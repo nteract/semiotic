@@ -31,7 +31,7 @@ export type SemanticViabilityStatus =
 export interface RenderEvidence {
   /** Optional post-placement label assessment; mark emptiness retains its meaning. */
   layout?: LabelLayoutEvidence
-  /** SHA-256 of the final serialized SVG plus resolved coordinate context, including chart chrome. */
+  /** SHA-256 of the final SVG and coordinate context, including chrome, with document IDs normalized. */
   sceneHash?: string
   /** Version 2 replaces the evidence envelope's legacy mark-count-only hash. */
   sceneHashVersion?: 2

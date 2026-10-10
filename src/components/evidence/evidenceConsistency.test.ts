@@ -445,7 +445,7 @@ describe("immutable evidence construction and evaluation", () => {
 })
 
 describe("versioned rendered-scene hashes", () => {
-  const stableProps = { ...props, _idPrefix: "scene-hash" }
+  const stableProps = props
   const cases: Array<[string, Datum, Datum]> = [
     [
       "LineChart",
@@ -510,8 +510,8 @@ describe("versioned rendered-scene hashes", () => {
   it.each(cases)(
     "distinguishes %s geometry with unchanged mark inventories",
     (component, left, right) => {
-      const exportLeft = { ...left, _idPrefix: "scene-hash" }
-      const exportRight = { ...right, _idPrefix: "scene-hash" }
+      const exportLeft = left
+      const exportRight = right
       const a = renderChartWithEvidence(component, exportLeft)
       const b = renderChartWithEvidence(component, exportRight)
       expect(a.svg).not.toBe(b.svg)
@@ -563,7 +563,7 @@ describe("versioned rendered-scene hashes", () => {
     }
     const original = renderChartWithEvidence("LineChart", stableProps)
     const annotated = renderChartWithEvidence("LineChart", extra)
-    expect(original.svg).toBe(annotated.svg)
+    expect(original.svg).not.toBe(annotated.svg)
     expect(original.evidence.sceneHash).toBe(annotated.evidence.sceneHash)
     expect(toEvidenceEnvelope("LineChart", stableProps).input.hash).not.toBe(
       toEvidenceEnvelope("LineChart", extra).input.hash

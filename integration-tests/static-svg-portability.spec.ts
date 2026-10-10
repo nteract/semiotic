@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test"
 import AxeBuilder from "@axe-core/playwright"
 import { createRequire } from "node:module"
 import { execFileSync } from "node:child_process"
+import { createElement } from "react"
 
 // Exercise the published entry points after the normal integration build.
 const requirePackage = createRequire(__filename)
@@ -12,12 +13,108 @@ const data = [
   { x: 1, y: 5 }
 ]
 
+test("exported custom SVG styles paint each chart's local gradient", async ({
+  page
+}) => {
+  const svgs = ["#ff0000", "#0000ff"].map((color) =>
+    renderChart("DonutChart", {
+      data: [{ category: "A", value: 1 }],
+      width: 300,
+      height: 300,
+      showLegend: false,
+      centerContent: createElement(
+        "g",
+        null,
+        createElement("style", null, "#shape { fill: url('#paint') }"),
+        createElement(
+          "defs",
+          null,
+          createElement(
+            "linearGradient",
+            { id: "paint" },
+            createElement("stop", { offset: 0, stopColor: color }),
+            createElement("stop", { offset: 1, stopColor: color })
+          )
+        ),
+        createElement("rect", {
+          id: "shape",
+          x: -20,
+          y: -20,
+          width: 40,
+          height: 40
+        })
+      )
+    })
+  )
+  await page.setContent(`<main>${svgs.join("")}</main>`)
+  const samples = await page.evaluate(async (markup) => {
+    const roots = [...document.querySelectorAll("main > svg")]
+    return Promise.all(
+      roots.map(async (root, index) => {
+        const rect = root.querySelector('[id$="-shape"]')!
+        const gradient = root.querySelector('[id$="-paint"]')!
+        const bounds = root.getBoundingClientRect()
+        const mark = rect.getBoundingClientRect()
+        const image = new Image()
+        image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(markup[index])}`
+        await image.decode()
+        const canvas = document.createElement("canvas")
+        canvas.width = image.naturalWidth
+        canvas.height = image.naturalHeight
+        const ctx = canvas.getContext("2d")!
+        ctx.drawImage(image, 0, 0)
+        return {
+          local: getComputedStyle(rect).fill.includes(`#${gradient.id}`),
+          pixel: [
+            ...ctx.getImageData(
+              mark.x + mark.width / 2 - bounds.x,
+              mark.y + mark.height / 2 - bounds.y,
+              1,
+              1
+            ).data
+          ]
+        }
+      })
+    )
+  }, svgs)
+  expect(samples.map((sample) => sample.local)).toEqual([true, true])
+  // WebKit's image color conversion can round a saturated channel by 1/255.
+  const expected = [
+    [255, 0, 0, 255],
+    [0, 0, 255, 255]
+  ]
+  samples.forEach((sample, index) =>
+    sample.pixel.forEach((channel, component) =>
+      expect(
+        Math.abs(channel - expected[index][component])
+      ).toBeLessThanOrEqual(1)
+    )
+  )
+})
+
+test("exported custom HTML labels focus their scoped input", async ({
+  page
+}) => {
+  const svg = renderChart("DonutChart", {
+    data: [{ category: "A", value: 1 }],
+    centerContent: createElement(
+      "div",
+      { style: { pointerEvents: "auto" } },
+      createElement("label", { htmlFor: "field" }, "Chart name"),
+      createElement("input", { id: "field" })
+    )
+  })
+  await page.setContent(`<main>${svg}</main>`)
+  await page.getByText("Chart name", { exact: true }).click()
+  await expect(page.getByRole("textbox", { name: "Chart name" })).toBeFocused()
+})
+
 test("default SVG identifiers remain distinct across ESM and CJS server entry points", async ({
   page
 }) => {
   // Playwright transforms imports. Use Node's native loaders to exercise both
   // published formats in the same process, then inspect their combined SVG.
-  const svgs: string[] = JSON.parse(
+  const { svgs, hashes }: { svgs: string[]; hashes: string[] } = JSON.parse(
     execFileSync(
       process.execPath,
       [
@@ -29,19 +126,25 @@ test("default SVG identifiers remain distinct across ESM and CJS server entry po
           const entries = ["semiotic/server", "semiotic/server/node", "semiotic/server/edge"]
           const modules = await Promise.all(entries.map(entry => import(entry)))
           const renderers = [
-            ...entries.map(entry => require(entry).renderChart),
-            ...modules.map(module => module.renderChart)
+            ...entries.map(entry => require(entry)),
+            ...modules
           ]
           const data = JSON.parse(process.argv[1])
-          process.stdout.write(JSON.stringify(renderers.map((renderer, i) =>
-            renderer("AreaChart", { data, title: "Entry " + i, gradientFill: true })
-          )))
+          process.stdout.write(JSON.stringify({
+            svgs: renderers.map((renderer, i) =>
+              renderer.renderChart("AreaChart", { data, title: "Entry " + i, gradientFill: true })
+            ),
+            hashes: renderers.map(renderer =>
+              renderer.renderChartWithEvidence("AreaChart", { data, gradientFill: true }).evidence.sceneHash
+            )
+          }))
         `,
         JSON.stringify(data)
       ],
       { encoding: "utf8" }
     )
   )
+  expect(new Set(hashes).size).toBe(1)
   await page.setContent(`<main>${svgs.join("")}</main>`)
   const ids = await page
     .locator("[id]")

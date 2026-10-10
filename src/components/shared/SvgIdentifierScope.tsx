@@ -9,15 +9,15 @@ import { rewriteSvgIdReference } from "./svgIdReference"
 
 /** Keep recipe defs local to each mounted overlay, including shared layout configs. */
 export function SvgIdentifierScope({ children }: { children: ReactNode }) {
-  const prefix = useId().replace(/[^a-zA-Z0-9_-]/g, "_")
+  const prefix = useId().replace(/[^\w-]/g, "_")
   const ids = new Map<string, string>()
   const scopeProps = (
     props: Record<string, unknown>,
     style = false
-  ): Record<string, unknown> =>
-    Object.fromEntries(
-      Object.entries(props).map(([name, value]) => [
-        name,
+  ): Record<string, unknown> => {
+    const scoped = { ...props }
+    for (const [name, value] of Object.entries(scoped)) {
+      scoped[name] =
         name === "children" && !style
           ? scope(value as ReactNode)
           : name === "style" && !style && value && typeof value === "object"
@@ -25,8 +25,9 @@ export function SvgIdentifierScope({ children }: { children: ReactNode }) {
             : typeof value === "string"
               ? rewriteSvgIdReference(style ? "style" : name, value, ids)
               : value
-      ])
-    )
+    }
+    return scoped
+  }
   const scope = (nodes: ReactNode, collect = false): ReactNode => {
     if (typeof nodes !== "object") return nodes
     return Children.map(nodes, (node) => {

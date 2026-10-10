@@ -1,4 +1,6 @@
 import { stableEvidenceHash } from "./stableJsonHash"
+import { mapSvgAttributes } from "../shared/svgRoot"
+import { rewriteSvgIdentifiers } from "../shared/svgIdentifiers"
 
 interface RenderedSceneHashContext {
   frameType: string
@@ -11,12 +13,23 @@ interface RenderedSceneHashContext {
   categories?: string[]
 }
 
-/** Identify the final SVG bytes and coordinates, including post-render theme CSS. */
-export function renderedSceneHash(svg: string, context: RenderedSceneHashContext): string {
+/** Identify rendered paint and coordinates, independent of document-instance ID names. */
+export function renderedSceneHash(
+  svg: string,
+  context: RenderedSceneHashContext
+): string {
+  const ids = new Map<string, string>()
+  mapSvgAttributes(svg, (name, value) => {
+    // Internal hash tokens cannot collide with authored IDs in valid XML.
+    // This normalized string is only hashed; exported SVG remains unchanged.
+    if (name === "id" && !ids.has(value))
+      ids.set(value, `\u0000scene-${ids.size}`)
+    return undefined
+  })
   return stableEvidenceHash({
     kind: "semiotic.rendered-svg-scene",
     version: 2,
-    svg,
+    svg: rewriteSvgIdentifiers(svg, ids),
     frameType: context.frameType,
     width: context.width,
     height: context.height,
