@@ -468,7 +468,7 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { LineChart } from "semiotic"` | browser | **118.2 KiB** | 43.8 KiB |
 | `import { LineChart } from "semiotic/xy"` | browser | **117.8 KiB** | 31.7 KiB |
 | `import { LineChart } from "semiotic/line"` | browser | **118.0 KiB** | 31.8 KiB |
-| `import { BarChart } from "semiotic/ordinal"` | browser | **101.3 KiB** | 14.7 KiB |
+| `import { BarChart } from "semiotic/ordinal"` | browser | **101.4 KiB** | 14.7 KiB |
 | `import { SankeyDiagram } from "semiotic/network"` | browser | **126.0 KiB** | 6.6 KiB |
 | `import { ZoomableNetworkCustomChart } from "semiotic/network/zoom"` | browser | **102.4 KiB** | 29.3 KiB |
 | `import { isometricGlyphs } from "semiotic/network/perspective"` | browser | **1.4 KiB** | — |
@@ -478,9 +478,9 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { GaltonBoardChart } from "semiotic/physics"` | browser | **86.0 KiB** | 0.3 KiB |
 | `import { MATTER_PHYSICS_CAPABILITIES } from "semiotic/physics/matter"` | browser | **0.1 KiB** | — |
 | `import { RAPIER_PHYSICS_CAPABILITIES } from "semiotic/physics/rapier"` | browser | **0.2 KiB** | — |
-| `import { renderChart } from "semiotic/server"` | node | **283.3 KiB** | — |
-| `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **119.9 KiB** | — |
-| `import { renderToImage } from "semiotic/server/node"` | node | **283.7 KiB** | 0.6 KiB |
+| `import { renderChart } from "semiotic/server"` | node | **284.7 KiB** | — |
+| `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **119.5 KiB** | — |
+| `import { renderToImage } from "semiotic/server/node"` | node | **285.1 KiB** | 0.6 KiB |
 | `import { suggestCharts } from "semiotic/ai"` | browser | **39.4 KiB** | 13.6 KiB |
 | `import { suggestCharts } from "semiotic/ai/core"` | browser | **38.9 KiB** | — |
 | `import { buildArtifactContract } from "semiotic/artifact"` | browser | **4.4 KiB** | — |
@@ -493,7 +493,7 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { createRoughRenderMode } from "semiotic/rough"` | browser | **3.2 KiB** | — |
 | `import { resolveThemePreset } from "semiotic/themes"` | browser | **2.5 KiB** | — |
 | `import { resolveThemePreset } from "semiotic/themes/core"` | browser | **2.5 KiB** | — |
-| `import { ThemeProvider } from "semiotic/themes/react"` | browser | **5.1 KiB** | — |
+| `import { ThemeProvider } from "semiotic/themes/react"` | browser | **5.4 KiB** | — |
 | `import { validateProps } from "semiotic/utils"` | browser | **9.6 KiB** | — |
 | `import { smartTickFormat } from "semiotic/utils/core"` | browser | **1.1 KiB** | — |
 | `import { useReducedMotion } from "semiotic/utils/react"` | browser | **0.3 KiB** | — |
