@@ -31,10 +31,10 @@ describe("the superpersuasion correction desk", () => {
     expect(after.evidence?.markCount).toBe(6)
     const beforeDocument = new DOMParser().parseFromString(before.svg!, "image/svg+xml")
     const afterDocument = new DOMParser().parseFromString(after.svg!, "image/svg+xml")
-    const beforeBars = [...beforeDocument.querySelectorAll("#data-area rect")].filter(
+    const beforeBars = [...beforeDocument.querySelectorAll("[id$='-data-area'] rect")].filter(
       (bar) => !bar.closest("defs"),
     )
-    const afterBars = [...afterDocument.querySelectorAll("#data-area rect")].filter(
+    const afterBars = [...afterDocument.querySelectorAll("[id$='-data-area'] rect")].filter(
       (bar) => !bar.closest("defs"),
     )
     expect(afterBars).toHaveLength(6)
