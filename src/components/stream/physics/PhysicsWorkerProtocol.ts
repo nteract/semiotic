@@ -3,6 +3,7 @@ import type {
   PhysicsPipelineConfig,
   PhysicsPipelineObservationOptions,
   PhysicsPipelineSnapshot,
+  PhysicsSimulationState,
   PhysicsPipelineTickResult,
   PhysicsQueuedSpawn,
   PhysicsSensorObservationConfig,
@@ -38,6 +39,16 @@ export type PhysicsWorkerPipelineConfig = Omit<
   sediment?: PhysicsWorkerSedimentConfig
 }
 
+export interface PhysicsWorkerState {
+  accumulator: number
+  activeSensorPairs: string[]
+  elapsedSeconds: number
+  paused: boolean
+  revision: number
+  simulationState: PhysicsSimulationState
+  visible: boolean
+}
+
 export interface PhysicsWorkerFrame {
   bodies: PhysicsBodyState[]
   ids: string[]
@@ -47,6 +58,9 @@ export interface PhysicsWorkerFrame {
   sleeping: Uint8Array
   snapshot?: PhysicsPipelineSnapshot
   velocities: Float32Array
+  sleepTimes?: Float32Array
+  previousPositions?: Float32Array
+  state?: PhysicsWorkerState
 }
 
 export type PhysicsWorkerCommand =
@@ -156,7 +170,7 @@ function workerObservationConfig(
     chartId: observation.chartId,
     chartType: observation.chartType,
     sensors: observation.sensors as
-      | Record<string, PhysicsSensorObservationConfig>
+      Record<string, PhysicsSensorObservationConfig>
       | undefined
   }
 }
@@ -223,12 +237,15 @@ export function packPhysicsWorkerFrame(
   const positions = new Float32Array(bodies.length * 2)
   const velocities = new Float32Array(bodies.length * 2)
   const sleeping = new Uint8Array(bodies.length)
+  const previousPositions = new Float32Array(bodies.length * 2)
 
   bodies.forEach((body, index) => {
     const offset = index * 2
     ids[index] = body.id
     positions[offset] = body.x
     positions[offset + 1] = body.y
+    previousPositions[offset] = body.prevX
+    previousPositions[offset + 1] = body.prevY
     velocities[offset] = body.vx
     velocities[offset + 1] = body.vy
     sleeping[index] = body.sleeping ? 1 : 0
@@ -238,6 +255,7 @@ export function packPhysicsWorkerFrame(
     bodies,
     ids,
     positions,
+    previousPositions,
     result,
     sediment,
     sleeping,
@@ -252,6 +270,8 @@ export function physicsWorkerFrameTransferables(
   return [
     frame.positions.buffer,
     frame.velocities.buffer,
-    frame.sleeping.buffer
+    frame.sleeping.buffer,
+    ...(frame.sleepTimes ? [frame.sleepTimes.buffer] : []),
+    ...(frame.previousPositions ? [frame.previousPositions.buffer] : [])
   ] as Transferable[]
 }

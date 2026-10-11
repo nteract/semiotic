@@ -22,7 +22,7 @@ import {
 } from "./readerGrounding"
 
 export type DataPitfallsImageMediaType =
-  | "image/png"
+  "image/png"
   | "image/jpeg"
   | "image/gif"
   | "image/webp"
@@ -125,14 +125,13 @@ export interface DataPitfallsBridgeResult {
   accessibility?: AccessibilityAuditResult
 }
 
-export type DataPitfallsSeverity =
-  | "info"
+export type DataPitfallsSeverity = "info"
   | "warning"
   | "error"
   | (string & {})
 
 export type DataPitfallsInputKind =
-  | "text"
+  "text"
   | "code"
   | "image"
   | "document"
@@ -159,7 +158,7 @@ export interface DataPitfallsReport {
 }
 
 export type DataPitfallsNotificationLevel =
-  | "info"
+  "info"
   | "warning"
   | "error"
   | "neutral"
@@ -314,7 +313,9 @@ function paletteColor(
   severity: DataPitfallsSeverity,
   palette: Partial<Record<string, string>>
 ): string {
-  return palette[severity] ?? palette.info ?? DEFAULT_DATA_PITFALLS_ANNOTATION_PALETTE.info
+  return (
+    palette[severity] ?? palette.info ?? DEFAULT_DATA_PITFALLS_ANNOTATION_PALETTE.info
+  )
 }
 
 function findingId(finding: DataPitfallsFinding): string {
@@ -500,7 +501,7 @@ function formatGrounding(grounding: ChartReaderGrounding): string {
 /**
  * Build a Data Pitfalls-compatible chain input from a Semiotic chart config.
  *
- * The returned `input` is intentionally dependency-free: pass it to
+ * The returned `input` is dependency-free: pass it to
  * `detectPitfalls(input, options)` from the `datapitfalls` package in your app,
  * CI job, or research harness. Semiotic contributes the chart config,
  * reader-grounding payload, config diagnostics, accessibility audit, and

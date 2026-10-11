@@ -19,8 +19,8 @@ const AccessibleTablePortalImpl = /* @__PURE__ */ React.lazy(() => import("./Acc
 const Content = /* @__PURE__ */ React.lazy(() => import("./AccessibleDataTableContent"))
 
 /** Relocate the complete interactive accessible-table UI when a chart lives
- * inside a consumer-owned `role="img"`. The historical inline DOM remains
- * unchanged for `accessibleTable={true}`. */
+ * inside a consumer-owned `role="img"`. `accessibleTable={true}` renders the UI
+ * inside the chart. */
 export function AccessibleTablePortal({
   accessibleTable,
   children
@@ -33,7 +33,9 @@ export function AccessibleTablePortal({
   // External targets only exist on the client. Keep the first hydration render
   // identical to SSR even when this optional portal chunk is already cached.
   if (!hydrated) return null
-  return <React.Suspense fallback={null}><AccessibleTablePortalImpl target={accessibleTable.portalTarget}>{children}</AccessibleTablePortalImpl></React.Suspense>
+  return (
+    <React.Suspense fallback={null}><AccessibleTablePortalImpl target={accessibleTable.portalTarget}>{children}</AccessibleTablePortalImpl></React.Suspense>
+  )
 }
 
 // ── Aria-label helpers ──────────────────────────────────────────────────

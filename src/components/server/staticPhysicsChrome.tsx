@@ -46,7 +46,7 @@ export interface StaticPhysicsChromeRender {
  *
  * The interactive overlay owns hooks and the live annotation factory; bringing
  * it into `semiotic/server` solely to serialize a settled scene retains that
- * client runtime. This counterpart intentionally uses the static legend and
+ * client runtime. This counterpart uses the static legend and
  * annotation paths while keeping the same nested SVG shell and paint order.
  */
 export function renderStaticPhysicsChrome(

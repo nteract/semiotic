@@ -5,9 +5,10 @@ import type {
   IntentDefinition,
 } from "./chartRecipes"
 import { getChartRecipe, resolveChartRecipe } from "./chartRecipeRegistry"
+import { aiDataRows } from "./aiData"
 
 export function recipeIntentId(intent: IntentDefinition): string | undefined {
-  return typeof intent === "string" ? intent : intent.id ?? intent.name
+  return typeof intent === "string" ? intent : (intent.id ?? intent.name)
 }
 
 export function recipeConfig(props: Datum): Record<string, unknown> {
@@ -17,10 +18,10 @@ export function recipeConfig(props: Datum): Record<string, unknown> {
 }
 
 export function recipeData(props: Datum): Datum[] {
-  if (Array.isArray(props.data)) return props.data as Datum[]
-  if (Array.isArray(props.nodes)) return props.nodes as Datum[]
-  if (Array.isArray(props.points)) return props.points as Datum[]
-  if (Array.isArray(props.areas)) return props.areas as Datum[]
+  if (Array.isArray(props.data)) return aiDataRows(props.data)
+  if (Array.isArray(props.nodes)) return aiDataRows(props.nodes)
+  if (Array.isArray(props.points)) return aiDataRows(props.points)
+  if (Array.isArray(props.areas)) return aiDataRows(props.areas)
   return []
 }
 

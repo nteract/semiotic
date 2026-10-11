@@ -1,4 +1,5 @@
 import { getMinMax } from "../charts/shared/minMax"
+import { aiChartProps } from "./aiData"
 import type { Datum } from "../charts/shared/datumTypes"
 import {
   describeChart,
@@ -304,7 +305,7 @@ function sourceFacts(
     const leaves: Record<string, unknown>[] = []
     const visit = (node: Record<string, unknown>) => {
       const children = Array.isArray(node[childKey])
-        ? node[childKey] as unknown[]
+        ? (node[childKey] as unknown[])
         : []
       if (children.length === 0) {
         leaves.push(node)
@@ -453,7 +454,9 @@ function normalizeSediment(
 
 function looksLikePhysicsSnapshot(value: unknown): value is Record<string, unknown> {
   const snapshot = record(value)
-  return !!snapshot && (isRecord(snapshot.world) || "simulationState" in snapshot || "liveBodyOrder" in snapshot)
+  return (
+    !!snapshot && (isRecord(snapshot.world) || "simulationState" in snapshot || "liveBodyOrder" in snapshot)
+  )
 }
 
 function countSleepingBodies(bodies: readonly unknown[] | undefined): number | undefined {
@@ -470,11 +473,13 @@ function countSensors(
   const observation = record(config?.observation)
   const configuredSensors = record(observation?.sensors)
   const activeSensors = firstArray(world?.activeSensors)
-  return Math.max(
+  return (
+    Math.max(
     colliderSensors ?? 0,
     configuredSensors ? Object.keys(configuredSensors).length : 0,
     activeSensors?.length ?? 0
   ) || undefined
+  )
 }
 
 function buildPhysicsGroundingText(physics: Omit<PhysicsReaderGrounding, "text">): string {
@@ -689,6 +694,7 @@ export function buildReaderGrounding(
   props: Datum,
   options: ChartReaderGroundingOptions = {}
 ): ChartReaderGrounding {
+  props = aiChartProps(props)
   const { capability, audience, locale } = options
   const levels = options.levels ?? ["l1", "l2", "l3"]
   const includeStructure = options.includeStructure !== false

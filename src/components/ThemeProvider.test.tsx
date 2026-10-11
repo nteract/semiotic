@@ -76,8 +76,8 @@ describe("ThemeProvider", () => {
       </ThemeProvider>
     )
 
-    expect(seen[0]).toBe(DARK_THEME)
-    expect(seen.map(theme => theme.mode)).toEqual(["dark"])
+    expect(seen[0]).toEqual(DARK_THEME)
+    expect(seen.map((theme) => theme.mode)).toEqual(["dark"])
   })
 
   it.each([
@@ -199,7 +199,7 @@ describe("ThemeProvider", () => {
     )
 
     expect(screen.getByTestId("theme-mode")).toHaveTextContent("dark")
-    expect(seen.at(-1)).toBe(DARK_THEME)
+    expect(seen.at(-1)).toEqual(DARK_THEME)
   })
 
   it("initializes from forced-colors and restores light when forced-colors exits", () => {
@@ -213,13 +213,13 @@ describe("ThemeProvider", () => {
         </ThemeProvider>
       )
 
-      expect(seen[0]).toBe(HIGH_CONTRAST_THEME)
+      expect(seen[0]).toEqual(HIGH_CONTRAST_THEME)
 
       act(() => {
         forcedColors.setMatches(false)
       })
 
-      expect(seen.at(-1)).toBe(LIGHT_THEME)
+      expect(seen.at(-1)).toEqual(LIGHT_THEME)
     } finally {
       forcedColors.restore()
     }

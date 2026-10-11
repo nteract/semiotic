@@ -22,13 +22,18 @@ const MAX_POINTS_PER_BATCH = 2_048
  */
 export const pointCanvasRenderer: StreamRendererFn = (
   ctx,
-  nodes,
-  _scales,
-  _layout
-) => {
-  const pointNodes = nodes.filter(
-    (n): n is PointSceneNode => n.type === "point"
+  nodes) =>
+  renderCanvasPoints(
+    ctx,
+    nodes.filter(
+    (node): node is PointSceneNode => node.type === "point"
   )
+  )
+
+export function renderCanvasPoints(
+  ctx: CanvasRenderingContext2D,
+  pointNodes: PointSceneNode[]
+): void {
   if (pointNodes.length === 0) return
 
   ctx.save()

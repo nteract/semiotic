@@ -100,8 +100,8 @@ export function resolveChartSize(
           (p.cellGap ?? SCATTERPLOT_MATRIX_SIZE.cellGap))
     return { width: side, height: side }
   }
-  // These compositions have their own semantics for `mode` and historically
-  // retain primary viewport dimensions. Do not silently change their layout.
+  // These compositions use chart-specific `mode` semantics and retain
+  // their primary viewport dimensions.
   const fixed = hasFixedModeSize(chart)
   const physics = [
     "GaltonBoardChart",

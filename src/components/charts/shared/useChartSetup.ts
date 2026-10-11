@@ -242,7 +242,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
   // category discovery, legend domain, selection match, scene builder —
   // dereferences `d[field]` without null-checks. Filtering once at the
   // setup boundary so all downstream consumers see clean data is the
-  // single load-bearing fix; HOCs forward `setup.data` (or, for shapes
+  // single required fix; HOCs forward `setup.data` (or, for shapes
   // not routed through setup, the equivalent helper directly) into the
   // StreamFrame so the frame side is also clean. `filterSparseArray`
   // returns the original reference when nothing is dropped, preserving

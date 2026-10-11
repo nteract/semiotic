@@ -37,7 +37,7 @@ export interface ProcessSankeyRibbonInputOptions {
   minRun?: number | "auto"
   /** Earliest proven time at which this feeder's source attachment can be
    * rendered. The caller owns feeder detection and stock validation; without
-   * this value `minRun` deliberately has no effect. */
+   * this value `minRun` has no effect. */
   sourceRunwayStart?: number
 }
 
@@ -120,7 +120,8 @@ export function computeProcessSankeyRibbonInputs(
     const desiredRun = minRun === "auto"
       ? Math.min(
           AUTO_MAXIMUM_RUN,
-          Math.sqrt(AUTO_MINIMUM_BEND_RADIUS * laneDistance / radiusCoefficient),
+          Math.sqrt(
+              (AUTO_MINIMUM_BEND_RADIUS * laneDistance) / radiusCoefficient),
         )
       : minRun
 

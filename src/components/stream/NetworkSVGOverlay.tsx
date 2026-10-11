@@ -59,6 +59,7 @@ export interface NetworkSVGOverlayProps {
   /** Accessible long description; wins over the title-derived `<desc>` suffix. */
   description?: string
   /** Prefix for `<title>`/`<desc>` ids so multiple charts on a page do not collide. */
+  decorative?: boolean
   idPrefix?: string
 
   /** Legend configuration */
@@ -108,6 +109,7 @@ export const NetworkSVGOverlay = /* @__PURE__ */ withDisplayName(function Networ
     title,
     description,
     idPrefix,
+      decorative = false,
     legend,
     legendHoverBehavior,
     legendClickBehavior,
@@ -187,8 +189,8 @@ export const NetworkSVGOverlay = /* @__PURE__ */ withDisplayName(function Networ
       <style key="annotation-widget-disclosure-style">{ANNOTATION_DISCLOSURE_REVEAL_CSS}</style>
     )}
     <svg
-      role="img"
-      aria-labelledby={labelledBy}
+      role={decorative ? "presentation" : "img"}
+          aria-labelledby={decorative ? undefined : labelledBy}
       width={totalWidth}
       height={totalHeight}
       style={{
@@ -197,15 +199,19 @@ export const NetworkSVGOverlay = /* @__PURE__ */ withDisplayName(function Networ
         left: 0,
         pointerEvents: "none"
       }}
-    >
-      <title id={titleId}>{overlayAccessibleTitle(title, "Network Chart")}</title>
+        >
+          {!decorative && (
+            <>
+              <title id={titleId}>{overlayAccessibleTitle(title, "Network Chart")}</title>
       <desc id={descId}>
         {overlayAccessibleDescription(title, description, {
           familyPhrase: "network data visualization",
           fallback: "Network data visualization"
         })}
       </desc>
-      <g transform={`translate(${margin.left},${margin.top})`}>
+            </>
+          )}
+          <g transform={`translate(${margin.left},${margin.top})`}>
         <NetworkViewGroup view={props.viewTransform} width={width} height={height}>
         {/* Labels */}
         {labels.map((label, i) => networkLabelToSVG(label, i, "start", "middle"))}
@@ -228,15 +234,17 @@ export const NetworkSVGOverlay = /* @__PURE__ */ withDisplayName(function Networ
       })}
     </svg>
     {/* Widget annotations — rendered as HTML divs so they can overflow the SVG. */}
-    {layoutAnnotations?.filter(a => a.type === "widget" && (a.pointId != null || a.nodeId != null) && sceneNodes).map((annotation, i) => {
+    {layoutAnnotations?.filter(
+            (a) => a.type === "widget" && (a.pointId != null || a.nodeId != null) && sceneNodes).map((annotation, i) => {
       const isDeferred = annotation._annotationDeferred === true
       const anchorId = annotation.pointId ?? annotation.nodeId
-      const node = sceneNodes!.find(n =>
+      const node = sceneNodes!.find(
+              (n) =>
         n.id === anchorId ||
-        (n.datum?.id === anchorId) ||
-        (n.datum?.data?.id === anchorId) ||
-        (n.datum?.data?.name === anchorId)
-      )
+                n.datum?.id === anchorId ||
+                n.datum?.data?.id === anchorId ||
+                n.datum?.data?.name === anchorId
+            )
       const center = node && nodeCenter(node)
       if (!center) return null
       const anchor = projectNetworkPoint(center, normalizeNetworkView(props.viewTransform))

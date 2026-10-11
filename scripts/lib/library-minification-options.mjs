@@ -10,8 +10,9 @@ export const libraryTerserOptions = {
     pure_funcs: ["console.log", "console.debug"],
     drop_debugger: true,
     hoist_funs: true,
-    // Keep reusable helpers intact across every library entry. Cloning them
-    // into individual chunks can retain otherwise unused exports downstream.
+    // Keep client helpers intact across shared entries. Server and neutral
+    // bundles may compare function reduction variants by compressed size.
+    // Semantic and named-import regressions cover every candidate.
     reduce_funcs: false,
     passes: 3
   },

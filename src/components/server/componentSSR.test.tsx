@@ -395,7 +395,7 @@ describe("Component SSR — XY Charts", () => {
     ["LineChart", { data: xyData, xAccessor: "x", yAccessor: "y" }],
     ["AreaChart", { data: xyData, xAccessor: "x", yAccessor: "y" }],
     ["StackedAreaChart", {
-      data: xyData.flatMap(d => [
+      data: xyData.flatMap((d) => [
         { ...d, group: "A" },
         { x: d.x, y: d.y * 0.6, group: "B" },
       ]),
@@ -510,7 +510,7 @@ describe("Component SSR — Ordinal Charts", () => {
 
     // Without colorBy, BarChart's HOC resolves one shared fill. The
     // frame-level palette fallback used to color these by category on SSR.
-    expect((svg.match(/fill="#9E8FFF"/g) || [])).toHaveLength(3)
+    expect(svg.match(/fill="#9E8FFF"/g) || []).toHaveLength(3)
   })
 
   it("StackedBarChart renders stacked rect elements", () => {
@@ -744,6 +744,7 @@ describe("Component SSR — Equivalence with renderToStaticSVG", () => {
         valueAccessor="value"
         width={500}
         height={400}
+        frameProps={{ background: "transparent" }}
       />
     )
 
@@ -753,6 +754,7 @@ describe("Component SSR — Equivalence with renderToStaticSVG", () => {
       oAccessor: "category",
       rAccessor: "value",
       size: [500, 400],
+      background: "transparent"
     })
 
     // Count data rects (exclude axis/background rects by checking for fill color)

@@ -69,7 +69,9 @@ function verify(data, experimental, server) {
     assert.equal(evidence.markCountByType.rect, 2)
     assert.deepEqual(evidence.yDomain, [0, 10])
     assert.doesNotMatch(svg, /NaN|Infinity/)
-    const rects = svg.match(/<rect[^>]+>/g)
+    const area = svg.match(/<g[^>]*id="[^"]*data-area"[^>]*>([\s\S]*?)<\/g>/)?.[1]
+    assert.ok(area, "rendered data area exists")
+    const rects = area.match(/<rect[^>]+>/g)
     assert.equal(rects.length, 2)
     for (const [index, value] of [2, 4].entries()) {
       assert.equal(
@@ -98,7 +100,9 @@ function verify(data, experimental, server) {
     ...shared
   })
   assert.equal(evidence.markCountByType.rect, 2)
-  const rects = svg.match(/<rect[^>]+>/g)
+  const area = svg.match(/<g[^>]*id="[^"]*data-area"[^>]*>([\s\S]*?)<\/g>/)?.[1]
+  assert.ok(area, "rendered data area exists")
+  const rects = area.match(/<rect[^>]+>/g)
   assert.equal(rects.length, 2)
   assert.ok(
     Math.abs(attr(rects[0], "height") / attr(rects[1], "height") - 5) < 1e-10

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { findNearestGeoNode } from "./GeoCanvasHitTester"
-import type { GeoAreaSceneNode } from "./geoTypes"
+import type { GeoAreaSceneNode, GeoLineSceneNode } from "./geoTypes"
 import type { PointSceneNode, LineSceneNode } from "./types"
 import { quadtree } from "d3-quadtree"
 
@@ -156,6 +156,36 @@ describe("findNearestGeoNode", () => {
     expect(result!.node.type).toBe("point")
   })
 
+  it("prefers a visible line over its underlying area", () => {
+    const area: GeoAreaSceneNode = {
+      type: "geoarea",
+      pathData: "M0,0L100,0L100,100L0,100Z",
+      centroid: [50, 50],
+      bounds: [
+        [0, 0],
+        [100, 100]
+      ],
+      screenArea: 10000,
+      style: { fill: "blue" },
+      datum: { id: "region" },
+      interactive: true
+    }
+    const line: GeoLineSceneNode = {
+      type: "line",
+      path: [
+        [0, 50],
+        [100, 50]
+      ],
+      style: { stroke: "red", strokeWidth: 2 },
+      datum: { id: "route" }
+    }
+    const context = createMockHitCtx()
+    context._registerHit(area.pathData)
+    expect(findNearestGeoNode([area, line], 50, 50, 30, context)?.node).toBe(
+      line
+    )
+  })
+
   it("skips non-interactive geo areas", () => {
     const areaNode: GeoAreaSceneNode = {
       type: "geoarea",
@@ -200,7 +230,7 @@ describe("findNearestGeoNode", () => {
     { name: "diagonal bounding-box miss", path: [[0, 0], [100, 100]], pointer: [10, 90], distance: null },
     { name: "outside endpoint tolerance", path: [[0, 0], [100, 0]], pointer: [106.01, 0], distance: null }
   ])("preserves exact line hits at $name", ({ path, pointer, distance }) => {
-    const line: LineSceneNode = {
+    const line: GeoLineSceneNode = {
       type: "line",
       path: path as [number, number][],
       style: { stroke: "red", strokeWidth: 2 },
@@ -228,7 +258,7 @@ describe("findNearestGeoNode", () => {
   })
 
   it("respects line-specific tolerance and changed route coordinates", () => {
-    const line: LineSceneNode = {
+    const line: GeoLineSceneNode = {
       type: "line", path: [[0, 0], [100, 0]],
       style: { stroke: "red" }, datum: [{ id: "route" }]
     }

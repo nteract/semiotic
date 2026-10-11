@@ -9,6 +9,6 @@ export interface AccessibleTableOptions {
   portalTarget: AccessibleTablePortalTarget
 }
 
-/** `true` keeps the historical in-chart placement, `false` disables the
+/** `true` uses in-chart placement, `false` disables the
  * fallback, and the object form enables it at an explicit portal target. */
 export type AccessibleTableProp = boolean | AccessibleTableOptions

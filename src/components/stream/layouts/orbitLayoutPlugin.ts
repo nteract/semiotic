@@ -1,3 +1,4 @@
+import { networkPluginState } from "../networkPluginState"
 import { pie as d3Pie } from "d3-shape"
 import { flattenHierarchy } from "../../charts/shared/networkUtils"
 import { resolveChildrenAccessor, uniqueHierarchyIds } from "./hierarchyUtils"
@@ -26,25 +27,16 @@ interface OrbitMeta {
   eccentricity: number
 }
 
-// Per-instance orbit state is stored on the config to support multiple OrbitDiagrams
 interface OrbitState {
   metaMap: Map<string, OrbitMeta>
   startTime: number
 }
 
 function getOrbitState(config: NetworkPipelineConfig): OrbitState {
-  // `__orbitState` is declared on `NetworkPipelineConfig` as `unknown`;
-  // narrow to `OrbitState | undefined` at the seam. The init/cache
-  // pattern keeps state per-config across plugin invocations.
-  let state = config.__orbitState as OrbitState | undefined
-  if (!state) {
-    state = {
-      metaMap: new Map<string, OrbitMeta>(),
-      startTime: typeof performance !== "undefined" ? performance.now() : Date.now(),
-    }
-    config.__orbitState = state
-  }
-  return state
+  return networkPluginState(config, "orbit", () => ({
+    metaMap: new Map<string, OrbitMeta>(),
+    startTime: typeof performance !== "undefined" ? performance.now() : Date.now(),
+  }))
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────
@@ -77,7 +69,7 @@ function resolveRevolutionStyle(style: "locked" | "decay" | "alternate" | undefi
   switch (style) {
     case "decay":
       // Each depth level is exponentially slower — outer rings wind down
-      return (n) => Math.pow(0.6, (n.depth ?? 0))
+      return (n) => Math.pow(0.6, n.depth ?? 0)
     case "alternate":
       // Odd depths reverse direction — counter-rotating rings
       return (n) => {
@@ -123,7 +115,7 @@ function buildOrbitLayout(
 
   const cx = size[0] / 2
   const cy = size[1] / 2
-  const maxRing = Math.min(size[0], size[1]) / 2 * 0.85
+  const maxRing = (Math.min(size[0], size[1]) / 2) * 0.85
 
   // Create root node
   const rootId = ids[idIndex++]

@@ -47,7 +47,7 @@ export interface PhysicsController {
   id: string
   /**
    * Keep the RAF loop alive even when the kernel reports allSleeping.
-   * Capacity queues and continuous process rules should set this true.
+   * Defaults to true; set false for controllers that only respond to active steps.
    */
   continuous?: boolean
   /**

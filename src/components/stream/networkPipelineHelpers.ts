@@ -10,6 +10,7 @@ export function createNode(id: string): RealtimeNode {
     x1: 0,
     y0: 0,
     y1: 0,
+    __hasPosition: false,
     x: 0,
     y: 0,
     width: 0,

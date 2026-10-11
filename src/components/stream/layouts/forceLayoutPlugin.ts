@@ -63,7 +63,7 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
     // viewports. When the smaller dimension drops below 200px, scale distances
     // and repulsion while strengthening the positional pull, so the simulation
     // settles inside the plot instead of relying on a final boundary clamp.
-    // Charts at or above 200px retain their historical force magnitudes.
+    // Charts at or above 200px use the standard force magnitudes.
     const spatialScale = Math.max(0.1, Math.min(1, Math.min(size[0], size[1]) / 200))
     const positionalStrength = Math.min(0.5, 0.06 + (1 - spatialScale) * 1.8)
 
@@ -72,12 +72,14 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
     const previousPositions: Map<string, { x: number; y: number }> | undefined =
       config.__previousPositions
 
-    // Classify nodes: positioned (have non-zero x/y or a previous position) vs new
+    // Classify nodes: positioned (have initialized coordinates or a previous position) vs new
     let positionedCount = 0
     const newNodes: RealtimeNode[] = []
 
     for (const node of nodes) {
-      const hasCurrentPos = node.x != null && node.y != null && (node.x !== 0 || node.y !== 0)
+      const hasCurrentPos = node.__hasPosition !== false &&
+        Number.isFinite(node.x) &&
+        Number.isFinite(node.y)
       const prevPos = previousPositions?.get(node.id)
 
       if (hasCurrentPos) {
@@ -136,7 +138,10 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
 
       for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i]
-        if (node.x == null || node.y == null || (node.x === 0 && node.y === 0)) {
+        if (node.__hasPosition === false ||
+          !Number.isFinite(node.x) ||
+          !Number.isFinite(node.y)
+        ) {
           const r = Math.sqrt(i + 0.5) * 10 * spatialScale
           const theta = i * goldenAngle
           node.x = cx + r * Math.cos(theta)
@@ -145,7 +150,10 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
       }
     }
 
-    // Adaptive iteration count: reduce iterations for large networks (cold start only)
+    for (const node of nodes) node.__hasPosition = true
+
+    // When iterations is omitted, reduce the cold-start budget for large networks.
+    // Frame and HOC callers supply their default budget explicitly.
     const nodeCount = nodes.length
     const coldIterations = config.iterations ?? Math.max(
       50,
@@ -224,10 +232,9 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
       // RealtimeNode lets d3-force thread the node type through charge callbacks
       // without per-call casts.
       // Keep d3-force's built-in LCG when the caller has not explicitly
-      // selected a random source. The LCG is deterministic (and was the
-      // historical default here); replacing it with Math.random changes
+      // selected a random source. The deterministic LCG keeps
       // otherwise identical force layouts between renders. A custom random
-      // callback or serializable seed deliberately opts into an override.
+      // callback or serializable seed opts into an override.
       const simulation = forceSimulation<RealtimeNode>()
 
       if (config.random !== undefined || config.seed !== undefined) {
@@ -260,7 +267,7 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
         // Keep components on screen without crushing community structure into
         // the center. Compact layouts need a stronger pull to balance the
         // repulsion between disconnected components; full-size layouts retain
-        // the historical 0.06 strength.
+        // a positional strength of 0.06.
         .force("x", forceX<RealtimeNode>(cx).strength(positionalStrength))
         .force("y", forceY<RealtimeNode>(cy).strength(positionalStrength))
         // Apply the viewport constraint during settling so collision and link
@@ -303,7 +310,7 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
     for (const node of nodes) {
       if (node.x == null || node.y == null) continue
       const r = nodeRadius(node)
-      // Preserve the historical radius-only clamp for explicitly pinned
+      // Use a radius-only clamp for explicitly pinned
       // layouts; the extra inset belongs to simulated layouts only.
       const safetyPadding = iterations > 0 ? 2 : 0
       const insetX = Math.min(size[0] / 2, r + safetyPadding)
@@ -361,9 +368,9 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
     // `undefined` fills from the modulo lookup below, so guard the length.
     const palette = Array.isArray(config.colorScheme)
       ? config.colorScheme
-      : (config.themeCategorical && config.themeCategorical.length > 0
+      : config.themeCategorical && config.themeCategorical.length > 0
           ? config.themeCategorical
-          : (schemeCategory10 as readonly string[]))
+          : (schemeCategory10 as readonly string[])
     const nodeColorMap = new Map<string, string>()
     nodes.forEach((n, i) => {
       nodeColorMap.set(n.id, palette[i % palette.length])

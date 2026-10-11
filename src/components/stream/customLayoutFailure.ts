@@ -2,13 +2,13 @@
  * Structured failure information emitted when a custom layout throws.
  *
  * Custom layouts run inside imperative stores so an exception cannot reach a
- * React error boundary. Keep this deliberately small and serializable enough
+ * React error boundary. Keep this small and serializable enough
  * for an app's error UI, telemetry, or an imperative frame-handle readback.
  */
 export type CustomLayoutFamily = "xy" | "ordinal" | "geo" | "network"
 
 export type CustomLayoutFailureRecovery =
-  | "preserved-last-good-scene"
+  "preserved-last-good-scene"
   | "empty-scene"
 
 export interface CustomLayoutFailureDiagnostic {

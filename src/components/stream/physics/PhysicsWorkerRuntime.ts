@@ -16,18 +16,30 @@ export interface PhysicsWorkerRuntime {
 
 function frameFromStore(
   store: PhysicsPipelineStore,
-  result: PhysicsPipelineTickResult
+  result: PhysicsPipelineTickResult,
+  structural = false
 ): PhysicsWorkerFrame {
-  return packPhysicsWorkerFrame(
+  const snapshot =
+    structural ||
+    result.spawned.length ||
+    result.evicted.length ||
+    result.sedimented.length
+      ? store.snapshot()
+      : undefined
+  const frame = packPhysicsWorkerFrame(
     result,
-    store.readBodies(),
-    store.readSediment(),
-    store.snapshot()
-  )
+    store.readBodies(), [], snapshot)
+  // Body metadata lives in structural snapshots. Stable ticks transfer only
+  // motion buffers and scheduling state, without another datum-bearing copy.
+  frame.sleepTimes = store.workerSleepTimes(frame.ids)
+  frame.bodies = []
+  if (!snapshot) frame.ids = []
+  frame.state = store.workerState()
+  return frame
 }
 
 function zeroTickFrame(store: PhysicsPipelineStore): PhysicsWorkerFrame {
-  return frameFromStore(store, store.tick(0))
+  return frameFromStore(store, store.tick(0), true)
 }
 
 export function createPhysicsWorkerRuntime(): PhysicsWorkerRuntime {

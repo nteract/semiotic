@@ -146,8 +146,8 @@ describe("Component SSR — Network Charts", () => {
 
     expect(svg).toContain("<svg")
     expect(svg).toContain("<path")
-    expect(svg).toContain("opacity=\"0.35\"")
-    expect(svg).toContain("fill-opacity=\"0.86\"")
+    expect(svg).toContain('opacity="0.35"')
+    expect(svg).toContain('fill-opacity="0.86"')
   })
 
   it("renderChart('ProcessSankey', …) preserves temporal axis chrome", () => {
@@ -451,7 +451,8 @@ describe("Standalone SSR — Network node inference from edges", () => {
     } as StaticNetworkProps)
 
     expect(svg).toContain("<svg")
-    expect((svg.match(/<rect /g) || []).length).toBe(0)
+    expect((svg.match(/<rect /g) || []).length).toBe(1)
+    expect(svg).toContain('fill="#ffffff"')
     expect((svg.match(/<path /g) || []).length).toBe(0)
   })
 })
@@ -486,7 +487,9 @@ describe("SSR mark count contracts", () => {
         rAccessor: "value",
         size: [400, 300],
       })
-      const rects = (svg.match(/<rect [^>]*fill="#[0-9a-f]{6}"/gi) || []).length
+      const dataArea =
+        svg.match(/<g id="[^"]*-data-area"[^>]*>([\s\S]*?)<\/g>/)?.[1] ?? ""
+      const rects = (dataArea.match(/<rect /g) || []).length
       expect(rects).toBe(n)
     }
   })

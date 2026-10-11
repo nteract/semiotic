@@ -49,7 +49,7 @@ export function loess(
     const radius = Math.max(Math.abs(xs[left] - x0), Math.abs(xs[right] - x0))
     const maxDist = radius || 1
     // Points outside a positive-radius span have zero tricube weight.
-    // A zero radius historically falls back to 1, so include all points
+    // A zero radius falls back to 1, so include all points
     // in that case (including duplicates and nearby fractional x values).
     if (radius > 0) {
       start = left

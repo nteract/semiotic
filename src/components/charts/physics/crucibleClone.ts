@@ -24,7 +24,7 @@ export function cloneCrucibleHistory(
   }))
 }
 
-/** Clone mutable run structures while intentionally retaining source datum references. */
+/** Clone mutable run structures while retaining source datum references. */
 export function cloneCrucibleState<TDatum extends Datum>(
   state: CrucibleRunState<TDatum>
 ): CrucibleRunState<TDatum> {

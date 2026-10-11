@@ -2,7 +2,7 @@
  * AUTO-GENERATED from chartSpecs.ts by scripts/regenerate-schema.ts.
  * Do not edit by hand; run `npm run docs:chart-specs:schema`.
  *
- * This compact registry is intentionally separate from validation metadata:
+ * This compact registry is separate from validation metadata:
  * config serialization and accessibility auditing only need chart names
  * and the supported text props, not the entire prop-validation catalog.
  */

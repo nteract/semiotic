@@ -35,7 +35,7 @@ export interface ChartDefinitionWireSchema {
   readonly type: "object"
   readonly properties: Readonly<Record<string, ChartDefinitionWireProperty>>
   readonly required: readonly string[]
-  /** Runtime props deliberately absent from the serializable wire surface. */
+  /** Runtime props absent from the serializable wire surface. */
   readonly "x-semiotic-runtime-only-props": readonly string[]
 }
 
@@ -107,8 +107,7 @@ export interface ChartDefinitionMetadata {
 }
 
 /**
- * Incremental manifest shape. `wire` is intentionally
- * serializable; richer prop metadata and lazy implementation references stay
+ * Incremental manifest shape. `wire` is * serializable; richer prop metadata and lazy implementation references stay
  * under `runtime`.
  */
 export interface ChartDefinition<TChart extends string = string> {
@@ -148,7 +147,7 @@ function isWireJsonType(type: PropType): type is WireJsonType {
 
 /**
  * Build a strict wire schema from the current ChartSpec without duplicating
- * the public prop declaration. This deliberately differs from the legacy AI
+ * the public prop declaration. This differs from the legacy AI
  * schema generator: a function-only prop is omitted here rather than emitted
  * as an unconstrained JSON-schema property, because a function cannot cross a
  * persisted/MCP wire boundary.

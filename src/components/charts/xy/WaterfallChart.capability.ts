@@ -1,3 +1,4 @@
+import { parseNumericValue } from "../../data/numericValue"
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
 import { BUILT_IN_NUMERIC_CONTRACTS } from "../../data/numericContracts"
 
@@ -19,7 +20,7 @@ export const WaterfallChartCapability: ChartCapability = {
     }
 
     const yValues = profile.data
-      .map((row) => Number(row[profile.primary.y!]))
+      .map((row) => parseNumericValue(row[profile.primary.y!]) ?? NaN)
       .filter(Number.isFinite)
     const hasSignedDeltas = yValues.some((value) => value < 0) && yValues.some((value) => value > 0)
     const hasDeltaNamedField = Object.keys(profile.fields).some((field) => DELTA_FIELD_HINT.test(field))
@@ -30,8 +31,8 @@ export const WaterfallChartCapability: ChartCapability = {
   },
 
   intentScores: {
-    "flow": 5,
-    "trend": 2,
+    flow: 5,
+    trend: 2,
     "compare-categories": 2,
   },
 

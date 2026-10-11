@@ -1,4 +1,4 @@
-import type { LineSceneNode } from "../types"
+import type { LineSceneNode, StreamLayout } from "../types"
 import { resolveCSSColor } from "./resolveCSSColor"
 import type { StreamRendererFn } from "./types"
 import { line as d3Line } from "d3-shape"
@@ -67,9 +67,19 @@ function renderEdgeFadeLine(
  * are present on the node.
  * Supports d3-shape curve interpolation when node.curve is set.
  */
-export const lineCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout) => {
-  const lineNodes = nodes.filter((n): n is LineSceneNode => n.type === "line")
+export const lineCanvasRenderer: StreamRendererFn = (ctx, nodes,
+  _scales, layout) =>
+  renderCanvasLines(
+    ctx,
+    nodes.filter((node): node is LineSceneNode => node.type === "line"),
+    layout
+  )
 
+export function renderCanvasLines(
+  ctx: CanvasRenderingContext2D,
+  lineNodes: Array<Omit<LineSceneNode, "datum">>,
+  layout: StreamLayout
+): void {
   for (const node of lineNodes) {
     if (node.path.length < 2) continue
 
@@ -157,8 +167,8 @@ export const lineCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
       if (curveFactory) {
         // Use d3-shape line generator with curve interpolation
         const lineGenerator = d3Line<[number, number]>()
-          .x(d => d[0])
-          .y(d => d[1])
+          .x((d) => d[0])
+          .y((d) => d[1])
           .curve(curveFactory)
           .context(ctx)
         lineGenerator(node.path)
@@ -200,8 +210,8 @@ export const lineCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
       if (curveFactory && !hasThresholds) {
         // Use d3-shape line generator for the curved top edge, then close with straight bottom
         const lineGenerator = d3Line<[number, number]>()
-          .x(d => d[0])
-          .y(d => d[1])
+          .x((d) => d[0])
+          .y((d) => d[1])
           .curve(curveFactory)
           .context(ctx)
         lineGenerator(node.path)

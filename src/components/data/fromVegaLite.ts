@@ -96,7 +96,7 @@ function isIDIDAnnotationLayer(layer: VegaLiteSpec): boolean {
 
 /**
  * Recover the one base view emitted by attachIDIDAnnotations(). This is
- * intentionally narrow: arbitrary Vega-Lite layer composition remains
+ * narrow: arbitrary Vega-Lite layer composition remains
  * unsupported and must not be guessed as a chart configuration.
  */
 export function unwrapIDIDEnrichedVegaLiteSpec(spec: VegaLiteSpec): VegaLiteSpec {
@@ -234,16 +234,22 @@ export function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: str
 
   // Unsupported composition features
   if (spec.layer) {
-    warnings.push("Layered specs (\"layer\") are not supported. Only single-mark specs can be translated.")
+    warnings.push(
+      'Layered specs ("layer") are not supported. Only single-mark specs can be translated.'
+    )
   }
   if (spec.hconcat || spec.vconcat || spec.concat) {
-    warnings.push("Concatenated views (\"hconcat\"/\"vconcat\"/\"concat\") are not supported. Translate each sub-spec individually.")
+    warnings.push(
+      'Concatenated views ("hconcat"/"vconcat"/"concat") are not supported. Translate each sub-spec individually.'
+    )
   }
   if (spec.facet || enc.facet || enc.row || enc.column) {
     warnings.push("Faceted views are not supported. Use Semiotic's LinkedCharts or render multiple charts manually.")
   }
   if (spec.repeat) {
-    warnings.push("Repeated views (\"repeat\") are not supported. Translate each field combination individually.")
+    warnings.push(
+      'Repeated views ("repeat") are not supported. Translate each field combination individually.'
+    )
   }
   if (spec.params || spec.selection) {
     warnings.push("Selections/params are not supported. Use Semiotic's LinkedCharts and selection props for interactivity.")
@@ -431,7 +437,7 @@ export function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: str
  * Strict, loss-aware Vega-Lite import.
  *
  * `fromVegaLite()` remains the stable compatibility helper and therefore
- * preserves its historical fallback behavior. New portability integrations
+ * preserves fallback behavior for unsupported marks. Portability integrations
  * should use this result API, whose default is to refuse unsupported semantics
  * rather than return a chart that merely looks plausible.
  */
@@ -472,11 +478,11 @@ export function fromVegaLiteResult(
   // them as warnings so callers can use error-level diagnostics as a reliable
   // refusal signal.
   const surfacedDiagnostics = options.mode === "lossy"
-    ? diagnostics.map((diagnostic) => (
-      diagnostic.severity === "error"
+    ? diagnostics.map((diagnostic) =>
+          diagnostic.severity === "error"
         ? { ...diagnostic, severity: "warning" as const }
         : diagnostic
-    ))
+        )
     : diagnostics
 
   return {
@@ -498,11 +504,10 @@ function resolveBarComponent(
   data: Datum[] | undefined,
 ): string {
   let component: string
-  const isStacked = color?.field && (
+  const isStacked = color?.field &&
     // Explicitly stacked or not explicitly unstacked
     x?.stack !== false && y?.stack !== false &&
     x?.stack !== null && y?.stack !== null
-  )
 
   if (isStacked) {
     component = "StackedBarChart"

@@ -1,4 +1,10 @@
 "use client"
+import {
+  cloneTheme,
+  resolveAutoPalette,
+  autoPaletteCSS,
+  warnUnknownTheme
+} from "./store/themeResolution"
 import * as React from "react"
 import {
   ThemeProvider as StoreProvider,
@@ -16,6 +22,7 @@ import type {
   ThemeStoreUpdate
 } from "./store/themeCore"
 import type { ThemeStoreState } from "./store/ThemeStore"
+import { useTheme } from "./store/useTheme"
 import { resolveThemePreset } from "./store/themePresets"
 import type { ThemePresetName } from "./store/themePresets"
 import { themeToCSSVariables } from "./store/themeCSSVariables"
@@ -31,7 +38,9 @@ interface ThemeProviderProps {
 }
 
 // Track the active preset name for the data-semiotic-theme attribute.
-const ThemeNameContext = /* @__PURE__ */ React.createContext<string | undefined>(undefined)
+const ThemeNameContext = /* @__PURE__ */ React.createContext<
+  string | undefined
+>(undefined)
 
 const useIsomorphicLayoutEffect =
   typeof window === "undefined" ? React.useEffect : React.useLayoutEffect
@@ -57,7 +66,7 @@ function themeToStoreUpdate(
   // typing. Warn and fall back to "light" instead of forwarding the invalid
   // preset so the provider always initializes with a known theme.
   if (typeof console !== "undefined") {
-    console.warn(`[ThemeProvider] Unknown theme preset "${theme}". Falling back to light theme.`)
+    warnUnknownTheme(theme)
   }
   return "light"
 }
@@ -68,22 +77,7 @@ function resolveInitialTheme(
   if (theme !== undefined) {
     return resolveThemeUpdate(LIGHT_THEME, themeToStoreUpdate(theme))
   }
-  return isForcedColorsActive() ? HIGH_CONTRAST_THEME : LIGHT_THEME
-}
-
-function setResolvedTheme(
-  setTheme: ThemeStoreState["setTheme"],
-  theme: SemioticThemeUpdate
-) {
-  if (theme === LIGHT_THEME) {
-    setTheme("light")
-  } else if (theme === DARK_THEME) {
-    setTheme("dark")
-  } else if (theme === HIGH_CONTRAST_THEME) {
-    setTheme("high-contrast")
-  } else {
-    setTheme(theme)
-  }
+  return cloneTheme(isForcedColorsActive() ? HIGH_CONTRAST_THEME : LIGHT_THEME)
 }
 
 // ── ThemeInitializer ────────────────────────────────────────────────────────
@@ -96,19 +90,17 @@ function ThemeInitializer({
 }: {
   theme?: ThemePresetName | SemioticThemeUpdate
 }) {
-  const setTheme = useThemeSelector(
-    (state: ThemeStoreState) => state.setTheme
-  )
-  const currentTheme = useThemeSelector(
-    (state: ThemeStoreState) => state.theme
-  )
+  const setTheme = useThemeSelector((state: ThemeStoreState) => state.setTheme)
+  const currentTheme = useThemeSelector((state: ThemeStoreState) => state.theme)
   // Keep a ref to the latest theme so the forced-colors handler can read it
   // without re-registering the listener on every theme change.
   const currentThemeRef = React.useRef(currentTheme)
   currentThemeRef.current = currentTheme
 
   // Remember the theme before forced-colors override so we can restore it
-  const themeBeforeForcedColorsRef = React.useRef<SemioticThemeUpdate | null>(null)
+  const themeBeforeForcedColorsRef = React.useRef<SemioticThemeUpdate | null>(
+    null
+  )
 
   // Auto-detect forced-colors / high-contrast mode
   React.useEffect(() => {
@@ -117,26 +109,36 @@ function ThemeInitializer({
 
     const mql = window.matchMedia("(forced-colors: active)")
     if (mql.matches) {
-      themeBeforeForcedColorsRef.current =
-        currentThemeRef.current === HIGH_CONTRAST_THEME ? LIGHT_THEME : currentThemeRef.current
+      themeBeforeForcedColorsRef.current = LIGHT_THEME
       setTheme("high-contrast")
     }
 
     const handler = (e: MediaQueryListEvent) => {
       if (e.matches) {
         // Store current theme before overriding
-        themeBeforeForcedColorsRef.current =
-          currentThemeRef.current === HIGH_CONTRAST_THEME
-            ? themeBeforeForcedColorsRef.current ?? LIGHT_THEME
-            : currentThemeRef.current
+        themeBeforeForcedColorsRef.current ??= currentThemeRef.current
         setTheme("high-contrast")
       } else {
         // Restore previous theme, falling back to LIGHT_THEME
-        setResolvedTheme(setTheme, themeBeforeForcedColorsRef.current ?? LIGHT_THEME)
+        setTheme(themeBeforeForcedColorsRef.current ?? "light")
         themeBeforeForcedColorsRef.current = null
       }
     }
     return addMqlListener(mql, handler)
+  }, [theme, setTheme])
+
+  React.useEffect(() => {
+    if (
+      typeof theme !== "object" ||
+      theme.mode !== "auto" ||
+      !window.matchMedia
+    )
+      return
+    const mql = window.matchMedia("(prefers-color-scheme: dark)")
+    const sync = () =>
+      setTheme(resolveAutoPalette(theme, mql.matches ? "dark" : "light"))
+    sync()
+    return addMqlListener(mql, sync)
   }, [theme, setTheme])
 
   const didMountRef = React.useRef(false)
@@ -155,28 +157,40 @@ function ThemeInitializer({
 
 // ── CSS Custom Properties wrapper ───────────────────────────────────────────
 
-function ThemeCSSWrapper({ children }: { children: React.ReactNode }) {
-  const theme = useThemeSelector(
-    (state: ThemeStoreState) => state.theme
-  )
+function ThemeCSSWrapper({
+  children,
+  input
+}: {
+  children: React.ReactNode
+  input?: ThemePresetName | SemioticThemeUpdate
+}) {
+  const theme = useThemeSelector((state: ThemeStoreState) => state.theme)
 
+  const autoId = React.useId()
+  const autoInput =
+    typeof input === "object" && input.mode === "auto" ? input : undefined
   const style: React.CSSProperties & Record<string, string> = {
     position: "relative",
-    colorScheme:
-      theme.mode === "auto" ? "light dark" : theme.mode,
-    ...themeToCSSVariables(theme),
+    colorScheme: theme.mode === "auto" ? "light dark" : theme.mode,
+    ...(autoInput ? {} : themeToCSSVariables(theme))
   }
 
   const themeName = React.useContext(ThemeNameContext)
-  const dataAttrs: Record<string, string> = {}
-  if (themeName) {
-    dataAttrs["data-semiotic-theme"] = themeName
-  }
-  dataAttrs["data-semiotic-theme-mode"] = theme.mode
-
   return (
     <TooltipChromeScope chrome={theme.tooltip?.chrome}>
-      <div style={style} {...dataAttrs}>{children}</div>
+      <div
+        style={style}
+        data-semiotic-theme={themeName}
+        data-semiotic-theme-mode={theme.mode}
+        data-semiotic-auto={autoInput ? autoId : undefined}
+      >
+        {autoInput && (
+          <style>
+            {autoPaletteCSS(autoInput, `[data-semiotic-auto="${autoId}"]`)}
+          </style>
+        )}
+        {children}
+      </div>
     </TooltipChromeScope>
   )
 }
@@ -195,16 +209,10 @@ function ThemeProviderWrapper({ theme, children }: ThemeProviderProps) {
     <StoreProvider initialState={{ theme: initialTheme }}>
       <ThemeNameContext.Provider value={themeName}>
         <ThemeInitializer theme={theme} />
-        <ThemeCSSWrapper>{children}</ThemeCSSWrapper>
+        <ThemeCSSWrapper input={theme}>{children}</ThemeCSSWrapper>
       </ThemeNameContext.Provider>
     </StoreProvider>
   )
-}
-
-// ── useTheme hook ───────────────────────────────────────────────────────────
-
-function useTheme(): SemioticTheme {
-  return useThemeSelector((state: ThemeStoreState) => state.theme)
 }
 
 // ── Exports ─────────────────────────────────────────────────────────────────

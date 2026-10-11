@@ -95,7 +95,8 @@ function representedSeriesDatums(scene: AccessibleSceneNode[]): Set<unknown> {
   const representedDatums = new Set<unknown>()
   // A collapsed series without markers needs only its array length, even for
   // large live datasets. Do not visit every observation just to build this set.
-  if (!scene.some(node => node && (
+  if (!scene.some(
+      (node) => node && (
     node.type === "point" || node.type === "symbol" || node.type === "glyph"
   ))) {
     return representedDatums
@@ -262,11 +263,9 @@ export function extractAllRows(scene: AccessibleSceneNode[]): DataRow[] {
           break
         case "geoarea": {
           const datum = nodeRecord(accessibleDatumFor(node))
-          const values = datumToValues(datum)
-          if (values.name == null) {
-            const properties = nodeRecord(datum.properties)
-            const name = properties.name ?? datum.name
-            if (name != null) values.name = String(name)
+          const values = {
+            ...datumToValues(datum.properties),
+            ...datumToValues(datum)
           }
           rows.push({ label: "Region", values })
           break

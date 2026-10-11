@@ -55,7 +55,7 @@ function buildLineStyle(
   const resolvedColorScheme = colorScheme ?? common.colorScheme ?? themeCategorical
   const colorKey = typeof colorBy === "string" ? colorBy : "__ssrLineColorBy"
   const colorRows = typeof colorBy === "function"
-    ? rows.map(d => ({ ...d, __ssrLineColorBy: colorBy(d) }))
+    ? rows.map((d) => ({ ...d, __ssrLineColorBy: colorBy(d) }))
     : rows
   const colorScale = colorBy
     ? createColorScale(colorRows, colorKey, resolvedColorScheme as string | string[] | Record<string, string>)
@@ -94,7 +94,7 @@ function buildAreaLineStyle(
   const resolvedColorScheme = colorScheme ?? common.colorScheme ?? themeCategorical
   const colorKey = typeof colorBy === "string" ? colorBy : "__ssrAreaColorBy"
   const colorRows = typeof colorBy === "function"
-    ? rows.map(d => ({ ...d, __ssrAreaColorBy: colorBy(d) }))
+    ? rows.map((d) => ({ ...d, __ssrAreaColorBy: colorBy(d) }))
     : rows
   const colorScale = colorBy
     ? createColorScale(colorRows, colorKey, resolvedColorScheme as string | string[] | Record<string, string>)
@@ -159,7 +159,7 @@ function buildShowPointsStyle(
   const resolvedColorScheme = colorScheme ?? common.colorScheme ?? themeCategorical
   const colorKey = typeof colorBy === "string" ? colorBy : "__ssrPointColorBy"
   const colorRows = typeof colorBy === "function"
-    ? rows.map(d => ({ ...d, __ssrPointColorBy: colorBy(d) }))
+    ? rows.map((d) => ({ ...d, __ssrPointColorBy: colorBy(d) }))
     : rows
   const colorScale = colorBy
     ? createColorScale(colorRows, colorKey, resolvedColorScheme as string | string[] | Record<string, string>)
@@ -213,7 +213,8 @@ export const lineChart: ChartConfig = {
 
     // Direct-label margin expansion (right/left). Sides the caller pinned
     // keep their value, as in the React LineChart.
-    let margin = common.margin as { top?: number; right?: number; bottom?: number; left?: number } | number | undefined
+    let margin = common.margin as
+      | { top?: number; right?: number; bottom?: number; left?: number } | number | undefined
     const pinned = new Set(Array.isArray(common.__explicitMarginSides) ? common.__explicitMarginSides : [])
     if (series.marginExtra && margin && typeof margin === "object") {
       margin = {
@@ -409,7 +410,7 @@ export const differenceChart: ChartConfig = {
       // surrounding finite-x rows can land out of order. The downstream
       // emission already skips non-finite-x rows; doing it first keeps
       // the sort total-ordered.
-      const finite = data.filter(d => Number.isFinite(getX(d)))
+      const finite = data.filter((d) => Number.isFinite(getX(d)))
       const sorted = finite.sort((p, q) => getX(p) - getX(q))
       for (const d of sorted) {
         const x = getX(d), a = getA(d), b = getB(d)
@@ -418,7 +419,7 @@ export const differenceChart: ChartConfig = {
       }
     }
     const combined = [...segmented, ...overlay] as Datum[]
-    const areaGroups = Array.from(new Set(segmented.map(r => r.__diffSegment)))
+    const areaGroups = Array.from(new Set(segmented.map((r) => r.__diffSegment)))
 
     return {
       chartType: "mixed",
@@ -492,10 +493,10 @@ export const stackedAreaChart: ChartConfig = {
       if (rules?.length) {
         const resolveValue = makeRuleValueResolver(rest.yAccessor as string | ((d: Datum) => unknown) | undefined)
         const group = colorAccessor
-          ? (typeof colorAccessor === "function"
+          ? typeof colorAccessor === "function"
               ? String(colorAccessor(d) ?? "")
-              : String(d[colorAccessor as string] ?? ""))
-          : undefined
+              : String(d[colorAccessor as string] ?? "")
+            : undefined
         Object.assign(style, resolveStyleRules(d, rules, { value: resolveValue(d), category: group }))
       }
       return style
@@ -557,7 +558,7 @@ export const candlestickChart: ChartConfig = {
           ),
         ),
       }),
-      // CandlestickChart deliberately insets the x scale so bodies don't
+      // CandlestickChart insets the x scale so bodies don't
       // touch the chart edges. This HOC-level calculation was absent from
       // renderChart(), making SSR candles visibly wider/outset than CSR.
       scalePadding: common.scalePadding ?? Math.max(2, Math.min(12, Math.round(width / 40))),
@@ -613,8 +614,9 @@ export const quadrantChart: ChartConfig = {
           h_("text", { key: "lbr", x: w - padding, y: h - padding,         fill: quadrants.bottomRight.color, fontWeight: 600, fontSize: labelSize, opacity: 0.5, textAnchor: "end" }, quadrants.bottomRight.label),
         ] : []
         return h_(React.Fragment, null,
-          ...quads.map((q, i) => (q.w > 0 && q.h > 0)
-            ? h_("rect", { key: `qf-${i}`, x: q.x, y: q.y, width: q.w, height: q.h, fill: q.c.color, opacity: q.c.opacity ?? 0.08 })
+          ...quads.map((q, i) =>
+                q.w > 0 && q.h > 0
+                  ? h_("rect", { key: `qf-${i}`, x: q.x, y: q.y, width: q.w, height: q.h, fill: q.c.color, opacity: q.c.opacity ?? 0.08 })
             : null),
           h_("line", { key: "vc", x1: cx, y1: 0,  x2: cx, y2: h,  stroke, strokeWidth, strokeDasharray: dashArray }),
           h_("line", { key: "hc", x1: 0,  y1: cy, x2: w,  y2: cy, stroke, strokeWidth, strokeDasharray: dashArray }),

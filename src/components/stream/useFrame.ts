@@ -1,39 +1,12 @@
 /**
- * useFrame — composition hook shared by all five Stream Frames.
+ * useFrame shares motion preferences, responsive sizing, theme tracking,
+ * logical time, scheduling, pointer coalescing, and accessibility IDs across
+ * the five Stream Frames.
  *
- * Bundles the concerns that all four frames duplicate identically (or with
- * trivial variation): reduced-motion tracking, responsive sizing, theme
- * tracking, animate-config resolution, foreground/background graphics
- * resolution, accessible-table id, and so on.
- *
- * Concerns are extracted in the order documented in
- * FRAME_COMPOSITION_LOG.md, smallest blast radius first.
- *
- * Design rules:
- *
- * 1. **No frame-specific knowledge here.** This file knows nothing about
- *    pipeline stores, hit testers, scene-node types, or family-specific
- *    layout. If a concern requires that knowledge, it stays in the frame.
- * 2. **Refs and state created here stay owned by the frame.** The hook
- *    returns the refs/state; assignment to `renderFnRef.current = () => …`
- *    happens in the frame body where the local closure captures family
- *    state.
- * 3. **Frame-supplied defaults.** Anything that varies across frames
- *    (margin defaults, dirtyRef initial value, table component) is passed
- *    in as input; the hook doesn't pick its own.
- * 4. **Output stability, where practical.** Refs and callback outputs
- *    (`rafRef`, `renderFnRef`, `hoverHandlerRef`, `scheduleRender`, `cancelRender`,
- *    `onPointerMove`, `onPointerLeave`) are stable across renders.
- *    `margin` is useMemo'd. But some outputs can change identity per
- *    render: `size` is whatever `useResponsiveSize` returns (stable
- *    only when the measured size hasn't changed); `resolvedForeground`
- *    / `resolvedBackground` are recomputed each render (and call the
- *    user's function-form graphics prop fresh each time); `transition`
- *    is derived inline from `animate`. Callers that use these as
- *    useMemo/useEffect deps should memoize the upstream props
- *    themselves where stability matters.
- *
- * See `useFrame.test.ts` for the behavior contracts.
+ * Family-specific stores, hit testing, and scene construction remain in the
+ * frame. Frames own returned refs and supply their defaults. Scheduler and
+ * pointer callbacks remain stable; graphics resolve from current props and
+ * scales. See useFrame.test.ts for the shared behavior contracts.
  */
 "use client"
 
@@ -78,10 +51,10 @@ const browserFrameScheduler: FrameScheduler = {
   // `requestAnimationFrame` is a Window API. Prefer `window` when it exists
   // rather than retaining a different test/global host at module evaluation
   // time; this keeps the browser default and injected schedulers equivalent.
-  requestAnimationFrame: callback => (
+  requestAnimationFrame: (callback) => (
     typeof window === "undefined" ? globalThis : window
   ).requestAnimationFrame(callback),
-  cancelAnimationFrame: handle => (
+  cancelAnimationFrame: (handle) => (
     typeof window === "undefined" ? globalThis : window
   ).cancelAnimationFrame(handle),
 }
@@ -109,7 +82,7 @@ export interface FrameMargin {
  * The function form lets users place chrome relative to the chart area.
  */
 export type FrameGraphicsProp =
-  | ReactNode
+  ReactNode
   | ((ctx: { size: number[]; margin: FrameMargin }) => ReactNode)
 
 function resolveGraphics(
@@ -182,16 +155,11 @@ export interface UseFrameInput {
    * Frame's `dirtyRef` (the flag that forces a full canvas redraw on the
    * next paint). When provided, useFrame installs a theme-change effect
    * that bumps it to `true`, clears the CSS-var cache, and queues a
-   * render — the pattern that all four frames duplicated.
+   * render for the next paint.
    *
-   * Optional because this is a Tier B add-on; before the migration the
-   * frames installed this themselves. The hook keeps the input optional
-   * so a frame can opt in independently, but in practice all four pass
-   * it.
-   *
-   * `dirtyRef` is owned by the frame (not the hook) because its initial
+   * `dirtyRef` is optional and owned by the frame (not the hook) because its initial
    * value differs — only `StreamXYFrame` inits to `false`; Ordinal,
-   * Network, and Geo all init to `true` (load-bearing for first-paint
+   * Network, and Geo all init to `true` (required for first-paint
    * timing on those three).
    */
   themeDirtyRef?: React.MutableRefObject<boolean>
@@ -300,8 +268,7 @@ export interface UseFrameResult {
 
 /**
  * Bundles the universally-shared setup boilerplate that opens every
- * Stream Frame. See `FRAME_COMPOSITION_LOG.md` for which concerns are
- * inside this hook vs. left frame-specific.
+ * Stream Frame. Stores and scene construction remain family-specific.
  */
 export function useFrame(input: UseFrameInput): UseFrameResult {
   // ── Reduced motion + ref-mirror ───────────────────────────────────────
@@ -560,7 +527,7 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
   // When the theme changes (currentTheme reference changes), invalidate
   // the per-canvas CSS-var color cache, force a full redraw on the next
   // paint, and schedule that paint. Identical pattern across all four
-  // frames pre-migration; only installed when the frame opts in by
+  // frames; only installed when the frame opts in by
   // passing themeDirtyRef.
   //
   // Note: `clearCSSColorCache` accepts an optional canvas argument that

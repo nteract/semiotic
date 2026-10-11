@@ -217,7 +217,7 @@ export const ChoroplethMap = /* @__PURE__ */ withDisplayName(function Choropleth
 
   // Color scheme resolution priority:
   //   explicit `colorScheme` prop > ambient theme's `colors.sequential` > "blues"
-  // The destructure default is deliberately undefined so the theme hook's value
+  // The destructure default is undefined so the theme hook's value
   // can still win over the fallback string below.
   const themeSequential = useThemeSequential()
   const {

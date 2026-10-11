@@ -1,3 +1,6 @@
+import { applyConcreteThemeAccessibility } from "./concreteThemeAccessibility"
+import { contrastRatio } from "../charts/shared/colorContrast"
+import { cloneTheme } from "./cloneTheme"
 import type { ThemeSemanticColors } from "../stream/streamThemeTypes"
 import type { AestheticProfile } from "../ai/aestheticProfileTypes"
 
@@ -131,7 +134,7 @@ export const LIGHT_THEME: SemioticTheme = {
     ],
     sequential: "blues",
     diverging: "RdBu",
-    background: "transparent",
+    background: "#ffffff",
     surface: "#ffffff",
     text: "#333",
     textSecondary: "#666",
@@ -257,40 +260,18 @@ export function resolveThemeSemanticColors(
 
 /** Apply accessibility flags to a resolved theme. */
 export function applyThemeAccessibility(theme: SemioticTheme): SemioticTheme {
-  if (!theme.accessibility) return theme
-  let result = theme
-  if (theme.accessibility.colorBlindSafe) {
-    result = {
-      ...result,
-      colors: {
-        ...result.colors,
-        categorical: COLOR_BLIND_SAFE_CATEGORICAL
-      }
-    }
-  }
-  if (theme.accessibility.highContrast) {
-    const isDark = result.mode === "dark"
-    result = {
-      ...result,
-      colors: {
-        ...result.colors,
-        text: isDark ? "#ffffff" : "#000000",
-        textSecondary: isDark ? "#cccccc" : "#333333",
-        grid: isDark ? "#666666" : "#999999",
-        border: isDark ? "#888888" : "#000000"
-      }
-    }
-  }
-  return result
+  const isDark = theme.mode === "dark" || (theme.mode === "auto" &&
+      (contrastRatio(theme.colors.background, "#ffffff") ?? 1) > Math.sqrt(21))
+  return applyConcreteThemeAccessibility(theme, isDark)
 }
 
 export function resolveThemeUpdate(
   current: SemioticTheme,
   theme: ThemeStoreUpdate
 ): SemioticTheme {
-  if (theme === "light") return LIGHT_THEME
-  if (theme === "dark") return DARK_THEME
-  if (theme === "high-contrast") return HIGH_CONTRAST_THEME
+  if (theme === "light") return cloneTheme(LIGHT_THEME)
+  if (theme === "dark") return cloneTheme(DARK_THEME)
+  if (theme === "high-contrast") return cloneTheme(HIGH_CONTRAST_THEME)
 
   if (typeof theme === "string") {
     if (typeof console !== "undefined") {
@@ -314,22 +295,14 @@ export function resolveThemeUpdate(
         }
       : base
 
-  if (theme.mode && theme.mode !== "auto") {
-    const base = theme.mode === "dark" ? DARK_THEME : LIGHT_THEME
-    return applyThemeAccessibility({
-      ...base,
-      ...theme,
-      colors: { ...base.colors, ...(theme.colors || {}) },
-      typography: { ...base.typography, ...(theme.typography || {}) },
-      aesthetics: mergeAesthetics(base.aesthetics)
-    } as SemioticTheme)
-  }
-
-  return applyThemeAccessibility({
-    ...current,
+  const base = theme.mode && theme.mode !== "auto"
+    ? theme.mode === "dark" ? DARK_THEME : LIGHT_THEME
+    : current
+  return cloneTheme(applyThemeAccessibility({
+    ...base,
     ...theme,
-    colors: { ...current.colors, ...(theme.colors || {}) },
-    typography: { ...current.typography, ...(theme.typography || {}) },
-    aesthetics: mergeAesthetics(current.aesthetics)
-  } as SemioticTheme)
+    colors: { ...base.colors, ...(theme.colors || {}) },
+    typography: { ...base.typography, ...(theme.typography || {}) },
+    aesthetics: mergeAesthetics(base.aesthetics)
+  } as SemioticTheme))
 }

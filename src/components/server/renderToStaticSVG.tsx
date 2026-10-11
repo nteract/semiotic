@@ -1,3 +1,4 @@
+import { resolveThemePreset } from "../store/themePresets"
 import { resolveHiddenAxisMargins } from "../legendLayout"
 import { scopeSvgIdentifiers } from "../shared/svgIdentifiers"
 import type { Datum } from "../charts/shared/datumTypes"
@@ -398,6 +399,9 @@ export function renderChartWithEvidence(
       annotations: props.annotations,
       extraWarnings: ["NO_EVIDENCE"]
     })
+  const inputTheme = props.theme
+  if (typeof inputTheme === "string" && !resolveThemePreset(inputTheme))
+    evidence.warnings.push("UNKNOWN_THEME")
   evidence.component = component
   evidence.sceneHashVersion = 2
   evidence.sceneHash = renderedSceneHash(svg, evidence)

@@ -1,3 +1,4 @@
+import { parseNumericValue } from "../../data/numericValue"
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
 
 export const GaugeChartCapability: ChartCapability = {
@@ -5,8 +6,7 @@ export const GaugeChartCapability: ChartCapability = {
   family: "categorical",
   importPath: "semiotic/ordinal",
   fieldPolicy: {
-    measureFields: (profile) =>
-      profile.primary.y ? [profile.primary.y] : [],
+    measureFields: (profile) => (profile.primary.y ? [profile.primary.y] : [])
   },
   rubric: { familiarity: 4, accuracy: 2, precision: 2 },
 
@@ -18,11 +18,11 @@ export const GaugeChartCapability: ChartCapability = {
 
   intentScores: {
     "compare-categories": 1,
-    "rank": 1,
+    rank: 1,
     // Single-value summaries are a natural part-to-whole encoding when the
     // value sits against a known target ("at 78% of plan"). The other
     // categorical part-to-whole charts (StackedBar, Pie) technically fit at
-    // rowCount = 1 too, but at single-value scale Gauge is the honest answer.
+    // rowCount = 1 too, but at single-value scale Gauge shows progress toward a target.
     // Gated on rowCount === 1 so this only fires at the tiny end.
     "part-to-whole": (p) => (p.rowCount === 1 ? 5 : 1),
   },
@@ -32,7 +32,7 @@ export const GaugeChartCapability: ChartCapability = {
   buildProps: (profile) => {
     const yField = profile.primary.y!
     const firstRow = profile.data[0]
-    const value = firstRow ? Number(firstRow[yField]) : 0
+    const value = firstRow ? (parseNumericValue(firstRow[yField]) ?? NaN) : 0
     const summary = profile.fields[yField]
     const max = summary?.type === "numeric" ? summary.max : 100
     return {

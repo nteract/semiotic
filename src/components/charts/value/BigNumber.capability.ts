@@ -1,3 +1,4 @@
+import { parseNumericValue } from "../../data/numericValue"
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
 import { BIG_NUMBER_SUGGESTION_PROP_CONTRACT } from "../../ai/suggestionPropContracts"
 
@@ -54,7 +55,7 @@ export const BigNumberCapability: ChartCapability = {
     // claiming trend coverage there would mislead the dashboard
     // suggester into picking a value tile for a question that needs a
     // line / area chart on a different dataset.
-    "trend": (p) => {
+    trend: (p) => {
       if (!(p.hasTimeAxis || p.xProvenance === "named" || p.monotonicX)) return 0
       return p.rowCount <= 8 ? 3 : 1
     },
@@ -62,7 +63,7 @@ export const BigNumberCapability: ChartCapability = {
     // Comparing a single value to a target or prior period is exactly
     // what BigNumber + comparison + target props are for.
     "compare-categories": 1,
-    "rank": 1,
+    rank: 1,
     // 5 at rowCount === 1 (parity with GaugeChart) so BigNumber's
     // higher rubric + scaleFit boost tips it over Gauge as the default
     // single-value answer. Gauges remain ranked when bounded scale is
@@ -91,7 +92,7 @@ export const BigNumberCapability: ChartCapability = {
 
     const rows = profile.data
     const latest = rows.length > 0 ? rows[rows.length - 1] : null
-    const value = latest ? Number(latest[yField]) : 0
+    const value = latest ? (parseNumericValue(latest[yField]) ?? NaN) : 0
 
     const props: Record<string, unknown> = {
       value: Number.isFinite(value) ? value : 0,
@@ -101,7 +102,7 @@ export const BigNumberCapability: ChartCapability = {
     // a comparison so the auto-generated card carries a delta + ARIA
     // sentence out of the box.
     if (rows.length >= 2) {
-      const prior = Number(rows[rows.length - 2][yField])
+      const prior = parseNumericValue(rows[rows.length - 2][yField]) ?? NaN
       if (Number.isFinite(prior)) {
         props.comparison = { value: prior, label: "vs previous" }
       }

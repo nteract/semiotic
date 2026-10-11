@@ -40,8 +40,8 @@ interface RealtimeCategoryColorOptions {
  * Precedence matches the existing streaming-legend contract:
  * CategoryColorProvider → explicit category map → explicit fallback fill →
  * categorical theme → the streaming fallback palette. Partial
- * explicit/provider maps intentionally fall through instead of collapsing
- * every unmapped category unless the consumer deliberately supplied a
+ * explicit/provider maps fall through instead of collapsing
+ * every unmapped category unless the consumer supplied a
  * uniform fallback fill.
  */
 export function useRealtimeCategoryColors({

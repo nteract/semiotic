@@ -19,7 +19,7 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
 
 /**
  * Convert application values to bounded, JSON-compatible data. Functions,
- * symbols, React elements, and cyclic references are intentionally omitted.
+ * symbols, React elements, and cyclic references are omitted.
  */
 export function jsonSafe(
   value: unknown,
@@ -341,7 +341,7 @@ export function scopeCapabilitiesSnapshot(
 }
 
 type ColumnType =
-  | "NULL"
+  "NULL"
   | "DOUBLE"
   | "VARCHAR"
   | "BOOLEAN"
@@ -419,7 +419,8 @@ function numericSummaries(
 function temporalSummaries(
   rows: readonly unknown[],
   fields: readonly string[]
-): Record<
+):
+  | Record<
   string,
   {
     minIso: string

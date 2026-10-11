@@ -195,11 +195,8 @@ function buttonStyle(targetSize: number, active?: boolean): React.CSSProperties 
       ? "var(--semiotic-primary, #0969da)"
       : "var(--semiotic-bg, #fff)",
     color: active
-      // Text on a primary-filled pill: the contrasting surface is the chart
-      // background, which inverts correctly in dark themes. (This used to read
-      // a `--semiotic-on-primary` var the library never emits, so it was always
-      // the hardcoded white — wrong against a light primary.)
-      ? "var(--semiotic-bg, #fff)"
+      ? // Use the chart surface as the contrasting text color on active pills.
+        "var(--semiotic-bg, #fff)"
       : "var(--semiotic-text, #24292f)",
     fontSize: 13,
     fontWeight: 650,
@@ -264,7 +261,8 @@ function BrushControls({ brush, targetSize }: { brush?: MobileStandardBrushContr
         </div>
       ) : (
         <div style={{ fontSize: 12, color: "var(--semiotic-text-secondary, #57606a)" }}>
-          Provide a brush domain and value to expose range inputs beside the drag gesture.
+          Provide a brush domain and value to expose range inputs beside the
+          drag gesture.
         </div>
       )}
       <button
@@ -375,9 +373,15 @@ export function MobileStandardControls({
         ...style,
       }}
     >
-      {requested.includes("brush") && <BrushControls brush={brush} targetSize={targetSize} />}
-      {requested.includes("zoom") && <ZoomControls zoom={zoom} targetSize={targetSize} />}
-      {requested.includes("legend") && <LegendControls legend={legend} targetSize={targetSize} />}
+      {requested.includes("brush") && (
+        <BrushControls brush={brush} targetSize={targetSize} />
+      )}
+      {requested.includes("zoom") && (
+        <ZoomControls zoom={zoom} targetSize={targetSize} />
+      )}
+      {requested.includes("legend") && (
+        <LegendControls legend={legend} targetSize={targetSize} />
+      )}
     </div>
   )
 }

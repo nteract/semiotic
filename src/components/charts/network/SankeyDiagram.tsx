@@ -138,12 +138,8 @@ export interface SankeyDiagramProps<TNode extends Datum = Datum, TEdge extends D
 export const SankeyDiagram = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function SankeyDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: SankeyDiagramProps<TNode, TEdge>, ref: React.Ref<RealtimeFrameHandle>) {
   ensureSankeyDiagramRegistrations()
   const frameRef = useRef<StreamNetworkFrameHandle>(null)
-  // Sankey's `getData` returns edges (the chart's primary data shape)
-  // rather than nodes — override the helper's node-default with the
-  // edge variant. Returns `e.data` as-is (no `?? {}` fallback) so
-  // edges without a payload still surface as `undefined`, matching
-  // the pre-migration inline handle's runtime shape.
-  useFrameImperativeHandle(ref, {
+    // getData exposes original edge payloads, including absent payloads.
+    useFrameImperativeHandle(ref, {
     variant: "network",
     frameRef,
     overrides: {
@@ -324,9 +320,11 @@ export const SankeyDiagram = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ for
     edges,
     edgesRequired: true,
   })
-  if (error) return <ChartError componentName="SankeyDiagram" message={error} width={width} height={height} />
+  if (error) return (
+        <ChartError componentName="SankeyDiagram" message={error} width={width} height={height} />
+      )
 
-  // ── Loading / empty guards (deferred to after all hooks) ───────────────
+    // ── Loading / empty guards (deferred to after all hooks) ───────────────
   if (setup.loadingEl) return setup.loadingEl
   if (setup.emptyEl) return setup.emptyEl
 
@@ -361,7 +359,8 @@ export const SankeyDiagram = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ for
       nodeLabel={nodeLabelFn}
       showLabels={showLabels}
       enableHover={enableHover}
-      tooltipContent={tooltip === false ? () => null : (normalizeTooltip(tooltip) || undefined)}
+      tooltipContent={tooltip === false ? () => null : normalizeTooltip(tooltip) || undefined
+          }
       {...buildCustomBehaviorProps({
         linkedHover,
         selection,

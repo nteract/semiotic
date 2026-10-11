@@ -1,6 +1,6 @@
 /**
  * Frame-neutral semantics shared by SVG, HTML, and declarative visualization
- * controls. This module intentionally has no React, frame, or store imports so
+ * controls. This module has no React, frame, or store imports so
  * it can be included by the small `semiotic/controls` entry point.
  */
 export const VISUALIZATION_CONTROL_TYPES = [
@@ -14,7 +14,7 @@ export const VISUALIZATION_CONTROL_TYPES = [
 export type VisualizationControlType = (typeof VISUALIZATION_CONTROL_TYPES)[number]
 export type VisualizationControlValue = number | [number, number]
 export type ControlObservationPhase =
-  | "control-start"
+  "control-start"
   | "control-change"
   | "control-end"
 export type ControlInputSource = "pointer" | "keyboard" | "programmatic"

@@ -222,12 +222,14 @@ describe("PNG generation (end-to-end)", () => {
     expect(pixel[3]).toBe(255)
   })
 
-  it("paints a frame export background and preserves PNG transparency when omitted", async () => {
+  it("paints the default frame background and preserves explicitly transparent PNGs", async () => {
     const props = { chartType: "line", data: lineData, xAccessor: "x", yAccessor: "y", size: [200, 150] }
     const red = await renderToImage("xy", props, { background: "#ff0000" })
-    const transparent = await renderToImage("xy", props)
+    const defaultImage = await renderToImage("xy", props)
+    const transparent = await renderToImage("xy", props, { background: "transparent" })
     const pixel = (image: Buffer) => sharp(image).extract({ left: 0, top: 0, width: 1, height: 1 }).ensureAlpha().raw().toBuffer()
     expect([...await pixel(red)]).toEqual([255, 0, 0, 255])
+    expect([...await pixel(defaultImage)]).toEqual([255, 255, 255, 255])
     expect((await pixel(transparent))[3]).toBe(0)
   })
 

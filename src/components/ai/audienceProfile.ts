@@ -7,7 +7,7 @@ import type { AccessibilityAuditResult } from "../charts/shared/auditAccessibili
  * in their channel (an 8-slice pie is familiar but illegible to a screen
  * reader). Defaults to `"visual"` when unset — no receivability bias applied.
  *
- *   • `visual`        — sighted reader; the historical default, no bias.
+ *   • `visual`        — sighted reader; the default, no bias.
  *   • `screen-reader` — non-visual; meaning must survive the data table / nav tree.
  *   • `sonified`      — audio; density and ordering matter more than color.
  *   • `agent`         — an LLM reading via the grounding payload; same non-visual
@@ -82,7 +82,7 @@ export interface AudienceProfile {
    * modality, `suggestCharts` runs the accessibility audit on each candidate and
    * `applyAudienceBias` down-ranks charts whose meaning doesn't survive that
    * channel (and surfaces the receivability findings as caveats). Unset /
-   * `"visual"` keeps the historical behavior — familiarity and targets only.
+   * `"visual"` applies — familiarity and targets only.
    * See {@link receivabilityBias}.
    */
   receptionModality?: ReceptionModality

@@ -198,8 +198,8 @@ export const MinimapChart = /* @__PURE__ */ withDisplayName(function MinimapChar
 
   // Main + overview line styles go through the shared hook. Neither
   // wraps with primitives or selection (the minimap's overview is
-  // intentionally static, and the main chart doesn't expose selection
-  // here — selection wiring would round-trip through `setup` but the
+    // static, and the main chart doesn't expose selection
+    // here — selection wiring would round-trip through `setup` but the
   // minimap predates that integration). The overview drops `fillArea`
   // by design (a dimmer single-line context band, not a filled area).
   const ruleContext = useMemo(
@@ -361,9 +361,9 @@ export const MinimapChart = /* @__PURE__ */ withDisplayName(function MinimapChar
 
   // ── Chart type ──────────────────────────────────────────────────────
 
-  const chartType = fillArea ? "area" as const : "line" as const
+  const chartType = fillArea ? ("area" as const) : ("line" as const)
 
-  // ── Build StreamXYFrame props ───────────────────────────────────────
+    // ── Build StreamXYFrame props ───────────────────────────────────────
 
   const mainProps: StreamXYFrameProps = {
     chartType,
@@ -462,9 +462,11 @@ export const MinimapChart = /* @__PURE__ */ withDisplayName(function MinimapChar
   // ── Loading / empty guards (deferred to after all hooks) ───────────────
   if (loadingEl) return loadingEl
   if (emptyEl) return emptyEl
-  if (error) return <ChartError componentName="MinimapChart" message={error} width={width} height={totalHeight} />
+  if (error) return (
+        <ChartError componentName="MinimapChart" message={error} width={width} height={totalHeight} />
+      )
 
-  return (
+    return (
     <SafeRender componentName="MinimapChart" width={width} height={height}>
       <div
         className={`minimap-chart${className ? ` ${className}` : ""}`}

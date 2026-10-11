@@ -26,14 +26,10 @@ interface SemanticFrameInteractionOptions<Hover extends HoverLike> {
 }
 
 /**
- * Add semantic observations around the legacy Stream Frame callbacks.
- *
- * Returns `undefined` for hover/click when neither a user callback nor
- * `onObservation` is present. Frames historically treated any truthy
- * `customHoverBehavior` as “selection may have changed” and marked the
- * scene dirty — which re-ran `computeScene` (and intro/data transitions)
- * on every pointermove. Observation emission alone does not change the
- * retained scene, so an always-present wrapper is the wrong signal.
+ * Wrap Stream Frame callbacks with semantic observations.
+ * Return undefined when neither an authored callback nor onObservation is
+ * present. Observation emission does not change retained geometry; callbacks
+ * that drive selection determine whether the frame needs a repaint.
  */
 export function useSemanticFrameInteractions<Hover extends HoverLike>({
   customHoverBehavior: customHoverBehaviorProp,

@@ -190,7 +190,7 @@ export interface RealtimeLineChartProps<
    * window**, distinct from `windowMode`'s RingBuffer eviction. Changing a
    * structural window field or either accessor rebuilds the accumulator:
    * controlled `data` is reseeded, while push-only input begins a new epoch
-   * because raw events are deliberately not retained.
+   * because raw events are not retained.
    */
   aggregate?: AggregateConfig
   /**

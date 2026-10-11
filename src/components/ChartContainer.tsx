@@ -37,7 +37,7 @@ const SR_ONLY: React.CSSProperties = {
 }
 
 export type ChartNotificationLevel =
-  | "info"
+  "info"
   | "success"
   | "warning"
   | "error"
@@ -98,7 +98,7 @@ export interface ChartContainerMobileAuditOptions {
 }
 
 export type ChartContainerMobileAudit =
-  | boolean
+  boolean
   | "warn"
   | ChartContainerMobileAuditOptions
 
@@ -118,7 +118,7 @@ export interface ChartContainerProps {
   /** Built-in actions. Each can be true (default config), false (hidden), or config object */
   actions?: {
     export?:
-      | boolean
+      boolean
       | { format?: "svg" | "png"; scale?: number; filename?: string }
     fullscreen?: boolean
     /** Enable "Copy Config" action button. Requires chartConfig prop. */
@@ -172,7 +172,7 @@ export interface ChartContainerProps {
   /**
    * Run Semiotic's numeric input audit over `chartConfig.props` and merge its
    * findings into the notification bell. Re-evaluates when the config/data
-   * identity changes. Ref-only push mutations are intentionally not observable
+   * identity changes. Ref-only push mutations are not observable
    * here; audit a bounded stream snapshot and pass its notifications instead.
    * Requires `chartConfig`.
    */
@@ -1180,11 +1180,9 @@ export const ChartContainer = /* @__PURE__ */ React.forwardRef<
           </div>
         )}
 
-        {banner && (
-          <div className="semiotic-chart-banner">
+        {banner && <div className="semiotic-chart-banner">
             {banner}
-          </div>
-        )}
+          </div>}
 
         {mobileAuditBanner}
 

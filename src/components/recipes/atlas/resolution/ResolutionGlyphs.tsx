@@ -1,5 +1,5 @@
 "use client"
-import { useTheme } from "../../../ThemeProvider"
+import { useTheme } from "../../../store/useTheme"
 import { resolveThemeSemanticColors } from "../../../store/themeCore"
 import { resolutionAppearance, type ResolutionAppearance } from "./appearance"
 import { projectEdgeWitnessGlyph, projectNodeResolutionStrip } from "./glyphs"

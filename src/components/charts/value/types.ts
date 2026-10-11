@@ -2,7 +2,7 @@
  * BigNumber and (forward-looking) SingleValueFrame types.
  *
  * BigNumber ships today as a plain React component under
- * `semiotic/value`. The type vocabulary here is intentionally a bit
+ * `semiotic/value`. The type vocabulary here is a bit
  * broader than the v1 component uses — it sketches the contract a
  * future `SingleValueFrame`  would own,
  * so adopters can write against types that survive the migration.
@@ -27,7 +27,7 @@ export type BigNumberMode = "tile" | "presentation" | "inline" | "thumbnail"
  * `--semiotic-info`, falls through to `--semiotic-text` for `neutral`).
  */
 export type BigNumberLevel =
-  | "success"
+  "success"
   | "warning"
   | "danger"
   | "info"
@@ -40,7 +40,7 @@ export type BigNumberLevel =
  * the direction isn't loaded.
  */
 export type BigNumberDirection =
-  | "higher-is-better"
+  "higher-is-better"
   | "lower-is-better"
   | "neutral"
 
@@ -183,11 +183,11 @@ export interface BigNumberSlotContext {
 }
 
 export type BigNumberSlot =
-  | React.ReactNode
+  React.ReactNode
   | ((ctx: BigNumberSlotContext) => React.ReactNode)
 
 /**
- * The full prop surface. Intentionally broad — every block here maps
+ * The full prop surface. broad — every block here maps
  * to a documented `SingleValueFrame` capability so users targeting
  * the v1 component can roll forward unchanged when (if) the frame ships.
  *
@@ -265,7 +265,7 @@ export interface BigNumberProps<_TDatum extends Datum = Datum> {
   height?: number | string
   /** Inner padding; number or `{top, right, bottom, left}`. */
   padding?:
-    | number
+    number
     | { top?: number; right?: number; bottom?: number; left?: number }
   /** Visual emphasis hint — dashboards can use this to span columns. */
   emphasis?: "primary" | "secondary"

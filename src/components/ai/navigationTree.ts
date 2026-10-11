@@ -1,5 +1,6 @@
 import type { Datum } from "../charts/shared/datumTypes"
-import { resolveAccessor, resolveRawAccessor } from "../stream/accessorUtils"
+import { resolveRawAccessor } from "../stream/accessorUtils"
+import { aiChartProps, aiNumericAccessor, aiNumericValue } from "./aiData"
 import {
   describeChart,
   chartValueFormatter,
@@ -119,7 +120,7 @@ function stringValue(value: unknown, fallback = "—"): string {
 
 function finiteValue(value: unknown): number | undefined {
   if (value == null || value === "") return undefined
-  const number = typeof value === "number" ? value : Number(value)
+  const number = aiNumericValue(value)
   return Number.isFinite(number) ? number : undefined
 }
 
@@ -159,6 +160,7 @@ function buildNetworkNavigationTree(
   maxLeaves: number,
   fmtNum: (n: number) => string
 ): NavTreeNode {
+  props = aiChartProps(props)
   const nodes = Array.isArray(props.nodes) ? (props.nodes as Datum[]) : []
   const edges = Array.isArray(props.edges)
     ? (props.edges as Datum[])
@@ -361,6 +363,7 @@ export function buildNavigationTree(
   props: Datum,
   options: BuildNavigationTreeOptions = {}
 ): NavTreeNode {
+  props = aiChartProps(props)
   const locale = options.locale ?? "en"
   const maxLeaves = Math.max(1, options.maxLeaves ?? 200)
   const fmtNum = chartValueFormatter(locale)
@@ -415,7 +418,7 @@ export function buildNavigationTree(
     component,
     props
   )
-  const getMeasure = resolveAccessor(measure, measureFallback)
+  const getMeasure = aiNumericAccessor(measure, measureFallback)
   const getDim = resolveRawAccessor(dimension, dimensionFallback)
   // Only string accessors are human-readable labels; a function accessor is
   // truthy but would leak its source into node labels — fall back instead.

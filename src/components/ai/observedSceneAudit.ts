@@ -1,6 +1,8 @@
 import { getMinMax } from "../charts/shared/minMax"
 import type { Datum } from "../charts/shared/datumTypes"
 import { contrastRatio } from "../charts/shared/colorContrast"
+import { aiDataRows } from "./aiData"
+import { sceneCoverage } from "./sceneCoverage"
 import { extractAllRows } from "../stream/accessibleDataRows"
 import type { AccessibleTableProp } from "../stream/accessibleTableTypes"
 import type { NavTreeNode } from "./navigationTree"
@@ -18,7 +20,8 @@ export type ObservedAuditStatus = "pass" | "warn" | "fail" | "manual" | "not-app
 
 export interface ObservedAuditFinding {
   id: string
-  category: "geometry" | "identity" | "coverage" | "interaction" | "accessibility" | "visual" | "manual-at"
+  category:
+    | "geometry" | "identity" | "coverage" | "interaction" | "accessibility" | "visual" | "manual-at"
   status: ObservedAuditStatus
   message: string
   evidence?: Record<string, unknown>
@@ -140,7 +143,9 @@ function nodeId(node: SceneNode): string | undefined {
 }
 
 function nodeDatum(node: SceneNode): Datum | Datum[] | null {
-  return node.accessibility?.tableFields ?? node.accessibleDatum ?? node.datum ?? null
+  return (
+    node.accessibility?.tableFields ?? node.accessibleDatum ?? node.datum ?? null
+  )
 }
 
 function finite(value: unknown): value is number {
@@ -162,7 +167,20 @@ function nodeBounds(node: SceneNode): Bounds | null {
       x0: node.cx - node.outerR,
       y0: node.cy - node.outerR,
       x1: node.cx + node.outerR,
-      y1: node.cy + node.outerR,
+      y1: node.cy + node.outerR
+    }
+  }
+  if (
+    finite(node.x1) &&
+    finite(node.x2) &&
+    finite(node.y1) &&
+    finite(node.y2)
+  ) {
+    return {
+      x0: Math.min(node.x1, node.x2),
+      x1: Math.max(node.x1, node.x2),
+      y0: Math.min(node.y1, node.y2),
+      y1: Math.max(node.y1, node.y2)
     }
   }
   const paths = [node.path, node.topPath, node.bottomPath].filter(Array.isArray)
@@ -202,22 +220,12 @@ function overlapRatio(a: Bounds, b: Bounds): number {
   return smaller > 0 ? intersection / smaller : 0
 }
 
-function matchesInput(
-  datum: Datum,
-  input: Datum,
-  recipe: ChartRecipe,
-  config: Record<string, unknown>,
-  data: ReadonlyArray<Datum>,
-): boolean {
-  if (datum === input) return true
-  const fields = recipe.dataRoles
-    .map((role) => fieldForRole(role, config, data))
-    .filter((field): field is string => !!field)
-  const comparable = fields.filter(
-    (field) => datum[field] != null && input[field] != null,
-  )
-  return comparable.length > 0 && comparable.every(
-    (field) => String(datum[field]) === String(input[field]),
+function strokeOnly(node: SceneNode): boolean {
+  const fill = node.style?.fill ?? node.fill
+  return (
+    fill === "none" ||
+    fill === "transparent" ||
+    (fill == null && ["line", "rule", "edge", "bezier"].includes(node.type))
   )
 }
 
@@ -240,7 +248,7 @@ function statusFinding(
 }
 
 /**
- * Audit what a custom layout actually emitted. The report deliberately keeps
+ * Audit what a custom layout actually emitted. The report keeps
  * declared meaning, observed evidence, and manual AT/reception checks separate.
  */
 export function auditObservedScene(
@@ -276,7 +284,9 @@ export function auditObservedScene(
 
   const bounds = nodes.map(nodeBounds)
   const zeroArea = bounds.filter(
-    (bound) => bound && (bound.x1 <= bound.x0 || bound.y1 <= bound.y0),
+    (bound, index) => bound && (strokeOnly(nodes[index])
+        ? bound.x1 <= bound.x0 && bound.y1 <= bound.y0
+        : bound.x1 <= bound.x0 || bound.y1 <= bound.y0),
   ).length
   evidence.push(statusFinding(
     "geometry.nonzero-area",
@@ -310,9 +320,15 @@ export function auditObservedScene(
     recipe.audit?.minimumHitTargetSize ??
     recipe.accessibility.minimumHitTarget ??
     24
-  const tiny = bounds.filter((bound) => {
-    if (!bound) return false
-    return bound.x1 - bound.x0 < minimumTarget || bound.y1 - bound.y0 < minimumTarget
+  const tiny = bounds.filter((bound, index) => {
+    if (!bound ||
+      strokeOnly(nodes[index]) ||
+      nodeDatum(nodes[index]) == null ||
+      nodes[index].interactive === false
+    ) return false
+    return (
+      bound.x1 - bound.x0 < minimumTarget || bound.y1 - bound.y0 < minimumTarget
+    )
   }).length
   evidence.push(statusFinding(
     "interaction.target-size",
@@ -364,25 +380,20 @@ export function auditObservedScene(
     })
   }
 
-  const represented = new Set<number>()
-  let unmatchedMarks = 0
-  const inputRows = input.inputData
-  for (const node of dataNodes) {
-    const datum = nodeDatum(node)
-    const datums = Array.isArray(datum) ? datum : [datum]
-    let nodeMatched = false
-    for (const candidate of datums) {
-      if (!candidate || typeof candidate !== "object") continue
-      for (let index = 0; index < inputRows.length; index += 1) {
-        if (matchesInput(candidate as Datum, inputRows[index], recipe, config, inputRows)) {
-          represented.add(index)
-          nodeMatched = true
-        }
-      }
-    }
-    if (!nodeMatched) unmatchedMarks += 1
-  }
-  const missingData = Math.max(0, inputRows.length - represented.size)
+  const inputRows = aiDataRows(input.inputData)
+    const fields = [
+    ...new Set(
+      recipe.dataRoles
+        .map((role) => fieldForRole(role, config, inputRows))
+        .filter((field): field is string => !!field)
+    )
+  ]
+  const { represented, unmatchedMarks } = sceneCoverage(
+    inputRows,
+    dataNodes.map(nodeDatum),
+    fields
+  )
+  const missingData = Math.max(0, inputRows.length - represented)
   evidence.push(statusFinding(
     "coverage.input-data",
     "coverage",
@@ -390,7 +401,7 @@ export function auditObservedScene(
     "Every input datum is represented by the observed scene.",
     `${missingData} input data items have no matching scene mark.`,
     recipe.audit?.requireDatumCoverage ? "fail" : "warn",
-    { represented: represented.size, input: inputRows.length },
+    { represented, input: inputRows.length },
   ))
   evidence.push(statusFinding(
     "coverage.scene-data",
@@ -405,7 +416,8 @@ export function auditObservedScene(
   const intentionalMultiplicity = recipe.encodings?.some(
     (encoding) => encoding.channel === "count",
   )
-  if (!intentionalMultiplicity && dataNodes.length > represented.size && represented.size > 0) {
+  if (!intentionalMultiplicity && dataNodes.length > represented &&
+    represented > 0) {
     evidence.push({
       id: "coverage.duplicate-references",
       category: "coverage",
@@ -566,19 +578,26 @@ export function auditObservedScene(
 
   const background = input.theme?.background ?? "#ffffff"
   const lowContrast = nodes.filter((node) => {
-    const fill = node.style?.fill ?? node.fill
-    if (typeof fill !== "string" || !fill.startsWith("#") || !background.startsWith("#")) {
-      return false
-    }
-    const ratio = contrastRatio(fill, background)
+    const paints = [
+      node.style?.stroke ?? node.stroke,
+      ...(strokeOnly(node) ? [] : [node.style?.fill ?? node.fill])
+    ]
+    return paints.some((paint) => {
+      if (typeof paint !== "string" ||
+        paint === "none" ||
+        paint === "transparent"
+      )
+        return false
+      const ratio = contrastRatio(paint, background)
     return ratio != null && ratio < 3
+    })
   }).length
   evidence.push(statusFinding(
     "visual.contrast",
     "visual",
     lowContrast === 0,
-    "All statically checkable mark fills meet 3:1 contrast.",
-    `${lowContrast} marks have fill contrast below 3:1.`,
+      "All statically checkable mark fills and strokes meet 3:1 contrast.",
+    `${lowContrast} marks have fill or stroke contrast below 3:1.`,
     "warn",
     { background },
   ))

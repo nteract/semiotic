@@ -81,7 +81,7 @@ import { BigNumberCapability } from "../charts/value/BigNumber.capability"
  * `Foo.capability.ts` next to `Foo.tsx`. To add a new chart, write the descriptor
  * and append it here.
  *
- * Charts intentionally NOT in this registry:
+ * Charts NOT in this registry:
  *   • Atlas readers — schemas accept prepared artifacts; flat-data profiling
  *     cannot infer evidence admission, required roots or circuit editions.
  *   • Realtime variants (RealtimeLineChart, RealtimeHistogram, ...) — they're for

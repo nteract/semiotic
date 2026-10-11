@@ -89,7 +89,7 @@ export const STYLE_RULES_WIRE_SCHEMA = {
 /**
  * Shared chart-registry prop for the serializable `StyleRule` contract.
  * React callers may additionally use predicate `when` and functional `style`
- * values; those function variants are intentionally absent from JSON Schema.
+ * values; those function variants are absent from JSON Schema.
  */
 export const STYLE_RULES_PROP_SPEC = {
   type: "array",

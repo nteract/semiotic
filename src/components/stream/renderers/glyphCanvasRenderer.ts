@@ -71,11 +71,19 @@ function paintGlyph(
 }
 
 /** XY / ordinal / geo painter (x/y-positioned glyph nodes). */
-export const glyphCanvasRenderer: StreamRendererFn = (ctx, nodes) => {
+export const glyphCanvasRenderer: StreamRendererFn = (ctx, nodes) =>
+  renderCanvasGlyphs(
+    ctx,
+    nodes.filter((node): node is GlyphSceneNode => node.type === "glyph")
+  )
+
+export function renderCanvasGlyphs(
+  ctx: CanvasRenderingContext2D,
+  nodes: GlyphSceneNode[]
+): void {
   const baseAlpha = ctx.globalAlpha
   for (const node of nodes) {
-    if (node.type !== "glyph") continue
-    const g = node as GlyphSceneNode
+    const g = node
     paintGlyph(ctx, g, g.x, g.y, baseAlpha)
   }
   ctx.globalAlpha = baseAlpha

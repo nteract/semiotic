@@ -32,7 +32,7 @@ function normalizeBarGradientFill(gradientFill: unknown): unknown {
 /**
  * The ordinal frame's fallback style cycles the palette by its `category`
  * argument. That is useful for radial slices, but it is not BarChart's HOC
- * behavior: an uncoloured bar chart deliberately uses one fill. Build the
+ * behavior: an uncoloured bar chart uses one fill. Build the
  * same resolved style function as the bar HOCs so `renderChart()` does not
  * fall back to the frame-level categorical default.
  */
@@ -681,10 +681,10 @@ export const funnelChart: ChartConfig = {
       ...common,
       // A vertical funnel normally needs ordinal axes, but the public
       // `showAxes` contract still takes precedence for compact/static use.
-      // Horizontal funnels intentionally never draw axes.
+      // Horizontal funnels never draw axes.
       showAxes: isVertical && common.showAxes !== false,
       showGrid: isVertical,
-      // A one-series funnel is intentionally monocolor; per-step palette
+      // A one-series funnel is monocolor; per-step palette
       // cycling is a frame fallback, not FunnelChart's HOC contract.
       pieceStyle: buildBarPieceStyle(
         data,

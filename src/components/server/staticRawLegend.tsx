@@ -8,7 +8,7 @@ import {
 /**
  * Position caller-supplied legend nodes with the same geometry as the live
  * overlay. Unlike configured legends, React nodes cannot be measured before
- * render; `resolveLegendPlacement` intentionally uses the shared fallback
+ * render; `resolveLegendPlacement` uses the shared fallback
  * box for that case.
  */
 export function renderStaticRawLegend(

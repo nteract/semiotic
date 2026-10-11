@@ -6,7 +6,7 @@ import { XY_WITH_AXES_CHARTS, ORDINAL_CHARTS, POINT_TARGET_RADIUS_PROP } from ".
  * auditMobileVisualization - static mobile-readiness triage for Semiotic chart
  * configurations.
  *
- * This is deliberately conservative: it does not inspect the DOM, resolved CSS,
+ * This is conservative: it does not inspect the DOM, resolved CSS,
  * measured labels, rendered annotation boxes, or real input behavior. It flags
  * risks that can be inferred from config/data and routes the rest to manual
  * mobile review. Treat it like auditAccessibility: useful before render, useful
@@ -110,10 +110,6 @@ const XY_CHARTS = /* @__PURE__ */ new Set([
   "RealtimeLineChart",
   "RealtimeHeatmap",
 ])
-
-const POINT_RADIUS_PROPS: Record<string, string[]> = /* @__PURE__ */ Object.fromEntries(
-  /* @__PURE__ */ (/* @__PURE__ */ Object.entries(POINT_TARGET_RADIUS_PROP)).map(([component, prop]) => [component, [prop, "hoverRadius"]])
-)
 
 function isObject(value: unknown): value is Datum {
   return !!value && typeof value === "object" && !Array.isArray(value)
@@ -290,17 +286,17 @@ function explicitTickCount(props: Datum): number | null {
 }
 
 function minimumPointerTarget(component: string, props: Datum): number | null {
-  const radiusProps = POINT_RADIUS_PROPS[component]
-  if (!radiusProps) return null
+  const radiusProp = POINT_TARGET_RADIUS_PROP[component]
+  if (typeof radiusProp !== "string") return null
 
-  let largestRadius: number | null = radiusProps.includes("hoverRadius") ? 30 : null
-  for (const prop of radiusProps) {
+  let largestRadius = 30
+  for (const prop of [radiusProp, "hoverRadius"]) {
     const value = props[prop]
     if (typeof value === "number" && Number.isFinite(value) && value > 0) {
-      largestRadius = largestRadius == null ? value : Math.max(largestRadius, value)
+      largestRadius = Math.max(largestRadius, value)
     }
   }
-  return largestRadius == null ? null : largestRadius * 2
+  return largestRadius * 2
 }
 
 function pushPass(findings: MobileVisualizationFinding[], finding: Omit<MobileVisualizationFinding, "status">) {

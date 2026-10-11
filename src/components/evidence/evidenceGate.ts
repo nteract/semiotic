@@ -1,7 +1,7 @@
 /**
  * Evidence publication gate for ChartEvidenceEnvelope@1.
  *
- * This is deliberately conservative: it fails on provable publication risks
+ * This is conservative: it fails on provable publication risks
  * and records uncertainty rather than inventing semantic or visual agreement.
  */
 import {

@@ -13,6 +13,8 @@ import {
 } from "./PhysicsSettledScene"
 
 export interface PhysicsSettledSVGOptions extends PhysicsSettledSceneOptions {
+  /** The containing frame supplies the accessible image name. */
+  decorative?: boolean
   width?: number
   height?: number
   title?: string
@@ -58,6 +60,10 @@ function safeSvgId(value: string): string {
   return cleaned
 }
 
+export function physicsSVGRootId(prefix: string): string {
+  return `${safeSvgId(prefix)}-svg`
+}
+
 const DEFAULT_MARGIN: FrameMargin = { top: 0, right: 0, bottom: 0, left: 0 }
 
 function resolveGraphics(
@@ -78,6 +84,7 @@ export function createPhysicsSettledSVG(
   options: PhysicsSettledSVGOptions = {}
 ): PhysicsSettledSVGElementRender {
   const {
+    decorative = false,
     width = 640,
     height = 360,
     title,
@@ -121,17 +128,21 @@ export function createPhysicsSettledSVG(
     element: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
+        id={physicsSVGRootId(prefix)}
         className={className ?? "stream-physics-frame"}
         width={width}
         height={height}
         viewBox={`0 0 ${width} ${height}`}
-        role="img"
-        aria-labelledby={labelledBy}
-        aria-label={description || title || `physics chart, ${scene.sceneNodes.length} marks`}
+        role={decorative ? "presentation" : "img"}
+        aria-labelledby={decorative ? undefined : labelledBy}
+        aria-label={
+          decorative
+            ? undefined
+            : description || title || `physics chart, ${scene.sceneNodes.length} marks`}
         style={style}
       >
-        {title && <title id={titleId}>{title}</title>}
-        {description && <desc id={descId}>{description}</desc>}
+        {!decorative && title && <title id={titleId}>{title}</title>}
+        {!decorative && description && <desc id={descId}>{description}</desc>}
         <defs>
           <clipPath id={plotClipId}>
             <rect width={plotWidth} height={plotHeight} />

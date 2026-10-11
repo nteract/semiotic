@@ -10,7 +10,7 @@ import {
  * - ordinary cells retain the caller's row and resolve x/y/value accessors;
  * - aggregated cells expose `{ value, count, sum, xCenter, yCenter, agg }`.
  *
- * The default `value` channel deliberately means the displayed aggregate for
+ * The default `value` channel means the displayed aggregate for
  * a derived cell. Callers can still target `count`, `sum`, or `agg` through a
  * declarative `field`, while `axis: "x"|"y"` resolves the bin center.
  */

@@ -114,7 +114,7 @@ export interface DataQualityAnnotationOptions {
   passColor?: string
 }
 
-/** A result the bridge declined to place, with the reason (the D7 honesty surface). */
+/** A result the bridge declined to place, with the reason. */
 export interface UnplacedDataQualityResult {
   result: DataQualityResult
   reason: string
@@ -322,7 +322,7 @@ function shortName(uniqueId?: string): string {
  * freshness (`sources.json`) — a real timestamp + status becomes a time
  * threshold. Test results (`run_results.json`) carry pass/fail but not, without
  * `manifest.json`, the column/range semantics needed to place them; those land
- * in `unplaced[]` with a reason (D7).
+ * in `unplaced[]` with a reason.
  */
 export function fromDbtArtifacts(
   artifacts: DbtArtifacts,

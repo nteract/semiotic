@@ -401,7 +401,7 @@ export interface TransitOcclusionOptions {
  * Value-weighted ribbon coverage of intermediate lane bands over each edge's
  * authored event window. Ribbon y values come from the same cubic used by the
  * renderer; x is inverted by bisection. Optional render-only feeder runway is
- * intentionally absent because it does not alter the edge's event interval.
+ * absent because it does not alter the edge's event interval.
  */
 export function measureTransitOcclusion(
   edges: readonly ProcessSankeyEdge[],

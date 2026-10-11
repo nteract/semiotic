@@ -4,6 +4,7 @@ import type { ChartDataProfile, FieldCandidate, FieldKind } from "./chartCapabil
 import { profileNumericFields } from "../data/auditData"
 import { isMissingValue, parseNumericValue } from "../data/numericValue"
 import { deriveProfileFields } from "./deriveProfileFields"
+import { aiDataRows, aiNumericValue } from "./aiData"
 import {
   fieldRoleCandidateMatch,
   identifierFields,
@@ -120,9 +121,10 @@ function inferStructure(rawInput: unknown): InferStructure {
         hasNetwork: false,
         hasGeo: true,
         geo: {
-          features: obj.features as ReadonlyArray<Datum>,
-          points: Array.isArray(obj.points) ? (obj.points as ReadonlyArray<Datum>) : undefined,
-          flows: Array.isArray(obj.flows) ? (obj.flows as ReadonlyArray<Datum>) : undefined,
+          features: aiDataRows(obj.features),
+          points: Array.isArray(obj.points) ? aiDataRows(obj.points)
+            : undefined,
+          flows: Array.isArray(obj.flows) ? aiDataRows(obj.flows) : undefined,
         },
       }
     }
@@ -130,12 +132,12 @@ function inferStructure(rawInput: unknown): InferStructure {
       return { hasHierarchy: true, hasNetwork: false, hasGeo: false, hierarchy: obj as Datum }
     }
     if (Array.isArray(obj.nodes) && (Array.isArray(obj.edges) || Array.isArray(obj.links))) {
-      const edges = (obj.edges ?? obj.links) as ReadonlyArray<Datum>
+      const edges = aiDataRows(obj.edges ?? obj.links)
       return {
         hasHierarchy: false,
         hasNetwork: true,
         hasGeo: false,
-        network: { nodes: obj.nodes as ReadonlyArray<Datum>, edges },
+        network: { nodes: aiDataRows(obj.nodes), edges },
       }
     }
   }
@@ -212,7 +214,7 @@ function detectTransitionNetwork(
     if (!nodes.has(targetLabel)) nodes.set(targetLabel, { id: targetLabel, label: targetLabel })
 
     const edgeKey = `${sourceLabel}->${targetLabel}`
-    const weight = valueField ? Number(row[valueField]) : 1
+    const weight = valueField ? aiNumericValue(row[valueField]) : 1
     const w = Number.isFinite(weight) ? weight : 1
     edgeWeights.set(edgeKey, (edgeWeights.get(edgeKey) ?? 0) + w)
 
@@ -265,8 +267,8 @@ export function profileData(
   data: ReadonlyArray<Datum> | null | undefined,
   options: ProfileDataOptions = {}
 ): ChartDataProfile {
-  const summary = summarizeData(data ?? [])
-  const rows: ReadonlyArray<Datum> = Array.isArray(data) ? data : []
+  const rows = aiDataRows(data)
+  const summary = summarizeData(rows)
   const structure = inferStructure(options.rawInput)
   const fieldRoles = normalizeProfileFieldRoles(
     options.fieldRoles,

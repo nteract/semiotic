@@ -3,30 +3,13 @@ import type { Datum } from "../charts/shared/datumTypes"
 // ── Accessor resolution ────────────────────────────────────────────────
 
 /**
- * Compare two accessor specs for equivalence, using **identity** semantics.
- * - String accessors: compared by value (`"value" === "value"`).
- * - Function accessors: compared by reference. Two distinct function objects are
- *   NOT equivalent, even when their source text matches.
- * - Mismatched types or `undefined` vs defined: not equivalent.
+ * Compare accessor specifications by identity. String accessors compare by
+ * value; function accessors compare by reference. Source text cannot establish
+ * closure equivalence because captured bindings may differ.
  *
- * **Why identity, not source text.** A previous implementation compared
- * `a.toString() === b.toString()` to treat re-created inline arrows
- * (`d => d.value`) as equivalent across renders. That was a correctness bug:
- * `.toString()` compares source text, not captured variables, so two closures
- * with identical source but different bindings — `makeAccessor(1)` vs
- * `makeAccessor(10)` — compared equal, and the store retained a stale
- * domain/scene against a genuinely different accessor. Identity comparison also
- * matches how the frames already decide a config changed
- * (`useStableShallow` compares function props by identity), so the store no
- * longer second-guesses a change the frame already detected.
- *
- * **Consumer contract.** Passing a *new* function accessor (a fresh inline
- * arrow every render) now triggers a rebuild, because the library can no longer
- * prove the new closure is semantically identical. Use a string accessor
- * (always referentially stable) or memoize the function with `useCallback`. For
- * the rare case where a stable function's captured semantics change *without*
- * its identity changing, bump the pipeline config's `accessorRevision` to force
- * re-derivation.
+ * A new function accessor triggers derivation. Use a string or useCallback for
+ * a stable accessor; bump accessorRevision when a stable function changes its
+ * captured semantics.
  */
 export function accessorsEquivalent<TDatum, TResult>(
   a: string | ((datum: TDatum, index?: number) => TResult) | undefined,

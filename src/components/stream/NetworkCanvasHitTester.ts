@@ -27,8 +27,9 @@ function preferDeeperNode(
   candidate: NetworkCircleNode | NetworkRectNode,
   current?: NetworkSceneNode | NetworkSceneEdge
 ): boolean {
-  return (candidate.depth ?? -1) > (
-    (current as { depth?: number } | undefined)?.depth ?? -1
+  return (
+    (candidate.depth ?? -1) > (
+    (current as { depth?: number } | undefined)?.depth ?? -1)
   )
 }
 
@@ -48,8 +49,9 @@ function preferCircleHit(
       return radiusDifference > 0
     }
   }
-  return distance < currentDistance || (
-    distance === currentDistance && preferDeeperNode(candidate, current)
+  return (
+    distance < currentDistance || (
+    distance === currentDistance && preferDeeperNode(candidate, current))
   )
 }
 
@@ -139,7 +141,9 @@ export function findNearestNetworkNode(
 function preferRectHit(candidate: NetworkRectNode, current: NetworkRectNode): boolean {
   const area = candidate.w * candidate.h
   const currentArea = current.w * current.h
-  return area < currentArea || (area === currentArea && preferDeeperNode(candidate, current))
+  return (
+    area < currentArea || (area === currentArea && preferDeeperNode(candidate, current))
+  )
 }
 
 function hitResult(
@@ -383,7 +387,7 @@ function hitTestPathEdge(
   try {
     // Canvas implicitly closes open paths for fill tests. Only filled bands
     // own that interior; an unfilled curved link owns its stroke alone.
-    // Opacity is intentionally ignored so transparent semantic targets work.
+    // Opacity is ignored so transparent semantic targets work.
     if (edge.style.fill && edge.style.fill !== "none" && ctx.isPointInPath(path, px, py)) {
       return hitResult("edge", edge, px, py)
     }

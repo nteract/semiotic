@@ -313,7 +313,7 @@ export const RealtimeLineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */
     const cfg = aggConfigRef.current!
     // `retain` is the sole retention control for aggregate mode — leaving it
     // unset means unbounded windows, matching AggregateConfig's documented
-    // default. (Deliberately not coupled to `windowSize`, which is the
+    // default. (not coupled to `windowSize`, which is the
     // ring-buffer eviction policy and does not apply to aggregated output.)
     const acc = new RealtimeAccumulator(cfg, seriesAccessor)
     accRef.current = acc

@@ -64,7 +64,7 @@ export interface ChartConfig {
 export interface ChartArtifactTransferStatus extends ArtifactTransferStatus {
   /** Identity of the serialized non-data props; detects later payload drift. */
   serializedConfigFingerprint?: string
-  /** Identity of serialized data, or null when the payload intentionally has none. */
+  /** Identity of serialized data, or null when the payload has none. */
   serializedDataFingerprint?: string | null
   /** Identity of the component or recipe, contract, transfer report, and payload bindings. */
   transferFingerprint?: string
