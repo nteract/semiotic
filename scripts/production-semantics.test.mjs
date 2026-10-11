@@ -65,6 +65,30 @@ function exercise(target, program) {
   )
 }
 
+for (const entry of ["./ai", "./ai/core", "./utils/core"]) {
+  for (const target of publicTargets(entry)) {
+    test(`${entry} (${target.conditions}) omits sparse data slots through public AI readers`, () => {
+      exercise(target, `
+        const datum = { category: "measured", value: 7 }
+        const data = new Array(3)
+        data[1] = datum
+        if (api.profileData) {
+          const profile = api.profileData(data)
+          assert.equal(profile.rowCount, 1)
+          assert.equal(profile.data[0], datum)
+          const dense = [datum]
+          assert.equal(api.profileData(dense).data, dense)
+        }
+        const props = { data, categoryAccessor: "category", valueAccessor: "value" }
+        const denseProps = { ...props, data: [datum] }
+        for (const read of [api.describeChart, api.buildNavigationTree, api.buildReaderGrounding]) {
+          assert.deepEqual(read("BarChart", props), read("BarChart", denseProps))
+        }
+      `)
+    })
+  }
+}
+
 for (const entry of [
   "./utils/core",
   "./network",
@@ -699,6 +723,42 @@ for (const entry of ["./server", "./server/node", "./server/edge"]) {
       `)
     })
   }
+}
+
+for (const target of publicTargets("./themes/react")) {
+  test(`public theme facades (${target.conditions}) share providers and reach family chart readers`, () => {
+    const condition = target.file.endsWith(".module.min.js") ? "import" : "require"
+    const paths = [".", "./utils", "./line", "./xy"].map((entry) =>
+      resolve(root, pkg.exports[entry][condition])
+    )
+    exercise(target, `
+      const { default: React } = await import("react")
+      const { renderToStaticMarkup } = await import("react-dom/server")
+      const load = async (file) => filename.endsWith(".module.min.js")
+        ? import(pathToFileURL(file).href)
+        : createRequire(import.meta.url)(file)
+      const [main, utils, line, xy] = await Promise.all(${JSON.stringify(paths)}.map(load))
+      for (const facade of [main, utils]) {
+        assert.equal(facade.ThemeProvider, api.ThemeProvider)
+        assert.equal(facade.useTheme, api.useTheme)
+      }
+      assert.equal(line.LineChart, xy.LineChart)
+      function Palette() {
+        const theme = utils.useTheme()
+        return React.createElement("span", { "data-category": theme.colors.categorical[0] })
+      }
+      const html = renderToStaticMarkup(React.createElement(
+        api.ThemeProvider, { theme: { mode: "dark", colors: { categorical: ["#010203"] } } },
+        React.createElement(Palette),
+        React.createElement(line.LineChart, {
+          data: [{ x: 0, y: 1, series: "a" }, { x: 1, y: 2, series: "a" }],
+          xAccessor: "x", yAccessor: "y", lineBy: "series", colorBy: "series"
+        })
+      ))
+      assert.match(html, /data-category="#010203"/)
+      assert.match(html, /<path[^>]*stroke="#010203"/)
+    `)
+  })
 }
 
 for (const entry of ["./utils/core", "./xy", "./realtime"]) {

@@ -209,7 +209,7 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
   const needsResolutionRepaint = resolutionDirtyRef?.current === true
   const needsDataRepaint = needsDataCanvasPaint({
     // `advanceTransition` returns false on the terminal frame after snapping
-    // geometry to its target. `computedScene` deliberately includes that
+    // geometry to its target. `computedScene` includes that
     // frame, so it must drive the paint gate as well as the scene rebuild.
     dirtyOrRebuilt: computedScene,
     transitioning: isTransitioning,
@@ -284,7 +284,7 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
       paintBuiltIn: (nodes) => {
         const builtInNodes = nodes as NetworkSceneNode[]
         // A projected scene is depth-sorted across mark types; flat scenes
-        // keep the historical per-type passes.
+        // use one pass per scene type.
         if (store.perspective.frame) {
           paintNetworkNodesInOrder(c2d, builtInNodes)
           return

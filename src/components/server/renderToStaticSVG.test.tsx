@@ -149,7 +149,8 @@ describe("renderOrdinalToStaticSVG", () => {
     expect(svg).toContain("<svg")
     expect(svg).toContain("stream-ordinal-frame")
     // No data marks
-    expect(countMatches(svg, /<rect /g)).toBe(0)
+    expect(countMatches(svg, /<rect /g)).toBe(1)
+    expect(svg).toContain('fill="#ffffff"')
   })
 
   it("renders with title", () => {
@@ -963,7 +964,8 @@ describe("renderNetworkToStaticSVG - node inference", () => {
     } as StaticNetworkProps)
 
     expect(svg).toContain("<svg")
-    expect(countMatches(svg, /<rect /g)).toBe(0)
+    expect(countMatches(svg, /<rect /g)).toBe(1)
+    expect(svg).toContain('fill="#ffffff"')
     expect(countMatches(svg, /<path /g)).toBe(0)
   })
 

@@ -33,7 +33,7 @@ export const forceDirectedGraph: ChartConfig = {
       ((d: Datum) => {
         const raw = (d?.data as Datum) || d
         return {
-          // ForceDirectedGraph is intentionally monocolor until colorBy is
+          // ForceDirectedGraph is monocolor until colorBy is
           // requested; the network layout's palette fallback would otherwise
           // assign a different color to each node on SSR.
           fill: colorBy

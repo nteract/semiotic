@@ -84,7 +84,7 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
     name: "ProcessSankey",
     category: "network",
     description: "Temporal sankey with a real time axis. Edges carry startTime/endTime; nodes can declare an explicit xExtent lifetime. Use horizontal flow for operational timelines or vertical flow for history-river and lineage views.",
-    // `edges` is intentionally NOT required: ProcessSankey supports
+    // `edges` is NOT required: ProcessSankey supports
     // push-mode where edges arrives via the ref. Only `domain` is
     // structurally required because the time axis can't degrade
     // without it.
@@ -303,7 +303,7 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
       colorModel: "categorical", layoutMode: "plugin",
       specialFeatures: ["hierarchy", "animated"],
     },
-  },
+  }
 
   // ─── Geo family ──────────────────────────────────────────────────────
 

@@ -176,7 +176,7 @@ function makeVariantDefaults(
   }
   if (variant === "network") {
     const r = frameRef as RefObject<NetworkFrameLike | null>
-    // `getScales` is intentionally absent because `RealtimeFrameHandle`
+    // `getScales` is absent because `RealtimeFrameHandle`
     // marks it optional for network/geo frames. Returning a
     // `() => null` stub instead would silently flip
     // `typeof handle.getScales === "function"` checks consumers may

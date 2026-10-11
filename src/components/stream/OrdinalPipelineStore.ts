@@ -1277,7 +1277,7 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
   // ── Public accessors ─────────────────────────────────────────────────
 
   getData(): Datum[] {
-    // Keep this public accessor's historical copy-on-read behavior. The
+    // This public accessor returns a copy. The
     // private cache above is only for internal frame-time pulse/scene work;
     // callers must not be able to mutate the array those paths rely on.
     return this.buffer.toArray()

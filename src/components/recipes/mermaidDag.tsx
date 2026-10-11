@@ -19,7 +19,7 @@ import { readField } from "./recipeUtils"
  * For large or dense graphs where crossing-minimization matters, run a real
  * Sugiyama layouter (the BYO `dagre` recipe, or `d3-dag`) to assign
  * `layer`/`row`, then render with this layout — the rendering and the
- * positioning are deliberately separate concerns.
+ * positioning are separate concerns.
  *
  * Pure, SSR-safe: hit-testable rects are emitted as scene nodes; all visual
  * chrome (shape glyphs, labels, edges, arrowheads, edge labels) is an SVG
@@ -103,7 +103,9 @@ function shapeGlyph(
     }
     case "stadium":
     case "round": {
-      return <rect x={left} y={top} width={w} height={h} rx={shape === "stadium" ? h / 2 : 8} ry={shape === "stadium" ? h / 2 : 8} {...common} />
+      return (
+        <rect x={left} y={top} width={w} height={h} rx={shape === "stadium" ? h / 2 : 8} ry={shape === "stadium" ? h / 2 : 8} {...common} />
+      )
     }
     case "hexagon": {
       const inset = Math.min(w * 0.18, 16)
@@ -143,9 +145,11 @@ function roundedRectPath(left: number, top: number, w: number, h: number, r: num
   const q = Math.max(0, Math.min(r, w / 2, h / 2))
   const right = left + w
   const bottom = top + h
-  return `M${left + q},${top} H${right - q} A${q},${q} 0 0 1 ${right},${top + q} V${bottom - q} ` +
+  return (
+    `M${left + q},${top} H${right - q} A${q},${q} 0 0 1 ${right},${top + q} V${bottom - q} ` +
     `A${q},${q} 0 0 1 ${right - q},${bottom} H${left + q} A${q},${q} 0 0 1 ${left},${bottom - q} ` +
     `V${top + q} A${q},${q} 0 0 1 ${left + q},${top} Z`
+  )
 }
 
 /** Closed silhouette of a node shape, for solid pieces under a `perspective`. */
@@ -164,13 +168,17 @@ function shapeOutline(shape: NodeShape, cx: number, cy: number, w: number, h: nu
       return roundedRectPath(left, top, w, h, shape === "stadium" ? h / 2 : 8)
     case "hexagon": {
       const inset = Math.min(w * 0.18, 16)
-      return `M${left + inset},${top} L${cx + w / 2 - inset},${top} L${cx + w / 2},${cy} ` +
+      return (
+        `M${left + inset},${top} L${cx + w / 2 - inset},${top} L${cx + w / 2},${cy} ` +
         `L${cx + w / 2 - inset},${cy + h / 2} L${left + inset},${cy + h / 2} L${left},${cy} Z`
+      )
     }
     case "cylinder": {
       const ry = Math.min(h * 0.16, 8)
-      return `M${left},${top + ry} A${w / 2},${ry} 0 0 1 ${left + w},${top + ry} V${top + h - ry} ` +
+      return (
+        `M${left},${top + ry} A${w / 2},${ry} 0 0 1 ${left + w},${top + ry} V${top + h - ry} ` +
         `A${w / 2},${ry} 0 0 1 ${left},${top + h - ry} Z`
+      )
     }
     case "subroutine":
       return roundedRectPath(left, top, w, h, 3)
@@ -187,7 +195,9 @@ function shapeDetail(shape: NodeShape, cx: number, cy: number, w: number, h: num
   const top = cy - h / 2
   if (shape === "cylinder") {
     const ry = Math.min(h * 0.16, 8)
-    return <path d={`M${left},${top + ry} a${w / 2},${ry} 0 0 0 ${w},0`} fill="none" stroke={stroke} strokeWidth={1.5} />
+    return (
+      <path d={`M${left},${top + ry} a${w / 2},${ry} 0 0 0 ${w},0`} fill="none" stroke={stroke} strokeWidth={1.5} />
+    )
   }
   if (shape === "subroutine") {
     const bar = Math.min(8, w * 0.08)
@@ -382,7 +392,9 @@ export const mermaidDagLayout: NetworkCustomLayout<MermaidDagConfig> = (ctx) => 
     }
     edgeGlyphs.push(
       <g key={`e-${ei}`}>
-        {!solid && <path d={pathD} fill="none" stroke={edgeColor} strokeWidth={1.4} />}
+        {!solid && (
+          <path d={pathD} fill="none" stroke={edgeColor} strokeWidth={1.4} />
+        )}
         <NetworkPerspectiveGround z="top">
           <polygon points={head} fill={edgeColor} />
         </NetworkPerspectiveGround>
@@ -412,7 +424,11 @@ export const mermaidDagLayout: NetworkCustomLayout<MermaidDagConfig> = (ctx) => 
   const overlays: ReactNode = (
     <g className="mermaid-dag">
       {edgeGlyphs}
-      {solid ? <NetworkPerspectiveGround z="top">{nodeGlyphs}</NetworkPerspectiveGround> : nodeGlyphs}
+      {solid ? (
+        <NetworkPerspectiveGround z="top">{nodeGlyphs}</NetworkPerspectiveGround>
+      ) : (
+        nodeGlyphs
+      )}
     </g>
   )
 

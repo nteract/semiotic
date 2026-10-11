@@ -234,13 +234,13 @@ export interface RealtimeFrameProps {
  *
  * `TDatum` is the authored input row accepted by `push`/`pushMany`/`replace`.
  * `TReadDatum` defaults to the same type and exists for transforms whose
- * materialized readback is deliberately different (RealtimeLineChart's
+ * materialized readback is different (RealtimeLineChart's
  * aggregate mode). Omitting both parameters preserves the loose 3.x `Datum`
  * surface.
  */
 export interface RealtimeFrameHandle<
   TDatum extends Datum = Datum,
-  TReadDatum extends Datum = TDatum,
+  TReadDatum extends Datum = TDatum
 > {
   push(point: TDatum): void
   pushMany(points: TDatum[]): void

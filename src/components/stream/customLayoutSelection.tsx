@@ -20,12 +20,12 @@ export interface CustomLayoutSelection {
  *  don't re-render against it. */
 const INACTIVE_SELECTION: CustomLayoutSelection = { isActive: false, predicate: () => true }
 
-// React's Server Component condition intentionally omits createContext. Keep
+// React's Server Component condition omits createContext. Keep
 // the context lazy so deterministic recipe layouts remain importable from
 // `semiotic/recipes/core`; the context is initialized only when a normal React
 // renderer mounts the provider or selection-aware overlay.
 let customLayoutSelectionContext:
-  | React.Context<CustomLayoutSelection | null>
+  React.Context<CustomLayoutSelection | null>
   | undefined
 
 function getCustomLayoutSelectionContext(): React.Context<
@@ -88,6 +88,9 @@ export function wrapWithCustomLayoutSelection(
   selection: CustomLayoutSelection | null
 ): React.ReactNode {
   return node != null
-    ? <CustomLayoutSelectionProvider value={selection}>{node}</CustomLayoutSelectionProvider>
-    : node
+    ? (
+    <CustomLayoutSelectionProvider value={selection}>{node}</CustomLayoutSelectionProvider>
+  ) : (
+    node
+  )
 }

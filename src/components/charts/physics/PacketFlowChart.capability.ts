@@ -1,7 +1,8 @@
+import { parseNumericValue } from "../../data/numericValue"
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
 
 function hasFiniteCoordinate(value: unknown): boolean {
-  const number = typeof value === "number" ? value : Number(value)
+  const number = typeof value === "number" ? value : (parseNumericValue(value) ?? NaN)
   return Number.isFinite(number)
 }
 
@@ -17,12 +18,14 @@ function hasRouteGeometry(
 
 function throughputField(edges: ReadonlyArray<Record<string, unknown>>): string {
   const candidates = ["value", "throughput", "traffic", "rate", "volume", "count"]
-  return candidates.find((field) =>
+  return (
+    candidates.find((field) =>
     edges.some((edge) => {
-      const value = Number(edge?.[field])
-      return Number.isFinite(value) && value > 0
+      const value = parseNumericValue(edge?.[field]) ?? NaN
+        return Number.isFinite(value) && value > 0
     })
   ) ?? "value"
+  )
 }
 
 export const PacketFlowChartCapability: ChartCapability = {

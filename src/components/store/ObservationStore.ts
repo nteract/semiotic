@@ -15,7 +15,7 @@ interface ObservationBase {
 
 /** Input channel that produced a semantic chart interaction. */
 export type ObservationInputType =
-  | "keyboard"
+  "keyboard"
   | "pointer"
   | "touch"
   | "navigation-tree"
@@ -68,14 +68,14 @@ export interface FocusObservation extends ObservationBase {
   inputType: Exclude<ObservationInputType, "touch">
 }
 
-/** A datum was deliberately activated, independent of input modality. */
+/** A datum was activated, independent of input modality. */
 export interface ActivateObservation extends ObservationBase {
   type: "activate"
   datum: Datum
   inputType: ObservationInputType
 }
 
-/** A stable, interactive annotation was deliberately activated. */
+/** A stable, interactive annotation was activated. */
 export interface AnnotationActivateObservation extends ObservationBase {
   type: "annotation-activate"
   annotationId: string

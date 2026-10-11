@@ -25,7 +25,7 @@ export function flowMapEdgeWidth(
 
 /**
  * Shared FlowMap edge style for the client HOC and `renderChart`. `fillOpacity: 0`
- * is load-bearing: the line renderer treats fillOpacity &gt; 0 as area fill.
+ * is required: the line renderer treats fillOpacity &gt; 0 as area fill.
  */
 export function buildFlowMapLineStyle(options: {
   valueAccessor: string

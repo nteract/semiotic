@@ -1,5 +1,5 @@
 import { fnv1a32 } from "../../utils/hash"
-// NOTE: intentionally no "use client" directive — this module is imported by
+// NOTE: no "use client" directive — this module is imported by
 // the server SVG path (semiotic/server via staticAnnotations + geo configs) and
 // must stay server-importable in RSC frameworks. It has no hooks or top-level
 // browser access; the only canvas API (resolveHatchCanvasPattern) runs at call
@@ -118,7 +118,7 @@ export function resolveHatchCanvasPattern(
   const strokeRaw = h.stroke ?? "#000"
   const background = backgroundRaw === "transparent" || backgroundRaw === "none"
     ? backgroundRaw
-    : (resolveCSSColor(ctx, backgroundRaw) || backgroundRaw)
+    : resolveCSSColor(ctx, backgroundRaw) || backgroundRaw
   const stroke = resolveCSSColor(ctx, strokeRaw) || strokeRaw || "#000"
 
   const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1
@@ -222,7 +222,8 @@ export function normalizeAnnotationGradient(
   gradient: unknown,
   defaultDirection: AnnotationGradientDirection,
   fallback: string,
-): { direction: AnnotationGradientDirection; stops: Array<{ offset: number; color: string; opacity?: number }> } | undefined {
+):
+  | { direction: AnnotationGradientDirection; stops: Array<{ offset: number; color: string; opacity?: number }> } | undefined {
   if (!gradient || typeof gradient !== "object") return undefined
   const candidate = gradient as {
     direction?: unknown

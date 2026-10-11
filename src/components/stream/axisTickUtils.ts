@@ -10,8 +10,8 @@ export function axisTickCount(
 
 /**
  * Only primitive labels can be meaningfully compared without rendering.
- * `String(<span />)` is always "[object Object]", which used to erase every
- * subsequent ReactNode tick when collision filtering also de-duplicated text.
+ * `String(<span />)` is always "[object Object]", so ReactNode ticks cannot
+ * use text-based deduplication.
  */
 export function hasSameTickLabel(a: string | ReactNode, b: string | ReactNode): boolean {
   const aIsText = typeof a === "string" || typeof a === "number"

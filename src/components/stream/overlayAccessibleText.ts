@@ -1,9 +1,6 @@
 /**
- * Shared accessible `<title>` / `<desc>` text for frame SVG overlays.
- *
- * Live overlays historically copied XY fallbacks (including Geo naming maps
- * "XY Chart") and ignored `description`. Keep family-specific fallbacks here
- * so canvas aria-labels, overlay chrome, and static SVG stay aligned.
+ * Shared accessible title and description text for standalone SVG overlays.
+ * Frame-owned overlays use presentation semantics; their parent names the chart.
  */
 export function overlayAccessibleTitle(title: unknown, fallback: string): string {
   return typeof title === "string" && title.length > 0 ? title : fallback

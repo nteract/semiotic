@@ -86,7 +86,7 @@ const LABELS: readonly Invalidation[] = [
 const NOOP: readonly Invalidation[] = []
 
 /**
- * Network's config dependency table. It is deliberately key-level rather
+ * Network's config dependency table. It is key-level rather
  * than a single conservative fallback so an integration can inspect whether
  * a patch rebuilds retained topology, relays out marks, repaints styles, or
  * only changes future work. Unknown future keys retain the safe layout
@@ -187,8 +187,8 @@ export function classifyNetworkConfigPatch(
   for (const key of keys) {
     const effect = chartType === "force" && (key === "nodeSize" || key === "nodeSizeRange")
       ? dependency("preserve", LAYOUT)
-      : NETWORK_CONFIG_PATCH_DEPENDENCIES[key]
-      ?? DEFAULT_CONFIG_PATCH_DEPENDENCY
+      : (NETWORK_CONFIG_PATCH_DEPENDENCIES[key]
+      ?? DEFAULT_CONFIG_PATCH_DEPENDENCY)
     if (effect.retainedData === "rebuild") retainedData = "rebuild"
     for (const invalidation of effect.invalidations) {
       invalidations.add(invalidation)

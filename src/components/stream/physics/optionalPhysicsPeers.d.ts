@@ -1,4 +1,4 @@
-// The optional peer loaders deliberately return opaque modules. Keep source
+// The optional peer loaders return opaque modules. Keep source
 // type checks independent of whether these optional packages are installed;
 // applications can use each engine's own types after loading it.
 declare module "matter-js" {

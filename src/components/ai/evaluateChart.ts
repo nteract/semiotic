@@ -1,7 +1,7 @@
 /**
  * Unified, deterministic chart evaluation for agent and application callers.
  *
- * This is intentionally a composition point rather than a second diagnostic
+ * This is a composition point rather than a second diagnostic
  * engine. The individual audits remain useful on their own; this module gives
  * callers one ranked finding list and one notification feed for the checks
  * that should happen before a chart is shown to a reader.

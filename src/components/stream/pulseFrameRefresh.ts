@@ -14,7 +14,7 @@ export interface IdlePulseRefresh {
 
 /**
  * Advance pulse styling without triggering a layout rebuild. A failed custom
- * layout deliberately retains its last good scene, which must remain
+ * layout retains its last good scene, which must remain
  * immutable until the layout owner recovers.
  */
 export function refreshIdlePulse(

@@ -238,7 +238,7 @@ export const OrbitDiagram = /* @__PURE__ */ withDisplayName(function OrbitDiagra
   // Consolidated network setup. OrbitDiagram uses tighter margin
   // defaults (10px on all sides) than the standard chart-mode
   // defaults — pass them through so the hook's margin reservation
-  // honors the legacy spacing instead of the standard chart-grid one.
+  // retains the 10px orbit margins.
   const setup = useNetworkChartSetup({
     responsive: props,
     nodes: allNodes,

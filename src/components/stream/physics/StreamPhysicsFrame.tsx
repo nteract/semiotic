@@ -31,10 +31,7 @@ import {
   type PhysicsAnnotationAnchorNode
 } from "./PhysicsSVGOverlay"
 import type { PhysicsBodyState } from "./PhysicsKernel"
-import {
-  PhysicsWorkerSession,
-  canUsePhysicsWorker
-} from "./PhysicsWorkerClient"
+import type { PhysicsWorkerSession } from "./PhysicsWorkerClient"
 import {
   PhysicsPipelineStore,
   type PhysicsObservationEvent,
@@ -660,7 +657,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
         ctx.rect(0, 0, plotWidth, plotHeight)
         ctx.clip()
 
-        const snapshot = store.snapshot()
+        const snapshot = store.workerState()
         const bodies = store.readBodies()
         const bodyCursors = physicsCanvasPointer.begin()
         // Throttle moving frames, but always publish the final navigation
@@ -817,7 +814,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
 
       const workerUnsupportedReason = useCallback((): string | null => {
         if (!hydrated) return "hydrating"
-        if (!canUsePhysicsWorker()) return "worker unavailable"
+        if (typeof window === "undefined" || typeof Worker === "undefined") return "worker unavailable"
         if (hasRuntimeRegionEffects)
           return "runtime region effects require sync"
         if (hasRuntimeBodyForces) return "body forces require sync"
@@ -866,8 +863,8 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
       const applyWorkerFrame = useCallback(
         (frame: PhysicsWorkerFrame, replayObservations = true) => {
           const store = storeRef.current
-          if (!store || !frame.snapshot) return store
-          store.restore(frame.snapshot)
+          if (!store) return store
+          store.applyWorkerFrame(frame)
           // Worker callbacks are stripped for structured cloning. Deliver their
           // observations after restoring bodies so region callbacks have context.
           if (replayObservations)
@@ -891,7 +888,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
           if (notifyTick) onTick?.(frame.result, store.controls())
           paint()
 
-          const latest = store.snapshot()
+          const latest = store.workerState()
           const popAnimationsActive = popAnimationsRef.current.size > 0
           if (
             (frame.result.shouldContinue || popAnimationsActive) &&
@@ -930,23 +927,26 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
 
         if (workerActiveRef.current || workerStartingRef.current) return true
 
-        const session = workerSessionRef.current ?? new PhysicsWorkerSession()
-        workerSessionRef.current = session
         workerStartingRef.current = true
         const generation = workerGenerationRef.current + 1
         workerGenerationRef.current = generation
 
-        session
-          .initFromSnapshot(augmentedConfig ?? {}, store.snapshot())
+        import("./PhysicsWorkerClient")
+          .then(({ PhysicsWorkerSession }) => {
+            if (workerGenerationRef.current !== generation) return null
+            const session = workerSessionRef.current ?? new PhysicsWorkerSession()
+            workerSessionRef.current = session
+            return session.initFromSnapshot(augmentedConfig ?? {}, store.snapshot())
+          })
           .then((frame) => {
-            if (workerGenerationRef.current !== generation) return
+            if (!frame || workerGenerationRef.current !== generation) return
             workerStartingRef.current = false
             workerActiveRef.current = true
             workerFailedRef.current = false
             applyWorkerFrame(frame)
             reportExecutionState("worker", choice.reason ?? "worker")
             paint()
-            const latest = storeRef.current?.snapshot()
+            const latest = storeRef.current?.workerState()
             if (
               frame.result.shouldContinue &&
               latest &&
@@ -961,6 +961,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
           .catch((error) => {
             if (workerGenerationRef.current !== generation) return
             handleWorkerError(error)
+            scheduleRender()
           })
 
         return true
@@ -1046,7 +1047,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
         // active run will consume that work and paint; never recursively settle.
         if (!store || !readyToStepRef.current || steppingRef.current) return
         const usingWorker = startWorkerIfNeeded()
-        const snapshot = store.snapshot()
+        const snapshot = store.workerState()
         const frameDrivenWork =
           continuousEffective ||
           hasRuntimeBodyForces ||
@@ -1090,7 +1091,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
         if (reducedMotionForFrame) {
           lastFrameTimeRef.current = null
           const previous = reducedRunRef.current
-          const state = store.snapshot()
+          const state = store.workerState()
           if (previous?.store === store && previous.revision === store.version() &&
             previous.bodyForces === bodyForcesRef.current &&
             previous.controllers === composedControllersRef.current &&
@@ -1477,6 +1478,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
           )
         }
         const { element } = createPhysicsSettledSVG(store, {
+          decorative: true,
           width: size[0],
           height: size[1],
           title: titleText,
@@ -1500,7 +1502,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
             ref={responsiveRef}
             className={wrapperClassName}
             data-semiotic-mode={chartMode}
-            role={accessibleTable ? "group" : "img"}
+            role="group"
             aria-label={ariaLabel}
             style={{
               width: responsiveWidth ? "100%" : size[0],
@@ -1509,7 +1511,9 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
           >
             {table}
             <ScreenReaderSummary summary={summary} />
-            {element}
+            <div role="img" aria-label={ariaLabel}>
+              {element}
+            </div>
           </div>
         )
       }
@@ -1557,10 +1561,10 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
               {resolvedBackground}
             </CanvasFrameBackground>
             <canvas
+              aria-hidden="true"
               ref={canvasRef}
               width={size[0]}
               height={size[1]}
-              aria-hidden="true"
               style={{
                 position: "absolute",
                 left: 0,

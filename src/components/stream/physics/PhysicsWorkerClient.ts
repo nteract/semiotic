@@ -9,17 +9,17 @@ import {
   isPhysicsWorkerPacingSupported,
   type PhysicsWorkerCommand,
   type PhysicsWorkerFrame,
-  type PhysicsWorkerRequest,
   type PhysicsWorkerResponse,
   type PhysicsWorkerResponsePayload
 } from "./PhysicsWorkerProtocol"
+import { PhysicsWorkerDatums } from "./physicsWorkerDatums"
 import { commonJsWorkerModuleUrl } from "../workerModuleUrl"
 
-interface PendingPhysicsWorkerRequest {
-  cleanup: () => void
-  reject: (error: Error) => void
-  resolve: (payload: PhysicsWorkerResponsePayload) => void
-}
+import {
+  ModuleWorkerSession,
+  moduleWorkerErrorFromPayload,
+  parseModuleWorkerErrorField
+} from "../moduleWorkerSession"
 
 export function canUsePhysicsWorker(): boolean {
   return typeof window !== "undefined" && typeof Worker !== "undefined"
@@ -40,72 +40,49 @@ export function createPhysicsWorker(): Worker {
   })
 }
 
-function abortError(): Error {
-  if (typeof DOMException !== "undefined") {
-    return new DOMException("Physics worker request aborted", "AbortError")
-  }
-  const error = new Error("Physics worker request aborted")
-  error.name = "AbortError"
-  return error
-}
-
-function responseError(response: Extract<PhysicsWorkerResponse, { ok: false }>) {
-  const error = new Error(response.error.message)
-  error.name = response.error.name ?? "Error"
-  if (response.error.stack) error.stack = response.error.stack
-  return error
-}
-
-export class PhysicsWorkerSession {
-  private nextRequestId = 1
-  private pending = new Map<number, PendingPhysicsWorkerRequest>()
-  private worker: Worker
+export class PhysicsWorkerSession extends ModuleWorkerSession<
+  PhysicsWorkerCommand,
+  PhysicsWorkerResponsePayload
+> {
+  private datums = new PhysicsWorkerDatums()
 
   constructor(worker: Worker = createPhysicsWorker()) {
-    this.worker = worker
-    this.worker.onmessage = (event: MessageEvent<PhysicsWorkerResponse>) => {
-      const response = event.data
-      const pending = this.pending.get(response.requestId)
-      if (!pending) return
-      this.pending.delete(response.requestId)
-      pending.cleanup()
-      if (response.ok) pending.resolve(response.payload)
-      else pending.reject(responseError(response))
-    }
-    this.worker.onerror = (event: ErrorEvent) => {
-      this.rejectAll(new Error(event.message || "Physics worker failed"))
-      this.worker.terminate()
-    }
+    super({
+      name: "Physics",
+      createWorker: () => worker,
+      requestTimeoutMs: 30_000,
+      encodeRequest: (requestId, command) => ({ requestId, command }),
+      parseMessage: (data) => {
+        const { requestId, error } = parseModuleWorkerErrorField(data)
+        const response = data as PhysicsWorkerResponse
+        if (requestId === undefined || typeof response.ok !== "boolean") {
+          throw new Error("Malformed physics worker response")
+        }
+        if (!response.ok) {
+          if (!error) throw new Error("Malformed physics worker error")
+          return {
+            requestId,
+            ok: false,
+            error: moduleWorkerErrorFromPayload(error)
+          }
+        }
+        if (
+          !response.payload ||
+          !["frame", "removed", "snapshot"].includes(response.payload.type)
+        ) {
+          throw new Error("Malformed physics worker payload")
+        }
+        return { requestId, ok: true, payload: response.payload }
+      }
+    })
   }
 
-  request(
+  override async request(
     command: PhysicsWorkerCommand,
     signal?: AbortSignal
   ): Promise<PhysicsWorkerResponsePayload> {
-    if (signal?.aborted) return Promise.reject(abortError())
-
-    const requestId = this.nextRequestId
-    this.nextRequestId += 1
-    const request: PhysicsWorkerRequest = { command, requestId }
-
-    return new Promise((resolve, reject) => {
-      const onAbort = () => {
-        this.pending.delete(requestId)
-        signal?.removeEventListener("abort", onAbort)
-        reject(abortError())
-      }
-      const cleanup = () => signal?.removeEventListener("abort", onAbort)
-      this.pending.set(requestId, { cleanup, reject, resolve })
-      signal?.addEventListener("abort", onAbort, { once: true })
-
-      try {
-        this.worker.postMessage(request)
-      } catch (error) {
-        this.pending.delete(requestId)
-        cleanup()
-        reject(error)
-      }
-    })
+    const revision = this.datums.capture(command)
+    return this.datums.receive(await super.request(command, signal), revision)
   }
 
   async init(
@@ -226,18 +203,5 @@ export class PhysicsWorkerSession {
       throw new Error("Physics worker returned a non-remove response")
     }
     return { frame: payload.frame, removed: payload.removed }
-  }
-
-  terminate(): void {
-    this.rejectAll(new Error("Physics worker terminated"))
-    this.worker.terminate()
-  }
-
-  private rejectAll(error: Error): void {
-    for (const [requestId, pending] of this.pending) {
-      this.pending.delete(requestId)
-      pending.cleanup()
-      pending.reject(error)
-    }
   }
 }

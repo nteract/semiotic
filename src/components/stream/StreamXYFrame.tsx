@@ -1070,7 +1070,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       // ── React state updates ──────────────────────────────────────────
       const wasDirty = dirtyRef.current
       // If a prop/layout/size change arrives while a transition is active,
-      // computeScene is intentionally deferred. Keep the dirty flag set so
+      // computeScene is deferred. Keep the dirty flag set so
       // the next non-transition frame applies the new responsive dimensions
       // instead of leaving canvas scene nodes and SVG overlays out of sync.
       dirtyRef.current = wasDirty && isTransitioning && !computedSceneThisFrame
@@ -1253,7 +1253,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
           // it would never re-run to see the now-attached element.
           ref={responsiveRef}
           className={`stream-xy-frame${className ? ` ${className}` : ""}`}
-          role={accessibleTable ? "group" : "img"}
+          role="group"
           aria-label={chartAriaLabel}
           style={{
             position: "relative",
@@ -1264,7 +1264,8 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
         >
           <AccessibleDataTableSlot accessibleTable={accessibleTable} scene={scene} chartType={chartType + " chart"} tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />
           <ScreenReaderSummary summary={summary} />
-          <svg
+          <div role="img" aria-label={chartAriaLabel}>
+          <svg role="presentation"
             xmlns="http://www.w3.org/2000/svg"
             width={size[0]}
             height={size[1]}
@@ -1294,6 +1295,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
             </g>
           </svg>
           <SVGOverlay
+            decorative
             width={adjustedWidth}
             height={adjustedHeight}
             totalWidth={size[0]}
@@ -1340,6 +1342,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
             linkedCrosshairName={linkedCrosshairName}
             linkedCrosshairSourceId={linkedCrosshairSourceId}
           />
+          </div>
         </div>
       )
     }
@@ -1410,9 +1413,10 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
           axisExtent={axisExtent}
         />
         {/* CSS box from the frame size at commit, so paused or hidden-tab mounts lay out before their first paint. */}
-        <canvas ref={canvasRef} aria-label={computeCanvasAriaLabel(storeRef.current?.scene ?? [], chartType + " chart")} style={{ position: "absolute", left: 0, top: 0, width: size[0], height: size[1] }} />
+        <canvas aria-hidden="true" ref={canvasRef} aria-label={computeCanvasAriaLabel(storeRef.current?.scene ?? [], chartType + " chart")} style={{ position: "absolute", left: 0, top: 0, width: size[0], height: size[1] }} />
         <canvas ref={interactionCanvasRef} style={{ position: "absolute", left: 0, top: 0, width: size[0], height: size[1], pointerEvents: "none" }} />
         <SVGOverlay
+          decorative
           width={adjustedWidth}
           height={adjustedHeight}
           totalWidth={size[0]}

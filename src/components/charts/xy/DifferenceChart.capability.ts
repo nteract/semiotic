@@ -1,3 +1,4 @@
+import { parseNumericValue } from "../../data/numericValue"
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
 import { BUILT_IN_NUMERIC_CONTRACTS } from "../../data/numericContracts"
 
@@ -36,7 +37,7 @@ export const DifferenceChartCapability: ChartCapability = {
     // the series"; LineChart / GroupedBarChart show them all.
     "compare-series": (p) => (p.seriesCount === 2 ? 5 : 3),
     "change-detection": 4,
-    "trend": 3,
+    trend: 3,
   },
 
   caveats: (p) => {
@@ -71,7 +72,7 @@ export const DifferenceChartCapability: ChartCapability = {
       const raw = row[seriesKey]
       if (!isValidSeries(raw)) continue
       const name = String(raw)
-      const v = Number(row[yKey])
+      const v = parseNumericValue(row[yKey]) ?? NaN
       totals.set(name, (totals.get(name) ?? 0) + (Number.isFinite(v) ? v : 0))
     }
     const ranked = [...totals.entries()].sort((a, b) => b[1] - a[1])

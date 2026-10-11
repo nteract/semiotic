@@ -81,7 +81,7 @@ export function getRequiredPaths(atlas: PreparedNetworkAtlas, target: string) {
   return answer
 }
 
-/** Shortest admitted directed path; capacity is intentionally not an edge filter. */
+/** Shortest admitted directed path; capacity is not an edge filter. */
 export function getBypassWitness(
   atlas: PreparedNetworkAtlas,
   query: { target: string; avoiding: string[] }

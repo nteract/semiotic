@@ -1,15 +1,15 @@
 "use client"
+import { useSSRStoreCommit } from "./useSSRStoreCommit"
 import * as React from "react"
 import { forwardRef, memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { GeoAreaSceneNode, GeoLineSceneNode, GeoSceneNode, StreamGeoFrameHandle, StreamGeoFrameProps } from "./geoTypes"
-import type { PointSceneNode, SceneNode, StreamLayout, StreamScales } from "./types"
+import type { PointSceneNode } from "./types"
 import type { HoverData } from "../realtime/types"
 import { GeoPipelineStore } from "./GeoPipelineStore"
 import { useGeoFrameHandle } from "./useGeoFrameHandle"
 import { SceneRevisionDiagnosticsObserver, useSceneRevisionDiagnostics } from "./sceneRevisionDiagnostics"
 import { refreshIdlePulse } from "./pulseFrameRefresh"
 import type { GeoPipelineConfig } from "./geoTypes"
-import { findNearestGeoNode } from "./GeoCanvasHitTester"
 import { useFrame } from "./useFrame"
 import { useConfigSync, useLayoutSelectionSync } from "./streamStoreSync"
 import { resolveThemeSemanticColors } from "../store/themeCore"
@@ -35,13 +35,13 @@ import { select } from "d3-selection"
 
 // Canvas renderers
 import { geoCanvasRenderer } from "./renderers/geoCanvasRenderer"
-import { lineCanvasRenderer } from "./renderers/lineCanvasRenderer"
-import { pointCanvasRenderer } from "./renderers/pointCanvasRenderer"
-import { glyphCanvasRenderer } from "./renderers/glyphCanvasRenderer"
+import { renderCanvasLines } from "./renderers/lineCanvasRenderer"
+import { renderCanvasPoints } from "./renderers/pointCanvasRenderer"
+import { renderCanvasGlyphs } from "./renderers/glyphCanvasRenderer"
 import { TileCache, renderTiles } from "./GeoTileRenderer"
 import { prepareCanvas, getDevicePixelRatio, syncCanvasSize } from "./canvasSetup"
 import { GeoParticlePool } from "./GeoParticlePool"
-import { getPointerHitRadius, type HoverPointerCoords } from "./hoverUtils"
+import { type HoverPointerCoords } from "./hoverUtils"
 import { resolveNodeColor } from "./sceneUtils"
 import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
@@ -51,13 +51,11 @@ import { collectGeoAnnotationAnchors } from "./geoAnnotationAnchors"
 import { DefaultGeoTooltip } from "./geoDefaultTooltip"
 import {
   DEFAULT_GEO_MARGIN as DEFAULT_MARGIN,
-  DEFAULT_GEO_HOVER_RADIUS,
   defaultGeoParticleMaxPerLine,
   defaultGeoParticleSpawnRate,
   resolveGeoPointerHit,
   zoomButtonStyle,
   resolveProjectionName,
-  ensureHitCanvasContext,
   type GeoZoomSelection,
   type GeoZoomControlBehavior
 } from "./geoFrameHelpers"
@@ -198,7 +196,7 @@ const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     // `height` props (legacy form). Resolve before handing to useFrame.
     const sizeFromProps: [number, number] = sizeProp || [widthProp || 600, heightProp || 400]
     // dirtyRef declared before useFrame so it can be threaded in for the
-    // theme-change effect. Geo inits to true (load-bearing for first paint).
+    // theme-change effect. Geo inits to true (required for first paint).
     const dirtyRef = useRef(true)
     const frame = useFrame({
       sizeProp: sizeFromProps,
@@ -251,7 +249,7 @@ const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     const safeLines = useMemo(() => filterSparseArray(lines), [lines])
 
     // Resolve dragRotate — defaults to true for orthographic
-    const effectiveDragRotate = dragRotateProp ?? (resolveProjectionName(projection) === "orthographic")
+    const effectiveDragRotate = dragRotateProp ?? resolveProjectionName(projection) === "orthographic"
 
     // ── Pipeline config ───────────────────────────────────────────────
 
@@ -331,19 +329,35 @@ const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
 
     const storeRef = useRef<GeoPipelineStore | null>(null)
     if (!storeRef.current) storeRef.current = new GeoPipelineStore(stablePipelineConfig)
-    const store = storeRef.current
+    const renderSVG =
+      isServerEnvironment || (!hydrated && wasHydratingFromSSR)
+    const ssrStore = useMemo(() => {
+      if (!renderSVG) return null
+      const isolated = new GeoPipelineStore(stablePipelineConfig)
+      if (safeAreas) isolated.setAreas(safeAreas)
+      if (points) isolated.setPoints(safePoints)
+      if (lines) isolated.setLines(safeLines)
+      isolated.computeScene({
+        width: adjustedWidth,
+        height: adjustedHeight
+      })
+      isolated.cancelIntroAnimation()
+      return isolated
+    }, [
+      renderSVG,
+      stablePipelineConfig,
+      safeAreas,
+      points,
+      safePoints,
+      lines,
+      safeLines,
+      adjustedWidth,
+      adjustedHeight
+    ])
+    useSSRStoreCommit(storeRef, ssrStore)
+    const store = ssrStore ?? storeRef.current
     const graphicsScaleTrackerRef = useRef<FrameGraphicsScaleTracker | null>(null)
-    const graphicsScaleTracker = graphicsScaleTrackerRef.current ??= createFrameGraphicsScaleTracker(store.scales)
-    const renderSVG = isServerEnvironment || (!hydrated && wasHydratingFromSSR)
-    if (renderSVG && (safeAreas || points || lines)) {
-      if (safeAreas) store.setAreas(safeAreas)
-      if (points) store.setPoints(safePoints)
-      if (lines) store.setLines(safeLines)
-      store.computeScene({ width: adjustedWidth, height: adjustedHeight })
-      // The SVG branch (server render and the hydration pass that must
-      // match it) paints the final state; an intro only runs on canvas.
-      store.cancelIntroAnimation()
-    }
+    const graphicsScaleTracker = (graphicsScaleTrackerRef.current ??= createFrameGraphicsScaleTracker(store.scales))
     const { resolvedForeground, resolvedBackground, themeBackground, surfaceBackground } = resolveSubscribedFrameLayers({ foregroundGraphics, backgroundGraphics, size, margin, scales: store.scales, background, themeBackgroundColor: currentTheme.colors.background, tracker: graphicsScaleTracker, readScales: () => store.scales })
 
     // ── Refs ──────────────────────────────────────────────────────────
@@ -519,7 +533,7 @@ const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     frame.hoverLeaveRef.current = () => {
       setCanvasMarkCursor(canvasRef.current)
       // Cursor-only interaction never mutates hover state or canvas paint.
-      // Reset the DOM cursor, then avoid the legacy hover cleanup repaint.
+      // Reset the DOM cursor, then avoid an extra hover cleanup repaint.
       if (!enableHover || hoverAnnotation === false) return
       hoverRef.current = null
       hoveredNodeRef.current = null
@@ -541,53 +555,25 @@ const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
           return
         }
 
-        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-        const chartX = e.clientX - rect.left - margin.left
-        const chartY = e.clientY - rect.top - margin.top
-        if (chartX < 0 || chartX > adjustedWidth || chartY < 0 || chartY > adjustedHeight) {
-          customClickBehavior(null)
-          return
-        }
-
-        if (!hitCanvasRef.current) {
-          if (typeof OffscreenCanvas !== "undefined") {
-            hitCanvasRef.current = new OffscreenCanvas(1, 1)
-          } else {
-            hitCanvasRef.current = document.createElement("canvas")
-          }
-        }
-        const hitCtx = ensureHitCanvasContext(hitCanvasRef.current)
-        if (!hitCtx) {
-          customClickBehavior(null)
-          return
-        }
-
-        const hitRadius = getPointerHitRadius(DEFAULT_GEO_HOVER_RADIUS, lastPointerTypeRef.current)
-        const lineHitRadius = getPointerHitRadius(6, lastPointerTypeRef.current)
-        const hit = findNearestGeoNode(store.scene, chartX, chartY, hitRadius, hitCtx, store.quadtree, store.maxPointRadius, lineHitRadius)
-        if (hit) {
-          const datum = hit.node.datum
-          const rawData = Array.isArray(datum) ? null : datum?.properties ? datum : datum?.data || datum
-          const flattened = rawData?.properties ? { ...rawData, ...rawData.properties } : rawData
-          customClickBehavior(
-            {
-              ...flattened,
-              data: rawData,
-              properties: rawData?.properties,
-              __semioticHoverData: true,
-              x: chartX,
-              y: chartY,
-              time: chartX,
-              value: chartY
-            },
-            {
-              type: "activate",
-              inputType: observationInputType(lastPointerTypeRef.current)
-            }
-          )
-          return
-        }
-        customClickBehavior(null)
+        const result = resolveGeoPointerHit({
+          pointer: {
+            clientX: e.clientX,
+            clientY: e.clientY,
+            pointerType: lastPointerTypeRef.current
+          },
+          canvasRect: (e.currentTarget as HTMLElement).getBoundingClientRect(),
+          margin,
+          width: adjustedWidth,
+          height: adjustedHeight,
+          scene: store.scene,
+          pointQuadtree: store.quadtree,
+          maxPointRadius: store.maxPointRadius,
+          hitCanvasRef
+        })
+        customClickBehavior(result.kind === "hit" ? result.hover : null, {
+          type: "activate",
+          inputType: observationInputType(lastPointerTypeRef.current)
+        })
       },
       [adjustedHeight, adjustedWidth, customClickBehavior, margin, flushPointerMove]
     )
@@ -802,9 +788,19 @@ const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
           pixelRatio: dpr,
           paintBuiltIn: (nodes) => {
             geoCanvasRenderer(ctx, nodes, scales, layout)
-            lineCanvasRenderer(ctx, nodes as unknown as SceneNode[], scales as unknown as StreamScales, layout as StreamLayout)
-            pointCanvasRenderer(ctx, nodes as unknown as SceneNode[], scales as unknown as StreamScales, layout as StreamLayout)
-            glyphCanvasRenderer(ctx, nodes as unknown as SceneNode[], scales as unknown as StreamScales, layout as StreamLayout)
+            renderCanvasLines(
+              ctx,
+              nodes.filter((node) => node.type === "line"),
+              layout
+            )
+            renderCanvasPoints(
+              ctx,
+              nodes.filter((node) => node.type === "point")
+            )
+            renderCanvasGlyphs(
+              ctx,
+              nodes.filter((node) => node.type === "glyph")
+            )
           }
         })
 
@@ -1144,7 +1140,9 @@ const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
 
     const effectiveHoverAnnotation = enableHover && hoverAnnotation !== false
 
-    const tooltipRendered = effectiveHoverAnnotation && hoverPoint ? tooltipContent ? tooltipContent(hoverPoint) : <DefaultGeoTooltip data={hoverPoint} /> : null
+    const tooltipRendered = effectiveHoverAnnotation && hoverPoint ? (
+      tooltipContent ? tooltipContent(hoverPoint) : <DefaultGeoTooltip data={hoverPoint} />
+    ) : null
 
     const tooltipElement = hasTooltipContent(tooltipRendered) ? (
       <FlippingTooltip
@@ -1175,69 +1173,99 @@ const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
           // commit. See `StreamXYFrame.tsx` for the rationale.
           ref={combinedRef}
           className={`stream-geo-frame${className ? ` ${className}` : ""}`}
-          role={accessibleTable ? "group" : "img"}
-          aria-label={description || (typeof title === "string" ? title : "Geographic chart")}
+          role="group"
+          aria-label={
+            description ||
+            (typeof title === "string" ? title : "Geographic chart")
+          }
           style={{
             position: "relative",
             fontFamily: "var(--semiotic-font-family, sans-serif)",
             width: responsiveWidth ? "100%" : size[0],
-            height: responsiveHeight ? "100%" : size[1]
+            height: responsiveHeight ? "100%" : size[1],
           }}
         >
-          <AccessibleDataTableSlot accessibleTable={accessibleTable} scene={scene} chartType="Geographic chart" tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />
-          <ScreenReaderSummary summary={summary} />
-          <svg xmlns="http://www.w3.org/2000/svg" width={size[0]} height={size[1]} style={{ position: "absolute", left: 0, top: 0 }}>
-            {surfaceBackground ? (
-              <rect
-                className="stream-frame-background__backdrop"
-                x={0}
-                y={0}
-                width={size[0]}
-                height={size[1]}
-                fill={surfaceBackground}
-              />
-            ) : null}
-            <g transform={`translate(${margin.left},${margin.top})`}>
-              {resolvedBackground}
-            </g>
-            <g transform={`translate(${margin.left},${margin.top})`}>
-              {scene.map((node, i) =>
-                renderSceneWithBackend({
-                  node,
-                  index: i,
-                  renderMode,
-                  fallback: () => geoSceneNodeToSVG(node, i)
-                })
-              )}
-            </g>
-          </svg>
-          <GeoSVGOverlay
-            width={adjustedWidth}
-            height={adjustedHeight}
-            totalWidth={size[0]}
-            totalHeight={size[1]}
-            margin={margin}
-            showAxes={false}
-            title={title}
-            description={description}
-            legend={legend}
-            legendPosition={legendPosition}
-            legendLayout={legendLayout}
-            legendHoverBehavior={legendHoverBehavior}
-            legendClickBehavior={legendClickBehavior}
-            legendHighlightedCategory={legendHighlightedCategory}
-            legendIsolatedCategories={legendIsolatedCategories}
-            foregroundGraphics={composeOverlays(resolvedForeground, wrapWithCustomLayoutSelection(storeRef.current?.customLayoutOverlays, layoutSelection ?? null))}
-            annotations={annotations}
-            onAnnotationActivate={onAnnotationActivate}
-            onObservation={annotationObservationCallback ?? onObservation}
-            chartId={chartId}
-            chartType="StreamGeoFrame"
-            autoPlaceAnnotations={autoPlaceAnnotations}
-            svgAnnotationRules={svgAnnotationRules}
-            pointNodes={collectGeoAnnotationAnchors(scene)}
-            geoProjection={storeRef.current?.scales?.projectedPoint}
+          <AccessibleDataTableSlot
+            accessibleTable={accessibleTable}
+            scene={scene}
+            chartType="Geographic chart"
+            tableId={tableId}
+            chartTitle={typeof title === "string" ? title : undefined}
           />
+          <ScreenReaderSummary summary={summary} />
+          <div
+            role="img"
+            aria-label={
+              description ||
+              (typeof title === "string" ? title : "Geographic chart")
+            }
+          >
+            <svg
+              role="presentation"
+              xmlns="http://www.w3.org/2000/svg"
+              width={size[0]}
+              height={size[1]}
+              style={{ position: "absolute", left: 0, top: 0 }}
+            >
+              {surfaceBackground ? (
+                <rect
+                  className="stream-frame-background__backdrop"
+                  x={0}
+                  y={0}
+                  width={size[0]}
+                  height={size[1]}
+                  fill={surfaceBackground}
+                />
+              ) : null}
+              <g transform={`translate(${margin.left},${margin.top})`}>
+                {resolvedBackground}
+              </g>
+              <g transform={`translate(${margin.left},${margin.top})`}>
+                {scene.map((node, i) =>
+                  renderSceneWithBackend({
+                    node,
+                    index: i,
+                    renderMode,
+                    fallback: () => geoSceneNodeToSVG(node, i),
+                  }),
+                )}
+              </g>
+            </svg>
+            <GeoSVGOverlay
+              decorative
+              width={adjustedWidth}
+              height={adjustedHeight}
+              totalWidth={size[0]}
+              totalHeight={size[1]}
+              margin={margin}
+              showAxes={false}
+              title={title}
+              description={description}
+              legend={legend}
+              legendPosition={legendPosition}
+              legendLayout={legendLayout}
+              legendHoverBehavior={legendHoverBehavior}
+              legendClickBehavior={legendClickBehavior}
+              legendHighlightedCategory={legendHighlightedCategory}
+              legendIsolatedCategories={legendIsolatedCategories}
+              foregroundGraphics={composeOverlays(
+                resolvedForeground,
+                wrapWithCustomLayoutSelection(
+                  store.customLayoutOverlays,
+                  layoutSelection ?? null,
+                ),
+              )}
+              annotations={annotations}
+              onAnnotationActivate={onAnnotationActivate}
+              onObservation={annotationObservationCallback ?? onObservation}
+              chartId={chartId}
+              chartType="StreamGeoFrame"
+              autoPlaceAnnotations={autoPlaceAnnotations}
+              svgAnnotationRules={svgAnnotationRules}
+              pointNodes={collectGeoAnnotationAnchors(scene)}
+              geoProjection={store.scales?.projectedPoint}
+            />
+          </div>
         </div>
       )
     }
@@ -1249,7 +1277,10 @@ const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
         ref={combinedRef}
         className={`stream-geo-frame${className ? ` ${className}` : ""}`}
         role="group"
-        aria-label={description || (typeof title === "string" ? title : "Geographic chart")}
+        aria-label={
+          description ||
+          (typeof title === "string" ? title : "Geographic chart")
+        }
         tabIndex={0}
         style={{
           position: "relative",
@@ -1257,28 +1288,54 @@ const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
           width: responsiveWidth ? "100%" : size[0],
           height: responsiveHeight ? "100%" : size[1],
           overflow: allowTooltipOverflow ? "visible" : "hidden",
-          ...(zoomable ? { touchAction: "none" } : {})
+          ...(zoomable ? { touchAction: "none" } : {}),
         }}
         onKeyDown={onKeyDown}
       >
         {process.env.NODE_ENV !== "production" && storeRef.current && (
-          <SceneRevisionDiagnosticsObserver store={storeRef.current} diagnostics={sceneRevisionDiagnosticsRef.current} />
+          <SceneRevisionDiagnosticsObserver
+            store={storeRef.current}
+            diagnostics={sceneRevisionDiagnosticsRef.current}
+          />
         )}
-        <AccessibleDataTableSlot accessibleTable={accessibleTable} sceneRevision={storeRef.current?.getUpdateSnapshot().revisions.accessibility} scene={storeRef.current?.scene ?? []} chartType="Geographic chart" tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />
+        <AccessibleDataTableSlot
+          accessibleTable={accessibleTable}
+          sceneRevision={
+            storeRef.current?.getUpdateSnapshot().revisions.accessibility
+          }
+          scene={storeRef.current?.scene ?? []}
+          chartType="Geographic chart"
+          tableId={tableId}
+          chartTitle={typeof title === "string" ? title : undefined}
+        />
         <ScreenReaderSummary summary={summary} />
         {/* Live region MUST live outside the role="img" wrapper — AT treats the
-            image as atomic and never announces content nested inside it. */}
-        <AriaLiveTooltip active={kbFocusIndexRef.current >= 0} hoverPoint={hoverPoint} />
+        image as atomic and never announces content nested inside it. */}
+        <AriaLiveTooltip
+          active={kbFocusIndexRef.current >= 0}
+          hoverPoint={hoverPoint}
+        />
         <div
           role="img"
-          aria-label={description || (typeof title === "string" ? title : "Geographic chart")}
+          aria-label={
+            description ||
+            (typeof title === "string" ? title : "Geographic chart")
+          }
           style={{ position: "relative", width: "100%", height: "100%" }}
           onPointerMove={onPointerMoveWrapped}
           onPointerLeave={onPointerLeave}
-          onPointerDown={effectiveHoverAnnotation || hasClickBehavior ? onPointerDown : undefined}
+          onPointerDown={
+            effectiveHoverAnnotation || hasClickBehavior
+              ? onPointerDown
+              : undefined
+          }
           onClick={hasClickBehavior ? onClick : undefined}
         >
-          <CanvasFrameBackground size={size} margin={margin} backdropFill={surfaceBackground ?? undefined}>
+          <CanvasFrameBackground
+            size={size}
+            margin={margin}
+            backdropFill={surfaceBackground ?? undefined}
+          >
             {resolvedBackground}
           </CanvasFrameBackground>
           {tileURL && (
@@ -1290,11 +1347,25 @@ const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
                 top: 0,
                 width: size[0],
                 height: size[1],
-                pointerEvents: "none"
+                pointerEvents: "none",
               }}
             />
           )}
-          <canvas ref={canvasRef} aria-label={computeCanvasAriaLabel(storeRef.current?.scene ?? [], "Geographic chart")} style={{ position: "absolute", left: 0, top: 0, width: size[0], height: size[1] }} />
+          <canvas
+            aria-hidden="true"
+            ref={canvasRef}
+            aria-label={computeCanvasAriaLabel(
+              storeRef.current?.scene ?? [],
+              "Geographic chart",
+            )}
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              width: size[0],
+              height: size[1],
+            }}
+          />
           <canvas
             ref={interactionCanvasRef}
             style={{
@@ -1303,10 +1374,11 @@ const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
               top: 0,
               width: size[0],
               height: size[1],
-              pointerEvents: "none"
+              pointerEvents: "none",
             }}
           />
           <GeoSVGOverlay
+            decorative
             width={adjustedWidth}
             height={adjustedHeight}
             totalWidth={size[0]}
@@ -1322,7 +1394,13 @@ const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
             legendClickBehavior={legendClickBehavior}
             legendHighlightedCategory={legendHighlightedCategory}
             legendIsolatedCategories={legendIsolatedCategories}
-            foregroundGraphics={composeOverlays(resolvedForeground, wrapWithCustomLayoutSelection(storeRef.current?.customLayoutOverlays, layoutSelection ?? null))}
+            foregroundGraphics={composeOverlays(
+              resolvedForeground,
+              wrapWithCustomLayoutSelection(
+                store.customLayoutOverlays,
+                layoutSelection ?? null,
+              ),
+            )}
             annotations={annotations}
             onAnnotationActivate={onAnnotationActivate}
             onObservation={annotationObservationCallback ?? onObservation}
@@ -1330,8 +1408,10 @@ const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
             chartType="StreamGeoFrame"
             autoPlaceAnnotations={autoPlaceAnnotations}
             svgAnnotationRules={svgAnnotationRules}
-            pointNodes={collectGeoAnnotationAnchors(storeRef.current?.scene)}
-            geoProjection={storeRef.current?.scales?.projectedPoint}
+            pointNodes={collectGeoAnnotationAnchors(
+              storeRef.current?.scene,
+            )}
+            geoProjection={store.scales?.projectedPoint}
           />
           {staleness?.showBadge && (
             <StalenessBadge
@@ -1340,70 +1420,6 @@ const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
               state={staleness.state}
               settling={staleness.settling}
             />
-          )}
-          {zoomable && (
-            <div
-              className="stream-geo-zoom-controls"
-              style={{
-                position: "absolute",
-                bottom: margin.bottom + 8,
-                left: margin.left + 8,
-                display: "flex",
-                flexDirection: "column",
-                gap: 2,
-                zIndex: 2
-              }}
-            >
-              <button
-                type="button"
-                aria-label="Zoom in"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  const container = containerRef.current
-                  const behavior = zoomBehaviorRef.current
-                  if (container && behavior?.scaleBy) {
-                    behavior.scaleBy(select(container), 1.5)
-                  }
-                }}
-                style={zoomButtonStyle}
-              >
-                +
-              </button>
-              <button
-                type="button"
-                aria-label="Zoom out"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  const container = containerRef.current
-                  const behavior = zoomBehaviorRef.current
-                  if (container && behavior?.scaleBy) {
-                    behavior.scaleBy(select(container), 1 / 1.5)
-                  }
-                }}
-                style={zoomButtonStyle}
-              >
-                −
-              </button>
-            </div>
-          )}
-          {tileAttribution && (
-            <div
-              className="stream-geo-tile-attribution"
-              style={{
-                position: "absolute",
-                bottom: margin.bottom + 2,
-                right: margin.right + 4,
-                fontSize: 10,
-                color: "rgba(0,0,0,0.6)",
-                background: "rgba(255,255,255,0.7)",
-                padding: "1px 4px",
-                borderRadius: 2,
-                pointerEvents: "none",
-                zIndex: 2
-              }}
-            >
-              {tileAttribution}
-            </div>
           )}
           <FocusRing
             active={kbFocusIndexRef.current >= 0}
@@ -1418,6 +1434,70 @@ const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
           {tooltipElement}
         </div>
         {/* end role="img" */}
+        {zoomable && (
+          <div
+            className="stream-geo-zoom-controls"
+            style={{
+              position: "absolute",
+              bottom: margin.bottom + 8,
+              left: margin.left + 8,
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+              zIndex: 2,
+            }}
+          >
+            <button
+              type="button"
+              aria-label="Zoom in"
+              onClick={(e) => {
+                e.stopPropagation()
+                const container = containerRef.current
+                const behavior = zoomBehaviorRef.current
+                if (container && behavior?.scaleBy) {
+                  behavior.scaleBy(select(container), 1.5)
+                }
+              }}
+              style={zoomButtonStyle}
+            >
+              +
+            </button>
+            <button
+              type="button"
+              aria-label="Zoom out"
+              onClick={(e) => {
+                e.stopPropagation()
+                const container = containerRef.current
+                const behavior = zoomBehaviorRef.current
+                if (container && behavior?.scaleBy) {
+                  behavior.scaleBy(select(container), 1 / 1.5)
+                }
+              }}
+              style={zoomButtonStyle}
+            >
+              −
+            </button>
+          </div>
+        )}
+        {tileAttribution && (
+          <div
+            className="stream-geo-tile-attribution"
+            style={{
+              position: "absolute",
+              bottom: margin.bottom + 2,
+              right: margin.right + 4,
+              fontSize: 10,
+              color: "rgba(0,0,0,0.6)",
+              background: "rgba(255,255,255,0.7)",
+              padding: "1px 4px",
+              borderRadius: 2,
+              pointerEvents: "none",
+              zIndex: 2,
+            }}
+          >
+            {tileAttribution}
+          </div>
+        )}
       </div>
     )
   })

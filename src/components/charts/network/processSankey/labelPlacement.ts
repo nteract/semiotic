@@ -116,7 +116,7 @@ export function staggerProcessSankeyLabels(
 /**
  * A vertical river can have many nodes opening on the same historical stage.
  * Place those labels in compact rows within the preceding inter-stage gap.
- * This is intentionally a label-only pass: it never changes band ordering or
+ * This is a label-only pass: it never changes band ordering or
  * geometry, and labels at distinct stages cannot push one another downstream.
  */
 export function staggerVerticalProcessSankeyLabels(

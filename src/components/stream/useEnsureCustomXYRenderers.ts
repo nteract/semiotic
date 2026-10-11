@@ -4,19 +4,9 @@ import { getXYPlugin, registerXYPlugin } from "./xyPlugins/registry"
 import { loadFrameModule } from "./loadFrameModule"
 
 /**
- * Keep LineChart's static graph free of candlestick/heatmap/bar, while
- * restoring two Frame contracts that cannot live on that graph:
- *
- * - `customLayout` can emit any node type — load the full painter set
- *   in a split chunk when a custom layout is actually present.
- * - Direct `<StreamXYFrame chartType="line" />` used to work with no
- *   prior register call. If this chartType has no plugin yet, load
- *   every built-in in a split chunk (HOCs that already registered skip
- *   this path).
- *
- * The paint loop only redraws when `dirtyRef` is set (or a
- * transition/restyle/pulse/resolution change). `scheduleRender` alone
- * after the first frame is not enough.
+ * Load optional scene painters for custom XY layouts, and register built-in
+ * layouts for direct StreamXYFrame use when no plugin exists. Loaded painters
+ * mark the scene dirty before scheduling a repaint.
  */
 export function useEnsureXYPlugins(
   chartType: StreamChartType,

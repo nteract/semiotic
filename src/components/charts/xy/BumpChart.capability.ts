@@ -1,3 +1,4 @@
+import { parseNumericValue } from "../../data/numericValue"
 import type { ChartCapability, ChartDataProfile, ChartVariant } from "../../ai/chartCapabilityTypes"
 import { scaleHints } from "../../ai/dataScaleProfile"
 import { BUILT_IN_NUMERIC_CONTRACTS } from "../../data/numericContracts"
@@ -22,7 +23,7 @@ export function rankColumnOccupancy(
 ): RankColumnOccupancy | undefined {
   const orderedX = !!(profile.primary.x || profile.primary.time)
   const columnField = orderedX
-    ? profile.primary.x ?? profile.primary.time
+    ? (profile.primary.x ?? profile.primary.time)
     : profile.primary.category
   const seriesField = profile.primary.series
   const valueField = profile.primary.y
@@ -32,7 +33,7 @@ export function rankColumnOccupancy(
   for (const datum of profile.data) {
     const column = datum[columnField]
     const series = datum[seriesField]
-    const value = Number(datum[valueField])
+    const value = parseNumericValue(datum[valueField]) ?? NaN
     if (column == null || series == null || !Number.isFinite(value)) continue
     const key = bumpXIdentity(column)
     const values = seriesByColumn.get(key) ?? new Set<string>()
@@ -103,7 +104,7 @@ export const BumpChartCapability: ChartCapability = {
   intentScores: {
     // The canonical bump-chart job. Strong when a handful of series are tracked
     // across several columns; weaker as the series count climbs into spaghetti.
-    "rank": (p) => {
+    rank: (p) => {
       if (!p.seriesCount || p.seriesCount < 2) return 1
       const orderedX = !!(p.primary.x || p.primary.time)
       const columns = orderedX ? (p.uniqueXCount ?? 0) : (p.categoryCount ?? 0)
@@ -127,7 +128,7 @@ export const BumpChartCapability: ChartCapability = {
     // scatter-fallback numeric x ("just the other measure") or a purely
     // categorical ranking column is NOT a trend axis (same scatter guard
     // LineChart uses), so score those 0 so they can't falsely "cover" trend.
-    "trend": (p) => {
+    trend: (p) => {
       if (p.primary.time) return 2
       if (p.primary.x && !(p.xProvenance === "scatter" && !p.monotonicX)) return 2
       return 0

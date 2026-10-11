@@ -59,7 +59,7 @@ export const CHART_DEFINITION_IDS = /* @__PURE__ */ Object.keys(CHART_DEFINITION
 
 /**
  * Pure generation hook for future schema/docs/registry emitters. Its output is
- * JSON-serializable and intentionally has no component or server imports.
+ * JSON-serializable and has no component or server imports.
  */
 export function generateChartDefinitionArtifacts(
   registry: Readonly<Record<string, ChartDefinition>> = CHART_DEFINITIONS

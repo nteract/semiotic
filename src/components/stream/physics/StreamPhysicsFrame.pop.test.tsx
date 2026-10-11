@@ -125,6 +125,7 @@ describe.each(["sync", "worker"] as const)(
       )
       await act(async () => {
         scheduler.flush()
+        await vi.dynamicImportSettled()
       })
       expect(activeExecution).toBe(execution)
       expect(ref.current!.readBodies().map((body) => body.id)).toEqual([

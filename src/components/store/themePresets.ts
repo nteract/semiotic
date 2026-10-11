@@ -1,3 +1,4 @@
+import { cloneTheme } from "./cloneTheme"
 /**
  * Internal named theme presets for Semiotic charts.
  *
@@ -32,7 +33,7 @@ export const PASTELS_LIGHT: SemioticTheme = {
     background: "#fdf6f0",
     surface: "#fff5ee",
     text: "#4a3728",
-    // textSecondary and annotation/focus are deliberately deeper than the
+    // textSecondary and annotation/focus are deeper than the
     // pastel marks: they render as text (ticks, editorial notes) and a focus
     // ring, so they must clear WCAG AA (4.5:1 text, 3:1 indicator) against
     // the cream background. Gated by semiotic-themes.contrast.test.ts.
@@ -626,6 +627,6 @@ export type ThemePresetName = KnownThemePresetName | (string & {})
  */
 export function resolveThemePreset(name: string): SemioticTheme | undefined {
   return Object.prototype.hasOwnProperty.call(THEME_PRESETS, name)
-    ? (THEME_PRESETS as Record<string, SemioticTheme>)[name]
+    ? cloneTheme((THEME_PRESETS as Record<string, SemioticTheme>)[name])
     : undefined
 }

@@ -7,8 +7,8 @@
  * Semiotic can render with hover, isolation, theme tokens, keyboard navigation,
  * and an accessible navigation tree.
  *
- * The gofish lesson applies hard (D7): **reconstruct the diagram's semantics,
- * not its pixels.** A Mermaid flowchart is a DAG, not a force graph, so this
+ * Reconstruct the diagram's authored relationships and group structure.
+ * A Mermaid flowchart is a DAG, so this
  * adapter doesn't just emit nodes/edges — it computes a layered layout
  * (longest-path layering) and stamps each node with `layer`/`row` coordinates,
  * ready for the `lineageDagLayout` recipe via `NetworkCustomChart`. The raw

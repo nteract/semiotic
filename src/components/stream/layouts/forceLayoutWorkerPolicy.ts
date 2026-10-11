@@ -52,10 +52,17 @@ export function createFrameForceWorkerRequest(
   const serializedNodes: RealtimeNode[] = nodes.map((node) => {
     const simulationNode = node as RealtimeNode & SimulationNodeDatum
     const previous = previousPositions?.get(node.id)
-    const x = node.x !== 0 || node.y !== 0 ? node.x : previous?.x ?? 0
-    const y = node.x !== 0 || node.y !== 0 ? node.y : previous?.y ?? 0
+    const x = node.__hasPosition !== false &&
+      Number.isFinite(node.x) &&
+      Number.isFinite(node.y)
+        ? node.x : (previous?.x ?? 0)
+    const y = node.__hasPosition !== false &&
+      Number.isFinite(node.x) &&
+      Number.isFinite(node.y)
+        ? node.y : (previous?.y ?? 0)
     return {
       id: node.id,
+      __hasPosition: node.__hasPosition !== false || previous !== undefined,
       x,
       y,
       vx: simulationNode.vx,

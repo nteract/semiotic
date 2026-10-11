@@ -1,5 +1,6 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import type { AudienceProfile } from "./audienceProfile"
+import { aiNumericValue } from "./aiData"
 import type { ChartRecipe } from "./chartRecipes"
 import type {
   DescribeChartResult,
@@ -71,7 +72,7 @@ function generatedLevels(
   if (categoryField && valueField) {
     for (const datum of data) {
       const category = String(datum[categoryField] ?? "Uncategorized")
-      const raw = Number(datum[valueField])
+      const raw = aiNumericValue(datum[valueField])
       if (Number.isFinite(raw)) {
         aggregates.set(category, (aggregates.get(category) ?? 0) + raw)
       }
@@ -91,7 +92,9 @@ function generatedLevels(
       id: recipeIntentId(intent),
       strength: typeof intent === "string" ? undefined : intent.strength,
     }))
-    .sort((a, b) => (a.strength === "primary" ? -1 : b.strength === "primary" ? 1 : 0))[0]?.id
+    .sort((a, b) =>
+      a.strength === "primary" ? -1 : b.strength === "primary" ? 1 : 0
+    )[0]?.id
   const audience =
     recipe.audience?.primary ??
     recipe.audienceFit?.find((fit) => fit.fit === "strong")?.audience

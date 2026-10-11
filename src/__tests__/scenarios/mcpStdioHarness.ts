@@ -1,7 +1,7 @@
 import type { Datum } from "../../components/charts/shared/datumTypes"
 import type { JsonRpcResponse } from "./mcpProtocolTypes"
 import { spawn, type ChildProcess } from "child_process"
-import { existsSync } from "fs"
+import { createRequire } from "node:module"
 import * as path from "path"
 
 export const SERVER_PATH = path.resolve(
@@ -9,32 +9,13 @@ export const SERVER_PATH = path.resolve(
   "../../../ai/dist/mcp-server.js"
 )
 
-// The bundled server externalizes the library entry points (build:mcp passes
-// --external:semiotic/ai etc.), which resolve through package.json `exports`
-// to dist/*.min.js — Rollup output that only exists after `npm run dist`. On
-// a fresh clone, plain `npm test` would otherwise fail every spawn with a
-// cryptic "Process exited with code 1 before responding to initialize".
-const REQUIRED_BUNDLES = [
-  SERVER_PATH,
-  // The server's runtime requires (mirrors the build:mcp --external flags):
-  path.resolve(__dirname, "../../../dist/semiotic-ai.min.js"),
-  path.resolve(__dirname, "../../../dist/geo.min.js"),
-  path.resolve(__dirname, "../../../dist/server.min.js")
-]
-const MISSING_BUNDLES = REQUIRED_BUNDLES.filter((bundle) => !existsSync(bundle))
-export const SERVER_DEPS_READY = MISSING_BUNDLES.length === 0
-if (!SERVER_DEPS_READY) {
-  const message =
-    "[mcp-protocol.test] MCP server suites need built bundles — run `npm run dist` " +
-    "(and `npm run build:mcp` if ai/dist is stale). Missing: " +
-    MISSING_BUNDLES.join(", ")
-  if (process.env.CI) {
-    // In CI a missing bundle means the dist step was dropped or reordered —
-    // fail loudly rather than silently skipping all MCP protocol coverage.
-    throw new Error(message)
-  }
-  console.warn(message)
-}
+// Check source content as well as artifact content. A local run must not
+// silently skip protocol coverage or validate a previously built revision.
+const { assertFreshMcpBundles } = createRequire(import.meta.url)(
+  "../../../scripts/lib/mcp-bundle-freshness.cjs"
+) as { assertFreshMcpBundles: (root: string) => void }
+assertFreshMcpBundles(path.resolve(__dirname, "../../.."))
+export const SERVER_DEPS_READY = true
 
 // ── Helpers ──────────────────────────────────────────────────────────
 

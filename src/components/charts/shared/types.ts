@@ -44,7 +44,7 @@ export type LinkedHoverProp =
  * - `{ name, xField?, yField? }` → explicit field mapping
  */
 export type LinkedBrushProp =
-  | string
+  string
   | { name: string; xField?: string; yField?: string }
 
 /**
@@ -68,7 +68,7 @@ export type MobileSnapBehavior = "nearestDatum" | "none"
 export type MobileStandardControlKind = "brush" | "zoom" | "legend"
 
 export type MobileStandardControlsMode =
-  | boolean
+  boolean
   | "all"
   | MobileStandardControlKind
   | MobileStandardControlKind[]
@@ -76,7 +76,7 @@ export type MobileStandardControlsMode =
 /**
  * Touch-first interaction policy for phone-sized chart slots.
  *
- * This is intentionally shared by built-in charts, custom charts, audits, and
+ * This is shared by built-in charts, custom charts, audits, and
  * generated/interoperable chart manifests so mobile behavior is not a
  * second-class per-component escape hatch.
  */
@@ -295,7 +295,7 @@ export type Accessor<T = DatumValue> = string | ((d: Datum, i?: number) => T)
  * Function accessors receive the caller's datum type, preserving inference and
  * catching misspelled fields. The bivariant callback form keeps the accessor
  * assignable at the internal Stream Frame boundary, where datum types are
- * intentionally erased to the shared `Datum` shape.
+ * erased to the shared `Datum` shape.
  */
 type DatumBoundaryAccessor<T> = {
   bivarianceHack(d: Datum, i?: number): T
@@ -305,7 +305,7 @@ type ChartAccessorFunction<TDatum, T> =
   ((d: TDatum, i?: number) => T) & DatumBoundaryAccessor<T>
 
 export type ChartAccessor<TDatum, T> =
-  | (keyof TDatum & string)
+  (keyof TDatum & string)
   | ChartAccessorFunction<TDatum, T>
 
 /**

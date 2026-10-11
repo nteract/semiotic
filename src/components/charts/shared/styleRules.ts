@@ -8,7 +8,7 @@
  * you like, and the last one that applies to a given property is the one you
  * see. A datum that matches no rule keeps the chart's resolved base style.
  *
- * `when` is intentionally permissive: it can be a predicate function (full
+ * `when` is permissive: it can be a predicate function (full
  * control), a declarative numeric/categorical threshold (no code), or simply
  * omitted / `true` (an unconditional base layer). Threshold conditions read a
  * numeric value from `field` (falling back to the chart-provided value, e.g.

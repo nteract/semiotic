@@ -8,14 +8,16 @@ Semiotic is a React data visualization library with canvas-first chart rendering
 git clone https://github.com/nteract/semiotic.git
 cd semiotic
 npm install
-npm run dist
+npm run dist:prod
+npm run build:mcp
 npm test
 npm run typescript
 ```
 
-Build the library bundles (`npm run dist`) before the first `npm test`: the MCP
-protocol suites spawn the bundled server, which resolves `semiotic/*` entry
-points from `dist/`. Without them those suites are skipped with a warning.
+Build the library and MCP bundles before running `npm test`: the MCP protocol
+suites spawn the bundled server, which resolves `semiotic/*` entry points from
+`dist/`. Source and artifact fingerprints reject missing or stale builds in
+local runs and CI. Rebuild after changing library or MCP runtime source.
 
 The repo pins Node with Volta in `package.json`. Use that version when possible.
 
@@ -56,7 +58,7 @@ benchmarks/       # vitest bench suites
 
 ## Toolchain
 
-- **tsup / esbuild** via `scripts/build.mjs` for library bundles (ESM + CJS).
+- **tsup / esbuild** via `scripts/build.mjs` for library bundles (ESM + CJS). Browser worker offload uses the ESM entry so bundlers can discover worker assets through `import.meta.url`. The CommonJS fallback resolves sibling files from the real Node module filename; browser builds that replace `__filename` with a mock path fall back to synchronous execution.
 - **Vite 8** for the docs website and integration-example server.
 - **TypeScript 6** for type checking and declarations (`tsconfig.declarations.json`).
 - **Vitest** for unit, integration, and benchmark tests.

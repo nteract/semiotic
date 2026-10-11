@@ -45,7 +45,7 @@ export interface ChartConfig {
    *
    * Composite HOCs such as MinimapChart and ScatterplotMatrix have more than
    * one scene, while ChainReactionChart's semantic reading is authored SVG
-   * chrome over an intentionally empty physics body scene. Forcing those
+   * chrome over an empty physics body scene. Forcing those
    * forms through a single lower-level frame either drops meaning or returns
    * an empty image. A custom renderer still receives the normalized
    * HOC-level props and must populate the same evidence sink as a frame
@@ -100,7 +100,7 @@ export function mergeServerRegressionAnnotation(
 ): Datum[] | undefined {
   const trend = buildRegressionAnnotation(regression as RegressionProp | undefined)
   const userAnnotations = Array.isArray(annotations)
-    ? annotations as Datum[]
+    ? (annotations as Datum[])
     : undefined
   return trend ? [trend, ...(userAnnotations ?? [])] : userAnnotations
 }
@@ -118,8 +118,10 @@ export function prepareConnectedScatterplotData(
     ? [...data].sort((a, b) => {
         if (a == null || typeof a !== "object") return 1
         if (b == null || typeof b !== "object") return -1
-        return numericValue(accessorValue(rest.orderAccessor, "order", a))
+        return (
+          numericValue(accessorValue(rest.orderAccessor, "order", a))
           - numericValue(accessorValue(rest.orderAccessor, "order", b))
+        )
       })
     : data
 

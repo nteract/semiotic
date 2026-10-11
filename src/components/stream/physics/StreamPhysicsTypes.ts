@@ -40,7 +40,7 @@ export interface PhysicsBodySelection {
 }
 
 export type StreamPhysicsRegionKind =
-  | "region"
+  "region"
   | "membrane"
   | "charge-gate"
   | "force-field"
@@ -137,7 +137,7 @@ export interface StreamPhysicsRegionEffect {
       ) => StreamPhysicsRegionVector | null | undefined)
   /**
    * Linear damping applied while a body is inside the region. Values are
-   * per-second-ish coefficients and are intentionally lightweight.
+   * per-second-ish coefficients and are lightweight.
    */
   damping?: number
   impulseOnEnter?:
@@ -251,7 +251,7 @@ export interface StreamPhysicsFrameProps {
   backgroundGraphics?: FrameGraphicsProp
   /**
    * Explicit full-frame SVG fill beneath `backgroundGraphics` and the canvas.
-   * Omit to preserve the historical transparent custom-background contract.
+   * Omit to keep custom backgrounds transparent.
    */
   backgroundGraphicsBackdrop?: string
   /**
@@ -266,7 +266,7 @@ export interface StreamPhysicsFrameProps {
    */
   clock?: () => number
   /**
-   * Host-level random seam for frame-local visual work. It deliberately does
+   * Host-level random seam for frame-local visual work. It does
    * not replace the physics kernel's deterministic random source.
    */
   random?: () => number

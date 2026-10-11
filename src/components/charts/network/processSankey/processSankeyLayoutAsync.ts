@@ -5,15 +5,9 @@ import {
   type ProcessSankeyNormalizedEdge,
   type ProcessSankeyNormalizedNode,
 } from "./buildScenes"
-import {
-  canUseProcessSankeyWorker,
-  processSankeyNeedsMainThread,
-  reattachProcessSankeySceneDatums,
-  runProcessSankeyLayoutWorker,
-  shouldUseProcessSankeyWorker,
-  type ProcessSankeyLayoutExecution,
-  type ProcessSankeyWorkerRequest,
-} from "./processSankeyLayoutWorkerClient"
+import { canUseProcessSankeyWorker, shouldUseProcessSankeyWorker, type ProcessSankeyLayoutExecution } from "./workerPolicy"
+import { processSankeyNeedsMainThread, reattachProcessSankeySceneDatums } from "./processSankeyWorkerHelpers"
+import type { ProcessSankeyWorkerRequest } from "./processSankeyLayoutWorkerClient"
 import type { Datum } from "../../shared/datumTypes"
 
 export interface ProcessSankeyLayoutAsyncOptions {
@@ -151,6 +145,7 @@ export async function buildProcessSankeyScenesAsync(
   }
 
   try {
+    const { runProcessSankeyLayoutWorker } = await import("./workerRunner")
     const response = await runProcessSankeyLayoutWorker(
       toProcessSankeyWorkerRequest(input, colorById, fallbackPalette),
       signal,

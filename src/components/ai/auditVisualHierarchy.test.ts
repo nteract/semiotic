@@ -2,6 +2,16 @@ import { describe, expect, it } from "vitest"
 import { auditVisualHierarchy } from "./auditVisualHierarchy"
 
 describe("auditVisualHierarchy", () => {
+  it("identifies weak data marks before recommending a scaffold change", () => {
+    const result = auditVisualHierarchy({
+      backgroundColor: "#ffffff",
+      dataColors: ["#f0e442"],
+      scaffoldColor: "#eeeeee"
+    })
+    expect(result.finding.code).toBe("DATA_MARK_CONTRAST")
+    expect(result.evidence?.weakestDataContrast).toBeLessThan(3)
+    expect(result.finding.fix).toContain("data-mark contrast")
+  })
   it("passes marks that clearly lead subtle scaffolding", () => {
     const result = auditVisualHierarchy({
       backgroundColor: "#fbf7ed",

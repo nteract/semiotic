@@ -176,16 +176,13 @@ export const XYCustomChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ for
   // identity on a real selection change. Must run before the early return.
   const sel = setup.effectiveSelectionHook
   const layoutSelection = useMemo(
-    () => (sel?.isActive ? { isActive: true, predicate: sel.predicate } : null),
+    () =>
+        sel?.isActive ? { isActive: true, predicate: sel.predicate } : null,
     [sel?.isActive, sel?.predicate]
   )
 
-  // XYCustomChart is still an XY frame: custom layouts that emit line/area
-  // scene nodes can use the same hover-anywhere multi-series contract as the
-  // built-in line and area HOCs. Resolving here also fixes config objects and
-  // `false`, which used to be cast directly into `tooltipContent` and could
-  // reach the frame as a non-callable value.
-  const tooltipProps = useMemo(
+    // Resolve declarative, disabled, and multi-series tooltips before the frame.
+    const tooltipProps = useMemo(
     () => resolveMultiCapableTooltip({
       tooltip: props.tooltip,
       defaultTooltipContent: (hover) => <DefaultTooltip hover={hover} />,

@@ -1,3 +1,5 @@
+import * as React from "react"
+import { physicsSVGRootId } from "../stream/physics/PhysicsSettledSVGElement"
 import { staticTitleText } from "./staticTitle"
 import {
   PhysicsPipelineStore,
@@ -9,7 +11,7 @@ import {
 } from "../stream/physics/PhysicsSettledSVG"
 import { buildEvidence, type EvidenceSink } from "./renderEvidence"
 import { themeToCSSVariables } from "../store/themeCSSVariables"
-import { resolveTheme } from "./themeResolver"
+import { resolveTheme, themeMediaCSS } from "./themeResolver"
 import { resolvePhysicsFramePipelineConfig } from "../stream/physics/physicsFramePipelineConfig"
 import { reserveFrameChromeMargin } from "../stream/titleLayout"
 import { clampLegendReservation, reserveLegendMargin } from "../legendLayout"
@@ -40,7 +42,8 @@ export function renderPhysicsFrame(
   const size = props.size ?? [props.width ?? 600, props.height ?? 400]
   const theme = resolveTheme(props.theme)
   const themeVariables =
-    props.theme === undefined ? {} : themeToCSSVariables(theme)
+    props.theme === undefined || theme.mode === "auto"
+      ? {} : themeToCSSVariables(theme)
   const authoredBodyStyle = props.bodyStyle
   // Physics chrome overlays titles by design. Reserve only the legend's plot
   // box here; title placement remains owned by the physics-specific chrome.
@@ -116,7 +119,13 @@ export function renderPhysicsFrame(
         theme
       )
       annotationRender = chrome.annotationRender
-      return chrome.node
+      const mediaCSS = themeMediaCSS(theme, `#${physicsSVGRootId(props.idPrefix ?? props._idPrefix ?? "physics")}`)
+      return (
+        <>
+          {mediaCSS && <style>{mediaCSS}</style>}
+          {chrome.node}
+        </>
+      )
     }
   })
   if (sink) {

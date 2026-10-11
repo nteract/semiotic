@@ -1,11 +1,11 @@
 /**
  * GeoTileRenderer — fetches, caches, and renders raster map tiles on a canvas.
+ * Failed tiles retry on a later render after one second, up to three attempts.
  *
- * Inlines slippy-tile math from `d3-tile` (the v1 module is ~30 lines
- * of math; the dependency wasn't earning its weight). The math is
+ * Uses the slippy-tile layout math from `d3-tile`. The math is
  * Web Mercator standard: each zoom level z has 2^z × 2^z 256-px tiles
  * tiling the world; given a projection scale (in d3 units, where
- * scale=256 puts the world in 256 px) and a translate offset, we
+ * scale=256 / (2π) puts the world in 256 px) and a translate offset, we
  * compute the tile coordinates that cover the visible viewport and
  * the (translate, scale) transform that maps tile coords to canvas px.
  *
@@ -79,7 +79,7 @@ function tileWrap([x, y, z]: [number, number, number]): [number, number, number]
 // ── Types ─────────────────────────────────────────────────────────────
 
 export type TileURLTemplate =
-  | string
+  string
   | ((z: number, x: number, y: number, dpr: number) => string)
 
 interface CachedTile {
@@ -88,6 +88,8 @@ interface CachedTile {
   failed: boolean
   key: string
   lastUsed: number
+  retryAt?: number
+  attempts?: number
 }
 
 // ── Tile URL resolution ───────────────────────────────────────────────
@@ -104,10 +106,10 @@ function resolveTileURL(
   }
   // String template: replace {z}, {x}, {y}, {r} placeholders
   return template
-    .replace("{z}", String(z))
-    .replace("{x}", String(x))
-    .replace("{y}", String(y))
-    .replace("{r}", dpr > 1 ? "@2x" : "")
+    .replaceAll("{z}", String(z))
+    .replaceAll("{x}", String(x))
+    .replaceAll("{y}", String(y))
+    .replaceAll("{r}", dpr > 1 ? "@2x" : "")
 }
 
 // ── Tile cache ────────────────────────────────────────────────────────
@@ -216,17 +218,16 @@ export function renderTiles(
 
   // Get projection scale and translate for d3-tile
   const projScale = projection.scale()
-  const projTranslate = projection.translate()
+  const projTranslate = projection([0, 0]) ?? projection.translate()
 
-  // d3-tile needs the scale in terms of the full 2π Mercator scale
-  // For a Mercator projection: scale = k / (2π), where k is d3's internal scale
-  // d3-tile expects: scale = 2π * projection.scale()
+  // Mercator's full world width is 2π times the projection scale.
   const tileScale = projScale * 2 * Math.PI
 
   const layout = computeTileLayout({
     size: [width, height],
     scale: tileScale,
     translate: projTranslate as [number, number],
+    clampX: false
   })
 
   const dpr = getDevicePixelRatio(maxDevicePixelRatio, [width, height])
@@ -240,7 +241,11 @@ export function renderTiles(
 
     let cached = tileCache.get(key)
 
-    if (!cached) {
+    if (!cached ||
+      (cached.failed &&
+        (cached.attempts ?? 1) < 3 &&
+        Date.now() >= (cached.retryAt ?? Infinity))
+    ) {
       // Start loading
       const img = new Image()
       img.crossOrigin = "anonymous"
@@ -249,7 +254,8 @@ export function renderTiles(
         loaded: false,
         failed: false,
         key,
-        lastUsed: performance.now()
+        lastUsed: performance.now(),
+        attempts: (cached?.attempts ?? 0) + 1
       }
       tileCache.set(key, entry)
 
@@ -258,9 +264,10 @@ export function renderTiles(
         onTileLoad?.()
       }
       img.onerror = () => {
-        // Mark as loaded (with broken image) to avoid re-fetching
+        // Finish this paint; a later render may retry after the backoff.
         entry.loaded = true
         entry.failed = true
+        entry.retryAt = Date.now() + 1000
         onTileLoad?.()
       }
       img.src = resolvedURL

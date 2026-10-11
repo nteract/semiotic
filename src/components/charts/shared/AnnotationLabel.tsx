@@ -1,34 +1,11 @@
-// NOTE: intentionally no "use client" directive — this component is rendered by
+// NOTE: no "use client" directive — this component is rendered by
 // the server SVG serializer (semiotic/server via staticAnnotations) as well as
 // the client overlay, so it must stay server-importable in RSC frameworks. It
 // is a pure render function: no hooks, no browser APIs.
 /**
- * `<AnnotationLabel>` — the single, shared renderer for the text label of a
- * region-bounding annotation (threshold lines, bands, enclosures, category
- * highlights) across every frame and the server SSR path.
- *
- * Two problems it solves:
- *   1. **Legibility.** A label sitting over dense marks needs a backdrop to
- *      stay readable. Historically the region rules hand-rolled a
- *      `paint-order: stroke` white "halo" inline — and only some of them, and
- *      the client and server disagreed (client `y-threshold` had a halo, the
- *      server's didn't). This component makes the halo a first-class,
- *      consistent option and adds a genuine semitransparent **box** backdrop
- *      (the rounded panel behind a label like "Fast-scaling · 10").
- *   2. **Duplication.** Client (`annotationRules.tsx`) and server
- *      (`staticAnnotations.tsx`) both emit label `<text>`; routing both through
- *      one component removes the drift.
- *
- * `background` is the knob:
- *   - `"halo"` / `true` — a stroke halo (default for region annotations; matches
- *      the legacy look byte-for-byte when `haloColor`/`haloWidth` are unset)
- *   - `"box"` — a filled, optionally-semitransparent rounded rect behind the text
- *   - `"none"` / `false` — plain text
- *   - a config object — fine-grained control over either treatment
- *
- * The box's geometry is derived from an *estimated* text width (SVG can't
- * measure text without a live DOM, and the server path has none), which is
- * accurate enough for a padded backdrop and identical on both backends.
+ * Shared region-annotation label for browser and server rendering.
+ * background selects a stroke halo, padded box, plain text, or a custom
+ * treatment. Box geometry uses estimated text width in both renderers.
  */
 import * as React from "react"
 import { cssVarFallback, isCssVarPaint } from "./cssVarFallback"
@@ -58,7 +35,7 @@ export interface AnnotationLabelBackgroundConfig {
 }
 
 export type AnnotationLabelBackground =
-  | boolean
+  boolean
   | "halo"
   | "box"
   | "none"

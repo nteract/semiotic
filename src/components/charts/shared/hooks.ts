@@ -24,7 +24,7 @@ import type {
   ResolvedMobileInteractionConfig
 } from "./types"
 import type { TransitionConfig } from "../../stream/types"
-import { useTheme } from "../../ThemeProvider"
+import { useTheme } from "../../store/useTheme"
 import type { Datum } from "./datumTypes"
 import { resolveChartMode } from "./chartMode"
 import type { ChartModeInput, ChartModeResult } from "./chartMode"

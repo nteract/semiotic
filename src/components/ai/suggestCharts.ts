@@ -257,7 +257,7 @@ export function suggestCharts(
   // Effective scale: merges declared DataScaleProfile with the measured profile.
   // Computed once per suggestCharts call. When no scale is declared, falls
   // back to whatever the profile measured — so the scaleRange tag always
-  // attaches honestly.
+  // applies to the plotted encoding.
   const effectiveScale = computeEffectiveScale(profile, options.scale)
 
   // Scaled profile: when the user declares a row count different from the
@@ -624,7 +624,7 @@ export function suggestChartsGrouped(
   const maxPerBand = options.maxPerBand ?? options.maxResults ?? 5
 
   const bandList = ["tiny", "small", "medium", "large", "huge"] as const
-  const groups: Partial<Record<typeof bandList[number], Suggestion[]>> = {}
+  const groups: Partial<Record<(typeof bandList)[number], Suggestion[]>> = {}
 
   for (const band of bandList) {
     const scaleForBand: DataScaleProfile = {

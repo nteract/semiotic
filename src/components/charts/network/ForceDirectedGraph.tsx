@@ -282,10 +282,8 @@ export const ForceDirectedGraph = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
     edges,
     margin: userMargin,
     className,
-    // Accept both casings; the camelCase one wins. `nodeIDAccessor`
-    // (uppercase ID) is the deprecated alias that shipped historically
-    // — kept for backwards compat and removed in 4.0.
-    nodeIdAccessor: nodeIdAccessorProp,
+      // nodeIdAccessor takes precedence over the deprecated nodeIDAccessor alias.
+      nodeIdAccessor: nodeIdAccessorProp,
     nodeIDAccessor: nodeIDAccessorLegacy,
     sourceAccessor = "source",
     targetAccessor = "target",
@@ -326,18 +324,13 @@ export const ForceDirectedGraph = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
     opacity,
   } = props
 
-  // Resolve the canonical name first, fall back to the legacy alias,
-  // default to "id". `nodeIDAccessor` (uppercase ID) is the deprecated
-  // alias, removed in 4.0 — see the prop's JSDoc for context.
+  // Resolve nodeIdAccessor, then its deprecated nodeIDAccessor alias, then "id".
   const nodeIDAccessor = nodeIdAccessorProp ?? nodeIDAccessorLegacy ?? "id"
 
   const { width, height, enableHover, showLegend, showLabels = false, title, description, summary, accessibleTable } = resolved
 
-  // Consolidated network setup. ForceDirected requires explicit
-  // nodes (no inference from edges) and keys empty-state off nodes
-  // — pass `inferNodes: false` and `emptyDataKey: "nodes"` to match
-  // the pre-migration behavior.
-  const setup = useNetworkChartSetup({
+    // Force graphs require explicit nodes and derive empty state from them.
+    const setup = useNetworkChartSetup({
     responsive: props,
     nodes,
     edges,
@@ -477,9 +470,11 @@ export const ForceDirectedGraph = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
     edgesRequired: true,
     accessors: { nodeIDAccessor },
   })
-  if (error) return <ChartError componentName="ForceDirectedGraph" message={error} width={width} height={height} />
+  if (error) return (
+        <ChartError componentName="ForceDirectedGraph" message={error} width={width} height={height} />
+      )
 
-  // ── Loading / empty guards (deferred to after all hooks) ───────────────
+    // ── Loading / empty guards (deferred to after all hooks) ───────────────
   if (setup.loadingEl) return setup.loadingEl
   if (setup.emptyEl) return setup.emptyEl
 
@@ -513,7 +508,8 @@ export const ForceDirectedGraph = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
       nodeLabel={nodeLabelFn}
       showLabels={showLabels}
       enableHover={enableHover}
-      tooltipContent={tooltip === false ? () => null : (normalizeTooltip(tooltip) || undefined)}
+      tooltipContent={tooltip === false ? () => null : normalizeTooltip(tooltip) || undefined
+          }
       {...buildCustomBehaviorProps({
         linkedHover,
         selection,

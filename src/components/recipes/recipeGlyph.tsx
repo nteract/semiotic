@@ -15,7 +15,7 @@ import {
  * recipe icon callbacks (e.g. `lineageDagLayout`'s `renderIcon`), and page
  * furniture. One definition, three surfaces, no drift.
  *
- * Positioning is deliberately chrome-shaped: the definition's **top-left**
+ * Positioning is chrome-shaped: the definition's **top-left**
  * corner lands at (`x`, `y`) and `size` is the rendered height (width follows
  * the viewBox aspect). The definition's `anchor` is a scene-node concern —
  * layouts use it to stand signs on baselines — and is ignored here, where the
@@ -77,7 +77,7 @@ function GlyphParts({
             d={part.d}
             fill={fill ?? "none"}
             stroke={stroke}
-            strokeWidth={stroke ? part.strokeWidth ?? 1 : undefined}
+            strokeWidth={stroke ? (part.strokeWidth ?? 1) : undefined}
             strokeLinecap={part.strokeLinecap}
             strokeLinejoin={part.strokeLinejoin}
             opacity={part.opacity}

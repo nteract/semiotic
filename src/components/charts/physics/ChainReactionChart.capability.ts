@@ -2,7 +2,7 @@ import type { ChartCapability } from "../../ai/chartCapabilityTypes"
 import { CHAIN_REACTION_SUGGESTION_PROP_CONTRACT } from "../../ai/suggestionPropContracts"
 
 /**
- * ChainReactionChart is intentionally known to the AI surface but never selected
+ * ChainReactionChart is known to the AI surface but never selected
  * from a flat data profile. The chart's whole claim is about a specific
  * dependency topology — which task waits on which — and a profiler cannot
  * responsibly invent edges. A dependency chart with the wrong edges is worse

@@ -68,6 +68,8 @@ export interface RealtimeNode {
   __radius?: number
   /** @internal Pre-resolved force-layout radius used by worker snapshots. */
   __forceRadius?: number
+  /** @internal Distinguishes an uninitialized store node from a valid origin. */
+  __hasPosition?: boolean
   /** @internal Chord-layout arc segment angles. */
   __arcData?: { startAngle: number; endAngle: number }
 }
@@ -464,7 +466,7 @@ export interface NetworkPipelineConfig {
   /** User-supplied config blob threaded through to NetworkLayoutContext.config. */
   layoutConfig?: object
   /** Resolved shared-selection predicate, surfaced to a custom layout as
-   *  `NetworkLayoutContext.selection`. Render-only — deliberately kept out of
+   *  `NetworkLayoutContext.selection`. Render-only — kept out of
    *  the layout/ingest-affecting signature so a selection change re-runs
    *  `buildScene` (re-emitting dimmed marks) without a re-ingest or re-layout. */
   layoutSelection?: import("./networkCustomLayout").NetworkLayoutSelection | null

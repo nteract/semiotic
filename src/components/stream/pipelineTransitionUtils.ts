@@ -14,7 +14,7 @@ export interface ActiveTransition {
 }
 
 /** Easing mode — determines interpolation curve */
-export type EasingMode = "linear" | "ease-out-cubic"
+export type EasingMode = "linear" | "ease-out-cubic" | "ease-out"
 
 // ── Easing ─────────────────────────────────────────────────────────────
 
@@ -70,7 +70,8 @@ export function now(): number {
 
 /** The animate prop type accepted by all HOCs and Stream Frames.
  *  Single source of truth — re-exported by types.ts, ordinalTypes.ts, networkTypes.ts, geoTypes.ts. */
-export type AnimateProp = boolean | { duration?: number; easing?: "linear" | "ease-out"; intro?: boolean }
+export type AnimateProp =
+  | boolean | { duration?: number; easing?: "linear" | "ease-out"; intro?: boolean }
 
 /**
  * Resolve the declarative `animate` prop into a concrete TransitionConfig.
@@ -92,14 +93,16 @@ export function resolveAnimateConfig(
   const reducedMotion = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
 
   const transition = animate
-    ? (animate === true
+    ? animate === true
       ? { duration: 300 }
-      : { duration: animate.duration ?? 300, easing: animate.easing === "linear" ? "linear" as const : "ease-out" as const })
+      : { duration: animate.duration ?? 300, easing: animate.easing === "linear" ? ("linear" as const)
+              : ("ease-out" as const)
+        }
     : transitionProp
 
-  const introEnabled = reducedMotion ? false : (animate
-    ? (animate === true ? true : (animate as { intro?: boolean }).intro !== false)
-    : false)
+  const introEnabled = reducedMotion ? false : animate
+    ? animate === true ? true : (animate as { intro?: boolean }).intro !== false
+      : false
 
   return { transition, introEnabled }
 }

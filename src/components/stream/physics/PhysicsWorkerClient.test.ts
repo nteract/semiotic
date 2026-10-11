@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { PhysicsWorkerSession } from "./PhysicsWorkerClient"
 import { createPhysicsWorkerRuntime } from "./PhysicsWorkerRuntime"
 import {
@@ -16,6 +16,7 @@ class MockWorker {
   onmessage: ((event: MessageEvent<PhysicsWorkerResponse>) => void) | null =
     null
   onerror: ((event: ErrorEvent) => void) | null = null
+  onmessageerror: (() => void) | null = null
   messages: PhysicsWorkerRequest[] = []
   terminated = false
 
@@ -191,12 +192,12 @@ describe("physics worker runtime", () => {
     expect(tick.type).toBe("frame")
     if (tick.type !== "frame") return
     expect(tick.frame.result.steps).toBe(1)
-    expect(tick.frame.snapshot?.world.bodies.map((body) => body.id)).toEqual([
-      "ball"
-    ])
-    expect(tick.frame.bodies[0].y).toBeCloseTo(0.1)
-    expect(tick.frame.positions[0]).toBeCloseTo(tick.frame.bodies[0].x)
-    expect(tick.frame.positions[1]).toBeCloseTo(tick.frame.bodies[0].y)
+    expect(tick.frame.snapshot).toBeUndefined()
+    expect(tick.frame.bodies).toEqual([])
+    expect(tick.frame.ids).toEqual([])
+    expect(tick.frame.positions[0]).toBe(0)
+    expect(tick.frame.positions[1]).toBeCloseTo(0.1)
+    expect(tick.frame.state?.elapsedSeconds).toBeCloseTo(0.1)
   })
 
   it("snapshots and restores the resident store", () => {
@@ -233,6 +234,91 @@ describe("physics worker runtime", () => {
 })
 
 describe("PhysicsWorkerSession", () => {
+  it.each(["error", "messageerror", "terminate"])(
+    "rejects pending and future requests after %s",
+    async (mode) => {
+      const worker = new MockWorker()
+      const session = new PhysicsWorkerSession(worker as unknown as Worker)
+      const pending = session.tick(1 / 60)
+      const rejected = expect(pending).rejects.toThrow()
+      if (mode === "error")
+        worker.onerror?.({ message: "CSP failure" } as ErrorEvent)
+      else if (mode === "messageerror") worker.onmessageerror?.()
+      else session.terminate()
+      await rejected
+      await expect(session.tick(1 / 60)).rejects.toThrow("closed")
+      expect(worker.messages).toHaveLength(1)
+      expect(worker.terminated).toBe(true)
+    }
+  )
+
+  it("times out unresponsive workers and closes the session", async () => {
+    vi.useFakeTimers()
+    try {
+      const worker = new MockWorker()
+      const session = new PhysicsWorkerSession(worker as unknown as Worker)
+      const rejected = expect(session.tick(1 / 60)).rejects.toThrow("timed out")
+      await vi.advanceTimersByTimeAsync(30_000)
+      await rejected
+      await expect(session.tick(1 / 60)).rejects.toThrow("closed")
+      expect(worker.terminated).toBe(true)
+      expect(vi.getTimerCount()).toBe(0)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it("retains datum identity for enqueue while initialization is in flight", async () => {
+    const worker = new MockWorker()
+    const session = new PhysicsWorkerSession(worker as unknown as Worker)
+    const runtime = createPhysicsWorkerRuntime()
+    const datum = { name: "queued during startup" }
+    const initial = session.init()
+    const enqueued = session.enqueue([{ id: "queued", x: 10, y: 10, shape: { type: "circle", radius: 2 }, datum }])
+    worker.respond(structuredClone(runtime.handle(structuredClone(worker.messages[0].command))), worker.messages[0].requestId)
+    await initial
+    worker.respond(structuredClone(runtime.handle(structuredClone(worker.messages[1].command))), worker.messages[1].requestId)
+    const frame = await enqueued
+    expect(frame.snapshot?.world.bodies[0]?.datum).toBe(datum)
+    session.terminate()
+  })
+
+  it("preserves original datums and consumes stable motion without restoring snapshots", async () => {
+    const worker = new MockWorker()
+    const session = new PhysicsWorkerSession(worker as unknown as Worker)
+    const runtime = createPhysicsWorkerRuntime()
+    const datum = { name: "authored" }
+    const config = {
+      kernel: { gravity: { x: 0, y: 10 }, sleepAfter: 999 },
+      fixedDt: 0.1
+    }
+    const { PhysicsPipelineStore } = await import("./PhysicsPipelineStore")
+    const mirror = new PhysicsPipelineStore(config)
+    const initPromise = session.init(config, [
+      { id: "a", x: 0, y: 0, shape: { type: "circle", radius: 2 }, datum }
+    ])
+    const initPayload = runtime.handle(
+      structuredClone(worker.messages[0].command)
+    )
+    worker.respond(structuredClone(initPayload))
+    const initial = await initPromise
+    mirror.applyWorkerFrame(initial)
+    expect(mirror.readBodies()[0].datum).toBe(datum)
+    expect(
+      initial.result.observations.find((e) => e.bodyId === "a")?.datum
+    ).toBe(datum)
+    const restore = vi.spyOn(mirror, "restore")
+    const tickPromise = session.tick(0.1)
+    worker.respond(structuredClone(runtime.handle(worker.messages[1].command)))
+    const frame = await tickPromise
+    mirror.applyWorkerFrame(frame)
+    expect(restore).not.toHaveBeenCalled()
+    expect(mirror.readBodies()[0].y).toBeCloseTo(frame.positions[1])
+    expect(mirror.readBodies()[0].datum).toBe(datum)
+    expect(mirror.snapshot().elapsedSeconds).toBeCloseTo(0.1)
+    session.terminate()
+  })
+
   it("resolves worker responses without terminating the resident worker", async () => {
     const worker = new MockWorker()
     const session = new PhysicsWorkerSession(worker as unknown as Worker)

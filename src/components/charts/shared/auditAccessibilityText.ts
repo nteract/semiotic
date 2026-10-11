@@ -4,7 +4,7 @@ import type { Datum } from "./datumTypes"
 import { supportsChartAccessibilityText } from "./knownChartComponents"
 
 const ACCESSIBILITY_TEXT_PROPS = ["title", "description", "summary"] as const
-// React-only custom layouts are intentionally absent from the JSON prop schema.
+// React-only custom layouts are absent from the JSON prop schema.
 // The frame wrappers forward BaseChartProps text through their metadata helpers.
 const CUSTOM_TEXT_COMPONENTS = new Set([
   "XYCustomChart",

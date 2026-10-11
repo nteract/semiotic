@@ -1,4 +1,5 @@
 import type {
+  PhysicsBodyState,
   PhysicsBodyShape,
   PhysicsColliderShape,
   PhysicsColliderBodyFilter,
@@ -34,30 +35,20 @@ export function cloneColliderShape(
       }
 }
 
-export function cloneBody(
-  body: PhysicsKernelSnapshotBody
-): PhysicsKernelSnapshotBody {
+export function cloneBodyState(body: PhysicsBodyState): PhysicsBodyState {
   return {
-    id: body.id,
-    x: body.x,
-    y: body.y,
-    prevX: body.prevX,
-    prevY: body.prevY,
-    vx: body.vx,
-    vy: body.vy,
-    angle: body.angle,
-    mass: body.mass,
-    bodyCollisions: body.bodyCollisions,
-    ...(body.fixedPosition
-      ? { fixedPosition: cloneFixedPosition(body.fixedPosition) }
-      : {}),
-    shape: cloneShape(body.shape),
-    sleeping: body.sleeping,
-    datum: body.datum,
-    index: body.index,
-    sleepTime: body.sleepTime,
-    restitution: body.restitution,
-    friction: body.friction
+    id: body.id, x: body.x, y: body.y, prevX: body.prevX, prevY: body.prevY,
+    vx: body.vx, vy: body.vy, angle: body.angle, mass: body.mass,
+    ...(body.fixedPosition ? { fixedPosition: cloneFixedPosition(body.fixedPosition) } : {}),
+    shape: cloneShape(body.shape), sleeping: body.sleeping, datum: body.datum
+  }
+}
+
+export function cloneBody(body: PhysicsKernelSnapshotBody): PhysicsKernelSnapshotBody {
+  return {
+    ...cloneBodyState(body), bodyCollisions: body.bodyCollisions,
+    index: body.index, sleepTime: body.sleepTime,
+    restitution: body.restitution, friction: body.friction
   }
 }
 

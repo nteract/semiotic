@@ -12,8 +12,7 @@ import type { Datum } from "../charts/shared/datumTypes"
  * each requested column cell-by-cell into a plain object, avoiding Arrow's own
  * `Table.toArray()` row-proxy machinery, and it supports column projection so
  * you only pay for the fields you chart. The genuinely zero-copy columnar path
- * (a typed-array accessor mode + bulk ring-buffer ingest) is deliberately
- * *not* built here: it touches the ingestion core and waits on a named consumer
+ * (a typed-array accessor mode + bulk ring-buffer ingest) is * *not* built here: it touches the ingestion core and waits on a named consumer
  * plus profiling evidence, rather than being built on spec.
  *
  * Pure, dependency-free: the Arrow table is duck-typed, so `apache-arrow` never

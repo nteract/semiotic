@@ -31,7 +31,8 @@ function bumpRows(data: unknown): Datum[] {
 
 function bumpRankOptions(props: Datum): BumpRankOptions {
   return {
-    xAccessor: props.xAccessor as string | ((datum: Datum, index?: number) => number | Date | string) | undefined,
+    xAccessor: props.xAccessor as
+      | string | ((datum: Datum, index?: number) => number | Date | string) | undefined,
     yAccessor: props.yAccessor as string | ((datum: Datum, index?: number) => number) | undefined,
     lineBy: props.lineBy as string | ((datum: Datum, index?: number) => string) | undefined,
     rankDirection: props.rankDirection as "descending" | "ascending" | undefined,
@@ -63,7 +64,7 @@ function bumpLabelInput(
 }
 
 /**
- * The static Bump contract is intentionally isolated from the general XY
+ * The static Bump contract is isolated from the general XY
  * configurations: it ranks data, builds custom layout input, and owns its
  * endpoint-label controls before the common frame renderer sees the result.
  */
@@ -124,7 +125,7 @@ export const bumpChart: ChartConfig = {
       curve: rest.curve === "linear" ? "linear" : "smooth",
       samplesPerSegment: typeof rest.samplesPerSegment === "number" ? rest.samplesPerSegment : 12,
       ribbonSizeRange: Array.isArray(rest.ribbonSizeRange)
-        ? rest.ribbonSizeRange as [number, number]
+        ? (rest.ribbonSizeRange as [number, number])
         : [4, 28],
       valueExtent: ranked.valueExtent,
       seriesOrder: ranked.seriesOrder,

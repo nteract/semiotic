@@ -35,3 +35,5 @@ docs/public/api/
 /core
 *.core
 qemu_chrome-headless-shell_*.core
+
+/ai/dist/.source-fingerprint.json

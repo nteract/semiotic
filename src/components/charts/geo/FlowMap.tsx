@@ -461,7 +461,7 @@ export const FlowMap = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRe
     const xAcc = typeof xAccessor === "function" ? xAccessor : (d: Datum) => d[xAccessor as string]
     const yAcc = typeof yAccessor === "function" ? yAccessor : (d: Datum) => d[yAccessor as string]
 
-    return safeFlows.map(flow => {
+    return safeFlows.map((flow) => {
       if (!flow || typeof flow !== "object" || flow.source == null || flow.target == null) return null
       const src = nodeLookup.get(String(flow.source))
       const tgt = nodeLookup.get(String(flow.target))
@@ -526,8 +526,8 @@ export const FlowMap = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRe
   )
 
   // Wrap line style with selection awareness so non-matching flows dim.
-  // `fillOpacity: 0` is load-bearing — the line renderer interprets
-  // fillOpacity > 0 as "fill area under the line", which is wrong for flows.
+    // `fillOpacity: 0` is required — the line renderer interprets
+    // fillOpacity > 0 as "fill area under the line", which is wrong for flows.
   // opacity / strokeOpacity are left to wrapStyleWithSelection so the
   // per-chart `selection.unselectedOpacity` or theme value takes effect.
   const lineStyleFn = useMemo(() => {
@@ -548,7 +548,7 @@ export const FlowMap = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRe
   const pointRadius = pointRadiusProp ?? (resolved.mode === "sparkline" ? 1.5 : 5)
   const pointStyleFn = useMemo(
     () => mergeShapeStyle(
-      () => ({ fill: "#333", r: pointRadius, fillOpacity: 0.8 } as Style & { r?: number }),
+      () => ({ fill: "#333", r: pointRadius, fillOpacity: 0.8 }) as Style & { r?: number },
       { stroke, strokeWidth, opacity }
     ) as (d: Datum) => Style & { r?: number },
     [pointRadius, stroke, strokeWidth, opacity]
@@ -573,7 +573,9 @@ export const FlowMap = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRe
       return (
         <div style={{ background: "rgba(0,0,0,0.85)", color: "white", padding: "6px 10px", borderRadius: 4, fontSize: 12 }}>
           <div style={{ fontWeight: 600 }}>{d.source} → {d.target}</div>
-          {val != null && <div style={{ opacity: 0.7 }}>{typeof val === "number" ? val.toLocaleString() : val}</div>}
+          {val != null && (
+                <div style={{ opacity: 0.7 }}>{typeof val === "number" ? val.toLocaleString() : val}</div>
+              )}
         </div>
       )
     }
@@ -634,7 +636,7 @@ export const FlowMap = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRe
     enableHover: resolved.enableHover,
     tooltipContent: tooltip === false
       ? () => null
-      : (normalizeTooltip(tooltip) || defaultTooltip),
+      : normalizeTooltip(tooltip) || defaultTooltip,
     ...setup.legendBehaviorProps,
     ...buildCustomBehaviorProps({
       linkedHover,

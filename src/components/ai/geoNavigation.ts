@@ -1,3 +1,4 @@
+import { aiNumericValue } from "./aiData"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { NavTreeNode } from "./navigationTree"
 
@@ -25,7 +26,7 @@ function stringValue(value: unknown, fallback = "—"): string {
 
 function finiteValue(value: unknown): number | undefined {
   if (value == null || value === "") return undefined
-  const number = typeof value === "number" ? value : Number(value)
+  const number = aiNumericValue(value)
   return Number.isFinite(number) ? number : undefined
 }
 

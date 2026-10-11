@@ -48,10 +48,9 @@ function uniqueFills(svg: string): Set<string> {
  * resolves its server theme independently. That chrome is not a Treemap mark
  * and must not participate in the categorical-fill parity assertion. */
 function uniqueDataFills(svg: string): Set<string> {
-  const withoutChrome = svg.replace(
-    /<rect\b(?=[^>]*\bclass="stream-frame-background__backdrop")[^>]*>/g,
-    ""
-  ).replace(/<text\b[^>]*>[\s\S]*?<\/text>/g, "")
+  const document = new DOMParser().parseFromString(svg, "image/svg+xml")
+  for (const background of document.querySelectorAll('svg > rect, .stream-frame-background__backdrop')) background.remove()
+  const withoutChrome = document.documentElement.outerHTML.replace(/<text\b[^>]*>[\s\S]*?<\/text>/g, "")
   return uniqueFills(withoutChrome)
 }
 

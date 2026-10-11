@@ -183,7 +183,7 @@ export function buildPerSeriesRibbons(
  * (all bands). Returns a shallow copy so the original data row is
  * never mutated.
  *
- * Bounds-sourced ribbons (`kind: "bounds"`) are intentionally excluded
+ * Bounds-sourced ribbons (`kind: "bounds"`) are excluded
  * — they're decorative, and the tooltip enrichment contract is
  * band-only. Returns the input datum unchanged when no band-kind
  * ribbons are configured or none produce finite values at this datum.

@@ -3,7 +3,7 @@
  * capability. Portable `intentScores` and `variants` are authoritative when
  * present; omission retains the host's ranking policy.
  *
- * The portable descriptor intentionally cannot contain executable `fits` or
+ * The portable descriptor cannot contain executable `fits` or
  * `buildProps` functions. Treating it as a complete runtime capability would
  * therefore make every dataset appear to fit, which is precisely the kind of
  * plausible-but-unsafe recommendation the portability layer refuses to make.

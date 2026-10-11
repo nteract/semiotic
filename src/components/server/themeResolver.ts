@@ -1,17 +1,22 @@
+import { applyConcreteThemeAccessibility } from "../store/concreteThemeAccessibility"
+import {
+  cloneTheme,
+  autoSVGTheme,
+  autoPaletteCSS,
+  warnUnknownTheme
+} from "../store/themeResolution"
 /**
  * Theme resolution for server-side rendering.
  *
  * Resolves theme presets and partial theme objects to concrete
  * SemioticTheme instances with all color/font values resolved.
- * No CSS custom properties — everything is concrete for inline SVG.
+ * Automatic palettes retain scoped CSS variables and media rules in SVG.
  */
 
 import type { SemioticTheme } from "../store/themeCore"
 import {
   LIGHT_THEME,
-  DARK_THEME,
-  HIGH_CONTRAST_THEME,
-  applyThemeAccessibility
+  DARK_THEME
 } from "../store/themeCore"
 import { resolveThemePreset } from "../store/themePresets"
 
@@ -31,17 +36,31 @@ export type ThemeInput = string | PartialThemeObject | undefined
  * - object with mode → merge onto matching base theme
  * - object without mode → merge onto LIGHT_THEME
  */
+const autoInputs = new WeakMap<SemioticTheme, PartialThemeObject>()
+
+export function themeMediaCSS(
+  theme: SemioticTheme,
+  selector: string
+): string | undefined {
+  const input = autoInputs.get(theme)
+  return input ? autoPaletteCSS(input, selector) : undefined
+}
+
 export function resolveTheme(theme: ThemeInput): SemioticTheme {
-  if (!theme) return LIGHT_THEME
+  if (!theme) return cloneTheme(LIGHT_THEME)
 
   if (typeof theme === "string") {
-    if (theme === "light") return LIGHT_THEME
-    if (theme === "dark") return DARK_THEME
-    if (theme === "high-contrast") return HIGH_CONTRAST_THEME
     const preset = resolveThemePreset(theme)
     if (preset) return preset
+    warnUnknownTheme(theme)
     // Unknown preset name — fall back to light
-    return LIGHT_THEME
+    return cloneTheme(LIGHT_THEME)
+  }
+
+  if (theme.mode === "auto") {
+    const resolved = autoSVGTheme(theme)
+    autoInputs.set(resolved, theme)
+    return resolved
   }
 
   // Object theme — merge onto base
@@ -55,7 +74,7 @@ export function resolveTheme(theme: ThemeInput): SemioticTheme {
     tooltip: { ...base.tooltip, ...(theme.tooltip || {}) },
   } as SemioticTheme
 
-  return applyThemeAccessibility(resolved)
+  return cloneTheme(applyConcreteThemeAccessibility(resolved))
 }
 
 /**

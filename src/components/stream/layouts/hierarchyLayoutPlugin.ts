@@ -131,7 +131,7 @@ export const hierarchyLayoutPlugin: NetworkLayoutPlugin = {
       // `HierarchyRectangularNode`, `r` for circlepack's
       // `HierarchyCircularNode`). The cast threads the right shape
       // through without `any` — the `layoutType` discriminant is
-      // load-bearing here.
+      // required here.
       if (layoutType === "tree" || layoutType === "cluster") {
         setTreePositions(node, d as HierarchyPointNode<Datum>, config)
       } else if (layoutType === "treemap" || layoutType === "partition") {

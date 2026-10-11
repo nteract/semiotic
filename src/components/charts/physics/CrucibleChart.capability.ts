@@ -1,7 +1,7 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
 
 /**
- * CrucibleChart is intentionally known to the AI surface but never selected
+ * CrucibleChart is known to the AI surface but never selected
  * from a flat data profile. A valid chart needs an authored treatment program,
  * declared products, and explicit destinations that dataset profiling cannot
  * responsibly invent.

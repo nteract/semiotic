@@ -61,12 +61,12 @@ export const BarChartCapability: ChartCapability = {
 
   intentScores: {
     // BarChart compares pre-aggregated category totals. When each category has
-    // many raw observations, a BoxPlot / ViolinPlot / SwarmPlot is more honest —
+    // many raw observations, a BoxPlot / ViolinPlot / SwarmPlot shows the distribution —
     // BarChart's implicit aggregation hides the within-category distribution.
     "compare-categories": (p) => {
       if (!p.categoryCount) return 0
       // A second crossed categorical (service × weekday, region × product)
-      // means flat bars silently aggregate one dimension away — the honest
+      // means flat bars silently aggregate one dimension away — the distribution-preserving
       // answers are GroupedBar/StackedBar/Heatmap, which show the matrix.
       if (p.candidates.category.length >= 2) return 3
       const obsPerCategory = p.rowCount / p.categoryCount
@@ -76,9 +76,9 @@ export const BarChartCapability: ChartCapability = {
       if (obsPerCategory >= 10) return 2
       return 5
     },
-    "rank": 5,
+    rank: 5,
     "part-to-whole": (p) => ((p.categoryCount ?? 0) <= 8 ? 3 : 2),
-    "distribution": 1,
+    distribution: 1,
   },
 
   caveats: (profile) => {
@@ -97,28 +97,28 @@ export const BarChartCapability: ChartCapability = {
       label: "Ranked",
       props: { sort: "desc" },
       tags: ["sorted", "ranked"],
-      intentDeltas: { "rank": +0, "compare-categories": +0 },
+      intentDeltas: { rank: +0, "compare-categories": +0 },
     },
     {
       key: "source-order",
       label: "Source order",
       props: { sort: false },
       tags: ["source-order"],
-      intentDeltas: { "rank": -2 },
+      intentDeltas: { rank: -2 },
     },
     {
       key: "horizontal",
       label: "Horizontal bars",
       props: { orientation: "horizontal", sort: "desc" },
       tags: ["horizontal", "ranked"],
-      intentDeltas: { "rank": +1 },
+      intentDeltas: { rank: +1 },
       rubricDeltas: { precision: +1 },
     },
     {
       key: "annotated-threshold",
       label: "With alert threshold",
       description:
-        "A target/threshold reference turns the bars into an alert — read for which categories breach. Pair with a provenanced annotation (e.g. from the data-quality bridge) and the communicative act becomes \"alerting\".",
+        'A target/threshold reference turns the bars into an alert — read for which categories breach. Pair with a provenanced annotation (e.g. from the data-quality bridge) and the communicative act becomes "alerting".',
       props: { showGrid: true },
       tags: ["alert", "annotated-threshold", "monitoring"],
       intentDeltas: { "outlier-detection": +2 },

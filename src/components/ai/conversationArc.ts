@@ -56,7 +56,8 @@ export interface ConversationArcSink {
   /** Clear durable state owned by this sink. */
   clear?(): void | Promise<void>
   /** Load previously persisted events for replay / hydration. */
-  load?(): ReadonlyArray<ConversationArcEvent> | Promise<ReadonlyArray<ConversationArcEvent>>
+  load?():
+    | ReadonlyArray<ConversationArcEvent> | Promise<ReadonlyArray<ConversationArcEvent>>
 }
 
 export interface ConversationArcStorageLike {
@@ -164,7 +165,7 @@ let store: ConversationArcStoreInternal | null = null
 // re-enable should resume notifying.
 const listeners = new Set<ConversationArcListener>()
 
-// Durable sinks are opt-in and deliberately separate from event
+// Durable sinks are opt-in and separate from event
 // listeners: listeners are for in-process observers, sinks own their
 // persistence side effects. Cleared by `reset()` to avoid leaking test
 // or preview registrations across sessions.
