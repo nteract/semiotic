@@ -14,6 +14,16 @@
  * OpenAI-compatible AI gateway on the same terms: `/v1/responses`, bare model
  * ids, no price table (cost is `null`), and no `reasoning` field, because one
  * key serves models from several labs.
+ *
+ * `litellm` is a self-hosted AI gateway, so it has no fixed URL, model list, or
+ * price table. The runner resolves `apiUrl` from `--base-url` or
+ * `LITELLM_BASE_URL` (default `http://localhost:4000`) and, because
+ * `priceSource` is `"litellm-model-info"`, reads per-token rates from the
+ * proxy's `/model/info` at startup. `hasPriceTable` stays `false` because it
+ * marks a locked table shipped here. When every requested model is priced the
+ * run gets a real price table, estimated USD, and an enforced `--max-usd`
+ * ceiling. Otherwise a run that passed `--max-usd` fails fast, and a run
+ * without it records cost as unknown (`null`) as for the other gateways.
  */
 export const AI_EVAL_PROVIDERS = {
   openai: {
@@ -91,4 +101,29 @@ export const AI_EVAL_PROVIDERS = {
     credentialCheckMaxTokens: 64,
     pricesPerMillion: null,
   },
+  litellm: {
+    id: "litellm",
+    label: "LiteLLM",
+    apiUrl: null,
+    baseUrlEnv: "LITELLM_BASE_URL",
+    defaultBaseUrl: "http://localhost:4000",
+    apiKeyEnv: "LITELLM_API_KEY",
+    projectEnv: null,
+    keychainService: "semiotic-litellm-evals",
+    clientVersion: "semiotic-litellm-eval/1",
+    // Model names are whatever the proxy operator configured, so runs must
+    // pass --models explicitly.
+    defaultModels: [],
+    // No locked table ships with the provider; the runner builds one from
+    // `/model/info` at startup (see `priceSource`).
+    hasPriceTable: false,
+    priceSource: "litellm-model-info",
+    priceRevision: null,
+    reportPrefix: "litellm",
+    requestReasoning: false,
+    // Headroom for proxied reasoning models: `reasoning` is not sent, so they
+    // can spend hidden reasoning tokens before the credential-check JSON.
+    credentialCheckMaxTokens: 256,
+    pricesPerMillion: null
+  }
 }
