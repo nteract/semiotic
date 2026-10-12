@@ -15,7 +15,6 @@ import {
   renderNetworkParticles,
   spawnNetworkParticles
 } from "./renderers/networkParticleRenderer"
-import { computeNetworkAriaLabel } from "./AccessibleDataTable"
 import type { NetworkPipelineStore } from "./NetworkPipelineStore"
 import type { SceneRevisionDiagnostics } from "./sceneRevisionDiagnostics"
 import type {
@@ -348,17 +347,6 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
 
   if (ctx.cameraOnly) return
   dirtyRef.current = false
-
-  if (computedScene) {
-    canvas.setAttribute(
-      "aria-label",
-      computeNetworkAriaLabel(
-        store.sceneNodes?.length ?? 0,
-        store.sceneEdges?.length ?? 0,
-        store.perspective.label("Network chart")
-      )
-    )
-  }
 
   const wantsAnnotationUpdate =
     computedScene || pendingAnnotationFrameRef.current

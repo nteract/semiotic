@@ -24,8 +24,9 @@ export interface ServiceResourcePoolController extends PhysicsController {
 }
 
 /**
- * Models finite, visible service resources. Assignment is * explicit so domain controllers decide scheduling while this controller
- * supplies physical tethers, return-to-home force, and resource evidence.
+ * Models finite, visible service resources. Assignment is explicit, so domain
+ * controllers decide scheduling while this controller supplies physical tethers,
+ * return-to-home force, and resource evidence.
  */
 export function createServiceResourcePoolController(
   options: ServiceResourcePoolOptions

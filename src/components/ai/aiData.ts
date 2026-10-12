@@ -1,17 +1,22 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import { resolveRawAccessor } from "../stream/accessorUtils"
 
-/** AI summaries retain valid row objects and omit absent/non-record rows. */
-export function aiDataRows(value: unknown): Datum[] {
-  if (!Array.isArray(value)) return []
-  const valid = (row: unknown): row is Datum =>
+export function isAIDataRecord(row: unknown): row is Datum {
+  return (
     row !== null &&
     typeof row === "object" &&
     !Array.isArray(row) &&
     !(row instanceof Date) &&
     !(row instanceof Map) &&
     !(row instanceof Set)
-  for (const row of value) if (!valid(row)) return value.filter(valid)
+  )
+}
+
+/** AI summaries retain valid row objects and omit absent/non-record rows. */
+export function aiDataRows(value: unknown): Datum[] {
+  if (!Array.isArray(value)) return []
+  for (const row of value)
+    if (!isAIDataRecord(row)) return value.filter(isAIDataRecord)
   return value
 }
 
@@ -24,6 +29,7 @@ export function aiChartProps(props: Datum): Datum {
     "edges",
     "points",
     "areas",
+    "lines",
     "flows",
     "spawns",
     "projectionRows",

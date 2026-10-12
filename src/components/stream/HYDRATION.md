@@ -76,6 +76,15 @@ consume a live ref.
 
 ## SVG layers and the canvas handoff
 
+Network frames retain the server wrapper's markup during initial hydration,
+using the frame's `useId` identifier. Client graph ingestion and layout run after
+commit through the normal synchronous/worker policy. The server SVG and its
+accessible data remain visible while a force worker is pending; canvas takes
+over when client geometry is ready. The retained markup is released after that
+handoff. Server rendering still builds an isolated scene to generate SVG.
+Network data tables read the authored data retained on layout wrappers unless
+the chart supplies an explicit accessibility projection.
+
 XY, ordinal, network, and geographic React SSR branches layer the SVG scene
 beneath a separate SVG overlay for axes, labels, legends, and annotations.
 Physics serializes a settled scene with its chrome overlay. Keep layer order,

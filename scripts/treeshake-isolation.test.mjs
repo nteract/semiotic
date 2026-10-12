@@ -11,6 +11,7 @@
 //
 // Run after `npm run dist:prod`.
 import assert from "node:assert/strict"
+import { execFileSync } from "node:child_process"
 import { existsSync, readFileSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 import { test } from "node:test"
@@ -33,6 +34,20 @@ const EXTERNAL = [
   "@chenglou/pretext",
   "topojson-client"
 ]
+
+test("multi-import size is independent of temporary consumer paths", () => {
+  const measure = () => {
+    const output = execFileSync(
+      process.execPath,
+      [join(root, "scripts/check-multi-import-size.mjs"), "--print"],
+      { cwd: root, encoding: "utf8" }
+    )
+    const bytes = output.match(/gzip:.*\((\d+) bytes\)/)?.[1]
+    assert.ok(bytes, "the consumer should report a gzip byte count")
+    return Number(bytes)
+  }
+  assert.equal(measure(), measure())
+})
 
 async function eagerBundle(exportKey, symbol) {
   const filename = resolve(root, pkg.exports[exportKey].import)

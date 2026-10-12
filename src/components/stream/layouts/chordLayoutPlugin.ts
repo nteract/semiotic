@@ -227,6 +227,7 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
         startAngle: arcData.startAngle - Math.PI / 2,
         endAngle: arcData.endAngle - Math.PI / 2,
         style,
+        accessibleDatum: node.data,
         datum: node,
         id: node.id,
         label: node.id
@@ -304,6 +305,7 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
         type: "ribbon",
         pathD,
         style,
+        accessibleDatum: edge.data,
         datum: edge
       })
     }

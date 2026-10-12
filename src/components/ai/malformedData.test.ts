@@ -14,7 +14,135 @@ const props = (data: Datum[]) => ({
   valueAccessor: "value"
 })
 
+function withoutDatums(value: unknown): unknown {
+  return JSON.parse(
+    JSON.stringify(value, (key, entry) => (key === "datum" ? undefined : entry))
+  )
+}
+
 describe("public AI data boundaries", () => {
+  it("omits sparse and invalid features inside geographic collections", () => {
+    const feature = {
+      type: "Feature",
+      id: "measured",
+      properties: { value: 7 }
+    }
+    const features = new Array<unknown>(4)
+    features[0] = null
+    features[2] = false
+    features[3] = feature
+    const mixed = { areas: { type: "FeatureCollection", features } }
+    const dense = { areas: { type: "FeatureCollection", features: [feature] } }
+    for (const component of [
+      "ChoroplethMap",
+      "ProportionalSymbolMap",
+      "FlowMap"
+    ]) {
+      for (const read of [
+        describeChart,
+        buildNavigationTree,
+        buildReaderGrounding
+      ]) {
+        expect(read(component, mixed)).toEqual(read(component, dense))
+      }
+    }
+    expect(features[3]).toBe(feature)
+    expect(features[0]).toBeNull()
+  })
+
+  it.each(["TreeDiagram", "Treemap", "CirclePack", "OrbitDiagram"])(
+    "%s omits invalid nested hierarchy children without cloning valid datums",
+    (component) => {
+      for (const childrenAccessor of [
+        undefined,
+        "branches",
+        (node: Datum) => node.branches
+      ]) {
+        const key = childrenAccessor === undefined ? "children" : "branches"
+        const leaf = { name: "measured", value: 7 }
+        const emptyBranch = { name: "empty", value: 2, [key]: [null, false] }
+        const branch = {
+          name: "branch",
+          [key]: [
+            null,
+            undefined,
+            false,
+            3,
+            "row",
+            [],
+            new Date(),
+            new Map(),
+            new Set(),
+            leaf
+          ]
+        }
+        const children = new Array<unknown>(4)
+        children[1] = branch
+        children[3] = emptyBranch
+        const root = { name: "root", [key]: children }
+        const source = { data: root, childrenAccessor }
+        const dense = {
+          data: {
+            name: "root",
+            [key]: [
+              { name: "branch", [key]: [leaf] },
+              { name: "empty", value: 2, [key]: [] }
+            ]
+          },
+          childrenAccessor
+        }
+        for (const read of [
+          describeChart,
+          buildNavigationTree,
+          buildReaderGrounding
+        ]) {
+          expect(withoutDatums(read(component, source))).toEqual(
+            withoutDatums(read(component, dense))
+          )
+        }
+        const tree = buildNavigationTree(component, source)
+        expect(tree.label).toContain("2 leaves")
+        expect(tree.label).toContain("leaf total 9")
+        expect(tree.children?.[0].datum).toBe(root)
+        expect(tree.children?.[0].children?.[0].children?.[0].datum).toBe(leaf)
+        expect(root[key]).toBe(children)
+        expect(branch[key]).toHaveLength(10)
+      }
+    }
+  )
+
+  it("treats non-record hierarchy roots as absent", () => {
+    for (const data of [
+      null,
+      false,
+      3,
+      "root",
+      [],
+      new Date(),
+      new Map(),
+      new Set()
+    ]) {
+      expect(buildNavigationTree("TreeDiagram", { data })).toEqual(
+        buildNavigationTree("TreeDiagram", {})
+      )
+      expect(buildReaderGrounding("TreeDiagram", { data })).toEqual(
+        buildReaderGrounding("TreeDiagram", {})
+      )
+    }
+  })
+
+  it("omits hierarchy cycles while retaining repeated leaves in separate branches", () => {
+    const leaf = { name: "shared", value: 7 }
+    const root: Datum = { name: "root", children: [] }
+    root.children = [null, root, leaf, leaf]
+    const grounding = buildReaderGrounding("TreeDiagram", { data: root })
+    expect(grounding.structure?.label).toContain("2 leaves")
+    expect(grounding.structure?.label).toContain("leaf total 14")
+    expect(grounding.facts?.statements).toContain(
+      "2 hierarchy leaves are supplied."
+    )
+  })
+
   it("omits sparse slots across public readers and retains valid datums", () => {
     const data = new Array<Datum>(3)
     data[1] = valid
@@ -105,6 +233,7 @@ describe("public AI data boundaries", () => {
       "ProportionalSymbolMap",
       { points: [{ lon: 0, lat: 0, value: 2n }], areas: [] }
     ],
+    ["DistanceCartogram", { lines: [{ source: "A", target: "B", value: 7 }] }],
     ["UnitPileChart", { data: [{ category: "A", value: Symbol("weight") }] }]
   ] as const)(
     "normalizes malformed rows in %s family inputs",

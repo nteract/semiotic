@@ -6,6 +6,27 @@ import { createNode } from "./networkPipelineHelpers"
 import type { NetworkPipelineConfig } from "./networkTypes"
 
 describe("network store ownership", () => {
+  it.each([
+    "force",
+    "sankey",
+    "chord",
+    "tree",
+    "cluster",
+    "treemap",
+    "circlepack",
+    "partition",
+    "orbit"
+  ] as const)("builds an empty isolated %s scene", (chartType) => {
+    const store = buildNetworkSSRStore(
+      { chartType },
+      { nodes: [], edges: [] },
+      [400, 300]
+    )
+    expect(store.sceneNodes).toEqual([])
+    expect(store.sceneEdges).toEqual([])
+    expect(store.labels).toEqual([])
+  })
+
   it("layouts frozen author configuration without writing pipeline state onto it", () => {
     const config = Object.freeze<NetworkPipelineConfig>({
       chartType: "orbit",
@@ -25,7 +46,7 @@ describe("network store ownership", () => {
     const revision = live.layoutVersion
     const isolated = buildNetworkSSRStore(
       config,
-      { chartType: "orbit", data: root },
+      { nodes: [], edges: [], hierarchy: root },
       [600, 400]
     )
     expect(isolated).not.toBe(live)

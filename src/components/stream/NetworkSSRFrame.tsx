@@ -4,8 +4,7 @@ import { NetworkPipelineStore } from "./NetworkPipelineStore"
 import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
 import { NetworkViewGroup } from "./networkViewTransform"
 import { NetworkHtmlMarksLayer } from "./NetworkHtmlMarksLayer"
-import { AccessibleTablePortal, ScreenReaderSummary } from "./AccessibleDataTable"
-import { NetworkAccessibleDataTableSlot } from "./NetworkAccessibleDataTableSlot"
+import { networkFrameAccessibility } from "./networkFrameAccessibility"
 import {
   networkSceneNodeToSVG,
   networkSceneEdgeToSVG
@@ -14,11 +13,14 @@ import { renderSceneWithBackend } from "./renderBackend"
 import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
 import { withNetworkPerspective } from "./networkPerspectiveContext"
+import { networkFrameContainerProps } from "./networkFrameContainerProps"
 
 interface NetworkSSRFrameProps {
+  hydrationMarkup?: string | null
+  layoutPending?: boolean
   tableId: string
   props: StreamNetworkFrameProps
-  store: NetworkPipelineStore | null
+  store: NetworkPipelineStore
   responsiveRef: React.Ref<HTMLDivElement>
   size: [number, number]
   margin: React.ComponentProps<typeof NetworkSVGOverlay>["margin"]
@@ -30,6 +32,8 @@ interface NetworkSSRFrameProps {
 }
 
 export function NetworkSSRFrame({
+  hydrationMarkup = null,
+  layoutPending,
   tableId,
   props,
   store,
@@ -43,13 +47,8 @@ export function NetworkSSRFrame({
   resolvedForeground
 }: NetworkSSRFrameProps) {
   const {
-    className,
     description,
     title,
-    responsiveWidth,
-    responsiveHeight,
-    summary,
-    accessibleTable = true,
     renderMode,
     legend,
     legendPosition,
@@ -68,169 +67,153 @@ export function NetworkSSRFrame({
     svgAnnotationRules
   } = props
 
-  const sceneNodes = store?.sceneNodes ?? []
-  const sceneEdges = store?.sceneEdges ?? []
-  const labels = store?.labels ?? []
-  const perspectiveFrame = store?.perspective.frame
-  const perspectiveMode = store?.lastCustomLayoutResult?.perspective
-  const underlay = store?.perspective.underlay ?? []
+  const sceneNodes = store.sceneNodes
+  const sceneEdges = store.sceneEdges
+  const labels = store.labels
+  const perspectiveFrame = store.perspective.frame
+  const perspectiveMode = store.lastCustomLayoutResult?.perspective
+  const underlay = store.perspective.underlay
+  const containerProps = networkFrameContainerProps(props, `${tableId}-frame`, size, layoutPending)
 
   return (
     <div
+      {...containerProps}
       ref={responsiveRef}
-      className={`stream-network-frame${className ? ` ${className}` : ""}`}
-      role="group"
-      aria-label={
-        description || (typeof title === "string" ? title : "Network chart")
+      dangerouslySetInnerHTML={
+        hydrationMarkup === null ? undefined : { __html: hydrationMarkup }
       }
-      style={{
-        position: "relative",
-        fontFamily: "var(--semiotic-font-family, sans-serif)",
-        width: responsiveWidth ? "100%" : size[0],
-        height: responsiveHeight ? "100%" : size[1],
-        overflow: props.viewTransform ? "clip" : undefined,
-      }}
     >
-      {accessibleTable && (
-        <AccessibleTablePortal accessibleTable={accessibleTable}>
-          <NetworkAccessibleDataTableSlot
-            nodes={sceneNodes}
-            edges={sceneEdges}
-            chartType="Network chart"
-            chartTitle={typeof title === "string" ? title : undefined}
-            tableId={tableId}
-          />
-        </AccessibleTablePortal>
-      )}
-      <ScreenReaderSummary summary={summary} />
-      <div
-        role={store?.customLayoutHtmlMarks?.length ? "group" : "img"}
-        aria-label={
-          description || (typeof title === "string" ? title : "Network chart")
-        }
-      >
-        <svg
-          role="presentation"
-          xmlns="http://www.w3.org/2000/svg"
-          width={size[0]}
-          height={size[1]}
-          style={{ position: "absolute", left: 0, top: 0 }}
-        >
-          {surfaceBackground ? (
-            <rect
-              className="stream-frame-background__backdrop"
-              x={0}
-              y={0}
+      {hydrationMarkup === null ? (
+        <>
+          {networkFrameAccessibility(props, store, tableId)}
+          <div
+            role={store.customLayoutHtmlMarks?.length ? "group" : "img"}
+            aria-label={containerProps["aria-label"]}
+          >
+            <svg
+              role="presentation"
+              xmlns="http://www.w3.org/2000/svg"
               width={size[0]}
               height={size[1]}
-              fill={surfaceBackground}
+              style={{ position: "absolute", left: 0, top: 0 }}
+            >
+              {surfaceBackground ? (
+                <rect
+                  className="stream-frame-background__backdrop"
+                  x={0}
+                  y={0}
+                  width={size[0]}
+                  height={size[1]}
+                  fill={surfaceBackground}
+                />
+              ) : null}
+              <g transform={`translate(${margin.left},${margin.top})`}>
+                <NetworkViewGroup
+                  view={props.viewTransform}
+                  width={adjustedWidth}
+                  height={adjustedHeight}
+                >
+                  {composeOverlays(
+                    resolvedBackground,
+                    withNetworkPerspective(
+                      store.customLayoutBackgrounds,
+                      perspectiveFrame,
+                      perspectiveMode
+                    )
+                  )}
+                </NetworkViewGroup>
+              </g>
+              <g transform={`translate(${margin.left},${margin.top})`}>
+                <NetworkViewGroup
+                  view={props.viewTransform}
+                  width={adjustedWidth}
+                  height={adjustedHeight}
+                >
+                  {underlay.map((edge, index) =>
+                    networkSceneEdgeToSVG(
+                      edge,
+                      index + sceneEdges.length + sceneNodes.length
+                    )
+                  )}
+                  {sceneEdges
+                    .map((edge, index) =>
+                      renderSceneWithBackend({
+                        node: edge,
+                        index,
+                        renderMode,
+                        fallback: () => networkSceneEdgeToSVG(edge, index)
+                      })
+                    )
+                    .filter(Boolean)}
+                  {sceneNodes
+                    .map((node, index) =>
+                      renderSceneWithBackend({
+                        node,
+                        index,
+                        renderMode,
+                        fallback: () => networkSceneNodeToSVG(node, index)
+                      })
+                    )
+                    .filter(Boolean)}
+                </NetworkViewGroup>
+              </g>
+            </svg>
+            <NetworkSVGOverlay
+              decorative
+              viewTransform={props.viewTransform}
+              width={adjustedWidth}
+              height={adjustedHeight}
+              totalWidth={size[0]}
+              totalHeight={size[1]}
+              margin={margin}
+              labels={labels}
+              sceneNodes={sceneNodes}
+              title={title}
+              description={description}
+              legend={legend}
+              legendPosition={legendPosition}
+              legendLayout={legendLayout}
+              legendHoverBehavior={legendHoverBehavior}
+              legendClickBehavior={legendClickBehavior}
+              legendHighlightedCategory={legendHighlightedCategory}
+              legendIsolatedCategories={legendIsolatedCategories}
+              foregroundGraphics={withNetworkPerspective(
+                composeOverlays(
+                  resolvedForeground,
+                  withNetworkPerspective(
+                    wrapWithCustomLayoutSelection(
+                      store.customLayoutOverlays,
+                      layoutSelection ?? null
+                    ),
+                    perspectiveFrame,
+                    perspectiveMode
+                  )
+                ),
+                perspectiveFrame
+              )}
+              annotations={annotations}
+              onAnnotationActivate={onAnnotationActivate}
+              onObservation={annotationObservationCallback ?? onObservation}
+              chartId={chartId}
+              chartType="StreamNetworkFrame"
+              autoPlaceAnnotations={autoPlaceAnnotations}
+              svgAnnotationRules={svgAnnotationRules}
+              annotationFrame={0}
             />
-          ) : null}
-          <g transform={`translate(${margin.left},${margin.top})`}>
-            <NetworkViewGroup
-              view={props.viewTransform}
+            <NetworkHtmlMarksLayer
+              viewTransform={props.viewTransform}
+              marks={store.customLayoutHtmlMarks}
+              margin={margin}
+              selection={layoutSelection ?? null}
               width={adjustedWidth}
               height={adjustedHeight}
-            >
-              {composeOverlays(
-                resolvedBackground,
-                withNetworkPerspective(
-                  store?.customLayoutBackgrounds,
-                  perspectiveFrame,
-                  perspectiveMode,
-                ),
-              )}
-            </NetworkViewGroup>
-          </g>
-          <g transform={`translate(${margin.left},${margin.top})`}>
-            <NetworkViewGroup
-              view={props.viewTransform}
-              width={adjustedWidth}
-              height={adjustedHeight}
-            >
-              {underlay.map((edge, index) =>
-                networkSceneEdgeToSVG(
-                  edge,
-                  index + sceneEdges.length + sceneNodes.length,
-                ),
-              )}
-              {sceneEdges
-                .map((edge, index) =>
-                  renderSceneWithBackend({
-                    node: edge,
-                    index,
-                    renderMode,
-                    fallback: () => networkSceneEdgeToSVG(edge, index),
-                  }),
-                )
-                .filter(Boolean)}
-              {sceneNodes
-                .map((node, index) =>
-                  renderSceneWithBackend({
-                    node,
-                    index,
-                    renderMode,
-                    fallback: () => networkSceneNodeToSVG(node, index),
-                  }),
-                )
-                .filter(Boolean)}
-            </NetworkViewGroup>
-          </g>
-        </svg>
-        <NetworkSVGOverlay
-          decorative
-          viewTransform={props.viewTransform}
-          width={adjustedWidth}
-          height={adjustedHeight}
-          totalWidth={size[0]}
-          totalHeight={size[1]}
-          margin={margin}
-          labels={labels}
-          sceneNodes={sceneNodes}
-          title={title}
-          description={description}
-          legend={legend}
-          legendPosition={legendPosition}
-          legendLayout={legendLayout}
-          legendHoverBehavior={legendHoverBehavior}
-          legendClickBehavior={legendClickBehavior}
-          legendHighlightedCategory={legendHighlightedCategory}
-          legendIsolatedCategories={legendIsolatedCategories}
-          foregroundGraphics={withNetworkPerspective(
-            composeOverlays(
-              resolvedForeground,
-              withNetworkPerspective(
-                wrapWithCustomLayoutSelection(
-                  store?.customLayoutOverlays,
-                  layoutSelection ?? null,
-                ),
-                perspectiveFrame,
-                perspectiveMode,
-              ),
-            ),
-            perspectiveFrame,
-          )}
-          annotations={annotations}
-          onAnnotationActivate={onAnnotationActivate}
-          onObservation={annotationObservationCallback ?? onObservation}
-          chartId={chartId}
-          chartType="StreamNetworkFrame"
-          autoPlaceAnnotations={autoPlaceAnnotations}
-          svgAnnotationRules={svgAnnotationRules}
-          annotationFrame={0}
-        />
-        <NetworkHtmlMarksLayer
-          viewTransform={props.viewTransform}
-          marks={store?.customLayoutHtmlMarks}
-          margin={margin}
-          selection={layoutSelection ?? null}
-          width={adjustedWidth}
-          height={adjustedHeight}
-          viewport={props.viewport}
-          htmlMarkCulling={props.htmlMarkCulling}
-          onViewportChange={props.onViewportChange}
-        />
-      </div>
+              viewport={props.viewport}
+              htmlMarkCulling={props.htmlMarkCulling}
+              onViewportChange={props.onViewportChange}
+            />
+          </div>
+        </>
+      ) : undefined}
     </div>
   )
 }

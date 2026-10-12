@@ -11,9 +11,9 @@ import type { Datum } from "../charts/shared/datumTypes"
  * row objects. This adapter therefore materializes rows — but leanly: it reads
  * each requested column cell-by-cell into a plain object, avoiding Arrow's own
  * `Table.toArray()` row-proxy machinery, and it supports column projection so
- * you only pay for the fields you chart. The genuinely zero-copy columnar path
- * (a typed-array accessor mode + bulk ring-buffer ingest) is * *not* built here: it touches the ingestion core and waits on a named consumer
- * plus profiling evidence, rather than being built on spec.
+ * you only pay for the fields you chart. A zero-copy columnar path using typed
+ * array accessors and bulk ring-buffer ingestion would require changes to the
+ * ingestion core, a named consumer, and profiling evidence.
  *
  * Pure, dependency-free: the Arrow table is duck-typed, so `apache-arrow` never
  * enters Semiotic's dependencies — you bring the table, this reads it.

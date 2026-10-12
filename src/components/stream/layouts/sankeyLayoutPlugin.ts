@@ -344,6 +344,7 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
           w: h,
           h: w,
           style,
+          accessibleDatum: node.data,
           datum: node,
           id: node.id,
           label: node.id
@@ -356,6 +357,7 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
           w,
           h,
           style,
+          accessibleDatum: node.data,
           datum: node,
           id: node.id,
           label: node.id
@@ -418,6 +420,7 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
         pathD,
         bezierCache: edge.bezier,
         style,
+        accessibleDatum: edge.data,
         datum: edge
       })
     }

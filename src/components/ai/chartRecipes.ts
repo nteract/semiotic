@@ -369,9 +369,8 @@ export interface ChartRecipe<
 }
 
 /**
- * Define a chart recipe with full generic inference. an identity
- * function in v0: the value is the shared, inspectable shape rather than hidden
- * registration or runtime behavior.
+ * Validate a chart recipe's contract and return the same value with full generic
+ * inference. Recipes remain inspectable values without hidden registration.
  */
 export function defineChartRecipe<
   TDatum extends Datum = Datum,

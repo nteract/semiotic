@@ -166,12 +166,11 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
       : coldIterations
 
     // Build node size accessor for charge strength
-    const nodeSizeFn = resolveNodeSizeFn(
+    const nodeRadius = resolveNodeSizeFn(
       config.nodeSize,
       config.nodeSizeRange,
       nodes
     )
-    const nodeRadius = (d: RealtimeNode) => nodeSizeFn(d)
 
     // Skip simulation entirely when iterations=0 (pinned layout mode).
     // d3-force's simulation.nodes() modifies positions during setup, so
@@ -402,6 +401,7 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
         cy: node.y,
         r,
         style,
+        accessibleDatum: node.data,
         datum: node,
         id: node.id,
         label: node.id
@@ -438,6 +438,7 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
         x2: targetNode.x,
         y2: targetNode.y,
         style,
+        accessibleDatum: edge.data,
         datum: edge
       })
     }

@@ -111,10 +111,14 @@ function linkWorkspaceNodeModules(consumerNodeModules) {
 
 async function measureMultiImportGzip() {
   const pkg = JSON.parse(readFileSync(join(REPO_ROOT, "package.json"), "utf8"))
-  const packageRoot = mkdtempSync(join(tmpdir(), "semiotic-multi-import-pkg-"))
   const consumerRoot = mkdtempSync(join(tmpdir(), "semiotic-multi-import-consumer-"))
+  const consumerNm = join(consumerRoot, "node_modules")
+  const packageRoot = join(consumerNm, "semiotic")
 
   try {
+    // Keep esbuild's module paths relative to one consumer root. Separate
+    // random package roots leak into module initializer names and gzip totals.
+    mkdirSync(packageRoot, { recursive: true })
     cpSync(join(REPO_ROOT, "dist"), join(packageRoot, "dist"), { recursive: true })
     writeFileSync(
       join(packageRoot, "package.json"),
@@ -132,9 +136,6 @@ async function measureMultiImportGzip() {
       )
     )
 
-    const consumerNm = join(consumerRoot, "node_modules")
-    mkdirSync(consumerNm)
-    symlinkSync(packageRoot, join(consumerNm, "semiotic"))
     linkWorkspaceNodeModules(consumerNm)
 
     writeFileSync(join(consumerRoot, "entry.js"), MULTI_IMPORT_SOURCE)
@@ -209,7 +210,6 @@ async function measureMultiImportGzip() {
       inputBytes: [...inputBytes].sort((a, b) => b[1] - a[1])
     }
   } finally {
-    rmSync(packageRoot, { recursive: true, force: true })
     rmSync(consumerRoot, { recursive: true, force: true })
   }
 }

@@ -107,8 +107,8 @@ export interface ChartDefinitionMetadata {
 }
 
 /**
- * Incremental manifest shape. `wire` is * serializable; richer prop metadata and lazy implementation references stay
- * under `runtime`.
+ * Incremental manifest shape. `wire` is serializable; richer prop metadata and
+ * lazy implementation references stay under `runtime`.
  */
 export interface ChartDefinition<TChart extends string = string> {
   readonly schemaVersion: typeof CHART_DEFINITION_SCHEMA_VERSION

@@ -1,29 +1,25 @@
 import { NetworkPipelineStore } from "./NetworkPipelineStore"
-import type {
-  NetworkPipelineConfig,
-  StreamNetworkFrameProps
-} from "./networkTypes"
+import type { NetworkPipelineConfig } from "./networkTypes"
+import type { Datum } from "../charts/shared/datumTypes"
 import { filterSparseArray } from "../charts/shared/sparseArray"
-import { HIERARCHICAL_NETWORK_LAYOUTS } from "./networkLayoutCapabilities"
 
-/** An isolated store makes render retries independent of the mounted live store. */
+/** Normalize frame data and build isolated server geometry. */
 export function buildNetworkSSRStore(
   config: NetworkPipelineConfig,
-  props: StreamNetworkFrameProps,
+  {
+    nodes,
+    edges,
+    hierarchy
+  }: {
+    nodes?: Datum[]
+    edges?: Datum[]
+    hierarchy?: Datum
+  },
   size: [number, number]
 ): NetworkPipelineStore {
   const store = new NetworkPipelineStore(config)
-  const hierarchy = HIERARCHICAL_NETWORK_LAYOUTS.has(props.chartType)
-    ? props.data || (!Array.isArray(props.edges) ? props.edges : undefined)
-    : undefined
   if (hierarchy) store.ingestHierarchy(hierarchy, size)
-  else {
-    const nodes = filterSparseArray(props.nodes)
-    const edges = Array.isArray(props.edges)
-      ? filterSparseArray(props.edges)
-      : []
-    if (nodes.length || edges.length) store.ingestBounded(nodes, edges, size)
-  }
+  else store.ingestBounded(filterSparseArray(nodes), filterSparseArray(edges), size)
   store.cancelIntroAnimation()
   store.buildScene(size)
   return store

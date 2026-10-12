@@ -187,9 +187,9 @@ export type BigNumberSlot =
   | ((ctx: BigNumberSlotContext) => React.ReactNode)
 
 /**
- * The full prop surface. broad — every block here maps
- * to a documented `SingleValueFrame` capability so users targeting
- * the v1 component can roll forward unchanged when (if) the frame ships.
+ * The full prop surface maps each block to a documented `SingleValueFrame`
+ * capability so users targeting the v1 component can roll forward unchanged
+ * when the frame ships.
  *
  * Does NOT extend `BaseChartProps` because most of those (axisExtent,
  * pointIdAccessor, linkedHover, linkedBrush, hoverHighlight, ...) are

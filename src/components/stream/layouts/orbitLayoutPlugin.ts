@@ -360,6 +360,7 @@ export const orbitLayoutPlugin: NetworkLayoutPlugin = {
         cy: node.y,
         r,
         style,
+        accessibleDatum: node.data,
         datum: node,
         id: node.id,
         label: node.id,

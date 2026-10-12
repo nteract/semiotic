@@ -1,6 +1,6 @@
 "use client"
-import { useSSRStoreCommit } from "./useSSRStoreCommit"
 import { buildNetworkSSRStore } from "./networkSSRStore"
+import { networkFrameContainerProps } from "./networkFrameContainerProps"
 import { HIERARCHICAL_NETWORK_LAYOUTS } from "./networkLayoutCapabilities"
 import type { Datum } from "../charts/shared/datumTypes"
 import * as React from "react"
@@ -53,11 +53,9 @@ import {
 } from "./useHydration"
 import { CanvasFrameBackground, useFrameCanvasHost } from "./useCanvasFrameHost"
 import { useStableShallow } from "./useStableShallow"
-import { NetworkAccessibleDataTableSlot } from "./NetworkAccessibleDataTableSlot"
+import { networkFrameAccessibility } from "./networkFrameAccessibility"
 import {
-  AccessibleTablePortal,
   AriaLiveTooltip,
-  ScreenReaderSummary,
   computeNetworkAriaLabel
 } from "./AccessibleDataTable"
 import { filterSparseArray } from "../charts/shared/sparseArray"
@@ -168,7 +166,6 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     responsiveWidth,
     responsiveHeight,
     margin: marginProp,
-    className,
     background,
     maxDevicePixelRatio,
     enableHover = true,
@@ -207,9 +204,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     paused = false,
     suspendWhenHidden = true,
     thresholds,
-    accessibleTable = true,
     description,
-    summary,
     orbitMode,
     orbitSize,
     orbitSpeed,
@@ -269,18 +264,24 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
   const { resolvedForeground, resolvedBackground, themeBackground, surfaceBackground } = resolveFrameLayers({ foregroundGraphics, backgroundGraphics, size, margin, scales: null, background, themeBackgroundColor: currentTheme.colors.background })
 
   // ── Hydration boundary ─────────────────────────────────────────────────
-  // See `HYDRATION.md` for the full recipe + `StreamXYFrame` for the
-  // canonical comment. SVG-branch gate is
-  // `isServerEnvironment || (!hydrated && wasHydratingFromSSR)`:
-  // SSR pass + first client render after SSR get the SVG branch
-  // (matches server output); pure CSR mounts skip it.
+  // SSR and initial hydration show SVG. Retain the server subtree while
+  // client layout is pending, then commit geometry and canvas together.
+  // Fresh client mounts start with canvas. See `HYDRATION.md`.
   const hydrated = useHydration()
   const wasHydratingFromSSR = useWasHydratingFromSSR()
-  const safeNodes = useMemo(() => filterSparseArray(nodesProp), [nodesProp])
-  const safeEdges = useMemo(
-    () => (Array.isArray(edgesProp) ? filterSparseArray(edgesProp) : edgesProp),
-    [edgesProp]
+  const frameId = `${tableId}-frame`
+  // Server markup becomes a numeric scene revision when client geometry commits.
+  const [sceneState, setSceneState] = useState<string | number>(() =>
+    !isServerEnvironment && wasHydratingFromSSR
+      ? (document.getElementById(frameId)?.innerHTML ?? 0)
+      : 0
   )
+  const hydrationMarkup = typeof sceneState === "string" ? sceneState : null
+  const isHierarchical = HIERARCHICAL_NETWORK_LAYOUTS.has(chartType)
+  const hierarchyRoot = isHierarchical
+    ? dataProp || (!Array.isArray(edgesProp) ? edgesProp : undefined)
+    : undefined
+  const hasControlledGraph = nodesProp != null || edgesProp != null
 
   const animationsDisabled = animate === false
   const tensionConfig = useMemo(
@@ -450,33 +451,21 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     storeRef.current = new NetworkPipelineStore(stablePipelineConfig)
   }
   const renderSVG =
-    isServerEnvironment || (!hydrated && wasHydratingFromSSR)
-  const ssrStore = useMemo(
-    () =>
-      renderSVG
-        ? buildNetworkSSRStore(
-            stablePipelineConfig,
-            {
-              chartType,
-              nodes: nodesProp,
-              edges: edgesProp,
-              data: dataProp
-            },
-            [adjustedWidth, adjustedHeight]
-          )
-        : null,
-    [
-      renderSVG,
-      stablePipelineConfig,
-      chartType,
-      nodesProp,
-      edgesProp,
-      dataProp,
-      adjustedWidth,
-      adjustedHeight
-    ]
-  )
-  useSSRStoreCommit(storeRef, ssrStore)
+    isServerEnvironment ||
+    (!hydrated && wasHydratingFromSSR) ||
+    hydrationMarkup !== null
+  const ssrStore =
+    renderSVG && hydrationMarkup === null
+      ? buildNetworkSSRStore(
+          stablePipelineConfig,
+          {
+            nodes: nodesProp,
+            edges: Array.isArray(edgesProp) ? edgesProp : undefined,
+            hierarchy: hierarchyRoot
+          },
+          [adjustedWidth, adjustedHeight]
+        )
+      : null
   const emitLegendCategories = useLegendCategoryEmission(
     storeRef,
     legendCategoryAccessor,
@@ -489,15 +478,21 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
   const buildSceneWithDiagnostics = useCallback((store: NetworkPipelineStore, sceneSize: [number, number], isTransitioning = false) => runSceneBuild(sceneRevisionDiagnosticsRef.current, store, () => store.buildScene(sceneSize), isTransitioning), [sceneRevisionDiagnosticsRef])
 
   const [hoverData, setHoverData] = useState<HoverData | null>(null)
-  const [_layoutVersion, setLayoutVersion] = useState(0)
   const [annotationFrame, setAnnotationFrame] = useState(0)
   const [isStale, setIsStale] = useState(false)
   const [layoutPending, setLayoutPending] = useState(false)
   const layoutRequestRef = useRef(0)
   const layoutAbortRef = useRef<AbortController | null>(null)
-  const hydrationLayoutHandledRef = useRef(false)
   const onLayoutStateChangeRef = useRef(onLayoutStateChange)
   onLayoutStateChangeRef.current = onLayoutStateChange
+  const publishLayoutState = useCallback(
+    (store: NetworkPipelineStore, state: "ready" | "error" = "ready") => {
+      setSceneState(store.layoutVersion)
+      setLayoutPending(false)
+      onLayoutStateChangeRef.current?.(state)
+    },
+    []
+  )
   const pipelineConfigRef = useRef(stablePipelineConfig)
   pipelineConfigRef.current = stablePipelineConfig
 
@@ -612,7 +607,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     storeRef.current?.markStylePaintPending()
   }, [])
   const { canvasRef, resolutionDirtyRef } = useFrameCanvasHost(frame, {
-    hydrated,
+    hydrated: hydrated && hydrationMarkup === null,
     wasHydratingFromSSR,
     storeRef,
     dirtyRef,
@@ -720,9 +715,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     const size: [number, number] = [adjustedWidth, adjustedHeight]
     const finish = (state: "ready" | "error", repaint = false) => {
       rebuildSceneNow(store, size)
-      setLayoutVersion(store.layoutVersion)
-      setLayoutPending(false)
-      onLayoutStateChangeRef.current?.(state)
+      publishLayoutState(store, state)
       if (onTopologyChange) {
         const { nodes, edges } = store.getLayoutData()
         onTopologyChange(nodes, edges)
@@ -755,7 +748,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     }
     store.runLayout(size)
     finish("ready")
-  }, [adjustedWidth, adjustedHeight, rebuildSceneNow, onTopologyChange, scheduleRender,
+  }, [adjustedWidth, adjustedHeight, rebuildSceneNow, publishLayoutState, onTopologyChange, scheduleRender,
     chartType, customNetworkLayout, randomProp, layoutExecution, iterations])
 
   // Controlled ingestion uses current callbacks without making callback identity
@@ -874,7 +867,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     // clear() bumps layoutVersion monotonically; sync React state to the new
     // value so the render fires (never force 0 — that can equal the last-seen
     // value and skip the post-clear repaint).
-    setLayoutVersion(storeRef.current?.layoutVersion ?? 0)
+    setSceneState(storeRef.current?.layoutVersion ?? 0)
     setHoverData(null)
     hoverRef.current = null
     kbFocusIndexRef.current = -1
@@ -1040,13 +1033,6 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
 
   // ── Bounded data ingestion ───────────────────────────────────────────
 
-  // Determine if this is a hierarchical chart type
-  const isHierarchical = HIERARCHICAL_NETWORK_LAYOUTS.has(chartType)
-  // Resolve hierarchy root: `data` prop or single-object `edges` prop
-  const hierarchyRoot = isHierarchical
-    ? dataProp || (!Array.isArray(edgesProp) ? edgesProp : undefined)
-    : undefined
-
   useEffect(() => {
     const store = storeRef.current
     if (!store) return
@@ -1063,15 +1049,13 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       // worker layout must not leave consumers stuck on "pending".
       store.ingestHierarchy(hierarchyRoot, [adjustedWidth, adjustedHeight])
       rebuildSceneNow(store, [adjustedWidth, adjustedHeight])
-      setLayoutVersion(store.layoutVersion)
-      setLayoutPending(false)
-      onLayoutStateChangeRef.current?.("ready")
+      publishLayoutState(store)
       scheduleRender()
     } else {
       // Graph data: nodes + edges arrays
-      const rawNodes = safeNodes
-      const rawEdges = Array.isArray(safeEdges) ? safeEdges : []
-      if (nodesProp != null || edgesProp != null) {
+      const rawNodes = filterSparseArray(nodesProp)
+      const rawEdges = Array.isArray(edgesProp) ? filterSparseArray(edgesProp) : []
+      if (hasControlledGraph) {
         // Controlled arrays are the newer source of truth. Eager push data may
         // exist in the store, but ingestBounded below replaces it atomically.
         pendingLayoutRef.current = false
@@ -1084,22 +1068,21 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
         // being provided — push mode omits them, and its store contents
         // must survive this effect re-running on resize/palette changes.
         if (
-          (nodesProp != null || edgesProp != null) &&
+          hasControlledGraph &&
           (store.nodes.size > 0 || store.edges.size > 0)
         ) {
           clearAll()
         }
         // Push-mode graphs have no controlled arrays to re-ingest, but force
         // parameter changes still need to re-solve their retained topology.
-        if (chartType === "force" && nodesProp == null && edgesProp == null && store.nodes.size > 0) {
+        if (chartType === "force" && !hasControlledGraph && store.nodes.size > 0) {
           pendingLayoutRef.current = false
           const controller = runLayoutRef.current()
           return () => controller?.abort()
         }
         // Nothing to lay out — the frame is no longer busy, so a consumer
         // watching a previously-pending worker layout gets released.
-        setLayoutPending(false)
-        onLayoutStateChangeRef.current?.("ready")
+        publishLayoutState(store)
         return
       }
 
@@ -1119,23 +1102,6 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
           iterations
         )
 
-      // The SSR/first-hydration branch above already produced deterministic
-      // geometry synchronously. Keep it instead of immediately replacing it
-      // with an equivalent worker request after hydration.
-      if (
-        useWorker &&
-        wasHydratingFromSSR &&
-        !hydrationLayoutHandledRef.current &&
-        store.sceneNodes.length > 0
-      ) {
-        hydrationLayoutHandledRef.current = true
-        setLayoutPending(false)
-        onLayoutStateChangeRef.current?.("ready")
-        dirtyRef.current = true
-        scheduleRender()
-        return
-      }
-
       if (useWorker) {
         store.ingestBounded(rawNodes, rawEdges, size, { deferLayout: true })
         const controller = runLayoutRef.current()
@@ -1148,9 +1114,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       // custom HTML marks are React overlays. Synchronize the completed
       // synchronous layout revision so they update in the same transaction
       // instead of waiting for hover or another unrelated render.
-      setLayoutVersion(store.layoutVersion)
-      setLayoutPending(false)
-      onLayoutStateChangeRef.current?.("ready")
+      publishLayoutState(store)
       scheduleRender()
     }
     // Gated on `stableLayoutConfig` (layout/ingest-affecting fields only), NOT
@@ -1159,7 +1123,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     // setState every render (the loop that crashed continuously-animated
     // charts); genuine layout-parameter, data, and dimension changes still
     // re-ingest. Palette changes only rebuild the scene.
-  }, [safeNodes, safeEdges, nodesProp, edgesProp, dataProp, hierarchyRoot, isHierarchical, adjustedWidth, adjustedHeight, stableLayoutConfig, layoutExecution, iterations, wasHydratingFromSSR, chartType, customNetworkLayout, randomProp, scheduleRender, clearAll, rebuildSceneNow])
+  }, [nodesProp, edgesProp, hasControlledGraph, hierarchyRoot, isHierarchical, adjustedWidth, adjustedHeight, stableLayoutConfig, layoutExecution, iterations, chartType, customNetworkLayout, randomProp, scheduleRender, clearAll, rebuildSceneNow, publishLayoutState])
 
   // ── Initial streaming data ───────────────────────────────────────────
 
@@ -1188,7 +1152,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     // Push-mode topology survives resize without bounded re-ingestion.
     if (resized) store.runLayout([adjustedWidth, adjustedHeight])
     rebuildSceneNow(store, [adjustedWidth, adjustedHeight])
-    setLayoutVersion((version) => version + 1)
+    setSceneState((state) => typeof state === "number" ? state + 1 : 0)
     scheduleRender()
   }, [currentTheme, adjustedWidth, adjustedHeight, rebuildSceneNow, scheduleRender])
 
@@ -1462,9 +1426,11 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
   // wasted SVG render. See StreamXYFrame for the full rationale.
   if (renderSVG) {
     return NetworkSSRFrame({
+      hydrationMarkup,
+      layoutPending,
       tableId,
       props,
-      store: ssrStore,
+      store: ssrStore ?? storeRef.current,
       responsiveRef,
       size,
       margin,
@@ -1479,24 +1445,15 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
   // ── Render ───────────────────────────────────────────────────────────
 
   const store = storeRef.current
+  const containerProps = networkFrameContainerProps(props, frameId, size, layoutPending, "visible")
+  const perspectiveFrame = store.perspective.frame
+  const perspectiveMode = store.lastCustomLayoutResult?.perspective
 
   return (
     <div
+      {...containerProps}
       ref={responsiveRef}
-      className={`stream-network-frame${className ? ` ${className}` : ""}`}
-      role="group"
-      aria-label={
-        description || (typeof title === "string" ? title : "Network chart")
-      }
       tabIndex={0}
-      aria-busy={layoutPending || undefined}
-      style={{
-        position: "relative",
-        fontFamily: "var(--semiotic-font-family, sans-serif)",
-        width: responsiveWidth ? "100%" : size[0],
-        height: responsiveHeight ? "100%" : size[1],
-        overflow: props.viewTransform ? "clip" : "visible"
-      }}
       onKeyDown={onKeyDown}
     >
       {process.env.NODE_ENV !== "production" && storeRef.current && (
@@ -1505,34 +1462,20 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
           diagnostics={sceneRevisionDiagnosticsRef.current}
         />
       )}
-      {accessibleTable && (
-        <AccessibleTablePortal accessibleTable={accessibleTable}>
-          <NetworkAccessibleDataTableSlot
-            sceneRevision={layoutPending ? undefined : store?.getUpdateSnapshot().revisions.accessibility}
-            nodes={store?.sceneNodes ?? []}
-            edges={store?.sceneEdges ?? []}
-            chartType="Network chart"
-            tableId={tableId}
-            chartTitle={typeof title === "string" ? title : undefined}
-          />
-        </AccessibleTablePortal>
-      )}
-      <ScreenReaderSummary summary={summary} />
+      {networkFrameAccessibility(props, store, tableId, layoutPending ? undefined : store.getUpdateSnapshot().revisions.accessibility)}
       {/* Live region MUST live outside the role="img" wrapper — AT treats the
           image as atomic and never announces content nested inside it. */}
       <AriaLiveTooltip active={kbFocusIndexRef.current >= 0} hoverPoint={hoverData && {
         data: (hoverData.nodeOrEdge === "edge"
-          ? storeRef.current?.sceneEdges
-          : storeRef.current?.sceneNodes
-        )?.find((mark) => mark.datum === hoverData.data)?.accessibleDatum ?? hoverData.data
+          ? store.sceneEdges
+          : store.sceneNodes
+        ).find((mark) => mark.datum === hoverData.data)?.accessibleDatum ?? hoverData.data
       }} />
       <div
         // An image is atomic to assistive technology. HTML marks can contain
         // editors and buttons, so expose their subtree as a group instead.
-        role={store?.customLayoutHtmlMarks?.length ? "group" : "img"}
-        aria-label={
-          description || (typeof title === "string" ? title : "Network chart")
-        }
+        role={store.customLayoutHtmlMarks?.length ? "group" : "img"}
+        aria-label={containerProps["aria-label"]}
         style={{ position: "relative", width: "100%", height: "100%" }}
         onMouseMove={onMouseMoveWrapped}
         onMouseLeave={onPointerLeave}
@@ -1562,7 +1505,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
           overflowVisible
         >
           <NetworkViewGroup view={props.viewTransform} width={adjustedWidth} height={adjustedHeight}>
-            {composeOverlays(resolvedBackground, withNetworkPerspective(store?.customLayoutBackgrounds, store?.perspective.frame, store?.lastCustomLayoutResult?.perspective))}
+            {composeOverlays(resolvedBackground, withNetworkPerspective(store.customLayoutBackgrounds, perspectiveFrame, perspectiveMode))}
           </NetworkViewGroup>
         </CanvasFrameBackground>
 
@@ -1570,9 +1513,9 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
           aria-hidden="true"
           ref={canvasRef}
           aria-label={computeNetworkAriaLabel(
-            store?.sceneNodes?.length ?? 0,
-            store?.sceneEdges?.length ?? 0,
-            store?.perspective.label("Network chart") ?? "Network chart"
+            store.sceneNodes.length,
+            store.sceneEdges.length,
+            store.perspective.label("Network chart")
           )}
           style={{
             position: "absolute",
@@ -1589,8 +1532,8 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
           totalWidth={size[0]}
           totalHeight={size[1]}
           margin={margin}
-          labels={store?.labels || []}
-          sceneNodes={store?.sceneNodes}
+          labels={store.labels}
+          sceneNodes={store.sceneNodes}
           title={title}
           description={description}
           legend={legend}
@@ -1603,10 +1546,10 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
           foregroundGraphics={withNetworkPerspective(composeOverlays(
             resolvedForeground,
             withNetworkPerspective(wrapWithCustomLayoutSelection(
-              storeRef.current?.customLayoutOverlays,
+              store.customLayoutOverlays,
               layoutSelection ?? null
-            ), store?.perspective.frame, store?.lastCustomLayoutResult?.perspective)
-          ), store?.perspective.frame)}
+            ), perspectiveFrame, perspectiveMode)
+          ), perspectiveFrame)}
           annotations={annotations}
           onAnnotationActivate={onAnnotationActivate}
           onObservation={annotationObservationCallback ?? onObservation}
@@ -1622,7 +1565,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
           `pointer-events: none` keeps the canvas authoritative for hit-testing. */}
         <NetworkHtmlMarksLayer
           viewTransform={props.viewTransform}
-          marks={store?.customLayoutHtmlMarks}
+          marks={store.customLayoutHtmlMarks}
           margin={margin}
           selection={layoutSelection ?? null}
           width={adjustedWidth}
