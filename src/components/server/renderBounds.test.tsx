@@ -98,7 +98,7 @@ describe("empty temporal snapshots", () => {
   it.each(["LineChart", "AreaChart", "Scatterplot", "RealtimeLineChart"])(
     "%s renders the same domain, ticks, and evidence at different wall-clock times",
     (component) => {
-      const props = { data: [], xScaleType: "time", width: 600, height: 300 }
+      const props = { _idPrefix: "empty-temporal", data: [], xScaleType: "time", width: 600, height: 300 }
       const now = vi.spyOn(Date, "now").mockReturnValue(Date.UTC(2025, 0, 1))
       const first = renderChartWithEvidence(component, props)
       now.mockReturnValue(Date.UTC(2026, 8, 25))

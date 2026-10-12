@@ -30,7 +30,7 @@ export interface BuildProcessSankeyBackgroundGraphicsInput {
   axisTicks?: readonly ProcessSankeyTickInput[]
   showQualityReadout?: boolean
   showLaneRails?: boolean
-  /** Non-fatal validation messages for the quality readout (M6). */
+  /** Non-fatal validation messages for the quality readout. */
   warnings?: readonly string[]
   timeFormat?: (d: number | Date) => string | React.ReactNode
   colorOf?: (id: string, idx: number) => string
@@ -41,8 +41,6 @@ export interface BuildProcessSankeyBackgroundGraphicsInput {
 export function buildProcessSankeyBackgroundGraphics(
   input: BuildProcessSankeyBackgroundGraphicsInput,
 ): React.ReactElement {
-  // Destructure only from `input` (never an outer `opts` alias) so HMR cannot
-  // resurrect a stale ReferenceError from intermediate refactors.
   const layout = input.layout
   const nodes = input.nodes
   const orientation = input.orientation
@@ -130,7 +128,7 @@ export function buildProcessSankeyBackgroundGraphics(
     </g>
   ) : null
 
-  const denseReadout = compressedPadding ? (
+  const denseReadout = showQualityReadout && compressedPadding ? (
     <text
       x={plotW}
       y={orientation === "vertical" ? -3 : 2}

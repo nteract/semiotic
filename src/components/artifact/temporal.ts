@@ -1,3 +1,4 @@
+import { getMax } from "../charts/shared/minMax"
 import type {
   Claim,
   CorrectionRecord,
@@ -470,7 +471,7 @@ export function auditTemporalContext(
     watermarkClock &&
     frontierUpperClocks.length > 0 &&
     watermarkClock.time >
-      Math.max(...frontierUpperClocks.map(({ time }) => time))
+      getMax(frontierUpperClocks.map(({ time }) => time))
   ) {
     findings.push({
       id: "time.watermark.after-declared-clock",

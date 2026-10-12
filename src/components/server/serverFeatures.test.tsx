@@ -447,7 +447,7 @@ describe("Accessibility", () => {
     })
     expect(svg).toContain("<title")
     expect(svg).toContain("Revenue by Region")
-    expect(svg).toContain('aria-labelledby="semiotic-title')
+    expect(svg).toMatch(/aria-labelledby="[^"]+-semiotic-title"/)
   })
 
   it("adds <desc> element when description is provided", () => {
@@ -473,7 +473,7 @@ describe("Accessibility", () => {
       title: "Chart Title",
       description: "Chart description",
     } as StaticOrdinalProps)
-    expect(svg).toContain('aria-labelledby="semiotic-title semiotic-desc"')
+    expect(svg).toMatch(/aria-labelledby="[^"]+-semiotic-title [^"]+-semiotic-desc"/)
   })
 
   it("adds role='img' to empty charts", () => {
@@ -738,7 +738,7 @@ describe("Legend rendering", () => {
     expect(svg).toContain(">Kafka<")
     expect(svg).toContain(">Flink<")
     expect(svg).toContain('width="8" height="8"')
-    expect(svg.match(/id="data-area" transform="translate\([\d.]+,([\d.]+)\)"/)?.[1]).not.toBe("20")
+    expect(svg.match(/id="[^"]*-data-area" transform="translate\([\d.]+,([\d.]+)\)"/)?.[1]).not.toBe("20")
   })
 
   it("composes caller legendGroups after an inferred series legend in SSR", () => {
@@ -837,7 +837,7 @@ describe("Legend rendering", () => {
       legendLayout: { maxWidth: 180, align: "start" },
     } as StaticXYProps)
 
-    const dataAreaTop = Number(svg.match(/id="data-area" transform="translate\([\d.]+,([\d.]+)\)"/)?.[1])
+    const dataAreaTop = Number(svg.match(/id="[^"]*-data-area" transform="translate\([\d.]+,([\d.]+)\)"/)?.[1])
     expect(svg).toContain('transform="translate(70,0)"')
     expect(dataAreaTop).toBeGreaterThan(40)
   })

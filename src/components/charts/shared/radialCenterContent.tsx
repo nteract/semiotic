@@ -1,10 +1,7 @@
 import * as React from "react"
 
-// `centerContent` is historically an HTML overlay in StreamOrdinalFrame, so
-// arbitrary React content must remain inside a foreignObject in static SVG.
-// A native SVG element, however, is safe and materially more portable (Figma
-// and several SVG importers discard foreignObject entirely). Keep the allow
-// list deliberately narrow: unknown components still take the HTML fallback.
+// Text and SVG elements use native SVG so rasterizers and design tools retain
+// them. Arbitrary React HTML uses an overlay (foreignObject in static SVG).
 const SVG_CENTER_CONTENT_TAGS = new Set([
   "svg",
   "g",
@@ -25,10 +22,13 @@ const SVG_CENTER_CONTENT_TAGS = new Set([
 
 /** An allow-listed SVG element, or a fragment/array made only of them. */
 function isSvgCenterContent(node: React.ReactNode): boolean {
-  if (Array.isArray(node)) return node.length > 0 && node.every(isSvgCenterContent)
+  if (Array.isArray(node))
+    return node.length > 0 && node.every(isSvgCenterContent)
   if (!React.isValidElement(node)) return false
   if (node.type === React.Fragment) {
-    const children = React.Children.toArray((node.props as { children?: React.ReactNode }).children)
+    const children = React.Children.toArray(
+      (node.props as { children?: React.ReactNode }).children
+    )
     return children.length > 0 && children.every(isSvgCenterContent)
   }
   return typeof node.type === "string" && SVG_CENTER_CONTENT_TAGS.has(node.type)
@@ -37,10 +37,21 @@ function isSvgCenterContent(node: React.ReactNode): boolean {
 export function renderSvgCenterContent(
   centerContent: React.ReactNode,
   centerX: number,
-  centerY: number
+  centerY: number,
+  textStyle?: React.SVGProps<SVGTextElement>
 ): React.ReactNode | null {
+  if (typeof centerContent === "string" || typeof centerContent === "number") {
+    centerContent = (
+      <text fill="currentColor" {...textStyle}>
+        {centerContent}
+      </text>
+    )
+  }
   if (!isSvgCenterContent(centerContent)) return null
-  if (!React.isValidElement(centerContent) || centerContent.type === React.Fragment) {
+  if (
+    !React.isValidElement(centerContent) ||
+    centerContent.type === React.Fragment
+  ) {
     return (
       <g
         className="semiotic-radial-center-content"

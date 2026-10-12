@@ -337,6 +337,7 @@ export const orbitLayoutPlugin: NetworkLayoutPlugin = {
             x2: parentX + ring * Math.sin(a2),
             y2: parentY + ring * Math.cos(a2) * ecc,
             style: ringStyle,
+            interactive: false,
             // SceneDatum is `Datum | null`; ring segments are decorative,
             // not data-bearing, so null is the right value.
             datum: null

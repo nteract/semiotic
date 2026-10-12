@@ -1,3 +1,4 @@
+import { getMax, getMin } from "../../charts/shared/minMax"
 import * as React from "react"
 import type { NetworkCustomLayout } from "../../stream/networkCustomLayout"
 import { NetworkPerspectiveGround } from "../../stream/networkPerspectivePlacement"
@@ -214,7 +215,7 @@ export const dependencyForestLayout: NetworkCustomLayout<
     } else if (between.length) {
       // A skip link must not imply a relationship to an intervening glyph.
       const channel =
-        Math.min(from.y, to.y, ...between.map((point) => point.y)) -
+        Math.min(from.y, to.y, getMin(between.map((point) => point.y))) -
         nodeHeight / 2 -
         26 -
         offset
@@ -283,9 +284,9 @@ export const dependencyForestLayout: NetworkCustomLayout<
     ].filter((id) => id !== selected && positions.has(id))
     if (targets.length) {
       const points = targets.map((id) => positions.get(id)!)
-      const x = Math.max(...points.map((point) => point.x)) + nodeWidth / 2 + 8
-      const low = Math.min(...points.map((point) => point.y)) - 23
-      const high = Math.max(...points.map((point) => point.y)) + 23
+      const x = getMax(points.map((point) => point.x)) + nodeWidth / 2 + 8
+      const low = getMin(points.map((point) => point.y)) - 23
+      const high = getMax(points.map((point) => point.y)) + 23
       bracket = { x: x - 7, y: low, width: 7, height: high - low, z: "top" }
       overlays.push(
         React.createElement("path", {

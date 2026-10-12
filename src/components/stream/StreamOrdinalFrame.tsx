@@ -897,16 +897,22 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
             height={size[1]}
             style={{ position: "absolute", left: 0, top: 0 }}
           >
+            <defs>
+              <clipPath id={`${tableId}-plot-clip`}>
+                <rect x={margin.left} y={margin.top} width={adjustedWidth} height={adjustedHeight} />
+              </clipPath>
+            </defs>
             <g transform={`translate(${margin.left},${margin.top})`}>
-              {background && (
-                <rect x={0} y={0} width={adjustedWidth} height={adjustedHeight} fill={background} />
-              )}
+              {resolvedCanvasBackground}
+              {resolvedCombinedBackground}
               {ssrBackground}
             </g>
-            <g transform={`translate(${translateX},${translateY})`}>
-              {renderOrdinalSceneListWithBackend({
-                nodes: scene, renderMode, idPrefix: tableId
-              }).map(entry => entry.element)}
+            <g clipPath={`url(#${tableId}-plot-clip)`}>
+              <g transform={`translate(${translateX},${translateY})`}>
+                {renderOrdinalSceneListWithBackend({
+                  nodes: scene, renderMode, idPrefix: tableId
+                }).map(entry => entry.element)}
+              </g>
             </g>
           </svg>
           <OrdinalSVGOverlay
@@ -951,7 +957,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
             yAccessor={annYAccessor}
             annotationData={enrichAnnotationData(store?.getData())}
           />
-          {centerContent && projection === "radial" && (
+          {centerContent != null && projection === "radial" && (
             <RadialCenterContent content={centerContent}
               centerX={margin.left + adjustedWidth / 2} centerY={margin.top + adjustedHeight / 2}
               width={size[0]} height={size[1]} />
@@ -1092,7 +1098,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
         )}
 
         {/* Donut center content */}
-        {centerContent && projection === "radial" && (
+        {centerContent != null && projection === "radial" && (
           <RadialCenterContent content={centerContent}
             centerX={margin.left + adjustedWidth / 2} centerY={margin.top + adjustedHeight / 2}
             width={size[0]} height={size[1]} />

@@ -49,13 +49,14 @@ export interface SyncedPushHandle<T = Datum> {
 }
 
 /** An id accessor: a field name, or a function of the row (and its index). */
-export type PushIdAccessor<T> = keyof T | ((datum: T, index: number) => string | number | null | undefined)
+export type PushIdAccessor<T> =
+  keyof T | ((datum: T, index: number) => string | number | null | undefined)
 
 export interface SyncedPushDataOptions<T = Datum> {
   /**
    * Identifies a row so it can be updated/removed in place. A field name
-   * (`"id"`) or a function. Omit it and rows are keyed by index — fine for
-   * append-mostly streams, but reorders/removals then read positionally.
+   * (`"id"`) or a function, matching the chart's ID accessor. Missing or
+   * duplicate IDs use snapshot replacement through clear() + pushMany().
    */
   id?: PushIdAccessor<T>
   /**
@@ -68,18 +69,18 @@ export interface SyncedPushDataOptions<T = Datum> {
 }
 
 function normalizeIdAccessor<T>(
-  id: PushIdAccessor<T> | undefined,
-): ((datum: T, index: number) => string) | null {
+  id: PushIdAccessor<T> | undefined
+): ((datum: T, index: number) => string | null) | null {
   if (id == null) return null
   if (typeof id === "function") {
     return (datum, index) => {
       const value = id(datum, index)
-      return value == null ? String(index) : String(value)
+      return value == null ? null : String(value)
     }
   }
-  return (datum, index) => {
+  return (datum) => {
     const value = (datum as Record<string, unknown>)[id as string]
-    return value == null ? String(index) : String(value)
+    return value == null ? null : String(value)
   }
 }
 
@@ -96,17 +97,57 @@ export function syncPushBuffer<T = Datum>(
   handle: SyncedPushHandle<T>,
   previousById: Map<string, T>,
   rows: ReadonlyArray<T>,
-  getId: ((datum: T, index: number) => string) | null,
+  getId: ((datum: T, index: number) => string | null | undefined) | null
 ): Map<string, T> {
   const next = new Map<string, T>()
+  let positional = getId == null
   rows.forEach((row, index) => {
-    next.set(getId ? getId(row, index) : String(index), row)
+    const id = getId?.(row, index)
+    if (id == null || next.has(id)) positional = true
+    next.set(id ?? String(index), row)
   })
+
+  if (positional) {
+    next.clear()
+    rows.forEach((row, index) => next.set(String(index), row))
+  }
+  if (previousById.size === 0) {
+    pushRows(handle, [...rows])
+    return next
+  }
+  const previousRows = [...previousById.values()]
+  const previousPositional =
+    getId == null ||
+    [...previousById.keys()].some(
+      (id, index) => getId(previousRows[index], index) !== id
+    )
+  if (positional || previousPositional) {
+    const unchangedPrefix =
+      previousRows.length <= rows.length &&
+      previousRows.every((row, index) => row === rows[index])
+    if (unchangedPrefix && positional === previousPositional) {
+      pushRows(handle, rows.slice(previousRows.length))
+    } else {
+      replaceRows(handle, rows)
+    }
+    return next
+  }
 
   const removed: string[] = []
   previousById.forEach((_row, id) => {
     if (!next.has(id)) removed.push(id)
   })
+  if (
+    (removed.length > 0 && !handle.remove) ||
+    (!handle.update &&
+      !handle.remove &&
+      [...next].some(
+        ([id, row]) => previousById.has(id) && previousById.get(id) !== row
+      ))
+  ) {
+    replaceRows(handle, rows)
+    return next
+  }
   if (removed.length > 0) handle.remove?.(removed)
 
   const pushed: T[] = []
@@ -122,12 +163,28 @@ export function syncPushBuffer<T = Datum>(
       }
     }
   })
-  if (pushed.length > 0) {
-    if (handle.pushMany) handle.pushMany(pushed)
-    else if (handle.push) for (const row of pushed) handle.push(row)
-  }
+  pushRows(handle, pushed)
 
   return next
+}
+
+function pushRows<T>(handle: SyncedPushHandle<T>, rows: T[]): void {
+  if (rows.length === 0) return
+  if (handle.pushMany) handle.pushMany(rows)
+  else if (handle.push) for (const row of rows) handle.push(row)
+}
+
+function replaceRows<T>(
+  handle: SyncedPushHandle<T>,
+  rows: ReadonlyArray<T>
+): void {
+  if (!handle.clear) {
+    throw new Error(
+      "Synchronizing these changed rows requires a clear() handle"
+    )
+  }
+  handle.clear()
+  pushRows(handle, [...rows])
 }
 
 /**
@@ -140,7 +197,7 @@ export function syncPushBuffer<T = Datum>(
 export function useSyncedPushData<T = Datum>(
   ref: React.RefObject<SyncedPushHandle<T> | null>,
   data: ReadonlyArray<T>,
-  options: SyncedPushDataOptions<T> = {},
+  options: SyncedPushDataOptions<T> = {}
 ): void {
   const { id, resetKey } = options
   const getId = useMemo(() => normalizeIdAccessor(id), [id])

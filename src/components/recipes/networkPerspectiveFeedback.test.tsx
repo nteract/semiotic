@@ -173,7 +173,7 @@ describe("downstream perspective contracts", () => {
       'class="lineage-dag-glyphs"><g data-perspective="ground"'
     )
     expect(svg).not.toContain('data-perspective="billboard"')
-    const flat = { nodes, edges, layout: lineageDagLayout }
+    const flat = { nodes, edges, layout: lineageDagLayout, _idPrefix: "flat-perspective" }
     expect(renderChart("NetworkCustomChart", flat)).toBe(
       renderChart("NetworkCustomChart", {
         ...flat,
@@ -248,6 +248,7 @@ describe("downstream perspective contracts", () => {
 
   it("emits a single flat token rim and stable SVG roles", () => {
     const props = {
+      _idPrefix: "token-rim",
       nodes: [
         { id: "a", x: 0, y: 0 },
         { id: "b", x: 1, y: 0 }

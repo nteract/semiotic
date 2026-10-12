@@ -1,3 +1,4 @@
+import { getMax } from "../charts/shared/minMax"
 import type { LinearBrushTrack } from "./linearBrushGeometry"
 
 // Pure LinearBrush label layout, shared by the browser control and static
@@ -57,7 +58,7 @@ export function estimateBrushLabelSize(
 ): number {
   if (orientation === "y") return lines.length * lineHeight
   if (labelWidth != null) return labelWidth
-  return Math.max(0, ...lines.map((line) => Array.from(line).length)) * fontSize * 0.6
+  return getMax(lines.map((line) => Array.from(line).length), 0) * fontSize * 0.6
 }
 
 /**

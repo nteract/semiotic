@@ -5,6 +5,36 @@ import { generateTokens } from "./tokenEncoding"
 import { tokenLayer } from "./tokenLayer"
 
 describe("tokenLayer", () => {
+  it.each(["quantile-strip", "dotplot"] as const)("keeps custom y positions and repeated values in %s", (layout) => {
+    const layer = tokenLayer({
+      input: [5],
+      encoding: {
+        tokenType: "dot", tokenSemantics: "possible-outcome", countStrategy: "quantile",
+        tokenCount: 3, layout
+      },
+      options: { x: 7, rows: 2, valueToY: () => 42 }
+    })
+    expect(layer.positionedTokens.map(({ x, y, row, column }) => [x, y, row, column]))
+      .toEqual(layout === "dotplot"
+        ? [[7, 42, 0, 0], [7, 42, 1, 0], [7, 42, 2, 0]]
+        : [[7, 42, 0, 0], [7, 42, 1, 1], [7, 42, 0, 2]])
+  })
+
+  it.each(["quantile-strip", "dotplot"] as const)("places 200,000 %s tokens with finite endpoints", (layout) => {
+    const layer = tokenLayer({
+      input: [0, 1],
+      encoding: {
+        tokenType: "dot", tokenSemantics: "possible-outcome", countStrategy: "quantile",
+        tokenCount: 200_000, layout
+      },
+      options: { width: 300, cellWidth: 1 }
+    })
+    expect(layer.positionedTokens).toHaveLength(200_000)
+    expect(layer.positionedTokens[0].x).toBe(0)
+    expect(layer.positionedTokens[199_999].x).toBe(300)
+    expect(layer.nodes).toHaveLength(200_000)
+  })
+
   it("turns unitized glyph tokens into positioned glyph scene nodes", () => {
     const layer = tokenLayer({
       input: 3.6,
@@ -126,6 +156,7 @@ describe("tokenLayer", () => {
       [2, 4],
       [2, 5],
     ])
+    expect(layer.nodes.map((node) => (node as PointSceneNode).x)).toEqual([20, 20, 20, 20, 20, 20])
     expect(layer.nodes.map((node) => (node as PointSceneNode).y)).toEqual([
       10,
       18,

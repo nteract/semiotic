@@ -1,3 +1,4 @@
+import { getMinMax } from "../charts/shared/minMax"
 import type { Datum } from "../charts/shared/datumTypes"
 import {
   describeChart,
@@ -337,8 +338,9 @@ function sourceFacts(
       .map((row) => finite(factValue(row, accessor, fallback)))
       .filter((value): value is number => value != null)
     if (values.length > 0) {
+      const [min, max] = getMinMax(values)
       statements.push(
-        `Observed ${typeof accessor === "string" ? accessor : fallback} ranges from ${displayFactValue(Math.min(...values))} to ${displayFactValue(Math.max(...values))}.`
+        `Observed ${typeof accessor === "string" ? accessor : fallback} ranges from ${displayFactValue(min)} to ${displayFactValue(max)}.`
       )
     }
   }

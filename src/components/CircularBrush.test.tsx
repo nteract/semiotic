@@ -18,6 +18,17 @@ function Harness({ initial = { start: 10, end: 40 } }: { initial?: CircularBrush
 const out = () => screen.getByTestId("out").textContent
 
 describe("CircularBrush — accessibility structure", () => {
+  it("keeps a controlled full-cycle selection when moving the range", () => {
+    render(<Harness initial={{ start: 0, end: 365 }} />)
+    const range = screen.getByRole("slider", { name: "Date (move both ends)" })
+    expect(range.querySelector("path")!.getAttribute("d")!.match(/A/g)).toHaveLength(4)
+    const end = screen.getByRole("slider", { name: "Date end" })
+    expect(end).toHaveAttribute("aria-valuenow", "365")
+    expect(end).toHaveAttribute("aria-valuemax", "365")
+    for (const key of ["ArrowRight", "PageDown", "Home", "End"]) fireEvent.keyDown(range, { key })
+    expect(out()).toBe("0,365")
+  })
+
   it("renders three sliders (range + two handles) with ARIA range attributes", () => {
     render(<Harness />)
     const sliders = screen.getAllByRole("slider")

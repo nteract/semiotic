@@ -1,5 +1,5 @@
 import * as React from "react"
-import { fireEvent, render, screen, within } from "@testing-library/react"
+import { act, fireEvent, render, screen, within } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
 import { PieChart, DonutChart, GaugeChart, BoxPlot, ViolinPlot, RidgelinePlot } from "semiotic/ordinal"
 import { Scatterplot } from "semiotic/xy"
@@ -9,6 +9,7 @@ import { OrdinalPipelineStore } from "./OrdinalPipelineStore"
 import { AriaLiveTooltip } from "./AriaLiveTooltip"
 import { extractAllRows } from "./accessibleDataRows"
 import { renderChartWithEvidence } from "../server/renderToStaticSVG"
+import { createFrameScheduler } from "./test-utils/frameScheduler"
 
 const slices = [{ category: "A", value: 30 }, { category: "B", value: 70 }]
 const distribution = [
@@ -30,56 +31,140 @@ async function openTable() {
 }
 
 describe("public chart accessibility data", () => {
-  it.each([PieChart, DonutChart])("announces and tabulates radial categories and original values", async (Chart) => {
-    const { container } = render(<TooltipProvider><Chart data={slices} showLegend={false} /></TooltipProvider>)
-    const frame = container.querySelector(".stream-ordinal-frame")!
-    fireEvent.keyDown(frame, { key: "Home" })
-    const live = container.querySelector('[aria-live="polite"]')!
-    expect(live.textContent).toMatch(/category: [AB]/)
-    expect(live.textContent).toMatch(/value: (30|70)/)
-    expect(live.textContent).toContain("percent:")
-    fireEvent.keyDown(frame, { key: "Escape" })
-    expect(live.textContent).toBe("")
-    const { table, rows } = await openTable()
-    expect(within(table).getByRole("columnheader", { name: "category" })).toBeTruthy()
-    expect(within(table).getByRole("columnheader", { name: "value" })).toBeTruthy()
-    expect(rows.map((row) => row.textContent)).toEqual(expect.arrayContaining([
-      expect.stringContaining("A30"), expect.stringContaining("B70"),
-    ]))
-  })
+  it.each([PieChart, DonutChart])(
+    "announces and tabulates radial categories and original values",
+    async (Chart) => {
+      const scheduler = createFrameScheduler()
+      const { container } = render(
+        <TooltipProvider>
+          <Chart
+            data={slices}
+            showLegend={false}
+            animate={false}
+            frameProps={{ frameScheduler: scheduler.scheduler }}
+          />
+        </TooltipProvider>
+      )
+      act(() => scheduler.flush())
+      const frame = container.querySelector(".stream-ordinal-frame")!
+      fireEvent.keyDown(frame, { key: "Home" })
+      const live = container.querySelector('[aria-live="polite"]')!
+      expect(live.textContent).toMatch(/category: [AB]/)
+      expect(live.textContent).toMatch(/value: (30|70)/)
+      expect(live.textContent).toContain("percent:")
+      fireEvent.keyDown(frame, { key: "Escape" })
+      expect(live.textContent).toBe("")
+      const { table, rows } = await openTable()
+      expect(
+        within(table).getByRole("columnheader", { name: "category" })
+      ).toBeTruthy()
+      expect(
+        within(table).getByRole("columnheader", { name: "value" })
+      ).toBeTruthy()
+      expect(rows.map((row) => row.textContent)).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining("A30"),
+          expect.stringContaining("B70")
+        ])
+      )
+    }
+  )
 
   it("tabulates and announces gauge segments", async () => {
-    const { container } = render(<TooltipProvider><GaugeChart value={65} /></TooltipProvider>)
-    fireEvent.keyDown(container.querySelector(".stream-ordinal-frame")!, { key: "Home" })
-    expect(container.querySelector('[aria-live="polite"]')?.textContent).toContain("value: 65")
+    const scheduler = createFrameScheduler()
+    const { container } = render(
+      <TooltipProvider>
+        <GaugeChart
+          value={65}
+          animate={false}
+          frameProps={{ frameScheduler: scheduler.scheduler }}
+        />
+      </TooltipProvider>
+    )
+    act(() => scheduler.flush())
+    fireEvent.keyDown(container.querySelector(".stream-ordinal-frame")!, {
+      key: "Home"
+    })
+    expect(
+      container.querySelector('[aria-live="polite"]')?.textContent
+    ).toContain("value: 65")
     const { table, rows } = await openTable()
-    expect(within(table).getByRole("columnheader", { name: "value" })).toBeTruthy()
-    expect(rows.every((row) => within(row).getAllByRole("cell", { name: "65" }).length > 0)).toBe(true)
+    expect(
+      within(table).getByRole("columnheader", { name: "value" })
+    ).toBeTruthy()
+    expect(
+      rows.every(
+        (row) => within(row).getAllByRole("cell", { name: "65" }).length > 0
+      )
+    ).toBe(true)
   })
 
-  it.each([BoxPlot, ViolinPlot, RidgelinePlot])("tabulates distribution statistics and raw observations", async (Chart) => {
-    render(<TooltipProvider><Chart data={distribution} /></TooltipProvider>)
-    const { table, rows } = await openTable()
-    expect(rows).toHaveLength(6)
-    expect(within(table).getByRole("columnheader", { name: "median" })).toBeTruthy()
-    expect(within(table).getAllByRole("cell", { name: "10" }).length).toBeGreaterThan(0)
-    expect(within(table).getAllByRole("cell", { name: "40" }).length).toBeGreaterThan(0)
-  })
+  it.each([BoxPlot, ViolinPlot, RidgelinePlot])(
+    "tabulates distribution statistics and raw observations",
+    async (Chart) => {
+      const scheduler = createFrameScheduler()
+      render(
+        <TooltipProvider>
+          <Chart
+            data={distribution}
+            animate={false}
+            frameProps={{ frameScheduler: scheduler.scheduler }}
+          />
+        </TooltipProvider>
+      )
+      act(() => scheduler.flush())
+      const { table, rows } = await openTable()
+      expect(rows).toHaveLength(6)
+      expect(
+        within(table).getByRole("columnheader", { name: "median" })
+      ).toBeTruthy()
+      expect(
+        within(table).getAllByRole("cell", { name: "10" }).length
+      ).toBeGreaterThan(0)
+      expect(
+        within(table).getAllByRole("cell", { name: "40" }).length
+      ).toBeGreaterThan(0)
+    }
+  )
 
   it("retains symbol scatterplot rows", async () => {
-    render(<TooltipProvider><Scatterplot data={slices} xAccessor="value" yAccessor="value" symbolBy="category" /></TooltipProvider>)
+    const scheduler = createFrameScheduler()
+    render(
+      <TooltipProvider>
+        <Scatterplot
+          data={slices}
+          xAccessor="value"
+          yAccessor="value"
+          symbolBy="category"
+          animate={false}
+          frameProps={{ frameScheduler: scheduler.scheduler }}
+        />
+      </TooltipProvider>
+    )
+    act(() => scheduler.flush())
     const { rows } = await openTable()
     expect(rows).toHaveLength(2)
     expect(rows[0].textContent).toContain("A30")
   })
 
   it("retains both city points and flows in a FlowMap", async () => {
-    render(<TooltipProvider><FlowMap
-      nodes={[{ id: "London", lon: 0, lat: 51 }, { id: "Paris", lon: 2, lat: 49 }]}
-      flows={[{ source: "London", target: "Paris", travelers: 27 }]}
-      valueAccessor="travelers"
-      areas={[]}
-    /></TooltipProvider>)
+    const scheduler = createFrameScheduler()
+    render(
+      <TooltipProvider>
+        <FlowMap
+          nodes={[
+            { id: "London", lon: 0, lat: 51 },
+            { id: "Paris", lon: 2, lat: 49 }
+          ]}
+          flows={[{ source: "London", target: "Paris", travelers: 27 }]}
+          valueAccessor="travelers"
+          areas={[]}
+          animate={false}
+          frameProps={{ frameScheduler: scheduler.scheduler }}
+        />
+      </TooltipProvider>
+    )
+    act(() => scheduler.flush())
     const { rows, table } = await openTable()
     expect(rows).toHaveLength(3)
     expect(table.textContent).toContain("London")

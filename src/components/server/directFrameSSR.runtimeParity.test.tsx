@@ -274,9 +274,10 @@ describe("direct Stream Frame SSR runtime parity", () => {
       />
     )
 
-    expect(html).toContain(
-      '<g transform="translate(70,50)"><rect x="0" y="0" width="190" height="130" fill="#badbad"></rect><rect id="custom-background"'
+    expect(html).toMatch(
+      /<g transform="translate\(70,50\)"><rect\b[^>]*data-semiotic-layer="canvas-background"[^>]*x="-70" y="-50" width="300" height="240" fill="#badbad"><\/rect><rect id="custom-background"/
     )
+    expectMarkupLayerOrder(html, "<path")
     expect(html).toContain('<g transform="translate(165,115)"><path')
   })
 

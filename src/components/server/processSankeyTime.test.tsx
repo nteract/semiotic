@@ -15,6 +15,7 @@ const edges = [
 describe("ProcessSankey server time contract", () => {
   it("produces the same scene for numeric strings as numeric values", () => {
     const numeric = renderChartWithEvidence("ProcessSankey", {
+      _idPrefix: "process-time",
       nodes,
       edges,
       domain: [12, 20],
@@ -22,6 +23,7 @@ describe("ProcessSankey server time contract", () => {
       height: 300
     })
     const strings = renderChartWithEvidence("ProcessSankey", {
+      _idPrefix: "process-time",
       nodes: nodes.map((node) => ({
         ...node,
         xExtent: node.xExtent.map(String)
@@ -46,6 +48,7 @@ describe("ProcessSankey server time contract", () => {
     (orientation) => {
       const numeric = vi.fn((time: number | Date) => `step ${time}`)
       const result = renderChartWithEvidence("ProcessSankey", {
+        _idPrefix: "process-time",
         nodes,
         edges,
         domain: [12, 20],
@@ -58,6 +61,7 @@ describe("ProcessSankey server time contract", () => {
       ).toBe(true)
       const date = vi.fn((time: number | Date) => (time as Date).toISOString())
       const dated = renderChartWithEvidence("ProcessSankey", {
+        _idPrefix: "process-time",
         edges: [
           {
             ...edges[0],
@@ -77,6 +81,7 @@ describe("ProcessSankey server time contract", () => {
 
   it("normalizes timezone-free ISO input to the same geometry as explicit UTC and rejects ambiguous dates", () => {
     const props = {
+      _idPrefix: "process-time",
       edges: [
         {
           ...edges[0],

@@ -3,6 +3,14 @@ import { describeChart } from "./describeChart"
 import { describePhysicsSource } from "./describePhysicsSource"
 import { buildPhysicsPile } from "../charts/physics/physicsPilePhysics"
 import { buildGaltonBoardPhysics } from "../charts/physics/galtonBoardPhysics"
+
+it("bins 300,000 Galton source values without a spread-argument crash", () => {
+  const result = describePhysicsSource("GaltonBoardChart", {
+    data: Array.from({ length: 300_000 }, (_, index) => ({ value: index % 2 })),
+    valueAccessor: "value", bins: 2
+  })
+  expect(result?.rows.map((row) => row.value)).toEqual([150_000, 150_000])
+})
 import { buildCollisionSwarmPhysics } from "../charts/physics/collisionSwarmPhysics"
 import { buildEventDropPhysics } from "../charts/physics/eventDropPhysics"
 import { generateGaltonMechanicalSamples } from "../charts/physics/physicsGaltonData"

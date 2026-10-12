@@ -1,3 +1,4 @@
+import { staticTitleText } from "./staticTitle"
 import * as React from "react"
 import * as ReactDOMServer from "react-dom/server"
 import type { Datum } from "../charts/shared/datumTypes"
@@ -144,7 +145,7 @@ export function renderMinimap(frameProps: Datum, sink?: EvidenceSink): string {
   const totalHeight = detailHeight + overviewTotalHeight
   const theme = resolveTheme(common.theme as Parameters<typeof resolveTheme>[0])
   const styles = themeStyles(theme)
-  const title = typeof common.title === "string" ? common.title : undefined
+  const title = staticTitleText(common.title) || undefined
   const description =
     typeof common.description === "string"
       ? common.description

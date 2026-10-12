@@ -97,6 +97,7 @@ describe("createRoughRenderMode", () => {
   it("renders through the established static export path", () => {
     const mode = createRoughRenderMode({ seed: 1984, disableMultiStroke: true })
     const props = {
+      _idPrefix: "rough-export",
       chartType: "bar" as const,
       data: [{ category: "A", value: 4 }, { category: "B", value: 7 }],
       categoryAccessor: "category",

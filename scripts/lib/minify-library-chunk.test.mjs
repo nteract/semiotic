@@ -4,8 +4,55 @@ import { gzipSync } from "node:zlib"
 import { minify } from "terser"
 import { build } from "esbuild"
 import { rollup } from "rollup"
-import { minifyLibraryChunk } from "./minify-library-chunk.mjs"
+import {
+  libraryCompressionCandidates,
+  minifyLibraryChunk
+} from "./minify-library-chunk.mjs"
 import { libraryTerserOptions as options } from "./library-minification-options.mjs"
+import { chunkLoadEffect } from "./strip-pure-bare-imports.mjs"
+import { cleanPureAnnotations } from "./clean-pure-annotations.mjs"
+
+test("purity cleanup preserves token separation, ASI and annotation-like literals", async () => {
+  const source = String.raw`
+    export let calls = 0
+    function target() { calls++; return 7 }
+    export function afterBreak() { return /* @__PURE__
+    */ target() }
+    export function literal() { return/* @__PURE__ */42 }
+    export const text = "/* @__PURE__ */"
+    export const pattern = /\/\* @__PURE__ \*\//
+  `
+  const load = (code) =>
+    import(`data:text/javascript,${encodeURIComponent(code)}`)
+  const candidates = [
+    source,
+    cleanPureAnnotations(source),
+    cleanPureAnnotations(source, { functionBodyAnnotations: false })
+  ]
+  for (const module of await Promise.all(candidates.map(load))) {
+    assert.equal(module.afterBreak(), undefined)
+    assert.equal(module.calls, 0)
+    assert.equal(module.literal(), 42)
+    assert.equal(module.text, "/* @__PURE__ */")
+    assert.ok(module.pattern.test(module.text))
+  }
+})
+
+test("body hint cleanup preserves module factories and computed member initializers", () => {
+  const source = `
+    const optional = /* @__PURE__ */ makeOptional()
+    class Required {
+      [/* @__PURE__ */ makeName()]() { return /* @__PURE__ */ makeOptional() }
+    }
+    export { optional, Required }
+  `
+  const compact = cleanPureAnnotations(source, {
+    functionBodyAnnotations: false
+  })
+  assert.match(compact, /optional = \/\*#__PURE__\*\/\s*makeOptional\(\)/)
+  assert.match(compact, /\[\/\*#__PURE__\*\/\s*makeName\(\)\]/)
+  assert.doesNotMatch(compact, /return\s*\/\*#__PURE__\*\//)
+})
 
 test("folded and returned calls do not leave invalid Rollup purity hints", async () => {
   const source = `
@@ -15,18 +62,32 @@ test("folded and returned calls do not leave invalid Rollup purity hints", async
     export const root = /* @__PURE__ */ Math.sqrt(8)
     export const text = "/* @__PURE__ */ return untouched"
   `
-  const result = await minifyLibraryChunk(source, { format: "esm", filename: "fixture.js", options })
+  const result = await minifyLibraryChunk(source, {
+    format: "esm",
+    filename: "fixture.js",
+    options
+  })
   const warnings = []
   const bundle = await rollup({
-    input: "fixture", external: ["optional-host"], onwarn: (warning) => warnings.push(warning),
-    plugins: [{ name: "fixture", resolveId: (id) => id === "fixture" ? id : null, load: () => result.code }]
+    input: "fixture",
+    external: ["optional-host"],
+    onwarn: (warning) => warnings.push(warning),
+    plugins: [
+      {
+        name: "fixture",
+        resolveId: (id) => (id === "fixture" ? id : null),
+        load: () => result.code
+      }
+    ]
   })
   try {
     const output = await bundle.generate({ format: "esm" })
     assert.deepEqual(warnings, [])
     assert.match(output.output[0].code, /\/\* @__PURE__ \*\/ return untouched/)
-    assert.match(result.code, /\/\*\s*@__PURE__\s*\*\/\s*\w+\(\)/)
-  } finally { await bundle.close() }
+    assert.match(result.code, /\/\*\s*[@#]__PURE__\s*\*\/\s*\w+\(\)/)
+  } finally {
+    await bundle.close()
+  }
 })
 
 test("compressed ESM preserves exports, initialization, closures and live bindings", async () => {
@@ -74,16 +135,19 @@ test("compressed ESM preserves exports, initialization, closures and live bindin
 test("preserves purity annotations for downstream named-import tree shaking", async () => {
   const source = `
     import { makeOptional } from "optional-host"
-    export const optional = /* @__PURE__ */ makeOptional()
-    export const required = 42
+    var optional = /* @__PURE__ */ makeOptional()
+    class Required { value() { return 42 } }
+    var anotherOptional = /* @__PURE__ */ makeOptional()
+    export { optional, anotherOptional, Required }
   `
   const compact = await minifyLibraryChunk(source, {
     format: "esm",
     filename: "library.js",
     options
   })
+  assert.equal(chunkLoadEffect(compact.code), null)
   const consumer = await build({
-    stdin: { contents: 'export { required } from "library"' },
+    stdin: { contents: 'export { Required } from "library"' },
     bundle: true,
     write: false,
     format: "esm",
@@ -111,10 +175,66 @@ test("preserves purity annotations for downstream named-import tree shaking", as
   const exports = await import(
     `data:text/javascript,${encodeURIComponent(code)}`
   )
-  assert.equal(exports.required, 42)
+  assert.equal(new exports.Required().value(), 42)
 })
 
-test("both production candidates preserve NaN comparisons, getters, and coercion order", async () => {
+test("all production candidates preserve initializer order and variable scope", async () => {
+  const source = `
+    export function exercise() {
+      const order = []
+      function record(value) { order.push(value); return value }
+      function initialize() {
+        order.push(value)
+        var value = record("first")
+        if (value) { var other = record("second") }
+        return [value, other]
+      }
+      const values = initialize()
+      const lexical = [], shared = []
+      for (let index = 0; index < 3; index++) lexical.push(() => index)
+      for (var index = 0; index < 3; index++) shared.push(() => index)
+      let tdz
+      try {
+        record(later)
+        let later = record("unreachable")
+      } catch (error) { tdz = error instanceof ReferenceError }
+      return { order, values, lexical: lexical.map(f => f()), shared: shared.map(f => f()), tdz }
+    }
+  `
+  const load = (code) =>
+    import(`data:text/javascript,${encodeURIComponent(code)}`)
+  const original = await load(source)
+  const expected = {
+    order: [undefined, "first", "second"],
+    values: ["first", "second"],
+    lexical: [0, 1, 2],
+    shared: [3, 3, 3],
+    tdz: true
+  }
+  assert.deepEqual(original.exercise(), expected)
+  const candidates = await Promise.all(
+    libraryCompressionCandidates.map((compression) =>
+      minify(source, {
+        module: true,
+        ...options,
+        compress: { ...options.compress, ...compression }
+      })
+    )
+  )
+  candidates.push(
+    await minifyLibraryChunk(source, {
+      format: "esm",
+      filename: "scope.js",
+      options
+    })
+  )
+  for (const compact of candidates) {
+    const module = await load(compact.code)
+    assert.deepEqual(module.exercise(), expected)
+  }
+})
+
+test("all production candidates preserve NaN comparisons, getters, and coercion order", async () => {
   const source = `
     export function guards(value, bound) {
       return [!(value > bound), !(value >= bound), !(value < bound), !(value <= bound)]
@@ -126,11 +246,11 @@ test("both production candidates preserve NaN comparisons, getters, and coercion
     import(`data:text/javascript,${encodeURIComponent(code)}`)
   const original = await load(source)
   const candidates = await Promise.all(
-    [true, false].map((hoist_funs) =>
+    libraryCompressionCandidates.map((compression) =>
       minify(source, {
         module: true,
         ...options,
-        compress: { ...options.compress, hoist_funs }
+        compress: { ...options.compress, ...compression }
       })
     )
   )
@@ -182,7 +302,7 @@ test("both production candidates preserve NaN comparisons, getters, and coercion
   }
 })
 
-test("both production candidates preserve matchesThreshold source semantics", async () => {
+test("all production candidates preserve matchesThreshold source semantics", async () => {
   const result = await build({
     entryPoints: ["src/components/charts/shared/styleRules.ts"],
     bundle: true,
@@ -195,11 +315,11 @@ test("both production candidates preserve matchesThreshold source semantics", as
     import(`data:text/javascript,${encodeURIComponent(code)}`)
   const original = await load(source)
   const candidates = await Promise.all(
-    [true, false].map((hoist_funs) =>
+    libraryCompressionCandidates.map((compression) =>
       minify(source, {
         module: true,
         ...options,
-        compress: { ...options.compress, hoist_funs }
+        compress: { ...options.compress, ...compression }
       })
     )
   )

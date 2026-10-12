@@ -83,12 +83,12 @@ describe("ordinal valueExtent across static and serialized entry points", () => 
         const originalBars = [
           ...new DOMParser()
             .parseFromString(before.svg!, "image/svg+xml")
-            .querySelectorAll("#data-area rect")
+            .querySelectorAll("[id$='-data-area'] rect")
         ]
         const correctedBars = [
           ...new DOMParser()
             .parseFromString(after.svg!, "image/svg+xml")
-            .querySelectorAll("#data-area rect")
+            .querySelectorAll("[id$='-data-area'] rect")
         ]
         expect(originalBars).toHaveLength(2)
         expect(correctedBars).toHaveLength(2)
@@ -139,12 +139,12 @@ describe("ordinal valueExtent across static and serialized entry points", () => 
       const originalDots = [
         ...new DOMParser()
           .parseFromString(before.svg, "image/svg+xml")
-          .querySelectorAll("#data-area circle")
+          .querySelectorAll("[id$='-data-area'] circle")
       ]
       const correctedDots = [
         ...new DOMParser()
           .parseFromString(after.svg, "image/svg+xml")
-          .querySelectorAll("#data-area circle")
+          .querySelectorAll("[id$='-data-area'] circle")
       ]
       expect(correctedDots).toHaveLength(2)
       const coordinate = orientation === "horizontal" ? "cx" : "cy"
@@ -196,10 +196,10 @@ describe("ordinal valueExtent across static and serialized entry points", () => 
       expect(after.evidence.yDomain).toEqual([0, 40])
       const originalRidges = new DOMParser()
         .parseFromString(before.svg, "image/svg+xml")
-        .querySelectorAll("#data-area path")
+        .querySelectorAll("[id$='-data-area'] path")
       const correctedRidges = new DOMParser()
         .parseFromString(after.svg, "image/svg+xml")
-        .querySelectorAll("#data-area path")
+        .querySelectorAll("[id$='-data-area'] path")
       expect(originalRidges).toHaveLength(2)
       expect(correctedRidges).toHaveLength(2)
       expect(correctedRidges[0].getAttribute("d")).toBe(

@@ -3,11 +3,13 @@
  */
 import { describe, it } from "node:test"
 import assert from "node:assert/strict"
+import { spawnSync } from "node:child_process"
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import {
   DEFAULT_VARIANCE_POLICY,
+  REPO_ROOT,
   assertPrerenderedDocsBuild,
   compareMachineBaselines,
   summarizeTimingSamples,
@@ -93,6 +95,36 @@ function clone(value) {
 }
 
 describe("machine baseline helpers", () => {
+  it("keeps SSR output stable across samples, warmups, and fresh processes", () => {
+    const sample = (warmups) => {
+      const result = spawnSync(
+        process.execPath,
+        ["--no-warnings", join(REPO_ROOT, "scripts/machine-baseline-runner.mjs"), "ssr"],
+        {
+          cwd: REPO_ROOT,
+          encoding: "utf8",
+          timeout: 30000,
+          env: {
+            ...process.env,
+            SEMIOTIC_MACHINE_BASELINE_SAMPLES: "3",
+            SEMIOTIC_MACHINE_BASELINE_WARMUPS: String(warmups)
+          }
+        }
+      )
+      assert.equal(result.status, 0, result.stderr || result.error?.message)
+      const metric = JSON.parse(result.stdout)
+      assert.equal(metric.samplesMs.length, 3)
+      assert.ok(metric.svgBytes > 0)
+      assert.match(metric.svgSha256, /^[a-f0-9]{64}$/)
+      return metric
+    }
+
+    const first = sample(2)
+    const second = sample(5)
+    assert.equal(second.svgBytes, first.svgBytes)
+    assert.equal(second.svgSha256, first.svgSha256)
+  })
+
   it("rejects a Vite-only docs shell as an incomplete emitted site", () => {
     const root = mkdtempSync(join(tmpdir(), "semiotic-machine-docs-"))
     try {

@@ -1,4 +1,4 @@
-import * as React from "react"
+import { createElement, Fragment, type ReactNode } from "react"
 import type { OrdinalCustomLayout } from "../stream/ordinalCustomLayout"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { ConnectorSceneNode, OrdinalSceneNode } from "../stream/ordinalTypes"
@@ -243,7 +243,7 @@ export const parallelCoordinatesLayout: OrdinalCustomLayout<ParallelCoordinatesC
   // 5 tick marks per axis. Each axis is independently scaled so each
   // gets its own ticks. Emitted as overlays so they sit above the
   // canvas-rendered polylines.
-  let overlays: React.ReactNode = null
+  let overlays: ReactNode = null
   if (showAxes) {
     // CSS variable wins so a dark-mode parent (setting `--semiotic-*`
     // vars on a wrapper, per the docs) overrides the default light
@@ -253,7 +253,7 @@ export const parallelCoordinatesLayout: OrdinalCustomLayout<ParallelCoordinatesC
     const subtleColor = `var(--semiotic-text-secondary, ${ctx.theme.semantic.textSecondary ?? "#888"})`
     const axisTop = plot.y + topPadding
     const axisBot = plot.y + plot.height - bottomPadding
-    const elements: React.ReactNode[] = []
+    const elements: ReactNode[] = []
     for (let i = 0; i < fields.length; i++) {
       const f = fields[i]
       const x = axisX[i]
@@ -268,7 +268,7 @@ export const parallelCoordinatesLayout: OrdinalCustomLayout<ParallelCoordinatesC
 
       // Vertical axis line.
       elements.push(
-        React.createElement("line", {
+        createElement("line", {
           key: `pc-axis-line-${i}`,
           x1: x, x2: x,
           y1: axisTop, y2: axisBot,
@@ -299,7 +299,7 @@ export const parallelCoordinatesLayout: OrdinalCustomLayout<ParallelCoordinatesC
         const v = lo + ((hi - lo) * t) / (tickCount - 1)
         const ty = yScales[i](v)
         elements.push(
-          React.createElement("line", {
+          createElement("line", {
             key: `pc-tick-${i}-${t}`,
             x1: x - 3, x2: x + 3,
             y1: ty, y2: ty,
@@ -319,7 +319,7 @@ export const parallelCoordinatesLayout: OrdinalCustomLayout<ParallelCoordinatesC
         )
       }
     }
-    overlays = React.createElement(React.Fragment, null, ...elements)
+    overlays = createElement(Fragment, null, ...elements)
   }
 
   // Concat: dimmed first, highlighted last → highlighted polylines paint

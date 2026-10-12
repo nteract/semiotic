@@ -162,7 +162,7 @@ export interface ProcessSankeyOptions {
   packing?: "off" | "reuse"
   laneOrder?: "insertion" | "crossing-min" | "inside-out" | "crossing-min+inside-out"
   lifetimeMode?: "full" | "half"
-  /** Cap band inflation in pixels per value unit. Unset preserves the legacy
+  /** Cap band inflation in pixels per value unit. Unset uses the
    * fill-the-plot scale. */
   maxValueScale?: number
   /** Optional slack-aware coordinate assignment. @default "stack" */

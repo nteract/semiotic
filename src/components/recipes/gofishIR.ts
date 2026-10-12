@@ -1,3 +1,4 @@
+import { SvgIdentifierScope } from "../shared/SvgIdentifierScope"
 import { createElement, Fragment } from "react"
 import type { ReactNode } from "react"
 import type { Datum } from "../charts/shared/datumTypes"
@@ -544,7 +545,7 @@ function makeDisplayListLayout(
     // The display list is a finished picture in baked painter order, so it
     // cannot be split into scene marks. Under a `perspective` the whole
     // picture lies on the plane its (transparent) hit targets occupy.
-    const overlays = createElement(
+    const picture = createElement(
       "g",
       { className: "semiotic-gofish-displaylist", "data-gofish-ir": doc.ir },
       createElement(
@@ -553,6 +554,7 @@ function makeDisplayListLayout(
         doc.items.map((item, i) => renderItem(item, `gf-${i}`, state)),
       ),
     )
+    const overlays = createElement(SvgIdentifierScope, null, picture)
 
     const result: NetworkLayoutResult = { sceneNodes, overlays, perspective: "manual" }
     // The picture's axes and legends reach past its hit targets.

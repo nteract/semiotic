@@ -682,10 +682,13 @@ interface-member BulletConfig::property::targetColor = optional targetColor: str
 interface-member BulletConfig::property::tickFormat = optional tickFormat: ((v: number) => string) | undefined
 interface-member BulletConfig::property::valueAccessor = required valueAccessor: ((d: Datum) => number) | string
 interface-member CalendarConfig::property::colorRamp = optional colorRamp: [string, string] | undefined
-interface-member CalendarConfig::property::dateAccessor = required dateAccessor: ((d: Datum) => Date | number) | string
+interface-member CalendarConfig::property::dateAccessor = required dateAccessor: ((d: Datum) => Date | number | string) | string
 interface-member CalendarConfig::property::gutter = optional gutter: number | undefined
 interface-member CalendarConfig::property::labelInset = optional labelInset: number | undefined
+interface-member CalendarConfig::property::missingColor = optional missingColor: string | undefined
+interface-member CalendarConfig::property::timeZone = optional timeZone: "local" | "utc" | undefined
 interface-member CalendarConfig::property::valueAccessor = required valueAccessor: ((d: Datum) => number) | string
+interface-member CalendarConfig::property::weekStart = optional weekStart: 0 | 1 | undefined
 interface-member CalendarConfig::property::year = optional year: number | undefined
 interface-member CapacityQueueAbandonedInfo::property::abandonedAt = required abandonedAt: number
 interface-member CapacityQueueAbandonedInfo::property::queueSeconds = required queueSeconds: number

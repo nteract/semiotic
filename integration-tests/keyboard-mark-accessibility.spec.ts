@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test"
+import { expectCanvasPainted } from "./helpers"
 
 for (const chart of ["BoxPlot", "ViolinPlot", "RidgelinePlot", "CandlestickChart", "FunnelChart", "FlowMap"]) {
     test(`${chart} canvas keyboard targets expose the same content as pointer targets`, async ({ page }) => {
@@ -17,7 +18,11 @@ for (const chart of ["BoxPlot", "ViolinPlot", "RidgelinePlot", "CandlestickChart
           : chart === "FunnelChart" ? /Awareness|Purchase/
             : "median: 30"
 
-      const check = async () => {
+      const check = async (width: number) => {
+        const canvas = frame.locator("canvas").first()
+        // Wait for real marks at the current size before navigating their scene.
+        await expect(canvas).toHaveCSS("width", `${width}px`)
+        await expectCanvasPainted(canvas)
         await frame.focus()
         await page.keyboard.press("Home")
         if (pathTarget) {
@@ -55,8 +60,8 @@ for (const chart of ["BoxPlot", "ViolinPlot", "RidgelinePlot", "CandlestickChart
         await expect(tooltip).toHaveCount(0)
         await expect(live).toBeEmpty()
       }
-      await check()
+      await check(440)
       await page.getByRole("button", { name: "Narrow marks" }).click()
-      await check()
+      await check(320)
     })
 }

@@ -39,6 +39,7 @@ import { reserveTitleMargin, TITLE_BASELINE } from "../stream/titleLayout"
 import { overlayAccessibleIds } from "../stream/overlayAccessibleText"
 import { renderChart } from "./renderToStaticSVG"
 import { chartUID } from "./staticSVGChrome"
+import { finiteDimension } from "./svgSizing"
 import {
   PhysicsPipelineStore,
   type PhysicsPipelineConfig,
@@ -296,12 +297,15 @@ export function generateFrameSequence(
   snapshots: Datum[],
   baseProps: Datum = {}
 ): string[] {
-  return snapshots.map(snapshot => {
+  return snapshots.map((snapshot, index) => {
     try {
       return renderChart(component as Parameters<typeof renderChart>[0], { ...baseProps, ...snapshot })
-    } catch {
-      const w = baseProps.width || snapshot.width || 600
-      const h = baseProps.height || snapshot.height || 400
+    } catch (error) {
+      if (process.env.NODE_ENV !== "production") {
+        console.warn(`[Semiotic] Failed to render snapshot ${index} for ${component}.`, error)
+      }
+      const w = finiteDimension(snapshot.width, finiteDimension(baseProps.width, 600))
+      const h = finiteDimension(snapshot.height, finiteDimension(baseProps.height, 400))
       return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"></svg>`
     }
   })

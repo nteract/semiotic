@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test"
 import type { StreamNetworkFrameHandle } from "../src/components/stream/networkFrameHandleTypes"
+import { expectCanvasPainted } from "./helpers"
 
 declare global {
   interface Window {
@@ -14,6 +15,7 @@ test("pushed network preserves accessors, values and tooltip identity", async ({
   page.on("pageerror", (error) => errors.push(error.message))
   await page.goto("/network-examples/?network-ingest")
   const frame = page.locator(".stream-network-frame")
+  const canvas = frame.locator("canvas")
   const tooltip = frame.locator(".stream-network-tooltip")
   const readTargets = () =>
     page.evaluate(() => {
@@ -49,6 +51,10 @@ test("pushed network preserves accessors, values and tooltip identity", async ({
   for (const resized of [false, true]) {
     if (resized)
       await page.getByRole("button", { name: "Resize pushed graph" }).click()
+    // Retained edges can appear before the first layout has positioned nodes.
+    // Read hover targets only after the current-size canvas paints its marks.
+    await expect(canvas).toHaveCSS("width", `${resized ? 420 : 600}px`)
+    await expectCanvasPainted(canvas)
     const targets = await readTargets()
     expect(targets.ids).toEqual(["0", "1"])
     expect(targets.value).toBe(5)

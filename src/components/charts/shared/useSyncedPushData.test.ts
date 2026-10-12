@@ -1,6 +1,10 @@
 import { describe, it, expect } from "vitest"
 import { renderHook } from "@testing-library/react"
-import { syncPushBuffer, useSyncedPushData, type SyncedPushHandle } from "./useSyncedPushData"
+import {
+  syncPushBuffer,
+  useSyncedPushData,
+  type SyncedPushHandle
+} from "./useSyncedPushData"
 
 type Row = { id: string; v: number }
 
@@ -10,7 +14,7 @@ function makeHandle(overrides: Partial<SyncedPushHandle<Row>> = {}) {
     pushMany: [] as Row[][],
     update: [] as Array<[string, (d: Row) => Row]>,
     remove: [] as Array<string | string[]>,
-    clear: 0,
+    clear: 0
   }
   const handle: SyncedPushHandle<Row> = {
     push: (d) => calls.push.push(d),
@@ -20,7 +24,7 @@ function makeHandle(overrides: Partial<SyncedPushHandle<Row>> = {}) {
     clear: () => {
       calls.clear += 1
     },
-    ...overrides,
+    ...overrides
   }
   return { handle, calls }
 }
@@ -30,7 +34,10 @@ const byId = (row: Row) => row.id
 describe("syncPushBuffer", () => {
   it("pushes all rows on first sync via pushMany", () => {
     const { handle, calls } = makeHandle()
-    const rows: Row[] = [{ id: "a", v: 1 }, { id: "b", v: 2 }]
+    const rows: Row[] = [
+      { id: "a", v: 1 },
+      { id: "b", v: 2 }
+    ]
     const map = syncPushBuffer(handle, new Map(), rows, byId)
     expect(calls.pushMany).toEqual([rows])
     expect(calls.push).toEqual([])
@@ -80,7 +87,10 @@ describe("syncPushBuffer", () => {
 
   it("uses push() per row when pushMany is unavailable", () => {
     const { handle, calls } = makeHandle({ pushMany: undefined })
-    const rows: Row[] = [{ id: "a", v: 1 }, { id: "b", v: 2 }]
+    const rows: Row[] = [
+      { id: "a", v: 1 },
+      { id: "b", v: 2 }
+    ]
     syncPushBuffer(handle, new Map(), rows, byId)
     expect(calls.push).toEqual(rows)
   })
@@ -91,6 +101,46 @@ describe("syncPushBuffer", () => {
     expect([...map.keys()]).toEqual(["0"])
     expect(calls.pushMany[0]).toHaveLength(1)
   })
+
+  it("replaces reordered and removed positional rows without sending index IDs", () => {
+    const { handle, calls } = makeHandle()
+    const a = { id: "a", v: 1 }
+    const b = { id: "b", v: 2 }
+    let map = syncPushBuffer(handle, new Map(), [a, b], null)
+    map = syncPushBuffer(handle, map, [b, a], null)
+    map = syncPushBuffer(handle, map, [a], null)
+    syncPushBuffer(handle, map, [], null)
+    expect(calls.clear).toBe(3)
+    expect(calls.pushMany).toEqual([[a, b], [b, a], [a]])
+    expect(calls.update).toEqual([])
+    expect(calls.remove).toEqual([])
+  })
+
+  it("preserves every duplicate-ID row and safely switches back to unique IDs", () => {
+    const { handle, calls } = makeHandle()
+    const a = { id: "a", v: 1 }
+    const duplicate = { id: "a", v: 2 }
+    let map = syncPushBuffer(handle, new Map(), [a, duplicate], byId)
+    expect([...map.values()]).toEqual([a, duplicate])
+    map = syncPushBuffer(handle, map, [a], byId)
+    expect([...map.keys()]).toEqual(["a"])
+    expect(calls.pushMany).toEqual([[a, duplicate], [a]])
+    expect(calls.remove).toEqual([])
+  })
+
+  it("only appends a new positional suffix for append-only handles", () => {
+    const { handle, calls } = makeHandle({
+      clear: undefined,
+      update: undefined,
+      remove: undefined
+    })
+    const a = { id: "a", v: 1 }
+    const b = { id: "b", v: 2 }
+    const map = syncPushBuffer(handle, new Map(), [a], null)
+    syncPushBuffer(handle, map, [a, b], null)
+    expect(calls.pushMany).toEqual([[a], [b]])
+    expect(() => syncPushBuffer(handle, map, [b], null)).toThrow("clear()")
+  })
 })
 
 describe("useSyncedPushData", () => {
@@ -99,12 +149,17 @@ describe("useSyncedPushData", () => {
     const ref = { current: handle } as React.RefObject<typeof handle>
     const { rerender } = renderHook(
       ({ data }: { data: Row[] }) => useSyncedPushData(ref, data, { id: "id" }),
-      { initialProps: { data: [{ id: "a", v: 1 }] as Row[] } },
+      { initialProps: { data: [{ id: "a", v: 1 }] as Row[] } }
     )
     expect(calls.clear).toBe(1) // null → handle counts as a reset
     expect(calls.pushMany).toEqual([[{ id: "a", v: 1 }]])
 
-    rerender({ data: [{ id: "a", v: 1 }, { id: "b", v: 2 }] })
+    rerender({
+      data: [
+        { id: "a", v: 1 },
+        { id: "b", v: 2 }
+      ]
+    })
     expect(calls.clear).toBe(1) // no extra clear on a plain data change
     expect(calls.pushMany).toEqual([[{ id: "a", v: 1 }], [{ id: "b", v: 2 }]])
   })
@@ -115,7 +170,9 @@ describe("useSyncedPushData", () => {
     const { rerender } = renderHook(
       ({ data, resetKey }: { data: Row[]; resetKey: string }) =>
         useSyncedPushData(ref, data, { id: "id", resetKey }),
-      { initialProps: { data: [{ id: "a", v: 1 }] as Row[], resetKey: "light" } },
+      {
+        initialProps: { data: [{ id: "a", v: 1 }] as Row[], resetKey: "light" }
+      }
     )
     expect(calls.clear).toBe(1)
     rerender({ data: [{ id: "a", v: 1 }], resetKey: "dark" })
@@ -123,9 +180,31 @@ describe("useSyncedPushData", () => {
   })
 
   it("no-ops safely when the ref is not yet attached", () => {
-    const ref = { current: null } as React.RefObject<SyncedPushHandle<Row> | null>
+    const ref = {
+      current: null
+    } as React.RefObject<SyncedPushHandle<Row> | null>
     expect(() =>
-      renderHook(() => useSyncedPushData(ref, [{ id: "a", v: 1 }] as Row[], { id: "id" })),
+      renderHook(() =>
+        useSyncedPushData(ref, [{ id: "a", v: 1 }] as Row[], { id: "id" })
+      )
     ).not.toThrow()
+  })
+
+  it("replaces rows with null field or function IDs instead of using positional updates", () => {
+    for (const id of ["id" as const, (row: Row) => row.id]) {
+      const { handle, calls } = makeHandle()
+      const ref = { current: handle }
+      const a = { id: null, v: 1 } as unknown as Row
+      const b = { id: "b", v: 2 }
+      const { rerender, unmount } = renderHook(
+        ({ data }: { data: Row[] }) => useSyncedPushData(ref, data, { id }),
+        { initialProps: { data: [a, b] } }
+      )
+      rerender({ data: [b] })
+      expect(calls.pushMany).toEqual([[a, b], [b]])
+      expect(calls.update).toEqual([])
+      expect(calls.remove).toEqual([])
+      unmount()
+    }
   })
 })

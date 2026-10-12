@@ -41,6 +41,8 @@ Change `--month` to any reference month in the window. The October 2025 graphic
 shows only the dated estimate because no first preliminary value exists.
 
 An existing output directory is compared byte-for-byte and cannot be replaced.
+Saved chart configurations supply stable `chartId` values before their artifact
+contracts are created, so SVG IDs reproduce across browser and CLI exports.
 Use a new directory for changed inputs or software. Font/rasterizer differences
 can affect PNG bytes across operating systems; canonical values and artifact
 identities must still reproduce. Generated artifacts must be rebuilt through

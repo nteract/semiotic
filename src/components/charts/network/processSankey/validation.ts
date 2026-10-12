@@ -24,7 +24,7 @@ export interface ProcessSankeyValidationPolicy {
   invalidSystemTime: "warn" | "strip"
 }
 
-/** Product policy table — keep Claude.md / strategy in sync with this object. */
+/** Validation policy shared by bounded and push-mode inputs. */
 export const PROCESS_SANKEY_VALIDATION_POLICY: Record<
   ProcessSankeyUsageMode,
   ProcessSankeyValidationPolicy

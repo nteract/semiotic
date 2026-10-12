@@ -1,3 +1,4 @@
+import { getMax, getMin } from "../charts/shared/minMax"
 import * as React from "react"
 import { useRef } from "react"
 import { createControlObservationAdapter } from "./controlContract"
@@ -202,8 +203,8 @@ export function DirectManipulationMarkers({
       // Coincident handles wait for a direction before one is chosen.
       if (value === state.startValue) return
       state.active = value < state.startValue
-        ? Math.min(...state.coincident)
-        : Math.max(...state.coincident)
+        ? getMin(state.coincident)
+        : getMax(state.coincident)
     }
     apply(state.active, value, "pointer")
   }

@@ -8,7 +8,9 @@ import { clamp } from "../utils/clamp"
  *   --semiotic-process-text, --semiotic-process-muted
  *   --semiotic-success / warning / danger / info for semantic stage roles
  */
-import * as React from "react"
+import { createElement } from "react"
+import type * as React from "react"
+import { SvgIdentifierScope } from "../shared/SvgIdentifierScope"
 
 export interface ProcessChromeStage {
   id: string
@@ -157,7 +159,7 @@ export function processChrome(
     layout
   const laneH = bottomY - topY
 
-  return (
+  return createElement(SvgIdentifierScope, null,
     <svg
       aria-hidden="true"
       data-testid={testId}

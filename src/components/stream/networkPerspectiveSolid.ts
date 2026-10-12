@@ -1,3 +1,4 @@
+import { getMin } from "../charts/shared/minMax"
 /**
  * Side walls for perspective "pieces": any flat outline lying on the ground
  * gains visible thickness. Walls are vertical, and every perspective preset
@@ -111,7 +112,7 @@ export function extrudeOutline(top: readonly Pt[], drop: number, rim: "faceted" 
     // Several bands along one wall: a backing strip in the darkest shade
     // closes the anti-aliasing seams between them.
     const bands = new Set(chain.map((i) => shades[i]))
-    if (bands.size > 1) wall(chain, Math.min(...(bands as Set<number>)), -Infinity)
+    if (bands.size > 1) wall(chain, getMin((bands as Set<number>)), -Infinity)
     chain = []
   }
   for (let k = 0; k < n; k++) {

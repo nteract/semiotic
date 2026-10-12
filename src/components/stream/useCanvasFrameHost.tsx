@@ -20,7 +20,7 @@ import type {
 } from "react"
 import type { FrameMargin, UseFrameResult } from "./useFrame"
 import { useHydrationLifecycle } from "./useHydration"
-import { subscribeToDevicePixelRatioChange } from "./canvasSetup"
+import { getDevicePixelRatio, subscribeToDevicePixelRatioChange, syncCanvasSize } from "./canvasSetup"
 
 const useCanvasLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect
 
@@ -52,6 +52,8 @@ export interface UseCanvasFrameHostInput<TStore extends object> {
   manageFrameRuntime?: boolean
   hydrated: boolean
   wasHydratingFromSSR: boolean
+  /** Size the canvas layers at commit without projecting or painting a scene. */
+  size?: [number, number]
   /** Consumer override for the canvas backing-store DPR ceiling. */
   maxDevicePixelRatio?: number
   /** Family-specific teardown such as clearing a streaming data adapter. */
@@ -92,7 +94,7 @@ export interface CanvasFrameHostResult {
 
 type FrameCanvasHost = Pick<
   UseFrameResult,
-  "renderFnRef" | "scheduleRender" | "cancelRender" | "frameRuntime"
+  "renderFnRef" | "scheduleRender" | "cancelRender" | "frameRuntime" | "size"
 >
 
 type FrameCanvasHostInput<TStore extends object> = Omit<
@@ -119,6 +121,17 @@ export function useCanvasFrameHost<TStore extends object>(
   const resolutionDirtyRef = useRef(false)
   const hasRunCanvasPaintInvalidationRef = useRef(false)
   const hasSeenMaxDevicePixelRatioRef = useRef(false)
+
+  // Canvas geometry can settle before passive ingestion without invoking a
+  // family's layout. Include hydration so newly mounted canvas layers replace
+  // the SVG fallback at the correct backing-store size.
+  useCanvasLayoutEffect(() => {
+    if (!input.size) return
+    const dpr = getDevicePixelRatio(maxDevicePixelRatio, input.size)
+    for (const canvas of [canvasRef.current, interactionCanvasRef.current]) {
+      if (canvas) syncCanvasSize(canvas, input.size, dpr)
+    }
+  }, [input.size?.[0], input.size?.[1], maxDevicePixelRatio, input.hydrated])
 
   // Overlay/background changes can alter whether opaque canvas paint hides an
   // SVG underlay. Each family provides its own precise dependency list so the
@@ -200,6 +213,7 @@ export function useFrameCanvasHost<TStore extends object>(
 ): CanvasFrameHostResult {
   return useCanvasFrameHost({
     ...input,
+    size: frame.size,
     renderFnRef: frame.renderFnRef,
     scheduleRender: frame.scheduleRender,
     cancelRender: frame.cancelRender,

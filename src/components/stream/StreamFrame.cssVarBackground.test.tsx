@@ -33,6 +33,7 @@ import StreamXYFrame from "./StreamXYFrame"
 import StreamOrdinalFrame from "./StreamOrdinalFrame"
 import StreamNetworkFrame from "./StreamNetworkFrame"
 import StreamGeoFrame from "./StreamGeoFrame"
+import { createFrameScheduler } from "./test-utils/frameScheduler"
 
 // Capture every value that flows through `ctx.fillStyle` setter for
 // any canvas created during the render. The canvas mock returns the
@@ -98,16 +99,13 @@ afterEach(() => {
 describe("Stream Frame: background prop with var() syntax", () => {
   let cleanupCanvas: () => void
   let spy: ReturnType<typeof captureFillStyleAssignments>
+  let scheduler: ReturnType<typeof createFrameScheduler>
 
   beforeEach(() => {
-    // `noop` rAF: schedule the first render on mount but never re-fire.
-    // The bug under test reproduces on the very first paint — the
-    // background fillStyle assignment lives at the top of every render
-    // pass — so a single mount-time render is enough. `true` (sync fire)
-    // would recurse indefinitely under sankey's continuous topology-diff
-    // animation chain; `false` (jsdom's setTimeout cadence) is too slow
-    // to settle inside a unit test.
+    // Drive the first populated paint explicitly. Leave global rAF inert
+    // so unrelated continuous animation cannot interfere with this check.
     cleanupCanvas = setupCanvasMock({ stubRaf: "noop" })
+    scheduler = createFrameScheduler()
     spy = captureFillStyleAssignments()
     spy.install()
   })
@@ -125,9 +123,12 @@ describe("Stream Frame: background prop with var() syntax", () => {
           edges={[{ source: "A", target: "B", value: 10 }]}
           size={[400, 300]}
           background={VAR_BG}
+          animate={false}
+          frameScheduler={scheduler.scheduler}
         />,
       )
     })
+    act(() => scheduler.flush())
     // The raw `var(...)` token must never reach fillStyle — that's the
     // exact assignment canvas silently rejects, which produces the
     // flashing-palette regression. The resolved value should appear at
@@ -146,9 +147,12 @@ describe("Stream Frame: background prop with var() syntax", () => {
           yAccessor="y"
           size={[400, 300]}
           background={VAR_BG}
+          animate={false}
+          frameScheduler={scheduler.scheduler}
         />,
       )
     })
+    act(() => scheduler.flush())
     expect(spy.log).not.toContain(VAR_BG)
     expect(spy.log).toContain(RESOLVED_BG)
   })
@@ -164,9 +168,12 @@ describe("Stream Frame: background prop with var() syntax", () => {
           rAccessor="v"
           size={[400, 300]}
           background={VAR_BG}
+          animate={false}
+          frameScheduler={scheduler.scheduler}
         />,
       ))
     })
+    act(() => scheduler.flush())
     expect(spy.log).not.toContain(VAR_BG)
     expect(
       container!.querySelector('[data-semiotic-layer="canvas-background"]'),
@@ -182,9 +189,12 @@ describe("Stream Frame: background prop with var() syntax", () => {
           projection="equalEarth"
           size={[400, 300]}
           background={VAR_BG}
+          animate={false}
+          frameScheduler={scheduler.scheduler}
         />,
       )
     })
+    act(() => scheduler.flush())
     expect(spy.log).not.toContain(VAR_BG)
     expect(spy.log).toContain(RESOLVED_BG)
   })

@@ -1,4 +1,5 @@
 import { annotationNote } from "../text/annotationTextLayout"
+import { XHTML_NAMESPACE } from "../shared/svgNamespace"
 import * as React from "react"
 import Annotation from "../Annotation"
 import { packEnclose } from "d3-hierarchy"
@@ -421,6 +422,7 @@ export function renderStaticAnnotationFallback(
           style={{ overflow: "visible", pointerEvents: "auto" }}
         >
           <div
+            {...{ xmlns: XHTML_NAMESPACE }}
             {...annotationActivationProps(ann)}
             style={{
               width,

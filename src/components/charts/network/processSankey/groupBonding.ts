@@ -1,3 +1,4 @@
+import { getMax } from "../../shared/minMax"
 import type {
   ProcessSankeyAttachment,
   ProcessSankeyNode,
@@ -133,7 +134,7 @@ export function bondProcessSankeyNodeData(
         .map(([slot, active]) => ({
           slot,
           active,
-          mass: Math.max(...active.map(({ sample }) => sampleMass(sample))),
+          mass: getMax(active.map(({ sample }) => sampleMass(sample))),
         }))
       if (activeSlots.length === 0) continue
 

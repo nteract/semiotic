@@ -1,3 +1,4 @@
+import { staticTitleText } from "./staticTitle"
 import type { Datum } from "../charts/shared/datumTypes"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 import * as React from "react"
@@ -34,8 +35,8 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
   const theme = resolveTheme(props.theme)
   const defaultMargin = { top: 10, right: 10, bottom: 10, left: 10 }
   const size: [number, number] = props.size || [props.width || 600, props.height || 400]
-  const margin = reserveTitleMargin({ ...defaultMargin, ...props.margin }, props.title)
-  const hasVisibleTitle = hasTextTitle(props.title)
+  const margin = reserveTitleMargin({ ...defaultMargin, ...props.margin }, staticTitleText(props.title))
+  const hasVisibleTitle = hasTextTitle(staticTitleText(props.title))
   const areas = Array.isArray(props.areas) ? filterSparseArray(props.areas) : props.areas
   const points = filterSparseArray(props.points)
   const lines = filterSparseArray(props.lines)
@@ -223,6 +224,7 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
       theme, innerTransform: `translate(${margin.left ?? 0},${margin.top ?? 0})`,
       innerWidth: width, innerHeight: height,
       legend: geoLegend,
+      markCount: renderedScene.length,
       idPrefix: props._idPrefix,
     })
   )

@@ -9,6 +9,13 @@ export interface SVGDimensions {
   height: number
 }
 
+/** Keep SVG dimensions finite and positive at untyped input boundaries. */
+export function finiteDimension(value: unknown, fallback: number): number {
+  return typeof value === "number" && Number.isFinite(value) && value > 0
+    ? value
+    : fallback
+}
+
 export function renderedSvgDimensions(
   svg: string,
   fallback: SVGDimensions

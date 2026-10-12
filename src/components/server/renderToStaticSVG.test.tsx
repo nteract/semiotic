@@ -213,7 +213,7 @@ describe("renderOrdinalToStaticSVG", () => {
       showAxes: false
     })
 
-    expect(svg).not.toContain('id="axes"')
+    expect(svg).not.toMatch(/id="[^"]*-axes"/)
   })
 
   it("renders with custom className", () => {
@@ -244,7 +244,23 @@ describe("renderOrdinalToStaticSVG", () => {
 })
 
 describe("renderChart SVG precision", () => {
+  it("reports failing SVG pre-renderers while retaining data marks", () => {
+    const error = new Error("custom chrome failed")
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    try {
+      const svg = renderToStaticSVG("xy", {
+        chartType: "scatter", data: [{ x: 1, y: 2 }], xAccessor: "x", yAccessor: "y",
+        svgPreRenderers: [() => { throw error }]
+      })
+      expect(svg).toContain("<circle")
+      expect(warn).toHaveBeenCalledWith("[Semiotic] SVG pre-renderer 0 failed.", error)
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
   const precisionProps = {
+    _idPrefix: "precision",
     data: [
       { x: 0.123456789, y: 12.3456789 },
       { x: 1.987654321, y: 98.7654321 },
@@ -297,6 +313,27 @@ describe("renderChart SVG precision", () => {
 
   it("rejects prototype component names as unknown charts", () => {
     expect(() => renderChart("toString", {})).toThrow('Unknown chart component: "toString"')
+  })
+
+  it("preserves alpha and thin strokes at zero geometry precision", () => {
+    const svg = serializeSvgPrecision(
+      '<svg><path d="M1.25 2.75" opacity="0.15" fill-opacity="0.3" stroke-opacity="0.45" stroke-width="0.5" stroke-dasharray="0.5 1.25" stroke-dashoffset="0.25" /></svg>',
+      0
+    )
+    expect(svg).toContain('d="M1 3"')
+    for (const attribute of ['opacity="0.15"', 'fill-opacity="0.3"', 'stroke-opacity="0.45"', 'stroke-width="0.5"', 'stroke-dasharray="0.5 1.25"', 'stroke-dashoffset="0.25"']) {
+      expect(svg).toContain(attribute)
+    }
+  })
+
+  it.each([
+    ["M0 0a10 10 0 0110 10", "M0 0a10 10 0 0 1 10 10"],
+    ["M0 0A10.25 10.25 0 10-10.25-.25", "M0 0A10 10 0 1 0 -10 0"],
+    ["M0 0a10 10 0 0110 10 10 10 0 0010 10L.25.75", "M0 0a10 10 0 0 1 10 10 10 10 0 0 0 10 10L0 1"],
+    ["M1e-3 2e-3A10 10 0 01.25.75z", "M0 0A10 10 0 0 1 0 1z"]
+  ])("preserves arc flags and endpoints in %s", (path, expected) => {
+    expect(serializeSvgPrecision(`<svg><path d="${path}" /></svg>`, 0))
+      .toContain(`d="${expected}"`)
   })
 })
 
@@ -831,6 +868,7 @@ describe("renderNetworkToStaticSVG - regression", () => {
     }
     const margin = { top: 40, right: 40, bottom: 40, left: 40 }
     const props = {
+      _idPrefix: "lineage-hulls",
       nodes: hullNodes,
       edges: hullEdges,
       layout: lineageDagLayout,

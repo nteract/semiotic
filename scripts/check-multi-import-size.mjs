@@ -72,7 +72,11 @@ const analyze = process.argv.includes("--analyze")
 // shares a published chunk (306.0 KiB measured). The note above about a
 // "non-splitting" build was inaccurate: this check has always split and
 // counted only the static graph.
-const MULTI_IMPORT_GZIP_BUDGET = 308 * 1024
+// Bumped 308→310 (2026-10-08): after purity-annotation cleanup and inert-chunk
+// minification fixes, a fresh production union measures 308.7 KiB gzip across
+// 27 initial files (316,131 bytes in CI; 316,135 locally). Keep 1.3 KiB of
+// headroom; single-entry budgets and tree-shaking isolation gates are unchanged.
+const MULTI_IMPORT_GZIP_BUDGET = 310 * 1024
 
 const MULTI_IMPORT_SOURCE = `
 export { LineChart } from "semiotic/xy"

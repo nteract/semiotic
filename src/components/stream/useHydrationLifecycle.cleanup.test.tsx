@@ -38,18 +38,16 @@ describe("useHydrationLifecycle cleanup", () => {
     delete (globalThis as { __setHydrated?: unknown }).__setHydrated
   })
 
-  it("fires the cleanup option exactly once on unmount, not on every deps change", () => {
+  it.each([false, true])("fires cleanup once on unmount (SSR handoff: %s)", (wasHydratingFromSSR) => {
     const calls: string[] = []
     function Probe() {
       const storeRef = useRef<{ cancelIntroAnimation?: () => void } | null>({})
       const dirtyRef = useRef(false)
       const renderFnRef = useRef(() => { calls.push("renderFn") })
       useHydrationLifecycle({
-        // Internally `useHydration` flips this from false to true
-        // after the first commit. We hard-wire it to true here and
-        // also test the false→true path below.
+        // SSR hydration flips false→true after commit; fresh mounts start true.
         hydrated: true,
-        wasHydratingFromSSR: false,
+        wasHydratingFromSSR,
         storeRef,
         dirtyRef,
         renderFnRef,
@@ -58,14 +56,14 @@ describe("useHydrationLifecycle cleanup", () => {
       return null
     }
     const { unmount } = render(<Probe />)
-    // Mount fired the layout effect (one renderFn) but not the
-    // cleanup — that's reserved for unmount.
-    expect(calls).toEqual(["renderFn"])
+    // Only an SSR handoff paints synchronously; both modes clean up on unmount.
+    const paints = wasHydratingFromSSR ? ["renderFn"] : []
+    expect(calls).toEqual(paints)
     unmount()
-    expect(calls).toEqual(["renderFn", "cleanup"])
+    expect(calls).toEqual([...paints, "cleanup"])
   })
 
-  it("cancels a queued render before synchronously painting hydration state", () => {
+  it("cancels a queued render before synchronously painting SSR hydration state", () => {
     const calls: string[] = []
     function Probe() {
       const storeRef = useRef<{ cancelIntroAnimation?: () => void } | null>({})
@@ -73,7 +71,7 @@ describe("useHydrationLifecycle cleanup", () => {
       const renderFnRef = useRef(() => { calls.push("render") })
       useHydrationLifecycle({
         hydrated: true,
-        wasHydratingFromSSR: false,
+        wasHydratingFromSSR: true,
         storeRef,
         dirtyRef,
         renderFnRef,
@@ -98,7 +96,7 @@ describe("useHydrationLifecycle cleanup", () => {
       renderFnRef.current = () => { calls.push(`renderFn(hydrated=${hydrated})`) }
       useHydrationLifecycle({
         hydrated,
-        wasHydratingFromSSR: false,
+        wasHydratingFromSSR: true,
         storeRef,
         dirtyRef,
         renderFnRef,

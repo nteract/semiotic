@@ -198,12 +198,13 @@ describe("all frame families share lifecycle scheduling", () => {
       })
       expect(scheduler.requestedHandles[0]).toBe(0)
       expect(scheduler.pendingCount).toBeGreaterThan(0)
+      const resumedHandle = scheduler.requestedHandles.at(-1)!
 
       act(() => {
         view.rerender(family.makeFrame(baseProps))
       })
       expect(scheduler.pendingCount).toBe(0)
-      expect(scheduler.cancelledHandles).toContain(0)
+      expect(scheduler.cancelledHandles).toContain(resumedHandle)
 
       // A long paused interval must not revive canceled work. Resume queues
       // fresh work, and visibility uses the same cancellation path.
@@ -222,5 +223,27 @@ describe("all frame families share lifecycle scheduling", () => {
       view.unmount()
       expect(scheduler.pendingCount).toBe(0)
     },
+  )
+
+  it.each(FRAME_FAMILIES)(
+    "$name cancels a pending zero handle before its first paint",
+    (family) => {
+      const scheduler = createFrameScheduler(0)
+      const props: LifecycleProps = {
+        clock: () => 0,
+        frameScheduler: scheduler.scheduler,
+        paused: false,
+        seed: 41,
+        suspendWhenHidden: true
+      }
+      const view = render(family.makeFrame(props))
+      expect(scheduler.requestedHandles[0]).toBe(0)
+      expect(scheduler.pendingCount).toBe(1)
+      view.rerender(family.makeFrame({ ...props, paused: true }))
+      expect(scheduler.pendingCount).toBe(0)
+      expect(scheduler.cancelledHandles).toContain(0)
+      view.unmount()
+      expect(scheduler.pendingCount).toBe(0)
+    }
   )
 })

@@ -13,6 +13,7 @@ import { publicJavaScriptEntrypoints } from "./lib/public-entrypoints.mjs"
 import { minifyLibraryPlugin } from "./lib/minify-library-chunk.mjs"
 import { libraryTerserOptions as terserOptions } from "./lib/library-minification-options.mjs"
 import { stripPureBareChunkImports } from "./lib/strip-pure-bare-imports.mjs"
+import { serverRuntimeLoadersPlugin } from "./lib/server-runtime-loaders.mjs"
 
 const args = process.argv.slice(2)
 const isProduction = args.includes("--production")
@@ -144,7 +145,7 @@ async function createCjsBundle(options = {}) {
     name: `${name}:cjs`,
     format: "cjs",
     splitting: false,
-    esbuildPlugins: [nodeStaticMarkupSourcePlugin(), externalizePerspectivePlacementPlugin(true), ...esbuildPlugins],
+    esbuildPlugins: [nodeStaticMarkupSourcePlugin(), ...(serverOnly ? [serverRuntimeLoadersPlugin()] : []), externalizePerspectivePlacementPlugin(true), ...esbuildPlugins],
     noExternal: esbuildPlugins.length > 0 ? ["d3-geo"] : undefined,
     outExtension: () => ({ js: ".min.js" }),
     esbuildOptions(esbuildOptions) {
@@ -193,6 +194,7 @@ async function createSharedEsmGroup({
     metafile: analyze,
     esbuildPlugins: [
       ...(serverOnly ? [nodeStaticMarkupSourcePlugin()] : []),
+      ...(serverOnly ? [serverRuntimeLoadersPlugin()] : []),
       externalizePerspectivePlacementPlugin(),
       ...esbuildPlugins
     ],

@@ -1,3 +1,4 @@
+import { getMax } from "../charts/shared/minMax"
 import * as React from "react"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { SemioticTheme } from "../store/themeCore"
@@ -145,7 +146,7 @@ export function renderStaticMinimapBrush(input: StaticMinimapBrushInput): React.
       fontSize: LABEL_FONT_SIZE,
       bounds: direction === "x" ? [-margin.left, plot.width + margin.right] : [-margin.top, plot.height + margin.bottom],
     })
-    const rowSize = Math.max(1, ...labels.map((label) => label.lines.length)) * LABEL_LINE_HEIGHT
+    const rowSize = getMax(labels.map((label) => label.lines.length), 1) * LABEL_LINE_HEIGHT
     for (const label of labels) {
       const before = label.placement === "before"
       // The first line's baseline sits about 0.95em into its line box.

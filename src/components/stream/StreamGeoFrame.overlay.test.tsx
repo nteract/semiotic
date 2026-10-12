@@ -7,6 +7,7 @@ import type { GeoScales, StreamGeoFrameProps } from "./geoTypes"
 import type { FrameGraphicsContext } from "./types"
 import StreamGeoFrame from "./StreamGeoFrame"
 import { setupCanvasMock } from "../../test-utils/canvasMock"
+import { createFrameScheduler } from "./test-utils/frameScheduler"
 
 const frameProps: StreamGeoFrameProps = {
   projection: "equirectangular",
@@ -91,9 +92,15 @@ describe("StreamGeoFrame GeoSVGOverlay integration", () => {
   })
 
   it("preserves Geo chrome after the client canvas takeover", () => {
+    const scheduler = createFrameScheduler()
     const { container, getByRole } = render(
-      <StreamGeoFrame {...frameProps} />
+      <StreamGeoFrame
+        {...frameProps}
+        animate={false}
+        frameScheduler={scheduler.scheduler}
+      />
     )
+    act(() => scheduler.flush())
 
     expect(getByRole("group", { name: "Geo chrome" })).toHaveAttribute(
       "tabindex",

@@ -49,6 +49,32 @@ const multiTooltipFormats = tooltipPrecision == null ? {} : {
   yFormat: (value) => `${Number(value).toFixed(Number(tooltipPrecision))}°`
 }
 
+// Exercise omitted/partial quadrant configuration without changing visual baselines.
+const quadrantDefaults = new URLSearchParams(window.location.search).get("quadrantDefaults")
+const quadrantDefaultsProps =
+  quadrantDefaults == null
+    ? {}
+    : {
+        data: [
+          { x: 20, y: 80, name: "Upper left" },
+          { x: 80, y: 80, name: "Upper right" },
+          { x: 20, y: 20, name: "Lower left" },
+          { x: 80, y: 20, name: "Lower right" }
+        ],
+        xCenter: 50,
+        yCenter: 50,
+        colorBy: undefined,
+        quadrants:
+          quadrantDefaults === "partial"
+            ? { topRight: { label: "Stars" }, bottomLeft: { color: "#ccc" } }
+            : undefined,
+        animate: false,
+        pointOpacity: 1,
+        responsiveWidth: true,
+        margin: 0,
+        frameProps: { xExtent: [0, 100], yExtent: [0, 100] }
+      }
+
 const examples = [
   // 1. Basic Line Chart
   TestCase({
@@ -308,8 +334,7 @@ const examples = [
       // fixture so all four quadrants have at least one point.
       xCenter: 50,
       yCenter: 45,
-      // `quadrants` is required — the four labeled, colored backgrounds
-      // are the entire point of the chart type.
+      // Explicit quadrant colors for the reviewed visual fixture.
       quadrants: {
         topRight:    { label: "High / High", color: "#dcfce7" },
         topLeft:     { label: "Low / High",  color: "#fef3c7" },
@@ -320,6 +345,7 @@ const examples = [
       width: 400,
       height: 300,
       colorScheme: colors,
+      ...quadrantDefaultsProps,
     }),
   }),
 

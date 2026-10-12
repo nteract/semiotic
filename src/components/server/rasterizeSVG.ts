@@ -17,11 +17,12 @@ export async function rasterizeSVG(
     const moduleName = "sharp"
     const sharpModule: SharpModule = await import(moduleName)
     sharp = sharpModule.default ?? sharpModule
-  } catch {
+  } catch (error) {
     throw new Error(
       `Image export requires the "sharp" package and a Node.js runtime. Install it:\n` +
         `  npm install sharp\n` +
-        `sharp is listed as an optional dependency of semiotic.`
+        `sharp is listed as an optional dependency of semiotic.`,
+      { cause: error }
     )
   }
 
@@ -35,7 +36,7 @@ export async function rasterizeSVG(
   )
 
   if (format === "jpeg") {
-    return pipeline.jpeg({ quality: 90 }).toBuffer()
+    return pipeline.flatten({ background: "#ffffff" }).jpeg({ quality: 90 }).toBuffer()
   }
   return pipeline.png().toBuffer()
 }

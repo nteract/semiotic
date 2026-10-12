@@ -1,3 +1,4 @@
+import { getMin } from "../charts/shared/minMax"
 import { contrastRatio } from "../charts/shared/colorContrast"
 import {
   colorEvidenceToHex,
@@ -113,7 +114,7 @@ export function auditVisualHierarchy(
     }
   }
 
-  const weakestDataContrast = Math.min(...dataContrasts)
+  const weakestDataContrast = getMin(dataContrasts)
   const hierarchyRatio = weakestDataContrast / scaffoldContrast
   const evidence = { weakestDataContrast, scaffoldContrast, hierarchyRatio }
   const minimumScaffoldContrast = Math.max(

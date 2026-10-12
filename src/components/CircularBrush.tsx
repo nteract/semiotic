@@ -36,7 +36,8 @@ import {
 export interface CircularBrushValue {
   /** Range start, in domain units (e.g. day-of-year). */
   start: number
-  /** Range end, in domain units. When `start > end` the range wraps the cycle. */
+  /** Range end, in domain units. When `start > end` the range wraps the cycle.
+   * Use `{ start: 0, end: period }` for a controlled full-cycle selection. */
   end: number
 }
 
@@ -160,6 +161,11 @@ export function CircularBrush({
   }
   /** Snap to the step, then wrap. */
   const snap = (v: number): number => wrap(cleanFloat(Math.round(v / snapStep) * snapStep))
+  const shiftRange = (current: CircularBrushValue, delta: number): CircularBrushValue =>
+    current.end - current.start >= period ? current : {
+      start: wrap(current.start + delta),
+      end: wrap(current.end + delta),
+    }
 
   /** Request a change through `onChange`'s updater form and report its value. */
   const change = (
@@ -214,10 +220,7 @@ export function CircularBrush({
       if (delta === 0) return
       drag.lastValue = next
       drag.changed = true
-      change((current) => ({
-        start: wrap(current.start + delta),
-        end: wrap(current.end + delta),
-      }), "pointer", { start: first, end: false })
+      change((current) => shiftRange(current, delta), "pointer", { start: first, end: false })
       return
     }
     const mode = drag.mode
@@ -242,10 +245,7 @@ export function CircularBrush({
 
   const nudge = (mode: BrushMode, delta: number) => {
     if (mode === "range") {
-      keyboardChange((current) => ({
-        start: wrap(current.start + delta),
-        end: wrap(current.end + delta),
-      }))
+      keyboardChange((current) => shiftRange(current, delta))
     } else {
       keyboardChange((current) => ({ ...current, [mode]: wrap(current[mode] + delta) }))
     }
@@ -255,10 +255,7 @@ export function CircularBrush({
    *  moves as a whole so its start does. */
   const jumpTo = (mode: BrushMode, target: number) => {
     if (mode === "range") {
-      keyboardChange((current) => ({
-        start: target,
-        end: wrap(current.end + target - current.start),
-      }))
+      keyboardChange((current) => shiftRange(current, target - current.start))
     } else {
       keyboardChange((current) => ({ ...current, [mode]: target }))
     }
@@ -353,7 +350,7 @@ export function CircularBrush({
               tabIndex={0}
               aria-label={`${label} ${mode}`}
               aria-valuemin={0}
-              aria-valuemax={maxValue}
+              aria-valuemax={mode === "end" && value.end === period ? period : maxValue}
               aria-valuenow={v}
               aria-valuetext={valueText(v)}
               onPointerDown={(e) => beginDrag(e, mode)}

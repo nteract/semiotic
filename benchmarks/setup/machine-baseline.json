@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "baselineKind": "semiotic-machine-baseline",
-  "capturedAt": "2026-10-06T00:23:59.278Z",
+  "capturedAt": "2026-10-10T16:11:26.531Z",
   "source": {
-    "gitCommit": "44d9c45ec",
+    "gitCommit": "4e837986c",
     "artifact": "checkout npm pack --ignore-scripts",
     "worktree": {
       "state": "dirty",
-      "changedPathCount": 29
+      "changedPathCount": 2
     }
   },
   "referenceEnvironment": {
@@ -102,18 +102,18 @@
       },
       "archive": {
         "fileName": "semiotic-3.12.1.tgz",
-        "bytes": 6102387,
-        "sha1": "96a77e0ab84c1fa47c61e703119f0a695c75f67b",
-        "integrity": "sha512-jYwpxSeA54VpVgR5P+ogJaNK8JboV8RAY1FWZ0uawGh6vkqG/NYE3O+modK3pZQAdzEvadDxTooX5xJknTkV0g=="
+        "bytes": 6143669,
+        "sha1": "a86a716187b3fa4ee1a95413a86d60f819803c85",
+        "integrity": "sha512-/ED8YQqPlNoIOfR56d6QYd/g5U5A0VFk9oRmq1MowBXuiytLUrF8bg0bV1JO84ISzPybvwOiHO40T1W60Yqgaw=="
       },
       "unpacked": {
-        "bytes": 22209405,
-        "fileCount": 1658
+        "bytes": 22244127,
+        "fileCount": 1660
       },
       "files": [
         {
           "path": "agent-skill/semiotic-charts/SKILL.md",
-          "size": 8284,
+          "size": 8362,
           "mode": 420
         },
         {
@@ -143,7 +143,7 @@
         },
         {
           "path": "ai/cli.js",
-          "size": 27022,
+          "size": 27557,
           "mode": 493
         },
         {
@@ -168,7 +168,7 @@
         },
         {
           "path": "ai/dist/mcp-server.js",
-          "size": 783483,
+          "size": 788614,
           "mode": 493
         },
         {
@@ -183,12 +183,12 @@
         },
         {
           "path": "ai/reference.md",
-          "size": 166787,
+          "size": 168906,
           "mode": 420
         },
         {
           "path": "ai/schema.json",
-          "size": 1566006,
+          "size": 1566692,
           "mode": 420
         },
         {
@@ -198,7 +198,7 @@
         },
         {
           "path": "ai/system-prompt.md",
-          "size": 16120,
+          "size": 16183,
           "mode": 420
         },
         {
@@ -237,23 +237,18 @@
           "mode": 420
         },
         {
-          "path": "dist/c-27DCB5T6.min.js",
-          "size": 4716,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-2AJ46UFA.min.js",
-          "size": 6561,
-          "mode": 420
-        },
-        {
           "path": "dist/c-2CKIGFD2.min.js",
-          "size": 396,
+          "size": 389,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-2DTVDLSN.min.js",
+          "size": 980,
           "mode": 420
         },
         {
           "path": "dist/c-2OZMC2MZ.min.js",
-          "size": 2438,
+          "size": 2424,
           "mode": 420
         },
         {
@@ -263,7 +258,17 @@
         },
         {
           "path": "dist/c-2QTL3GXN.min.js",
-          "size": 18001,
+          "size": 17909,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-2UO47FY4.min.js",
+          "size": 2375,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-2UOHJDBY.min.js",
+          "size": 366,
           "mode": 420
         },
         {
@@ -278,7 +283,7 @@
         },
         {
           "path": "dist/c-3FOUMWLR.min.js",
-          "size": 688,
+          "size": 671,
           "mode": 420
         },
         {
@@ -287,13 +292,23 @@
           "mode": 420
         },
         {
-          "path": "dist/c-3PFVJFBK.min.js",
-          "size": 236,
+          "path": "dist/c-3LNFHIDW.min.js",
+          "size": 8026,
           "mode": 420
         },
         {
-          "path": "dist/c-3YEW2PK6.min.js",
-          "size": 529,
+          "path": "dist/c-3OLJBBEF.min.js",
+          "size": 1403,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-3VOYYOGK.min.js",
+          "size": 691,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-4BFBX2VI.min.js",
+          "size": 23355,
           "mode": 420
         },
         {
@@ -302,38 +317,43 @@
           "mode": 420
         },
         {
-          "path": "dist/c-4SCJKAWZ.min.js",
-          "size": 317691,
+          "path": "dist/c-4SCE5JGK.min.js",
+          "size": 39819,
           "mode": 420
         },
         {
-          "path": "dist/c-5CI6XDJG.min.js",
-          "size": 879,
+          "path": "dist/c-53X2RJUN.min.js",
+          "size": 4462,
           "mode": 420
         },
         {
-          "path": "dist/c-5FUOKMH6.min.js",
-          "size": 23401,
+          "path": "dist/c-5H6IMPPV.min.js",
+          "size": 254,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-5MH62ZSJ.min.js",
+          "size": 585,
           "mode": 420
         },
         {
           "path": "dist/c-5OWKSEA3.min.js",
-          "size": 16566,
+          "size": 16326,
           "mode": 420
         },
         {
-          "path": "dist/c-66RY2WAJ.min.js",
-          "size": 1403,
+          "path": "dist/c-6AWUIYHP.min.js",
+          "size": 46036,
           "mode": 420
         },
         {
           "path": "dist/c-6B5EZDHP.min.js",
-          "size": 112,
+          "size": 110,
           "mode": 420
         },
         {
-          "path": "dist/c-7AMFSRGG.min.js",
-          "size": 16530,
+          "path": "dist/c-6LDJQTYY.min.js",
+          "size": 17756,
           "mode": 420
         },
         {
@@ -348,27 +368,27 @@
         },
         {
           "path": "dist/c-7NLJCI3Z.min.js",
-          "size": 4047,
+          "size": 3984,
           "mode": 420
         },
         {
           "path": "dist/c-AAIPWVQ5.min.js",
-          "size": 2229,
+          "size": 2053,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-AHJVSAFZ.min.js",
+          "size": 879535,
           "mode": 420
         },
         {
           "path": "dist/c-AINGQGUN.min.js",
-          "size": 1279,
+          "size": 1264,
           "mode": 420
         },
         {
-          "path": "dist/c-AK4RESLS.min.js",
-          "size": 691,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-ALLF3Y77.min.js",
-          "size": 366,
+          "path": "dist/c-ALQ33SAV.min.js",
+          "size": 23920,
           "mode": 420
         },
         {
@@ -382,48 +402,33 @@
           "mode": 420
         },
         {
-          "path": "dist/c-BHUMCXKU.min.js",
-          "size": 78,
-          "mode": 420
-        },
-        {
           "path": "dist/c-BKL6GCDN.min.js",
           "size": 1346,
           "mode": 420
         },
         {
           "path": "dist/c-BLJBV5GC.min.js",
-          "size": 12519,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-BMZ6SLYD.min.js",
-          "size": 83,
+          "size": 12324,
           "mode": 420
         },
         {
           "path": "dist/c-BOA4LTOM.min.js",
-          "size": 967,
+          "size": 937,
           "mode": 420
         },
         {
           "path": "dist/c-BSLJZUTD.min.js",
-          "size": 4914,
+          "size": 4774,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-BXPP4KR2.min.js",
+          "size": 33964,
           "mode": 420
         },
         {
           "path": "dist/c-BYJJ7EMG.min.js",
           "size": 167,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-C5GXUHUO.min.js",
-          "size": 23536,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-C67QDKTU.min.js",
-          "size": 62641,
           "mode": 420
         },
         {
@@ -442,18 +447,13 @@
           "mode": 420
         },
         {
-          "path": "dist/c-D3XJMVBU.min.js",
-          "size": 4346,
-          "mode": 420
-        },
-        {
           "path": "dist/c-D7G47WV4.min.js",
-          "size": 2388,
+          "size": 2325,
           "mode": 420
         },
         {
-          "path": "dist/c-DHNELGP4.min.js",
-          "size": 5124,
+          "path": "dist/c-DGV7FWH7.min.js",
+          "size": 4329,
           "mode": 420
         },
         {
@@ -462,8 +462,13 @@
           "mode": 420
         },
         {
+          "path": "dist/c-EADEFB2X.min.js",
+          "size": 14921,
+          "mode": 420
+        },
+        {
           "path": "dist/c-EFU2HZPG.min.js",
-          "size": 2932,
+          "size": 2917,
           "mode": 420
         },
         {
@@ -473,27 +478,17 @@
         },
         {
           "path": "dist/c-F76M77YC.min.js",
-          "size": 12989,
+          "size": 12877,
           "mode": 420
         },
         {
-          "path": "dist/c-FDR6XYFC.min.js",
-          "size": 585,
+          "path": "dist/c-FEDA77C3.min.js",
+          "size": 117203,
           "mode": 420
         },
         {
           "path": "dist/c-FEVXPKQH.min.js",
-          "size": 3661,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-FFEAEWU5.min.js",
-          "size": 845,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-FIBDFPNT.min.js",
-          "size": 100,
+          "size": 3609,
           "mode": 420
         },
         {
@@ -502,33 +497,28 @@
           "mode": 420
         },
         {
-          "path": "dist/c-FPUCO2T3.min.js",
-          "size": 99260,
+          "path": "dist/c-FXA4O4JS.min.js",
+          "size": 96193,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-FZDXSKAF.min.js",
+          "size": 134,
           "mode": 420
         },
         {
           "path": "dist/c-G232AVBM.min.js",
-          "size": 2844,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-G5A3YWTN.min.js",
-          "size": 99650,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-GHOZRMFB.min.js",
-          "size": 6561,
+          "size": 2830,
           "mode": 420
         },
         {
           "path": "dist/c-GU2FIJ7F.min.js",
-          "size": 355,
+          "size": 341,
           "mode": 420
         },
         {
           "path": "dist/c-GYLOSK7M.min.js",
-          "size": 353,
+          "size": 339,
           "mode": 420
         },
         {
@@ -537,23 +527,13 @@
           "mode": 420
         },
         {
-          "path": "dist/c-HVNGJ6VO.min.js",
-          "size": 21790,
+          "path": "dist/c-H6QYACSB.min.js",
+          "size": 5516,
           "mode": 420
         },
         {
-          "path": "dist/c-I6FTWSEN.min.js",
-          "size": 21228,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-IATPZOL7.min.js",
-          "size": 207127,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-IE5EBBP6.min.js",
-          "size": 187388,
+          "path": "dist/c-IBTT6AWQ.min.js",
+          "size": 1489,
           "mode": 420
         },
         {
@@ -562,28 +542,33 @@
           "mode": 420
         },
         {
-          "path": "dist/c-IKPM53JH.min.js",
-          "size": 13010,
+          "path": "dist/c-IU4QZ7Y5.min.js",
+          "size": 376,
           "mode": 420
         },
         {
-          "path": "dist/c-IU4QZ7Y5.min.js",
-          "size": 388,
+          "path": "dist/c-JO3MOW2P.min.js",
+          "size": 1966,
           "mode": 420
         },
         {
           "path": "dist/c-JY4ZN6AO.min.js",
-          "size": 2337,
+          "size": 2318,
           "mode": 420
         },
         {
           "path": "dist/c-K2Z4F22S.min.js",
-          "size": 5994,
+          "size": 5979,
           "mode": 420
         },
         {
           "path": "dist/c-K2ZIYDI3.min.js",
           "size": 679,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-K7RHPRSX.min.js",
+          "size": 5109,
           "mode": 420
         },
         {
@@ -594,6 +579,11 @@
         {
           "path": "dist/c-KMRWORMM.min.js",
           "size": 3566,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-KOPD6R2L.min.js",
+          "size": 313229,
           "mode": 420
         },
         {
@@ -613,7 +603,7 @@
         },
         {
           "path": "dist/c-LPX4CNQZ.min.js",
-          "size": 3879,
+          "size": 3849,
           "mode": 420
         },
         {
@@ -622,13 +612,23 @@
           "mode": 420
         },
         {
-          "path": "dist/c-M5FNUMRV.min.js",
-          "size": 48186,
+          "path": "dist/c-M7QUZZCE.min.js",
+          "size": 3004,
           "mode": 420
         },
         {
-          "path": "dist/c-M7QUZZCE.min.js",
-          "size": 3104,
+          "path": "dist/c-MA2X4Z4S.min.js",
+          "size": 78,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-MF4JT6V7.min.js",
+          "size": 48131,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-ML7BJBKI.min.js",
+          "size": 205491,
           "mode": 420
         },
         {
@@ -637,28 +637,33 @@
           "mode": 420
         },
         {
-          "path": "dist/c-MR7EZFNT.min.js",
-          "size": 1370,
+          "path": "dist/c-MRQQDHZP.min.js",
+          "size": 1367,
           "mode": 420
         },
         {
           "path": "dist/c-MXKN7S3R.min.js",
-          "size": 957,
+          "size": 929,
           "mode": 420
         },
         {
-          "path": "dist/c-NIYSAQGB.min.js",
-          "size": 845,
+          "path": "dist/c-NLM3WNA6.min.js",
+          "size": 16416,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-NP57P45X.min.js",
+          "size": 12916,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-NRIJZZXK.min.js",
+          "size": 972,
           "mode": 420
         },
         {
           "path": "dist/c-NSVENB5K.min.js",
-          "size": 35801,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-NVNCBFF2.min.js",
-          "size": 19840,
+          "size": 35716,
           "mode": 420
         },
         {
@@ -667,18 +672,8 @@
           "mode": 420
         },
         {
-          "path": "dist/c-NWRYV6ZF.min.js",
-          "size": 8056,
-          "mode": 420
-        },
-        {
           "path": "dist/c-O4OMJLE7.min.js",
-          "size": 2928,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-O53GOO7H.min.js",
-          "size": 14204,
+          "size": 2926,
           "mode": 420
         },
         {
@@ -693,7 +688,7 @@
         },
         {
           "path": "dist/c-OMAX5WVR.min.js",
-          "size": 2853,
+          "size": 2823,
           "mode": 420
         },
         {
@@ -702,13 +697,18 @@
           "mode": 420
         },
         {
-          "path": "dist/c-OV5F3DQP.min.js",
-          "size": 1998,
+          "path": "dist/c-OU4LTIRE.min.js",
+          "size": 183461,
           "mode": 420
         },
         {
           "path": "dist/c-P3SKRNZN.min.js",
-          "size": 709,
+          "size": 694,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-PBK54UCA.min.js",
+          "size": 19713,
           "mode": 420
         },
         {
@@ -717,38 +717,23 @@
           "mode": 420
         },
         {
-          "path": "dist/c-PHRISC6T.min.js",
-          "size": 2407,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-Q7V5REA5.min.js",
-          "size": 51301,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-QFPIY7YY.min.js",
-          "size": 847914,
+          "path": "dist/c-Q3WNA2PW.min.js",
+          "size": 256,
           "mode": 420
         },
         {
           "path": "dist/c-QIVKWHDL.min.js",
-          "size": 13101,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-QP3PXK3N.min.js",
-          "size": 1815,
+          "size": 13056,
           "mode": 420
         },
         {
           "path": "dist/c-QSWEP2WS.min.js",
-          "size": 3848,
+          "size": 3818,
           "mode": 420
         },
         {
           "path": "dist/c-QXLDCATV.min.js",
-          "size": 239,
+          "size": 237,
           "mode": 420
         },
         {
@@ -758,7 +743,7 @@
         },
         {
           "path": "dist/c-RBWJFQDC.min.js",
-          "size": 2594,
+          "size": 2564,
           "mode": 420
         },
         {
@@ -767,33 +752,33 @@
           "mode": 420
         },
         {
+          "path": "dist/c-REKK5VF4.min.js",
+          "size": 97357,
+          "mode": 420
+        },
+        {
           "path": "dist/c-RHDOOQ4X.min.js",
           "size": 172,
           "mode": 420
         },
         {
+          "path": "dist/c-RHMNMHQV.min.js",
+          "size": 61675,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-S4VSRS5B.min.js",
+          "size": 8274,
+          "mode": 420
+        },
+        {
           "path": "dist/c-SBP7KEMI.min.js",
-          "size": 262,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-SBPEIAZ3.min.js",
-          "size": 120736,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-SGZ7ZD2I.min.js",
-          "size": 102731,
+          "size": 260,
           "mode": 420
         },
         {
           "path": "dist/c-SSKV5JPW.min.js",
-          "size": 8781,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-THWTHWXU.min.js",
-          "size": 40635,
+          "size": 8692,
           "mode": 420
         },
         {
@@ -802,8 +787,18 @@
           "mode": 420
         },
         {
+          "path": "dist/c-TPY6OGA3.min.js",
+          "size": 97215,
+          "mode": 420
+        },
+        {
           "path": "dist/c-TVKZC4BY.min.js",
-          "size": 2924,
+          "size": 2894,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-U2EU2GXE.min.js",
+          "size": 83,
           "mode": 420
         },
         {
@@ -813,27 +808,32 @@
         },
         {
           "path": "dist/c-U5XVLSHN.min.js",
-          "size": 450,
+          "size": 445,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-U5YXWQKU.min.js",
+          "size": 6540,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-UDJ2IEKD.min.js",
+          "size": 100736,
           "mode": 420
         },
         {
           "path": "dist/c-UF4BWPDR.min.js",
-          "size": 1046,
+          "size": 1044,
           "mode": 420
         },
         {
-          "path": "dist/c-UOAXCGLZ.min.js",
-          "size": 256,
+          "path": "dist/c-UOR4Y74X.min.js",
+          "size": 1815,
           "mode": 420
         },
         {
           "path": "dist/c-UP656CST.min.js",
-          "size": 910,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-UU5L4QKE.min.js",
-          "size": 46387,
+          "size": 855,
           "mode": 420
         },
         {
@@ -852,13 +852,18 @@
           "mode": 420
         },
         {
-          "path": "dist/c-VI753KBO.min.js",
-          "size": 8304,
+          "path": "dist/c-VCQVDGXR.min.js",
+          "size": 118237,
+          "mode": 420
+        },
+        {
+          "path": "dist/c-VEKFEEPJ.min.js",
+          "size": 845,
           "mode": 420
         },
         {
           "path": "dist/c-VLAAAFST.min.js",
-          "size": 6766,
+          "size": 6659,
           "mode": 420
         },
         {
@@ -872,33 +877,23 @@
           "mode": 420
         },
         {
-          "path": "dist/c-VSOQPII4.min.js",
-          "size": 17921,
+          "path": "dist/c-VVT5VRJ3.min.js",
+          "size": 5908,
           "mode": 420
         },
         {
-          "path": "dist/c-VW3UFK54.min.js",
-          "size": 1491,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-VWOTHQBA.min.js",
-          "size": 34010,
+          "path": "dist/c-W3OC2ZT3.min.js",
+          "size": 50907,
           "mode": 420
         },
         {
           "path": "dist/c-W3OOPUWV.min.js",
-          "size": 1110,
+          "size": 1095,
           "mode": 420
         },
         {
-          "path": "dist/c-W3WHSKWX.min.js",
-          "size": 1367,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-WGDM4ZRP.min.js",
-          "size": 95765,
+          "path": "dist/c-WFRULNA5.min.js",
+          "size": 4720,
           "mode": 420
         },
         {
@@ -907,38 +902,23 @@
           "mode": 420
         },
         {
-          "path": "dist/c-XCV7VUU3.min.js",
-          "size": 120150,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-XI6CLZII.min.js",
-          "size": 5516,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-XLC7PKM7.min.js",
-          "size": 4734,
-          "mode": 420
-        },
-        {
           "path": "dist/c-XN6FERBN.min.js",
           "size": 49,
           "mode": 420
         },
         {
+          "path": "dist/c-XNYTF5VR.min.js",
+          "size": 100,
+          "mode": 420
+        },
+        {
           "path": "dist/c-XXSTHDB5.min.js",
-          "size": 13007,
+          "size": 12962,
           "mode": 420
         },
         {
-          "path": "dist/c-Y6RUGEBS.min.js",
-          "size": 78,
-          "mode": 420
-        },
-        {
-          "path": "dist/c-YM6CT4LJ.min.js",
-          "size": 959,
+          "path": "dist/c-YJNQI7GS.min.js",
+          "size": 23877,
           "mode": 420
         },
         {
@@ -947,33 +927,23 @@
           "mode": 420
         },
         {
-          "path": "dist/c-YQVOKPKR.min.js",
-          "size": 134,
-          "mode": 420
-        },
-        {
           "path": "dist/c-YRJ3BJQZ.min.js",
           "size": 726,
           "mode": 420
         },
         {
-          "path": "dist/c-YSBYFJMT.min.js",
-          "size": 5936,
-          "mode": 420
-        },
-        {
           "path": "dist/c-YWZBFG63.min.js",
-          "size": 4535,
+          "size": 4527,
           "mode": 420
         },
         {
           "path": "dist/c-ZMYO3NZU.min.js",
-          "size": 793,
+          "size": 748,
           "mode": 420
         },
         {
           "path": "dist/c-ZOE7TAR3.min.js",
-          "size": 7483,
+          "size": 7443,
           "mode": 420
         },
         {
@@ -1788,7 +1758,7 @@
         },
         {
           "path": "dist/components/charts/network/processSankey/axisChrome.d.ts",
-          "size": 1469,
+          "size": 1464,
           "mode": 420
         },
         {
@@ -1838,7 +1808,7 @@
         },
         {
           "path": "dist/components/charts/network/processSankey/layoutGeometry.d.ts",
-          "size": 3632,
+          "size": 3634,
           "mode": 420
         },
         {
@@ -1908,7 +1878,7 @@
         },
         {
           "path": "dist/components/charts/network/processSankey/processSankeyTypes.d.ts",
-          "size": 6565,
+          "size": 6553,
           "mode": 420
         },
         {
@@ -1948,7 +1918,7 @@
         },
         {
           "path": "dist/components/charts/network/processSankey/validation.d.ts",
-          "size": 1928,
+          "size": 1909,
           "mode": 420
         },
         {
@@ -3108,7 +3078,7 @@
         },
         {
           "path": "dist/components/charts/shared/minMax.d.ts",
-          "size": 264,
+          "size": 358,
           "mode": 420
         },
         {
@@ -3143,7 +3113,7 @@
         },
         {
           "path": "dist/components/charts/shared/radialCenterContent.d.ts",
-          "size": 476,
+          "size": 520,
           "mode": 420
         },
         {
@@ -3328,7 +3298,7 @@
         },
         {
           "path": "dist/components/charts/shared/useSyncedPushData.d.ts",
-          "size": 2472,
+          "size": 2487,
           "mode": 420
         },
         {
@@ -3368,7 +3338,7 @@
         },
         {
           "path": "dist/components/charts/shared/withChartWrapper.d.ts",
-          "size": 2179,
+          "size": 2191,
           "mode": 420
         },
         {
@@ -3663,7 +3633,7 @@
         },
         {
           "path": "dist/components/CircularBrush.d.ts",
-          "size": 4562,
+          "size": 4640,
           "mode": 420
         },
         {
@@ -3673,7 +3643,7 @@
         },
         {
           "path": "dist/components/controls/controlAudit.d.ts",
-          "size": 938,
+          "size": 1197,
           "mode": 420
         },
         {
@@ -3873,7 +3843,7 @@
         },
         {
           "path": "dist/components/evidence/renderedSceneHash.d.ts",
-          "size": 605,
+          "size": 610,
           "mode": 420
         },
         {
@@ -4478,7 +4448,7 @@
         },
         {
           "path": "dist/components/recipes/calendar.d.ts",
-          "size": 1477,
+          "size": 1895,
           "mode": 420
         },
         {
@@ -4708,7 +4678,7 @@
         },
         {
           "path": "dist/components/recipes/processChrome.d.ts",
-          "size": 2196,
+          "size": 1749,
           "mode": 420
         },
         {
@@ -4758,7 +4728,7 @@
         },
         {
           "path": "dist/components/recipes/recipeUtils.d.ts",
-          "size": 10086,
+          "size": 10088,
           "mode": 420
         },
         {
@@ -5108,7 +5078,7 @@
         },
         {
           "path": "dist/components/server/optionalImageTypes.d.ts",
-          "size": 1243,
+          "size": 1317,
           "mode": 420
         },
         {
@@ -5128,12 +5098,17 @@
         },
         {
           "path": "dist/components/server/renderEvidence.d.ts",
-          "size": 8093,
+          "size": 7999,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/server/renderToImage.d.ts",
+          "size": 831,
           "mode": 420
         },
         {
           "path": "dist/components/server/renderToStaticSVG.d.ts",
-          "size": 4050,
+          "size": 4132,
           "mode": 420
         },
         {
@@ -5348,12 +5323,12 @@
         },
         {
           "path": "dist/components/server/staticPhysics.d.ts",
-          "size": 1006,
+          "size": 1021,
           "mode": 420
         },
         {
           "path": "dist/components/server/staticPhysicsChrome.d.ts",
-          "size": 1462,
+          "size": 1543,
           "mode": 420
         },
         {
@@ -5363,7 +5338,12 @@
         },
         {
           "path": "dist/components/server/staticSVGChrome.d.ts",
-          "size": 6006,
+          "size": 6025,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/server/staticTitle.d.ts",
+          "size": 333,
           "mode": 420
         },
         {
@@ -5398,7 +5378,7 @@
         },
         {
           "path": "dist/components/server/svgSizing.d.ts",
-          "size": 259,
+          "size": 418,
           "mode": 420
         },
         {
@@ -5407,8 +5387,33 @@
           "mode": 420
         },
         {
+          "path": "dist/components/shared/svgCssIdentifiers.d.ts",
+          "size": 402,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/shared/svgIdentifiers.d.ts",
+          "size": 271,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/shared/SvgIdentifierScope.d.ts",
+          "size": 227,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/shared/svgIdReference.d.ts",
+          "size": 190,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/shared/svgNamespace.d.ts",
+          "size": 218,
+          "mode": 420
+        },
+        {
           "path": "dist/components/shared/svgRoot.d.ts",
-          "size": 999,
+          "size": 1255,
           "mode": 420
         },
         {
@@ -5423,7 +5428,7 @@
         },
         {
           "path": "dist/components/store/designTokens.d.ts",
-          "size": 904,
+          "size": 919,
           "mode": 420
         },
         {
@@ -5434,6 +5439,11 @@
         {
           "path": "dist/components/store/ObservationStore.d.ts",
           "size": 3885,
+          "mode": 420
+        },
+        {
+          "path": "dist/components/store/safeThemeCSS.d.ts",
+          "size": 315,
           "mode": 420
         },
         {
@@ -5463,7 +5473,7 @@
         },
         {
           "path": "dist/components/store/themeSerialization.d.ts",
-          "size": 1086,
+          "size": 1170,
           "mode": 420
         },
         {
@@ -5798,7 +5808,7 @@
         },
         {
           "path": "dist/components/stream/hitTestUtils.d.ts",
-          "size": 1875,
+          "size": 2003,
           "mode": 420
         },
         {
@@ -5963,7 +5973,7 @@
         },
         {
           "path": "dist/components/stream/NetworkCanvasHitTester.d.ts",
-          "size": 869,
+          "size": 1002,
           "mode": 420
         },
         {
@@ -6028,7 +6038,7 @@
         },
         {
           "path": "dist/components/stream/networkFrameInteraction.d.ts",
-          "size": 1316,
+          "size": 1371,
           "mode": 420
         },
         {
@@ -6763,7 +6773,7 @@
         },
         {
           "path": "dist/components/stream/quadtreeHitTest.d.ts",
-          "size": 1504,
+          "size": 1793,
           "mode": 420
         },
         {
@@ -7113,7 +7123,7 @@
         },
         {
           "path": "dist/components/stream/useCanvasFrameHost.d.ts",
-          "size": 4396,
+          "size": 4518,
           "mode": 420
         },
         {
@@ -7138,7 +7148,7 @@
         },
         {
           "path": "dist/components/stream/useHydration.d.ts",
-          "size": 4372,
+          "size": 4307,
           "mode": 420
         },
         {
@@ -7538,22 +7548,22 @@
         },
         {
           "path": "dist/controls.module.min.js",
-          "size": 56607,
+          "size": 55910,
           "mode": 420
         },
         {
           "path": "dist/forceLayoutWorker.js",
-          "size": 9034,
+          "size": 9054,
           "mode": 420
         },
         {
           "path": "dist/geo.min.js",
-          "size": 310945,
+          "size": 311060,
           "mode": 420
         },
         {
           "path": "dist/geo.module.min.js",
-          "size": 40959,
+          "size": 40133,
           "mode": 420
         },
         {
@@ -7563,7 +7573,7 @@
         },
         {
           "path": "dist/network.module.min.js",
-          "size": 2100,
+          "size": 2105,
           "mode": 420
         },
         {
@@ -7603,7 +7613,7 @@
         },
         {
           "path": "dist/physics.module.min.js",
-          "size": 26538,
+          "size": 26407,
           "mode": 420
         },
         {
@@ -7613,7 +7623,7 @@
         },
         {
           "path": "dist/processSankeyLayoutWorker.js",
-          "size": 63065,
+          "size": 63108,
           "mode": 420
         },
         {
@@ -7633,7 +7643,7 @@
         },
         {
           "path": "dist/rough.module.min.js",
-          "size": 8000,
+          "size": 7961,
           "mode": 420
         },
         {
@@ -7648,7 +7658,7 @@
         },
         {
           "path": "dist/semiotic-access.module.min.js",
-          "size": 7159,
+          "size": 7147,
           "mode": 420
         },
         {
@@ -7658,12 +7668,12 @@
         },
         {
           "path": "dist/semiotic-ai-core.min.js",
-          "size": 500771,
+          "size": 502928,
           "mode": 420
         },
         {
           "path": "dist/semiotic-ai-core.module.min.js",
-          "size": 496640,
+          "size": 496846,
           "mode": 420
         },
         {
@@ -7678,7 +7688,7 @@
         },
         {
           "path": "dist/semiotic-ai.module.min.js",
-          "size": 398190,
+          "size": 396890,
           "mode": 420
         },
         {
@@ -7693,7 +7703,7 @@
         },
         {
           "path": "dist/semiotic-artifact-react.module.min.js",
-          "size": 17176,
+          "size": 14267,
           "mode": 420
         },
         {
@@ -7703,12 +7713,12 @@
         },
         {
           "path": "dist/semiotic-artifact.min.js",
-          "size": 445086,
+          "size": 445158,
           "mode": 420
         },
         {
           "path": "dist/semiotic-artifact.module.min.js",
-          "size": 441380,
+          "size": 439609,
           "mode": 420
         },
         {
@@ -7723,7 +7733,7 @@
         },
         {
           "path": "dist/semiotic-atlas-core.module.min.js",
-          "size": 15003,
+          "size": 14898,
           "mode": 420
         },
         {
@@ -7743,17 +7753,17 @@
         },
         {
           "path": "dist/semiotic-atlas.module.min.js",
-          "size": 42379,
+          "size": 41955,
           "mode": 420
         },
         {
           "path": "dist/semiotic-client-cjs-shared.min.js",
-          "size": 2681722,
+          "size": 2688052,
           "mode": 420
         },
         {
           "path": "dist/semiotic-client-glyph.module.min.js",
-          "size": 1414,
+          "size": 1295,
           "mode": 420
         },
         {
@@ -7793,7 +7803,7 @@
         },
         {
           "path": "dist/semiotic-data.module.min.js",
-          "size": 12704,
+          "size": 12634,
           "mode": 420
         },
         {
@@ -7803,17 +7813,17 @@
         },
         {
           "path": "dist/semiotic-evidence.min.js",
-          "size": 150488,
+          "size": 150509,
           "mode": 420
         },
         {
           "path": "dist/semiotic-evidence.module.min.js",
-          "size": 149021,
+          "size": 148459,
           "mode": 420
         },
         {
           "path": "dist/semiotic-experimental-auxiliary.module.min.js",
-          "size": 375923,
+          "size": 376306,
           "mode": 420
         },
         {
@@ -7828,7 +7838,7 @@
         },
         {
           "path": "dist/semiotic-experimental-network-resolution-react.module.min.js",
-          "size": 56174,
+          "size": 54265,
           "mode": 420
         },
         {
@@ -7843,12 +7853,12 @@
         },
         {
           "path": "dist/semiotic-experimental-network-resolution.module.min.js",
-          "size": 47086,
+          "size": 46552,
           "mode": 420
         },
         {
           "path": "dist/semiotic-experimental-node-auxiliary.module.min.js",
-          "size": 504287,
+          "size": 504238,
           "mode": 420
         },
         {
@@ -7858,7 +7868,7 @@
         },
         {
           "path": "dist/semiotic-experimental-react-shared.module.min.js",
-          "size": 28495,
+          "size": 28078,
           "mode": 420
         },
         {
@@ -7868,12 +7878,12 @@
         },
         {
           "path": "dist/semiotic-experimental-vacp.min.js",
-          "size": 118221,
+          "size": 118219,
           "mode": 420
         },
         {
           "path": "dist/semiotic-experimental-vacp.module.min.js",
-          "size": 83909,
+          "size": 83164,
           "mode": 420
         },
         {
@@ -7938,7 +7948,7 @@
         },
         {
           "path": "dist/semiotic-network-perspective.module.min.js",
-          "size": 4700,
+          "size": 4662,
           "mode": 420
         },
         {
@@ -7948,7 +7958,7 @@
         },
         {
           "path": "dist/semiotic-network-placement.module.min.js",
-          "size": 1528,
+          "size": 1493,
           "mode": 420
         },
         {
@@ -7963,7 +7973,7 @@
         },
         {
           "path": "dist/semiotic-network-zoom.module.min.js",
-          "size": 13076,
+          "size": 12924,
           "mode": 420
         },
         {
@@ -8003,7 +8013,7 @@
         },
         {
           "path": "dist/semiotic-realtime-core.module.min.js",
-          "size": 2205,
+          "size": 2175,
           "mode": 420
         },
         {
@@ -8018,7 +8028,7 @@
         },
         {
           "path": "dist/semiotic-realtime-react.module.min.js",
-          "size": 3914,
+          "size": 4404,
           "mode": 420
         },
         {
@@ -8028,7 +8038,7 @@
         },
         {
           "path": "dist/semiotic-recipes-core-cjs-base.min.js",
-          "size": 290749,
+          "size": 292175,
           "mode": 420
         },
         {
@@ -8043,7 +8053,7 @@
         },
         {
           "path": "dist/semiotic-recipes-core.module.min.js",
-          "size": 203009,
+          "size": 199388,
           "mode": 420
         },
         {
@@ -8088,7 +8098,7 @@
         },
         {
           "path": "dist/semiotic-server-edge-node.module.min.js",
-          "size": 847208,
+          "size": 878843,
           "mode": 420
         },
         {
@@ -8098,12 +8108,12 @@
         },
         {
           "path": "dist/semiotic-server-edge.min.js",
-          "size": 915105,
+          "size": 921022,
           "mode": 420
         },
         {
           "path": "dist/semiotic-server-edge.module.min.js",
-          "size": 704935,
+          "size": 695589,
           "mode": 420
         },
         {
@@ -8113,7 +8123,7 @@
         },
         {
           "path": "dist/semiotic-server-node.min.js",
-          "size": 917859,
+          "size": 923009,
           "mode": 420
         },
         {
@@ -8138,7 +8148,7 @@
         },
         {
           "path": "dist/semiotic-text.module.min.js",
-          "size": 3120,
+          "size": 3088,
           "mode": 420
         },
         {
@@ -8148,7 +8158,7 @@
         },
         {
           "path": "dist/semiotic-themes-core.min.js",
-          "size": 36723,
+          "size": 40161,
           "mode": 420
         },
         {
@@ -8178,7 +8188,7 @@
         },
         {
           "path": "dist/semiotic-themes.min.js",
-          "size": 36723,
+          "size": 40161,
           "mode": 420
         },
         {
@@ -8193,12 +8203,12 @@
         },
         {
           "path": "dist/semiotic-utils-core.min.js",
-          "size": 338037,
+          "size": 340191,
           "mode": 420
         },
         {
           "path": "dist/semiotic-utils-core.module.min.js",
-          "size": 334585,
+          "size": 335392,
           "mode": 420
         },
         {
@@ -8243,7 +8253,7 @@
         },
         {
           "path": "dist/semiotic-value.module.min.js",
-          "size": 19138,
+          "size": 18586,
           "mode": 420
         },
         {
@@ -8258,7 +8268,7 @@
         },
         {
           "path": "dist/semiotic-vite.module.min.js",
-          "size": 995,
+          "size": 980,
           "mode": 420
         },
         {
@@ -8278,12 +8288,12 @@
         },
         {
           "path": "dist/semiotic.module.min.js",
-          "size": 27005,
+          "size": 28068,
           "mode": 420
         },
         {
           "path": "dist/server.min.js",
-          "size": 917859,
+          "size": 923009,
           "mode": 420
         },
         {
@@ -8318,12 +8328,12 @@
         },
         {
           "path": "package.json",
-          "size": 38140,
+          "size": 38780,
           "mode": 420
         },
         {
           "path": "README.md",
-          "size": 45323,
+          "size": 45485,
           "mode": 420
         },
         {
@@ -8410,88 +8420,88 @@
         "sourceBytes": 1649,
         "timing": {
           "samplesMs": [
-            0.235,
-            0.047,
-            0.036,
-            0.034,
-            0.032,
-            0.043,
-            0.07,
-            0.037,
-            0.089,
-            0.046,
-            0.037,
+            0.242,
+            0.048,
             0.033,
-            0.031,
-            0.031,
-            0.034
+            0.033,
+            0.032,
+            0.041,
+            0.069,
+            0.03,
+            0.072,
+            0.04,
+            0.03,
+            0.029,
+            0.027,
+            0.026,
+            0.026
           ],
-          "minMs": 0.031,
-          "p50Ms": 0.037,
-          "p95Ms": 0.133,
-          "p99Ms": 0.215,
-          "maxMs": 0.235,
-          "meanMs": 0.056
+          "minMs": 0.026,
+          "p50Ms": 0.033,
+          "p95Ms": 0.123,
+          "p99Ms": 0.218,
+          "maxMs": 0.242,
+          "meanMs": 0.052
         }
       },
       {
         "id": "server-edge",
         "path": "dist/semiotic-server-edge.module.min.js",
-        "sourceBytes": 704935,
+        "sourceBytes": 695589,
         "timing": {
           "samplesMs": [
-            8.179,
-            7.725,
-            7.671,
-            7.588,
-            7.617,
-            8.067,
-            7.512,
-            7.694,
-            7.645,
-            7.592,
-            7.582,
-            7.611,
-            7.596,
-            7.577,
-            7.729
+            8.239,
+            7.663,
+            8.175,
+            7.699,
+            7.989,
+            8.35,
+            8.242,
+            8.3,
+            8.207,
+            7.626,
+            7.627,
+            7.735,
+            7.858,
+            7.964,
+            7.718
           ],
-          "minMs": 7.512,
-          "p50Ms": 7.617,
-          "p95Ms": 8.101,
-          "p99Ms": 8.163,
-          "maxMs": 8.179,
-          "meanMs": 7.692
+          "minMs": 7.626,
+          "p50Ms": 7.964,
+          "p95Ms": 8.315,
+          "p99Ms": 8.343,
+          "maxMs": 8.35,
+          "meanMs": 7.959
         }
       },
       {
         "id": "ai-core",
         "path": "dist/semiotic-ai-core.module.min.js",
-        "sourceBytes": 496640,
+        "sourceBytes": 496846,
         "timing": {
           "samplesMs": [
-            4.864,
-            4.445,
-            4.307,
+            4.955,
             4.285,
-            4.359,
-            4.129,
-            4.28,
-            4.127,
-            4.213,
-            4.164,
-            4.173,
-            4.098,
-            4.147,
-            4.103,
-            4.157
+            4.299,
+            4.17,
+            4.363,
+            4.255,
+            4.429,
+            4.183,
+            4.294,
+            4.137,
+            4.201,
+            4.117,
+            4.344,
+            4.246,
+            4.362
           ],
-          "minMs": 4.098,
-          "p50Ms": 4.173,
-          "p95Ms": 4.571,
-          "p99Ms": 4.806,
-          "maxMs": 4.864,
-          "meanMs": 4.257
+          "minMs": 4.117,
+          "p50Ms": 4.285,
+          "p95Ms": 4.587,
+          "p99Ms": 4.882,
+          "maxMs": 4.955,
+          "meanMs": 4.309
         }
       }
     ],
@@ -8502,20 +8512,20 @@
         "exportCount": 46,
         "timing": {
           "samplesMs": [
-            77.541,
-            52.424,
-            51.961,
-            51.647,
-            51.976,
-            51.684,
-            51.734
+            86.088,
+            52.774,
+            56.127,
+            56.652,
+            56.135,
+            55.698,
+            55.778
           ],
-          "minMs": 51.647,
-          "p50Ms": 51.961,
-          "p95Ms": 70.006,
-          "p99Ms": 76.034,
-          "maxMs": 77.541,
-          "meanMs": 55.567
+          "minMs": 52.774,
+          "p50Ms": 56.127,
+          "p95Ms": 77.257,
+          "p99Ms": 84.322,
+          "maxMs": 86.088,
+          "meanMs": 59.893
         }
       },
       {
@@ -8524,20 +8534,20 @@
         "exportCount": 14,
         "timing": {
           "samplesMs": [
-            73.143,
-            60.508,
-            59.912,
-            60.168,
-            60.899,
-            60.101,
-            62.008
+            78.14,
+            62.285,
+            64.605,
+            64.091,
+            64.965,
+            63.713,
+            64.268
           ],
-          "minMs": 59.912,
-          "p50Ms": 60.508,
-          "p95Ms": 69.803,
-          "p99Ms": 72.475,
-          "maxMs": 73.143,
-          "meanMs": 62.391
+          "minMs": 62.285,
+          "p50Ms": 64.268,
+          "p95Ms": 74.188,
+          "p99Ms": 77.35,
+          "maxMs": 78.14,
+          "meanMs": 66.01
         }
       },
       {
@@ -8546,20 +8556,20 @@
         "exportCount": 121,
         "timing": {
           "samplesMs": [
-            19.376,
-            19.32,
-            19.186,
-            18.878,
-            18.94,
-            19.467,
-            18.796
+            19.219,
+            19.483,
+            20.327,
+            20.319,
+            20.802,
+            20.78,
+            20.01
           ],
-          "minMs": 18.796,
-          "p50Ms": 19.186,
-          "p95Ms": 19.439,
-          "p99Ms": 19.461,
-          "maxMs": 19.467,
-          "meanMs": 19.137
+          "minMs": 19.219,
+          "p50Ms": 20.319,
+          "p95Ms": 20.796,
+          "p99Ms": 20.801,
+          "maxMs": 20.802,
+          "meanMs": 20.134
         }
       }
     ],
@@ -8573,55 +8583,55 @@
         ],
         "renderer": "semiotic/server/edge renderChart"
       },
-      "svgBytes": 22634,
-      "svgSha256": "49c88f739517af77ae9b9a4a74356f5bf7f44bc824c0d740000103dde078e0e7",
+      "svgBytes": 22773,
+      "svgSha256": "441f97df49f540f0594d0704b84a30079218bc7ee4678359d9c39f488b7075d0",
       "timing": {
         "samplesMs": [
-          1.522,
-          1.17,
-          1.558,
-          1.102,
-          1.243,
-          0.975,
-          2.454,
-          1.469,
-          1.753,
-          1.17,
-          1.144,
-          1.141,
-          1.152,
-          1.152,
-          0.967
+          2.903,
+          1.384,
+          1.739,
+          1.379,
+          1.595,
+          1.339,
+          2.717,
+          1.865,
+          1.505,
+          1.496,
+          1.484,
+          1.54,
+          1.537,
+          1.163,
+          1.436
         ],
-        "minMs": 0.967,
-        "p50Ms": 1.17,
-        "p95Ms": 1.963,
-        "p99Ms": 2.356,
-        "maxMs": 2.454,
-        "meanMs": 1.331
+        "minMs": 1.163,
+        "p50Ms": 1.505,
+        "p95Ms": 2.773,
+        "p99Ms": 2.877,
+        "maxMs": 2.903,
+        "meanMs": 1.672
       }
     },
     "workers": [
       {
         "id": "force-layout",
         "path": "dist/forceLayoutWorker.js",
-        "sourceBytes": 9034,
+        "sourceBytes": 9054,
         "timing": {
           "samplesMs": [
-            34.571,
-            32.534,
-            33.412,
-            32.372,
-            32.064,
-            33.018,
-            33.184
+            37.285,
+            33.558,
+            33.747,
+            36.515,
+            35.613,
+            34.968,
+            34.683
           ],
-          "minMs": 32.064,
-          "p50Ms": 33.018,
-          "p95Ms": 34.223,
-          "p99Ms": 34.501,
-          "maxMs": 34.571,
-          "meanMs": 33.022
+          "minMs": 33.558,
+          "p50Ms": 34.968,
+          "p95Ms": 37.054,
+          "p99Ms": 37.239,
+          "maxMs": 37.285,
+          "meanMs": 35.196
         }
       },
       {
@@ -8630,20 +8640,20 @@
         "sourceBytes": 50042,
         "timing": {
           "samplesMs": [
-            18.365,
-            16.991,
-            17.026,
-            16.36,
-            16.242,
-            16.517,
-            16.042
+            19.555,
+            17.606,
+            18.541,
+            18.048,
+            18.503,
+            17.389,
+            16.863
           ],
-          "minMs": 16.042,
-          "p50Ms": 16.517,
-          "p95Ms": 17.963,
-          "p99Ms": 18.285,
-          "maxMs": 18.365,
-          "meanMs": 16.792
+          "minMs": 16.863,
+          "p50Ms": 18.048,
+          "p95Ms": 19.251,
+          "p99Ms": 19.495,
+          "maxMs": 19.555,
+          "meanMs": 18.072
         }
       }
     ],
@@ -8651,15 +8661,15 @@
       "root": "docs/build",
       "compression": "gzip level 9 applied independently to each emitted file",
       "total": {
-        "fileCount": 2078,
-        "rawBytes": 116379625,
-        "gzipBytes": 39665906
+        "fileCount": 2080,
+        "rawBytes": 116414915,
+        "gzipBytes": 39677859
       },
       "groups": {
         "javascript": {
-          "fileCount": 1152,
-          "rawBytes": 21955814,
-          "gzipBytes": 6213457
+          "fileCount": 1154,
+          "rawBytes": 21969842,
+          "gzipBytes": 6220131
         },
         "stylesheet": {
           "fileCount": 91,
@@ -8668,20 +8678,20 @@
         },
         "html": {
           "fileCount": 405,
-          "rawBytes": 13121945,
-          "gzipBytes": 2774747
+          "rawBytes": 13134976,
+          "gzipBytes": 2778392
         },
         "other": {
           "fileCount": 430,
-          "rawBytes": 80272058,
-          "gzipBytes": 30441314
+          "rawBytes": 80280289,
+          "gzipBytes": 30442948
         }
       }
     },
     "mcp": {
       "entry": {
         "path": "ai/dist/mcp-server.js",
-        "sourceBytes": 783483
+        "sourceBytes": 788614
       },
       "profile": "public",
       "protocolVersion": "2025-06-18",
@@ -8689,35 +8699,35 @@
       "initialize": {
         "timing": {
           "samplesMs": [
-            430.475,
-            412.009,
-            410.906,
-            413.14,
-            440.867
+            444.233,
+            456.876,
+            426.621,
+            431.616,
+            421.246
           ],
-          "minMs": 410.906,
-          "p50Ms": 413.14,
-          "p95Ms": 438.789,
-          "p99Ms": 440.451,
-          "maxMs": 440.867,
-          "meanMs": 421.48
+          "minMs": 421.246,
+          "p50Ms": 431.616,
+          "p95Ms": 454.348,
+          "p99Ms": 456.371,
+          "maxMs": 456.876,
+          "meanMs": 436.119
         }
       },
       "toolsList": {
         "timing": {
           "samplesMs": [
-            2.384,
-            2.509,
-            2.58,
-            2.425,
-            2.504
+            2.338,
+            2.652,
+            2.595,
+            2.338,
+            2.377
           ],
-          "minMs": 2.384,
-          "p50Ms": 2.504,
-          "p95Ms": 2.566,
-          "p99Ms": 2.577,
-          "maxMs": 2.58,
-          "meanMs": 2.48
+          "minMs": 2.338,
+          "p50Ms": 2.377,
+          "p95Ms": 2.641,
+          "p99Ms": 2.65,
+          "maxMs": 2.652,
+          "meanMs": 2.46
         }
       }
     }

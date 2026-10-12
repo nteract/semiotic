@@ -1,4 +1,5 @@
 import * as React from "react"
+import { XHTML_NAMESPACE } from "../shared/svgNamespace"
 
 /** A primitive label can use portable native SVG text. Other React content
  * follows the live overlays and is hosted in an HTML foreignObject. */
@@ -21,6 +22,7 @@ export function renderStaticTickForeignObject(options: {
   return (
     <foreignObject x={x} y={y} width={60} height={24} style={{ overflow: "visible" }}>
       <div
+        {...{ xmlns: XHTML_NAMESPACE }}
         style={{
           color,
           fontFamily,

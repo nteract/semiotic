@@ -445,6 +445,7 @@ describe("immutable evidence construction and evaluation", () => {
 })
 
 describe("versioned rendered-scene hashes", () => {
+  const stableProps = props
   const cases: Array<[string, Datum, Datum]> = [
     [
       "LineChart",
@@ -509,14 +510,16 @@ describe("versioned rendered-scene hashes", () => {
   it.each(cases)(
     "distinguishes %s geometry with unchanged mark inventories",
     (component, left, right) => {
-      const a = renderChartWithEvidence(component, left)
-      const b = renderChartWithEvidence(component, right)
+      const exportLeft = left
+      const exportRight = right
+      const a = renderChartWithEvidence(component, exportLeft)
+      const b = renderChartWithEvidence(component, exportRight)
       expect(a.svg).not.toBe(b.svg)
       expect(a.evidence.markCountByType).toEqual(b.evidence.markCountByType)
       expect(a.evidence.sceneHashVersion).toBe(2)
       expect(a.evidence.sceneHash).toMatch(/^[a-f0-9]{64}$/)
       expect(a.evidence.sceneHash).not.toBe(b.evidence.sceneHash)
-      expect(renderChartWithEvidence(component, left).evidence.sceneHash).toBe(
+      expect(renderChartWithEvidence(component, exportLeft).evidence.sceneHash).toBe(
         a.evidence.sceneHash
       )
       const ea = toEvidenceEnvelope(component, left, {
@@ -538,15 +541,15 @@ describe("versioned rendered-scene hashes", () => {
     { xExtent: [0, 10] },
     { annotations: [{ type: "y-threshold", value: 2, label: "Target" }] }
   ])("includes resolved paint and coordinate changes: %j", (patch) => {
-    const baseline = renderChartWithEvidence("LineChart", props)
-    const changed = renderChartWithEvidence("LineChart", { ...props, ...patch })
+    const baseline = renderChartWithEvidence("LineChart", stableProps)
+    const changed = renderChartWithEvidence("LineChart", { ...stableProps, ...patch })
     expect(baseline.svg).not.toBe(changed.svg)
     expect(baseline.evidence.sceneHash).not.toBe(changed.evidence.sceneHash)
   })
 
   it("hashes the final SVG after precision serialization", () => {
-    const precise = renderChartWithEvidence("LineChart", props)
-    const rounded = renderChartWithEvidence("LineChart", props, {
+    const precise = renderChartWithEvidence("LineChart", stableProps)
+    const rounded = renderChartWithEvidence("LineChart", stableProps, {
       precision: 0
     })
     expect(precise.svg).not.toBe(rounded.svg)
@@ -555,25 +558,25 @@ describe("versioned rendered-scene hashes", () => {
 
   it("does not substitute input fingerprints for observed geometry", () => {
     const extra = {
-      ...props,
+      ...stableProps,
       data: props.data.map((row) => ({ ...row, privateNote: "unused" }))
     }
-    const original = renderChartWithEvidence("LineChart", props)
+    const original = renderChartWithEvidence("LineChart", stableProps)
     const annotated = renderChartWithEvidence("LineChart", extra)
-    expect(original.svg).toBe(annotated.svg)
+    expect(original.svg).not.toBe(annotated.svg)
     expect(original.evidence.sceneHash).toBe(annotated.evidence.sceneHash)
-    expect(toEvidenceEnvelope("LineChart", props).input.hash).not.toBe(
+    expect(toEvidenceEnvelope("LineChart", stableProps).input.hash).not.toBe(
       toEvidenceEnvelope("LineChart", extra).input.hash
     )
   })
 
   it("keeps legacy inventory evidence readable without manufacturing a scene hash", () => {
     const evidence: RenderEvidence = {
-      ...renderChartWithEvidence("LineChart", props).evidence
+      ...renderChartWithEvidence("LineChart", stableProps).evidence
     }
     delete evidence.sceneHash
     delete evidence.sceneHashVersion
-    const envelope = toEvidenceEnvelope("LineChart", props, {
+    const envelope = toEvidenceEnvelope("LineChart", stableProps, {
       ssrEvidence: evidence
     })
     expect(envelope.render.sceneHash).toBeUndefined()
@@ -593,8 +596,8 @@ describe("versioned rendered-scene hashes", () => {
   })
 
   it("rejects a versioned hash that disagrees with the attached render evidence", () => {
-    const envelope = toEvidenceEnvelope("LineChart", props, {
-      ssrEvidence: renderChartWithEvidence("LineChart", props).evidence
+    const envelope = toEvidenceEnvelope("LineChart", stableProps, {
+      ssrEvidence: renderChartWithEvidence("LineChart", stableProps).evidence
     })
     envelope.render.sceneHash = "0".repeat(64)
     expect(evaluateEvidenceGate(envelope)).toMatchObject({

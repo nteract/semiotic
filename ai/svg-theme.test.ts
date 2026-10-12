@@ -29,7 +29,21 @@ it("rejects CSS declaration and markup injection through either keys or values",
       "--semiotic-label": "</style><script/>",
       "--semiotic-unsafe": "url(https://example.test)",
       "--semiotic-comment": "/* hidden",
+      "--semiotic-escape": "u\\72l(https://example.test)",
+      "--semiotic-quote": '"Open; fill: red',
       color: "red"
     })
   ).toBe(host)
+})
+
+it("preserves safe quoted font delimiters through MCP theme injection", () => {
+  const font = '"ACME; Sans } /* Text */ ]]>", serif'
+  const svg = applySvgTheme('<svg xmlns="http://www.w3.org/2000/svg"/>', {
+    "--semiotic-font-family": font
+  })
+  const doc = new DOMParser().parseFromString(svg, "image/svg+xml")
+  expect(doc.querySelector("parsererror")).toBeNull()
+  expect(doc.querySelector("style")?.textContent).toBe(
+    `:root { --semiotic-font-family: ${font} }`
+  )
 })

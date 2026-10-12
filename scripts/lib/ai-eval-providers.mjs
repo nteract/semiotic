@@ -26,6 +26,22 @@
  * without it records cost as unknown (`null`) as for the other gateways.
  */
 export const AI_EVAL_PROVIDERS = {
+  apiroute: {
+    id: "apiroute",
+    label: "API Route",
+    apiUrl: "https://global.api-route.com/v1/responses",
+    apiKeyEnv: "API_ROUTE_API_KEY",
+    projectEnv: null,
+    keychainService: "semiotic-apiroute-evals",
+    clientVersion: "semiotic-apiroute-eval/1",
+    defaultModels: ["gpt-6.1-sol"],
+    hasPriceTable: false,
+    priceRevision: null,
+    reportPrefix: "apiroute",
+    requestReasoning: false,
+    credentialCheckMaxTokens: 64,
+    pricesPerMillion: null,
+  },
   openai: {
     id: "openai",
     label: "OpenAI",

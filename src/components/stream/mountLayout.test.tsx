@@ -2,6 +2,7 @@ import * as React from "react"
 import { act, cleanup, render, waitFor } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { NetworkCustomChart } from "semiotic/network"
+import { ZoomableNetworkCustomChart } from "semiotic/network/zoom"
 import { XYCustomChart } from "semiotic/xy"
 import { OrdinalCustomChart } from "semiotic/ordinal"
 import { GeoCustomChart } from "semiotic/geo"
@@ -175,6 +176,33 @@ describe("mount and resize layout budgets", () => {
       expect(build).toHaveBeenCalledTimes(3)
     }
   )
+
+  it("waits for topology before the initial zoom camera paints a custom network", () => {
+    const scheduler = createFrameScheduler()
+    const layout = vi.fn<NetworkCustomLayout>((ctx) => ({
+      sceneNodes: ctx.nodes.map((node) => ({
+        type: "circle", cx: 20, cy: 20, r: 5,
+        style: { fill: "red" }, datum: node
+      }))
+    }))
+    render(
+      <ZoomableNetworkCustomChart
+        nodes={nodes}
+        edges={edges}
+        layout={layout}
+        width={400}
+        height={300}
+        margin={margin}
+        zoom={{ x: 0, y: 0, k: 1 }}
+        animate={false}
+        frameProps={{ frameScheduler: scheduler.scheduler }}
+      />
+    )
+    settle(scheduler)
+    expect(layout.mock.calls.map(([ctx]) => [
+      ctx.dimensions.width, ctx.nodes.length, ctx.edges.length
+    ])).toEqual([[400, 2, 1]])
+  })
 
   it.each(["xy", "ordinal", "geo"] as const)(
     "builds the built-in %s scene once at mount",

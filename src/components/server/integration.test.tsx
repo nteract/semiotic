@@ -17,6 +17,7 @@ import {
 } from "./renderToStaticSVG"
 import { renderToAnimatedGif, generateFrameSVGs, generateFrameSequence } from "./animatedGif"
 import { buildGaltonBoardPhysics } from "../charts/physics/physicsChartUtils"
+import sharp from "sharp"
 
 // ── Test data ────────────────────────────────────────────────────────
 
@@ -200,6 +201,44 @@ describe("SVG generation (end-to-end)", () => {
 // ═══════════════════════════════════════════════════════════════════════
 
 describe("PNG generation (end-to-end)", () => {
+  it.each([
+    ["BigNumber", { value: 42 }],
+    ["ScatterplotMatrix", { data: [{ a: 1, b: 2 }], fields: ["a", "b"] }]
+  ] as const)("paints an overridden background in %s exports", async (component, props) => {
+    const image = await renderToImage(component, { ...props, theme: "dark", width: 200, height: 150 }, { background: "#ff0000" })
+    const pixel = await sharp(image).extract({ left: 0, top: 0, width: 1, height: 1 }).ensureAlpha().raw().toBuffer()
+    expect([...pixel]).toEqual([255, 0, 0, 255])
+  })
+
+  it.each(["png", "jpeg"] as const)("paints the requested %s background over the theme", async (format) => {
+    const image = await renderToImage("BarChart", {
+      data: barData, categoryAccessor: "category", valueAccessor: "value",
+      theme: "dark", width: 200, height: 150,
+    }, { background: "#ff0000", format })
+    const pixel = await sharp(image).extract({ left: 0, top: 0, width: 1, height: 1 }).ensureAlpha().raw().toBuffer()
+    expect(pixel[0]).toBeGreaterThanOrEqual(253)
+    expect(pixel[1]).toBeLessThanOrEqual(2)
+    expect(pixel[2]).toBeLessThanOrEqual(2)
+    expect(pixel[3]).toBe(255)
+  })
+
+  it("paints a frame export background and preserves PNG transparency when omitted", async () => {
+    const props = { chartType: "line", data: lineData, xAccessor: "x", yAccessor: "y", size: [200, 150] }
+    const red = await renderToImage("xy", props, { background: "#ff0000" })
+    const transparent = await renderToImage("xy", props)
+    const pixel = (image: Buffer) => sharp(image).extract({ left: 0, top: 0, width: 1, height: 1 }).ensureAlpha().raw().toBuffer()
+    expect([...await pixel(red)]).toEqual([255, 0, 0, 255])
+    expect((await pixel(transparent))[3]).toBe(0)
+  })
+
+  it("flattens transparent JPEG backgrounds to white", async () => {
+    const image = await renderToImage("BarChart", {
+      data: barData, categoryAccessor: "category", valueAccessor: "value", width: 200, height: 150
+    }, { format: "jpeg" })
+    const pixel = await sharp(image).extract({ left: 0, top: 0, width: 1, height: 1 }).raw().toBuffer()
+    expect([...pixel]).toEqual([255, 255, 255])
+  })
+
   it("renderToImage produces valid PNG buffer from BarChart", async () => {
     const png = await renderToImage("BarChart", {
       data: barData, categoryAccessor: "category", valueAccessor: "value",
@@ -345,9 +384,8 @@ describe("Dashboard composition (end-to-end)", () => {
 
     expect(isValidSVG(svg)).toBe(true)
     expect(svg).toContain("Test Dashboard")
-    // Both charts rendered via foreignObject
-    const foreignObjects = (svg.match(/foreignObject/g) || []).length
-    expect(foreignObjects).toBeGreaterThanOrEqual(4) // open+close for each chart
+    expect(svg).not.toContain("foreignObject")
+    expect(new DOMParser().parseFromString(svg, "image/svg+xml").querySelectorAll("svg svg")).toHaveLength(2)
   })
 
   it("renderDashboard applies theme to all charts", () => {
@@ -383,7 +421,8 @@ describe("Dashboard composition (end-to-end)", () => {
     ], { width: 420, layout: { columns: 1, gap: 0 } })
 
     expect(svg).toContain('width="420" height="230"')
-    expect(svg).toContain('<foreignObject width="420" height="230"')
+    expect(svg).not.toContain("foreignObject")
+    expect(new DOMParser().parseFromString(svg, "image/svg+xml").querySelector("svg svg")?.getAttribute("height")).toBe("230")
     expect(svg).toContain('viewBox="0 0 420 230"')
   })
 })

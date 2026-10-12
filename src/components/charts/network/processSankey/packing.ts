@@ -146,7 +146,7 @@ export function packProcessSankeySlots(
   })
 
   // Invisible/orphan nodes do not consume row capacity. Preserve their stable
-  // identity by attaching them to the first row, matching the old reuse path.
+  // identity by attaching them to the first row.
   for (const node of [...nodes].sort((a, b) =>
     compareProcessSankeyIds(a.id, b.id)
   )) {

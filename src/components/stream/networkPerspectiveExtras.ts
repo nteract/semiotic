@@ -1,3 +1,4 @@
+import { getMax, getMin } from "../charts/shared/minMax"
 /**
  * Perspective extras: ground grid and plate, regions (raised plates with
  * labels that seat their member nodes), orthogonal ground routing, and
@@ -241,15 +242,15 @@ export const networkPerspectiveExtras: NetworkPerspectiveExtras = {
     const all = [...shape.up, ...shape.down]
     const xs = all.map((p) => p[0])
     const ys = all.map((p) => p[1])
-    const x0 = Math.min(...xs)
-    const y0 = Math.min(...ys)
+    const x0 = getMin(xs)
+    const y0 = getMin(ys)
     const hitD = pathD + shape.faces.map((f) => f.pathD).join("")
     return {
       ...n,
       x: x0,
       y: y0,
-      w: Math.max(1e-3, Math.max(...xs) - x0),
-      h: Math.max(1e-3, Math.max(...ys) - y0),
+      w: Math.max(1e-3, getMax(xs) - x0),
+      h: Math.max(1e-3, getMax(ys) - y0),
       pathD,
       faces: shape.faces.length ? shape.faces : undefined,
       _hitPath: { pathD: hitD, transform: [0, 0, 1, 1], fill: true, strokeWidth: 0 }

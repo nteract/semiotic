@@ -70,6 +70,8 @@ async function renderSsr() {
   const warmupCount = positiveInteger(process.env.SEMIOTIC_MACHINE_BASELINE_WARMUPS, 2)
   const { renderChart } = await import("semiotic/server/edge")
   const props = {
+    // Repeated benchmark samples reuse caller-owned SVG IDs.
+    chartId: "machine-baseline-ssr",
     width: 640,
     height: 360,
     data: ssrFixture(),

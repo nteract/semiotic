@@ -180,4 +180,17 @@ describe("physics recipes", () => {
       timeScale: 0.5,
     })
   })
+
+  it("rebases and sorts 300,000 arrival-spaced spawns without an argument-limit crash", () => {
+    const spawns = Array.from({ length: 300_000 }, (_, index) => ({
+      id: String(index), x: 0, y: 0,
+      shape: { type: "circle" as const, radius: 3 },
+      datum: { arrivalTime: 300_000 - index }
+    }))
+    const replay = arrivalReplay(spawns, { startAt: 7 })
+    expect(replay.initialSpawns).toHaveLength(300_000)
+    expect(replay.initialSpawns[0]).toMatchObject({ id: "299999", spawnAt: 7 })
+    expect(replay.initialSpawns[299_999]).toMatchObject({ id: "0", spawnAt: 300_006 })
+    expect(spawns[0]).not.toHaveProperty("spawnAt")
+  })
 })

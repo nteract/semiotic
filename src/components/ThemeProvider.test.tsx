@@ -62,6 +62,11 @@ function installForcedColorsMock(initialMatches: boolean) {
 }
 
 describe("ThemeProvider", () => {
+  it("preserves declaration delimiters inside quoted font names", () => {
+    const fontFamily = '"ACME; Sans", sans-serif'
+    const { container } = render(<ThemeProvider theme={{ typography: { fontFamily } }}><div>Chart</div></ThemeProvider>)
+    expect((container.firstElementChild as HTMLElement).style.getPropertyValue("--semiotic-font-family")).toBe(fontFamily)
+  })
   it("initializes the store with the requested preset before children render", () => {
     const seen: SemioticTheme[] = []
 

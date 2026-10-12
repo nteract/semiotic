@@ -1,3 +1,4 @@
+import { getMax, getMin } from "../../shared/minMax"
 /**
  * Compute the `RibbonGeometryInput` shape for a ProcessSankey ribbon
  * from its source/target attachment data. Both the HOC (CSR) and the
@@ -188,9 +189,9 @@ export function synchronizeProcessSankeyFeederBatches(
       if (batchInputs.some((input) => input == null)) continue
 
       const authoredX = xScale(startTime)
-      const earliestRequestedX = Math.min(...batchInputs.map((input) => input!.sx))
+      const earliestRequestedX = getMin(batchInputs.map((input) => input!.sx))
       if (!(earliestRequestedX < authoredX - 1e-9)) continue
-      const latestSafeX = Math.max(...batch.map((edge) => {
+      const latestSafeX = getMax(batch.map((edge) => {
         const runwayStart = runwayStartByEdge.get(edge.id)
         return runwayStart == null ? authoredX : Math.min(authoredX, xScale(runwayStart))
       }))

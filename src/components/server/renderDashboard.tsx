@@ -4,7 +4,10 @@ import type { Datum } from "../charts/shared/datumTypes"
 import type { RenderChartName } from "./renderToStaticSVG"
 import type { FrameType, StaticFrameProps } from "./staticSVGChrome"
 import { resolveTheme, themeStyles, type ThemeInput } from "./themeResolver"
+import { setSvgRootAttributes } from "../shared/svgRoot"
+import { createSvgIdPrefix } from "../shared/svgNamespace"
 import {
+  finiteDimension,
   renderedSvgDimensions,
   fitSvgToBox,
   type SVGDimensions
@@ -54,7 +57,7 @@ export function composeDashboard(
     title,
     subtitle,
     theme: themeInput,
-    width = 1200,
+    width: widthInput,
     height: heightInput,
     layout = {},
     background
@@ -62,8 +65,17 @@ export function composeDashboard(
 
   const theme = resolveTheme(themeInput)
   const styles = themeStyles(theme)
-  const columns = layout.columns || 2
-  const gap = layout.gap ?? 16
+  const width = finiteDimension(widthInput, 1200)
+  const columns = Math.max(1, Math.floor(finiteDimension(layout.columns, 2)))
+  const gap = Math.min(
+    typeof layout.gap === "number" &&
+      Number.isFinite(layout.gap) &&
+      layout.gap >= 0
+      ? layout.gap
+      : 16,
+    width / (columns + 1)
+  )
+  const idPrefix = createSvgIdPrefix("dashboard")
 
   let headerHeight = 0
   if (title) headerHeight += 30
@@ -86,9 +98,15 @@ export function composeDashboard(
   const defaultCellHeight = 300
 
   for (const chart of charts) {
-    const span = Math.min(chart.colSpan || 1, columns)
+    const span = Math.min(
+      Math.max(1, Math.floor(finiteDimension(chart.colSpan, 1))),
+      columns
+    )
     const cellWidthWithSpan = cellWidth * span + gap * (span - 1)
-    const requestedCellHeight = chart.props.height || defaultCellHeight
+    const requestedCellHeight = finiteDimension(
+      chart.props.height,
+      defaultCellHeight
+    )
 
     if (column + span > columns) {
       rowY += rowHeight + gap
@@ -102,13 +120,19 @@ export function composeDashboard(
       width: cellWidthWithSpan,
       height: requestedCellHeight,
       theme: themeInput,
-      _idPrefix: `chart-${rows.length}`
+      _idPrefix: `${idPrefix}-chart-${rows.length}${chart.props._idPrefix ? `-${String(chart.props._idPrefix).replace(/[^a-zA-Z0-9_-]/g, "_")}` : ""}`
     }
     const svg = chart.component
       ? renderers.chart(chart.component, chartProps)
       : chart.frameType
         ? renderers.frame(chart.frameType, chartProps as StaticFrameProps)
-        : `<svg xmlns="http://www.w3.org/2000/svg" width="${cellWidthWithSpan}" height="${requestedCellHeight}"></svg>`
+        : ReactDOMServer.renderToStaticMarkup(
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width={cellWidthWithSpan}
+              height={requestedCellHeight}
+            />
+          )
     const svgDimensions = renderedSvgDimensions(svg, {
       width: cellWidthWithSpan,
       height: requestedCellHeight
@@ -126,22 +150,22 @@ export function composeDashboard(
     column += span
   }
 
-  const totalHeight = heightInput || rowY + rowHeight + gap
+  const totalHeight = finiteDimension(heightInput, rowY + rowHeight + gap)
   const chartElements = rows.map((item, index) => (
     <g
       key={`dashboard-chart-${index}`}
       transform={`translate(${item.x},${item.y})`}
-    >
-      <foreignObject width={item.width} height={item.height}>
-        <div
-          // @ts-expect-error — xmlns for foreignObject child
-          xmlns="http://www.w3.org/1999/xhtml"
-          dangerouslySetInnerHTML={{
-            __html: fitSvgToBox(item.svg, item.svgDimensions)
-          }}
-        />
-      </foreignObject>
-    </g>
+      dangerouslySetInnerHTML={{
+        __html: setSvgRootAttributes(
+          fitSvgToBox(item.svg, item.svgDimensions),
+          {
+            width: String(item.width),
+            height: String(item.height),
+            role: "group"
+          }
+        )
+      }}
+    />
   ))
 
   return ReactDOMServer.renderToStaticMarkup(
@@ -149,11 +173,13 @@ export function composeDashboard(
       xmlns="http://www.w3.org/2000/svg"
       width={width}
       height={totalHeight}
-      role="img"
+      role="group"
       aria-label={title || "Dashboard"}
+      aria-describedby={subtitle ? `${idPrefix}-desc` : undefined}
       style={{ fontFamily: styles.fontFamily }}
     >
       {title && <title>{title}</title>}
+      {subtitle && <desc id={`${idPrefix}-desc`}>{subtitle}</desc>}
       {background && (
         <rect
           x={0}

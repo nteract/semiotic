@@ -1,4 +1,5 @@
 import type { SemioticTheme } from "./themeCore"
+import { assertSafeThemeCSS } from "./safeThemeCSS"
 
 /**
  * Canonical CSS custom-property projection for a Semiotic theme.
@@ -107,5 +108,8 @@ export function themeToCSSVariables(
       `${theme.typography.labelSize}px`
   }
 
+  for (const [name, value] of Object.entries(variables)) {
+    assertSafeThemeCSS(value, name)
+  }
   return variables
 }

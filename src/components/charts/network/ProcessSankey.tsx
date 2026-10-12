@@ -434,7 +434,7 @@ export const ProcessSankey = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ for
       maxLabels,
       selectionDatum,
       styleRules,
-      // Live React surface: warn on duplicate ids, strip bad system times (M6).
+      // Live React surface: warn on duplicate ids, strip bad system times.
       usageMode: "push",
       colorBy: colorBy as string | ((d: Datum) => unknown) | undefined,
       valueAccessor: valueAccessor as

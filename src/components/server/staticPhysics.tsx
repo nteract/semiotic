@@ -1,3 +1,4 @@
+import { staticTitleText } from "./staticTitle"
 import {
   PhysicsPipelineStore,
   type PhysicsQueuedSpawn
@@ -20,7 +21,7 @@ import {
 import type { StaticAnnotationRenderResult } from "./staticAnnotations"
 import type { StreamPhysicsFrameProps } from "../stream/physics/StreamPhysicsTypes"
 
-export type StaticPhysicsFrameProps = PhysicsSettledSVGOptions & {
+export type StaticPhysicsFrameProps = Omit<PhysicsSettledSVGOptions, "title"> & {
   config?: ConstructorParameters<typeof PhysicsPipelineStore>[0]
   initialSpawns?: PhysicsQueuedSpawn[]
   projectionRows?: PhysicsSettledSVGOptions["projectionRows"]
@@ -83,6 +84,7 @@ export function renderPhysicsFrame(
   }
   const result = renderPhysicsSettledSVG(store, {
     ...props,
+    title: staticTitleText(props.title) || undefined,
     width: size[0],
     height: size[1],
     background: props.background ?? theme.colors.background,

@@ -1,3 +1,4 @@
+import { getMax, getMin } from "../../../charts/shared/minMax"
 import type { NetworkCustomLayout } from "../../../stream/networkCustomLayout"
 import type { ResolutionLayoutConfig } from "./resolutionAtlasLayout"
 import { sceneBuilder, shortLabel } from "./scene"
@@ -34,8 +35,8 @@ export const boundaryLoomLayout: NetworkCustomLayout<ResolutionLayoutConfig> = (
     )) {
       const members = group.nodeIds.filter((id) => rowIndex.has(id))
       if (!members.length) continue
-      const from = Math.min(...members.map(y)) - rowHeight * 0.4
-      const to = Math.max(...members.map(y)) + rowHeight * 0.4
+      const from = getMin(members.map(y)) - rowHeight * 0.4
+      const to = getMax(members.map(y)) + rowHeight * 0.4
       scene.path(
         { ...group, id: `${group.id}:ownership-bracket` },
         `M${left - 62},${from} H${left - 69} V${to} H${left - 62}`,
