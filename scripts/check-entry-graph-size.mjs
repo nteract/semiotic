@@ -281,7 +281,10 @@ const ENTRY_GRAPHS = [
   // Bumped 261.5→262.5: static value-banded histogram bars, standalone-safe
   // (var()-free) annotation label paints, and the shared hatch tile measure
   // 261.8 KiB gzip.
-  { entry: "server.module.min.js", label: "server", limitKb: 264.5 },
+  // Approved 264.5→265 (2026-10-13): retaining computed Sankey/hierarchy
+  // accessibility totals puts the graph just above 264.5 KiB in CI. Allow
+  // half a KiB of headroom; the measured graph still rounds to 264.5 KiB.
+  { entry: "server.module.min.js", label: "server", limitKb: 265 },
   // Bumped 450→460: the public numeric audit + chart contract evaluator adds
   // ~5–6 KB gzip to the AI graph; ChartContainer loads the same code lazily.
   // Bumped 460→462 (3.8.6): BumpChart (+ its ribbon geometry) joins the AI graph.

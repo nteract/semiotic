@@ -76,7 +76,10 @@ const analyze = process.argv.includes("--analyze")
 // minification fixes, a fresh production union measures 308.7 KiB gzip across
 // 27 initial files (316,131 bytes in CI; 316,135 locally). Keep 1.3 KiB of
 // headroom; single-entry budgets and tree-shaking isolation gates are unchanged.
-const MULTI_IMPORT_GZIP_BUDGET = 310 * 1024
+// Bumped 310→310.25 (2026-10-13): the current production union is 317,460
+// bytes, 20 bytes above the old limit. Allow 256 bytes for the accepted
+// accessibility-total fix while retaining the existing graph/isolation checks.
+const MULTI_IMPORT_GZIP_BUDGET = 310.25 * 1024
 
 const MULTI_IMPORT_SOURCE = `
 export { LineChart } from "semiotic/xy"

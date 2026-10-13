@@ -290,10 +290,14 @@ jobs:
       - name: Check committed MCP bundle
         run: npm run check:mcp-bundle
 
-      - name: Build production library and MCP server
-        run: |
-          npm run dist:prod
-          npm run build:mcp
+      - name: Build production library
+        run: npm run dist:prod
+
+      - name: Check bundle budgets before package tests
+        run: npm run check:bundle-budgets
+
+      - name: Build MCP server
+        run: npm run build:mcp
 
       - name: Check production package contracts
         run: npm run check:package-contracts:from-dist
