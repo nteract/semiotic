@@ -700,7 +700,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
 
       const pulseRefresh = refreshIdlePulse(store, now, computedSceneThisFrame, pulseFramePendingRef)
       // Update canvas aria-label imperatively after scene changes
-      if (computedSceneThisFrame || isTransitioning) {
+      if (computedSceneThisFrame || transitionWasActive) {
         canvas.setAttribute("aria-label", computeCanvasAriaLabel(store.scene, chartType + " chart"))
       }
 
@@ -768,11 +768,8 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       }
 
       // Push scales to React state for SVG overlay
-      if (computedSceneThisFrame && store.scales) {
-        setCurrentScales(store.scales)
-        setAnnotationFrame((f) => f + 1)
-        lastAnnotationFrameTimeRef.current = now
-      } else if (isTransitioning && store.scales && now - lastAnnotationFrameTimeRef.current >= 33) {
+      if (store.scales && (computedSceneThisFrame || (transitionWasActive && (!transitionActive || now - lastAnnotationFrameTimeRef.current >= 33)))) {
+        if (computedSceneThisFrame) setCurrentScales(store.scales)
         setAnnotationFrame((f) => f + 1)
         lastAnnotationFrameTimeRef.current = now
       }

@@ -5,6 +5,7 @@
 import { getDevicePixelRatio, prepareCanvas } from "./canvasSetup"
 import { paintCanvasBackground } from "./canvasBackground"
 import { needsDataCanvasPaint } from "./paintNeeds"
+import { computeNetworkAriaLabel } from "./AccessibleDataTable"
 import { networkEdgeRenderer } from "./renderers/networkEdgeRenderer"
 import { networkRectRenderer } from "./renderers/networkRectRenderer"
 import { networkCircleRenderer } from "./renderers/networkCircleRenderer"
@@ -89,6 +90,15 @@ export interface NetworkFramePaintContext {
   }) => void
 }
 
+/** Keep React renders and imperative paints on the same scene label. */
+export function networkFrameAriaLabel(store: NetworkPipelineStore): string {
+  return computeNetworkAriaLabel(
+    store.sceneNodes.length,
+    store.sceneEdges.length,
+    store.perspective.label("Network chart")
+  )
+}
+
 /**
  * Run one paint tick. Returns whether another rAF should be scheduled
  * (also invoked via scheduleNextFrame for continuous modes).
@@ -167,6 +177,7 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
   const computedScene = transitionWasActive || wasDirty || animationTicked || perspectiveTicked
   if (computedScene) {
     store.buildScene([adjustedWidth, adjustedHeight])
+    canvas.setAttribute("aria-label", networkFrameAriaLabel(store))
     // Resync particle/hover color caches from the freshly rebuilt scene fills
     // only on an invalidating rebuild (an effect / mount paint set `dirtyRef`),
     // NOT on pure transition/animation frames whose fills are unchanged. This

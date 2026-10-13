@@ -95,6 +95,10 @@ test("published network SSR survives pending worker hydration and enables real h
     ).toHaveAccessibleName("Network measurements")
     releaseWorker()
     await expect(network.locator("canvas")).toHaveCount(1)
+    await expect(network.locator("canvas")).toHaveAttribute(
+      "aria-label",
+      "Network chart, 2 nodes, 1 edges"
+    )
     await expect
       .poll(() =>
         page.evaluate(() =>
@@ -135,6 +139,10 @@ test("published network SSR survives pending worker hydration and enables real h
     )
     await hoverNetwork(page)
     await hoverNetwork(page, true)
+    await expect(network.locator("canvas")).toHaveAttribute(
+      "aria-label",
+      "Network chart, 2 nodes, 1 edges"
+    )
     const summaryButton = network.getByRole("button", {
       name: /view data summary/i
     })

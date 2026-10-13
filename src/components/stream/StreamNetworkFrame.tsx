@@ -54,10 +54,7 @@ import {
 import { CanvasFrameBackground, useFrameCanvasHost } from "./useCanvasFrameHost"
 import { useStableShallow } from "./useStableShallow"
 import { networkFrameAccessibility } from "./networkFrameAccessibility"
-import {
-  AriaLiveTooltip,
-  computeNetworkAriaLabel
-} from "./AccessibleDataTable"
+import { AriaLiveTooltip } from "./AccessibleDataTable"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 import { renderLoadingState } from "../charts/shared/withChartWrapper"
 import {
@@ -72,7 +69,7 @@ import {
 import { DefaultNetworkTooltip } from "./networkDefaultTooltip"
 import { buildNetworkPipelineConfig } from "./networkPipelineConfig"
 
-import { paintNetworkFrame } from "./networkFramePaint"
+import { networkFrameAriaLabel, paintNetworkFrame } from "./networkFramePaint"
 import {
   networkEdgeFallbackColor,
   resolveNetworkEdgeColor,
@@ -1512,11 +1509,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
         <canvas
           aria-hidden="true"
           ref={canvasRef}
-          aria-label={computeNetworkAriaLabel(
-            store.sceneNodes.length,
-            store.sceneEdges.length,
-            store.perspective.label("Network chart")
-          )}
+          aria-label={networkFrameAriaLabel(store)}
           style={{
             position: "absolute",
             top: 0,

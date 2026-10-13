@@ -5,10 +5,13 @@ import type { ReactNode } from "react"
 import { GeoPipelineStore } from "./GeoPipelineStore"
 import { NetworkPipelineStore } from "./NetworkPipelineStore"
 import { NetworkPerspectiveState } from "./networkPerspectiveState"
+import { OrdinalPipelineStore } from "./OrdinalPipelineStore"
 import { PipelineStore } from "./PipelineStore"
 import StreamGeoFrame from "./StreamGeoFrame"
+import StreamOrdinalFrame from "./StreamOrdinalFrame"
 import StreamXYFrame from "./StreamXYFrame"
 import { paintNetworkFrame } from "./networkFramePaint"
+import { registerNetworkPerspective } from "./networkPerspectiveRuntime"
 import type { FrameScheduler } from "./useFrame"
 import {
   setupCanvasMock,
@@ -256,4 +259,132 @@ describe("terminal transition paint", () => {
     expect(canvas.getAttribute("aria-label")).toBe("Network chart, empty")
     expect(setAnnotationFrame).toHaveBeenCalledOnce()
   })
+
+  it("commits Ordinal's final exit removal inside the annotation throttle window", () => {
+    let clock = 1000
+    let store: OrdinalPipelineStore | null = null
+    const captureStore = (value: OrdinalPipelineStore) => {
+      store = value
+    }
+    const originalAdvance = OrdinalPipelineStore.prototype.advanceTransition
+    vi.spyOn(OrdinalPipelineStore.prototype, "advanceTransition").mockImplementation(
+      function captureAdvance(this: OrdinalPipelineStore, now: number) {
+        captureStore(this)
+        return originalAdvance.call(this, now)
+      }
+    )
+    const annotationRule = vi.fn((): ReactNode => null)
+    const frames = createManualScheduler()
+    const result = render(
+      <StreamOrdinalFrame
+        chartType="bar"
+        data={[{ category: "a", value: 2 }]}
+        oAccessor="category"
+        rAccessor="value"
+        annotations={[{ type: "label", category: "a", value: 2, label: "bar" }]}
+        svgAnnotationRules={annotationRule}
+        accessibleTable={false}
+        animate={false}
+        size={[200, 100]}
+        clock={() => clock}
+        frameScheduler={frames.scheduler}
+      />
+    )
+    frames.drain(clock)
+    const capturedStore = required<OrdinalPipelineStore>(store, "expected Ordinal pipeline store")
+    const canvas = required(result.container.querySelector("canvas"), "expected Ordinal data canvas")
+    const annotationCallsBefore = annotationRule.mock.calls.length
+    expect(capturedStore.scene.length).toBeGreaterThan(0)
+    const computeScene = vi.spyOn(capturedStore, "computeScene")
+
+    capturedStore.exitNodes = [...capturedStore.scene]
+    capturedStore.activeTransition = { startTime: clock - 100, duration: 100 }
+    clock += 10
+    frames.replayLatest(clock)
+
+    expect(capturedStore.scene).toEqual([])
+    expect(computeScene).not.toHaveBeenCalled()
+    expect(canvas.getAttribute("aria-label")).toBe("bar chart, empty")
+    expect(annotationRule.mock.calls.length).toBeGreaterThan(annotationCallsBefore)
+  })
+
+  it.each(["flat", "isometric"] as const)(
+    "updates Network's %s scene label while overlay commits are throttled",
+    (perspective) => {
+      registerNetworkPerspective()
+      const store = new NetworkPipelineStore({
+        chartType: "force",
+        perspective,
+        customNetworkLayout: ({ nodes, edges }) => ({
+          sceneNodes: nodes.map((node, i) => ({
+            type: "circle",
+            cx: 50 + i * 50,
+            cy: 50,
+            r: 5,
+            datum: node,
+            style: { fill: "navy" }
+          })),
+          sceneEdges: edges.map((edge) => ({
+            type: "line",
+            x1: 50,
+            y1: 50,
+            x2: 100,
+            y2: 50,
+            datum: edge,
+            style: { stroke: "navy" }
+          }))
+        })
+      })
+      const canvas = document.createElement("canvas")
+      const setAnnotationFrame = vi.fn()
+      const pendingAnnotationFrameRef = { current: false }
+      const label =
+        perspective === "flat"
+          ? "Network chart"
+          : "Network chart (isometric perspective)"
+      const paint = (now: number) =>
+        paintNetworkFrame({
+          canvas,
+          store,
+          size: [200, 100],
+          margin: { top: 0, right: 0, bottom: 0, left: 0 },
+          adjustedWidth: 200,
+          adjustedHeight: 100,
+          dirtyRef: { current: true },
+          lastFrameTimeRef: { current: 0 },
+          now,
+          random: () => 0.5,
+          reducedMotion: false,
+          showParticles: false,
+          isContinuous: false,
+          animate: false,
+          particleStyle: {},
+          getParticleColor: () => "navy",
+          pendingAnnotationFrameRef,
+          lastAnnotationFrameTimeRef: { current: 100 },
+          setAnnotationFrame,
+          scheduleNextFrame: vi.fn()
+        })
+
+      store.ingestBounded(
+        [{ id: "a" }, { id: "b" }],
+        [{ source: "a", target: "b" }],
+        [200, 100]
+      )
+      paint(110)
+      expect(canvas.getAttribute("aria-label")).toBe(
+        `${label}, 2 nodes, 1 edges`
+      )
+
+      store.ingestBounded([{ id: "a" }], [], [200, 100])
+      paint(120)
+      expect(canvas.getAttribute("aria-label")).toBe(`${label}, 1 nodes`)
+
+      store.ingestBounded([], [], [200, 100])
+      paint(130)
+      expect(canvas.getAttribute("aria-label")).toBe(`${label}, empty`)
+      expect(setAnnotationFrame).not.toHaveBeenCalled()
+      expect(pendingAnnotationFrameRef.current).toBe(true)
+    }
+  )
 })
