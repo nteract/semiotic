@@ -17,10 +17,27 @@ function routeDocumentHash(document) {
 describe("documentation prerender determinism", () => {
   it("emits stable machine-readable content for stateful documentation routes", async () => {
     const renderRoute = await createStaticRouteRenderer()
-    const routes = ["", "artifacts/overview", "intelligence/serialization", "server/studio"]
+    const routes = [
+      "",
+      "artifacts/overview",
+      "intelligence/serialization",
+      "server/studio",
+      // Network hydration reads the existing frame by ID. The prerender DOM
+      // shim must support that lookup even though no mounted frame exists.
+      "frames/network-frame",
+      "charts/force-directed-graph",
+      "charts/tree-diagram",
+      "recipes/network-explorer",
+      "examples/network-visualization",
+      "blog/orbit-diagram",
+    ]
 
     for (const route of routes) {
       const first = sanitizeRouteHtml(await renderRoute(route), route)
+      assert.ok(
+        first?.text && first.headings.length > 0,
+        `Route ${route || "/"} has no readable content`,
+      )
       await delay(5)
       const second = sanitizeRouteHtml(await renderRoute(route), route)
 
