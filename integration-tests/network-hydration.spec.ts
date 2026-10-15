@@ -6,6 +6,8 @@ import AxeBuilder from "@axe-core/playwright"
 import { expect, test, type Page } from "@playwright/test"
 import { HydrationFixture } from "./network-hydration-fixture"
 
+// This tests published CJS/ESM artifacts and belongs to the package suite,
+// whose CI job builds dist before starting the browser tests.
 async function hoverNetwork(page: Page, edge = false) {
   const canvas = page.getByTestId("hydration-network").locator("canvas").first()
   const box = (await canvas.boundingBox())!

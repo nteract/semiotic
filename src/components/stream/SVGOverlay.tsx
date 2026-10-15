@@ -87,6 +87,8 @@ interface SVGOverlayProps {
   description?: string
   /** Prefix for `<title>`/`<desc>` ids so multiple charts on a page do not collide. */
   decorative?: boolean
+  /** Connect endpoint text to the owning image when this overlay is decorative. */
+  directLabelDescriptionId?: string
   idPrefix?: string
 
   // Legend
@@ -177,6 +179,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
     description,
     idPrefix,
     decorative = false,
+    directLabelDescriptionId,
     legend,
     legendHoverBehavior,
     legendClickBehavior,
@@ -366,6 +369,11 @@ export function SVGOverlay(props: SVGOverlayProps) {
         overflow: "visible"
       }}
     >
+      {decorative && directLabelDescriptionId && (
+        <desc id={directLabelDescriptionId}>
+          {directLabelDescription(expandedAnnotations)}
+        </desc>
+      )}
       {!decorative && (
         <>
           <title id={titleId}>{overlayAccessibleTitle(title, "XY Chart")}</title>

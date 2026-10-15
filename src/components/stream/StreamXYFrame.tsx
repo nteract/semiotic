@@ -1186,6 +1186,9 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
     const annYAccessor = yResolved.key
     const hasAnnotations = (annotations && annotations.length > 0) || false
     const enrichAnnotationData = buildEnrichAnnotationData(xResolved, yResolved, hasAnnotations)
+    const directLabelDescriptionId = annotations?.some((a) => a._directLabel || a._directLabelRequest)
+      ? `${tableId}-direct-labels`
+      : undefined
 
     // ── SSR + hydration path: render SVG instead of canvas ─────────────
     //
@@ -1264,7 +1267,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
         >
           <AccessibleDataTableSlot accessibleTable={accessibleTable} scene={scene} chartType={chartType + " chart"} tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />
           <ScreenReaderSummary summary={summary} />
-          <div role="img" aria-label={chartAriaLabel}>
+          <div role="img" aria-label={chartAriaLabel} aria-describedby={directLabelDescriptionId}>
           <svg role="presentation"
             xmlns="http://www.w3.org/2000/svg"
             width={size[0]}
@@ -1296,6 +1299,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
           </svg>
           <SVGOverlay
             decorative
+            directLabelDescriptionId={directLabelDescriptionId}
             width={adjustedWidth}
             height={adjustedHeight}
             totalWidth={size[0]}
@@ -1383,6 +1387,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
         <div
           role="img"
           aria-label={description || (typeof title === "string" ? title : "XY chart")}
+          aria-describedby={directLabelDescriptionId}
           style={{ position: "relative", width: "100%", height: "100%" }}
           onPointerMove={onPointerMoveWrapped}
           onMouseMove={onMouseMoveFallback}
@@ -1417,6 +1422,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
         <canvas ref={interactionCanvasRef} style={{ position: "absolute", left: 0, top: 0, width: size[0], height: size[1], pointerEvents: "none" }} />
         <SVGOverlay
           decorative
+          directLabelDescriptionId={directLabelDescriptionId}
           width={adjustedWidth}
           height={adjustedHeight}
           totalWidth={size[0]}

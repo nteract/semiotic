@@ -67,7 +67,7 @@ test("actual omissions have evidence and accessible fallback; axes report measur
   await expect(chart.locator("[data-direct-label-id]")).toHaveCount(
     evidence.rendered
   )
-  await expect(chart.locator("svg > desc")).toContainText("Series 29:")
+  await expect(chart.getByRole("img")).toHaveAccessibleDescription(/Series 29:/)
   await expect
     .poll(async () => {
       const axes = await page
@@ -94,9 +94,7 @@ test("push updates refresh endpoints with fixed domains and font-load invalidati
       chart.locator('[data-direct-label-id="Series 0"] text').getAttribute("y")
     )
     .not.toBe(before)
-  await expect(chart.locator("svg > desc")).toContainText(
-    "Series 0: x 2, y 0.2"
-  )
+  await expect(chart.getByRole("img")).toHaveAccessibleDescription(/Series 0: x 2, y 0\.2/)
   // A synthetic event exercises the same invalidation subscription without an external font dependency.
   await page.evaluate(() =>
     document.fonts.dispatchEvent(new Event("loadingdone"))
