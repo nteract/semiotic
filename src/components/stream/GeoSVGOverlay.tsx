@@ -192,6 +192,7 @@ export function GeoSVGOverlay(props: GeoSVGOverlayProps) {
 
   return (
     <svg
+      data-semiotic-overlay=""
       role={decorative ? "presentation" : "img"}
       aria-labelledby={decorative ? undefined : labelledBy}
       width={totalWidth}

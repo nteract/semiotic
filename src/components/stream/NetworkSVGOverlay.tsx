@@ -189,6 +189,7 @@ export const NetworkSVGOverlay = /* @__PURE__ */ withDisplayName(function Networ
       <style key="annotation-widget-disclosure-style">{ANNOTATION_DISCLOSURE_REVEAL_CSS}</style>
     )}
     <svg
+      data-semiotic-overlay=""
       role={decorative ? "presentation" : "img"}
           aria-labelledby={decorative ? undefined : labelledBy}
       width={totalWidth}

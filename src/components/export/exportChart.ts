@@ -29,8 +29,10 @@ export async function exportChart(
     background = "white"
   } = options || {}
 
-  // Prefer the accessible foreground overlay over a separate grid SVG.
+  // Foreground overlays can be decorative inside the frame's accessible image.
+  // Keep the role-based fallback for older charts and consumer-owned SVGs.
   const svgElement =
+    container.querySelector("svg[data-semiotic-overlay]") ||
     container.querySelector('svg[role="img"]') || container.querySelector("svg")
   if (!svgElement) {
     throw new Error("No SVG element found in the container")
@@ -38,6 +40,11 @@ export async function exportChart(
 
   // Clone the SVG to avoid modifying the original
   const clone = svgElement.cloneNode(true) as SVGSVGElement
+  if (clone.getAttribute("role") === "presentation") {
+    clone.setAttribute("role", "img")
+    const label = svgElement.closest('[role="img"]')?.getAttribute("aria-label")
+    if (label) clone.setAttribute("aria-label", label)
+  }
 
   // Ensure the clone has explicit width/height attributes
   const bbox = svgElement.getBoundingClientRect()

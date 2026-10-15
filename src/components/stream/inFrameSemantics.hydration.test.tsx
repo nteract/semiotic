@@ -4,6 +4,7 @@ import * as React from "react"
 import { act } from "react"
 import { renderToString } from "react-dom/server"
 import { hydrateRoot } from "react-dom/client"
+import { within } from "@testing-library/react"
 import { afterEach, beforeEach, expect, it, vi } from "vitest"
 import { setupCanvasMock } from "../../test-utils/canvasMock"
 import StreamXYFrame from "./StreamXYFrame"
@@ -88,7 +89,7 @@ it.each(charts)(
     host.innerHTML = renderToString(chart())
     const frame = host.querySelector(`.stream-${family}-frame`)!
     expect(frame).toHaveAttribute("role", "group")
-    expect(frame.querySelectorAll('[role="img"]')).toHaveLength(1)
+    expect(within(frame as HTMLElement).getAllByRole("img")).toHaveLength(1)
     expect(frame.querySelector('[role="img"]')).toHaveAccessibleName(
       "Measured chart description"
     )
@@ -103,7 +104,7 @@ it.each(charts)(
     })
     expect(host.querySelector(`.stream-${family}-frame`)).toBe(frame)
     expect(frame).toHaveAttribute("role", "group")
-    expect(frame.querySelectorAll('[role="img"]')).toHaveLength(1)
+    expect(within(frame as HTMLElement).getAllByRole("img")).toHaveLength(1)
     expect(frame.querySelector("canvas")).not.toBeNull()
     expect(
       errors.mock.calls.filter((call) =>

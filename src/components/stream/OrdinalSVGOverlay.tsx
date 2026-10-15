@@ -158,6 +158,7 @@ export function OrdinalSVGUnderlay(props: OrdinalSVGUnderlayProps) {
 
   return (
     <svg
+      role="presentation"
       width={totalWidth}
       height={totalHeight}
       overflow="visible"
@@ -415,6 +416,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
   return (
     <svg
       role={decorative ? "presentation" : "img"}
+      data-semiotic-overlay=""
       aria-labelledby={decorative ? undefined : labelledBy}
       width={totalWidth}
       height={totalHeight}

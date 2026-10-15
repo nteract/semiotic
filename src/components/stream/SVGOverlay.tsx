@@ -354,6 +354,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
 
   return (
     <svg
+      data-semiotic-overlay=""
       ref={axisAssessment.ref}
       data-axis-label-layout={hasDirectLabels ? JSON.stringify(axisAssessment.assessment) : undefined}
       role={decorative ? "presentation" : "img"}
