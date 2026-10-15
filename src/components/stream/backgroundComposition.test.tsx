@@ -1,12 +1,13 @@
 import "../../test-utils/registerBuiltInXYPlugins"
 import * as React from "react"
-import { render, waitFor } from "@testing-library/react"
+import { act, render, waitFor } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { setupCanvasMock } from "../../test-utils/canvasMock"
 import StreamGeoFrame from "./StreamGeoFrame"
 import StreamNetworkFrame from "./StreamNetworkFrame"
 import StreamOrdinalFrame from "./StreamOrdinalFrame"
 import StreamXYFrame from "./StreamXYFrame"
+import { createFrameScheduler } from "./test-utils/frameScheduler"
 
 function expectOrderedLayers(
   container: HTMLElement,
@@ -47,6 +48,26 @@ describe("Stream Frame background composition", () => {
       />
     )
     expectOrderedLayers(container, ".stream-frame-background__backdrop")
+  })
+
+  it.each([undefined, "#112233", "transparent"])("keeps one XY grid behind marks with background %s", (background) => {
+    const scheduler = createFrameScheduler()
+    const { container } = render(
+      <StreamXYFrame chartType="line" data={[{ x: 0, y: 1 }, { x: 1, y: 2 }]}
+        showGrid background={background} animate={false} frameScheduler={scheduler.scheduler} />
+    )
+    act(() => scheduler.flush())
+    const grids = container.querySelectorAll(".stream-grid")
+    expect(grids).toHaveLength(1)
+    expect(grids[0].querySelectorAll("line").length).toBeGreaterThan(0)
+    const canvas = container.querySelector("canvas")!
+    expect(grids[0].compareDocumentPosition(canvas) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    const backdrop = container.querySelector(".stream-frame-background__backdrop")
+    if (background === "transparent") expect(backdrop).toBeNull()
+    else {
+      expect(backdrop).not.toBeNull()
+      expect(backdrop!.compareDocumentPosition(grids[0]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    }
   })
 
   it("composes ordinal solid background, graphics, then marks", () => {

@@ -3,10 +3,9 @@ import "../../test-utils/registerBuiltInXYPlugins"
  * Regression coverage for the `background="var(--token, fallback)"`
  * flashing-background bug.
  *
- * The four Stream Frames (`StreamXYFrame`, `StreamOrdinalFrame`,
- * `StreamNetworkFrame`, `StreamGeoFrame`) each paint the chart
- * background in their canvas render loop by assigning the
- * user-supplied `background` prop to `ctx.fillStyle`. Canvas's
+ * Network and geo frames paint their backgrounds in the canvas loop.
+ * XY and ordinal frames delegate the background to an SVG surface
+ * below the grid and data canvas. Canvas's
  * `fillStyle` setter accepts only resolved CSS colors —
  * `var(--token, fallback)` strings are silently rejected, leaving
  * `fillStyle` at whatever color was last set (a node fill, edge
@@ -18,11 +17,8 @@ import "../../test-utils/registerBuiltInXYPlugins"
  * passes `background="var(--surface-1, #fafafa)"` to a streaming
  * Sankey. The fix routes the prop through `resolveCSSColor` (which
  * reads the canvas's computed style for the custom property) before
- * assignment. This test pins that contract per frame: when the user
- * passes a `var(...)` background, the value reaching `ctx.fillStyle`
- * at the moment of `fillRect` is the resolved color, never the raw
- * `var(...)` string and never the fillStyle value left behind by a
- * previous draw operation.
+ * assignment. Each frame must either resolve the token before canvas
+ * assignment or retain it in SVG where the browser resolves it.
  */
 import * as React from "react"
 import { render, act } from "@testing-library/react"
@@ -137,9 +133,10 @@ describe("Stream Frame: background prop with var() syntax", () => {
     expect(spy.log).toContain(RESOLVED_BG)
   })
 
-  it("StreamXYFrame resolves a var() background before assigning to fillStyle", async () => {
+  it("StreamXYFrame keeps a var() background below the transparent mark canvas", async () => {
+    let container: HTMLElement
     await act(async () => {
-      render(
+      ;({ container } = render(
         <StreamXYFrame
           chartType="line"
           data={[{ x: 0, y: 1 }, { x: 1, y: 2 }]}
@@ -150,11 +147,11 @@ describe("Stream Frame: background prop with var() syntax", () => {
           animate={false}
           frameScheduler={scheduler.scheduler}
         />,
-      )
+      ))
     })
     act(() => scheduler.flush())
     expect(spy.log).not.toContain(VAR_BG)
-    expect(spy.log).toContain(RESOLVED_BG)
+    expect(container!.querySelector(".stream-frame-background__backdrop")).toHaveAttribute("fill", VAR_BG)
   })
 
   it("StreamOrdinalFrame keeps a var() background in its SVG underlay instead of assigning it to canvas", async () => {

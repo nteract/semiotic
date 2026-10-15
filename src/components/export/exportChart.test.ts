@@ -37,3 +37,49 @@ it.each(["marked", "legacy", "plain"])("exports the %s foreground SVG instead of
     expect(container.querySelector("svg[data-semiotic-overlay]")).toHaveAttribute("role", "presentation")
   }
 })
+
+it("composites SVG background and grid before canvas marks and foreground labels in PNG", async () => {
+  const container = document.createElement("div")
+  container.innerHTML = `<div role="img">
+    <svg><rect fill="#112233" width="100" height="100" /></svg>
+    <svg><path stroke="#abcdef" d="M0 50H100" /></svg>
+    <canvas></canvas>
+    <svg data-semiotic-overlay=""><text>Endpoint labels</text></svg>
+  </div>`
+  vi.spyOn(Element.prototype, "getBoundingClientRect").mockReturnValue({
+    x: 0, y: 0, width: 100, height: 100
+  } as DOMRect)
+  const blobs: Blob[] = []
+  const revoked: string[] = []
+  vi.stubGlobal("URL", {
+    createObjectURL: (blob: Blob) => { blobs.push(blob); return `blob:${blobs.length}` },
+    revokeObjectURL: (url: string) => { revoked.push(url) }
+  })
+  vi.stubGlobal("Image", class {
+    onload?: () => void
+    url = ""
+    set src(url: string) { this.url = url; this.onload?.() }
+  })
+  const layers: unknown[] = []
+  vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
+    fillRect: vi.fn(), scale: vi.fn(),
+    drawImage: (layer: HTMLCanvasElement | { url: string }) => {
+      layers.push(layer instanceof HTMLCanvasElement ? layer : layer.url)
+    }
+  } as unknown as CanvasRenderingContext2D)
+  vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation(callback => {
+    callback(new Blob(["png"], { type: "image/png" }))
+  })
+  vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {})
+  await exportChart(container)
+  expect(layers).toEqual(["blob:1", "blob:2", container.querySelector("canvas"), "blob:3"])
+  const contents = await Promise.all(blobs.slice(0, 3).map(blob => new Promise<string>(resolve => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result))
+    reader.readAsText(blob)
+  })))
+  expect(contents[0]).toContain("#112233")
+  expect(contents[1]).toContain("#abcdef")
+  expect(contents[2]).toContain("Endpoint labels")
+  expect(revoked).toEqual(["blob:1", "blob:2", "blob:3", "blob:4"])
+})

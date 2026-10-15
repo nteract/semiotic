@@ -35,7 +35,7 @@ import { useXYTransitionEngine } from "./useXYTransitionEngine"
 import { useHydration, useWasHydratingFromSSR } from "./useHydration"
 import { useStableShallow } from "./useStableShallow"
 import { paintCanvasPreRenderers, useUnderLayerBandRenderers } from "./underLayerBands"
-import { paintCanvasBackground, resolveCanvasBackground, resolveFrameSurfaceBackground } from "./canvasBackground"
+import { resolveFrameSurfaceBackground } from "./canvasBackground"
 import { needsInteractionCanvasPaint } from "./paintNeeds"
 import { createFrameThemeColorCache, LIGHT_FRAME_THEME } from "./frameThemeColors"
 
@@ -946,24 +946,8 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
             ctx.globalAlpha = resolvedStaleness.alpha
           }
 
-          // Background.
-          //   • `background="transparent"` — explicit opt-out so this chart
-          //     can be composed as an overlay without painting over the
-          //     layer beneath.
-          //   • `backgroundGraphics` — user supplied their own SVG
-          //     background (rendered as a DOM sibling behind the canvas).
-          //     Skip the canvas fill so the SVG remains visible. When an
-          //     explicit solid `background` is also present, that solid is
-          //     rendered as the SVG layer's backdrop before the graphics.
-          paintCanvasBackground(ctx, {
-            background,
-            hasBackgroundGraphics: Boolean(backgroundGraphics),
-            themeBackground: theme.background,
-            x: -margin.left,
-            y: -margin.top,
-            width: size[0],
-            height: size[1]
-          })
+          // Keep the mark canvas transparent: the SVG surface and grid
+          // underneath it own the background, so gridlines cannot cover marks.
 
           // Clip and render data marks
           ctx.save()
@@ -1377,7 +1361,11 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
         <CanvasFrameBackground
           size={size}
           margin={margin}
-          backdropFill={backgroundGraphics ? background : undefined}
+          backdropFill={resolveFrameSurfaceBackground({
+            background,
+            hasBackgroundGraphics: Boolean(backgroundGraphics),
+            themeBackground: `var(--semiotic-bg, ${currentTheme.colors.background})`,
+          }) ?? undefined}
         >
           {resolvedBackground}
         </CanvasFrameBackground>
@@ -1445,19 +1433,8 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
           pointNodes={collectAnnotationAnchors(storeRef.current?.scene)}
           curve={typeof curve === "string" ? curve : undefined}
           underlayRendered
-          // When the canvas paints `--semiotic-bg`
-          // opaquely, it hides `SVGUnderlay` and the overlay needs to
-          // emit the grid + baseline copy itself. When the canvas is
-          // transparent (`background="transparent"` opt-out, or a
-          // `backgroundGraphics` SVG sibling that owns the bg layer),
-          // the underlay shows through and the overlay must NOT
-          // duplicate to avoid the doubled / slightly-darker stroke
-          // from two SVG paths overlaid pixel-for-pixel.
-          canvasObscuresUnderlay={Boolean(resolveCanvasBackground({
-            background,
-            hasBackgroundGraphics: Boolean(backgroundGraphics),
-            themeBackground: currentTheme?.colors.background,
-          }))}
+          // The SVG grid and baselines remain visible below the mark canvas.
+          canvasObscuresUnderlay={false}
           linkedCrosshairName={linkedCrosshairName}
           linkedCrosshairSourceId={linkedCrosshairSourceId}
         />

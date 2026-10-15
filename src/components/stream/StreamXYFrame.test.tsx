@@ -873,9 +873,8 @@ describe("StreamXYFrame", () => {
 
     // Regression: composing one chart as a `position: absolute` overlay on
     // top of another is an intended pattern (see docs/RealtimeHistogramPage).
-    // Without an opt-out, the overlay canvas paints its background across
-    // the full area and hides the base layer. `background="transparent"`
-    // must short-circuit the fill so the composition works.
+    // An opaque chart surface hides the base layer. `background="transparent"`
+    // must omit that surface so the composition works.
     describe("background paint (overlay composition)", () => {
       // Capture fillStyle at each fillRect call + restore the original
       // method so the replacement can't leak into another test if the
@@ -901,12 +900,13 @@ describe("StreamXYFrame", () => {
           "2d"
         ) as unknown as CanvasContextMock
 
-      it("paints an explicit background color via fillRect", () => {
+      it("paints an explicit SVG background beneath the transparent mark canvas", () => {
         const ctx = getMockCtx()
         const cap = captureFillRectStyles(ctx)
         try {
-          render(<StreamXYFrame chartType="scatter" background="red" />)
-          expect(cap.styles).toContain("red")
+          const { container } = render(<StreamXYFrame chartType="scatter" background="red" />)
+          expect(container.querySelector(".stream-frame-background__backdrop")).toHaveAttribute("fill", "red")
+          expect(cap.styles).toHaveLength(0)
         } finally {
           cap.restore()
         }

@@ -1,7 +1,7 @@
 /**
  * Export a semiotic chart to PNG (default) or SVG from the browser.
  *
- * PNG export composites the canvas data layer underneath the SVG overlay,
+ * PNG export composites SVG backgrounds, the canvas data layer, and the SVG overlay,
  * producing a complete image. SVG export captures only the SVG overlay
  * (axes, labels, annotations) since canvas content cannot be represented
  * as SVG.
@@ -83,43 +83,63 @@ export async function exportChart(
     ctx.fillRect(0, 0, width, height)
     ctx.scale(scale, scale)
 
-    // Layer 1: Draw the data canvas (contains all rendered marks)
+    // SVG surfaces and grids precede the transparent mark canvas in DOM order.
+    // Keep that order in the exported image as well.
     const dataCanvas = container.querySelector("canvas")
     if (dataCanvas) {
+      for (const layer of Array.from(dataCanvas.parentElement!.children)) {
+        if (layer === dataCanvas) break
+        if (layer instanceof SVGSVGElement) {
+          const backgroundClone = layer.cloneNode(true) as SVGSVGElement
+          backgroundClone.setAttribute("xmlns", "http://www.w3.org/2000/svg")
+          const bounds = layer.getBoundingClientRect()
+          backgroundClone.setAttribute("width", String(bounds.width))
+          backgroundClone.setAttribute("height", String(bounds.height))
+          inlineStyles(layer, backgroundClone)
+          await drawSVG(ctx, backgroundClone, bounds.x - bbox.x, bounds.y - bbox.y)
+        }
+      }
       ctx.drawImage(dataCanvas, 0, 0, bbox.width, bbox.height)
     }
 
-    // Layer 2: Draw the SVG overlay (axes, labels, annotations) on top
-    const serializer = new XMLSerializer()
-    const svgString = serializer.serializeToString(clone)
-    const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" })
-    const url = URL.createObjectURL(svgBlob)
-
-    const img = new Image()
-    img.width = bbox.width
-    img.height = bbox.height
+    // Draw the SVG overlay (axes, labels, annotations) on top.
+    await drawSVG(ctx, clone, 0, 0)
 
     await new Promise<void>((resolve, reject) => {
-      img.onload = () => {
-        ctx.drawImage(img, 0, 0)
+      exportCanvas.toBlob((blob) => {
+        if (blob) {
+          downloadBlob(blob, `${filename}.png`)
+          resolve()
+        } else {
+          reject(new Error("Failed to create PNG blob"))
+        }
+      }, "image/png")
+    })
+  }
+}
 
-        exportCanvas.toBlob((blob) => {
-          if (blob) {
-            downloadBlob(blob, `${filename}.png`)
-            resolve()
-          } else {
-            reject(new Error("Failed to create PNG blob"))
-          }
-        }, "image/png")
-
-        URL.revokeObjectURL(url)
-      }
-      img.onerror = () => {
-        URL.revokeObjectURL(url)
-        reject(new Error("Failed to load SVG image"))
-      }
+async function drawSVG(
+  ctx: CanvasRenderingContext2D,
+  svg: SVGSVGElement,
+  x: number,
+  y: number
+): Promise<void> {
+  const blob = new Blob([new XMLSerializer().serializeToString(svg)], {
+    type: "image/svg+xml;charset=utf-8"
+  })
+  const url = URL.createObjectURL(blob)
+  try {
+    const img = new Image()
+    img.width = Number(svg.getAttribute("width"))
+    img.height = Number(svg.getAttribute("height"))
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve()
+      img.onerror = () => reject(new Error("Failed to load SVG image"))
       img.src = url
     })
+    ctx.drawImage(img, x, y)
+  } finally {
+    URL.revokeObjectURL(url)
   }
 }
 

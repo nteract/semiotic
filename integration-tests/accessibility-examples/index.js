@@ -120,6 +120,7 @@ const examples = [
     title: "Scatter with Tooltip (aria-live)",
     testId: "a11y-tooltip",
     children: React.createElement(Scatterplot, {
+      description: "Scatter observations with keyboard and pointer details",
       data: scatterData.slice(0, 15),
       xAccessor: "x",
       yAccessor: "y",
