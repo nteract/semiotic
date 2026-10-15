@@ -3,6 +3,7 @@ import { mulberry32 } from "../../recipes/random"
 import { cloneFixedPosition, enforceFixedPosition, fixedAxisContact } from "./physicsFixedPosition"
 import { cloneBodyState, cloneBody, cloneCollider, cloneColliderBodyFilter, cloneColliderShape, cloneShape } from "./physicsKernelCloning"
 import { sweptAabbContact } from "./physicsSweptAabbContact"
+import { segmentContact } from "./physicsSegmentContact"
 import { physicsBodyPairCandidates } from "./physicsBodyPairCandidates"
 import { sweptCircleContact } from "./physicsSweptCircleContact"
 import { aabbOverlap, bodyBounds, colliderBounds,
@@ -35,7 +36,7 @@ export interface PhysicsKernelOptions {
   sleepAfter?: number
   restitution?: number
   friction?: number
-  /** Speed cap (px/s) applied each substep to reduce tunneling through thin walls. */
+  /** Speed cap (px/s) applied each substep; it is not a collision guarantee. */
   maxVelocity?: number
   /**
    * Contact impact speed (px/s) above which a resting/sleeping body is woken.
@@ -287,49 +288,6 @@ function circleAabbCollision(
   }
 }
 
-function circleSegmentCollision(
-  cx: number,
-  cy: number,
-  radius: number,
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number,
-  thickness = 0
-): Collision | null {
-  const sx = x2 - x1
-  const sy = y2 - y1
-  const lengthSquared = sx * sx + sy * sy
-  const t =
-    lengthSquared <= EPSILON
-      ? 0
-      : clamp(((cx - x1) * sx + (cy - y1) * sy) / lengthSquared, 0, 1)
-  const px = x1 + sx * t
-  const py = y1 + sy * t
-  const effectiveRadius = radius + thickness / 2
-  const dx = cx - px
-  const dy = cy - py
-  const distanceSquared = dx * dx + dy * dy
-  if (distanceSquared >= effectiveRadius * effectiveRadius) return null
-  if (distanceSquared <= EPSILON) {
-    const length = Math.sqrt(lengthSquared)
-    if (length <= EPSILON) {
-      return { nx: 1, ny: 0, penetration: effectiveRadius }
-    }
-    return {
-      nx: -sy / length,
-      ny: sx / length,
-      penetration: effectiveRadius
-    }
-  }
-  const distance = Math.sqrt(distanceSquared)
-  return {
-    nx: dx / distance,
-    ny: dy / distance,
-    penetration: effectiveRadius - distance
-  }
-}
-
 function bodyBodyCollision(a: MutableBody, b: MutableBody): Collision | null {
   if (a.shape.type === "circle" && b.shape.type === "circle") {
     return circleCircleCollision(
@@ -396,23 +354,7 @@ function bodyColliderCollision(
     )
   }
 
-  const radius =
-    body.shape.type === "circle"
-      ? body.shape.radius
-      : Math.sqrt(
-          body.shape.width * body.shape.width +
-            body.shape.height * body.shape.height
-        ) / 2
-  return circleSegmentCollision(
-    body.x,
-    body.y,
-    radius,
-    shape.x1,
-    shape.y1,
-    shape.x2,
-    shape.y2,
-    shape.thickness ?? 0
-  )
+  return segmentContact(body, shape)
 }
 
 function sensorKey(sensorId: string, bodyId: string): string {
@@ -476,6 +418,7 @@ export class PhysicsKernelWorld {
     determinism: "strict" as const,
     sensors: true,
     joints: false,
+    // Sweeps cover static walls and circle pairs, not every body pair or sensor.
     ccd: false,
     maxBodiesHint: 5000,
     worker: false
@@ -1023,9 +966,10 @@ export class PhysicsKernelWorld {
         const colliderIndex = nearby ? nearby.indexes[cursor++] : cursor++
         const { collider, bounds } = colliders[colliderIndex]
         if (!colliderAppliesToBody(collider, body)) continue
-        const swept = sweptAabbContact(body, collider.shape, POSITION_SLOP + EPSILON)
-        if (!swept && !aabbOverlap(bodyBounds(body), bounds)) continue
-        const collision = swept ?? bodyColliderCollision(body, collider)
+        const collision = collider.shape.type === "segment"
+          ? segmentContact(body, collider.shape, POSITION_SLOP + EPSILON, true)
+          : sweptAabbContact(body, collider.shape, POSITION_SLOP + EPSILON) ??
+            (aabbOverlap(bodyBounds(body), bounds) ? bodyColliderCollision(body, collider) : null)
         if (!collision) continue
         hasContacts = true
         this.resolveStaticCollision(body, collider, collision)

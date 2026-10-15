@@ -117,6 +117,26 @@ for (const entry of ["./ai", "./ai/core", "./utils/core"]) {
 }
 
 for (const target of publicTargets("./physics")) {
+  test(`physics (${target.conditions}) retains small circles and boxes at segment floors (#1346)`, () => {
+    exercise(target, `
+      const engine = new api.BuiltInPhysicsEngineAdapter({ fixedDt: 1 / 60, restitution: 0 })
+      engine.setColliders([{ id: "floor", shape: { type: "segment", x1: 0, y1: 140, x2: 300, y2: 140 } }])
+      engine.spawn({ id: "circle", x: 70, y: 10, vy: 1600, shape: { type: "circle", radius: 2 } })
+      engine.spawn({ id: "box", x: 150, y: 10, vy: 1600, shape: { type: "aabb", width: 20, height: 12 } })
+      engine.settle(2000)
+      const bodies = engine.readState()
+      assert.deepEqual(bodies.map(body => body.sleeping), [true, true])
+      assert.ok(Math.abs(bodies[0].y - 138.005) < 1e-6)
+      assert.ok(Math.abs(bodies[1].y - 134.005) < 1e-6)
+      engine.init({ gravity: { x: 0, y: 0 }, velocityDamping: 1, maxVelocity: 0, restitution: 0, friction: 0 })
+      engine.setColliders([{ id: "box", shape: { type: "aabb", x: 0, y: 0, width: 2, height: 2 } }])
+      engine.spawn({ id: "corner", x: -10, y: -10, vx: 2400, vy: 2400, shape: { type: "circle", radius: 2 } })
+      engine.step()
+      const corner = engine.readState()[0]
+      assert.ok(Math.abs(corner.x - (-1 - (2 - 0.005) / Math.sqrt(2))) < 1e-6)
+      assert.ok(Math.abs(corner.x - corner.y) < 1e-6)
+    `)
+  })
   test(`physics (${target.conditions}) preserves body collision flags in public state reads`, () => {
     exercise(target, `
       const engine = new api.BuiltInPhysicsEngineAdapter()
@@ -246,6 +266,32 @@ for (const entry of ["./recipes", "./recipes/core"]) {
 
 for (const entry of ["./server", "./server/node", "./server/edge"]) {
   for (const target of publicTargets(entry)) {
+    test(`${entry} ${target.conditions} exports shape-correct segment floor contacts (#1346)`, () => {
+      exercise(target, `
+        const { svg, evidence } = api.renderChartWithEvidence("PhysicsCustomChart", {
+          data: [{ id: "circle" }, { id: "box" }], width: 300, height: 180,
+          layout: () => ({
+            bodies: [
+              { id: "circle", x: 70, y: 10, vy: 1600, shape: { type: "circle", radius: 2 } },
+              { id: "box", x: 150, y: 10, vy: 1600, shape: { type: "aabb", width: 20, height: 12 } }
+            ],
+            colliders: [{ id: "floor", shape: { type: "segment", x1: 0, y1: 140, x2: 300, y2: 140 } }],
+            config: { fixedDt: 1 / 60, kernel: { restitution: 0 } },
+            bodyStyle: { fill: "#123456" }
+          })
+        })
+        assert.equal(evidence.markCount, 2)
+        assert.equal(evidence.empty, false)
+        assert.doesNotMatch(svg, /NaN|Infinity/)
+        const marks = [...svg.matchAll(/<(circle|rect)\\b[^>]*fill="#123456"[^>]*>/g)]
+        assert.equal(marks.length, 2)
+        for (const [tag, kind] of marks) {
+          const attr = name => Number(tag.match(new RegExp(' ' + name + '="([^"]+)"'))?.[1])
+          const bottom = kind === "circle" ? attr("cy") + attr("r") : attr("y") + attr("height")
+          assert.ok(Math.abs(bottom - 140.005) < 1e-6, tag)
+        }
+      `)
+    })
     test(`${entry} ${target.conditions} preserves dense cyclic Sankey flows (#1334)`, () => {
       exercise(target, `
         const nodes = Array.from({ length: 12 }, (_, i) => ({ id: "N" + i }))

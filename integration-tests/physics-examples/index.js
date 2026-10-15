@@ -5,6 +5,7 @@ import {
 } from "../../dist/physics.module.min.js"
 import React from "react"
 import { createRoot } from "react-dom/client"
+import { SegmentContactsFixture } from "./SegmentContactsFixture"
 
 window.__physicsChartHandles = {}
 
@@ -99,4 +100,7 @@ function App() {
 }
 
 const root = createRoot(document.getElementById("root"))
-root.render(React.createElement(App))
+const segments = new URLSearchParams(window.location.search).get("segments")
+root.render(segments
+  ? React.createElement(SegmentContactsFixture, { execution: segments === "worker" ? "worker" : "sync" })
+  : React.createElement(App))
