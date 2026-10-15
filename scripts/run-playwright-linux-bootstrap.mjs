@@ -38,8 +38,10 @@ if (probe.error || probe.status !== 0) {
 
 // Noble (Ubuntu 24.04) to match the CI `e2e` job's pinned container
 // (.github/workflows/node.js.yml). Baselines and CI must render in the SAME
-// image or sub-pixel text anti-aliasing drifts and the visual gate fails.
+// image, CPU architecture, and production build or sub-pixel rasterization
+// can drift even when the Playwright version matches.
 const image = process.env.PW_DOCKER_IMAGE || "mcr.microsoft.com/playwright:v1.61.1-noble"
+const platform = process.env.PW_DOCKER_PLATFORM || "linux/amd64"
 const defaultSpecs = [
   "integration-tests/mobile-visualization-harness.spec.ts",
   "integration-tests/physics-frame.spec.ts",
@@ -99,13 +101,15 @@ const visualCommand = missingOnly
 // Avoid an APT-backed reinstall so bootstrap and CI use the same image contents.
 const command = [
   "npm ci",
-  "npm run dist",
+  "npm run dist:prod",
   visualCommand,
 ].join(" && ")
 
 const dockerArgs = [
   "run",
   "--rm",
+  "--platform",
+  platform,
   "--shm-size=2g",
   "-v",
   `${repoRoot}:/workspace`,

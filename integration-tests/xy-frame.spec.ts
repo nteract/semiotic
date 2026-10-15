@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test"
-import { expectTooltipWithinPlot, waitForChartReady, waitForRafs } from "./helpers"
+import { expectCanvasPainted, expectTooltipWithinPlot, waitForChartReady, waitForRafs } from "./helpers"
 
 async function hoverAndScreenshotMultiTooltip(
   page: Page,
@@ -403,8 +403,24 @@ test.describe("XY Charts - HOC default coverage", () => {
     "xy-minimap",
   ]) {
     test(`renders ${testId}`, async ({ page }) => {
+      // At 900px this page has two 420px cards, narrower than the 500px
+      // minimap. A single column keeps both panels inside their card and
+      // excludes overflow from the neighboring scatter-matrix fixture.
+      if (testId === "xy-minimap") await page.setViewportSize({ width: 600, height: 800 })
       await waitForChartReady(page, testId)
       const testCase = page.locator(`[data-testid="${testId}"]`)
+      if (testId === "xy-minimap") {
+        const panels = testCase.locator("canvas[aria-label]")
+        await expect(panels).toHaveCount(2)
+        const card = await testCase.boundingBox()
+        for (const panel of await panels.all()) {
+          await expectCanvasPainted(panel)
+          const bounds = await panel.boundingBox()
+          expect(bounds!.x).toBeGreaterThanOrEqual(card!.x)
+          expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(card!.x + card!.width)
+          expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(card!.y + card!.height)
+        }
+      }
       await expect(testCase).toHaveScreenshot(`${testId}.png`, {
         maxDiffPixels: 100,
       })

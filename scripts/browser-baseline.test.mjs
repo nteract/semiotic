@@ -1,6 +1,11 @@
 /** Run: node --test scripts/browser-baseline.test.mjs */
 import { describe, it } from "node:test"
 import assert from "node:assert/strict"
+import { execFileSync } from "node:child_process"
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { delimiter, join } from "node:path"
+import { fileURLToPath } from "node:url"
 import {
   compareBrowserBaselines,
   DEFAULT_BROWSER_VARIANCE_POLICY,
@@ -213,4 +218,41 @@ describe("browser baseline helpers", () => {
       false
     )
   })
+})
+
+it("Linux snapshot generation uses CI architecture and production bundles", (t) => {
+  const directory = mkdtempSync(join(tmpdir(), "semiotic-snapshot-command-"))
+  t.after(() => rmSync(directory, { recursive: true, force: true }))
+  const capture = join(directory, "docker-args.json")
+  writeFileSync(join(directory, "docker"), `#!/usr/bin/env node
+const { writeFileSync } = require("node:fs")
+if (process.argv[2] !== "version") {
+  writeFileSync(process.env.SEMIOTIC_DOCKER_CAPTURE, JSON.stringify(process.argv.slice(2)))
+}
+`, { mode: 0o755 })
+
+  execFileSync(process.execPath, [
+    fileURLToPath(new URL("./run-playwright-linux-bootstrap.mjs", import.meta.url)),
+    "integration-tests/chart-features.spec.ts",
+    "--project=webkit",
+    "--update-snapshots=none",
+    "--grep=threshold end caps|renders xy-minimap$"
+  ], {
+    env: {
+      ...process.env,
+      PATH: `${directory}${delimiter}${process.env.PATH}`,
+      SEMIOTIC_DOCKER_CAPTURE: capture,
+      PW_DOCKER_IMAGE: "",
+      PW_DOCKER_PLATFORM: ""
+    },
+    stdio: "pipe"
+  })
+
+  const args = JSON.parse(readFileSync(capture, "utf8"))
+  assert.equal(args[args.indexOf("--platform") + 1], "linux/amd64")
+  assert.ok(args.includes("mcr.microsoft.com/playwright:v1.61.1-noble"))
+  const command = args.at(-1)
+  assert.match(command, /^npm ci && npm run dist:prod && npx playwright test /)
+  assert.ok(command.includes("'--update-snapshots=none'"))
+  assert.ok(command.includes("'--grep=threshold end caps|renders xy-minimap$'"))
 })
