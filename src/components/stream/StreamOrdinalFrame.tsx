@@ -220,8 +220,8 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     const rFormat = valueFormat ?? rFormatLegacy
     // dirtyRef is declared before useFrame so it can be threaded in for
     // the theme-change effect. Initial value `true` is family-specific
-    // (Ordinal forces a first paint) — see investigation note #3.
-    const dirtyRef = useRef(true)
+      // (Ordinal requires an initial paint).
+      const dirtyRef = useRef(true)
 
     // ── Frame composition (Tier A + B concerns; see useFrame.ts) ─────────
     const frame = useFrame({
@@ -304,7 +304,9 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
           y={-margin.top}
           width={size[0]}
           height={size[1]}
-          fill={background || "var(--semiotic-bg, transparent)"}
+          fill={background ||
+              `var(--semiotic-bg, ${currentTheme.colors.background})`
+            }
         />
       ) : null
     const resolvedCombinedBackground =
@@ -358,10 +360,10 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       multiAxis,
       timeAccessor: isStreaming ? timeAccessor : undefined,
       valueAccessor: isStreaming
-        ? (valueAccessor ||
+        ? valueAccessor ||
           (typeof effectiveRAccessor === "string" || typeof effectiveRAccessor === "function"
             ? effectiveRAccessor
-            : undefined))
+            : undefined)
         : undefined,
       categoryAccessor: isStreaming ? effectiveOAccessor : undefined,
       rExtent,
@@ -421,7 +423,8 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
 
     // scheduleRender comes from useFrame above.
 
-    const emitLegendCategories = useLegendCategoryEmission(storeRef, legendCategoryAccessor, onCategoriesChange, store => store.getData())
+    const emitLegendCategories = useLegendCategoryEmission(storeRef, legendCategoryAccessor, onCategoriesChange,
+        (store) => store.getData())
 
     useConfigSync(storeRef, stablePipelineConfig, dirtyRef, scheduleRender)
 
@@ -697,7 +700,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
 
       const pulseRefresh = refreshIdlePulse(store, now, computedSceneThisFrame, pulseFramePendingRef)
       // Update canvas aria-label imperatively after scene changes
-      if (computedSceneThisFrame || isTransitioning) {
+      if (computedSceneThisFrame || transitionWasActive) {
         canvas.setAttribute("aria-label", computeCanvasAriaLabel(store.scene, chartType + " chart"))
       }
 
@@ -711,7 +714,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       // Staleness dimming
       const staleThreshold = staleness?.threshold ?? 5000
       const currentlyStale = staleness && store.lastIngestTime > 0 &&
-        (now - store.lastIngestTime) > staleThreshold
+          now - store.lastIngestTime > staleThreshold
 
       if (currentlyStale) {
         ctx.globalAlpha = staleness?.dimOpacity ?? 0.5
@@ -737,8 +740,8 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       }
 
       // Custom layouts may emit any node type, so use the self-filtering custom set.
-      const renderers = customLayout ? RENDERERS.custom : (RENDERERS[chartType] || [])
-      const layout: OrdinalLayout = { width: adjustedWidth, height: adjustedHeight }
+      const renderers = customLayout ? RENDERERS.custom : RENDERERS[chartType] || []
+        const layout: OrdinalLayout = { width: adjustedWidth, height: adjustedHeight }
       const scales = store.scales
       if (scales) paintSceneWithBackend({
         context: ctx,
@@ -765,12 +768,9 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       }
 
       // Push scales to React state for SVG overlay
-      if (computedSceneThisFrame && store.scales) {
-        setCurrentScales(store.scales)
-        setAnnotationFrame(f => f + 1)
-        lastAnnotationFrameTimeRef.current = now
-      } else if (isTransitioning && store.scales && now - lastAnnotationFrameTimeRef.current >= 33) {
-        setAnnotationFrame(f => f + 1)
+      if (store.scales && (computedSceneThisFrame || (transitionWasActive && (!transitionActive || now - lastAnnotationFrameTimeRef.current >= 33)))) {
+        if (computedSceneThisFrame) setCurrentScales(store.scales)
+        setAnnotationFrame((f) => f + 1)
         lastAnnotationFrameTimeRef.current = now
       }
 
@@ -792,18 +792,23 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     // ── Tooltip positioning ──────────────────────────────────────────────
 
     const tooltipRendered = effectiveHoverAnnotation && hoverPoint
-      ? (tooltipContent ? tooltipContent(hoverPoint) : <DefaultOrdinalTooltip hover={hoverPoint} />)
+      ? (tooltipContent ? (
+            tooltipContent(hoverPoint)
+          ) : (
+            <DefaultOrdinalTooltip hover={hoverPoint} />
+          )
+        )
       : null
 
     // For radial projection, hit coords are center-relative — convert back
     // to margin-relative for tooltip positioning
     const isRadialMode = projection === "radial"
     const tooltipX = hoverPoint
-      ? (isRadialMode ? hoverPoint.x + adjustedWidth / 2 : hoverPoint.x)
-      : 0
+      ? isRadialMode ? hoverPoint.x + adjustedWidth / 2 : hoverPoint.x
+        : 0
     const tooltipY = hoverPoint
-      ? (isRadialMode ? hoverPoint.y + adjustedHeight / 2 : hoverPoint.y)
-      : 0
+      ? isRadialMode ? hoverPoint.y + adjustedHeight / 2 : hoverPoint.y
+        : 0
 
     const tooltipElement = hasTooltipContent(tooltipRendered) ? (
       <FlippingTooltip
@@ -880,8 +885,8 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
           // commit. See `StreamXYFrame.tsx` for the full rationale.
           ref={responsiveRef}
           className={`stream-ordinal-frame${className ? ` ${className}` : ""}`}
-          role={accessibleTable ? "group" : "img"}
-          aria-label={description || (typeof title === "string" ? title : "Ordinal chart")}
+          role="group"
+            aria-label={description || (typeof title === "string" ? title : "Ordinal chart")}
           style={{
             position: "relative",
             fontFamily: "var(--semiotic-font-family, sans-serif)",
@@ -891,8 +896,16 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
         >
           <AccessibleDataTableSlot accessibleTable={accessibleTable} scene={scene} chartType={chartType + " chart"} tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />
           <ScreenReaderSummary summary={summary} />
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
+          <div
+              role="img"
+              aria-label={
+                description ||
+                (typeof title === "string" ? title : "Ordinal chart")
+              }
+            >
+              <svg
+                role="presentation"
+                xmlns="http://www.w3.org/2000/svg"
             width={size[0]}
             height={size[1]}
             style={{ position: "absolute", left: 0, top: 0 }}
@@ -911,12 +924,13 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
               <g transform={`translate(${translateX},${translateY})`}>
                 {renderOrdinalSceneListWithBackend({
                   nodes: scene, renderMode, idPrefix: tableId
-                }).map(entry => entry.element)}
+                }).map((entry) => entry.element)}
               </g>
             </g>
           </svg>
           <OrdinalSVGOverlay
-            width={adjustedWidth}
+                decorative
+                width={adjustedWidth}
             height={adjustedHeight}
             totalWidth={size[0]}
             totalHeight={size[1]}
@@ -962,7 +976,8 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
               centerX={margin.left + adjustedWidth / 2} centerY={margin.top + adjustedHeight / 2}
               width={size[0]} height={size[1]} />
           )}
-        </div>
+            </div>
+          </div>
       )
     }
 
@@ -1026,7 +1041,8 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
         />
 
         <canvas
-          ref={canvasRef}
+              aria-hidden="true"
+              ref={canvasRef}
           aria-label={computeCanvasAriaLabel(storeRef.current?.scene ?? [], chartType + " chart")}
           style={{
             position: "absolute",
@@ -1038,7 +1054,8 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
         />
 
         <OrdinalSVGOverlay
-          width={adjustedWidth}
+              decorative
+              width={adjustedWidth}
           height={adjustedHeight}
           totalWidth={size[0]}
           totalHeight={size[1]}
@@ -1078,8 +1095,8 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
           yAccessor={annYAccessor}
           annotationData={enrichAnnotationData(storeRef.current?.getData())}
           underlayRendered
-          // The retained mark canvas is intentionally transparent. The SVG
-          // background and underlay precede it, so no overlay grid copy is
+              // The retained mark canvas is transparent. The SVG
+              // background and underlay precede it, so no overlay grid copy is
           // needed and gridlines remain behind the marks.
           canvasObscuresUnderlay={false}
         />

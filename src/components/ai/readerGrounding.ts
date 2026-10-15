@@ -1,4 +1,6 @@
+import { hierarchyChildren } from "./navigationValues"
 import { getMinMax } from "../charts/shared/minMax"
+import { aiChartProps, isAIDataRecord } from "./aiData"
 import type { Datum } from "../charts/shared/datumTypes"
 import {
   describeChart,
@@ -186,12 +188,8 @@ const PHYSICS_COMPONENTS = new Set([
   "PhysicsCustomChart",
 ])
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return !!value && typeof value === "object" && !Array.isArray(value)
-}
-
 function record(value: unknown): Record<string, unknown> | undefined {
-  return isRecord(value) ? value : undefined
+  return isAIDataRecord(value) ? value : undefined
 }
 
 function finite(value: unknown): number | undefined {
@@ -286,11 +284,7 @@ function sourceFacts(
     component === "TreeDiagram" ||
     component === "OrbitDiagram"
   ) {
-    const root = record(props.data)
-    const childKey =
-      typeof props.childrenAccessor === "string" && props.childrenAccessor
-        ? props.childrenAccessor
-        : "children"
+    const root = isAIDataRecord(props.data) ? props.data : undefined
     const valueKey =
       typeof props.valueAccessor === "string" && props.valueAccessor
         ? props.valueAccessor
@@ -302,18 +296,17 @@ function sourceFacts(
           ? props.nodeIDAccessor
           : "name"
     const leaves: Record<string, unknown>[] = []
+    const ancestors = new WeakSet<Record<string, unknown>>()
     const visit = (node: Record<string, unknown>) => {
-      const children = Array.isArray(node[childKey])
-        ? node[childKey] as unknown[]
-        : []
+      if (ancestors.has(node)) return
+      const children = hierarchyChildren(node, props.childrenAccessor)
       if (children.length === 0) {
         leaves.push(node)
         return
       }
-      for (const child of children) {
-        const childRecord = record(child)
-        if (childRecord) visit(childRecord)
-      }
+      ancestors.add(node)
+      for (const child of children) visit(child)
+      ancestors.delete(node)
     }
     if (root) visit(root)
     if (leaves.length > 0) {
@@ -453,7 +446,9 @@ function normalizeSediment(
 
 function looksLikePhysicsSnapshot(value: unknown): value is Record<string, unknown> {
   const snapshot = record(value)
-  return !!snapshot && (isRecord(snapshot.world) || "simulationState" in snapshot || "liveBodyOrder" in snapshot)
+  return (
+    !!snapshot && (isAIDataRecord(snapshot.world) || "simulationState" in snapshot || "liveBodyOrder" in snapshot)
+  )
 }
 
 function countSleepingBodies(bodies: readonly unknown[] | undefined): number | undefined {
@@ -470,11 +465,13 @@ function countSensors(
   const observation = record(config?.observation)
   const configuredSensors = record(observation?.sensors)
   const activeSensors = firstArray(world?.activeSensors)
-  return Math.max(
+  return (
+    Math.max(
     colliderSensors ?? 0,
     configuredSensors ? Object.keys(configuredSensors).length : 0,
     activeSensors?.length ?? 0
   ) || undefined
+  )
 }
 
 function buildPhysicsGroundingText(physics: Omit<PhysicsReaderGrounding, "text">): string {
@@ -553,7 +550,7 @@ function buildPhysicsGrounding(
   option: ChartReaderGroundingOptions["physics"]
 ): PhysicsReaderGrounding | undefined {
   if (option === false) return undefined
-  const input = isRecord(option) ? option : undefined
+  const input = record(option)
   const physicsProps = record(props.physics)
   const snapshot = firstRecord(
     input?.snapshot,
@@ -689,6 +686,7 @@ export function buildReaderGrounding(
   props: Datum,
   options: ChartReaderGroundingOptions = {}
 ): ChartReaderGrounding {
+  props = aiChartProps(props)
   const { capability, audience, locale } = options
   const levels = options.levels ?? ["l1", "l2", "l3"]
   const includeStructure = options.includeStructure !== false

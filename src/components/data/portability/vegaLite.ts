@@ -42,7 +42,7 @@ export interface ToVegaLiteOptions {
   allowLossy?: boolean
 }
 
-/** Typed result for Vega-Lite export. A refused result deliberately has no spec. */
+/** Typed result for Vega-Lite export. A refused result has no spec. */
 export interface VegaLiteExportResult extends PortabilityExportResult<VegaLiteSpec> {
   spec?: VegaLiteSpec
 }
@@ -182,7 +182,8 @@ export function toVegaLiteResult(
         lossReport.push({
           code: "GROUPED_BAR_APPROXIMATION",
           path: "/props/groupBy",
-          message: 'GroupedBarChart maps groupBy to color; Vega-Lite needs xOffset for an exact grouped layout.',
+          message:
+            "GroupedBarChart maps groupBy to color; Vega-Lite needs xOffset for an exact grouped layout."
         })
       }
       break

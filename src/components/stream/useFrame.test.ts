@@ -612,7 +612,7 @@ describe("useFrame — theme-change effect", () => {
         result.current.setTheme("dark")
       })
 
-      expect(result.current.frame.currentTheme).toBe(DARK_THEME)
+      expect(result.current.frame.currentTheme).toEqual(DARK_THEME)
       expect(dirtyRef.current).toBe(true)
       expect(rafCallbacks).toHaveLength(1)
       expect(resolveCSSColor(ctx, "var(--semiotic-primary)")).toBe("#222222")

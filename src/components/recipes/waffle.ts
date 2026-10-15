@@ -224,7 +224,7 @@ export function allocateCells<T extends CellWeight>(
   return allocate(weights, totalCells, opts)
 }
 
-// Waffles historically resolve tied remainders in category order. Keep that
+// Waffles resolve tied remainders in category order. Use that
 // policy while sharing the allocation/zero-weight logic with the public helper.
 function allocate<T extends CellWeight>(
   weights: readonly T[],

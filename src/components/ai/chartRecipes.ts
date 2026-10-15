@@ -279,7 +279,7 @@ export interface MobileCustomSemanticsDefinition {
 export interface MobileDesignDefinition {
   /** Overall mobile design strategy, e.g. "responsive", "small-multiples", "summary-cards". */
   strategy?: string
-  /** True when the layout intentionally recomputes for narrow viewports. */
+  /** True when the layout recomputes for narrow viewports. */
   responsive?: boolean
   /** Alias for responsive, friendlier in portable manifests. */
   supportsResponsiveLayout?: boolean
@@ -328,7 +328,7 @@ export interface RecipePortabilityConfig {
 /**
  * Declarative identity/meaning contract for a custom chart recipe.
  *
- * Required v0 fields intentionally stay small. A recipe can participate before
+ * Required v0 fields stay small. A recipe can participate before
  * it has a schema, generated description, custom navigation tree, or detailed
  * audit expectations; those layers can be added without changing its identity.
  */
@@ -369,9 +369,8 @@ export interface ChartRecipe<
 }
 
 /**
- * Define a chart recipe with full generic inference. Intentionally an identity
- * function in v0: the value is the shared, inspectable shape rather than hidden
- * registration or runtime behavior.
+ * Validate a chart recipe's contract and return the same value with full generic
+ * inference. Recipes remain inspectable values without hidden registration.
  */
 export function defineChartRecipe<
   TDatum extends Datum = Datum,
@@ -382,7 +381,7 @@ export function defineChartRecipe<
 }
 
 /**
- * Runtime validation is intentionally limited to contract integrity. It does
+ * Runtime validation is limited to contract integrity. It does
  * not try to validate a recipe's domain-specific layout configuration.
  */
 export function validateChartRecipe<

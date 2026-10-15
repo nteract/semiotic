@@ -92,7 +92,6 @@ test.describe("Accessibility - AriaLiveTooltip region", () => {
     await expect(liveRegion).toBeAttached()
 
     // The region should be in the DOM for screen readers even if visually clipped
-    const box = await liveRegion.boundingBox()
     // It may be visually hidden (clip/sr-only) or have zero dimensions — that's fine
     // The key assertion is that the element exists in the accessibility tree
     expect(await liveRegion.evaluate((el) => el.isConnected)).toBe(true)
@@ -323,85 +322,44 @@ test.describe("Accessibility - Focus rings", () => {
   })
 })
 
-// ─── 5. SVG overlays have title/desc elements ────────────────────────────────
+// ─── 5. One named image owns the decorative rendering layers ────────────────
 
-test.describe("Accessibility - SVG overlay title/desc elements", () => {
+test.describe("Accessibility - Chart image semantics", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/accessibility-examples/")
   })
 
-  test("XY chart SVG overlay contains a title element with chart title", async ({ page }) => {
+  for (const [id, name] of [
+    ["a11y-xy-titled", "Monthly Revenue Trends"],
+    ["a11y-xy-default", "XY chart"],
+    ["a11y-ordinal", "Sales by Category"],
+    ["a11y-network", "Team Connections"],
+    ["a11y-tooltip", "Scatter observations with keyboard and pointer details"],
+  ]) {
+    test(`${id} exposes one image with its title, fallback, or description`, async ({ page }) => {
+      await waitForChartReady(page, id)
+      const chart = page.getByTestId(id)
+      const image = chart.getByRole("img")
+      await expect(image).toHaveCount(1)
+      await expect(image).toHaveAccessibleName(name)
+      // SVG layers contribute visual content to the owning image. They must
+      // not introduce nested accessible images or duplicate title tooltips.
+      const overlay = chart.locator("svg[data-semiotic-overlay]")
+      await expect(overlay).toHaveAttribute("role", "presentation")
+      await expect(overlay.locator("title")).toHaveCount(0)
+      await expect(chart.locator("canvas[aria-label]").first()).toHaveAttribute("aria-hidden", "true")
+    })
+  }
+
+  test("data-summary controls remain reachable outside the chart image", async ({ page }) => {
     await waitForChartReady(page, "a11y-xy-titled")
-    const testCase = page.locator('[data-testid="a11y-xy-titled"]')
-
-    const svgTitle = testCase.locator("svg title")
-    await expect(svgTitle.first()).toBeAttached()
-
-    const titleText = await svgTitle.first().textContent()
-    expect(titleText).toBe("Monthly Revenue Trends")
-  })
-
-  test("XY chart SVG overlay contains a desc element", async ({ page }) => {
-    await waitForChartReady(page, "a11y-xy-titled")
-    const testCase = page.locator('[data-testid="a11y-xy-titled"]')
-
-    const svgDesc = testCase.locator("svg desc")
-    await expect(svgDesc.first()).toBeAttached()
-
-    const descText = await svgDesc.first().textContent()
-    expect(descText).toBeTruthy()
-    expect(descText).toContain("XY data visualization")
-  })
-
-  test("XY chart SVG title includes custom title text in desc", async ({ page }) => {
-    await waitForChartReady(page, "a11y-xy-titled")
-    const testCase = page.locator('[data-testid="a11y-xy-titled"]')
-
-    const svgDesc = testCase.locator("svg desc")
-    const descText = await svgDesc.first().textContent()
-    // When title is provided, desc should reference it
-    expect(descText).toContain("Monthly Revenue Trends")
-  })
-
-  test("XY chart without title has fallback SVG title", async ({ page }) => {
-    await waitForChartReady(page, "a11y-xy-default")
-    const testCase = page.locator('[data-testid="a11y-xy-default"]')
-
-    const svgTitle = testCase.locator("svg title")
-    await expect(svgTitle.first()).toBeAttached()
-
-    const titleText = await svgTitle.first().textContent()
-    expect(titleText).toBe("XY Chart")
-  })
-
-  test("Ordinal chart SVG overlay has title and desc", async ({ page }) => {
-    await waitForChartReady(page, "a11y-ordinal")
-    const testCase = page.locator('[data-testid="a11y-ordinal"]')
-
-    const svgTitle = testCase.locator("svg title")
-    await expect(svgTitle.first()).toBeAttached()
-    const titleText = await svgTitle.first().textContent()
-    expect(titleText).toBe("Sales by Category")
-
-    const svgDesc = testCase.locator("svg desc")
-    await expect(svgDesc.first()).toBeAttached()
-    const descText = await svgDesc.first().textContent()
-    expect(descText).toContain("ordinal data visualization")
-  })
-
-  test("Network chart SVG overlay has title and desc", async ({ page }) => {
-    await waitForChartReady(page, "a11y-network")
-    const testCase = page.locator('[data-testid="a11y-network"]')
-
-    const svgTitle = testCase.locator("svg title")
-    await expect(svgTitle.first()).toBeAttached()
-    const titleText = await svgTitle.first().textContent()
-    expect(titleText).toBe("Team Connections")
-
-    const svgDesc = testCase.locator("svg desc")
-    await expect(svgDesc.first()).toBeAttached()
-    const descText = await svgDesc.first().textContent()
-    expect(descText).toContain("network data visualization")
+    const chart = page.getByTestId("a11y-xy-titled")
+    await expect(chart.getByRole("img").getByRole("button")).toHaveCount(0)
+    const summary = chart.getByRole("button", { name: /View data summary/ })
+    await summary.focus()
+    await summary.press("Enter")
+    await expect(chart.getByRole("table").first()).toBeVisible()
+    await expect(chart.getByRole("table").first().getByRole("row")).not.toHaveCount(1)
   })
 })
 

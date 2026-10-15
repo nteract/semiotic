@@ -1,6 +1,6 @@
 /**
  * Deterministic one-dimensional layout primitives shared by ordered bands,
- * lanes, and layered graphs. The helpers are deliberately geometry-agnostic:
+ * lanes, and layered graphs. The helpers are geometry-agnostic:
  * callers provide relations, silhouettes, and cost functions while the kit
  * owns the guarded search and separation invariants.
  */

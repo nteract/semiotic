@@ -1,4 +1,7 @@
 "use client"
+import { buildNetworkSSRStore } from "./networkSSRStore"
+import { networkFrameContainerProps } from "./networkFrameContainerProps"
+import { HIERARCHICAL_NETWORK_LAYOUTS } from "./networkLayoutCapabilities"
 import type { Datum } from "../charts/shared/datumTypes"
 import * as React from "react"
 import {
@@ -15,14 +18,13 @@ import {
 import type {
   StreamNetworkFrameProps,
   StreamNetworkFrameHandle,
-  NetworkSceneNode,
   NetworkPipelineConfig,
   RealtimeNode,
   RealtimeEdge,
   EdgePush
 } from "./networkTypes"
 import type { HoverData } from "../realtime/types"
-import { buildHoverData, type HoverPointerCoords } from "./hoverUtils"
+import type { HoverPointerCoords } from "./hoverUtils"
 import { DEFAULT_TENSION_CONFIG, DEFAULT_PARTICLE_STYLE } from "./networkTypes"
 import { NetworkPipelineStore } from "./NetworkPipelineStore"
 import {
@@ -33,16 +35,8 @@ import {
 import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
 import { useConfigSync, useLayoutSelectionSync } from "./streamStoreSync"
-import {
-  extractNetworkNavPoints,
-  buildNavGraph,
-  resolvePosition,
-  nextNetworkIndex,
-  type NavGraph
-} from "./keyboardNav"
+import { useNetworkKeyboardNavigation } from "./networkFrameKeyboardNavigation"
 import { FocusRing } from "./FocusRing"
-import { refreshNetworkKeyboardFocus } from "./networkKeyboardFocus"
-import type { NavPoint } from "./keyboardNav"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { hasOwnTooltipChrome } from "../Tooltip/tooltipChrome"
 import { useFrame } from "./useFrame"
@@ -59,13 +53,8 @@ import {
 } from "./useHydration"
 import { CanvasFrameBackground, useFrameCanvasHost } from "./useCanvasFrameHost"
 import { useStableShallow } from "./useStableShallow"
-import { NetworkAccessibleDataTableSlot } from "./NetworkAccessibleDataTableSlot"
-import {
-  AccessibleTablePortal,
-  AriaLiveTooltip,
-  ScreenReaderSummary,
-  computeNetworkAriaLabel
-} from "./AccessibleDataTable"
+import { networkFrameAccessibility } from "./networkFrameAccessibility"
+import { AriaLiveTooltip } from "./AccessibleDataTable"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 import { renderLoadingState } from "../charts/shared/withChartWrapper"
 import {
@@ -80,7 +69,7 @@ import {
 import { DefaultNetworkTooltip } from "./networkDefaultTooltip"
 import { buildNetworkPipelineConfig } from "./networkPipelineConfig"
 
-import { paintNetworkFrame } from "./networkFramePaint"
+import { networkFrameAriaLabel, paintNetworkFrame } from "./networkFramePaint"
 import {
   networkEdgeFallbackColor,
   resolveNetworkEdgeColor,
@@ -90,9 +79,7 @@ import {
   syncNetworkNodeColorMap
 } from "./networkColorAccessors"
 import { resolveNetworkPointerHit } from "./networkFrameInteraction"
-import {
-  isInteractiveKeyboardTarget,
-  observationInputType
+import { observationInputType
 } from "../charts/shared/semanticInteractions"
 import { isAnnotationActivationTarget } from "../charts/shared/annotationActivation"
 import { useNetworkObservationBehaviors } from "./networkFrameObservations"
@@ -176,7 +163,6 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     responsiveWidth,
     responsiveHeight,
     margin: marginProp,
-    className,
     background,
     maxDevicePixelRatio,
     enableHover = true,
@@ -215,9 +201,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     paused = false,
     suspendWhenHidden = true,
     thresholds,
-    accessibleTable = true,
     description,
-    summary,
     orbitMode,
     orbitSize,
     orbitSpeed,
@@ -238,7 +222,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
   // exact same family default through networkFrameDefaultMargin.
   const baseMargin = networkFrameDefaultMargin(chartType)
   // dirtyRef declared before useFrame so it can be threaded in for the
-  // theme-change effect. Network inits to true (load-bearing).
+  // theme-change effect. Network inits to true (required).
   const dirtyRef = useRef(true)
   const frame = useFrame({
     sizeProp,
@@ -277,18 +261,24 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
   const { resolvedForeground, resolvedBackground, themeBackground, surfaceBackground } = resolveFrameLayers({ foregroundGraphics, backgroundGraphics, size, margin, scales: null, background, themeBackgroundColor: currentTheme.colors.background })
 
   // ── Hydration boundary ─────────────────────────────────────────────────
-  // See `HYDRATION.md` for the full recipe + `StreamXYFrame` for the
-  // canonical comment. SVG-branch gate is
-  // `isServerEnvironment || (!hydrated && wasHydratingFromSSR)`:
-  // SSR pass + first client render after SSR get the SVG branch
-  // (matches server output); pure CSR mounts skip it.
+  // SSR and initial hydration show SVG. Retain the server subtree while
+  // client layout is pending, then commit geometry and canvas together.
+  // Fresh client mounts start with canvas. See `HYDRATION.md`.
   const hydrated = useHydration()
   const wasHydratingFromSSR = useWasHydratingFromSSR()
-  const safeNodes = useMemo(() => filterSparseArray(nodesProp), [nodesProp])
-  const safeEdges = useMemo(
-    () => (Array.isArray(edgesProp) ? filterSparseArray(edgesProp) : edgesProp),
-    [edgesProp]
+  const frameId = `${tableId}-frame`
+  // Server markup becomes a numeric scene revision when client geometry commits.
+  const [sceneState, setSceneState] = useState<string | number>(() =>
+    !isServerEnvironment && wasHydratingFromSSR
+      ? (document.getElementById(frameId)?.innerHTML ?? 0)
+      : 0
   )
+  const hydrationMarkup = typeof sceneState === "string" ? sceneState : null
+  const isHierarchical = HIERARCHICAL_NETWORK_LAYOUTS.has(chartType)
+  const hierarchyRoot = isHierarchical
+    ? dataProp || (!Array.isArray(edgesProp) ? edgesProp : undefined)
+    : undefined
+  const hasControlledGraph = nodesProp != null || edgesProp != null
 
   const animationsDisabled = animate === false
   const tensionConfig = useMemo(
@@ -399,7 +389,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
   // re-run the layout plugin): data accessors, hierarchy/sankey/force/orbit
   // layout parameters, and the custom layout. Render-only props (nodeStyle,
   // edgeStyle, orbitRevolution, labels, colors, realtime encoding,
-  // animation) are deliberately excluded — those are applied by the
+  // animation) are excluded — those are applied by the
   // `updateConfig` effect + the next `buildScene` without a re-ingest. The
   // hierarchy-ingest effect below depends on this instead of the full
   // pipeline config so a parent passing fresh inline-arrow *style* callbacks
@@ -407,7 +397,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
   // with a continuous animation's frame loop into React's max-update-depth
   // crash), while genuine layout-parameter changes still take effect.
   //
-  // `layoutConfig` is deliberately EXCLUDED: it's threaded to a custom layout
+  // `layoutConfig` is EXCLUDED: it's threaded to a custom layout
   // as `ctx.config` and read only during `buildScene` (the custom layout) —
   // never during ingest, which rebuilds the node/edge maps the config doesn't
   // touch. So a `layoutConfig` change re-runs the layout via the
@@ -457,6 +447,22 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
   if (!storeRef.current) {
     storeRef.current = new NetworkPipelineStore(stablePipelineConfig)
   }
+  const renderSVG =
+    isServerEnvironment ||
+    (!hydrated && wasHydratingFromSSR) ||
+    hydrationMarkup !== null
+  const ssrStore =
+    renderSVG && hydrationMarkup === null
+      ? buildNetworkSSRStore(
+          stablePipelineConfig,
+          {
+            nodes: nodesProp,
+            edges: Array.isArray(edgesProp) ? edgesProp : undefined,
+            hierarchy: hierarchyRoot
+          },
+          [adjustedWidth, adjustedHeight]
+        )
+      : null
   const emitLegendCategories = useLegendCategoryEmission(
     storeRef,
     legendCategoryAccessor,
@@ -469,28 +475,61 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
   const buildSceneWithDiagnostics = useCallback((store: NetworkPipelineStore, sceneSize: [number, number], isTransitioning = false) => runSceneBuild(sceneRevisionDiagnosticsRef.current, store, () => store.buildScene(sceneSize), isTransitioning), [sceneRevisionDiagnosticsRef])
 
   const [hoverData, setHoverData] = useState<HoverData | null>(null)
-  const [_layoutVersion, setLayoutVersion] = useState(0)
   const [annotationFrame, setAnnotationFrame] = useState(0)
   const [isStale, setIsStale] = useState(false)
   const [layoutPending, setLayoutPending] = useState(false)
   const layoutRequestRef = useRef(0)
   const layoutAbortRef = useRef<AbortController | null>(null)
-  const hydrationLayoutHandledRef = useRef(false)
   const onLayoutStateChangeRef = useRef(onLayoutStateChange)
   onLayoutStateChangeRef.current = onLayoutStateChange
+  const publishLayoutState = useCallback(
+    (store: NetworkPipelineStore, state: "ready" | "error" = "ready") => {
+      setSceneState(store.layoutVersion)
+      setLayoutPending(false)
+      onLayoutStateChangeRef.current?.(state)
+    },
+    []
+  )
   const pipelineConfigRef = useRef(stablePipelineConfig)
   pipelineConfigRef.current = stablePipelineConfig
 
   const hoverRef = useRef<typeof hoverData>(null)
-  const kbFocusIndexRef = useRef(-1)
-  const focusedNavPointRef = useRef<NavPoint | null>(null)
-  const neighborIndexRef = useRef(-1)
-  const refreshKeyboardFocus = useCallback((store: NetworkPipelineStore) => {
-    refreshNetworkKeyboardFocus({
-      sceneNodes: store.sceneNodes, indexRef: kbFocusIndexRef,
-      pointRef: focusedNavPointRef, neighborIndexRef, hoverRef, setHoverData
+  // ── Observation wrappers ─────────────────────────────────────────────
+
+  const { customHoverBehavior, customClickBehavior } =
+    useNetworkObservationBehaviors({
+      customHoverBehavior: customHoverBehaviorProp,
+      customClickBehavior: customClickBehaviorProp,
+      onObservation,
+      chartId
     })
-  }, [])
+
+  // ── Hover handlers ───────────────────────────────────────────────────
+  // hoverHandlerRef + hoverLeaveRef + onPointerMove/Leave + cleanup all
+  // come from useFrame above; frame still owns the closure bodies.
+  const {
+    hoverHandlerRef,
+    hoverLeaveRef,
+    onPointerMove,
+    onPointerLeave,
+    pointerStateRef
+  } = frame
+
+  const {
+    kbFocusIndexRef,
+    focusedNavPointRef,
+    neighborIndexRef,
+    onKeyDown,
+    refreshKeyboardFocus
+  } = useNetworkKeyboardNavigation({
+    storeRef,
+    hoverRef,
+    setHoverPoint: setHoverData,
+    customHoverBehavior,
+    customClickBehavior,
+    scheduleRender,
+    clearPointerHover: onPointerLeave
+  })
   const sceneCursorInventoryRef = useRef<NetworkCursorInventory>({
     nodes: false,
     edges: false
@@ -547,7 +586,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
   const rebuildSceneNow = useCallback(
     (store: NetworkPipelineStore, sceneSize: [number, number]) => {
       buildSceneWithDiagnostics(store, sceneSize)
-      refreshKeyboardFocus(store)
+      refreshKeyboardFocus()
       lastSceneSizeRef.current = sceneSize
       emitLegendCategories()
       syncColorMap(store)
@@ -565,7 +604,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     storeRef.current?.markStylePaintPending()
   }, [])
   const { canvasRef, resolutionDirtyRef } = useFrameCanvasHost(frame, {
-    hydrated,
+    hydrated: hydrated && hydrationMarkup === null,
     wasHydratingFromSSR,
     storeRef,
     dirtyRef,
@@ -673,9 +712,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     const size: [number, number] = [adjustedWidth, adjustedHeight]
     const finish = (state: "ready" | "error", repaint = false) => {
       rebuildSceneNow(store, size)
-      setLayoutVersion(store.layoutVersion)
-      setLayoutPending(false)
-      onLayoutStateChangeRef.current?.(state)
+      publishLayoutState(store, state)
       if (onTopologyChange) {
         const { nodes, edges } = store.getLayoutData()
         onTopologyChange(nodes, edges)
@@ -708,7 +745,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     }
     store.runLayout(size)
     finish("ready")
-  }, [adjustedWidth, adjustedHeight, rebuildSceneNow, onTopologyChange, scheduleRender,
+  }, [adjustedWidth, adjustedHeight, rebuildSceneNow, publishLayoutState, onTopologyChange, scheduleRender,
     chartType, customNetworkLayout, randomProp, layoutExecution, iterations])
 
   // Controlled ingestion uses current callbacks without making callback identity
@@ -827,7 +864,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     // clear() bumps layoutVersion monotonically; sync React state to the new
     // value so the render fires (never force 0 — that can equal the last-seen
     // value and skip the post-clear repaint).
-    setLayoutVersion(storeRef.current?.layoutVersion ?? 0)
+    setSceneState(storeRef.current?.layoutVersion ?? 0)
     setHoverData(null)
     hoverRef.current = null
     kbFocusIndexRef.current = -1
@@ -835,7 +872,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     neighborIndexRef.current = -1
     dirtyRef.current = true
     scheduleRender()
-  }, [emitLegendCategories, scheduleRender])
+  }, [emitLegendCategories, scheduleRender, kbFocusIndexRef, focusedNavPointRef, neighborIndexRef])
 
   const forceRelayout = useCallback(() => {
     const store = storeRef.current
@@ -993,20 +1030,6 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
 
   // ── Bounded data ingestion ───────────────────────────────────────────
 
-  // Determine if this is a hierarchical chart type
-  const isHierarchical = [
-    "tree",
-    "cluster",
-    "treemap",
-    "circlepack",
-    "partition",
-    "orbit"
-  ].includes(chartType)
-  // Resolve hierarchy root: `data` prop or single-object `edges` prop
-  const hierarchyRoot = isHierarchical
-    ? dataProp || (!Array.isArray(edgesProp) ? edgesProp : undefined)
-    : undefined
-
   useEffect(() => {
     const store = storeRef.current
     if (!store) return
@@ -1023,15 +1046,13 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       // worker layout must not leave consumers stuck on "pending".
       store.ingestHierarchy(hierarchyRoot, [adjustedWidth, adjustedHeight])
       rebuildSceneNow(store, [adjustedWidth, adjustedHeight])
-      setLayoutVersion(store.layoutVersion)
-      setLayoutPending(false)
-      onLayoutStateChangeRef.current?.("ready")
+      publishLayoutState(store)
       scheduleRender()
     } else {
       // Graph data: nodes + edges arrays
-      const rawNodes = safeNodes
-      const rawEdges = Array.isArray(safeEdges) ? safeEdges : []
-      if (nodesProp != null || edgesProp != null) {
+      const rawNodes = filterSparseArray(nodesProp)
+      const rawEdges = Array.isArray(edgesProp) ? filterSparseArray(edgesProp) : []
+      if (hasControlledGraph) {
         // Controlled arrays are the newer source of truth. Eager push data may
         // exist in the store, but ingestBounded below replaces it atomically.
         pendingLayoutRef.current = false
@@ -1044,22 +1065,21 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
         // being provided — push mode omits them, and its store contents
         // must survive this effect re-running on resize/palette changes.
         if (
-          (nodesProp != null || edgesProp != null) &&
+          hasControlledGraph &&
           (store.nodes.size > 0 || store.edges.size > 0)
         ) {
           clearAll()
         }
         // Push-mode graphs have no controlled arrays to re-ingest, but force
         // parameter changes still need to re-solve their retained topology.
-        if (chartType === "force" && nodesProp == null && edgesProp == null && store.nodes.size > 0) {
+        if (chartType === "force" && !hasControlledGraph && store.nodes.size > 0) {
           pendingLayoutRef.current = false
           const controller = runLayoutRef.current()
           return () => controller?.abort()
         }
         // Nothing to lay out — the frame is no longer busy, so a consumer
         // watching a previously-pending worker layout gets released.
-        setLayoutPending(false)
-        onLayoutStateChangeRef.current?.("ready")
+        publishLayoutState(store)
         return
       }
 
@@ -1070,7 +1090,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
         canUseForceWorker() &&
         // A callback cannot cross the worker boundary. A serializable seed
         // does, so seeded layouts retain worker execution while injected
-        // randomness deliberately uses the synchronous plugin path.
+        // randomness uses the synchronous plugin path.
         !randomProp &&
         shouldUseForceWorker(
           layoutExecution,
@@ -1078,23 +1098,6 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
           rawEdges.length,
           iterations
         )
-
-      // The SSR/first-hydration branch above already produced deterministic
-      // geometry synchronously. Keep it instead of immediately replacing it
-      // with an equivalent worker request after hydration.
-      if (
-        useWorker &&
-        wasHydratingFromSSR &&
-        !hydrationLayoutHandledRef.current &&
-        store.sceneNodes.length > 0
-      ) {
-        hydrationLayoutHandledRef.current = true
-        setLayoutPending(false)
-        onLayoutStateChangeRef.current?.("ready")
-        dirtyRef.current = true
-        scheduleRender()
-        return
-      }
 
       if (useWorker) {
         store.ingestBounded(rawNodes, rawEdges, size, { deferLayout: true })
@@ -1108,9 +1111,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       // custom HTML marks are React overlays. Synchronize the completed
       // synchronous layout revision so they update in the same transaction
       // instead of waiting for hover or another unrelated render.
-      setLayoutVersion(store.layoutVersion)
-      setLayoutPending(false)
-      onLayoutStateChangeRef.current?.("ready")
+      publishLayoutState(store)
       scheduleRender()
     }
     // Gated on `stableLayoutConfig` (layout/ingest-affecting fields only), NOT
@@ -1119,7 +1120,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     // setState every render (the loop that crashed continuously-animated
     // charts); genuine layout-parameter, data, and dimension changes still
     // re-ingest. Palette changes only rebuild the scene.
-  }, [safeNodes, safeEdges, nodesProp, edgesProp, dataProp, hierarchyRoot, isHierarchical, adjustedWidth, adjustedHeight, stableLayoutConfig, layoutExecution, iterations, wasHydratingFromSSR, chartType, customNetworkLayout, randomProp, scheduleRender, clearAll, rebuildSceneNow])
+  }, [nodesProp, edgesProp, hasControlledGraph, hierarchyRoot, isHierarchical, adjustedWidth, adjustedHeight, stableLayoutConfig, layoutExecution, iterations, chartType, customNetworkLayout, randomProp, scheduleRender, clearAll, rebuildSceneNow, publishLayoutState])
 
   // ── Initial streaming data ───────────────────────────────────────────
 
@@ -1148,30 +1149,9 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     // Push-mode topology survives resize without bounded re-ingestion.
     if (resized) store.runLayout([adjustedWidth, adjustedHeight])
     rebuildSceneNow(store, [adjustedWidth, adjustedHeight])
-    setLayoutVersion((version) => version + 1)
+    setSceneState((state) => typeof state === "number" ? state + 1 : 0)
     scheduleRender()
   }, [currentTheme, adjustedWidth, adjustedHeight, rebuildSceneNow, scheduleRender])
-
-  // ── Observation wrappers ─────────────────────────────────────────────
-
-  const { customHoverBehavior, customClickBehavior } =
-    useNetworkObservationBehaviors({
-      customHoverBehavior: customHoverBehaviorProp,
-      customClickBehavior: customClickBehaviorProp,
-      onObservation,
-      chartId
-    })
-
-  // ── Hover handlers ───────────────────────────────────────────────────
-  // hoverHandlerRef + hoverLeaveRef + onPointerMove/Leave + cleanup all
-  // come from useFrame above; frame still owns the closure bodies.
-  const {
-    hoverHandlerRef,
-    hoverLeaveRef,
-    onPointerMove,
-    onPointerLeave,
-    pointerStateRef
-  } = frame
 
   // A custom layout with no restyle handler paints its hover state off-canvas
   // (React overlays / HTML marks), so the canvas needs no redraw on pointer move.
@@ -1280,130 +1260,10 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     }
   }
 
-  // pointermove coalescing  // pointermove coalescing + onPointerLeave come from useFrame above.
+  // Pointer coalescing and leave handling come from useFrame.
   const onClick = useCallback(
     (e: React.MouseEvent) => clickHandlerRef.current(e),
     []
-  )
-
-  // ── Keyboard navigation ───────────────────────────────────────────
-
-  const onKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (isInteractiveKeyboardTarget(e)) return
-      const store = storeRef.current
-      if (!store) return
-      const clearFocus = () => {
-        const hadHover = hoverRef.current !== null
-        kbFocusIndexRef.current = -1
-        focusedNavPointRef.current = null
-        neighborIndexRef.current = -1
-        hoverRef.current = null
-        setHoverData(null)
-        // Focus chrome is SVG/tooltip — do not dirty retained scene geometry.
-        if (hadHover) customHoverBehavior?.(null)
-        scheduleRender()
-      }
-      if (e.key === "Escape") {
-        e.preventDefault()
-        // Cancel a coalesced pointer move so it cannot reopen the tooltip.
-        onPointerLeave()
-        clearFocus()
-        return
-      }
-
-      // Always rebuild NavGraph from current sceneNodes — positions change during
-      // force simulation ticks and transition interpolation, so caching risks stale coordinates
-      const navPoints = extractNetworkNavPoints(
-        store.sceneNodes as NetworkSceneNode[]
-      )
-      if (navPoints.length === 0) {
-        if (kbFocusIndexRef.current >= 0) clearFocus()
-        return
-      }
-      const graph: NavGraph = buildNavGraph(navPoints)
-
-      const requestedIndex = kbFocusIndexRef.current
-      let current = requestedIndex
-      if (current >= graph.flat.length) {
-        clearFocus()
-        current = -1
-      }
-
-      // Enter is reserved for the network-specific "follow connected edge"
-      // navigation contract. Space activates the currently focused node.
-      if (e.key === " " && current >= 0) {
-        e.preventDefault()
-        const point = graph.flat[current]
-        customClickBehavior?.(buildHoverData(point.datum || {}, point.x, point.y, {
-          nodeOrEdge: "node"
-        }), { type: "activate", inputType: "keyboard" })
-        return
-      }
-
-      if (current < 0) {
-        const isNav = [
-          "ArrowRight",
-          "ArrowLeft",
-          "ArrowUp",
-          "ArrowDown",
-          "Home",
-          "End",
-          "PageUp",
-          "PageDown",
-          "Enter"
-        ].includes(e.key)
-        if (!isNav) return
-        e.preventDefault()
-        kbFocusIndexRef.current = 0
-        neighborIndexRef.current = -1
-        const point = graph.flat[0]
-        focusedNavPointRef.current = point
-        const rawDatum = point.datum || {}
-        const hover: HoverData = buildHoverData(rawDatum, point.x, point.y, {
-          nodeOrEdge: "node"
-        })
-        hoverRef.current = hover
-        setHoverData(hover)
-        customHoverBehavior?.(hover, { type: "focus", inputType: "keyboard" })
-        scheduleRender()
-        return
-      }
-
-      const pos = resolvePosition(graph, current)
-      const next = nextNetworkIndex(
-        e.key,
-        pos,
-        graph,
-        store.sceneEdges ?? [],
-        neighborIndexRef
-      )
-      if (next === null) return
-
-      e.preventDefault()
-
-      if (next < 0) {
-        clearFocus()
-        return
-      }
-
-      kbFocusIndexRef.current = next
-      const point = graph.flat[next]
-      focusedNavPointRef.current = point
-      const rawDatum = point.datum || {}
-      const hover: HoverData = {
-        data: rawDatum,
-        x: point.x,
-        y: point.y,
-        __semioticHoverData: true,
-        nodeOrEdge: "node"
-      }
-      hoverRef.current = hover
-      setHoverData(hover)
-      customHoverBehavior?.(hover, { type: "focus", inputType: "keyboard" })
-      scheduleRender()
-    },
-    [customClickBehavior, customHoverBehavior, onPointerLeave, scheduleRender]
   )
 
   const onMouseMoveWrapped = useCallback(
@@ -1417,7 +1277,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       focusedNavPointRef.current = null
       onPointerMove(e)
     },
-    [canvasRef, enableHover, onPointerMove, pointerStateRef]
+    [canvasRef, enableHover, onPointerMove, pointerStateRef, kbFocusIndexRef, focusedNavPointRef]
   )
 
   // ── Render function ──────────────────────────────────────────────────
@@ -1479,7 +1339,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       },
       syncColorMap: () => syncColorMap(store),
       onSceneOrStyleChange: ({ inventoryChanged, geometryChanged }) => {
-        if (inventoryChanged || geometryChanged) refreshKeyboardFocus(store)
+        if (inventoryChanged || geometryChanged) refreshKeyboardFocus()
         if (inventoryChanged) {
           if (!refreshNetworkCursorInventory(
             sceneCursorInventoryRef.current,
@@ -1517,7 +1377,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       }
     }
     cameraWasActive.current = !!props.viewTransform
-  }, [props.viewTransform, renderFnRef, hoverLeaveRef])
+  }, [props.viewTransform, renderFnRef, hoverLeaveRef, kbFocusIndexRef])
 
   useCanvasMarkCursorCleanup(canvasRef)
 
@@ -1561,31 +1421,36 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
 
   // SSR + actual SSR-hydration only — pure CSR mounts skip the
   // wasted SVG render. See StreamXYFrame for the full rationale.
-  if (isServerEnvironment || (!hydrated && wasHydratingFromSSR)) {
-    return <NetworkSSRFrame tableId={tableId} props={props} store={storeRef.current} responsiveRef={responsiveRef} size={size} margin={margin} adjustedWidth={adjustedWidth} adjustedHeight={adjustedHeight} surfaceBackground={surfaceBackground} resolvedBackground={resolvedBackground} resolvedForeground={resolvedForeground} />
+  if (renderSVG) {
+    return NetworkSSRFrame({
+      hydrationMarkup,
+      layoutPending,
+      tableId,
+      props,
+      store: ssrStore ?? storeRef.current,
+      responsiveRef,
+      size,
+      margin,
+      adjustedWidth,
+      adjustedHeight,
+      surfaceBackground,
+      resolvedBackground,
+      resolvedForeground
+    })
   }
 
   // ── Render ───────────────────────────────────────────────────────────
 
   const store = storeRef.current
+  const containerProps = networkFrameContainerProps(props, frameId, size, layoutPending, "visible")
+  const perspectiveFrame = store.perspective.frame
+  const perspectiveMode = store.lastCustomLayoutResult?.perspective
 
   return (
     <div
+      {...containerProps}
       ref={responsiveRef}
-      className={`stream-network-frame${className ? ` ${className}` : ""}`}
-      role="group"
-      aria-label={
-        description || (typeof title === "string" ? title : "Network chart")
-      }
       tabIndex={0}
-      aria-busy={layoutPending || undefined}
-      style={{
-        position: "relative",
-        fontFamily: "var(--semiotic-font-family, sans-serif)",
-        width: responsiveWidth ? "100%" : size[0],
-        height: responsiveHeight ? "100%" : size[1],
-        overflow: props.viewTransform ? "clip" : "visible"
-      }}
       onKeyDown={onKeyDown}
     >
       {process.env.NODE_ENV !== "production" && storeRef.current && (
@@ -1594,34 +1459,20 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
           diagnostics={sceneRevisionDiagnosticsRef.current}
         />
       )}
-      {accessibleTable && (
-        <AccessibleTablePortal accessibleTable={accessibleTable}>
-          <NetworkAccessibleDataTableSlot
-            sceneRevision={layoutPending ? undefined : store?.getUpdateSnapshot().revisions.accessibility}
-            nodes={store?.sceneNodes ?? []}
-            edges={store?.sceneEdges ?? []}
-            chartType="Network chart"
-            tableId={tableId}
-            chartTitle={typeof title === "string" ? title : undefined}
-          />
-        </AccessibleTablePortal>
-      )}
-      <ScreenReaderSummary summary={summary} />
+      {networkFrameAccessibility(props, store, tableId, layoutPending ? undefined : store.getUpdateSnapshot().revisions.accessibility)}
       {/* Live region MUST live outside the role="img" wrapper — AT treats the
           image as atomic and never announces content nested inside it. */}
       <AriaLiveTooltip active={kbFocusIndexRef.current >= 0} hoverPoint={hoverData && {
         data: (hoverData.nodeOrEdge === "edge"
-          ? storeRef.current?.sceneEdges
-          : storeRef.current?.sceneNodes
-        )?.find((mark) => mark.datum === hoverData.data)?.accessibleDatum ?? hoverData.data
+          ? store.sceneEdges
+          : store.sceneNodes
+        ).find((mark) => mark.datum === hoverData.data)?.accessibleDatum ?? hoverData.data
       }} />
       <div
         // An image is atomic to assistive technology. HTML marks can contain
         // editors and buttons, so expose their subtree as a group instead.
-        role={store?.customLayoutHtmlMarks?.length ? "group" : "img"}
-        aria-label={
-          description || (typeof title === "string" ? title : "Network chart")
-        }
+        role={store.customLayoutHtmlMarks?.length ? "group" : "img"}
+        aria-label={containerProps["aria-label"]}
         style={{ position: "relative", width: "100%", height: "100%" }}
         onMouseMove={onMouseMoveWrapped}
         onMouseLeave={onPointerLeave}
@@ -1651,17 +1502,14 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
           overflowVisible
         >
           <NetworkViewGroup view={props.viewTransform} width={adjustedWidth} height={adjustedHeight}>
-            {composeOverlays(resolvedBackground, withNetworkPerspective(store?.customLayoutBackgrounds, store?.perspective.frame, store?.lastCustomLayoutResult?.perspective))}
+            {composeOverlays(resolvedBackground, withNetworkPerspective(store.customLayoutBackgrounds, perspectiveFrame, perspectiveMode))}
           </NetworkViewGroup>
         </CanvasFrameBackground>
 
         <canvas
+          aria-hidden="true"
           ref={canvasRef}
-          aria-label={computeNetworkAriaLabel(
-            store?.sceneNodes?.length ?? 0,
-            store?.sceneEdges?.length ?? 0,
-            store?.perspective.label("Network chart") ?? "Network chart"
-          )}
+          aria-label={networkFrameAriaLabel(store)}
           style={{
             position: "absolute",
             top: 0,
@@ -1670,14 +1518,15 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
         />
 
         <NetworkSVGOverlay
+          decorative
           viewTransform={props.viewTransform}
           width={adjustedWidth}
           height={adjustedHeight}
           totalWidth={size[0]}
           totalHeight={size[1]}
           margin={margin}
-          labels={store?.labels || []}
-          sceneNodes={store?.sceneNodes}
+          labels={store.labels}
+          sceneNodes={store.sceneNodes}
           title={title}
           description={description}
           legend={legend}
@@ -1690,10 +1539,10 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
           foregroundGraphics={withNetworkPerspective(composeOverlays(
             resolvedForeground,
             withNetworkPerspective(wrapWithCustomLayoutSelection(
-              storeRef.current?.customLayoutOverlays,
+              store.customLayoutOverlays,
               layoutSelection ?? null
-            ), store?.perspective.frame, store?.lastCustomLayoutResult?.perspective)
-          ), store?.perspective.frame)}
+            ), perspectiveFrame, perspectiveMode)
+          ), perspectiveFrame)}
           annotations={annotations}
           onAnnotationActivate={onAnnotationActivate}
           onObservation={annotationObservationCallback ?? onObservation}
@@ -1709,7 +1558,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
           `pointer-events: none` keeps the canvas authoritative for hit-testing. */}
         <NetworkHtmlMarksLayer
           viewTransform={props.viewTransform}
-          marks={store?.customLayoutHtmlMarks}
+          marks={store.customLayoutHtmlMarks}
           margin={margin}
           selection={layoutSelection ?? null}
           width={adjustedWidth}

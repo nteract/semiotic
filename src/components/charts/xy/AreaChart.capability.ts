@@ -1,3 +1,4 @@
+import { parseNumericValue } from "../../data/numericValue"
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
 import { scaleHints } from "../../ai/dataScaleProfile"
 import { BUILT_IN_NUMERIC_CONTRACTS } from "../../data/numericContracts"
@@ -32,13 +33,14 @@ export const AreaChartCapability: ChartCapability = {
     // more visually arresting than a thin line. Yield to LineChart when
     // the data is genuinely multi-series; the subselected single series we
     // emit is a partial picture, so it should not outrank a full multi-line.
-    "trend": (p) => {
+    trend: (p) => {
       if (p.xProvenance === "scatter" && !p.monotonicX) return 1
       const singleSeries = !p.seriesCount || p.seriesCount < 2
       if (!singleSeries) return 3
       return p.uniqueXCount && p.uniqueXCount >= 4 ? 5 : 3
     },
-    "change-detection": (p) => (p.xProvenance === "scatter" && !p.monotonicX ? 1 : 3),
+    "change-detection": (p) =>
+      p.xProvenance === "scatter" && !p.monotonicX ? 1 : 3
   },
 
   caveats: (p) => {
@@ -75,7 +77,7 @@ export const AreaChartCapability: ChartCapability = {
       key: "annotated-threshold",
       label: "With alert threshold",
       description:
-        "A reference threshold or expected band turns the area into an alert — read for breaches. Pair with a provenanced annotation (e.g. from the data-quality bridge) and the communicative act becomes \"alerting\".",
+        'A reference threshold or expected band turns the area into an alert — read for breaches. Pair with a provenanced annotation (e.g. from the data-quality bridge) and the communicative act becomes "alerting".',
       props: { showGrid: true },
       tags: ["alert", "annotated-threshold", "monitoring"],
       intentDeltas: { "outlier-detection": +2, "change-detection": +1 },
@@ -99,7 +101,7 @@ export const AreaChartCapability: ChartCapability = {
         // when counting categories, and bucketing them as their own group
         // would let "undefined" or "" become the leading series.
         if (k == null || k === "") continue
-        const v = Number(row[yKey])
+        const v = parseNumericValue(row[yKey]) ?? NaN
         totals.set(k, (totals.get(k) ?? 0) + (Number.isFinite(v) ? v : 0))
       }
       let leading: unknown

@@ -113,6 +113,9 @@ describe("network camera server rendering", () => {
         />
       )
       const doc = new DOMParser().parseFromString(markup, "text/html")
+      for (const viewport of doc.querySelectorAll("svg[data-network-view]")) {
+        expect(viewport.getAttribute("role")).toBe("presentation")
+      }
       expect(
         [...doc.querySelectorAll("text")].filter(
           (node) => node.textContent === "Only once"

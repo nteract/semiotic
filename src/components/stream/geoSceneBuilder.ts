@@ -1,3 +1,4 @@
+import { rememberGeoPointSource } from "./geoPointSourceIndex"
 import {
   geoDistance,
   geoGraticule,
@@ -157,9 +158,9 @@ export function buildBuiltInGeoScene({
   }
 
   const pointIdAcc = config.pointIdAccessor
-    ? (typeof config.pointIdAccessor === "function"
+    ? typeof config.pointIdAccessor === "function"
       ? config.pointIdAccessor
-      : (datum: Datum) => datum[config.pointIdAccessor as string])
+      : (datum: Datum) => datum[config.pointIdAccessor as string]
     : null
   const clipAngle = projection.clipAngle ? (projection.clipAngle() ?? 0) : 0
   const clipRadians = clipAngle > 0 ? (clipAngle * Math.PI) / 180 : null
@@ -170,14 +171,18 @@ export function buildBuiltInGeoScene({
     (center[1] ?? 0) - rotation[1]
   ]
 
-  for (const datum of points) {
+  for (const [sourceIndex, datum] of points.entries()) {
     const lon = xAcc(datum)
     const lat = yAcc(datum)
+    if (!Number.isFinite(lon) || !Number.isFinite(lat)) continue
     if (clipRadians != null && geoDistance([lon, lat], projectionCenter) > clipRadians) {
       continue
     }
     const projected = projection([lon, lat])
-    if (!projected) continue
+    if (!projected ||
+      !Number.isFinite(projected[0]) ||
+      !Number.isFinite(projected[1])
+    ) continue
     const style = config.pointStyle ? config.pointStyle(datum) : { ...pointDefault }
     const point: PointSceneNode = {
       type: "point",
@@ -188,6 +193,7 @@ export function buildBuiltInGeoScene({
       datum,
       pointId: pointIdAcc ? String(pointIdAcc(datum)) : undefined
     }
+    rememberGeoPointSource(point, sourceIndex)
     nodes.push(point)
   }
   return nodes

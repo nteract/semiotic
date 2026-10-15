@@ -75,6 +75,7 @@ export function resolveAccessor(
 function realtimeNode([id, data]: [string, Datum]): RealtimeNode {
   return {
     id,
+    __hasPosition: Number.isFinite(data.x) && Number.isFinite(data.y),
     // Preserve pre-set positions from source data (for pinned layouts).
     x: data.x ?? 0, y: data.y ?? 0,
     x0: 0, x1: 0, y0: 0, y1: 0,
@@ -112,11 +113,10 @@ const HIERARCHICAL_TYPES: Set<string> = new Set([
 function networkAnnotationData(nodes: NetworkSceneNode[]): Datum[] {
   return nodes.map((node) => {
     const source = node.datum && typeof node.datum === "object"
-      ? node.datum as Datum
-      : {}
+      ? (node.datum as Datum) : {}
     const data = source.data && typeof source.data === "object"
-      ? source.data as Datum
-      : source
+      ? (source.data as Datum)
+        : source
     const x = "cx" in node ? node.cx : node.x + node.w / 2
     const y = "cy" in node ? node.cy : node.y + node.h / 2
     return {
@@ -245,7 +245,7 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
       annotationData: sceneNodes && networkAnnotationData(sceneNodes),
       pointNodes: sceneNodes && collectNetworkAnnotationAnchors(sceneNodes),
       idPrefix: props._idPrefix,
-      onRender: result => { annotationRender = result },
+      onRender: (result) => { annotationRender = result },
     }) : null
   }
   const renderEmptyNetwork = () => {
@@ -360,11 +360,12 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
   let customLayoutBackgrounds: import("react").ReactNode = null
   let customLayoutOverlays: import("react").ReactNode = null
   let customLayoutPerspectiveMode: "ground" | "manual" | undefined
-  let customLayoutBounds: readonly import("../stream/networkPerspective").NetworkPerspectiveBound[] | undefined
+  let customLayoutBounds:
+    | readonly import("../stream/networkPerspective").NetworkPerspectiveBound[] | undefined
   if (config.customNetworkLayout) {
     // Share named-palette and category-map resolution with NetworkPipelineStore.
     const customColorScheme = config.colorScheme as
-      | string
+      string
       | string[]
       | Record<string, string>
       | undefined
@@ -466,8 +467,8 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
     fallback: (node, index) => networkSceneNodeToSVG(node, index),
   })
 
-  const edgeElements = renderedEdges.map(entry => entry.element)
-  const nodeElements = renderedNodes.map(entry => entry.element)
+  const edgeElements = renderedEdges.map((entry) => entry.element)
+  const nodeElements = renderedNodes.map((entry) => entry.element)
 
   const labelElements = labels
     .map((label, i) => networkLabelToSVG(label, i))

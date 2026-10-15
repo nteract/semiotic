@@ -82,9 +82,10 @@ describe("StreamGeoFrame GeoSVGOverlay integration", () => {
     const html = renderToString(<StreamGeoFrame {...frameProps} />)
 
     expect(html).not.toContain("<canvas")
-    expect(html).toContain(">Geo chrome</title>")
-    expect(html).toContain(">Geo chrome (geographic data visualization)</desc>")
-    expect(html).toMatch(/id="[^"]+-semiotic-title"/)
+    expect(html).toContain('role="group" aria-label="Geo chrome"')
+    expect(html.match(/role="img"/g)).toHaveLength(1)
+    expect(html).not.toContain("<title")
+    expect(html).toContain('role="presentation"')
     expect(html).toContain("Alpha")
     expect(html).toContain("Geo point annotation")
     expect(html).toContain('data-geo-foreground="yes"')
@@ -106,12 +107,13 @@ describe("StreamGeoFrame GeoSVGOverlay integration", () => {
       "tabindex",
       "0"
     )
-    expect(container.querySelector("svg[role='img'] title")?.textContent).toBe(
+    expect(container.querySelectorAll('[role="img"]')).toHaveLength(1)
+    expect(container.querySelector('[role="img"]')).toHaveAttribute(
+      "aria-label",
       "Geo chrome"
     )
-    expect(container.querySelector("svg[role='img'] desc")?.textContent).toBe(
-      "Geo chrome (geographic data visualization)"
-    )
+    expect(container.querySelector("svg title")).toBeNull()
+    expect(container.querySelector('svg[role="presentation"]')).not.toBeNull()
     expect(container.textContent).toContain("Alpha")
     expect(container.textContent).toContain("Geo point annotation")
     expect(

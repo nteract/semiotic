@@ -18,7 +18,7 @@ export const DEFAULT_LEGEND_DISTANCE = 10
 export const DEFAULT_LEGEND_EDGE_GUTTER = 3
 
 /** Keep a chart's data area meaningful when chart-owned chrome (currently a
- * legend) is measured in a compact frame. This intentionally does not shrink
+ * legend) is measured in a compact frame. This does not shrink
  * caller/default margins: it caps only the reservation that was added for the
  * requested legend side. */
 export function clampLegendReservation(
@@ -444,8 +444,8 @@ export function resolveLegendPlacement(
   const width = Math.max(
     1,
     horizontal
-      ? input.legendLayout?.maxWidth ?? plotWidth
-      : input.reservedWidth ?? resolveSideLegendWidth(legend, input.legendLayout),
+      ? (input.legendLayout?.maxWidth ?? plotWidth)
+      : (input.reservedWidth ?? resolveSideLegendWidth(legend, input.legendLayout))
   )
   const distance = resolveLegendDistance(legend)
   const sideGutter = resolveLegendSideGutter(
@@ -533,7 +533,7 @@ export function resolveLegendMetrics(layout?: LegendLayout): LegendMetrics {
       ? "start"
       : layout?.align === "right"
         ? "end"
-        : layout?.align ?? "start",
+        : (layout?.align ?? "start"),
     maxWidth: layout?.maxWidth,
   }
 }
@@ -571,7 +571,8 @@ export function layoutVerticalLegendGroups(
 /** Drop only default margins belonging to explicitly hidden XY axes. */
 export function resolveHiddenAxisMargins(
   defaults: { top: number; right: number; bottom: number; left: number },
-  axes: ReadonlyArray<{ orient: "top" | "bottom" | "left" | "right"; visible?: boolean }> | undefined,
+  axes:
+    | ReadonlyArray<{ orient: "top" | "bottom" | "left" | "right"; visible?: boolean }> | undefined,
   hasTitle = false
 ) {
   const result = { ...defaults }

@@ -12,7 +12,7 @@
  *
  * Custom radial chart authors using `XYCustomChart` or building a
  * bespoke radial layout can reach for the same primitives without
- * reimplementing the trigonometry. Surface intentionally tight —
+ * reimplementing the trigonometry. Surface tight —
  * each function is a few lines of math with a documented input
  * convention.
  */

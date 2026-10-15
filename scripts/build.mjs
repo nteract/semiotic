@@ -1,3 +1,4 @@
+import bundleFreshness from "./lib/mcp-bundle-freshness.cjs"
 import { execSync } from "child_process"
 import {
   existsSync,
@@ -15,6 +16,10 @@ import { libraryTerserOptions as terserOptions } from "./lib/library-minificatio
 import { stripPureBareChunkImports } from "./lib/strip-pure-bare-imports.mjs"
 import { serverRuntimeLoadersPlugin } from "./lib/server-runtime-loaders.mjs"
 
+const buildSourceFingerprint = bundleFreshness.sourceFingerprint(
+  process.cwd(),
+  "library"
+)
 const args = process.argv.slice(2)
 const isProduction = args.includes("--production")
 const isAnalyze = args.includes("--analyze")
@@ -114,7 +119,11 @@ function baseBuildOptions({ minify, serverOnly, clientOnly, entryNames, format }
     pure: ["console.log", "console.debug"],
     plugins: [
       ...(minify && format === "esm"
-        ? [minifyLibraryPlugin({ format, options: terserOptions })]
+        ? [minifyLibraryPlugin({
+            format,
+            options: terserOptions,
+            allowFunctionReduction: !clientOnly
+          })]
         : []),
       useClientDirectivePlugin({ clientOnly, entryNames })
     ],
@@ -285,7 +294,7 @@ function externalizeNetworkZoomHostPlugin(cjs = false) {
 /** Atlas is an opt-in reader graph over the canonical frame/store instances. */
 function externalizeAtlasHostsPlugin() {
   const hosts = {
-    "ThemeProvider": "semiotic-themes-react.module.min.js",
+    ThemeProvider: "semiotic-themes-react.module.min.js",
     "charts/custom/NetworkCustomChart": "network.module.min.js",
     "charts/physics/PhysicsCustomChart": "physics.module.min.js",
     "store/useSelection": "semiotic-atlas-selection.module.min.js"
@@ -312,7 +321,7 @@ function writeSharedClientSymbolFacade(publicEntry, symbol, output) {
   let localName
   for (const node of source.statements) {
     if (!ts.isExportDeclaration(node) || !node.exportClause || !ts.isNamedExports(node.exportClause)) continue
-    const binding = node.exportClause.elements.find(item => item.name.text === symbol)
+    const binding = node.exportClause.elements.find((item) => item.name.text === symbol)
     if (!binding) continue
     if (node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
       writeFileSync(`dist/${output}`, `"use client";\nexport{${binding.propertyName?.text ?? symbol} as ${symbol}}from${JSON.stringify(node.moduleSpecifier.text)};\n`)
@@ -324,7 +333,7 @@ function writeSharedClientSymbolFacade(publicEntry, symbol, output) {
     if (!ts.isImportDeclaration(node) || !ts.isStringLiteral(node.moduleSpecifier)) continue
     const bindings = node.importClause?.namedBindings
     if (!bindings || !ts.isNamedImports(bindings)) continue
-    const binding = bindings.elements.find(item => item.name.text === localName)
+    const binding = bindings.elements.find((item) => item.name.text === localName)
     if (!binding) continue
     writeFileSync(`dist/${output}`, `"use client";\nexport{${binding.propertyName?.text ?? binding.name.text} as ${symbol}}from${JSON.stringify(node.moduleSpecifier.text)};\n`)
     return
@@ -745,20 +754,20 @@ const generatedBundleMetadata = {
     loading: "eager"
   },
   "semiotic-atlas": {
-    "platform": "browser",
-    "rsc": false,
-    "edge": false,
-    "native": false,
-    "stability": "stable",
-    "loading": "eager"
+    platform: "browser",
+    rsc: false,
+    edge: false,
+    native: false,
+    stability: "stable",
+    loading: "eager"
   },
   "semiotic-atlas-core": {
-    "platform": "neutral",
-    "rsc": true,
-    "edge": true,
-    "native": false,
-    "stability": "stable",
-    "loading": "eager"
+    platform: "neutral",
+    rsc: true,
+    edge: true,
+    native: false,
+    stability: "stable",
+    loading: "eager"
   },
   "semiotic-experimental-network-resolution": {
     platform: "neutral", rsc: true, edge: true, native: false,
@@ -1780,10 +1789,8 @@ function assertBrowserCompatibleStaticMarkupImports() {
       visited.add(name)
       const code = codeByFile.get(name) ?? ""
       const requests = [...code.matchAll(/["']\.\/([^"']+\.js)["']/g)]
-      return (
-        code +
+      return code +
         requests.map(([, imported]) => visit(imported)).join("")
-      )
     }
     return visit(entryName)
   }
@@ -1894,6 +1901,12 @@ const buildPromise = isDeclarationsOnly
 
 buildPromise
   .then(() => {
+    if (!isDeclarationsOnly)
+      bundleFreshness.writeBuildFingerprint(
+        process.cwd(),
+        "library",
+        buildSourceFingerprint
+      )
     process.exit(0)
   })
   .catch((err) => {

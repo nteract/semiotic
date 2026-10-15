@@ -5,7 +5,7 @@ import type { Datum } from "./datumTypes"
  * Validates component name, required props, prop types, enum values,
  * unknown props (typo detection), and data shape via the existing
  * validateArrayData / validateObjectData / validateNetworkData helpers.
- * Components with dataShape "none" intentionally skip data validation.
+ * Components with dataShape "none" skip data validation.
  */
 
 import {

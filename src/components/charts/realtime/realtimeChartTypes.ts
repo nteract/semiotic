@@ -26,12 +26,12 @@ export interface RealtimeAccessibilityProps {
 }
 
 /**
- * Realtime charts historically passed the full HoverData wrapper to a custom
- * tooltip callback. Keep that published callback contract while also accepting
+ * Realtime charts pass the full HoverData wrapper to custom tooltip callbacks
+ * and accept
  * the shared declarative and multi-series tooltip forms.
  */
 export type RealtimeTooltipProp =
-  | TooltipPropWithHoverCallback
+  TooltipPropWithHoverCallback
   | ((data: HoverData) => ReactNode)
 
 /** Typed data inference plus the broader array accepted by the 3.x API. */
@@ -42,5 +42,5 @@ export type RealtimeData<TDatum extends Datum> = TDatum[] | Datum[]
  * by the 3.x realtime wrappers.
  */
 export type RealtimePointIdAccessor<TDatum extends Datum> =
-  | string
+  string
   | ChartAccessor<TDatum, string>

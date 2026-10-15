@@ -393,7 +393,7 @@ export const RealtimeHistogram = /* @__PURE__ */ withDisplayName(/* @__PURE__ */
   })
   const controlledCategories = useMemo(
     // Use the same coercion as push-mode frame emission. Realtime stack keys
-    // deliberately preserve nullish values as "null" and "undefined".
+    // preserve nullish values as "null" and "undefined".
     () => extractCategoryDomain(data ?? [], categoryAccessor),
     [data, categoryAccessor]
   )

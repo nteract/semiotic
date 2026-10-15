@@ -16,7 +16,7 @@ type PackingWindow = ProcessSankeyLaneLifetime
 function windowsOverlap(a: PackingWindow, b: PackingWindow): boolean {
   if (a.start == null || a.end == null || b.start == null || b.end == null)
     return false
-  // A handoff at exactly the same instant is intentionally compatible: the
+  // A handoff at exactly the same instant is compatible: the
   // outgoing and incoming bands meet rather than occupy the row together.
   return !(a.end <= b.start || b.end <= a.start)
 }

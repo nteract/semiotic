@@ -3,17 +3,17 @@ import { LIGHT_THEME, DARK_THEME, HIGH_CONTRAST_THEME, resolveThemeUpdate } from
 describe("ThemeStore — setTheme merge rules", () => {
   it("string 'dark' returns DARK_THEME", () => {
     const result = resolveThemeUpdate(LIGHT_THEME, "dark")
-    expect(result).toBe(DARK_THEME)
+    expect(result).toEqual(DARK_THEME)
   })
 
   it("string 'light' returns LIGHT_THEME", () => {
     const result = resolveThemeUpdate(DARK_THEME, "light")
-    expect(result).toBe(LIGHT_THEME)
+    expect(result).toEqual(LIGHT_THEME)
   })
 
   it("string 'high-contrast' returns HIGH_CONTRAST_THEME", () => {
     const result = resolveThemeUpdate(DARK_THEME, "high-contrast")
-    expect(result).toBe(HIGH_CONTRAST_THEME)
+    expect(result).toEqual(HIGH_CONTRAST_THEME)
   })
 
   it("object with mode:'dark' merges onto DARK_THEME base", () => {
@@ -27,7 +27,7 @@ describe("ThemeStore — setTheme merge rules", () => {
     expect(result.colors.text).toBe(DARK_THEME.colors.text)
     expect(result.colors.grid).toBe(DARK_THEME.colors.grid)
     // But categorical should be our custom palette
-    expect(result.colors.categorical).toBe(custom)
+    expect(result.colors.categorical).toEqual(custom)
     expect(result.mode).toBe("dark")
   })
 
@@ -39,7 +39,7 @@ describe("ThemeStore — setTheme merge rules", () => {
     })
     expect(result.colors.background).toBe(LIGHT_THEME.colors.background)
     expect(result.colors.text).toBe(LIGHT_THEME.colors.text)
-    expect(result.colors.categorical).toBe(custom)
+    expect(result.colors.categorical).toEqual(custom)
     expect(result.mode).toBe("light")
   })
 
@@ -52,7 +52,7 @@ describe("ThemeStore — setTheme merge rules", () => {
     // 'auto' should merge onto current (dark), not force light base
     expect(result.colors.background).toBe(DARK_THEME.colors.background)
     expect(result.colors.text).toBe(DARK_THEME.colors.text)
-    expect(result.colors.categorical).toBe(custom)
+    expect(result.colors.categorical).toEqual(custom)
     expect(result.mode).toBe("auto")
   })
 
@@ -64,7 +64,7 @@ describe("ThemeStore — setTheme merge rules", () => {
     // Should keep dark base (current theme)
     expect(result.colors.background).toBe(DARK_THEME.colors.background)
     expect(result.colors.text).toBe(DARK_THEME.colors.text)
-    expect(result.colors.categorical).toBe(custom)
+    expect(result.colors.categorical).toEqual(custom)
     // Mode stays from current theme
     expect(result.mode).toBe("dark")
   })

@@ -11,6 +11,7 @@ class-member BuiltInPhysicsEngineAdapter::construct::%24construct = required new
 class-member BuiltInPhysicsEngineAdapter::method::activeSensorPairs = required activeSensorPairs(): PhysicsActiveSensorPair[]
 class-member BuiltInPhysicsEngineAdapter::method::allSleeping = required allSleeping(): boolean
 class-member BuiltInPhysicsEngineAdapter::method::applyImpulse = required applyImpulse(id: string, ix: number, iy: number): void
+class-member BuiltInPhysicsEngineAdapter::method::applyWorkerMotion = required applyWorkerMotion(frame: PhysicsWorkerFrame): void
 class-member BuiltInPhysicsEngineAdapter::method::dispose = required dispose(): void
 class-member BuiltInPhysicsEngineAdapter::method::events = required events(): PhysicsKernelEvent[]
 class-member BuiltInPhysicsEngineAdapter::method::init = required init(options?: PhysicsKernelOptions | undefined): void
@@ -25,11 +26,13 @@ class-member BuiltInPhysicsEngineAdapter::method::settle = required settle(maxSt
 class-member BuiltInPhysicsEngineAdapter::method::snapshot = required snapshot(): PhysicsKernelSnapshot
 class-member BuiltInPhysicsEngineAdapter::method::spawn = required spawn(spec: PhysicsBodySpec): void
 class-member BuiltInPhysicsEngineAdapter::method::step = required step(dtSeconds?: number | undefined): void
+class-member BuiltInPhysicsEngineAdapter::method::workerSleepTimes = required workerSleepTimes(ids: string[]): Float32Array<ArrayBufferLike>
 class-member BuiltInPhysicsEngineAdapter::property::capabilities = required readonly capabilities: PhysicsEngineCapabilities
 class-member BuiltInPhysicsEngineAdapter::property::id = required readonly id: "builtin"
 class-member PhysicsPipelineStore::construct::%24construct = required new (config?: PhysicsPipelineConfig | undefined): PhysicsPipelineStore
 class-member PhysicsPipelineStore::method::allSleeping = required allSleeping(): boolean
 class-member PhysicsPipelineStore::method::applyImpulse = required applyImpulse(id: string, ix: number, iy: number): void
+class-member PhysicsPipelineStore::method::applyWorkerFrame = required applyWorkerFrame(frame: PhysicsWorkerFrame): void
 class-member PhysicsPipelineStore::method::atRest = required atRest(): boolean
 class-member PhysicsPipelineStore::method::bodyBudgetStatus = required bodyBudgetStatus(): PhysicsBodyBudgetDecision
 class-member PhysicsPipelineStore::method::clear = required clear(): void
@@ -67,6 +70,8 @@ class-member PhysicsPipelineStore::method::tick = required tick(deltaSeconds: nu
 class-member PhysicsPipelineStore::method::updateConfig = required updateConfig(config: PhysicsPipelineConfig): void
 class-member PhysicsPipelineStore::method::updateConfigWithResult = required updateConfigWithResult(config: PhysicsPipelineConfig): UpdateResult
 class-member PhysicsPipelineStore::method::version = required version(): number
+class-member PhysicsPipelineStore::method::workerSleepTimes = required workerSleepTimes(ids: string[]): Float32Array<ArrayBufferLike> | undefined
+class-member PhysicsPipelineStore::method::workerState = required workerState(): PhysicsWorkerState
 class-member PhysicsSedimentAccumulator::construct::%24construct = required new (config?: PhysicsSedimentConfig | false | undefined): PhysicsSedimentAccumulator
 class-member PhysicsSedimentAccumulator::method::add = required add(body: PhysicsBodyState): PhysicsSedimentBinSnapshot | null
 class-member PhysicsSedimentAccumulator::method::clear = required clear(): void
@@ -1679,6 +1684,7 @@ interface-member PhysicsEncodingDefaults::property::y = optional y: number | und
 interface-member PhysicsEngineAdapter::property::activeSensorPairs = required activeSensorPairs: () => PhysicsActiveSensorPair[]
 interface-member PhysicsEngineAdapter::property::allSleeping = required allSleeping: () => boolean
 interface-member PhysicsEngineAdapter::property::applyImpulse = required applyImpulse: (id: string, ix: number, iy: number) => void
+interface-member PhysicsEngineAdapter::property::applyWorkerMotion = optional applyWorkerMotion: ((frame: PhysicsWorkerFrame) => void) | undefined
 interface-member PhysicsEngineAdapter::property::capabilities = required readonly capabilities: PhysicsEngineCapabilities
 interface-member PhysicsEngineAdapter::property::dispose = required dispose: () => void
 interface-member PhysicsEngineAdapter::property::events = required events: () => PhysicsKernelEvent[]
@@ -1695,6 +1701,7 @@ interface-member PhysicsEngineAdapter::property::settle = required settle: (maxS
 interface-member PhysicsEngineAdapter::property::snapshot = required snapshot: () => PhysicsKernelSnapshot
 interface-member PhysicsEngineAdapter::property::spawn = required spawn: (spec: PhysicsBodySpec) => void
 interface-member PhysicsEngineAdapter::property::step = required step: (dtSeconds?: number) => void
+interface-member PhysicsEngineAdapter::property::workerSleepTimes = optional workerSleepTimes: ((ids: string[]) => Float32Array) | undefined
 interface-member PhysicsEngineCapabilities::property::ccd = required ccd: boolean
 interface-member PhysicsEngineCapabilities::property::determinism = required determinism: PhysicsEngineDeterminism
 interface-member PhysicsEngineCapabilities::property::engine = required engine: string

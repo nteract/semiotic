@@ -974,7 +974,7 @@ describe("StreamOrdinalFrame", () => {
 
         expect(background).toHaveAttribute(
           "fill",
-          "var(--semiotic-bg, transparent)"
+          "var(--semiotic-bg, #1a1a2e)"
         )
         expect(grid).toBeTruthy()
         expectBefore(background!, grid!)

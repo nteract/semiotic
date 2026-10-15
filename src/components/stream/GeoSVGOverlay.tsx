@@ -34,17 +34,14 @@ interface GeoSVGOverlayProps {
   totalHeight: number
   margin: { top: number; right: number; bottom: number; left: number }
 
-  /**
-   * Geo has no Cartesian axis scale, but this remains part of the internal
-   * contract because StreamGeoFrame historically used it to request an empty
-   * accessible overlay shell.
-   */
+  /** Request an overlay shell; Geo has no Cartesian axis scale. */
   showAxes?: boolean
 
   title?: string | ReactNode
   /** Accessible long description; wins over the title-derived `<desc>` suffix. */
   description?: string
   /** Prefix for `<title>`/`<desc>` ids so multiple charts on a page do not collide. */
+  decorative?: boolean
   idPrefix?: string
 
   legend?: LegendValue
@@ -95,6 +92,7 @@ export function GeoSVGOverlay(props: GeoSVGOverlayProps) {
     title,
     description,
     idPrefix,
+    decorative = false,
     legend,
     legendHoverBehavior,
     legendClickBehavior,
@@ -135,7 +133,7 @@ export function GeoSVGOverlay(props: GeoSVGOverlayProps) {
     const visibleAnnotations = filterAnnotationsByStatus(annotations)
 
     // Geo annotations use the public `coordinates: [lon, lat]` form. The
-    // generic annotation rules deliberately only understand pixel x/y, so
+    // generic annotation rules only understand pixel x/y, so
     // project that form before handing annotations to them. SSR already did
     // this in staticAnnotations; this closes the client-only gap.
     const projectedAnnotations = geoProjection
@@ -146,7 +144,7 @@ export function GeoSVGOverlay(props: GeoSVGOverlayProps) {
         })
       : visibleAnnotations
 
-    // These values deliberately mirror the context Geo received through the
+    // These values mirror the context Geo received through the
     // Cartesian overlay. Geo x/y values here are already pixels (including
     // the projected `coordinates` form above), so identity scales let the
     // shared resolver consume them without treating them as data-space values.
@@ -194,8 +192,9 @@ export function GeoSVGOverlay(props: GeoSVGOverlayProps) {
 
   return (
     <svg
-      role="img"
-      aria-labelledby={labelledBy}
+      data-semiotic-overlay=""
+      role={decorative ? "presentation" : "img"}
+      aria-labelledby={decorative ? undefined : labelledBy}
       width={totalWidth}
       height={totalHeight}
       overflow="visible"
@@ -207,13 +206,17 @@ export function GeoSVGOverlay(props: GeoSVGOverlayProps) {
         overflow: "visible"
       }}
     >
-      <title id={titleId}>{overlayAccessibleTitle(title, "Geographic chart")}</title>
+      {!decorative && (
+        <>
+          <title id={titleId}>{overlayAccessibleTitle(title, "Geographic chart")}</title>
       <desc id={descId}>
         {overlayAccessibleDescription(title, description, {
           familyPhrase: "geographic data visualization",
           fallback: "geographic data visualization"
         })}
       </desc>
+        </>
+      )}
       <g transform={"translate(" + margin.left + "," + margin.top + ")"}>
         {renderedAnnotations}
         {foregroundGraphics}

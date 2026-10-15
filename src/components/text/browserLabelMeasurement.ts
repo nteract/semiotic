@@ -4,7 +4,7 @@ import {
   type LabelMeasurer
 } from "./labelMeasurement"
 
-/** Call after mount; SSR and initial hydration deliberately use estimates. */
+/** Call after mount; SSR and initial hydration use estimates. */
 export function browserLabelMeasurer(): LabelMeasurer {
   if (typeof document === "undefined") return estimateLabel
   const canvas = document.createElement("canvas")

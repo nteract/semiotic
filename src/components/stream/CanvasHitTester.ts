@@ -136,7 +136,7 @@ export function findNearestNode(
 
     // Each type-specific tester has already applied its effective visual hit
     // geometry. Do not re-cap large bubbles/glyphs at maxDistance here; the
-    // quadtree path intentionally honors the same visual radius.
+    // quadtree path honors the same visual radius.
     if (result) {
       if (!best || result.distance < best.distance || (
         result.distance === 0 && best.distance === 0 &&
@@ -404,7 +404,8 @@ function hitTestAreaPath(
       // Normal offsets give the two boundaries different x coordinates. Use
       // their paired centers to retain the nearest sample's datum identity.
       const idx = binarySearchPath(node.topPath, px, node.bottomPath)
-      const datum = Array.isArray(node.datum) ? node.datum[idx] ?? node.datum : node.datum
+      const datum = Array.isArray(node.datum) ? (node.datum[idx] ?? node.datum)
+        : node.datum
       return { node, datum, x: px, y: py, distance: 0 }
     }
   }

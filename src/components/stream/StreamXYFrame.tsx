@@ -35,15 +35,13 @@ import { useXYTransitionEngine } from "./useXYTransitionEngine"
 import { useHydration, useWasHydratingFromSSR } from "./useHydration"
 import { useStableShallow } from "./useStableShallow"
 import { paintCanvasPreRenderers, useUnderLayerBandRenderers } from "./underLayerBands"
-import { paintCanvasBackground, resolveCanvasBackground, resolveFrameSurfaceBackground } from "./canvasBackground"
+import { resolveFrameSurfaceBackground } from "./canvasBackground"
 import { needsInteractionCanvasPaint } from "./paintNeeds"
 import { createFrameThemeColorCache, LIGHT_FRAME_THEME } from "./frameThemeColors"
 
 export { withAlpha } from "./frameThemeColors"
 import { AccessibleDataTableSlot, AriaLiveTooltip, ScreenReaderSummary, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { FocusRing } from "./FocusRing"
-import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
-import { hasOwnTooltipChrome, hasTooltipContent } from "../Tooltip/tooltipChrome"
 import { useFrame } from "./useFrame"
 import { CanvasFrameBackground, useFrameCanvasHost } from "./useCanvasFrameHost"
 import { refreshIdlePulse } from "./pulseFrameRefresh"
@@ -60,7 +58,7 @@ import { getXYCanvasRenderers } from "./xyPlugins/registry"
 import { useEnsureXYPlugins } from "./useEnsureCustomXYRenderers"
 import { paintSceneWithBackend, renderSceneWithBackend } from "./renderBackend"
 import { drawCrosshair, drawLineHighlight } from "./xyCrosshair"
-import { DefaultTooltip } from "./xyDefaultTooltip"
+import { XYFrameTooltip } from "./xyDefaultTooltip"
 import { observationInputType } from "../charts/shared/semanticInteractions"
 import { isAnnotationActivationTarget } from "../charts/shared/annotationActivation"
 import { useSemanticFrameInteractions } from "./useSemanticFrameInteractions"
@@ -948,24 +946,8 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
             ctx.globalAlpha = resolvedStaleness.alpha
           }
 
-          // Background.
-          //   • `background="transparent"` — explicit opt-out so this chart
-          //     can be composed as an overlay without painting over the
-          //     layer beneath.
-          //   • `backgroundGraphics` — user supplied their own SVG
-          //     background (rendered as a DOM sibling behind the canvas).
-          //     Skip the canvas fill so the SVG remains visible. When an
-          //     explicit solid `background` is also present, that solid is
-          //     rendered as the SVG layer's backdrop before the graphics.
-          paintCanvasBackground(ctx, {
-            background,
-            hasBackgroundGraphics: Boolean(backgroundGraphics),
-            themeBackground: theme.background,
-            x: -margin.left,
-            y: -margin.top,
-            width: size[0],
-            height: size[1]
-          })
+          // Keep the mark canvas transparent: the SVG surface and grid
+          // underneath it own the background, so gridlines cannot cover marks.
 
           // Clip and render data marks
           ctx.save()
@@ -1070,7 +1052,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       // ── React state updates ──────────────────────────────────────────
       const wasDirty = dirtyRef.current
       // If a prop/layout/size change arrives while a transition is active,
-      // computeScene is intentionally deferred. Keep the dirty flag set so
+      // computeScene is deferred. Keep the dirty flag set so
       // the next non-transition frame applies the new responsive dimensions
       // instead of leaving canvas scene nodes and SVG overlays out of sync.
       dirtyRef.current = wasDirty && isTransitioning && !computedSceneThisFrame
@@ -1135,26 +1117,6 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
 
     const effectiveXFormat: StreamXYFrameProps["xFormat"] = xFormat || (tickFormatTime as StreamXYFrameProps["xFormat"]) || (autoDateXFormat as StreamXYFrameProps["xFormat"])
 
-    // ── Tooltip positioning ──────────────────────────────────────────────
-
-    const tooltipRendered = effectiveHoverAnnotation && hoverPoint
-      ? (tooltipContent ? tooltipContent(hoverPoint) : <DefaultTooltip hover={hoverPoint} />)
-      : null
-
-    const tooltipElement = hasTooltipContent(tooltipRendered) ? (
-      <FlippingTooltip
-        contentOwnsChrome={hasOwnTooltipChrome(tooltipContent)}
-        x={hoverPoint!.x}
-        y={hoverPoint!.y}
-        containerWidth={adjustedWidth}
-        containerHeight={adjustedHeight}
-        margin={margin}
-        className="stream-frame-tooltip"
-      >
-        {tooltipRendered}
-      </FlippingTooltip>
-    ) : null
-
     // ── Keyboard focus ring ──────────────────────────────────────────────
 
     const fnp = focusedNavPointRef.current
@@ -1186,6 +1148,9 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
     const annYAccessor = yResolved.key
     const hasAnnotations = (annotations && annotations.length > 0) || false
     const enrichAnnotationData = buildEnrichAnnotationData(xResolved, yResolved, hasAnnotations)
+    const directLabelDescriptionId = annotations?.some((a) => a._directLabel || a._directLabelRequest)
+      ? `${tableId}-direct-labels`
+      : undefined
 
     // ── SSR + hydration path: render SVG instead of canvas ─────────────
     //
@@ -1253,7 +1218,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
           // it would never re-run to see the now-attached element.
           ref={responsiveRef}
           className={`stream-xy-frame${className ? ` ${className}` : ""}`}
-          role={accessibleTable ? "group" : "img"}
+          role="group"
           aria-label={chartAriaLabel}
           style={{
             position: "relative",
@@ -1264,7 +1229,8 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
         >
           <AccessibleDataTableSlot accessibleTable={accessibleTable} scene={scene} chartType={chartType + " chart"} tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />
           <ScreenReaderSummary summary={summary} />
-          <svg
+          <div role="img" aria-label={chartAriaLabel} aria-describedby={directLabelDescriptionId}>
+          <svg role="presentation"
             xmlns="http://www.w3.org/2000/svg"
             width={size[0]}
             height={size[1]}
@@ -1294,6 +1260,8 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
             </g>
           </svg>
           <SVGOverlay
+            decorative
+            directLabelDescriptionId={directLabelDescriptionId}
             width={adjustedWidth}
             height={adjustedHeight}
             totalWidth={size[0]}
@@ -1340,6 +1308,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
             linkedCrosshairName={linkedCrosshairName}
             linkedCrosshairSourceId={linkedCrosshairSourceId}
           />
+          </div>
         </div>
       )
     }
@@ -1380,6 +1349,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
         <div
           role="img"
           aria-label={description || (typeof title === "string" ? title : "XY chart")}
+          aria-describedby={directLabelDescriptionId}
           style={{ position: "relative", width: "100%", height: "100%" }}
           onPointerMove={onPointerMoveWrapped}
           onMouseMove={onMouseMoveFallback}
@@ -1391,7 +1361,11 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
         <CanvasFrameBackground
           size={size}
           margin={margin}
-          backdropFill={backgroundGraphics ? background : undefined}
+          backdropFill={resolveFrameSurfaceBackground({
+            background,
+            hasBackgroundGraphics: Boolean(backgroundGraphics),
+            themeBackground: `var(--semiotic-bg, ${currentTheme.colors.background})`,
+          }) ?? undefined}
         >
           {resolvedBackground}
         </CanvasFrameBackground>
@@ -1410,9 +1384,11 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
           axisExtent={axisExtent}
         />
         {/* CSS box from the frame size at commit, so paused or hidden-tab mounts lay out before their first paint. */}
-        <canvas ref={canvasRef} aria-label={computeCanvasAriaLabel(storeRef.current?.scene ?? [], chartType + " chart")} style={{ position: "absolute", left: 0, top: 0, width: size[0], height: size[1] }} />
+        <canvas aria-hidden="true" ref={canvasRef} aria-label={computeCanvasAriaLabel(storeRef.current?.scene ?? [], chartType + " chart")} style={{ position: "absolute", left: 0, top: 0, width: size[0], height: size[1] }} />
         <canvas ref={interactionCanvasRef} style={{ position: "absolute", left: 0, top: 0, width: size[0], height: size[1], pointerEvents: "none" }} />
         <SVGOverlay
+          decorative
+          directLabelDescriptionId={directLabelDescriptionId}
           width={adjustedWidth}
           height={adjustedHeight}
           totalWidth={size[0]}
@@ -1457,19 +1433,8 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
           pointNodes={collectAnnotationAnchors(storeRef.current?.scene)}
           curve={typeof curve === "string" ? curve : undefined}
           underlayRendered
-          // When the canvas paints `--semiotic-bg`
-          // opaquely, it hides `SVGUnderlay` and the overlay needs to
-          // emit the grid + baseline copy itself. When the canvas is
-          // transparent (`background="transparent"` opt-out, or a
-          // `backgroundGraphics` SVG sibling that owns the bg layer),
-          // the underlay shows through and the overlay must NOT
-          // duplicate to avoid the doubled / slightly-darker stroke
-          // from two SVG paths overlaid pixel-for-pixel.
-          canvasObscuresUnderlay={Boolean(resolveCanvasBackground({
-            background,
-            hasBackgroundGraphics: Boolean(backgroundGraphics),
-            themeBackground: currentTheme?.colors.background,
-          }))}
+          // The SVG grid and baselines remain visible below the mark canvas.
+          canvasObscuresUnderlay={false}
           linkedCrosshairName={linkedCrosshairName}
           linkedCrosshairSourceId={linkedCrosshairSourceId}
         />
@@ -1499,7 +1464,14 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
           />
         )}
         {focusRing}
-        {tooltipElement}
+        <XYFrameTooltip
+          enabled={Boolean(effectiveHoverAnnotation)}
+          hoverPoint={hoverPoint}
+          tooltipContent={tooltipContent}
+          containerWidth={adjustedWidth}
+          containerHeight={adjustedHeight}
+          margin={margin}
+        />
         </div>{/* end role="img" */}
         {/* Controls stay outside role="img" so assistive technology reaches them. */}
         <FrameInteractiveLayer

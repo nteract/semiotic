@@ -208,7 +208,7 @@ export interface NavBranchExpandedEvent extends ConversationArcEventBase {
  * observable node of the conversation arc (IDID §13.4): the note is the unit
  * the arc is *about*, not chart chrome.
  *
- * `fromStatus`/`toStatus` are deliberately not named `from`/`to` — `summarizeArc`
+ * `fromStatus`/`toStatus` are not named `from`/`to` — `summarizeArc`
  * reads `from`/`to` as chart-component names (the `chart-replaced` shape), so a
  * status value there would pollute `componentsSeen`.
  */

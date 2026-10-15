@@ -48,7 +48,7 @@ export interface MobileChartContainerProps
   detailMode?: MobileChartDetailMode
   /** Initial open state for sheet details. Inline details are always visible. */
   initialDetailOpen?: boolean
-  /** Last-resort horizontal scroll fallback for legacy or intentionally wide charts. */
+  /** Last-resort horizontal scroll fallback for legacy or wide charts. */
   allowHorizontalScroll?: boolean
   /** Hide toolbar controls at the mobile breakpoint. */
   hideToolbar?: boolean
@@ -145,7 +145,9 @@ export function MobileChartContainer({
       )}
       {chipControls}
     </div>
-  ) : mobile?.summary
+  ) : (
+      mobile?.summary
+    )
 
   const mergedMobile: ChartContainerMobileOptions = {
     breakpoint,

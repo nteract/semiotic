@@ -418,7 +418,7 @@ export type TooltipProp =
   | TooltipConfig
 
 /**
- * Backward-compatible tooltip input for charts that historically supplied the
+ * Tooltip input for charts that supply the
  * complete HoverData wrapper to a plain callback.
  */
 export type TooltipPropWithHoverCallback =
@@ -629,8 +629,7 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
     // labels ("Open"/"High"/"Low"/"Close" for candlestick,
     // "Category"/"Value" for ordinal, etc.). Returning the generic
     // `Tooltip()` here would render raw datum field names ("o", "h",
-    // "l", "c") which is what `tooltip={true}` historically did but
-    // is rarely what the user wants. Consumers without a chart-
+    // "l", "c"). Consumers without a chart-
     // specific default still fall through to the Stream Frame's
     // `DefaultTooltip`, so `tooltip={true}` on a raw frame keeps
     // working — just with the chart-aware shape.

@@ -112,8 +112,7 @@ describe("Chart Clinic read-only inspection", () => {
       category: "geo",
       recommendedImport: "semiotic/geo",
       serverImport: "semiotic/server",
-      note:
-        "Use the family facade today. Granular chart modules are a later package-boundary migration, so this recommendation does not claim a smaller per-chart bundle.",
+      note: "Use the recommended family import. This guidance does not estimate a per-chart bundle size."
     })
   })
 

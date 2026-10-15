@@ -28,7 +28,7 @@ describe("category task: values, marks and evidence boundaries", () => {
       })
       const document = new DOMParser().parseFromString(svg, "image/svg+xml")
       // Exclude clip rectangles: these are the three colored data marks.
-      const bars = Array.from(document.querySelectorAll("rect")).filter(
+      const bars = Array.from(document.querySelectorAll("[id$=data-area] rect")).filter(
         (rect) => !rect.closest("defs") && rect.getAttribute("fill") !== "none",
       )
       expect(evidence.markCount).toBe(3)

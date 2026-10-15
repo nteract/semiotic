@@ -11,6 +11,7 @@
 //
 // Run after `npm run dist:prod`.
 import assert from "node:assert/strict"
+import { execFileSync } from "node:child_process"
 import { existsSync, readFileSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 import { test } from "node:test"
@@ -33,6 +34,20 @@ const EXTERNAL = [
   "@chenglou/pretext",
   "topojson-client"
 ]
+
+test("multi-import size is independent of temporary consumer paths", () => {
+  const measure = () => {
+    const output = execFileSync(
+      process.execPath,
+      [join(root, "scripts/check-multi-import-size.mjs"), "--print"],
+      { cwd: root, encoding: "utf8" }
+    )
+    const bytes = output.match(/gzip:.*\((\d+) bytes\)/)?.[1]
+    assert.ok(bytes, "the consumer should report a gzip byte count")
+    return Number(bytes)
+  }
+  assert.equal(measure(), measure())
+})
 
 async function eagerBundle(exportKey, symbol) {
   const filename = resolve(root, pkg.exports[exportKey].import)
@@ -69,9 +84,24 @@ async function eagerBundle(exportKey, symbol) {
   const files = [...eager].map((path) => textByPath.get(resolve(root, path)) ?? "")
   return {
     code: files.join("\n"),
+    deferredCode: Object.keys(outputs)
+      .filter((path) => !eager.has(path))
+      .map((path) => textByPath.get(resolve(root, path)) ?? "")
+      .join("\n"),
     gzipBytes: files.reduce((sum, text) => sum + gzipSync(text, { level: 9 }).length, 0)
   }
 }
+
+test("chart downloads stay outside the initial public entry graphs", async () => {
+  for (const entry of [".", "./ai", "./utils", "./utils/core"]) {
+    const { code, deferredCode } = await eagerBundle(entry, "exportChart")
+    assert.match(code, /\bimport\(/, `${entry} must retain its deferred export implementation`)
+    for (const message of ["No SVG element found in the container", "Failed to create PNG blob"]) {
+      assert.ok(!code.includes(message), `${entry} must not eagerly load the chart download implementation`)
+      assert.ok(deferredCode.includes(message), `${entry} must retain SVG and PNG downloads in a deferred chunk`)
+    }
+  }
+})
 
 const cases = [
   {

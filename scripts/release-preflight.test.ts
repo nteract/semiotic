@@ -102,6 +102,58 @@ test("local release and direct publish start with preflight; fast checks include
   )
 })
 
+test("production bundle budgets fail before size tests and package consumer checks", () => {
+  assert.equal(
+    scripts.size.split(" && ")[0],
+    "npm run check:bundle-budgets"
+  )
+  assert.deepEqual(scripts["check:bundle-budgets"].split(" && "), [
+    "npm run check:entry-graph-size",
+    "npm run check:multi-import-size"
+  ])
+  assert.equal(
+    scripts["check:package-contracts:from-dist"].split(" && ")[0],
+    "npm run size"
+  )
+  for (const name of ["release:check", "prepublishOnly"]) {
+    assert.deepEqual(scripts[name].split(" && ").slice(0, 3), [
+      "npm run check:release-preflight",
+      "npm run dist:prod",
+      "npm run check:bundle-budgets"
+    ])
+  }
+})
+
+test("CI checks bundle budgets immediately after production builds and before expensive work", () => {
+  const ci = read(".github/workflows/node.js.yml")
+    .split("  docs-package:")[1]
+    .split("  testing-matrix:")[0]
+  const release = read(".github/workflows/release.yml")
+    .split("  source-preflight:")[1]
+    .split("  docs-examples:")[0]
+  for (const [job, budgetCommand, nextCommand] of [
+    [ci, "npm run check:bundle-budgets", "npm run build:mcp"],
+    [release, "npm run check:entry-graph-size", "npm run typescript"]
+  ]) {
+    const build = job.indexOf("npm run dist:prod")
+    const budget = job.indexOf(budgetCommand)
+    assert.ok(build >= 0)
+    assert.ok(budget > build)
+    assert.ok(budget < job.indexOf(nextCommand))
+    assert.doesNotMatch(job.slice(build, budget), /npm run (?!dist:prod)/)
+  }
+  // Recovery can target a tag older than the combined budget script.
+  assert.doesNotMatch(release, /npm run check:bundle-budgets/)
+  assert.match(
+    release,
+    /npm run check:entry-graph-size\s+npm run check:multi-import-size/
+  )
+  assert.ok(
+    release.indexOf("npm run check:multi-import-size") < release.indexOf("npm run typescript")
+  )
+  assert.doesNotMatch(ci + release, /continue-on-error:/)
+})
+
 test("release gates browsers and publication on current preflight policy against tagged source", () => {
   const workflow = read(".github/workflows/release.yml")
   const source = workflow

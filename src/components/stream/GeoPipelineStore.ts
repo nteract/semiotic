@@ -1,3 +1,6 @@
+import { repairDegenerateGeoFit } from "./geoProjectionFit"
+import { geoPointIndices } from "./geoPointSourceIndex"
+import { buildGeoScales } from "./geoScales"
 import { geoPath as d3GeoPath } from "d3-geo"
 import type { GeoProjection, GeoPath, GeoPermissibleObjects } from "d3-geo"
 import type { ZoomTransform } from "d3-zoom"
@@ -326,8 +329,8 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
 
   /** Append a single line/flow record (coordinates pre-resolved). Lines
    *  use array storage, then retain the active configured window in streaming mode.
-   *  Mutates `lineData` in place to avoid the O(n) GC churn of an
-   *  array spread per push. The mutation is invisible to callers
+   *  Appends in place before trimming; a full streaming window requires a
+   *  retained-suffix copy. The mutation is invisible to callers
    *  because `setLines` defensive-copies on entry and `getLines`
    *  defensive-copies on exit. */
   pushLine(line: Datum): void {
@@ -427,7 +430,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
       return removed
     } else {
       const removed: Datum[] = []
-      this.pointData = this.pointData.filter(d => {
+      this.pointData = this.pointData.filter((d) => {
         if (ids.has(String(getId(d)))) {
           removed.push(d)
           return false
@@ -486,6 +489,25 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
 
   // ── Projection pipeline ──────────────────────────────────────────
 
+  private rebuildProjectedScene(
+    layout: StreamLayout,
+    rollback: () => void
+  ): boolean {
+    this._customLayoutFailedThisBuild = false
+    const nextScene = this.buildSceneNodes(layout)
+    if (this._customLayoutFailedThisBuild) {
+      if (this.lastCustomLayoutFailure?.preservedLastGoodScene) rollback()
+      else {
+        this.scene = []
+        this.rebuildQuadtree()
+      }
+      return false
+    }
+    this.scene = nextScene
+    this.rebuildQuadtree()
+    return true
+  }
+
   computeScene(layout: StreamLayout): void {
     const { config } = this
     const previousProjection = this.projection
@@ -508,47 +530,21 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
 
     // Step 3: Build scales object
     const proj = this.projection
-    this.scales = {
-      projection: proj,
-      geoPath: this.geoPath,
-      projectedPoint: (lon: number, lat: number) => {
-        const result = proj([lon, lat])
-        return result as [number, number] | null
-      },
-      invertedPoint: (px: number, py: number) => {
-        if (!proj.invert) return null
-        const result = proj.invert([px, py])
-        return result as [number, number] | null
-      }
-    }
+    this.scales = buildGeoScales(proj)
+    this.geoPath = this.scales.geoPath
 
     // Step 4: Build scene nodes
-    this._customLayoutFailedThisBuild = false
-    const nextScene = this.buildSceneNodes(layout)
-    if (this._customLayoutFailedThisBuild) {
-      const preservedLastGoodScene =
-        this.lastCustomLayoutFailure?.preservedLastGoodScene === true
-      if (preservedLastGoodScene) {
-        // The callback saw a freshly fitted projection, but the retained scene
-        // was produced against the prior one. Restore the complete geographic
-        // scale bundle so drawing, annotation anchoring, and imperative
-        // readback continue to describe the visible last-good scene.
+    if (
+      !this.rebuildProjectedScene(layout, () => {
         this.projection = previousProjection
         this.geoPath = previousGeoPath
         this.scales = previousScales
         this.baseScale = previousBaseScale
         this.baseTranslate = previousBaseTranslate
         this.baseRotation = previousBaseRotation
-      } else {
-        // A newly installed custom layout must not leave an unrelated built-in
-        // scene visible when it fails before producing any custom output.
-        this.scene = []
-        this.rebuildQuadtree()
-      }
+      })
+    )
       return
-    }
-    this.scene = nextScene
-    this.rebuildQuadtree()
 
     // Step 5: Apply distance cartogram transform
     if (config.projectionTransform) {
@@ -568,8 +564,8 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
       const cx = layout.width / 2
       const cy = layout.height / 2
       const syntheticPrev = this.scene
-        .filter(n => n.type === "point")
-        .map(n => ({ ...n, x: cx, y: cy }))
+        .filter((n) => n.type === "point")
+        .map((n) => ({ ...n, x: cx, y: cy }))
       if (syntheticPrev.length > 0) {
         this.startTransition(syntheticPrev)
       }
@@ -600,7 +596,8 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
     const points = this.getPoints()
 
     if (points.length > 0) {
-      const coords: [number, number][] = points.map(d => [xAcc(d), yAcc(d)])
+      const coords: [number, number][] = points.map((d): [number, number] => [xAcc(d), yAcc(d)])
+        .filter((coord) => coord.every(Number.isFinite))
       allFeatures.push({
         type: "Feature",
         properties: {},
@@ -664,6 +661,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
         [[px, py], [layout.width - px, layout.height - py]],
         collection
       )
+      repairDegenerateGeoFit(proj, collection, layout)
     }
 
     // Save base projection state for zoom reference
@@ -698,38 +696,19 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
     this.geoPath = d3GeoPath(proj)
 
     // Rebuild scales
-    this.scales = {
-      projection: proj,
-      geoPath: this.geoPath,
-      projectedPoint: (lon: number, lat: number) => {
-        const result = proj([lon, lat])
-        return result as [number, number] | null
-      },
-      invertedPoint: (px: number, py: number) => {
-        if (!proj.invert) return null
-        const result = proj.invert([px, py])
-        return result as [number, number] | null
-      }
-    }
+    this.scales = buildGeoScales(proj)
+    this.geoPath = this.scales.geoPath
 
     // Rebuild scene nodes with zoomed projection (skip re-fitting)
-    this._customLayoutFailedThisBuild = false
-    const nextScene = this.buildSceneNodes(layout)
-    if (this._customLayoutFailedThisBuild) {
-      if (this.lastCustomLayoutFailure?.preservedLastGoodScene) {
+    if (!this.rebuildProjectedScene(layout, () => {
         proj.scale(previousScale)
         proj.translate(previousTranslate)
         this.currentZoom = previousZoom
         this.geoPath = previousGeoPath
         this.scales = previousScales
-      } else {
-        this.scene = []
-        this.rebuildQuadtree()
-      }
+      })
+    )
       return
-    }
-    this.scene = nextScene
-    this.rebuildQuadtree()
 
     // Apply cartogram transform if configured
     if (this.config.projectionTransform) {
@@ -759,37 +738,18 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
     this.currentZoom = k
 
     this.geoPath = d3GeoPath(proj)
-    this.scales = {
-      projection: proj,
-      geoPath: this.geoPath,
-      projectedPoint: (lon: number, lat: number) => {
-        const result = proj([lon, lat])
-        return result as [number, number] | null
-      },
-      invertedPoint: (px: number, py: number) => {
-        if (!proj.invert) return null
-        const result = proj.invert([px, py])
-        return result as [number, number] | null
-      }
-    }
+    this.scales = buildGeoScales(proj)
+    this.geoPath = this.scales.geoPath
 
-    this._customLayoutFailedThisBuild = false
-    const nextScene = this.buildSceneNodes(layout)
-    if (this._customLayoutFailedThisBuild) {
-      if (this.lastCustomLayoutFailure?.preservedLastGoodScene) {
+    if (!this.rebuildProjectedScene(layout, () => {
         proj.scale(previousScale)
         proj.translate(previousTranslate)
         this.currentZoom = previousZoom
         this.geoPath = previousGeoPath
         this.scales = previousScales
-      } else {
-        this.scene = []
-        this.rebuildQuadtree()
-      }
+      })
+    )
       return
-    }
-    this.scene = nextScene
-    this.rebuildQuadtree()
     if (this.config.projectionTransform) {
       this.applyCartogramTransform(this.config.projectionTransform, layout)
     }
@@ -811,36 +771,17 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
 
     // Rebuild geoPath and scales
     this.geoPath = d3GeoPath(proj)
-    this.scales = {
-      projection: proj,
-      geoPath: this.geoPath,
-      projectedPoint: (lon: number, lat: number) => {
-        const result = proj([lon, lat])
-        return result as [number, number] | null
-      },
-      invertedPoint: (px: number, py: number) => {
-        if (!proj.invert) return null
-        const result = proj.invert([px, py])
-        return result as [number, number] | null
-      }
-    }
+    this.scales = buildGeoScales(proj)
+    this.geoPath = this.scales.geoPath
 
     // Rebuild scene
-    this._customLayoutFailedThisBuild = false
-    const nextScene = this.buildSceneNodes(layout)
-    if (this._customLayoutFailedThisBuild) {
-      if (this.lastCustomLayoutFailure?.preservedLastGoodScene) {
+    if (!this.rebuildProjectedScene(layout, () => {
         proj.rotate(previousRotation)
         this.geoPath = previousGeoPath
         this.scales = previousScales
-      } else {
-        this.scene = []
-        this.rebuildQuadtree()
-      }
+      })
+    )
       return
-    }
-    this.scene = nextScene
-    this.rebuildQuadtree()
     if (this.config.projectionTransform) {
       this.applyCartogramTransform(this.config.projectionTransform, layout)
     }
@@ -912,8 +853,8 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
       }
     }
     this._quadtree = d3Quadtree<PointSceneNode>()
-      .x(n => n.x)
-      .y(n => n.y)
+      .x((n) => n.x)
+      .y((n) => n.y)
       .addAll(points)
   }
 
@@ -1053,8 +994,10 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
       (n): n is PointSceneNode => n.type === "point"
     )
 
+    const indices = geoPointIndices(pointNodes, this.getPoints())
     for (let i = 0; i < pointNodes.length; i++) {
-      const opacity = computeDecayOpacity(decay, i, bufferSize)
+      if (indices[i] < 0) continue
+      const opacity = computeDecayOpacity(decay, indices[i], bufferSize)
       pointNodes[i]._decayOpacity = opacity
       pointNodes[i].style = { ...pointNodes[i].style, opacity }
     }
@@ -1070,15 +1013,16 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
       (n): n is PointSceneNode => n.type === "point"
     )
     const timestamps = this.timestampBuffer.toArray()
+    const indices = geoPointIndices(pointNodes, this.getPoints())
     const pulseColor = pulse.color || "rgba(255,255,255,0.6)"
     const glowRadius = pulse.glowRadius ?? 4
     let changed = false
 
-    for (let i = 0; i < pointNodes.length && i < timestamps.length; i++) {
-      // Share the pulse-intensity curve with the XY/realtime pipeline so a
-      // change to the fade math (pipelinePulse.computePulseIntensity) reaches
-      // geo too. Behaviourally identical to the previous inline 1 - age/dur.
-      const intensity = computePulseIntensity(pulse, timestamps[i], now)
+    for (let i = 0; i < pointNodes.length; i++) {
+      const timestamp = timestamps[indices[i]]
+      if (timestamp === undefined) continue
+      // Use the same intensity curve as XY, with the retained source timestamp.
+      const intensity = computePulseIntensity(pulse, timestamp, now)
       changed = setPulseState(pointNodes[i], intensity, pulseColor, glowRadius) || changed
     }
 
@@ -1091,7 +1035,9 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
   }
 
   hasActivePulsesAt(now: number): boolean {
-    return !!this.config.pulse && hasActivePulsesShared(this.config.pulse, this.timestampBuffer, now)
+    return (
+      !!this.config.pulse && hasActivePulsesShared(this.config.pulse, this.timestampBuffer, now)
+    )
   }
 
   get hasActivePulses(): boolean {
@@ -1101,7 +1047,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
   // ── Transition ─────────────────────────────────────────────────
 
   private startTransition(prevScene: GeoSceneNode[]): void {
-    const duration = (this.config.transition?.duration ?? 300)
+    const duration = this.config.transition?.duration ?? 300
     if (duration <= 0) return
 
     // Snapshot previous positions
@@ -1133,13 +1079,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
       }
     }
 
-    // Enter: points present now but absent from the previous scene fade in
-    // from opacity 0. The XY/ordinal families get this from the shared
-    // transition engine; geo's transition is position-only, so without this
-    // new points popped in abruptly while existing points glided. (Exit-fade
-    // for removed points is not yet handled — it requires carrying the removed
-    // nodes through the transition, which geo's fresh-scene-per-compute model
-    // doesn't currently support.)
+    // Newly inserted points fade from zero opacity; removed points leave immediately.
     for (const node of pointNodes) {
       if (node.pointId && !prevPos.has(node.pointId)) {
         // Match pointCanvasRenderer: opacity ?? fillOpacity ?? 1
@@ -1188,7 +1128,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
     if (!this.activeTransition) return false
 
     const rawT = computeRawProgress(now, this.activeTransition)
-    const t = computeEasing(rawT)
+    const t = computeEasing(rawT, this.config.transition?.easing)
 
     const pointNodes = this.scene.filter(
       (n): n is PointSceneNode => n.type === "point"

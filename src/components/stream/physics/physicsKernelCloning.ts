@@ -1,4 +1,5 @@
 import type {
+  PhysicsBodyState,
   PhysicsBodyShape,
   PhysicsColliderShape,
   PhysicsColliderBodyFilter,
@@ -34,9 +35,11 @@ export function cloneColliderShape(
       }
 }
 
-export function cloneBody(
+export function cloneBodyState(
   body: PhysicsKernelSnapshotBody
-): PhysicsKernelSnapshotBody {
+): PhysicsBodyState & { bodyCollisions: boolean }
+export function cloneBodyState(body: PhysicsBodyState): PhysicsBodyState
+export function cloneBodyState(body: PhysicsBodyState): PhysicsBodyState {
   return {
     id: body.id,
     x: body.x,
@@ -53,7 +56,15 @@ export function cloneBody(
       : {}),
     shape: cloneShape(body.shape),
     sleeping: body.sleeping,
-    datum: body.datum,
+    datum: body.datum
+  }
+}
+
+export function cloneBody(
+  body: PhysicsKernelSnapshotBody
+): PhysicsKernelSnapshotBody {
+  return {
+    ...cloneBodyState(body),
     index: body.index,
     sleepTime: body.sleepTime,
     restitution: body.restitution,

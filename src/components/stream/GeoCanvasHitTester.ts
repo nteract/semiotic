@@ -85,28 +85,7 @@ export function findNearestGeoNode(
     return { node: bestGlyph, distance: bestGlyphDist }
   }
 
-  // ── 2. Geo area nodes (reverse order = top layer wins) ─────────
-
-  for (let i = nodes.length - 1; i >= 0; i--) {
-    const node = nodes[i]
-    if (node.type !== "geoarea") continue
-    const area = node as GeoAreaSceneNode
-    if (area.interactive === false) continue
-
-    // Quick bounds check
-    const [[x0, y0], [x1, y1]] = area.bounds
-    if (mouseX < x0 || mouseX > x1 || mouseY < y0 || mouseY > y1) continue
-
-    // isPointInPath with Path2D (lazily cached to avoid re-parsing per mouse event)
-    if (!area._cachedPath2D) {
-      area._cachedPath2D = new Path2D(area.pathData)
-    }
-    if (hitCtx.isPointInPath(area._cachedPath2D, mouseX, mouseY)) {
-      return { node: area, distance: 0 }
-    }
-  }
-
-  // ── 3. Line nodes ──────────────────────────────────────────────
+  // ── 2. Line nodes ──────────────────────────────────────────────
 
   let bestLine: GeoLineSceneNode | null = null
   let bestLineDist = Infinity
@@ -143,6 +122,27 @@ export function findNearestGeoNode(
 
   if (bestLine) {
     return { node: bestLine, distance: bestLineDist }
+  }
+
+  // ── 3. Geo area nodes (reverse order = top layer wins) ─────────
+
+  for (let i = nodes.length - 1; i >= 0; i--) {
+    const node = nodes[i]
+    if (node.type !== "geoarea") continue
+    const area = node as GeoAreaSceneNode
+    if (area.interactive === false) continue
+
+    // Quick bounds check
+    const [[x0, y0], [x1, y1]] = area.bounds
+    if (mouseX < x0 || mouseX > x1 || mouseY < y0 || mouseY > y1) continue
+
+    // isPointInPath with Path2D (lazily cached to avoid re-parsing per mouse event)
+    if (!area._cachedPath2D) {
+      area._cachedPath2D = new Path2D(area.pathData)
+    }
+    if (hitCtx.isPointInPath(area._cachedPath2D, mouseX, mouseY)) {
+      return { node: area, distance: 0 }
+    }
   }
 
   return null

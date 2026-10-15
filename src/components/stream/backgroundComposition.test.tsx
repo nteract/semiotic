@@ -1,12 +1,13 @@
 import "../../test-utils/registerBuiltInXYPlugins"
 import * as React from "react"
-import { render, waitFor } from "@testing-library/react"
+import { act, render, waitFor } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { setupCanvasMock } from "../../test-utils/canvasMock"
 import StreamGeoFrame from "./StreamGeoFrame"
 import StreamNetworkFrame from "./StreamNetworkFrame"
 import StreamOrdinalFrame from "./StreamOrdinalFrame"
 import StreamXYFrame from "./StreamXYFrame"
+import { createFrameScheduler } from "./test-utils/frameScheduler"
 
 function expectOrderedLayers(
   container: HTMLElement,
@@ -47,6 +48,36 @@ describe("Stream Frame background composition", () => {
       />
     )
     expectOrderedLayers(container, ".stream-frame-background__backdrop")
+  })
+
+  it.each([undefined, "#112233", "transparent"])("keeps one XY grid behind marks with background %s", (background) => {
+    const scheduler = createFrameScheduler()
+    const { container } = render(
+      <StreamXYFrame chartType="line" data={[{ x: 0, y: 1 }, { x: 1, y: 2 }]}
+        size={[300, 200]} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+        xExtent={[0, 1]} yExtent={[0, 2]}
+        showGrid background={background} animate={false} frameScheduler={scheduler.scheduler} />
+    )
+    act(() => scheduler.flush())
+    const grids = container.querySelectorAll(".stream-grid")
+    expect(grids).toHaveLength(1)
+    const gridLines = Array.from(grids[0].querySelectorAll("line"), line =>
+      ["x1", "x2", "y1", "y2"].map(attribute => line.getAttribute(attribute))
+    )
+    expect(gridLines).toContainEqual(["0", "260", "80", "80"])
+    const canvas = container.querySelector("canvas")!
+    expect(grids[0].compareDocumentPosition(canvas)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    const ctx = canvas.getContext("2d")!
+    expect(ctx.stroke).toHaveBeenCalled()
+    expect(ctx.fillRect).not.toHaveBeenCalled()
+    const backdrop = container.querySelector(".stream-frame-background__backdrop")
+    if (background === "transparent") expect(backdrop).toBeNull()
+    else {
+      expect(backdrop).toHaveAttribute("fill", background ?? "var(--semiotic-bg, #ffffff)")
+      expect(backdrop).toHaveAttribute("width", "300")
+      expect(backdrop).toHaveAttribute("height", "200")
+      expect(backdrop!.compareDocumentPosition(grids[0])).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    }
   })
 
   it("composes ordinal solid background, graphics, then marks", () => {

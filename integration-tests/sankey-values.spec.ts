@@ -48,6 +48,20 @@ for (const vertical of [false, true]) {
       await checkHover()
       await page.getByRole("button", { name: "Zoom and pan Sankey" }).click()
       await checkHover(true)
+      const summaryTrigger = frame.getByRole("button", { name: /View data summary/ })
+      await summaryTrigger.focus()
+      await summaryTrigger.press("Enter")
+      const nodeTable = page.getByRole("table", {
+        name: /Node data and degree summary/
+      })
+      await expect(nodeTable).toBeVisible()
+      const headers = await nodeTable.getByRole("columnheader").allTextContents()
+      const valueColumn = headers.indexOf("value")
+      expect(valueColumn).toBeGreaterThanOrEqual(0)
+      await expect(
+        nodeTable.getByRole("row", { name: "B", exact: true })
+          .getByRole("cell").nth(valueColumn)
+      ).toHaveText("100")
       expect(errors).toEqual([])
     })
   }

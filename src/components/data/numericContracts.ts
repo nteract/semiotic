@@ -1,7 +1,7 @@
 /**
  * Serializable numeric input contracts for chart capabilities.
  *
- * The contract table deliberately lives below the AI/capability registry. It is
+ * The contract table lives below the AI/capability registry. It is
  * consumed by `diagnoseConfig` and `ChartContainer`, both of which must stay
  * lightweight, while capability descriptors reference the same objects.
  */
@@ -23,7 +23,7 @@ export type NumericFieldRole =
   | (string & {})
 
 export type NumericRequirement =
-  | "finite"
+  "finite"
   | "positive"
   | "non-negative"
   | "integer"
@@ -268,7 +268,7 @@ const PROPORTIONAL_SYMBOL_CONTRACT: NumericContracts = {
 }
 
 /**
- * Compact built-in table. Shared contract objects are intentionally reused so
+ * Compact built-in table. Shared contract objects are reused so
  * this adds very little to `semiotic/utils/core` when diagnostics import it.
  */
 export const BUILT_IN_NUMERIC_CONTRACTS: Readonly<

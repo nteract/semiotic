@@ -63,6 +63,7 @@ interface OrdinalSVGOverlayProps {
   /** Accessible long description; wins over the title-derived `<desc>` suffix. */
   description?: string
   /** Prefix for `<title>`/`<desc>` ids so multiple charts on a page do not collide. */
+  decorative?: boolean
   idPrefix?: string
 
   // Legend
@@ -144,7 +145,7 @@ export function OrdinalSVGUnderlay(props: OrdinalSVGUnderlayProps) {
     // from data min to data max inclusive. The r-scale is always
     // linear in ordinal frames; the type narrows naturally.
     const rawTicks: number[] = rTickValues || (ticksForMode(scales.r, 5, axisExtent) as number[])
-    return rawTicks.map(v => ({
+    return rawTicks.map((v) => ({
       value: v,
       pixel: scales.r(v)
     }))
@@ -157,6 +158,7 @@ export function OrdinalSVGUnderlay(props: OrdinalSVGUnderlayProps) {
 
   return (
     <svg
+      role="presentation"
       width={totalWidth}
       height={totalHeight}
       overflow="visible"
@@ -232,6 +234,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
     title,
     description,
     idPrefix,
+    decorative = false,
     legend,
     legendHoverBehavior,
     legendClickBehavior,
@@ -315,7 +318,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
     const minimumGap = isHorizontal ? 0 : 6
     let lastPixel = -Infinity
     let lastFootprint = 0
-    return all.filter(tick => {
+    return all.filter((tick) => {
       const current = footprint(tick.label)
       if (tick.pixel - lastPixel < (lastFootprint + current) / 2 + minimumGap) return false
       lastPixel = tick.pixel
@@ -335,7 +338,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
     // min to data max inclusive). The r-scale is always linear.
     const rawTicks: number[] = rTickValues || (ticksForMode(scales.r, 5, axisExtent) as number[])
     const format = rFormat || numericTickFormatter(rawTicks)
-    return rawTicks.map(v => ({
+    return rawTicks.map((v) => ({
       value: v,
       pixel: scales.r(v),
       label: format(v)
@@ -368,14 +371,14 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
     const isHoriz = scales?.projection === "horizontal"
     type AnnotationAxisScale = NonNullable<NonNullable<AnnotationContext["scales"]>["x"]>
     const oCentered = scales?.o
-      ? ((v: string) => (scales.o(v) ?? 0) + scales.o.bandwidth() / 2) as unknown as AnnotationAxisScale
+      ? (((v: string) => (scales.o(v) ?? 0) + scales.o.bandwidth() / 2) as unknown as AnnotationAxisScale)
       : null
 
     const context: AnnotationContext = {
       scales: scales
         ? {
-            x: isHoriz ? scales.r : (oCentered || scales.r),
-            y: isHoriz ? (oCentered || scales.r) : scales.r,
+            x: isHoriz ? scales.r : oCentered || scales.r,
+            y: isHoriz ? oCentered || scales.r : scales.r,
             time: scales.r,
             value: scales.r,
             o: scales.o,
@@ -412,8 +415,9 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
 
   return (
     <svg
-      role="img"
-      aria-labelledby={labelledBy}
+      role={decorative ? "presentation" : "img"}
+      data-semiotic-overlay=""
+      aria-labelledby={decorative ? undefined : labelledBy}
       width={totalWidth}
       height={totalHeight}
       overflow="visible"
@@ -425,13 +429,17 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
         overflow: "visible"
       }}
     >
-      <title id={titleId}>{overlayAccessibleTitle(title, "Ordinal Chart")}</title>
+      {!decorative && (
+        <>
+          <title id={titleId}>{overlayAccessibleTitle(title, "Ordinal Chart")}</title>
       <desc id={descId}>
         {overlayAccessibleDescription(title, description, {
           familyPhrase: "ordinal data visualization",
           fallback: "Ordinal data visualization"
         })}
       </desc>
+        </>
+      )}
       <g transform={`translate(${margin.left},${margin.top})`}>
         {/* Grid lines (skipped when underlayRendered — they're in OrdinalSVGUnderlay) */}
         {showGrid && scales && !isRadial && rendersUnderlayAboveCanvas && (
@@ -469,7 +477,9 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                 {/* Horizontal: categories on left, values on bottom */}
                 <g className="semiotic-axis semiotic-axis-left" data-orient="left">
                 {/* Category axis baseline (left) — skipped when underlayRendered */}
-                {rendersUnderlayAboveCanvas && <line x1={0} y1={0} x2={0} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />}
+                {rendersUnderlayAboveCanvas && (
+                        <line x1={0} y1={0} x2={0} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
+                      )}
                 {categoryTicks.map((tick, i) => (
                   <g key={`cat-${i}`} transform={`translate(0,${tick.pixel})`}>
                     <line x2={-5} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
@@ -511,18 +521,22 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                 <g className="semiotic-axis semiotic-axis-bottom" data-orient="bottom">
                 {/* Value axis baseline (bottom) — skipped when underlayRendered */}
                 {/* Value axis baseline (bottom) + zero line if different */}
-                {rendersUnderlayAboveCanvas && <line x1={0} y1={height} x2={width} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />}
+                {rendersUnderlayAboveCanvas && (
+                        <line x1={0} y1={height} x2={width} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
+                      )}
                 {rendersUnderlayAboveCanvas && scales?.r && (() => {
                   const zeroX = scales.r(0)
                   if (zeroX > 1 && zeroX < width - 1) {
-                    return <line x1={zeroX} y1={0} x2={zeroX} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} strokeDasharray="4,4" />
-                  }
+                    return (
+                              <line x1={zeroX} y1={0} x2={zeroX} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} strokeDasharray="4,4" />
+                            )
+                          }
                   return null
                 })()}
                 {valueTicks.map((tick, i) => {
                   const anchor = tickLabelEdgeAlign
-                    ? (i === 0 ? "start" : i === valueTicks.length - 1 ? "end" : "middle")
-                    : "middle"
+                    ? i === 0 ? "start" : i === valueTicks.length - 1 ? "end" : "middle"
+                          : "middle"
                   return (
                     <g key={`val-${i}`} transform={`translate(${tick.pixel},${height})`}>
                       <line y2={5} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
@@ -561,9 +575,12 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                 {/* Category axis baseline — drawn at rScale(0) to align with bar baseline, falls back to chart bottom */}
                 {rendersUnderlayAboveCanvas && (() => {
                   const zeroY = scales?.r ? scales.r(0) : height
-                  const baseY = (zeroY >= 0 && zeroY <= height) ? zeroY : height
-                  return <line x1={0} y1={baseY} x2={width} y2={baseY} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
-                })()}
+                  const baseY =
+                            zeroY >= 0 && zeroY <= height ? zeroY : height
+                  return (
+                            <line x1={0} y1={baseY} x2={width} y2={baseY} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
+                          )
+                        })()}
                 {categoryTicks.map((tick, i) => (
                   <g key={`cat-${i}`} transform={`translate(${tick.pixel},${height})`}>
                     <line y2={5} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
@@ -602,7 +619,9 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
 
                 <g className="semiotic-axis semiotic-axis-left" data-orient="left">
                 {/* Value axis baseline (left) — skipped when underlayRendered */}
-                {rendersUnderlayAboveCanvas && <line x1={0} y1={0} x2={0} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />}
+                {rendersUnderlayAboveCanvas && (
+                        <line x1={0} y1={0} x2={0} y2={height} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
+                      )}
                 {valueTicks.map((tick, i) => (
                   <g key={`val-${i}`} transform={`translate(0,${tick.pixel})`}>
                     <line x2={-5} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />

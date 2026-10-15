@@ -2,7 +2,7 @@
  * Narrow canvas-host lifecycle shared by Stream Frame family adapters.
  *
  * `useFrame` owns responsive sizing, theme/motion, logical time, and rAF
- * coalescing. This hook deliberately owns only the lifecycle that begins once
+ * coalescing. This hook owns only the lifecycle that begins once
  * a family has its store and paint closure: canvas-layer refs, hydration
  * takeover/teardown, runtime pause/visibility handoff, and explicit canvas
  * repaint dependencies. Layout, scene construction, hit testing, and the
@@ -147,7 +147,7 @@ export function useCanvasFrameHost<TStore extends object>(
     if (input.canvasPaintInvalidator) input.canvasPaintInvalidator()
     else input.dirtyRef.current = true
     input.scheduleRender()
-    // `canvasPaintDependencies` is intentionally the adapter's explicit
+    // `canvasPaintDependencies` is the adapter's explicit
     // dependency list; React compares its values just like a local effect.
   }, input.canvasPaintDependencies)
 
@@ -245,6 +245,7 @@ export function CanvasFrameBackground({
   if (!children && !backdropFill) return null
   return (
     <svg
+      role="presentation"
       style={{
         position: "absolute",
         left: 0,

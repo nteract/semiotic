@@ -1,5 +1,6 @@
 import type { Datum } from "../charts/shared/datumTypes"
-import { resolveAccessor, resolveRawAccessor } from "../stream/accessorUtils"
+import { resolveRawAccessor } from "../stream/accessorUtils"
+import { aiChartProps, aiNumericAccessor } from "./aiData"
 import type { ChartCapability, ChartFamily } from "./chartCapabilityTypes"
 import type { IntentId } from "./intents"
 import { intentRegistryStore } from "./intentRegistry"
@@ -411,7 +412,7 @@ export function resolveCommunicativeAct(
     // Only trust the dominant intent when it's a *strong* fit (≥3, the same bar
     // `buildReasons` uses). A weak top score means we're looking at leftover
     // static scorers (a chart's primary intents are often function scorers we
-    // can't evaluate here) — the family is the more honest signal in that case.
+    // can't evaluate here) — the family supplies the fallback intent in that case.
     if (top && INTENT_ACT[top] && (ctx.intentScores[top] ?? 0) >= 3)
       return INTENT_ACT[top]
   }
@@ -689,6 +690,7 @@ export function describeChart(
   props: Datum,
   options: DescribeChartOptions = {}
 ): DescribeChartResult {
+  props = aiChartProps(props)
   const explicitLevels = options.levels !== undefined
   const want = new Set<DescribeLevel>(options.levels ?? ["l1", "l2", "l3"])
   // L4 is opt-in: auto-append when intent context is supplied and `levels`
@@ -801,7 +803,7 @@ export function describeChart(
     data &&
     data.length > 0
   ) {
-    const getMeasure = resolveAccessor(measure, measureFallback)
+    const getMeasure = aiNumericAccessor(measure, measureFallback)
     const getDim = resolveRawAccessor(dimension, dimensionFallback)
     stats = computeStats(data, getMeasure, getDim, fmtNum)
   }
@@ -822,7 +824,7 @@ export function describeChart(
   // ── L3: trend (only meaningful over an ordered dimension) ────────────────
   // Split-series stats pool rows end-to-end, so directional claims would
   // describe the concatenation rather than any real trend. L1 reports the
-  // split and L2 the pooled range; per-series narration is future work.
+  // split and L2 the pooled range across series.
   if (want.has("l3") && stats && !series && XY_FAMILY.has(component)) {
     levels.l3 = trendSentence(stats, measureName, fmtNum)
   } else if (want.has("l3") && stats && !series && BAR_FAMILY.has(component)) {

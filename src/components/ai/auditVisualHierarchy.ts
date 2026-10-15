@@ -27,7 +27,9 @@ export interface VisualHierarchyInput {
 
 export interface VisualHierarchyFinding {
   readonly code:
-    "SCAFFOLD_DOMINANCE" | "SCAFFOLD_VISIBILITY" | "VISUAL_HIERARCHY_MANUAL"
+    | "SCAFFOLD_DOMINANCE" | "SCAFFOLD_VISIBILITY"
+    | "DATA_MARK_CONTRAST"
+    | "VISUAL_HIERARCHY_MANUAL"
   readonly status: VisualHierarchyStatus
   readonly message: string
   readonly fix?: string
@@ -61,10 +63,10 @@ function composite(
 }
 
 /**
- * Audit one intentionally narrow presentation boundary: primary data marks
+ * Audit one narrow presentation boundary: primary data marks
  * should lead and reference scaffolding should recede.
  *
- * This is deliberately not a universal beauty score. Aesthetic preferences
+ * This is not a universal beauty score. Aesthetic preferences
  * vary, but research supports bounding grids to a visible-yet-unobtrusive
  * range rather than claiming an ideal style:
  * https://www.tableau.com/research/publications/whisper-dont-scream-grids-and-transparency
@@ -126,6 +128,21 @@ export function auditVisualHierarchy(
     input.maximumScaffoldContrast ?? 2
   )
   const minimumHierarchyRatio = Math.max(1, input.minimumHierarchyRatio ?? 2)
+  if (weakestDataContrast < 3) {
+    return {
+      ok: false,
+      status: "warn",
+      method: "mark-to-scaffold-contrast",
+      evidence,
+      finding: {
+        code: "DATA_MARK_CONTRAST",
+        status: "warn",
+        message:
+          "Primary data marks have contrast below 3:1 against the background.",
+        fix: "Increase data-mark contrast against the background before adjusting grids or guides."
+      }
+    }
+  }
   if (scaffoldContrast < minimumScaffoldContrast) {
     return {
       ok: false,

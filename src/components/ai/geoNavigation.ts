@@ -1,3 +1,5 @@
+import { readProp, stringValue, finiteValue, slug, interactionCue } from "./navigationValues"
+import { aiDataRows } from "./aiData"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { NavTreeNode } from "./navigationTree"
 
@@ -8,51 +10,11 @@ interface GeoRow {
   value?: number
 }
 
-function readProp(datum: Datum, accessor: unknown, fallback: string): unknown {
-  if (typeof accessor === "function") return accessor(datum)
-  const key = typeof accessor === "string" && accessor ? accessor : fallback
-  return datum[key]
-}
-
-function stringValue(value: unknown, fallback = "—"): string {
-  if (value == null || value === "") return fallback
-  if (typeof value === "object") {
-    const record = value as Datum
-    return stringValue(record.id ?? record.name ?? record.label, fallback)
-  }
-  return String(value)
-}
-
-function finiteValue(value: unknown): number | undefined {
-  if (value == null || value === "") return undefined
-  const number = typeof value === "number" ? value : Number(value)
-  return Number.isFinite(number) ? number : undefined
-}
-
-function slug(value: unknown): string {
-  const normalized = stringValue(value, "unknown")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-  return normalized || "unknown"
-}
-
-function interactionCue(props: Datum): string {
-  const cues: string[] = []
-  if (props.linkedHover || props.selection || props.linkedBrush) {
-    cues.push("Use linked highlighting to compare related locations.")
-  }
-  if (props.enableHover || props.tooltip) {
-    cues.push("Hover or focus a mark for its details.")
-  }
-  return cues.length > 0 ? ` ${cues.join(" ")}` : ""
-}
-
 function geoFeatures(value: unknown): Datum[] {
-  if (Array.isArray(value)) return value as Datum[]
+  if (Array.isArray(value)) return aiDataRows(value)
   if (!value || typeof value !== "object") return []
   const object = value as Datum
-  if (Array.isArray(object.features)) return object.features as Datum[]
+  if (Array.isArray(object.features)) return aiDataRows(object.features)
   return object.type === "Feature" ? [object] : []
 }
 
@@ -255,7 +217,7 @@ export function buildGeoNavigationTree(
     id: "root",
     role: "chart",
     level: 1,
-    label: `${title}${interactionCue(props)}`,
+    label: `${title}${interactionCue(props, "Use linked highlighting to compare related locations.")}`,
     children: []
   }
 

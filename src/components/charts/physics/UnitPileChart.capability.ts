@@ -1,3 +1,4 @@
+import { parseNumericValue } from "../../data/numericValue"
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
 import { PHYSICS_SAMPLE_SUGGESTION_PROP_CONTRACT } from "../../ai/suggestionPropContracts"
 
@@ -52,7 +53,7 @@ export const UnitPileChartCapability: ChartCapability = {
     const yField = profile.primary.y
     const values = yField
       ? profile.data
-          .map((datum) => Number(datum?.[yField]))
+          .map((datum) => parseNumericValue(datum?.[yField]) ?? NaN)
           .filter((value) => Number.isFinite(value))
       : []
     const maxValue = values.reduce(

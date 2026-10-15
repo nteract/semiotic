@@ -1,5 +1,6 @@
 "use client"
 
+import { cloneTheme } from "./cloneTheme"
 import { createStore } from "./createStore"
 import { LIGHT_THEME, resolveThemeUpdate } from "./themeCore"
 import type { SemioticTheme, ThemeStoreUpdate } from "./themeCore"
@@ -15,7 +16,7 @@ export interface ThemeStoreState {
 
 export const [ThemeProvider, useThemeSelector] = /* @__PURE__ */ createStore<ThemeStoreState>(
   (set) => ({
-    theme: LIGHT_THEME,
+    theme: cloneTheme(LIGHT_THEME),
 
     setTheme(theme: ThemeStoreUpdate) {
       set((current: ThemeStoreState) => ({

@@ -48,9 +48,7 @@ export function ChainReactionOverlay<TDatum extends Datum = Datum>({
   reduced,
   onSelectTask
 }: ChainReactionOverlayProps<TDatum>): React.ReactElement {
-  // Lane labels used to sit at a fixed y=23, which is the same band the frame
-  // draws the chart title in — they collided. Derive them from the topmost task
-  // so they always sit just above the first row of tiles and clear of the title.
+  // Place lane labels above the topmost task, outside the chart title band.
   const topTaskTop = layout.tasks.length
     ? layout.tasks.reduce(
         (min, task) => Math.min(min, task.y - task.height / 2),
@@ -224,7 +222,8 @@ export function ChainReactionOverlay<TDatum extends Datum = Datum>({
                 fontSize={9.5}
                 fill="var(--semiotic-text-secondary, #5f6b72)"
               >
-                {Math.round(node.progress * 100)}% · {completed ? "done" : blocked ? "blocked" : runtime.armed.has(node.id) ? "ready" : "waiting"}
+                {Math.round(node.progress * 100)}% ·{" "}
+                {completed ? "done" : blocked ? "blocked" : runtime.armed.has(node.id) ? "ready" : "waiting"}
               </text>
             </g>
           </g>

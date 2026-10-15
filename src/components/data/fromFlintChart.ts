@@ -6,7 +6,7 @@ import { aggregateRows as aggregateData, normalizeAggregate, unusedAggregateFiel
 /**
  * Flint Chart -> Semiotic translator.
  *
- * Flint's public request shape is intentionally small: inline or referenced
+ * Flint's public request shape is small: inline or referenced
  * rows, optional field semantics, and a chart_spec object with chart type,
  * channel encodings, base size, canvas ceiling, and chart properties. This
  * adapter consumes that request as an ecosystem boundary format and emits a
@@ -406,7 +406,9 @@ function warnOnUnmappedEncodings(
   }
   const nonFacets = channels.filter((channel) => {
     const normalized = ownValue(FLINT_CHANNEL_ALIASES, channel) || channel
-    return channel !== "column" && channel !== "row" && !consumed.has(normalized)
+    return (
+      channel !== "column" && channel !== "row" && !consumed.has(normalized)
+    )
   })
   if (nonFacets.length > 0) {
     warnings.push(`Flint encoding channel(s) not mapped for ${kind}: ${nonFacets.join(", ")}.`)

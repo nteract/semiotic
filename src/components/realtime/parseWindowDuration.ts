@@ -5,7 +5,7 @@
 // `"2h"`, `"1d"`. Compound strings like `"1m30s"` are supported and
 // summed left-to-right. This is the terse form a streaming-config
 // author reaches for; ISO-8601 durations (`"P30D"`) remain the
-// annotation-`ttlHint` vocabulary and are intentionally not accepted
+// annotation-`ttlHint` vocabulary and are not accepted
 // here to keep the streaming config readable.
 //
 // NB: this is the **aggregation window**, not the RingBuffer eviction

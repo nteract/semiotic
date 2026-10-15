@@ -36,7 +36,8 @@ export {
   reserveLegendConfigMargin,
   reserveStaticLegendMargin,
 } from "./staticLegendMargin"
-import { resolveTheme, themeStyles, type ThemeInput } from "./themeResolver"
+import { resolveTheme,
+  themeMediaCSS, themeStyles, type ThemeInput } from "./themeResolver"
 import type { SemioticTheme } from "../store/themeCore"
 import * as React from "react"
 import { TITLE_BASELINE } from "../stream/titleLayout"
@@ -393,6 +394,10 @@ export function wrapSVG(
   }
 ): React.ReactElement {
   const s = themeStyles(opts.theme)
+  const mediaCSS = themeMediaCSS(
+    opts.theme,
+    `[data-semiotic-auto="${opts.idPrefix ?? "chart"}"]`
+  )
   const background = opts.background ?? s.background
   const pfx = opts.idPrefix ? `${opts.idPrefix}-` : ""
   const titleText = staticTitleText(opts.title)
@@ -409,11 +414,13 @@ export function wrapSVG(
       className={opts.className}
       width={opts.width}
       height={opts.height}
+      data-semiotic-auto={mediaCSS ? (opts.idPrefix ?? "chart") : undefined}
       role="img"
       aria-labelledby={labelledBy}
       aria-label={opts.description || titleText || `${opts.className.match(/stream-(\w+)-frame/)?.[1] ?? "data"} chart, ${opts.markCount ?? 0} marks`}
       style={{ fontFamily: s.fontFamily }}
     >
+      {mediaCSS && <style>{mediaCSS}</style>}
       {titleText && <title id={titleId}>{titleText}</title>}
       {opts.description && <desc id={descId}>{opts.description}</desc>}
       {opts.defs && <defs>{opts.defs}</defs>}
@@ -496,7 +503,7 @@ export function generateAxesSVG(
   const xPixelExtent = tickPixelExtent(xTicks)
   const yPixelExtent = tickPixelExtent(yTicks)
   const xLabel = xAxis?.label ?? props.xLabel
-  const yLabel = yAxis?.label ?? (yOrient === "right" ? props.yLabelRight ?? props.yLabel : props.yLabel)
+  const yLabel = yAxis?.label ?? (yOrient === "right" ? (props.yLabelRight ?? props.yLabel) : props.yLabel)
   const xAxisLine = resolveAxisLineStyle(xAxis?.axisStyle, { stroke: s.border, strokeWidth: 1 })
   const yAxisLine = resolveAxisLineStyle(yAxis?.axisStyle, { stroke: s.border, strokeWidth: 1 })
   const yAxisLabelX = yOrient === "right"
@@ -505,7 +512,8 @@ export function generateAxesSVG(
 
   return (
     <g id={`${idPrefix ? `${idPrefix}-` : ""}axes`} className="stream-axes">
-      {xAxis?.visible !== false && <g className={`semiotic-axis semiotic-axis-${xOrient}`} data-orient={xOrient}>
+      {xAxis?.visible !== false && (
+        <g className={`semiotic-axis semiotic-axis-${xOrient}`} data-orient={xOrient}>
       {xAxis?.baseline !== false && !xAxis?.jaggedBase && (
         <line
           x1={0}
@@ -544,7 +552,8 @@ export function generateAxesSVG(
             >
               {tick.label}
             </text>
-          ) : renderStaticTickForeignObject({
+          ) : (
+                  renderStaticTickForeignObject({
             label: tick.label,
             x: -30,
             y: xOrient === "top" ? -30 : 6,
@@ -552,7 +561,8 @@ export function generateAxesSVG(
             fontSize: s.tickSize,
             fontFamily: s.fontFamily,
             color: s.textSecondary,
-          })}
+          })
+                )}
         </g>
         )
       })}
@@ -571,8 +581,10 @@ export function generateAxesSVG(
         </text>
       )}
 
-      </g>}
-      {yAxis?.visible !== false && <g className={`semiotic-axis semiotic-axis-${yOrient}`} data-orient={yOrient}>
+      </g>
+      )}
+      {yAxis?.visible !== false && (
+        <g className={`semiotic-axis semiotic-axis-${yOrient}`} data-orient={yOrient}>
       {yAxis?.baseline !== false && !yAxis?.jaggedBase && (
         <line
           x1={yBaselineX}
@@ -606,7 +618,8 @@ export function generateAxesSVG(
             >
               {tick.label}
             </text>
-          ) : renderStaticTickForeignObject({
+          ) : (
+                  renderStaticTickForeignObject({
             label: tick.label,
             x: yOrient === "right" ? 8 : -68,
             y: -12,
@@ -614,7 +627,8 @@ export function generateAxesSVG(
             fontSize: s.tickSize,
             fontFamily: s.fontFamily,
             color: s.textSecondary,
-          })}
+          })
+                )}
           </g>
         )
       })}
@@ -631,7 +645,8 @@ export function generateAxesSVG(
           {yLabel}
         </text>
       )}
-      </g>}
+      </g>
+      )}
     </g>
   )
 }

@@ -336,6 +336,9 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
       // Track the resolved fill per node so edges can inherit the actual rendered color
       resolvedNodeFills.set(node.id, (typeof style.fill === "string" ? style.fill : null) || nodeColorMap.get(node.id) || "#4d430c")
 
+      // Keep computed totals without exposing geometry or replacing authored values.
+      const accessibleDatum = { ...node.data, value: node.data?.value ?? node.value }
+
       if (direction === "down") {
         sceneNodes.push({
           type: "rect",
@@ -344,6 +347,7 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
           w: h,
           h: w,
           style,
+          accessibleDatum,
           datum: node,
           id: node.id,
           label: node.id
@@ -356,6 +360,7 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
           w,
           h,
           style,
+          accessibleDatum,
           datum: node,
           id: node.id,
           label: node.id
@@ -418,6 +423,7 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
         pathD,
         bezierCache: edge.bezier,
         style,
+        accessibleDatum: edge.data,
         datum: edge
       })
     }

@@ -1,3 +1,5 @@
+import { transferNetworkPluginState } from "./networkPluginState"
+import { DETERMINISTIC_NETWORK_LAYOUTS } from "./networkLayoutCapabilities"
 import { ParticlePool } from "./ParticlePool"
 import { getLayoutPlugin } from "./layouts/registry"
 import { warnIfLayoutPluginMissing } from "./layouts/missingPlugin"
@@ -242,7 +244,7 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
 
   constructor(config: NetworkPipelineConfig) {
     super()
-    this.config = config
+    this.config = { ...config }
     this.tensionConfig = {
       ...DEFAULT_TENSION_CONFIG,
       ...config.tensionConfig
@@ -266,27 +268,23 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
   // ── Config update ─────────────────────────────────────────────────────
 
   updateConfig(config: Partial<NetworkPipelineConfig>): void {
-    // Preserve plugin state stored on the config object across updates
+    // Retain store-owned plugin state when replacing the active configuration
     const prev = this.config
-    // Network historically received a full frame config, while direct store
-    // callers need the same merged-effective-config patch semantics as the
-    // other pipeline stores. Copy before preserving internal plugin state so
-    // a partial accessor patch compares against the active, not absent,
-    // sibling accessors.
+    // Compare a partial patch against the merged active configuration.
     const nextConfig = { ...prev, ...config } as NetworkPipelineConfig
-    if (prev.__orbitState) nextConfig.__orbitState = prev.__orbitState
+    transferNetworkPluginState(prev, nextConfig)
     if (prev.__hierarchyRoot) nextConfig.__hierarchyRoot = prev.__hierarchyRoot
     // `layoutSelection` is owned by a dedicated frame effect (so a selection
     // change can repaint via restyleScene instead of forcing a rebuild), and is
-    // intentionally not part of the rebuild-triggering pipelineConfig — preserve
+    // not part of the rebuild-triggering pipelineConfig — preserve
     // it across other config updates.
     if (config.layoutSelection === undefined && prev.layoutSelection != null) {
       nextConfig.layoutSelection = prev.layoutSelection
     }
     const changedConfigKeys = [...new Set([...Object.keys(prev), ...Object.keys(nextConfig)])].filter(
       (key) =>
-        (prev as unknown as Record<string, unknown>)[key] !==
-        (nextConfig as unknown as Record<string, unknown>)[key],
+        prev[key as keyof NetworkPipelineConfig] !==
+        nextConfig[key as keyof NetworkPipelineConfig],
     )
     this.config = nextConfig
     this.tensionConfig = {
@@ -385,7 +383,15 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
     this._arrCacheVersion = -1
     const normalized = normalizeNetworkData(rawNodes, rawEdges, this.config)
     for (const [id, raw] of normalized.nodes) {
-      this.nodes.set(id, { ...createNode(id), data: raw })
+      const node = createNode(id)
+      node.data = raw
+      if (this.config.chartType === "force" && !this.config.customNetworkLayout &&
+          Number.isFinite(raw.x) && Number.isFinite(raw.y)) {
+        node.x = raw.x as number
+        node.y = raw.y as number
+        node.__hasPosition = true
+      }
+      this.nodes.set(id, node)
     }
 
     // Build edge map (creating nodes if not provided).
@@ -448,6 +454,7 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
       if (!node) continue
       node.x = position.x
       node.y = position.y
+      node.__hasPosition = true
     }
     this.config.__skipForceSimulation = true
     try {
@@ -521,12 +528,11 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
       topologyChanged = true
     }
 
-    const needsRelayout = (
+    const needsRelayout =
       isFirst ||
       topologyChanged ||
       valueChanged ||
       this.tension >= this.tensionConfig.threshold
-    )
     if (topologyChanged) this._arrCacheVersion = -1
     this.updateResults.recordData("ingest", 1)
     return needsRelayout
@@ -662,13 +668,7 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
     // Only for deterministic layouts (sankey, tree, treemap, circlepack) — force/chord
     // layouts compute positions from randomized starting points and don't benefit
     // from a center-origin intro (it fights the simulation).
-    const deterministicLayout = [
-      "sankey",
-      "tree",
-      "treemap",
-      "circlepack",
-      "partition"
-    ].includes(this.config.chartType)
+    const deterministicLayout = DETERMINISTIC_NETWORK_LAYOUTS.has(this.config.chartType)
     if (
       !this._hasRenderedOnce &&
       this.config.introAnimation &&
@@ -831,7 +831,7 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
       this.commitCustomScene(result, size)
       this.lastCustomLayoutFailure = null
       // Any successful sceneNodes rebuild invalidates the lazily-built node
-      // quadtree. A recovered failure deliberately does not.
+      // quadtree. A recovered failure preserves the current quadtree.
       this._sceneNodesRevision++
       // Stash per-frame restyle callbacks. Their presence opts the chart into
       // the cheap selection path: snapshot each mark's emitted (base) style, then
@@ -1006,13 +1006,13 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
   /** Cached node array — safe only for read / position-mutate consumers. */
   get nodesArray(): RealtimeNode[] {
     this._ensureArrays()
-    return this._nodesArrCache!
+    return this._nodesArrCache ?? []
   }
 
   /** Cached edge array — safe only for read / position-mutate consumers. */
   get edgesArray(): RealtimeEdge[] {
     this._ensureArrays()
-    return this._edgesArrCache!
+    return this._edgesArrCache ?? []
   }
 
   // ── Animation tick (orbit etc.) ──────────────────────────────────────
@@ -1088,7 +1088,7 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
     if (!this.transition) return false
 
     const rawT = computeRawProgress(now, this.transition)
-    const t = computeEasing(rawT)
+    const t = computeEasing(rawT, this.config.transition?.easing)
 
     for (const node of this.nodes.values()) {
       if (

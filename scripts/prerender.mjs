@@ -537,6 +537,8 @@ globalThis.document = globalThis.document || {
   },
   body: elementStub(),
   head: { appendChild() {} },
+  // Hydration may look for an existing frame; nothing is mounted in Node.
+  getElementById: () => null,
   querySelector: () => null,
   createElement: elementStub,
   addEventListener() {},

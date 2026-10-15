@@ -1,3 +1,4 @@
+import { slug as navigationSlug } from "./navigationValues"
 import type { Datum } from "../charts/shared/datumTypes"
 import type {
   ChartRecipe,
@@ -19,11 +20,7 @@ export interface RecipeNavigationOptions {
 }
 
 function slug(value: unknown): string {
-  const normalized = String(value ?? "unknown")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-  return normalized || "unknown"
+  return navigationSlug(String(value ?? "unknown"))
 }
 
 function isPortableStrategy(

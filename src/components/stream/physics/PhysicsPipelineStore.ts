@@ -1,3 +1,7 @@
+import type {
+  PhysicsWorkerFrame,
+  PhysicsWorkerState
+} from "./PhysicsWorkerProtocol"
 import {
   type PhysicsBodyState,
   type PhysicsColliderSpec,
@@ -697,24 +701,58 @@ export class PhysicsPipelineStore {
     return createPhysicsPipelineControls(this)
   }
 
+  /** Scalar scheduling state, without cloning the world or queued datums. */
+  workerState(): PhysicsWorkerState {
+    return {
+      accumulator: this.accumulator,
+      activeSensorPairs: Array.from(this.activeSensorPairs),
+      elapsedSeconds: this.elapsedSeconds,
+      paused: this.paused,
+      revision: this.revision,
+      simulationState: this.simulationState,
+      visible: this.visible
+    }
+  }
+
+  workerSleepTimes(ids: string[]): Float32Array | undefined {
+    return this.world.workerSleepTimes?.(ids)
+  }
+
+  applyWorkerFrame(frame: PhysicsWorkerFrame): void {
+    if (frame.snapshot) {
+      this.restore(frame.snapshot)
+      return
+    }
+    if (!frame.state || !this.world.applyWorkerMotion) {
+      throw new Error("Physics worker motion frame requires a built-in mirror")
+    }
+    this.world.applyWorkerMotion(frame)
+    const previousState = this.simulationState
+    Object.assign(this, frame.state, {
+      activeSensorPairs: new Set(frame.state.activeSensorPairs)
+    })
+    this.updateResults.record({ kind: "tick" }, PHYSICS_MOTION_INVALIDATIONS)
+    if (previousState !== this.simulationState) {
+      this.observation.onSimulationStateChange?.(
+        this.simulationState,
+        previousState
+      )
+    }
+  }
+
   snapshot(): PhysicsPipelineSnapshot {
     const world = this.world.snapshot()
     return {
-      accumulator: this.accumulator,
+      ...this.workerState(),
       activeSensorPairs: Array.from(this.activeSensorPairs).sort(),
       bodyBudget: cloneBodyBudgetOptions(this.bodyBudget),
       config: {
         ...this.config,
         kernel: requiredKernelOptions(world.options)
       },
-      elapsedSeconds: this.elapsedSeconds,
-      paused: this.paused,
       queue: this.queue.map(cloneQueuedSpawn),
-      revision: this.revision,
       sediment: this.readSediment(),
-      simulationState: this.simulationState,
       liveBodyOrder: this.liveBodyOrder.slice(),
-      visible: this.visible,
       world
     }
   }

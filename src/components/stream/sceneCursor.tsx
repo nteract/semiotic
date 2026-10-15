@@ -94,7 +94,7 @@ export function useCanvasMarkCursorCleanup(
  * complex/fragment marks covers every child while an explicit style on a
  * custom backend's own DOM element still wins naturally.
  *
- * Native SVG hit geometry deliberately follows the painted mark. Canvas uses
+ * Native SVG hit geometry follows the painted mark. Canvas uses
  * a larger pointer-tolerance halo because one bitmap surface has no per-mark
  * DOM hit targets; that small backend-specific affordance is not reproduced
  * with extra SVG nodes. Built-in XY area fills are the categorical exception:

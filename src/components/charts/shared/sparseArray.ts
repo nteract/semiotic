@@ -29,18 +29,8 @@ export function filterSparseArray<T extends object>(
   input: readonly (T | null | undefined)[] | undefined | null
 ): T[] {
   if (!input) return EMPTY_ARRAY as T[]
-  let hasInvalid = false
-  for (let i = 0; i < input.length; i++) {
-    const v = input[i]
-    if (v == null || typeof v !== "object") {
-      hasInvalid = true
-      break
-    }
-  }
-  if (!hasInvalid) return input as T[]
-  const out: T[] = []
-  for (const v of input) {
-    if (v != null && typeof v === "object") out.push(v)
-  }
-  return out
+  for (const value of input)
+    if (value == null || typeof value !== "object")
+      return input.filter((row): row is T => row != null && typeof row === "object")
+  return input as T[]
 }

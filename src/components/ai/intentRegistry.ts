@@ -4,7 +4,7 @@ interface IntentRegistryStore {
   intents: Map<IntentId, IntentDescriptor>
 }
 
-// `semiotic/ai` and `semiotic/ai/core` are intentionally independent entry
+// `semiotic/ai` and `semiotic/ai/core` are independent entry
 // bundles. Put the runtime extension point on the realm-global symbol registry
 // so registering an intent through either public entry is immediately visible
 // to the other (as recipe and numeric-contract registries already are).

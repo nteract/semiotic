@@ -180,4 +180,52 @@ describe("frame fixed-step execution", () => {
     expect(ref.current!.readBodies()).toEqual([])
     expect(view.getByText("Removed 1").textContent).toBe("Removed 1")
   })
+  it("falls back to sync when CSP blocks worker construction", async () => {
+    vi.stubGlobal(
+      "Worker",
+      class {
+        constructor() {
+          throw new DOMException("blocked by CSP", "SecurityError")
+        }
+      }
+    )
+    const execution = vi.fn()
+    const ref = React.createRef<StreamPhysicsFrameHandle>()
+    const scheduler = createFrameScheduler()
+    const view = render(
+      <StreamPhysicsFrame
+        ref={ref}
+        size={[200, 120]}
+        config={config}
+        initialSpawns={initialSpawns}
+        simulationExecution="worker"
+        onSimulationExecutionChange={execution}
+        frameScheduler={scheduler.scheduler}
+      />
+    )
+    await act(async () => {
+      scheduler.flush(0)
+      await vi.dynamicImportSettled()
+    })
+    expect(view.container.querySelector("canvas")).not.toBeNull()
+    expect(
+      execution.mock.calls.some(
+        ([state]) =>
+          state.execution === "sync" && state.reason?.includes("blocked by CSP")
+      )
+    ).toBe(true)
+    expect(ref.current!.readBodies()[0].id).toBe("body")
+  })
+  it("does not construct a worker after the frame unmounts during transport loading", async () => {
+    const construct = vi.fn()
+    vi.stubGlobal("Worker", construct)
+    const scheduler = createFrameScheduler()
+    const view = render(<StreamPhysicsFrame config={config} initialSpawns={initialSpawns}
+      simulationExecution="worker" frameScheduler={scheduler.scheduler} />)
+    act(() => scheduler.flush(0))
+    view.unmount()
+    await act(async () => { await vi.dynamicImportSettled() })
+    expect(construct).not.toHaveBeenCalled()
+  })
+
 })

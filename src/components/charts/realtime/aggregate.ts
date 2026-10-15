@@ -26,7 +26,7 @@ import type { Datum } from "../shared/datumTypes"
  * optional ±σ or min–max envelope — bounded render cost regardless of
  * arrival rate. Structural window changes start a new accumulator epoch:
  * controlled `data` is replayed, while push-only history resets because the
- * transform intentionally does not retain every raw event. `stat`, `band`,
+ * transform does not retain every raw event. `stat`, `band`,
  * and `sigma` are readout-only and update existing windows in place.
  */
 export interface AggregateConfig {
@@ -125,7 +125,7 @@ export function aggregatedRows(
   const band: AggregateBand = config.band ?? "none"
   const sigma = config.sigma ?? 1
 
-  return acc.emit().map(w => {
+  return acc.emit().map((w) => {
     const row: AggregatedRealtimeDatum = {
       [AGG_TIME]: (w.start + w.end) / 2,
       [AGG_VALUE]: statValue(w, stat),

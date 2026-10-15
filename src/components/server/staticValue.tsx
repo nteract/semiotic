@@ -16,7 +16,7 @@ import type {
   BigNumberThreshold,
 } from "../charts/value/types"
 import { buildEvidence, type EvidenceSink } from "./renderEvidence"
-import { resolveTheme, type ThemeInput } from "./themeResolver"
+import { resolveTheme, themeMediaCSS, type ThemeInput } from "./themeResolver"
 
 interface ValueModeDefaults {
   width: number
@@ -110,7 +110,7 @@ function comparisonDetail(
 ): string | undefined {
   const comparison =
     props.comparison && typeof props.comparison === "object"
-      ? props.comparison as Record<string, unknown>
+      ? (props.comparison as Record<string, unknown>)
       : undefined
   const comparisonValue =
     comparison && typeof comparison.value === "number" &&
@@ -140,7 +140,7 @@ function targetDetail(
 ): string | undefined {
   const target =
     props.target && typeof props.target === "object"
-      ? props.target as Record<string, unknown>
+      ? (props.target as Record<string, unknown>)
       : undefined
   if (
     !target ||
@@ -162,11 +162,12 @@ export function renderBigNumberToStaticSVG(
   props: Datum,
   sink?: EvidenceSink,
 ): string {
-  const mode: BigNumberMode = (
+  const mode: BigNumberMode =
     props.mode === "presentation" ||
     props.mode === "inline" ||
     props.mode === "thumbnail"
-  ) ? props.mode as BigNumberMode : "tile"
+      ? (props.mode as BigNumberMode)
+      : "tile"
   const defaults = VALUE_MODE_DEFAULTS[mode]
   const width = finiteDimension(props.width, defaults.width)
   const height = finiteDimension(props.height, defaults.height)
@@ -186,7 +187,7 @@ export function renderBigNumberToStaticSVG(
     : undefined
   const format =
     typeof props.format === "string" || typeof props.format === "function"
-      ? props.format as BigNumberFormat
+      ? (props.format as BigNumberFormat)
       : "number"
   const formatter = buildFormatter(format, {
     locale: typeof props.locale === "string" ? props.locale : undefined,
@@ -224,14 +225,14 @@ export function renderBigNumberToStaticSVG(
   const surface =
     typeof props.background === "string"
       ? props.background
-      : theme.colors.surface ?? theme.colors.background
+      : (theme.colors.surface ?? theme.colors.background)
   const border =
     typeof props.borderColor === "string" ? props.borderColor : theme.colors.border
   const labelY = padding + defaults.labelSize
   const captionY = labelY + defaults.captionSize + 4
   const headerBottom = defaults.showHeader && (label || caption)
-    ? (caption ? captionY + 10 : labelY + 14)
-    : padding
+    ? caption ? captionY + 10 : labelY + 14
+      : padding
   const valueY = mode === "presentation"
     ? height / 2 + defaults.valueSize * 0.32
     : mode === "thumbnail"
@@ -243,6 +244,11 @@ export function renderBigNumberToStaticSVG(
       : 0
   )
 
+  const themeScope = String(props._idPrefix ?? "bignumber").replace(
+    /[^A-Za-z0-9_-]/g,
+    "_"
+  )
+  const mediaCSS = themeMediaCSS(theme, `[data-semiotic-auto="${themeScope}"]`)
   const svg = ReactDOMServer.renderToStaticMarkup(
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -252,9 +258,13 @@ export function renderBigNumberToStaticSVG(
       role="img"
       aria-label={accessibleName}
       data-semiotic-component="BigNumber"
+      data-semiotic-auto={mediaCSS ? themeScope : undefined}
     >
+      {mediaCSS && <style>{mediaCSS}</style>}
       <title>{label ?? formattedValue}</title>
-      {typeof props.description === "string" && <desc>{props.description}</desc>}
+      {typeof props.description === "string" && (
+        <desc>{props.description}</desc>
+      )}
       <rect
         x={defaults.border ? 0.5 : 0}
         y={defaults.border ? 0.5 : 0}

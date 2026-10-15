@@ -100,7 +100,7 @@ const NOOP: readonly Invalidation[] = []
  * XY's explicit config-patch dependency table. Accessor and chart-mode
  * changes re-derive retained data; scale/layout keys preserve data while
  * rebuilding derived scene state; styling and overlays repaint their own
- * layers. Mount-only and future-work keys intentionally have no immediate
+ * layers. Mount-only and future-work keys have no immediate
  * revision effect.
  */
 export const XY_CONFIG_PATCH_DEPENDENCIES: Readonly<

@@ -6,9 +6,10 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import { smartTooltipEntries } from "../charts/shared/tooltipUtils"
 import * as React from "react"
-import type { HoverData } from "./types"
+import type { HoverData, StreamXYFrameProps } from "./types"
+import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { defaultTooltipStyle } from "../Tooltip/Tooltip"
-import { markTooltipChrome } from "../Tooltip/tooltipChrome"
+import { hasOwnTooltipChrome, hasTooltipContent, markTooltipChrome } from "../Tooltip/tooltipChrome"
 
 function formatTooltipValue(v: unknown): string {
   if (v == null) return ""
@@ -71,3 +72,30 @@ const DefaultTooltip = /* @__PURE__ */ markTooltipChrome(function DefaultTooltip
 })
 
 export { DefaultTooltip }
+
+/** Resolve XY content and position its single tooltip surface. */
+export function XYFrameTooltip({
+  enabled,
+  hoverPoint,
+  tooltipContent,
+  ...placement
+}: Pick<React.ComponentProps<typeof FlippingTooltip>, "containerWidth" | "containerHeight" | "margin"> & {
+  enabled: boolean
+  hoverPoint: HoverData | null
+  tooltipContent: StreamXYFrameProps["tooltipContent"]
+}) {
+  if (!enabled || !hoverPoint) return null
+  const content = tooltipContent ? tooltipContent(hoverPoint) : <DefaultTooltip hover={hoverPoint} />
+  if (!hasTooltipContent(content)) return null
+  return (
+    <FlippingTooltip
+      {...placement}
+      contentOwnsChrome={hasOwnTooltipChrome(tooltipContent)}
+      x={hoverPoint.x}
+      y={hoverPoint.y}
+      className="stream-frame-tooltip"
+    >
+      {content}
+    </FlippingTooltip>
+  )
+}

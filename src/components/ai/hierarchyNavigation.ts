@@ -1,3 +1,11 @@
+import {
+  readProp,
+  stringValue,
+  finiteValue,
+  slug,
+  hierarchyChildren
+} from "./navigationValues"
+import { isAIDataRecord } from "./aiData"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { NavTreeNode } from "./navigationTree"
 
@@ -9,40 +17,6 @@ interface HierarchySummary {
   leafTotal: number
 }
 
-function readProp(datum: Datum, accessor: unknown, fallback: string): unknown {
-  if (typeof accessor === "function") return accessor(datum)
-  const key = typeof accessor === "string" && accessor ? accessor : fallback
-  return datum[key]
-}
-
-function stringValue(value: unknown, fallback = "—"): string {
-  if (value == null || value === "") return fallback
-  if (typeof value === "object") {
-    const record = value as Datum
-    return stringValue(record.id ?? record.name ?? record.label, fallback)
-  }
-  return String(value)
-}
-
-function finiteValue(value: unknown): number | undefined {
-  if (value == null || value === "") return undefined
-  const number = typeof value === "number" ? value : Number(value)
-  return Number.isFinite(number) ? number : undefined
-}
-
-function slug(value: unknown): string {
-  const normalized = stringValue(value, "unknown")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-  return normalized || "unknown"
-}
-
-function childrenFor(datum: Datum, accessor: unknown): Datum[] {
-  const children = readProp(datum, accessor, "children")
-  return Array.isArray(children) ? (children as Datum[]) : []
-}
-
 function countPhrase(count: number, singular: string, plural: string): string {
   return `${count} ${count === 1 ? singular : plural}`
 }
@@ -52,10 +26,11 @@ function rollupPhrase(
   fmtNum: (number: number) => string
 ): string {
   if (summary.numericLeaves === 0) return ""
+  const total = fmtNum(summary.leafTotal)
   if (summary.numericLeaves === summary.leaves) {
-    return `, leaf total ${fmtNum(summary.leafTotal)}`
+    return `, leaf total ${total}`
   }
-  return `, known leaf total ${fmtNum(summary.leafTotal)} across ${countPhrase(
+  return `, known leaf total ${total} across ${countPhrase(
     summary.numericLeaves,
     "valued leaf",
     "valued leaves"
@@ -76,19 +51,17 @@ export function buildHierarchyNavigationTree(
   maxLeaves: number,
   fmtNum: (number: number) => string
 ): NavTreeNode {
-  const data =
-    props.data && typeof props.data === "object" ? (props.data as Datum) : null
-  const childrenAccessor = props.childrenAccessor ?? "children"
-  const valueAccessor = props.valueAccessor ?? "value"
+  const data = isAIDataRecord(props.data) ? props.data : null
+  const childrenAccessor = props.childrenAccessor
+  const valueAccessor = props.valueAccessor
   const labelAccessor = props.nodeLabel ?? props.nodeIdAccessor
-  const summaryCache = new WeakMap<Datum, HierarchySummary>()
-  const summarizing = new WeakSet<Datum>()
+  // A null entry marks an ancestor whose summary is still being computed.
+  const summaryCache = new WeakMap<Datum, HierarchySummary | null>()
 
   const summarize = (node: Datum): HierarchySummary => {
     const cached = summaryCache.get(node)
-    if (cached) return cached
-    if (summarizing.has(node)) {
-      return {
+    if (cached !== undefined) {
+      return cached ?? {
         descendants: 0,
         depth: 0,
         leaves: 0,
@@ -97,50 +70,38 @@ export function buildHierarchyNavigationTree(
       }
     }
 
-    summarizing.add(node)
-    const children = childrenFor(node, childrenAccessor)
-    let result: HierarchySummary
-    if (children.length === 0) {
-      const value = finiteValue(readProp(node, valueAccessor, "value"))
-      result = {
-        descendants: 0,
-        depth: 1,
-        leaves: 1,
-        numericLeaves: value == null ? 0 : 1,
-        leafTotal: value ?? 0
-      }
-    } else {
-      result = children.reduce<HierarchySummary>(
-        (total, child) => {
-          const childSummary = summarize(child)
-          return {
-            descendants: total.descendants + 1 + childSummary.descendants,
-            depth: Math.max(total.depth, childSummary.depth + 1),
-            leaves: total.leaves + childSummary.leaves,
-            numericLeaves: total.numericLeaves + childSummary.numericLeaves,
-            leafTotal: total.leafTotal + childSummary.leafTotal
-          }
-        },
-        {
-          descendants: 0,
-          depth: 1,
-          leaves: 0,
-          numericLeaves: 0,
-          leafTotal: 0
-        }
-      )
+    summaryCache.set(node, null)
+    const children = hierarchyChildren(node, childrenAccessor)
+    const isLeaf = children.length === 0
+    const value =
+      isLeaf
+        ? finiteValue(readProp(node, valueAccessor, "value"))
+        : undefined
+    const result: HierarchySummary = {
+      descendants: 0,
+      depth: 1,
+      leaves: isLeaf ? 1 : 0,
+      numericLeaves: value == null ? 0 : 1,
+      leafTotal: value ?? 0
     }
-    summarizing.delete(node)
+    for (const child of children) {
+      const summary = summarize(child)
+      result.descendants += 1 + summary.descendants
+      result.depth = Math.max(result.depth, summary.depth + 1)
+      result.leaves += summary.leaves
+      result.numericLeaves += summary.numericLeaves
+      result.leafTotal += summary.leafTotal
+    }
     summaryCache.set(node, result)
     return result
   }
 
   let emittedLeaves = 0
+  const ancestors = new WeakSet<Datum>()
   const buildNode = (
     node: Datum,
     level: number,
-    path: string,
-    ancestors: ReadonlySet<Datum>
+    path: string
   ): NavTreeNode | null => {
     const label = stringValue(
       readProp(node, labelAccessor, "name"),
@@ -155,7 +116,7 @@ export function buildHierarchyNavigationTree(
       }
     }
 
-    const children = childrenFor(node, childrenAccessor)
+    const children = hierarchyChildren(node, childrenAccessor)
     const summary = summarize(node)
     if (children.length === 0) {
       if (emittedLeaves >= maxLeaves) return null
@@ -171,8 +132,7 @@ export function buildHierarchyNavigationTree(
       }
     }
 
-    const nextAncestors = new Set(ancestors)
-    nextAncestors.add(node)
+    ancestors.add(node)
     const childNodes: NavTreeNode[] = []
     let omittedLeaves = 0
     for (const [index, child] of children.entries()) {
@@ -183,11 +143,11 @@ export function buildHierarchyNavigationTree(
       const childNode = buildNode(
         child,
         level + 1,
-        `${path}-${index}`,
-        nextAncestors
+        `${path}-${index}`
       )
       if (childNode) childNodes.push(childNode)
     }
+    ancestors.delete(node)
     if (omittedLeaves > 0) {
       childNodes.push({
         id: `hierarchy-${slug(path)}-more`,
@@ -246,7 +206,7 @@ export function buildHierarchyNavigationTree(
   }
 
   if (data) {
-    const branch = buildNode(data, 2, "root", new Set())
+    const branch = buildNode(data, 2, "root")
     if (branch) {
       const authoredRootLabel = stringValue(
         readProp(data, labelAccessor, "name"),

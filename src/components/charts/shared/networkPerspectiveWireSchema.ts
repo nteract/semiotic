@@ -18,7 +18,7 @@ const FLAG_OR_OBJECT = { type: ["boolean", "object"] } as const
 const ACCESSOR = { type: ["number", "string"] } as const
 const SCALE = { oneOf: [NUMBER, { type: "string", enum: ["auto"] }] } as const
 
-// Kept deliberately shallow: this schema is repeated in every network chart's
+// Kept shallow: this schema is repeated in every network chart's
 // tool definition. The prop description names the nested fields.
 const CONFIG_SCHEMA = {
   type: "object",
@@ -74,6 +74,6 @@ export const NETWORK_PERSPECTIVE_PROP_SPEC = {
   type: ["string", "object"],
   default: "flat",
   description:
-    "Parallel projection after layout: \"isometric\" (true 30°), \"pixel\" (2:1), \"dimetric\", \"military\", \"cabinet\", or a config: elevation (field|px), thickness (px, default 6; 0 = flat pieces), edgeShadow, marks (token|billboard|ground|extrude), extrude, edges {route: orthogonal|orthogonal-rounded, elevation}, labels {mode: ground, axis}, ground {grid, plate}, regions [{id, label, nodes, elevation, depth, padding, fill, stroke}], glyph, transition. Points become tokens and areas become slabs with side walls; edges ride above the ground and cast a shadow; layout positions are unchanged. For topological positions, not measured ones.",
+    'Parallel projection after layout: "isometric" (true 30°), "pixel" (2:1), "dimetric", "military", "cabinet", or a config: elevation (field|px), thickness (px, default 6; 0 = flat pieces), edgeShadow, marks (token|billboard|ground|extrude), extrude, edges {route: orthogonal|orthogonal-rounded, elevation}, labels {mode: ground, axis}, ground {grid, plate}, regions [{id, label, nodes, elevation, depth, padding, fill, stroke}], glyph, transition. Points become tokens and areas become slabs with side walls; edges ride above the ground and cast a shadow; layout positions are unchanged. For topological positions, not measured ones.',
   schema: { oneOf: [PRESET_SCHEMA, CONFIG_SCHEMA] }
 } as const satisfies ChartPropSpec

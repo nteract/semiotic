@@ -86,6 +86,9 @@ interface SVGOverlayProps {
   /** Accessible long description; wins over the title-derived `<desc>` suffix. */
   description?: string
   /** Prefix for `<title>`/`<desc>` ids so multiple charts on a page do not collide. */
+  decorative?: boolean
+  /** Connect endpoint text to the owning image when this overlay is decorative. */
+  directLabelDescriptionId?: string
   idPrefix?: string
 
   // Legend
@@ -175,6 +178,8 @@ export function SVGOverlay(props: SVGOverlayProps) {
     title,
     description,
     idPrefix,
+    decorative = false,
+    directLabelDescriptionId,
     legend,
     legendHoverBehavior,
     legendClickBehavior,
@@ -237,24 +242,24 @@ export function SVGOverlay(props: SVGOverlayProps) {
 
   const xTicks = useMemo(() => {
     if ((!showAxes && !showGrid) || !scales) return []
-    const axis = axes?.find(a => a.orient === "bottom") ?? axes?.find(a => a.orient === "top")
+    const axis = axes?.find((a) => a.orient === "bottom") ?? axes?.find((a) => a.orient === "top")
     return generateXYTicks({ scale: scales.x, axis, size: width, horizontal: true, format: xFormat, axisExtent })
   }, [showAxes, showGrid, scales, axes, xFormat, width, axisExtent])
 
   const shouldRotateBottomTicks = useMemo(() => {
-    const axis = axes?.find(a => a.orient === "bottom") ?? axes?.find(a => a.orient === "top")
+    const axis = axes?.find((a) => a.orient === "bottom") ?? axes?.find((a) => a.orient === "top")
     return Boolean(axis?.autoRotate && axisTicksNeedRotation(xTicks))
   }, [axes, xTicks])
 
   const yTicks = useMemo(() => {
     if ((!showAxes && !showGrid) || !scales) return []
-    const axis = axes?.find(a => a.orient === "left") ?? axes?.find(a => a.orient === "right")
+    const axis = axes?.find((a) => a.orient === "left") ?? axes?.find((a) => a.orient === "right")
     return generateXYTicks({ scale: scales.y, axis, size: height, format: yFormat, axisExtent })
   }, [showAxes, showGrid, scales, axes, yFormat, height, axisExtent])
 
   const yTicksRight = useMemo(() => {
-    if (!showAxes || !scales || !axes?.some(a => a.orient === "left")) return []
-    const axis = axes?.find(a => a.orient === "right")
+    if (!showAxes || !scales || !axes?.some((a) => a.orient === "left")) return []
+    const axis = axes?.find((a) => a.orient === "right")
     if (!axis) return []
     return generateXYTicks({ scale: scales.y, axis, size: height, format: yFormat, axisExtent })
   }, [showAxes, scales, axes, yFormat, height, axisExtent])
@@ -272,8 +277,8 @@ export function SVGOverlay(props: SVGOverlayProps) {
     stickyPositionCacheRef.current = new Map()
   }
 
-  const directLabelTheme = useThemeSelector(state => state.theme)
-  const hasDirectLabels = Boolean(annotations?.some(a => a._directLabel || a._directLabelRequest))
+  const directLabelTheme = useThemeSelector((state) => state.theme)
+  const hasDirectLabels = Boolean(annotations?.some((a) => a._directLabel || a._directLabelRequest))
   const labelMeasurer = useLabelMeasurer(hasDirectLabels)
   const expandedAnnotations = useMemo(() => hasDirectLabels
     ? expandDirectLabelRequests(annotations || [], annotationData, annXAccessor, annYAccessor)
@@ -291,7 +296,8 @@ export function SVGOverlay(props: SVGOverlayProps) {
   const renderedAnnotations = useMemo(() => {
     if (!annotations || annotations.length === 0) return null
     // Hide retracted/superseded by default so paint matches describe/nav tree.
-    const visibleAnnotations = filterAnnotationsByStatus(annotations).filter(a => !a._directLabel && !a._directLabelRequest)
+    const visibleAnnotations = filterAnnotationsByStatus(annotations).filter(
+      (a) => !a._directLabel && !a._directLabelRequest)
 
     const defaultRules = createDefaultAnnotationRules("xy", annotationActivation, true)
 
@@ -348,10 +354,11 @@ export function SVGOverlay(props: SVGOverlayProps) {
 
   return (
     <svg
+      data-semiotic-overlay=""
       ref={axisAssessment.ref}
       data-axis-label-layout={hasDirectLabels ? JSON.stringify(axisAssessment.assessment) : undefined}
-      role="img"
-      aria-labelledby={labelledBy}
+      role={decorative ? "presentation" : "img"}
+      aria-labelledby={decorative ? undefined : labelledBy}
       width={totalWidth}
       height={totalHeight}
       overflow="visible"
@@ -363,7 +370,14 @@ export function SVGOverlay(props: SVGOverlayProps) {
         overflow: "visible"
       }}
     >
-      <title id={titleId}>{overlayAccessibleTitle(title, "XY Chart")}</title>
+      {decorative && directLabelDescriptionId && (
+        <desc id={directLabelDescriptionId}>
+          {directLabelDescription(expandedAnnotations)}
+        </desc>
+      )}
+      {!decorative && (
+        <>
+          <title id={titleId}>{overlayAccessibleTitle(title, "XY Chart")}</title>
       <desc id={descId}>
         {overlayAccessibleDescription(title, description, {
           familyPhrase: "XY data visualization",
@@ -371,6 +385,8 @@ export function SVGOverlay(props: SVGOverlayProps) {
         })}
         {directLabelDescription(expandedAnnotations)}
       </desc>
+        </>
+      )}
       <g transform={`translate(${margin.left},${margin.top})`}>
         {/* Grid lines.
          *
@@ -431,7 +447,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
           const xTickAnchorMode = xAxis?.tickAnchor
           const yTickAnchorMode = yAxis?.tickAnchor
           const xAxisLabel = xAxis?.label ?? xLabel
-          const yAxisLabel = yAxis?.label ?? (yOrient === "right" ? yLabelRight ?? yLabel : yLabel)
+          const yAxisLabel = yAxis?.label ?? (yOrient === "right" ? (yLabelRight ?? yLabel) : yLabel)
           const yAxisLabelX = yOrient === "right"
             ? width + rightAxisLabelMargin - 15
             : -leftAxisLabelMargin + 15
@@ -444,7 +460,8 @@ export function SVGOverlay(props: SVGOverlayProps) {
           const yPixelExtent = tickPixelExtent(yTicks)
           return (
           <g className="stream-axes" style={{ fontFamily: "var(--semiotic-font-family, sans-serif)" }}>
-            {xAxis?.visible !== false && <g className={`semiotic-axis semiotic-axis-${xOrient}`} data-orient={xOrient}>
+            {xAxis?.visible !== false && (
+                  <g className={`semiotic-axis semiotic-axis-${xOrient}`} data-orient={xOrient}>
             {/* Horizontal-axis baseline. Same three-state gate as the grid block
                 above: render unless the underlay is already showing
                 through a transparent canvas. */}
@@ -501,9 +518,11 @@ export function SVGOverlay(props: SVGOverlayProps) {
                 {xAxisLabel}
               </text>
             )}
-            </g>}
+            </g>
+                )}
 
-            {yAxis?.visible !== false && <g className={`semiotic-axis semiotic-axis-${yOrient}`} data-orient={yOrient}>
+            {yAxis?.visible !== false && (
+                  <g className={`semiotic-axis semiotic-axis-${yOrient}`} data-orient={yOrient}>
             {/* Vertical-axis baseline. Same gate as the horizontal baseline above. */}
             {(!underlayRendered || canvasObscuresUnderlay) && showYBaseline && !yJagged && (
               <line x1={yBaselineX} y1={0} x2={yBaselineX} y2={height} {...yAxisLine} />
@@ -559,11 +578,12 @@ export function SVGOverlay(props: SVGOverlayProps) {
                 {yAxisLabel}
               </text>
             )}
-            </g>}
+            </g>
+                )}
 
             {/* Right Y axis */}
             {(() => {
-              const rightAxis = axes?.find(a => a.orient === "right")
+              const rightAxis = axes?.find((a) => a.orient === "right")
               // With no left axis, the primary vertical-axis block above is
               // the right axis. Render this second block only for an explicit
               // left/right pair so right-only configs do not also create a

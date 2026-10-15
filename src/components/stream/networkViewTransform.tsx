@@ -55,10 +55,16 @@ export function NetworkViewGroup({
   height: number
   children: React.ReactNode
 }) {
-  if (!view) return <>{children}</>
+  if (!view) return children
   const { x, y, k } = normalizeNetworkView(view)
   return (
-    <svg width={width} height={height} overflow="hidden" data-network-view="">
+    <svg
+      role="presentation"
+      width={width}
+      height={height}
+      overflow="hidden"
+      data-network-view=""
+    >
       <g transform={`translate(${x},${y}) scale(${k})`}>{children}</g>
     </svg>
   )

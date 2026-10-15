@@ -56,6 +56,38 @@ function stateTuple(
 }
 
 describe("PhysicsPipelineStore", () => {
+  it("preserves collision flags through public reads, reusable buffers and snapshot restores", () => {
+    const adapter = new BuiltInPhysicsEngineAdapter()
+    const store = new PhysicsPipelineStore({ engine: adapter })
+    const datum = { label: "satellite" }
+    store.spawnNow({ ...circle("disabled"), bodyCollisions: false, datum })
+    store.spawnNow({ ...circle("enabled"), bodyCollisions: true })
+    store.spawnNow(circle("default"))
+
+    const assertFlags = () => {
+      const states = adapter.readState()
+      expect(states.map((body) => body.bodyCollisions)).toEqual([
+        false,
+        true,
+        true
+      ])
+      expect(states[0].datum).toBe(datum)
+      const buffer = states.slice()
+      expect(store.readBodies(buffer)).toBe(buffer)
+      expect(buffer.map((body) => body.bodyCollisions)).toEqual([
+        false,
+        true,
+        true
+      ])
+      buffer[0].bodyCollisions = true
+      expect(store.readBodies()[0].bodyCollisions).toBe(false)
+    }
+
+    assertFlags()
+    adapter.restore(adapter.snapshot())
+    assertFlags()
+  })
+
   it("uses the public built-in physics engine adapter by default", () => {
     const engine = createDefaultPhysicsEngineAdapter({
       gravity: { x: 0, y: 0 }

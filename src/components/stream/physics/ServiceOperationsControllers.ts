@@ -24,9 +24,9 @@ export interface ServiceResourcePoolController extends PhysicsController {
 }
 
 /**
- * Models finite, visible service resources. Assignment is intentionally
- * explicit so domain controllers decide scheduling while this controller
- * supplies physical tethers, return-to-home force, and resource evidence.
+ * Models finite, visible service resources. Assignment is explicit, so domain
+ * controllers decide scheduling while this controller supplies physical tethers,
+ * return-to-home force, and resource evidence.
  */
 export function createServiceResourcePoolController(
   options: ServiceResourcePoolOptions
@@ -127,7 +127,7 @@ export interface ServiceLevelController extends PhysicsController {
 function deadlineFor(body: PhysicsBodyState, options: ServiceLevelControllerOptions): number {
   const raw = typeof options.deadlineAccessor === "function"
     ? options.deadlineAccessor(body)
-    : valueAtPath(body.datum, options.deadlineAccessor) ?? valueAtPath(body, options.deadlineAccessor)
+    : (valueAtPath(body.datum, options.deadlineAccessor) ?? valueAtPath(body, options.deadlineAccessor))
   return Number.isFinite(Number(raw)) ? Math.max(0, Number(raw)) : 0
 }
 

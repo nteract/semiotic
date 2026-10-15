@@ -1,6 +1,7 @@
+import type { PhysicsWorkerFrame } from "./PhysicsWorkerProtocol"
 import { mulberry32 } from "../../recipes/random"
 import { cloneFixedPosition, enforceFixedPosition, fixedAxisContact } from "./physicsFixedPosition"
-import { cloneBody, cloneCollider, cloneColliderBodyFilter, cloneColliderShape, cloneShape } from "./physicsKernelCloning"
+import { cloneBodyState, cloneBody, cloneCollider, cloneColliderBodyFilter, cloneColliderShape, cloneShape } from "./physicsKernelCloning"
 import { sweptAabbContact } from "./physicsSweptAabbContact"
 import { physicsBodyPairCandidates } from "./physicsBodyPairCandidates"
 import { sweptCircleContact } from "./physicsSweptCircleContact"
@@ -34,7 +35,7 @@ export interface PhysicsKernelOptions {
   sleepAfter?: number
   restitution?: number
   friction?: number
-  /** Speed cap (px/s) applied each substep to prevent tunneling through thin walls. */
+  /** Speed cap (px/s) applied each substep to reduce tunneling through thin walls. */
   maxVelocity?: number
   /**
    * Contact impact speed (px/s) above which a resting/sleeping body is woken.
@@ -88,7 +89,7 @@ export interface PhysicsColliderBodyFilterSpec {
 }
 
 export type PhysicsColliderBodyFilter =
-  | PhysicsColliderBodyFilterSpec
+  PhysicsColliderBodyFilterSpec
   | ((body: PhysicsBodyState) => boolean)
 
 export interface PhysicsColliderSpec {
@@ -133,7 +134,8 @@ export interface PhysicsKernelSnapshotSpring extends Required<
   target: PhysicsSpringSpec["target"]
 }
 
-export type PhysicsKernelEvent = { type: "contact"; bodyId: string; otherId: string; sensor: false } | { type: "sensor-enter"; bodyId: string; sensorId: string } | { type: "sensor-exit"; bodyId: string; sensorId: string } | { type: "sleep"; bodyId: string } | { type: "wake"; bodyId: string }
+export type PhysicsKernelEvent =
+  | { type: "contact"; bodyId: string; otherId: string; sensor: false } | { type: "sensor-enter"; bodyId: string; sensorId: string } | { type: "sensor-exit"; bodyId: string; sensorId: string } | { type: "sleep"; bodyId: string } | { type: "wake"; bodyId: string }
 
 export interface PhysicsActiveSensorPair { sensorId: string; bodyId: string }
 
@@ -636,7 +638,7 @@ export class PhysicsKernelWorld {
     // Rebuild when a large correction can introduce a more distant contact.
     const solidColliders = this.sortedColliders().filter(
       (collider) => !collider.sensor
-    ).map(collider => ({ collider, bounds: colliderBounds(collider) }))
+    ).map((collider) => ({ collider, bounds: colliderBounds(collider) }))
     // Filters may inspect or mutate bodies on each visit. Keep their complete
     // authored call order; only reuse bounds when the pass has no filters.
     const colliderCandidates = solidColliders.some(({ collider }) => collider.bodyFilter)
@@ -693,23 +695,32 @@ export class PhysicsKernelWorld {
   readState(out: PhysicsBodyState[] = []): PhysicsBodyState[] {
     out.length = 0
     for (const body of this.sortedBodies()) {
-      out.push({
-        id: body.id,
-        x: body.x,
-        y: body.y,
-        prevX: body.prevX,
-        prevY: body.prevY,
-        vx: body.vx,
-        vy: body.vy,
-        angle: body.angle,
-        mass: body.mass,
-        ...(body.fixedPosition ? { fixedPosition: cloneFixedPosition(body.fixedPosition) } : {}),
-        shape: cloneShape(body.shape),
-        sleeping: body.sleeping,
-        datum: body.datum
-      })
+      out.push(cloneBodyState(body))
     }
     return out
+  }
+
+  workerSleepTimes(ids: string[]): Float32Array {
+    return Float32Array.from(ids, (id) => this.bodies.get(id)?.sleepTime ?? 0)
+  }
+
+  /** Update an existing worker mirror without rebuilding bodies or constraints. */
+  applyWorkerMotion(frame: PhysicsWorkerFrame): void {
+    frame.ids.forEach((id, i) => {
+      const body = this.bodies.get(id)
+      if (!body) throw new Error(`Unknown physics worker body ${id}`)
+      body.prevX = frame.previousPositions?.[i * 2] ?? body.x
+      body.prevY = frame.previousPositions?.[i * 2 + 1] ?? body.y
+      body.x = frame.positions[i * 2]
+      body.y = frame.positions[i * 2 + 1]
+      body.vx = frame.velocities[i * 2]
+      body.vy = frame.velocities[i * 2 + 1]
+      body.sleeping = frame.sleeping[i] === 1
+      body.sleepTime =
+        frame.sleepTimes?.[i] ?? (body.sleeping ? this.options.sleepAfter : 0)
+    })
+    this.lastEvents = frame.result.events
+    if (frame.state) this.activeSensors = new Set(frame.state.activeSensorPairs)
   }
 
   events(): PhysicsKernelEvent[] {

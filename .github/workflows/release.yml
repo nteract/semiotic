@@ -63,7 +63,7 @@ jobs:
 
   source-preflight:
     needs: npm-publish-preflight
-    name: Release dependency, generated-source, and type preflight
+    name: Release dependency, source, bundle, and type preflight
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -109,6 +109,12 @@ jobs:
 
       - name: Check dependencies and generated source before expensive jobs
         run: node --experimental-strip-types .release-preflight/scripts/check-release-preflight.ts
+
+      - name: Build and check bundle budgets before browser jobs
+        run: |
+          npm run dist:prod
+          npm run check:entry-graph-size
+          npm run check:multi-import-size
 
       # Explicit preparation also supports manual recovery of older tags whose
       # test typecheck command did not yet build its own declarations.

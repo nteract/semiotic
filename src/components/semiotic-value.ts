@@ -6,7 +6,7 @@
  * scale-aware suggestion engine routes those datasets here.
  *
  * v1 ships `BigNumber` as a plain React component. The component is
- * deliberately chart-dependency-free: consumers compose their own
+ * chart-dependency-free: consumers compose their own
  * Semiotic chart (or any ReactNode) into the `trendSlot` (wide /
  * rectangular charts, e.g. LineChart / AreaChart in sparkline mode) or
  * `chartSlot` (square charts, e.g. DonutChart / PieChart / Scatterplot

@@ -110,7 +110,7 @@ const themeShapeProps = [
     type: '"light" | "dark" | "auto"',
     required: false,
     default: '"light"',
-    description: "Theme mode label. Used by some components for mode-aware defaults.",
+    description: "Auto follows prefers-color-scheme, including before hydration and in static SVG. Explicit color overrides apply to both palettes.",
   },
   {
     name: "colors.primary",
@@ -144,8 +144,8 @@ const themeShapeProps = [
     name: "colors.background",
     type: "string",
     required: false,
-    default: '"transparent"',
-    description: "Chart background. Maps to --semiotic-bg.",
+    default: '"#ffffff"',
+    description: "Opaque chart background. Maps to --semiotic-bg. Use transparent explicitly for layered charts.",
   },
   {
     name: "colors.text",

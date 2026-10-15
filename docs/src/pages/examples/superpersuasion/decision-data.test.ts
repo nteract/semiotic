@@ -109,7 +109,7 @@ describe("superpersuasion: a map of expectations, not conversion results", () =>
       expect(path.getAttribute("d")).toMatch(/^M/)
       expect(path.getAttribute("d")).not.toMatch(/NaN|Infinity/)
     }
-    const nodes = [...document.querySelectorAll("rect")].filter(
+    const nodes = [...document.querySelectorAll("[id$=data-area] rect")].filter(
       (rect) => !rect.closest("defs") && rect.getAttribute("fill") !== "none",
     )
     expect(nodes).toHaveLength(flow.nodes.length)

@@ -227,6 +227,7 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
         startAngle: arcData.startAngle - Math.PI / 2,
         endAngle: arcData.endAngle - Math.PI / 2,
         style,
+        accessibleDatum: node.data,
         datum: node,
         id: node.id,
         label: node.id
@@ -245,7 +246,7 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
       const chordData = edge.__chordData as Chord | undefined
       if (!chordData || renderedChords.has(chordData)) continue
       renderedChords.add(chordData)
-      // Preserve the historical representative used by style/custom tooltip
+      // Use the representative datum expected by style/custom tooltip
       // callbacks: the last authored row in d3's source direction (the larger
       // matrix cell). All contributing rows remain available on the datum.
       const sourceId = activeNodes[chordData.source.index].id
@@ -304,6 +305,7 @@ export const chordLayoutPlugin: NetworkLayoutPlugin = {
         type: "ribbon",
         pathD,
         style,
+        accessibleDatum: edge.data,
         datum: edge
       })
     }

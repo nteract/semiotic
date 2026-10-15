@@ -1,5 +1,5 @@
 /**
- * Shared long-lived module-worker session for layout offload (force, ProcessSankey).
+ * Shared long-lived module-worker session for layout offload (force, ProcessSankey, physics).
  *
  * One Worker is reused across requests so module parse + startup is paid once
  * per page. Callers supply wire parse / createWorker; this owns request ids,
@@ -35,6 +35,8 @@ export interface ModuleWorkerSessionOptions<TRequest, TResponse> {
    * only cancellation mode that actually stops superseded work.
    */
   terminateOnAbort?: boolean
+  /** Fatal timeout for an unresponsive transport; omitted for unbounded work. */
+  requestTimeoutMs?: number
 }
 
 interface Pending<TResponse> {
@@ -168,10 +170,11 @@ export class ModuleWorkerSession<TRequest, TResponse> {
       ({ requestId, request } as unknown)
 
     return new Promise((resolve, reject) => {
+      let timeout: ReturnType<typeof setTimeout> | undefined
       const onAbort = () => {
         const isOnlyPendingRequest = this.pending.size === 1
         this.pending.delete(requestId)
-        signal?.removeEventListener("abort", onAbort)
+        cleanup()
         reject(makeAbortError(this.options.name))
         // Termination is the only way to interrupt synchronous CPU work, but
         // a shared worker may also be carrying requests for unrelated chart
@@ -182,9 +185,17 @@ export class ModuleWorkerSession<TRequest, TResponse> {
           this.terminate()
         }
       }
-      const cleanup = () => signal?.removeEventListener("abort", onAbort)
+      const cleanup = () => {
+        signal?.removeEventListener("abort", onAbort)
+        clearTimeout(timeout)
+      }
       this.pending.set(requestId, { cleanup, reject, resolve })
       signal?.addEventListener("abort", onAbort, { once: true })
+      if (this.options.requestTimeoutMs !== undefined) {
+        timeout = setTimeout(() => {
+          this.fail(new Error(`${this.options.name} worker request timed out`))
+        }, this.options.requestTimeoutMs)
+      }
 
       try {
         this.worker.postMessage(wire)
@@ -216,7 +227,7 @@ export class ModuleWorkerSession<TRequest, TResponse> {
  * Lazy singleton holder for a session class that exposes `isDead` + `terminate`.
  */
 export function createSharedWorkerSessionHolder<
-  TSession extends { isDead: boolean; failure?: Error | null; terminate(): void },
+  TSession extends { isDead: boolean; failure?: Error | null; terminate(): void }
 >(create: () => TSession): {
   get: () => TSession
   readonly available: boolean

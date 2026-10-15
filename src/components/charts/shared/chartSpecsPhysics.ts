@@ -1009,7 +1009,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       supportsLinkedHover: false,
       supportsPush: false,
       // The server path renders the authored current-time task/dependency
-      // projection directly. It intentionally omits arbitrary in-flight ball
+      // projection directly. It omits arbitrary in-flight ball
       // positions, which are animation state rather than the chart's ledger.
       supportsSSR: true,
       colorModel: "categorical",

@@ -1,3 +1,4 @@
+import type { PhysicsWorkerFrame } from "./PhysicsWorkerProtocol"
 import {
   PhysicsKernelWorld,
   type PhysicsActiveSensorPair,
@@ -40,6 +41,9 @@ export interface PhysicsEngineAdapter {
   allSleeping: () => boolean
   snapshot: () => PhysicsKernelSnapshot
   restore: (snapshot: PhysicsKernelSnapshot) => void
+  /** Internal worker mirror update; custom engines use synchronous execution. */
+  workerSleepTimes?: (ids: string[]) => Float32Array
+  applyWorkerMotion?: (frame: PhysicsWorkerFrame) => void
   nextRandom: () => number
   dispose: () => void
 }
@@ -49,7 +53,7 @@ export type PhysicsEngineAdapterFactory = (
 ) => PhysicsEngineAdapter
 
 export type PhysicsEngineAdapterInput =
-  | PhysicsEngineAdapter
+  PhysicsEngineAdapter
   | PhysicsEngineAdapterFactory
 
 export class BuiltInPhysicsEngineAdapter implements PhysicsEngineAdapter {
@@ -123,6 +127,14 @@ export class BuiltInPhysicsEngineAdapter implements PhysicsEngineAdapter {
 
   restore(snapshot: PhysicsKernelSnapshot): void {
     this.world.restore(snapshot)
+  }
+
+  workerSleepTimes(ids: string[]): Float32Array {
+    return this.world.workerSleepTimes(ids)
+  }
+
+  applyWorkerMotion(frame: PhysicsWorkerFrame): void {
+    this.world.applyWorkerMotion(frame)
   }
 
   nextRandom(): number {

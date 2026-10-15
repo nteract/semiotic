@@ -12,7 +12,7 @@ import type { CustomLayoutSelection } from "./customLayoutSelection"
  * nodes. The frame still owns hit testing, transitions, decay, theme
  * cascade, and SSR — the layout owns geometry only.
  *
- * Surface is intentionally narrow. Resist adding fields until a real
+ * Surface is narrow. Resist adding fields until a real
  * recipe demands them.
  */
 export type CustomLayout<C extends object = Record<string, unknown>> = (

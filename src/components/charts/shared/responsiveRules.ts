@@ -1,7 +1,7 @@
 /**
  * Responsive visualization rule grammar.
  *
- * This is deliberately chart-semantic, not CSS. A rule says "when this chart
+ * This is chart-semantic, not CSS. A rule says "when this chart
  * slot is narrow, transform the chart props this way" so agents, recipes,
  * audits, and future HOC runtime wiring can reason about the mobile variant
  * without executing a renderer.
@@ -112,7 +112,8 @@ function mergeResponsiveProps<TProps extends Record<string, unknown>>(
 export function resolveResponsiveRules<TProps extends Record<string, unknown>>(
   props: TProps,
   context: ResponsiveRuleContext,
-  rules: ReadonlyArray<ResponsiveRule<TProps>> | undefined = props.responsiveRules as ReadonlyArray<ResponsiveRule<TProps>> | undefined,
+  rules:
+    | ReadonlyArray<ResponsiveRule<TProps>> | undefined = props.responsiveRules as ReadonlyArray<ResponsiveRule<TProps>> | undefined,
 ): ResponsiveRuleResult<TProps> {
   if (!Array.isArray(rules) || rules.length === 0) {
     return { props, matches: [] }

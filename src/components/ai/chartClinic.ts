@@ -1,7 +1,7 @@
 /**
  * Read-only Chart Clinic inspection contract.
  *
- * This is intentionally an inspection surface, not an authoring or repair
+ * This is an inspection surface, not an authoring or repair
  * loop. It composes the existing validation, diagnostic, serializable-config,
  * render-evidence, and revision contracts into one deterministic report that
  * a docs page, CLI, MCP tool, or application can present without mutating the
@@ -110,7 +110,7 @@ function bundleGuidance(component: string): ChartClinicBundleGuidance {
     ...(metadata.docsRoute ? { docsRoute: metadata.docsRoute } : {}),
     note: metadata.definition
       ? "The chart definition declares its module and server support; existing family facades remain compatible."
-      : "Use the family facade today. Granular chart modules are a later package-boundary migration, so this recommendation does not claim a smaller per-chart bundle.",
+      : "Use the recommended family import. This guidance does not estimate a per-chart bundle size."
   }
 }
 
