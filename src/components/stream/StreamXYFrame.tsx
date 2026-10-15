@@ -42,8 +42,6 @@ import { createFrameThemeColorCache, LIGHT_FRAME_THEME } from "./frameThemeColor
 export { withAlpha } from "./frameThemeColors"
 import { AccessibleDataTableSlot, AriaLiveTooltip, ScreenReaderSummary, computeCanvasAriaLabel } from "./AccessibleDataTable"
 import { FocusRing } from "./FocusRing"
-import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
-import { hasOwnTooltipChrome, hasTooltipContent } from "../Tooltip/tooltipChrome"
 import { useFrame } from "./useFrame"
 import { CanvasFrameBackground, useFrameCanvasHost } from "./useCanvasFrameHost"
 import { refreshIdlePulse } from "./pulseFrameRefresh"
@@ -60,7 +58,7 @@ import { getXYCanvasRenderers } from "./xyPlugins/registry"
 import { useEnsureXYPlugins } from "./useEnsureCustomXYRenderers"
 import { paintSceneWithBackend, renderSceneWithBackend } from "./renderBackend"
 import { drawCrosshair, drawLineHighlight } from "./xyCrosshair"
-import { DefaultTooltip } from "./xyDefaultTooltip"
+import { XYFrameTooltip } from "./xyDefaultTooltip"
 import { observationInputType } from "../charts/shared/semanticInteractions"
 import { isAnnotationActivationTarget } from "../charts/shared/annotationActivation"
 import { useSemanticFrameInteractions } from "./useSemanticFrameInteractions"
@@ -1135,26 +1133,6 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
 
     const effectiveXFormat: StreamXYFrameProps["xFormat"] = xFormat || (tickFormatTime as StreamXYFrameProps["xFormat"]) || (autoDateXFormat as StreamXYFrameProps["xFormat"])
 
-    // ── Tooltip positioning ──────────────────────────────────────────────
-
-    const tooltipRendered = effectiveHoverAnnotation && hoverPoint
-      ? (tooltipContent ? tooltipContent(hoverPoint) : <DefaultTooltip hover={hoverPoint} />)
-      : null
-
-    const tooltipElement = hasTooltipContent(tooltipRendered) ? (
-      <FlippingTooltip
-        contentOwnsChrome={hasOwnTooltipChrome(tooltipContent)}
-        x={hoverPoint!.x}
-        y={hoverPoint!.y}
-        containerWidth={adjustedWidth}
-        containerHeight={adjustedHeight}
-        margin={margin}
-        className="stream-frame-tooltip"
-      >
-        {tooltipRendered}
-      </FlippingTooltip>
-    ) : null
-
     // ── Keyboard focus ring ──────────────────────────────────────────────
 
     const fnp = focusedNavPointRef.current
@@ -1509,7 +1487,14 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
           />
         )}
         {focusRing}
-        {tooltipElement}
+        <XYFrameTooltip
+          enabled={Boolean(effectiveHoverAnnotation)}
+          hoverPoint={hoverPoint}
+          tooltipContent={tooltipContent}
+          containerWidth={adjustedWidth}
+          containerHeight={adjustedHeight}
+          margin={margin}
+        />
         </div>{/* end role="img" */}
         {/* Controls stay outside role="img" so assistive technology reaches them. */}
         <FrameInteractiveLayer
