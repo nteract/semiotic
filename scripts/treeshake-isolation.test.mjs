@@ -84,9 +84,24 @@ async function eagerBundle(exportKey, symbol) {
   const files = [...eager].map((path) => textByPath.get(resolve(root, path)) ?? "")
   return {
     code: files.join("\n"),
+    deferredCode: Object.keys(outputs)
+      .filter((path) => !eager.has(path))
+      .map((path) => textByPath.get(resolve(root, path)) ?? "")
+      .join("\n"),
     gzipBytes: files.reduce((sum, text) => sum + gzipSync(text, { level: 9 }).length, 0)
   }
 }
+
+test("chart downloads stay outside the initial public entry graphs", async () => {
+  for (const entry of [".", "./ai", "./utils", "./utils/core"]) {
+    const { code, deferredCode } = await eagerBundle(entry, "exportChart")
+    assert.match(code, /\bimport\(/, `${entry} must retain its deferred export implementation`)
+    for (const message of ["No SVG element found in the container", "Failed to create PNG blob"]) {
+      assert.ok(!code.includes(message), `${entry} must not eagerly load the chart download implementation`)
+      assert.ok(deferredCode.includes(message), `${entry} must retain SVG and PNG downloads in a deferred chunk`)
+    }
+  }
+})
 
 const cases = [
   {

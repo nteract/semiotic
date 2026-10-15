@@ -17,9 +17,9 @@ it.each(["marked", "legacy", "plain"])("exports the %s foreground SVG instead of
         </svg>
       </div>`
   let downloaded!: Blob
-  vi.stubGlobal("URL", {
-    createObjectURL: (blob: Blob) => { downloaded = blob; return "blob:chart" },
-    revokeObjectURL: vi.fn()
+  vi.stubGlobal("URL", class extends URL {
+    static createObjectURL(blob: Blob) { downloaded = blob; return "blob:chart" }
+    static revokeObjectURL = vi.fn()
   })
   vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {})
   await exportChart(container, { format: "svg" })
@@ -51,9 +51,9 @@ it("composites SVG background and grid before canvas marks and foreground labels
   } as DOMRect)
   const blobs: Blob[] = []
   const revoked: string[] = []
-  vi.stubGlobal("URL", {
-    createObjectURL: (blob: Blob) => { blobs.push(blob); return `blob:${blobs.length}` },
-    revokeObjectURL: (url: string) => { revoked.push(url) }
+  vi.stubGlobal("URL", class extends URL {
+    static createObjectURL(blob: Blob) { blobs.push(blob); return `blob:${blobs.length}` }
+    static revokeObjectURL(url: string) { revoked.push(url) }
   })
   vi.stubGlobal("Image", class {
     onload?: () => void
