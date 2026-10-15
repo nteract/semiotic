@@ -54,19 +54,29 @@ describe("Stream Frame background composition", () => {
     const scheduler = createFrameScheduler()
     const { container } = render(
       <StreamXYFrame chartType="line" data={[{ x: 0, y: 1 }, { x: 1, y: 2 }]}
+        size={[300, 200]} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+        xExtent={[0, 1]} yExtent={[0, 2]}
         showGrid background={background} animate={false} frameScheduler={scheduler.scheduler} />
     )
     act(() => scheduler.flush())
     const grids = container.querySelectorAll(".stream-grid")
     expect(grids).toHaveLength(1)
-    expect(grids[0].querySelectorAll("line").length).toBeGreaterThan(0)
+    const gridLines = Array.from(grids[0].querySelectorAll("line"), line =>
+      ["x1", "x2", "y1", "y2"].map(attribute => line.getAttribute(attribute))
+    )
+    expect(gridLines).toContainEqual(["0", "260", "80", "80"])
     const canvas = container.querySelector("canvas")!
-    expect(grids[0].compareDocumentPosition(canvas) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(grids[0].compareDocumentPosition(canvas)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    const ctx = canvas.getContext("2d")!
+    expect(ctx.stroke).toHaveBeenCalled()
+    expect(ctx.fillRect).not.toHaveBeenCalled()
     const backdrop = container.querySelector(".stream-frame-background__backdrop")
     if (background === "transparent") expect(backdrop).toBeNull()
     else {
-      expect(backdrop).not.toBeNull()
-      expect(backdrop!.compareDocumentPosition(grids[0]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+      expect(backdrop).toHaveAttribute("fill", background ?? "var(--semiotic-bg, #ffffff)")
+      expect(backdrop).toHaveAttribute("width", "300")
+      expect(backdrop).toHaveAttribute("height", "200")
+      expect(backdrop!.compareDocumentPosition(grids[0])).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
     }
   })
 
