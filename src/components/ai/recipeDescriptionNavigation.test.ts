@@ -95,7 +95,8 @@ describe("recipe navigation fallback", () => {
       },
     })
     const datum = { category: Object.create(null), value: 7 }
-    Object.defineProperty(datum, "__proto__", {
+    const protoLikeField = "__proto__"
+    Object.defineProperty(datum, protoLikeField, {
       value: "own field",
       enumerable: true,
       writable: true,
