@@ -513,7 +513,7 @@ describe("diagnoseConfig", () => {
     const galton = diagnoseConfig("GaltonBoardChart", {
       data: [{ value: 1 }],
       valueAccessor: "value",
-      bins: 1,
+      bins: 0,
       branchProbability: 1.2,
       mechanicalCount: 0
     })

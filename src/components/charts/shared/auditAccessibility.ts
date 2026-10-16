@@ -25,14 +25,20 @@ import type { Datum } from "./datumTypes"
  */
 
 import { isKnownChartComponent } from "./knownChartComponents"
+import { hasDeclaredHatchFill, usesCvdSafePalette } from "./auditAccessibilityStyles"
+import {
+  checkVisualContent,
+  checkColorChannels,
+  checkDataTable,
+  checkNavigableStructure,
+  checkDataDensity,
+  checkNumberReadability,
+  checkSkippableNavigation
+} from "./auditReceivability"
 import {
   assessAccessibilityText,
   isNonEmptyString
 } from "./auditAccessibilityText"
-import {
-  hasDeclaredHatchFill,
-  usesCvdSafePalette
-} from "./auditAccessibilityStyles"
 import { contrastRatio } from "./colorContrast"
 import {
   annotationDrawsConnector,
@@ -44,7 +50,6 @@ import {
   DUAL_AXIS_CHARTS as DUAL_AXIS,
   GEO_CHARTS as GEO,
   HIERARCHY_CHARTS as HIERARCHY,
-  PART_TO_WHOLE_CHARTS as PART_TO_WHOLE,
   PHYSICS_MOTION_CHARTS as PHYSICS,
   PHYSICS_SETTLED_CHARTS as PHYSICS_SETTLED,
   POINT_TARGET_RADIUS_PROP,
@@ -347,41 +352,25 @@ export function auditAccessibility(
     ? ""
     : ` (unrecognized component "${component}" — verify manually that the built-in applies)`
 
+  const receivabilityContext = {
+    component,
+    props,
+    isValue,
+    tableEnabled,
+    hasDescription,
+    hasSummary,
+    known,
+    builtIn,
+    builtInNote,
+    navigable,
+    isHierarchy
+  }
+
   if (unsupportedFinding) f.push(unsupportedFinding)
 
   // ── PERCEIVABLE ────────────────────────────────────────────────────────
   f.push(checkContrast(props))
-  f.push({
-    id: "perceivable.content-only-visual",
-    principle: "perceivable",
-    heuristic: "Content is only visual",
-    critical: true,
-    ...(isValue
-      ? {
-          status: "pass" as A11yStatus,
-          message:
-            "BigNumber renders its value as real text with an ARIA label — available without vision."
-        }
-      : tableEnabled
-        ? {
-            status: "pass" as A11yStatus,
-            message:
-              "A screen-reader data table + live region expose the data non-visually (accessibleTable is on)."
-          }
-        : hasDescription && hasSummary
-          ? {
-              status: "manual" as A11yStatus,
-              message:
-                "accessibleTable is off; a description + summary are present. Verify they convey everything the chart shows.",
-              fix: "Re-enable accessibleTable, or confirm via screen reader that the text alternative is complete."
-            }
-          : {
-              status: "fail" as A11yStatus,
-              message:
-                "accessibleTable is disabled and there's no full text alternative — the data is only available visually.",
-              fix: "Remove accessibleTable={false}, or provide a complete description/summary plus a data table."
-            })
-  })
+  checkVisualContent(f, receivabilityContext)
   f.push({
     id: "perceivable.small-text",
     principle: "perceivable",
@@ -411,34 +400,9 @@ export function auditAccessibility(
           fix: "Manual check — most static charts pass trivially."
         })
   })
+  checkColorChannels(f, receivabilityContext)
   if (props.colorBy != null) {
-    // A redundant channel beyond color: direct labels, or — for XY series — the
-    // series' own position. We can only see explicit label opt-ins here.
-    const hasDirectLabel =
-      props.directLabel === true || props.showLabels === true
     const hasAuthoredTexture = hasDeclaredHatchFill(props)
-    f.push({
-      id: "perceivable.color-alone",
-      principle: "perceivable",
-      heuristic: "Color is used alone to communicate meaning",
-      critical: false,
-      ...(hasDirectLabel
-        ? {
-            status: "pass" as A11yStatus,
-            message:
-              "Categories are encoded by color (colorBy) and also directly labeled, so color isn't the only channel."
-          }
-        : {
-            status: "warn" as A11yStatus,
-            message: hasAuthoredTexture
-              ? "Categories use colorBy and this config authors a HatchFill through styleRules, but a static audit cannot prove those rules give every category a distinct non-color cue. Semiotic does not automatically assign per-category textures."
-              : "Categories are encoded by color (colorBy) with no declared redundant channel. Semiotic supports author-supplied HatchFill patterns through styleRules, but this config has no statically visible HatchFill descriptor and there is no automatic per-category texture assignment.",
-            fix: hasAuthoredTexture
-              ? "Verify every category remains distinguishable with color removed; add direct labels where hatching is incomplete, keep categories ≤ ~7, and use a CVD-safe palette."
-              : "Add direct labels (directLabel on LineChart/AreaChart, showLabels on network/hierarchy) or category-targeted styleRules with distinct HatchFill descriptors; keep categories ≤ ~7 and use a CVD-safe palette."
-          })
-    })
-
     const usesSafePalette = usesCvdSafePalette(props.colorScheme)
     f.push({
       id: "perceivable.cvd-safe",
@@ -845,29 +809,7 @@ export function auditAccessibility(
   })
 
   // ── COMPROMISING ───────────────────────────────────────────────────────
-  f.push({
-    id: "compromising.table",
-    principle: "compromising",
-    heuristic: "No table",
-    critical: true,
-    ...(isValue
-      ? {
-          status: "not-applicable" as A11yStatus,
-          message: "Single-value display — a table isn't meaningful."
-        }
-      : tableEnabled
-        ? {
-            status: "pass" as A11yStatus,
-            message:
-              "A human-readable data table is provided (accessibleTable)."
-          }
-        : {
-            status: "fail" as A11yStatus,
-            message:
-              "accessibleTable is disabled — no human-readable table of the underlying data.",
-            fix: "Remove accessibleTable={false} (unless title/summary/annotations already convey all the data)."
-          })
-  })
+  checkDataTable(f, receivabilityContext)
   if (!isValue) {
     f.push({
       id: "compromising.table-static",
@@ -900,136 +842,12 @@ export function auditAccessibility(
       ? "Expose it to users via the ChartContainer copyConfig action or a shareable URL."
       : undefined
   })
-  f.push({
-    id: "compromising.navigable-structure",
-    principle: "compromising",
-    heuristic:
-      "Information cannot be navigated according to narrative or structure",
-    critical: false,
-    ...(navigable
-      ? isHierarchy
-        ? {
-            status: "pass" as A11yStatus,
-            message:
-              "ChartContainer's navigable option mounts a structured navigation tree, including hierarchy/network branches and their data items."
-          }
-        : {
-            status: "pass" as A11yStatus,
-            message:
-              "ChartContainer's navigable option mounts a structured tree (chart → axes/series → data points) that screen readers can traverse."
-          }
-      : isHierarchy
-        ? {
-            status: "warn" as A11yStatus,
-            message:
-              "Hierarchical chart: built-in keyboard navigation is largely flat — it doesn't descend the tree structure.",
-            fix: "Enable ChartContainer's navigable option for a structured navigation tree, or lean on the data table and a summary that conveys the hierarchy."
-          }
-        : {
-            status: builtIn,
-            message: `Keyboard navigation steps through points and switches series/groups${builtInNote}.`,
-            fix: known
-              ? "For deeper structure (axis → series → datum), enable ChartContainer's navigable option."
-              : undefined
-          })
-  })
+  checkNavigableStructure(f, receivabilityContext)
 
   // ── ASSISTIVE ──────────────────────────────────────────────────────────
-  {
-    const data = Array.isArray(props.data) ? props.data : null
-    const nodes = Array.isArray(props.nodes) ? props.nodes : null
-    const base = {
-      id: "assistive.data-density",
-      principle: "assistive" as A11yPrinciple,
-      heuristic: "Data density is inappropriate",
-      critical: true
-    }
-    let density: A11yFinding
-    if (PART_TO_WHOLE.has(component) && data && data.length > 7) {
-      density = {
-        ...base,
-        status: "warn",
-        message: `${data.length} slices in a part-to-whole chart. Chartability suggests ≤ 5 categories; many thin slices are hard to perceive and to describe.`,
-        fix: 'Group small slices into an "Other" category, or switch to a ranked bar chart.'
-      }
-    } else if (nodes && nodes.length > 200) {
-      density = {
-        ...base,
-        status: "warn",
-        message: `${nodes.length} nodes. A network this size is hard to navigate non-visually node by node.`,
-        fix: "Provide a summary of structure (clusters, hubs, components) and consider filtering or aggregating the graph."
-      }
-    } else if (data && data.length > 5000) {
-      density = {
-        ...base,
-        status: "warn",
-        message: `${data.length} data points. Canvas renders this fine, but the non-visual table/navigation become unwieldy.`,
-        fix: "Aggregate or bin for the accessible representation, or expose summary statistics rather than every row."
-      }
-    } else if (data) {
-      density = {
-        ...base,
-        status: "pass",
-        message: `${data.length} data points — a reasonable density for non-visual consumption.`
-      }
-    } else if (nodes) {
-      density = {
-        ...base,
-        status: "pass",
-        message: `${nodes.length} nodes — a reasonable density for non-visual consumption.`
-      }
-    } else {
-      density = {
-        ...base,
-        status: "manual",
-        message:
-          "Data not provided inline (push mode); verify density at runtime."
-      }
-    }
-    f.push(density)
-  }
+  checkDataDensity(f, receivabilityContext)
   // Human-readable numbers: large magnitudes need formatting (6.5b, not 6500000000).
-  {
-    const data = Array.isArray(props.data) ? props.data : null
-    const hasFormatter = [
-      "valueFormat",
-      "yFormat",
-      "xFormat",
-      "tickFormat",
-      "format"
-    ].some(
-      (k) => typeof props[k] === "function" || typeof props[k] === "string"
-    )
-    let hasLargeNumbers = false
-    if (data && !hasFormatter) {
-      for (const row of data.slice(0, 50)) {
-        if (!row || typeof row !== "object") continue
-        for (const v of Object.values(row as Record<string, unknown>)) {
-          if (
-            typeof v === "number" &&
-            Number.isFinite(v) &&
-            Math.abs(v) >= 100000
-          ) {
-            hasLargeNumbers = true
-            break
-          }
-        }
-        if (hasLargeNumbers) break
-      }
-    }
-    if (hasLargeNumbers) {
-      f.push({
-        id: "assistive.human-readable-numbers",
-        principle: "assistive",
-        heuristic: "Data in text is not human-readable",
-        critical: false,
-        status: "warn",
-        message:
-          'Data includes large numbers (≥ 100,000) and no value/tick formatter — screen readers will read every digit (e.g. "six hundred fifty thousand…").',
-        fix: 'Pass valueFormat / yFormat (e.g. a compact formatter so 6,500,000 reads as "6.5M"); the formatter flows to ticks, tooltips, and the data table.'
-      })
-    }
-  }
+  checkNumberReadability(f, receivabilityContext)
   f.push({
     id: "assistive.features-described",
     principle: "assistive",
@@ -1055,29 +873,7 @@ export function auditAccessibility(
             fix: "Enable ChartContainer's describe option (auto-generates via describeChart()), or write a summary covering the key trend and notable points."
           })
   })
-  f.push({
-    id: "assistive.skippable-navigation",
-    principle: "assistive",
-    heuristic: "Navigation and interaction is tedious",
-    critical: true,
-    ...(isValue
-      ? {
-          status: "not-applicable" as A11yStatus,
-          message: "Single value — nothing to skip."
-        }
-      : tableEnabled
-        ? {
-            status: "pass" as A11yStatus,
-            message:
-              'A "Skip to data table" link lets screen-reader users bypass point-by-point navigation.'
-          }
-        : {
-            status: "warn" as A11yStatus,
-            message:
-              "accessibleTable is off, removing the skip-to-table affordance.",
-            fix: "Keep accessibleTable enabled so users can skip past dense point navigation."
-          })
-  })
+  checkSkippableNavigation(f, receivabilityContext)
 
   // ── FLEXIBLE ───────────────────────────────────────────────────────────
   f.push({

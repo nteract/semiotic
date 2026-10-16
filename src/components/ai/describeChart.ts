@@ -213,7 +213,8 @@ function humanizeComponent(name: string): string {
   return name.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase()
 }
 function kindPhrase(component: string): string {
-  return KIND_PHRASE[component] || `${humanizeComponent(component)} chart`
+  return Object.prototype.hasOwnProperty.call(KIND_PHRASE, component)
+    ? KIND_PHRASE[component] : `${humanizeComponent(component)} chart`
 }
 
 // ---------------------------------------------------------------------------
@@ -305,7 +306,8 @@ export function communicativeActForIntent(
 ): CommunicativeAct | undefined {
   const visiting = new Set<IntentId>()
   const resolve = (id: IntentId): CommunicativeAct | undefined => {
-    const direct = INTENT_ACT[id]
+    const direct = Object.prototype.hasOwnProperty.call(INTENT_ACT, id)
+      ? INTENT_ACT[id] : undefined
     if (direct) return direct
     if (visiting.has(id)) return undefined
     const descriptor = intentRegistryStore().intents.get(id)
@@ -413,10 +415,11 @@ export function resolveCommunicativeAct(
     // `buildReasons` uses). A weak top score means we're looking at leftover
     // static scorers (a chart's primary intents are often function scorers we
     // can't evaluate here) — the family supplies the fallback intent in that case.
-    if (top && INTENT_ACT[top] && (ctx.intentScores[top] ?? 0) >= 3)
+    if (top && Object.prototype.hasOwnProperty.call(INTENT_ACT, top) && (ctx.intentScores[top] ?? 0) >= 3)
       return INTENT_ACT[top]
   }
-  if (ctx?.family) return FAMILY_ACT[ctx.family]
+  if (ctx?.family && Object.prototype.hasOwnProperty.call(FAMILY_ACT, ctx.family))
+    return FAMILY_ACT[ctx.family]
   return componentAct(component)
 }
 
@@ -649,7 +652,8 @@ function annotationQualifier(ann: Datum): string {
  */
 export function annotationPhrase(ann: Datum): string {
   const type = typeof ann.type === "string" ? ann.type : "annotation"
-  const baseKind = ANNOTATION_KIND[type] || "an annotation"
+  const baseKind = Object.prototype.hasOwnProperty.call(ANNOTATION_KIND, type)
+    ? ANNOTATION_KIND[type] : "an annotation"
   const qualifier = annotationQualifier(ann)
   const kind = qualifier ? qualifier + baseKind.replace(/^an? /, "") : baseKind
   const label =

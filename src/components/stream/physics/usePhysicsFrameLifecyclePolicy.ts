@@ -60,7 +60,7 @@ export function usePhysicsFrameLifecyclePolicy({
     if (!suspendWhenHidden) {
       const store = storeRef.current
       frameRuntime.setVisible(true)
-      if (store && !store.snapshot().visible) {
+      if (store && !store.runtimeState().visible) {
         store.setVisible(true)
         postWorkerCommandRef.current({ type: "setVisible", visible: true }, false)
         requestRenderRef.current()

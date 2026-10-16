@@ -469,6 +469,26 @@ const { componentName, props } = fromConfig(config)`} />
         </p>
       </section>
       <section>
+        <h2>Strict portability</h2>
+        <p>
+          Use <code>unstable_fromVegaLiteResult</code> from <code>semiotic/experimental</code>{" "}
+          for loss-aware imports. Unsupported encoding keys, scale settings, time units, sorting,
+          composition, and malformed inputs return structured refusals. Explicitly opt into
+          <code> {`{ mode: "lossy" }`}</code> to receive a config with its loss report. Temporal x
+          fields and supported log scales retain their scale intent. Calendar time on y is refused
+          because the public XY chart API supports time scales only on x.
+        </p>
+        <p>
+          The outbound <code>unstable_toVegaLiteResult</code> reports every present prop outside
+          its supported subset, including annotations and independent grouping/color fields.
+          Normalized stacks and area opacity are preserved. Palettes are preserved only when
+          a color field is exported. Category colors on BarChart and DotPlot are reported as
+          losses; use <code>{`{ allowLossy: true }`}</code> to accept the export with its loss report.
+          Use an explicit
+          <code> innerRadius</code> when exporting a donut; its responsive default is not portable.
+        </p>
+      </section>
+      <section>
         <h2>Limitations</h2>
         <ul>
           <li>

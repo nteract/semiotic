@@ -40,7 +40,10 @@ export interface GaltonBoardProjectionMetadata {
 export function buildGaltonBoardPhysics<TDatum extends Datum>(
   options: GaltonBoardPhysicsOptions<TDatum>
 ): PhysicsChartLayout {
-  const { data: sourceRows, valueAccessor, bins, ballRadius, seed, size, valueExtent } = options
+  const { data: sourceRows, valueAccessor, ballRadius, seed, size, valueExtent } = options
+  const bins = Number.isFinite(options.bins) ? Math.max(1, Math.floor(options.bins)) : 1
+  if (!(Number.isFinite(ballRadius) && ballRadius > 0))
+    throw new RangeError("Galton ballRadius must be finite and positive")
   const { rows: data } = createPhysicsSourceState(sourceRows, "galton")
   const area = physicsChartArea(size)
   const values = data

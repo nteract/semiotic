@@ -50,7 +50,10 @@ export {
   attachIDIDAnnotations as unstable_attachIDIDAnnotations,
   readIDIDAnnotations as unstable_readIDIDAnnotations
 } from "../data/portability"
-export { fromObservablePlot as unstable_fromObservablePlot } from "../data/fromObservablePlot"
+export {
+  fromObservablePlot as unstable_fromObservablePlot,
+  fromObservablePlotResult as unstable_fromObservablePlotResult
+} from "../data/fromObservablePlot"
 export { fromMermaid as unstable_fromMermaid } from "../data/fromMermaid"
 export { fromFlintChart as unstable_fromFlintChart } from "../data/fromFlintChart"
 

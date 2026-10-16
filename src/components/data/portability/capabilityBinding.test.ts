@@ -49,7 +49,7 @@ function hostCapability(
 }
 
 const portable = {
-  specVersion: "0.1",
+  specVersion: "0.1" as const,
   component: "PortableBars",
   family: "ordinal",
   importPath: "another-library/bar",

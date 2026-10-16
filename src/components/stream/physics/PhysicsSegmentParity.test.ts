@@ -37,6 +37,40 @@ const spawns: PhysicsQueuedSpawn[] = [
   }
 ]
 
+it("forwards a glancing endpoint contact through both sync and worker results", () => {
+  const config: PhysicsPipelineConfig = {
+    fixedDt: 1 / 120,
+    kernel: {
+      gravity: { x: 0, y: 0 },
+      velocityDamping: 1,
+      restitution: 0,
+      friction: 0
+    },
+    colliders: [
+      { id: "wall", shape: { type: "segment", x1: 0, y1: 0, x2: 10, y2: 0 } }
+    ]
+  }
+  const spawns: PhysicsQueuedSpawn[] = [
+    { id: "body", x: -4, y: -1, vx: 960, shape: { type: "circle", radius: 2 } }
+  ]
+  const store = new PhysicsPipelineStore(config)
+  store.enqueue(spawns)
+  store.tick(0)
+  const runtime = createPhysicsWorkerRuntime()
+  runtime.handle({
+    type: "init",
+    config: createPhysicsWorkerConfig(config),
+    initialSpawns: spawns
+  })
+  const sync = store.tick(1 / 120)
+  const response = runtime.handle({ type: "tick", deltaSeconds: 1 / 120 })
+  if (response.type !== "frame") throw new Error("Expected worker frame")
+  expect(sync.events).toEqual([
+    { type: "contact", bodyId: "body", otherId: "wall", sensor: false }
+  ])
+  expect(response.frame.result.events).toEqual(sync.events)
+})
+
 it("matches sync and worker contacts, sleeping, and snapshot replay", () => {
   const store = new PhysicsPipelineStore(config)
   store.enqueue(spawns)

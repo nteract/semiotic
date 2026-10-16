@@ -90,8 +90,9 @@ test("folded and returned calls do not leave invalid Rollup purity hints", async
   }
 })
 
-test("compressed ESM preserves exports, initialization, closures and live bindings", async () => {
-  const source = `
+for (const allowFunctionReduction of [false, true]) {
+  test(`compressed ESM preserves exports, initialization, closures and live bindings (function reduction: ${allowFunctionReduction})`, async () => {
+    const source = `
     export let calls = 0
     export const initial = readValue(3)
     export function readValue(value) { calls++; return scale(value) }
@@ -101,36 +102,38 @@ test("compressed ESM preserves exports, initialization, closures and live bindin
     export class Item { constructor(value) { this.value = value } }
     export function makeItem(value) { return new Item(value) }
   `
-  const result = await minifyLibraryChunk(source, {
-    format: "esm",
-    filename: "fixture.js",
-    options
+    const result = await minifyLibraryChunk(source, {
+      format: "esm",
+      filename: "fixture.js",
+      options,
+      allowFunctionReduction
+    })
+    const reference = await minify(source, { module: true, ...options })
+    assert.ok(
+      gzipSync(result.code, { level: 9 }).length <=
+        gzipSync(reference.code, { level: 9 }).length
+    )
+    const original = await import(
+      `data:text/javascript,${encodeURIComponent(source)}#original-${allowFunctionReduction}`
+    )
+    const compact = await import(
+      `data:text/javascript,${encodeURIComponent(result.code)}#compact-${allowFunctionReduction}`
+    )
+    assert.deepEqual(Object.keys(compact), Object.keys(original))
+    for (const module of [original, compact]) {
+      assert.equal(module.initial, 21)
+      assert.equal(module.calls, 1)
+      assert.equal(module.readValue(4), 28)
+      assert.equal(module.calls, 2)
+      assert.equal(module.sameFunction, module.readValue)
+      const counter = module.counter(5)
+      assert.deepEqual([counter(), counter()], [6, 7])
+      const item = module.makeItem(9)
+      assert.ok(item instanceof module.Item)
+      assert.equal(item.value, 9)
+    }
   })
-  const reference = await minify(source, { module: true, ...options })
-  assert.ok(
-    gzipSync(result.code, { level: 9 }).length <=
-      gzipSync(reference.code, { level: 9 }).length
-  )
-  const original = await import(
-    `data:text/javascript,${encodeURIComponent(source)}`
-  )
-  const compact = await import(
-    `data:text/javascript,${encodeURIComponent(result.code)}`
-  )
-  assert.deepEqual(Object.keys(compact), Object.keys(original))
-  for (const module of [original, compact]) {
-    assert.equal(module.initial, 21)
-    assert.equal(module.calls, 1)
-    assert.equal(module.readValue(4), 28)
-    assert.equal(module.calls, 2)
-    assert.equal(module.sameFunction, module.readValue)
-    const counter = module.counter(5)
-    assert.deepEqual([counter(), counter()], [6, 7])
-    const item = module.makeItem(9)
-    assert.ok(item instanceof module.Item)
-    assert.equal(item.value, 9)
-  }
-})
+}
 
 test("preserves purity annotations for downstream named-import tree shaking", async () => {
   const source = `

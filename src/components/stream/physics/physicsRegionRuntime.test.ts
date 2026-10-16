@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import {
   composePhysicsControllers,
   createCapacityQueueController
@@ -89,6 +89,16 @@ function advance(
 }
 
 describe("runPhysicsPostTick simulated time", () => {
+  it("does not clone the world for fixed-step runtime policy reads", () => {
+    const runtime = makeRuntime()
+    const snapshot = vi.spyOn(runtime.store, "snapshot")
+    const outcome = advance(runtime, 4 * FIXED_DT, { bodyForces: { x: 2 } })
+    expect(outcome.result.steps).toBe(4)
+    expect(outcome.postTick.bodyForcesApplied).toBe(true)
+    expect(snapshot).not.toHaveBeenCalled()
+    expect(runtime.store.readBodies()[0].vx).toBeCloseTo(8 * FIXED_DT)
+  })
+
   it("does not apply region or body forces when the pipeline advances zero steps", () => {
     const runtime = makeRuntime()
     const regionEffects: StreamPhysicsRegionEffect[] = [

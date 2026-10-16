@@ -119,7 +119,7 @@ function printSingleComponentSchema(componentName) {
       .join(", ")
     console.error(`Unknown component: ${componentName}`)
     console.error(`Available components: ${available}`)
-    process.exit(1)
+    return 1
   }
 
   const payload = {
@@ -143,6 +143,7 @@ function printSingleComponentSchema(componentName) {
     })
   }
   console.log(JSON.stringify(payload, null, 2))
+  return 0
 }
 
 // Returns true when the schema-only validation passed, so the caller can set
@@ -175,7 +176,7 @@ function printDoctorBehaviorContracts(component, props) {
   }
 }
 
-function readJSONInput(usage) {
+async function readJSONInput(usage) {
   // Skip flag tokens (e.g. `--json`) so `--doctor --json` still reads the JSON
   // from stdin rather than trying to parse the flag as the input.
   const positional = process.argv
@@ -185,11 +186,13 @@ function readJSONInput(usage) {
     return positional.join(" ")
   }
   if (!process.stdin.isTTY) {
-    return fs.readFileSync(0, "utf-8")
+    process.stdin.setEncoding("utf-8")
+    let input = ""
+    for await (const chunk of process.stdin) input += chunk
+    return input
   }
 
-  console.error(usage)
-  process.exit(1)
+  throw new Error(usage)
 }
 
 function loadArtifactRuntime() {
@@ -353,12 +356,12 @@ function safeArtifactRepairOutput(runtime, result) {
 }
 
 function writeArtifactJsonAndExit(value, exitCode) {
-  fs.writeSync(1, `${JSON.stringify(value, null, 2)}\n`)
-  process.exit(exitCode)
+  console.log(JSON.stringify(value, null, 2))
+  process.exitCode = exitCode
 }
 
-function readArtifactRequest(flagName) {
-  const input = readJSONInput(
+async function readArtifactRequest(flagName) {
+  const input = await readJSONInput(
     `Usage: npx -p semiotic semiotic-ai ${flagName} '{"component":"LineChart","props":{"data":[...]},"contract":{...}}'`
   )
   const parsed = JSON.parse(input)
@@ -368,461 +371,473 @@ function readArtifactRequest(flagName) {
   return parsed
 }
 
-if (flag === "--help" || flag === "-h") {
-  console.log(HELP)
-  process.exit(0)
+function setExitCode(code) {
+  process.exitCode = code
 }
 
-if (flag === "--list") {
-  printComponentList(process.argv.includes("--json"))
-  process.exit(0)
-}
-
-if (flag === "--schema" && process.argv[3]) {
-  printSingleComponentSchema(process.argv[3])
-  process.exit(0)
-}
-
-if (flag === "--skill") {
-  console.log(fs.readFileSync(FILES["--skill"], "utf-8"))
-  process.exit(0)
-}
-
-if (flag === "--suggest") {
-  const input = readJSONInput(
-    'Usage: npx -p semiotic semiotic-ai --suggest \'{"data":[{"category":"A","value":10}],"intent":"comparison"}\''
-  )
-  try {
-    const args = JSON.parse(input)
-    const result = suggestCharts(args)
-    console.log(formatSuggestionReport(result))
-    process.exit(result.ok ? 0 : 1)
-  } catch (err) {
-    console.error(`Failed to parse input: ${errorMessage(err)}`)
-    process.exit(1)
+// Let Node drain stdout/stderr after each command, including piped reports.
+async function main() {
+  if (flag === "--help" || flag === "-h") {
+    console.log(HELP)
+    return setExitCode(0)
   }
-}
 
-// --doctor: validate component + props from stdin or argv
-if (flag === "--doctor") {
-  const input = readJSONInput(
-    'Usage: npx -p semiotic semiotic-ai --doctor \'{"component":"LineChart","props":{"data":[...]},"usageMode":"static"}\'\n       echo \'{"component":"LineChart","props":{"xAccessor":"x","yAccessor":"y"},"usageMode":"push"}\' | npx -p semiotic semiotic-ai --doctor'
-  )
+  if (flag === "--list") {
+    printComponentList(process.argv.includes("--json"))
+    return setExitCode(0)
+  }
 
-  // `--json` emits a stable machine-readable report instead of the human text.
-  const asJson = process.argv.includes("--json")
+  if (flag === "--schema" && process.argv[3]) {
+    return setExitCode(printSingleComponentSchema(process.argv[3]))
+  }
 
-  try {
-    const { component, props, usageMode: rawUsageMode } = JSON.parse(input)
-    if (!component || !props) {
-      const msg = "Input must be JSON with { component, props } fields."
-      if (asJson)
-        console.log(JSON.stringify({ ok: false, error: msg }, null, 2))
-      else console.error(msg)
-      process.exit(1)
-    }
+  if (flag === "--skill") {
+    console.log(fs.readFileSync(FILES["--skill"], "utf-8"))
+    return setExitCode(0)
+  }
 
-    // Load diagnoseConfig from dist (falls back to validateProps, then schema.json)
-    const distPath = path.join(pkgRoot, "dist", "semiotic-ai.min.js")
-    let diagnoseConfig, validateProps
-    try {
-      if (!process.env.SEMIOTIC_AI_SCHEMA_ONLY) {
-        const mod = require(distPath)
-        diagnoseConfig = mod.diagnoseConfig
-        validateProps = mod.validateProps
-      }
-    } catch (e) {
-      // Dist is not available in a clean source checkout. Fall back to the
-      // packaged schema so the CLI still catches basic agent mistakes.
-    }
-
-    const report = diagnoseChart(
-      { component, props, usageMode: rawUsageMode },
-      { diagnoseConfig, validateProps },
-      loadSchema
+  if (flag === "--suggest") {
+    const input = await readJSONInput(
+      'Usage: npx -p semiotic semiotic-ai --suggest \'{"data":[{"category":"A","value":10}],"intent":"comparison"}\''
     )
-    const { usageMode, ok } = report
-
-    if (report.mode === "schema-only") {
-      if (asJson) console.log(JSON.stringify(report, null, 2))
-      else printSchemaOnlyDoctorResult(component, props, usageMode, report)
-    } else if (report.mode === "diagnose") {
-      const { diagnoses } = report
-      if (asJson) {
-        console.log(
-          JSON.stringify(
-            { component, usageMode, mode: "diagnose", ok, diagnoses },
-            null,
-            2
-          )
-        )
-      } else {
-        if (usageMode === "push") {
-          console.log(
-            `  Usage mode: push (data prop may be omitted; use a ref to push data)`
-          )
-        }
-
-        // Show data shape summary
-        if (props.data && Array.isArray(props.data) && props.data.length > 0) {
-          const sample = props.data[0]
-          console.log(
-            `  Data shape: ${props.data.length} items, keys: [${Object.keys(sample).join(", ")}]`
-          )
-        }
-
-        if (ok && diagnoses.length === 0) {
-          console.log(`✓ ${component}: configuration looks good.`)
-        } else if (ok) {
-          console.log(`✓ ${component}: configuration OK with warnings:`)
-          for (const d of diagnoses) {
-            console.log(`  ⚠ [${d.code}] ${d.message}`)
-            if (d.fix) console.log(`    Fix: ${d.fix}`)
-          }
-        } else {
-          console.log(`✗ ${component}: issues detected.`)
-          for (const d of diagnoses) {
-            const icon = d.severity === "error" ? "✗" : "⚠"
-            console.log(`  ${icon} [${d.code}] ${d.message}`)
-            if (d.fix) console.log(`    Fix: ${d.fix}`)
-          }
-        }
-        printDoctorBehaviorContracts(component, props)
-      }
-    } else {
-      // Fallback to validateProps only
-      const { errors } = report
-      if (asJson) {
-        console.log(
-          JSON.stringify(
-            { component, usageMode, mode: "validate", ok, errors },
-            null,
-            2
-          )
-        )
-      } else {
-        if (usageMode === "push") {
-          console.log(
-            `  Usage mode: push (data prop may be omitted; use a ref to push data)`
-          )
-        }
-        if (ok) {
-          console.log(`✓ ${component}: props are valid.`)
-        } else {
-          console.log(`✗ ${component}: validation failed.`)
-          for (const err of errors) {
-            console.log(`  • ${err}`)
-          }
-        }
-        printDoctorBehaviorContracts(component, props)
-      }
-    }
-
-    // Exit nonzero when an error-level problem was found (warnings still exit 0).
-    process.exit(ok ? 0 : 1)
-  } catch (err) {
-    const msg = `Failed to parse input: ${errorMessage(err)}`
-    if (asJson) console.log(JSON.stringify({ ok: false, error: msg }, null, 2))
-    else console.error(msg)
-    process.exit(1)
-  }
-}
-
-// --audit-a11y: grade component + props against Chartability heuristics
-if (flag === "--audit-a11y") {
-  const input = readJSONInput(
-    'Usage: npx -p semiotic semiotic-ai --audit-a11y \'{"component":"LineChart","props":{"data":[...],"xAccessor":"x","yAccessor":"y"}}\'\n       echo \'{"component":"BarChart","props":{...},"inChartContainer":true}\' | npx -p semiotic semiotic-ai --audit-a11y'
-  )
-
-  try {
-    const { component, props, inChartContainer, describe, navigable } =
-      JSON.parse(input)
-    if (!component || !props) {
-      console.error("Input must be JSON with { component, props } fields.")
-      process.exit(1)
-    }
-
-    // Load the audit from dist (same strategy as --doctor). It lives in the
-    // semiotic/ai bundle; a clean source checkout without a build can't run it.
-    const distPath = path.join(pkgRoot, "dist", "semiotic-ai.min.js")
-    let auditAccessibility, formatAccessibilityAudit
     try {
-      if (!process.env.SEMIOTIC_AI_SCHEMA_ONLY) {
-        const mod = require(distPath)
-        auditAccessibility = mod.auditAccessibility
-        formatAccessibilityAudit = mod.formatAccessibilityAudit
-      }
-    } catch (e) {
-      // Dist unavailable.
+      const args = JSON.parse(input)
+      const result = suggestCharts(args)
+      console.log(formatSuggestionReport(result))
+      return setExitCode(result.ok ? 0 : 1)
+    } catch (err) {
+      console.error(`Failed to parse input: ${errorMessage(err)}`)
+      return setExitCode(1)
     }
+  }
 
-    if (!auditAccessibility || !formatAccessibilityAudit) {
-      console.error(
-        "Accessibility audit requires the built library. Run `npm run dist` first, or use the MCP `auditAccessibility` tool."
+  // --doctor: validate component + props from stdin or argv
+  if (flag === "--doctor") {
+    const input = await readJSONInput(
+      'Usage: npx -p semiotic semiotic-ai --doctor \'{"component":"LineChart","props":{"data":[...]},"usageMode":"static"}\'\n       echo \'{"component":"LineChart","props":{"xAccessor":"x","yAccessor":"y"},"usageMode":"push"}\' | npx -p semiotic semiotic-ai --doctor'
+    )
+
+    // `--json` emits a stable machine-readable report instead of the human text.
+    const asJson = process.argv.includes("--json")
+
+    try {
+      const { component, props, usageMode: rawUsageMode } = JSON.parse(input)
+      if (!component || !props) {
+        const msg = "Input must be JSON with { component, props } fields."
+        if (asJson)
+          console.log(JSON.stringify({ ok: false, error: msg }, null, 2))
+        else console.error(msg)
+        return setExitCode(1)
+      }
+
+      // Load diagnoseConfig from dist (falls back to validateProps, then schema.json)
+      const distPath = path.join(pkgRoot, "dist", "semiotic-ai.min.js")
+      let diagnoseConfig, validateProps
+      try {
+        if (!process.env.SEMIOTIC_AI_SCHEMA_ONLY) {
+          const mod = require(distPath)
+          diagnoseConfig = mod.diagnoseConfig
+          validateProps = mod.validateProps
+        }
+      } catch (e) {
+        // Dist is not available in a clean source checkout. Fall back to the
+        // packaged schema so the CLI still catches basic agent mistakes.
+      }
+
+      const report = diagnoseChart(
+        { component, props, usageMode: rawUsageMode },
+        { diagnoseConfig, validateProps },
+        loadSchema
       )
-      process.exit(2)
-    }
+      const { usageMode, ok } = report
 
-    const result = auditAccessibility(component, props, {
-      inChartContainer: inChartContainer === true,
-      describe: describe === true,
-      navigable: navigable === true
-    })
-    console.log(formatAccessibilityAudit(result))
-    process.exit(result.ok ? 0 : 1)
-  } catch (err) {
-    console.error(`Failed to parse input: ${errorMessage(err)}`)
-    process.exit(1)
-  }
-}
+      if (report.mode === "schema-only") {
+        if (asJson) console.log(JSON.stringify(report, null, 2))
+        else printSchemaOnlyDoctorResult(component, props, usageMode, report)
+      } else if (report.mode === "diagnose") {
+        const { diagnoses } = report
+        if (asJson) {
+          console.log(
+            JSON.stringify(
+              { component, usageMode, mode: "diagnose", ok, diagnoses },
+              null,
+              2
+            )
+          )
+        } else {
+          if (usageMode === "push") {
+            console.log(
+              `  Usage mode: push (data prop may be omitted; use a ref to push data)`
+            )
+          }
 
-// --audit-mobile: grade component + props for mobile visualization risks
-if (flag === "--audit-mobile") {
-  const input = readJSONInput(
-    'Usage: npx -p semiotic semiotic-ai --audit-mobile \'{"component":"LineChart","props":{"data":[...],"xAccessor":"x","yAccessor":"y"},"viewportWidth":390}\'\n       echo \'{"component":"Scatterplot","props":{...},"targetSize":44}\' | npx -p semiotic semiotic-ai --audit-mobile'
-  )
+          // Show data shape summary
+          if (props.data && Array.isArray(props.data) && props.data.length > 0) {
+            const sample = props.data.find((row) => row && typeof row === "object" && !Array.isArray(row)) ?? {}
+            console.log(
+              `  Data shape: ${props.data.length} items, keys: [${Object.keys(sample).join(", ")}]`
+            )
+          }
 
-  try {
-    const { component, props, viewportWidth, targetSize, inChartContainer } =
-      JSON.parse(input)
-    if (!component || !props) {
-      console.error("Input must be JSON with { component, props } fields.")
-      process.exit(1)
-    }
-
-    const distPath = path.join(pkgRoot, "dist", "semiotic-ai.min.js")
-    let auditMobileVisualization, formatMobileVisualizationAudit
-    try {
-      if (!process.env.SEMIOTIC_AI_SCHEMA_ONLY) {
-        const mod = require(distPath)
-        auditMobileVisualization = mod.auditMobileVisualization
-        formatMobileVisualizationAudit = mod.formatMobileVisualizationAudit
+          if (ok && diagnoses.length === 0) {
+            console.log(`✓ ${component}: configuration looks good.`)
+          } else if (ok) {
+            console.log(`✓ ${component}: configuration OK with warnings:`)
+            for (const d of diagnoses) {
+              console.log(`  ⚠ [${d.code}] ${d.message}`)
+              if (d.fix) console.log(`    Fix: ${d.fix}`)
+            }
+          } else {
+            console.log(`✗ ${component}: issues detected.`)
+            for (const d of diagnoses) {
+              const icon = d.severity === "error" ? "✗" : "⚠"
+              console.log(`  ${icon} [${d.code}] ${d.message}`)
+              if (d.fix) console.log(`    Fix: ${d.fix}`)
+            }
+          }
+          printDoctorBehaviorContracts(component, props)
+        }
+      } else {
+        // Fallback to validateProps only
+        const { errors } = report
+        if (asJson) {
+          console.log(
+            JSON.stringify(
+              { component, usageMode, mode: "validate", ok, errors },
+              null,
+              2
+            )
+          )
+        } else {
+          if (usageMode === "push") {
+            console.log(
+              `  Usage mode: push (data prop may be omitted; use a ref to push data)`
+            )
+          }
+          if (ok) {
+            console.log(`✓ ${component}: props are valid.`)
+          } else {
+            console.log(`✗ ${component}: validation failed.`)
+            for (const err of errors) {
+              console.log(`  • ${err}`)
+            }
+          }
+          printDoctorBehaviorContracts(component, props)
+        }
       }
-    } catch (e) {
-      // Dist unavailable.
-    }
 
-    if (!auditMobileVisualization || !formatMobileVisualizationAudit) {
-      console.error(
-        "Mobile visualization audit requires the built library. Run `npm run dist` first, or use the MCP `auditMobileVisualization` tool."
-      )
-      process.exit(2)
+      // Exit nonzero when an error-level problem was found (warnings still exit 0).
+      return setExitCode(ok ? 0 : 1)
+    } catch (err) {
+      const msg = `Failed to parse input: ${errorMessage(err)}`
+      if (asJson) console.log(JSON.stringify({ ok: false, error: msg }, null, 2))
+      else console.error(msg)
+      return setExitCode(1)
     }
-
-    const result = auditMobileVisualization(component, props, {
-      viewportWidth:
-        typeof viewportWidth === "number" ? viewportWidth : undefined,
-      targetSize: typeof targetSize === "number" ? targetSize : undefined,
-      inChartContainer: inChartContainer === true
-    })
-    console.log(formatMobileVisualizationAudit(result))
-    process.exit(result.ok ? 0 : 1)
-  } catch (err) {
-    console.error(`Failed to parse input: ${errorMessage(err)}`)
-    process.exit(1)
   }
-}
 
-// --evaluate: run the unified data/deception/accessibility evaluator
-if (flag === "--evaluate") {
-  const input = readJSONInput(
-    'Usage: npx -p semiotic semiotic-ai --evaluate \'{"component":"LineChart","props":{"xAccessor":"x","yAccessor":"y"},"data":[...]}\''
-  )
-  const asJson = process.argv.includes("--json")
+  // --audit-a11y: grade component + props against Chartability heuristics
+  if (flag === "--audit-a11y") {
+    const input = await readJSONInput(
+      'Usage: npx -p semiotic semiotic-ai --audit-a11y \'{"component":"LineChart","props":{"data":[...],"xAccessor":"x","yAccessor":"y"}}\'\n       echo \'{"component":"BarChart","props":{...},"inChartContainer":true}\' | npx -p semiotic semiotic-ai --audit-a11y'
+    )
 
-  try {
-    const { component, props, data, inChartContainer, describe, navigable } =
-      JSON.parse(input)
-    if (!component || !props) {
-      const msg = "Input must be JSON with { component, props } fields."
-      if (asJson)
-        console.log(JSON.stringify({ ok: false, error: msg }, null, 2))
-      else console.error(msg)
-      process.exit(1)
-    }
-
-    const distPath = path.join(pkgRoot, "dist", "semiotic-ai.min.js")
-    let evaluateChart, formatEvaluateChart
     try {
-      if (!process.env.SEMIOTIC_AI_SCHEMA_ONLY) {
-        const mod = require(distPath)
-        evaluateChart = mod.evaluateChart
-        formatEvaluateChart = mod.formatEvaluateChart
+      const { component, props, inChartContainer, describe, navigable } =
+        JSON.parse(input)
+      if (!component || !props) {
+        console.error("Input must be JSON with { component, props } fields.")
+        return setExitCode(1)
       }
-    } catch (e) {
-      // Dist unavailable.
-    }
 
-    if (!evaluateChart || !formatEvaluateChart) {
-      const msg =
-        "Chart evaluation requires the built library. Run `npm run dist` first, or use the MCP `evaluateChart` tool."
-      if (asJson)
-        console.log(JSON.stringify({ ok: false, error: msg }, null, 2))
-      else console.error(msg)
-      process.exit(2)
-    }
+      // Load the audit from dist (same strategy as --doctor). It lives in the
+      // semiotic/ai bundle; a clean source checkout without a build can't run it.
+      const distPath = path.join(pkgRoot, "dist", "semiotic-ai.min.js")
+      let auditAccessibility, formatAccessibilityAudit
+      try {
+        if (!process.env.SEMIOTIC_AI_SCHEMA_ONLY) {
+          const mod = require(distPath)
+          auditAccessibility = mod.auditAccessibility
+          formatAccessibilityAudit = mod.formatAccessibilityAudit
+        }
+      } catch (e) {
+        // Dist unavailable.
+      }
 
-    const result = evaluateChart(
-      component,
-      props,
-      Array.isArray(data) ? data : undefined,
-      {
+      if (!auditAccessibility || !formatAccessibilityAudit) {
+        console.error(
+          "Accessibility audit requires the built library. Run `npm run dist` first, or use the MCP `auditAccessibility` tool."
+        )
+        return setExitCode(2)
+      }
+
+      const result = auditAccessibility(component, props, {
         inChartContainer: inChartContainer === true,
         describe: describe === true,
         navigable: navigable === true
-      }
-    )
-    if (asJson) console.log(JSON.stringify(result, null, 2))
-    else console.log(formatEvaluateChart(result))
-    process.exit(result.ok ? 0 : 1)
-  } catch (err) {
-    const msg = `Failed to parse input: ${errorMessage(err)}`
-    if (asJson) console.log(JSON.stringify({ ok: false, error: msg }, null, 2))
-    else console.error(msg)
-    process.exit(1)
-  }
-}
-
-if (
-  [
-    "--audit-artifact",
-    "--recommend-representation",
-    "--repair-artifact",
-    "--explain-refusal"
-  ].includes(flag)
-) {
-  const asJson = process.argv.includes("--json")
-  try {
-    const request = readArtifactRequest(flag)
-    const runtime = loadArtifactRuntime()
-    if (!runtime) {
-      const message =
-        "Artifact evaluation requires the built library. Run `npm run dist` first, or use the equivalent MCP tool."
-      if (asJson)
-        console.log(JSON.stringify({ ok: false, error: message }, null, 2))
-      else console.error(message)
-      process.exit(2)
-    }
-    const validation = runtime.validateArtifactContract(request.contract)
-    if (!validation.valid) {
-      const message = validation.errors
-        .map(
-          ({ path: errorPath, message: detail }) => `${errorPath}: ${detail}`
-        )
-        .join("\n")
-      if (asJson) {
-        console.log(
-          JSON.stringify(
-            { ok: false, error: "Invalid artifact contract", validation },
-            null,
-            2
-          )
-        )
-      } else {
-        console.error(`Invalid artifact contract:\n${message}`)
-      }
-      process.exit(1)
-    }
-    const options = {
-      data: Array.isArray(request.data) ? request.data : undefined,
-      policy: request.policy,
-      exceptions: Array.isArray(request.exceptions)
-        ? request.exceptions
-        : undefined,
-      now: request.now,
-      ...(typeof runtime.renderChartWithEvidence === "function"
-        ? { render: runtime.renderChartWithEvidence }
-        : {}),
-      inChartContainer: request.inChartContainer === true,
-      describe: request.describe === true,
-      navigable: request.navigable === true
-    }
-    if (flag === "--recommend-representation") {
-      const data =
-        options.data ??
-        (Array.isArray(request.props.data) ? request.props.data : [])
-      const result = runtime.recommendRepresentation(data, request.contract, {
-        policy: request.policy,
-        exceptions: options.exceptions,
-        preferredComponent: request.component,
-        intent: request.intent,
-        now: request.now
       })
-      console.log(JSON.stringify(result, null, 2))
-      process.exit(result.status === "refuse" ? 1 : 0)
+      console.log(formatAccessibilityAudit(result))
+      return setExitCode(result.ok ? 0 : 1)
+    } catch (err) {
+      console.error(`Failed to parse input: ${errorMessage(err)}`)
+      return setExitCode(1)
     }
-    if (flag === "--repair-artifact") {
-      const result = runtime.repairArtifact(
+  }
+
+  // --audit-mobile: grade component + props for mobile visualization risks
+  if (flag === "--audit-mobile") {
+    const input = await readJSONInput(
+      'Usage: npx -p semiotic semiotic-ai --audit-mobile \'{"component":"LineChart","props":{"data":[...],"xAccessor":"x","yAccessor":"y"},"viewportWidth":390}\'\n       echo \'{"component":"Scatterplot","props":{...},"targetSize":44}\' | npx -p semiotic semiotic-ai --audit-mobile'
+    )
+
+    try {
+      const { component, props, viewportWidth, targetSize, inChartContainer } =
+        JSON.parse(input)
+      if (!component || !props) {
+        console.error("Input must be JSON with { component, props } fields.")
+        return setExitCode(1)
+      }
+
+      const distPath = path.join(pkgRoot, "dist", "semiotic-ai.min.js")
+      let auditMobileVisualization, formatMobileVisualizationAudit
+      try {
+        if (!process.env.SEMIOTIC_AI_SCHEMA_ONLY) {
+          const mod = require(distPath)
+          auditMobileVisualization = mod.auditMobileVisualization
+          formatMobileVisualizationAudit = mod.formatMobileVisualizationAudit
+        }
+      } catch (e) {
+        // Dist unavailable.
+      }
+
+      if (!auditMobileVisualization || !formatMobileVisualizationAudit) {
+        console.error(
+          "Mobile visualization audit requires the built library. Run `npm run dist` first, or use the MCP `auditMobileVisualization` tool."
+        )
+        return setExitCode(2)
+      }
+
+      const result = auditMobileVisualization(component, props, {
+        viewportWidth:
+          typeof viewportWidth === "number" ? viewportWidth : undefined,
+        targetSize: typeof targetSize === "number" ? targetSize : undefined,
+        inChartContainer: inChartContainer === true
+      })
+      console.log(formatMobileVisualizationAudit(result))
+      return setExitCode(result.ok ? 0 : 1)
+    } catch (err) {
+      console.error(`Failed to parse input: ${errorMessage(err)}`)
+      return setExitCode(1)
+    }
+  }
+
+  // --evaluate: run the unified data/deception/accessibility evaluator
+  if (flag === "--evaluate") {
+    const input = await readJSONInput(
+      'Usage: npx -p semiotic semiotic-ai --evaluate \'{"component":"LineChart","props":{"xAccessor":"x","yAccessor":"y"},"data":[...]}\''
+    )
+    const asJson = process.argv.includes("--json")
+
+    try {
+      const { component, props, data, inChartContainer, describe, navigable } =
+        JSON.parse(input)
+      if (!component || !props) {
+        const msg = "Input must be JSON with { component, props } fields."
+        if (asJson)
+          console.log(JSON.stringify({ ok: false, error: msg }, null, 2))
+        else console.error(msg)
+        return setExitCode(1)
+      }
+
+      const distPath = path.join(pkgRoot, "dist", "semiotic-ai.min.js")
+      let evaluateChart, formatEvaluateChart
+      try {
+        if (!process.env.SEMIOTIC_AI_SCHEMA_ONLY) {
+          const mod = require(distPath)
+          evaluateChart = mod.evaluateChart
+          formatEvaluateChart = mod.formatEvaluateChart
+        }
+      } catch (e) {
+        // Dist unavailable.
+      }
+
+      if (!evaluateChart || !formatEvaluateChart) {
+        const msg =
+          "Chart evaluation requires the built library. Run `npm run dist` first, or use the MCP `evaluateChart` tool."
+        if (asJson)
+          console.log(JSON.stringify({ ok: false, error: msg }, null, 2))
+        else console.error(msg)
+        return setExitCode(2)
+      }
+
+      const result = evaluateChart(
+        component,
+        props,
+        Array.isArray(data) ? data : undefined,
+        {
+          inChartContainer: inChartContainer === true,
+          describe: describe === true,
+          navigable: navigable === true
+        }
+      )
+      if (asJson) console.log(JSON.stringify(result, null, 2))
+      else console.log(formatEvaluateChart(result))
+      return setExitCode(result.ok ? 0 : 1)
+    } catch (err) {
+      const msg = `Failed to parse input: ${errorMessage(err)}`
+      if (asJson) console.log(JSON.stringify({ ok: false, error: msg }, null, 2))
+      else console.error(msg)
+      return setExitCode(1)
+    }
+  }
+
+  if (
+    [
+      "--audit-artifact",
+      "--recommend-representation",
+      "--repair-artifact",
+      "--explain-refusal"
+    ].includes(flag)
+  ) {
+    const asJson = process.argv.includes("--json")
+    try {
+      const request = await readArtifactRequest(flag)
+      const runtime = loadArtifactRuntime()
+      if (!runtime) {
+        const message =
+          "Artifact evaluation requires the built library. Run `npm run dist` first, or use the equivalent MCP tool."
+        if (asJson)
+          console.log(JSON.stringify({ ok: false, error: message }, null, 2))
+        else console.error(message)
+        return setExitCode(2)
+      }
+      const validation = runtime.validateArtifactContract(request.contract)
+      if (!validation.valid) {
+        const message = validation.errors
+          .map(
+            ({ path: errorPath, message: detail }) => `${errorPath}: ${detail}`
+          )
+          .join("\n")
+        if (asJson) {
+          console.log(
+            JSON.stringify(
+              { ok: false, error: "Invalid artifact contract", validation },
+              null,
+              2
+            )
+          )
+        } else {
+          console.error(`Invalid artifact contract:\n${message}`)
+        }
+        return setExitCode(1)
+      }
+      const options = {
+        data: Array.isArray(request.data) ? request.data : undefined,
+        policy: request.policy,
+        exceptions: Array.isArray(request.exceptions)
+          ? request.exceptions
+          : undefined,
+        now: request.now,
+        ...(typeof runtime.renderChartWithEvidence === "function"
+          ? { render: runtime.renderChartWithEvidence }
+          : {}),
+        inChartContainer: request.inChartContainer === true,
+        describe: request.describe === true,
+        navigable: request.navigable === true
+      }
+      if (flag === "--recommend-representation") {
+        const data =
+          options.data ??
+          (Array.isArray(request.props.data) ? request.props.data : [])
+        const result = runtime.recommendRepresentation(data, request.contract, {
+          policy: request.policy,
+          exceptions: options.exceptions,
+          preferredComponent: request.component,
+          intent: request.intent,
+          now: request.now
+        })
+        console.log(JSON.stringify(result, null, 2))
+        return setExitCode(result.status === "refuse" ? 1 : 0)
+      }
+      if (flag === "--repair-artifact") {
+        const result = runtime.repairArtifact(
+          request.component,
+          request.props,
+          request.contract,
+          {
+            ...options,
+            applySafeIdentityRepairs: request.applySafeIdentityRepairs === true
+          }
+        )
+        return writeArtifactJsonAndExit(
+          safeArtifactRepairOutput(runtime, result),
+          result.after.status === "refuse" ? 1 : 0
+        )
+      }
+      const result = runtime.evaluateArtifact(
         request.component,
         request.props,
         request.contract,
-        {
-          ...options,
-          applySafeIdentityRepairs: request.applySafeIdentityRepairs === true
-        }
+        options
       )
-      writeArtifactJsonAndExit(
-        safeArtifactRepairOutput(runtime, result),
-        result.after.status === "refuse" ? 1 : 0
-      )
-    }
-    const result = runtime.evaluateArtifact(
-      request.component,
-      request.props,
-      request.contract,
-      options
-    )
-    if (flag === "--explain-refusal") {
-      const explanation = runtime.explainArtifactRefusal(result)
-      if (asJson) {
-        console.log(
-          JSON.stringify(
-            {
-              status: result.status === "refuse" ? "refuse" : "not-refused",
-              evaluationStatus: result.status,
-              policy: result.policy,
-              explanation,
-              failures: result.obligations
-                .filter(({ status }) => status === "fail")
-                .slice(0, 20),
-              repairs: result.repairs.slice(0, 20)
-            },
-            null,
-            2
+      if (flag === "--explain-refusal") {
+        const explanation = runtime.explainArtifactRefusal(result)
+        if (asJson) {
+          console.log(
+            JSON.stringify(
+              {
+                status: result.status === "refuse" ? "refuse" : "not-refused",
+                evaluationStatus: result.status,
+                policy: result.policy,
+                explanation,
+                failures: result.obligations
+                  .filter(({ status }) => status === "fail")
+                  .slice(0, 20),
+                repairs: result.repairs.slice(0, 20)
+              },
+              null,
+              2
+            )
           )
-        )
+        } else {
+          console.log(explanation)
+        }
+      } else if (asJson) {
+        console.log(JSON.stringify(result, null, 2))
       } else {
-        console.log(explanation)
+        console.log(
+          `Artifact status: ${result.status}\n${runtime.formatObligations(result.obligations)}`
+        )
       }
-    } else if (asJson) {
-      console.log(JSON.stringify(result, null, 2))
-    } else {
-      console.log(
-        `Artifact status: ${result.status}\n${runtime.formatObligations(result.obligations)}`
-      )
+      return setExitCode(result.status === "refuse" ? 1 : 0)
+    } catch (err) {
+      const message = errorMessage(err)
+      if (asJson)
+        console.log(JSON.stringify({ ok: false, error: message }, null, 2))
+      else console.error(message)
+      return setExitCode(1)
     }
-    process.exit(result.status === "refuse" ? 1 : 0)
+  }
+
+  const filePath = !flag ? FILES.default
+    : Object.prototype.hasOwnProperty.call(FILES, flag) ? FILES[flag] : undefined
+
+  if (!filePath) {
+    console.error(`Unknown flag: ${flag}\n`)
+    console.error(HELP)
+    return setExitCode(1)
+  }
+
+  try {
+    const content = fs.readFileSync(filePath, "utf-8")
+    process.stdout.write(content)
   } catch (err) {
-    const message = errorMessage(err)
-    if (asJson)
-      console.log(JSON.stringify({ ok: false, error: message }, null, 2))
-    else console.error(message)
-    process.exit(1)
+    console.error(`Error reading ${filePath}: ${err.message}`)
+    return setExitCode(1)
   }
 }
 
-const filePath = flag ? FILES[flag] : FILES.default
-
-if (!filePath) {
-  console.error(`Unknown flag: ${flag}\n`)
-  console.error(HELP)
-  process.exit(1)
-}
-
-try {
-  const content = fs.readFileSync(filePath, "utf-8")
-  process.stdout.write(content)
-} catch (err) {
-  console.error(`Error reading ${filePath}: ${err.message}`)
-  process.exit(1)
-}
+main().catch((error) => {
+  console.error(errorMessage(error))
+  process.exitCode = 1
+})

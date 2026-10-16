@@ -501,7 +501,7 @@ export default function StreamingSystemModelPage() {
             <td style={tdCodeStyle}><code>children</code></td>
             <td style={tdStyle}>(datum, observation) =&gt; ReactNode</td>
             <td style={tdStyle}>required</td>
-            <td style={tdStyle}>Render function for panel content</td>
+            <td style={tdStyle}>Render function for panel content. Receives a click observation by default or a hover observation with <code>trigger="hover"</code>. Return <code>null</code> to hide the panel.</td>
           </tr>
           <tr style={trStyle}>
             <td style={tdCodeStyle}><code>position</code></td>
@@ -519,7 +519,7 @@ export default function StreamingSystemModelPage() {
             <td style={tdCodeStyle}><code>trigger</code></td>
             <td style={tdStyle}>"click" | "hover"</td>
             <td style={tdStyle}>"click"</td>
-            <td style={tdStyle}>Observation type that triggers the panel</td>
+            <td style={tdStyle}>Observation type that triggers the panel. The click mode also accepts keyboard activations, which use a click payload with <code>x</code> and <code>y</code> set to 0 because no pointer coordinates are available.</td>
           </tr>
           <tr style={trStyle}>
             <td style={tdCodeStyle}><code>chartId</code></td>
@@ -540,13 +540,31 @@ export default function StreamingSystemModelPage() {
             <td style={tdStyle}>Show close button</td>
           </tr>
           <tr style={trStyle}>
+            <td style={tdCodeStyle}><code>observation</code></td>
+            <td style={tdStyle}>ChartObservation | null</td>
+            <td style={tdStyle}>&mdash;</td>
+            <td style={tdStyle}>Optional direct feed. An explicit <code>null</code> dismisses the panel; omitting the prop uses the observation store.</td>
+          </tr>
+          <tr style={trStyle}>
+            <td style={tdCodeStyle}><code>ariaLabel</code></td>
+            <td style={tdStyle}>string</td>
+            <td style={tdStyle}>"Chart details"</td>
+            <td style={tdStyle}>Accessible name for the side/bottom region or overlay dialog.</td>
+          </tr>
+          <tr style={trStyle}>
             <td style={tdCodeStyle}><code>onToggle</code></td>
             <td style={tdStyle}>(open: boolean) =&gt; void</td>
             <td style={tdStyle}>&mdash;</td>
-            <td style={tdStyle}>Called when panel opens or closes</td>
+            <td style={tdStyle}>Called only when visible content opens or closes, without an initial closed notification.</td>
           </tr>
         </tbody>
       </table>
+
+      <p>
+        Keyboard activation and overlay panels move focus into the details. Escape or the close
+        button dismisses the panel and restores the invoking control when focus is inside it.
+        Side and bottom panels announce updates politely, and animations respect reduced-motion preferences.
+      </p>
 
       <CodeBlock code={detailsPanelApiCode} language="jsx" />
 

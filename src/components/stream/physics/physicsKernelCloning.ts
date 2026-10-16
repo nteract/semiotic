@@ -78,8 +78,8 @@ export function cloneColliderBodyFilter(
   if (!filter || typeof filter === "function") return filter
   return {
     property: filter.property,
-    equals: filter.equals,
-    notEquals: filter.notEquals,
+    ...("equals" in filter ? { equals: filter.equals } : {}),
+    ...("notEquals" in filter ? { notEquals: filter.notEquals } : {}),
     oneOf: filter.oneOf?.slice(),
     notOneOf: filter.notOneOf?.slice()
   }

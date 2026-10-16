@@ -2,6 +2,7 @@ import type {
   PhysicsWorkerFrame,
   PhysicsWorkerState
 } from "./PhysicsWorkerProtocol"
+import { validatePhysicsSpawn, validatePhysicsPipelineConfig, validatePhysicsPipelineSnapshot } from "./physicsInputValidation"
 import {
   type PhysicsBodyState,
   type PhysicsColliderSpec,
@@ -39,9 +40,6 @@ import {
   cloneSpawn,
   normalizeObservationConfig,
   requiredKernelOptions,
-  schedulePhysicsSpawns,
-  sortQueue,
-  type InternalQueuedSpawn,
   type NormalizedObservationConfig,
   type PhysicsPipelineEvictionResult
 } from "./physicsPipelineHelpers"
@@ -50,6 +48,7 @@ import { PhysicsBodySpatialIndex, type PhysicsBodyHitTestOptions } from "./Physi
 import { createPhysicsPipelineControls } from "./physicsPipelineControls"
 import {
   classifyPhysicsConfigPatch,
+  clonePhysicsConfigInput,
   changedPhysicsConfigKeys,
   physicsKernelOptionsEqual,
   PHYSICS_BODY_INVALIDATIONS,
@@ -58,12 +57,14 @@ import {
 } from "./physicsPipelineUpdateResults"
 import {
   emitPhysicsSimulationStateTransition,
+  emitPhysicsSpawnObservation,
   emitPhysicsBodyBudgetObservation,
   observePhysicsKernelEvents,
   observePhysicsSensorTransitions,
   removePhysicsSensorPairsForBodies,
   resolvePhysicsSimulationState
 } from "./physicsPipelineObservations"
+import { PhysicsSpawnQueue, enqueuePhysicsSpawns } from "./PhysicsSpawnQueue"
 import { evictPhysicsOverflow } from "./physicsPipelineEviction"
 import { PhysicsQuiescenceTracker } from "./physicsPipelineQuiescence"
 import { createPhysicsStepObserver, runPhysicsSettleSteps, type PhysicsSettleHost, type PhysicsSettleRun, type PhysicsSettleSink } from "./physicsPipelineSettle"
@@ -126,11 +127,11 @@ export class PhysicsPipelineStore {
   private engineInput?: PhysicsEngineAdapterInput
   private bodySpatialIndex = new PhysicsBodySpatialIndex()
   private elapsedSeconds = 0
-  private liveBodyOrder: string[] = []
+  private liveBodyOrder = new Set<string>()
   private nextSequence = 0
   private observation: NormalizedObservationConfig
   private paused = false
-  private queue: InternalQueuedSpawn[] = []
+  private queue = new PhysicsSpawnQueue()
   private revision = 0
   private observedInitialBoundary = false
   private updateResults = new UpdateResultTracker()
@@ -141,6 +142,7 @@ export class PhysicsPipelineStore {
   private quiescence = new PhysicsQuiescenceTracker()
 
   constructor(config: PhysicsPipelineConfig = {}) {
+    validatePhysicsPipelineConfig(config)
     const {
       bodyBudget,
       colliders,
@@ -151,7 +153,7 @@ export class PhysicsPipelineStore {
       ...storeConfig
     } = config
     this.config = { ...DEFAULT_PHYSICS_PIPELINE_CONFIG, ...storeConfig }
-    this.configInput = { ...config }
+    this.configInput = clonePhysicsConfigInput(config)
     this.bodyBudget = bodyBudget ?? {}
     this.engineInput = engine
     this.observation = normalizeObservationConfig(observation)
@@ -165,6 +167,7 @@ export class PhysicsPipelineStore {
   }
 
   updateConfig(config: PhysicsPipelineConfig): void {
+    validatePhysicsPipelineConfig(config)
     const changedConfigKeys = changedPhysicsConfigKeys(config, this.configInput)
     const {
       colliders,
@@ -213,13 +216,13 @@ export class PhysicsPipelineStore {
       )
     }
     this.sediment.updateConfig(sediment)
-    if (colliders) {
+    if (colliders && changedConfigKeys.includes("colliders")) {
       // `updateConfigWithResult` should describe one config mutation rather
       // than report an intermediate standalone collider update.
       this.world.setColliders(cloneColliders(colliders))
       this.revision += 1
     }
-    this.configInput = { ...this.configInput, ...config }
+    this.configInput = clonePhysicsConfigInput({ ...this.configInput, ...config })
     const classification = classifyPhysicsConfigPatch(changedConfigKeys)
     this.updateResults.record(
       { kind: "config", keys: changedConfigKeys },
@@ -235,6 +238,7 @@ export class PhysicsPipelineStore {
 
   setColliders(colliders: PhysicsColliderSpec[]): void {
     this.world.setColliders(cloneColliders(colliders))
+    this.configInput = { ...this.configInput, colliders: cloneColliders(colliders) }
     this.revision += 1
     this.updateResults.record(
       { kind: "config", keys: ["colliders"] },
@@ -246,26 +250,12 @@ export class PhysicsPipelineStore {
     spawn: PhysicsQueuedSpawn | PhysicsQueuedSpawn[],
     pacing?: PhysicsSpawnPacingOptions
   ): void {
-    const rawSpawns = Array.isArray(spawn) ? spawn : [spawn]
-    const spawns = pacing
-      ? schedulePhysicsSpawns(rawSpawns, {
-          ...pacing,
-          startAt: pacing.startAt ?? this.elapsedSeconds
-        })
-      : rawSpawns
-    for (const next of spawns) {
-      this.queue.push({
-        ...cloneSpawn(next),
-        sequence: this.nextSequence,
-        spawnAt: next.spawnAt ?? this.elapsedSeconds
-      })
-      this.nextSequence += 1
-    }
-    this.queue.sort(sortQueue)
-    if (spawns.length > 0) this.revision += 1
+    const count = enqueuePhysicsSpawns(this.queue, spawn, pacing, this.elapsedSeconds, this.nextSequence)
+    this.nextSequence += count
+    if (count > 0) this.revision += 1
     this.updateResults.record(
-      { kind: "enqueue", count: spawns.length },
-      spawns.length ? PHYSICS_BODY_INVALIDATIONS : []
+      { kind: "enqueue", count },
+      count ? PHYSICS_BODY_INVALIDATIONS : []
     )
   }
 
@@ -314,14 +304,15 @@ export class PhysicsPipelineStore {
 
   clear(): void {
     this.observedInitialBoundary = false
-    const kernelOptions = this.world.snapshot().options
+    const { options: kernelOptions, colliders } = this.world.snapshot()
     this.world.init({
       ...kernelOptions,
       fixedDt: this.config.fixedDt
     })
+    this.world.setColliders(colliders)
     this.activeSensorPairs.clear()
-    this.liveBodyOrder = []
-    this.queue = []
+    this.liveBodyOrder.clear()
+    this.queue.clear()
     this.accumulator = 0
     this.elapsedSeconds = 0
     this.nextSequence = 0
@@ -449,8 +440,8 @@ export class PhysicsPipelineStore {
       queueSize: () => this.queue.length,
       atRest: () => this.atRest(),
       elapsed: () => this.elapsedSeconds,
-      nextArrival: () => this.queue[0]?.spawnAt,
-      lastArrival: () => this.queue.at(-1)?.spawnAt,
+      nextArrival: () => this.queue.firstArrival(),
+      lastArrival: () => this.queue.lastArrival(),
       advanceTime: (s) => { this.elapsedSeconds += s },
       spawnDue: (spawned, obs) => this.spawnDue(spawned, obs),
       observeBodyBudget: (obs) => this.observeBodyBudget(obs),
@@ -588,7 +579,7 @@ export class PhysicsPipelineStore {
   }
 
   liveBodyCount(): number {
-    return this.liveBodyOrder.length
+    return this.liveBodyOrder.size
   }
 
   elapsed(): number {
@@ -645,9 +636,8 @@ export class PhysicsPipelineStore {
   remove(ids: string[]): string[] {
     const idSet = new Set(ids)
     const liveBefore = new Set(this.liveBodyOrder)
-    const queuedBefore = new Set(this.queue.map((spawn) => spawn.id))
-    this.queue = this.queue.filter((spawn) => !idSet.has(spawn.id))
-    this.liveBodyOrder = this.liveBodyOrder.filter((id) => !idSet.has(id))
+    const queuedBefore = this.queue.remove(idSet)
+    for (const id of ids) this.liveBodyOrder.delete(id)
     this.world.remove(ids)
     this.removeActiveSensorPairsForBodies(idSet)
 
@@ -701,6 +691,16 @@ export class PhysicsPipelineStore {
     return createPhysicsPipelineControls(this)
   }
 
+  /** Runtime policy reads do not copy bodies, queued datums, or sensor pairs. */
+  runtimeState() {
+    return {
+      fixedDt: this.config.fixedDt,
+      paused: this.paused,
+      visible: this.visible,
+      simulationState: this.simulationState
+    }
+  }
+
   /** Scalar scheduling state, without cloning the world or queued datums. */
   workerState(): PhysicsWorkerState {
     return {
@@ -720,7 +720,11 @@ export class PhysicsPipelineStore {
 
   applyWorkerFrame(frame: PhysicsWorkerFrame): void {
     if (frame.snapshot) {
+      const configInput = this.configInput
       this.restore(frame.snapshot)
+      // Worker snapshots contain resolved options, not the caller's patch.
+      // Keep authored equality checks stable across structural worker frames.
+      this.configInput = configInput
       return
     }
     if (!frame.state || !this.world.applyWorkerMotion) {
@@ -750,14 +754,16 @@ export class PhysicsPipelineStore {
         ...this.config,
         kernel: requiredKernelOptions(world.options)
       },
-      queue: this.queue.map(cloneQueuedSpawn),
+      queue: this.queue.sorted().map(cloneQueuedSpawn),
       sediment: this.readSediment(),
-      liveBodyOrder: this.liveBodyOrder.slice(),
+      liveBodyOrder: Array.from(this.liveBodyOrder),
       world
     }
   }
 
   restore(snapshot: PhysicsPipelineSnapshot): void {
+    validatePhysicsPipelineSnapshot(snapshot)
+    this.bodySpatialIndex = new PhysicsBodySpatialIndex()
     this.observedInitialBoundary = false
     const previousState = this.simulationState
     this.config = {
@@ -782,7 +788,7 @@ export class PhysicsPipelineStore {
     this.accumulator = snapshot.accumulator
     this.elapsedSeconds = snapshot.elapsedSeconds
     this.paused = snapshot.paused
-    this.queue = snapshot.queue.map(cloneQueuedSpawn).sort(sortQueue)
+    this.queue.restore(snapshot.queue.map(cloneQueuedSpawn))
     this.revision = snapshot.revision
     this.sediment.restore(snapshot.sediment ?? [])
     this.simulationState = snapshot.simulationState ?? resolvePhysicsSimulationState(
@@ -791,10 +797,10 @@ export class PhysicsPipelineStore {
       snapshot.queue.length > 0,
       snapshot.world.bodies.every((body) => body.sleeping)
     )
-    this.liveBodyOrder = snapshot.liveBodyOrder.slice()
+    this.liveBodyOrder = new Set(snapshot.liveBodyOrder)
     this.visible = snapshot.visible
     this.nextSequence =
-      this.queue.reduce((max, spawn) => Math.max(max, spawn.sequence), -1) + 1
+      snapshot.queue.reduce((max, spawn) => Math.max(max, spawn.sequence), -1) + 1
     this.world.restore(snapshot.world)
     this.updateResults.record({ kind: "restore" }, PHYSICS_BODY_INVALIDATIONS)
     if (this.simulationState !== previousState) {
@@ -808,7 +814,7 @@ export class PhysicsPipelineStore {
   ): void {
     while (
       this.queue.length > 0 &&
-      this.queue[0].spawnAt <= this.elapsedSeconds + this.config.fixedDt * 1e-9
+      this.queue.firstArrival()! <= this.elapsedSeconds + this.config.fixedDt * 1e-9
     ) {
       const next = this.queue.shift()
       if (!next) return
@@ -821,10 +827,12 @@ export class PhysicsPipelineStore {
     spawn: PhysicsQueuedSpawn,
     observations?: PhysicsObservationEvent[]
   ): void {
-    this.liveBodyOrder = this.liveBodyOrder.filter((id) => id !== spawn.id)
-    this.removeActiveSensorPairsForBodies(new Set([spawn.id]))
+    validatePhysicsSpawn(spawn)
+    if (this.liveBodyOrder.delete(spawn.id)) {
+      this.removeActiveSensorPairsForBodies(new Set([spawn.id]))
+    }
     this.world.spawn(spawn)
-    this.liveBodyOrder.push(spawn.id)
+    this.liveBodyOrder.add(spawn.id)
     for (const spring of spawn.springs ?? []) {
       this.world.setConstraint({
         ...spring,
@@ -833,20 +841,7 @@ export class PhysicsPipelineStore {
     }
     // Avoid a full-world copy for spawn observations that nobody will receive.
     if (!observations && !this.observation.onObservation) return
-    const body = this.world.readState().find((state) => state.id === spawn.id)
-    this.emitObservation(
-      {
-        type: "physics-spawn",
-        timestamp: this.elapsedSeconds,
-        chartType: this.observation.chartType,
-        chartId: this.observation.chartId,
-        bodyId: spawn.id,
-        datum: body?.datum ?? spawn.datum,
-        x: body?.x ?? spawn.x,
-        y: body?.y ?? spawn.y
-      },
-      observations
-    )
+    emitPhysicsSpawnObservation(this.world, spawn, this.observationContext(observations))
   }
 
   private result(
@@ -920,7 +915,7 @@ export class PhysicsPipelineStore {
       bodyLimit: this.config.bodyLimit,
       engineMaxBodiesHint: this.world.capabilities.maxBodiesHint,
       evictionEnabled: this.config.eviction !== false,
-      liveBodies: this.liveBodyOrder.length,
+      liveBodies: this.liveBodyOrder.size,
       queuedBodies: this.queue.length,
       sedimentEnabled: this.sediment.isEnabled(),
       options: this.bodyBudget

@@ -65,6 +65,20 @@ function exercise(target, program) {
   )
 }
 
+test("server ESM paths share the complete synchronous renderer API", () => {
+  exercise({ file: "dist/server.module.min.js" }, `
+    const node = await import("./dist/semiotic-server-node.module.min.js")
+    assert.deepEqual(Object.keys(node), Object.keys(api))
+    for (const name of Object.keys(api)) assert.equal(node[name], api[name], name)
+    const result = node.renderChartWithEvidence("BarChart", {
+      data: [{ category: "A", value: 7 }],
+      categoryAccessor: "category", valueAccessor: "value"
+    })
+    assert.equal(result.evidence.markCount, 1)
+    assert.match(result.svg, /<svg/)
+  `)
+})
+
 for (const entry of ["./ai", "./ai/core", "./utils/core"]) {
   for (const target of publicTargets(entry)) {
     test(`${entry} (${target.conditions}) omits sparse data slots through public AI readers`, () => {
@@ -750,6 +764,21 @@ for (const entry of ["./server", "./server/node", "./server/edge"]) {
 }
 
 for (const target of publicTargets("./experimental")) {
+  test(`experimental ${target.conditions} exposes the strict Plot adapter with consistent results`, () => {
+    exercise(target, `
+      assert.equal(typeof api.unstable_fromObservablePlotResult, "function")
+      const spec = {
+        marks: [{ type: "dot", data: [{ x: 1, y: 2 }], options: { x: "x", y: "y" } }]
+      }
+      const options = { createdAt: "2026-01-01T00:00:00.000Z" }
+      const result = api.unstable_fromObservablePlotResult(spec, options)
+      assert.equal(result.status, "success")
+      assert.equal(result.config.component, "Scatterplot")
+      const cjs = createRequire(import.meta.url)("./dist/semiotic-experimental.min.js")
+      assert.deepEqual(result, cjs.unstable_fromObservablePlotResult(spec, options))
+      assert.equal(api.unstable_fromObservablePlotResult({ ...spec, facet: {} }).status, "refused")
+    `)
+  })
   test(`experimental ${target.conditions} preserves SVG path bounds and hit regions (#1509)`, () => {
     exercise(target, `
       const items = [

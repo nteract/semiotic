@@ -208,8 +208,9 @@ export function classifyXYConfigPatch(
   const invalidations = new Set<Invalidation>()
 
   for (const key of keys) {
-    const effect = XY_CONFIG_PATCH_DEPENDENCIES[key]
-      ?? DEFAULT_CONFIG_PATCH_DEPENDENCY
+    const effect = Object.prototype.hasOwnProperty.call(XY_CONFIG_PATCH_DEPENDENCIES, key)
+      ? XY_CONFIG_PATCH_DEPENDENCIES[key]
+      : DEFAULT_CONFIG_PATCH_DEPENDENCY
     if (effect.retainedData === "rebuild") retainedData = "rebuild"
     for (const invalidation of effect.invalidations) {
       invalidations.add(invalidation)

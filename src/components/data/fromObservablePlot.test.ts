@@ -234,3 +234,32 @@ describe("fromObservablePlot — config validity (round-trip gate)", () => {
     })
   }
 })
+
+describe("Plot semantic boundaries", () => {
+  it.each(["steelblue", "RED", "#f00", "#ff000080", "rgb(255 0 0 / 50%)", "hsl(120, 50%, 50%)", "transparent", "rebeccapurple"])("keeps %s paint constant instead of creating a nonexistent grouping", fill => {
+    const bars = fromObservablePlot({ marks: [{ type: "barY", data: ROWS, options: { x: "series", y: "value", fill } }] })
+    expect(bars.component).toBe("BarChart")
+    expect(bars.props.color).toBe(fill)
+    expect(bars.props.stackBy).toBeUndefined()
+    const dots = fromObservablePlot({ marks: [{ type: "dot", data: ROWS, options: { x: "date", y: "value", stroke: fill } }] })
+    expect(dots.props.colorBy).toBeUndefined()
+    expect(dots.props.color).toBe(fill)
+  })
+
+  it("reads z as the series field before stroke or fill", () => {
+    const line = fromObservablePlot({ marks: [{ type: "line", data: ROWS, options: { x: "date", y: "value", z: "series", stroke: "black" } }] })
+    expect(line.props).toMatchObject({ lineBy: "series", color: "black" })
+    const area = fromObservablePlot({ marks: [{ type: "areaY", data: ROWS, options: { x: "date", y: "value", z: "series", fill: "blue" } }] })
+    expect(area.props.areaBy).toBe("series")
+  })
+
+  it.each(["rectY", "rectX"])("uses the binned source field for %s", type => {
+    const options = type === "rectY" ? { x: "weight", y: "count" } : { x: "count", y: "weight" }
+    expect(fromObservablePlot({ marks: [{ type, data: [{ weight: 2, count: 1 }], options }] }).props.valueAccessor).toBe("weight")
+  })
+
+  it.each(["Store 12", "Category 1", "North 5"])("does not treat %s as a date", category => {
+    const config = fromObservablePlot({ marks: [{ type: "line", data: [{ label: category, value: 1 }], options: { x: "label", y: "value" } }] })
+    expect(config.warnings).toContainEqual(expect.stringContaining("categorical"))
+  })
+})

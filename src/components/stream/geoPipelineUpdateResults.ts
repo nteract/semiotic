@@ -149,8 +149,9 @@ export function classifyGeoConfigPatch(
   const invalidations = new Set<Invalidation>()
 
   for (const key of keys) {
-    const effect = GEO_CONFIG_PATCH_DEPENDENCIES[key]
-      ?? DEFAULT_CONFIG_PATCH_DEPENDENCY
+    const effect = Object.prototype.hasOwnProperty.call(GEO_CONFIG_PATCH_DEPENDENCIES, key)
+      ? GEO_CONFIG_PATCH_DEPENDENCIES[key]
+      : DEFAULT_CONFIG_PATCH_DEPENDENCY
     if (effect.retainedData === "rebuild") retainedData = "rebuild"
     for (const invalidation of effect.invalidations) {
       invalidations.add(invalidation)

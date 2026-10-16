@@ -217,7 +217,7 @@ export function generateFrameSVGs(
       store.computeScene({ width: innerW, height: innerH })
 
       if (store.scene.length > 0) {
-        svgFrames.push(renderOrdinalFrameSVG(store.scene as OrdinalSceneNode[], width, height, theme, frameProps, svgFrames.length))
+        svgFrames.push(renderGifFrameSVG(store.scene as OrdinalSceneNode[], "ordinal", width, height, theme, frameProps, svgFrames.length))
       }
     }
   } else {
@@ -260,8 +260,8 @@ export function generateFrameSVGs(
       if (store.scene.length === 0) continue
 
       // Phase 1: Base frame (no transition)
-      const scales = store.scales ? { y: store.scales.y } : undefined
-      svgFrames.push(renderXYFrameSVG(store.scene, width, height, theme, frameProps, scales, svgFrames.length))
+      const yScale = store.scales?.y
+      svgFrames.push(renderGifFrameSVG(store.scene, "xy", width, height, theme, frameProps, svgFrames.length, yScale))
 
       // Phase 2: Transition easing frames between data steps (XY only)
       if (transitionFrames > 0 && fi > 0 && store.activeTransition) {
@@ -270,7 +270,7 @@ export function generateFrameSVGs(
           const t = tf / transitionFrames
           const fakeNow = store.activeTransition.startTime + t * duration
           store.advanceTransition(fakeNow)
-          svgFrames.push(renderXYFrameSVG(store.scene, width, height, theme, frameProps, scales, svgFrames.length))
+          svgFrames.push(renderGifFrameSVG(store.scene, "xy", width, height, theme, frameProps, svgFrames.length, yScale))
         }
       }
 
@@ -331,9 +331,9 @@ function gifAccessibleChrome(
   }
 }
 
-function gifFramePrefix(props: Datum, familyFallback: string): string {
+function gifFramePrefix(props: Datum): string {
   if (typeof props.idPrefix === "string" && props.idPrefix.length > 0) return props.idPrefix
-  return chartUID(props) || familyFallback
+  return chartUID(props)
 }
 
 function renderPhysicsFrameSVG(
@@ -490,100 +490,55 @@ function renderFrameAnnotations(
     }
   }
 
-  return elements.length > 0 ? <>{elements}</> : null
+  return elements
 }
 
-function renderXYFrameSVG(
-  scene: SceneNode[],
+/** Shared XY/ordinal frame chrome keeps titles and accessibility in sync. */
+function renderGifFrameSVG(
+  scene: SceneNode[] | OrdinalSceneNode[],
+  family: "xy" | "ordinal",
   width: number,
   height: number,
   theme: SemioticTheme,
   props: Datum,
-  storeScales?: { y?: (v: number) => number },
-  frameIndex = 0
+  frameIndex: number,
+  yScale?: (v: number) => number
 ): string {
   const s = themeStyles(theme)
   const margin = reserveTitleMargin(
     { top: 20, right: 20, bottom: 30, left: 40, ...props.margin },
     props.title,
   )
-  // Keep the plot nondegenerate when margins exhaust the frame, like the
-  // static renderers.
-  const innerW = Math.max(1, width - margin.left - margin.right)
-  const innerH = Math.max(1, height - margin.top - margin.bottom)
-  const bg = resolveBackground(props, theme)
-
-  const renderMode = props.renderMode as SceneRenderMode<SceneNode> | undefined
-  const dataMarks = scene.map((node, i) => renderSceneWithBackend({
-    node,
-    index: i,
-    renderMode,
-    fallback: () => xySceneNodeToSVG(node, i)
-  })).filter(Boolean)
-  // Use explicit yExtent for annotation mapping, falling back to store scales
-  const annots = renderFrameAnnotations(props.annotations, innerW, innerH, theme, props.yExtent, storeScales?.y)
-
-  const { titleText, descText, titleId, descId, labelledBy } = gifAccessibleChrome(
-    gifFramePrefix(props, "xy-gif"),
-    frameIndex,
-    props.title,
-    props.description
-  )
-
-  const svgEl = (
-    <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height}
-      role="img" aria-labelledby={labelledBy}
-      style={{ fontFamily: s.fontFamily }}>
-      {titleText && <title id={titleId}>{titleText}</title>}
-      {descText && <desc id={descId}>{descText}</desc>}
-      {bg && <rect x={0} y={0} width={width} height={height} fill={bg} />}
-      <g transform={`translate(${margin.left},${margin.top})`}>
-        {annots}
-        {dataMarks}
-      </g>
-      {titleText && (
-        <text x={width / 2} y={TITLE_BASELINE} textAnchor="middle" fontSize={s.titleFontSize}
-          fontWeight={s.titleFontWeight} fill={s.text} fontFamily={s.titleFontFamily}>
-          {titleText}
-        </text>
-      )}
-    </svg>
-  )
-
-  return ReactDOMServer.renderToStaticMarkup(svgEl)
-}
-
-function renderOrdinalFrameSVG(
-  scene: OrdinalSceneNode[],
-  width: number,
-  height: number,
-  theme: SemioticTheme,
-  props: Datum,
-  frameIndex = 0
-): string {
-  const s = themeStyles(theme)
-  const margin = reserveTitleMargin(
-    { top: 20, right: 20, bottom: 30, left: 40, ...props.margin },
-    props.title,
-  )
-  const isRadial = props.projection === "radial"
+  const isRadial = family === "ordinal" && props.projection === "radial"
   const tx = isRadial ? margin.left + (width - margin.left - margin.right) / 2 : margin.left
   const ty = isRadial ? margin.top + (height - margin.top - margin.bottom) / 2 : margin.top
   const bg = resolveBackground(props, theme)
-
-  const renderMode = props.renderMode as SceneRenderMode<OrdinalSceneNode> | undefined
-  const dataMarks = renderOrdinalSceneListWithBackend({
-    nodes: scene,
-    renderMode,
-    idPrefix: props.idPrefix
-  }).map(entry => entry.element)
+  const renderMode = props.renderMode
+  const dataMarks = family === "ordinal"
+    ? renderOrdinalSceneListWithBackend({
+        nodes: scene as OrdinalSceneNode[],
+        renderMode: renderMode as SceneRenderMode<OrdinalSceneNode> | undefined,
+        idPrefix: props.idPrefix
+      }).map(entry => entry.element)
+    : (scene as SceneNode[]).map((node, index) => renderSceneWithBackend({
+        node,
+        index,
+        renderMode: renderMode as SceneRenderMode<SceneNode> | undefined,
+        fallback: () => xySceneNodeToSVG(node, index)
+      })).filter(Boolean)
+  // XY thresholds use the explicit extent, then the store's computed scale.
+  const annots = family === "xy" ? renderFrameAnnotations(
+    props.annotations,
+    Math.max(1, width - margin.left - margin.right),
+    Math.max(1, height - margin.top - margin.bottom),
+    theme, props.yExtent, yScale
+  ) : null
   const { titleText, descText, titleId, descId, labelledBy } = gifAccessibleChrome(
-    gifFramePrefix(props, "ordinal-gif"),
+    gifFramePrefix(props),
     frameIndex,
     props.title,
     props.description
   )
-
   const svgEl = (
     <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height}
       role="img" aria-labelledby={labelledBy}
@@ -592,6 +547,7 @@ function renderOrdinalFrameSVG(
       {descText && <desc id={descId}>{descText}</desc>}
       {bg && <rect x={0} y={0} width={width} height={height} fill={bg} />}
       <g transform={`translate(${tx},${ty})`}>
+        {annots}
         {dataMarks}
       </g>
       {titleText && (

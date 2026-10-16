@@ -19,6 +19,46 @@ function loadJson(name: string): {
 }
 
 describe("validateAtlas", () => {
+  it.each(["constructor", "toString", "__proto__"])("requires an own declared %s measure", (measureId) => {
+    const { spec, source } = loadJson("etl-snapshot-v1.json")
+    const unknown = { ...source, measureValues: [{ measureId, subjectId: "ingest", value: 5, status: "exact" as const }] }
+    expect(validateAtlas(spec, unknown).issues.map(({ kind }) => kind)).toContain("unknown-measure")
+    expect(measuresAreComparable(measureId, measureId, spec)).toEqual({ ok: false, reason: "unknown-measure" })
+    const comparison = { ...spec, comparison: { partitions: ["a", "b"], denominatorMeasureId: measureId } }
+    expect(validateAtlas(comparison, source).issues.map(({ kind }) => kind)).toContain("comparison-denominator")
+    const declared = { ...spec, measures: { ...spec.measures, [measureId]: { unitKind: "stock" as const, countUnit: "work-item" as const } } }
+    const prepared = prepareNetworkAtlas(declared, unknown)
+    expect(prepared.ok).toBe(true)
+    if (prepared.ok) {
+      expect(prepared.atlas.ledger.entries[0]).toMatchObject({ measureId, unitKind: "stock", countUnit: "work-item", value: 5 })
+    }
+  })
+
+  it.each([
+    {}, { relations: undefined }, { forest: null }, { forest: { display: {} } },
+    { forest: { display: { kind: "rooted-backbone" } } },
+    { coordinate: { kind: "ordinal" } }, { measures: null }, { measures: { bad: null } },
+    { comparison: { denominatorMeasureId: "work-items" } }, { motifs: null }, { temporal: null },
+  ])("returns fatal issues for malformed spec fields %j", (override) => {
+    const { spec, source } = loadJson("etl-snapshot-v1.json")
+    const malformed = Object.keys(override).length ? { ...spec, ...override } : null
+    const result = prepareNetworkAtlas(malformed as NetworkAtlasSpec, source)
+    expect(result.ok).toBe(false)
+    expect(result.issues.some(({ severity }) => severity === "fatal")).toBe(true)
+  })
+
+  it.each([
+    { nodes: null }, { nodes: [null] }, { edges: undefined }, { edges: [false] },
+    { measureValues: null }, { measureValues: [null] },
+    { occurrences: [null] }, { occurrences: [{ id: "a", entityId: "e" }] },
+    { nodes: new Array(2) }, { measureValues: new Array(2) },
+  ])("returns fatal issues for malformed source fields %j", (override) => {
+    const { spec, source } = loadJson("etl-snapshot-v1.json")
+    const result = prepareNetworkAtlas(spec, { ...source, ...override } as NetworkAtlasSource)
+    expect(result.ok).toBe(false)
+    expect(result.issues.some(({ severity }) => severity === "fatal")).toBe(true)
+  })
+
   it("accepts etl-snapshot-v1", () => {
     const fixture = loadJson("etl-snapshot-v1.json")
     const result = validateAtlas(fixture.spec, fixture.source)

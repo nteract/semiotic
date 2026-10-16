@@ -36,6 +36,7 @@ import {
 import { checkPhysicsConfig } from "./diagnosePhysicsChecks"
 import { diagnoseProcessSankeyProps } from "../network/processSankey/layoutQualityProduct"
 import { auditData } from "../../data/auditData"
+import { isDataRecord, sampledFields } from "./dataRecords"
 
 export { contrastRatio } from "./colorContrast"
 export type { Diagnosis, DiagnosisResult } from "./diagnoseTypes"
@@ -96,22 +97,22 @@ function checkBadDimensions(
 ): void {
   for (const [dimension, fallback] of [["width", 600], ["height", 400]] as const) {
     const value = props[dimension]
-    if (value !== undefined && (typeof value !== "number" || value <= 0)) {
+    if (value !== undefined && (typeof value !== "number" || !Number.isFinite(value) || value <= 0)) {
       out.push({
         severity: "error",
         code: dimension === "width" ? "BAD_WIDTH" : "BAD_HEIGHT",
-        message: `${dimension}=${JSON.stringify(value)} — chart needs a positive number.`,
+        message: `${dimension} must be a finite positive number.`,
         fix: `Set ${dimension}={${fallback}}.`,
       })
     }
   }
   if (props.size && Array.isArray(props.size)) {
     const [sw, sh] = props.size
-    if ((sw != null && sw <= 0) || (sh != null && sh <= 0)) {
+    if (props.size.length !== 2 || [sw, sh].some((value) => typeof value !== "number" || !Number.isFinite(value) || value <= 0)) {
       out.push({
         severity: "error",
         code: "BAD_SIZE",
-        message: `size=[${sw}, ${sh}] — both dimensions must be positive.`,
+        message: `size must contain two finite positive dimensions.`,
         fix: `Set size={[600, 400]}.`,
       })
     }
@@ -128,14 +129,13 @@ function checkAccessorFieldMissing(
   const data = props.data
   if (!data || !Array.isArray(data) || data.length === 0) return
 
-  const sample = data[0]
-  if (!sample || typeof sample !== "object") return
-  const available = Object.keys(sample)
+  const available = sampledFields(data)
+  if (!available.length) return
 
   for (const accProp of spec.dataAccessors) {
     const accValue = props[accProp]
     if (typeof accValue !== "string") continue
-    if (!(accValue in sample)) {
+    if (!available.includes(accValue)) {
       out.push({
         severity: "error",
         code: "ACCESSOR_MISSING",
@@ -634,6 +634,7 @@ export function diagnoseConfig(
   componentName: string,
   props: Datum
 ): DiagnosisResult {
+  if (!isDataRecord(props)) props = {}
   const diagnoses: Diagnosis[] = []
   const result = (): DiagnosisResult => ({
     ok: diagnoses.every((finding) => finding.severity === "warning"),

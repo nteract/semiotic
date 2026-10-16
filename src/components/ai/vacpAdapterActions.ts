@@ -181,6 +181,8 @@ export function buildRuntimeActions(
 ): RuntimeAction[] {
   const actions: RuntimeAction[] = []
   const handleRefs = model.dataHandles.map((handle) => handle.ref)
+  const allowSummaries = options.dataAccess?.summaries === true ||
+    options.dataAccess?.sample === true
   if (handleRefs.length) {
     addRuntimeAction(actions, {
       descriptor: {
@@ -193,7 +195,10 @@ export function buildRuntimeActions(
           type: "object",
           properties: {
             handleRef: { type: "string", enum: handleRefs },
-            detail: { type: "string", enum: ["columns", "full"] },
+            detail: {
+              type: "string",
+              enum: allowSummaries ? ["columns", "full"] : ["columns"],
+            },
             sampleRows: { type: "number", minimum: 1 },
           },
           required: ["handleRef"],
@@ -218,6 +223,11 @@ export function buildRuntimeActions(
                     'params.detail must be "columns" or "full".'
                   )
                 })()
+        if (detail === "full" && !allowSummaries) {
+          throw new Error(
+            'Full data schema summaries require dataAccess.summaries or dataAccess.sample.'
+          )
+        }
         const requested =
           typeof payload.sampleRows === "number" &&
           Number.isFinite(payload.sampleRows)
@@ -239,7 +249,7 @@ export function buildRuntimeActions(
     })
   }
 
-  if (handleRefs.length && options.dataAccess?.sample) {
+  if (handleRefs.length && options.dataAccess?.sample === true) {
     addRuntimeAction(actions, {
       descriptor: {
         name: SEMIOTIC_VACP_INSPECT_DATA_ACTION,

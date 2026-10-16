@@ -1,4 +1,5 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
+import { aiScalarLabel } from "../../ai/aiData"
 
 function hasField(
   profile: Parameters<ChartCapability["buildProps"]>[0],
@@ -57,8 +58,8 @@ export const ProcessFlowChartCapability: ChartCapability = {
     const stageValues = new Set<string>()
     for (const row of profile.data) {
       if (!row || typeof row !== "object") continue
-      const value = (row as Record<string, unknown>)[stageField]
-      if (value != null && value !== "") stageValues.add(String(value))
+      const value = aiScalarLabel(row[stageField])
+      if (value) stageValues.add(value)
     }
     const stageIds =
       stageValues.size > 0

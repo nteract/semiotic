@@ -16,11 +16,11 @@ import { expandComposedIntentScores } from "./intentRegistry"
 import { getCapabilities } from "./chartCapabilities"
 import {
   applyAudienceBias,
-  receivabilityBias,
+  receivabilityBiasFromFindings,
   type AudienceProfile,
   type ReceptionModality,
 } from "./audienceProfile"
-import { auditAccessibility } from "../charts/shared/auditAccessibility"
+import { auditReceivability } from "../charts/shared/auditReceivability"
 import {
   applyScaleBias,
   computeEffectiveScale,
@@ -310,10 +310,10 @@ export function suggestCharts(
       // Receivability (non-visual audiences only) — audit the candidate and
       // derive the signal ONCE here; it feeds both the score bias and the
       // receivability caveats, so the audit findings are scanned a single time.
-      let receivability: ReturnType<typeof receivabilityBias> | undefined
+      let receivability: ReturnType<typeof receivabilityBiasFromFindings> | undefined
       if (wantReceivability) {
-        const audit = auditAccessibility(capability.component, props as Datum)
-        receivability = receivabilityBias(audit, modality as ReceptionModality)
+        const audit = auditReceivability(capability.component, props as Datum)
+        receivability = receivabilityBiasFromFindings(audit, modality as ReceptionModality)
       }
 
       // Audience bias: overrides familiarity and shifts composite score
@@ -557,7 +557,7 @@ export function scoreChart(
   // audience also gets the same paint-independent receivability audit.
   const modality = options.audience?.receptionModality
   const receivability = modality && modality !== "visual"
-    ? receivabilityBias(auditAccessibility(capability.component, props as Datum), modality)
+    ? receivabilityBiasFromFindings(auditReceivability(capability.component, props as Datum), modality)
     : undefined
   const biased = applyAudienceBias(
     composite,

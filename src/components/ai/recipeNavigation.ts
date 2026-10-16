@@ -1,4 +1,4 @@
-import { slug as navigationSlug } from "./navigationValues"
+import { slug as navigationSlug, stringValue } from "./navigationValues"
 import type { Datum } from "../charts/shared/datumTypes"
 import type {
   ChartRecipe,
@@ -20,7 +20,7 @@ export interface RecipeNavigationOptions {
 }
 
 function slug(value: unknown): string {
-  return navigationSlug(String(value ?? "unknown"))
+  return navigationSlug(value)
 }
 
 function isPortableStrategy(
@@ -42,11 +42,11 @@ function defaultLeafLabel(
   const categoryField = category ? fieldForRole(category, config, data) : undefined
   const parts: string[] = []
   if (categoryField && datum[categoryField] != null) {
-    parts.push(String(datum[categoryField]))
+    parts.push(stringValue(datum[categoryField]))
   }
   for (const role of quantitative) {
     const field = fieldForRole(role, config, data)
-    if (field && datum[field] != null) parts.push(`${role.role}: ${String(datum[field])}`)
+    if (field && datum[field] != null) parts.push(`${role.role}: ${stringValue(datum[field])}`)
   }
   return parts.length > 0 ? parts.join(", ") : "Data item"
 }
@@ -128,7 +128,7 @@ export function buildRecipeNavigationTree(
   if (groupField) {
     const groups = new Map<string, Datum[]>()
     for (const datum of data) {
-      const key = String(datum[groupField] ?? "Uncategorized")
+      const key = stringValue(datum[groupField], "Uncategorized")
       const rows = groups.get(key)
       if (rows) rows.push(datum)
       else groups.set(key, [datum])

@@ -11,7 +11,6 @@ export function semioticSourceAliases(repoRoot) {
 export function browserProcessDefines(mode) {
   const nodeEnv = mode === "production" ? "production" : "development"
   return {
-    "process.env.NODE_ENV": JSON.stringify(nodeEnv),
-    "process.env.ANTHROPIC_API_KEY": JSON.stringify(process.env.ANTHROPIC_API_KEY ?? "")
+    "process.env.NODE_ENV": JSON.stringify(nodeEnv)
   }
 }

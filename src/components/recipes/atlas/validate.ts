@@ -1,4 +1,5 @@
-import { idDictionary, setOwnValue } from "./ids"
+import { idDictionary, ownValue, setOwnValue } from "./ids"
+import { validateAtlasShape } from "./validateShape"
 import {
   NETWORK_ATLAS_SCHEMA_VERSION,
   type AtlasIssue,
@@ -28,7 +29,8 @@ export function validateAtlas(
   spec: NetworkAtlasSpec,
   source: NetworkAtlasSource
 ): AtlasValidation {
-  const issues: AtlasIssue[] = []
+  const issues = validateAtlasShape(spec, source)
+  if (issues.length) return { ok: false, issues }
   if (spec.schemaVersion !== NETWORK_ATLAS_SCHEMA_VERSION) {
     fatal(
       issues,
@@ -36,8 +38,13 @@ export function validateAtlas(
       `expected schemaVersion ${NETWORK_ATLAS_SCHEMA_VERSION}`
     )
   }
-  if (!spec.relations.directed || spec.relations.edgeIdRequired !== true) {
-    fatal(issues, "relations", "Phase 1 requires directed edges with ids")
+  if (
+    spec.relations.directed !== true ||
+    spec.relations.edgeIdRequired !== true ||
+    spec.relations.parallelEdges !== "keep-by-id" ||
+    spec.relations.selfLoops !== "keep-by-id"
+  ) {
+    fatal(issues, "relations", "Phase 1 requires directed edges, preserving parallel edges and self-loops by id")
   }
   if (
     spec.forest.display.kind !== "rooted-backbone" &&
@@ -119,7 +126,7 @@ export function validateAtlas(
     if (spec.comparison.partitions.length < 2) {
       fatal(issues, "comparison", "comparison requires at least two partitions")
     }
-    if (!spec.measures[spec.comparison.denominatorMeasureId]) {
+    if (!ownValue(spec.measures, spec.comparison.denominatorMeasureId)) {
       fatal(
         issues,
         "comparison-denominator",
@@ -144,7 +151,7 @@ export function validateAtlas(
   }
 
   for (const row of source.measureValues) {
-    const measure = spec.measures[row.measureId]
+    const measure = ownValue(spec.measures, row.measureId)
     if (!measure) {
       fatal(
         issues,
@@ -199,9 +206,9 @@ export function measuresAreComparable(
   rightId: string,
   spec: NetworkAtlasSpec
 ): { ok: true } | { ok: false; reason: string } {
-  const left = spec.measures[leftId]
-  const right = spec.measures[rightId]
-  if (!left || !right) {
+  const left = isRecord(spec?.measures) ? ownValue(spec.measures, leftId) : undefined
+  const right = isRecord(spec?.measures) ? ownValue(spec.measures, rightId) : undefined
+  if (!isRecord(left) || !isRecord(right)) {
     return { ok: false, reason: "unknown-measure" }
   }
   if (left.countUnit !== right.countUnit) {

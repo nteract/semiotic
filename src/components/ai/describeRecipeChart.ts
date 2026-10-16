@@ -1,6 +1,7 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import type { AudienceProfile } from "./audienceProfile"
 import { aiNumericValue } from "./aiData"
+import { stringValue } from "./navigationValues"
 import type { ChartRecipe } from "./chartRecipes"
 import type {
   DescribeChartResult,
@@ -71,7 +72,7 @@ function generatedLevels(
   const aggregates = new Map<string, number>()
   if (categoryField && valueField) {
     for (const datum of data) {
-      const category = String(datum[categoryField] ?? "Uncategorized")
+      const category = stringValue(datum[categoryField], "Uncategorized")
       const raw = aiNumericValue(datum[valueField])
       if (Number.isFinite(raw)) {
         aggregates.set(category, (aggregates.get(category) ?? 0) + raw)

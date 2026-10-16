@@ -8,4 +8,9 @@
  *
  *   npm run docs:chart-specs:schema
  */
-export { VALIDATION_MAP } from "./validationMap.generated"
+import { VALIDATION_MAP as GENERATED_VALIDATION_MAP } from "./validationMap.generated"
+
+// Component names arrive from public JSON/API callers. Preserve the public
+// dictionary API without admitting names inherited from Object.prototype.
+export const VALIDATION_MAP: typeof GENERATED_VALIDATION_MAP =
+  /* @__PURE__ */ Object.assign(Object.create(null), GENERATED_VALIDATION_MAP)

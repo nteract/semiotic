@@ -1,6 +1,20 @@
 import type { PhysicsKernelOptions } from "./PhysicsKernel"
 import type { PhysicsPipelineConfig } from "./PhysicsPipelineTypes"
 import type { Invalidation } from "../pipelineUpdateContract"
+import { physicsCollidersEqual } from "./physicsColliderEquality"
+import { cloneColliders } from "./physicsPipelineHelpers"
+
+/** Retain comparison baselines independently of caller-owned mutable geometry. */
+export function clonePhysicsConfigInput(config: PhysicsPipelineConfig): PhysicsPipelineConfig {
+  return {
+    ...config,
+    ...(config.colliders && { colliders: cloneColliders(config.colliders) }),
+    ...(config.kernel && { kernel: {
+      ...config.kernel,
+      ...(config.kernel.gravity && { gravity: { ...config.kernel.gravity } })
+    } })
+  }
+}
 
 export const PHYSICS_BODY_INVALIDATIONS: readonly Invalidation[] = [
   "data",
@@ -102,8 +116,9 @@ export function classifyPhysicsConfigPatch(
   const invalidations = new Set<Invalidation>()
 
   for (const key of keys) {
-    const effect = PHYSICS_CONFIG_PATCH_DEPENDENCIES[key]
-      ?? DEFAULT_CONFIG_PATCH_DEPENDENCY
+    const effect = Object.prototype.hasOwnProperty.call(PHYSICS_CONFIG_PATCH_DEPENDENCIES, key)
+      ? PHYSICS_CONFIG_PATCH_DEPENDENCIES[key]
+      : DEFAULT_CONFIG_PATCH_DEPENDENCY
     if (effect.retainedData === "rebuild") retainedData = "rebuild"
     for (const invalidation of effect.invalidations) {
       invalidations.add(invalidation)
@@ -144,6 +159,9 @@ export function changedPhysicsConfigKeys(
   previous: PhysicsPipelineConfig
 ): string[] {
   return Object.keys(config).filter((key) => {
+    if (key === "colliders") {
+      return !physicsCollidersEqual(config.colliders, previous.colliders)
+    }
     if (key === "kernel") {
       return !physicsKernelOptionsEqual(config.kernel, previous.kernel)
     }

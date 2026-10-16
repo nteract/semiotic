@@ -24,7 +24,7 @@ export interface RegistryEntry {
   recipeId?: string
 }
 
-export const COMPONENT_REGISTRY: Record<string, RegistryEntry> = {
+export const COMPONENT_REGISTRY: Record<string, RegistryEntry> = /* @__PURE__ */ Object.assign(Object.create(null), {
   ...XY_COMPONENT_REGISTRY,
   ...REALTIME_COMPONENT_REGISTRY,
 
@@ -51,4 +51,4 @@ export const COMPONENT_REGISTRY: Record<string, RegistryEntry> = {
     category: "xy",
     recipeId: "CalendarHeatmapRecipe"
   }
-}
+})

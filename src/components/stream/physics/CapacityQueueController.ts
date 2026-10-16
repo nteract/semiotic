@@ -1,7 +1,7 @@
 /** FIFO capacity-queue controller: stateful region service riding StreamPhysicsFrame's live heartbeat. */
 
 import type { PhysicsBodyState } from "./PhysicsKernel"
-import { valueAtPath, matchesPhysicsBodyFilter } from "./PhysicsKernel"
+import { valueAtPath, matchesPhysicsBodyFilter } from "./physicsBodyFilter"
 import type {
   PhysicsController,
   PhysicsControllerTickContext

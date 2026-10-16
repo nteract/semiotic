@@ -1,6 +1,7 @@
 import type { ChartCapability, ChartDataProfile } from "../../ai/chartCapabilityTypes"
 import { scaleHints } from "../../ai/dataScaleProfile"
 import { BUILT_IN_NUMERIC_CONTRACTS } from "../../data/numericContracts"
+import { aiScalarLabel } from "../../ai/aiData"
 
 // Field names that signal the category axis is really a time bin. Matched at
 // token boundaries (not substrings) so ordinary words that merely contain a
@@ -35,10 +36,10 @@ function looksTemporalCategory(profile: ChartDataProfile): boolean {
   let matches = 0
   let seen = 0
   for (const row of rows) {
-    const raw = (row as Record<string, unknown>)[field]
-    if (raw == null) continue
+    const raw = aiScalarLabel(row[field])
+    if (raw === undefined) continue
     seen++
-    const label = String(raw).trim()
+    const label = raw.trim()
     if (MONTH_OR_WEEKDAY.test(label) || PERIOD_LABEL.test(label)) matches++
   }
   return seen > 0 && matches / seen >= 0.6

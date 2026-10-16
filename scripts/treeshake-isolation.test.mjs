@@ -92,6 +92,27 @@ async function eagerBundle(exportKey, symbol) {
   }
 }
 
+test("cold recipe facades do not load the physics simulation", () => {
+  for (const key of ["./recipes", "./recipes/core"]) {
+    const pending = [resolve(root, pkg.exports[key].import)]
+    const seen = new Set()
+    while (pending.length) {
+      const file = pending.pop()
+      if (seen.has(file)) continue
+      seen.add(file)
+      const code = readFileSync(file, "utf8")
+      assert.ok(!/\bworkerSleepTimes\(/.test(code), `${key} retains the physics kernel through ${file}`)
+      assert.ok(!/Physics worker motion frame requires/.test(code), `${key} retains the physics store through ${file}`)
+      for (const pattern of [
+        /from\s*["'](\.?\.?\/[^"']+\.js)["']/g,
+        /import\s*["'](\.?\.?\/[^"']+\.js)["']/g
+      ]) {
+        for (const match of code.matchAll(pattern)) pending.push(resolve(dirname(file), match[1]))
+      }
+    }
+  }
+})
+
 test("chart downloads stay outside the initial public entry graphs", async () => {
   for (const entry of [".", "./ai", "./utils", "./utils/core"]) {
     const { code, deferredCode } = await eagerBundle(entry, "exportChart")

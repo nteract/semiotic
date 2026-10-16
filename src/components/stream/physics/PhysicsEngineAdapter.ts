@@ -11,6 +11,7 @@ import {
   type PhysicsSpringSpec
 } from "./PhysicsKernel"
 
+/** Repeatability within the same engine/runtime, inputs, and fixed timestep. */
 export type PhysicsEngineDeterminism = "strict" | "tolerance" | "none"
 
 export interface PhysicsEngineCapabilities {
@@ -36,6 +37,8 @@ export interface PhysicsEngineAdapter {
   step: (dtSeconds?: number) => void
   settle: (maxSteps?: number, dtSeconds?: number) => number
   readState: (out?: PhysicsBodyState[]) => PhysicsBodyState[]
+  /** Optional indexed read returning an independent body state. */
+  readBody?: (id: string) => PhysicsBodyState | undefined
   events: () => PhysicsKernelEvent[]
   activeSensorPairs: () => PhysicsActiveSensorPair[]
   allSleeping: () => boolean
@@ -58,15 +61,13 @@ export type PhysicsEngineAdapterInput =
 
 export class BuiltInPhysicsEngineAdapter implements PhysicsEngineAdapter {
   readonly id = "builtin"
-  readonly capabilities: PhysicsEngineCapabilities = {
-    ...new PhysicsKernelWorld().capabilities,
-    engine: "builtin"
-  }
+  readonly capabilities: PhysicsEngineCapabilities
 
   private world: PhysicsKernelWorld
 
   constructor(options: PhysicsKernelOptions = {}) {
     this.world = new PhysicsKernelWorld(options)
+    this.capabilities = { ...this.world.capabilities, engine: "builtin" }
   }
 
   init(options: PhysicsKernelOptions = {}): void {
@@ -107,6 +108,10 @@ export class BuiltInPhysicsEngineAdapter implements PhysicsEngineAdapter {
 
   readState(out?: PhysicsBodyState[]): PhysicsBodyState[] {
     return this.world.readState(out)
+  }
+
+  readBody(id: string): PhysicsBodyState | undefined {
+    return this.world.readBody(id)
   }
 
   events(): PhysicsKernelEvent[] {

@@ -86,6 +86,34 @@ describe("recipe-aware description", () => {
 })
 
 describe("recipe navigation fallback", () => {
+  it("uses safe labels for malformed categories and honors own prototype-named template fields", () => {
+    const portable = defineChartRecipe({
+      ...recipe,
+      navigation: {
+        groupByRole: "category",
+        itemLabelTemplate: "{category}: {value}; {__proto__}; {toString}",
+      },
+    })
+    const datum = { category: Object.create(null), value: 7 }
+    const protoLikeField = "__proto__"
+    Object.defineProperty(datum, protoLikeField, {
+      value: "own field",
+      enumerable: true,
+      writable: true,
+      configurable: true,
+    })
+    const malformed = {
+      ...props,
+      recipe: portable,
+      data: [datum],
+    }
+    expect(describeChart("XYCustomChart", malformed).levels.l2)
+      .toContain("Uncategorized accounts for 7")
+    const tree = buildNavigationTree("XYCustomChart", malformed)
+    expect(tree.children?.[0].children?.[0].label)
+      .toBe("{category}: 7; own field; {toString}")
+  })
+
   it("groups by the primary categorical role and emits stable data leaves", () => {
     const tree = buildNavigationTree("XYCustomChart", props)
     expect(tree.label).toContain("Waffle chart")

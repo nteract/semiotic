@@ -187,8 +187,9 @@ export function classifyNetworkConfigPatch(
   for (const key of keys) {
     const effect = chartType === "force" && (key === "nodeSize" || key === "nodeSizeRange")
       ? dependency("preserve", LAYOUT)
-      : (NETWORK_CONFIG_PATCH_DEPENDENCIES[key]
-      ?? DEFAULT_CONFIG_PATCH_DEPENDENCY)
+      : (Object.prototype.hasOwnProperty.call(NETWORK_CONFIG_PATCH_DEPENDENCIES, key)
+      ? NETWORK_CONFIG_PATCH_DEPENDENCIES[key]
+      : DEFAULT_CONFIG_PATCH_DEPENDENCY)
     if (effect.retainedData === "rebuild") retainedData = "rebuild"
     for (const invalidation of effect.invalidations) {
       invalidations.add(invalidation)

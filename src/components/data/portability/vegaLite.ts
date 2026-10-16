@@ -13,6 +13,8 @@
  *
  * Pure, dependency-free, no chart-family imports.
  */
+import { isRecord, isRecordArray } from "../vegaLiteValidation"
+import { exportableColorScheme, vegaLiteExportLosses } from "./vegaLiteExportDiagnostics"
 import type { ChartConfig } from "../../export/chartConfig"
 import type { Datum } from "../../charts/shared/datumTypes"
 import type { VegaLiteEncoding, VegaLiteSpec } from "../fromVegaLite"
@@ -67,9 +69,14 @@ function nominal(field: string): VegaLiteEncoding {
   return { field, type: "nominal" }
 }
 
-/** Whether the chart's x is a time field, read from props. */
-function xType(props: AnyProps): "quantitative" | "temporal" {
-  return props.xScaleType === "time" ? "temporal" : "quantitative"
+/** Preserve axis scale intent for every continuous XY component. */
+function xyEncoding(props: AnyProps, axis: "x" | "y"): VegaLiteEncoding {
+  const type = props[`${axis}ScaleType`]
+  return {
+    field: props[`${axis}Accessor`],
+    type: type === "time" ? "temporal" : "quantitative",
+    ...(["log", "symlog"].includes(type) ? { scale: { type } } : {}),
+  }
 }
 
 function withAxisTitle(enc: VegaLiteEncoding, label: unknown): VegaLiteEncoding {
@@ -105,7 +112,7 @@ const OPTIONAL_ACCESSORS: Record<string, readonly string[]> = {
 
 function accessorDiagnostics(component: string, props: AnyProps): PortabilityDiagnostic[] {
   const diagnostics: PortabilityDiagnostic[] = []
-  for (const key of REQUIRED_ACCESSORS[component] || []) {
+  for (const key of (Object.prototype.hasOwnProperty.call(REQUIRED_ACCESSORS, component) ? REQUIRED_ACCESSORS[component] : [])) {
     if (typeof props[key] !== "string" || props[key].length === 0) {
       diagnostics.push({
         code: "UNSERIALIZABLE_ACCESSOR",
@@ -115,7 +122,7 @@ function accessorDiagnostics(component: string, props: AnyProps): PortabilityDia
       })
     }
   }
-  for (const key of OPTIONAL_ACCESSORS[component] || []) {
+  for (const key of (Object.prototype.hasOwnProperty.call(OPTIONAL_ACCESSORS, component) ? OPTIONAL_ACCESSORS[component] : [])) {
     if (props[key] !== undefined && (typeof props[key] !== "string" || props[key].length === 0)) {
       diagnostics.push({
         code: "UNSERIALIZABLE_ACCESSOR",
@@ -143,9 +150,17 @@ export function toVegaLiteResult(
     direction: "export" as const,
     sourceFormat: "semiotic-chart-config",
     targetFormat: "vega-lite",
-    ...(typeof config.version === "string" ? { specVersion: config.version } : {}),
+    ...(typeof config?.version === "string" ? { specVersion: config.version } : {}),
   }
-  const props: AnyProps = config.props || {}
+  if (!isRecord(config) || typeof config.component !== "string" || !isRecord(config.props)) {
+    const diagnostic = { code: "INVALID_CONFIG", severity: "error" as const, path: "/", message: "Export requires a chart config with a component string and props object." }
+    return { status: "refused", diagnostics: [diagnostic], lossReport: [diagnostic], provenance }
+  }
+  const props: AnyProps = config.props
+  if (props.data !== undefined && !isRecordArray(props.data)) {
+    const diagnostic = { code: "INVALID_DATA", severity: "error" as const, path: "/props/data", message: "Inline chart data must be an array of row objects." }
+    return { status: "refused", diagnostics: [diagnostic], lossReport: [diagnostic], provenance }
+  }
   const accessorErrors = accessorDiagnostics(config.component, props)
   if (accessorErrors.length > 0) {
     return {
@@ -177,6 +192,7 @@ export function toVegaLiteResult(
       }
       if (component === "StackedBarChart" && props.stackBy) {
         enc.color = nominal(props.stackBy)
+        if (props.normalize) val.stack = "normalize"
       } else if (component === "GroupedBarChart" && props.groupBy) {
         enc.color = nominal(props.groupBy)
         lossReport.push({
@@ -191,37 +207,39 @@ export function toVegaLiteResult(
     case "LineChart": {
       mark = props.curve || props.showPoints ? { type: "line" } : "line"
       if (typeof mark === "object") {
-        if (props.curve && CURVE_TO_INTERPOLATE[props.curve]) {
+        if (props.curve && Object.prototype.hasOwnProperty.call(CURVE_TO_INTERPOLATE, props.curve)) {
           mark.interpolate = CURVE_TO_INTERPOLATE[props.curve]
         }
         if (props.showPoints) mark.point = true
       }
-      enc.x = withAxisTitle({ field: props.xAccessor, type: xType(props) }, props.xLabel)
-      enc.y = withAxisTitle(quant(props.yAccessor), props.yLabel)
+      enc.x = withAxisTitle(xyEncoding(props, "x"), props.xLabel)
+      enc.y = withAxisTitle(xyEncoding(props, "y"), props.yLabel)
       if (props.lineBy) enc.color = nominal(props.lineBy)
       else if (props.colorBy) enc.color = nominal(props.colorBy)
       break
     }
     case "AreaChart":
     case "StackedAreaChart": {
-      mark = props.curve ? { type: "area" } : "area"
-      if (typeof mark === "object" && props.curve && CURVE_TO_INTERPOLATE[props.curve]) {
+      mark = props.curve || props.areaOpacity !== undefined ? { type: "area" } : "area"
+      if (typeof mark === "object" && props.curve && Object.prototype.hasOwnProperty.call(CURVE_TO_INTERPOLATE, props.curve)) {
         mark.interpolate = CURVE_TO_INTERPOLATE[props.curve]
       }
       if (typeof mark === "object" && props.areaOpacity !== undefined) {
         mark.opacity = props.areaOpacity
       }
-      enc.x = withAxisTitle({ field: props.xAccessor, type: xType(props) }, props.xLabel)
-      enc.y = withAxisTitle(quant(props.yAccessor), props.yLabel)
+      enc.x = withAxisTitle(xyEncoding(props, "x"), props.xLabel)
+      enc.y = withAxisTitle(xyEncoding(props, "y"), props.yLabel)
       if (component === "StackedAreaChart" && props.areaBy) enc.color = nominal(props.areaBy)
+      if (props.normalize) enc.y.stack = "normalize"
       break
     }
     case "Scatterplot":
     case "BubbleChart": {
       mark = "point"
-      enc.x = withAxisTitle(quant(props.xAccessor), props.xLabel)
-      enc.y = withAxisTitle(quant(props.yAccessor), props.yLabel)
+      enc.x = withAxisTitle(xyEncoding(props, "x"), props.xLabel)
+      enc.y = withAxisTitle(xyEncoding(props, "y"), props.yLabel)
       if (props.colorBy) enc.color = nominal(props.colorBy)
+      if (props.pointOpacity !== undefined) enc.opacity = { value: props.pointOpacity }
       if (component === "BubbleChart" && props.sizeBy) {
         enc.size = quant(props.sizeBy)
         if (Array.isArray(props.sizeRange)) enc.size.scale = { range: props.sizeRange }
@@ -282,9 +300,11 @@ export function toVegaLiteResult(
     }
   }
 
+  lossReport.unshift(...vegaLiteExportLosses(component, props, enc.color?.field))
+
   // Shared color scheme
-  if (props.colorScheme && enc.color) {
-    enc.color.scale = { ...(enc.color.scale || {}), scheme: props.colorScheme }
+  if (props.colorScheme && enc.color && exportableColorScheme(component, props.colorScheme)) {
+    enc.color.scale = { ...(enc.color.scale || {}), ...(Array.isArray(props.colorScheme) ? { range: props.colorScheme } : { scheme: props.colorScheme }) }
   }
 
   const spec: VegaLiteSpec = { mark }

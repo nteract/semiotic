@@ -85,6 +85,13 @@ export function MobileChartContainer({
     () => activeChip ?? chips.find((chip) => !chip.disabled)?.id
   )
   const [detailOpen, setDetailOpen] = React.useState(initialDetailOpen)
+  const detailId = `semiotic-mobile-details-${React.useId().replace(/:/g, "")}`
+  const detailToggleRef = React.useRef<HTMLButtonElement>(null)
+  const detailPanelRef = React.useRef<HTMLElement>(null)
+  const closeDetails = React.useCallback(() => {
+    setDetailOpen(false)
+    detailToggleRef.current?.focus()
+  }, [])
 
   React.useEffect(() => {
     if (activeChip !== undefined) return
@@ -111,8 +118,8 @@ export function MobileChartContainer({
   const chipControls = chips.length ? (
     <div
       className="semiotic-mobile-chip-row"
-      role="list"
-      aria-label="Mobile chart controls"
+      role="group"
+      aria-label="Chart views"
     >
       {chips.map((chip) => {
         const selected = chip.id === selectedChipId
@@ -179,11 +186,17 @@ export function MobileChartContainer({
   const hasInlineDetail = !!detail && detailMode === "inline"
   const detailsVisible = hasInlineDetail || (hasSheetDetail && detailOpen)
 
+  React.useEffect(() => {
+    if (hasSheetDetail && detailOpen) detailPanelRef.current?.focus()
+  }, [detailOpen, hasSheetDetail])
+
   const detailToggle = hasSheetDetail ? (
     <button
+      ref={detailToggleRef}
       type="button"
       className="semiotic-mobile-detail-toggle"
       aria-expanded={detailOpen}
+      aria-controls={detailsVisible ? detailId : undefined}
       onClick={() => setDetailOpen((open) => !open)}
     >
       {detailOpen ? "Hide details" : "Show details"}
@@ -226,7 +239,7 @@ export function MobileChartContainer({
           flex-direction: column;
           align-items: flex-start;
           justify-content: center;
-          min-height: 40px;
+          min-height: 44px;
           min-width: 44px;
           border: 1px solid var(--semiotic-border, #d8d8d8);
           border-radius: 999px;
@@ -262,7 +275,8 @@ export function MobileChartContainer({
           flex-wrap: wrap;
         }
         .semiotic-mobile-detail-toggle {
-          min-height: 32px;
+          min-height: 44px;
+          min-width: 44px;
           border: 1px solid var(--semiotic-border, #d8d8d8);
           border-radius: 999px;
           padding: 5px 10px;
@@ -315,9 +329,19 @@ export function MobileChartContainer({
       </ChartContainer>
       {detailsVisible && (
         <section
+          ref={detailPanelRef}
+          id={detailId}
+          tabIndex={-1}
           className="semiotic-mobile-detail-panel"
           data-mode={detailMode}
           aria-label={typeof detailTitle === "string" ? detailTitle : "Chart details"}
+          onKeyDown={(event) => {
+            if (hasSheetDetail && event.key === "Escape") {
+              event.preventDefault()
+              event.stopPropagation()
+              closeDetails()
+            }
+          }}
         >
           <div className="semiotic-mobile-detail-header">
             <span>{detailTitle}</span>
@@ -325,7 +349,7 @@ export function MobileChartContainer({
               <button
                 type="button"
                 className="semiotic-mobile-detail-toggle"
-                onClick={() => setDetailOpen(false)}
+                onClick={closeDetails}
               >
                 Close
               </button>

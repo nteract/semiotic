@@ -1,3 +1,6 @@
+import { isPlotPaint, malformedPlotDiagnostics, observablePlotDiagnostics } from "./observablePlotValidation"
+import { coerceUtcTimeValue } from "../charts/shared/temporalStrings"
+import type { PortabilityImportResult } from "./portability/result"
 import type { Datum } from "../charts/shared/datumTypes"
 /**
  * Observable Plot → Semiotic translator.
@@ -13,8 +16,9 @@ import type { Datum } from "../charts/shared/datumTypes"
  * adapter consumes the **declarative shape of a Plot spec** — the `{ marks,
  * x, y, color, … }` object you'd pass to `Plot.plot()`, with each mark
  * expressed as `{ type, data?, options? }`. Where a mark, channel, or
- * transform has no faithful Semiotic equivalent, it surfaces a warning and
- * refuses to approximate, rather than emit a plausible-but-wrong chart.
+ * transform has no faithful Semiotic equivalent, the compatibility helper
+ * returns warnings. Use fromObservablePlotResult for strict refusals and
+ * explicit opt-in to lossy translations.
  *
  * Scope (alpha): core marks — line/lineY/lineX, barY/barX, dot, areaY/area,
  * rectY (binned → histogram), cell, tick — with basic channels. No layered
@@ -144,7 +148,7 @@ function looksCategorical(data: Datum[] | undefined, field: string | undefined):
     if (v == null) continue
     if (typeof v === "number" || v instanceof Date) return false
     // A date-parseable string is fine (a time axis); a plain label is not.
-    if (typeof v === "string") return Number.isNaN(Date.parse(v))
+    if (typeof v === "string") return Number.isNaN(coerceUtcTimeValue(v))
     return false
   }
   return false
@@ -168,7 +172,13 @@ function pushFnWarning(
 export function fromObservablePlot(
   spec: ObservablePlotSpec,
 ): ChartConfig & { warnings?: string[] } {
+  return translateObservablePlot(spec)
+}
+
+function translateObservablePlot(spec: ObservablePlotSpec, silent = false, createdAt?: string): ChartConfig & { warnings?: string[] } {
   const warnings: string[] = []
+  const malformed = malformedPlotDiagnostics(spec)
+  if (malformed.length) return buildConfig("Scatterplot", {}, malformed.map(d => d.message), silent, createdAt)
 
   if (spec.facet || spec.fx || spec.fy) {
     warnings.push(
@@ -181,7 +191,7 @@ export function fromObservablePlot(
 
   if (dataMarks.length === 0) {
     warnings.push("No translatable data mark found in the Plot spec. Defaulting to an empty Scatterplot.")
-    return buildConfig("Scatterplot", {}, warnings)
+    return buildConfig("Scatterplot", {}, warnings, silent, createdAt)
   }
   if (dataMarks.length > 1) {
     warnings.push(
@@ -203,7 +213,7 @@ export function fromObservablePlot(
   if (spec.y?.label) props.yLabel = spec.y.label
 
   // Shared color scheme
-  const scheme = spec.color?.scheme ? SCHEME_MAP[spec.color.scheme] : undefined
+  const scheme = spec.color?.scheme ? (Object.prototype.hasOwnProperty.call(SCHEME_MAP, spec.color.scheme) ? SCHEME_MAP[spec.color.scheme] : undefined) : undefined
 
   // Channel function warnings (these channels are the ones we read)
   pushFnWarning(warnings, opts.x, "x")
@@ -214,10 +224,15 @@ export function fromObservablePlot(
 
   const x = fieldName(opts.x)
   const y = fieldName(opts.y)
-  const fill = fieldName(opts.fill)
-  const stroke = fieldName(opts.stroke)
+  const fill = isPlotPaint(opts.fill) ? undefined : fieldName(opts.fill)
+  const stroke = isPlotPaint(opts.stroke) ? undefined : fieldName(opts.stroke)
+  const z = fieldName(opts.z)
+  pushFnWarning(warnings, opts.z, "z")
+  const constantColor = isPlotPaint(opts.fill) ? opts.fill : isPlotPaint(opts.stroke) ? opts.stroke : undefined
+  if (constantColor) props.color = constantColor
   const colorField = fill || stroke
   const type = mark.type.toLowerCase()
+  if (fill && stroke && fill !== stroke) warnings.push("Independent fill and stroke fields are not both translated; fill selects the color field.")
 
   let component: string
 
@@ -238,10 +253,10 @@ export function fromObservablePlot(
       if (type === "liney" && !x) {
         warnings.push("lineY without an explicit x plots against the row index, which Semiotic doesn't infer. Provide options.x.")
       }
-      const lineBy = stroke || fill
+      const lineBy = z || stroke || fill
       if (lineBy) props.lineBy = lineBy
       applyCurve(opts, props)
-      attach(props, data, { colorScheme: scheme })
+      attach(props, data, { colorBy: colorField, colorScheme: scheme })
       break
     }
     case "bary":
@@ -282,7 +297,8 @@ export function fromObservablePlot(
     case "area":
     case "areay":
     case "areax": {
-      component = fill && fill !== y ? "StackedAreaChart" : "AreaChart"
+      const areaBy = z || (fill !== y ? fill : undefined)
+      component = areaBy ? "StackedAreaChart" : "AreaChart"
       if (x) props.xAccessor = x
       if (y) props.yAccessor = y
       if (looksCategorical(data, x)) {
@@ -291,7 +307,7 @@ export function fromObservablePlot(
             "categorical x won't position. Use a numeric/time x.",
         )
       }
-      if (component === "StackedAreaChart" && fill) props.areaBy = fill
+      if (component === "StackedAreaChart" && areaBy) props.areaBy = areaBy
       applyCurve(opts, props)
       attach(props, data, {
         colorBy: component === "StackedAreaChart" ? undefined : colorField,
@@ -304,7 +320,7 @@ export function fromObservablePlot(
     case "rect": {
       // A binned rect is a histogram; the binned field is the value.
       component = "Histogram"
-      const valueField = type === "rectx" ? x : y || x
+      const valueField = type === "rectx" ? y : x
       if (valueField) props.valueAccessor = valueField
       if (colorField) props.categoryAccessor = colorField
       attach(props, data, { colorScheme: scheme })
@@ -353,10 +369,50 @@ export function fromObservablePlot(
     const xType = scaleType(spec.x?.type)
     const yType = scaleType(spec.y?.type)
     if (xType) props.xScaleType = xType
-    if (yType) props.yScaleType = yType
+    if (yType === "log") props.yScaleType = yType
+    else if (yType) warnings.push("Temporal y scales are not supported by the Semiotic XY API.")
   }
 
-  return buildConfig(component, props, warnings)
+  for (const axis of ["x", "y"] as const) {
+    const type = spec[axis]?.type
+    if (type && type !== "linear" && (!CONTINUOUS_XY.has(component) || !scaleType(type))) {
+      warnings.push(`The ${axis} scale type "${type}" cannot be translated for ${component}.`)
+    }
+  }
+  if (spec.color?.scheme && !scheme) warnings.push(`Color scheme "${spec.color.scheme}" is not supported.`)
+  if (opts.curve && !Object.prototype.hasOwnProperty.call(CURVE_MAP, opts.curve)) warnings.push(`Curve "${opts.curve}" is not supported.`)
+  return buildConfig(component, props, warnings, silent, createdAt)
+}
+
+/** Strictness and reproducible provenance for the experimental Plot importer. */
+export interface FromObservablePlotOptions {
+  mode?: "strict" | "lossy"
+  createdAt?: string
+}
+
+export type ObservablePlotImportResult = PortabilityImportResult<ChartConfig>
+
+/** Refuse unsupported Plot semantics unless the caller explicitly accepts loss. */
+export function fromObservablePlotResult(spec: ObservablePlotSpec, options: FromObservablePlotOptions = {}): ObservablePlotImportResult {
+  const diagnostics = observablePlotDiagnostics(spec)
+  const malformed = diagnostics.some(d => d.code === "INVALID_PLOT_SPEC")
+  const config = malformed ? undefined : translateObservablePlot(spec, true, options.createdAt)
+  if (config) {
+    const accessors = config.component === "Histogram" ? ["valueAccessor"]
+      : ["BarChart", "StackedBarChart", "DotPlot"].includes(config.component) ? ["categoryAccessor", "valueAccessor"]
+        : config.component === "Heatmap" ? ["xAccessor", "yAccessor", "valueAccessor"] : ["xAccessor", "yAccessor"]
+    for (const accessor of accessors) if (typeof config.props[accessor] !== "string" || !config.props[accessor]) diagnostics.push({ code: "MISSING_PLOT_CHANNEL", severity: "error", message: `The translated ${config.component} requires ${accessor}.` })
+  }
+  for (const message of config?.warnings || []) diagnostics.push({ code: "UNSUPPORTED_PLOT_SEMANTIC", severity: "error", message })
+  const lossReport = diagnostics.map(({ code, message, path }) => ({ code, message, ...(path ? { path } : {}) }))
+  const refused = malformed || (lossReport.length > 0 && options.mode !== "lossy")
+  return {
+    status: refused ? "refused" : lossReport.length ? "lossy" : "success",
+    ...(!refused ? { config } : {}),
+    diagnostics: refused ? diagnostics : diagnostics.map(d => ({ ...d, severity: "warning" as const })),
+    lossReport,
+    provenance: { adapter: "semiotic/observable-plot", direction: "import", sourceFormat: "observable-plot", targetFormat: "semiotic-chart-config" },
+  }
 }
 
 /** XY components with continuous x/y scales that honor xScaleType/yScaleType. */
@@ -374,7 +430,7 @@ function scaleType(type: string | undefined): "time" | "log" | undefined {
 // ── Internal helpers ───────────────────────────────────────────────────────
 
 function applyCurve(opts: ObservablePlotMarkOptions, props: Datum): void {
-  if (opts.curve && CURVE_MAP[opts.curve]) props.curve = CURVE_MAP[opts.curve]
+  if (opts.curve && Object.prototype.hasOwnProperty.call(CURVE_MAP, opts.curve)) props.curve = CURVE_MAP[opts.curve]
 }
 
 /** Attach data, an optional colorBy field, and an optional color scheme to props. */
@@ -392,16 +448,18 @@ function buildConfig(
   component: string,
   props: Datum,
   warnings: string[],
+  silent = false,
+  createdAt?: string,
 ): ChartConfig & { warnings?: string[] } {
   const config: ChartConfig & { warnings?: string[] } = {
     component,
     props,
     version: "1",
-    createdAt: new Date().toISOString(),
+    createdAt: createdAt ?? new Date().toISOString(),
   }
   if (warnings.length > 0) {
     config.warnings = warnings
-    for (const w of warnings) {
+    for (const w of silent ? [] : warnings) {
       console.warn(`[semiotic/fromObservablePlot] ${w}`)
     }
   }

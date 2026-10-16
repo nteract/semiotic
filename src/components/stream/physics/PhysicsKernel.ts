@@ -1,5 +1,9 @@
+import { physicsCollidersEqual } from "./physicsColliderEquality"
+import { matchesPhysicsBodyFilter } from "./physicsBodyFilter"
+export { matchesPhysicsBodyFilter, valueAtPath } from "./physicsBodyFilter"
 import type { PhysicsWorkerFrame } from "./PhysicsWorkerProtocol"
 import { mulberry32 } from "../../recipes/random"
+import { validatePhysicsBody, validatePhysicsColliders, validatePhysicsOptions, validatePhysicsSpring, validatePhysicsSnapshot } from "./physicsInputValidation"
 import { cloneFixedPosition, enforceFixedPosition, fixedAxisContact } from "./physicsFixedPosition"
 import { cloneBodyState, cloneBody, cloneCollider, cloneColliderBodyFilter, cloneColliderShape, cloneShape } from "./physicsKernelCloning"
 import { sweptAabbContact } from "./physicsSweptAabbContact"
@@ -31,6 +35,7 @@ export interface PhysicsKernelOptions {
   fixedDt?: number
   cellSize?: number
   collisionIterations?: number
+  /** Velocity retained per 1/120 second, scaled to the actual step duration. */
   velocityDamping?: number
   sleepSpeed?: number
   sleepAfter?: number
@@ -151,6 +156,8 @@ interface Collision {
 }
 
 export interface PhysicsKernelSnapshot {
+  /** PRNG continuation state. Older snapshots without it restart from seed. */
+  randomState?: number
   options: Required<PhysicsKernelOptions>
   bodies: PhysicsKernelSnapshotBody[]
   colliders: PhysicsKernelSnapshotCollider[]
@@ -369,43 +376,6 @@ function parseSensorKey(key: string): { sensorId: string; bodyId: string } {
   }
 }
 
-/** Read a dot-separated property path off an arbitrary value. Shared across physics controllers. */
-export function valueAtPath(source: unknown, path: string): unknown {
-  if (!path) return undefined
-  let current = source
-  for (const part of path.split(".")) {
-    if (current == null || typeof current !== "object") return undefined
-    if (!Object.prototype.hasOwnProperty.call(current, part)) return undefined
-    current = (current as Record<string, unknown>)[part]
-  }
-  return current
-}
-
-function valueIn(value: unknown, options: unknown[] | undefined): boolean {
-  return Boolean(options?.some((candidate) => Object.is(value, candidate)))
-}
-
-/**
- * Test whether a body matches a `PhysicsColliderBodyFilter` — a predicate
- * function or a declarative equals/notEquals/oneOf/notOneOf spec. Shared by
- * collider/sensor permeability here and by the capacity-queue and
- * service-operations controllers' own `bodyFilter` options.
- */
-export function matchesPhysicsBodyFilter(
-  body: PhysicsBodyState,
-  filter: PhysicsColliderBodyFilter | undefined
-): boolean {
-  if (!filter) return true
-  if (typeof filter === "function") return filter(body)
-
-  const value = valueAtPath(body, filter.property)
-  if ("equals" in filter && !Object.is(value, filter.equals)) return false
-  if ("notEquals" in filter && Object.is(value, filter.notEquals)) return false
-  if (filter.oneOf && !valueIn(value, filter.oneOf)) return false
-  if (filter.notOneOf && valueIn(value, filter.notOneOf)) return false
-  return true
-}
-
 function colliderAppliesToBody(
   collider: MutableCollider,
   body: MutableBody
@@ -441,14 +411,16 @@ export class PhysicsKernelWorld {
   private nextBodyIndex = 0
   private nextColliderIndex = 0
   private nextSpringIndex = 0
-  private random: () => number
+  private random: ReturnType<typeof mulberry32>
 
   constructor(options: PhysicsKernelOptions = {}) {
+    validatePhysicsOptions(options)
     this.options = { ...DEFAULT_OPTIONS, ...options }
     this.random = mulberry32(this.options.seed)
   }
 
   init(options: PhysicsKernelOptions = {}): void {
+    validatePhysicsOptions(options)
     this.options = { ...DEFAULT_OPTIONS, ...options }
     this.random = mulberry32(this.options.seed)
     this.bodies.clear()
@@ -462,6 +434,7 @@ export class PhysicsKernelWorld {
   }
 
   spawn(spec: PhysicsBodySpec): void {
+    validatePhysicsBody(spec)
     const body: MutableBody = {
       id: spec.id,
       x: spec.x,
@@ -497,6 +470,8 @@ export class PhysicsKernelWorld {
   }
 
   setColliders(colliders: PhysicsColliderSpec[]): void {
+    validatePhysicsColliders(colliders)
+    if (physicsCollidersEqual(colliders, this.sortedColliders())) return
     this.colliders.clear()
     this.activeSensors.clear()
     this.nextColliderIndex = 0
@@ -512,6 +487,7 @@ export class PhysicsKernelWorld {
   }
 
   setConstraint(spec: PhysicsSpringSpec): string {
+    validatePhysicsSpring(spec)
     const id = spec.id ?? `spring-${this.nextSpringIndex}`
     this.springs.set(id, {
       id,
@@ -530,6 +506,8 @@ export class PhysicsKernelWorld {
   }
 
   applyImpulse(id: string, ix: number, iy: number): void {
+    if (!Number.isFinite(ix) || !Number.isFinite(iy))
+      throw new RangeError("Physics impulses must be finite")
     const body = this.bodies.get(id)
     if (!body) return
     body.vx += ix / body.mass
@@ -539,7 +517,7 @@ export class PhysicsKernelWorld {
   }
 
   step(dtSeconds = this.options.fixedDt): void {
-    const dt = Math.max(0, dtSeconds)
+    const dt = Number.isFinite(dtSeconds) ? Math.max(0, dtSeconds) : 0
     this.lastEvents = []
     if (dt === 0) return
     this.reboundingThisStep.clear()
@@ -553,12 +531,13 @@ export class PhysicsKernelWorld {
     this.applySprings(dt)
 
     const maxVelocity = this.options.maxVelocity
+    const damping = this.options.velocityDamping ** (dt * 120)
     for (const body of bodies) {
       if (body.sleeping) continue
       body.vx += this.options.gravity.x * dt
       body.vy += this.options.gravity.y * dt
-      body.vx *= this.options.velocityDamping
-      body.vy *= this.options.velocityDamping
+      body.vx *= damping
+      body.vy *= damping
       enforceFixedPosition(body)
       if (maxVelocity > 0) {
         const speed = Math.sqrt(body.vx * body.vx + body.vy * body.vy)
@@ -588,15 +567,17 @@ export class PhysicsKernelWorld {
       ? undefined : new Array<PhysicsColliderCandidates | undefined>(bodies.length)
     // Establish grounded supports before propagating their position constraint
     // up the pile. Impulses continue to use the bodies' actual masses.
-    this.resolveColliders(bodies, solidColliders, false, colliderCandidates)
+    const colliderContacts = new Set<number>()
+    const bodyContactsThisStep = new Set<number>()
+    this.resolveColliders(bodies, solidColliders, colliderContacts, colliderCandidates)
     const stationarySleepers = colliderCandidates && bodies.map(stationarySleeper)
     let candidates = physicsBodyPairCandidates(bodies, this.options.cellSize, this.options.gravity)
     for (let i = 0; i < this.options.collisionIterations; i += 1) {
       if (i > 0 && !candidates.coversPositions()) {
         candidates = physicsBodyPairCandidates(bodies, this.options.cellSize, this.options.gravity)
       }
-      const bodyContacts = this.resolveBodyPairs(bodies, candidates.pairs, i === 0, stationarySleepers)
-      const staticContacts = this.resolveColliders(bodies, solidColliders, i === 0, colliderCandidates)
+      const bodyContacts = this.resolveBodyPairs(bodies, candidates.pairs, bodyContactsThisStep, i === 0, stationarySleepers)
+      const staticContacts = this.resolveColliders(bodies, solidColliders, colliderContacts, colliderCandidates)
       // Without contacts, another pass cannot change geometry or support.
       // Filter callbacks still receive every authored pass, including mutations.
       if (colliderCandidates && !bodyContacts && !staticContacts) break
@@ -643,6 +624,11 @@ export class PhysicsKernelWorld {
     return out
   }
 
+  readBody(id: string): PhysicsBodyState | undefined {
+    const body = this.bodies.get(id)
+    return body ? cloneBodyState(body) : undefined
+  }
+
   workerSleepTimes(ids: string[]): Float32Array {
     return Float32Array.from(ids, (id) => this.bodies.get(id)?.sleepTime ?? 0)
   }
@@ -683,6 +669,7 @@ export class PhysicsKernelWorld {
 
   snapshot(): PhysicsKernelSnapshot {
     return {
+      randomState: this.random.getState(),
       options: {
         ...this.options,
         gravity: { ...this.options.gravity }
@@ -698,11 +685,12 @@ export class PhysicsKernelWorld {
   }
 
   restore(snapshot: PhysicsKernelSnapshot): void {
+    validatePhysicsSnapshot(snapshot)
     this.options = {
       ...snapshot.options,
       gravity: { ...snapshot.options.gravity }
     }
-    this.random = mulberry32(this.options.seed)
+    this.random = mulberry32(snapshot.randomState ?? this.options.seed)
     this.bodies.clear()
     this.colliders.clear()
     this.springs.clear()
@@ -761,7 +749,7 @@ export class PhysicsKernelWorld {
 
   private applySprings(dt: number): void {
     for (const spring of Array.from(this.springs.values()).sort((a, b) =>
-      a.id.localeCompare(b.id)
+      a.id < b.id ? -1 : a.id > b.id ? 1 : 0
     )) {
       const body = this.bodies.get(spring.bodyId)
       if (!body || body.sleeping) continue
@@ -793,7 +781,8 @@ export class PhysicsKernelWorld {
   private resolveBodyPairs(
     bodies: MutableBody[],
     pairs: [number, number][],
-    emitEvents: boolean,
+    contacts: Set<number>,
+    firstPass: boolean,
     stationarySleepers?: boolean[]
   ): boolean {
     let hasContacts = false
@@ -803,7 +792,7 @@ export class PhysicsKernelWorld {
       if (!a || !b) continue
       // The first pass already recorded these immovable contacts. Revisit any
       // body corrected by a collider or woken by another contact this step.
-      if (!emitEvents && stationarySleepers?.[aIndex] && stationarySleepers[bIndex] &&
+      if (!firstPass && stationarySleepers?.[aIndex] && stationarySleepers[bIndex] &&
         stationarySleeper(a) && stationarySleeper(b)) {
         hasContacts = true
         continue
@@ -812,7 +801,9 @@ export class PhysicsKernelWorld {
       if (!collision) continue
       hasContacts = true
       this.resolveDynamicCollision(a, b, collision)
-      if (emitEvents) {
+      const key = aIndex * bodies.length + bIndex
+      if (!contacts.has(key)) {
+        contacts.add(key)
         this.lastEvents.push({
           type: "contact",
           bodyId: a.id,
@@ -950,7 +941,7 @@ export class PhysicsKernelWorld {
   private resolveColliders(
     bodies: MutableBody[],
     colliders: Array<{ collider: MutableCollider; bounds: PhysicsAabbBounds }>,
-    emitEvents: boolean,
+    contacts: Set<number>,
     candidates?: Array<PhysicsColliderCandidates | undefined>
   ): boolean {
     if (colliders.length === 0) return false
@@ -978,7 +969,11 @@ export class PhysicsKernelWorld {
         if (this.contactOpposesGravity(collision.nx, collision.ny)) {
           this.supportedThisStep.add(body.id)
         }
-        if (emitEvents) {
+        // A correction can remove the overlap before the next pass. Retain
+        // every hit, including the support prepass, once per body/collider.
+        const key = bodyIndex * colliders.length + colliderIndex
+        if (!contacts.has(key)) {
+          contacts.add(key)
           this.lastEvents.push({
             type: "contact",
             bodyId: body.id,
@@ -1018,8 +1013,10 @@ export class PhysicsKernelWorld {
       const ty = collision.nx
       const tangentVelocity = body.vx * tx + body.vy * ty
       const friction = pairFriction(body.friction, collider.friction, this.options.friction)
-      body.vx -= tangentVelocity * tx * friction
-      body.vy -= tangentVelocity * ty * friction
+      const frictionLimit = friction * -(1 + restitution) * velocityAlongNormal
+      const tangentImpulse = clamp(tangentVelocity, -frictionLimit, frictionLimit)
+      body.vx -= tangentImpulse * tx
+      body.vy -= tangentImpulse * ty
       if (restitution > 0 && previous >= 0 && body.vx * gravity.x + body.vy * gravity.y < 0) {
         this.reboundingThisStep.add(body.id)
       }
@@ -1143,7 +1140,7 @@ export class PhysicsKernelWorld {
     body.sleepTime = 0
   }
 
-  /** Uses the deterministic PRNG for future jittered spawn helpers. */
+  /** Seeded random stream; snapshots retain the current sequence position. */
   nextRandom(): number {
     return this.random()
   }

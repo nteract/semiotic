@@ -1,3 +1,4 @@
+import { isRecord, vegaLiteShapeDiagnostics, vegaLiteSemanticDiagnostics } from "./vegaLiteValidation"
 import type { Datum } from "../charts/shared/datumTypes"
 /**
  * Vega-Lite to Semiotic translator.
@@ -19,7 +20,7 @@ export interface VegaLiteEncoding {
   field?: string
   type?: "quantitative" | "nominal" | "ordinal" | "temporal"
   aggregate?: string
-  scale?: { scheme?: string; range?: Array<string | number>; domain?: Array<string | number | boolean | Date> }
+  scale?: { type?: string; scheme?: string; range?: Array<string | number>; domain?: Array<string | number | boolean | Date> }
   axis?: { title?: string; labelAngle?: number }
   value?: string | number | boolean | null
   bin?: boolean | { maxbins?: number }
@@ -53,6 +54,8 @@ export interface FromVegaLiteOptions {
    * legacy fallback behavior, but reports every known loss explicitly.
    */
   mode?: "strict" | "lossy"
+  /** Supply an authored timestamp for reproducible imported configurations. */
+  createdAt?: string
 }
 
 /** Typed result for the experimental, loss-aware Vega-Lite importer. */
@@ -64,7 +67,7 @@ function normalizeMark(mark: string | ({ type: string } & Datum) | undefined): {
   type: string
   markProps: Datum
 } {
-  if (!mark) return { type: "", markProps: {} }
+  if (!mark || (typeof mark !== "string" && !isRecord(mark))) return { type: "", markProps: {} }
   if (typeof mark === "string") {
     return { type: mark, markProps: {} }
   }
@@ -87,11 +90,11 @@ function isQuantitative(type?: string): boolean {
 }
 
 function readIDIDMetadata(spec: VegaLiteSpec): Datum | undefined {
-  return spec.usermeta?.idid
+  return spec?.usermeta?.idid
 }
 
 function isIDIDAnnotationLayer(layer: VegaLiteSpec): boolean {
-  return layer.usermeta?.idid?.role === "annotation-layer"
+  return layer?.usermeta?.idid?.role === "annotation-layer"
 }
 
 /**
@@ -170,7 +173,7 @@ function strictImportDiagnostics(spec: VegaLiteSpec): PortabilityDiagnostic[] {
     })
   }
 
-  diagnostics.push(...vegaLiteAggregationDiagnostics(normalized))
+  diagnostics.push(...vegaLiteSemanticDiagnostics(normalized), ...vegaLiteAggregationDiagnostics(normalized))
   return diagnostics
 }
 
@@ -209,6 +212,12 @@ const CURVE_MAP: Record<string, string> = {
 // ── Main ─────────────────────────────────────────────────────────────────
 
 export function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: string[] } {
+  return translateVegaLite(spec)
+}
+
+function translateVegaLite(spec: VegaLiteSpec, silent = false, createdAt?: string): ChartConfig & { warnings?: string[] } {
+  const malformed = vegaLiteShapeDiagnostics(spec)
+  if (malformed.length) return buildConfig("Scatterplot", {}, malformed.map(d => d.message), silent, createdAt)
   // attachIDIDAnnotations() represents courtesy marks as a Vega-Lite layer.
   // Recover its one actual chart layer before inspecting `mark`; arbitrary
   // layered specs remain on the legacy warning/fallback path below.
@@ -225,34 +234,34 @@ export function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: str
 
   // Data handling
   if (!data && spec.data?.url) {
-    warnings.push("data.url is not supported — only inline data.values can be translated. Provide data manually.")
+    warnings.push("Load data.url into inline data.values before import.")
   }
 
   if (spec.transform && spec.transform.length > 0) {
-    warnings.push("Vega-Lite transforms are not supported. Pre-transform your data before passing to fromVegaLite().")
+    warnings.push("Materialize Vega-Lite transforms before import.")
   }
 
   // Unsupported composition features
   if (spec.layer) {
     warnings.push(
-      'Layered specs ("layer") are not supported. Only single-mark specs can be translated.'
+      'Layered specs ("layer") are unsupported; provide one mark.'
     )
   }
   if (spec.hconcat || spec.vconcat || spec.concat) {
     warnings.push(
-      'Concatenated views ("hconcat"/"vconcat"/"concat") are not supported. Translate each sub-spec individually.'
+      'Concatenated views ("hconcat"/"vconcat"/"concat") are unsupported; import each view separately.'
     )
   }
   if (spec.facet || enc.facet || enc.row || enc.column) {
-    warnings.push("Faceted views are not supported. Use Semiotic's LinkedCharts or render multiple charts manually.")
+    warnings.push("Faceted views are unsupported; use LinkedCharts or separate charts.")
   }
   if (spec.repeat) {
     warnings.push(
-      'Repeated views ("repeat") are not supported. Translate each field combination individually.'
+      'Repeated views ("repeat") are unsupported; import each field combination separately.'
     )
   }
   if (spec.params || spec.selection) {
-    warnings.push("Selections/params are not supported. Use Semiotic's LinkedCharts and selection props for interactivity.")
+    warnings.push("Selections/params are unsupported; use LinkedCharts and selection props.")
   }
 
   // Determine component and build props
@@ -268,9 +277,10 @@ export function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: str
   if (color?.field) {
     props.colorBy = color.field
     if (color.scale?.scheme) {
-      const mapped = SCHEME_MAP[color.scale.scheme]
+      const mapped = Object.prototype.hasOwnProperty.call(SCHEME_MAP, color.scale.scheme) ? SCHEME_MAP[color.scale.scheme] : undefined
       if (mapped) props.colorScheme = mapped
     }
+    if (Array.isArray(color.scale?.range)) props.colorScheme = color.scale.range
   }
 
   // Opacity
@@ -297,14 +307,14 @@ export function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: str
       : undefined
     if (maxbins) props.bins = maxbins
 
-    return buildConfig(component, props, warnings)
+    return buildConfig(component, props, warnings, silent, createdAt)
   }
 
   let component: string
 
   switch (markType) {
     case "bar": {
-      component = resolveBarComponent(x, y, color, props, data)
+      component = resolveBarComponent(x, y, color, props)
       break
     }
     case "line": {
@@ -313,14 +323,9 @@ export function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: str
       if (color?.field) {
         props.lineBy = color.field
       }
-      if (markProps.interpolate) {
-        const curve = CURVE_MAP[markProps.interpolate]
-        if (curve) props.curve = curve
-      }
       if (markProps.point === true) {
         props.showPoints = true
       }
-      if (data) props.data = data
       break
     }
     case "area": {
@@ -331,14 +336,10 @@ export function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: str
         component = "AreaChart"
       }
       setXYAccessors(x, y, props)
-      if (markProps.interpolate) {
-        const curve = CURVE_MAP[markProps.interpolate]
-        if (curve) props.curve = curve
-      }
+      if (x?.stack === "normalize" || y?.stack === "normalize") props.normalize = true
       if (markProps.opacity !== undefined) {
         props.areaOpacity = markProps.opacity
       }
-      if (data) props.data = data
       break
     }
     case "point":
@@ -354,7 +355,6 @@ export function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: str
         component = "Scatterplot"
       }
       setXYAccessors(x, y, props)
-      if (data) props.data = data
       break
     }
     case "rect": {
@@ -369,7 +369,6 @@ export function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: str
       }
       if (x?.axis?.title) props.xLabel = x.axis.title
       if (y?.axis?.title) props.yLabel = y.axis.title
-      if (data) props.data = data
       break
     }
     case "arc": {
@@ -392,7 +391,6 @@ export function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: str
       if (x?.field && !theta?.field) {
         props.categoryAccessor = x.field
       }
-      if (data) props.data = data
       break
     }
     case "tick": {
@@ -413,24 +411,22 @@ export function fromVegaLite(spec: VegaLiteSpec): ChartConfig & { warnings?: str
         if (x?.field) props.categoryAccessor = x.field
         if (y?.field) props.valueAccessor = y.field
       }
-      if (data) props.data = data
       break
     }
-    case "geoshape":
-    case "text":
-    case "rule":
-    case "image":
-    case "trail":
     default: {
       warnings.push(`Unsupported mark type "${markType}". Defaulting to Scatterplot.`)
       component = "Scatterplot"
       setXYAccessors(x, y, props)
-      if (data) props.data = data
       break
     }
   }
 
-  return buildConfig(component, props, warnings)
+  if ((markType === "line" || markType === "area") && markProps.interpolate &&
+      Object.prototype.hasOwnProperty.call(CURVE_MAP, markProps.interpolate)) {
+    props.curve = CURVE_MAP[markProps.interpolate]
+  }
+  if (data) props.data = data
+  return buildConfig(component, props, warnings, silent, createdAt)
 }
 
 /**
@@ -445,7 +441,8 @@ export function fromVegaLiteResult(
   spec: VegaLiteSpec,
   options: FromVegaLiteOptions = {},
 ): VegaLiteImportResult {
-  const diagnostics = strictImportDiagnostics(spec)
+  const malformed = vegaLiteShapeDiagnostics(spec)
+  const diagnostics = malformed.length ? malformed : strictImportDiagnostics(spec)
   const errors = diagnostics.filter((diagnostic) => diagnostic.severity === "error")
   const idid = readIDIDMetadata(spec)
   const provenance = {
@@ -457,7 +454,7 @@ export function fromVegaLiteResult(
     ...(idid ? { metadata: { idid } } : {}),
   }
 
-  if (errors.length > 0 && options.mode !== "lossy") {
+  if (errors.length > 0 && (options.mode !== "lossy" || malformed.length > 0)) {
     return {
       status: "refused",
       diagnostics,
@@ -466,7 +463,7 @@ export function fromVegaLiteResult(
     }
   }
 
-  const config = fromVegaLite(spec)
+  const config = translateVegaLite(spec, true, options.createdAt)
   const warningDiagnostics: PortabilityDiagnostic[] = (config.warnings || []).map((message) => ({
     code: "LEGACY_TRANSLATION_WARNING",
     severity: "warning",
@@ -501,7 +498,6 @@ function resolveBarComponent(
   y: VegaLiteEncoding | undefined,
   color: VegaLiteEncoding | undefined,
   props: Datum,
-  data: Datum[] | undefined,
 ): string {
   let component: string
   const isStacked = color?.field &&
@@ -512,6 +508,7 @@ function resolveBarComponent(
   if (isStacked) {
     component = "StackedBarChart"
     props.stackBy = color!.field
+    if (x?.stack === "normalize" || y?.stack === "normalize") props.normalize = true
   } else {
     component = "BarChart"
   }
@@ -538,8 +535,6 @@ function resolveBarComponent(
     if (y?.axis?.title) props.valueLabel = y.axis.title
   }
 
-  if (data) props.data = data
-
   return component
 }
 
@@ -552,22 +547,27 @@ function setXYAccessors(
   if (y?.field) props.yAccessor = y.field
   if (x?.axis?.title) props.xLabel = x.axis.title
   if (y?.axis?.title) props.yLabel = y.axis.title
+  if (x?.type === "temporal") props.xScaleType = "time"
+  else if (x?.scale?.type === "log") props.xScaleType = "log"
+  if (y?.scale?.type === "log" || y?.scale?.type === "symlog") props.yScaleType = y.scale.type
 }
 
 function buildConfig(
   component: string,
   props: Datum,
   warnings: string[],
+  silent = false,
+  createdAt?: string,
 ): ChartConfig & { warnings?: string[] } {
   const config: ChartConfig & { warnings?: string[] } = {
     component,
     props,
     version: "1",
-    createdAt: new Date().toISOString(),
+    createdAt: createdAt ?? new Date().toISOString(),
   }
   if (warnings.length > 0) {
     config.warnings = warnings
-    for (const w of warnings) {
+    for (const w of silent ? [] : warnings) {
       console.warn(`[semiotic/fromVegaLite] ${w}`)
     }
   }

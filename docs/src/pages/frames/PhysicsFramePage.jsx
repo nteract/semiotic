@@ -532,6 +532,40 @@ function SensorScene() {
       </p>
 
       <p>
+        Body coordinates, velocities, mass, sizes, and explicit <code>spawnAt</code>
+        {" "}times must be finite; mass and sizes must be positive. Invalid spawns
+        throw a <code>RangeError</code> before changing the world or queue, including
+        when a batch contains both valid and invalid bodies. Galton builders
+        normalize invalid bin counts to one bin and round fractional counts down.
+      </p>
+
+      <p>
+        <code>clear()</code> removes bodies, pending arrivals, and accumulated
+        sediment while preserving the current walls and sensors, including
+        restored geometry. Controllers with <code>continuous: false</code> stop
+        requesting animation frames when the world reaches rest. Controllers
+        without an explicit setting retain the default continuous behavior.
+      </p>
+
+      <p>
+        Galton, UnitPile, EventDrop, and CollisionSwarm source IDs use upsert
+        semantics: the last row with an ID replaces earlier rows, including
+        imperative pushes and updates. Use a unique ID for each observation,
+        or omit IDs to keep every row. <code>diagnoseConfig</code> reports
+        {" "}<code>PHYSICS_DUPLICATE_IDS</code> when source rows would be replaced.
+      </p>
+
+      <p>
+        Built-in engine determinism means repeatability with the same runtime,
+        inputs, and fixed timestep. Snapshots preserve the random stream's
+        position; older snapshots without random state restart from their seed.
+        {" "}<code>velocityDamping</code> is the retained velocity per 1/120 second,
+        scaled to the step duration. Static and body contacts limit friction by
+        the normal impulse. Different timesteps can still produce different
+        integration and contact trajectories.
+      </p>
+
+      <p>
         <code>createCapacityQueueController</code> records one semantic job visit
         per physical entry. Its observations distinguish <code>queued</code>,{" "}
         <code>processed</code>, <code>blocked</code>, and <code>abandoned</code> with

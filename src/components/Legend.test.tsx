@@ -216,8 +216,8 @@ describe("Legend — aria-selected and isolation", () => {
 
 // ── aria-current in highlight mode ───────────────────────────────────────
 
-describe("Legend — aria-current in highlight mode", () => {
-  it("uses aria-current instead of aria-selected when legendInteraction is highlight", () => {
+describe("Legend — transient highlighting", () => {
+  it("does not expose transient hover as a current or selected value", () => {
     const onHover = vi.fn()
     const { container } = renderInSvg(
       <Legend
@@ -231,9 +231,9 @@ describe("Legend — aria-current in highlight mode", () => {
     // aria-selected should not be present in highlight mode
     expect(options[0].getAttribute("aria-selected")).toBeNull()
     expect(options[1].getAttribute("aria-selected")).toBeNull()
-    // aria-current should be set on the highlighted item
+    // Hover is transient styling, not the current item in a collection.
     expect(options[0].getAttribute("aria-current")).toBeNull()
-    expect(options[1].getAttribute("aria-current")).toBe("true")
+    expect(options[1].getAttribute("aria-current")).toBeNull()
     expect(options[2].getAttribute("aria-current")).toBeNull()
   })
 
@@ -247,7 +247,7 @@ describe("Legend — aria-current in highlight mode", () => {
       />
     )
     const options = container.querySelectorAll("[role='option']")
-    // Without legendInteraction="isolate", should use aria-current, not aria-selected
+    // Highlighting does not change selection.
     options.forEach((opt) => {
       expect(opt.getAttribute("aria-selected")).toBeNull()
     })

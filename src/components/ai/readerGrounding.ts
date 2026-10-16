@@ -1,4 +1,4 @@
-import { hierarchyChildren } from "./navigationValues"
+import { hierarchyChildren, stringValue } from "./navigationValues"
 import { getMinMax } from "../charts/shared/minMax"
 import { aiChartProps, isAIDataRecord } from "./aiData"
 import type { Datum } from "../charts/shared/datumTypes"
@@ -229,11 +229,10 @@ function factValue(row: Record<string, unknown>, accessor: unknown, fallback: st
 }
 
 function displayFactValue(value: unknown): string {
-  if (value instanceof Date) return value.toISOString()
   if (typeof value === "number") {
     return Number.isInteger(value) ? String(value) : String(Math.round(value * 1000) / 1000)
   }
-  return String(value ?? "—")
+  return stringValue(value)
 }
 
 function sourceFacts(
@@ -384,8 +383,8 @@ function normalizePhysicsAggregates(rows: readonly unknown[] | undefined): Physi
       if (!d) return undefined
       const count = finite(d.count ?? d.value ?? d.total ?? d.bodies ?? d.events)
       if (count == null) return undefined
-      const label = String(d.label ?? d.id ?? d.name ?? `container ${index + 1}`)
-      const id = d.id == null ? undefined : String(d.id)
+      const label = stringValue(d.label ?? d.id ?? d.name, `container ${index + 1}`)
+      const id = d.id == null ? undefined : stringValue(d.id)
       const secondary = finite(d.secondary ?? d.secondaryCount)
       const observed = finite(d.observed ?? d.observedCount)
       return compactObject({
@@ -422,10 +421,10 @@ function normalizeSediment(
       const count = finite(d.count) ?? 0
       const total = finite(d.total)
       const normalized: SedimentRow = {
-        label: String(d.label ?? d.id ?? `sediment ${index + 1}`),
+        label: stringValue(d.label ?? d.id, `sediment ${index + 1}`),
         count,
       }
-      if (d.id != null) normalized.id = String(d.id)
+      if (d.id != null) normalized.id = stringValue(d.id)
       if (total != null) normalized.total = total
       return normalized
     })

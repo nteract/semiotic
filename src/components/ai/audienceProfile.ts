@@ -162,11 +162,19 @@ export function receivabilityBias(
   audit: AccessibilityAuditResult,
   modality: ReceptionModality,
 ): ReceivabilitySignal {
+  return receivabilityBiasFromFindings(audit.findings, modality)
+}
+
+/** Internal ranking path; the public audit adapter preserves its full-result API. */
+export function receivabilityBiasFromFindings(
+  findings: AccessibilityAuditResult["findings"],
+  modality: ReceptionModality,
+): ReceivabilitySignal {
   if (modality === "visual") return { delta: 0, caveats: [] }
   let delta = 0
   const flagged: string[] = []
   const caveats: string[] = []
-  for (const f of audit.findings) {
+  for (const f of findings) {
     if (!RECEIVABILITY_HEURISTICS.has(f.id)) continue
     let penalty = 0
     if (f.status === "fail") penalty = f.critical ? 1.2 : 0.8

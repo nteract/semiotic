@@ -15,6 +15,20 @@ import {
 import { realtimeDefinitionFixtures } from "../../test-utils/realtimeDefinitionFixtures"
 
 const cases: DiagnosisRequest[] = [
+  ...[
+    "GaltonBoardChart",
+    "UnitPileChart",
+    "EventDropChart",
+    "CollisionSwarmChart"
+  ].map((component) => ({
+    component,
+    props: {
+      data: [
+        { id: "same", value: 1, time: 0 },
+        { id: "same", value: 2, time: 1 }
+      ]
+    }
+  })),
   ...Object.entries(realtimeDefinitionFixtures).flatMap(
     ([component, fixture]) => {
       const { data, ...props } = fixture

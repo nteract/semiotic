@@ -70,6 +70,7 @@ export default defineConfig(({ mode }) => ({
         chartModes: resolve(integrationRoot, "chart-modes-examples/index.html"),
         coordinated: resolve(integrationRoot, "coordinated-examples/index.html"),
         controlAudit: resolve(integrationRoot, "control-audit-examples/index.html"),
+        controlAccessibilityRegressions: resolve(integrationRoot, "control-accessibility-regressions/index.html"),
         selectionPredicates: resolve(integrationRoot, "selection-predicates-examples/index.html"),
         linkedColors: resolve(integrationRoot, "linked-color-examples/index.html"),
         customLayout: resolve(integrationRoot, "custom-layout-examples/index.html"),

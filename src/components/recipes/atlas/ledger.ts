@@ -31,7 +31,7 @@ export function buildLedger(
   const authoredSectionKeys = new Set<string>()
 
   for (const row of source.measureValues) {
-    const measure = spec.measures[row.measureId]
+    const measure = ownValue(spec.measures, row.measureId)
     if (!measure) continue
     const subjectKind = nodeKind(row.subjectId, nodeIds, sections)
     entries.push({
@@ -69,7 +69,7 @@ export function buildLedger(
     const split = key.split("\0")
     const measureId = split[0]
     const subjectId = split[1]
-    const measure = spec.measures[measureId]
+    const measure = ownValue(spec.measures, measureId)
     if (!measure) continue
     entries.push({
       measureId,

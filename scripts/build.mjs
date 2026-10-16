@@ -15,6 +15,7 @@ import { minifyLibraryPlugin } from "./lib/minify-library-chunk.mjs"
 import { libraryTerserOptions as terserOptions } from "./lib/library-minification-options.mjs"
 import { stripPureBareChunkImports } from "./lib/strip-pure-bare-imports.mjs"
 import { serverRuntimeLoadersPlugin } from "./lib/server-runtime-loaders.mjs"
+import { shortenChunkExportsPlugin } from "./lib/shorten-chunk-exports.mjs"
 
 const buildSourceFingerprint = bundleFreshness.sourceFingerprint(
   process.cwd(),
@@ -99,7 +100,7 @@ function useClientDirectivePlugin({
   }
 }
 
-function baseBuildOptions({ minify, serverOnly, clientOnly, entryNames, format }) {
+function baseBuildOptions({ minify, serverOnly, clientOnly, entryNames, format, mergeImports = false }) {
   return {
     outDir: "dist",
     // es2020 matches modern React/Vite targets and drops many esbuild
@@ -122,7 +123,10 @@ function baseBuildOptions({ minify, serverOnly, clientOnly, entryNames, format }
         ? [minifyLibraryPlugin({
             format,
             options: terserOptions,
-            allowFunctionReduction: !clientOnly
+            mergeImports,
+            // Named-import and cold-entry budgets both guard the selected
+            // output; compare function reduction for client chunks as well.
+            allowFunctionReduction: true
           })]
         : []),
       useClientDirectivePlugin({ clientOnly, entryNames })
@@ -183,6 +187,8 @@ async function createSharedEsmGroup({
   clientOnly = false,
   groupName = "esm",
   analyze = false,
+  deferIdentifierMinification = false,
+  mergeImports = false,
   esbuildPlugins = []
 } = {}) {
   const names = Object.keys(entries)
@@ -194,7 +200,8 @@ async function createSharedEsmGroup({
       serverOnly,
       clientOnly,
       entryNames: names,
-      format: "esm"
+      format: "esm",
+      mergeImports
     }),
     entry: entries,
     name: `${groupName}:esm`,
@@ -205,6 +212,7 @@ async function createSharedEsmGroup({
       ...(serverOnly ? [nodeStaticMarkupSourcePlugin()] : []),
       ...(serverOnly ? [serverRuntimeLoadersPlugin()] : []),
       externalizePerspectivePlacementPlugin(),
+      ...(minify && deferIdentifierMinification ? [shortenChunkExportsPlugin()] : []),
       ...esbuildPlugins
     ],
     // Public ESM entries retain the package's historical `.module.min.js`
@@ -222,10 +230,10 @@ async function createSharedEsmGroup({
       // Fold syntax while the full module graph is visible. Terser runs on
       // individual output chunks and cannot optimize across those boundaries.
       esbuildOptions.minifySyntax = minify
-      // Only esbuild sees both ends of private cross-chunk exports. Terser
-      // cannot shorten those names when it minifies each chunk separately.
-      // Public entry exports retain their documented names.
-      esbuildOptions.minifyIdentifiers = minify
+      // The primary client/server graphs compress better when Terser sees
+      // original local identifiers. Shorten their private module interfaces
+      // separately so cross-chunk imports still use compact names.
+      esbuildOptions.minifyIdentifiers = minify && !deferIdentifierMinification
       esbuildOptions.entryNames = "[name].module.min"
       // Private filenames do not need a descriptive basename: the content
       // hash is their cache identity, and shorter specifiers recur throughout
@@ -1551,6 +1559,8 @@ async function build() {
     minify,
     clientOnly: true,
     groupName: "client-primary",
+    deferIdentifierMinification: true,
+    mergeImports: true,
     analyze
   })
   writeSharedClientSymbolFacade("semiotic-ai.module.min.js", "useSelection", "semiotic-atlas-selection.module.min.js")
@@ -1574,13 +1584,15 @@ async function build() {
     esbuildPlugins: [externalizeExperimentalBridgeStoresPlugin(), externalizeNetworkZoomHostPlugin()]
   })
   await createSharedEsmGroup({
-    entries: Object.fromEntries(
-      Object.entries(serverEntries).filter(([name]) => name !== "semiotic-ai-core")
-    ),
+    entries: { server: serverEntries.server },
     minify,
     serverOnly: true,
-    groupName: "server"
+    groupName: "server",
+    mergeImports: true
   })
+  // These public paths expose the same renderer. Keep one canonical entry
+  // instead of making both facades load a separately compressed shared chunk.
+  writeFileSync("dist/semiotic-server-node.module.min.js", 'export * from "./server.module.min.js";\n')
   // AI tooling otherwise widens shared renderer chunks with contract helpers.
   // Recipe and intent registries coordinate separate entries through global keys.
   await createSharedEsmGroup({

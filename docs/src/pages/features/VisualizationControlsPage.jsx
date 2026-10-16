@@ -898,6 +898,13 @@ export default function VisualizationControlsPage() {
       </details>
 
       <h3 id="sentence-filter-design">Design guidance</h3>
+      <p>
+        Number and range editors keep incomplete typing local, publish only finite values within
+        their declared bounds, and normalize drafts on Enter or blur. Continuous text, number,
+        and slider edits share a live announcement after a 500 ms pause; closing the editor
+        announces the final value immediately. Static sentence text remains readable when the
+        wrapper is a paragraph or heading.
+      </p>
       <div style={styles.cardGrid}>
         <article style={styles.card}>
           <h4 style={styles.cardHeading}>A good fit</h4>
@@ -934,6 +941,7 @@ export default function VisualizationControlsPage() {
         <article style={styles.card}>
           <h3>Mobile alternatives</h3>
           <p><code>MobileStandardControls</code> and <code>useMobileRangeControls</code> provide native buttons, ranges, and legend controls that drive the same controlled state as desktop gestures.</p>
+          <p>Range inputs announce formatted values with stable start/end labels. Without an explicit <code>step</code>, zoom moves each boundary by 10% of the current span, with a domain-relative minimum. Explicit steps retain their absolute-unit behavior.</p>
         </article>
         <article style={styles.card}>
           <h3>Sentence titles</h3>

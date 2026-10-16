@@ -8,6 +8,32 @@ export interface PhysicsContact {
 }
 const EPSILON = 1e-9
 
+/** Clip the path against a convex polygon's open interior. An isolated
+ * corner touch or travel along a face has no interior interval. */
+function entersPolygon(
+  body: PhysicsBodyState,
+  points: ContactPoint[]
+): boolean {
+  let entry = 0
+  let exit = 1
+  const dx = body.x - body.prevX
+  const dy = body.y - body.prevY
+  for (let i = 0; i < points.length; i++) {
+    const [ax, ay] = points[i]
+    const [bx, by] = points[(i + 1) % points.length]
+    const nx = by - ay
+    const ny = ax - bx
+    if (Math.hypot(nx, ny) <= EPSILON) continue
+    const separation = (body.prevX - ax) * nx + (body.prevY - ay) * ny
+    const approach = dx * nx + dy * ny
+    if (approach < 0) entry = Math.max(entry, -separation / approach)
+    else if (approach > 0) exit = Math.min(exit, -separation / approach)
+    else if (separation >= 0) return false
+    if (entry >= exit) return false
+  }
+  return entry < exit
+}
+
 /** Signed distance to the unrounded polygon (negative inside), and the outward
  * normal of the nearest boundary. Two vertices describe a circle's segment. */
 export function nearestBoundary(x: number, y: number, points: ContactPoint[]) {
@@ -60,6 +86,7 @@ export function sweepRoundedPolygon(
   const dy = body.y - body.prevY
   const speedSquared = dx * dx + dy * dy
   if (speedSquared <= EPSILON * EPSILON) return null
+  if (radius === 0 && !entersPolygon(body, points)) return null
   // Deep initial overlaps need the minimum separating translation, not a
   // crossing reconstructed from a point that was already inside the solid.
   if (nearestBoundary(body.prevX, body.prevY, points).distance < radius - slop)

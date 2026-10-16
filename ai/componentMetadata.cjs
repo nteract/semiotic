@@ -119,7 +119,10 @@ function categoryForComponent(name) {
 }
 
 function categoryForAIExport(name) {
-  return COMPONENT_TO_CATEGORY.get(name) ?? AI_EXPORT_ONLY_CATEGORIES[name]
+  return COMPONENT_TO_CATEGORY.get(name) ?? (
+    Object.prototype.hasOwnProperty.call(AI_EXPORT_ONLY_CATEGORIES, name)
+      ? AI_EXPORT_ONLY_CATEGORIES[name] : undefined
+  )
 }
 
 function importPathForCategory(category) {

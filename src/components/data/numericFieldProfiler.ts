@@ -48,7 +48,7 @@ function observeField(
     zero: 0, negative: 0, fractional: 0,
   }
   for (const row of data) {
-    const raw = row?.[field]
+    const raw = row && Object.prototype.hasOwnProperty.call(row, field) ? row[field] : undefined
     if (isMissingValue(raw)) {
       out.missing++
       continue
@@ -102,7 +102,7 @@ export function profileNumericFields(
     // The observation owns this array. Sorting it cannot mutate source rows;
     // callers that only need health counts and extents allocate no value array.
     const sorted = observation.numbers?.sort((a, b) => a - b)
-    profiles[field] = {
+    Object.defineProperty(profiles, field, { enumerable: true, writable: true, configurable: true, value: {
       field,
       observedCount: data.length - observation.missing,
       finiteCount: observation.finite,
@@ -125,7 +125,7 @@ export function profileNumericFields(
             max: observation.max,
           }
         : {}),
-    }
+    } })
   }
   return profiles
 }
