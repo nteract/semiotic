@@ -84,7 +84,12 @@ describe("UnitPile body budget diagnostics", () => {
         ],
         valueAccessor: "value"
       })
-    ).toEqual([])
+    ).toEqual([
+      expect.objectContaining({
+        code: "PHYSICS_DUPLICATE_IDS",
+        severity: "warning"
+      })
+    ])
   })
 
   it.each([
@@ -119,8 +124,7 @@ describe("UnitPile body budget diagnostics", () => {
   })
 
   it("applies an authored value accessor to mechanical records", () => {
-    const valueAccessor = (_datum: Datum, index = 0) =>
-      index === 0 ? 1501 : 0
+    const valueAccessor = (_datum: Datum, index = 0) => (index === 0 ? 1501 : 0)
     const data = generatePhysicsPileMechanicalSamples({ count: 4 })
     expect(
       buildPhysicsPile({
@@ -141,4 +145,51 @@ describe("UnitPile body budget diagnostics", () => {
       }).find((entry) => entry.code === "PHYSICS_BODY_BUDGET")?.message
     ).toContain("1501")
   })
+})
+
+it.each([
+  "GaltonBoardChart",
+  "UnitPileChart",
+  "EventDropChart",
+  "CollisionSwarmChart"
+])(
+  "%s diagnoses rows replaced by ID upserts, including numeric/string collisions",
+  (component) => {
+    const findings: Diagnosis[] = []
+    checkPhysicsConfig(
+      component,
+      { data: [{ id: 1 }, { id: "1" }, {}, {}] },
+      findings
+    )
+    expect(findings).toContainEqual(
+      expect.objectContaining({
+        code: "PHYSICS_DUPLICATE_IDS",
+        message: expect.stringContaining("1 physics source rows")
+      })
+    )
+    const distinct: Diagnosis[] = []
+    checkPhysicsConfig(
+      component,
+      { data: [{ id: "a" }, { id: "b" }, {}, {}] },
+      distinct
+    )
+    expect(distinct.some(({ code }) => code === "PHYSICS_DUPLICATE_IDS")).toBe(
+      false
+    )
+  }
+)
+
+it.each([0, -3, NaN, Infinity, 1.5])(
+  "diagnoses normalized Galton bins=%s",
+  (bins) => {
+    const findings: Diagnosis[] = []
+    checkPhysicsConfig("GaltonBoardChart", { bins }, findings)
+    expect(findings.map(({ code }) => code)).toContain("PHYSICS_BAD_BINS")
+  }
+)
+
+it("accepts a finite one-bin Galton projection", () => {
+  const findings: Diagnosis[] = []
+  checkPhysicsConfig("GaltonBoardChart", { bins: 1 }, findings)
+  expect(findings).toEqual([])
 })

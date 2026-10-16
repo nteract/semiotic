@@ -1,16 +1,8 @@
 import type { Datum } from "../charts/shared/datumTypes"
+import { isDataRecord as isAIDataRecord } from "../charts/shared/dataRecords"
 import { resolveRawAccessor } from "../stream/accessorUtils"
 
-export function isAIDataRecord(row: unknown): row is Datum {
-  return (
-    row !== null &&
-    typeof row === "object" &&
-    !Array.isArray(row) &&
-    !(row instanceof Date) &&
-    !(row instanceof Map) &&
-    !(row instanceof Set)
-  )
-}
+export { isAIDataRecord }
 
 /** AI summaries retain valid row objects and omit absent/non-record rows. */
 export function aiDataRows(value: unknown): Datum[] {
@@ -51,6 +43,17 @@ export function aiNumericValue(value: unknown): number {
   if (typeof value === "number") return value
   if (typeof value === "string" && value.trim() !== "") return Number(value)
   return NaN
+}
+
+/** Labels never invoke application objects' string/primitive coercion hooks. */
+export function aiScalarLabel(value: unknown): string | undefined {
+  if (value instanceof Date) {
+    return Number.isFinite(value.getTime()) ? value.toISOString() : undefined
+  }
+  if (value == null || typeof value === "object" || typeof value === "function") {
+    return undefined
+  }
+  return String(value)
 }
 
 export function aiNumericAccessor(

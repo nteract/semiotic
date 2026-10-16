@@ -171,8 +171,9 @@ export function classifyOrdinalConfigPatch(
   const invalidations = new Set<Invalidation>()
 
   for (const key of keys) {
-    const effect = ORDINAL_CONFIG_PATCH_DEPENDENCIES[key]
-      ?? DEFAULT_CONFIG_PATCH_DEPENDENCY
+    const effect = Object.prototype.hasOwnProperty.call(ORDINAL_CONFIG_PATCH_DEPENDENCIES, key)
+      ? ORDINAL_CONFIG_PATCH_DEPENDENCIES[key]
+      : DEFAULT_CONFIG_PATCH_DEPENDENCY
     if (effect.retainedData === "rebuild") retainedData = "rebuild"
     for (const invalidation of effect.invalidations) {
       invalidations.add(invalidation)

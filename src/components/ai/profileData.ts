@@ -4,7 +4,7 @@ import type { ChartDataProfile, FieldCandidate, FieldKind } from "./chartCapabil
 import { profileNumericFields } from "../data/auditData"
 import { isMissingValue, parseNumericValue } from "../data/numericValue"
 import { deriveProfileFields } from "./deriveProfileFields"
-import { aiDataRows, aiNumericValue } from "./aiData"
+import { aiDataRows, aiNumericValue, aiScalarLabel } from "./aiData"
 import {
   fieldRoleCandidateMatch,
   identifierFields,
@@ -191,11 +191,11 @@ function detectTransitionNetwork(
   const validRows: Datum[] = []
   for (const row of rows) {
     if (!row) continue
-    const source = row[sourceField]
-    const target = row[targetField]
+    const source = aiScalarLabel(row[sourceField])
+    const target = aiScalarLabel(row[targetField])
     if (source == null || target == null) continue
-    const sourceStr = String(source).trim()
-    const targetStr = String(target).trim()
+    const sourceStr = source.trim()
+    const targetStr = target.trim()
     if (!sourceStr || !targetStr || sourceStr === targetStr) continue
     validRows.push(row)
   }
@@ -208,8 +208,8 @@ function detectTransitionNetwork(
   const edgeMeta = new Map<string, Datum>()
 
   for (const row of validRows) {
-    const sourceLabel = String(row[sourceField]).trim()
-    const targetLabel = String(row[targetField]).trim()
+    const sourceLabel = aiScalarLabel(row[sourceField])!.trim()
+    const targetLabel = aiScalarLabel(row[targetField])!.trim()
     if (!nodes.has(sourceLabel)) nodes.set(sourceLabel, { id: sourceLabel, label: sourceLabel })
     if (!nodes.has(targetLabel)) nodes.set(targetLabel, { id: targetLabel, label: targetLabel })
 

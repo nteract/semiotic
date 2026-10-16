@@ -1,4 +1,5 @@
 import type { Datum } from "../charts/shared/datumTypes"
+import { aiScalarLabel } from "./aiData"
 import type { ChartDataProfile } from "./chartCapabilityTypes"
 import {
   fieldHasRole,
@@ -49,10 +50,10 @@ function fieldCardinality(
   const seen = new Set<string>()
   let count = 0
   for (const row of data) {
-    const value = row?.[field]
+    const value = aiScalarLabel(row?.[field])
     if (value == null) continue
     count++
-    seen.add(String(value))
+    seen.add(value)
   }
   return { distinct: seen.size, repeated: seen.size < count }
 }
@@ -78,12 +79,12 @@ function computeStackability(
   if (!x || !series) return undefined
   const seriesByX = new Map<string, Set<string>>()
   for (const row of data) {
-    const xValue = row?.[x]
-    const seriesValue = row?.[series]
+    const xValue = aiScalarLabel(row?.[x])
+    const seriesValue = aiScalarLabel(row?.[series])
     if (xValue == null || seriesValue == null) continue
-    const key = String(xValue)
+    const key = xValue
     const values = seriesByX.get(key) ?? new Set<string>()
-    values.add(String(seriesValue))
+    values.add(seriesValue)
     seriesByX.set(key, values)
   }
   if (seriesByX.size === 0) return undefined

@@ -444,7 +444,7 @@ export function buildNavigationTree(
     const seen = new Set<string>()
     const distinct: unknown[] = []
     for (const dv of dims) {
-      const key = String(dv)
+      const key = stringValue(dv)
       if (!seen.has(key)) {
         seen.add(key)
         distinct.push(dv)
@@ -473,7 +473,7 @@ export function buildNavigationTree(
     const getSeries = resolveRawAccessor(series, series)
     const groups = new Map<string, Datum[]>()
     for (const d of data) {
-      const key = String(getSeries(d) ?? "—")
+      const key = stringValue(getSeries(d))
       const bucket = groups.get(key)
       if (bucket) bucket.push(d)
       else groups.set(key, [d])

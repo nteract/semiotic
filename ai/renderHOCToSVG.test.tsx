@@ -7,6 +7,15 @@ import {
 } from "../scripts/network-atlas/stories/atlasStories"
 
 describe("MCP recipe rendering", () => {
+  it.each(Object.getOwnPropertyNames(Object.prototype))(
+    "returns an unknown-component error for %s",
+    (component) => {
+      const result = renderHOCToSVG(component, {})
+      expect(result.svg).toBeNull()
+      expect(result.error).toContain(`Unknown component "${component}"`)
+    }
+  )
+
   it.each(Object.keys(atlasStoryNames) as AtlasStoryId[])(
     "renders the %s Atlas story through MCP's component registry",
     (id) => {

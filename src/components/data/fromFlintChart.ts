@@ -1,5 +1,5 @@
 import type { Datum } from "../charts/shared/datumTypes"
-import { coerceTemporalStringRows } from "../charts/shared/temporalStrings"
+import { coerceAdapterTemporalRows } from "./coerceAdapterTemporalRows"
 import type { ChartConfig } from "../export/chartConfig"
 import { aggregateRows as aggregateData, normalizeAggregate, unusedAggregateField } from "./aggregateRows"
 
@@ -155,7 +155,7 @@ function normalizeEncodings(
   raw: Record<string, FlintRawEncodingValue> | undefined,
   warnings: string[],
 ): NormalizedEncodings {
-  const encodings: NormalizedEncodings = {}
+  const encodings: NormalizedEncodings = Object.create(null)
   if (!raw || typeof raw !== "object") return encodings
 
   for (const [rawChannel, rawValue] of Object.entries(raw)) {
@@ -509,12 +509,12 @@ function buildXY(
   const wantsYTime = looksTemporal(encodings.y, y, semanticTypes)
   let nextData = aggregate.data
   if (wantsXTime) {
-    const result = coerceTemporalStringRows(nextData, x)
+    const result = coerceAdapterTemporalRows(nextData, x, semanticType(x, semanticTypes))
     nextData = result.data
     if (result.failed) warnTemporalCoercion(x, "x", warnings)
   }
   if (wantsYTime) {
-    const result = coerceTemporalStringRows(nextData, aggregate.valueAccessor)
+    const result = coerceAdapterTemporalRows(nextData, aggregate.valueAccessor, semanticType(y, semanticTypes))
     nextData = result.data
     if (result.failed) warnTemporalCoercion(aggregate.valueAccessor, "y", warnings)
   }
@@ -523,7 +523,7 @@ function buildXY(
   if (x) props.xAccessor = x
   if (aggregate.valueAccessor) props.yAccessor = aggregate.valueAccessor
   if (wantsXTime) props.xScaleType = "time"
-  if (wantsYTime) props.yScaleType = "time"
+  if (wantsYTime) warnings.push("Temporal y fields are normalized to milliseconds; Semiotic supports calendar time scales only on x. Swap the axes to display calendar labels.")
   applyLabels(props, { x, y }, displayNames, "xy")
 
   if (kind === "line") {

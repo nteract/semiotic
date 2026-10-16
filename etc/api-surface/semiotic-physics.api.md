@@ -16,6 +16,7 @@ class-member BuiltInPhysicsEngineAdapter::method::dispose = required dispose(): 
 class-member BuiltInPhysicsEngineAdapter::method::events = required events(): PhysicsKernelEvent[]
 class-member BuiltInPhysicsEngineAdapter::method::init = required init(options?: PhysicsKernelOptions | undefined): void
 class-member BuiltInPhysicsEngineAdapter::method::nextRandom = required nextRandom(): number
+class-member BuiltInPhysicsEngineAdapter::method::readBody = required readBody(id: string): PhysicsBodyState | undefined
 class-member BuiltInPhysicsEngineAdapter::method::readState = required readState(out?: PhysicsBodyState[] | undefined): PhysicsBodyState[]
 class-member BuiltInPhysicsEngineAdapter::method::remove = required remove(ids: string[]): void
 class-member BuiltInPhysicsEngineAdapter::method::removeConstraint = required removeConstraint(id: string): void
@@ -55,6 +56,7 @@ class-member PhysicsPipelineStore::method::recordObservation = required recordOb
 class-member PhysicsPipelineStore::method::remove = required remove(ids: string[]): string[]
 class-member PhysicsPipelineStore::method::removeConstraint = required removeConstraint(id: string): void
 class-member PhysicsPipelineStore::method::restore = required restore(snapshot: PhysicsPipelineSnapshot): void
+class-member PhysicsPipelineStore::method::runtimeState = required runtimeState(): {fixedDt: number; paused: boolean; visible: boolean; simulationState: PhysicsSimulationState;}
 class-member PhysicsPipelineStore::method::sedimentHeightfield = required sedimentHeightfield(options?: PhysicsSedimentHeightfieldOptions | undefined): PhysicsSedimentColumn[]
 class-member PhysicsPipelineStore::method::sedimentTotals = required sedimentTotals(): PhysicsSedimentTotals
 class-member PhysicsPipelineStore::method::setColliders = required setColliders(colliders: PhysicsColliderSpec[]): void
@@ -1691,6 +1693,7 @@ interface-member PhysicsEngineAdapter::property::events = required events: () =>
 interface-member PhysicsEngineAdapter::property::id = required readonly id: string
 interface-member PhysicsEngineAdapter::property::init = required init: (options?: PhysicsKernelOptions) => void
 interface-member PhysicsEngineAdapter::property::nextRandom = required nextRandom: () => number
+interface-member PhysicsEngineAdapter::property::readBody = optional readBody: ((id: string) => PhysicsBodyState | undefined) | undefined
 interface-member PhysicsEngineAdapter::property::readState = required readState: (out?: PhysicsBodyState[]) => PhysicsBodyState[]
 interface-member PhysicsEngineAdapter::property::remove = required remove: (ids: string[]) => void
 interface-member PhysicsEngineAdapter::property::removeConstraint = required removeConstraint: (id: string) => void

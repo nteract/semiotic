@@ -1,4 +1,4 @@
-import { aiDataRows, aiNumericValue } from "./aiData"
+import { aiDataRows, aiNumericValue, aiScalarLabel } from "./aiData"
 import type { Datum } from "../charts/shared/datumTypes"
 
 export function readProp(
@@ -12,12 +12,15 @@ export function readProp(
 }
 
 export function stringValue(value: unknown, fallback = "—"): string {
-  if (value == null || value === "") return fallback
-  if (typeof value === "object") {
+  let seen: Set<object> | undefined
+  while (value !== null && typeof value === "object" && !(value instanceof Date)) {
+    seen ??= new Set<object>()
+    if (seen.has(value)) return fallback
+    seen.add(value)
     const record = value as Datum
-    return stringValue(record.id ?? record.name ?? record.label, fallback)
+    value = record.id ?? record.name ?? record.label
   }
-  return String(value)
+  return aiScalarLabel(value) || fallback
 }
 
 export function finiteValue(value: unknown): number | undefined {

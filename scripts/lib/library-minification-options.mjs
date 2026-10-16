@@ -10,9 +10,9 @@ export const libraryTerserOptions = {
     pure_funcs: ["console.log", "console.debug"],
     drop_debugger: true,
     hoist_funs: true,
-    // Keep client helpers intact across shared entries. Server and neutral
-    // bundles may compare function reduction variants by compressed size.
-    // Semantic and named-import regressions cover every candidate.
+    // Start with intact helpers; the chunk minifier also compares function
+    // reduction by compressed size. Semantic and named-import regressions
+    // cover the selected output.
     reduce_funcs: false,
     passes: 3
   },

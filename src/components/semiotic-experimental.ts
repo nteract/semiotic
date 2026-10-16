@@ -135,7 +135,7 @@ export type {
 // `fromVegaLite`, staged behind `unstable_` while the imperative-JS → declarative
 // translation is proven against real Plot specs (D5). Promotes to `semiotic/data`
 // once it clears a fixture suite + a real consumer.
-export { fromObservablePlot as unstable_fromObservablePlot } from "./data/fromObservablePlot"
+export { fromObservablePlot as unstable_fromObservablePlot, fromObservablePlotResult as unstable_fromObservablePlotResult } from "./data/fromObservablePlot"
 // Mermaid → layered graph adapter (§5.4). Parses graph/flowchart text and
 // computes a longest-path layering (a flowchart is a DAG, not a force graph —
 // D7), ready for the lineageDagLayout recipe. Staged behind `unstable_` (D5);
@@ -149,6 +149,8 @@ export type {
   MermaidNodeShape as UnstableMermaidNodeShape
 } from "./data/fromMermaid"
 export type {
+  FromObservablePlotOptions as UnstableFromObservablePlotOptions,
+  ObservablePlotImportResult as UnstableObservablePlotImportResult,
   ObservablePlotSpec as UnstableObservablePlotSpec,
   ObservablePlotMark as UnstableObservablePlotMark,
   ObservablePlotMarkOptions as UnstableObservablePlotMarkOptions,

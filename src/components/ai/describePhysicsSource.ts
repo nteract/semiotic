@@ -1,4 +1,5 @@
 import { getMinMax } from "../charts/shared/minMax"
+import { stringValue } from "./navigationValues"
 import type { Datum } from "../charts/shared/datumTypes"
 import {
   finiteNumber,
@@ -67,9 +68,9 @@ export function describePhysicsSource(
     const valueAccessor =
       props.valueAccessor ?? (generated ? "value" : undefined)
     data.forEach((datum, index) => {
-      const category = String(
-        readAccessor(datum, index, props.categoryAccessor ?? "category") ??
-          "unknown"
+      const category = stringValue(
+        readAccessor(datum, index, props.categoryAccessor ?? "category"),
+        "unknown"
       )
       const value = valueAccessor
         ? finiteNumber(readAccessor(datum, index, valueAccessor))
@@ -119,7 +120,7 @@ export function describePhysicsSource(
       )
         return
       const group = props.groupAccessor
-        ? String(readAccessor(datum, index, props.groupAccessor) ?? "All")
+        ? stringValue(readAccessor(datum, index, props.groupAccessor), "All")
         : "All"
       groups.set(group, (groups.get(group) ?? 0) + 1)
     })

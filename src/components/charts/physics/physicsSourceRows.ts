@@ -1,6 +1,7 @@
 import type { Datum } from "../shared/datumTypes"
 
-/** Assign stable source IDs consistently in React and server builders. */
+/** Assign stable source IDs in React and server builders. Authored IDs upsert:
+ * the last row wins; omit IDs or use unique observation IDs to keep every row. */
 export interface PhysicsSourceState<T extends Datum> {
   seed: readonly T[]
   rows: T[]

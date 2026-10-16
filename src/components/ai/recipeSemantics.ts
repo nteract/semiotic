@@ -6,6 +6,7 @@ import type {
 } from "./chartRecipes"
 import { getChartRecipe, resolveChartRecipe } from "./chartRecipeRegistry"
 import { aiDataRows } from "./aiData"
+import { stringValue } from "./navigationValues"
 
 export function recipeIntentId(intent: IntentDefinition): string | undefined {
   return typeof intent === "string" ? intent : (intent.id ?? intent.name)
@@ -56,7 +57,7 @@ export function fieldForRole(
     return entries.find(([, value]) => typeof value === "number")?.[0]
   }
   if (role.semanticType === "identifier") {
-    return ["id", "key", "name"].find((key) => key in sample)
+    return ["id", "key", "name"].find((key) => Object.prototype.hasOwnProperty.call(sample, key))
   }
   return entries.find(([, value]) => typeof value === "string")?.[0]
 }
@@ -94,7 +95,7 @@ export function fillRecipeTemplate(
   data: ReadonlyArray<Datum>,
   extra: Record<string, string | number> = {},
 ): string {
-  const values: Record<string, unknown> = { ...extra }
+  const values: Record<string, unknown> = Object.assign(Object.create(null), extra)
   if (datum) {
     for (const [key, value] of Object.entries(datum)) values[key] = value
   }
@@ -105,6 +106,6 @@ export function fillRecipeTemplate(
   }
   return template.replace(/\{([^}]+)\}/g, (_match, key: string) => {
     const value = values[key]
-    return value == null ? `{${key}}` : String(value)
+    return stringValue(value, `{${key}}`)
   })
 }

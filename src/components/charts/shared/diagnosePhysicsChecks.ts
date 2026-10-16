@@ -26,14 +26,40 @@ export function checkPhysicsConfig(
 ): void {
   if (!PHYSICS_DIAGNOSTIC_CHARTS.has(component)) return
 
+  if (
+    [
+      "GaltonBoardChart",
+      "UnitPileChart",
+      "EventDropChart",
+      "CollisionSwarmChart"
+    ].includes(component) &&
+    Array.isArray(props.data)
+  ) {
+    const ids = new Set<string>()
+    let replaced = 0
+    for (const row of props.data) {
+      if (row?.id == null) continue
+      const id = String(row.id)
+      if (ids.has(id)) replaced++
+      ids.add(id)
+    }
+    if (replaced)
+      out.push({
+        severity: "warning",
+        code: "PHYSICS_DUPLICATE_IDS",
+        message: `${replaced} physics source rows are replaced by later rows with the same id. Source IDs use upsert semantics, including push and update.`,
+        fix: "Assign a unique id to each observation (rather than each entity), or omit id to retain every row."
+      })
+  }
+
   if (component === "GaltonBoardChart") {
     const bins = props.bins
-    if (typeof bins === "number" && bins < 2) {
+    if (bins != null && (!Number.isInteger(bins) || (bins as number) < 1)) {
       out.push({
         severity: "error",
         code: "PHYSICS_BAD_BINS",
-        message: `bins=${bins} leaves no meaningful settled projection for a Galton board.`,
-        fix: `Use at least two bins; 8-24 bins is a practical range for physics distributions.`
+        message: `bins=${bins} is normalized to a finite positive integer by the Galton builder.`,
+        fix: `Use a positive integer; 8-24 bins is a practical range for physics distributions.`
       })
     }
     const branchProbability = finiteNumber(props.branchProbability)

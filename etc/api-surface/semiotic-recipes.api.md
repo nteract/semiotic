@@ -148,7 +148,7 @@ function mobileOrdinalChartRecipe(options?: MobileChartFamilyRecipeOptions | und
 function mobileScatterplotRecipe(options?: MobileChartFamilyRecipeOptions | undefined): MobileChartFamilyRecipe
 function mobileSmallMultipleRecipe(options?: MobileChartFamilyRecipeOptions | undefined): MobileChartFamilyRecipe
 function motifBraidLayout(ctx: NetworkLayoutContext<import("../semiotic-recipes-core").MotifBraidLayoutConfig>): import("../../semiotic-network").NetworkLayoutResult
-function mulberry32(seed: number): () => number
+function mulberry32(seed: number): (() => number) & {getState: () => number;}
 function netEnsembleLayout(ctx: NetworkLayoutContext<import("../semiotic-recipes-core").NetEnsembleConfig>): import("../semiotic-network").NetworkLayoutResult
 function networkEdgeHitTarget(props: NetworkLineEdgeHitTargetProps): NetworkLineEdge
 function networkEdgeHitTarget(props: NetworkPathEdgeHitTargetProps): NetworkBezierEdge | NetworkCurvedEdge | NetworkRibbonEdge

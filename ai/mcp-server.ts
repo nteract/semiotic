@@ -52,6 +52,7 @@ import {
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js"
 import { z } from "zod"
+import { ownRecordSchema } from "./ownRecordSchema"
 import * as fs from "fs"
 import * as path from "path"
 import * as http from "http"
@@ -156,6 +157,8 @@ type McpProfileFieldRoleHints = Record<
   McpProfileFieldRole | McpProfileFieldRole[]
 >
 
+const unknownRecordInput = ownRecordSchema(z.unknown())
+
 const MCP_PROFILE_HINT_INPUT = {
   identifiers: z
     .array(z.string())
@@ -163,9 +166,7 @@ const MCP_PROFILE_HINT_INPUT = {
     .describe(
       "Fields that identify records and must not be used as visual encodings or measures."
     ),
-  fieldRoles: z
-    .record(
-      z.string(),
+  fieldRoles: ownRecordSchema(
       z.union([
         z.enum([
           "identifier",
@@ -298,7 +299,7 @@ if (typeof packageManifest.version !== "string" || !packageManifest.version) {
 const PACKAGE_VERSION = packageManifest.version
 
 // Build component name → schema lookup from schema.json
-const schemaByComponent: Record<string, any> = {}
+const schemaByComponent: Record<string, any> = Object.create(null)
 for (const tool of schema.tools) {
   schemaByComponent[tool.function.name] = tool.function
 }
@@ -1163,10 +1164,10 @@ const MAX_ARTIFACT_CONTRACT_OUTPUT_BYTES = 64 * 1024
 const explicitArtifactContractInput = z
   .object({
     contractVersion: z.string(),
-    artifact: z.record(z.string(), z.unknown()),
-    purpose: z.record(z.string(), z.unknown()),
-    claims: z.array(z.record(z.string(), z.unknown())),
-    evidence: z.array(z.record(z.string(), z.unknown()))
+    artifact: unknownRecordInput,
+    purpose: unknownRecordInput,
+    claims: z.array(unknownRecordInput),
+    evidence: z.array(unknownRecordInput)
   })
   .passthrough()
   .describe(
@@ -1266,7 +1267,7 @@ const representationCandidateOutput = z.object({
   ]),
   label: z.string(),
   component: z.string().optional(),
-  props: z.record(z.string(), z.unknown()).optional(),
+  props: unknownRecordInput.optional(),
   score: z.number().optional(),
   reasons: z.array(z.string()).max(8),
   caveats: z.array(z.string()).max(8).optional()
@@ -4085,7 +4086,7 @@ function createServer(
         description:
           "Select, validate, diagnose, render, and prove a static-data Semiotic chart. This is the default public workflow.",
         inputSchema: {
-          data: z.array(z.record(z.string(), z.unknown())).min(1),
+          data: z.array(unknownRecordInput).min(1),
           intent: z.union([z.string(), z.array(z.string())]).optional(),
           audience: z
             .object({
@@ -4103,8 +4104,7 @@ function createServer(
             .describe(
               "Optional chart preference; the fit-ranked result remains authoritative."
             ),
-          props: z
-            .record(z.string(), z.unknown())
+          props: unknownRecordInput
             .optional()
             .describe(
               "Optional props to merge over the selected chart recipe."
@@ -4114,8 +4114,8 @@ function createServer(
         outputSchema: {
           status: z.enum(["render-proven", "blocked", "no-suggestion"]),
           component: z.string().optional(),
-          evidenceEnvelope: z.record(z.string(), z.unknown()).optional(),
-          evidenceGate: z.record(z.string(), z.unknown()).optional(),
+          evidenceEnvelope: unknownRecordInput.optional(),
+          evidenceGate: unknownRecordInput.optional(),
           surfaceVersion: z.string()
         },
         annotations: READ_ONLY_TOOL_ANNOTATIONS,
@@ -4134,8 +4134,8 @@ function createServer(
           "Diagnose a chart configuration, assess data fit, and propose repairs or variants.",
         inputSchema: {
           component: z.string(),
-          props: z.record(z.string(), z.unknown()),
-          data: z.array(z.record(z.string(), z.unknown())).optional(),
+          props: unknownRecordInput,
+          data: z.array(unknownRecordInput).optional(),
           intent: z.union([z.string(), z.array(z.string())]).optional(),
           ...MCP_PROFILE_HINT_INPUT
         },
@@ -4143,16 +4143,16 @@ function createServer(
           status: z.enum(["reviewed", "repair-needed"]),
           component: z.string(),
           diagnostics: z.array(z.unknown()),
-          repair: z.record(z.string(), z.unknown()),
+          repair: unknownRecordInput,
           variants: z.array(z.unknown()),
           accessibilityRecommendation: z
             .object({
               location: z.literal("direct-component-props"),
               props: z.record(z.string(), z.string()),
-              chartContainer: z.record(z.string(), z.unknown())
+              chartContainer: unknownRecordInput
             })
             .optional(),
-          evidenceFragment: z.record(z.string(), z.unknown()).optional(),
+          evidenceFragment: unknownRecordInput.optional(),
           surfaceVersion: z.string()
         },
         annotations: READ_ONLY_TOOL_ANNOTATIONS
@@ -4167,12 +4167,12 @@ function createServer(
           "Return reader grounding: chart description, communicative intent, and navigable data structure.",
         inputSchema: {
           component: z.string(),
-          props: z.record(z.string(), z.unknown())
+          props: unknownRecordInput
         },
         outputSchema: {
           status: z.literal("grounded"),
-          grounding: z.record(z.string(), z.unknown()),
-          evidenceFragment: z.record(z.string(), z.unknown()).optional(),
+          grounding: unknownRecordInput,
+          evidenceFragment: unknownRecordInput.optional(),
           surfaceVersion: z.string()
         },
         annotations: READ_ONLY_TOOL_ANNOTATIONS
@@ -4187,14 +4187,14 @@ function createServer(
           "Run design diagnostics plus accessibility and mobile audits, returning prioritized structured findings.",
         inputSchema: {
           component: z.string(),
-          props: z.record(z.string(), z.unknown()),
+          props: unknownRecordInput,
           viewportWidth: z.number().int().min(240).max(1600).optional()
         },
         outputSchema: {
           status: z.enum(["passed", "findings"]),
           component: z.string(),
-          evidenceEnvelope: z.record(z.string(), z.unknown()).optional(),
-          evidenceGate: z.record(z.string(), z.unknown()).optional(),
+          evidenceEnvelope: unknownRecordInput.optional(),
+          evidenceGate: unknownRecordInput.optional(),
           surfaceVersion: z.string()
         },
         annotations: READ_ONLY_TOOL_ANNOTATIONS
@@ -4226,11 +4226,11 @@ function createServer(
               })
             )
             .optional(),
-          schema: z.record(z.string(), z.unknown()).optional(),
+          schema: unknownRecordInput.optional(),
           accessibility: z
             .object({
-              directProps: z.record(z.string(), z.unknown()),
-              chartContainer: z.record(z.string(), z.unknown())
+              directProps: unknownRecordInput,
+              chartContainer: unknownRecordInput
             })
             .optional(),
           behaviorContracts: z.array(z.unknown()).optional(),
@@ -4251,14 +4251,13 @@ function createServer(
         "Evaluate a chart and its explicit artifact contract under a named policy. The tool audits only supplied claims, evidence, source identity, review state, and time state; missing facts remain missing or unknown. Results are capped and report truncation explicitly.",
       inputSchema: {
         component: z.string().describe("Semiotic component name."),
-        props: z
-          .record(z.string(), z.unknown())
+        props: unknownRecordInput
           .optional()
           .describe(
             "Chart props/config. Data may be supplied here or separately."
           ),
         data: z
-          .array(z.record(z.string(), z.unknown()))
+          .array(unknownRecordInput)
           .max(10_000)
           .optional()
           .describe("Optional explicit row data overriding props.data."),
@@ -4307,7 +4306,7 @@ function createServer(
         "Recommend chart and non-chart outcomes from explicit data and an explicit artifact contract. Evidence, source, review, and time facts are never synthesized. The named policy can recommend waiting, collecting data, or making no claim instead of forcing a chart.",
       inputSchema: {
         data: z
-          .array(z.record(z.string(), z.unknown()))
+          .array(unknownRecordInput)
           .max(10_000)
           .optional()
           .describe(
@@ -4368,8 +4367,8 @@ function createServer(
         "Propose repairs for a chart and explicit artifact contract. By default this is proposal-only. If enabled, safe application fills missing component and configuration/data identity fields only; existing bindings are never overwritten. Mismatches require an explicit revision and claim reassessment. Source, evidence, review, approval, and time facts are never invented. Returned contracts omit evidence samples, report transfer losses, and are withheld above a 64 KiB UTF-8 cap.",
       inputSchema: {
         component: z.string().describe("Semiotic component name."),
-        props: z.record(z.string(), z.unknown()).optional(),
-        data: z.array(z.record(z.string(), z.unknown())).max(10_000).optional(),
+        props: unknownRecordInput.optional(),
+        data: z.array(unknownRecordInput).max(10_000).optional(),
         contract: explicitArtifactContractInput,
         policyId: artifactPolicyIdInput,
         exceptions: z.array(artifactPolicyExceptionInput).max(20).optional(),
@@ -4419,8 +4418,8 @@ function createServer(
         "Evaluate an explicit artifact contract under a named policy and explain why publication or action is refused. Missing evidence, source, review, and time facts stay explicit rather than being guessed.",
       inputSchema: {
         component: z.string().describe("Semiotic component name."),
-        props: z.record(z.string(), z.unknown()).optional(),
-        data: z.array(z.record(z.string(), z.unknown())).max(10_000).optional(),
+        props: unknownRecordInput.optional(),
+        data: z.array(unknownRecordInput).max(10_000).optional(),
         contract: explicitArtifactContractInput,
         policyId: artifactPolicyIdInput,
         exceptions: z.array(artifactPolicyExceptionInput).max(20).optional(),
@@ -4468,7 +4467,7 @@ function createServer(
     "Lightweight heuristic chart recommender for a small data sample (1-5 rows) with capability filtering (push API, linked hover, SSR, selection, legend). Returns ranked recommendations with example props. For richer capability-descriptor ranking (scores, reasons, caveats) and the full 13-intent taxonomy, prefer `suggestCharts` (plural).",
     {
       data: z
-        .array(z.record(z.string(), z.unknown()))
+        .array(unknownRecordInput)
         .min(1)
         .max(5)
         .describe("1-5 sample data objects"),
@@ -4521,12 +4520,10 @@ function createServer(
       component: z
         .string()
         .describe("Chart component name, e.g. 'LineChart', 'BarChart'"),
-      props: z
-        .record(z.string(), z.unknown())
+      props: unknownRecordInput
         .optional()
         .describe("Chart props object, e.g. { data: [...], xAccessor: 'x' }."),
-      contract: z
-        .record(z.string(), z.unknown())
+      contract: unknownRecordInput
         .optional()
         .describe(
           "Optional explicit artifact contract. The render evidence reports whether it was preserved, invalid, or an unsupported version."
@@ -4559,8 +4556,7 @@ function createServer(
           .describe(
             "Renderable chart component name, e.g. 'LineChart', 'BarChart', 'GaugeChart'."
           ),
-        props: z
-          .record(z.string(), z.unknown())
+        props: unknownRecordInput
           .optional()
           .describe(
             "Static Semiotic chart props, including data/accessors where required."
@@ -4577,7 +4573,7 @@ function createServer(
         title: z.string(),
         summary: z.string(),
         datumCount: z.number().nullable(),
-        evidence: z.record(z.string(), z.unknown()).nullable()
+        evidence: unknownRecordInput.nullable()
       },
       annotations: {
         readOnlyHint: true,
@@ -4600,8 +4596,7 @@ function createServer(
     "Diagnose a Semiotic chart configuration for common problems (empty data, bad dimensions, missing accessors, wrong data shape, color contrast issues, etc). Pass usageMode='push' for ref-based React HOCs that intentionally omit data; omit usageMode or pass 'static' for renderChart/MCP/server configs where data is required. Checks WCAG color contrast ratios and suggests COLOR_BLIND_SAFE_CATEGORICAL for accessibility. Returns a human-readable diagnostic report with actionable fixes.",
     {
       component: z.string().describe("Chart component name, e.g. 'LineChart'"),
-      props: z
-        .record(z.string(), z.unknown())
+      props: unknownRecordInput
         .optional()
         .describe("Chart props object, e.g. { data: [...], xAccessor: 'x' }."),
       usageMode: z
@@ -4620,8 +4615,7 @@ function createServer(
     "Audit a Semiotic chart configuration against the Chartability (POUR-CAF) accessibility framework — Perceivable, Operable, Understandable, Robust, Compromising, Assistive, Flexible. Statically grades the config (no DOM/AT): credits the built-ins every HOC ships (keyboard nav, focus ring, skip link, screen-reader data table, reduced-motion + forced-colors, shareable state), flags author-actionable gaps (missing title/description/summary, low contrast, small text, color-only encoding, undescribed trends, data density), and routes everything that needs real assistive-technology testing to a 'manual' item. Returns a per-principle report with the 14 critical heuristics marked. Pass inChartContainer=true to credit data-download/share affordances. Pair with manual NVDA/JAWS/VoiceOver testing — Chartability is not a pass/fail certification.",
     {
       component: z.string().describe("Chart component name, e.g. 'LineChart'"),
-      props: z
-        .record(z.string(), z.unknown())
+      props: unknownRecordInput
         .optional()
         .describe(
           "Chart props object, e.g. { data: [...], xAccessor: 'x', title: '...' }."
@@ -4654,12 +4648,11 @@ function createServer(
     "Evaluate a Semiotic chart through one deterministic quality pass: numeric data contracts, configuration and representation/deception checks, and static Chartability accessibility heuristics. Returns the independent audit reports plus a severity-ranked findings list and notification feed. Pass data separately when it should override props.data; use inChartContainer, describe, or navigable to describe the intended accessibility wrapper. This is static analysis and does not replace manual assistive-technology testing or render evidence.",
     {
       component: z.string().describe("Chart component name, e.g. 'LineChart'."),
-      props: z
-        .record(z.string(), z.unknown())
+      props: unknownRecordInput
         .optional()
         .describe("Chart props/config, including accessors and optional data."),
       data: z
-        .array(z.record(z.string(), z.unknown()))
+        .array(unknownRecordInput)
         .optional()
         .describe(
           "Optional explicit dataset. When supplied, this is used as the effective props.data for evaluation."
@@ -4694,8 +4687,7 @@ function createServer(
         .describe(
           "Chart component name, e.g. 'LineChart', 'Scatterplot', or 'BarChart'."
         ),
-      props: z
-        .record(z.string(), z.unknown())
+      props: unknownRecordInput
         .optional()
         .describe("Chart props/config to audit."),
       viewportWidth: z
@@ -4767,8 +4759,7 @@ function createServer(
     "Conversational interrogation of a Semiotic chart. Extract a statistical summary and answer natural language questions about the data, trends, and outliers. Returns a summary and guidance for an AI to generate a textual answer and visual annotations.",
     {
       component: z.string().describe("Chart component name, e.g. 'LineChart'"),
-      props: z
-        .record(z.string(), z.unknown())
+      props: unknownRecordInput
         .describe("The full chart props including data"),
       query: z
         .string()
@@ -4789,16 +4780,15 @@ function createServer(
         component: z
           .string()
           .describe("Chart component name, e.g. 'LineChart'"),
-        props: z
-          .record(z.string(), z.unknown())
+        props: unknownRecordInput
           .describe("The full chart props including data")
       },
       outputSchema: {
         component: z.string(),
-        description: z.record(z.string(), z.unknown()),
-        intent: z.record(z.string(), z.unknown()).optional(),
-        structure: z.record(z.string(), z.unknown()).optional(),
-        physics: z.record(z.string(), z.unknown()).optional(),
+        description: unknownRecordInput,
+        intent: unknownRecordInput.optional(),
+        structure: unknownRecordInput.optional(),
+        physics: unknownRecordInput.optional(),
         text: z.string()
       },
       annotations: READ_ONLY_TOOL_ANNOTATIONS
@@ -4834,7 +4824,7 @@ function createServer(
         .optional()
         .describe("Ranking intent."),
       maxResults: z.number().int().min(1).max(20).optional(),
-      audience: z.record(z.string(), z.unknown()).optional()
+      audience: unknownRecordInput.optional()
     },
     READ_ONLY_TOOL_ANNOTATIONS,
     suggestStreamChartsHandler
@@ -4850,7 +4840,7 @@ function createServer(
       ]),
       intent: z.union([z.string(), z.array(z.string())]).optional(),
       budget: z.number().int().min(1).max(12).optional(),
-      audience: z.record(z.string(), z.unknown()).optional()
+      audience: unknownRecordInput.optional()
     },
     READ_ONLY_TOOL_ANNOTATIONS,
     suggestStreamDashboardHandler
@@ -4861,7 +4851,7 @@ function createServer(
     "Generate a dashboard of complementary chart panels for a dataset — each panel answers a distinct analytical intent (trend, rank, distribution, correlation, etc.) and the engine diversifies by chart family by default. Heuristic only; no LLM call. Use when the user asks 'show me this data' or 'build me a dashboard' rather than picking one chart.",
     {
       data: z
-        .array(z.record(z.string(), z.unknown()))
+        .array(unknownRecordInput)
         .describe("Row data — array of objects."),
       intents: z
         .array(z.string())
@@ -4960,7 +4950,7 @@ function createServer(
     "suggestStretchCharts",
     "Recommend literacy-growth chart picks for a dataset given an AudienceProfile. Returns charts the data supports but the audience is unfamiliar with (familiarity ≤ 3, or ≤ 4 at exposureLevel 2), each paired with the familiar chart it could substitute for and a rationale. Use when the consumer wants to gently expose users to less familiar but more analytically appropriate visualizations.",
     {
-      data: z.array(z.record(z.string(), z.unknown())).describe("Row data."),
+      data: z.array(unknownRecordInput).describe("Row data."),
       audience: z
         .object({
           name: z.string().optional(),
@@ -5005,7 +4995,7 @@ function createServer(
           .string()
           .describe("Chart component name to validate, e.g. 'PieChart'"),
         data: z
-          .array(z.record(z.string(), z.unknown()))
+          .array(unknownRecordInput)
           .describe("Row data — array of objects."),
         intent: z
           .union([z.string(), z.array(z.string())])
@@ -5027,7 +5017,7 @@ function createServer(
         component: z.string(),
         reason: z.string().optional(),
         alternatives: z.array(z.unknown()).optional(),
-        profile: z.record(z.string(), z.unknown()),
+        profile: unknownRecordInput,
         repairs: z.array(z.string()).optional()
       },
       annotations: READ_ONLY_TOOL_ANNOTATIONS
@@ -5044,14 +5034,13 @@ function createServer(
         .describe(
           "Base chart component to vary, e.g. 'LineChart', 'BarChart', or 'BoxPlot'."
         ),
-      props: z
-        .record(z.string(), z.unknown())
+      props: unknownRecordInput
         .optional()
         .describe(
           "Existing chart props. If props.data is present it is profiled; network/hierarchy/geo object data can be passed here as raw input."
         ),
       data: z
-        .array(z.record(z.string(), z.unknown()))
+        .array(unknownRecordInput)
         .optional()
         .describe("Row data to profile. Overrides props.data when present."),
       intent: z
@@ -5107,7 +5096,7 @@ function createServer(
         "Recommend Semiotic charts for a dataset using heuristic capability descriptors. Returns ranked, structured suggestions with scores, reasons, caveats, and ready-to-use props; no LLM call is made.",
       inputSchema: {
         data: z
-          .array(z.record(z.string(), z.unknown()))
+          .array(unknownRecordInput)
           .describe("Row data — array of objects."),
         intent: z
           .union([z.string(), z.array(z.string())])

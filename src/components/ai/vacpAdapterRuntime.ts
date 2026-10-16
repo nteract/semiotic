@@ -56,7 +56,9 @@ export function jsonSafe(
     ) {
       return undefined
     }
-    if (entry instanceof Date) return entry.toISOString()
+    if (entry instanceof Date) {
+      return Number.isFinite(entry.getTime()) ? entry.toISOString() : null
+    }
     if (depth >= maxDepth) return "[depth limit]"
     if (typeof entry !== "object") return String(entry)
     if ("$$typeof" in entry) return undefined
@@ -398,7 +400,7 @@ function numericSummaries(
   for (const field of fields) {
     const values: number[] = []
     for (const row of rows) {
-      if (!isRecord(row)) continue
+      if (!isRecord(row) || !Object.prototype.hasOwnProperty.call(row, field)) continue
       const value = row[field]
       if (typeof value === "number" && Number.isFinite(value)) values.push(value)
     }
@@ -441,7 +443,7 @@ function temporalSummaries(
   for (const field of fields) {
     const values: number[] = []
     for (const row of rows) {
-      if (!isRecord(row)) continue
+      if (!isRecord(row) || !Object.prototype.hasOwnProperty.call(row, field)) continue
       const value = row[field]
       if (value instanceof Date && Number.isFinite(value.getTime())) {
         values.push(value.getTime())
@@ -468,15 +470,23 @@ function categoricalSummaries(
     Array<{ value: string; n: number }>
   >
   for (const field of fields) {
+    // Summaries describe recurring groups, never enumerate identifiers. Split
+    // camelCase as well as delimited names so userId and account_id agree.
+    const words = field.replace(/([a-z\d])([A-Z])/g, "$1 $2").split(/[^a-z\d]+/i)
+    if (words.some((word) => /^(id|uuid|guid|identifier|email|phone|ssn|token|password)$/i.test(word))) {
+      continue
+    }
     const counts = new Map<string, number>()
+    let observed = 0
     for (const row of rows) {
-      if (!isRecord(row)) continue
+      if (!isRecord(row) || !Object.prototype.hasOwnProperty.call(row, field)) continue
       const value = row[field]
       if (typeof value !== "string" && typeof value !== "boolean") continue
       const key = String(value)
       counts.set(key, (counts.get(key) ?? 0) + 1)
+      observed++
     }
-    if (!counts.size) continue
+    if (!counts.size || counts.size / observed > 0.5) continue
     result[field] = Array.from(counts)
       .sort(([a, aCount], [b, bCount]) => bCount - aCount || a.localeCompare(b))
       .slice(0, 10)

@@ -172,8 +172,8 @@ export function groupBy<T extends Datum>(
     if (fields) {
       const filtered: Datum = {}
       for (const f of fields) {
-        if (f in d) {
-          filtered[f] = d[f]
+        if (Object.prototype.hasOwnProperty.call(d, f)) {
+          Object.defineProperty(filtered, f, { value: d[f], enumerable: true, writable: true, configurable: true })
         }
       }
       groups.get(groupKey)!.push(filtered)
@@ -212,7 +212,7 @@ export function pivot<T extends Datum>(
     const base: Datum = {}
     for (const k of Object.keys(row)) {
       if (!columnsSet.has(k)) {
-        base[k] = row[k]
+        Object.defineProperty(base, k, { value: row[k], enumerable: true, writable: true, configurable: true })
       }
     }
 

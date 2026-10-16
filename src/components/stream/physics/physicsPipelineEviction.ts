@@ -1,3 +1,4 @@
+import { physicsBodyLookup } from "./physicsBodyLookup"
 import type { PhysicsEngineAdapter } from "./PhysicsEngineAdapter"
 import type { PhysicsSedimentAccumulator } from "./PhysicsSediment"
 import type { PhysicsPipelineConfig } from "./PhysicsPipelineTypes"
@@ -7,9 +8,9 @@ import type { PhysicsObservationContext } from "./physicsPipelineObservations"
 export function selectEvictionCandidates(
   world: PhysicsEngineAdapter,
   eviction: PhysicsPipelineConfig["eviction"],
-  liveBodyOrder: string[]
+  liveBodyOrder: ReadonlySet<string>
 ): string[] {
-  if (eviction !== "sleeping-first") return liveBodyOrder.slice()
+  if (eviction !== "sleeping-first") return Array.from(liveBodyOrder)
   const sleepState = new Map(
     world.readState().map((body) => [body.id, body.sleeping])
   )
@@ -28,10 +29,11 @@ export function absorbPhysicsSediment(
   ids: string[],
   context: PhysicsObservationContext
 ): string[] {
-  const bodyById = new Map(world.readState().map((body) => [body.id, body]))
+  if (!sediment.isEnabled()) return []
+  const readBody = physicsBodyLookup(world, ids)
   const sedimented: string[] = []
   for (const id of ids) {
-    const body = bodyById.get(id)
+    const body = readBody(id)
     if (!body) continue
     const bin = sediment.add(body)
     if (!bin) continue
@@ -63,16 +65,16 @@ export function evictPhysicsOverflow(
   sediment: PhysicsSedimentAccumulator,
   eviction: PhysicsPipelineConfig["eviction"],
   bodyLimit: number,
-  liveBodyOrder: string[],
+  liveBodyOrder: Set<string>,
   context: PhysicsObservationContext
-): PhysicsPipelineEvictionResult & { liveBodyOrder: string[] } {
+): PhysicsPipelineEvictionResult & { liveBodyOrder: Set<string> } {
   const noop = { evicted: [], sedimented: [], liveBodyOrder }
   if (eviction === false) return noop
 
   const limit = Math.max(0, Math.floor(bodyLimit))
   if (!Number.isFinite(limit)) return noop
 
-  const overflow = liveBodyOrder.length - limit
+  const overflow = liveBodyOrder.size - limit
   if (overflow <= 0) return noop
 
   const candidates = selectEvictionCandidates(world, eviction, liveBodyOrder)
@@ -86,6 +88,6 @@ export function evictPhysicsOverflow(
   return {
     evicted,
     sedimented,
-    liveBodyOrder: liveBodyOrder.filter((id) => !evictedSet.has(id))
+    liveBodyOrder: new Set(Array.from(liveBodyOrder).filter((id) => !evictedSet.has(id)))
   }
 }

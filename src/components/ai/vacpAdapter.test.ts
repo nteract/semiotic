@@ -241,10 +241,11 @@ describe("createSemioticVACPBridge capabilities", () => {
 })
 
 describe("VACP data handles", () => {
-  it("exposes exact data schema but keeps raw sampling opt-in", async () => {
+  it("exposes opted-in schema summaries while keeping raw sampling separate", async () => {
     const bridge = createSemioticVACPBridge({
       appId: "schema",
       charts: [chart()],
+      dataAccess: { summaries: true },
       now: () => NOW,
     })
     const actions = bridge
@@ -304,7 +305,7 @@ describe("VACP data handles", () => {
           },
         }),
       ],
-      dataAccess: { maxSchemaRows: 1 },
+      dataAccess: { summaries: true, maxSchemaRows: 1 },
       now: () => NOW,
     })
     const result = await bridge.execute({

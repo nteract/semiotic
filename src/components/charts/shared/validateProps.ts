@@ -280,7 +280,8 @@ export function validateProps(
   // 3. Prop types & enum values
   for (const [key, value] of Object.entries(props)) {
     if (value === undefined || value === null) continue
-    const def = spec.props[key]
+    const def = Object.prototype.hasOwnProperty.call(spec.props, key)
+      ? spec.props[key] : undefined
     if (!def) continue // unknown prop — checked in step 4
 
     // Type check
@@ -292,6 +293,15 @@ export function validateProps(
         `"${key}" should be ${expectedStr}, got ${Array.isArray(value) ? "array" : typeof value}.`
       )
       continue
+    }
+
+    if ((key === "width" || key === "height") &&
+      (typeof value !== "number" || !Number.isFinite(value) || value <= 0)) {
+      errors.push(`"${key}" must be a finite positive number.`)
+    }
+    if (key === "size" && Array.isArray(value) &&
+      (value.length !== 2 || !Array.from(value).every((entry) => typeof entry === "number" && Number.isFinite(entry) && entry > 0))) {
+      errors.push('"size" must contain two finite positive dimensions.')
     }
 
     // Enum check

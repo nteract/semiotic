@@ -101,12 +101,13 @@ export function summarizeData(
   const fields: Record<string, FieldSummary> = {}
 
   for (const key of keys) {
+    Object.defineProperty(fields, key, { value: undefined, enumerable: true, writable: true, configurable: true })
     const raw: unknown[] = []
     const numeric: number[] = []
     const dates: number[] = []
     let observedCount = 0
     for (const row of data) {
-      const v = row?.[key]
+      const v = row && Object.prototype.hasOwnProperty.call(row, key) ? row[key] : undefined
       if (isMissingValue(v)) continue
       observedCount++
       const number = parseNumericValue(v)

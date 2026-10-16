@@ -62,7 +62,7 @@ export function normalizeProfileFieldRoles(
   identifiers: ReadonlyArray<string> | undefined,
   seriesField?: string,
 ): NormalizedProfileFieldRoles {
-  const normalized: Record<string, ProfileFieldRole[]> = {}
+  const normalized: Record<string, ProfileFieldRole[]> = Object.create(null)
 
   for (const [field, rawRoles] of Object.entries(fieldRoles ?? {})) {
     const roles = Array.isArray(rawRoles) ? rawRoles : [rawRoles]
@@ -99,7 +99,8 @@ export function fieldHasRole(
   field: string,
   role: ProfileFieldRole,
 ): boolean {
-  return roles[field]?.includes(role) ?? false
+  return Object.prototype.hasOwnProperty.call(roles, field) &&
+    (roles[field]?.includes(role) ?? false)
 }
 
 export function identifierFields(
@@ -121,7 +122,8 @@ export function fieldRoleCandidateMatch(
   candidateRole: CandidateFieldRole,
   nativeTypeAllowed: boolean,
 ): 0 | 1 | 2 {
-  const hints = roles[field] ?? []
+  const hints = Object.prototype.hasOwnProperty.call(roles, field)
+    ? roles[field] ?? [] : []
   if (hints.includes("identifier") || hints.includes("ignore")) return 0
   if (hints.length === 0) return nativeTypeAllowed ? 1 : 0
 

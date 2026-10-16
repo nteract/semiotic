@@ -96,6 +96,7 @@ export interface PortableMobileCapability {
 }
 
 export interface PortableChartCapability {
+  specVersion?: "0.1"
   /** Stable chart name (e.g. "BarChart"). */
   component: string
   /** Coarse family — open string ("xy" | "ordinal" | "network" | …). */
@@ -125,6 +126,7 @@ export interface PortableAudienceTarget {
 }
 
 export interface PortableAudienceProfile {
+  specVersion?: "0.1"
   name?: string
   /** Per-chart familiarity override, 1–5, keyed by component. */
   familiarity?: Record<string, number>
@@ -261,8 +263,11 @@ function isISODateTime(value: string): boolean {
   // JSON Schema's date-time format is RFC 3339-like. Date.parse alone accepts
   // informal values such as a bare date, which would make the runtime helper
   // more permissive than the published schema.
-  return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value)
-    && !Number.isNaN(Date.parse(value))
+  const parts = /^(\d{4})-(\d{2})-(\d{2})[Tt](\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:[Zz]|[+-]\d{2}:\d{2})$/.exec(value)
+  if (!parts || !Number.isFinite(Date.parse(value)) || +parts[4] > 23 || +parts[5] > 59 || +parts[6] > 59) return false
+  const date = new Date(0)
+  date.setUTCFullYear(+parts[1], +parts[2] - 1, +parts[3])
+  return date.getUTCFullYear() === +parts[1] && date.getUTCMonth() === +parts[2] - 1 && date.getUTCDate() === +parts[3]
 }
 
 /**

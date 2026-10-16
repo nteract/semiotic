@@ -1,4 +1,5 @@
 import type { Datum } from "../charts/shared/datumTypes"
+import { aiScalarLabel } from "./aiData"
 
 /**
  * Shared chart-family classification + measure/dimension role resolution.
@@ -8,7 +9,7 @@ import type { Datum } from "../charts/shared/datumTypes"
  * (quantitative) and dimension (categorical/ordered) accessors. This is the
  * single source of truth so the two surfaces can't drift apart.
  *
- * Pure, dependency-light (types only).
+ * Pure and dependency-light.
  */
 
 export const XY_FAMILY = new Set([
@@ -55,7 +56,7 @@ export function seriesField(props: Datum): string | undefined {
 /** Format a dimension value (the label at an extremum) — dates as ISO day, numbers compactly. */
 export function fmtDim(v: unknown, fmtNum: (n: number) => string): string {
   if (v == null) return "—"
-  if (v instanceof Date) return v.toISOString().slice(0, 10)
+  if (v instanceof Date) return aiScalarLabel(v)?.slice(0, 10) ?? "—"
   if (typeof v === "number") return fmtNum(v)
-  return String(v)
+  return aiScalarLabel(v) ?? "—"
 }

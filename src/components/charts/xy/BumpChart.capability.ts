@@ -4,6 +4,7 @@ import { scaleHints } from "../../ai/dataScaleProfile"
 import { BUILT_IN_NUMERIC_CONTRACTS } from "../../data/numericContracts"
 import { BUMP_CHART_SEMANTIC_VIABILITY } from "./BumpChart.semanticViability"
 import { bumpXIdentity } from "./bumpIdentity"
+import { aiScalarLabel } from "../../ai/aiData"
 
 export interface RankColumnOccupancy {
   columns: number
@@ -32,12 +33,12 @@ export function rankColumnOccupancy(
   const seriesByColumn = new Map<string, Set<string>>()
   for (const datum of profile.data) {
     const column = datum[columnField]
-    const series = datum[seriesField]
+    const series = aiScalarLabel(datum[seriesField])
     const value = parseNumericValue(datum[valueField]) ?? NaN
-    if (column == null || series == null || !Number.isFinite(value)) continue
+    if (aiScalarLabel(column) === undefined || series === undefined || !Number.isFinite(value)) continue
     const key = bumpXIdentity(column)
     const values = seriesByColumn.get(key) ?? new Set<string>()
-    values.add(String(series))
+    values.add(series)
     seriesByColumn.set(key, values)
   }
 

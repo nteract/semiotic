@@ -59,7 +59,8 @@ function CirclePack<TNode extends Datum = Datum>(props: CirclePackProps<TNode>):
 function CircularBrush({ value, onChange, period, radius, innerRadius, width, height, step, largeStep, label, formatValue, arcFill, stroke, onObservation, controlType, controlId, chartId, chartType, className, style, }: CircularBrushProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function ConnectedScatterplot<TDatum extends Datum = Datum>(props: ConnectedScatterplotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function ContextLayout({ children, context, position, contextSize, mobilePosition, mobileBreakpoint, gap, className, style, }: ContextLayoutProps): React.JSX.Element
-function DetailsPanel({ children, position, size, trigger, chartId, observation: directObservation, dismissOnEmpty, showClose, onToggle, className, style, }: DetailsPanelProps): React.JSX.Element | null
+function DetailsPanel(props: DetailsPanelProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function DetailsPanel(props: HoverDetailsPanelProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function DifferenceChart<TDatum extends Datum = Datum>(props: DifferenceChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function DirectManipulationControl({ value, onChange, pointToValue, pointerToValue, min, max, step, stepOrigin, largeStep, x, y, controlType, controlId, label, ariaRoleDescription, valueText, radius, fill, stroke, strokeWidth, labelText, labelDx, labelDy, labelClassName, className, disabled, onChangeStart, onChangeEnd, onObservation, chartId, chartType, }: DirectManipulationControlProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function DirectManipulationMarkers({ values, onChange, markers, valueToPoint, pointToValue, min, max, step, stepOrigin, largeStep, ordered, label, ariaRoleDescription, controlType, controlId, radius, fill, stroke, strokeWidth, labelDx, labelDy, labelClassName, className, disabled, onChangeStart, onChangeEnd, onObservation, chartId, chartType }: DirectManipulationMarkersProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
@@ -982,6 +983,7 @@ interface-member DashboardIntentManifest::property::ididVersion = required ididV
 interface-member DashboardIntentManifest::property::layout = optional layout: DashboardLayoutPolicy | undefined
 interface-member DashboardIntentManifest::property::panels = required panels: IntentManifest[]
 interface-member DashboardIntentManifest::property::title = optional title: string | undefined
+interface-member DetailsPanelProps::property::ariaLabel = optional ariaLabel: string | undefined
 interface-member DetailsPanelProps::property::chartId = optional chartId: string | undefined
 interface-member DetailsPanelProps::property::children = required children: (datum: Datum, observation: ClickObservation) => React.ReactNode
 interface-member DetailsPanelProps::property::className = optional className: string | undefined
@@ -3150,7 +3152,7 @@ interface-member VegaLiteEncoding::property::aggregate = optional aggregate: str
 interface-member VegaLiteEncoding::property::axis = optional axis: undefined | {title?: string; labelAngle?: number;}
 interface-member VegaLiteEncoding::property::bin = optional bin: boolean | undefined | {maxbins?: number;}
 interface-member VegaLiteEncoding::property::field = optional field: string | undefined
-interface-member VegaLiteEncoding::property::scale = optional scale: undefined | {scheme?: string; range?: Array<number | string>; domain?: Array<Date | boolean | number | string>;}
+interface-member VegaLiteEncoding::property::scale = optional scale: undefined | {type?: string; scheme?: string; range?: Array<number | string>; domain?: Array<Date | boolean | number | string>;}
 interface-member VegaLiteEncoding::property::stack = optional stack: boolean | null | string | undefined
 interface-member VegaLiteEncoding::property::type = optional type: "nominal" | "ordinal" | "quantitative" | "temporal" | undefined
 interface-member VegaLiteEncoding::property::value = optional value: boolean | null | number | string | undefined

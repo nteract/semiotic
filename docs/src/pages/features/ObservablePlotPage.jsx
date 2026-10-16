@@ -257,16 +257,20 @@ const config = unstable_fromObservablePlot({
 configToJSX(config)   // → "<LineChart data={…} xAccessor=\\"month\\" yAccessor=\\"users\\" lineBy=\\"plan\\" … />"`}
       </CodeBlock>
 
-      <h2>Faithful, or it refuses</h2>
+      <h2>Strict import and declared losses</h2>
       <p>
-        The honest hard part is that Plot's API is imperative JS, not declarative JSON, and some of
-        it has no faithful Semiotic equivalent. Where that happens, the adapter warns instead of
-        approximating — a function-valued channel can't be serialized; a layered multi-mark plot
-        translates only its first data mark; a faceted plot is declined toward{" "}
-        <code>LinkedCharts</code>. A 70%-faithful adapter that announces its 30% gap is an asset; a
-        95%-faithful one that hides its 5% is a liability, because the failures are exactly where a
-        non-expert reader and an LLM are both deceived. Every produced config is also checked to
-        emit only props the schema knows, so it round-trips cleanly through <code>fromConfig</code>.
+        Use <code>unstable_fromObservablePlotResult(spec)</code> when accepting a chart from another
+        tool. It returns <code>status</code>, <code>diagnostics</code>, and <code>lossReport</code>;
+        unsupported marks, transforms, facets, layered data marks, scales, and malformed input
+        produce a <code>refused</code> result without a config. Pass <code>{`{ mode: "lossy" }`}</code>{" "}
+        to explicitly accept a translation with the listed losses. The compatibility helper
+        <code> fromObservablePlot</code> keeps its warning and fallback behavior.
+      </p>
+      <p>
+        CSS paint strings such as <code>steelblue</code> and <code>#f00</code> become constant
+        colors. Other fill/stroke strings name data fields, and <code>z</code> selects the series
+        before fill or stroke. Both Result importers accept an optional <code>createdAt</code>{" "}
+        timestamp for reproducible configurations and return diagnostics without logging warnings.
       </p>
 
       <h2>Where this goes</h2>

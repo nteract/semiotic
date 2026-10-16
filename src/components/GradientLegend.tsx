@@ -1,3 +1,4 @@
+import { moveLegendFocus } from "./legendKeyboard"
 import * as React from "react"
 import { LEGEND_FONT_STYLE } from "./legendStyles"
 import { numericTickFormatter } from "./charts/shared/numericTickFormatter"
@@ -43,7 +44,6 @@ export function GradientLegend({
     (legendInteraction === undefined && isolatedCategories != null)
   const [rovingIndex, setRovingIndex] = React.useState(0)
   const [focusedIndex, setFocusedIndex] = React.useState<number | null>(null)
-  const binRefs = React.useRef<Array<SVGRectElement | null>>([])
 
   const rangeItem = (index: number): LegendItem => {
     const visualIndex = horizontal ? index : binCount - index - 1
@@ -70,17 +70,9 @@ export function GradientLegend({
     const dimmed =
       (isolatedCategories?.size && !isolated) ||
       (highlightedCategory != null && !highlighted)
-    const moveFocus = (nextIndex: number) => {
-      const wrappedIndex = (nextIndex + binCount) % binCount
-      setRovingIndex(wrappedIndex)
-      binRefs.current[wrappedIndex]?.focus()
-    }
 
     return (
       <rect
-        ref={(node) => {
-          binRefs.current[index] = node
-        }}
         key={`gradient-interaction-${index}`}
         className="semiotic-gradient-legend-bin"
         {...geometry}
@@ -123,17 +115,7 @@ export function GradientLegend({
             customClickBehavior(item)
             return
           }
-          const previousKey =
-            orientation === "horizontal" ? "ArrowLeft" : "ArrowUp"
-          const nextKey =
-            orientation === "horizontal" ? "ArrowRight" : "ArrowDown"
-          if (event.key === previousKey || event.key === nextKey) {
-            event.preventDefault()
-            moveFocus(index + (event.key === nextKey ? 1 : -1))
-          } else if (event.key === "Home" || event.key === "End") {
-            event.preventDefault()
-            moveFocus(event.key === "Home" ? 0 : binCount - 1)
-          }
+          moveLegendFocus(event, horizontal)
         }}
         style={{ cursor: "pointer", pointerEvents: "all" }}
       />

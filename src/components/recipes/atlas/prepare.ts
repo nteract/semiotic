@@ -14,6 +14,7 @@ import type {
   PreparedNetworkAtlas
 } from "./types"
 import { validateAtlas } from "./validate"
+import { isDataRecord } from "../../charts/shared/dataRecords"
 
 export type PrepareOptions = {
   generation?: number
@@ -52,7 +53,40 @@ export function prepareNetworkAtlas(
   if (!validation.ok) {
     return { ok: false, issues: validation.issues }
   }
+  if (
+    !isDataRecord(options) ||
+    (options.generation !== undefined &&
+      (!Number.isSafeInteger(options.generation) || options.generation < 0))
+  ) {
+    return {
+      ok: false,
+      issues: [
+        {
+          kind: "generation",
+          severity: "fatal",
+          message: "generation must be a nonnegative safe integer"
+        }
+      ]
+    }
+  }
   const generation = options.generation ?? 1
+  let revision: string
+  try {
+    revision = analysisRevision(spec, source, generation)
+  } catch {
+    // Optional extension fields still contribute to the revision. Cycles and
+    // non-JSON values must fail before any derived atlas is built.
+    return {
+      ok: false,
+      issues: [
+        {
+          kind: "spec-serialization",
+          severity: "fatal",
+          message: "atlas spec must be serializable as JSON"
+        }
+      ]
+    }
+  }
   const sections = buildSections(spec, source)
   const motifs = matchMotifs(spec, source)
   const classified = classifyForest(spec, source)
@@ -60,7 +94,6 @@ export function prepareNetworkAtlas(
   const ledger = buildLedger(spec, source, sections)
   const completeness = buildCompleteness(source, motifs)
   const ports = buildRouteSupportIndex(source)
-  const revision = analysisRevision(spec, source, generation)
   const prefixForest =
     spec.forest.display.kind === "observed-prefix" ||
     (source.occurrences?.length ?? 0) > 0

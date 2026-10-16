@@ -38,9 +38,10 @@ describe("physics observation materialization", () => {
     }))
   })
 
-  it("copies body state only when a kernel event emits a settle observation", () => {
+  it.each([true, false])("reads only required settle state (indexed: %s)", (indexed) => {
     const world = createDefaultPhysicsEngineAdapter()
     world.spawn(spawn)
+    if (!indexed) world.readBody = undefined
     const readState = vi.spyOn(world, "readState")
     const emit = vi.fn()
     const context = { elapsedSeconds: 3, observation: normalizeObservationConfig({}), emit }
@@ -50,15 +51,16 @@ describe("physics observation materialization", () => {
     expect(emit).not.toHaveBeenCalled()
 
     observePhysicsKernelEvents(world, [{ type: "sleep", bodyId: "observed" }], context)
-    expect(readState).toHaveBeenCalledOnce()
+    expect(readState.mock.calls.length).toBe(indexed ? 0 : 1)
     expect(emit).toHaveBeenCalledWith(expect.objectContaining({
       type: "physics-settle", bodyId: "observed", x: 10, y: 2, datum: spawn.datum, timestamp: 3
     }))
   })
 
-  it("preserves sensor transitions and skips body copies while membership is unchanged", () => {
+  it.each([true, false])("preserves sensor transitions and skips unchanged membership (indexed: %s)", (indexed) => {
     const world = createDefaultPhysicsEngineAdapter()
     world.spawn(spawn)
+    if (!indexed) world.readBody = undefined
     const pairs = vi.spyOn(world, "activeSensorPairs").mockReturnValue([{ sensorId: "first", bodyId: "observed" }])
     const readState = vi.spyOn(world, "readState")
     const emit = vi.fn()
@@ -75,10 +77,48 @@ describe("physics observation materialization", () => {
 
     pairs.mockReturnValue([{ sensorId: "second", bodyId: "observed" }])
     observePhysicsSensorTransitions(world, unchanged, context)
-    expect(readState).toHaveBeenCalledOnce()
+    expect(readState.mock.calls.length).toBe(indexed ? 0 : 1)
     expect(emit.mock.calls.map(([event]) => [event.type, event.sensorId, event.datum])).toEqual([
       ["physics-bin-enter", "second", spawn.datum],
       ["physics-bin-exit", "first", spawn.datum]
+    ])
+  })
+})
+
+describe("physics boundary observations under callback mutations", () => {
+  it.each([true, false])("captures only affected bodies before settle callbacks (indexed: %s)", indexed => {
+    const world = createDefaultPhysicsEngineAdapter()
+    for (let i = 0; i < 20; i++) world.spawn({ ...spawn, id: String(i), datum: { id: i } })
+    const readBody = vi.spyOn(world, "readBody")
+    if (!indexed) world.readBody = undefined
+    const readState = vi.spyOn(world, "readState")
+    const events: unknown[] = []
+    observePhysicsKernelEvents(world, [{ type: "sleep", bodyId: "0" }, { type: "sleep", bodyId: "1" }], {
+      elapsedSeconds: 3, observation: normalizeObservationConfig({}),
+      emit(event) { events.push(event); if (event.bodyId === "0") world.remove(["1"]) }
+    })
+    expect(events).toEqual([
+      expect.objectContaining({ bodyId: "0", datum: { id: 0 }, x: 10, y: 2 }),
+      expect.objectContaining({ bodyId: "1", datum: { id: 1 }, x: 10, y: 2 }),
+    ])
+    expect(readState.mock.calls.length).toBe(indexed ? 0 : 1)
+    expect(readBody.mock.calls.length).toBe(indexed ? 2 : 0)
+  })
+
+  it.each([true, false])("keeps enter and exit boundary data stable (indexed: %s)", indexed => {
+    const world = createDefaultPhysicsEngineAdapter()
+    world.spawn({ ...spawn, id: "a", datum: { id: "a" } })
+    world.spawn({ ...spawn, id: "b", datum: { id: "b" } })
+    if (!indexed) world.readBody = undefined
+    vi.spyOn(world, "activeSensorPairs").mockReturnValue([{ sensorId: "new", bodyId: "a" }])
+    const events: unknown[] = []
+    observePhysicsSensorTransitions(world, new Set(["old\u0000b"]), {
+      elapsedSeconds: 3, observation: normalizeObservationConfig({}),
+      emit(event) { events.push(event); if (event.bodyId === "a") world.remove(["b"]) }
+    })
+    expect(events).toEqual([
+      expect.objectContaining({ type: "physics-bin-enter", bodyId: "a", datum: { id: "a" }, x: 10 }),
+      expect.objectContaining({ type: "physics-bin-exit", bodyId: "b", datum: { id: "b" }, x: 10 }),
     ])
   })
 })

@@ -3,13 +3,15 @@ import type { VisualToken } from "./tokenEncoding"
 import { sedimentHeightfield } from "../stream/physics/PhysicsSediment"
 import {
   collidersFromPlotBounds,
-  collidersFromXScaleBins,
-  type PhysicsBoundsColliderOptions,
-  type PhysicsPlotBounds,
-  type PhysicsQueuedSpawn,
-  type PhysicsSpawnPacingOptions,
-  type PhysicsXBinColliderOptions
-} from "../stream/physics/PhysicsPipelineStore"
+  collidersFromXScaleBins
+} from "../stream/physics/physicsPipelineHelpers"
+import type {
+  PhysicsBoundsColliderOptions,
+  PhysicsPlotBounds,
+  PhysicsQueuedSpawn,
+  PhysicsSpawnPacingOptions,
+  PhysicsXBinColliderOptions
+} from "../stream/physics/PhysicsPipelineTypes"
 import type {
   PhysicsBodyShape,
   PhysicsColliderSpec

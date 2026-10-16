@@ -89,7 +89,8 @@ function CollisionSwarmChart(props: React.RefAttributes<import("semiotic-interna
 function ConnectedScatterplot<TDatum extends Datum = Datum>(props: ConnectedScatterplotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function ContextLayout({ children, context, position, contextSize, mobilePosition, mobileBreakpoint, gap, className, style, }: ContextLayoutProps): React.JSX.Element
 function CrucibleChart<TDatum extends Datum = Datum>(props: CrucibleChartProps<TDatum> & React.RefAttributes<CrucibleChartHandle<TDatum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function DetailsPanel({ children, position, size, trigger, chartId, observation: directObservation, dismissOnEmpty, showClose, onToggle, className, style, }: DetailsPanelProps): React.JSX.Element | null
+function DetailsPanel(props: DetailsPanelProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function DetailsPanel(props: HoverDetailsPanelProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function DifferenceChart<TDatum extends Datum = Datum>(props: DifferenceChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function DonutChart<TDatum extends Datum = Datum>(props: DonutChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function DotPlot<TDatum extends Datum = Datum>(props: DotPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
@@ -1643,6 +1644,7 @@ interface-member DesignContractDefinition::property::tradeoff = optional tradeof
 interface-member DesignContractDefinition::property::whyCustom = required whyCustom: string
 interface-member DesignContractDefinition::property::whyNotDefault = optional whyNotDefault: string | undefined
 interface-member DesignContractDefinition::property::whyThisForm = optional whyThisForm: string | undefined
+interface-member DetailsPanelProps::property::ariaLabel = optional ariaLabel: string | undefined
 interface-member DetailsPanelProps::property::chartId = optional chartId: string | undefined
 interface-member DetailsPanelProps::property::children = required children: (datum: Datum, observation: ClickObservation) => React.ReactNode
 interface-member DetailsPanelProps::property::className = optional className: string | undefined
@@ -2894,7 +2896,7 @@ interface-member VegaLiteEncoding::property::aggregate = optional aggregate: str
 interface-member VegaLiteEncoding::property::axis = optional axis: undefined | {title?: string; labelAngle?: number;}
 interface-member VegaLiteEncoding::property::bin = optional bin: boolean | undefined | {maxbins?: number;}
 interface-member VegaLiteEncoding::property::field = optional field: string | undefined
-interface-member VegaLiteEncoding::property::scale = optional scale: undefined | {scheme?: string; range?: Array<number | string>; domain?: Array<Date | boolean | number | string>;}
+interface-member VegaLiteEncoding::property::scale = optional scale: undefined | {type?: string; scheme?: string; range?: Array<number | string>; domain?: Array<Date | boolean | number | string>;}
 interface-member VegaLiteEncoding::property::stack = optional stack: boolean | null | string | undefined
 interface-member VegaLiteEncoding::property::type = optional type: "nominal" | "ordinal" | "quantitative" | "temporal" | undefined
 interface-member VegaLiteEncoding::property::value = optional value: boolean | null | number | string | undefined

@@ -22,6 +22,7 @@ export interface PhysicsBodyHitTestOptions {
 
 /** Revision-keyed body index used by PhysicsPipelineStore hit testing. */
 export class PhysicsBodySpatialIndex {
+  private order = new Map<string, number>()
   private maxSearchRadius = 0
   private revision = -1
   private tree: Quadtree<PhysicsBodyState> | null = null
@@ -29,13 +30,13 @@ export class PhysicsBodySpatialIndex {
   hitTest(
     world: PhysicsEngineAdapter,
     revision: number,
-    liveBodyOrder: readonly string[],
+    liveBodyOrder: Iterable<string>,
     x: number,
     y: number,
     radius = 0,
     options?: PhysicsBodyHitTestOptions
   ): PhysicsBodyState | null {
-    const tree = this.ensure(world, revision)
+    const tree = this.ensure(world, revision, liveBodyOrder)
     if (!tree) return null
 
     let best: PhysicsBodyState | null = null
@@ -63,7 +64,7 @@ export class PhysicsBodySpatialIndex {
             distanceSquared != null &&
             (distanceSquared < bestDistanceSquared ||
               (distanceSquared === bestDistanceSquared &&
-                liveBodyOrder.indexOf(body.id) > liveBodyOrder.indexOf(best?.id ?? "")))
+                (this.order.get(body.id) ?? -1) > (this.order.get(best?.id ?? "") ?? -1)))
           ) {
             best = body
             bestDistanceSquared = distanceSquared
@@ -78,10 +79,12 @@ export class PhysicsBodySpatialIndex {
 
   private ensure(
     world: PhysicsEngineAdapter,
-    revision: number
+    revision: number,
+    liveBodyOrder: Iterable<string>
   ): Quadtree<PhysicsBodyState> | null {
     if (this.tree && this.revision === revision) return this.tree
 
+    this.order = new Map(Array.from(liveBodyOrder, (id, index) => [id, index]))
     const bodies = world.readState()
     if (bodies.length === 0) {
       this.tree = null

@@ -483,8 +483,12 @@ export default function VACPPage() {
           <strong>Data stays bounded</strong>
           <p style={{ marginBottom: 0, fontSize: 13 }}>
             Config snapshots omit raw collections. Agents receive data handles
-            and schema summaries; row sampling is a separate, explicitly
-            enabled, size-limited action.
+            and column types by default. Value-bearing summaries require
+            {" "}<code>dataAccess: {"{ summaries: true }"}</code> or explicit
+            row-sampling permission. Identifier-like and high-cardinality
+            categorical values are excluded from summaries. Raw row sampling
+            requires <code>dataAccess: {"{ sample: true }"}</code> and remains
+            size-limited.
           </p>
         </div>
       </div>

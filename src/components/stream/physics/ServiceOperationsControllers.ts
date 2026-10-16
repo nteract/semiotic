@@ -1,5 +1,5 @@
 import type { PhysicsBodyState } from "./PhysicsKernel"
-import { valueAtPath, matchesPhysicsBodyFilter } from "./PhysicsKernel"
+import { valueAtPath, matchesPhysicsBodyFilter } from "./physicsBodyFilter"
 import type {
   PhysicsController
 } from "./PhysicsControllers"

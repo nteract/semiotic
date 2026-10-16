@@ -1,5 +1,6 @@
 "use client"
 import * as React from "react"
+import { nodeText } from "./controls/controlText"
 import type {
   MobileStandardControlKind,
   MobileStandardControlsMode,
@@ -81,15 +82,16 @@ export function clampMobileRange(
 ): [number, number] {
   const lo = Math.min(domain[0], domain[1])
   const hi = Math.max(domain[0], domain[1])
+  const requiredSpan = Number.isFinite(minSpan) ? Math.min(hi - lo, Math.max(0, minSpan)) : 0
   const start = Math.max(lo, Math.min(hi, value[0]))
   const end = Math.max(lo, Math.min(hi, value[1]))
   const ordered: [number, number] = start <= end ? [start, end] : [end, start]
-  if (ordered[1] - ordered[0] >= minSpan) return ordered
+  if (ordered[1] - ordered[0] >= requiredSpan) return ordered
   const center = (ordered[0] + ordered[1]) / 2
-  const half = minSpan / 2
+  const half = requiredSpan / 2
   return [
-    Math.max(lo, Math.min(hi - minSpan, center - half)),
-    Math.min(hi, Math.max(lo + minSpan, center + half)),
+    Math.max(lo, Math.min(hi - requiredSpan, center - half)),
+    Math.min(hi, Math.max(lo + requiredSpan, center + half)),
   ]
 }
 
@@ -97,11 +99,16 @@ export function zoomMobileRange(
   value: [number, number],
   domain: [number, number],
   direction: "in" | "out",
-  step = 1,
+  step = Math.max(Math.abs(value[1] - value[0]) / 10, Math.abs(domain[1] - domain[0]) / 100),
   minSpan = step
 ): [number, number] {
-  const delta = direction === "in" ? step : -step
-  return clampMobileRange([value[0] + delta, value[1] - delta], domain, minSpan)
+  const span = Math.abs(value[1] - value[0])
+  const amount = Number.isFinite(step) ? Math.max(0, step) : 0
+  const delta = direction === "in"
+    ? Math.min(amount, Math.max(0, (span - Math.max(0, minSpan)) / 2))
+    : -amount
+  const ordered = clampMobileRange(value, domain)
+  return clampMobileRange([ordered[0] + delta, ordered[1] - delta], domain, minSpan)
 }
 
 export function useMobileRangeControls(
@@ -110,7 +117,7 @@ export function useMobileRangeControls(
   const {
     domain,
     initialValue = domain,
-    step = 1,
+    step = Math.abs(domain[1] - domain[0]) / 100 || 1,
     minSpan = step,
     label,
     formatValue,
@@ -142,11 +149,11 @@ export function useMobileRangeControls(
   )
   const zoom = React.useMemo<MobileStandardZoomControls>(
     () => ({
-      onZoomIn: () => setValue(zoomMobileRange(value, domain, "in", step, minSpan)),
-      onZoomOut: () => setValue(zoomMobileRange(value, domain, "out", step, minSpan)),
+      onZoomIn: () => setValue(zoomMobileRange(value, domain, "in", options.step ?? Math.max(minSpan, (value[1] - value[0]) / 10), minSpan)),
+      onZoomOut: () => setValue(zoomMobileRange(value, domain, "out", options.step ?? Math.max(minSpan, (value[1] - value[0]) / 10), minSpan)),
       onReset: () => setValue(domain),
     }),
-    [domain, minSpan, setValue, step, value]
+    [domain, minSpan, options.step, setValue, value]
   )
   return { value, setValue, xExtent: value, brush, zoom }
 }
@@ -215,11 +222,12 @@ function BrushControls({ brush, targetSize }: { brush?: MobileStandardBrushContr
   const disabled = brush?.disabled === true
   const format = brush?.formatValue ?? ((v: number) => v)
   const canChange = !!brush?.onChange && hasRange && !disabled
-  const min = domain?.[0] ?? 0
-  const max = domain?.[1] ?? 1
+  const min = domain ? Math.min(...domain) : 0
+  const max = domain ? Math.max(...domain) : 1
   const lower = value?.[0] ?? min
   const upper = value?.[1] ?? max
   const step = brush?.step ?? ((max - min) / 100 || 1)
+  const label = nodeText(brush?.label) || "Filter range"
 
   return (
     <section style={sectionStyle} aria-label="Brush controls">
@@ -230,6 +238,8 @@ function BrushControls({ brush, targetSize }: { brush?: MobileStandardBrushContr
             <span>Start: {format(lower)}</span>
             <input
               type="range"
+              aria-label={`${label} start`}
+              aria-valuetext={nodeText(format(lower)) || String(lower)}
               min={min}
               max={max}
               step={step}
@@ -246,6 +256,8 @@ function BrushControls({ brush, targetSize }: { brush?: MobileStandardBrushContr
             <span>End: {format(upper)}</span>
             <input
               type="range"
+              aria-label={`${label} end`}
+              aria-valuetext={nodeText(format(upper)) || String(upper)}
               min={min}
               max={max}
               step={step}

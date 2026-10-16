@@ -124,6 +124,17 @@ const lean = fromArrow(table, { fields: ["region", "revenue"] })`}
         all.
       </p>
 
+      <h2>Integer precision</h2>
+      <p>
+        Safe bigint columns convert to numbers by default. If a column contains an integer outside
+        the safe number range, its bigint values remain bigint consistently and the adapter warns.
+        Choose <code>{`{ bigint: "number-lossy" }`}</code> to allow rounding for chart arithmetic,
+        <code> {`{ bigint: "string" }`}</code> to preserve exact digits for identifiers, or
+        <code> {`{ bigint: "keep" }`}</code> to retain every bigint. Existing
+        <code> coerceBigInt: false</code> remains supported. Malformed table shapes and invalid row
+        counts return an empty array with a warning.
+      </p>
+
       <h2>Where this goes</h2>
       <p>
         Paired with <Link to="/coordinated-views">coordinated views</Link>, an in-browser DuckDB

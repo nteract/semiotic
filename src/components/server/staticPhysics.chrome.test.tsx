@@ -183,9 +183,14 @@ describe("static physics chrome", () => {
   })
 
   it("installs barrier annotations before settling the static simulation", () => {
-    const free = renderToStaticSVG("physics", movingFrame)
-    const blocked = renderToStaticSVG("physics", {
+    // Travel beyond the barrier even with timestep-normalized damping.
+    const crossingFrame = {
       ...movingFrame,
+      initialSpawns: movingFrame.initialSpawns.map((spawn) => ({ ...spawn, vx: 160 }))
+    }
+    const free = renderToStaticSVG("physics", crossingFrame)
+    const blocked = renderToStaticSVG("physics", {
+      ...crossingFrame,
       annotations: [
         {
           id: "wall",

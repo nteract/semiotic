@@ -30,8 +30,8 @@ export async function minifyLibraryChunk(
     const preserveInert =
       round > 0 && format === "esm" && chunkLoadEffect(input, filename) === null
     for (const compression of libraryCompressionCandidates) {
-      // Client chunks are combined and tree-shaken again by consumers.
-      // Function cloning can shrink one chunk while widening that import union.
+      // Callers can opt out when downstream import unions grow: function
+      // cloning can shrink one chunk while widening a consumer's bundle.
       if (compression.reduce_funcs && !allowFunctionReduction) continue
       const result = await minify(
         { [filename]: input },

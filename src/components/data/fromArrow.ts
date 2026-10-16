@@ -47,9 +47,13 @@ export interface FromArrowOptions {
   /**
    * Convert Arrow int64/uint64 values (returned as `bigint`) to `number`, since
    * the chart scales and `toNumber` coercion work in `number`. Default true.
-   * Values outside `Number.MAX_SAFE_INTEGER` are left as `bigint` (and warned).
+   * A column containing an unsafe integer keeps all its bigint values intact
+   * (and warns), so a column never mixes converted numbers and bigints.
+   * Use bigint: "number-lossy" to explicitly allow rounded chart values.
    */
   coerceBigInt?: boolean
+  /** Explicit conversion policy; takes precedence over coerceBigInt. */
+  bigint?: "number-lossy" | "string" | "keep"
 }
 
 /**
@@ -57,46 +61,56 @@ export interface FromArrowOptions {
  * straight to a chart's `data` prop: `<LineChart data={fromArrow(table)} … />`.
  */
 export function fromArrow(table: ArrowTableLike, options: FromArrowOptions = {}): Datum[] {
-  if (!table || typeof table.numRows !== "number" || !table.schema) {
-    console.warn("[semiotic/fromArrow] Expected an Arrow table with `numRows` and `schema`. Returning [].")
+  if (!table || !Number.isSafeInteger(table.numRows) || table.numRows < 0 || table.numRows > 0xffffffff ||
+      !Array.isArray(table.schema?.fields) || Array.from(table.schema.fields).some(field => !field || typeof field.name !== "string") ||
+      typeof table.getChild !== "function" || (options.fields !== undefined && (!Array.isArray(options.fields) || Array.from(options.fields).some(field => typeof field !== "string")))) {
+    console.warn("[semiotic/fromArrow] Expected an Arrow table with a valid row count, schema fields, and getChild function. Returning [].")
     return []
   }
 
-  const coerceBigInt = options.coerceBigInt !== false
+  const policy = options.bigint ?? (options.coerceBigInt === false ? "keep" : "safe")
   const schemaNames = table.schema.fields.map((f) => f.name)
+  const schemaFields = new Set(schemaNames)
   const requested = options.fields ?? schemaNames
 
   // Resolve columns once; skip (and warn on) requested fields that don't exist.
   const columns: Array<{ name: string; column: ArrowColumnLike }> = []
-  for (const name of requested) {
-    const column = table.getChild(name)
-    if (!column) {
+  for (const name of new Set(requested)) {
+    const column = schemaFields.has(name) ? table.getChild(name) : undefined
+    if (!schemaFields.has(name) || !column || typeof column.get !== "function") {
       console.warn(`[semiotic/fromArrow] Column "${name}" is not in the table schema; skipping it.`)
       continue
     }
     columns.push({ name, column })
   }
 
-  let bigIntTruncationWarned = false
+  const unsafeColumns = new Set<string>()
+  const bigintColumns = new Set<string>()
   const rows: Datum[] = new Array(table.numRows)
   for (let i = 0; i < table.numRows; i++) {
     const row: Datum = {}
     for (const { name, column } of columns) {
-      let value = column.get(i)
-      if (coerceBigInt && typeof value === "bigint") {
-        if (value >= BigInt(Number.MIN_SAFE_INTEGER) && value <= BigInt(Number.MAX_SAFE_INTEGER)) {
-          value = Number(value)
-        } else if (!bigIntTruncationWarned) {
-          bigIntTruncationWarned = true
-          console.warn(
-            "[semiotic/fromArrow] A 64-bit integer exceeds Number.MAX_SAFE_INTEGER; left as bigint to avoid precision loss.",
-          )
-        }
+      const value = column.get(i)
+      if (typeof value === "bigint") {
+        bigintColumns.add(name)
+        if (value < -9007199254740991n || value > 9007199254740991n) unsafeColumns.add(name)
       }
-      row[name] = value as Datum[string]
+      if (name === "__proto__") Object.defineProperty(row, name, { value, enumerable: true, writable: true, configurable: true })
+      else row[name] = value
     }
     rows[i] = row
   }
 
+  if (unsafeColumns.size && (policy === "safe" || policy === "number-lossy")) {
+    console.warn(policy === "safe"
+      ? "[semiotic/fromArrow] A 64-bit integer exceeds Number.MAX_SAFE_INTEGER; its column keeps bigint values to avoid precision loss. Set bigint: \"number-lossy\" or \"string\" explicitly to convert it."
+      : "[semiotic/fromArrow] A 64-bit integer exceeds Number.MAX_SAFE_INTEGER; bigint: \"number-lossy\" may round values.")
+  }
+  if (policy !== "keep") for (const name of bigintColumns) {
+    if (policy === "safe" && unsafeColumns.has(name)) continue
+    for (const row of rows) {
+      if (typeof row[name] === "bigint") row[name] = policy === "string" ? String(row[name]) : Number(row[name])
+    }
+  }
   return rows
 }

@@ -239,6 +239,8 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
       const regionEffectsRef = useRef(regionEffects)
       regionEffectsRef.current = regionEffects
       const bodyForcesRef = useRef(bodyForces)
+      const onRegionEventRef = useRef(onRegionEvent)
+      onRegionEventRef.current = onRegionEvent
       const onTickRef = useRef(onTick)
       onTickRef.current = onTick
       const steppingRef = useRef(false)
@@ -266,8 +268,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
       const composedBodyForces = React.useMemo<
         StreamPhysicsBodyForce | undefined
       >(() => {
-        if (!bodyForces && !composedControllers?.bodyForce) return bodyForces
-        if (!composedControllers?.bodyForce) return bodyForces
+        if (!composedControllers?.controllers.some((controller) => controller.bodyForce)) return bodyForces
         if (!bodyForces) return composedControllers.bodyForce
         const controllerForce = composedControllers.bodyForce
         return (context) => {
@@ -377,9 +378,9 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
           }
           if (type === "region-enter") region.onEnter?.(event)
           else region.onExit?.(event)
-          onRegionEvent?.(event)
+          onRegionEventRef.current?.(event)
         },
-        [onRegionEvent]
+        []
       )
 
       const handleRegionObservation = useCallback(
@@ -657,7 +658,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
         ctx.rect(0, 0, plotWidth, plotHeight)
         ctx.clip()
 
-        const snapshot = store.workerState()
+        const snapshot = store.runtimeState()
         const bodies = store.readBodies()
         const bodyCursors = physicsCanvasPointer.begin()
         // Throttle moving frames, but always publish the final navigation
@@ -888,7 +889,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
           if (notifyTick) onTick?.(frame.result, store.controls())
           paint()
 
-          const latest = store.workerState()
+          const latest = store.runtimeState()
           const popAnimationsActive = popAnimationsRef.current.size > 0
           if (
             (frame.result.shouldContinue || popAnimationsActive) &&
@@ -1021,7 +1022,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
             const result = options.deltaSeconds === undefined
               ? store.settleWithObservations(options.maxSteps)
               : store.tick(options.deltaSeconds)
-            return { result, snapshot: store.snapshot(), regionEffectsApplied: false, bodyForcesApplied: false }
+            return { result, snapshot: store.runtimeState(), regionEffectsApplied: false, bodyForcesApplied: false }
           }
           return runPhysicsObservedSteps(store, (result) => runPhysicsPostTick({
             store,
@@ -1033,7 +1034,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
             onTick: onTickRef.current
           }), {
             ...options,
-            continueWhile: () => Boolean(continuousRef.current || composedControllersRef.current ||
+            continueWhile: () => Boolean(continuousRef.current ||
               bodyForcesRef.current || regionRuntimeEffectsRequireSync(regionEffectsRef.current))
           })
         } finally {
@@ -1047,12 +1048,11 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
         // active run will consume that work and paint; never recursively settle.
         if (!store || !readyToStepRef.current || steppingRef.current) return
         const usingWorker = startWorkerIfNeeded()
-        const snapshot = store.workerState()
+        const snapshot = store.runtimeState()
         const frameDrivenWork =
           continuousEffective ||
           hasRuntimeBodyForces ||
-          hasRuntimeRegionEffects ||
-          Boolean(composedControllers)
+          hasRuntimeRegionEffects
         if (
           snapshot.paused ||
           !snapshot.visible ||
@@ -1068,7 +1068,6 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
         // patches) forces zero-delta ticks and stalls motion under thrash.
         scheduleRender()
       }, [
-        composedControllers,
         continuousEffective,
         hasRuntimeBodyForces,
         hasRuntimeRegionEffects,
@@ -1091,7 +1090,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
         if (reducedMotionForFrame) {
           lastFrameTimeRef.current = null
           const previous = reducedRunRef.current
-          const state = store.workerState()
+          const state = store.runtimeState()
           if (previous?.store === store && previous.revision === store.version() &&
             previous.bodyForces === bodyForcesRef.current &&
             previous.controllers === composedControllersRef.current &&
@@ -1149,7 +1148,6 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
           return
         }
 
-        const composed = composedControllersRef.current
         let deltaSeconds: number | undefined
         if (!reducedMotionForFrame) {
           const now = logicalClockRef.current()
@@ -1177,7 +1175,6 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
             result.shouldContinue ||
             regionEffectsApplied ||
             bodyForcesApplied ||
-            Boolean(composed) ||
             popAnimationsActive) &&
           !latest.paused &&
           latest.visible &&
@@ -1200,12 +1197,14 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
       renderFnRef.current = renderFrame
 
       useEffect(() => {
-        workerFailedRef.current = false
-        if (workerActiveRef.current || workerStartingRef.current) {
-          stopWorker("config changed", false)
-        }
         const store = storeRef.current
-        store?.updateConfig(augmentedConfig ?? {})
+        const update = store?.updateConfigWithResult(augmentedConfig ?? {})
+        const changed = Boolean(update?.changeSet.keys?.length) ||
+          (augmentedConfig?.colliders === undefined && hadConfiguredCollidersRef.current)
+        if (changed) {
+          workerFailedRef.current = false
+          if (workerActiveRef.current || workerStartingRef.current) stopWorker("config changed", false)
+        }
         // Frame props describe the complete authored + frame-owned collider
         // set. Clear the world once when the last configured collider source
         // disappears, without revising collider-free worlds on every rerender.

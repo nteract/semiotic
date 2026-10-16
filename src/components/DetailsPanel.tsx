@@ -3,27 +3,22 @@ import type { Datum } from "./charts/shared/datumTypes"
 import * as React from "react"
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useChartObserver } from "./store/useObservation"
-import type { ChartObservation, ClickObservation } from "./store/ObservationStore"
+import type { ChartObservation, ClickObservation, HoverObservation } from "./store/ObservationStore"
 import { withDisplayName } from "./charts/shared/withDisplayName"
+import { useReducedMotion } from "./stream/useMediaPreferences"
 
 export interface DetailsPanelProps {
-  /**
-   * Render function receiving the clicked datum and the full observation.
-   * Return null to hide the panel for a given datum.
-   */
-  children: (
-    datum: Datum,
-    observation: ClickObservation
-  ) => React.ReactNode
+  /** Render function for clicked data. Return null to hide the panel. */
+  children: (datum: Datum, observation: ClickObservation) => React.ReactNode
+
+  /** Observation trigger type. Default: "click" */
+  trigger?: "click" | "hover"
 
   /** Panel position relative to the chart. Default: "right" */
   position?: "right" | "bottom" | "overlay"
 
   /** Panel width (for "right" position) or height (for "bottom"). Default: 300 */
   size?: number
-
-  /** Observation trigger type. Default: "click" */
-  trigger?: "click" | "hover"
 
   /** Filter observations by chart ID */
   chartId?: string
@@ -44,6 +39,9 @@ export interface DetailsPanelProps {
   /** Called when the panel opens or closes */
   onToggle?: (open: boolean) => void
 
+  /** Accessible name for the details region or overlay dialog. Default: "Chart details" */
+  ariaLabel?: string
+
   /** CSS class for the panel container */
   className?: string
 
@@ -51,114 +49,158 @@ export interface DetailsPanelProps {
   style?: React.CSSProperties
 }
 
+/** Precise callback typing for the hover component overload. */
+interface HoverDetailsPanelProps extends Omit<DetailsPanelProps, "trigger" | "children"> {
+  trigger: "hover"
+  children: (datum: Datum, observation: HoverObservation) => React.ReactNode
+}
+
 const ANIMATION_DURATION = 200
+const CLICK_TYPES: ChartObservation["type"][] = ["click", "click-end", "activate"]
+const HOVER_TYPES: ChartObservation["type"][] = ["hover", "hover-end"]
 
-export const DetailsPanel = /* @__PURE__ */ withDisplayName(function DetailsPanel({
-  children,
-  position = "right",
-  size = 300,
-  trigger = "click",
-  chartId,
-  observation: directObservation,
-  dismissOnEmpty = true,
-  showClose = true,
-  onToggle,
-  className,
-  style,
-}: DetailsPanelProps) {
-  const [selectedDatum, setSelectedDatum] = useState<Datum | null>(null)
-  const [selectedObservation, setSelectedObservation] = useState<ClickObservation | null>(null)
+function DetailsPanelComponent(props: HoverDetailsPanelProps): React.ReactElement | null
+function DetailsPanelComponent(props: DetailsPanelProps): React.ReactElement | null
+function DetailsPanelComponent(props: DetailsPanelProps | HoverDetailsPanelProps): React.ReactElement | null {
+  const {
+    position = "right", size = 300, trigger = "click", chartId,
+    observation: directObservation, dismissOnEmpty = true, showClose = true,
+    onToggle, ariaLabel = "Chart details", className, style,
+  } = props
+  const [selectedObservation, setSelectedObservation] = useState<ClickObservation | HoverObservation | null>(null)
   const [isOpen, setIsOpen] = useState(false)
-  const [isAnimating, setIsAnimating] = useState(false)
+  const [visible, setVisible] = useState(false)
   const panelRef = useRef<HTMLDivElement>(null)
-  const animTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-
-  const observationTypes = trigger === "click"
-    ? (["click", "click-end"] as ChartObservation["type"][])
-    : (["hover", "hover-end"] as ChartObservation["type"][])
+  const restoreFocusRef = useRef<HTMLElement | SVGElement | null>(null)
+  const focusOnOpenRef = useRef(false)
+  const openRef = useRef(false)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const reducedMotion = useReducedMotion()
 
   const { latest: storeLatest } = useChartObserver({
-    types: observationTypes,
-    chartId,
-    limit: 1,
+    types: trigger === "click" ? CLICK_TYPES : HOVER_TYPES, chartId, limit: 1,
   })
-
-  // Use direct observation prop if provided, otherwise fall back to store
   const latest = directObservation !== undefined ? directObservation : storeLatest
+  const handledRef = useRef<{ latest: ChartObservation | null; trigger: string; chartId?: string } | null>(null)
 
   const handleClose = useCallback(() => {
-    setIsAnimating(true)
+    if (!openRef.current) return
+    openRef.current = false
+    if (panelRef.current?.contains(document.activeElement)) {
+      const target = restoreFocusRef.current
+      if (target?.isConnected) target.focus({ preventScroll: true })
+    }
     setIsOpen(false)
-    clearTimeout(animTimerRef.current)
-    animTimerRef.current = setTimeout(() => {
-      setIsAnimating(false)
-      setSelectedDatum(null)
-      setSelectedObservation(null)
-    }, ANIMATION_DURATION)
-  }, [])
+    setVisible(false)
+    clearTimeout(timerRef.current)
+    if (reducedMotion) setSelectedObservation(null)
+    else timerRef.current = setTimeout(() => setSelectedObservation(null), ANIMATION_DURATION)
+  }, [reducedMotion])
 
   useEffect(() => {
-    if (!latest) return
-
-    if (latest.type === "click" || latest.type === "hover") {
-      const obs = latest as ClickObservation
-      setSelectedDatum(obs.datum)
-      setSelectedObservation(obs)
-      setIsOpen((wasOpen) => {
-        if (!wasOpen) {
-          setIsAnimating(true)
-          clearTimeout(animTimerRef.current)
-          animTimerRef.current = setTimeout(() => setIsAnimating(false), ANIMATION_DURATION)
-        }
-        return true
-      })
-    } else if (dismissOnEmpty && (latest.type === "click-end" || latest.type === "hover-end")) {
+    const previous = handledRef.current
+    if (previous?.latest === latest && previous.trigger === trigger && previous.chartId === chartId) return
+    handledRef.current = { latest, trigger, chartId }
+    if (directObservation === null) {
+      handleClose()
+      return
+    }
+    if (!latest || (chartId && latest.chartId !== chartId)) return
+    const accepted = trigger === "hover"
+      ? latest.type === "hover"
+      : latest.type === "click" || latest.type === "activate"
+    if (accepted) {
+      const observation = latest.type === "activate"
+        ? { ...latest, type: "click" as const, x: 0, y: 0 }
+        : latest as ClickObservation | HoverObservation
+      if (!openRef.current) {
+        const active = document.activeElement
+        restoreFocusRef.current = active instanceof HTMLElement || active instanceof SVGElement ? active : null
+        focusOnOpenRef.current = position === "overlay" || (latest.type === "activate" && latest.inputType !== "pointer" && latest.inputType !== "touch")
+      }
+      clearTimeout(timerRef.current)
+      openRef.current = true
+      setSelectedObservation(observation)
+      setIsOpen(true)
+    } else if (dismissOnEmpty && (trigger === "hover" ? latest.type === "hover-end" : latest.type === "click-end")) {
       handleClose()
     }
-  }, [dismissOnEmpty, handleClose, latest])
+  }, [chartId, directObservation, dismissOnEmpty, handleClose, latest, position, trigger])
+
+  const content = selectedObservation?.type === "hover" && props.trigger === "hover"
+    ? (props.children as HoverDetailsPanelProps["children"])(selectedObservation.datum, selectedObservation)
+    : selectedObservation?.type === "click" && props.trigger !== "hover"
+      ? props.children(selectedObservation.datum, selectedObservation)
+      : null
+  const effectiveOpen = isOpen && content != null
+  const previousOpenRef = useRef(false)
+  useEffect(() => {
+    if (previousOpenRef.current === effectiveOpen) return
+    previousOpenRef.current = effectiveOpen
+    onToggle?.(effectiveOpen)
+  }, [effectiveOpen, onToggle])
 
   useEffect(() => {
-    onToggle?.(isOpen)
-  }, [isOpen, onToggle])
+    if (!effectiveOpen) {
+      setVisible(false)
+      return
+    }
+    if (focusOnOpenRef.current) {
+      panelRef.current?.focus({ preventScroll: true })
+      focusOnOpenRef.current = false
+    }
+    if (reducedMotion) {
+      setVisible(true)
+      return
+    }
+    let frame = requestAnimationFrame(() => {
+      frame = requestAnimationFrame(() => setVisible(true))
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [effectiveOpen, reducedMotion])
 
-  useEffect(() => {
-    return () => clearTimeout(animTimerRef.current)
-  }, [])
+  useEffect(() => () => clearTimeout(timerRef.current), [])
 
-  if (!selectedDatum && !isAnimating) return null
-
-  const content = selectedDatum && selectedObservation
-    ? children(selectedDatum, selectedObservation)
-    : null
-
-  if (content === null && !isAnimating) return null
-
-  const panelStyle = getPanelStyle(position, size, isOpen, isAnimating)
-
+  if (content == null) return null
+  const panelStyle = getPanelStyle(position, size, visible && isOpen, !reducedMotion)
   return (
     <div
       ref={panelRef}
+      role={position === "overlay" ? "dialog" : "region"}
+      aria-label={ariaLabel}
+      aria-live={position === "overlay" ? undefined : "polite"}
+      aria-hidden={!isOpen || undefined}
+      inert={!isOpen || undefined}
+      tabIndex={-1}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") {
+          event.preventDefault()
+          event.stopPropagation()
+          handleClose()
+        }
+      }}
       className={`semiotic-details-panel semiotic-details-${position}${className ? ` ${className}` : ""}`}
       style={{ ...panelStyle, ...style }}
     >
       {showClose && (
         <button
+          type="button"
           className="semiotic-details-close"
           onClick={handleClose}
           aria-label="Close details"
           style={closeButtonStyle}
         >
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+          <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
             <path d="M2 2l8 8M10 2l-8 8" />
           </svg>
         </button>
       )}
-      <div className="semiotic-details-content" style={{ overflow: "auto", flex: 1 }}>
-        {content}
-      </div>
+      <div className="semiotic-details-content" style={{ overflow: "auto", flex: 1 }}>{content}</div>
     </div>
   )
-}, "DetailsPanel")
+}
+
+export const DetailsPanel = /* @__PURE__ */ withDisplayName(DetailsPanelComponent, "DetailsPanel")
 
 function getPanelStyle(
   position: "right" | "bottom" | "overlay",
@@ -227,8 +269,8 @@ const closeButtonStyle: React.CSSProperties = {
   position: "absolute",
   top: 8,
   right: 8,
-  width: 20,
-  height: 20,
+  width: 24,
+  height: 24,
   display: "flex",
   alignItems: "center",
   justifyContent: "center",

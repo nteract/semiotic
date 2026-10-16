@@ -376,7 +376,7 @@ export function applyBodyForces(
 export interface PhysicsPostTickOutcome {
   regionEffectsApplied: boolean
   bodyForcesApplied: boolean
-  snapshot: ReturnType<PhysicsPipelineStore["snapshot"]>
+  snapshot: ReturnType<PhysicsPipelineStore["runtimeState"]>
   result: PhysicsPipelineTickResult
 }
 
@@ -405,7 +405,7 @@ export function runPhysicsObservedSteps(
   const result = options.deltaSeconds === undefined
     ? store.settleWithObservations(options.maxSteps, execution)
     : store.tick(options.deltaSeconds, execution)
-  return { regionEffectsApplied, bodyForcesApplied, result, snapshot: store.snapshot() }
+  return { regionEffectsApplied, bodyForcesApplied, result, snapshot: store.runtimeState() }
 }
 
 /**
@@ -426,13 +426,13 @@ export function runPhysicsPostTick(options: {
 }): {
   regionEffectsApplied: boolean
   bodyForcesApplied: boolean
-  snapshot: ReturnType<PhysicsPipelineStore["snapshot"]>
+  snapshot: ReturnType<PhysicsPipelineStore["runtimeState"]>
 } {
   const controls = options.store.controls()
   // Forces use the state at this boundary; scheduling uses the state after
   // controllers have had a chance to pause, remove, or admit bodies.
-  const snapshot = options.store.snapshot()
-  const fixedDt = snapshot.config.fixedDt || 1 / 60
+  const snapshot = options.store.runtimeState()
+  const fixedDt = snapshot.fixedDt
   const simulatedDt = Math.max(0, options.result.steps * fixedDt)
   const regionEffectsApplied = applyActiveRegionEffects(
     controls,
@@ -457,7 +457,7 @@ export function runPhysicsPostTick(options: {
     })
   }
   options.onTick?.(options.result, controls)
-  return { regionEffectsApplied, bodyForcesApplied, snapshot: options.store.snapshot() }
+  return { regionEffectsApplied, bodyForcesApplied, snapshot: options.store.runtimeState() }
 }
 
 export function resolveStyle(

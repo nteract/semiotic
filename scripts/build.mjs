@@ -122,7 +122,9 @@ function baseBuildOptions({ minify, serverOnly, clientOnly, entryNames, format }
         ? [minifyLibraryPlugin({
             format,
             options: terserOptions,
-            allowFunctionReduction: !clientOnly
+            // Named-import and cold-entry budgets both guard the selected
+            // output; compare function reduction for client chunks as well.
+            allowFunctionReduction: true
           })]
         : []),
       useClientDirectivePlugin({ clientOnly, entryNames })

@@ -96,7 +96,9 @@ export interface SemioticVACPCustomAction {
 }
 
 export interface SemioticVACPDataAccess {
-  /** Include bounded `semiotic.inspect_data`. Raw rows are off by default. */
+  /** Permit bounded schema summaries without exposing raw rows. Off by default. */
+  summaries?: boolean
+  /** Include bounded `semiotic.inspect_data` and schema summaries. Off by default. */
   sample?: boolean
   /** Maximum rows returned from one inspect call. Default 50. */
   maxSampleRows?: number
@@ -117,6 +119,7 @@ export interface CreateSemioticVACPBridgeOptions {
   /** Live observation buffer; the latest event per chart becomes VACP state. */
   getObservations?: () => readonly ChartObservation[]
   selectionActions?: SemioticVACPSelectionActions
+  /** Columns and types are public; value summaries and raw samples require opt-in. */
   dataAccess?: SemioticVACPDataAccess
   actions?:
     | readonly SemioticVACPCustomAction[]
