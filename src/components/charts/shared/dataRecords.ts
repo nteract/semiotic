@@ -11,7 +11,7 @@ export function isDataRecord(value: unknown): value is Datum {
   )
 }
 
-/** Sample ordinary rows cheaply, finding a real record when samples are gaps. */
+/** Sample ordinary rows cheaply; inspect all records when samples are gaps. */
 export function sampleDataRecords(data: readonly unknown[]): Datum[] {
   const sampled =
     data.length <= 3
@@ -19,8 +19,7 @@ export function sampleDataRecords(data: readonly unknown[]): Datum[] {
       : [data[0], data[Math.floor(data.length / 2)], data[data.length - 1]]
   const records = sampled.filter(isDataRecord)
   if (records.length) return records
-  const record = data.find(isDataRecord)
-  return record ? [record] : []
+  return data.filter(isDataRecord)
 }
 
 export function sampledFields(data: readonly unknown[]): string[] {

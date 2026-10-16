@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest"
 import { fromVegaLite, fromVegaLiteResult } from "../fromVegaLite"
 import type { VegaLiteSpec } from "../fromVegaLite"
 import { validatePortableAnnotation } from "./spec"
-import { toVegaLiteResult } from "./vegaLite"
+import { toVegaLite, toVegaLiteResult } from "./vegaLite"
 
 const base: VegaLiteSpec = {
   mark: "line",
@@ -181,6 +181,97 @@ describe("strict Vega-Lite export", () => {
     props,
     version: "1",
     createdAt: "2024-01-01T00:00:00Z"
+  })
+
+  it.each(["BarChart", "DotPlot"])(
+    "reports unexported category colors and palettes for %s",
+    (component) => {
+      const input = config(component, {
+        data: [{ c: "A", v: 1 }, { c: "B", v: 2 }],
+        categoryAccessor: "c",
+        valueAccessor: "v",
+        colorBy: "c",
+        colorScheme: ["red", "blue"]
+      })
+      const strict = toVegaLiteResult(input)
+      expect(strict.status).toBe("refused")
+      expect(strict.spec).toBeUndefined()
+      expect(toVegaLite(input)).toBeUndefined()
+      const lossy = toVegaLiteResult(input, { allowLossy: true })
+      expect(lossy.status).toBe("lossy")
+      expect(lossy.spec?.encoding?.color).toBeUndefined()
+      for (const key of ["colorBy", "colorScheme"]) {
+        expect(strict.diagnostics).toContainEqual(
+          expect.objectContaining({ path: `/props/${key}`, severity: "error" })
+        )
+        expect(lossy.lossReport).toContainEqual(
+          expect.objectContaining({ path: `/props/${key}` })
+        )
+      }
+    }
+  )
+
+  it.each<[string, Record<string, unknown>]>([
+    ["BarChart", { categoryAccessor: "c", valueAccessor: "v" }],
+    ["DotPlot", { categoryAccessor: "c", valueAccessor: "v" }],
+    ["LineChart", { xAccessor: "x", yAccessor: "y" }],
+    ["AreaChart", { xAccessor: "x", yAccessor: "y" }],
+    ["Scatterplot", { xAccessor: "x", yAccessor: "y" }],
+    ["BubbleChart", { xAccessor: "x", yAccessor: "y", sizeBy: "v" }],
+    ["Histogram", { valueAccessor: "v" }]
+  ])("reports a palette without an exported color channel for %s", (component, props) => {
+    const input = config(component, { ...props, colorScheme: "category10" })
+    expect(toVegaLiteResult(input).status).toBe("refused")
+    const lossy = toVegaLiteResult(input, { allowLossy: true })
+    expect(lossy.status).toBe("lossy")
+    expect(lossy.spec?.encoding?.color).toBeUndefined()
+    expect(lossy.lossReport).toEqual([
+      expect.objectContaining({ path: "/props/colorScheme" })
+    ])
+  })
+
+  it.each<[string, Record<string, unknown>, string]>([
+    ["StackedBarChart", { categoryAccessor: "c", valueAccessor: "v", stackBy: "g" }, "g"],
+    ["StackedAreaChart", { xAccessor: "x", yAccessor: "y", areaBy: "g" }, "g"],
+    ["PieChart", { categoryAccessor: "c", valueAccessor: "v" }, "c"],
+    ["DonutChart", { categoryAccessor: "c", valueAccessor: "v", innerRadius: 30 }, "c"],
+    ["Histogram", { valueAccessor: "v", categoryAccessor: "c" }, "c"],
+    ["LineChart", { xAccessor: "x", yAccessor: "y", lineBy: "g" }, "g"],
+    ["Scatterplot", { xAccessor: "x", yAccessor: "y" }, "g"],
+    ["BubbleChart", { xAccessor: "x", yAccessor: "y", sizeBy: "v" }, "g"],
+    ["Heatmap", { xAccessor: "x", yAccessor: "y", valueAccessor: "g" }, "g"]
+  ])("preserves matching color fields and palettes for %s", (component, props, field) => {
+    const result = toVegaLiteResult(config(component, {
+      ...props,
+      colorBy: field,
+      colorScheme: ["red", "blue"]
+    }))
+    expect(result.status).toBe("success")
+    expect(result.lossReport).toEqual([])
+    expect(result.spec?.encoding?.color).toEqual({
+      field,
+      type: component === "Heatmap" ? "quantitative" : "nominal",
+      scale: { range: ["red", "blue"] }
+    })
+  })
+
+  it("preserves grouped colors while reporting the grouped layout approximation", () => {
+    const result = toVegaLiteResult(config("GroupedBarChart", {
+      categoryAccessor: "c",
+      valueAccessor: "v",
+      groupBy: "g",
+      colorBy: "g",
+      colorScheme: ["red", "blue"]
+    }), { allowLossy: true })
+    expect(result.status).toBe("lossy")
+    expect(result.lossReport).toEqual([
+      expect.objectContaining({ code: "GROUPED_BAR_APPROXIMATION", path: "/props/groupBy" })
+    ])
+    expect(result.spec?.encoding?.color).toEqual({
+      field: "g",
+      type: "nominal",
+      scale: { range: ["red", "blue"] }
+    })
   })
 
   it.each([

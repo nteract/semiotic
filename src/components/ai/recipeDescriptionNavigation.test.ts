@@ -94,10 +94,17 @@ describe("recipe navigation fallback", () => {
         itemLabelTemplate: "{category}: {value}; {__proto__}; {toString}",
       },
     })
+    const datum = { category: Object.create(null), value: 7 }
+    Object.defineProperty(datum, "__proto__", {
+      value: "own field",
+      enumerable: true,
+      writable: true,
+      configurable: true,
+    })
     const malformed = {
       ...props,
       recipe: portable,
-      data: [{ category: Object.create(null), value: 7, ["__proto__"]: "own field" }],
+      data: [datum],
     }
     expect(describeChart("XYCustomChart", malformed).levels.l2)
       .toContain("Uncategorized accounts for 7")

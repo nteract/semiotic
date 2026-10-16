@@ -83,6 +83,41 @@ describe("public validation boundaries", () => {
     expect(validateProps("BarChart", { ...bar, data: sparse }).valid).toBe(true)
   })
 
+  it.each(["nulls", "holes"])(
+    "finds fields across all fallback records when samples are %s",
+    (gaps) => {
+      const data = gaps === "nulls" ? new Array(5).fill(null) : new Array(5)
+      data[1] = { value: 1 }
+      data[3] = { category: "A", value: 2 }
+      const accessors = {
+        categoryAccessor: "category",
+        valueAccessor: "value"
+      }
+      expect(
+        validateArrayData({ componentName: "BarChart", data, accessors })
+      ).toBeNull()
+      expect(validateProps("BarChart", { ...bar, data }).valid).toBe(true)
+      expect(
+        diagnoseConfig("BarChart", { ...bar, data }).diagnoses.map(({ code }) => code)
+      ).not.toContain("ACCESSOR_MISSING")
+      expect(
+        validateNetworkData({
+          componentName: "ForceDirectedGraph",
+          nodes: data,
+          edges: [{ source: "A", target: "A" }],
+          accessors: { nodeIDAccessor: "category" }
+        })
+      ).toBeNull()
+      expect(
+        diagnoseConfig("BarChart", {
+          ...bar,
+          data,
+          categoryAccessor: "missing"
+        }).diagnoses.map(({ code }) => code)
+      ).toContain("ACCESSOR_MISSING")
+    }
+  )
+
   it.each(
     [
       [null, null],

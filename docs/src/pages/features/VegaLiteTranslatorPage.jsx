@@ -481,7 +481,10 @@ const { componentName, props } = fromConfig(config)`} />
         <p>
           The outbound <code>unstable_toVegaLiteResult</code> reports every present prop outside
           its supported subset, including annotations and independent grouping/color fields.
-          Normalized stacks, array palettes, and area opacity are preserved. Use an explicit
+          Normalized stacks and area opacity are preserved. Palettes are preserved only when
+          a color field is exported. Category colors on BarChart and DotPlot are reported as
+          losses; use <code>{`{ allowLossy: true }`}</code> to accept the export with its loss report.
+          Use an explicit
           <code> innerRadius</code> when exporting a donut; its responsive default is not portable.
         </p>
       </section>

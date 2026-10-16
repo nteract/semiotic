@@ -32,7 +32,7 @@ describe("own-key-safe data boundaries", () => {
   })
 
   it("ignores inherited values when profiling ragged rows", () => {
-    const data = [...rows, Object.create({ __proto__: 100, constructor: 100 })]
+    const data = [...rows, Object.create({ constructor: 100 })]
     expect(summarizeData(data).fields.constructor).toMatchObject({
       mean: 4,
       missingCount: 1
@@ -49,10 +49,12 @@ describe("own-key-safe data boundaries", () => {
       fields: ["__proto__", "constructor", "toString"]
     })
     expect(grouped[0].coordinates).toEqual(
-      rows.map((row) => ({
-        ["__proto__"]: row.__proto__,
-        constructor: row.constructor
-      }))
+      rows.map((row) =>
+        Object.fromEntries([
+          ["__proto__", row.__proto__],
+          ["constructor", row.constructor]
+        ])
+      )
     )
     for (const row of grouped[0].coordinates) {
       expect(Object.getPrototypeOf(row)).toBe(Object.prototype)
@@ -64,12 +66,12 @@ describe("own-key-safe data boundaries", () => {
   it("preserves prototype-named non-pivot columns", () => {
     const result = pivot(rows, { columns: ["constructor"] })
     expect(result[0]).toMatchObject({
-      ["__proto__"]: 2,
       name: "constructor",
       value: 3
     })
     expect(Object.getPrototypeOf(result[0])).toBe(Object.prototype)
     expect(Object.hasOwn(result[0], "__proto__")).toBe(true)
+    expect(result[0]["__proto__"]).toBe(2)
   })
 
   it("does not inject an encoding through a __proto__ channel", () => {

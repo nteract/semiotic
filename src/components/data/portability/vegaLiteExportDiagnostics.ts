@@ -45,7 +45,8 @@ export function exportableColorScheme(component: string, value: unknown): value 
 /** Every present prop outside the translated subset is a declared loss. */
 export function vegaLiteExportLosses(
   component: string,
-  props: Datum
+  props: Datum,
+  colorField: string | undefined
 ): PortabilityLoss[] {
   const losses: PortabilityLoss[] = []
   const add = (
@@ -60,13 +61,12 @@ export function vegaLiteExportLosses(
   const allowed = Object.prototype.hasOwnProperty.call(SUPPORTED, component)
     ? SUPPORTED[component]
     : []
-  // The importer records implicit category colors as colorBy; those references
-  // are equivalent only when they name the exported category/group channel.
-  const implicitColor = props.stackBy ?? props.areaBy ?? props.categoryAccessor
+  // Imported implicit colors are equivalent only when the exporter actually
+  // emits that field as a color channel.
   for (const [key, value] of Object.entries(props)) {
     if (value === undefined || SHARED.includes(key) || allowed.includes(key))
       continue
-    if (key === "colorBy" && value === implicitColor) continue
+    if (key === "colorBy" && value === colorField) continue
     add(key)
   }
   if (props.lineBy && props.colorBy && props.lineBy !== props.colorBy)
@@ -105,6 +105,11 @@ export function vegaLiteExportLosses(
       "innerRadius",
       "DonutChart computes its default inner radius from its responsive container; an explicit innerRadius is required for an exact export."
     )
-  if (props.colorScheme !== undefined && !exportableColorScheme(component, props.colorScheme)) add("colorScheme", "This color scheme cannot be preserved as a supported named scheme or color array.")
+  if (props.colorScheme !== undefined) {
+    if (!exportableColorScheme(component, props.colorScheme))
+      add("colorScheme", "This color scheme cannot be preserved as a supported named scheme or color array.")
+    else if (colorField === undefined)
+      add("colorScheme", "This palette requires an exported color field.")
+  }
   return losses
 }

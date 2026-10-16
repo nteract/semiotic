@@ -174,7 +174,6 @@ export function toVegaLiteResult(
   let mark: VegaLiteSpec["mark"]
 
   const component = config.component
-  lossReport.push(...vegaLiteExportLosses(component, props))
 
   switch (component) {
     case "BarChart":
@@ -300,6 +299,8 @@ export function toVegaLiteResult(
       }
     }
   }
+
+  lossReport.unshift(...vegaLiteExportLosses(component, props, enc.color?.field))
 
   // Shared color scheme
   if (props.colorScheme && enc.color && exportableColorScheme(component, props.colorScheme)) {
