@@ -51,6 +51,18 @@ function readRegistryKeys(filename, registryName, visiting = new Set()) {
       expression = expression.expression
     }
     if (!expression) throw new Error(`Expected object registry: ${identity}`)
+    // A null-prototype assign target contributes no keys. Recognize only
+    // this empty form; descriptor arguments or computed prototypes require
+    // evaluation and must remain unsupported.
+    if (
+      ts.isCallExpression(expression) &&
+      ts.isPropertyAccessExpression(expression.expression) &&
+      ts.isIdentifier(expression.expression.expression) &&
+      expression.expression.expression.text === "Object" &&
+      expression.expression.name.text === "create" &&
+      expression.arguments.length === 1 &&
+      expression.arguments[0].kind === ts.SyntaxKind.NullKeyword
+    ) return
     // Read the arguments as registry fragments, without executing the call.
     // Nested assign calls preserve the same union of keys as object spreads.
     if (

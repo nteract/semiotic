@@ -2,6 +2,7 @@ import assert from "node:assert/strict"
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import { fileURLToPath } from "node:url"
 import { test } from "node:test"
 import { readRegistryKeys } from "./lib/registry-source.cjs"
 
@@ -60,8 +61,9 @@ test("registry checks read nested Object.assign catalogs without evaluating modu
       entry,
       `import { FAMILY as XY } from "./family"
        export const REGISTRY = /* @__PURE__ */ Object.assign(
+         Object.create(null),
          { Direct: { Nested: fake } },
-         Object.assign({}, (XY as Record<string, Config>), { Direct: override }),
+         Object.assign(Object.create(null), (XY as Record<string, Config>), { Direct: override }),
          { ...Object.assign({}, { Last: last }) }
        ) satisfies Record<string, Config>`
     )
@@ -73,11 +75,18 @@ test("registry checks read nested Object.assign catalogs without evaluating modu
       "Object.assign({}, makeRegistry())",
       "Other.assign({}, { Hidden: hidden })",
       "Object.assign({}, ...catalogs)",
-      "Object.assign()"
+      "Object.assign()",
+      "Object.create()",
+      "Object.create({ Inherited: inherited })",
+      "Object.create(null, { Hidden: { value: hidden } })",
+      "Object.create(makePrototype())",
+      "Other.create(null)"
     ]) {
       writeFileSync(entry, `export const REGISTRY = ${expression}`)
       assert.throws(() => readRegistryKeys(entry, "REGISTRY"), /Expected object registry/)
     }
+    writeFileSync(entry, "export const REGISTRY = Object.create(null)")
+    assert.deepEqual([...readRegistryKeys(entry, "REGISTRY")], [])
     writeFileSync(
       entry,
       'import { FAMILY } from "./family"\nexport const REGISTRY = Object.assign({}, FAMILY)'
@@ -90,4 +99,13 @@ test("registry checks read nested Object.assign catalogs without evaluating modu
   } finally {
     rmSync(root, { recursive: true, force: true })
   }
+})
+
+test("registry checks read the production MCP catalog without loading renderers", () => {
+  const keys = readRegistryKeys(
+    fileURLToPath(new URL("../ai/componentRegistry.ts", import.meta.url)),
+    "COMPONENT_REGISTRY"
+  )
+  for (const name of ["LineChart", "BarChart", "BigNumber", "CalendarHeatmapRecipe"])
+    assert.ok(keys.has(name), `${name} is discoverable`)
 })
