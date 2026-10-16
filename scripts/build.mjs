@@ -100,7 +100,7 @@ function useClientDirectivePlugin({
   }
 }
 
-function baseBuildOptions({ minify, serverOnly, clientOnly, entryNames, format }) {
+function baseBuildOptions({ minify, serverOnly, clientOnly, entryNames, format, mergeImports = false }) {
   return {
     outDir: "dist",
     // es2020 matches modern React/Vite targets and drops many esbuild
@@ -123,6 +123,7 @@ function baseBuildOptions({ minify, serverOnly, clientOnly, entryNames, format }
         ? [minifyLibraryPlugin({
             format,
             options: terserOptions,
+            mergeImports,
             // Named-import and cold-entry budgets both guard the selected
             // output; compare function reduction for client chunks as well.
             allowFunctionReduction: true
@@ -187,6 +188,7 @@ async function createSharedEsmGroup({
   groupName = "esm",
   analyze = false,
   deferIdentifierMinification = false,
+  mergeImports = false,
   esbuildPlugins = []
 } = {}) {
   const names = Object.keys(entries)
@@ -198,7 +200,8 @@ async function createSharedEsmGroup({
       serverOnly,
       clientOnly,
       entryNames: names,
-      format: "esm"
+      format: "esm",
+      mergeImports
     }),
     entry: entries,
     name: `${groupName}:esm`,
@@ -1557,6 +1560,7 @@ async function build() {
     clientOnly: true,
     groupName: "client-primary",
     deferIdentifierMinification: true,
+    mergeImports: true,
     analyze
   })
   writeSharedClientSymbolFacade("semiotic-ai.module.min.js", "useSelection", "semiotic-atlas-selection.module.min.js")
@@ -1584,7 +1588,7 @@ async function build() {
     minify,
     serverOnly: true,
     groupName: "server",
-    deferIdentifierMinification: true
+    mergeImports: true
   })
   // These public paths expose the same renderer. Keep one canonical entry
   // instead of making both facades load a separately compressed shared chunk.

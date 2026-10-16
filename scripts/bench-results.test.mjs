@@ -67,6 +67,17 @@ describe("benchmark result validation", () => {
     assert.match(result.errors[0], /sampleCount must be a positive/)
   })
 
+  it("rejects duplicate leaf names across benchmark suites", () => {
+    const entry = { name: "repeated", mean: 1, sampleCount: 10 }
+    const result = collectVitestBenchmarks({ files: [{
+      filepath: "example.bench.ts",
+      groups: ["small", "large"].map((fullName) => ({ fullName, benchmarks: [entry] })),
+    }] })
+    assert.equal(Object.keys(result.benchmarks).length, 1)
+    assert.equal(result.errors.length, 1)
+    assert.match(result.errors[0], /large > repeated: duplicate benchmark name/)
+  })
+
   it("reports membership drift in either direction", () => {
     const errors = exactBenchmarkMembershipErrors(
       { retained: {}, removed: {} },

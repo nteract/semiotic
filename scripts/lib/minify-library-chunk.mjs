@@ -3,6 +3,7 @@ import { minify } from "terser"
 import { cleanPureAnnotations } from "./clean-pure-annotations.mjs"
 import { chunkLoadEffect } from "./strip-pure-bare-imports.mjs"
 import { restoreModuleInitializers } from "./restore-module-initializers.mjs"
+import { mergeLibraryImports } from "./merge-library-imports.mjs"
 
 export const libraryCompressionCandidates = [
   { hoist_funs: true },
@@ -67,12 +68,15 @@ export async function minifyLibraryChunk(
 export function minifyLibraryPlugin({
   format,
   options,
-  allowFunctionReduction
+  allowFunctionReduction,
+  mergeImports = false
 }) {
   return {
     name: "minify-library-chunk",
-    renderChunk(code, info) {
+    async renderChunk(code, info) {
       if (!/\.(?:cjs|js|mjs)$/.test(info.path)) return
+      if (mergeImports && format === "esm")
+        code = await mergeLibraryImports(code, info.path)
       return minifyLibraryChunk(code, {
         format,
         filename: info.path,

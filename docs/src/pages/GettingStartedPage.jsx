@@ -9,12 +9,12 @@ import PageLayout from "../components/PageLayout"
 const bundleSizeRows = Object.freeze([
   {
     "importPath": "semiotic/atlas",
-    "kb": 300,
+    "kb": 299,
     "blurb": "Motif Braid, Dependency Forest, and Flow Circuit readers"
   },
   {
     "importPath": "semiotic/atlas/core",
-    "kb": 13,
+    "kb": 15,
     "blurb": "Network Atlas preparation, projections, and evidence queries"
   },
   {
@@ -29,7 +29,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/artifact",
-    "kb": 122,
+    "kb": 123,
     "blurb": "Renderer-independent contracts, claims, time, policy, grounding, and transfer audits"
   },
   {
@@ -39,27 +39,27 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/line",
-    "kb": 141,
+    "kb": 140,
     "blurb": "LineChart only — one-chart micro boundary"
   },
   {
     "importPath": "semiotic/xy",
-    "kb": 180,
+    "kb": 178,
     "blurb": "LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts"
   },
   {
     "importPath": "semiotic/ordinal",
-    "kb": 133,
+    "kb": 131,
     "blurb": "BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts"
   },
   {
     "importPath": "semiotic/network",
-    "kb": 174,
+    "kb": 173,
     "blurb": "ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more"
   },
   {
     "importPath": "semiotic/network/zoom",
-    "kb": 180,
+    "kb": 178,
     "blurb": "Optional virtual network viewport, camera controls and consumer-owned LOD"
   },
   {
@@ -79,17 +79,17 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/geo",
-    "kb": 109,
+    "kb": 108,
     "blurb": "ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap"
   },
   {
     "importPath": "semiotic/realtime",
-    "kb": 208,
+    "kb": 206,
     "blurb": "RealtimeLineChart, RealtimeHistogram, + 4 streaming charts"
   },
   {
     "importPath": "semiotic/realtime/core",
-    "kb": 206,
+    "kb": 204,
     "blurb": "Streaming chart types, HOCs, and buffer helpers"
   },
   {
@@ -109,17 +109,17 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/server/edge",
-    "kb": 276,
+    "kb": 279,
     "blurb": "renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard"
   },
   {
     "importPath": "semiotic/utils",
-    "kb": 108,
+    "kb": 110,
     "blurb": "ThemeProvider, numeric/accessibility audits, serialization — no chart components"
   },
   {
     "importPath": "semiotic/utils/core",
-    "kb": 98,
+    "kb": 100,
     "blurb": "Pure theme helpers, numeric/accessibility audits, and serialization"
   },
   {
@@ -129,12 +129,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/recipes",
-    "kb": 115,
+    "kb": 104,
     "blurb": "Pure layout functions (waffle, marimekko, flextree, dagre, …)"
   },
   {
     "importPath": "semiotic/recipes/core",
-    "kb": 113,
+    "kb": 103,
     "blurb": "Pure layout functions (waffle, marimekko, flextree, dagre, …)"
   },
   {
@@ -169,7 +169,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/physics",
-    "kb": 171,
+    "kb": 170,
     "blurb": "GaltonBoardChart, EventDropChart, UnitPileChart, CollisionSwarmChart, PacketFlowChart, PhysicsCustomChart"
   },
   {
@@ -184,17 +184,17 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/ai",
-    "kb": 644,
+    "kb": 642,
     "blurb": "All schema-backed charts + validation — optimized for LLM code generation"
   },
   {
     "importPath": "semiotic/ai/core",
-    "kb": 140,
+    "kb": 141,
     "blurb": "suggestCharts, auditData, describeChart, repairChartConfig, tool adapters — no chart components"
   },
   {
     "importPath": "semiotic/controls",
-    "kb": 18,
+    "kb": 19,
     "blurb": "DirectManipulationControl, CircularBrush, LinearBrush, MobileStandardControls, auditVisualizationControls — no frame renderer"
   },
   {
@@ -209,7 +209,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic",
-    "kb": 421,
+    "kb": 418,
     "blurb": "Full chart API and shared utilities"
   }
 ])
