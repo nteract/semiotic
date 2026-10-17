@@ -5,6 +5,12 @@ import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import test from "node:test"
 import { AI_EVAL_PROVIDERS } from "./lib/ai-eval-providers.mjs"
+import { sanitizedApiError } from "./lib/api-key-redaction.mjs"
+import {
+  describeUnpricedModels,
+  liteLLMPriceTable,
+  liteLLMProxyRoot
+} from "./lib/litellm-model-prices.mjs"
 import {
   calculateResponseCost,
   extractOutputText,
@@ -559,4 +565,359 @@ test("a matching legacy OpenAI manifest without a provider field resumes as open
   const manifest = JSON.parse(await readFile(manifestPath, "utf8"))
   assert.equal(manifest.provider, "openai")
   assert.equal(manifest.requestCount, 1)
+})
+
+const liteLLMModelInfo = {
+  data: [
+    {
+      model_name: "gpt-4.1-mini",
+      model_info: {
+        input_cost_per_token: 4e-7,
+        output_cost_per_token: 1.6e-6,
+        cache_read_input_token_cost: 1e-7
+      }
+    },
+    {
+      model_name: "gpt-4.1-mini",
+      model_info: {
+        input_cost_per_token: 5e-7,
+        output_cost_per_token: 1.5e-6
+      }
+    },
+    { model_name: "local-llama", model_info: { mode: "chat" } },
+    {
+      model_name: "free-model",
+      model_info: { input_cost_per_token: 0, output_cost_per_token: 0 }
+    },
+    { model_name: "openai/*", model_info: { mode: "chat" } },
+    {
+      model_name: "priced/*",
+      model_info: {
+        input_cost_per_token: 1e-6,
+        output_cost_per_token: 2e-6
+      }
+    }
+  ]
+}
+
+function liteLLMFetch(calls, outputText = '{"ok":true}') {
+  return async (url, options) => {
+    calls.push({
+      url,
+      authorization: options.headers.Authorization,
+      body: options.body ? JSON.parse(options.body) : undefined
+    })
+    if (url.endsWith("/model/info")) {
+      return { ok: true, status: 200, json: async () => liteLLMModelInfo }
+    }
+    const model = JSON.parse(options.body).model
+    return jsonResponse(model, outputText)
+  }
+}
+
+test("provider registry registers litellm as a self-hosted gateway priced from /model/info", () => {
+  const provider = AI_EVAL_PROVIDERS.litellm
+  assert.ok(provider)
+  assert.equal(provider.apiUrl, null)
+  assert.equal(provider.baseUrlEnv, "LITELLM_BASE_URL")
+  assert.equal(provider.defaultBaseUrl, "http://localhost:4000")
+  assert.equal(provider.apiKeyEnv, "LITELLM_API_KEY")
+  assert.equal(provider.projectEnv, null)
+  assert.equal(provider.priceSource, "litellm-model-info")
+  assert.deepEqual(provider.defaultModels, [])
+  assert.equal(provider.requestReasoning, false)
+  // hasPriceTable marks a locked table shipped in the registry.
+  assert.equal(provider.hasPriceTable, false)
+  for (const entry of Object.values(AI_EVAL_PROVIDERS)) {
+    assert.equal(entry.hasPriceTable, entry.pricesPerMillion != null, entry.id)
+  }
+})
+
+test("liteLLMPriceTable resolves wildcard routes and treats a $0 price as priced", () => {
+  const discovered = liteLLMPriceTable(liteLLMModelInfo, [
+    "free-model",
+    "openai/gpt-4o-mini",
+    "priced/some-model"
+  ])
+  assert.deepEqual(discovered.prices["free-model"], {
+    input: 0,
+    cachedInput: 0,
+    cacheWriteInput: 0,
+    output: 0
+  })
+  assert.ok(Math.abs(discovered.prices["priced/some-model"].input - 1) < 1e-9)
+  assert.ok(Math.abs(discovered.prices["priced/some-model"].output - 2) < 1e-9)
+  assert.deepEqual(discovered.unpriced, ["openai/gpt-4o-mini"])
+  assert.deepEqual(discovered.wildcardRoutes, {
+    "openai/gpt-4o-mini": "openai/*",
+    "priced/some-model": "priced/*"
+  })
+  assert.equal(
+    describeUnpricedModels(discovered),
+    "openai/gpt-4o-mini (via wildcard route openai/*)"
+  )
+  // An exact model_name wins over a wildcard route, and a wildcard does not
+  // match across a different prefix.
+  assert.deepEqual(
+    liteLLMPriceTable(liteLLMModelInfo, ["gpt-4.1-mini", "other/openai/x"])
+      .wildcardRoutes,
+    {}
+  )
+})
+
+test("sanitizedApiError redacts the configured key in any format", () => {
+  assert.equal(
+    sanitizedApiError(
+      "bad key lt-custom-key-123 and sk-other",
+      "lt-custom-key-123"
+    ),
+    "bad key [REDACTED_API_KEY] and [REDACTED_API_KEY]"
+  )
+  assert.equal(
+    sanitizedApiError("Received API Key = sk-...-dev"),
+    "Received API Key = [REDACTED_API_KEY]"
+  )
+})
+
+test("liteLLMPriceTable keeps the highest deployment rate and falls back to the input rate", () => {
+  assert.equal(liteLLMProxyRoot("http://proxy:4000/v1/"), "http://proxy:4000")
+  assert.equal(
+    liteLLMProxyRoot("https://gw.example.com/litellm"),
+    "https://gw.example.com/litellm"
+  )
+  const { prices, unpriced } = liteLLMPriceTable(liteLLMModelInfo, [
+    "gpt-4.1-mini",
+    "local-llama",
+    "missing-model"
+  ])
+  assert.deepEqual(Object.keys(prices), ["gpt-4.1-mini"])
+  const rates = prices["gpt-4.1-mini"]
+  assert.ok(Math.abs(rates.input - 0.5) < 1e-9)
+  assert.ok(Math.abs(rates.output - 1.6) < 1e-9)
+  assert.ok(Math.abs(rates.cachedInput - 0.5) < 1e-9)
+  assert.ok(Math.abs(rates.cacheWriteInput - 0.5) < 1e-9)
+  assert.deepEqual(unpriced, ["local-llama", "missing-model"])
+})
+
+test("litellm validate-only reads prices from the proxy and estimates cost", async () => {
+  const calls = []
+  const stdoutChunks = []
+  await runEvalRun({
+    argv: [
+      "node",
+      "run-openai-ai-evals.mjs",
+      "--provider=litellm",
+      "--models=gpt-4.1-mini",
+      "--validate-only"
+    ],
+    env: {
+      LITELLM_API_KEY: "sk-test",
+      LITELLM_BASE_URL: "http://proxy.internal:4000/v1"
+    },
+    fetchImpl: liteLLMFetch(calls),
+    stdout: { write: (chunk) => stdoutChunks.push(String(chunk)) },
+    stderr: { write: () => {} }
+  })
+  assert.deepEqual(
+    calls.map(({ url }) => url),
+    [
+      "http://proxy.internal:4000/model/info",
+      "http://proxy.internal:4000/v1/responses"
+    ]
+  )
+  assert.equal(calls[0].authorization, "Bearer sk-test")
+  assert.equal(calls[1].body.model, "gpt-4.1-mini")
+  assert.equal(calls[1].body.reasoning, undefined)
+  const output = JSON.parse(stdoutChunks.join(""))
+  assert.equal(output.ok, true)
+  // 10 input tokens at $0.5/M plus 5 output tokens at $1.6/M.
+  assert.equal(output.estimatedUsd, 0.000013)
+})
+
+test("litellm --base-url overrides LITELLM_BASE_URL", async () => {
+  const calls = []
+  await runEvalRun({
+    argv: [
+      "node",
+      "run-openai-ai-evals.mjs",
+      "--provider=litellm",
+      "--models=gpt-4.1-mini",
+      "--base-url=https://gateway.example.com/litellm",
+      "--validate-only"
+    ],
+    env: {
+      LITELLM_API_KEY: "sk-test",
+      LITELLM_BASE_URL: "http://ignored:4000"
+    },
+    fetchImpl: liteLLMFetch(calls),
+    stdout: { write: () => {} },
+    stderr: { write: () => {} }
+  })
+  assert.equal(calls[1].url, "https://gateway.example.com/litellm/v1/responses")
+})
+
+test("litellm runs with priced models require and enforce --max-usd", async () => {
+  const jobs = JSON.parse(
+    await readFile(join(root, "evals/first-try/jobs.json"), "utf8")
+  )
+  const argv = (outputDirectory, ...extra) => [
+    "node",
+    "run-openai-ai-evals.mjs",
+    "--provider=litellm",
+    "--models=gpt-4.1-mini",
+    "--suites=first-try",
+    `--first-try-fixtures=${jobs.jobs[0].fixtureId}`,
+    `--output-dir=${outputDirectory}`,
+    "--trial-id=test-litellm-run",
+    "--confirm-spend",
+    ...extra
+  ]
+  const run = (outputDirectory, calls, ...extra) =>
+    runEvalRun({
+      argv: argv(outputDirectory, ...extra),
+      env: { LITELLM_API_KEY: "sk-test" },
+      fetchImpl: liteLLMFetch(calls, '{"component":"LineChart","props":{}}'),
+      stdout: { write: () => {} },
+      stderr: { write: () => {} }
+    })
+
+  await assert.rejects(
+    run(await mkdtemp(join(tmpdir(), "litellm-no-ceiling-")), []),
+    /LiteLLM \/model\/info prices every requested model, so a positive --max-usd is required/
+  )
+
+  const tinyCalls = []
+  await assert.rejects(
+    run(
+      await mkdtemp(join(tmpdir(), "litellm-tiny-ceiling-")),
+      tinyCalls,
+      "--max-usd=0.0000001"
+    ),
+    /Spend ceiling would be exceeded/
+  )
+  assert.equal(
+    tinyCalls.filter(({ url }) => url.endsWith("/v1/responses")).length,
+    0
+  )
+
+  const outputDirectory = await mkdtemp(join(tmpdir(), "litellm-run-"))
+  const calls = []
+  await run(outputDirectory, calls, "--max-usd=1")
+  assert.equal(calls[0].url, "http://localhost:4000/model/info")
+  const manifest = JSON.parse(
+    await readFile(join(outputDirectory, "run-manifest.json"), "utf8")
+  )
+  assert.equal(manifest.provider, "litellm")
+  assert.match(manifest.priceRevision, /^litellm-model-info-[0-9a-f]{12}$/)
+  assert.equal(manifest.requestCount, 1)
+  assert.equal(manifest.estimatedUsd, 0.000013)
+  assert.equal(manifest.requests[0].estimatedUsd, 0.000013)
+})
+
+test("litellm models the proxy cannot price fall back to unknown cost", async () => {
+  const jobs = JSON.parse(
+    await readFile(join(root, "evals/first-try/jobs.json"), "utf8")
+  )
+  const outputDirectory = await mkdtemp(join(tmpdir(), "litellm-unpriced-"))
+  const stderrChunks = []
+  await runEvalRun({
+    argv: [
+      "node",
+      "run-openai-ai-evals.mjs",
+      "--provider=litellm",
+      "--models=local-llama",
+      "--suites=first-try",
+      `--first-try-fixtures=${jobs.jobs[0].fixtureId}`,
+      `--output-dir=${outputDirectory}`,
+      "--trial-id=test-litellm-unpriced",
+      "--confirm-spend"
+    ],
+    env: { LITELLM_API_KEY: "sk-test" },
+    fetchImpl: liteLLMFetch([], '{"component":"LineChart","props":{}}'),
+    stdout: { write: () => {} },
+    stderr: { write: (chunk) => stderrChunks.push(String(chunk)) }
+  })
+  assert.match(
+    stderrChunks.join(""),
+    /no input and output prices for local-llama/
+  )
+  const manifest = JSON.parse(
+    await readFile(join(outputDirectory, "run-manifest.json"), "utf8")
+  )
+  assert.equal(manifest.priceRevision, null)
+  assert.equal(manifest.estimatedUsd, null)
+  assert.equal(manifest.requests[0].estimatedUsd, null)
+})
+
+test("litellm --max-usd fails fast when any requested model is unpriced", async () => {
+  for (const extra of [[], ["--validate-only"]]) {
+    const calls = []
+    await assert.rejects(
+      runEvalRun({
+        argv: [
+          "node",
+          "run-openai-ai-evals.mjs",
+          "--provider=litellm",
+          "--models=gpt-4.1-mini,local-llama,openai/gpt-4o-mini",
+          "--max-usd=1",
+          "--confirm-spend",
+          ...extra
+        ],
+        env: { LITELLM_API_KEY: "sk-test" },
+        fetchImpl: liteLLMFetch(calls),
+        stdout: { write: () => {} },
+        stderr: { write: () => {} }
+      }),
+      (error) =>
+        error.message.startsWith("--max-usd cannot be enforced") &&
+        error.message.includes(
+          "local-llama, openai/gpt-4o-mini (via wildcard route openai/*)"
+        ) &&
+        !error.message.includes("gpt-4.1-mini,")
+    )
+    assert.deepEqual(
+      calls.map(({ url }) => url),
+      ["http://localhost:4000/model/info"]
+    )
+  }
+})
+
+test("litellm requires --models and reports /model/info auth failures without the key", async () => {
+  await assert.rejects(
+    runEvalRun({
+      argv: [
+        "node",
+        "run-openai-ai-evals.mjs",
+        "--provider=litellm",
+        "--validate-only"
+      ],
+      env: { LITELLM_API_KEY: "sk-test" },
+      fetchImpl: liteLLMFetch([]),
+      stdout: { write: () => {} }
+    }),
+    /LiteLLM has no default models; pass --models/
+  )
+  await assert.rejects(
+    runEvalRun({
+      argv: [
+        "node",
+        "run-openai-ai-evals.mjs",
+        "--provider=litellm",
+        "--models=gpt-4.1-mini",
+        "--validate-only"
+      ],
+      env: { LITELLM_API_KEY: "lt-live-secret" },
+      fetchImpl: async () => ({
+        ok: false,
+        status: 401,
+        text: async () =>
+          '{"error":{"message":"Authentication Error, Received API Key = lt-live-secret"}}'
+      }),
+      stdout: { write: () => {} }
+    }),
+    (error) =>
+      /LiteLLM \/model\/info 401/.test(error.message) &&
+      error.message.includes("[REDACTED_API_KEY]") &&
+      !error.message.includes("lt-live-secret")
+  )
 })
