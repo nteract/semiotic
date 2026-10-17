@@ -48,6 +48,28 @@ describe("MCP HTTP access policy", () => {
     expect(hosted.allowsHost("[::1]:3001")).toBe(true)
   })
 
+  it.each(["fe80::1%eth0", "fe80::1%25eth0", "fe80::1%1", "::1%lo0"])(
+    "rejects scoped IPv6 %s without throwing from either header parser",
+    (address) => {
+      const policy = createMcpHttpAccessPolicy("::1", {
+        MCP_ALLOWED_ORIGINS: "http://[::1]:3001"
+      })
+      const authority = `[${address}]:3001`
+      expect(policy.allowsHost(authority)).toBe(false)
+      expect(policy.allowsOrigin(`http://${authority}`)).toBe(false)
+      expect(() =>
+        createMcpHttpAccessPolicy("::1", {
+          MCP_ALLOWED_HOSTS: authority
+        })
+      ).toThrow("MCP_ALLOWED_HOSTS")
+      expect(() =>
+        createMcpHttpAccessPolicy("::1", {
+          MCP_ALLOWED_ORIGINS: `http://${authority}`
+        })
+      ).toThrow("MCP_ALLOWED_ORIGINS")
+    }
+  )
+
   it("uses explicit hosts instead of the local defaults and respects explicit ports", () => {
     const policy = createMcpHttpAccessPolicy("127.0.0.1", {
       MCP_ALLOWED_HOSTS: " api.example, tunnel.example:443 "

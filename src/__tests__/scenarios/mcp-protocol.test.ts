@@ -1029,6 +1029,30 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP HTTP transport smoke", () => {
     expect(forwarded.status).toBe(403)
   })
 
+  it.each(["Host", "Origin"])("rejects scoped IPv6 in %s and keeps serving requests", async (header) => {
+    for (const authority of ["[fe80::1%eth0]:3001", "[fe80::1%25eth0]:3001"]) {
+      for (const method of ["GET", "POST", "OPTIONS"]) {
+        const response = await requestHTTP(port, "/mcp", {
+          method,
+          headers: { [header]: header === "Host" ? authority : `http://${authority}` },
+          ...(method === "POST" ? {
+            body: { jsonrpc: "2.0", id: "scoped-ipv6", method: "tools/list" }
+          } : {})
+        })
+        expect(response.status).toBe(403)
+        expect(response.body).toMatchObject({
+          error: { message: header === "Host" ? "Forbidden host" : "Forbidden origin" }
+        })
+        expect(response.headers["access-control-allow-origin"]).toBeUndefined()
+        const healthy = await requestHTTP(port, "/mcp", {
+          body: { jsonrpc: "2.0", id: "after-scoped-ipv6", method: "tools/list" }
+        })
+        expect(healthy.status).toBe(200)
+        expect(healthy.body).toMatchObject({ result: { tools: expect.any(Array) } })
+      }
+    }
+  })
+
   it("requires explicit access lists for a public-profile all-interface bind", async () => {
     proc?.kill("SIGTERM")
     if (proc) await waitForProcessExit(proc)

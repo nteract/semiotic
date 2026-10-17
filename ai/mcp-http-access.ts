@@ -18,7 +18,13 @@ function parseHost(value: string): HostAuthority | undefined {
   let hostname = match[1].toLowerCase()
   if (hostname.startsWith("[")) {
     if (isIP(hostname.slice(1, -1)) !== 6) return undefined
-    hostname = new URL(`http://${hostname}`).hostname.slice(1, -1)
+    try {
+      hostname = new URL(`http://${hostname}`).hostname.slice(1, -1)
+    } catch {
+      // isIP accepts zone identifiers that URL rejects. Untrusted headers
+      // must fail the access check rather than escape the request handler.
+      return undefined
+    }
   }
   const port = match[2] === undefined ? undefined : Number(match[2])
   if (
