@@ -11,8 +11,6 @@ for (const { input, geometry } of cases) {
     await page.goto(
       `/recipe-regressions/?case=positioned&input=${input}&geometry=${geometry}`
     )
-    for (const name of ["flextree", "dagre"])
-      await waitForChartReady(page, name)
     for (const width of [500, 280]) {
       if (width === 280)
         await page.getByRole("button", { name: "Resize charts" }).click()
@@ -20,6 +18,9 @@ for (const { input, geometry } of cases) {
         const chart = page.getByTestId(name)
         const canvas = chart.locator("canvas").first()
         await expect(canvas).toHaveCSS("width", `${width}px`)
+        // Push-mode resize can update the canvas before React commits the new
+        // SVG label positions. Settle this size before sampling hover targets.
+        await waitForChartReady(page, name)
         const labels = chart
           .locator("text")
           .filter({ hasText: /^(Root|Leaf)$/ })
@@ -47,7 +48,9 @@ for (const { input, geometry } of cases) {
         ] as const) {
           await page.mouse.move(point.x, point.y)
           const tooltip = chart.locator(".stream-network-tooltip")
-          await expect(tooltip).toHaveText(content)
+          await expect(tooltip, `${name} at ${width}px: ${content}`).toHaveText(
+            content
+          )
           await expect
             .poll(async () => {
               const box = await canvas.boundingBox(),
