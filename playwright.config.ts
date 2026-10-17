@@ -7,6 +7,8 @@ export default {
   // explicit Chromium-only config. Do not run it through the three-browser
   // package integration suite on :1234 as well.
   testIgnore: [
+    // Camera scale measurements own a production profiling build and CDP.
+    "**/network-camera-scale.spec.ts",
     // Docs examples have their own Vite application and Chromium-only config.
     "**/docs-examples-*.spec.ts",
   ],

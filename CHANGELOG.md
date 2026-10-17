@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Network zoom gestures preserve node and edge clicks and touch taps while
+  drag-to-pan is enabled. Pointer capture now stays on the original target;
+  clicks following a drag remain suppressed.
+
 ### Security
 
 - MCP HTTP mode now rejects browser origins unless explicitly listed in

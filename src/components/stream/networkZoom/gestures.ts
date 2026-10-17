@@ -33,6 +33,7 @@ export function bindNetworkZoom(element: HTMLElement, host: Host) {
   let moving = false
   let suppressClickUntil = 0
   const pointers = new Map<number, { x: number; y: number }>()
+  const captures = new Map<number, Element>()
   let origin: { x: number; y: number } | null = null
   let dragged = false
   let lastTap: { x: number; y: number; time: number } | null = null
@@ -224,16 +225,22 @@ export function bindNetworkZoom(element: HTMLElement, host: Host) {
       return
     const point = plotPoint(event)
     if (!inside(point)) return
-    // Map dragging must not start browser text selection. Interactive card
-    // controls were filtered above and retain native focus/editing behavior.
-    event.preventDefault()
+    // Mouse dragging must not select text. Touch/pen use the host's
+    // touch-action policy; canceling touch pointerdown also cancels WebKit's
+    // synthesized click, even when the pointer never moves.
+    if (event.pointerType === "mouse") event.preventDefault()
     cancelAnimation()
     if (pointers.size === 0) {
       origin = point
       dragged = false
     }
     pointers.set(event.pointerId, point)
-    element.setPointerCapture(event.pointerId)
+    // Capture on the original mark/canvas so a stationary pointer's click
+    // still bubbles through the chart. Capturing on the outer zoom wrapper
+    // retargets the browser's click outside the frame and loses activation.
+    const capture = event.target instanceof Element ? event.target : element
+    captures.set(event.pointerId, capture)
+    capture.setPointerCapture(event.pointerId)
   }
   const move = (event: PointerEvent) => {
     if (!pointers.has(event.pointerId)) return
@@ -305,8 +312,10 @@ export function bindNetworkZoom(element: HTMLElement, host: Host) {
     if (!pointers.has(event.pointerId)) return
     const point = pointers.get(event.pointerId)!
     pointers.delete(event.pointerId)
-    if (element.hasPointerCapture(event.pointerId))
-      element.releasePointerCapture(event.pointerId)
+    const capture = captures.get(event.pointerId)
+    captures.delete(event.pointerId)
+    if (capture?.hasPointerCapture(event.pointerId))
+      capture.releasePointerCapture(event.pointerId)
     if (dragged) suppressClickUntil = win.performance.now() + 400
     else if (
       event.type === "pointerup" &&
@@ -328,9 +337,10 @@ export function bindNetworkZoom(element: HTMLElement, host: Host) {
     settle()
   }
   const cancel = () => {
-    for (const id of pointers.keys())
-      if (element.hasPointerCapture(id)) element.releasePointerCapture(id)
     pointers.clear()
+    for (const [id, capture] of captures)
+      if (capture.hasPointerCapture(id)) capture.releasePointerCapture(id)
+    captures.clear()
     origin = null
     cancelAnimation()
     finish()
