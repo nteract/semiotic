@@ -246,6 +246,58 @@ describe("network pointer driver", () => {
     element.dispatchEvent(click)
     expect(click.defaultPrevented).toBe(true)
   })
+  it.each(["pointerup", "pointercancel", "cancel", "destroy"])(
+    "captures the original mark and releases it on %s",
+    (end) => {
+      const canvas = document.createElement("canvas")
+      element.append(canvas)
+      const held = new Set<number>()
+      canvas.setPointerCapture = vi.fn((id) => {
+        held.add(id)
+      })
+      canvas.hasPointerCapture = (id) => held.has(id)
+      canvas.releasePointerCapture = vi.fn((id) => {
+        held.delete(id)
+      })
+      const event = new Event("pointerdown", {
+        bubbles: true,
+        cancelable: true
+      })
+      Object.assign(event, {
+        pointerId: 1,
+        pointerType: "mouse",
+        button: 0,
+        clientX: 50,
+        clientY: 50
+      })
+      canvas.dispatchEvent(event)
+      expect(canvas.setPointerCapture).toHaveBeenCalledWith(1)
+      expect(element.hasPointerCapture(1)).toBe(false)
+      if (end === "cancel" || end === "destroy") driver[end]()
+      else pointer(end, 1, 50, 50)
+      expect(canvas.releasePointerCapture).toHaveBeenCalledWith(1)
+      expect(held.size).toBe(0)
+      expect(change).not.toHaveBeenCalled()
+    }
+  )
+  it.each(["mouse", "touch", "pen"])(
+    "only cancels mouse selection, preserving %s tap defaults",
+    (pointerType) => {
+      const event = new Event("pointerdown", {
+        bubbles: true,
+        cancelable: true
+      })
+      Object.assign(event, {
+        pointerId: 1,
+        pointerType,
+        button: 0,
+        clientX: 50,
+        clientY: 50
+      })
+      element.dispatchEvent(event)
+      expect(event.defaultPrevented).toBe(pointerType === "mouse")
+    }
+  )
   it("locks all imperative and gesture movement and cleans up pending work on disposal", () => {
     options.locked = true
     driver.zoomBy(2)

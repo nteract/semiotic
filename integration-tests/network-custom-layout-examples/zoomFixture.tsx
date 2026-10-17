@@ -166,8 +166,6 @@ export function ZoomFixture() {
   const [accept, setAccept] = React.useState(false)
   const [options, setOptions] = React.useState<NetworkZoomOptions>({
     wheelZoom: true,
-    // This fixture pans through the camera API so mark clicks reach the frame.
-    dragPan: new URLSearchParams(location.search).has("node-hit-test") ? false : undefined,
     duration: new URLSearchParams(location.search).has("animated") ? 180 : 0,
     minZoom: 0.25,
     maxZoom: 4
