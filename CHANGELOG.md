@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- MCP HTTP mode now rejects browser origins unless explicitly listed in
+  `MCP_ALLOWED_ORIGINS` and validates Host against the bind hostname by default.
+  These checks also cover preflight, health, and challenge requests. Configure
+  `MCP_ALLOWED_HOSTS` for hosted services and tunnels; binding to all interfaces
+  does not disable Host validation. Native clients without Origin and the
+  default stdio transport continue to work. CORS no longer grants wildcard access.
+
 ## [3.12.1] - 2026-10-05
 
 ### Added

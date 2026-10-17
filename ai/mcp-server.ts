@@ -41,8 +41,9 @@
  * HTTP mode (loopback-only by default):
  *   npx -y -p semiotic semiotic-mcp --http --port 3001
  *
- * Bind intentionally to a public interface only when needed:
- *   npx -y -p semiotic semiotic-mcp --http --host 0.0.0.0 --port 3001
+ * Browser clients require MCP_ALLOWED_ORIGINS (for example http://localhost:5173).
+ * Bind intentionally to a public interface with an explicit served hostname:
+ *   MCP_ALLOWED_HOSTS=mcp.example.com npx -y -p semiotic semiotic-mcp --http --host 0.0.0.0 --port 3001
  */
 
 import {
@@ -57,6 +58,7 @@ import * as fs from "fs"
 import * as path from "path"
 import * as http from "http"
 import { resolveHTTPListenHost } from "./mcp-server-options"
+import { createMcpHttpAccessPolicy } from "./mcp-http-access"
 import { DEFAULT_MCP_BODY_TIMEOUT_MS } from "./mcp-http-body"
 import { closeMcpRequestAfterResponse, createMcpUploadAdmission, resolveMcpUploadLimit } from "./mcp-upload-admission"
 import { diagnoseChart } from "./operations/diagnose"
@@ -5216,22 +5218,7 @@ async function main() {
     // holding an SSE stream open — the right shape for serverless.
     // sessionIdGenerator: undefined selects stateless mode in the SDK.
 
-    // DNS-rebinding defense (CVE-2025-66414): opt-in Host-header allowlist.
-    // The SDK's built-in allowedHosts option is deprecated in favor of doing
-    // this in the request handler. Set MCP_ALLOWED_HOSTS to your public
-    // hostname(s) in production; leave unset for local dev.
-    const allowedHosts = (process.env.MCP_ALLOWED_HOSTS || "")
-      .split(",")
-      .map((h) => h.trim().toLowerCase())
-      .filter(Boolean)
-    // Origin allowlist (browser cross-origin defense, opt-in). When set, a
-    // request carrying a disallowed `Origin` is rejected and CORS echoes only
-    // an allowed origin instead of the `*` wildcard. Leave unset for non-browser
-    // MCP clients (which send no Origin) and local dev.
-    const allowedOrigins = (process.env.MCP_ALLOWED_ORIGINS || "")
-      .split(",")
-      .map((o) => o.trim().toLowerCase())
-      .filter(Boolean)
+    const httpAccess = createMcpHttpAccessPolicy(host)
     // Hard request-body ceiling (DoS guard). A read-only tool can still consume
     // unbounded CPU/memory validating or rendering a huge payload, so cap the
     // bytes we accept before handing the body to the MCP transport. Default 4 MB;
@@ -5307,44 +5294,15 @@ async function main() {
         }
       })()
 
-      const origin = String(req.headers.origin || "")
-        .trim()
-        .toLowerCase()
-      // CORS: wildcard when no origin allowlist is configured; otherwise echo
-      // only an allowed origin (and Vary on Origin so caches don't cross wires).
-      if (allowedOrigins.length > 0) {
-        res.setHeader(
-          "Access-Control-Allow-Origin",
-          allowedOrigins.includes(origin) ? origin : allowedOrigins[0]
-        )
-        res.setHeader("Vary", "Origin")
-      } else {
-        res.setHeader("Access-Control-Allow-Origin", "*")
-      }
-      res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-      res.setHeader(
-        "Access-Control-Allow-Headers",
-        "Content-Type, Accept, Authorization, mcp-session-id, MCP-Protocol-Version, Last-Event-ID"
-      )
-      res.setHeader("Access-Control-Expose-Headers", "MCP-Protocol-Version")
-
-      if (req.method === "OPTIONS") {
-        res.writeHead(204)
-        res.end()
-        return
-      }
-
-      // Origin allowlist (browser cross-origin defense). A request that presents
-      // a disallowed Origin is rejected outright. Non-browser MCP clients send
-      // no Origin header and are unaffected.
-      if (
-        allowedOrigins.length > 0 &&
-        origin &&
-        !allowedOrigins.includes(origin)
-      ) {
+      // Check every route and method, including preflight, before returning
+      // CORS headers or consuming a body. Forwarded headers are not trusted.
+      res.setHeader("Vary", "Origin")
+      const origin = req.headers.origin
+      const forbiddenHost = !httpAccess.allowsHost(req.headers.host)
+      if (forbiddenHost || !httpAccess.allowsOrigin(origin)) {
         closeMcpRequestAfterResponse(req, res)
         mcpLogger.warn("request_rejected", {
-          reason: "forbidden_origin",
+          reason: forbiddenHost ? "forbidden_host" : "forbidden_origin",
           method: req.method,
           route: pathname,
           status: 403
@@ -5353,48 +5311,32 @@ async function main() {
         res.end(
           JSON.stringify({
             jsonrpc: "2.0",
-            error: { code: -32000, message: "Forbidden origin" },
+            error: {
+              code: -32000,
+              message: forbiddenHost ? "Forbidden host" : "Forbidden origin"
+            },
             id: null
           })
         )
         return
       }
 
-      res.setHeader("MCP-Protocol-Version", protocolVersion)
-
-      // Host-header allowlist (DNS-rebinding defense). Opt-in via env.
-      // req.headers.host usually carries a port (localhost:3001) and may be
-      // bracketed for IPv6 ([::1]:3001). Allowlist entries are typically bare
-      // hosts, so match against both the raw header and a port-stripped form.
-      if (allowedHosts.length > 0) {
-        const rawHost = String(req.headers.host || "")
-          .trim()
-          .toLowerCase()
-        const normalizedHost = rawHost.startsWith("[")
-          ? rawHost.replace(/^\[([^\]]+)\](?::\d+)?$/, "$1")
-          : rawHost.split(":")[0]
-        if (
-          !allowedHosts.includes(rawHost) &&
-          !allowedHosts.includes(normalizedHost)
-        ) {
-          closeMcpRequestAfterResponse(req, res)
-          mcpLogger.warn("request_rejected", {
-            reason: "forbidden_host",
-            method: req.method,
-            route: pathname,
-            status: 403
-          })
-          res.writeHead(403, { "Content-Type": "application/json" })
-          res.end(
-            JSON.stringify({
-              jsonrpc: "2.0",
-              error: { code: -32000, message: "Forbidden host" },
-              id: null
-            })
-          )
-          return
-        }
+      if (origin !== undefined) {
+        res.setHeader("Access-Control-Allow-Origin", origin)
+        res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        res.setHeader(
+          "Access-Control-Allow-Headers",
+          "Content-Type, Accept, Authorization, mcp-session-id, MCP-Protocol-Version, Last-Event-ID"
+        )
+        res.setHeader("Access-Control-Expose-Headers", "MCP-Protocol-Version")
       }
+      if (req.method === "OPTIONS") {
+        res.writeHead(204)
+        res.end()
+        return
+      }
+
+      res.setHeader("MCP-Protocol-Version", protocolVersion)
 
       // Dedicated health endpoint for platform probes (Cloud Run, uptime checks).
       if (req.method === "GET" && pathname === "/health") {
