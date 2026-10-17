@@ -6,6 +6,7 @@ import { CustomLayoutSelectionProvider } from "./customLayoutSelection"
 import type { NetworkViewportProps } from "./networkViewportTypes"
 import { useNetworkViewport } from "./useNetworkViewport"
 import { normalizeNetworkView } from "./networkViewTransform"
+import { networkCameraTransformRef } from "./networkCameraCommit"
 
 export interface NetworkHtmlMarksLayerProps extends NetworkViewportProps {
   /** Marks emitted by the custom layout (`NetworkLayoutResult.htmlMarks`). */
@@ -33,6 +34,47 @@ const containerBaseStyle: React.CSSProperties = {
   // authoritative. Mark content can opt back in with `pointer-events: auto`.
   pointerEvents: "none"
 }
+
+// A camera changes the clipping rectangle every frame, often without changing
+// membership. Reuse the positioned subtree in that case; context subscriptions
+// inside card content (selection, projected size) still update independently.
+const NetworkHtmlMarkContents = /* @__PURE__ */ React.memo(
+  function NetworkHtmlMarkContents({ marks }: { marks: NetworkHtmlMark[] }) {
+    return (
+      <>
+        {marks.map((mark) => (
+          <div
+            key={mark.id}
+            className="semiotic-network-html-mark"
+            data-mark-id={mark.id}
+            style={{
+              position: "absolute",
+              transform: `translate(${mark.x}px, ${mark.y}px)`,
+              width: mark.width,
+              height: mark.height,
+              pointerEvents: "none"
+            }}
+          >
+            {mark.content}
+          </div>
+        ))}
+      </>
+    )
+  },
+  (previous, next) =>
+    previous.marks.length === next.marks.length &&
+    previous.marks.every((mark, index) => {
+      const other = next.marks[index]
+      return (
+        mark.id === other.id &&
+        mark.x === other.x &&
+        mark.y === other.y &&
+        mark.width === other.width &&
+        mark.height === other.height &&
+        mark.content === other.content
+      )
+    })
+)
 
 /**
  * Renders a custom network layout's {@link NetworkHtmlMark}s into one
@@ -117,27 +159,14 @@ export function NetworkHtmlMarksLayer({
       }}
     >
       <div
+        ref={networkCameraTransformRef(viewTransform, true)}
         style={{
           transformOrigin: "0 0",
           transform: `translate(${view.x}px, ${view.y}px) scale(${view.k})`
         }}
       >
-        {visible.map((mark) => (
-          <div
-            key={mark.id}
-            className="semiotic-network-html-mark"
-            data-mark-id={mark.id}
-            style={{
-              position: "absolute",
-              transform: `translate(${mark.x}px, ${mark.y}px)`,
-              width: mark.width,
-              height: mark.height,
-              pointerEvents: "none"
-            }}
-          >
-            {mark.content}
-          </div>
-        ))}
+        {/* Snapshot placement so a layout can reuse and update mark objects. */}
+        <NetworkHtmlMarkContents marks={visible.map((mark) => ({ ...mark }))} />
       </div>
     </div>
   )

@@ -41,6 +41,32 @@ function context() {
 describe.each(["curved", "line", "bezier", "ribbon"] as const)(
   "%s edge paint visibility",
   (type) => {
+    it.each(["opacity", "strokeOpacity"] as const)(
+      "skips invisible semantic targets with %s=0, then paints a restyled target",
+      (opacity) => {
+        const mark = edge(type)
+        mark.style = { stroke: "#4e79a7", fill: "none", [opacity]: 0 }
+        const ctx = context()
+        networkEdgeRenderer(ctx, [mark])
+        expect(ctx.save).not.toHaveBeenCalled()
+        expect(ctx.stroke).not.toHaveBeenCalled()
+        expect(ctx.fill).not.toHaveBeenCalled()
+        if (mark.type !== "line") expect(mark._cachedPath2D).toBeUndefined()
+        mark.style[opacity] = 1
+        networkEdgeRenderer(ctx, [mark])
+        expect(ctx.stroke).toHaveBeenCalledOnce()
+      }
+    )
+
+    it("keeps zero-alpha paints when compositing can alter existing pixels", () => {
+      const mark = edge(type)
+      mark.style = { stroke: "#4e79a7", fill: "none", opacity: 0 }
+      const ctx = context()
+      ctx.globalCompositeOperation = "copy"
+      networkEdgeRenderer(ctx, [mark])
+      expect(ctx.stroke).toHaveBeenCalledOnce()
+    })
+
     it.each([0, 0.4])("honors strokeOpacity %s in Canvas and SVG", (strokeOpacity) => {
       const mark = edge(type)
       mark.style.opacity = 0.5
@@ -79,6 +105,41 @@ describe.each(["curved", "line", "bezier", "ribbon"] as const)(
       networkEdgeRenderer(ctx, [edge(type)])
       expect(ctx.stroke).toHaveBeenCalledOnce()
     })
+  }
+)
+
+it.each(["bezier", "ribbon", "curved"] as const)(
+  "retains a %s fill that overrides zero stroke opacity",
+  (type) => {
+    const mark = edge(type)
+    mark.style.opacity = 0
+    const ctx = context()
+    const alphas: number[] = []
+    vi.mocked(ctx.fill).mockImplementation(() => { alphas.push(ctx.globalAlpha) })
+    networkEdgeRenderer(ctx, [mark])
+    expect(alphas).toEqual([1])
+    if (type === "curved") {
+      delete mark.style.fillOpacity
+      networkEdgeRenderer(ctx, [mark])
+      expect(alphas).toEqual([1, 0.1])
+    }
+  }
+)
+
+it.each(["line", "bezier", "ribbon"] as const)(
+  "retains a %s pulse over an invisible base edge",
+  (type) => {
+    const mark = edge(type)
+    if (mark.type === "curved") throw new Error("Curved edges have no pulse")
+    mark.style = { stroke: "#4e79a7", fill: "none", opacity: 0 }
+    mark._pulseIntensity = 1
+    const ctx = context()
+    const alphas: number[] = []
+    const record = () => { alphas.push(ctx.globalAlpha) }
+    vi.mocked(ctx.fill).mockImplementation(record)
+    vi.mocked(ctx.stroke).mockImplementation(record)
+    networkEdgeRenderer(ctx, [mark])
+    expect(alphas.some((alpha) => alpha > 0)).toBe(true)
   }
 )
 

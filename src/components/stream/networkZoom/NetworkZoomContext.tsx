@@ -1,29 +1,70 @@
 "use client"
-import { createContext, useContext, useEffect, useState } from "react"
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore
+} from "react"
+import type { ReactNode } from "react"
 import type { NetworkZoomState } from "./types"
-import { DEFAULT_ZOOM } from "./geometry"
+import {
+  createNetworkZoomStore,
+  type NetworkZoomStore
+} from "./NetworkZoomStore"
 
-export const NetworkZoomContext = /* @__PURE__ */ createContext<NetworkZoomState>({
-  zoom: DEFAULT_ZOOM,
-  settledZoom: DEFAULT_ZOOM,
-  isInteracting: false,
-  visibleRect: null
-})
+const defaultStore = /* @__PURE__ */ createNetworkZoomStore()
+const NetworkZoomContext = /* @__PURE__ */ createContext(defaultStore)
 
-/** Read camera facts inside a zoomable chart's HTML marks or SVG overlays.
- * Outside a zoomable chart the identity camera keeps reusable content usable. */
+/** Internal provider. A supplied value also supports isolated content/SSR tests. */
+export function NetworkZoomProvider({
+  value,
+  store,
+  children
+}: {
+  value?: NetworkZoomState
+  store?: NetworkZoomStore
+  children: ReactNode
+}) {
+  const [local] = useState(() => store ?? createNetworkZoomStore(value))
+  const active = store ?? local
+  useLayoutEffect(() => {
+    if (value) active.update(value)
+  }, [active, value])
+  return (
+    <NetworkZoomContext.Provider value={active}>
+      {children}
+    </NetworkZoomContext.Provider>
+  )
+}
+
+/** Read live camera facts inside a zoomable chart. Outside a chart the identity
+ * camera keeps reusable content usable. Changes include pan and visibleRect. */
 export function useNetworkZoom(): NetworkZoomState {
-  return useContext(NetworkZoomContext)
+  const store = useContext(NetworkZoomContext)
+  return useSyncExternalStore(
+    store.subscribe,
+    store.getSnapshot,
+    store.getSnapshot
+  )
 }
 
 /** Displayed CSS-pixel size, with the last settled size for deferred work. */
 export function useNetworkProjectedSize(width: number, height: number) {
-  const { zoom, settledZoom, isInteracting } = useNetworkZoom()
+  const store = useContext(NetworkZoomContext)
+  const { k, settledK, isInteracting } = useSyncExternalStore(
+    store.subscribeSize,
+    store.getSize,
+    store.getSize
+  )
   return {
-    width: width * zoom.k,
-    height: height * zoom.k,
-    settledWidth: width * settledZoom.k,
-    settledHeight: height * settledZoom.k,
+    width: width * k,
+    height: height * k,
+    settledWidth: width * settledK,
+    settledHeight: height * settledK,
     isInteracting
   }
 }
@@ -61,17 +102,87 @@ export function useNetworkLOD(
   const band = Number.isFinite(options.hysteresis)
     ? Math.max(0, options.hysteresis!)
     : 8
-  let level = Math.min(
-    previous ?? (size.isInteracting ? 0 : desired),
-    thresholds.length
+  const level = resolveLevel(
+    previous,
+    size.width,
+    size.isInteracting,
+    thresholds,
+    band,
+    options.keepDetail
   )
-  while (level > 0 && size.width < thresholds[level - 1] - band) level--
-  if (!size.isInteracting)
-    while (level < thresholds.length && size.width >= thresholds[level] + band)
-      level++
-  if (options.keepDetail) level = thresholds.length
   useEffect(() => {
-    if (previous !== null || !size.isInteracting) setPrevious(level)
+    if (previous !== level && (previous !== null || !size.isInteracting))
+      setPrevious(level)
   }, [level, previous, size.isInteracting])
   return { ...size, level }
+}
+
+function resolveLevel(
+  previous: number | null,
+  width: number,
+  moving: boolean,
+  thresholds: number[],
+  band: number,
+  keepDetail?: boolean
+) {
+  const desired = thresholds.filter((value) => width >= value).length
+  let level = Math.min(previous ?? (moving ? 0 : desired), thresholds.length)
+  while (level > 0 && width < thresholds[level - 1] - band) level--
+  if (!moving)
+    while (level < thresholds.length && width >= thresholds[level] + band)
+      level++
+  return keepDetail ? thresholds.length : level
+}
+
+/** Discrete detail level without subscribing to live pixel sizes or viewport
+ * movement. Demotion is immediate, promotion waits for settle, and keepDetail
+ * retains focused editors. Levels range from 0 through breakpoints.length. */
+export function useNetworkLODLevel(
+  width: number,
+  options: NetworkLODOptions
+): number {
+  const store = useContext(NetworkZoomContext)
+  const thresholdsKey = options.breakpoints
+    .filter(Number.isFinite)
+    .sort((a, b) => a - b)
+    .join(",")
+  const band = Number.isFinite(options.hysteresis)
+    ? Math.max(0, options.hysteresis!)
+    : 8
+  const committed = useRef<{ previous: number | null }>({ previous: null })
+  const selection = useMemo(() => {
+    const thresholds = thresholdsKey ? thresholdsKey.split(",").map(Number) : []
+    let snapshot: ReturnType<NetworkZoomStore["getSize"]> | undefined
+    let level = 0
+    const result = {
+      previous: committed.current.previous,
+      read() {
+        const next = store.getSize()
+        if (next !== snapshot) {
+          snapshot = next
+          level = resolveLevel(
+            result.previous,
+            width * next.k,
+            next.isInteracting,
+            thresholds,
+            band,
+            options.keepDetail
+          )
+          if (result.previous !== null || !next.isInteracting)
+            result.previous = level
+        }
+        return level
+      }
+    }
+    return result
+  }, [store, width, thresholdsKey, band, options.keepDetail])
+  const level = useSyncExternalStore(
+    store.subscribeSize,
+    selection.read,
+    selection.read
+  )
+  useLayoutEffect(() => {
+    committed.current = selection
+  }, [selection])
+  return level
 }

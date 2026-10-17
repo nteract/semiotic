@@ -72,6 +72,36 @@ describe("NetworkHtmlMarksLayer", () => {
     expect(after.style.transform).toBe("translate(99px, 88px)")
   })
 
+  it("updates reused mark objects and selection without replacing editor state", () => {
+    function Card() {
+      const { isActive } = useCustomLayoutSelection()
+      return <label>{isActive ? "Selected" : "Unselected"}<input defaultValue="draft" /></label>
+    }
+    const mark = { id: "a", x: 0, y: 0, width: 80, height: 40, content: <Card /> }
+    const tree = (active: boolean) => (
+      <NetworkHtmlMarksLayer
+        marks={[mark]}
+        margin={margin}
+        selection={{ isActive: active, predicate: () => true }}
+      />
+    )
+    const view = render(tree(false))
+    const input = view.getByRole("textbox") as HTMLInputElement
+    input.value = "unsaved edit"
+    mark.x = 99
+    mark.width = 120
+    view.rerender(tree(true))
+    expect(view.getByLabelText("Selected")).toBe(input)
+    expect(input.value).toBe("unsaved edit")
+    const wrapper = input.closest<HTMLElement>("[data-mark-id]")!
+    expect(wrapper.style.transform).toBe("translate(99px, 0px)")
+    expect(wrapper.style.width).toBe("120px")
+    mark.content = <span>Replacement content</span>
+    view.rerender(tree(true))
+    expect(view.queryByRole("textbox")).toBeNull()
+    expect(wrapper.textContent).toBe("Replacement content")
+  })
+
   it("provides the shared selection to mark content via useCustomLayoutSelection", () => {
     function Probe() {
       const { isActive, predicate } = useCustomLayoutSelection()

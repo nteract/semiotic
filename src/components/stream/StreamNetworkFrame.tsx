@@ -8,7 +8,6 @@ import {
   useRef,
   useState,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useCallback,
   useImperativeHandle,
@@ -36,14 +35,13 @@ import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
 import { useConfigSync, useLayoutSelectionSync } from "./streamStoreSync"
 import { useNetworkKeyboardNavigation } from "./networkFrameKeyboardNavigation"
-import { FocusRing } from "./FocusRing"
-import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
-import { hasOwnTooltipChrome } from "../Tooltip/tooltipChrome"
+import { NetworkFrameHover } from "./NetworkFrameHover"
 import { useFrame } from "./useFrame"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { StalenessBadge } from "./StalenessBadge"
 import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
-import { NetworkViewGroup, normalizeNetworkView, projectNetworkPoint } from "./networkViewTransform"
+import { NetworkViewGroup } from "./networkViewTransform"
+import { useNetworkCameraPaint } from "./useNetworkCamera"
 import { NetworkHtmlMarksLayer } from "./NetworkHtmlMarksLayer"
 import { isServerEnvironment } from "./isServerEnvironment"
 import { NetworkSSRFrame } from "./NetworkSSRFrame"
@@ -66,7 +64,6 @@ import {
 // Canvas setup
 
 // Canvas renderers
-import { DefaultNetworkTooltip } from "./networkDefaultTooltip"
 import { buildNetworkPipelineConfig } from "./networkPipelineConfig"
 
 import { networkFrameAriaLabel, paintNetworkFrame } from "./networkFramePaint"
@@ -1282,7 +1279,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
 
   // ── Render function ──────────────────────────────────────────────────
 
-  const cameraPaint = useRef(false)
+  const cameraPaint = useNetworkCameraPaint(props.viewTransform, renderFnRef, hoverLeaveRef, kbFocusIndexRef)
   renderFnRef.current = () => {
     // The scheduled paint is also the commit boundary for burst layout work.
     // Commit before canvas guards so data/layout semantics do not depend on
@@ -1363,22 +1360,6 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     })
   }
 
-  const cameraWasActive = useRef(false)
-  useLayoutEffect(() => {
-    // Paint in the same commit as the SVG/CSS camera so continuous gestures
-    // cannot leave the raster layer one animation frame behind the DOM.
-    if (props.viewTransform || cameraWasActive.current) {
-      if (kbFocusIndexRef.current < 0) hoverLeaveRef.current?.()
-      cameraPaint.current = true
-      try {
-        renderFnRef.current?.()
-      } finally {
-        cameraPaint.current = false
-      }
-    }
-    cameraWasActive.current = !!props.viewTransform
-  }, [props.viewTransform, renderFnRef, hoverLeaveRef, kbFocusIndexRef])
-
   useCanvasMarkCursorCleanup(canvasRef)
 
   // ── Staleness timer ─────────────────────────────────────────────────
@@ -1392,30 +1373,6 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     isStale,
     setIsStale
   )
-
-  // ── Tooltip ──────────────────────────────────────────────────────────
-
-  const view = normalizeNetworkView(props.viewTransform)
-  const screenHover = hoverData ? projectNetworkPoint(hoverData, view) : null
-  const tooltipElement =
-    enableHover && hoverData ? (
-      <FlippingTooltip
-        contentOwnsChrome={hasOwnTooltipChrome(tooltipContent)}
-        x={screenHover!.x}
-        y={screenHover!.y}
-        containerWidth={adjustedWidth}
-        containerHeight={adjustedHeight}
-        margin={margin}
-        className="stream-network-tooltip"
-        zIndex={2}
-      >
-        {tooltipContent ? (
-          tooltipContent(hoverData)
-        ) : (
-          <DefaultNetworkTooltip data={hoverData} />
-        )}
-      </FlippingTooltip>
-    ) : null
 
   // ── SSR path: render SVG instead of canvas ──────────────────────────
 
@@ -1568,9 +1525,14 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
           onViewportChange={props.onViewportChange}
         />
 
-        <FocusRing
+        <NetworkFrameHover
+          viewTransform={props.viewTransform}
+          hoverData={hoverData}
+          enableHover={enableHover}
+          tooltipContent={tooltipContent}
+          adjustedWidth={adjustedWidth}
+          adjustedHeight={adjustedHeight}
           active={kbFocusIndexRef.current >= 0}
-          hoverPoint={screenHover}
           margin={margin}
           size={size}
           shape={
@@ -1580,11 +1542,9 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
               | "wedge"
               | undefined
           }
-          width={focusedNavPointRef.current?.w == null ? undefined : focusedNavPointRef.current.w * view.k}
-          height={focusedNavPointRef.current?.h == null ? undefined : focusedNavPointRef.current.h * view.k}
+          width={focusedNavPointRef.current?.w == null ? undefined : focusedNavPointRef.current.w}
+          height={focusedNavPointRef.current?.h == null ? undefined : focusedNavPointRef.current.h}
         />
-
-        {tooltipElement}
 
         {staleness?.showBadge && (
           <StalenessBadge
