@@ -16,89 +16,13 @@ import type { JsonRpcResponse, ListedMcpTool } from "./mcpProtocolTypes"
  *   - Invalid methods return JSON-RPC error
  */
 
-import { spawn, type ChildProcess } from "child_process"
+import type { ChildProcess } from "child_process"
 import { readFileSync } from "fs"
-import * as net from "net"
 import * as path from "path"
-import { SERVER_PATH, SERVER_DEPS_READY, spawnServer, sendRequest, initializeServer } from "./mcpStdioHarness"
+import { SERVER_DEPS_READY, spawnServer, sendRequest, initializeServer } from "./mcpStdioHarness"
 
 import { openPartialMcpUpload, requestHTTP } from "./mcpHttpUploadHarness"
-
-const HTTP_START_RETRIES = 3
-
-/** Spawn the MCP server process in Streamable HTTP mode. */
-function spawnHTTPServer(
-  port: number,
-  env: NodeJS.ProcessEnv = {},
-  args: string[] = []
-): ChildProcess {
-  return spawn("node", [SERVER_PATH, "--http", "--port", String(port), ...args], {
-    stdio: ["ignore", "pipe", "pipe"],
-    env: {
-      ...process.env,
-      NODE_ENV: "test",
-      SEMIOTIC_DEPLOYMENT_CHANNEL: "",
-      SEMIOTIC_GIT_SHA: "",
-      SEMIOTIC_BUILD_ID: "",
-      SEMIOTIC_BUILD_TIME: "",
-      ...env,
-    },
-  })
-}
-
-/** Reserve an open port long enough to avoid hard-coding one in tests. */
-function getOpenPort(): Promise<number> {
-  return new Promise((resolve, reject) => {
-    const server = net.createServer()
-    server.once("error", reject)
-    server.listen(0, "127.0.0.1", () => {
-      const address = server.address()
-      if (!address || typeof address === "string") {
-        server.close(() => reject(new Error("Could not determine open port")))
-        return
-      }
-      server.close(() => resolve(address.port))
-    })
-  })
-}
-
-/**
- * Wait for the metadata-only HTTP startup event before sending requests.
- * The server intentionally no longer writes a human-readable host/port line:
- * all hosted-service logs use the bounded MCP metadata schema.
- */
-function waitForHTTPServer(proc: ChildProcess): Promise<void> {
-  return new Promise((resolve, reject) => {
-    let stderr = ""
-
-    const cleanup = () => {
-      clearTimeout(timeout)
-      proc.stderr!.off("data", onData)
-      proc.off("exit", onExit)
-    }
-
-    const onData = (chunk: Buffer) => {
-      stderr += chunk.toString()
-      if (stderr.includes('"event":"service_started"')) {
-        cleanup()
-        resolve()
-      }
-    }
-
-    const onExit = (code: number | null) => {
-      cleanup()
-      reject(new Error(`HTTP server exited with code ${code}: ${stderr}`))
-    }
-
-    const timeout = setTimeout(() => {
-      cleanup()
-      reject(new Error(`Timeout waiting for HTTP server startup: ${stderr}`))
-    }, 10000)
-
-    proc.stderr!.on("data", onData)
-    proc.on("exit", onExit)
-  })
-}
+import { spawnReadyHTTPServer, waitForProcessExit } from "./mcpHttpServerHarness"
 
 function parseSSEJSON(text: string): JsonRpcResponse {
   const events = text.split(/\r?\n\r?\n/)
@@ -123,48 +47,6 @@ function parseHTTPRPCBody(text: string, contentType: string | null): JsonRpcResp
   } catch {
     return parseSSEJSON(text)
   }
-}
-
-function waitForProcessExit(proc: ChildProcess): Promise<void> {
-  return new Promise((resolve) => {
-    if (proc.exitCode !== null || proc.signalCode !== null) {
-      resolve()
-      return
-    }
-
-    let settled = false
-
-    const cleanup = () => {
-      clearTimeout(graceTimeout)
-      clearTimeout(forceTimeout)
-      proc.off("exit", onExit)
-    }
-
-    const onExit = () => {
-      if (settled) return
-      settled = true
-      cleanup()
-      resolve()
-    }
-
-    const graceTimeout = setTimeout(() => {
-      if (proc.exitCode !== null || proc.signalCode !== null) return
-      try {
-        proc.kill("SIGKILL")
-      } catch {
-        // The process may have exited between the state check and kill call.
-      }
-    }, 1000)
-
-    const forceTimeout = setTimeout(() => {
-      if (settled) return
-      settled = true
-      cleanup()
-      resolve()
-    }, 5000)
-
-    proc.once("exit", onExit)
-  })
 }
 
 async function sendHTTPRPC(
@@ -192,28 +74,6 @@ async function sendHTTPRPC(
     response,
     text,
   }
-}
-
-async function spawnReadyHTTPServer(
-  env: NodeJS.ProcessEnv = {},
-  args: string[] = []
-): Promise<{ proc: ChildProcess; port: number }> {
-  let lastError: unknown
-
-  for (let attempt = 0; attempt < HTTP_START_RETRIES; attempt++) {
-    const port = await getOpenPort()
-    const proc = spawnHTTPServer(port, env, args)
-    try {
-      await waitForHTTPServer(proc)
-      return { proc, port }
-    } catch (err) {
-      lastError = err
-      proc.kill("SIGTERM")
-      await waitForProcessExit(proc)
-    }
-  }
-
-  throw lastError
 }
 
 /** Send a JSON-RPC request and wait for the response. */
@@ -1120,6 +980,99 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP HTTP transport smoke", () => {
     })
   })
 
+  it("rejects browser origins by default before preflight, initialization, or tool dispatch", async () => {
+    for (const origin of ["https://example.com", "null", "", `http://127.0.0.1:${port}`]) {
+      for (const pathname of ["/health", "/.well-known/openai-apps-challenge"]) {
+        const response = await requestHTTP(port, pathname, { headers: { Origin: origin } })
+        expect(response.status).toBe(403)
+        expect(response.headers["access-control-allow-origin"]).toBeUndefined()
+      }
+      for (const pathname of ["/", "/mcp"]) {
+        const preflight = await requestHTTP(port, pathname, {
+          method: "OPTIONS",
+          headers: { Origin: origin, "Access-Control-Request-Method": "POST" },
+        })
+        expect(preflight.status).toBe(403)
+        expect(preflight.headers["access-control-allow-origin"]).toBeUndefined()
+        for (const method of ["initialize", "tools/list", "tools/call"]) {
+          const response = await requestHTTP(port, pathname, {
+            method: "POST",
+            headers: { Origin: origin },
+            body: { jsonrpc: "2.0", id: method, method, params: { name: "getSchema", arguments: {} } },
+          })
+          expect(response.status).toBe(403)
+          expect(response.headers["access-control-allow-origin"]).toBeUndefined()
+          expect(response.body).toMatchObject({ error: { message: "Forbidden origin" } })
+        }
+      }
+    }
+  })
+
+  it("rejects forged or malformed Host headers on every route by default", async () => {
+    for (const host of ["evil.example", `evil.example:${port}`, `localhost:${port}:evil`, ""]) {
+      for (const pathname of ["/", "/mcp", "/health", "/.well-known/openai-apps-challenge"]) {
+        for (const method of ["GET", "POST", "OPTIONS"]) {
+          const response = await requestHTTP(port, pathname, { method, host })
+          expect(response.status, `${method} ${pathname} with Host ${JSON.stringify(host)}`).toBe(403)
+          expect(response.headers["access-control-allow-origin"]).toBeUndefined()
+          expect(response.body).toMatchObject({ error: { message: "Forbidden host" } })
+        }
+      }
+    }
+    const local = await requestHTTP(port, "/health", { host: `localhost:${port}` })
+    expect(local.status).toBe(200)
+    expect(local.headers["access-control-allow-origin"]).toBeUndefined()
+    const forwarded = await requestHTTP(port, "/health", {
+      host: "evil.example",
+      headers: { "X-Forwarded-Host": `localhost:${port}`, Forwarded: `host=localhost:${port}` },
+    })
+    expect(forwarded.status).toBe(403)
+  })
+
+  it.each(["Host", "Origin"])("rejects scoped IPv6 in %s and keeps serving requests", async (header) => {
+    for (const authority of ["[fe80::1%eth0]:3001", "[fe80::1%25eth0]:3001"]) {
+      for (const method of ["GET", "POST", "OPTIONS"]) {
+        const response = await requestHTTP(port, "/mcp", {
+          method,
+          headers: { [header]: header === "Host" ? authority : `http://${authority}` },
+          ...(method === "POST" ? {
+            body: { jsonrpc: "2.0", id: "scoped-ipv6", method: "tools/list" }
+          } : {})
+        })
+        expect(response.status).toBe(403)
+        expect(response.body).toMatchObject({
+          error: { message: header === "Host" ? "Forbidden host" : "Forbidden origin" }
+        })
+        expect(response.headers["access-control-allow-origin"]).toBeUndefined()
+        const healthy = await requestHTTP(port, "/mcp", {
+          body: { jsonrpc: "2.0", id: "after-scoped-ipv6", method: "tools/list" }
+        })
+        expect(healthy.status).toBe(200)
+        expect(healthy.body).toMatchObject({ result: { tools: expect.any(Array) } })
+      }
+    }
+  })
+
+  it("requires explicit access lists for a public-profile all-interface bind", async () => {
+    proc?.kill("SIGTERM")
+    if (proc) await waitForProcessExit(proc)
+    const server = await spawnReadyHTTPServer({}, ["--host", "0.0.0.0", "--profile", "public"])
+    proc = server.proc
+    port = server.port
+    const native = await requestHTTP(port, "/mcp", {
+      body: { jsonrpc: "2.0", id: "native", method: "tools/list" },
+    })
+    expect(native.status).toBe(200)
+    expect(native.body).toMatchObject({ result: { tools: expect.any(Array) } })
+    const browser = await requestHTTP(port, "/mcp", {
+      headers: { Origin: "https://example.com" },
+      body: { jsonrpc: "2.0", id: "browser", method: "tools/list" },
+    })
+    expect(browser.status).toBe(403)
+    const rebound = await requestHTTP(port, "/health", { host: "evil.example" })
+    expect(rebound.status).toBe(403)
+  })
+
   it("accepts an allowlisted Origin and rejects a disallowed one", async () => {
     proc?.kill("SIGTERM")
     if (proc) await waitForProcessExit(proc)
@@ -1149,6 +1102,18 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP HTTP transport smoke", () => {
     expect(allowed.headers["access-control-allow-origin"]).toBe(allowedOrigin)
     expect(allowed.headers.vary).toBe("Origin")
     expect(allowed.body).toMatchObject({ result: { serverInfo: { name: "semiotic" } } })
+    const schema = await requestHTTP(port, "/mcp", {
+      headers: { Origin: allowedOrigin },
+      body: { jsonrpc: "2.0", id: "schema-allowed", method: "tools/call", params: { name: "getSchema", arguments: {} } },
+    })
+    expect(schema.status).toBe(200)
+    expect(schema.body).toMatchObject({ result: { content: expect.any(Array) } })
+    expect(schema.text).toContain("Available components")
+    expect(schema.headers["access-control-allow-origin"]).toBe(allowedOrigin)
+    const native = await requestHTTP(port, "/health")
+    expect(native.status).toBe(200)
+    expect(native.headers["access-control-allow-origin"]).toBeUndefined()
+    expect(native.headers.vary).toBe("Origin")
 
     const rejected = await requestHTTP(port, "/mcp", {
       method: "POST",
@@ -1162,6 +1127,24 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP HTTP transport smoke", () => {
       error: { message: "Forbidden origin" },
       id: null,
     })
+
+    for (const origin of [allowedOrigin, "https://untrusted.example", "null", ""]) {
+      const preflight = await requestHTTP(port, "/mcp", {
+        method: "OPTIONS",
+        headers: { Origin: origin, "Access-Control-Request-Method": "POST" },
+      })
+      expect(preflight.status).toBe(origin === allowedOrigin ? 204 : 403)
+      expect(preflight.headers["access-control-allow-origin"]).toBe(
+        origin === allowedOrigin ? allowedOrigin : undefined
+      )
+    }
+    const forgedHost = await requestHTTP(port, "/mcp", {
+      method: "OPTIONS",
+      host: "evil.example",
+      headers: { Origin: allowedOrigin },
+    })
+    expect(forgedHost.status).toBe(403)
+    expect(forgedHost.headers["access-control-allow-origin"]).toBeUndefined()
   })
 
   it("returns 413 before MCP dispatch when a request exceeds MCP_MAX_BODY_BYTES", async () => {
@@ -1317,6 +1300,13 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP HTTP transport smoke", () => {
     expect(response).toContain("401 Unauthorized")
     expect(response).toMatch(/connection: close/i)
     expect(response).toMatch(/access-control-allow-origin: https:\/\/allowed\.example/i)
+    const forbidden = openPartialMcpUpload(port, "{", {
+      Origin: "https://evil.example", Authorization: "Bearer upload-test-token"
+    })
+    const forbiddenResponse = await forbidden.closed
+    expect(forbiddenResponse).toContain("403 Forbidden")
+    expect(forbiddenResponse).toMatch(/connection: close/i)
+    expect(forbiddenResponse).not.toMatch(/access-control-allow-origin/i)
     const healthy = await requestHTTP(port, "/mcp", {
       headers: { Authorization: "Bearer upload-test-token", Origin: "https://allowed.example" },
       body: { jsonrpc: "2.0", id: "authorized-upload", method: "tools/list" }

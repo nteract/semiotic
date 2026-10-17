@@ -125,9 +125,20 @@ npx -y -p semiotic semiotic-mcp --profile public
 # Local HTTP uses loopback by default
 MCP_TOOL_PROFILE=public npx -y -p semiotic semiotic-mcp --http --port 3001
 
-# Hosted deployments must opt in to a public bind
-MCP_TOOL_PROFILE=public npx -y -p semiotic semiotic-mcp --http --host 0.0.0.0 --port 3001
-# Or: MCP_HOST=0.0.0.0 MCP_TOOL_PROFILE=public npx -y -p semiotic semiotic-mcp --http --port 3001`}</CodeBlock>
+# Allow a local browser client explicitly
+MCP_ALLOWED_ORIGINS=http://localhost:5173 MCP_TOOL_PROFILE=public npx -y -p semiotic semiotic-mcp --http --port 3001
+
+# Hosted deployments set both the bind address and served hostname
+MCP_ALLOWED_HOSTS=mcp.example.com MCP_TOOL_PROFILE=public npx -y -p semiotic semiotic-mcp --http --host 0.0.0.0 --port 3001`}</CodeBlock>
+      <p>
+        HTTP mode rejects browser origins unless listed in <code>MCP_ALLOWED_ORIGINS</code>.
+        Native clients that omit Origin continue to work. Host checks default to the bind
+        hostname plus <code>localhost</code> for loopback; an all-interface bind allows
+        only loopback hosts until <code>MCP_ALLOWED_HOSTS</code> is configured. Both lists
+        are comma-separated and apply to preflight and health requests too. CORS echoes
+        only an allowed origin. Set <code>MCP_AUTH_TOKEN</code> to require a bearer token
+        for MCP requests.
+      </p>
 
       <h3 id="developer-profile">Full developer profile</h3>
       <p>
@@ -197,7 +208,8 @@ MCP_TOOL_PROFILE=public npx -y -p semiotic semiotic-mcp --http --host 0.0.0.0 --
       <p>
         For a ChatGPT Apps SDK prototype, start the HTTP transport with{" "}
         <code>npx -y -p semiotic semiotic-mcp --http --port 3001</code>, expose <code>/mcp</code> over HTTPS with a
-        tunnel, then create a ChatGPT developer-mode connector pointed at that endpoint. The widget
+        tunnel, set <code>MCP_ALLOWED_HOSTS</code> to the tunnel hostname, then create a
+        ChatGPT developer-mode connector pointed at that endpoint. The widget
         template is served from <code>ui://semiotic/chart-widget.html</code>.
       </p>
 

@@ -65,8 +65,9 @@ export function requestHTTP(port: number, pathName: string, options: {
       port,
       path: pathName,
       method: options.method ?? (bodyText ? "POST" : "GET"),
+      setHost: options.host === undefined,
       headers: {
-        ...(options.host ? { Host: options.host } : {}),
+        ...(options.host !== undefined ? { Host: options.host } : {}),
         ...(bodyText ? {
           Accept: "application/json, text/event-stream",
           "Content-Type": "application/json",

@@ -130,7 +130,7 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP HTTP health route", () => {
     expect(healthWithQuery.status).toBe(200)
     expect(healthWithQuery.body).toEqual(health.body)
     expect(health.headers["content-type"]).toContain("application/json")
-    expect(health.headers["access-control-allow-origin"]).toBe("*")
+    expect(health.headers["access-control-allow-origin"]).toBeUndefined()
     expect(health.headers["mcp-protocol-version"]).toBeDefined()
     expect(health.headers["mcp-session-id"]).toBeUndefined()
     expect(healthWithQuery.headers["mcp-session-id"]).toBeUndefined()
