@@ -2,7 +2,8 @@ import * as React from "react"
 import { createRoot } from "react-dom/client"
 import {
   ZoomableNetworkCustomChart,
-  useNetworkLOD
+  useNetworkLOD,
+  useNetworkLODLevel
 } from "semiotic/network/zoom"
 import type { ZoomableNetworkCustomChartHandle } from "semiotic/network/zoom"
 import type {
@@ -110,11 +111,29 @@ declare global {
 }
 window.cameraScale = measurement
 
-function CompactCard({ node }: { node: PipelineNode }) {
+function LiveCompactCard({ node }: { node: PipelineNode }) {
   const { level } = useNetworkLOD(width, height, {
     breakpoints: [55, 125],
     hysteresis: 8
   })
+  return <CompactCardContent node={node} level={level} />
+}
+
+function CompactCard({ node }: { node: PipelineNode }) {
+  const level = useNetworkLODLevel(width, {
+    breakpoints: [55, 125],
+    hysteresis: 8
+  })
+  return <CompactCardContent node={node} level={level} />
+}
+
+function CompactCardContent({
+  node,
+  level
+}: {
+  node: PipelineNode
+  level: number
+}) {
   return (
     <article
       data-lod={level}
@@ -201,6 +220,8 @@ const layout: NetworkCustomLayout = () => {
       height,
       content: pipeline ? (
         <PipelineCard node={node} />
+      ) : params.get("lod") === "live" ? (
+        <LiveCompactCard node={node} />
       ) : (
         <CompactCard node={node} />
       )
@@ -233,6 +254,19 @@ function Fixture() {
         title="Network camera scale fixture"
         description="Synthetic pipeline nodes and connections"
         animate={false}
+        annotations={
+          params.has("widgets")
+            ? [
+                {
+                  type: "widget",
+                  nodeId: "node-0",
+                  width: 32,
+                  height: 32,
+                  content: <span data-testid="camera-widget">Info</span>
+                }
+              ]
+            : undefined
+        }
         zoomControls={false}
         zoomOptions={{
           minZoom: 0.005,

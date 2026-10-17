@@ -7,8 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `useNetworkLODLevel(width, options)` from `semiotic/network/zoom` returns a
+  discrete detail level without rerendering cards for unchanged levels during
+  camera movement. It preserves hysteresis, settle-only promotion, and focused
+  editor detail through `keepDetail`.
+
 ### Fixed
 
+- Uncontrolled network camera updates apply HTML/SVG transforms and repaint
+  canvas synchronously without rerendering the chart. Culling updates mounted
+  cards only when membership changes; viewport reports, focused tooltips and
+  annotation widgets stay current during motion. Existing projected-size and
+  LOD hooks retain live sizes. Invisible semantic edge targets skip Canvas paint
+  while remaining interactive.
 - Network zoom gestures preserve node and edge clicks and touch taps while
   drag-to-pan is enabled. Pointer capture now stays on the original target;
   clicks following a drag remain suppressed.

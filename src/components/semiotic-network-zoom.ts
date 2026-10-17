@@ -4,7 +4,8 @@ export type { ZoomableNetworkCustomChartProps } from "./stream/networkZoom/Zooma
 export {
   useNetworkZoom,
   useNetworkProjectedSize,
-  useNetworkLOD
+  useNetworkLOD,
+  useNetworkLODLevel
 } from "./stream/networkZoom/NetworkZoomContext"
 export type { NetworkLODOptions } from "./stream/networkZoom/NetworkZoomContext"
 export { getNetworkContentBounds } from "./stream/networkZoom/geometry"

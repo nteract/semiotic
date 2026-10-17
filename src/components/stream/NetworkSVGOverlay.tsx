@@ -17,7 +17,7 @@ import type { AnnotationContext } from "../realtime/types"
 import { networkLabelToSVG } from "./SceneToSVGNetwork"
 import { SVGChartTitle } from "./SVGChartTitle"
 import type { NetworkViewTransform } from "./networkViewportTypes"
-import { NetworkViewGroup, normalizeNetworkView, projectNetworkPoint } from "./networkViewTransform"
+import { NetworkViewGroup } from "./networkViewTransform"
 import {
   overlayAccessibleDescription,
   overlayAccessibleIds,
@@ -25,15 +25,14 @@ import {
 } from "./overlayAccessibleText"
 import {
   collectNetworkAnnotationAnchors,
-  nodeCenter,
   type NetworkAnnotationAnchorNode,
 } from "./networkAnnotationAnchors"
 import type { OnObservationCallback } from "../store/ObservationStore"
 import {
-  annotationActivationProps,
   useAnnotationActivationOptions,
   type OnAnnotationActivateCallback
 } from "../charts/shared/annotationActivation"
+import { NetworkAnnotationWidgets } from "./NetworkAnnotationWidgets"
 import { withDisplayName } from "../charts/shared/withDisplayName"
 
 type AnnotationAnchorNode = NetworkAnnotationAnchorNode
@@ -234,53 +233,9 @@ export const NetworkSVGOverlay = /* @__PURE__ */ withDisplayName(function Networ
         legendHoverBehavior, legendClickBehavior, legendHighlightedCategory, legendIsolatedCategories,
       })}
     </svg>
-    {/* Widget annotations — rendered as HTML divs so they can overflow the SVG. */}
-    {layoutAnnotations?.filter(
-            (a) => a.type === "widget" && (a.pointId != null || a.nodeId != null) && sceneNodes).map((annotation, i) => {
-      const isDeferred = annotation._annotationDeferred === true
-      const anchorId = annotation.pointId ?? annotation.nodeId
-      const node = sceneNodes!.find(
-              (n) =>
-        n.id === anchorId ||
-                n.datum?.id === anchorId ||
-                n.datum?.data?.id === anchorId ||
-                n.datum?.data?.name === anchorId
-            )
-      const center = node && nodeCenter(node)
-      if (!center) return null
-      const anchor = projectNetworkPoint(center, normalizeNetworkView(props.viewTransform))
-      if (props.viewTransform && (anchor.x < 0 || anchor.y < 0 || anchor.x > width || anchor.y > height)) return null
-      const nx = margin.left + anchor.x
-      const ny = margin.top + anchor.y
-      const dx = annotation.dx ?? 0
-      const dy = annotation.dy ?? -16
-      const w = annotation.width ?? 32
-      const h = annotation.height ?? 32
-      const content = annotation.content ?? (
-        <span style={{ fontSize: 18, cursor: "default" }}>{"ℹ️"}</span>
-      )
-      return (
-        <div
-          key={`widget-${i}`}
-          {...annotationActivationProps(annotation, annotationActivation)}
-          className={isDeferred ? "annotation-deferred" : undefined}
-          data-annotation-disclosure={isDeferred ? "deferred" : undefined}
-          style={{
-            position: "absolute",
-            left: nx + dx - w / 2,
-            top: ny + dy - h / 2,
-            width: w,
-            height: h,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 5,
-          }}
-        >
-          {content}
-        </div>
-      )
-    })}
+    <NetworkAnnotationWidgets annotations={layoutAnnotations} sceneNodes={sceneNodes}
+      viewTransform={props.viewTransform} margin={margin} width={width} height={height}
+      activation={annotationActivation} />
     </>
   )
 }, "NetworkSVGOverlay")

@@ -9,6 +9,7 @@ function getNetworkContentBounds(layout: NetworkLayoutResult | null | undefined)
 function invertNetworkRect(rect: NetworkViewportRect, view: NetworkViewTransform): NetworkViewportRect
 function projectNetworkPoint<T extends {x: number; y: number;}>(point: T, view: NetworkViewTransform): T
 function useNetworkLOD(width: number, height: number, options: NetworkLODOptions): {level: number; width: number; height: number; settledWidth: number; settledHeight: number; isInteracting: boolean;}
+function useNetworkLODLevel(width: number, options: NetworkLODOptions): number
 function useNetworkProjectedSize(width: number, height: number): {width: number; height: number; settledWidth: number; settledHeight: number; isInteracting: boolean;}
 function useNetworkZoom(): NetworkZoomState
 interface NetworkLODOptions
