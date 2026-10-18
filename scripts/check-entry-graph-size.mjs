@@ -380,7 +380,10 @@ const ENTRY_GRAPHS = [
   // Bumped 612→614: axis-config key validation, value-banded histogram
   // fills, and the shared hatch tile measure 613.5 KiB gzip.
   // Feature graph: 614.7 KiB (previous built HEAD: 613.3 KiB).
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 615.5 },
+  // User-approved 615.5→616: S6 invisible-node paint skipping, prepared
+  // rectangle hits and native pointer dispatch measure 615.9 KiB gzip.
+  // Other entry budgets are unchanged.
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 616 },
   // Bumped 100→101: transitDiagramLayout's public detail modes, source-rooted
   // line derivation, and station-rendering contract extend the curated recipes
   // entry. Linux CI measures 100.3 KiB gzip; retain a reviewable 0.7 KiB

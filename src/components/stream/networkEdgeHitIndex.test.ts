@@ -5,8 +5,8 @@ import {
 } from "./networkEdgeHitIndex"
 import { findNearestNetworkNode } from "./NetworkCanvasHitTester"
 import {
-  prepareNetworkCustomEdgeHits,
-  preparedNetworkCustomEdgeHits
+  prepareNetworkCustomHits,
+  preparedNetworkCustomHits
 } from "./networkFrameCursorInteraction"
 import { NetworkPipelineStore } from "./NetworkPipelineStore"
 import type { NetworkSceneEdge } from "./networkTypes"
@@ -135,19 +135,19 @@ describe("committed network edge index", () => {
       })
     })
     store.buildScene([400, 300])
-    prepareNetworkCustomEdgeHits(store)
-    expect(preparedNetworkCustomEdgeHits(store)).toBeDefined()
+    prepareNetworkCustomHits(store)
+    expect(preparedNetworkCustomHits(store)?.edgeIndex).toBeDefined()
     store.restyleScene(null)
-    expect(preparedNetworkCustomEdgeHits(store)).toBeUndefined()
+    expect(preparedNetworkCustomHits(store)?.edgeIndex).toBeUndefined()
     expect(findNearestNetworkNode([], store.sceneEdges, 5, 90)?.type).toBe(
       "edge"
     )
-    prepareNetworkCustomEdgeHits(store)
-    expect(preparedNetworkCustomEdgeHits(store)).toBeDefined()
+    prepareNetworkCustomHits(store)
+    expect(preparedNetworkCustomHits(store)?.edgeIndex).toBeDefined()
     store.sceneEdges = [line(300)]
-    expect(preparedNetworkCustomEdgeHits(store)).toBeUndefined()
-    prepareNetworkCustomEdgeHits(store)
-    const index = preparedNetworkCustomEdgeHits(store)
+    expect(preparedNetworkCustomHits(store)?.edgeIndex).toBeUndefined()
+    prepareNetworkCustomHits(store)
+    const index = preparedNetworkCustomHits(store)?.edgeIndex
     expect(
       findNearestNetworkNode(
         [],
@@ -163,9 +163,9 @@ describe("committed network edge index", () => {
       )?.type
     ).toBe("edge")
     store.updateConfig({ layoutConfig: { revision: 2 } })
-    expect(preparedNetworkCustomEdgeHits(store)).toBeUndefined()
+    expect(preparedNetworkCustomHits(store)?.edgeIndex).toBeUndefined()
     store.lastCustomLayoutResult!.edgeHitTesting = false
-    prepareNetworkCustomEdgeHits(store)
-    expect(preparedNetworkCustomEdgeHits(store)).toBeUndefined()
+    prepareNetworkCustomHits(store)
+    expect(preparedNetworkCustomHits(store)?.edgeIndex).toBeUndefined()
   })
 })

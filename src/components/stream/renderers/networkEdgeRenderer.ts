@@ -36,13 +36,14 @@ export function networkEdgeRenderer(
   ctx: CanvasRenderingContext2D,
   edges: NetworkSceneEdge[]
 ): void {
+  const sourceOver = ctx.globalCompositeOperation === "source-over"
   for (const edge of edges) {
     // Semantic hit targets often have a zero-alpha stroke and no fill. Keep
     // them in the retained scene/hit index, but avoid even constructing Path2D
     // for an invisible paint. Fill opacity can override opacity in the legacy
     // edge renderers, and pulse overlays can remain visible independently.
     if (
-      ctx.globalCompositeOperation === "source-over" &&
+      sourceOver &&
       (edge.style.opacity === 0 || edge.style.strokeOpacity === 0) &&
       (!edge.style.fill ||
         edge.style.fill === "none" ||

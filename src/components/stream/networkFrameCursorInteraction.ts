@@ -4,6 +4,10 @@ import type { CursorFrameGeometry } from "./frameCursorInteraction"
 import { resolveNetworkPointerHit } from "./networkFrameInteraction"
 import type { NetworkSceneEdge, NetworkSceneNode } from "./networkTypes"
 import {
+  buildNetworkRectHitIndex,
+  type NetworkRectHitIndex
+} from "./networkRectHitIndex"
+import {
   buildNetworkEdgeHitIndex,
   type NetworkEdgeHitIndex
 } from "./networkEdgeHitIndex"
@@ -31,37 +35,49 @@ export function refreshNetworkCursorInventory(
 /** Keep custom-layout hit preparation off the pointer and camera-only paths. */
 const prepared = new WeakMap<
   NetworkPipelineStore,
-  { index: NetworkEdgeHitIndex; geometry: number; style: number }
+  {
+    hits: { edgeIndex?: NetworkEdgeHitIndex; rectIndex?: NetworkRectHitIndex }
+    nodes: NetworkSceneNode[]
+    edges: NetworkSceneEdge[]
+    geometry: number
+    style: number
+  }
 >()
 
-export function prepareNetworkCustomEdgeHits(
-  store: NetworkPipelineStore
-): void {
-  if (
-    store.lastCustomLayoutResult &&
-    store.lastCustomLayoutResult.edgeHitTesting !== false
-  ) {
-    const revisions = store.getUpdateSnapshot().revisions
-    prepared.set(store, {
-      index: buildNetworkEdgeHitIndex(store.sceneEdges),
-      geometry: revisions.sceneGeometry,
-      style: revisions.sceneStyle
-    })
-  } else prepared.delete(store)
+export function prepareNetworkCustomHits(store: NetworkPipelineStore): void {
+  const result = store.lastCustomLayoutResult
+  if (!result) {
+    prepared.delete(store)
+    return
+  }
+  const revisions = store.getUpdateSnapshot().revisions
+  prepared.set(store, {
+    hits: {
+      edgeIndex:
+        result.edgeHitTesting === false
+          ? undefined
+          : buildNetworkEdgeHitIndex(store.sceneEdges),
+      rectIndex: buildNetworkRectHitIndex(store.sceneNodes)
+    },
+    nodes: store.sceneNodes,
+    edges: store.sceneEdges,
+    geometry: revisions.sceneGeometry,
+    style: revisions.sceneStyle
+  })
 }
 
-/** A mutation awaiting paint must use live records, never a stale snapshot. */
-export function preparedNetworkCustomEdgeHits(
-  store: NetworkPipelineStore
-): NetworkEdgeHitIndex | undefined {
+/** Pending mutations fall back to live geometry until the next commit. */
+export function preparedNetworkCustomHits(store: NetworkPipelineStore) {
   const cached = prepared.get(store)
-  if (!cached) return undefined
+  if (!cached) return
   const revisions = store.getUpdateSnapshot().revisions
-  return cached.geometry === revisions.sceneGeometry &&
+  if (
+    cached.geometry === revisions.sceneGeometry &&
     cached.style === revisions.sceneStyle &&
-    cached.index.edges === store.sceneEdges
-    ? cached.index
-    : undefined
+    cached.nodes === store.sceneNodes &&
+    cached.edges === store.sceneEdges
+  )
+    return cached.hits
 }
 
 export function rehitNetworkFrameCursor(
@@ -81,7 +97,7 @@ export function rehitNetworkFrameCursor(
       adjustedHeight: options.height,
       sceneNodes: options.store.sceneNodes,
       sceneEdges: options.store.sceneEdges,
-      edgeIndex: preparedNetworkCustomEdgeHits(options.store),
+      ...preparedNetworkCustomHits(options.store),
       // Rebuilding the lazy index on every moving frame costs another O(n)
       // pass. Cursor-enabled motion takes one direct hit scan instead.
       nodeQuadtree: options.geometryMoved ? null : options.store.nodeQuadtree,

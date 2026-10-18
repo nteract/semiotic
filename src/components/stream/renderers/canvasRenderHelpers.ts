@@ -164,6 +164,20 @@ function canvasGradientStopColor(
   return `rgba(${r},${g},${b},${opacity})`
 }
 
+/** Transparent semantic nodes remain hit targets but need no source-over paint.
+ * Pulses have independent alpha, and other composite modes can erase pixels. */
+export function invisibleNetworkNode(
+  style: Style,
+  pulse = 0
+): boolean {
+  return !(pulse > 0) && (
+    style.opacity === 0 || (
+      (!style.fill || style.fill === "transparent") &&
+      (!style.stroke || style.stroke === "none" || style.stroke === "transparent")
+    )
+  )
+}
+
 /**
  * Resolve and apply a network node's fill, then invoke `paint` (the
  * renderer's own `fill()`/`fillRect()` call — the path or rect traced

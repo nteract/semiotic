@@ -14,6 +14,7 @@ import type { NetworkCircleNode } from "./networkTypes"
 import type { NetworkViewTransform } from "./networkViewportTypes"
 import { normalizeNetworkView } from "./networkViewTransform"
 import type { NetworkEdgeHitIndex } from "./networkEdgeHitIndex"
+import type { NetworkRectHitIndex } from "./networkRectHitIndex"
 
 export type NetworkPointerHit =
   | { kind: "miss-outside" }
@@ -39,6 +40,7 @@ export function resolveNetworkPointerHit(options: {
   hitRadius?: number
   includeEdges?: boolean
   edgeIndex?: NetworkEdgeHitIndex
+  rectIndex?: NetworkRectHitIndex
   viewTransform?: NetworkViewTransform
 }): NetworkPointerHit {
   const {
@@ -79,7 +81,8 @@ export function resolveNetworkPointerHit(options: {
     maxNodeRadius,
     includeEdges,
     view.k,
-    options.edgeIndex
+    options.edgeIndex,
+    options.rectIndex
   )
 
   if (!hit) return { kind: "miss" }

@@ -5,7 +5,7 @@
 Apply a source correction, replace affected claims explicitly, and preserve the context a later reader needs.
 
 Source package: semiotic@3.12.1. Channel: source.
-Source revision: sha256:820bc207363812af1500f6f48bd2f2e7a1acadafa1ee6afcbd7ef3c75943d15e. Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks.
+Source revision: sha256:7703ab5dc1b644b66860cc41635db9f567f1ab31d9d57a6575788eeaa34688ef. Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks.
 
 ## The job
 
