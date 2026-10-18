@@ -1,6 +1,6 @@
 import type { NetworkSceneNode, NetworkCircleNode } from "../networkTypes"
 import { renderCirclePulse } from "./renderPulse"
-import { paintNetworkFill, paintNetworkStroke } from "./canvasRenderHelpers"
+import { invisibleNetworkNode, paintNetworkFill, paintNetworkStroke } from "./canvasRenderHelpers"
 import { cachedScenePath2D, paintPerspectiveFaces } from "./networkPerspectivePaint"
 
 /**
@@ -10,11 +10,13 @@ export function networkCircleRenderer(
   ctx: CanvasRenderingContext2D,
   nodes: NetworkSceneNode[]
 ): void {
+  const sourceOver = ctx.globalCompositeOperation === "source-over"
   for (const node of nodes) {
     if (node.type !== "circle") continue
     const c = node as NetworkCircleNode
 
     if (c.r <= 0) continue
+    if (sourceOver && invisibleNetworkNode(c.style, c._pulseIntensity)) continue
 
     ctx.save()
 

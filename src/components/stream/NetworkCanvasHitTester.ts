@@ -11,6 +11,10 @@ import { glyphHitGeometry } from "./glyphDef"
 import { findHitPointInQuadtree } from "./quadtreeHitTest"
 import { outsideNetworkEdgeBounds } from "./networkEdgeHitBounds"
 import { queryNetworkEdgeHitIndex, type NetworkEdgeHitIndex } from "./networkEdgeHitIndex"
+import {
+  queryNetworkRectHitIndex,
+  type NetworkRectHitIndex
+} from "./networkRectHitIndex"
 import type { Quadtree } from "d3-quadtree"
 import type { SceneDatum } from "./types"
 
@@ -77,14 +81,18 @@ export function findNearestNetworkNode(
   maxNodeRadius = 0,
   includeEdges = true,
   viewScale = 1,
-  edgeIndex?: NetworkEdgeHitIndex
+  edgeIndex?: NetworkEdgeHitIndex,
+  rectIndex?: NetworkRectHitIndex
 ): NetworkHitResult | null {
   // Nested treemap cells and packed circles prefer the containing child.
   let bestNode: NetworkHitResult | null = null
   // Exact paths belong to a display list: all marks in that list compete in
   // paint order, including ordinary rects/circles painted over a path. Scenes
   // without paths retain nearest-circle and smallest-treemap-cell semantics.
-  const paintOrder = sceneNodes.some((node) => node.type === "rect" && node._hitPath)
+  const indexed = rectIndex?.nodes === sceneNodes ? rectIndex : undefined
+  const paintOrder = indexed
+    ? indexed.paintOrder
+    : sceneNodes.some((node) => node.type === "rect" && node._hitPath)
   if (paintOrder) nodeQuadtree = null
 
   // Fast path: when a circle-node quadtree is available (large force/orbit
@@ -103,7 +111,7 @@ export function findNearestNetworkNode(
     }
   }
 
-  for (const node of sceneNodes) {
+  for (const node of indexed ? queryNetworkRectHitIndex(indexed, px, py) : sceneNodes) {
     // Circles are handled by the quadtree fast path above.
     if (nodeQuadtree && node.type === "circle") continue
     const result = hitTestNode(node, px, py, maxDistance, viewScale)

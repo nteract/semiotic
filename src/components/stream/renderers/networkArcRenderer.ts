@@ -1,5 +1,5 @@
 import type { NetworkSceneNode, NetworkArcNode } from "../networkTypes"
-import { paintNetworkFill, paintNetworkStroke } from "./canvasRenderHelpers"
+import { invisibleNetworkNode, paintNetworkFill, paintNetworkStroke } from "./canvasRenderHelpers"
 import { cachedScenePath2D, paintPerspectiveFaces } from "./networkPerspectivePaint"
 
 /**
@@ -9,9 +9,11 @@ export function networkArcRenderer(
   ctx: CanvasRenderingContext2D,
   nodes: NetworkSceneNode[]
 ): void {
+  const sourceOver = ctx.globalCompositeOperation === "source-over"
   for (const node of nodes) {
     if (node.type !== "arc") continue
     const a = node as NetworkArcNode
+    if (sourceOver && invisibleNetworkNode(a.style)) continue
 
     ctx.save()
 

@@ -1,13 +1,26 @@
 import { defineConfig } from "@playwright/test"
 
-// Production React with profiling, one worker, and CDP CPU throttling. Keep
+// Production React (optional profiling), one worker, and CDP CPU throttling. Keep
 // these measurements separate from the development/three-browser suite.
+const mode =
+  process.env.NETWORK_CAMERA_PROFILE === "1" ? "profiling" : "production"
 export default defineConfig({
   testDir: "integration-tests",
-  testMatch: ["network-camera-scale.spec.ts", "network-edge-hit-bounds.spec.ts", "network-edge-performance.spec.ts"],
+  testMatch: [
+    "network-camera-scale.spec.ts",
+    "network-edge-hit-bounds.spec.ts",
+    "network-edge-performance.spec.ts"
+  ],
   workers: 1,
+  retries: 0,
+  forbidOnly: !!process.env.CI,
   timeout: 120_000,
-  reporter: "list",
+  globalTimeout: 15 * 60 * 1000,
+  outputDir: `test-results/network-camera/${mode}`,
+  reporter: [
+    ["list"],
+    ["json", { outputFile: `test-results/network-camera/${mode}.json` }]
+  ],
   use: {
     browserName: "chromium",
     headless: true,

@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Static network exports apply default label colors without mutating retained
+  labels, supporting frozen scenes and reuse across themes.
 - Static network rendering preserves custom scenes and SVG decorations supplied
   without raw topology, including saved layouts used for export.
 - Network content bounds include pointed and rotated symbol paths, preventing

@@ -213,10 +213,24 @@ describe("exportNetworkViewSVG", () => {
     }
     Object.freeze(result.sceneNodes)
     Object.freeze(result.sceneEdges)
+    for (const label of result.labels!) Object.freeze(label)
+    Object.freeze(result.labels)
     Object.freeze(result)
     const svg = exportNetworkViewSVG(result, { width: 1200, height: 400 })
     expect(svg).toContain('fill="#ff0000"')
     expect(svg).toContain('stroke="#008000"')
+    expect(
+      [...parse(svg).querySelectorAll("text")].map((label) => [
+        label.textContent,
+        label.getAttribute("fill")
+      ])
+    ).toEqual([
+      ["Source", "#333"],
+      ["Destination", "#333"]
+    ])
+    for (const label of result.labels!) {
+      expect(label).not.toHaveProperty("fill")
+    }
     expect(result.restyle).not.toHaveBeenCalled()
     expect(result.restyleEdge).not.toHaveBeenCalled()
   })

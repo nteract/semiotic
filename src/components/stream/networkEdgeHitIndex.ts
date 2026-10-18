@@ -1,3 +1,8 @@
+import {
+  buildNetworkHitTree,
+  queryNetworkHitTree,
+  type NetworkHitBranch
+} from "./networkHitTree"
 import { getNetworkEdgeBounds } from "./networkEdgeHitBounds"
 import type { NetworkSceneEdge } from "./networkTypes"
 import type { PathBox } from "../geometry/svgPathBounds"
@@ -54,16 +59,6 @@ function cubicBoxes(
   return result
 }
 
-interface Branch {
-  x0: number
-  y0: number
-  x1: number
-  y1: number
-  radius: number
-  order: number
-  children?: Branch[]
-}
-
 function edgeRadius(edge: NetworkSceneEdge): number {
   const width = edge.style.strokeWidth ?? 1
   return Number.isFinite(width) ? Math.max(0, width / 2) : Infinity
@@ -72,7 +67,7 @@ function edgeRadius(edge: NetworkSceneEdge): number {
 /** Geometry/style snapshot owned by a committed custom scene, never raw callers. */
 export interface NetworkEdgeHitIndex {
   edges: NetworkSceneEdge[]
-  root: Branch
+  root: NetworkHitBranch
 }
 
 const retained = new WeakMap<
@@ -113,7 +108,7 @@ export function buildNetworkEdgeHitIndex(
     if (
       signatures.some((row, i) => !Object.is(row[2], previous.signatures[i][2]))
     ) {
-      const refreshRadius = (node: Branch): number => {
+      const refreshRadius = (node: NetworkHitBranch): number => {
         node.radius = node.children
           ? Math.max(0, ...node.children.map(refreshRadius))
           : edgeRadius(edges[node.order])
@@ -124,7 +119,7 @@ export function buildNetworkEdgeHitIndex(
     previous.signatures = signatures
     return previous.index
   }
-  const entries: Branch[] = []
+  const entries: NetworkHitBranch[] = []
   edges.forEach((edge, order) => {
     if (edge.datum == null || edge.interactive === false) return
     const box =
@@ -147,40 +142,8 @@ export function buildNetworkEdgeHitIndex(
         order
       })
   })
-  const build = (items: Branch[]): Branch => {
-    if (items.length === 1) return items[0]
-    const node: Branch = {
-      x0: Infinity,
-      y0: Infinity,
-      x1: -Infinity,
-      y1: -Infinity,
-      radius: 0,
-      order: -1
-    }
-    for (const item of items) {
-      node.x0 = Math.min(node.x0, item.x0)
-      node.y0 = Math.min(node.y0, item.y0)
-      node.x1 = Math.max(node.x1, item.x1)
-      node.y1 = Math.max(node.y1, item.y1)
-      node.radius = Math.max(node.radius, item.radius)
-      node.order = Math.max(node.order, item.order)
-    }
-    if (items.length <= 8)
-      node.children = items.sort((a, b) => b.order - a.order)
-    else {
-      const horizontal = node.x1 - node.x0 >= node.y1 - node.y0
-      items.sort((a, b) =>
-        horizontal ? a.x0 + a.x1 - (b.x0 + b.x1) : a.y0 + a.y1 - (b.y0 + b.y1)
-      )
-      const middle = items.length >> 1
-      node.children = [
-        build(items.slice(0, middle)),
-        build(items.slice(middle))
-      ].sort((a, b) => b.order - a.order)
-    }
-    return node
-  }
-  const index = { edges, root: build(entries) }
+
+  const index = { edges, root: buildNetworkHitTree(entries) }
   retained.set(edges, { index, signatures })
   return index
 }
@@ -193,27 +156,7 @@ export function queryNetworkEdgeHitIndex<T>(
   tolerance: number,
   hit: (edge: NetworkSceneEdge) => T | null
 ): T | null {
-  let result: T | null = null,
-    order = -1
-  const visit = (node: Branch) => {
-    if (node.order <= order) return
-    const padding = Math.max(tolerance, node.radius) * 10 + 1e-7
-    if (
-      x < node.x0 - padding ||
-      x > node.x1 + padding ||
-      y < node.y0 - padding ||
-      y > node.y1 + padding
-    )
-      return
-    if (node.children) node.children.forEach(visit)
-    else {
-      const candidate = hit(index.edges[node.order])
-      if (candidate) {
-        result = candidate
-        order = node.order
-      }
-    }
-  }
-  visit(index.root)
-  return result
+  return queryNetworkHitTree(index.root, x, y, tolerance, (order) =>
+    hit(index.edges[order])
+  )
 }

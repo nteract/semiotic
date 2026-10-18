@@ -89,8 +89,8 @@ import {
 } from "./sceneCursor"
 import { shouldHandleFramePointer } from "./frameCursorInteraction"
 import {
-  prepareNetworkCustomEdgeHits,
-  preparedNetworkCustomEdgeHits,
+  prepareNetworkCustomHits,
+  preparedNetworkCustomHits,
   refreshNetworkCursorInventory,
   rehitNetworkFrameCursor,
   type NetworkCursorInventory
@@ -586,7 +586,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
   const rebuildSceneNow = useCallback(
     (store: NetworkPipelineStore, sceneSize: [number, number]) => {
       buildSceneWithDiagnostics(store, sceneSize)
-      prepareNetworkCustomEdgeHits(store)
+      prepareNetworkCustomHits(store)
       refreshKeyboardFocus()
       lastSceneSizeRef.current = sceneSize
       emitLegendCategories()
@@ -1183,7 +1183,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       adjustedHeight,
       sceneNodes: store.sceneNodes,
       sceneEdges: store.sceneEdges,
-      edgeIndex: preparedNetworkCustomEdgeHits(store),
+      ...preparedNetworkCustomHits(store),
       nodeQuadtree: store.nodeQuadtree,
       maxNodeRadius: store.maxNodeRadius,
       includeEdges: store.lastCustomLayoutResult?.edgeHitTesting !== false && (enableHover || sceneCursorInventoryRef.current.edges)
@@ -1246,7 +1246,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       adjustedHeight,
       sceneNodes: store.sceneNodes,
       sceneEdges: store.sceneEdges,
-      edgeIndex: preparedNetworkCustomEdgeHits(store),
+      ...preparedNetworkCustomHits(store),
       nodeQuadtree: store.nodeQuadtree,
       maxNodeRadius: store.maxNodeRadius,
       includeEdges: store.lastCustomLayoutResult?.edgeHitTesting !== false
@@ -1271,7 +1271,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
   )
 
   const onMouseMoveWrapped = useCallback(
-    (e: React.MouseEvent) => {
+    (e: HoverPointerCoords) => {
       if (!shouldHandleFramePointer(
         pointerStateRef, e, enableHover,
         sceneCursorInventoryRef.current.nodes || sceneCursorInventoryRef.current.edges,
@@ -1283,6 +1283,18 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     },
     [canvasRef, enableHover, onPointerMove, pointerStateRef, kbFocusIndexRef, focusedNavPointRef]
   )
+  // Canvas bursts need no synthetic event. Interactive overlays keep React
+  // bubbling below, so a child's stopPropagation still suppresses chart hover.
+  const pointerSurface = useRef<HTMLDivElement | null>(null)
+  const onCanvasMouseMove = useCallback((event: MouseEvent) => {
+    if (event.target === canvasRef.current || event.target === pointerSurface.current)
+      onMouseMoveWrapped(event)
+  }, [canvasRef, onMouseMoveWrapped])
+  const pointerSurfaceRef = useCallback((element: HTMLDivElement | null) => {
+    pointerSurface.current?.removeEventListener("mousemove", onCanvasMouseMove)
+    pointerSurface.current = element
+    element?.addEventListener("mousemove", onCanvasMouseMove)
+  }, [onCanvasMouseMove])
 
   // ── Render function ──────────────────────────────────────────────────
 
@@ -1343,7 +1355,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       },
       syncColorMap: () => syncColorMap(store),
       onSceneOrStyleChange: ({ inventoryChanged, geometryChanged }) => {
-        if (inventoryChanged || geometryChanged) prepareNetworkCustomEdgeHits(store)
+        if (inventoryChanged || geometryChanged) prepareNetworkCustomHits(store)
         if (store.lastCustomLayoutResult?.edgeHitTesting === false && hoverRef.current?.nodeOrEdge === "edge") hoverLeaveRef.current()
         if (inventoryChanged || geometryChanged) refreshKeyboardFocus()
         if (inventoryChanged) {
@@ -1435,37 +1447,39 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
         role={store.customLayoutHtmlMarks?.length ? "group" : "img"}
         aria-label={containerProps["aria-label"]}
         style={{ position: "relative", width: "100%", height: "100%" }}
-        onMouseMove={onMouseMoveWrapped}
+        ref={pointerSurfaceRef}
         onMouseLeave={onPointerLeave}
         onClick={customClickBehaviorProp || onObservation ? onClick : undefined}
       >
-        {layoutPending && layoutLoadingContent !== false && (
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              zIndex: 3,
-              background: "var(--semiotic-bg, #fff)"
-            }}
+        <div style={{ display: "contents" }} onMouseMove={onMouseMoveWrapped}>
+          {layoutPending && layoutLoadingContent !== false && (
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                zIndex: 3,
+                background: "var(--semiotic-bg, #fff)"
+              }}
+            >
+              {renderLoadingState(
+                true,
+                size[0],
+                size[1],
+                layoutLoadingContent
+              )}
+            </div>
+          )}
+          <CanvasFrameBackground
+            size={size}
+            margin={margin}
+            backdropFill={surfaceBackground ?? undefined}
+            overflowVisible
           >
-            {renderLoadingState(
-              true,
-              size[0],
-              size[1],
-              layoutLoadingContent
-            )}
-          </div>
-        )}
-        <CanvasFrameBackground
-          size={size}
-          margin={margin}
-          backdropFill={surfaceBackground ?? undefined}
-          overflowVisible
-        >
-          <NetworkViewGroup view={props.viewTransform} width={adjustedWidth} height={adjustedHeight}>
-            {composeOverlays(resolvedBackground, withNetworkPerspective(store.customLayoutBackgrounds, perspectiveFrame, perspectiveMode))}
-          </NetworkViewGroup>
-        </CanvasFrameBackground>
+            <NetworkViewGroup view={props.viewTransform} width={adjustedWidth} height={adjustedHeight}>
+              {composeOverlays(resolvedBackground, withNetworkPerspective(store.customLayoutBackgrounds, perspectiveFrame, perspectiveMode))}
+            </NetworkViewGroup>
+          </CanvasFrameBackground>
+        </div>
 
         <canvas
           aria-hidden="true"
@@ -1478,78 +1492,80 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
           }}
         />
 
-        <NetworkSVGOverlay
-          decorative
-          viewTransform={props.viewTransform}
-          width={adjustedWidth}
-          height={adjustedHeight}
-          totalWidth={size[0]}
-          totalHeight={size[1]}
-          margin={margin}
-          labels={store.labels}
-          sceneNodes={store.sceneNodes}
-          title={title}
-          description={description}
-          legend={legend}
-          legendPosition={legendPosition}
-          legendLayout={legendLayout}
-          legendHoverBehavior={legendHoverBehavior}
-          legendClickBehavior={legendClickBehavior}
-          legendHighlightedCategory={legendHighlightedCategory}
-          legendIsolatedCategories={legendIsolatedCategories}
-          foregroundGraphics={withNetworkPerspective(composeOverlays(
-            resolvedForeground,
-            withNetworkPerspective(wrapWithCustomLayoutSelection(
-              store.customLayoutOverlays,
-              layoutSelection ?? null
-            ), perspectiveFrame, perspectiveMode)
-          ), perspectiveFrame)}
-          annotations={annotations}
-          onAnnotationActivate={onAnnotationActivate}
-          onObservation={annotationObservationCallback ?? onObservation}
-          chartId={chartId}
-          chartType="StreamNetworkFrame"
-          autoPlaceAnnotations={autoPlaceAnnotations}
-          svgAnnotationRules={svgAnnotationRules}
-          annotationFrame={annotationFrame}
-        />
-
-        {/* HTML marks: a real-DOM layer above the canvas + SVG overlays, read
-          straight from the store (same render-time read as customLayoutOverlays).
-          `pointer-events: none` keeps the canvas authoritative for hit-testing. */}
-        <NetworkHtmlMarksLayer
-          viewTransform={props.viewTransform}
-          marks={store.customLayoutHtmlMarks}
-          margin={margin}
-          selection={layoutSelection ?? null}
-          width={adjustedWidth}
-          height={adjustedHeight}
-          viewport={props.viewport}
-          htmlMarkCulling={props.htmlMarkCulling}
-          onViewportChange={props.onViewportChange}
-        />
-
-        <NetworkFrameHover
-          viewTransform={props.viewTransform}
-          hoverStore={hoverStore}
-          kbFocusIndexRef={kbFocusIndexRef}
-          focusedNavPointRef={focusedNavPointRef}
-          enableHover={enableHover}
-          tooltipContent={tooltipContent}
-          adjustedWidth={adjustedWidth}
-          adjustedHeight={adjustedHeight}
-          margin={margin}
-          size={size}
-        />
-
-        {staleness?.showBadge && (
-          <StalenessBadge
-            isStale={isStale}
-            position={staleness.badgePosition}
-            state={staleness.state}
-            settling={staleness.settling}
+        <div style={{ display: "contents" }} onMouseMove={onMouseMoveWrapped}>
+          <NetworkSVGOverlay
+            decorative
+            viewTransform={props.viewTransform}
+            width={adjustedWidth}
+            height={adjustedHeight}
+            totalWidth={size[0]}
+            totalHeight={size[1]}
+            margin={margin}
+            labels={store.labels}
+            sceneNodes={store.sceneNodes}
+            title={title}
+            description={description}
+            legend={legend}
+            legendPosition={legendPosition}
+            legendLayout={legendLayout}
+            legendHoverBehavior={legendHoverBehavior}
+            legendClickBehavior={legendClickBehavior}
+            legendHighlightedCategory={legendHighlightedCategory}
+            legendIsolatedCategories={legendIsolatedCategories}
+            foregroundGraphics={withNetworkPerspective(composeOverlays(
+              resolvedForeground,
+              withNetworkPerspective(wrapWithCustomLayoutSelection(
+                store.customLayoutOverlays,
+                layoutSelection ?? null
+              ), perspectiveFrame, perspectiveMode)
+            ), perspectiveFrame)}
+            annotations={annotations}
+            onAnnotationActivate={onAnnotationActivate}
+            onObservation={annotationObservationCallback ?? onObservation}
+            chartId={chartId}
+            chartType="StreamNetworkFrame"
+            autoPlaceAnnotations={autoPlaceAnnotations}
+            svgAnnotationRules={svgAnnotationRules}
+            annotationFrame={annotationFrame}
           />
-        )}
+
+          {/* HTML marks: a real-DOM layer above the canvas + SVG overlays, read
+            straight from the store (same render-time read as customLayoutOverlays).
+            `pointer-events: none` keeps the canvas authoritative for hit-testing. */}
+          <NetworkHtmlMarksLayer
+            viewTransform={props.viewTransform}
+            marks={store.customLayoutHtmlMarks}
+            margin={margin}
+            selection={layoutSelection ?? null}
+            width={adjustedWidth}
+            height={adjustedHeight}
+            viewport={props.viewport}
+            htmlMarkCulling={props.htmlMarkCulling}
+            onViewportChange={props.onViewportChange}
+          />
+
+          <NetworkFrameHover
+            viewTransform={props.viewTransform}
+            hoverStore={hoverStore}
+            kbFocusIndexRef={kbFocusIndexRef}
+            focusedNavPointRef={focusedNavPointRef}
+            enableHover={enableHover}
+            tooltipContent={tooltipContent}
+            adjustedWidth={adjustedWidth}
+            adjustedHeight={adjustedHeight}
+            margin={margin}
+            size={size}
+          />
+
+          {staleness?.showBadge && (
+            <StalenessBadge
+              isStale={isStale}
+              position={staleness.badgePosition}
+              state={staleness.state}
+              settling={staleness.settling}
+            />
+          )}
+        </div>
       </div>
       {/* end visual content */}
     </div>

@@ -1,0 +1,1979 @@
+{
+  "version": 1,
+  "production": {
+    "measuredAt": "2026-10-18T18:16:02.868Z",
+    "sourceCommit": "5df91760930955a01dfbd978bbfa3ecda0d5fdbb",
+    "sourceWorktree": "S6 local production: fixed camera/pointer budgets and repeated dense culling stability; Linux calibration pending",
+    "timingBudgets": {
+      "status": "passed",
+      "failures": []
+    },
+    "densePan": {
+      "cpuThrottle": 4,
+      "profiling": false,
+      "frames": 50,
+      "layoutRuns": 0,
+      "minMounted": 104,
+      "maxMounted": 104,
+      "scriptMs": 6.176739999999999,
+      "layoutMs": 0.3715599999999999,
+      "timingStatus": "diagnostic: membership-changing pans have no calibrated timing budget"
+    },
+    "edgeQueries": {
+      "browser": "149.0.7827.55",
+      "cpu": "Apple M3 Pro",
+      "cpuThrottle": 4,
+      "reports": [
+        {
+          "name": "layout early hit",
+          "preparationMs": {
+            "mean": 37.556666660308835,
+            "p95": 46.30000019073486,
+            "max": 214.69999980926514,
+            "samples": 30
+          },
+          "firstQueryMs": {
+            "mean": 0.406666644414266,
+            "p95": 2.4000000953674316,
+            "max": 2.6999998092651367,
+            "samples": 30
+          },
+          "warmQueryMs": {
+            "mean": 0.06700000286102295,
+            "p95": 0.5,
+            "max": 1,
+            "samples": 100
+          },
+          "invalidations": {
+            "unchanged": 2.0999999046325684,
+            "style": 3.3000001907348633,
+            "one path": 9.199999809265137,
+            "all paths": 48
+          }
+        },
+        {
+          "name": "layout miss",
+          "preparationMs": {
+            "mean": 30.00000001589457,
+            "p95": 33.80000019073486,
+            "max": 48.90000009536743,
+            "samples": 30
+          },
+          "firstQueryMs": {
+            "mean": 0.029999987284342448,
+            "p95": 0.10000038146972656,
+            "max": 0.2999997138977051,
+            "samples": 30
+          },
+          "warmQueryMs": {
+            "mean": 0.06800000190734863,
+            "p95": 0.40000009536743164,
+            "max": 0.9000000953674316,
+            "samples": 100
+          },
+          "invalidations": {
+            "unchanged": 1.4000000953674316,
+            "style": 1.6999998092651367,
+            "one path": 7.099999904632568,
+            "all paths": 44.200000286102295
+          }
+        },
+        {
+          "name": "overlapping cubic hit",
+          "preparationMs": {
+            "mean": 90.20666669209798,
+            "p95": 92.19999980926514,
+            "max": 505.7000002861023,
+            "samples": 30
+          },
+          "firstQueryMs": {
+            "mean": 0.18000000317891438,
+            "p95": 0.9000000953674316,
+            "max": 0.9000000953674316,
+            "samples": 30
+          },
+          "warmQueryMs": {
+            "mean": 0.009000000953674316,
+            "p95": 0.09999990463256836,
+            "max": 0.40000009536743164,
+            "samples": 100
+          },
+          "invalidations": {
+            "unchanged": 3.8000001907348633,
+            "style": 4.599999904632568,
+            "one path": 49,
+            "all paths": 50
+          }
+        },
+        {
+          "name": "overlapping cubic interior miss",
+          "preparationMs": {
+            "mean": 84.7533333937327,
+            "p95": 116.30000019073486,
+            "max": 327.30000019073486,
+            "samples": 30
+          },
+          "firstQueryMs": {
+            "mean": 0.006666660308837891,
+            "p95": 0.09999990463256836,
+            "max": 0.09999990463256836,
+            "samples": 30
+          },
+          "warmQueryMs": {
+            "mean": 0.006999998092651367,
+            "p95": 0,
+            "max": 0.5999999046325684,
+            "samples": 100
+          },
+          "invalidations": {
+            "unchanged": 1.8000001907348633,
+            "style": 4.599999904632568,
+            "one path": 49.299999713897705,
+            "all paths": 46
+          }
+        },
+        {
+          "name": "filled holes worst-case miss",
+          "preparationMs": {
+            "mean": 56.68333336512248,
+            "p95": 59.5,
+            "max": 285.90000009536743,
+            "samples": 30
+          },
+          "firstQueryMs": {
+            "mean": 12.450000063578289,
+            "p95": 15.700000286102295,
+            "max": 16,
+            "samples": 30
+          },
+          "warmQueryMs": {
+            "mean": 1.7830000019073486,
+            "p95": 2.3000001907348633,
+            "max": 2.5,
+            "samples": 100
+          },
+          "invalidations": {
+            "unchanged": 1.1999998092651367,
+            "style": 2.299999713897705,
+            "one path": 5.200000286102295,
+            "all paths": 60.80000019073486
+          }
+        }
+      ]
+    },
+    "edgePointer": {
+      "browser": "149.0.7827.55",
+      "cpu": "Apple M3 Pro",
+      "cpuThrottle": 4,
+      "profiling": false,
+      "rows": [
+        {
+          "k": 0.3,
+          "scenario": "edge",
+          "scriptMs": 0.5229299999999998,
+          "layoutMs": 0.05242999999999998,
+          "counts": {
+            "calls": 100,
+            "queries": 100,
+            "layouts": 0,
+            "renders": 0,
+            "layers": 0
+          }
+        },
+        {
+          "k": 0.3,
+          "scenario": "node",
+          "scriptMs": 0.1854699999999998,
+          "layoutMs": 0.0007700000000000762,
+          "counts": {
+            "calls": 100,
+            "queries": 100,
+            "layouts": 0,
+            "renders": 0,
+            "layers": 0
+          }
+        },
+        {
+          "k": 0.3,
+          "scenario": "miss",
+          "scriptMs": 0.10640000000000038,
+          "layoutMs": 0.0004099999999999937,
+          "counts": {
+            "calls": 1,
+            "queries": 100,
+            "layouts": 0,
+            "renders": 0,
+            "layers": 0
+          }
+        },
+        {
+          "k": 0.3,
+          "scenario": "alternating",
+          "scriptMs": 0.4316599999999998,
+          "layoutMs": 0.09366,
+          "counts": {
+            "calls": 100,
+            "queries": 100,
+            "layouts": 0,
+            "renders": 0,
+            "layers": 0
+          }
+        },
+        {
+          "k": 1,
+          "scenario": "edge",
+          "scriptMs": 0.2902100000000002,
+          "layoutMs": 0.05842,
+          "counts": {
+            "calls": 100,
+            "queries": 100,
+            "layouts": 0,
+            "renders": 0,
+            "layers": 0
+          }
+        },
+        {
+          "k": 1,
+          "scenario": "node",
+          "scriptMs": 0.1575099999999996,
+          "layoutMs": 0.0006099999999999162,
+          "counts": {
+            "calls": 100,
+            "queries": 100,
+            "layouts": 0,
+            "renders": 0,
+            "layers": 0
+          }
+        },
+        {
+          "k": 1,
+          "scenario": "miss",
+          "scriptMs": 0.10558000000000012,
+          "layoutMs": 0.0004600000000000437,
+          "counts": {
+            "calls": 1,
+            "queries": 100,
+            "layouts": 0,
+            "renders": 0,
+            "layers": 0
+          }
+        },
+        {
+          "k": 1,
+          "scenario": "alternating",
+          "scriptMs": 0.2801500000000001,
+          "layoutMs": 0.06629999999999997,
+          "counts": {
+            "calls": 100,
+            "queries": 100,
+            "layouts": 0,
+            "renders": 0,
+            "layers": 0
+          }
+        },
+        {
+          "k": 2,
+          "scenario": "edge",
+          "scriptMs": 0.2678900000000001,
+          "layoutMs": 0.033129999999999965,
+          "counts": {
+            "calls": 100,
+            "queries": 100,
+            "layouts": 0,
+            "renders": 0,
+            "layers": 0
+          }
+        },
+        {
+          "k": 2,
+          "scenario": "node",
+          "scriptMs": 0.10684999999999946,
+          "layoutMs": 0.00784999999999994,
+          "counts": {
+            "calls": 100,
+            "queries": 100,
+            "layouts": 0,
+            "renders": 0,
+            "layers": 0
+          }
+        },
+        {
+          "k": 2,
+          "scenario": "miss",
+          "scriptMs": 0.09762000000000048,
+          "layoutMs": 0.0063300000000000856,
+          "counts": {
+            "calls": 1,
+            "queries": 100,
+            "layouts": 0,
+            "renders": 0,
+            "layers": 0
+          }
+        },
+        {
+          "k": 2,
+          "scenario": "alternating",
+          "scriptMs": 0.31652000000000013,
+          "layoutMs": 0.07300999999999988,
+          "counts": {
+            "calls": 100,
+            "queries": 100,
+            "layouts": 0,
+            "renders": 0,
+            "layers": 0
+          }
+        }
+      ]
+    },
+    "reports": [
+      {
+        "browser": "149.0.7827.55",
+        "cpuThrottle": 4,
+        "productionProfiling": false,
+        "machine": {
+          "platform": "darwin",
+          "arch": "arm64",
+          "cpu": "Apple M3 Pro"
+        },
+        "rows": [
+          {
+            "nodes": 300,
+            "cards": "compact",
+            "edgeHits": false,
+            "scale": "fit",
+            "k": 0.1851063829787234,
+            "mounted": 300,
+            "dots": 300,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 0.8561199999999997,
+            "layoutMs": 0.08946000000000008,
+            "frameIntervalMeanMs": 8.257999992370605,
+            "frameIntervalP95Ms": 9.399999618530273,
+            "cameraPaintMs": 0.30999998092651365,
+            "cameraPaints": 50,
+            "layers": null
+          },
+          {
+            "nodes": 300,
+            "cards": "compact",
+            "edgeHits": false,
+            "scale": 0.5,
+            "k": 0.5,
+            "mounted": 140,
+            "dots": 0,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 0.5626600000000004,
+            "layoutMs": 0.09393999999999986,
+            "frameIntervalMeanMs": 8.275999994277955,
+            "frameIntervalP95Ms": 9.300000190734863,
+            "cameraPaintMs": 0.17999999046325685,
+            "cameraPaints": 50,
+            "layers": null
+          },
+          {
+            "nodes": 300,
+            "cards": "compact",
+            "edgeHits": false,
+            "scale": 1,
+            "k": 1,
+            "mounted": 42,
+            "dots": 0,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 0.3418999999999994,
+            "layoutMs": 0.10798000000000002,
+            "frameIntervalMeanMs": 8.29,
+            "frameIntervalP95Ms": 9.400000095367432,
+            "cameraPaintMs": 0.15799999237060547,
+            "cameraPaints": 50,
+            "layers": null
+          },
+          {
+            "nodes": 300,
+            "cards": "compact",
+            "edgeHits": false,
+            "scale": 2,
+            "k": 2,
+            "mounted": 12,
+            "dots": 0,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 0.2673799999999993,
+            "layoutMs": 0.05019999999999997,
+            "frameIntervalMeanMs": 8.305999994277954,
+            "frameIntervalP95Ms": 9.5,
+            "cameraPaintMs": 0.11799999237060547,
+            "cameraPaints": 50,
+            "layers": null
+          }
+        ],
+        "edgeCost": null,
+        "edgeInvalidationCost": null
+      },
+      {
+        "browser": "149.0.7827.55",
+        "cpuThrottle": 4,
+        "productionProfiling": false,
+        "machine": {
+          "platform": "darwin",
+          "arch": "arm64",
+          "cpu": "Apple M3 Pro"
+        },
+        "rows": [
+          {
+            "nodes": 1000,
+            "cards": "compact",
+            "edgeHits": false,
+            "scale": "fit",
+            "k": 0.10381861575178997,
+            "mounted": 1000,
+            "dots": 1000,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 2.678,
+            "layoutMs": 0.22773999999999991,
+            "frameIntervalMeanMs": 8.641999988555908,
+            "frameIntervalP95Ms": 12,
+            "cameraPaintMs": 1.369999990463257,
+            "cameraPaints": 50,
+            "layers": null
+          },
+          {
+            "nodes": 1000,
+            "cards": "compact",
+            "edgeHits": false,
+            "scale": 0.5,
+            "k": 0.5,
+            "mounted": 154,
+            "dots": 0,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 1.2424600000000008,
+            "layoutMs": 0.18289999999999998,
+            "frameIntervalMeanMs": 8.304000005722045,
+            "frameIntervalP95Ms": 9.599999904632568,
+            "cameraPaintMs": 0.8619999980926514,
+            "cameraPaints": 50,
+            "layers": null
+          },
+          {
+            "nodes": 1000,
+            "cards": "compact",
+            "edgeHits": false,
+            "scale": 1,
+            "k": 1,
+            "mounted": 42,
+            "dots": 0,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 0.90526,
+            "layoutMs": 0.18904000000000004,
+            "frameIntervalMeanMs": 8.29,
+            "frameIntervalP95Ms": 9.600000381469727,
+            "cameraPaintMs": 0.6280000114440918,
+            "cameraPaints": 50,
+            "layers": null
+          },
+          {
+            "nodes": 1000,
+            "cards": "compact",
+            "edgeHits": false,
+            "scale": 2,
+            "k": 2,
+            "mounted": 12,
+            "dots": 0,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 0.88862,
+            "layoutMs": 0.15533999999999992,
+            "frameIntervalMeanMs": 8.28,
+            "frameIntervalP95Ms": 9.400000095367432,
+            "cameraPaintMs": 0.6099999809265136,
+            "cameraPaints": 50,
+            "layers": null
+          }
+        ],
+        "edgeCost": null,
+        "edgeInvalidationCost": null
+      },
+      {
+        "browser": "149.0.7827.55",
+        "cpuThrottle": 4,
+        "productionProfiling": false,
+        "machine": {
+          "platform": "darwin",
+          "arch": "arm64",
+          "cpu": "Apple M3 Pro"
+        },
+        "rows": [
+          {
+            "nodes": 1000,
+            "cards": "pipeline",
+            "edgeHits": false,
+            "scale": "fit",
+            "k": 0.044592516658124026,
+            "mounted": 1000,
+            "dots": 1000,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 10.226199999999999,
+            "layoutMs": 0.36268,
+            "frameIntervalMeanMs": 22.402000007629393,
+            "frameIntervalP95Ms": 26.199999809265137,
+            "cameraPaintMs": 1.3560000038146973,
+            "cameraPaints": 50,
+            "layers": null
+          },
+          {
+            "nodes": 1000,
+            "cards": "pipeline",
+            "edgeHits": false,
+            "scale": 0.5,
+            "k": 0.5,
+            "mounted": 60,
+            "dots": 0,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 2.667919999999999,
+            "layoutMs": 0.27020000000000005,
+            "frameIntervalMeanMs": 8.348000001907348,
+            "frameIntervalP95Ms": 9.599999904632568,
+            "cameraPaintMs": 0.8040000247955322,
+            "cameraPaints": 50,
+            "layers": null
+          },
+          {
+            "nodes": 1000,
+            "cards": "pipeline",
+            "edgeHits": false,
+            "scale": 1,
+            "k": 1,
+            "mounted": 15,
+            "dots": 0,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 2.299760000000002,
+            "layoutMs": 0.2503999999999998,
+            "frameIntervalMeanMs": 8.304000005722045,
+            "frameIntervalP95Ms": 10.600000381469727,
+            "cameraPaintMs": 0.7820000076293945,
+            "cameraPaints": 50,
+            "layers": null
+          },
+          {
+            "nodes": 1000,
+            "cards": "pipeline",
+            "edgeHits": false,
+            "scale": 2,
+            "k": 2,
+            "mounted": 6,
+            "dots": 0,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 1.387260000000001,
+            "layoutMs": 0.24941999999999992,
+            "frameIntervalMeanMs": 8.332000007629395,
+            "frameIntervalP95Ms": 9.5,
+            "cameraPaintMs": 0.5880000209808349,
+            "cameraPaints": 50,
+            "layers": null
+          }
+        ],
+        "edgeCost": null,
+        "edgeInvalidationCost": null
+      },
+      {
+        "browser": "149.0.7827.55",
+        "cpuThrottle": 4,
+        "productionProfiling": false,
+        "machine": {
+          "platform": "darwin",
+          "arch": "arm64",
+          "cpu": "Apple M3 Pro"
+        },
+        "rows": [
+          {
+            "nodes": 3000,
+            "cards": "compact",
+            "edgeHits": false,
+            "scale": "fit",
+            "k": 0.05823293172690769,
+            "mounted": 3000,
+            "dots": 3000,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 6.509440000000001,
+            "layoutMs": 1.0086799999999998,
+            "frameIntervalMeanMs": 22.09199999809265,
+            "frameIntervalP95Ms": 28.700000286102295,
+            "cameraPaintMs": 3.651999979019165,
+            "cameraPaints": 50,
+            "layers": null
+          },
+          {
+            "nodes": 3000,
+            "cards": "compact",
+            "edgeHits": false,
+            "scale": 0.5,
+            "k": 0.5,
+            "mounted": 154,
+            "dots": 0,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 2.8335199999999983,
+            "layoutMs": 0.6248599999999999,
+            "frameIntervalMeanMs": 8.33,
+            "frameIntervalP95Ms": 9.5,
+            "cameraPaintMs": 2.2499999713897707,
+            "cameraPaints": 50,
+            "layers": null
+          },
+          {
+            "nodes": 3000,
+            "cards": "compact",
+            "edgeHits": false,
+            "scale": 1,
+            "k": 1,
+            "mounted": 42,
+            "dots": 0,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 2.6523000000000008,
+            "layoutMs": 0.5840000000000001,
+            "frameIntervalMeanMs": 8.303999996185302,
+            "frameIntervalP95Ms": 10.799999713897705,
+            "cameraPaintMs": 2.177999973297119,
+            "cameraPaints": 50,
+            "layers": null
+          },
+          {
+            "nodes": 3000,
+            "cards": "compact",
+            "edgeHits": false,
+            "scale": 2,
+            "k": 2,
+            "mounted": 12,
+            "dots": 0,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 2.8528200000000004,
+            "layoutMs": 0.5587799999999998,
+            "frameIntervalMeanMs": 8.495999994277954,
+            "frameIntervalP95Ms": 12.200000286102295,
+            "cameraPaintMs": 2.327999963760376,
+            "cameraPaints": 50,
+            "layers": null
+          }
+        ],
+        "edgeCost": [
+          {
+            "name": "early hit",
+            "hit": true,
+            "coldMs": 33.80000019073486,
+            "preparationMs": 24.40000009536743,
+            "firstHoverMs": 1.5999999046325684,
+            "fullSceneMean": 0.4,
+            "fullSceneP95": 0.9000000953674316,
+            "mean": 0.32199999809265134,
+            "p95": 0.8000001907348633
+          },
+          {
+            "name": "miss",
+            "hit": false,
+            "coldMs": 22.59999990463257,
+            "preparationMs": 22.09999990463257,
+            "firstHoverMs": 0.7000002861022949,
+            "fullSceneMean": 0.40299999713897705,
+            "fullSceneP95": 0.9000000953674316,
+            "mean": 0.26800000190734863,
+            "p95": 0.8000001907348633
+          },
+          {
+            "name": "interior hit",
+            "hit": true,
+            "coldMs": 13.400000095367432,
+            "preparationMs": 30.799999713897705,
+            "firstHoverMs": 0,
+            "fullSceneMean": 0.33800000190734864,
+            "fullSceneP95": 0.7999997138977051,
+            "mean": 0.17300000190734863,
+            "p95": 0.6999998092651367
+          }
+        ],
+        "edgeInvalidationCost": {
+          "freshSceneMs": 25.5,
+          "unchangedSceneMs": 0.5999999046325684,
+          "restyledSceneMs": 0.20000028610229492,
+          "onePathChangedMs": 1,
+          "allPathsChangedMs": 36.19999980926514
+        }
+      },
+      {
+        "browser": "149.0.7827.55",
+        "cpuThrottle": 4,
+        "productionProfiling": false,
+        "machine": {
+          "platform": "darwin",
+          "arch": "arm64",
+          "cpu": "Apple M3 Pro"
+        },
+        "rows": [
+          {
+            "nodes": 3000,
+            "cards": "compact",
+            "edgeHits": true,
+            "scale": "fit",
+            "k": 0.05823293172690769,
+            "mounted": 3000,
+            "dots": 3000,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 7.0894200000000005,
+            "layoutMs": 1.0624799999999999,
+            "frameIntervalMeanMs": 23.9,
+            "frameIntervalP95Ms": 28.200000286102295,
+            "cameraPaintMs": 4.400000028610229,
+            "cameraPaints": 50,
+            "layers": null
+          },
+          {
+            "nodes": 3000,
+            "cards": "compact",
+            "edgeHits": true,
+            "scale": 0.5,
+            "k": 0.5,
+            "mounted": 154,
+            "dots": 0,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 3.782479999999999,
+            "layoutMs": 0.6733600000000002,
+            "frameIntervalMeanMs": 9.27,
+            "frameIntervalP95Ms": 12.199999809265137,
+            "cameraPaintMs": 3.2879999256134034,
+            "cameraPaints": 50,
+            "layers": null
+          },
+          {
+            "nodes": 3000,
+            "cards": "compact",
+            "edgeHits": true,
+            "scale": 1,
+            "k": 1,
+            "mounted": 42,
+            "dots": 0,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 3.5337400000000008,
+            "layoutMs": 0.8529999999999999,
+            "frameIntervalMeanMs": 8.671999998092652,
+            "frameIntervalP95Ms": 10.800000190734863,
+            "cameraPaintMs": 2.947999973297119,
+            "cameraPaints": 50,
+            "layers": null
+          },
+          {
+            "nodes": 3000,
+            "cards": "compact",
+            "edgeHits": true,
+            "scale": 2,
+            "k": 2,
+            "mounted": 12,
+            "dots": 0,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 3.417199999999996,
+            "layoutMs": 0.6432800000000001,
+            "frameIntervalMeanMs": 8.796000003814697,
+            "frameIntervalP95Ms": 12.799999713897705,
+            "cameraPaintMs": 2.961999979019165,
+            "cameraPaints": 50,
+            "layers": null
+          }
+        ],
+        "edgeCost": [
+          {
+            "name": "early hit",
+            "hit": true,
+            "coldMs": 34.700000286102295,
+            "preparationMs": 28.300000190734863,
+            "firstHoverMs": 1,
+            "fullSceneMean": 0.40400000095367433,
+            "fullSceneP95": 0.8000001907348633,
+            "mean": 0.3109999990463257,
+            "p95": 0.8000001907348633
+          },
+          {
+            "name": "miss",
+            "hit": false,
+            "coldMs": 28.799999713897705,
+            "preparationMs": 22,
+            "firstHoverMs": 0.5,
+            "fullSceneMean": 0.39699999809265135,
+            "fullSceneP95": 0.9000000953674316,
+            "mean": 0.28,
+            "p95": 0.8000001907348633
+          },
+          {
+            "name": "interior hit",
+            "hit": true,
+            "coldMs": 13.799999713897705,
+            "preparationMs": 21.799999713897705,
+            "firstHoverMs": 0.10000038146972656,
+            "fullSceneMean": 0.285,
+            "fullSceneP95": 0.8000001907348633,
+            "mean": 0.22899999618530273,
+            "p95": 0.6999998092651367
+          }
+        ],
+        "edgeInvalidationCost": {
+          "freshSceneMs": 22,
+          "unchangedSceneMs": 0.19999980926513672,
+          "restyledSceneMs": 0.20000028610229492,
+          "onePathChangedMs": 1.3999996185302734,
+          "allPathsChangedMs": 38.299999713897705
+        }
+      }
+    ]
+  },
+  "profiling": {
+    "measuredAt": "2026-10-18T18:46:07.795Z",
+    "sourceCommit": "e23e1597e76f492eb72aea1e6ba973d4e08cef43",
+    "sourceWorktree": "S6 local profiling: completed after interruption; layer attribution only, Linux calibration pending",
+    "timingBudgets": {
+      "status": "diagnostic",
+      "failures": []
+    },
+    "densePan": {
+      "cpuThrottle": 4,
+      "profiling": true,
+      "frames": 50,
+      "layoutRuns": 0,
+      "minMounted": 104,
+      "maxMounted": 104,
+      "scriptMs": 8.5337,
+      "layoutMs": 0.4770199999999999,
+      "timingStatus": "diagnostic: membership-changing pans have no calibrated timing budget"
+    },
+    "edgeQueries": {
+      "browser": "149.0.7827.55",
+      "cpu": "Apple M3 Pro",
+      "cpuThrottle": 4,
+      "reports": [
+        {
+          "name": "layout early hit",
+          "preparationMs": {
+            "mean": 35.636666695276894,
+            "p95": 45,
+            "max": 180.19999980926514,
+            "samples": 30
+          },
+          "firstQueryMs": {
+            "mean": 0.2733333428700765,
+            "p95": 0.9000000953674316,
+            "max": 2.5999999046325684,
+            "samples": 30
+          },
+          "warmQueryMs": {
+            "mean": 0.061999998092651366,
+            "p95": 0.40000009536743164,
+            "max": 0.6999998092651367,
+            "samples": 100
+          },
+          "invalidations": {
+            "unchanged": 2.3000001907348633,
+            "style": 3.6999998092651367,
+            "one path": 10.300000190734863,
+            "all paths": 49.89999961853027
+          }
+        },
+        {
+          "name": "layout miss",
+          "preparationMs": {
+            "mean": 29.8,
+            "p95": 31.699999809265137,
+            "max": 56,
+            "samples": 30
+          },
+          "firstQueryMs": {
+            "mean": 0.06999999682108561,
+            "p95": 0.6000003814697266,
+            "max": 0.7000002861022949,
+            "samples": 30
+          },
+          "warmQueryMs": {
+            "mean": 0.05799999713897705,
+            "p95": 0.5,
+            "max": 0.9000000953674316,
+            "samples": 100
+          },
+          "invalidations": {
+            "unchanged": 1.4000000953674316,
+            "style": 2,
+            "one path": 6.699999809265137,
+            "all paths": 42
+          }
+        },
+        {
+          "name": "overlapping cubic hit",
+          "preparationMs": {
+            "mean": 89.75666658083598,
+            "p95": 92.59999990463257,
+            "max": 487,
+            "samples": 30
+          },
+          "firstQueryMs": {
+            "mean": 0.05000001589457194,
+            "p95": 0.3000001907348633,
+            "max": 0.6000003814697266,
+            "samples": 30
+          },
+          "warmQueryMs": {
+            "mean": 0.015,
+            "p95": 0.09999990463256836,
+            "max": 0.5999999046325684,
+            "samples": 100
+          },
+          "invalidations": {
+            "unchanged": 2.5,
+            "style": 5,
+            "one path": 49.10000038146973,
+            "all paths": 48.09999990463257
+          }
+        },
+        {
+          "name": "overlapping cubic interior miss",
+          "preparationMs": {
+            "mean": 76.98666666348775,
+            "p95": 80.40000009536743,
+            "max": 134.30000019073486,
+            "samples": 30
+          },
+          "firstQueryMs": {
+            "mean": 0.016666666666666666,
+            "p95": 0,
+            "max": 0.5,
+            "samples": 30
+          },
+          "warmQueryMs": {
+            "mean": 0.0019999980926513673,
+            "p95": 0,
+            "max": 0.09999990463256836,
+            "samples": 100
+          },
+          "invalidations": {
+            "unchanged": 2,
+            "style": 3.8999996185302734,
+            "one path": 201,
+            "all paths": 50
+          }
+        },
+        {
+          "name": "filled holes worst-case miss",
+          "preparationMs": {
+            "mean": 48.93666667938233,
+            "p95": 54.40000009536743,
+            "max": 67.69999980926514,
+            "samples": 30
+          },
+          "firstQueryMs": {
+            "mean": 13.313333304723104,
+            "p95": 16.199999809265137,
+            "max": 16.40000009536743,
+            "samples": 30
+          },
+          "warmQueryMs": {
+            "mean": 2.0930000019073485,
+            "p95": 2.5,
+            "max": 2.6000003814697266,
+            "samples": 100
+          },
+          "invalidations": {
+            "unchanged": 0.7999997138977051,
+            "style": 2.4000000953674316,
+            "one path": 4.699999809265137,
+            "all paths": 59.5
+          }
+        }
+      ]
+    },
+    "edgePointer": {
+      "browser": "149.0.7827.55",
+      "cpu": "Apple M3 Pro",
+      "cpuThrottle": 4,
+      "profiling": true,
+      "rows": [
+        {
+          "k": 0.3,
+          "scenario": "edge",
+          "scriptMs": 0.5675799999999998,
+          "layoutMs": 0.03598000000000004,
+          "counts": {
+            "calls": 100,
+            "queries": 100,
+            "layouts": 0,
+            "renders": 0,
+            "layers": 0
+          }
+        },
+        {
+          "k": 0.3,
+          "scenario": "node",
+          "scriptMs": 0.23173,
+          "layoutMs": 0.0007799999999999474,
+          "counts": {
+            "calls": 100,
+            "queries": 100,
+            "layouts": 0,
+            "renders": 0,
+            "layers": 0
+          }
+        },
+        {
+          "k": 0.3,
+          "scenario": "miss",
+          "scriptMs": 0.11786000000000019,
+          "layoutMs": 0.0004000000000001225,
+          "counts": {
+            "calls": 1,
+            "queries": 100,
+            "layouts": 0,
+            "renders": 0,
+            "layers": 0
+          }
+        },
+        {
+          "k": 0.3,
+          "scenario": "alternating",
+          "scriptMs": 0.5153000000000002,
+          "layoutMs": 0.033170000000000005,
+          "counts": {
+            "calls": 100,
+            "queries": 100,
+            "layouts": 0,
+            "renders": 0,
+            "layers": 0
+          }
+        },
+        {
+          "k": 1,
+          "scenario": "edge",
+          "scriptMs": 0.6337299999999996,
+          "layoutMs": 0.0671999999999999,
+          "counts": {
+            "calls": 100,
+            "queries": 100,
+            "layouts": 0,
+            "renders": 0,
+            "layers": 0
+          }
+        },
+        {
+          "k": 1,
+          "scenario": "node",
+          "scriptMs": 0.50871,
+          "layoutMs": 0.007160000000000083,
+          "counts": {
+            "calls": 100,
+            "queries": 100,
+            "layouts": 0,
+            "renders": 0,
+            "layers": 0
+          }
+        },
+        {
+          "k": 1,
+          "scenario": "miss",
+          "scriptMs": 0.1128600000000002,
+          "layoutMs": 0.0004300000000000137,
+          "counts": {
+            "calls": 1,
+            "queries": 100,
+            "layouts": 0,
+            "renders": 0,
+            "layers": 0
+          }
+        },
+        {
+          "k": 1,
+          "scenario": "alternating",
+          "scriptMs": 0.3995700000000002,
+          "layoutMs": 0.06754999999999997,
+          "counts": {
+            "calls": 100,
+            "queries": 100,
+            "layouts": 0,
+            "renders": 0,
+            "layers": 0
+          }
+        },
+        {
+          "k": 2,
+          "scenario": "edge",
+          "scriptMs": 0.28803000000000023,
+          "layoutMs": 0.03586000000000006,
+          "counts": {
+            "calls": 100,
+            "queries": 100,
+            "layouts": 0,
+            "renders": 0,
+            "layers": 0
+          }
+        },
+        {
+          "k": 2,
+          "scenario": "node",
+          "scriptMs": 0.1794600000000002,
+          "layoutMs": 0.0003799999999999637,
+          "counts": {
+            "calls": 100,
+            "queries": 100,
+            "layouts": 0,
+            "renders": 0,
+            "layers": 0
+          }
+        },
+        {
+          "k": 2,
+          "scenario": "miss",
+          "scriptMs": 0.07012000000000018,
+          "layoutMs": 0.0003700000000000925,
+          "counts": {
+            "calls": 1,
+            "queries": 100,
+            "layouts": 0,
+            "renders": 0,
+            "layers": 0
+          }
+        },
+        {
+          "k": 2,
+          "scenario": "alternating",
+          "scriptMs": 0.41993999999999976,
+          "layoutMs": 0.09890999999999997,
+          "counts": {
+            "calls": 100,
+            "queries": 100,
+            "layouts": 0,
+            "renders": 0,
+            "layers": 0
+          }
+        }
+      ]
+    },
+    "reports": [
+      {
+        "browser": "149.0.7827.55",
+        "cpuThrottle": 4,
+        "productionProfiling": true,
+        "machine": {
+          "platform": "darwin",
+          "arch": "arm64",
+          "cpu": "Apple M3 Pro"
+        },
+        "rows": [
+          {
+            "nodes": 300,
+            "cards": "compact",
+            "edgeHits": false,
+            "scale": "fit",
+            "k": 0.1851063829787234,
+            "mounted": 300,
+            "dots": 300,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 0.7173200000000002,
+            "layoutMs": 0.04864000000000007,
+            "frameIntervalMeanMs": 8.264000005722046,
+            "frameIntervalP95Ms": 9.5,
+            "cameraPaintMs": 0.33800000190734864,
+            "cameraPaints": 50,
+            "layers": {
+              "NetworkHtmlMarksLayer": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              },
+              "NetworkSVGOverlay": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              }
+            }
+          },
+          {
+            "nodes": 300,
+            "cards": "compact",
+            "edgeHits": false,
+            "scale": 0.5,
+            "k": 0.5,
+            "mounted": 140,
+            "dots": 0,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 0.42044000000000026,
+            "layoutMs": 0.10546,
+            "frameIntervalMeanMs": 8.241999998092652,
+            "frameIntervalP95Ms": 9.5,
+            "cameraPaintMs": 0.16399996757507324,
+            "cameraPaints": 50,
+            "layers": {
+              "NetworkHtmlMarksLayer": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              },
+              "NetworkSVGOverlay": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              }
+            }
+          },
+          {
+            "nodes": 300,
+            "cards": "compact",
+            "edgeHits": false,
+            "scale": 1,
+            "k": 1,
+            "mounted": 42,
+            "dots": 0,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 0.29332000000000025,
+            "layoutMs": 0.08284000000000014,
+            "frameIntervalMeanMs": 8.271999998092651,
+            "frameIntervalP95Ms": 9.400000095367432,
+            "cameraPaintMs": 0.14800002098083495,
+            "cameraPaints": 50,
+            "layers": {
+              "NetworkHtmlMarksLayer": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              },
+              "NetworkSVGOverlay": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              }
+            }
+          },
+          {
+            "nodes": 300,
+            "cards": "compact",
+            "edgeHits": false,
+            "scale": 2,
+            "k": 2,
+            "mounted": 12,
+            "dots": 0,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 0.24004000000000025,
+            "layoutMs": 0.04390000000000005,
+            "frameIntervalMeanMs": 8.286000003814697,
+            "frameIntervalP95Ms": 9.400000095367432,
+            "cameraPaintMs": 0.11400003433227539,
+            "cameraPaints": 50,
+            "layers": {
+              "NetworkHtmlMarksLayer": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              },
+              "NetworkSVGOverlay": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              }
+            }
+          }
+        ],
+        "edgeCost": null,
+        "edgeInvalidationCost": null
+      },
+      {
+        "browser": "149.0.7827.55",
+        "cpuThrottle": 4,
+        "productionProfiling": true,
+        "machine": {
+          "platform": "darwin",
+          "arch": "arm64",
+          "cpu": "Apple M3 Pro"
+        },
+        "rows": [
+          {
+            "nodes": 1000,
+            "cards": "compact",
+            "edgeHits": false,
+            "scale": "fit",
+            "k": 0.10381861575178997,
+            "mounted": 1000,
+            "dots": 1000,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 2.5189000000000004,
+            "layoutMs": 0.2806800000000001,
+            "frameIntervalMeanMs": 8.674000005722046,
+            "frameIntervalP95Ms": 11.100000381469727,
+            "cameraPaintMs": 1.2740000247955323,
+            "cameraPaints": 50,
+            "layers": {
+              "NetworkHtmlMarksLayer": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              },
+              "NetworkSVGOverlay": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              }
+            }
+          },
+          {
+            "nodes": 1000,
+            "cards": "compact",
+            "edgeHits": false,
+            "scale": 0.5,
+            "k": 0.5,
+            "mounted": 154,
+            "dots": 0,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 1.2714000000000003,
+            "layoutMs": 0.32136,
+            "frameIntervalMeanMs": 8.321999998092652,
+            "frameIntervalP95Ms": 9.199999809265137,
+            "cameraPaintMs": 0.8559999561309815,
+            "cameraPaints": 50,
+            "layers": {
+              "NetworkHtmlMarksLayer": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              },
+              "NetworkSVGOverlay": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              }
+            }
+          },
+          {
+            "nodes": 1000,
+            "cards": "compact",
+            "edgeHits": false,
+            "scale": 1,
+            "k": 1,
+            "mounted": 42,
+            "dots": 0,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 1.0861600000000005,
+            "layoutMs": 0.19241999999999984,
+            "frameIntervalMeanMs": 8.298000001907349,
+            "frameIntervalP95Ms": 9.900000095367432,
+            "cameraPaintMs": 0.6480000305175782,
+            "cameraPaints": 50,
+            "layers": {
+              "NetworkHtmlMarksLayer": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              },
+              "NetworkSVGOverlay": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              }
+            }
+          },
+          {
+            "nodes": 1000,
+            "cards": "compact",
+            "edgeHits": false,
+            "scale": 2,
+            "k": 2,
+            "mounted": 12,
+            "dots": 0,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 0.8786800000000006,
+            "layoutMs": 0.18596000000000001,
+            "frameIntervalMeanMs": 8.27800000190735,
+            "frameIntervalP95Ms": 9.600000381469727,
+            "cameraPaintMs": 0.6059999942779541,
+            "cameraPaints": 50,
+            "layers": {
+              "NetworkHtmlMarksLayer": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              },
+              "NetworkSVGOverlay": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              }
+            }
+          }
+        ],
+        "edgeCost": null,
+        "edgeInvalidationCost": null
+      },
+      {
+        "browser": "149.0.7827.55",
+        "cpuThrottle": 4,
+        "productionProfiling": true,
+        "machine": {
+          "platform": "darwin",
+          "arch": "arm64",
+          "cpu": "Apple M3 Pro"
+        },
+        "rows": [
+          {
+            "nodes": 1000,
+            "cards": "pipeline",
+            "edgeHits": false,
+            "scale": "fit",
+            "k": 0.044592516658124026,
+            "mounted": 1000,
+            "dots": 1000,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 33.45588,
+            "layoutMs": 0.3572800000000001,
+            "frameIntervalMeanMs": 70.4539999961853,
+            "frameIntervalP95Ms": 76.5,
+            "cameraPaintMs": 1.3619999408721923,
+            "cameraPaints": 50,
+            "layers": {
+              "NetworkHtmlMarksLayer": {
+                "commits": 50,
+                "startCommits": 1,
+                "steadyCommits": 49,
+                "settleCommits": 1,
+                "renderMsPerFrame": 5.6179999828338625
+              },
+              "NetworkSVGOverlay": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              }
+            }
+          },
+          {
+            "nodes": 1000,
+            "cards": "pipeline",
+            "edgeHits": false,
+            "scale": 0.5,
+            "k": 0.5,
+            "mounted": 60,
+            "dots": 0,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 5.26014,
+            "layoutMs": 0.3361,
+            "frameIntervalMeanMs": 11.083999996185304,
+            "frameIntervalP95Ms": 15.400000095367432,
+            "cameraPaintMs": 1.0980000019073486,
+            "cameraPaints": 50,
+            "layers": {
+              "NetworkHtmlMarksLayer": {
+                "commits": 50,
+                "startCommits": 1,
+                "steadyCommits": 49,
+                "settleCommits": 1,
+                "renderMsPerFrame": 1.1480000019073486
+              },
+              "NetworkSVGOverlay": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              }
+            }
+          },
+          {
+            "nodes": 1000,
+            "cards": "pipeline",
+            "edgeHits": false,
+            "scale": 1,
+            "k": 1,
+            "mounted": 15,
+            "dots": 0,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 2.7499800000000003,
+            "layoutMs": 0.2793800000000002,
+            "frameIntervalMeanMs": 8.357999992370605,
+            "frameIntervalP95Ms": 10.299999713897705,
+            "cameraPaintMs": 0.6680000114440918,
+            "cameraPaints": 50,
+            "layers": {
+              "NetworkHtmlMarksLayer": {
+                "commits": 50,
+                "startCommits": 1,
+                "steadyCommits": 49,
+                "settleCommits": 1,
+                "renderMsPerFrame": 0.6659999942779541
+              },
+              "NetworkSVGOverlay": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              }
+            }
+          },
+          {
+            "nodes": 1000,
+            "cards": "pipeline",
+            "edgeHits": false,
+            "scale": 2,
+            "k": 2,
+            "mounted": 6,
+            "dots": 0,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 1.8992999999999949,
+            "layoutMs": 0.28447999999999973,
+            "frameIntervalMeanMs": 8.298000001907349,
+            "frameIntervalP95Ms": 10.600000381469727,
+            "cameraPaintMs": 0.6100000095367432,
+            "cameraPaints": 50,
+            "layers": {
+              "NetworkHtmlMarksLayer": {
+                "commits": 50,
+                "startCommits": 1,
+                "steadyCommits": 49,
+                "settleCommits": 1,
+                "renderMsPerFrame": 0.35199999809265137
+              },
+              "NetworkSVGOverlay": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              }
+            }
+          }
+        ],
+        "edgeCost": null,
+        "edgeInvalidationCost": null
+      },
+      {
+        "browser": "149.0.7827.55",
+        "cpuThrottle": 4,
+        "productionProfiling": true,
+        "machine": {
+          "platform": "darwin",
+          "arch": "arm64",
+          "cpu": "Apple M3 Pro"
+        },
+        "rows": [
+          {
+            "nodes": 3000,
+            "cards": "compact",
+            "edgeHits": false,
+            "scale": "fit",
+            "k": 0.05823293172690769,
+            "mounted": 3000,
+            "dots": 3000,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 6.914979999999999,
+            "layoutMs": 1.1377599999999999,
+            "frameIntervalMeanMs": 28.478000001907347,
+            "frameIntervalP95Ms": 35.799999713897705,
+            "cameraPaintMs": 3.677999973297119,
+            "cameraPaints": 50,
+            "layers": {
+              "NetworkHtmlMarksLayer": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              },
+              "NetworkSVGOverlay": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              }
+            }
+          },
+          {
+            "nodes": 3000,
+            "cards": "compact",
+            "edgeHits": false,
+            "scale": 0.5,
+            "k": 0.5,
+            "mounted": 154,
+            "dots": 0,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 3.2033999999999985,
+            "layoutMs": 0.8129399999999998,
+            "frameIntervalMeanMs": 8.808000001907349,
+            "frameIntervalP95Ms": 10.900000095367432,
+            "cameraPaintMs": 2.4900000286102295,
+            "cameraPaints": 50,
+            "layers": {
+              "NetworkHtmlMarksLayer": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              },
+              "NetworkSVGOverlay": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              }
+            }
+          },
+          {
+            "nodes": 3000,
+            "cards": "compact",
+            "edgeHits": false,
+            "scale": 1,
+            "k": 1,
+            "mounted": 42,
+            "dots": 0,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 2.7681999999999984,
+            "layoutMs": 0.7195999999999997,
+            "frameIntervalMeanMs": 8.33,
+            "frameIntervalP95Ms": 11.599999904632568,
+            "cameraPaintMs": 2.2080000019073487,
+            "cameraPaints": 50,
+            "layers": {
+              "NetworkHtmlMarksLayer": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              },
+              "NetworkSVGOverlay": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              }
+            }
+          },
+          {
+            "nodes": 3000,
+            "cards": "compact",
+            "edgeHits": false,
+            "scale": 2,
+            "k": 2,
+            "mounted": 12,
+            "dots": 0,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 3.0806999999999984,
+            "layoutMs": 0.6870000000000005,
+            "frameIntervalMeanMs": 8.543999996185303,
+            "frameIntervalP95Ms": 12.199999809265137,
+            "cameraPaintMs": 2.5819999885559084,
+            "cameraPaints": 50,
+            "layers": {
+              "NetworkHtmlMarksLayer": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              },
+              "NetworkSVGOverlay": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              }
+            }
+          }
+        ],
+        "edgeCost": [
+          {
+            "name": "early hit",
+            "hit": true,
+            "coldMs": 33.90000009536743,
+            "preparationMs": 26.600000381469727,
+            "firstHoverMs": 1.6999998092651367,
+            "fullSceneMean": 0.395,
+            "fullSceneP95": 0.9000000953674316,
+            "mean": 0.3220000028610229,
+            "p95": 0.8000001907348633
+          },
+          {
+            "name": "miss",
+            "hit": false,
+            "coldMs": 22.59999990463257,
+            "preparationMs": 25.59999990463257,
+            "firstHoverMs": 0.5,
+            "fullSceneMean": 0.3309999990463257,
+            "fullSceneP95": 0.8000001907348633,
+            "mean": 0.23900000095367432,
+            "p95": 0.6000003814697266
+          },
+          {
+            "name": "interior hit",
+            "hit": true,
+            "coldMs": 14,
+            "preparationMs": 21.5,
+            "firstHoverMs": 0,
+            "fullSceneMean": 0.2959999990463257,
+            "fullSceneP95": 0.8000001907348633,
+            "mean": 0.20199999809265137,
+            "p95": 0.7000002861022949
+          }
+        ],
+        "edgeInvalidationCost": {
+          "freshSceneMs": 25.90000009536743,
+          "unchangedSceneMs": 0.6999998092651367,
+          "restyledSceneMs": 0,
+          "onePathChangedMs": 1.1000003814697266,
+          "allPathsChangedMs": 41.799999713897705
+        }
+      },
+      {
+        "browser": "149.0.7827.55",
+        "cpuThrottle": 4,
+        "productionProfiling": true,
+        "machine": {
+          "platform": "darwin",
+          "arch": "arm64",
+          "cpu": "Apple M3 Pro"
+        },
+        "rows": [
+          {
+            "nodes": 3000,
+            "cards": "compact",
+            "edgeHits": true,
+            "scale": "fit",
+            "k": 0.05823293172690769,
+            "mounted": 3000,
+            "dots": 3000,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 8.0176,
+            "layoutMs": 1.2224000000000002,
+            "frameIntervalMeanMs": 29.81,
+            "frameIntervalP95Ms": 35,
+            "cameraPaintMs": 4.634000034332275,
+            "cameraPaints": 50,
+            "layers": {
+              "NetworkHtmlMarksLayer": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              },
+              "NetworkSVGOverlay": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              }
+            }
+          },
+          {
+            "nodes": 3000,
+            "cards": "compact",
+            "edgeHits": true,
+            "scale": 0.5,
+            "k": 0.5,
+            "mounted": 154,
+            "dots": 0,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 4.032840000000002,
+            "layoutMs": 0.98856,
+            "frameIntervalMeanMs": 10.165999994277954,
+            "frameIntervalP95Ms": 12,
+            "cameraPaintMs": 3.0520000076293945,
+            "cameraPaints": 50,
+            "layers": {
+              "NetworkHtmlMarksLayer": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              },
+              "NetworkSVGOverlay": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              }
+            }
+          },
+          {
+            "nodes": 3000,
+            "cards": "compact",
+            "edgeHits": true,
+            "scale": 1,
+            "k": 1,
+            "mounted": 42,
+            "dots": 0,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 3.5593999999999992,
+            "layoutMs": 0.6845599999999996,
+            "frameIntervalMeanMs": 8.651999998092652,
+            "frameIntervalP95Ms": 12.199999809265137,
+            "cameraPaintMs": 2.8679999828338625,
+            "cameraPaints": 50,
+            "layers": {
+              "NetworkHtmlMarksLayer": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              },
+              "NetworkSVGOverlay": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              }
+            }
+          },
+          {
+            "nodes": 3000,
+            "cards": "compact",
+            "edgeHits": true,
+            "scale": 2,
+            "k": 2,
+            "mounted": 12,
+            "dots": 0,
+            "layoutRuns": 0,
+            "frames": 50,
+            "scriptMs": 3.7632200000000005,
+            "layoutMs": 0.7361399999999996,
+            "frameIntervalMeanMs": 9.253999996185303,
+            "frameIntervalP95Ms": 13.900000095367432,
+            "cameraPaintMs": 3.013999996185303,
+            "cameraPaints": 50,
+            "layers": {
+              "NetworkHtmlMarksLayer": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              },
+              "NetworkSVGOverlay": {
+                "commits": 0,
+                "startCommits": 0,
+                "steadyCommits": 0,
+                "settleCommits": 0,
+                "renderMsPerFrame": 0
+              }
+            }
+          }
+        ],
+        "edgeCost": [
+          {
+            "name": "early hit",
+            "hit": true,
+            "coldMs": 35.299999713897705,
+            "preparationMs": 28.399999618530273,
+            "firstHoverMs": 1.5,
+            "fullSceneMean": 0.41,
+            "fullSceneP95": 0.8000001907348633,
+            "mean": 0.3130000019073486,
+            "p95": 0.8000001907348633
+          },
+          {
+            "name": "miss",
+            "hit": false,
+            "coldMs": 27.5,
+            "preparationMs": 22.299999713897705,
+            "firstHoverMs": 0.10000038146972656,
+            "fullSceneMean": 0.3830000019073486,
+            "fullSceneP95": 0.8000001907348633,
+            "mean": 0.32700000286102293,
+            "p95": 0.8000001907348633
+          },
+          {
+            "name": "interior hit",
+            "hit": true,
+            "coldMs": 13.699999809265137,
+            "preparationMs": 22.09999990463257,
+            "firstHoverMs": 0.5,
+            "fullSceneMean": 0.28299999713897706,
+            "fullSceneP95": 0.7999997138977051,
+            "mean": 0.245,
+            "p95": 0.7999997138977051
+          }
+        ],
+        "edgeInvalidationCost": {
+          "freshSceneMs": 20.799999713897705,
+          "unchangedSceneMs": 1.1000003814697266,
+          "restyledSceneMs": 0.20000028610229492,
+          "onePathChangedMs": 1.0999999046325684,
+          "allPathsChangedMs": 37.799999713897705
+        }
+      }
+    ]
+  }
+}

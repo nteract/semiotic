@@ -131,44 +131,41 @@ describe("network edge bounds before exact Canvas hits", () => {
   })
 
   it("prepares custom scene bounds before hover without constructing all Canvas paths", async () => {
-    const { prepareNetworkCustomEdgeHits } =
+    const { prepareNetworkCustomHits } =
       await import("./networkFrameCursorInteraction")
     const parser = await import("../geometry/svgPathBounds")
     const parse = vi.spyOn(parser, "svgPathBounds")
     const mark = edge()
-    const store = {
-      lastCustomLayoutResult: {},
-      getUpdateSnapshot: () => ({ revisions: { sceneGeometry: 0, sceneStyle: 0 } }),
-      sceneEdges: [mark]
-    } as import("./NetworkPipelineStore").NetworkPipelineStore
-    prepareNetworkCustomEdgeHits(store)
+    const { NetworkPipelineStore } = await import("./NetworkPipelineStore")
+    const store = new NetworkPipelineStore({ chartType: "force" })
+    store.lastCustomLayoutResult = {}
+    store.sceneEdges = [mark]
+    prepareNetworkCustomHits(store)
     expect(parse).toHaveBeenCalledTimes(1)
     expect(constructed).not.toHaveBeenCalled()
     hitTest([], store.sceneEdges, 0, -100)
     expect(parse).toHaveBeenCalledTimes(1)
     expect(constructed).toHaveBeenCalledTimes(1)
     mark.pathD = "M900,900 L1100,900"
-    prepareNetworkCustomEdgeHits(store)
+    prepareNetworkCustomHits(store)
     expect(parse).toHaveBeenCalledTimes(2)
     expect(hitTest([], store.sceneEdges, 0, -100)).toBeNull()
   })
 
   it("does not prepare built-in scenes, opted-out layouts or decorative paths", async () => {
-    const { prepareNetworkCustomEdgeHits } =
+    const { prepareNetworkCustomHits } =
       await import("./networkFrameCursorInteraction")
     const parser = await import("../geometry/svgPathBounds")
     const parse = vi.spyOn(parser, "svgPathBounds")
-    const store = {
-      lastCustomLayoutResult: null,
-      getUpdateSnapshot: () => ({ revisions: { sceneGeometry: 0, sceneStyle: 0 } }),
-      sceneEdges: [edge()]
-    } as import("./NetworkPipelineStore").NetworkPipelineStore
-    prepareNetworkCustomEdgeHits(store)
+    const { NetworkPipelineStore } = await import("./NetworkPipelineStore")
+    const store = new NetworkPipelineStore({ chartType: "force" })
+    store.sceneEdges = [edge()]
+    prepareNetworkCustomHits(store)
     store.lastCustomLayoutResult = { edgeHitTesting: false }
-    prepareNetworkCustomEdgeHits(store)
+    prepareNetworkCustomHits(store)
     store.lastCustomLayoutResult = {}
     store.sceneEdges[0].interactive = false
-    prepareNetworkCustomEdgeHits(store)
+    prepareNetworkCustomHits(store)
     expect(parse).not.toHaveBeenCalled()
   })
 })

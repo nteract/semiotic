@@ -2,8 +2,54 @@
 import { TextEncoder, TextDecoder } from "util"
 Object.assign(global, { TextEncoder, TextDecoder })
 
-import { renderChart } from "./renderToStaticSVG"
+import { renderChart, renderNetworkToStaticSVG } from "./renderToStaticSVG"
 import { generateFrameSequence } from "./animatedGif"
+import type { NetworkLayoutResult } from "../stream/networkCustomLayout"
+
+describe("Retained network label colors", () => {
+  it.each([
+    {
+      name: "renderChart",
+      render: (result: NetworkLayoutResult, theme: string) =>
+        renderChart("NetworkCustomChart", {
+          nodes: [], edges: [], width: 300, height: 150,
+          layout: () => result, theme
+        })
+    },
+    {
+      name: "renderNetworkToStaticSVG",
+      render: (result: NetworkLayoutResult, theme: string) =>
+        renderNetworkToStaticSVG({
+          chartType: "force", nodes: [], edges: [], size: [300, 150],
+          customNetworkLayout: () => result, theme
+        })
+    }
+  ])("$name applies each theme without mutating frozen labels", ({ render }) => {
+    const labels = [
+      { x: 10, y: 20, text: "Default" },
+      { x: 10, y: 40, text: "Authored", fill: "#7c3aed" },
+      { x: 10, y: 60, text: "Empty fill", fill: "" }
+    ]
+    const originalLabels = labels.map((label) => ({ ...label }))
+    for (const label of labels) Object.freeze(label)
+    Object.freeze(labels)
+    const result = Object.freeze({ labels })
+
+    for (const theme of ["light", "dark", "light"]) {
+      const doc = new DOMParser().parseFromString(render(result, theme), "image/svg+xml")
+      const textColor = theme === "dark" ? "#e0e0e0" : "#333"
+      expect([...doc.querySelectorAll("text")].map((label) => [
+        label.textContent, label.getAttribute("fill")
+      ])).toEqual([
+        ["Default", textColor],
+        ["Authored", "#7c3aed"],
+        ["Empty fill", textColor]
+      ])
+      expect(labels).toEqual(originalLabels)
+      expect(labels[0]).not.toHaveProperty("fill")
+    }
+  })
+})
 
 describe("Network node coloring via nodeStyle", () => {
   const groupColors = { broker: "#c8a8f0", teamA: "#a8c8f0", teamB: "#f0a8a8" }

@@ -1,6 +1,6 @@
 import type { NetworkSceneNode, NetworkRectNode } from "../networkTypes"
 import { renderRectPulse } from "./renderPulse"
-import { paintNetworkFill, paintNetworkStroke } from "./canvasRenderHelpers"
+import { invisibleNetworkNode, paintNetworkFill, paintNetworkStroke } from "./canvasRenderHelpers"
 import { cachedScenePath2D, paintPerspectiveFaces } from "./networkPerspectivePaint"
 
 /**
@@ -10,11 +10,13 @@ export function networkRectRenderer(
   ctx: CanvasRenderingContext2D,
   nodes: NetworkSceneNode[]
 ): void {
+  const sourceOver = ctx.globalCompositeOperation === "source-over"
   for (const node of nodes) {
     if (node.type !== "rect") continue
     const r = node as NetworkRectNode
 
     if (r.w <= 0 || r.h <= 0) continue
+    if (sourceOver && invisibleNetworkNode(r.style, r._pulseIntensity)) continue
 
     ctx.save()
 

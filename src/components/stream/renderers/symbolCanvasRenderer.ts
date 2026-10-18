@@ -2,7 +2,7 @@ import type { SymbolSceneNode } from "../types"
 import type { NetworkSceneNode, NetworkSymbolNode } from "../networkTypes"
 import type { StreamRendererFn } from "./types"
 import { resolveCSSColor } from "./resolveCSSColor"
-import { resolveCanvasFill } from "./canvasRenderHelpers"
+import { invisibleNetworkNode, resolveCanvasFill } from "./canvasRenderHelpers"
 import { symbolPathString } from "../symbolPath"
 import { getGlyphPath2D } from "../glyphDef"
 
@@ -94,9 +94,11 @@ export function networkSymbolRenderer(
   nodes: NetworkSceneNode[]
 ): void {
   const baseAlpha = ctx.globalAlpha
+  const sourceOver = ctx.globalCompositeOperation === "source-over"
   for (const node of nodes) {
     if (node.type !== "symbol") continue
     const s = node as NetworkSymbolNode
+    if (sourceOver && invisibleNetworkNode(s.style)) continue
     paintSymbol(ctx, s, s.cx, s.cy, baseAlpha, "#007bff")
   }
   ctx.globalAlpha = baseAlpha
