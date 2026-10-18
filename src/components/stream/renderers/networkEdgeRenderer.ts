@@ -37,6 +37,20 @@ export function networkEdgeRenderer(
   edges: NetworkSceneEdge[]
 ): void {
   for (const edge of edges) {
+    // Semantic hit targets often have a zero-alpha stroke and no fill. Keep
+    // them in the retained scene/hit index, but avoid even constructing Path2D
+    // for an invisible paint. Fill opacity can override opacity in the legacy
+    // edge renderers, and pulse overlays can remain visible independently.
+    if (
+      ctx.globalCompositeOperation === "source-over" &&
+      (edge.style.opacity === 0 || edge.style.strokeOpacity === 0) &&
+      (!edge.style.fill ||
+        edge.style.fill === "none" ||
+        (edge.style.fillOpacity ??
+          (edge.type === "curved" ? 0.1 : edge.style.opacity)) === 0) &&
+      !("_pulseIntensity" in edge && edge._pulseIntensity)
+    )
+      continue
     switch (edge.type) {
       case "bezier":
         renderBezierEdge(ctx, edge)

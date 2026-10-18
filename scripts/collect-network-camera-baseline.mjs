@@ -5,7 +5,9 @@ import { execFileSync } from "node:child_process"
 // Run after each of the two camera configurations. Measurements are evidence,
 // not timing thresholds; this never changes a release budget.
 const input = resolve(process.argv[2] ?? "test-results")
-const destination = resolve("benchmarks/setup/network-camera-scale.json")
+const destination = resolve(
+  process.argv[3] ?? "benchmarks/setup/network-camera-scale.json"
+)
 const reports = []
 for (const entry of await readdir(input, { withFileTypes: true })) {
   if (
@@ -46,7 +48,7 @@ baseline[profiling ? "profiling" : "production"] = {
     encoding: "utf8"
   }).trim(),
   sourceWorktree:
-    "Includes the camera measurement harness and pointer capture fix",
+    process.argv[4] ?? "Working tree at measurement time; see the strategy notes",
   reports: reports.sort(
     (a, b) =>
       a.rows[0].nodes - b.rows[0].nodes ||

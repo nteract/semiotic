@@ -9,34 +9,29 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { NetworkLayoutResult } from "../networkCustomLayout"
 import type {
   NetworkViewTransform,
-  NetworkViewportSnapshot
+  NetworkViewportSnapshot,
+  NetworkViewportRect
 } from "../networkViewportTypes"
 import type {
   NetworkZoomChange,
   NetworkZoomOptions,
   ZoomableNetworkCustomChartHandle
 } from "./types"
-import { NetworkZoomContext } from "./NetworkZoomContext"
+import { NetworkZoomProvider } from "./NetworkZoomContext"
+import { createNetworkZoomStore } from "./NetworkZoomStore"
+import { NetworkZoomControls } from "./NetworkZoomControls"
 import { bindNetworkZoom } from "./gestures"
 import {
   constrainZoom,
   DEFAULT_ZOOM,
   EMPTY_PLOT,
   fitZoom,
-  getNetworkContentBounds,
-  zoomLimits
+  getNetworkContentBounds
 } from "./geometry"
 
-const controlStyle: React.CSSProperties = {
-  minWidth: 44,
-  minHeight: 44,
-  padding: "4px 12px",
-  font: "inherit",
-  borderRadius: 6,
-  border: "1px solid var(--semiotic-border, #b6c4ce)",
-  background: "var(--semiotic-bg, #fff)",
-  color: "inherit"
-}
+const CameraChart = /* @__PURE__ */ React.memo(
+  NetworkCustomChart
+) as typeof NetworkCustomChart
 
 /** An opt-in camera around NetworkCustomChart. Layout remains in authored
  * coordinates; only presentation, hit testing and the visible window change. */
@@ -78,14 +73,26 @@ export const ZoomableNetworkCustomChart = /* @__PURE__ */ React.forwardRef(
     const container = React.useRef<HTMLDivElement>(null)
     const frame = React.useRef<RealtimeFrameHandle>(null)
     const driver = React.useRef<ReturnType<typeof bindNetworkZoom> | null>(null)
-    const [localZoom, setLocalZoom] = React.useState(defaultZoom)
-    const [isInteracting, setInteracting] = React.useState(false)
-    const [viewport, setViewport] =
-      React.useState<NetworkViewportSnapshot | null>(null)
-    const plot = viewport?.plotRect ?? EMPTY_PLOT
-    const bounded = constrainZoom(controlled ?? localZoom, plot, zoomOptions)
+    const [store] = React.useState(() => {
+      const initial = constrainZoom(
+        controlled ?? defaultZoom,
+        EMPTY_PLOT,
+        zoomOptions
+      )
+      return createNetworkZoomStore({
+        zoom: initial,
+        settledZoom: initial,
+        isInteracting: false,
+        visibleRect: null
+      })
+    })
+    const [plot, setPlot] = React.useState<NetworkViewportRect>(EMPTY_PLOT)
+    const bounded = constrainZoom(
+      controlled ?? store.getSnapshot().zoom,
+      plot,
+      zoomOptions
+    )
     const zoom = React.useMemo(() => bounded, [bounded.x, bounded.y, bounded.k]) // eslint-disable-line react-hooks/exhaustive-deps -- scalar camera identity
-    const [settledZoom, setSettledZoom] = React.useState(zoom)
     const live = React.useRef({
       zoom,
       zoomOptions,
@@ -102,10 +109,13 @@ export const ZoomableNetworkCustomChart = /* @__PURE__ */ React.forwardRef(
       onZoomChange,
       defaultZoom
     }
-    // Controlled updates and resizes are also valid settled size changes.
-    React.useEffect(() => {
-      if (!isInteracting) setSettledZoom(zoom)
-    }, [zoom.x, zoom.y, zoom.k, isInteracting]) // eslint-disable-line react-hooks/exhaustive-deps -- scalar camera identity
+    // Controlled props/resizes commit the accepted camera before browser paint.
+    React.useLayoutEffect(() => {
+      store.update({
+        zoom,
+        ...(!store.getSnapshot().isInteracting ? { settledZoom: zoom } : {})
+      })
+    }, [store, zoom])
     React.useEffect(() => {
       if (!container.current) return
       const bound = bindNetworkZoom(container.current, {
@@ -121,10 +131,12 @@ export const ZoomableNetworkCustomChart = /* @__PURE__ */ React.forwardRef(
                 current.plot,
                 current.zoomOptions
               )
-              setLocalZoom(current.zoom)
             }
-            setInteracting(event.phase === "moving")
-            if (event.phase === "idle") setSettledZoom(current.zoom)
+            store.update({
+              zoom: current.zoom,
+              isInteracting: event.phase === "moving",
+              ...(event.phase === "idle" ? { settledZoom: current.zoom } : {})
+            })
             current.onZoomChange?.(next, event)
           }
           // Moving updates run once per rAF, outside React's lifecycle. Commit
@@ -139,7 +151,7 @@ export const ZoomableNetworkCustomChart = /* @__PURE__ */ React.forwardRef(
         bound.destroy()
         driver.current = null
       }
-    }, [])
+    }, [store])
     React.useEffect(() => {
       driver.current?.cancel()
     }, [
@@ -252,31 +264,41 @@ export const ZoomableNetworkCustomChart = /* @__PURE__ */ React.forwardRef(
     const onViewportChange = frameProps?.onViewportChange
     const report = React.useCallback(
       (next: NetworkViewportSnapshot) => {
-        if (next.plotRect) live.current.plot = next.plotRect
-        setViewport(next)
+        if (next.plotRect) {
+          const previous = live.current.plot,
+            plot = next.plotRect
+          if (
+            previous.x !== plot.x ||
+            previous.y !== plot.y ||
+            previous.width !== plot.width ||
+            previous.height !== plot.height
+          )
+            setPlot(plot)
+          live.current.plot = plot
+        }
+        store.update({ visibleRect: next.visibleRect })
         onViewportChange?.(next)
       },
-      [onViewportChange]
+      [onViewportChange, store]
     )
-    const state = React.useMemo(
-      () => ({
-        zoom,
-        settledZoom,
-        isInteracting,
-        visibleRect: viewport?.visibleRect ?? null
-      }),
-      [zoom, settledZoom, isInteracting, viewport?.visibleRect]
-    )
-    const [min, max] = zoomLimits(zoomOptions)
-    const zoomLocked = zoomOptions.locked || zoomOptions.zoomEnabled === false
     const touchAction =
       zoomOptions.locked ||
       ((zoomOptions.dragPan === false || zoomOptions.pan === false) &&
         (zoomOptions.pinchZoom === false || zoomOptions.zoomEnabled === false))
         ? "auto"
         : "none"
+    // A viewport report updates live context after the frame commits. Keep
+    // chart props stable so that report does not commit the entire frame again.
+    const cameraFrameProps = React.useMemo(
+      () => ({
+        ...frameProps,
+        viewTransform: store.view,
+        onViewportChange: report
+      }),
+      [frameProps, store, report]
+    )
     return (
-      <NetworkZoomContext.Provider value={state}>
+      <NetworkZoomProvider store={store}>
         <div
           ref={container}
           className="semiotic-network-zoom"
@@ -295,78 +317,22 @@ export const ZoomableNetworkCustomChart = /* @__PURE__ */ React.forwardRef(
             touchAction
           }}
         >
-          <NetworkCustomChart
+          <CameraChart
             {...chartProps}
             ref={frame}
             onObservation={observe}
-            frameProps={{
-              ...frameProps,
-              viewTransform: zoom,
-              onViewportChange: report
-            }}
+            frameProps={cameraFrameProps}
           />
           {zoomControls && (
-            <div
-              role="group"
-              className="semiotic-network-zoom-controls"
-              aria-label="Network viewport controls"
-              data-network-zoom-ignore=""
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "8px 0",
-                touchAction: "auto"
-              }}
-            >
-              <button
-                type="button"
-                aria-label="Zoom out"
-                style={controlStyle}
-                disabled={zoomLocked || zoom.k <= min}
-                onClick={() => driver.current?.zoomBy(0.5)}
-              >
-                −
-              </button>
-              <output
-                aria-label="Zoom level"
-                style={{
-                  minWidth: 54,
-                  textAlign: "center",
-                  fontVariantNumeric: "tabular-nums"
-                }}
-              >
-                {Math.round(zoom.k * 100)}%
-              </output>
-              <button
-                type="button"
-                aria-label="Zoom in"
-                style={controlStyle}
-                disabled={zoomLocked || zoom.k >= max}
-                onClick={() => driver.current?.zoomBy(2)}
-              >
-                +
-              </button>
-              <button
-                type="button"
-                disabled={zoomOptions.locked}
-                onClick={() => fitToContent()}
-                style={controlStyle}
-              >
-                Fit
-              </button>
-              <button
-                type="button"
-                disabled={zoomOptions.locked}
-                onClick={resetZoom}
-                style={controlStyle}
-              >
-                Reset
-              </button>
-            </div>
+            <NetworkZoomControls
+              zoomOptions={zoomOptions}
+              driver={driver}
+              fitToContent={fitToContent}
+              resetZoom={resetZoom}
+            />
           )}
         </div>
-      </NetworkZoomContext.Provider>
+      </NetworkZoomProvider>
     )
   }
 ) as <

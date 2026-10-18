@@ -1322,8 +1322,18 @@ const [viewport, setViewport] = useState<NetworkViewportSnapshot | null>(null)
           Open the <Link to="/examples/pipeline-explorer">Pipeline Explorer</Link> for
           the complete example, including its inspector, minimap, persistent notes and Full Code view.
         </p>
-        <CodeBlock language="tsx">{`import { ZoomableNetworkCustomChart, useNetworkLOD } from "semiotic/network/zoom"
+        <CodeBlock language="tsx">{`import { ZoomableNetworkCustomChart, useNetworkLOD, useNetworkLODLevel } from "semiotic/network/zoom"
 
+function LevelOnlyCard({ focused }: { focused: boolean }) {
+  const level = useNetworkLODLevel(260, {
+    breakpoints: [55, 125, 235],
+    hysteresis: 8,
+    keepDetail: focused
+  })
+  return <CardContent level={level} />
+}
+
+// Use the live-size hook when the content needs displayed dimensions.
 function Card() {
   const { width, height, level, isInteracting } = useNetworkLOD(260, 174, {
     breakpoints: [55, 125, 235],
@@ -1363,7 +1373,12 @@ function Card() {
           boxes; pass explicit bounds to include arbitrary SVG decorations or edge curves.
         </p>
         <p>
-          <code>useNetworkProjectedSize</code> exposes live and settled CSS-pixel sizes;
+          Use <code>useNetworkLODLevel(width, options)</code> for cards that only need
+          a discrete detail level. It avoids rerendering during camera movement when
+          that level stays unchanged. <code>useNetworkLOD</code> also returns live
+          pixel sizes, so it updates on every scale frame even when you only
+          destructure its <code>level</code>.
+          <code> useNetworkProjectedSize</code> exposes live and settled CSS-pixel sizes;
           <code> useNetworkZoom</code> exposes the camera and world-coordinate visible
           rectangle for edge culling or minimaps. The LOD helper delays promotion until
           motion settles and demotes immediately outside its hysteresis band. It does

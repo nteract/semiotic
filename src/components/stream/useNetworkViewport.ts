@@ -1,5 +1,12 @@
 "use client"
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useReducer,
+  useRef,
+  useState
+} from "react"
 import type { RefObject } from "react"
 import type { NetworkHtmlMark } from "./networkCustomLayout"
 import type {
@@ -17,7 +24,11 @@ import {
 import { shallowEqualTwoLevel } from "./shallowEqual"
 import { invertNetworkRect, normalizeNetworkView } from "./networkViewTransform"
 
+import { networkCameraSource } from "./networkCameraCommit"
+
 const EMPTY_MARKS: NetworkHtmlMark[] = []
+const sameMarks = (a: NetworkHtmlMark[], b: NetworkHtmlMark[]) =>
+  a.length === b.length && a.every((mark, i) => mark === b[i])
 
 interface Options extends NetworkViewportProps {
   containerRef: RefObject<HTMLDivElement | null>
@@ -77,7 +88,7 @@ export function useNetworkViewport({
       previous?.dispose()
       binding.current = null
       if (!layer || !root) {
-        setWindowRect(null)
+        if (windowRect !== null) setWindowRect(null)
       } else {
         const win = layer.ownerDocument.defaultView!
         let pending: number | null = null
@@ -129,7 +140,7 @@ export function useNetworkViewport({
     htmlMarkCulling!.overscan! >= 0
       ? htmlMarkCulling!.overscan!
       : 400
-  const result = useMemo(() => {
+  const calculate = useCallback(() => {
     const plot =
       width != null && height != null ? { x: 0, y: 0, width, height } : null
     const screenRect =
@@ -193,16 +204,46 @@ export function useNetworkViewport({
     margin.top
   ])
 
+  // A new layout can reuse its output array and mutate the mark records. Read
+  // their current bounds on real React renders; camera-only frames already
+  // avoid those renders unless membership changes.
+  const result = calculate()
+  const [, refresh] = useReducer((revision: number) => revision + 1, 0)
   const notified = useRef<NetworkViewportSnapshot | undefined>(undefined)
+  const publish = useCallback(
+    (snapshot: NetworkViewportSnapshot) => {
+      if (!onViewportChange) {
+        notified.current = undefined
+        return
+      }
+      if (!shallowEqualTwoLevel(notified.current, snapshot)) {
+        notified.current = snapshot
+        onViewportChange(snapshot)
+      }
+    },
+    [onViewportChange]
+  )
   useEffect(() => {
-    if (!onViewportChange) {
-      notified.current = undefined
-      return
-    }
-    if (!shallowEqualTwoLevel(notified.current, result.snapshot)) {
-      notified.current = result.snapshot
-      onViewportChange(result.snapshot)
-    }
-  }, [onViewportChange, result.snapshot])
+    // A controlled camera can commit in the parent's layout effect after this
+    // render. Never overwrite its live report with the render's older camera;
+    // if membership also changed, wait for that queued DOM update to commit.
+    const next = calculate()
+    if (sameMarks(next.mounted, result.mounted)) publish(next.snapshot)
+  }, [calculate, publish, result.mounted])
+  useLayoutEffect(
+    () =>
+      networkCameraSource(viewTransform)?.subscribe(() => {
+        const next = calculate()
+        // World geometry is retained during a camera update. Only membership can
+        // require new wrappers; publish unchanged membership without React work.
+        if (sameMarks(next.mounted, result.mounted)) {
+          publish(next.snapshot)
+        } else {
+          // The effect above reports after the new DOM membership commits.
+          refresh()
+        }
+      }, true),
+    [calculate, publish, result.mounted, viewTransform]
+  )
   return result.mounted
 }

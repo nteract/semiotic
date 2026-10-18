@@ -1,4 +1,5 @@
 import * as React from "react"
+import { networkCameraTransformRef } from "./networkCameraCommit"
 import type {
   NetworkViewTransform,
   NetworkViewportRect
@@ -65,7 +66,12 @@ export function NetworkViewGroup({
       overflow="hidden"
       data-network-view=""
     >
-      <g transform={`translate(${x},${y}) scale(${k})`}>{children}</g>
+      <g
+        ref={networkCameraTransformRef(view)}
+        transform={`translate(${x},${y}) scale(${k})`}
+      >
+        {children}
+      </g>
     </svg>
   )
 }
