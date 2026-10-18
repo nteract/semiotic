@@ -341,7 +341,9 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
     const propsNodes = filterSparseArray(props.nodes || [])
     const propsEdges = Array.isArray(props.edges) ? filterSparseArray(props.edges) : []
 
-    if (propsNodes.length === 0 && propsEdges.length === 0) {
+    // A custom layout may supply a retained scene or SVG-only decoration
+    // without raw topology. Let it run, as the live frame's layout path does.
+    if (propsNodes.length === 0 && propsEdges.length === 0 && !props.customNetworkLayout) {
       return renderEmptyNetwork()
     }
 

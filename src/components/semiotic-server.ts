@@ -11,6 +11,8 @@ export {
   serializeSvgPrecision,
 } from "./server/renderToStaticSVG"
 export type { RenderChartName, RenderChartOptions } from "./server/renderToStaticSVG"
+export { exportNetworkViewSVG } from "./server/exportNetworkViewSVG"
+export type { ExportNetworkViewSVGOptions } from "./server/exportNetworkViewSVG"
 
 export type { RenderEvidence, SemanticViabilityStatus } from "./server/renderEvidence"
 

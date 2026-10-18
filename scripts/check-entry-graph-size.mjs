@@ -284,7 +284,14 @@ const ENTRY_GRAPHS = [
   // Approved 264.5→265 (2026-10-13): retaining computed Sankey/hierarchy
   // accessibility totals puts the graph just above 264.5 KiB in CI. Allow
   // half a KiB of headroom; the measured graph still rounds to 264.5 KiB.
-  { entry: "server.module.min.js", label: "server", limitKb: 265 },
+  // S5 static-export feature (2026-10-18): the synchronous public
+  // exportNetworkViewSVG helper and analytic symbol-path bounds add 1.8 KiB
+  // to the full server facade (264.9 -> 266.7 KiB). Pure fit geometry is
+  // shared with zoom; server imports exclude the gesture/LOD runtime.
+  // Existing named server imports still tree-shake the unused helper, checked
+  // by the packed cold-consumer gate. Allocate 2 KiB for this added API;
+  // other entry, multi-import, gesture and consumer tolerances stay unchanged.
+  { entry: "server.module.min.js", label: "server", limitKb: 267 },
   // Bumped 450→460: the public numeric audit + chart contract evaluator adds
   // ~5–6 KB gzip to the AI graph; ChartContainer loads the same code lazily.
   // Bumped 460→462 (3.8.6): BumpChart (+ its ribbon geometry) joins the AI graph.
