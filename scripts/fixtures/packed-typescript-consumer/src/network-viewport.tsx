@@ -7,6 +7,16 @@ import {
 } from "semiotic/network"
 import { createLineageDagFit, lineageDagLayout } from "semiotic/recipes"
 import { createLineageDagFit as createCoreFit } from "semiotic/recipes/core"
+import { exportNetworkViewSVG, type ExportNetworkViewSVGOptions } from "semiotic/server"
+import { exportNetworkViewSVG as exportNodeView } from "semiotic/server/node"
+import { exportNetworkViewSVG as exportEdgeView } from "semiotic/server/edge"
+
+const exportOptions: ExportNetworkViewSVGOptions = {
+  width: 1200, height: 400, view: "fit", padding: 0,
+  bounds: { x: 0, y: 0, width: 3000, height: 600 }
+}
+export const staticViews: string[] = [exportNetworkViewSVG, exportNodeView, exportEdgeView]
+  .map(render => render({ sceneNodes: [] }, exportOptions))
 
 const nodes = [
   { id: "source", x: 0, y: 0 },

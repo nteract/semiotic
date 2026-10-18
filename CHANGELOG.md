@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `exportNetworkViewSVG` from `semiotic/server`, `semiotic/server/node` and
+  `semiotic/server/edge` exports a retained network scene with a fitted, identity
+  or explicit camera. SVG backgrounds, marks and card overlays are preserved;
+  HTML cards require SVG equivalents. Fit supports explicit decoration bounds
+  and scales outside the interactive camera's limits.
 - Custom network layouts can return `edgeHitTesting: false` to keep node
   interactions while skipping edge hover, clicks, and cursors.
 - `useNetworkLODLevel(width, options)` from `semiotic/network/zoom` returns a
@@ -18,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Static network rendering preserves custom scenes and SVG decorations supplied
+  without raw topology, including saved layouts used for export.
+- Network content bounds include pointed and rotated symbol paths, preventing
+  automatic fit from clipping triangles, stars and custom symbols.
 - Network tooltip and keyboard-focus updates subscribe independently of the
   retained frame. Custom edge indexes preserve exact Canvas hits, node priority
   and paint order while pruning overlapping cubic links with conservative

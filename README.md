@@ -408,7 +408,7 @@ The numbers below are **first-party artifact cost**: the gzip size of Semiotic's
 | `semiotic/xy` | **178 KB** | LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts |
 | `semiotic/ordinal` | **131 KB** | BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts |
 | `semiotic/network` | **176 KB** | ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more |
-| `semiotic/network/zoom` | **182 KB** | Optional virtual network viewport, camera controls and consumer-owned LOD |
+| `semiotic/network/zoom` | **184 KB** | Optional virtual network viewport, camera controls and consumer-owned LOD |
 | `semiotic/network/perspective` | **2 KB** | Isometric pictograms and an accessible perspective toggle (the prop ships in ./network) |
 | `semiotic/network/perspective/core` | **3 KB** | Projection sizing, resolution, and SVG placement helpers |
 | `semiotic/vite` | **1 KB** | Build plugin for unused Semiotic worker assets |
@@ -416,9 +416,9 @@ The numbers below are **first-party artifact cost**: the gzip size of Semiotic's
 | `semiotic/realtime` | **209 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
 | `semiotic/realtime/core` | **207 KB** | Streaming chart types, HOCs, and buffer helpers |
 | `semiotic/realtime/react` | **2 KB** | Stream status and synced push hooks |
-| `semiotic/server` | **266 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
-| `semiotic/server/node` | **266 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
-| `semiotic/server/edge` | **279 KB** | renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard |
+| `semiotic/server` | **268 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
+| `semiotic/server/node` | **268 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
+| `semiotic/server/edge` | **280 KB** | renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard |
 | `semiotic/utils` | **110 KB** | ThemeProvider, numeric/accessibility audits, serialization — no chart components |
 | `semiotic/utils/core` | **100 KB** | Pure theme helpers, numeric/accessibility audits, and serialization |
 | `semiotic/utils/react` | **10 KB** | ThemeProvider, useTheme, useReducedMotion, useHighContrast, useStreamStatus |
@@ -463,14 +463,14 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 |---|---:|---:|---:|
 | `import { semioticVite } from "semiotic/vite"` | node | **0.6 KiB** | — |
 | `import { getNetworkPerspectiveSize } from "semiotic/network/perspective/core"` | browser | **1.1 KiB** | — |
-| `import { MotifBraidChart } from "semiotic/atlas"` | browser | **103.3 KiB** | 29.3 KiB |
+| `import { MotifBraidChart } from "semiotic/atlas"` | browser | **106.4 KiB** | 29.3 KiB |
 | `import { prepareNetworkAtlas } from "semiotic/atlas/core"` | browser | **7.0 KiB** | — |
 | `import { LineChart } from "semiotic"` | browser | **118.4 KiB** | 43.7 KiB |
 | `import { LineChart } from "semiotic/xy"` | browser | **118.0 KiB** | 31.7 KiB |
 | `import { LineChart } from "semiotic/line"` | browser | **118.1 KiB** | 31.7 KiB |
 | `import { BarChart } from "semiotic/ordinal"` | browser | **101.8 KiB** | 14.7 KiB |
-| `import { SankeyDiagram } from "semiotic/network"` | browser | **126.9 KiB** | 6.6 KiB |
-| `import { ZoomableNetworkCustomChart } from "semiotic/network/zoom"` | browser | **103.3 KiB** | 29.3 KiB |
+| `import { SankeyDiagram } from "semiotic/network"` | browser | **129.9 KiB** | 6.6 KiB |
+| `import { ZoomableNetworkCustomChart } from "semiotic/network/zoom"` | browser | **108.5 KiB** | 29.3 KiB |
 | `import { isometricGlyphs } from "semiotic/network/perspective"` | browser | **1.4 KiB** | — |
 | `import { RealtimeLineChart } from "semiotic/realtime"` | browser | **115.3 KiB** | 41.5 KiB |
 | `import { RingBuffer } from "semiotic/realtime/core"` | browser | **0.7 KiB** | 13.6 KiB |
@@ -478,7 +478,7 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { GaltonBoardChart } from "semiotic/physics"` | browser | **87.8 KiB** | 2.4 KiB |
 | `import { MATTER_PHYSICS_CAPABILITIES } from "semiotic/physics/matter"` | browser | **0.1 KiB** | — |
 | `import { RAPIER_PHYSICS_CAPABILITIES } from "semiotic/physics/rapier"` | browser | **0.2 KiB** | — |
-| `import { renderChart } from "semiotic/server"` | node | **287.7 KiB** | — |
+| `import { renderChart } from "semiotic/server"` | node | **287.8 KiB** | — |
 | `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **123.2 KiB** | — |
 | `import { renderToImage } from "semiotic/server/node"` | node | **288.1 KiB** | 0.6 KiB |
 | `import { suggestCharts } from "semiotic/ai"` | browser | **37.9 KiB** | 13.6 KiB |

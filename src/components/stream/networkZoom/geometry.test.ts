@@ -92,6 +92,24 @@ describe("network camera geometry", () => {
     expect(getNetworkContentBounds({})).toBeNull()
     expect(fitZoom({ x: 0, y: 0, width: 0, height: 1 }, plot, {})).toBeNull()
   })
+  it("contains pointed and rotated custom symbols rather than using their circle-area radius", () => {
+    const triangle = getNetworkContentBounds({ sceneNodes: [{
+      type: "symbol", cx: 0, cy: 0, size: 300, symbolType: "triangle", style: {}, datum: {}
+    }] })!
+    // d3's 300-square-pixel equilateral triangle reaches about 15.2px above
+    // its center, beyond the 9.77px equal-area circle used for hit tolerance.
+    expect(triangle.y).toBeLessThanOrEqual(-15.19)
+    const custom = getNetworkContentBounds({ sceneNodes: [{
+      type: "symbol", cx: -100, cy: 50, size: 1, rotation: Math.PI / 2,
+      path: "M100,100 h100 v100 h-100z", style: {}, datum: {}
+    }] })!
+    // The authored square occupies [100,200] on both local axes. After a
+    // quarter turn its layout bounds are [-300,-200] × [150,250].
+    expect(custom.x).toBeLessThanOrEqual(-300)
+    expect(custom.y).toBeLessThanOrEqual(150)
+    expect(custom.x + custom.width).toBeGreaterThanOrEqual(-200)
+    expect(custom.y + custom.height).toBeGreaterThanOrEqual(250)
+  })
   it("checks viewport bounds before inverse projection and keeps edge tolerance in screen pixels", () => {
     const base = {
       canvasRect: new DOMRect(100, 50, 460, 340),

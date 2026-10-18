@@ -28,7 +28,15 @@ for (const [condition, load] of [
       "none"
     )
   }
+  for (const entry of ["semiotic/server", "semiotic/server/node", "semiotic/server/edge"]) {
+    const { exportNetworkViewSVG } = await load(entry)
+    const svg = exportNetworkViewSVG({
+      sceneNodes: [{ type: "rect", x: 0, y: 0, w: 3000, h: 600, style: { fill: "#123456" }, datum: {} }]
+    }, { width: 1200, height: 400, view: "fit", padding: 0 })
+    assert.ok(svg.includes('translate(0,80) scale(0.4)'), `${entry} ${condition}: fitted camera`)
+    assert.ok(svg.includes('fill="#123456"'), `${entry} ${condition}: retained scene`)
+  }
   console.log(
-    `Network custom layouts ${condition}: fit projection and edge targets passed`
+    `Network custom layouts ${condition}: fit projection, edge targets and static exports passed`
   )
 }

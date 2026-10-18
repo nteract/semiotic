@@ -2,7 +2,9 @@
  * Export a semiotic chart to PNG (default) or SVG from the browser.
  *
  * PNG export composites SVG backgrounds, the canvas data layer, and the SVG overlay,
- * producing a complete image. SVG export captures only the SVG overlay
+ * producing an image of those layers. HTML marks are excluded from both formats;
+ * use SVG card equivalents with exportNetworkViewSVG from semiotic/server instead.
+ * SVG export captures only the SVG overlay
  * (axes, labels, annotations) since canvas content cannot be represented
  * as SVG. The browser download implementation loads on the first call.
  *

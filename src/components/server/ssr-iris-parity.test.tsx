@@ -32,12 +32,48 @@ import { Heatmap } from "../charts/xy/Heatmap"
 import { MultiAxisLineChart } from "../charts/xy/MultiAxisLineChart"
 import { MinimapChart } from "../charts/xy/MinimapChart"
 import { BumpChart } from "../charts/xy/BumpChart"
+import { NetworkCustomChart } from "../charts/custom/NetworkCustomChart"
+import type { NetworkCustomLayout } from "../stream/networkCustomLayout"
+import { exportNetworkViewSVG } from "./exportNetworkViewSVG"
 
 /** Count `<path>` marks whose fill is a real paint (color or url()) — i.e.
  * filled areas. Lines render with `fill="none"`, so this isolates area fills. */
 function filledPathCount(svg: string): number {
   return (svg.match(/<path\b[^>]*\bfill="(?!none)[^"]+"/g) ?? []).length
 }
+
+describe("NetworkCustomChart — saved SVG cards and camera SSR parity", () => {
+  it("keeps backgrounds, curves and SVG cards under the same camera in all server paths", () => {
+    const layout: NetworkCustomLayout = () => ({
+      backgrounds: <rect data-parity="hull" x={10} y={20} width={350} height={180} fill="#eee" />,
+      sceneNodes: [{ type: "rect", x: 40, y: 60, w: 120, h: 50, style: { fill: "#369" }, datum: { id: "a" } }],
+      sceneEdges: [{ type: "curved", pathD: "M160,85 Q240,10 320,85", style: { stroke: "#123", fill: "none" }, datum: {} }],
+      overlays: <g data-parity="card"><text x={50} y={90}>Readable SVG card</text></g>
+    })
+    const viewTransform = { x: -30, y: 15, k: 1.5 }
+    const props = {
+      nodes: [{ id: "a" }], edges: [], width: 500, height: 300, margin: 0,
+      layout, frameProps: { viewTransform }
+    }
+    const { svg, evidence } = renderChartWithEvidence("NetworkCustomChart", props)
+    expect(evidence.nodeCount).toBe(1)
+    expect(evidence.edgeCount).toBe(1)
+    expect(evidence.empty).toBe(false)
+    const result = layout({} as Parameters<NetworkCustomLayout>[0])
+    const exported = exportNetworkViewSVG(result, { width: 500, height: 300, view: viewTransform })
+    const inFrame = renderToString(<NetworkCustomChart {...props} />)
+    for (const markup of [svg, exported, inFrame]) {
+      const doc = new DOMParser().parseFromString(markup, "text/html")
+      for (const selector of ['[data-parity="hull"]', '[data-parity="card"]', 'path[d="M160,85 Q240,10 320,85"]']) {
+        const mark = doc.querySelector(selector)
+        expect(mark).not.toBeNull()
+        expect(mark!.closest("[data-network-view] > g")?.getAttribute("transform"))
+          .toBe("translate(-30,15) scale(1.5)")
+      }
+      expect(doc.querySelector('[data-parity="card"]')?.textContent).toBe("Readable SVG card")
+    }
+  })
+})
 
 function uniqueFills(svg: string): Set<string> {
   return new Set([...svg.matchAll(/fill="([^"]+)"/g)].map((m) => m[1]))

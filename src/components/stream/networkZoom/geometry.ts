@@ -1,11 +1,11 @@
-import type { NetworkLayoutResult } from "../networkCustomLayout"
 import type {
   NetworkViewTransform,
   NetworkViewportRect
 } from "../networkViewportTypes"
 import type { NetworkZoomOptions } from "./types"
 import { normalizeNetworkView } from "../networkViewTransform"
-import { glyphExtent } from "../glyphDef"
+import { fitNetworkView, validBounds } from "../networkViewGeometry"
+export { getNetworkContentBounds, validBounds } from "../networkViewGeometry"
 
 export const DEFAULT_ZOOM = { x: 0, y: 0, k: 1 }
 export const EMPTY_PLOT = { x: 0, y: 0, width: 0, height: 0 }
@@ -105,89 +105,11 @@ export function panZoom(
   )
 }
 
-export function validBounds(bounds: NetworkViewportRect): boolean {
-  return (
-    [bounds.x, bounds.y, bounds.width, bounds.height].every(Number.isFinite) &&
-    bounds.width > 0 &&
-    bounds.height > 0
-  )
-}
-
 export function fitZoom(
   bounds: NetworkViewportRect,
   plot: NetworkViewportRect,
   options: NetworkZoomOptions
 ): NetworkViewTransform | null {
-  if (!validBounds(bounds) || plot.width <= 0 || plot.height <= 0) return null
-  const padding = Number.isFinite(options.fitPadding)
-    ? Math.max(0, options.fitPadding!)
-    : 24
-  const [min, max] = zoomLimits(options)
-  const k = Math.max(
-    min,
-    Math.min(
-      max,
-      Math.max(1, plot.width - padding * 2) / bounds.width,
-      Math.max(1, plot.height - padding * 2) / bounds.height
-    )
-  )
-  return constrainZoom(
-    {
-      k,
-      x: plot.width / 2 - (bounds.x + bounds.width / 2) * k,
-      y: plot.height / 2 - (bounds.y + bounds.height / 2) * k
-    },
-    plot,
-    options
-  )
-}
-
-/** Fit helper for retained nodes and HTML card boxes. Arbitrary SVG decorations
- * and curved edge excursions require consumer-supplied bounds. */
-export function getNetworkContentBounds(
-  layout: NetworkLayoutResult | null | undefined
-): NetworkViewportRect | null {
-  if (!layout) return null
-  const boxes: NetworkViewportRect[] = [...(layout.htmlMarks ?? [])]
-  for (const node of layout.sceneNodes ?? []) {
-    if (node.type === "rect")
-      boxes.push({ x: node.x, y: node.y, width: node.w, height: node.h })
-    else if (node.type === "glyph") {
-      const radius = glyphExtent(node.glyph, node.size)
-      boxes.push({
-        x: node.cx - radius,
-        y: node.cy - radius,
-        width: radius * 2,
-        height: radius * 2
-      })
-    } else {
-      const radius =
-        node.type === "circle"
-          ? node.r
-          : node.type === "arc"
-            ? node.outerR
-            : Math.sqrt(node.size / Math.PI)
-      const cx = node.cx
-      const cy = node.cy
-      boxes.push({
-        x: cx - radius,
-        y: cy - radius,
-        width: radius * 2,
-        height: radius * 2
-      })
-    }
-  }
-  const finite = boxes.filter(validBounds)
-  if (!finite.length) return null
-  let x = Infinity,
-    y = Infinity,
-    right = -Infinity,
-    bottom = -Infinity
-  for (const box of finite) {
-    x = Math.min(x, box.x)
-    y = Math.min(y, box.y)
-    right = Math.max(right, box.x + box.width)
-    bottom = Math.max(bottom, box.y + box.height)
-  }
-  return { x, y, width: right - x, height: bottom - y }
+  const view = fitNetworkView(bounds, plot, options.fitPadding, zoomLimits(options))
+  return view && constrainZoom(view, plot, options)
 }
