@@ -5,6 +5,9 @@ import type { NetworkViewTransform } from "./networkViewportTypes"
 export interface NetworkCameraSource {
   getSnapshot: () => NetworkViewTransform
   subscribe: (listener: () => void, afterPaint?: boolean) => () => void
+  transformRef: (
+    css: boolean
+  ) => (element: SVGGElement | HTMLDivElement | null) => void
 }
 
 export type NetworkCameraView = NetworkViewTransform & {
@@ -15,27 +18,10 @@ export function networkCameraSource(view?: NetworkViewTransform) {
   return (view as NetworkCameraView | undefined)?._semioticCamera
 }
 
-/** Callback refs own their subscription, including React 18 null-ref cleanup.
- * SSR still emits the ordinary authored transform; only mounted carriers bind. */
+/** Static rendering retains only this bridge; the opt-in entry owns DOM writes. */
 export function networkCameraTransformRef(
   view?: NetworkViewTransform,
   css = false
 ) {
-  const camera = networkCameraSource(view)
-  if (!camera) return undefined
-  let dispose: (() => void) | undefined
-  return (element: SVGGElement | HTMLDivElement | null) => {
-    dispose?.()
-    dispose = undefined
-    if (!element) return
-    const apply = () => {
-      const { x, y, k } = camera.getSnapshot()
-      if (css)
-        (element as HTMLDivElement).style.transform =
-          `translate(${x}px, ${y}px) scale(${k})`
-      else element.setAttribute("transform", `translate(${x},${y}) scale(${k})`)
-    }
-    apply()
-    dispose = camera.subscribe(apply)
-  }
+  return networkCameraSource(view)?.transformRef(css)
 }

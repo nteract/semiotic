@@ -1,9 +1,9 @@
 {
   "version": 1,
   "profiling": {
-    "measuredAt": "2026-10-17T22:08:20.857Z",
-    "sourceCommit": "9545eb475cd8d20d754b32ee3b6c1c6b62d7d6e5",
-    "sourceWorktree": "S3 complete: imperative camera, discrete LOD, controlled viewport ordering and mutable-layout audit fixes",
+    "measuredAt": "2026-10-17T22:26:12.393Z",
+    "sourceCommit": "7f67b5580744713cdee956e2cb6a05542c199973",
+    "sourceWorktree": "S3 complete: isolated opt-in DOM writer, discrete LOD, and viewport audit fixes",
     "reports": [
       {
         "browser": "149.0.7827.55",
@@ -25,11 +25,11 @@
             "dots": 300,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 0.7128400000000003,
-            "layoutMs": 0.07406000000000024,
-            "frameIntervalMeanMs": 8.272000007629394,
-            "frameIntervalP95Ms": 10.200000286102295,
-            "cameraPaintMs": 0.27199999809265135,
+            "scriptMs": 1.3374599999999992,
+            "layoutMs": 0.13156,
+            "frameIntervalMeanMs": 8.248000001907348,
+            "frameIntervalP95Ms": 9.300000190734863,
+            "cameraPaintMs": 0.4160000228881836,
             "cameraPaints": 50,
             "layers": {
               "NetworkHtmlMarksLayer": {
@@ -58,11 +58,11 @@
             "dots": 0,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 0.5063800000000002,
-            "layoutMs": 0.10819999999999996,
-            "frameIntervalMeanMs": 8.273999996185303,
-            "frameIntervalP95Ms": 9.099999904632568,
-            "cameraPaintMs": 0.23399999618530273,
+            "scriptMs": 0.7604200000000005,
+            "layoutMs": 0.17374000000000003,
+            "frameIntervalMeanMs": 8.27800000190735,
+            "frameIntervalP95Ms": 9.600000381469727,
+            "cameraPaintMs": 0.3039999580383301,
             "cameraPaints": 50,
             "layers": {
               "NetworkHtmlMarksLayer": {
@@ -91,11 +91,11 @@
             "dots": 0,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 0.4390999999999995,
-            "layoutMs": 0.07938,
-            "frameIntervalMeanMs": 8.285999994277955,
-            "frameIntervalP95Ms": 9,
-            "cameraPaintMs": 0.15399996757507325,
+            "scriptMs": 0.9779799999999994,
+            "layoutMs": 0.13501999999999986,
+            "frameIntervalMeanMs": 8.275999994277955,
+            "frameIntervalP95Ms": 9.300000190734863,
+            "cameraPaintMs": 0.2620000171661377,
             "cameraPaints": 50,
             "layers": {
               "NetworkHtmlMarksLayer": {
@@ -124,11 +124,11 @@
             "dots": 0,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 0.27189999999999936,
-            "layoutMs": 0.06554000000000004,
-            "frameIntervalMeanMs": 8.287999992370606,
-            "frameIntervalP95Ms": 10.5,
-            "cameraPaintMs": 0.11600000381469727,
+            "scriptMs": 0.7762599999999997,
+            "layoutMs": 0.15520000000000006,
+            "frameIntervalMeanMs": 8.273999996185303,
+            "frameIntervalP95Ms": 9.400000095367432,
+            "cameraPaintMs": 0.2580000019073486,
             "cameraPaints": 50,
             "layers": {
               "NetworkHtmlMarksLayer": {
@@ -170,11 +170,11 @@
             "dots": 1000,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 2.58248,
-            "layoutMs": 0.31207999999999986,
-            "frameIntervalMeanMs": 8.657999992370605,
-            "frameIntervalP95Ms": 11,
-            "cameraPaintMs": 1.3080000114440917,
+            "scriptMs": 3.2412000000000005,
+            "layoutMs": 0.45618000000000014,
+            "frameIntervalMeanMs": 11.938000001907348,
+            "frameIntervalP95Ms": 15.700000286102295,
+            "cameraPaintMs": 1.6240000057220458,
             "cameraPaints": 50,
             "layers": {
               "NetworkHtmlMarksLayer": {
@@ -203,11 +203,11 @@
             "dots": 0,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 1.2239,
-            "layoutMs": 0.2603,
+            "scriptMs": 1.771079999999999,
+            "layoutMs": 0.36104000000000025,
             "frameIntervalMeanMs": 8.28,
-            "frameIntervalP95Ms": 10,
-            "cameraPaintMs": 0.7859999752044677,
+            "frameIntervalP95Ms": 10.199999809265137,
+            "cameraPaintMs": 1.0960000133514405,
             "cameraPaints": 50,
             "layers": {
               "NetworkHtmlMarksLayer": {
@@ -236,11 +236,11 @@
             "dots": 0,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 1.0371999999999992,
-            "layoutMs": 0.21568000000000004,
-            "frameIntervalMeanMs": 8.26,
-            "frameIntervalP95Ms": 10.099999904632568,
-            "cameraPaintMs": 0.591999979019165,
+            "scriptMs": 1.4616399999999996,
+            "layoutMs": 0.34262000000000015,
+            "frameIntervalMeanMs": 8.298000001907349,
+            "frameIntervalP95Ms": 9.899999618530273,
+            "cameraPaintMs": 0.8600000286102295,
             "cameraPaints": 50,
             "layers": {
               "NetworkHtmlMarksLayer": {
@@ -269,11 +269,11 @@
             "dots": 0,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 0.8015799999999996,
-            "layoutMs": 0.26183999999999985,
-            "frameIntervalMeanMs": 8.295999994277954,
-            "frameIntervalP95Ms": 10.199999809265137,
-            "cameraPaintMs": 0.43800003051757813,
+            "scriptMs": 1.4692799999999995,
+            "layoutMs": 0.40005999999999986,
+            "frameIntervalMeanMs": 8.268000001907348,
+            "frameIntervalP95Ms": 10.799999713897705,
+            "cameraPaintMs": 0.8819999885559082,
             "cameraPaints": 50,
             "layers": {
               "NetworkHtmlMarksLayer": {
@@ -315,11 +315,11 @@
             "dots": 1000,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 32.78454,
-            "layoutMs": 0.3632000000000001,
-            "frameIntervalMeanMs": 69.38800000190734,
-            "frameIntervalP95Ms": 75.5,
-            "cameraPaintMs": 1.4779999923706055,
+            "scriptMs": 38.499559999999995,
+            "layoutMs": 0.45435999999999993,
+            "frameIntervalMeanMs": 77.84800000190735,
+            "frameIntervalP95Ms": 85.59999990463257,
+            "cameraPaintMs": 1.4140000057220459,
             "cameraPaints": 50,
             "layers": {
               "NetworkHtmlMarksLayer": {
@@ -327,7 +327,7 @@
                 "startCommits": 1,
                 "steadyCommits": 49,
                 "settleCommits": 1,
-                "renderMsPerFrame": 5.714000015258789
+                "renderMsPerFrame": 6.190000028610229
               },
               "NetworkSVGOverlay": {
                 "commits": 0,
@@ -348,11 +348,11 @@
             "dots": 0,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 4.9525,
-            "layoutMs": 0.241,
-            "frameIntervalMeanMs": 10.102000007629394,
-            "frameIntervalP95Ms": 11.099999904632568,
-            "cameraPaintMs": 0.8700000095367432,
+            "scriptMs": 6.1615600000000015,
+            "layoutMs": 0.41775999999999996,
+            "frameIntervalMeanMs": 12.572000007629395,
+            "frameIntervalP95Ms": 13.800000190734863,
+            "cameraPaintMs": 1.0400000286102296,
             "cameraPaints": 50,
             "layers": {
               "NetworkHtmlMarksLayer": {
@@ -360,7 +360,7 @@
                 "startCommits": 1,
                 "steadyCommits": 49,
                 "settleCommits": 1,
-                "renderMsPerFrame": 1.058000020980835
+                "renderMsPerFrame": 1.3840000057220458
               },
               "NetworkSVGOverlay": {
                 "commits": 0,
@@ -381,11 +381,11 @@
             "dots": 0,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 3.8126000000000015,
-            "layoutMs": 0.35968000000000006,
-            "frameIntervalMeanMs": 8.355999994277955,
+            "scriptMs": 3.5507600000000035,
+            "layoutMs": 0.40102,
+            "frameIntervalMeanMs": 8.384000005722045,
             "frameIntervalP95Ms": 10.5,
-            "cameraPaintMs": 1.0020000171661376,
+            "cameraPaintMs": 0.9319999885559082,
             "cameraPaints": 50,
             "layers": {
               "NetworkHtmlMarksLayer": {
@@ -393,7 +393,7 @@
                 "startCommits": 1,
                 "steadyCommits": 49,
                 "settleCommits": 1,
-                "renderMsPerFrame": 0.9719999885559082
+                "renderMsPerFrame": 0.9639999675750732
               },
               "NetworkSVGOverlay": {
                 "commits": 0,
@@ -414,11 +414,11 @@
             "dots": 0,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 2.4956399999999945,
-            "layoutMs": 0.36136,
-            "frameIntervalMeanMs": 8.326000003814697,
-            "frameIntervalP95Ms": 10.300000190734863,
-            "cameraPaintMs": 0.8460000514984131,
+            "scriptMs": 2.690659999999996,
+            "layoutMs": 0.39434000000000025,
+            "frameIntervalMeanMs": 8.321999998092652,
+            "frameIntervalP95Ms": 9.900000095367432,
+            "cameraPaintMs": 0.9139999771118164,
             "cameraPaints": 50,
             "layers": {
               "NetworkHtmlMarksLayer": {
@@ -426,7 +426,7 @@
                 "startCommits": 1,
                 "steadyCommits": 49,
                 "settleCommits": 1,
-                "renderMsPerFrame": 0.48400001525878905
+                "renderMsPerFrame": 0.46599998474121096
               },
               "NetworkSVGOverlay": {
                 "commits": 0,
@@ -460,11 +460,11 @@
             "dots": 3000,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 6.39132,
-            "layoutMs": 1.0763600000000004,
-            "frameIntervalMeanMs": 22.94,
-            "frameIntervalP95Ms": 26.09999990463257,
-            "cameraPaintMs": 3.7039999771118164,
+            "scriptMs": 6.78566,
+            "layoutMs": 1.16714,
+            "frameIntervalMeanMs": 28.184000005722044,
+            "frameIntervalP95Ms": 32.19999980926514,
+            "cameraPaintMs": 3.8480000495910645,
             "cameraPaints": 50,
             "layers": {
               "NetworkHtmlMarksLayer": {
@@ -493,11 +493,11 @@
             "dots": 0,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 3.0686000000000013,
-            "layoutMs": 0.7447400000000005,
-            "frameIntervalMeanMs": 8.78800000190735,
-            "frameIntervalP95Ms": 11.300000190734863,
-            "cameraPaintMs": 2.498000020980835,
+            "scriptMs": 3.6793000000000005,
+            "layoutMs": 1.0854200000000003,
+            "frameIntervalMeanMs": 10.910000009536743,
+            "frameIntervalP95Ms": 12.299999713897705,
+            "cameraPaintMs": 2.635999937057495,
             "cameraPaints": 50,
             "layers": {
               "NetworkHtmlMarksLayer": {
@@ -526,11 +526,11 @@
             "dots": 0,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 2.675639999999999,
-            "layoutMs": 0.64224,
-            "frameIntervalMeanMs": 8.424000005722046,
-            "frameIntervalP95Ms": 11.099999904632568,
-            "cameraPaintMs": 2.0200000190734864,
+            "scriptMs": 3.3263399999999965,
+            "layoutMs": 1.0838000000000003,
+            "frameIntervalMeanMs": 9.554000005722045,
+            "frameIntervalP95Ms": 13.300000190734863,
+            "cameraPaintMs": 2.4839999675750732,
             "cameraPaints": 50,
             "layers": {
               "NetworkHtmlMarksLayer": {
@@ -559,11 +559,11 @@
             "dots": 0,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 2.875860000000001,
-            "layoutMs": 0.7511599999999996,
-            "frameIntervalMeanMs": 8.664000005722047,
-            "frameIntervalP95Ms": 10.400000095367432,
-            "cameraPaintMs": 2.3599999713897706,
+            "scriptMs": 3.5669200000000023,
+            "layoutMs": 1.09398,
+            "frameIntervalMeanMs": 10.295999994277954,
+            "frameIntervalP95Ms": 14.400000095367432,
+            "cameraPaintMs": 2.716000032424927,
             "cameraPaints": 50,
             "layers": {
               "NetworkHtmlMarksLayer": {
@@ -586,13 +586,13 @@
         "edgeCost": [
           {
             "hit": true,
-            "mean": 11.459000000953674,
-            "p95": 12
+            "mean": 12.65699999332428,
+            "p95": 13.199999809265137
           },
           {
             "hit": false,
-            "mean": 11.395,
-            "p95": 12
+            "mean": 12.65,
+            "p95": 13.099999904632568
           }
         ]
       },
@@ -616,11 +616,11 @@
             "dots": 3000,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 7.702979999999999,
-            "layoutMs": 1.1957,
-            "frameIntervalMeanMs": 28.65,
-            "frameIntervalP95Ms": 35.69999980926514,
-            "cameraPaintMs": 4.619999990463257,
+            "scriptMs": 7.60132,
+            "layoutMs": 1.1407,
+            "frameIntervalMeanMs": 28.71,
+            "frameIntervalP95Ms": 32,
+            "cameraPaintMs": 4.487999963760376,
             "cameraPaints": 50,
             "layers": {
               "NetworkHtmlMarksLayer": {
@@ -649,11 +649,11 @@
             "dots": 0,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 4.07878,
-            "layoutMs": 0.9270600000000002,
-            "frameIntervalMeanMs": 10.17,
-            "frameIntervalP95Ms": 11.699999809265137,
-            "cameraPaintMs": 3.3640000343322756,
+            "scriptMs": 4.7158999999999995,
+            "layoutMs": 1.10944,
+            "frameIntervalMeanMs": 11.875999994277954,
+            "frameIntervalP95Ms": 13.799999713897705,
+            "cameraPaintMs": 3.6820000076293944,
             "cameraPaints": 50,
             "layers": {
               "NetworkHtmlMarksLayer": {
@@ -682,11 +682,11 @@
             "dots": 0,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 3.5119199999999973,
-            "layoutMs": 0.7256599999999996,
-            "frameIntervalMeanMs": 8.651999998092652,
-            "frameIntervalP95Ms": 11.600000381469727,
-            "cameraPaintMs": 2.93,
+            "scriptMs": 4.217720000000003,
+            "layoutMs": 1.1152600000000001,
+            "frameIntervalMeanMs": 10.384000005722045,
+            "frameIntervalP95Ms": 14.599999904632568,
+            "cameraPaintMs": 3.335999994277954,
             "cameraPaints": 50,
             "layers": {
               "NetworkHtmlMarksLayer": {
@@ -715,11 +715,11 @@
             "dots": 0,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 3.535140000000001,
-            "layoutMs": 0.6797399999999998,
-            "frameIntervalMeanMs": 9.158000001907348,
-            "frameIntervalP95Ms": 13.799999713897705,
-            "cameraPaintMs": 2.913999948501587,
+            "scriptMs": 4.32172,
+            "layoutMs": 1.1841199999999996,
+            "frameIntervalMeanMs": 12.031999998092651,
+            "frameIntervalP95Ms": 15.799999713897705,
+            "cameraPaintMs": 3.425999994277954,
             "cameraPaints": 50,
             "layers": {
               "NetworkHtmlMarksLayer": {
@@ -742,22 +742,22 @@
         "edgeCost": [
           {
             "hit": true,
-            "mean": 11.555999999046326,
-            "p95": 12.599999904632568
+            "mean": 12.832999997138977,
+            "p95": 13.599999904632568
           },
           {
             "hit": false,
-            "mean": 11.294000000953675,
-            "p95": 11.700000286102295
+            "mean": 12.866000003814698,
+            "p95": 13.400000095367432
           }
         ]
       }
     ]
   },
   "production": {
-    "measuredAt": "2026-10-17T22:09:03.889Z",
-    "sourceCommit": "9545eb475cd8d20d754b32ee3b6c1c6b62d7d6e5",
-    "sourceWorktree": "S3 complete: imperative camera, discrete LOD, controlled viewport ordering and mutable-layout audit fixes",
+    "measuredAt": "2026-10-17T22:26:58.152Z",
+    "sourceCommit": "7f67b5580744713cdee956e2cb6a05542c199973",
+    "sourceWorktree": "S3 complete: isolated opt-in DOM writer, discrete LOD, and viewport audit fixes",
     "reports": [
       {
         "browser": "149.0.7827.55",
@@ -779,11 +779,11 @@
             "dots": 300,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 1.6075,
-            "layoutMs": 0.14629999999999976,
-            "frameIntervalMeanMs": 8.274000005722046,
-            "frameIntervalP95Ms": 9.5,
-            "cameraPaintMs": 0.5879999923706055,
+            "scriptMs": 1.6682200000000003,
+            "layoutMs": 0.18273999999999982,
+            "frameIntervalMeanMs": 8.22199999809265,
+            "frameIntervalP95Ms": 9.799999713897705,
+            "cameraPaintMs": 0.6300000381469727,
             "cameraPaints": 50,
             "layers": null
           },
@@ -797,11 +797,11 @@
             "dots": 0,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 1.1949800000000004,
-            "layoutMs": 0.18210000000000004,
-            "frameIntervalMeanMs": 8.276000003814698,
+            "scriptMs": 1.3156599999999998,
+            "layoutMs": 0.2027800000000002,
+            "frameIntervalMeanMs": 8.29,
             "frameIntervalP95Ms": 9.400000095367432,
-            "cameraPaintMs": 0.34200004577636717,
+            "cameraPaintMs": 0.3539999866485596,
             "cameraPaints": 50,
             "layers": null
           },
@@ -815,11 +815,11 @@
             "dots": 0,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 0.9897200000000006,
-            "layoutMs": 0.19824000000000008,
-            "frameIntervalMeanMs": 8.275999994277955,
+            "scriptMs": 1.2512400000000001,
+            "layoutMs": 0.1442400000000002,
+            "frameIntervalMeanMs": 8.261999998092652,
             "frameIntervalP95Ms": 9.600000381469727,
-            "cameraPaintMs": 0.29199995994567873,
+            "cameraPaintMs": 0.37599997520446776,
             "cameraPaints": 50,
             "layers": null
           },
@@ -833,11 +833,11 @@
             "dots": 0,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 0.69894,
-            "layoutMs": 0.15067999999999998,
-            "frameIntervalMeanMs": 8.27,
+            "scriptMs": 0.6643399999999999,
+            "layoutMs": 0.12560000000000016,
+            "frameIntervalMeanMs": 8.29,
             "frameIntervalP95Ms": 9.400000095367432,
-            "cameraPaintMs": 0.2340000057220459,
+            "cameraPaintMs": 0.27999996185302733,
             "cameraPaints": 50,
             "layers": null
           }
@@ -864,11 +864,11 @@
             "dots": 1000,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 2.4741999999999997,
-            "layoutMs": 0.30696,
-            "frameIntervalMeanMs": 8.63199999809265,
-            "frameIntervalP95Ms": 11.400000095367432,
-            "cameraPaintMs": 1.3619999980926514,
+            "scriptMs": 3.2050800000000006,
+            "layoutMs": 0.5616399999999999,
+            "frameIntervalMeanMs": 12.021999998092651,
+            "frameIntervalP95Ms": 15.799999713897705,
+            "cameraPaintMs": 1.3579999828338623,
             "cameraPaints": 50,
             "layers": null
           },
@@ -882,11 +882,11 @@
             "dots": 0,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 1.1187000000000002,
-            "layoutMs": 0.2527600000000002,
-            "frameIntervalMeanMs": 8.308000001907349,
-            "frameIntervalP95Ms": 9.400000095367432,
-            "cameraPaintMs": 0.7759999942779541,
+            "scriptMs": 1.8474400000000002,
+            "layoutMs": 0.4691799999999999,
+            "frameIntervalMeanMs": 8.28800000190735,
+            "frameIntervalP95Ms": 10.900000095367432,
+            "cameraPaintMs": 1.0639999961853028,
             "cameraPaints": 50,
             "layers": null
           },
@@ -900,11 +900,11 @@
             "dots": 0,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 0.9613000000000005,
-            "layoutMs": 0.23040000000000005,
-            "frameIntervalMeanMs": 8.324000005722047,
-            "frameIntervalP95Ms": 10.200000286102295,
-            "cameraPaintMs": 0.6139999485015869,
+            "scriptMs": 1.4759999999999998,
+            "layoutMs": 0.3947999999999996,
+            "frameIntervalMeanMs": 8.38,
+            "frameIntervalP95Ms": 10.099999904632568,
+            "cameraPaintMs": 0.8580000209808349,
             "cameraPaints": 50,
             "layers": null
           },
@@ -918,11 +918,11 @@
             "dots": 0,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 0.9077000000000001,
-            "layoutMs": 0.17969999999999986,
-            "frameIntervalMeanMs": 8.303999996185302,
-            "frameIntervalP95Ms": 9.099999904632568,
-            "cameraPaintMs": 0.5199999713897705,
+            "scriptMs": 1.2228400000000006,
+            "layoutMs": 0.4337800000000003,
+            "frameIntervalMeanMs": 8.313999996185302,
+            "frameIntervalP95Ms": 9.799999713897705,
+            "cameraPaintMs": 0.8500000476837158,
             "cameraPaints": 50,
             "layers": null
           }
@@ -949,11 +949,11 @@
             "dots": 1000,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 10.458599999999999,
-            "layoutMs": 0.35070000000000007,
-            "frameIntervalMeanMs": 23.19,
-            "frameIntervalP95Ms": 28.90000009536743,
-            "cameraPaintMs": 1.4259999942779542,
+            "scriptMs": 11.88694,
+            "layoutMs": 0.49384,
+            "frameIntervalMeanMs": 27.914000005722045,
+            "frameIntervalP95Ms": 33.09999990463257,
+            "cameraPaintMs": 1.367999973297119,
             "cameraPaints": 50,
             "layers": null
           },
@@ -967,11 +967,11 @@
             "dots": 0,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 2.3496000000000006,
-            "layoutMs": 0.17501999999999987,
-            "frameIntervalMeanMs": 8.30199999809265,
-            "frameIntervalP95Ms": 9.800000190734863,
-            "cameraPaintMs": 0.5720000171661377,
+            "scriptMs": 3.144019999999999,
+            "layoutMs": 0.3402000000000001,
+            "frameIntervalMeanMs": 8.33,
+            "frameIntervalP95Ms": 9.200000286102295,
+            "cameraPaintMs": 0.8200000095367431,
             "cameraPaints": 50,
             "layers": null
           },
@@ -985,11 +985,11 @@
             "dots": 0,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 1.949399999999999,
-            "layoutMs": 0.1524399999999998,
-            "frameIntervalMeanMs": 8.33,
-            "frameIntervalP95Ms": 10.199999809265137,
-            "cameraPaintMs": 0.5640000057220459,
+            "scriptMs": 2.683620000000002,
+            "layoutMs": 0.41964,
+            "frameIntervalMeanMs": 8.335999994277953,
+            "frameIntervalP95Ms": 11.5,
+            "cameraPaintMs": 0.8079999828338623,
             "cameraPaints": 50,
             "layers": null
           },
@@ -1003,11 +1003,11 @@
             "dots": 0,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 1.3431000000000015,
-            "layoutMs": 0.247,
-            "frameIntervalMeanMs": 8.327999992370605,
+            "scriptMs": 1.9282000000000021,
+            "layoutMs": 0.38898000000000016,
+            "frameIntervalMeanMs": 8.313999996185302,
             "frameIntervalP95Ms": 9.5,
-            "cameraPaintMs": 0.5859999656677246,
+            "cameraPaintMs": 0.8180000019073487,
             "cameraPaints": 50,
             "layers": null
           }
@@ -1034,11 +1034,11 @@
             "dots": 3000,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 6.76664,
-            "layoutMs": 1.0053600000000003,
-            "frameIntervalMeanMs": 22.644000005722045,
-            "frameIntervalP95Ms": 29.800000190734863,
-            "cameraPaintMs": 3.8040000057220458,
+            "scriptMs": 7.27374,
+            "layoutMs": 1.15876,
+            "frameIntervalMeanMs": 28.845999994277953,
+            "frameIntervalP95Ms": 35.90000009536743,
+            "cameraPaintMs": 4.2459999942779545,
             "cameraPaints": 50,
             "layers": null
           },
@@ -1052,11 +1052,11 @@
             "dots": 0,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 3.0281599999999997,
-            "layoutMs": 0.8539800000000003,
-            "frameIntervalMeanMs": 8.927999992370605,
-            "frameIntervalP95Ms": 11.099999904632568,
-            "cameraPaintMs": 2.3400000381469725,
+            "scriptMs": 3.76058,
+            "layoutMs": 1.0662999999999996,
+            "frameIntervalMeanMs": 10.71199999809265,
+            "frameIntervalP95Ms": 12.199999809265137,
+            "cameraPaintMs": 2.7360000133514406,
             "cameraPaints": 50,
             "layers": null
           },
@@ -1070,11 +1070,11 @@
             "dots": 0,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 2.6751199999999993,
-            "layoutMs": 0.6520399999999998,
-            "frameIntervalMeanMs": 8.35800000190735,
-            "frameIntervalP95Ms": 10.200000286102295,
-            "cameraPaintMs": 2.128000011444092,
+            "scriptMs": 3.4621399999999984,
+            "layoutMs": 1.1043799999999997,
+            "frameIntervalMeanMs": 9.484000005722045,
+            "frameIntervalP95Ms": 13.599999904632568,
+            "cameraPaintMs": 2.488000020980835,
             "cameraPaints": 50,
             "layers": null
           },
@@ -1088,11 +1088,11 @@
             "dots": 0,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 3.071220000000001,
-            "layoutMs": 0.6662800000000001,
-            "frameIntervalMeanMs": 8.580000009536743,
-            "frameIntervalP95Ms": 9.599999904632568,
-            "cameraPaintMs": 2.4939999961853028,
+            "scriptMs": 3.4746799999999967,
+            "layoutMs": 1.08792,
+            "frameIntervalMeanMs": 10.021999998092651,
+            "frameIntervalP95Ms": 14.300000190734863,
+            "cameraPaintMs": 2.5680000019073486,
             "cameraPaints": 50,
             "layers": null
           }
@@ -1100,13 +1100,13 @@
         "edgeCost": [
           {
             "hit": true,
-            "mean": 12.061999998092652,
-            "p95": 12.800000190734863
+            "mean": 12.785999999046325,
+            "p95": 13.399999618530273
           },
           {
             "hit": false,
-            "mean": 11.686000003814698,
-            "p95": 12.5
+            "mean": 12.69,
+            "p95": 13.199999809265137
           }
         ]
       },
@@ -1130,11 +1130,11 @@
             "dots": 3000,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 7.3776600000000006,
-            "layoutMs": 1.0328199999999998,
-            "frameIntervalMeanMs": 23.77,
-            "frameIntervalP95Ms": 29.799999713897705,
-            "cameraPaintMs": 4.737999982833863,
+            "scriptMs": 7.68664,
+            "layoutMs": 1.06628,
+            "frameIntervalMeanMs": 28.846000003814698,
+            "frameIntervalP95Ms": 40.59999990463257,
+            "cameraPaintMs": 4.675999994277954,
             "cameraPaints": 50,
             "layers": null
           },
@@ -1148,11 +1148,11 @@
             "dots": 0,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 4.15362,
-            "layoutMs": 1.0248800000000002,
-            "frameIntervalMeanMs": 10.553999996185302,
-            "frameIntervalP95Ms": 12.5,
-            "cameraPaintMs": 3.1559999656677244,
+            "scriptMs": 4.33608,
+            "layoutMs": 1.0856999999999999,
+            "frameIntervalMeanMs": 11.42,
+            "frameIntervalP95Ms": 13,
+            "cameraPaintMs": 3.4179999732971194,
             "cameraPaints": 50,
             "layers": null
           },
@@ -1166,11 +1166,11 @@
             "dots": 0,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 3.529100000000001,
-            "layoutMs": 0.7730199999999998,
-            "frameIntervalMeanMs": 8.735999994277954,
-            "frameIntervalP95Ms": 12.099999904632568,
-            "cameraPaintMs": 2.878000011444092,
+            "scriptMs": 4.063420000000004,
+            "layoutMs": 1.0970000000000002,
+            "frameIntervalMeanMs": 9.916000003814696,
+            "frameIntervalP95Ms": 13.099999904632568,
+            "cameraPaintMs": 3.3299999904632567,
             "cameraPaints": 50,
             "layers": null
           },
@@ -1184,11 +1184,11 @@
             "dots": 0,
             "layoutRuns": 0,
             "frames": 50,
-            "scriptMs": 3.627880000000001,
-            "layoutMs": 0.6589400000000001,
-            "frameIntervalMeanMs": 8.69800000190735,
-            "frameIntervalP95Ms": 10.400000095367432,
-            "cameraPaintMs": 3.2100000190734863,
+            "scriptMs": 4.058219999999997,
+            "layoutMs": 1.23116,
+            "frameIntervalMeanMs": 11.686000003814698,
+            "frameIntervalP95Ms": 16.59999990463257,
+            "cameraPaintMs": 3.282000026702881,
             "cameraPaints": 50,
             "layers": null
           }
@@ -1196,13 +1196,13 @@
         "edgeCost": [
           {
             "hit": true,
-            "mean": 11.343000001907349,
-            "p95": 11.899999618530273
+            "mean": 13.22,
+            "p95": 13.800000190734863
           },
           {
             "hit": false,
-            "mean": 11.321999998092652,
-            "p95": 11.800000190734863
+            "mean": 13.220000004768371,
+            "p95": 13.700000286102295
           }
         ]
       }

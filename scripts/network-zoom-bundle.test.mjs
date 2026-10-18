@@ -31,7 +31,9 @@ test("ordinary imports exclude the optional gesture/LOD runtime", async () => {
     "semiotic",
     "semiotic-network",
     "semiotic-xy",
-    "semiotic-ordinal"
+    "semiotic-ordinal",
+    "semiotic-server",
+    "semiotic-server-edge"
   ]) {
     const result = await consumer(`./src/components/${entry}`)
     assert.equal(

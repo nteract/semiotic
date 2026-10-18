@@ -1,6 +1,10 @@
 import type { NetworkZoomState } from "./types"
-import type { NetworkCameraView } from "../networkCameraCommit"
+import type {
+  NetworkCameraSource,
+  NetworkCameraView
+} from "../networkCameraCommit"
 import { DEFAULT_ZOOM } from "./geometry"
+import { cameraTransformRef } from "./cameraTransformRef"
 
 export const DEFAULT_ZOOM_STATE: NetworkZoomState = {
   zoom: DEFAULT_ZOOM,
@@ -31,6 +35,12 @@ export function createNetworkZoomStore(initial = DEFAULT_ZOOM_STATE) {
     sizeChanged = false
   const equalView = (a: typeof state.zoom, b: typeof state.zoom) =>
     a.x === b.x && a.y === b.y && a.k === b.k
+  const camera: NetworkCameraSource = {
+    getSnapshot: () => state.zoom,
+    subscribe: (listener, afterPaint = false) =>
+      subscribe(afterPaint ? viewportListeners : cameraListeners)(listener),
+    transformRef: (css) => cameraTransformRef(camera, css)
+  }
   const store = {
     getSnapshot: () => state,
     getSize: () => size,
@@ -46,11 +56,7 @@ export function createNetworkZoomStore(initial = DEFAULT_ZOOM_STATE) {
       get k() {
         return state.zoom.k
       },
-      _semioticCamera: {
-        getSnapshot: () => state.zoom,
-        subscribe: (listener: () => void, afterPaint = false) =>
-          subscribe(afterPaint ? viewportListeners : cameraListeners)(listener)
-      }
+      _semioticCamera: camera
     } satisfies NetworkCameraView,
     update(patch: Partial<NetworkZoomState>) {
       const next = { ...state, ...patch }
