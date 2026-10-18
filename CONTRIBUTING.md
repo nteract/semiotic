@@ -388,6 +388,43 @@ For example, 2 ms → 5 ms remains informational despite its 150% increase;
 20 ms → 30 ms counts toward systemic failure, and 10 ms → 20 ms fails alone.
 The same policy applies to PR, previous-release, and committed-baseline comparisons.
 
+The network camera has a separate Chromium gate built directly from source:
+
+```bash
+npm run test:network-camera:contracts
+npm run test:network-camera
+NETWORK_CAMERA_PROFILE=1 npm run test:network-camera
+```
+
+Both modes run with one worker, no retries, production React and 4× CDP CPU
+throttling. Production enforces the existing acceptance targets: **4 ms mean
+scripting per camera frame at 1,000 nodes/k=1** (compact and PipelineCard),
+**16 ms at 3,000 nodes/fit** (SVG-only and semantic edges), and **1 ms mean
+script + browser layout per coalesced pointer update** over 4,500 edges.
+Profiling checks layer commit counts; its timings are diagnostic. Both modes
+check layout reuse, culling membership, LOD settling and real tooltip behavior.
+Repeated dense pans verify exact mounted membership and round-trip stability;
+their timings have no calibrated acceptance budget yet.
+
+The `network-camera` CI jobs run production and profiling on separate runners
+using the pinned Playwright container. Reports survive timing failures and are
+uploaded even when the gate fails. Local outputs stay separate under
+`test-results/network-camera/{production,profiling}` with sibling Playwright
+JSON reports. To retain an entire measurement matrix locally, run the collector
+after each mode (set `NETWORK_CAMERA_PROFILE=1` for the profiling default path):
+
+```bash
+node --experimental-strip-types scripts/collect-network-camera-baseline.mjs
+```
+
+The collector requires all twenty camera rows and twelve pointer rows, rejects
+mixed environments or incomplete captures, and records budget failures before
+exiting unsuccessfully. Its timing summary does not replace the Playwright
+correctness result. It never recalculates the fixed budgets from a baseline.
+The committed captures are local evidence; collect repeated CI runner results
+before claiming Linux timing calibration. Investigate runner variance or an
+over-budget workload without automatically relaxing these targets.
+
 ## Before Opening a PR
 
 Run the checks that match the change. For shared library changes, public API changes, release work, generated AI contracts, or SSR behavior, `npm run release:check` is the best local approximation of CI.

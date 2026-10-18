@@ -3,6 +3,7 @@ import type { Page } from "@playwright/test"
 import type {} from "./network-custom-layout-examples/cameraScaleFixture"
 import { writeFile } from "node:fs/promises"
 import { cpus, platform, arch } from "node:os"
+import { cameraScenarios, cameraScales, cameraScriptBudgetMs } from "../scripts/lib/network-camera-budgets"
 
 const fixture = "/network-custom-layout-examples/camera-scale.html"
 
@@ -39,13 +40,7 @@ async function setScale(page: Page, k: number | "fit") {
   await settled(page)
 }
 
-for (const scenario of [
-  { nodes: 300, cards: "compact", edgeHits: false },
-  { nodes: 1000, cards: "compact", edgeHits: false },
-  { nodes: 3000, cards: "compact", edgeHits: false },
-  { nodes: 1000, cards: "pipeline", edgeHits: false },
-  { nodes: 3000, cards: "compact", edgeHits: true }
-]) {
+for (const scenario of cameraScenarios) {
   test(`measure ${scenario.nodes} ${scenario.cards} cards, edge hits ${scenario.edgeHits}, at 4x CPU`, async ({
     page,
     browserName
@@ -59,7 +54,7 @@ for (const scenario of [
       `nodes=${scenario.nodes}&cards=${scenario.cards}${scenario.edgeHits ? "&edge-hits" : ""}`
     )
     const rows = []
-    for (const scale of ["fit", 0.5, 1, 2] as const) {
+    for (const scale of cameraScales) {
       await setScale(page, scale)
       const before = await page.evaluate(() => {
         window.cameraScale.reset()
@@ -190,6 +185,13 @@ for (const scenario of [
       }
       rows.push(row)
       console.log(JSON.stringify(row))
+      const budget = cameraScriptBudgetMs(row)
+      if (!before.profiling && budget !== null) {
+        // Soft assertions retain every row and the JSON attachment on a
+        // timing failure. They still fail the test; retries are disabled.
+        expect.soft(row.scriptMs, `${scenario.nodes}/${scenario.cards}/${scale}: scripting ms per camera frame`)
+          .toBeLessThanOrEqual(budget)
+      }
     }
     const edgeCost =
       scenario.nodes === 3000
@@ -507,6 +509,85 @@ test("dense interior panning updates mounted membership and real node tooltips",
   expect(await page.evaluate(() => window.cameraScale.layoutCalls)).toBe(
     layouts
   )
+})
+
+test("repeated dense pans retain bounded, exact culling membership", async ({ page }, testInfo) => {
+  const cdp = await page.context().newCDPSession(page)
+  await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 })
+  await cdp.send("Performance.enable")
+  await ready(page, "nodes=3000&edge-hits")
+  await page.evaluate(() => window.cameraScale.handle!.zoomTo({ x: -4000, y: -4000, k: 1 }, 0))
+  await settled(page)
+  const before = await page.evaluate(() => {
+    window.cameraScale.reset()
+    return {
+      layouts: window.cameraScale.layoutCalls,
+      zoom: window.cameraScale.handle!.getZoom(),
+      marks: window.cameraScale.result!.htmlMarks!.map(({ id, x, y, width, height }) => ({ id, x, y, width, height })),
+      mounted: [...document.querySelectorAll<HTMLElement>("[data-mark-id]")].map((node) => node.dataset.markId!)
+    }
+  })
+  const metricsBefore = await cdp.send("Performance.getMetrics")
+  const samples = await page.evaluate(async () => {
+    const samples = []
+    for (let i = 0; i < 50; i++) {
+      // Five round trips, each crossing one grid row/column per frame.
+      // Membership changes exercise React mounts, unlike the wheel matrix.
+      const direction = i % 10 < 5 ? -1 : 1
+      window.cameraScale.handle!.panBy(320 * direction, 128 * direction)
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+      samples.push({
+        rect: window.cameraScale.viewport!.renderRect!,
+        reported: window.cameraScale.viewport!.mountedMarkIds,
+        mounted: [...document.querySelectorAll<HTMLElement>("[data-mark-id]")].map((node) => node.dataset.markId!)
+      })
+    }
+    return samples
+  })
+  const metricsAfter = await cdp.send("Performance.getMetrics")
+  let previous = before.mounted
+  for (const sample of samples) {
+    const rect = sample.rect
+    const expected = before.marks.filter((mark) =>
+      mark.x + mark.width >= rect.x && mark.x <= rect.x + rect.width &&
+      mark.y + mark.height >= rect.y && mark.y <= rect.y + rect.height
+    ).map((mark) => mark.id)
+    expect(sample.mounted).toEqual(expected)
+    expect(sample.reported).toEqual(expected)
+    expect(sample.mounted).not.toEqual(previous)
+    expect(sample.mounted.length).toBeGreaterThan(40)
+    expect(sample.mounted.length).toBeLessThan(3000)
+    previous = sample.mounted
+  }
+  await settled(page)
+  const after = await page.evaluate(() => ({
+    layouts: window.cameraScale.layoutCalls,
+    zoom: window.cameraScale.handle!.getZoom(),
+    frames: window.cameraScale.movingFrames,
+    mounted: [...document.querySelectorAll<HTMLElement>("[data-mark-id]")].map((node) => node.dataset.markId!)
+  }))
+  expect(after.layouts).toBe(before.layouts)
+  expect(after.zoom).toEqual(before.zoom)
+  expect(after.mounted).toEqual(before.mounted)
+  expect(after.frames).toBe(50)
+  const delta = (name: string) => 1000 * (
+    metricsAfter.metrics.find((m) => m.name === name)!.value -
+    metricsBefore.metrics.find((m) => m.name === name)!.value
+  ) / after.frames
+  const reportPath = testInfo.outputPath("dense-pan.json")
+  await writeFile(reportPath, JSON.stringify({
+    cpuThrottle: 4,
+    profiling: await page.evaluate(() => window.cameraScale.profiling),
+    frames: after.frames,
+    layoutRuns: after.layouts - before.layouts,
+    minMounted: Math.min(...samples.map((sample) => sample.mounted.length)),
+    maxMounted: Math.max(...samples.map((sample) => sample.mounted.length)),
+    scriptMs: delta("ScriptDuration"),
+    layoutMs: delta("LayoutDuration"),
+    timingStatus: "diagnostic: membership-changing pans have no calibrated timing budget"
+  }, null, 2))
+  await testInfo.attach("dense-pan-measurements", { path: reportPath, contentType: "application/json" })
+  await cdp.detach()
 })
 
 for (const lod of ["discrete", "live"]) {

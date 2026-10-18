@@ -452,12 +452,6 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
       })()
     : null
 
-  // Apply theme text color to labels (layout plugins default to #333)
-  const s = themeStyles(theme)
-  for (const label of labels) {
-    if (!label.fill) label.fill = s.text
-  }
-
   const renderedEdges = renderSceneListWithBackend<NetworkSceneEdge>({
     nodes: sceneEdges,
     renderMode: props.renderMode,
@@ -472,8 +466,13 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
   const edgeElements = renderedEdges.map((entry) => entry.element)
   const nodeElements = renderedNodes.map((entry) => entry.element)
 
+  // Default colors at render time: retained labels may be frozen or reused
+  // with another theme, so never assign the fallback onto the input record.
+  const s = themeStyles(theme)
   const labelElements = labels
-    .map((label, i) => networkLabelToSVG(label, i))
+    .map((label, i) =>
+      networkLabelToSVG({ ...label, fill: label.fill || s.text }, i)
+    )
     .filter(Boolean)
 
   // Annotation anchors stay in layout coordinates inside the camera group.

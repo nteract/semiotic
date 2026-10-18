@@ -436,6 +436,56 @@ jobs:
       - name: Compare PR vs main on identical hardware
         run: npm run bench:pr-vs-main
 
+  network-camera:
+    name: Network camera (${{ matrix.mode }})
+    runs-on: ubuntu-latest
+    needs: fast-contracts
+    timeout-minutes: 20
+    container: mcr.microsoft.com/playwright:v1.61.1-noble
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [production, profiling]
+    # Each mode owns its runner and runs one browser worker. Profiling checks
+    # commit counts; only production enforces the unchanged S3/S4 time budgets.
+    env:
+      NETWORK_CAMERA_PROFILE: ${{ matrix.mode == 'profiling' && '1' || '0' }}
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Use Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22.x
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check measurement contracts
+        run: npm run test:network-camera:contracts
+
+      - name: Run network camera gate
+        run: npm run test:network-camera
+
+      - name: Collect timing evidence
+        if: always()
+        run: >-
+          node --experimental-strip-types scripts/collect-network-camera-baseline.mjs
+          test-results/network-camera/${{ matrix.mode }}
+          test-results/network-camera/${{ matrix.mode }}-measurements.json
+          "CI ${{ github.sha }} / ${{ runner.os }} / ${{ runner.arch }} / run ${{ github.run_id }} attempt ${{ github.run_attempt }}"
+
+      - name: Upload timing and correctness reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: network-camera-${{ matrix.mode }}
+          path: test-results/network-camera/
+          if-no-files-found: error
+          retention-days: 30
+
   # The docs source route suite owns a separate Vite server and exercises
   # authored examples rather than the packaged visual harness. Keep it in an
   # independent Chromium job so a slow or failed docs route neither obscures

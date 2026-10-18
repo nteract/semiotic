@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test"
 import { writeFile } from "node:fs/promises"
 import { cpus } from "node:os"
 import type {} from "./network-custom-layout-examples/cameraScaleFixture"
+import { pointerBudgetMs } from "../scripts/lib/network-camera-budgets"
 
 test("4500 edges: complete coalesced pointer updates with real tooltip chrome", async ({
   page,
@@ -115,7 +116,8 @@ test("4500 edges: complete coalesced pointer updates with real tooltip chrome", 
       // The original 1ms budget, including script and browser layout. Profiling
       // builds establish commit attribution; production establishes timing.
       if (!(await page.evaluate(() => window.cameraScale.profiling)))
-        expect(row.scriptMs + row.layoutMs).toBeLessThanOrEqual(1)
+        expect.soft(row.scriptMs + row.layoutMs, `${scenario}/k=${k}: pointer script + layout ms`)
+          .toBeLessThanOrEqual(pointerBudgetMs)
     }
   }
   await page.mouse.move(1430, 990)
