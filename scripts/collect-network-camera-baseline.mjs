@@ -1,6 +1,7 @@
 import { readFile, readdir, writeFile } from "node:fs/promises"
 import { resolve } from "node:path"
 import { execFileSync } from "node:child_process"
+import { fileURLToPath } from "node:url"
 import {
   cameraBudgetFailures,
   pointerBudgetFailures,
@@ -77,9 +78,15 @@ try {
 }
 baseline[profiling ? "profiling" : "production"] = {
   measuredAt: new Date().toISOString(),
-  sourceCommit: execFileSync("git", ["rev-parse", "HEAD"], {
-    encoding: "utf8"
-  }).trim(),
+  // Container checkouts may not permit Git's ownership check. Actions already
+  // supplies the checked-out revision; local captures resolve this repository
+  // rather than depending on the caller's working directory.
+  sourceCommit:
+    process.env.GITHUB_SHA ||
+    execFileSync("git", ["rev-parse", "HEAD"], {
+      cwd: fileURLToPath(new URL("..", import.meta.url)),
+      encoding: "utf8"
+    }).trim(),
   sourceWorktree:
     process.argv[4] ??
     "Working tree at measurement time; see the strategy notes",

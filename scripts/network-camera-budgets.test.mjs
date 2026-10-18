@@ -214,6 +214,18 @@ test("pointer captures require every scale/scenario and no retained renders", ()
 test("collector preserves failed production evidence when adding profiling diagnostics", (t) => {
   const root = mkdtempSync(join(tmpdir(), "semiotic-camera-gate-"))
   t.after(() => rmSync(root, { recursive: true, force: true }))
+  const commit = "1234567890abcdef1234567890abcdef12345678"
+  // Exercise CI metadata without relying on this machine's checkout/trust
+  // configuration. A Git lookup must fail even when the test runs locally.
+  const childOptions = {
+    encoding: "utf8",
+    cwd: root,
+    env: {
+      ...process.env,
+      GITHUB_SHA: commit,
+      GIT_DIR: join(root, "missing.git")
+    }
+  }
   const { reports, pointer } = capture()
   reports[1].rows[2].scriptMs = 4.001
   pointer.rows[0].scriptMs = 1
@@ -237,11 +249,18 @@ test("collector preserves failed production evidence when adding profiling diagn
       destination,
       "synthetic failing capture"
     ],
-    { encoding: "utf8" }
+    childOptions
   )
   assert.ifError(result.error)
   assert.equal(result.status, 1, result.stdout + result.stderr)
+  assert.match(
+    result.stdout,
+    /Recorded production camera measurements/,
+    result.stderr
+  )
+  assert.match(result.stderr, /exceeds 4 ms scripting budget/)
   const recorded = JSON.parse(readFileSync(destination, "utf8"))
+  assert.equal(recorded.production.sourceCommit, commit)
   assert.equal(recorded.production.timingBudgets.status, "failed")
   assert.equal(recorded.production.timingBudgets.failures.length, 2)
   assert.equal(recorded.production.reports.length, 5)
@@ -267,11 +286,70 @@ test("collector preserves failed production evidence when adding profiling diagn
       destination,
       "synthetic profiling capture"
     ],
-    { encoding: "utf8" }
+    childOptions
   )
   assert.ifError(profiled.error)
   assert.equal(profiled.status, 0, profiled.stdout + profiled.stderr)
   const combined = JSON.parse(readFileSync(destination, "utf8"))
   assert.deepEqual(combined.production, recorded.production)
   assert.equal(combined.profiling.timingBudgets.status, "diagnostic")
+  assert.equal(combined.profiling.sourceCommit, commit)
+})
+
+test("aggregate testing waits for the camera matrix and rejects every required non-success result", (t) => {
+  const workflow = readFileSync(
+    new URL("../.github/workflows/node.js.yml", import.meta.url),
+    "utf8"
+  )
+  const aggregate = workflow.match(
+    /^ {2}testing:\n([\s\S]*?)(?=^ {2}[\w-]+:)/m
+  )?.[1]
+  assert.ok(aggregate, "testing aggregate must exist")
+  assert.match(aggregate, /^ {4}if: always\(\)/m)
+  const dependencies = [...aggregate.matchAll(/^ {6}- ([\w-]+)$/gm)].map(
+    (match) => match[1]
+  )
+  assert.ok(
+    dependencies.includes("network-camera"),
+    "aggregate must wait for both camera modes"
+  )
+  const shell = aggregate.split("        run: |\n")[1].replace(/^ {10}/gm, "")
+  const root = mkdtempSync(join(tmpdir(), "semiotic-camera-aggregate-"))
+  t.after(() => rmSync(root, { recursive: true, force: true }))
+  const summary = join(root, "summary.md")
+  const run = (failedJob, status = "success") => {
+    writeFileSync(summary, "")
+    const expanded = shell.replace(
+      /\$\{\{ needs\['([\w-]+)'\]\.result \}\}/g,
+      (_expression, job) => {
+        assert.ok(
+          dependencies.includes(job),
+          `${job} result requires a dependency`
+        )
+        return job === failedJob ? status : "success"
+      }
+    )
+    const result = spawnSync("bash", ["-c", expanded], {
+      encoding: "utf8",
+      env: { ...process.env, GITHUB_STEP_SUMMARY: summary }
+    })
+    assert.ifError(result.error)
+    return { ...result, summary: readFileSync(summary, "utf8") }
+  }
+  assert.equal(run().status, 0)
+  for (const job of dependencies)
+    for (const status of ["failure", "cancelled", "skipped"]) {
+      const result = run(job, status)
+      assert.equal(
+        result.status,
+        1,
+        `${job}/${status}: ${result.stdout}${result.stderr}`
+      )
+      if (job === "network-camera") {
+        assert.ok(
+          result.summary.includes(`Network camera result: \`${status}\``)
+        )
+        assert.ok(result.stdout.includes(`network camera: ${status}`))
+      }
+    }
 })

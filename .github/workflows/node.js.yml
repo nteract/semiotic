@@ -381,11 +381,12 @@ jobs:
       - testing-matrix
       - e2e
       - docs-examples
+      - network-camera
     if: always()
     steps:
       - name: Aggregate matrix result
         run: |
-          if [[ "${{ needs['fast-contracts'].result }}" != "success" || "${{ needs['coverage-shards'].result }}" != "success" || "${{ needs['coverage'].result }}" != "success" || "${{ needs['full-contracts'].result }}" != "success" || "${{ needs['docs-package'].result }}" != "success" || "${{ needs['testing-matrix'].result }}" != "success" || "${{ needs['e2e'].result }}" != "success" || "${{ needs['docs-examples'].result }}" != "success" ]]; then
+          if [[ "${{ needs['fast-contracts'].result }}" != "success" || "${{ needs['coverage-shards'].result }}" != "success" || "${{ needs['coverage'].result }}" != "success" || "${{ needs['full-contracts'].result }}" != "success" || "${{ needs['docs-package'].result }}" != "success" || "${{ needs['testing-matrix'].result }}" != "success" || "${{ needs['e2e'].result }}" != "success" || "${{ needs['docs-examples'].result }}" != "success" || "${{ needs['network-camera'].result }}" != "success" ]]; then
             {
               echo "## Testing failed"
               echo ""
@@ -397,10 +398,11 @@ jobs:
               echo "Smoke matrix result: \`${{ needs['testing-matrix'].result }}\`"
               echo "E2E result: \`${{ needs['e2e'].result }}\`"
               echo "Docs examples result: \`${{ needs['docs-examples'].result }}\`"
+              echo "Network camera result: \`${{ needs['network-camera'].result }}\`"
               echo ""
               echo "Open the failed job above for the concrete error."
             } >> "$GITHUB_STEP_SUMMARY"
-            echo "::error title=Testing failed::Preflight: ${{ needs['fast-contracts'].result }}; coverage shards: ${{ needs['coverage-shards'].result }}; merged coverage: ${{ needs['coverage'].result }}; contracts: ${{ needs['full-contracts'].result }}; docs/package: ${{ needs['docs-package'].result }}; smoke matrix: ${{ needs['testing-matrix'].result }}; E2E: ${{ needs['e2e'].result }}; docs examples: ${{ needs['docs-examples'].result }}"
+            echo "::error title=Testing failed::Preflight: ${{ needs['fast-contracts'].result }}; coverage shards: ${{ needs['coverage-shards'].result }}; merged coverage: ${{ needs['coverage'].result }}; contracts: ${{ needs['full-contracts'].result }}; docs/package: ${{ needs['docs-package'].result }}; smoke matrix: ${{ needs['testing-matrix'].result }}; E2E: ${{ needs['e2e'].result }}; docs examples: ${{ needs['docs-examples'].result }}; network camera: ${{ needs['network-camera'].result }}"
             exit 1
           fi
 
@@ -470,7 +472,7 @@ jobs:
         run: npm run test:network-camera
 
       - name: Collect timing evidence
-        if: always()
+        if: always() && hashFiles(format('test-results/network-camera/{0}/**/measurements.json', matrix.mode)) != ''
         run: >-
           node --experimental-strip-types scripts/collect-network-camera-baseline.mjs
           test-results/network-camera/${{ matrix.mode }}
@@ -478,7 +480,7 @@ jobs:
           "CI ${{ github.sha }} / ${{ runner.os }} / ${{ runner.arch }} / run ${{ github.run_id }} attempt ${{ github.run_attempt }}"
 
       - name: Upload timing and correctness reports
-        if: always()
+        if: always() && hashFiles('test-results/network-camera/**') != ''
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: network-camera-${{ matrix.mode }}
