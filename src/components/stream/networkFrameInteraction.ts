@@ -13,6 +13,7 @@ import type { Quadtree } from "d3-quadtree"
 import type { NetworkCircleNode } from "./networkTypes"
 import type { NetworkViewTransform } from "./networkViewportTypes"
 import { normalizeNetworkView } from "./networkViewTransform"
+import type { NetworkEdgeHitIndex } from "./networkEdgeHitIndex"
 
 export type NetworkPointerHit =
   | { kind: "miss-outside" }
@@ -37,6 +38,7 @@ export function resolveNetworkPointerHit(options: {
   /** Requested node hit radius in screen pixels. */
   hitRadius?: number
   includeEdges?: boolean
+  edgeIndex?: NetworkEdgeHitIndex
   viewTransform?: NetworkViewTransform
 }): NetworkPointerHit {
   const {
@@ -76,7 +78,8 @@ export function resolveNetworkPointerHit(options: {
     nodeQuadtree,
     maxNodeRadius,
     includeEdges,
-    view.k
+    view.k,
+    options.edgeIndex
   )
 
   if (!hit) return { kind: "miss" }

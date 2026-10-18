@@ -178,6 +178,10 @@ export interface NetworkLayoutResult {
   sceneNodes?: NetworkSceneNode[]
   /** Positioned edges. Lines, beziers, ribbons, or curved. */
   sceneEdges?: NetworkSceneEdge[]
+  /** Set false to skip all edge pointer hits (hover, click, and cursor).
+   * Nodes remain interactive; edge painting and accessible rows are unchanged.
+   * Defaults to true. Per-edge opt-out is also available via `interactive: false`. */
+  edgeHitTesting?: boolean
   /** Optional labels placed at arbitrary plot-relative positions. */
   labels?: NetworkLabel[]
   /**

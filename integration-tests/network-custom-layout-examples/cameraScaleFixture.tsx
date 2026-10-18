@@ -13,6 +13,8 @@ import type {
 } from "semiotic/network"
 import type { HoverData } from "../../src/components/realtime/types"
 import { findNearestNetworkNode } from "../../src/components/stream/NetworkCanvasHitTester"
+import { prepareNetworkEdgeHitBounds } from "../../src/components/stream/networkEdgeHitBounds"
+import { buildNetworkEdgeHitIndex } from "../../src/components/stream/networkEdgeHitIndex"
 import { PipelineCard } from "../../docs/src/pages/examples/pipeline-explorer/PipelineCard"
 import type { PipelineNode } from "../../docs/src/pages/examples/pipeline-explorer/data"
 import "../../docs/src/pages/examples/pipeline-explorer/pipeline-explorer.css"
@@ -58,9 +60,14 @@ const measurement = {
   renders: [] as RenderSample[],
   paints: [] as number[],
   hover: null as HoverData | null,
+  hoverCalls: 0,
+  frameRenders: 0,
+  pointerQueries: 0,
   click: null as HoverData | null,
   result: null as NetworkLayoutResult | null,
   hitEdges: [] as NonNullable<NetworkLayoutResult["sceneEdges"]>,
+  hitTest: findNearestNetworkNode,
+  prepareEdges: buildNetworkEdgeHitIndex,
   recordRender(id: string, phase: string, duration: number) {
     this.renders.push({ id, phase, duration })
   },
@@ -73,35 +80,81 @@ const measurement = {
     this.movingFrames = 0
   },
   edgeCost() {
-    // An interior, early-painted edge forces a near-worst-case reverse scan;
-    // a miss forces all 4,500 paths. Warm Path2D caches before timing.
-    const probe = (hit: boolean) =>
-      findNearestNetworkNode(
-        [],
-        this.hitEdges,
-        hit ? 100 : -100,
-        hit ? -100 : -1000,
-        12,
-        null,
-        0,
-        true,
-        1
-      )
-    probe(true)
-    probe(false)
-    return [true, false].map((hit) => {
+    // Retain the S0 early-painted hit and full-scan miss, and add a dense
+    // interior hit. Cold samples use fresh records without either cache;
+    // they measure cache construction, not JavaScript/module startup.
+    const index = Math.floor(count / 2)
+    const source = nodes[index], target = nodes[(index + 1) % count]
+    return [
+      { name: "early hit", hit: true, x: 100, y: -100 },
+      { name: "miss", hit: false, x: -100, y: -1000 },
+      { name: "interior hit", hit: true,
+        x: (source.x + width + target.x) / 2,
+        y: (source.y + target.y + height) / 2 }
+    ].map(({ name, hit, x, y }) => {
+      const probe = (edges = this.hitEdges, withNodes = false) =>
+        findNearestNetworkNode(withNodes ? this.result!.sceneNodes! : [], edges, x, y, 12, null, 0, true, 1)
+      const coldEdges = this.hitEdges.map((edge) => ({
+        ...edge, _cachedPath2D: undefined, _cachedPath2DSource: undefined
+      }))
+      const start = performance.now()
+      const cold = probe(coldEdges)
+      const coldMs = performance.now() - start
+      if (!!cold !== hit) throw new Error("Invalid cold edge benchmark probe")
+      const preparedEdges = this.hitEdges.map((edge) => ({
+        ...edge, _cachedPath2D: undefined, _cachedPath2DSource: undefined
+      }))
+      const preparationStart = performance.now()
+      prepareNetworkEdgeHitBounds(preparedEdges)
+      const preparationMs = performance.now() - preparationStart
+      const firstHoverStart = performance.now()
+      const firstHover = probe(preparedEdges)
+      const firstHoverMs = performance.now() - firstHoverStart
+      if (!!firstHover !== hit) throw new Error("Invalid prepared edge benchmark probe")
+      probe()
       const samples = Array.from({ length: 100 }, () => {
         const start = performance.now()
-        const result = probe(hit)
+        const result = probe()
         if (!!result !== hit) throw new Error("Invalid edge benchmark probe")
         return performance.now() - start
       }).sort((a, b) => a - b)
+      const withNodes = Array.from({ length: 100 }, () => {
+        const start = performance.now()
+        const result = probe(this.hitEdges, true)
+        if (!!result !== hit) throw new Error("Invalid full-scene benchmark probe")
+        return performance.now() - start
+      }).sort((a, b) => a - b)
       return {
+        name,
         hit,
+        coldMs,
+        preparationMs,
+        firstHoverMs,
+        fullSceneMean: withNodes.reduce((a, b) => a + b, 0) / withNodes.length,
+        fullSceneP95: withNodes[94],
         mean: samples.reduce((a, b) => a + b, 0) / samples.length,
         p95: samples[94]
       }
     })
+  },
+  edgeInvalidationCost() {
+    const edges = this.hitEdges.map((edge) => ({ ...edge, style: { ...edge.style } }))
+    const measure = () => {
+      const start = performance.now()
+      prepareNetworkEdgeHitBounds(edges)
+      return performance.now() - start
+    }
+    const freshSceneMs = measure()
+    const unchangedSceneMs = measure()
+    for (const edge of edges) edge.style.strokeWidth = 40
+    const restyledSceneMs = measure()
+    if (edges[0].type !== "line") edges[0].pathD += " M-900,-900 L-800,-900"
+    const onePathChangedMs = measure()
+    for (const edge of edges) {
+      if (edge.type !== "line") edge.pathD += " M-700,-700 L-600,-700"
+    }
+    return { freshSceneMs, unchangedSceneMs, restyledSceneMs, onePathChangedMs,
+      allPathsChangedMs: measure() }
   }
 }
 declare global {
@@ -184,7 +237,10 @@ const layout: NetworkCustomLayout = () => {
         i === 0
           ? "M-400,-25 C-150,-125 350,-125 600,-25"
           : `M${x1},${y1} C${(x1 + x2) / 2},${y1} ${(x1 + x2) / 2},${y2} ${x2},${y2}`,
-      style: { fill: "none", stroke: "#358499", strokeWidth: 2, opacity: 0 }
+      style: {
+        fill: "none", stroke: "#358499", strokeWidth: 2, opacity: 0,
+        cursor: params.has("hit-policy") ? "crosshair" : undefined
+      }
     }
   })
   const result: NetworkLayoutResult = {
@@ -234,6 +290,10 @@ const layout: NetworkCustomLayout = () => {
 
 function Fixture() {
   const [chartWidth, setWidth] = React.useState(1400)
+  const [edgeHitTesting, setEdgeHitTesting] = React.useState(true)
+  const interactiveLayout = React.useCallback<NetworkCustomLayout>((ctx) => ({
+    ...layout(ctx), edgeHitTesting
+  }), [edgeHitTesting])
   return (
     <>
       <button
@@ -241,13 +301,18 @@ function Fixture() {
       >
         Resize chart
       </button>
+      {params.has("hit-policy") && (
+        <button onClick={() => setEdgeHitTesting((enabled) => !enabled)}>
+          {edgeHitTesting ? "Disable edge hits" : "Enable edge hits"}
+        </button>
+      )}
       <ZoomableNetworkCustomChart
         ref={(handle) => {
           measurement.handle = handle
         }}
         nodes={nodes}
         edges={edges}
-        layout={layout}
+        layout={interactiveLayout}
         width={chartWidth}
         height={800}
         margin={{ top: 20, left: 20, right: 20, bottom: 20 }}
@@ -291,6 +356,7 @@ function Fixture() {
             measurement.viewport = viewport
           },
           customHoverBehavior: (datum) => {
+            measurement.hoverCalls++
             measurement.hover = datum
           },
           customClickBehavior: (datum) => {

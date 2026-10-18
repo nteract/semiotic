@@ -1343,6 +1343,7 @@ interface-member NetworkLayoutContext::property::resolveColor = required resolve
 interface-member NetworkLayoutContext::property::selection = optional selection: NetworkLayoutSelection | null | undefined
 interface-member NetworkLayoutContext::property::theme = required theme: {semantic: ThemeSemanticColors; categorical: string[]; sequential?: string; selectionOpacity?: number;}
 interface-member NetworkLayoutResult::property::backgrounds = optional backgrounds: ReactNode
+interface-member NetworkLayoutResult::property::edgeHitTesting = optional edgeHitTesting: boolean | undefined
 interface-member NetworkLayoutResult::property::htmlMarks = optional htmlMarks: NetworkHtmlMark[] | undefined
 interface-member NetworkLayoutResult::property::labels = optional labels: NetworkLabel[] | undefined
 interface-member NetworkLayoutResult::property::overlays = optional overlays: ReactNode

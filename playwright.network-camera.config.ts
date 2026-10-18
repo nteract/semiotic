@@ -4,7 +4,7 @@ import { defineConfig } from "@playwright/test"
 // these measurements separate from the development/three-browser suite.
 export default defineConfig({
   testDir: "integration-tests",
-  testMatch: "network-camera-scale.spec.ts",
+  testMatch: ["network-camera-scale.spec.ts", "network-edge-hit-bounds.spec.ts", "network-edge-performance.spec.ts"],
   workers: 1,
   timeout: 120_000,
   reporter: "list",

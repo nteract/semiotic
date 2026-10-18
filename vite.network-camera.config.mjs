@@ -13,6 +13,16 @@ function cameraInstrumentation() {
     name: "network-camera-measurement",
     enforce: "pre",
     transform(code, id) {
+      if (id.endsWith("/stream/StreamNetworkFrame.tsx")) {
+        const declaration = "function StreamNetworkFrame(props, ref) {"
+        if (!code.includes(declaration)) throw new Error("Cannot instrument network frame")
+        return code.replace(declaration, declaration + "\n  if (window.cameraScale) window.cameraScale.frameRenders++")
+      }
+      if (id.endsWith("/stream/networkFrameInteraction.ts")) {
+        const declaration = "): NetworkPointerHit {"
+        if (!code.includes(declaration)) throw new Error("Cannot instrument network pointer")
+        return code.replace(declaration, declaration + "\n  if (window.cameraScale) window.cameraScale.pointerQueries++")
+      }
       const layer = layers.find((name) => id.endsWith(`/stream/${name}.tsx`))
       if (layer && profiling) {
         const declaration =

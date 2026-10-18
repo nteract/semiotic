@@ -1393,7 +1393,10 @@ function Card() {
           in SVG overlays, emit <code>networkEdgeHitTarget</code> into <code>sceneEdges</code> with
           the same plot geometry. Its default curved path hits the stroke only; use
           <code> type: "ribbon"</code> or <code>"bezier"</code> for filled bands. Set
-          <code> interactive: false</code> for a table-only edge. Overlay pointer events must reach
+          <code> interactive: false</code> for a table-only edge, or return
+          <code> edgeHitTesting: false</code> from the layout to disable all edge
+          hover, clicks, and cursors while keeping nodes interactive. Edges still
+          render and retain accessible table rows. Overlay pointer events must reach
           the frame. Keyboard network traversal remains node-based.
         </p>
       </section>

@@ -196,6 +196,10 @@ for (const scenario of [
         ? await page.evaluate(() => window.cameraScale.edgeCost())
         : null
     if (edgeCost) console.log(JSON.stringify({ edgeCost }))
+    const edgeInvalidationCost = scenario.nodes === 3000
+      ? await page.evaluate(() => window.cameraScale.edgeInvalidationCost())
+      : null
+    if (edgeInvalidationCost) console.log(JSON.stringify({ edgeInvalidationCost }))
     const reportPath = testInfo.outputPath("measurements.json")
     await writeFile(
       reportPath,
@@ -208,7 +212,8 @@ for (const scenario of [
           ),
           machine: { platform: platform(), arch: arch(), cpu: cpus()[0].model },
           rows,
-          edgeCost
+          edgeCost,
+          edgeInvalidationCost
         },
         null,
         2
