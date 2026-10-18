@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Custom network layouts can return `edgeHitTesting: false` to keep node
+  interactions while skipping edge hover, clicks, and cursors.
 - `useNetworkLODLevel(width, options)` from `semiotic/network/zoom` returns a
   discrete detail level without rerendering cards for unchanged levels during
   camera movement. It preserves hysteresis, settle-only promotion, and focused
@@ -16,6 +18,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Network tooltip and keyboard-focus updates subscribe independently of the
+  retained frame. Custom edge indexes preserve exact Canvas hits, node priority
+  and paint order while pruning overlapping cubic links with conservative
+  sub-curve bounds. Color-only restyles reuse the index; geometry, stroke and
+  fill changes refresh it. Keyboard announcements now honor authored
+  `accessibility.tableFields`, matching accessible data tables.
+- Network path hits reject distant candidates using cached conservative
+  bounds before exact Canvas tests. Custom layouts prepare a spatial index at
+  scene commit, preserving first-hover responsiveness, stroke tolerance under zoom,
+  filled bands, sharp joins, and changes to retained geometry or styles.
 - Uncontrolled network camera updates apply HTML/SVG transforms and repaint
   canvas synchronously without rerendering the chart. Culling updates mounted
   cards only when membership changes; viewport reports, focused tooltips and

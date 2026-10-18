@@ -297,7 +297,7 @@ describe("StreamNetworkFrame", () => {
     expect(canvas.style.cursor).toBe("")
   })
 
-  it.each([false, true])("keeps pointer readings visual and announces authored keyboard focus (shared render datum: %s)", async (sharedDatum) => {
+  it.each([[false, false], [true, false], [false, true], [true, true]])("keeps pointer readings visual and announces authored keyboard focus (shared render datum: %s, table projection: %s)", async (sharedDatum, tableFields) => {
     const scheduler = createFrameScheduler(0)
     const nodeDatum = { id: "a", geometry: "node render internals" }
     const edgeDatum = sharedDatum ? nodeDatum : { id: "ab", geometry: "edge render internals" }
@@ -307,7 +307,8 @@ describe("StreamNetworkFrame", () => {
       sceneNodes: [{
         type: "circle", id: "a", cx: 30, cy: 30, r: 10,
         style: { fill: "#4682b4" }, datum: nodeDatum,
-        accessibleDatum: { vertex: "Arrival" }
+        accessibleDatum: { vertex: "Arrival" },
+        accessibility: tableFields ? { tableFields: { vertex: "Projected Arrival" } } : undefined
       }],
       sceneEdges: [{
         type: "line", x1: 30, y1: 80, x2: 150, y2: 80,
@@ -371,7 +372,7 @@ describe("StreamNetworkFrame", () => {
     expect(live).toBeEmptyDOMElement()
 
     fireEvent.keyDown(image, { key: "Home" })
-    expect(live).toHaveTextContent("Data point: vertex: Arrival")
+    expect(live).toHaveTextContent(`Data point: vertex: ${tableFields ? "Projected Arrival" : "Arrival"}`)
     expect(customHoverBehavior.mock.lastCall?.[0].data).toBe(nodeDatum)
   })
 

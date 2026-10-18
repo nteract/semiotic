@@ -176,5 +176,13 @@ describe("network cursor-only hit testing", () => {
     })
     expect(edges.visits()).toBe(1)
     expect(canvas.style.cursor).toBe("crosshair")
+
+    store.lastCustomLayoutResult = { edgeHitTesting: false }
+    rehitNetworkFrameCursor({
+      ...base,
+      cursorInventory: { nodes: false, edges: true }
+    })
+    expect(edges.visits()).toBe(1)
+    expect(canvas.style.cursor).toBe("")
   })
 })

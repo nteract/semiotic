@@ -9,6 +9,8 @@ import { hitTestRect as sharedHitTestRect, normalizeAngle, getHitRadius } from "
 import { symbolRadius } from "./symbolPath"
 import { glyphHitGeometry } from "./glyphDef"
 import { findHitPointInQuadtree } from "./quadtreeHitTest"
+import { outsideNetworkEdgeBounds } from "./networkEdgeHitBounds"
+import { queryNetworkEdgeHitIndex, type NetworkEdgeHitIndex } from "./networkEdgeHitIndex"
 import type { Quadtree } from "d3-quadtree"
 import type { SceneDatum } from "./types"
 
@@ -74,7 +76,8 @@ export function findNearestNetworkNode(
   nodeQuadtree?: Quadtree<NetworkCircleNode> | null,
   maxNodeRadius = 0,
   includeEdges = true,
-  viewScale = 1
+  viewScale = 1,
+  edgeIndex?: NetworkEdgeHitIndex
 ): NetworkHitResult | null {
   // Nested treemap cells and packed circles prefer the containing child.
   let bestNode: NetworkHitResult | null = null
@@ -123,6 +126,9 @@ export function findNearestNetworkNode(
 
   if (bestNode) return bestNode
   if (!includeEdges) return null
+
+  if (edgeIndex?.edges === sceneEdges)
+    return queryNetworkEdgeHitIndex(edgeIndex, px, py, 5 / viewScale, (edge) => hitTestEdge(edge, px, py, 5 / viewScale))
 
   // Edges paint in array order; the last-painted semantic edge owns overlap.
   // Decorative geometry must never produce an empty tooltip or observation.
@@ -379,6 +385,15 @@ function hitTestPathEdge(
   // Use pointer coordinates for every path edge; custom layout data need not
   // contain Sankey-specific endpoint coordinates for tooltip placement.
   if (!edge.pathD) return null
+
+  // The private hit context uses Canvas's default miter joins/limit (10).
+  // Expanding only by half the stroke would reject sharp, visible corners.
+  // Styles and camera tolerance are read on every query, so restyles and zoom
+  // never require invalidating the cached geometry-only bounds.
+  // Padding filled-only paths too is conservative; a non-finite width cannot
+  // safely reject a candidate because Canvas ignores invalid line widths.
+  const padding = Math.max(tolerance, (edge.style.strokeWidth ?? 1) / 2) * 10
+  if (outsideNetworkEdgeBounds(edge, px, py, padding + 1e-7)) return null
 
   const path = getEdgePath2D(edge)
   const ctx = getHitContext()

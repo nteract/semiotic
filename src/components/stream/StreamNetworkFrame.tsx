@@ -35,7 +35,8 @@ import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
 import { useConfigSync, useLayoutSelectionSync } from "./streamStoreSync"
 import { useNetworkKeyboardNavigation } from "./networkFrameKeyboardNavigation"
-import { NetworkFrameHover } from "./NetworkFrameHover"
+import { NetworkFrameHover, NetworkFrameLiveHover } from "./NetworkFrameHover"
+import { createNetworkHoverStore } from "./networkHoverStore"
 import { useFrame } from "./useFrame"
 import { useStalenessCheck } from "./useStalenessCheck"
 import { StalenessBadge } from "./StalenessBadge"
@@ -52,7 +53,6 @@ import {
 import { CanvasFrameBackground, useFrameCanvasHost } from "./useCanvasFrameHost"
 import { useStableShallow } from "./useStableShallow"
 import { networkFrameAccessibility } from "./networkFrameAccessibility"
-import { AriaLiveTooltip } from "./AccessibleDataTable"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 import { renderLoadingState } from "../charts/shared/withChartWrapper"
 import {
@@ -89,6 +89,8 @@ import {
 } from "./sceneCursor"
 import { shouldHandleFramePointer } from "./frameCursorInteraction"
 import {
+  prepareNetworkCustomEdgeHits,
+  preparedNetworkCustomEdgeHits,
   refreshNetworkCursorInventory,
   rehitNetworkFrameCursor,
   type NetworkCursorInventory
@@ -471,7 +473,8 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
   const sceneRevisionDiagnosticsRef = useSceneRevisionDiagnostics("StreamNetworkFrame")
   const buildSceneWithDiagnostics = useCallback((store: NetworkPipelineStore, sceneSize: [number, number], isTransitioning = false) => runSceneBuild(sceneRevisionDiagnosticsRef.current, store, () => store.buildScene(sceneSize), isTransitioning), [sceneRevisionDiagnosticsRef])
 
-  const [hoverData, setHoverData] = useState<HoverData | null>(null)
+  const [hoverStore] = useState(createNetworkHoverStore)
+  const setHoverData = hoverStore.set
   const [annotationFrame, setAnnotationFrame] = useState(0)
   const [isStale, setIsStale] = useState(false)
   const [layoutPending, setLayoutPending] = useState(false)
@@ -490,7 +493,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
   const pipelineConfigRef = useRef(stablePipelineConfig)
   pipelineConfigRef.current = stablePipelineConfig
 
-  const hoverRef = useRef<typeof hoverData>(null)
+  const hoverRef = useRef<HoverData | null>(null)
   // ── Observation wrappers ─────────────────────────────────────────────
 
   const { customHoverBehavior, customClickBehavior } =
@@ -583,6 +586,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
   const rebuildSceneNow = useCallback(
     (store: NetworkPipelineStore, sceneSize: [number, number]) => {
       buildSceneWithDiagnostics(store, sceneSize)
+      prepareNetworkCustomEdgeHits(store)
       refreshKeyboardFocus()
       lastSceneSizeRef.current = sceneSize
       emitLegendCategories()
@@ -869,7 +873,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     neighborIndexRef.current = -1
     dirtyRef.current = true
     scheduleRender()
-  }, [emitLegendCategories, scheduleRender, kbFocusIndexRef, focusedNavPointRef, neighborIndexRef])
+  }, [emitLegendCategories, scheduleRender, kbFocusIndexRef, focusedNavPointRef, neighborIndexRef, setHoverData])
 
   const forceRelayout = useCallback(() => {
     const store = storeRef.current
@@ -904,7 +908,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     }
     if (commitLayout(removed.length > 0)) scheduleRender()
     return removed
-  }, [commitLayout, scheduleRender, nodeIDAccessor])
+  }, [commitLayout, scheduleRender, nodeIDAccessor, setHoverData])
   const updateNodes = useCallback((ids: string[], updater: (data: Datum) => Datum): Datum[] => {
     const previous: Datum[] = []
     try {
@@ -1022,7 +1026,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
         return storeRef.current?.tension ?? 0
       }
     }),
-    [pushEdge, pushManyEdges, clearAll, forceRelayout, flushPendingLayout, commitLayout, removeNodes, updateNodes, scheduleRender, edgeIdAccessor]
+    [pushEdge, pushManyEdges, clearAll, forceRelayout, flushPendingLayout, commitLayout, removeNodes, updateNodes, scheduleRender, edgeIdAccessor, setHoverData]
   )
 
   // ── Bounded data ingestion ───────────────────────────────────────────
@@ -1179,9 +1183,10 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       adjustedHeight,
       sceneNodes: store.sceneNodes,
       sceneEdges: store.sceneEdges,
+      edgeIndex: preparedNetworkCustomEdgeHits(store),
       nodeQuadtree: store.nodeQuadtree,
       maxNodeRadius: store.maxNodeRadius,
-      includeEdges: enableHover || sceneCursorInventoryRef.current.edges
+      includeEdges: store.lastCustomLayoutResult?.edgeHitTesting !== false && (enableHover || sceneCursorInventoryRef.current.edges)
     })
     setCanvasMarkCursor(
       canvas,
@@ -1241,8 +1246,10 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       adjustedHeight,
       sceneNodes: store.sceneNodes,
       sceneEdges: store.sceneEdges,
+      edgeIndex: preparedNetworkCustomEdgeHits(store),
       nodeQuadtree: store.nodeQuadtree,
-      maxNodeRadius: store.maxNodeRadius
+      maxNodeRadius: store.maxNodeRadius,
+      includeEdges: store.lastCustomLayoutResult?.edgeHitTesting !== false
     })
 
     if (result.kind === "hit") {
@@ -1336,6 +1343,8 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       },
       syncColorMap: () => syncColorMap(store),
       onSceneOrStyleChange: ({ inventoryChanged, geometryChanged }) => {
+        if (inventoryChanged || geometryChanged) prepareNetworkCustomEdgeHits(store)
+        if (store.lastCustomLayoutResult?.edgeHitTesting === false && hoverRef.current?.nodeOrEdge === "edge") hoverLeaveRef.current()
         if (inventoryChanged || geometryChanged) refreshKeyboardFocus()
         if (inventoryChanged) {
           if (!refreshNetworkCursorInventory(
@@ -1419,12 +1428,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       {networkFrameAccessibility(props, store, tableId, layoutPending ? undefined : store.getUpdateSnapshot().revisions.accessibility)}
       {/* Live region MUST live outside the role="img" wrapper — AT treats the
           image as atomic and never announces content nested inside it. */}
-      <AriaLiveTooltip active={kbFocusIndexRef.current >= 0} hoverPoint={hoverData && {
-        data: (hoverData.nodeOrEdge === "edge"
-          ? store.sceneEdges
-          : store.sceneNodes
-        ).find((mark) => mark.datum === hoverData.data)?.accessibleDatum ?? hoverData.data
-      }} />
+      <NetworkFrameLiveHover hoverStore={hoverStore} kbFocusIndexRef={kbFocusIndexRef} store={store} />
       <div
         // An image is atomic to assistive technology. HTML marks can contain
         // editors and buttons, so expose their subtree as a group instead.
@@ -1527,23 +1531,15 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
 
         <NetworkFrameHover
           viewTransform={props.viewTransform}
-          hoverData={hoverData}
+          hoverStore={hoverStore}
+          kbFocusIndexRef={kbFocusIndexRef}
+          focusedNavPointRef={focusedNavPointRef}
           enableHover={enableHover}
           tooltipContent={tooltipContent}
           adjustedWidth={adjustedWidth}
           adjustedHeight={adjustedHeight}
-          active={kbFocusIndexRef.current >= 0}
           margin={margin}
           size={size}
-          shape={
-            focusedNavPointRef.current?.shape as
-              | "circle"
-              | "rect"
-              | "wedge"
-              | undefined
-          }
-          width={focusedNavPointRef.current?.w == null ? undefined : focusedNavPointRef.current.w}
-          height={focusedNavPointRef.current?.h == null ? undefined : focusedNavPointRef.current.h}
         />
 
         {staleness?.showBadge && (

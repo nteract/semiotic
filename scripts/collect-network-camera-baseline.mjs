@@ -9,7 +9,17 @@ const destination = resolve(
   process.argv[3] ?? "benchmarks/setup/network-camera-scale.json"
 )
 const reports = []
+const edgeReports = {}
 for (const entry of await readdir(input, { withFileTypes: true })) {
+  if (entry.isDirectory() && entry.name.startsWith("network-edge-performance-")) {
+    for (const [file, key] of [["edge-pointer.json", "edgePointer"], ["edge-cold.json", "edgeQueries"]]) {
+      try {
+        edgeReports[key] = JSON.parse(await readFile(resolve(input, entry.name, file), "utf8"))
+      } catch (error) {
+        if (error.code !== "ENOENT") throw error
+      }
+    }
+  }
   if (
     !entry.isDirectory() ||
     !entry.name.startsWith("network-camera-scale-measu")
@@ -49,6 +59,7 @@ baseline[profiling ? "profiling" : "production"] = {
   }).trim(),
   sourceWorktree:
     process.argv[4] ?? "Working tree at measurement time; see the strategy notes",
+  ...edgeReports,
   reports: reports.sort(
     (a, b) =>
       a.rows[0].nodes - b.rows[0].nodes ||
