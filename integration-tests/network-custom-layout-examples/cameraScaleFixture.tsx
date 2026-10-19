@@ -15,6 +15,7 @@ import type { HoverData } from "../../src/components/realtime/types"
 import { findNearestNetworkNode } from "../../src/components/stream/NetworkCanvasHitTester"
 import { prepareNetworkEdgeHitBounds } from "../../src/components/stream/networkEdgeHitBounds"
 import { buildNetworkEdgeHitIndex } from "../../src/components/stream/networkEdgeHitIndex"
+import { measureCustomHitPreparation } from "./hitPreparationProbe"
 import { PipelineCard } from "../../docs/src/pages/examples/pipeline-explorer/PipelineCard"
 import type { PipelineNode } from "../../docs/src/pages/examples/pipeline-explorer/data"
 import "../../docs/src/pages/examples/pipeline-explorer/pipeline-explorer.css"
@@ -68,6 +69,7 @@ const measurement = {
   hitEdges: [] as NonNullable<NetworkLayoutResult["sceneEdges"]>,
   hitTest: findNearestNetworkNode,
   prepareEdges: buildNetworkEdgeHitIndex,
+  hitPreparationCost: measureCustomHitPreparation,
   recordRender(id: string, phase: string, duration: number) {
     this.renders.push({ id, phase, duration })
   },
@@ -92,7 +94,8 @@ const measurement = {
         x: (source.x + width + target.x) / 2,
         y: (source.y + target.y + height) / 2 }
     ].map(({ name, hit, x, y }) => {
-      const probe = (edges = this.hitEdges, withNodes = false) =>
+      const hitEdges = this.hitEdges
+      const probe = (edges = hitEdges, withNodes = false) =>
         findNearestNetworkNode(withNodes ? this.result!.sceneNodes! : [], edges, x, y, 12, null, 0, true, 1)
       const coldEdges = this.hitEdges.map((edge) => ({
         ...edge, _cachedPath2D: undefined, _cachedPath2DSource: undefined

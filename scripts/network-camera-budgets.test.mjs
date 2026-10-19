@@ -20,6 +20,7 @@ import {
   validatePointerReport,
   pointerBudgetFailures
 } from "./lib/network-camera-budgets.ts"
+import { networkCameraDiagnostics } from "./lib/network-camera-diagnostics.ts"
 
 function capture(profiling = false) {
   const reports = cameraScenarios.map((scenario) => ({
@@ -102,6 +103,30 @@ test("profiling retains structural checks but never supplies timing acceptance",
   assert.deepEqual(pointerBudgetFailures(pointer), [])
   reports[0].rows[0].layoutRuns = 1
   assert.throws(() => validateCameraReports(reports), /no layout reruns/)
+})
+
+test("CPU replays select only failed production rows without changing acceptance evidence", () => {
+  const { reports, pointer } = capture()
+  const saved = { production: { reports, edgePointer: pointer } }
+  assert.deepEqual(networkCameraDiagnostics(saved), [])
+  const camera = reports[3].rows.find((row) => row.scale === 1)
+  camera.scriptMs = 4.01
+  // Diagnostic-only scales never acquire an acceptance threshold.
+  reports[0].rows[0].scriptMs = 1000
+  pointer.rows[0].scriptMs = 1.01
+  const before = structuredClone(saved)
+  assert.deepEqual(networkCameraDiagnostics(saved), [
+    { kind: "camera", row: camera, budget: 4 },
+    { kind: "pointer", row: pointer.rows[0], budget: 1 }
+  ])
+  assert.deepEqual(saved, before)
+  assert.throws(() => networkCameraDiagnostics({}), /production capture/)
+  const profiling = capture(true)
+  assert.throws(() => networkCameraDiagnostics({ production: {
+    reports: profiling.reports, edgePointer: profiling.pointer
+  } }), /unprofiled production/)
+  reports.pop()
+  assert.throws(() => networkCameraDiagnostics(saved), /five scenarios/)
 })
 
 for (const [name, mutate] of [
@@ -237,6 +262,14 @@ test("collector preserves failed production evidence when adding profiling diagn
   const edgeDir = join(root, "network-edge-performance-pointer")
   mkdirSync(edgeDir)
   writeFileSync(join(edgeDir, "edge-pointer.json"), JSON.stringify(pointer))
+  const cold = {
+    profiling: false,
+    combinedScene: {
+      nodes: 3000, edges: 4500, trials: 30,
+      reports: [{ name: "replacement scene", preparationMs: { mean: 35, samples: 30 } }]
+    }
+  }
+  writeFileSync(join(edgeDir, "edge-cold.json"), JSON.stringify(cold))
   const destination = join(root, "capture.json")
   const result = spawnSync(
     process.execPath,
@@ -264,6 +297,7 @@ test("collector preserves failed production evidence when adding profiling diagn
   assert.equal(recorded.production.timingBudgets.status, "failed")
   assert.equal(recorded.production.timingBudgets.failures.length, 2)
   assert.equal(recorded.production.reports.length, 5)
+  assert.deepEqual(recorded.production.edgeQueries, cold)
   for (const [index, report] of reports.entries()) {
     report.productionProfiling = true
     for (const row of report.rows) row.scriptMs = 1000
@@ -275,6 +309,9 @@ test("collector preserves failed production evidence when adding profiling diagn
   pointer.profiling = true
   pointer.rows[0].scriptMs = 1000
   writeFileSync(join(edgeDir, "edge-pointer.json"), JSON.stringify(pointer))
+  cold.profiling = true
+  cold.combinedScene.reports[0].preparationMs.mean = 50
+  writeFileSync(join(edgeDir, "edge-cold.json"), JSON.stringify(cold))
   const profiled = spawnSync(
     process.execPath,
     [
@@ -294,6 +331,7 @@ test("collector preserves failed production evidence when adding profiling diagn
   assert.deepEqual(combined.production, recorded.production)
   assert.equal(combined.profiling.timingBudgets.status, "diagnostic")
   assert.equal(combined.profiling.sourceCommit, commit)
+  assert.deepEqual(combined.profiling.edgeQueries, cold)
 })
 
 test("aggregate testing waits for the camera matrix and rejects every required non-success result", (t) => {

@@ -1,5 +1,6 @@
 import { resolve } from "node:path"
 import { defineConfig } from "vite"
+import MagicString from "magic-string"
 import { semioticSourceAliases } from "./vite.shared.mjs"
 
 const root = process.cwd()
@@ -13,15 +14,26 @@ function cameraInstrumentation() {
     name: "network-camera-measurement",
     enforce: "pre",
     transform(code, id) {
+      if (!id.includes("/stream/")) return
+      const source = new MagicString(code)
+      const replace = (before, after) => {
+        const start = code.indexOf(before)
+        if (start < 0) throw new Error(`Cannot instrument ${id}`)
+        source.overwrite(start, start + before.length, after)
+      }
+      const result = () => ({
+        code: source.toString(),
+        map: source.generateMap({ source: id, includeContent: true, hires: true })
+      })
       if (id.endsWith("/stream/StreamNetworkFrame.tsx")) {
         const declaration = "function StreamNetworkFrame(props, ref) {"
-        if (!code.includes(declaration)) throw new Error("Cannot instrument network frame")
-        return code.replace(declaration, declaration + "\n  if (window.cameraScale) window.cameraScale.frameRenders++")
+        replace(declaration, declaration + "\n  if (window.cameraScale) window.cameraScale.frameRenders++")
+        return result()
       }
       if (id.endsWith("/stream/networkFrameInteraction.ts")) {
         const declaration = "): NetworkPointerHit {"
-        if (!code.includes(declaration)) throw new Error("Cannot instrument network pointer")
-        return code.replace(declaration, declaration + "\n  if (window.cameraScale) window.cameraScale.pointerQueries++")
+        replace(declaration, declaration + "\n  if (window.cameraScale) window.cameraScale.pointerQueries++")
+        return result()
       }
       const layer = layers.find((name) => id.endsWith(`/stream/${name}.tsx`))
       if (layer && profiling) {
@@ -29,15 +41,13 @@ function cameraInstrumentation() {
           layer === "NetworkHtmlMarksLayer"
             ? `export function ${layer}(`
             : `export const ${layer} =`
-        if (!code.includes(declaration))
-          throw new Error(`Cannot instrument ${layer}`)
-        return (
-          code.replace(
-            declaration,
-            declaration
-              .replace(`export `, "")
-              .replace(layer, `Measured${layer}`)
-          ) +
+        replace(
+          declaration,
+          declaration
+            .replace(`export `, "")
+            .replace(layer, `Measured${layer}`)
+        )
+        source.append(
           `
 export function ${layer}(props: ${layer}Props) {
   return React.createElement(React.Profiler, {
@@ -46,13 +56,12 @@ export function ${layer}(props: ${layer}Props) {
 }
 `
         )
+        return result()
       }
       if (id.endsWith("/stream/networkFramePaint.ts")) {
         const declaration = "export function paintNetworkFrame("
-        if (!code.includes(declaration))
-          throw new Error("Cannot instrument network paint")
-        return (
-          code.replace(declaration, "function measuredNetworkPaint(") +
+        replace(declaration, "function measuredNetworkPaint(")
+        source.append(
           `
 export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
   const start = performance.now()
@@ -61,6 +70,7 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
 }
 `
         )
+        return result()
       }
     }
   }

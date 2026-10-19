@@ -9,6 +9,7 @@ export default {
   testIgnore: [
     // Camera scale measurements own a production profiling build and CDP.
     "**/network-camera-scale.spec.ts",
+    "**/network-camera-diagnostics.spec.ts",
     "**/network-edge-hit-bounds.spec.ts",
     "**/network-edge-performance.spec.ts",
     // Docs examples have their own Vite application and Chromium-only config.

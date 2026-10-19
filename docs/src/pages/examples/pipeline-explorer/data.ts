@@ -68,7 +68,9 @@ export const edges = nodes
     target: nodes[nodes.indexOf(source) + 1].id,
   }))
 export const byId = new Map(nodes.map((node) => [node.id, node]))
-export const formatRows = (rows: number) => rows.toLocaleString("en-US")
+// Live-size cards render throughout a gesture; reuse locale setup across them.
+const rowFormatter = new Intl.NumberFormat("en-US")
+export const formatRows = (rows: number) => rowFormatter.format(rows)
 
 export function connectionPath(id: string) {
   const node = byId.get(id)!
