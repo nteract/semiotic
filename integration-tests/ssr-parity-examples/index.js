@@ -12,6 +12,7 @@ import { makeDependencyXRayParityCases } from "../dependency-xray-parity-fixture
 import { makeFlowCircuitParityCases } from "../flow-circuit-parity-fixtures"
 import { makeAtlasStoryParityCases } from "../atlas-story-parity-fixtures"
 import { makeNetworkPerspectiveParityCases } from "../network-perspective-parity-fixtures"
+import { makeCompositionalParityCases } from "../compositional-parity-fixtures"
 
 const { ThemeProvider } = Semiotic
 const COMPONENTS = { ...Semiotic, ...SemioticGeo, ...SemioticPhysics, MotifBraidChart, DependencyForestChart, FlowCircuitChart }
@@ -32,6 +33,7 @@ const parityCases = [
   ...makeDependencyXRayParityCases(),
   ...makeFlowCircuitParityCases(),
   ...makeNetworkPerspectiveParityCases(SemioticRecipes),
+  ...makeCompositionalParityCases(),
 ]
 const selectedCases = requestedCase
   ? parityCases.filter((c) => c.id === requestedCase)
@@ -67,6 +69,22 @@ function ProjectedAtlasCase({ Component, fixture }) {
 }
 
 const projected = new URLSearchParams(window.location.search).has("projected")
+
+// Expose the live public handle and the actual normalized layout inputs, so
+// parity tests inspect retained CSR output rather than re-emitting a fixture.
+function CompositionalCase({ Component, fixture }) {
+  const ref = React.useRef(null)
+  const layout = React.useMemo(() => (context) => {
+    window.__compositionalInputKeys = context.edges.map((edge) => edge._edgeKey)
+    return fixture.props.layout(context)
+  }, [fixture])
+  React.useEffect(() => {
+    window.__compositionalFrame = ref.current
+    return () => { delete window.__compositionalFrame }
+  }, [])
+  return React.createElement(Component, { ...fixture.props, ref, layout })
+}
+
 const examples = selectedCases.map((c) => {
   const Component = COMPONENTS[c.component]
   if (!Component) {
@@ -77,7 +95,9 @@ const examples = selectedCases.map((c) => {
   // Apply the same explicit animation setting to every CSR fixture; the
   // server renderer receives it from the spec as well.
   const linkedHover = linkedNode ? { name: "atlas-hover", fields: ["nodeId"] } : undefined
-  const chart = projected ? React.createElement(ProjectedAtlasCase, { Component, fixture: c }) : React.createElement(Component, {
+  const chart = c.id.startsWith("compositional-")
+    ? React.createElement(CompositionalCase, { Component, fixture: c })
+    : projected ? React.createElement(ProjectedAtlasCase, { Component, fixture: c }) : React.createElement(Component, {
     ...c.props, animate: false,
     ...(linkedHover && {
       linkedHover,

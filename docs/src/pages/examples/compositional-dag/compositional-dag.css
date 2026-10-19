@@ -1,0 +1,205 @@
+.compositional-intro {
+  max-width: 72ch;
+  font-size: 1.1rem;
+  line-height: 1.65;
+}
+.compositional-lab {
+  --dag-paper: var(--surface-1, #fff);
+  --dag-row: var(--surface-2, #f4f7f9);
+  --dag-ink: var(--text-primary, #243746);
+  --dag-border: var(--border, #ccd6dd);
+  color: var(--dag-ink);
+  background: var(--dag-paper);
+  border: 1px solid var(--dag-border);
+  border-radius: 12px;
+  margin: 24px 0;
+  overflow: hidden;
+}
+.compositional-toolbar,
+.compositional-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+}
+.compositional-toolbar {
+  border-bottom: 1px solid var(--dag-border);
+}
+.compositional-lab label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+.compositional-lab select,
+.compositional-lab button {
+  color: inherit;
+  background: var(--dag-paper);
+  border: 1px solid var(--dag-border);
+  border-radius: 5px;
+  min-height: 40px;
+  padding: 6px 10px;
+  font: inherit;
+  max-width: 100%;
+}
+.compositional-lab :focus-visible {
+  outline: 3px solid #087f8c;
+  outline-offset: 3px;
+}
+.compositional-lab button[aria-pressed="true"] {
+  border-color: #087f8c;
+  box-shadow: inset 0 0 0 1px #087f8c;
+}
+.compositional-metrics {
+  gap: 24px;
+  background: var(--dag-row);
+  font-size: 13px;
+}
+.compositional-metrics strong {
+  font-size: 21px;
+  margin-right: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.compositional-chart {
+  width: 100%;
+  min-width: 0;
+}
+.compositional-owner {
+  fill: var(--dag-paper);
+  stroke: var(--dag-border);
+  stroke-width: 1.5px;
+}
+.compositional-owner-label {
+  fill: var(--dag-ink);
+  font:
+    600 14px system-ui,
+    sans-serif;
+}
+.compositional-row {
+  fill: var(--dag-row);
+  stroke-width: 1px;
+}
+.compositional-row-label {
+  fill: var(--dag-ink);
+  font:
+    13px system-ui,
+    sans-serif;
+}
+.compositional-summary-label {
+  fill: var(--dag-ink);
+  font:
+    12px system-ui,
+    sans-serif;
+}
+[data-representation="exploded"] .compositional-owner {
+  fill: none;
+  stroke: none;
+}
+.compositional-caption {
+  margin: 0;
+  padding: 8px 20px 20px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.compositional-inspector {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 24px;
+  padding: 20px;
+  border-top: 1px solid var(--dag-border);
+}
+.compositional-inspector label {
+  flex-direction: column;
+  align-items: flex-start;
+}
+.compositional-inspector p {
+  font-size: 14px;
+  line-height: 1.6;
+}
+.compositional-lab summary {
+  cursor: pointer;
+  min-height: 40px;
+  padding: 8px 0;
+  font-weight: 600;
+}
+.compositional-lab .compositional-navigator [role="group"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 12px 0;
+}
+.compositional-lab .compositional-navigator [role="status"] {
+  font-size: 12px;
+}
+.compositional-connection-table,
+.compositional-diagnostics {
+  padding: 4px 20px 12px;
+}
+.compositional-table-scroll {
+  overflow-x: auto;
+}
+.compositional-lab table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.compositional-lab th,
+.compositional-lab td {
+  text-align: left;
+  padding: 10px;
+  border-bottom: 1px solid var(--dag-border);
+}
+.compositional-lab caption {
+  text-align: left;
+  padding: 8px;
+}
+.compositional-lessons {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  margin: 24px 0;
+}
+.compositional-lessons h2 {
+  font-size: 18px;
+}
+.compositional-lessons p {
+  font-size: 14px;
+  line-height: 1.65;
+}
+@media (max-width: 720px) {
+  .compositional-inspector,
+  .compositional-lessons {
+    grid-template-columns: 1fr;
+  }
+  .compositional-toolbar {
+    align-items: flex-start;
+  }
+  .compositional-toolbar label:first-child {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .compositional-metrics {
+    gap: 12px;
+  }
+  .compositional-lab button,
+  .compositional-lab select {
+    min-height: 44px;
+  }
+}
+@media (forced-colors: active) {
+  .compositional-owner,
+  .compositional-row {
+    fill: Canvas;
+    stroke: CanvasText;
+  }
+  .compositional-scene text {
+    fill: CanvasText;
+  }
+  .compositional-scene path {
+    stroke: LinkText;
+  }
+  .compositional-scene circle {
+    fill: LinkText;
+  }
+}

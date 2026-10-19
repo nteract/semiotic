@@ -346,6 +346,7 @@ const MobileDataVisualizationExamplePage = lazy(
 )
 const NetworkVizExamplePage = lazy(() => import("./pages/examples/NetworkVizExamplePage"))
 const PipelineExplorerExamplePage = lazy(() => import("./pages/examples/PipelineExplorerExamplePage"))
+const CompositionalDagExamplePage = lazy(() => import("./pages/examples/CompositionalDagExamplePage"))
 const NovelNetworkLabExamplePage = lazy(() => import("./pages/examples/NovelNetworkLabExamplePage"))
 const DependencyXRayExamplePage = lazy(() => import("./pages/examples/DependencyXRayExamplePage"))
 const FlowCircuitExamplePage = lazy(() => import("./pages/examples/FlowCircuitExamplePage"))
@@ -357,6 +358,7 @@ const EqualPlacesAtlasExamplePage = lazy(
   () => import("./pages/examples/EqualPlacesAtlasExamplePage"),
 )
 const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
+  "CompositionalDagExamplePage.tsx": CompositionalDagExamplePage,
   "NovelNetworkLabExamplePage.tsx": NovelNetworkLabExamplePage,
   "PipelineExplorerExamplePage.tsx": PipelineExplorerExamplePage,
   "AtlasEvaluationExamplePage.tsx": AtlasEvaluationExamplePage,

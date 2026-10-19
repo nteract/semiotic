@@ -15,6 +15,7 @@ interface EdgePositionSnapshot {
 export type EdgePositionSnapshots = Map<string, EdgePositionSnapshot[]>
 
 function edgeEndpoints(edge: RealtimeEdge): string {
+  if (edge._edgeKey?.startsWith('["id",')) return edge._edgeKey
   const source = typeof edge.source === "string" ? edge.source : edge.source.id
   const target = typeof edge.target === "string" ? edge.target : edge.target.id
   return `${source}\0${target}`

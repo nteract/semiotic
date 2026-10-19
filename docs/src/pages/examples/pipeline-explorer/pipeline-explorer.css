@@ -441,3 +441,30 @@
     stroke: CanvasText;
   }
 }
+
+.pipeline-wiring-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+  font-size: 12px;
+}
+.pipeline-card-metrics > div { display: flex; align-items: center; justify-content: space-between; }
+.pipeline-part-box {
+  height: 100%;
+  padding: 0 8px;
+  background: var(--px-paper);
+  color: var(--px-ink);
+  border: 1px solid var(--px-accent);
+  border-radius: 4px;
+  font-size: 12px;
+}
+.pipeline-connections-table { margin-top: 16px; }
+.pipeline-connections-table td, .pipeline-connections-table th { padding: 6px; text-align: left; }
+.pipeline-connections-table [data-traced="true"] { outline: 1px solid var(--px-accent); }
+.compositional-navigator { margin: 12px 0; }
+.compositional-navigator select { display: block; max-width: 100%; }
+.compositional-navigator [role="group"] { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+.compositional-navigator button[aria-pressed="true"] { outline: 2px solid var(--px-accent); }
+.compositional-navigator [role="status"] { font-size: 12px; }

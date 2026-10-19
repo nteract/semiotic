@@ -276,6 +276,8 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
     sourceAccessor: props.sourceAccessor,
     targetAccessor: props.targetAccessor,
     valueAccessor: props.valueAccessor,
+    edgeIdAccessor: props.edgeIdAccessor,
+    edgeIdentity: props.edgeIdentity,
     childrenAccessor: props.childrenAccessor,
     hierarchySum: props.hierarchySum,
     orientation: props.orientation,

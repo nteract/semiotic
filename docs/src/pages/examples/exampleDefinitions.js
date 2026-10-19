@@ -84,6 +84,26 @@ const UNASSESSED_EXAMPLE_CONTRACT = Object.freeze({
 /** @type {readonly ExampleDefinition[]} */
 const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
   {
+    id: "compositional-dag",
+    path: "/examples/compositional-dag",
+    sourceFile: "CompositionalDagExamplePage.tsx",
+    sourceFiles: ["CompositionalDagExamplePage.tsx", "compositional-dag/model.ts", "compositional-dag/scene.tsx", "compositional-dag/compositional-dag.css"],
+    isPilot: true,
+    title: "Compositional DAGs",
+    eyebrow: "Custom networks · parts & ports",
+    description: "Connect individual fields, compare legal row orders, and trace distinct wires through explicit transfers.",
+    contract: {
+      publicImports: ["semiotic/network", "semiotic/network/zoom", "semiotic/recipes/core", "semiotic/recipes/react"],
+      data: { states: ["snapshot"], fixture: { kind: "illustrative-field-wiring", replay: false, schemaVersion: "1", inventory: { nodes: 3, parts: 9, edges: 7, transfers: 3 } } },
+      provenance: { source: "Authored illustrative graph in compositional-dag/model.ts; no observed execution provenance", capturedAt: "2026-10-19", freshnessOwner: "Semiotic maintainers", reviewCadence: "Compositional graph, layout, trace or camera API changes" },
+      accessibility: { summary: "Exact connection table, named interfaces, trace status and measured layout metrics", navigation: "Native representation, order and connection controls; keyboard part/port navigation", keyboard: "Duplicate wires are individually selectable; zoom buttons and keyboard pan controls", forcedColors: "System-color chart marks and exact text/table alternatives; manual assistive-technology review pending" },
+      motion: { reducedMotion: "Settled geometry with animation disabled; camera respects reduced motion", visibility: "No replay, polling or recurring background data work" },
+      responsive: { status: "Container-sized chart with fit/zoom and stacking controls; table scrolls locally", viewports: [390, 1280], selectionIdentity: "Semantic endpoint and connection IDs persist across representations" },
+      ssr: { status: "Deterministic graph, article, controls and table are prerenderable", hydration: "Resize observation and camera gestures attach after mount" },
+      performance: { status: "Bounded teaching fixture; no device latency claim", budgets: { bundle: "Lazy example route; static gallery art imports no solver", interaction: "Only representation and order transactions solve; camera, row visibility and selection reuse geometry", memory: "3 owners, 9 parts, 7 wires, 3 transfers; no accumulating history", hiddenPage: "No recurring background data work" } },
+    },
+  },
+  {
     id: "novel-network-lab",
     path: "/examples/novel-network-lab",
     sourceFile: "NovelNetworkLabExamplePage.tsx",
@@ -107,20 +127,20 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     id: "pipeline-explorer",
     path: "/examples/pipeline-explorer",
     sourceFile: "PipelineExplorerExamplePage.tsx",
-    sourceFiles: ["PipelineExplorerExamplePage.tsx", "pipeline-explorer/PipelineExplorer.tsx", "pipeline-explorer/data.ts", "pipeline-explorer/scene.tsx", "pipeline-explorer/PipelineCard.tsx", "pipeline-explorer/PipelineMinimap.tsx", "pipeline-explorer/pipeline-explorer.css"],
+    sourceFiles: ["PipelineExplorerExamplePage.tsx", "pipeline-explorer/PipelineExplorer.tsx", "pipeline-explorer/data.ts", "pipeline-explorer/scene.tsx", "pipeline-explorer/geometry.ts", "pipeline-explorer/RowNodeExample.tsx", "pipeline-explorer/PipelineCard.tsx", "pipeline-explorer/PipelineMinimap.tsx", "pipeline-explorer/pipeline-explorer.css"],
     isPilot: true,
     title: "Pipeline Explorer",
     eyebrow: "Custom networks · semantic zoom",
     description: "Explore a virtualized pipeline map, inspect individual steps and preserve notes while zoom changes the detail.",
     contract: {
-      publicImports: ["semiotic/network", "semiotic/network/zoom"],
-      data: { states: ["snapshot"], fixture: { kind: "illustrative-pipeline-snapshot", replay: false, schemaVersion: "1", inventory: { nodes: 30, edges: 24, pipelines: 6 } } },
+      publicImports: ["semiotic/network", "semiotic/network/zoom", "semiotic/recipes/core", "semiotic/recipes/react"],
+      data: { states: ["snapshot"], fixture: { kind: "illustrative-pipeline-snapshot", replay: false, schemaVersion: "1", inventory: { nodes: 30, edges: 73, pipelines: 6 } } },
       provenance: { source: "Authored illustrative data in pipeline-explorer/data.ts; no live telemetry or external requests", capturedAt: "2026-09-23", freshnessOwner: "Semiotic maintainers", reviewCadence: "Camera, virtualization and semantic LOD API changes" },
       accessibility: { summary: "Persistent step inspector and complete snapshot table include exact metrics and text status", navigation: "Native step selector, zoom/fit/reset controls and chart keyboard navigation", keyboard: "Plus/minus zoom, Alt+arrows pan, focusable note editors and native disclosure controls", forcedColors: "System-color outlines and a tabular alternative; manual assistive-technology review remains pending" },
       motion: { reducedMotion: "The camera driver disables eased navigation when reduced motion is requested", visibility: "No polling or replay; gesture work is bounded and disposed on unmount" },
       responsive: { status: "Virtual viewport fits its container; inspector stacks on smaller screens", viewports: [320, 390, 768, 1440], selectionIdentity: "Stable step IDs; page-owned notes survive card virtualization" },
       ssr: { status: "Static article, snapshot and initial camera are prerenderable", hydration: "Resize observation and pointer gestures attach after mount" },
-      performance: { status: "Bounded local example; no device timing claim", budgets: { bundle: "Lazy example route; the gallery preview does not import optional zoom code", interaction: "Fixed layout identity; gestures coalesce per animation frame; detail promotion waits until settled", memory: "30 steps, 24 edges, page-local notes and viewport culling", hiddenPage: "No recurring background data work" } },
+      performance: { status: "Bounded local example; no device timing claim", budgets: { bundle: "Lazy example route; the gallery preview does not import optional zoom code", interaction: "Fixed layout identity; gestures coalesce per animation frame; detail promotion waits until settled", memory: "30 steps, 90 parts, 73 edges, page-local notes and viewport culling", hiddenPage: "No recurring background data work" } },
     },
   },
   {
@@ -2057,6 +2077,17 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
 // timestamp is newer; paths make same-instant imports deterministic. Existing
 // timestamps were backfilled from the commit that first added each page source.
 const EXAMPLE_REGISTRY_METADATA = [
+  {
+    title: "Compositional DAGs",
+    path: "/examples/compositional-dag",
+    publishedAt: "2026-10-19T12:00:00-05:00",
+    eyebrow: "Custom networks · parts & ports",
+    description: "Wire individual fields inside a card. Preserve duplicate connections, optimize permitted row order, and trace declared dependencies across representations.",
+    preview: "compositional-dag",
+    badges: ["Parts & ports", "Parallel wires", "Layout optimization"],
+    frames: ["network", "custom"],
+    topics: ["process", "design", "accessibility"],
+  },
   {
     title: "Isometric Infrastructure",
     path: "/examples/isometric-infrastructure",

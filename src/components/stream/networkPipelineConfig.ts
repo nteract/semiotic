@@ -15,6 +15,7 @@ export type NetworkPipelineConfigSources = Pick<
   | "targetAccessor"
   | "valueAccessor"
   | "edgeIdAccessor"
+  | "edgeIdentity"
   | "childrenAccessor"
   | "hierarchySum"
   | "orientation"

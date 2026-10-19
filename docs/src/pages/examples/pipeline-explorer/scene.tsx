@@ -1,18 +1,12 @@
 import * as React from "react"
 import { networkHitTarget, networkEdgeHitTarget, TooltipRoot } from "semiotic/network"
 import type { NetworkCustomLayout } from "semiotic/network"
+import { compositionalPath } from "semiotic/recipes/core"
+import type { SolvedCompositionalLayout } from "semiotic/recipes/core"
+import { initialPipelineSolution, partLabels } from "./geometry"
 import { useNetworkZoom } from "semiotic/network/zoom"
 import { PipelineCard, ExplorerContext } from "./PipelineCard"
-import {
-  nodes,
-  edges,
-  byId,
-  bounds,
-  cardWidth,
-  cardHeight,
-  connectionPath,
-  formatRows,
-} from "./data"
+import { nodes, edges, byId, bounds, cardWidth, cardHeight, formatRows } from "./data"
 
 // Chart-level callbacks receive the authored node/edge, not a frame wrapper.
 export function pipelineTooltip(datum: Record<string, unknown>) {
@@ -41,35 +35,49 @@ export function pipelineTooltip(datum: Record<string, unknown>) {
       <div>
         {formatRows(source.rows)} rows sent to {target.stage.toLowerCase()}
       </div>
+      <div>
+        {typeof datum.sourceEndpoint === "object" && datum.sourceEndpoint
+          ? partLabels[(datum.sourceEndpoint as { partId: string }).partId]
+          : "Connection"}{" "}
+        · {String(datum.id)}
+      </div>
+      <div>Illustrative wiring · precision unknown</div>
     </TooltipRoot>
   )
 }
 
-function Connections() {
+function Connections({ solved }: { solved: SolvedCompositionalLayout }) {
   const { visibleRect } = useNetworkZoom()
-  const { selected } = React.useContext(ExplorerContext)
+  const { selected, selectedEdge, traceEdges } = React.useContext(ExplorerContext)
   return (
     <g data-testid="zoom-connections" fill="none">
-      {edges
-        .filter((edge) => {
-          if (!visibleRect) return true
-          const node = byId.get(edge.source)!
-          const y = node.y + 54
-          // Test the complete curve bounds, not just its endpoints.
-          return (
-            y + 3 >= visibleRect.y &&
-            y - 3 <= visibleRect.y + visibleRect.height &&
-            node.x + cardWidth + 80 >= visibleRect.x &&
-            node.x + cardWidth <= visibleRect.x + visibleRect.width
-          )
-        })
+      {solved.edges
+        .filter(
+          (edge) =>
+            !visibleRect ||
+            (edge.bounds.y + edge.bounds.height + 3 >= visibleRect.y &&
+              edge.bounds.y - 3 <= visibleRect.y + visibleRect.height &&
+              edge.bounds.x + edge.bounds.width + 3 >= visibleRect.x &&
+              edge.bounds.x - 3 <= visibleRect.x + visibleRect.width),
+        )
         .map((edge) => (
           <path
-            key={edge.id}
-            d={connectionPath(edge.source)}
+            key={edge.edgeId}
+            data-edge-id={edge.edgeId}
+            d={edge.sections.map(compositionalPath).join(" ")}
             className="pipeline-connection"
-            data-active={edge.source === selected || edge.target === selected}
-            strokeWidth={edge.source === selected || edge.target === selected ? 3 : 2}
+            data-active={
+              selectedEdge || traceEdges.length > 0
+                ? traceEdges.includes(edge.edgeId) || selectedEdge === edge.edgeId
+                : edge.source.semantic.nodeId === selected ||
+                  edge.target.semantic.nodeId === selected
+            }
+            strokeDasharray={
+              edge.source.precision === "proxy" || edge.target.precision === "proxy"
+                ? "4 3"
+                : undefined
+            }
+            strokeWidth={selectedEdge === edge.edgeId ? 3 : 2}
           />
         ))}
     </g>
@@ -78,10 +86,11 @@ function Connections() {
 
 export let networkZoomDemoLayoutCalls = 0
 // Layout identity and input arrays stay stable through notes, selection and camera changes.
-export const layout: NetworkCustomLayout = () => {
+export const layout: NetworkCustomLayout<{ solved?: SolvedCompositionalLayout }> = (context) => {
+  const solved = context.config.solved ?? initialPipelineSolution
   networkZoomDemoLayoutCalls++
   return {
-    sceneNodes: nodes.flatMap((node) => [
+    sceneNodes: nodes.map((node) =>
       networkHitTarget({
         id: node.id,
         datum: node,
@@ -90,31 +99,30 @@ export const layout: NetworkCustomLayout = () => {
         width: cardWidth,
         height: cardHeight,
       }),
-      {
-        type: "circle" as const,
-        cx: node.x - 8,
-        cy: node.y + 54,
-        r: 4,
-        style: { fill: node.color },
-        datum: node,
-        interactive: false,
-      },
-    ]),
-    sceneEdges: edges.map((edge) =>
+    ),
+    sceneEdges: solved.edges.map((route) =>
       networkEdgeHitTarget({
-        id: edge.id,
-        datum: edge,
-        pathD: connectionPath(edge.source),
+        id: route.edgeId,
+        datum: context.edges.find(e => e.data?.id === route.edgeId)?.data ?? edges.find((e) => e.id === route.edgeId)!,
+        pathD: route.sections.map(compositionalPath).join(" "),
       }),
     ),
-    htmlMarks: nodes.map((node) => ({
-      id: node.id,
-      x: node.x,
-      y: node.y,
-      width: cardWidth,
-      height: cardHeight,
-      content: <PipelineCard node={node} />,
-    })),
+    htmlMarks: solved.nodes.map((placed) => {
+      const node = byId.get(placed.semantic.nodeId)!
+      return {
+        id: placed.id,
+        x: placed.rect.x,
+        y: placed.rect.y,
+        width: placed.rect.width,
+        height: placed.rect.height,
+        content:
+          placed.semantic.endpoint.kind === "part" ? (
+            <div className="pipeline-part-box">{partLabels[placed.semantic.endpoint.partId]}</div>
+          ) : (
+            <PipelineCard node={node} />
+          ),
+      }
+    }),
     backgrounds: (
       <rect
         data-testid="zoom-background"
@@ -126,6 +134,6 @@ export const layout: NetworkCustomLayout = () => {
         rx={20}
       />
     ),
-    overlays: <Connections />,
+    overlays: <Connections solved={solved} />,
   }
 }

@@ -4,7 +4,12 @@ import type { NetworkPipelineConfig } from "./networkTypes"
 type NetworkAccessor = string | ((datum: Datum) => unknown) | undefined
 type NetworkAccessors = Pick<
   NetworkPipelineConfig,
-  "nodeIDAccessor" | "sourceAccessor" | "targetAccessor" | "valueAccessor"
+  | "nodeIDAccessor"
+  | "sourceAccessor"
+  | "targetAccessor"
+  | "valueAccessor"
+  | "edgeIdentity"
+  | "edgeIdAccessor"
 >
 
 export function readNetworkAccessor(
@@ -15,6 +20,19 @@ export function readNetworkAccessor(
   return typeof accessor === "function"
     ? accessor(datum)
     : datum[accessor ?? fallback]
+}
+
+/** Stable explicit key shared by bounded, streaming, mutation and SSR ingestion. */
+export function explicitNetworkEdgeKey(
+  raw: Datum,
+  config: Pick<NetworkPipelineConfig, "edgeIdentity" | "edgeIdAccessor">
+): string {
+  const id = readNetworkAccessor(raw, config.edgeIdAccessor, "id")
+  if (typeof id !== "string" || !id)
+    throw new Error(
+      "IDENTITY_EDGE_ID: edgeIdentity=id requires nonempty string edge IDs."
+    )
+  return JSON.stringify(["id", id])
 }
 
 export function normalizeNetworkValue(value: unknown): number {
@@ -52,7 +70,11 @@ export function resolveNetworkEdgeDatum(
     readNetworkAccessor(raw, config.targetAccessor, "target"),
     "target"
   )
-  if (source === null || target === null) return null
+  if (source === null || target === null) {
+    if (config.edgeIdentity === "id")
+      throw new Error("ENDPOINT_OWNER: explicit-ID edges require both owners.")
+    return null
+  }
   return {
     source,
     target,
@@ -87,7 +109,17 @@ export function normalizeNetworkData(
     nodes.set(id, raw)
   }
   const edges: Array<ResolvedNetworkEdge & { _edgeKey: string }> = []
+  const edgeIds = new Set<string>()
   rawEdges.forEach((raw, index) => {
+    const idKey =
+      config.edgeIdentity === "id"
+        ? explicitNetworkEdgeKey(raw, config)
+        : undefined
+    if (idKey && edgeIds.has(idKey))
+      throw new Error(
+        "IDENTITY_DUPLICATE_EDGE: repeated edge ID in bounded graph."
+      )
+    if (idKey) edgeIds.add(idKey)
     const edge = resolveNetworkEdgeDatum(raw, config)
     if (!edge) return
     for (const id of [edge.source, edge.target]) {
@@ -95,7 +127,7 @@ export function normalizeNetworkData(
     }
     edges.push({
       ...edge,
-      _edgeKey: `${edge.source}\0${edge.target}\0${index}`
+      _edgeKey: idKey ?? `${edge.source}\0${edge.target}\0${index}`
     })
   })
   return { nodes, edges }

@@ -2,7 +2,18 @@ import * as React from "react"
 import { ZoomableNetworkCustomChart } from "semiotic/network/zoom"
 import type { NetworkZoomOptions, ZoomableNetworkCustomChartHandle } from "semiotic/network/zoom"
 import type { NetworkViewportSnapshot } from "semiotic/network"
+import { CompositionalNavigator } from "semiotic/recipes/react"
+import type { CompositionalEndpointRef } from "semiotic/recipes/core"
+import { traceCompositionalGraph, patchCompositionalGraph } from "semiotic/recipes/core"
+import {
+  initialPipelineSolution,
+  preparedPipeline,
+  solvePipeline,
+  pipelineSolveCalls,
+  partLabels,
+} from "./geometry"
 import { ExplorerContext } from "./PipelineCard"
+import { RowNodeExample } from "./RowNodeExample"
 import { PipelineMinimap } from "./PipelineMinimap"
 import { layout, networkZoomDemoLayoutCalls, pipelineTooltip } from "./scene"
 import {
@@ -32,6 +43,37 @@ export default function PipelineExplorer() {
   const [maxZoom, setMaxZoom] = React.useState(4)
   const [phase, setPhase] = React.useState("idle")
   const [selected, select] = React.useState("step-0")
+  const [representation, setRepresentation] = React.useState<
+    "composite" | "wires" | "exploded" | "summary"
+  >("composite")
+  const [showGlyphs, setShowGlyphs] = React.useState(true)
+  const [optimized, setOptimized] = React.useState(false)
+  const [selectedEdge, selectEdge] = React.useState("")
+  const [prepared, setPrepared] = React.useState(preparedPipeline)
+  const activeEdges = prepared.graph.edges as typeof edges
+  const [selectedEndpoint, selectEndpoint] = React.useState<CompositionalEndpointRef | undefined>()
+  const projection = representation === "wires" ? "composite" : representation
+  const solution = React.useMemo(
+    () =>
+      !optimized && projection === "composite" && prepared === preparedPipeline
+        ? initialPipelineSolution
+        : solvePipeline(optimized, projection, prepared),
+    [optimized, projection, prepared],
+  )
+  const layoutConfig = React.useMemo(() => ({ solved: solution }), [solution])
+  const trace = React.useMemo(() => {
+    const edge = activeEdges.find((e) => e.id === selectedEdge)
+    const start = edge ? { nodeId: edge.target, endpoint: edge.targetEndpoint } : selectedEndpoint
+    return start
+      ? traceCompositionalGraph(prepared, {
+          start,
+          direction: "upstream",
+          maxDepth: 100,
+          maxVisited: 1000,
+        })
+      : null
+  }, [selectedEdge, selectedEndpoint, prepared])
+  const traceEdges = trace?.edgeIds ?? []
   const [notes, setNotes] = React.useState<Record<string, string>>({})
   const [viewport, setViewport] = React.useState<NetworkViewportSnapshot | null>(null)
   const saveNote = React.useCallback(
@@ -39,8 +81,19 @@ export default function PipelineExplorer() {
     [],
   )
   const context = React.useMemo(
-    () => ({ selected, select, notes, saveNote }),
-    [selected, notes, saveNote],
+    () => ({
+      selected,
+      select,
+      notes,
+      saveNote,
+      solution,
+      representation,
+      showGlyphs,
+      selectedEdge,
+      selectEdge,
+      traceEdges,
+    }),
+    [selected, notes, saveNote, solution, representation, showGlyphs, selectedEdge, traceEdges],
   )
   const node = byId.get(selected)!
   const pinnedIds = React.useMemo(() => [selected], [selected])
@@ -71,6 +124,7 @@ export default function PipelineExplorer() {
         className="pipeline-explorer"
         aria-label="Interactive pipeline explorer"
         data-layout-calls={networkZoomDemoLayoutCalls}
+        data-solve-calls={pipelineSolveCalls}
         data-visible-count={viewport?.visibleMarkIds?.length ?? 0}
         data-mounted-count={viewport?.mountedMarkIds.length ?? 0}
       >
@@ -91,13 +145,49 @@ export default function PipelineExplorer() {
             </li>
           ))}
         </ol>
+        <div className="pipeline-wiring-controls">
+          <label>
+            Representation{" "}
+            <select
+              aria-label="Wiring representation"
+              value={representation}
+              onChange={(event) => setRepresentation(event.target.value as typeof representation)}
+            >
+              <option value="composite">Rows in cards</option>
+              <option value="wires">Wire slots</option>
+              <option value="exploded">Individual parts</option>
+              <option value="summary">Collapsed interfaces</option>
+            </select>
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={showGlyphs}
+              onChange={(event) => setShowGlyphs(event.target.checked)}
+            />{" "}
+            Show row graphics
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={optimized}
+              onChange={(event) => setOptimized(event.target.checked)}
+            />{" "}
+            Optimize part order
+          </label>
+          <output aria-label="Wiring metrics">
+            {solution.metrics.crossings} crossings · {solution.metrics.alignmentError.toFixed(0)}{" "}
+            alignment error
+          </output>
+        </div>
         <div className="pipeline-workspace">
           <div className="pipeline-chart" ref={host}>
             <ZoomableNetworkCustomChart
               ref={ref}
               nodes={nodes}
-              edges={edges}
+              edges={activeEdges}
               layout={layout}
+              layoutConfig={layoutConfig}
               width={width}
               height={500}
               margin={margin}
@@ -108,7 +198,10 @@ export default function PipelineExplorer() {
               accessibleTable={false}
               tooltip={pipelineTooltip}
               onClick={(datum) => {
-                if (typeof datum?.id === "string" && byId.has(datum.id)) select(datum.id)
+                if (typeof datum?.id === "string") {
+                  if (byId.has(datum.id)) select(datum.id)
+                  else if (edges.some((e) => e.id === datum.id)) selectEdge(datum.id)
+                }
               }}
               onObservation={(event) => {
                 if (
@@ -121,6 +214,8 @@ export default function PipelineExplorer() {
               zoomOptions={{ minZoom, maxZoom, pan, locked, panBounds: bounds, wheelZoom: true }}
               onZoomChange={(_zoom, event) => setPhase(event.phase)}
               frameProps={{
+                edgeIdentity: "id",
+                edgeIdAccessor: "id",
                 htmlMarkCulling: { overscan: 80, pinnedIds },
                 onViewportChange: setViewport,
               }}
@@ -177,13 +272,135 @@ export default function PipelineExplorer() {
             <p className="pipeline-note-hint">
               Notes stay while this page is open, including when cards leave view.
             </p>
-            <PipelineMinimap visibleRect={viewport?.visibleRect ?? null} selected={selected} />
+            <PipelineMinimap
+              visibleRect={viewport?.visibleRect ?? null}
+              selected={selected}
+              solved={solution}
+            />
           </aside>
         </div>
         <div className="pipeline-footer">
           <span>{viewport?.visibleMarkIds?.length ?? 0} of 30 steps in view</span>
           <span>Silhouettes → shapes → summaries → full detail</span>
         </div>
+        <details className="pipeline-connections-table">
+          <summary>Trace and select all {activeEdges.length} connections</summary>
+          <p>
+            Illustrative metric wiring, not execution or record provenance. Containment adds no
+            dependency. Selecting a connection traces only declared transfers of that metric.
+          </p>
+          <label className="pipeline-field">
+            Select a connection
+            <select
+              aria-label="Select a connection"
+              value={selectedEdge}
+              onChange={(event) => selectEdge(event.target.value)}
+            >
+              <option value="">No connection selected</option>
+              {selectedEdge && !activeEdges.some((e) => e.id === selectedEdge) && (
+                <option value={selectedEdge}>{selectedEdge} (removed)</option>
+              )}
+              {activeEdges.map((edge) => (
+                <option key={edge.id} value={edge.id}>
+                  {edge.id} · {partLabels[edge.sourceEndpoint.partId]} · {edge.source} →{" "}
+                  {edge.target}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            type="button"
+            disabled={!activeEdges.some((e) => e.id === selectedEdge)}
+            onClick={() =>
+              setPrepared((previous) =>
+                patchCompositionalGraph(previous, {
+                  baseRevision: previous.graph.revision,
+                  revision: String(Number(previous.graph.revision) + 1),
+                  removeEdgeIds: [selectedEdge],
+                }),
+              )
+            }
+          >
+            Remove selected connection
+          </button>{" "}
+          <button
+            type="button"
+            disabled={activeEdges.some((e) => e.id === "step-0-next-duplicate")}
+            onClick={() =>
+              setPrepared((previous) =>
+                patchCompositionalGraph(previous, {
+                  baseRevision: previous.graph.revision,
+                  revision: String(Number(previous.graph.revision) + 1),
+                  upsertEdges: [edges.find((e) => e.id === "step-0-next-duplicate")!],
+                }),
+              )
+            }
+          >
+            Restore duplicate connection
+          </button>
+          {selectedEdge && !activeEdges.some((e) => e.id === selectedEdge) && (
+            <p role="status">{selectedEdge} was removed; selection remains on that ID.</p>
+          )}
+          <CompositionalNavigator
+            prepared={prepared}
+            selected={selectedEndpoint}
+            proxy={representation === "summary"}
+            onSelect={(endpoint) => {
+              selectEndpoint(endpoint)
+              selectEdge("")
+              select(endpoint.nodeId)
+            }}
+          />
+          <p role="status" data-testid="trace-status">
+            {trace
+              ? `${selectedEdge}: ${trace.edgeIds.length} modeled dependencies; ${trace.completeness} within this illustrative graph. Evidence precision: unknown.`
+              : "Select a connection to inspect its declared dependencies."}
+          </p>
+          <div
+            className="pipeline-table-scroll"
+            tabIndex={0}
+            role="region"
+            aria-label="Connection identities and evidence"
+          >
+            <table>
+              <caption>Every edge retains its own ID, including exact duplicates.</caption>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Source</th>
+                  <th>Part / port</th>
+                  <th>Target</th>
+                  <th>Part / port</th>
+                  <th>Evidence / attachment</th>
+                </tr>
+              </thead>
+              <tbody>
+                {activeEdges.map((edge) => (
+                  <tr key={edge.id} data-traced={traceEdges.includes(edge.id)}>
+                    <th scope="row">
+                      <button
+                        type="button"
+                        aria-pressed={selectedEdge === edge.id}
+                        onClick={() => selectEdge(edge.id)}
+                      >
+                        {edge.id}
+                      </button>
+                    </th>
+                    <td>{edge.source}</td>
+                    <td>{edge.sourceEndpoint.partId} / out</td>
+                    <td>{edge.target}</td>
+                    <td>{edge.targetEndpoint.partId} / in</td>
+                    <td>
+                      Illustrative; unknown /{" "}
+                      {representation === "summary" ? "proxy" : "exact geometry"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
+        <RowNodeExample />
         <details className="pipeline-settings">
           <summary>Camera settings</summary>
           <div className="pipeline-settings-grid">

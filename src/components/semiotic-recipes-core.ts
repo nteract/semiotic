@@ -709,3 +709,5 @@ export {
   mobileBrushAlternatives,
   type MobileBrushAlternativeOptions,
 } from "./recipes/mobileChartFamilyRecipes"
+
+export * from "./recipes/compositional"

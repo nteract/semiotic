@@ -36,6 +36,10 @@ export default function PipelineExplorerExamplePage() {
         </section>
       </div>
       <p>
+        For a smaller introduction to parts, ports and parallel wiring, try the{" "}
+        <Link to="/examples/compositional-dag">Compositional DAGs example</Link>.
+      </p>
+      <p>
         This is an illustrative snapshot, not a live monitoring service. The Full Code view includes
         the data, layout, cards, minimap and styles. See the{" "}
         <Link to="/custom-charts/custom-layouts">custom-layout guide</Link> for the optional{" "}

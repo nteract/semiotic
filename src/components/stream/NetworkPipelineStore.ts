@@ -1,3 +1,9 @@
+import {
+  explicitNetworkEdgeKey,
+  validateNetworkEdgeUpdate,
+  rekeyNetworkEdges,
+  networkEdgeIdentityChanged
+} from "./networkEdgeIdentity"
 import { transferNetworkPluginState } from "./networkPluginState"
 import { DETERMINISTIC_NETWORK_LAYOUTS } from "./networkLayoutCapabilities"
 import { ParticlePool } from "./ParticlePool"
@@ -268,10 +274,48 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
   // ── Config update ─────────────────────────────────────────────────────
 
   updateConfig(config: Partial<NetworkPipelineConfig>): void {
+    this.applyConfig(config)
+  }
+
+  hasEdgeIdentityChange(config: NetworkPipelineConfig): boolean {
+    return networkEdgeIdentityChanged(this.config, config)
+  }
+
+  private applyConfig(
+    config: Partial<NetworkPipelineConfig>,
+    replacingTopology = false
+  ): void {
     // Retain store-owned plugin state when replacing the active configuration
     const prev = this.config
     // Compare a partial patch against the merged active configuration.
     const nextConfig = { ...prev, ...config } as NetworkPipelineConfig
+    if (
+      !replacingTopology && this.edges.size &&
+      prev.edgeIdentity === "id" && nextConfig.edgeIdentity !== "id"
+    )
+      throw new Error(
+        "IDENTITY_EDGE_MODE: clear or replace retained edges before switching to pair identity."
+      )
+    if (
+      !replacingTopology &&
+      nextConfig.edgeIdentity === "id" &&
+      (prev.edgeIdentity !== "id" || prev.edgeIdAccessor !== nextConfig.edgeIdAccessor)
+    ) {
+      const replacements = rekeyNetworkEdges(this.edges, nextConfig)
+      const timestamps = new Map<string, number>()
+      for (const { previous, key } of replacements) {
+        const timestamp = this.edgeTimestamps.get(previous)
+        if (timestamp !== undefined) timestamps.set(key, timestamp)
+      }
+      this.edges.clear()
+      for (const { key, edge } of replacements) {
+        edge._edgeKey = key
+        this.edges.set(key, edge)
+      }
+      this.edgeTimestamps = timestamps
+      this.incidentEdges = null
+      this._arrCacheVersion = -1
+    }
     transferNetworkPluginState(prev, nextConfig)
     if (prev.__hierarchyRoot) nextConfig.__hierarchyRoot = prev.__hierarchyRoot
     // `layoutSelection` is owned by a dedicated frame effect (so a selection
@@ -317,7 +361,12 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
    * Ingest hierarchy root data for tree/treemap/circlepack/partition layouts.
    * The hierarchy root is passed to the layout plugin via config.__hierarchyRoot.
    */
-  ingestHierarchy(rootData: Datum, size: [number, number]): void {
+  ingestHierarchy(
+    rootData: Datum,
+    size: [number, number],
+    config?: NetworkPipelineConfig
+  ): void {
+    if (config) this.applyConfig(config, true)
     // Snapshot positions before clearing so data-change transitions work.
     // Stored on _boundedPrevSnapshot; prepareForRelayout uses it as fallback.
     this._boundedPrevSnapshot = new Map()
@@ -357,8 +406,12 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
     rawNodes: Datum[],
     rawEdges: Datum[],
     size: [number, number],
-    options?: { deferLayout?: boolean }
+    options?: { deferLayout?: boolean; config?: NetworkPipelineConfig }
   ): void {
+    const normalized = normalizeNetworkData(rawNodes, rawEdges, {
+      ...this.config, ...options?.config
+    })
+    if (options?.config) this.applyConfig(options.config, true)
     // Snapshot positions before clearing so data-change transitions work.
     // Stored on _boundedPrevSnapshot; prepareForRelayout uses it as fallback.
     this._boundedPrevSnapshot = new Map()
@@ -381,7 +434,6 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
 
     // Build node map
     this._arrCacheVersion = -1
-    const normalized = normalizeNetworkData(rawNodes, rawEdges, this.config)
     for (const [id, raw] of normalized.nodes) {
       const node = createNode(id)
       node.data = raw
@@ -396,7 +448,7 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
 
     // Build edge map (creating nodes if not provided).
     // Use a unique index key so parallel edges (same source→target, different
-    // groups) are preserved. Streaming ingestion still aggregates by source+target.
+    // groups) are preserved. ID mode uses stable keys in bounded and push paths.
     for (const resolved of normalized.edges) {
       const raw = resolved.data
       const edge: RealtimeEdge = {
@@ -433,7 +485,7 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
     rawNodes: Datum[],
     rawEdges: Datum[],
     size: [number, number],
-    options?: { deferLayout?: boolean },
+    options?: { deferLayout?: boolean; config?: NetworkPipelineConfig },
   ): UpdateResult {
     this.ingestBounded(rawNodes, rawEdges, size, options)
     return this.updateResults.last
@@ -484,6 +536,9 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
       return false
     }
     const { source, target, value } = resolved
+    const key = this.config.edgeIdentity === "id" ? explicitNetworkEdgeKey(push, this.config) : this.edgeKey(source, target)
+    const existing = this.edges.get(key)
+    if (existing) validateNetworkEdgeUpdate(existing, push, this.config)
     const isFirst = this.nodes.size === 0
     let topologyChanged = false
     const now = this.currentTime()
@@ -504,13 +559,10 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
       topologyChanged = true
     }
 
-    const key = this.edgeKey(source, target)
-    const existing = this.edges.get(key)
-
     let valueChanged = false
     if (existing) {
-      existing.value += value
-      existing.data = { ...existing.data, ...push }
+      existing.value = this.config.edgeIdentity === "id" ? value : existing.value + value
+      existing.data = this.config.edgeIdentity === "id" ? push : { ...existing.data, ...push }
       this.edgeTimestamps.set(key, now)
       this.tension += this.tensionConfig.weightChange
       valueChanged = true
@@ -1360,17 +1412,27 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
     targetId: string,
     updater: (data: Datum) => Datum
   ): Datum[] {
-    const results: Datum[] = []
-    for (const [, edge] of this.edges) {
+    return this.replaceEdgeData([...this.edges.values()].filter((edge) => {
       const src = typeof edge.source === "string" ? edge.source : edge.source.id
       const tgt = typeof edge.target === "string" ? edge.target : edge.target.id
-      if (src === sourceId && tgt === targetId) {
-        const previousValue = readNetworkAccessor(edge.data ?? {}, this.config.valueAccessor, "value")
-        results.push(edge.data ? { ...edge.data } : {})
-        edge.data = updater(edge.data ?? {})
-        const nextValue = readNetworkAccessor(edge.data, this.config.valueAccessor, "value")
-        if (!Object.is(previousValue, nextValue)) edge.value = normalizeNetworkValue(nextValue)
-      }
+      return src === sourceId && tgt === targetId
+    }), updater)
+  }
+
+  private replaceEdgeData(edges: RealtimeEdge[], updater: (data: Datum) => Datum): Datum[] {
+    const results: Datum[] = []
+    const replacements: Array<{ edge: RealtimeEdge; data: Datum }> = []
+    for (const edge of edges) {
+      const data = updater({ ...edge.data })
+      validateNetworkEdgeUpdate(edge, data, this.config)
+      replacements.push({ edge, data })
+    }
+    for (const { edge, data } of replacements) {
+      const previousValue = readNetworkAccessor(edge.data ?? {}, this.config.valueAccessor, "value")
+      results.push({ ...edge.data })
+      edge.data = data
+      const nextValue = readNetworkAccessor(data, this.config.valueAccessor, "value")
+      if (!Object.is(previousValue, nextValue)) edge.value = normalizeNetworkValue(nextValue)
     }
     if (results.length > 0) {
       this.layoutVersion++
@@ -1382,10 +1444,14 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
     return results
   }
 
-  /**
-   * Remove a node by ID. Also removes all edges connected to this node.
-   * Returns true if the node was found and removed.
-   */
+  /** Update exactly one edge without changing its identity or owners. */
+  updateEdgeById(id: string, updater: (data: Datum) => Datum): Datum | null {
+    if (this.config.edgeIdentity !== "id") throw new Error("updateEdgeById requires edgeIdentity=id.")
+    const edge = this.edges.get(JSON.stringify(["id", id]))
+    return this.replaceEdgeData(edge ? [edge] : [], updater)[0] ?? null
+  }
+
+  /** Remove a node and its incident edges. */
   removeNode(id: string): boolean {
     if (!this.nodes.has(id)) {
       this.updateResults.recordNoop("remove")
@@ -1417,7 +1483,7 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
 
     if (targetId === undefined) {
       // Single-ID mode: use edgeIdAccessor
-      const accessor = this.config.edgeIdAccessor
+      const accessor = this.config.edgeIdAccessor ?? (this.config.edgeIdentity === "id" ? "id" : undefined)
       if (!accessor) {
         throw new Error(
           "removeEdge(edgeId) requires edgeIdAccessor to be configured. Use removeEdge(sourceId, targetId) instead."

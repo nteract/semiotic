@@ -16,6 +16,7 @@ import { existsSync, readFileSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 import { test } from "node:test"
 import { fileURLToPath } from "node:url"
+import { createRequire } from "node:module"
 import { gzipSync } from "node:zlib"
 import { build } from "esbuild"
 
@@ -111,6 +112,28 @@ test("cold recipe facades do not load the physics simulation", () => {
       }
     }
   }
+})
+
+test("compositional recipe exports survive both package formats without retaining chart hosts", async () => {
+  const require = createRequire(import.meta.url)
+  for (const key of ["./recipes", "./recipes/core", "./recipes/react"]) {
+    const esm = await import(resolve(root, pkg.exports[key].import))
+    const cjs = require(resolve(root, pkg.exports[key].require))
+    const symbols = key === "./recipes/react"
+      ? ["CompositionalNavigator"]
+      : ["prepareCompositionalGraph", "routeCompositionalGraph", "compositionalDagLayout"]
+    for (const symbol of symbols) {
+      assert.equal(typeof esm[symbol], "function", `${key} ESM: ${symbol}`)
+      assert.equal(typeof cjs[symbol], "function", `${key} CJS: ${symbol}`)
+    }
+  }
+  const solver = await eagerBundle("./recipes/core", "routeCompositionalGraph")
+  assert.ok(!solver.code.includes("StreamNetworkFrame"))
+  assert.ok(!solver.code.includes("CompositionalNavigator"))
+  const navigator = await eagerBundle("./recipes/react", "CompositionalNavigator")
+  assert.ok(!navigator.code.includes("CAPABILITY_COMPOUND_OPTIMIZE"))
+  const waffle = await eagerBundle("./recipes/core", "waffleLayout")
+  assert.ok(!waffle.code.includes("CAPABILITY_COMPOUND_OPTIMIZE"))
 })
 
 test("chart downloads stay outside the initial public entry graphs", async () => {

@@ -62,19 +62,17 @@ export const nodes: PipelineNode[] = pipelines.flatMap((pipeline, row) =>
 
 export const edges = nodes
   .filter((node) => node.stageIndex < 4)
-  .map((source) => ({
-    id: `${source.id}-next`,
+  .flatMap((source) => ["rows", "latency", "fields"].map((partId) => ({
+    id: `${source.id}-next${partId === "rows" ? "" : `-${partId}`}`,
     source: source.id,
     target: nodes[nodes.indexOf(source) + 1].id,
-  }))
+    sourceEndpoint: { kind: "part" as const, partId, portId: "out" },
+    targetEndpoint: { kind: "part" as const, partId, portId: "in" },
+    kind: "illustrative",
+    evidence: { basis: "illustrative" as const, precision: "unknown" as const },
+  })))
+edges.push({ ...edges[0], id: "step-0-next-duplicate" })
 export const byId = new Map(nodes.map((node) => [node.id, node]))
 // Live-size cards render throughout a gesture; reuse locale setup across them.
 const rowFormatter = new Intl.NumberFormat("en-US")
 export const formatRows = (rows: number) => rowFormatter.format(rows)
-
-export function connectionPath(id: string) {
-  const node = byId.get(id)!
-  const x = node.x + cardWidth,
-    y = node.y + 54
-  return `M${x},${y} C${x + 40},${y} ${x + 40},${y} ${x + 80},${y}`
-}

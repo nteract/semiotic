@@ -33,7 +33,7 @@ import {
 } from "./sceneRevisionDiagnostics"
 import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
-import { useConfigSync, useLayoutSelectionSync } from "./streamStoreSync"
+import { useLayoutSelectionSync } from "./streamStoreSync"
 import { useNetworkKeyboardNavigation } from "./networkFrameKeyboardNavigation"
 import { NetworkFrameHover, NetworkFrameLiveHover } from "./NetworkFrameHover"
 import { createNetworkHoverStore } from "./networkHoverStore"
@@ -121,7 +121,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     sourceAccessor = "source",
     targetAccessor = "target",
     valueAccessor = "value",
-    edgeIdAccessor,
+    edgeIdAccessor, edgeIdentity,
     childrenAccessor,
     hierarchySum,
     orientation = "horizontal",
@@ -314,7 +314,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
         sourceAccessor,
         targetAccessor,
         valueAccessor,
-        edgeIdAccessor,
+        edgeIdAccessor, edgeIdentity,
         childrenAccessor,
         hierarchySum,
         orientation,
@@ -366,7 +366,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
         perspective,
         currentTheme
       }),
-    [perspective, chartType, frameRuntime.now, randomProp, seed, nodeIDAccessor, sourceAccessor, targetAccessor, valueAccessor, edgeIdAccessor, childrenAccessor, hierarchySum, orientation, nodeAlign, nodePaddingRatio, nodeWidth, iterations, forceStrength, padAngle, groupWidth, sortGroups, edgeSort, treeOrientation, edgeType, padding, paddingTop, tensionConfig, showParticles, particleStyle, nodeStyle, edgeStyle, nodeLabel, showLabels, labelMode, colorBy, colorScheme, edgeColorBy, edgeOpacity, colorByDepth, nodeSize, nodeSizeRange, decay, pulse, transition, introEnabled, staleness, thresholds, orbitMode, orbitSize, orbitSpeed, orbitRevolution, orbitRevolutionStyle, orbitEccentricity, orbitShowRings, orbitAnimated, customNetworkLayout, onLayoutError, layoutConfig, currentTheme]
+    [perspective, chartType, frameRuntime.now, randomProp, seed, nodeIDAccessor, sourceAccessor, targetAccessor, valueAccessor, edgeIdAccessor, edgeIdentity, childrenAccessor, hierarchySum, orientation, nodeAlign, nodePaddingRatio, nodeWidth, iterations, forceStrength, padAngle, groupWidth, sortGroups, edgeSort, treeOrientation, edgeType, padding, paddingTop, tensionConfig, showParticles, particleStyle, nodeStyle, edgeStyle, nodeLabel, showLabels, labelMode, colorBy, colorScheme, edgeColorBy, edgeOpacity, colorByDepth, nodeSize, nodeSizeRange, decay, pulse, transition, introEnabled, staleness, thresholds, orbitMode, orbitSize, orbitSpeed, orbitRevolution, orbitRevolutionStyle, orbitEccentricity, orbitShowRings, orbitAnimated, customNetworkLayout, onLayoutError, layoutConfig, currentTheme]
   )
 
   // Stabilize the config reference so inline-object / inline-array
@@ -409,7 +409,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     sourceAccessor,
     targetAccessor,
     valueAccessor,
-    edgeIdAccessor,
+    edgeIdAccessor, edgeIdentity,
     childrenAccessor,
     hierarchySum,
     orientation,
@@ -694,7 +694,22 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
   // A render-only config change (e.g. the resolved selection predicate driving
   // dim/highlight) flows through here too: updateConfig → dirty → render-loop
   // buildScene re-emits the overlays → setAnnotationFrame re-render reads them.
-  useConfigSync(storeRef, stablePipelineConfig, dirtyRef, scheduleRender)
+  // Identity changes on controlled data belong to its replacement transaction.
+  // Rekeying the previous records here could reject valid new IDs/accessors.
+  const pendingControlledConfigRef = useRef<NetworkPipelineConfig | undefined>(undefined)
+  useEffect(() => {
+    const store = storeRef.current
+    if (!store) return
+    const replacing = hasControlledGraph || (isHierarchical && !!hierarchyRoot)
+    if (replacing && store.hasEdgeIdentityChange(stablePipelineConfig)) {
+      pendingControlledConfigRef.current = stablePipelineConfig
+    } else {
+      store.updateConfig(stablePipelineConfig)
+      pendingControlledConfigRef.current = undefined
+    }
+    dirtyRef.current = true
+    scheduleRender()
+  }, [stablePipelineConfig, hasControlledGraph, isHierarchical, hierarchyRoot, scheduleRender])
   useNetworkPerspectiveExtrasReady(storeRef.current, useCallback(() => { dirtyRef.current = true; scheduleRender() }, [scheduleRender]))
 
   // Bridge the resolved custom-layout selection into the scene store +
@@ -949,11 +964,11 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
             let matches: boolean
             if (targetId !== undefined) {
               matches = hSrc === sourceIdOrEdgeId && hTgt === targetId
-            } else if (edgeIdAccessor && hoveredEdge) {
+            } else if ((edgeIdAccessor || edgeIdentity === "id") && hoveredEdge) {
               const getEid =
                 typeof edgeIdAccessor === "function"
                   ? edgeIdAccessor
-                  : (d: Datum) => d?.[edgeIdAccessor]
+                  : (d: Datum) => d?.[edgeIdAccessor ?? "id"]
               matches = getEid(hoveredEdge.data ?? hoveredEdge) === sourceIdOrEdgeId
             } else {
               matches = true // no accessor to compare — conservatively clear
@@ -988,6 +1003,11 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
         if (commitLayout(previous.length > 0)) {
           scheduleRender()
         }
+        return previous
+      },
+      updateEdgeById: (id: string, updater: (data: Datum) => Datum) => {
+        const previous = storeRef.current?.updateEdgeById(id, updater) ?? null
+        if (commitLayout(previous !== null)) scheduleRender()
         return previous
       },
       clear: clearAll,
@@ -1026,7 +1046,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
         return storeRef.current?.tension ?? 0
       }
     }),
-    [pushEdge, pushManyEdges, clearAll, forceRelayout, flushPendingLayout, commitLayout, removeNodes, updateNodes, scheduleRender, edgeIdAccessor, setHoverData]
+    [pushEdge, pushManyEdges, clearAll, forceRelayout, flushPendingLayout, commitLayout, removeNodes, updateNodes, scheduleRender, edgeIdAccessor, edgeIdentity, setHoverData]
   )
 
   // ── Bounded data ingestion ───────────────────────────────────────────
@@ -1038,6 +1058,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     layoutAbortRef.current?.abort()
     layoutAbortRef.current = null
 
+    const replacementConfig = pendingControlledConfigRef.current
     if (isHierarchical && hierarchyRoot) {
       // A controlled hierarchy replacement supersedes any uncommitted push
       // layout from the same frame transaction.
@@ -1045,7 +1066,8 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       // Hierarchy data: single root object. Emit "ready" like the other
       // synchronous paths — a chart-type/data switch away from a pending
       // worker layout must not leave consumers stuck on "pending".
-      store.ingestHierarchy(hierarchyRoot, [adjustedWidth, adjustedHeight])
+      store.ingestHierarchy(hierarchyRoot, [adjustedWidth, adjustedHeight], replacementConfig)
+      pendingControlledConfigRef.current = undefined
       rebuildSceneNow(store, [adjustedWidth, adjustedHeight])
       publishLayoutState(store)
       scheduleRender()
@@ -1070,6 +1092,10 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
           (store.nodes.size > 0 || store.edges.size > 0)
         ) {
           clearAll()
+        }
+        if (replacementConfig) {
+          store.updateConfig(replacementConfig)
+          pendingControlledConfigRef.current = undefined
         }
         // Push-mode graphs have no controlled arrays to re-ingest, but force
         // parameter changes still need to re-solve their retained topology.
@@ -1101,12 +1127,14 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
         )
 
       if (useWorker) {
-        store.ingestBounded(rawNodes, rawEdges, size, { deferLayout: true })
+        store.ingestBounded(rawNodes, rawEdges, size, { deferLayout: true, config: replacementConfig })
+        pendingControlledConfigRef.current = undefined
         const controller = runLayoutRef.current()
         return () => controller?.abort()
       }
 
-      store.ingestBounded(rawNodes, rawEdges, size)
+      store.ingestBounded(rawNodes, rawEdges, size, { config: replacementConfig })
+      pendingControlledConfigRef.current = undefined
       rebuildSceneNow(store, size)
       // The canvas repaints imperatively, but labels, accessible data, and
       // custom HTML marks are React overlays. Synchronize the completed

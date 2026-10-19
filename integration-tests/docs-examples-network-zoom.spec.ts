@@ -338,7 +338,7 @@ test("gallery, guide link and complete source tabs expose the example", async ({
     .click()
   await expect(
     page.getByRole("tablist", { name: "Example source files" }).getByRole("tab")
-  ).toHaveCount(7)
+  ).toHaveCount(9)
   await page
     .getByRole("tab", {
       name: "pipeline-explorer/PipelineCard.tsx",
