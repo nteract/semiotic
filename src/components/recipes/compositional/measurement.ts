@@ -19,7 +19,10 @@ export class CompositionalMeasurementTransaction {
   }
   update(snapshot: GeometrySnapshot): SolvedCompositionalLayout {
     validateGeometry(snapshot)
-    if (canonical(snapshot.nodes) === canonical(this.current.geometry.nodes))
+    if (
+      snapshot.basis === this.current.geometry.basis &&
+      canonical(snapshot.nodes) === canonical(this.current.geometry.nodes)
+    )
       return this.accepted
     if (this.passes >= 2)
       return freeze({

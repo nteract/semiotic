@@ -281,6 +281,7 @@ export interface PathSection {
   readonly id: ID
   readonly points: readonly Point[] // At least two; authoritative routing skeleton.
   // Optional final smooth geometry: the SAME commands drive paint, picking and bounds.
+  // Omitted or empty commands use the authoritative points skeleton.
   readonly commands?: readonly PathCommand[]
   readonly bounds: Rect // Includes actual final geometry, including cubic control envelopes.
 }

@@ -28,6 +28,17 @@ export function validateNetworkEdgeUpdate(
 
 export { explicitNetworkEdgeKey } from "./networkDataNormalization"
 
+export function networkEdgeIdentityChanged(
+  previous: NetworkPipelineConfig,
+  next: NetworkPipelineConfig
+): boolean {
+  return (
+    (previous.edgeIdentity ?? "pair") !== (next.edgeIdentity ?? "pair") ||
+    (next.edgeIdentity === "id" &&
+      previous.edgeIdAccessor !== next.edgeIdAccessor)
+  )
+}
+
 /** Validate a mode/accessor change before mutating retained topology. */
 export function rekeyNetworkEdges(
   edges: Map<string, RealtimeEdge>,

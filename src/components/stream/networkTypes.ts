@@ -349,7 +349,7 @@ export interface NetworkPipelineConfig {
   valueAccessor?: string | ((d: Datum) => number)
   /** Edge ID accessor for removeEdge(edgeId) — enables single-ID edge removal */
   edgeIdAccessor?: string | ((d: Datum) => string)
-  /** Opt into stable edge IDs. Pushes upsert by ID; the default accumulates by owner pair. */
+  /** Stable IDs upsert pushes; pairs accumulate. Clear/replace retained edges before switching ID → pair. */
   edgeIdentity?: "pair" | "id"
 
   // ── Hierarchy (tree/treemap/circlepack) ──────────
@@ -497,7 +497,7 @@ export interface StreamNetworkFrameProps<T = Datum>
   valueAccessor?: string | ((d: T) => number)
   /** Edge ID accessor for removeEdge(edgeId) single-ID removal */
   edgeIdAccessor?: string | ((d: Datum) => string)
-  /** Opt into stable edge IDs. Pushes upsert by ID; the default accumulates by owner pair. */
+  /** Stable IDs upsert pushes; pairs accumulate. Clear/replace retained edges before switching ID → pair. */
   edgeIdentity?: "pair" | "id"
 
   // ── Hierarchy ────────────────────────────────────

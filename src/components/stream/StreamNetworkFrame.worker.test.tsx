@@ -42,6 +42,29 @@ describe("StreamNetworkFrame worker force layout", () => {
     vi.restoreAllMocks()
   })
 
+  it("replaces controlled identities before dispatching the next worker solve", async () => {
+    const pending: Array<{ signal: AbortSignal; resolve: (value: { positions: Record<string, { x: number; y: number }> }) => void }> = []
+    runWorker.mockImplementation((_request, signal) => new Promise((resolve) => pending.push({ signal, resolve })))
+    const ref = React.createRef<StreamNetworkFrameHandle>()
+    const nodes = [{ id: "a" }, { id: "b" }]
+    const view = render(<StreamNetworkFrame ref={ref} chartType="force" layoutExecution="worker"
+      nodes={nodes} edges={[{ source: "a", target: "b" }]} animate={false} />)
+    await waitFor(() => expect(pending).toHaveLength(1))
+    view.rerender(<StreamNetworkFrame ref={ref} chartType="force" layoutExecution="worker"
+      nodes={nodes} edges={[{ id: "first", source: "a", target: "b" }]} edgeIdentity="id" animate={false} />)
+    await waitFor(() => expect(pending).toHaveLength(2))
+    expect(pending[0].signal.aborted).toBe(true)
+    expect(ref.current!.getTopology().edges.map((e) => e._edgeKey)).toEqual([JSON.stringify(["id", "first"])])
+    view.rerender(<StreamNetworkFrame ref={ref} chartType="force" layoutExecution="worker"
+      nodes={nodes} edges={[{ wireId: "next", source: "a", target: "b" }]}
+      edgeIdentity="id" edgeIdAccessor="wireId" animate={false} />)
+    await waitFor(() => expect(pending).toHaveLength(3))
+    expect(pending[1].signal.aborted).toBe(true)
+    await act(async () => pending[2].resolve({ positions: { a: { x: 100, y: 100 }, b: { x: 200, y: 100 } } }))
+    expect(ref.current!.getTopology().edges.map((e) => e._edgeKey)).toEqual([JSON.stringify(["id", "next"])])
+    expect(view.container.querySelector('[aria-busy="true"]')).toBeNull()
+  })
+
   it("supersedes worker geometry after pushes, batch removal, updates, and clear without a synchronous solve", async () => {
     const solve = vi.spyOn(NetworkPipelineStore.prototype, "runLayout")
     const pending: Array<{ signal: AbortSignal; resolve: (value: { positions: Record<string, { x: number; y: number }> }) => void }> = []

@@ -213,11 +213,12 @@ export function routeSection(
 }
 export function compositionalPath(section: PathSection): string {
   return (
-    section.commands ??
-    section.points.map((point, i) => ({
-      kind: i ? ("L" as const) : ("M" as const),
-      point
-    }))
+    section.commands?.length
+      ? section.commands
+      : section.points.map((point, i) => ({
+          kind: i ? ("L" as const) : ("M" as const),
+          point
+        }))
   )
     .map((c) =>
       c.kind === "C"

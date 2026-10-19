@@ -2,6 +2,7 @@ import type { LayoutRequest, SolvedCompositionalLayout } from "./types"
 import { compositionalEndpointKey, endpoint, fail } from "./identity"
 import { contains, validateRect } from "./geometry"
 import { distance } from "./routing"
+import { validateSolvedNodes } from "./acceptedNodes"
 
 /** Validate portable engine output before it becomes the shared scene authority. */
 export function validateCompositionalSolution(
@@ -12,10 +13,7 @@ export function validateCompositionalSolution(
   const nodes = new Map(solved.nodes.map((n) => [n.id, n]))
   if (nodes.size !== solved.nodes.length)
     fail("IDENTITY_SOLVED_NODE", "Duplicate display node ID.")
-  for (const n of solved.nodes) {
-    validateRect(n.rect)
-    for (const p of n.parts ?? []) validateRect(p.rect)
-  }
+  validateSolvedNodes(request, solved)
   validateRect(solved.bounds)
   const edges = new Map(request.prepared.graph.edges.map((e) => [e.id, e])),
     seen = new Set<string>()

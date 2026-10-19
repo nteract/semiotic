@@ -29,12 +29,8 @@ export interface Projection {
   bySemantic: Map<string, PlacedNode>
   measures: Map<string, NodeMeasure>
 }
-export function project(
-  request: LayoutRequest,
-  measurements: Map<string, NodeMeasure>,
-  positions: Map<string, Point>,
-  orders: Map<string, string[]>
-): Projection {
+/** Shared visibility rules for projection and external-engine acceptance. */
+export function projectionOwners(request: LayoutRequest) {
   const { graph } = request.prepared
   const semantics = new Map(graph.nodes.map((n) => [n.id, n]))
   const views = new Map(request.view.nodes.map((n) => [n.nodeId, n]))
@@ -50,6 +46,17 @@ export function project(
       parent = semantics.get(parent)?.parentId
     }
   }
+  return { semantics, views, hidden }
+}
+
+export function project(
+  request: LayoutRequest,
+  measurements: Map<string, NodeMeasure>,
+  positions: Map<string, Point>,
+  orders: Map<string, string[]>
+): Projection {
+  const { graph } = request.prepared
+  const { semantics, views, hidden } = projectionOwners(request)
   const nodes: PlacedNode[] = [],
     bySemantic = new Map<string, PlacedNode>(),
     measures = new Map<string, NodeMeasure>()

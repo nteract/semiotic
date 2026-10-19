@@ -850,7 +850,10 @@ const layoutConfig = { prepared, solved, showParts: true }
           <code>edgeIdentity="id"</code> opts streaming frames into replacement by edge ID;
           the default still accumulates pushes by owner pair. <code>updateEdgeById</code> and
           single-ID <code>removeEdge</code> on a <code>StreamNetworkFrame</code> ref operate on
-          one connection. <code>patchCompositionalGraph</code> validates semantic mutations
+          one connection. Clear retained push data before switching from ID identity back
+          to pair identity; this avoids silently merging distinct connections. Controlled
+          edges and their ID accessor can be replaced together in one render.{" "}
+          <code>patchCompositionalGraph</code> validates semantic mutations
           atomically. Serialized graph structure has a schema at{" "}
           <code>semiotic/spec/v0.1/compositional-graph.schema.json</code>; runtime preparation
           additionally validates references and directions. These are layout helpers, not a new
@@ -861,6 +864,9 @@ const layoutConfig = { prepared, solved, showParts: true }
           revisions atomically and keeps the last valid solution during work or failure.
           <code>createCompositionalWorkerEngine</code> takes an application-owned worker;
           <code>installCompositionalWorker</code> installs the matching worker protocol.
+          Request IDs must be unique for the lifetime of each worker engine, including
+          cancelled requests. Engine results must cover every visible semantic owner
+          and exploded part; collapsed descendants are excluded from that coverage.
           No worker or optional optimizer dependency is loaded automatically. Cancellation of the
           built-in synchronous solve discards stale results; it cannot interrupt an executing sweep.
         </p>

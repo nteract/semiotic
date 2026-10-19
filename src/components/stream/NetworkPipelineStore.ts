@@ -1,7 +1,8 @@
 import {
   explicitNetworkEdgeKey,
   validateNetworkEdgeUpdate,
-  rekeyNetworkEdges
+  rekeyNetworkEdges,
+  networkEdgeIdentityChanged
 } from "./networkEdgeIdentity"
 import { transferNetworkPluginState } from "./networkPluginState"
 import { DETERMINISTIC_NETWORK_LAYOUTS } from "./networkLayoutCapabilities"
@@ -273,11 +274,30 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
   // ── Config update ─────────────────────────────────────────────────────
 
   updateConfig(config: Partial<NetworkPipelineConfig>): void {
+    this.applyConfig(config)
+  }
+
+  hasEdgeIdentityChange(config: NetworkPipelineConfig): boolean {
+    return networkEdgeIdentityChanged(this.config, config)
+  }
+
+  private applyConfig(
+    config: Partial<NetworkPipelineConfig>,
+    replacingTopology = false
+  ): void {
     // Retain store-owned plugin state when replacing the active configuration
     const prev = this.config
     // Compare a partial patch against the merged active configuration.
     const nextConfig = { ...prev, ...config } as NetworkPipelineConfig
     if (
+      !replacingTopology && this.edges.size &&
+      prev.edgeIdentity === "id" && nextConfig.edgeIdentity !== "id"
+    )
+      throw new Error(
+        "IDENTITY_EDGE_MODE: clear or replace retained edges before switching to pair identity."
+      )
+    if (
+      !replacingTopology &&
       nextConfig.edgeIdentity === "id" &&
       (prev.edgeIdentity !== "id" || prev.edgeIdAccessor !== nextConfig.edgeIdAccessor)
     ) {
@@ -341,7 +361,12 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
    * Ingest hierarchy root data for tree/treemap/circlepack/partition layouts.
    * The hierarchy root is passed to the layout plugin via config.__hierarchyRoot.
    */
-  ingestHierarchy(rootData: Datum, size: [number, number]): void {
+  ingestHierarchy(
+    rootData: Datum,
+    size: [number, number],
+    config?: NetworkPipelineConfig
+  ): void {
+    if (config) this.applyConfig(config, true)
     // Snapshot positions before clearing so data-change transitions work.
     // Stored on _boundedPrevSnapshot; prepareForRelayout uses it as fallback.
     this._boundedPrevSnapshot = new Map()
@@ -381,9 +406,12 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
     rawNodes: Datum[],
     rawEdges: Datum[],
     size: [number, number],
-    options?: { deferLayout?: boolean }
+    options?: { deferLayout?: boolean; config?: NetworkPipelineConfig }
   ): void {
-    const normalized = normalizeNetworkData(rawNodes, rawEdges, this.config)
+    const normalized = normalizeNetworkData(rawNodes, rawEdges, {
+      ...this.config, ...options?.config
+    })
+    if (options?.config) this.applyConfig(options.config, true)
     // Snapshot positions before clearing so data-change transitions work.
     // Stored on _boundedPrevSnapshot; prepareForRelayout uses it as fallback.
     this._boundedPrevSnapshot = new Map()
@@ -457,7 +485,7 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
     rawNodes: Datum[],
     rawEdges: Datum[],
     size: [number, number],
-    options?: { deferLayout?: boolean },
+    options?: { deferLayout?: boolean; config?: NetworkPipelineConfig },
   ): UpdateResult {
     this.ingestBounded(rawNodes, rawEdges, size, options)
     return this.updateResults.last

@@ -2,7 +2,15 @@ import { describe, expect, it } from "vitest"
 import { prepareCompositionalGraph } from "./prepare"
 import { routeCompositionalGraph, compositionalLayoutOptions } from "./solve"
 import { traceCompositionalGraph } from "./trace"
-import { layoutCompositionalGraph, compositionalDagEngine } from "./runtime"
+import {
+  layoutCompositionalGraph,
+  compositionalDagEngine,
+  CompositionalLayoutController
+} from "./runtime"
+import { validateCompositionalSolution } from "./acceptance"
+import { CompositionalMeasurementTransaction } from "./measurement"
+import { compositionalPath, flattened } from "./routing"
+import { emitCompositionalScene } from "./scene"
 import type { CompositionalGraph, LayoutRequest, NodeConstraint } from "./types"
 
 const local = { kind: "node" as const }
@@ -48,6 +56,157 @@ const base = {
 }
 
 describe("compositional boundaries and engine contracts", () => {
+  it("rejects an empty engine response for an isolated node and retains the accepted scene", async () => {
+    const r = request({ ...base, nodes: [{ id: "isolated" }], edges: [] })
+    const controller = new CompositionalLayoutController()
+    expect(await controller.solve(r)).toBe(true)
+    const accepted = controller.solution
+    expect(
+      await controller.solve(
+        { ...r, requestId: "next" },
+        {
+          ...compositionalDagEngine,
+          layout: async (req) => ({
+            ...routeCompositionalGraph(req),
+            nodes: [],
+            edges: []
+          })
+        }
+      )
+    ).toBe(false)
+    expect(controller.solution).toBe(accepted)
+    expect(controller.diagnostics[0].message).toContain("IDENTITY_SOLVED_NODE")
+    expect(controller.updating).toBe(false)
+  })
+  it("checks collapsed and exploded coverage while permitting engine-owned display IDs", async () => {
+    const r = request({
+      ...base,
+      nodes: [
+        { id: "group" },
+        { id: "hidden", parentId: "group" },
+        { id: "outside", parts: [{ id: "p" }] }
+      ],
+      edges: []
+    })
+    r.view = {
+      ...r.view,
+      nodes: [
+        { nodeId: "group", mode: "summary", footprint: "stable" },
+        { nodeId: "outside", mode: "exploded", footprint: "stable" }
+      ]
+    }
+    const solved = await layoutCompositionalGraph(r, compositionalDagEngine)
+    expect(solved.nodes).toHaveLength(3)
+    expect(() =>
+      validateCompositionalSolution(r, {
+        ...solved,
+        nodes: solved.nodes.map((n, i) => ({ ...n, id: `engine-${i}` }))
+      })
+    ).not.toThrow()
+    const proxy = solved.nodes.find((n) => n.semantic.endpoint.kind === "part")!
+    expect(() =>
+      validateCompositionalSolution(r, {
+        ...solved,
+        nodes: solved.nodes.filter((n) => n !== proxy)
+      })
+    ).toThrow("IDENTITY_SOLVED_NODE")
+    for (const semantic of [
+      { nodeId: "missing", endpoint: local },
+      { nodeId: "hidden", endpoint: local },
+      {
+        nodeId: "outside",
+        endpoint: { kind: "part" as const, partId: "missing" }
+      },
+      { nodeId: "outside", endpoint: { kind: "node" as const, portId: "port" } }
+    ]) {
+      expect(() =>
+        validateCompositionalSolution(r, {
+          ...solved,
+          nodes: solved.nodes.map((n) => (n === proxy ? { ...n, semantic } : n))
+        })
+      ).toThrow("IDENTITY_SOLVED_NODE")
+    }
+    const owner = solved.nodes.find((n) => n.id === "outside")!
+    for (const parts of [
+      [],
+      [...owner.parts!, ...owner.parts!],
+      owner.parts!.map((p) => ({
+        ...p,
+        semantic: { nodeId: "group", endpoint: p.semantic.endpoint }
+      }))
+    ]) {
+      expect(() =>
+        validateCompositionalSolution(r, {
+          ...solved,
+          nodes: solved.nodes.map((n) => (n === owner ? { ...n, parts } : n))
+        })
+      ).toThrow("IDENTITY_SOLVED_PART")
+    }
+  })
+  it("confirms estimated geometry even when measured rectangles are identical", () => {
+    const r = request({ ...base, nodes: [{ id: "a" }], edges: [] })
+    r.geometry = { ...r.geometry, basis: "estimated" }
+    const initial = routeCompositionalGraph(r)
+    expect(
+      initial.diagnostics.some((d) => d.code === "GEOMETRY_ESTIMATED")
+    ).toBe(true)
+    const transaction = new CompositionalMeasurementTransaction(r, initial)
+    const measured = {
+      ...r.geometry,
+      revision: "measured",
+      basis: "measured" as const
+    }
+    const accepted = transaction.update(measured)
+    expect(accepted.geometryRevision).toBe("measured")
+    expect(accepted.status).toBe("complete")
+    expect(
+      accepted.diagnostics.some((d) => d.code === "GEOMETRY_ESTIMATED")
+    ).toBe(false)
+    expect(transaction.solution).toBe(accepted)
+    expect(
+      transaction.update({ ...measured, revision: "same-measurement" })
+    ).toBe(accepted)
+  })
+  it("rejects a basis change without a new revision", () => {
+    const r = request({ ...base, nodes: [{ id: "a" }], edges: [] })
+    r.geometry = { ...r.geometry, basis: "estimated" }
+    const initial = routeCompositionalGraph(r)
+    const transaction = new CompositionalMeasurementTransaction(r, initial)
+    expect(
+      transaction
+        .update({ ...r.geometry, basis: "measured" })
+        .diagnostics.at(-1)?.code
+    ).toBe("REVISION_GEOMETRY")
+    expect(transaction.solution).toBe(initial)
+  })
+  it("paints the same skeleton it measures when an engine supplies empty commands", async () => {
+    const r = request({
+      ...base,
+      nodes: [{ id: "a" }, { id: "b" }],
+      edges: [{ id: "ab", source: "a", target: "b" }]
+    })
+    const solved = await layoutCompositionalGraph(r, {
+      ...compositionalDagEngine,
+      layout: async (req) => {
+        const routed = routeCompositionalGraph(req)
+        return {
+          ...routed,
+          edges: routed.edges.map((e) => ({
+            ...e,
+            sections: e.sections.map((s) => ({ ...s, commands: [] }))
+          }))
+        }
+      }
+    })
+    const section = solved.edges[0].sections[0]
+    const expected = section.points
+      .map((p, i) => `${i ? "L" : "M"}${p.x},${p.y}`)
+      .join(" ")
+    expect(compositionalPath(section)).toBe(expected)
+    expect(flattened(section)).toEqual(section.points)
+    const scene = emitCompositionalScene({ prepared: r.prepared, solved })
+    expect(scene.sceneEdges![0]).toMatchObject({ pathD: expected })
+  })
   it("preserves sparse collapsed interfaces without creating an internal trace", () => {
     const r = request({
       ...base,

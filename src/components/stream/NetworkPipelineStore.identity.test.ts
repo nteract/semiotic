@@ -1,16 +1,17 @@
 import { describe, expect, it } from "vitest"
 import { NetworkPipelineStore } from "./NetworkPipelineStore"
+import type { NetworkPipelineConfig } from "./networkTypes"
 import {
   savePreviousEdgePositions,
   snapshotEdgePositions
 } from "./networkEdgeTransitions"
 
-const makeStore = () =>
-  new NetworkPipelineStore({
-    chartType: "force",
-    edgeIdentity: "id",
-    customNetworkLayout: () => ({ sceneNodes: [], sceneEdges: [] })
-  })
+const config: NetworkPipelineConfig = {
+  chartType: "force",
+  edgeIdentity: "id",
+  customNetworkLayout: () => ({ sceneNodes: [], sceneEdges: [] })
+}
+const makeStore = () => new NetworkPipelineStore(config)
 const edges = [
   {
     id: "one",
@@ -28,15 +29,69 @@ const edges = [
   }
 ]
 describe("explicit network edge identity", () => {
+  it("rejects reverse mode changes before altering retained push topology", () => {
+    const store = makeStore()
+    edges.forEach((edge) => store.ingestEdge(edge))
+    for (const edgeIdentity of ["pair", undefined] as const) {
+      expect(() => store.updateConfig({ edgeIdentity })).toThrow(
+        "IDENTITY_EDGE_MODE"
+      )
+      store.ingestEdge({ ...edges[0], value: 7 })
+      expect([...store.edges.values()].map((edge) => edge.value)).toEqual([
+        7, 3
+      ])
+    }
+    store.clear()
+    store.updateConfig({ edgeIdentity: "pair" })
+    edges.forEach((edge) => store.ingestEdge(edge))
+    expect(store.edges.size).toBe(1)
+    expect([...store.edges.values()][0].value).toBe(5)
+  })
+  it("validates a controlled replacement before committing its identity config", () => {
+    const store = makeStore()
+    store.ingestBounded([], edges, [500, 300])
+    const nextConfig = { ...config, edgeIdAccessor: "wireId" }
+    expect(() =>
+      store.ingestBounded([], edges, [500, 300], { config: nextConfig })
+    ).toThrow("IDENTITY_EDGE_ID")
+    store.ingestEdge({ ...edges[0], value: 9 })
+    expect([...store.edges.values()].map((edge) => edge.value)).toEqual([9, 3])
+    expect([...store.edges.values()].map((edge) => edge.data?.id)).toEqual([
+      "one",
+      "two"
+    ])
+    store.ingestBounded(
+      [],
+      [{ wireId: "replacement", source: "C", target: "D", value: 8 }],
+      [500, 300],
+      { config: nextConfig }
+    )
+    store.ingestEdge({
+      wireId: "replacement",
+      source: "C",
+      target: "D",
+      value: 10
+    })
+    expect([...store.edges.values()].map((edge) => edge.value)).toEqual([10])
+    expect([...store.edges.keys()]).toEqual([
+      JSON.stringify(["id", "replacement"])
+    ])
+    expect([...store.nodes.keys()]).toEqual(["C", "D"])
+  })
   it("rekeys retained bounded data atomically when enabling IDs or changing accessors", () => {
-    const store = new NetworkPipelineStore({ chartType: "force", customNetworkLayout: () => ({ sceneNodes: [], sceneEdges: [] }) })
+    const store = new NetworkPipelineStore({
+      chartType: "force",
+      customNetworkLayout: () => ({ sceneNodes: [], sceneEdges: [] })
+    })
     store.ingestBounded([], edges, [500, 300])
     store.updateConfig({ edgeIdentity: "id" })
     store.ingestEdge({ ...edges[0], value: 10 })
-    expect([...store.edges.values()].map(e => e.value)).toEqual([10, 3])
-    expect(() => store.updateConfig({ edgeIdAccessor: () => "same" })).toThrow("IDENTITY_DUPLICATE_EDGE")
+    expect([...store.edges.values()].map((e) => e.value)).toEqual([10, 3])
+    expect(() => store.updateConfig({ edgeIdAccessor: () => "same" })).toThrow(
+      "IDENTITY_DUPLICATE_EDGE"
+    )
     expect(store.removeEdge("one")).toBe(true)
-    expect([...store.edges.values()].map(e => e.data?.id)).toEqual(["two"])
+    expect([...store.edges.values()].map((e) => e.data?.id)).toEqual(["two"])
   })
   it("preserves exact duplicates through bounded/push/update/remove without aggregation", () => {
     for (const bounded of [true, false]) {

@@ -23,7 +23,7 @@ export interface CompositionalWorkerPort {
   ): void
 }
 
-/** Application-owned worker: no worker or optional optimizer is imported at initialization. */
+/** Application-owned worker. Request IDs must be unique for this engine's lifetime. */
 export function createCompositionalWorkerEngine(
   port: CompositionalWorkerPort,
   engine: Pick<
@@ -39,7 +39,15 @@ export function createCompositionalWorkerEngine(
       clean: () => void
     }
   >()
+  const usedRequestIds = new Set<string>()
   let disposed = false
+  const cancelRemote = (requestId: string) => {
+    try {
+      port.postMessage({ type: "cancel", requestId })
+    } catch {
+      // Local cancellation must settle even if the worker transport is gone.
+    }
+  }
   const onMessage = ({ data }: MessageEvent<CompositionalWorkerMessage>) => {
     if (data.type !== "result" && data.type !== "error") return
     const entry = pending.get(data.requestId)
@@ -58,19 +66,20 @@ export function createCompositionalWorkerEngine(
           reject(new Error("REVISION_CANCELLED"))
           return
         }
-        if (pending.has(request.requestId)) {
+        if (usedRequestIds.has(request.requestId)) {
           reject(
             new Error(
-              "REVISION_REQUEST_ID: in-flight request IDs must be unique."
+              "REVISION_REQUEST_ID: request IDs must be unique for the engine's lifetime."
             )
           )
           return
         }
+        usedRequestIds.add(request.requestId)
         const cancel = () => {
           pending.delete(request.requestId)
           signal?.removeEventListener("abort", cancel)
-          port.postMessage({ type: "cancel", requestId: request.requestId })
           reject(new Error("REVISION_CANCELLED"))
+          cancelRemote(request.requestId)
         }
         pending.set(request.requestId, {
           resolve,
@@ -93,9 +102,10 @@ export function createCompositionalWorkerEngine(
       for (const [requestId, entry] of pending) {
         entry.clean()
         entry.reject(new Error("REVISION_CANCELLED"))
-        port.postMessage({ type: "cancel", requestId })
+        cancelRemote(requestId)
       }
       pending.clear()
+      usedRequestIds.clear()
     }
   }
 }
@@ -116,8 +126,8 @@ export function installCompositionalWorker(
       controller = new AbortController()
     active.get(request.requestId)?.abort()
     active.set(request.requestId, controller)
-    void engine
-      .layout(request, controller.signal)
+    void Promise.resolve()
+      .then(() => engine.layout(request, controller.signal))
       .then(
         (solved) => {
           if (!controller.signal.aborted)
