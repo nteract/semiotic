@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test"
-import { waitForChartReady, waitForRafs } from "./helpers"
+import { expectTooltipWithinPlot, waitForChartReady, waitForRafs } from "./helpers"
 
 test.describe("Ordinal Charts - Bar Charts", () => {
   test.beforeEach(async ({ page }) => {
@@ -131,6 +131,22 @@ test.describe("Ordinal Charts - Statistical", () => {
 test.describe("Ordinal Charts - Interactivity", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/ordinal-examples/")
+  })
+
+  test("bar tooltip retains content, placement and dismissal after resize", async ({ page }) => {
+    await waitForChartReady(page, "ordinal-bars-hover")
+    const chart = page.getByTestId("ordinal-bars-hover")
+    const canvas = chart.locator("canvas").first()
+    const tooltip = chart.locator(".stream-ordinal-tooltip")
+    for (const width of [900, 700]) {
+      await page.setViewportSize({ width, height: 800 })
+      await canvas.hover({ position: { x: 80, y: 240 } })
+      await expect(tooltip).toHaveText("Alpha25")
+      await expect(tooltip).toHaveAttribute("data-placement", "placed")
+      await expectTooltipWithinPlot(chart, { left: 0, right: 0, top: 0, bottom: 0 })
+      await chart.locator("h2").hover()
+      await expect(tooltip).toHaveCount(0)
+    }
   })
 
   test("shows tooltip on bar hover", async ({ page }) => {

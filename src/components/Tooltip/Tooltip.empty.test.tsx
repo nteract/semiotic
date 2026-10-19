@@ -1,5 +1,5 @@
 import * as React from "react"
-import { cleanup, render } from "@testing-library/react"
+import { act, cleanup, render } from "@testing-library/react"
 import { afterEach, expect, it, vi } from "vitest"
 import { FlippingTooltip } from "./FlippingTooltip"
 import { normalizeTooltip, hasTooltipContent, markTooltipChrome, TooltipRoot } from "./Tooltip"
@@ -51,6 +51,18 @@ it.each(empty)("does not wrap a %s chart tooltip result", (_name, content) => {
 })
 
 it("keeps zero visible and measures when previously empty content appears", () => {
+  const notifications = new Set<() => void>()
+  vi.stubGlobal("ResizeObserver", class {
+    notify: () => void
+    constructor(callback: ResizeObserverCallback) {
+      this.notify = () => callback([], this as unknown as ResizeObserver)
+    }
+    observe() { notifications.add(this.notify) }
+    disconnect() { notifications.delete(this.notify) }
+  })
+  const deliverSize = () => act(() => {
+    for (const notify of notifications) notify()
+  })
   const rect = vi
     .spyOn(HTMLElement.prototype, "getBoundingClientRect")
     .mockReturnValue({
@@ -69,6 +81,8 @@ it("keeps zero visible and measures when previously empty content appears", () =
     expect(rect).not.toHaveBeenCalled()
     view.rerender(<FlippingTooltip {...position}>{0}</FlippingTooltip>)
     expect(view.container.textContent).toBe("0")
+    expect(rect).not.toHaveBeenCalled()
+    deliverSize()
     expect(rect).toHaveBeenCalledTimes(1)
     // 150px to the right cannot fit the measured 180px tooltip.
     const wrapper = view.container.firstChild as HTMLElement
@@ -77,7 +91,9 @@ it("keeps zero visible and measures when previously empty content appears", () =
     )
     view.rerender(<FlippingTooltip {...position}>{false}</FlippingTooltip>)
     expect(view.container.firstChild).toBeNull()
+    expect(notifications.size).toBe(0)
     view.rerender(<FlippingTooltip {...position}>Restored</FlippingTooltip>)
+    deliverSize()
     expect(rect).toHaveBeenCalledTimes(2)
     expect(view.container.textContent).toBe("Restored")
     const tooltip = normalizeTooltip(() => 0)
@@ -86,6 +102,7 @@ it("keeps zero visible and measures when previously empty content appears", () =
     expect(render(<>{tooltip({ value: 0 })}</>).container.textContent).toBe("0")
   } finally {
     rect.mockRestore()
+    vi.unstubAllGlobals()
   }
 })
 

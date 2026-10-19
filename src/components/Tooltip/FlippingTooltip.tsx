@@ -1,4 +1,5 @@
 import * as React from "react"
+import { flushSync } from "react-dom"
 import { useTooltipChrome } from "./tooltipChrome"
 import {
   defaultTooltipStyle,
@@ -130,9 +131,15 @@ export function FlippingTooltip({
       })
     }
 
-    measure()
-    if (typeof ResizeObserver === "undefined") return
-    const observer = new ResizeObserver(measure)
+    if (typeof ResizeObserver === "undefined") {
+      measure()
+      return
+    }
+    // ResizeObserver delivers the initial size after layout and before paint.
+    // Reading here avoids forcing synchronous layout during every tooltip
+    // mount. Commit placement in this same pre-paint phase so the heuristic
+    // position never flashes and first/flip transitions remain disabled.
+    const observer = new ResizeObserver(() => flushSync(measure))
     observer.observe(el)
     return () => observer.disconnect()
   }, [className, containerWidth, containerHeight, positionFinite, hasContent])
