@@ -8,3 +8,6 @@ export type { CustomLayoutSelection } from "./stream/customLayoutSelection"
 
 export { Glyph } from "./recipes/recipeGlyph"
 export type { GlyphProps } from "./recipes/recipeGlyph"
+
+export { CompositionalNavigator } from "./recipes/compositional/CompositionalNavigator"
+export type { CompositionalNavigatorProps } from "./recipes/compositional/CompositionalNavigator"

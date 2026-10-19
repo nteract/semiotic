@@ -123,7 +123,9 @@ function buildCardSVG(entry) {
   const previewY = 168
   const previewPad = 18
   const longTitle = entry.title.length > 45
-  const titleLines = wrapText(entry.title, longTitle ? 20 : 18, 3)
+  // Leave room before the preview panel at the larger title size. Eighteen
+  // characters (for example, "Compositional DAGs") can run beneath the art.
+  const titleLines = wrapText(entry.title, longTitle ? 20 : 16, 3)
   const descLines = wrapText(entry.description, 43, 3)
 
   // Brand row at the top; eyebrow, title, description flow below it.

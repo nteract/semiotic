@@ -121,7 +121,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     sourceAccessor = "source",
     targetAccessor = "target",
     valueAccessor = "value",
-    edgeIdAccessor,
+    edgeIdAccessor, edgeIdentity,
     childrenAccessor,
     hierarchySum,
     orientation = "horizontal",
@@ -314,7 +314,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
         sourceAccessor,
         targetAccessor,
         valueAccessor,
-        edgeIdAccessor,
+        edgeIdAccessor, edgeIdentity,
         childrenAccessor,
         hierarchySum,
         orientation,
@@ -366,7 +366,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
         perspective,
         currentTheme
       }),
-    [perspective, chartType, frameRuntime.now, randomProp, seed, nodeIDAccessor, sourceAccessor, targetAccessor, valueAccessor, edgeIdAccessor, childrenAccessor, hierarchySum, orientation, nodeAlign, nodePaddingRatio, nodeWidth, iterations, forceStrength, padAngle, groupWidth, sortGroups, edgeSort, treeOrientation, edgeType, padding, paddingTop, tensionConfig, showParticles, particleStyle, nodeStyle, edgeStyle, nodeLabel, showLabels, labelMode, colorBy, colorScheme, edgeColorBy, edgeOpacity, colorByDepth, nodeSize, nodeSizeRange, decay, pulse, transition, introEnabled, staleness, thresholds, orbitMode, orbitSize, orbitSpeed, orbitRevolution, orbitRevolutionStyle, orbitEccentricity, orbitShowRings, orbitAnimated, customNetworkLayout, onLayoutError, layoutConfig, currentTheme]
+    [perspective, chartType, frameRuntime.now, randomProp, seed, nodeIDAccessor, sourceAccessor, targetAccessor, valueAccessor, edgeIdAccessor, edgeIdentity, childrenAccessor, hierarchySum, orientation, nodeAlign, nodePaddingRatio, nodeWidth, iterations, forceStrength, padAngle, groupWidth, sortGroups, edgeSort, treeOrientation, edgeType, padding, paddingTop, tensionConfig, showParticles, particleStyle, nodeStyle, edgeStyle, nodeLabel, showLabels, labelMode, colorBy, colorScheme, edgeColorBy, edgeOpacity, colorByDepth, nodeSize, nodeSizeRange, decay, pulse, transition, introEnabled, staleness, thresholds, orbitMode, orbitSize, orbitSpeed, orbitRevolution, orbitRevolutionStyle, orbitEccentricity, orbitShowRings, orbitAnimated, customNetworkLayout, onLayoutError, layoutConfig, currentTheme]
   )
 
   // Stabilize the config reference so inline-object / inline-array
@@ -409,7 +409,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     sourceAccessor,
     targetAccessor,
     valueAccessor,
-    edgeIdAccessor,
+    edgeIdAccessor, edgeIdentity,
     childrenAccessor,
     hierarchySum,
     orientation,
@@ -949,11 +949,11 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
             let matches: boolean
             if (targetId !== undefined) {
               matches = hSrc === sourceIdOrEdgeId && hTgt === targetId
-            } else if (edgeIdAccessor && hoveredEdge) {
+            } else if ((edgeIdAccessor || edgeIdentity === "id") && hoveredEdge) {
               const getEid =
                 typeof edgeIdAccessor === "function"
                   ? edgeIdAccessor
-                  : (d: Datum) => d?.[edgeIdAccessor]
+                  : (d: Datum) => d?.[edgeIdAccessor ?? "id"]
               matches = getEid(hoveredEdge.data ?? hoveredEdge) === sourceIdOrEdgeId
             } else {
               matches = true // no accessor to compare — conservatively clear
@@ -988,6 +988,11 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
         if (commitLayout(previous.length > 0)) {
           scheduleRender()
         }
+        return previous
+      },
+      updateEdgeById: (id: string, updater: (data: Datum) => Datum) => {
+        const previous = storeRef.current?.updateEdgeById(id, updater) ?? null
+        if (commitLayout(previous !== null)) scheduleRender()
         return previous
       },
       clear: clearAll,
@@ -1026,7 +1031,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
         return storeRef.current?.tension ?? 0
       }
     }),
-    [pushEdge, pushManyEdges, clearAll, forceRelayout, flushPendingLayout, commitLayout, removeNodes, updateNodes, scheduleRender, edgeIdAccessor, setHoverData]
+    [pushEdge, pushManyEdges, clearAll, forceRelayout, flushPendingLayout, commitLayout, removeNodes, updateNodes, scheduleRender, edgeIdAccessor, edgeIdentity, setHoverData]
   )
 
   // ── Bounded data ingestion ───────────────────────────────────────────

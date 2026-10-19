@@ -1675,6 +1675,12 @@ const EXPLICIT_EXAMPLE_PROFILES = [
     ],
   },
   {
+    id: "compositional-dag",
+    shortLabel: "Compositional DAGs",
+    note: "Explicit parts, ports and parallel edge IDs feed a bounded compositional solver. A NetworkCustomChart uses its accepted geometry for marks and hits; keyboard controls and a connection table preserve access across representations.",
+    uses: ["input-static", "hoc-network-custom", "feature-custom-layout", "feature-custom-overlays", "feature-observation", "feature-accessibility", "feature-responsive", "feature-theme", "feature-canvas-svg"],
+  },
+  {
     id: "pipeline-explorer",
     shortLabel: "Pipeline Explorer",
     note: "An optional camera on NetworkCustomChart scales canvas ports, SVG connections and virtualized HTML cards together. Consumer-authored semantic detail, a shared-window minimap, persistent notes and an accessible inspector make the same pipeline readable at every scale.",

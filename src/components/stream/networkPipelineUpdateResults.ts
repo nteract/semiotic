@@ -100,6 +100,7 @@ export const NETWORK_CONFIG_PATCH_DEPENDENCIES: Readonly<
   sourceAccessor: /* @__PURE__ */ dependency("rebuild", RETAINED_REBUILD),
   targetAccessor: /* @__PURE__ */ dependency("rebuild", RETAINED_REBUILD),
   valueAccessor: /* @__PURE__ */ dependency("rebuild", RETAINED_REBUILD),
+  edgeIdentity: /* @__PURE__ */ dependency("rebuild", RETAINED_REBUILD),
   edgeIdAccessor: /* @__PURE__ */ dependency("rebuild", RETAINED_REBUILD),
   childrenAccessor: /* @__PURE__ */ dependency("rebuild", RETAINED_REBUILD),
   hierarchySum: /* @__PURE__ */ dependency("rebuild", RETAINED_REBUILD),

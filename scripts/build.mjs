@@ -1074,7 +1074,7 @@ function writeClientPassThroughFacades() {
     "semiotic-utils-react.module.min.js":
       '"use client";\nexport{ThemeProvider,useTheme,useReducedMotion,useHighContrast}from"./semiotic-client-shared.module.min.js";export{useResponsiveSize,resolveResponsiveDimension}from"./semiotic-client-responsive.module.min.js";\n',
     "semiotic-recipes-react.module.min.js":
-      '"use client";\nexport{useCustomLayoutSelection}from"./semiotic-client-selection.module.min.js";export{Glyph}from"./semiotic-client-glyph.module.min.js";\n',
+      '"use client";\nexport{useCustomLayoutSelection}from"./semiotic-client-selection.module.min.js";export{Glyph}from"./semiotic-client-glyph.module.min.js";export{CompositionalNavigator}from"./semiotic-client-compositional.module.min.js";\n',
     "semiotic-utils.module.min.js":
       '"use client";\nexport*from"./semiotic-utils-core.module.min.js";export{ThemeProvider,useTheme,useReducedMotion,useHighContrast,useResponsiveSize}from"./semiotic-utils-react.module.min.js";\n',
     "semiotic-recipes.module.min.js":
@@ -1469,6 +1469,10 @@ async function build() {
       .map((b) => [b.name, b.input])
   )
   const isolatedNeutralEntryNames = new Set([
+    // The opt-in compositional solver shares pure helpers with other recipes.
+    // Keep their union in one compressed graph instead of fragmenting it across
+    // unrelated neutral entries. Named-import isolation remains independently gated.
+    "semiotic-recipes-core",
     "semiotic-atlas-core",
     "semiotic-experimental-network-resolution",
     "semiotic-artifact",
@@ -1546,6 +1550,8 @@ async function build() {
     "src/components/stream/useResponsiveSize.ts"
   auxiliaryClientEntries["semiotic-client-glyph"] =
     "src/components/recipes/recipeGlyph.tsx"
+  auxiliaryClientEntries["semiotic-client-compositional"] =
+    "src/components/recipes/compositional/CompositionalNavigator.tsx"
   auxiliaryClientEntries["semiotic-experimental-auxiliary"] =
     "src/components/internal/semioticExperimentalEsmAuxiliary.ts"
   // The bridge itself is experimental and otherwise partitions every stable

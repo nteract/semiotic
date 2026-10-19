@@ -800,6 +800,83 @@ import { lineageDagLayout } from "semiotic/recipes"
         </p>
       </section>
 
+      <section id="compositional-dags">
+        <h2>Compositional DAG interfaces</h2>
+        <p>
+          Try the <Link to="/examples/compositional-dag">interactive Compositional DAGs example</Link>:
+          wire individual fields, compare fixed and optimized row orders, select duplicate wires,
+          and trace dependencies through explicit transfers.
+        </p>
+        <p>
+          Use <code>prepareCompositionalGraph</code> and <code>routeCompositionalGraph</code> from{" "}
+          <code>semiotic/recipes/core</code> for connections to identifiable parts or named ports.
+          Every connection has its own ID, including exact endpoint duplicates. A node can also
+          remain an ordinary row or record node. Parts do not acquire dependencies merely by
+          sharing an owner; tracing follows supplied connections and explicit transfers.
+        </p>
+        <p>
+          Prepare and solve outside the synchronous scene callback. Supply owner-local geometry
+          and either authored positions in <code>route-only</code> mode or explicit order freedoms
+          in <code>optimize</code> mode. The built-in optimizer evaluates routed attachment geometry
+          and legal row swaps with bounded work. It reports infeasible pins, missing anchors,
+          unsupported compound routing, and shared-channel congestion through diagnostics.
+        </p>
+        <CodeBlock language="jsx">{`import { NetworkCustomChart } from "semiotic/network"
+import {
+  prepareCompositionalGraph, routeCompositionalGraph,
+  compositionalLayoutOptions, compositionalDagLayout
+} from "semiotic/recipes/core"
+
+// graph: versioned nodes, parts, ports, edges and explicit transfers.
+// view: representations, complete part orders, anchors and node constraints.
+// geometry: authored or measured owner-local rectangles, with a revision.
+const prepared = prepareCompositionalGraph(graph)
+const solved = routeCompositionalGraph({
+  requestId: "layout-1", prepared, view, geometry,
+  options: compositionalLayoutOptions({ mode: "route-only" })
+})
+// Retain the previous accepted scene if solved.status === "infeasible".
+const layoutConfig = { prepared, solved, showParts: true }
+
+<NetworkCustomChart
+  nodes={graph.nodes} edges={graph.edges}
+  layout={compositionalDagLayout} layoutConfig={layoutConfig}
+  frameProps={{ edgeIdentity: "id", edgeIdAccessor: "id" }}
+  title="Interface dependencies"
+  description="Declared connections between identifiable interfaces."
+  accessibleTable
+/>`}</CodeBlock>
+        <p>
+          <code>edgeIdentity="id"</code> opts streaming frames into replacement by edge ID;
+          the default still accumulates pushes by owner pair. <code>updateEdgeById</code> and
+          single-ID <code>removeEdge</code> on a <code>StreamNetworkFrame</code> ref operate on
+          one connection. <code>patchCompositionalGraph</code> validates semantic mutations
+          atomically. Serialized graph structure has a schema at{" "}
+          <code>semiotic/spec/v0.1/compositional-graph.schema.json</code>; runtime preparation
+          additionally validates references and directions. These are layout helpers, not a new
+          serialized MCP chart component.
+        </p>
+        <p>
+          For asynchronous engines, <code>CompositionalLayoutController</code> accepts matching
+          revisions atomically and keeps the last valid solution during work or failure.
+          <code>createCompositionalWorkerEngine</code> takes an application-owned worker;
+          <code>installCompositionalWorker</code> installs the matching worker protocol.
+          No worker or optional optimizer dependency is loaded automatically. Cancellation of the
+          built-in synchronous solve discards stale results; it cannot interrupt an executing sweep.
+        </p>
+        <p>
+          <code>CompositionalNavigator</code> from <code>semiotic/recipes/react</code> supplies
+          keyboard access to parts and ports. Stable glyph visibility and camera changes reuse
+          solved geometry. Explicit scrolling can use <code>projectCompositionalScroll</code>
+          with horizontal boundary slots to disclose clipped rows as continuation proxies.
+          <code>CompositionalMeasurementTransaction</code> caps host measurement corrections at
+          two. General compound optimization, free port permutations and arbitrary interior
+          routing corridors require another adapter. See the working controls, trace, individual
+          duplicate selection and shared HTML row geometry in the{" "}
+          <Link to="/examples/pipeline-explorer">compositional Pipeline Explorer</Link>.
+        </p>
+      </section>
+
       <section>
         <h2>Streamgraph</h2>
         <p>

@@ -13,7 +13,8 @@ export interface StreamNetworkFrameHandle {
    * pushes at the next animation frame. Geometry getters commit first; worker
    * execution keeps the previous geometry until the latest request completes.
    * Source, target and value use the configured accessors. Repeated pairs
-   * accumulate values and merge raw fields, with the latest field winning. */
+   * accumulate values and merge raw fields, with the latest field winning.
+   * With edgeIdentity="id", pushes replace the record/value for that ID instead. */
   push(edge: EdgePush): void
   /** Ingest an explicit edge batch immediately and commit one layout, absorbing
    * prior single-edge pushes. Worker execution completes geometry asynchronously. */
@@ -31,6 +32,8 @@ export interface StreamNetworkFrameHandle {
   /** Update all edges between source+target. Returns array of previous data.
    * Accumulated values are retained unless the updater changes the value accessor result. */
   updateEdge(sourceId: string, targetId: string, updater: (data: Datum) => Datum): Datum[]
+  /** Update one stable ID. Requires edgeIdentity="id"; owners and ID are immutable. */
+  updateEdgeById?(id: string, updater: (data: Datum) => Datum): Datum | null
   clear(): void
   getTopology(): { nodes: RealtimeNode[]; edges: RealtimeEdge[] }
   getTopologyDiff(): { addedNodes: string[]; removedNodes: string[]; addedEdges: string[]; removedEdges: string[] }

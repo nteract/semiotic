@@ -383,7 +383,11 @@ const ENTRY_GRAPHS = [
   // User-approved 615.5→616: S6 invisible-node paint skipping, prepared
   // rectangle hits and native pointer dispatch measure 615.9 KiB gzip.
   // Other entry budgets are unchanged.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 616 },
+  // User-approved 616→617 (2026-10-19): explicit network edge identity,
+  // atomic mutation and SSR propagation measure 631,503 gzip bytes (616.7 KiB).
+  // The compositional solver stays in recipes; its isolated graph remains
+  // within the unchanged recipes budget. No dependency or family coupling added.
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 617 },
   // Bumped 100→101: transitDiagramLayout's public detail modes, source-rooted
   // line derivation, and station-rendering contract extend the curated recipes
   // entry. Linux CI measures 100.3 KiB gzip; retain a reviewable 0.7 KiB

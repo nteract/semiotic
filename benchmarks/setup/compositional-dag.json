@@ -1,0 +1,128 @@
+{
+  "recordedAt": "2026-10-19T17:53:36.949Z",
+  "device": {
+    "cpu": "Apple M3 Pro",
+    "platform": "darwin",
+    "architecture": "arm64",
+    "memoryBytes": 38654705664
+  },
+  "browser": "149.0.7827.55",
+  "node": "v22.22.1",
+  "scope": "Warmed browser CPU microbenchmark of materialized disjoint owner pairs; five measured samples. Route-only transaction includes validation, local geometry, routing, and metrics. Local geometry is separately sampled, not subtracted. Heap is whole-page used JS heap, not retained feature memory. Optimizer, painting and picking are not timed; these results are not latency promises.",
+  "results": [
+    {
+      "owners": 30,
+      "edges": 300,
+      "samples": 5,
+      "warmups": 1,
+      "timings": {
+        "preparationMs": {
+          "p50": 2.299999713897705,
+          "p95": 3.6999998092651367
+        },
+        "localGeometryMs": {
+          "p50": 0.09999990463256836,
+          "p95": 0.20000028610229492
+        },
+        "routeOnlyTransactionMs": {
+          "p50": 5.5,
+          "p95": 10.599999904632568
+        },
+        "sceneEmissionMs": {
+          "p50": 0.09999990463256836,
+          "p95": 0.5999999046325684
+        },
+        "traceMs": {
+          "p50": 0,
+          "p95": 0.09999990463256836
+        },
+        "heapBytes": {
+          "p50": 59112638,
+          "p95": 60970866
+        }
+      },
+      "routedEdges": 300,
+      "sceneEdges": 300,
+      "status": "complete",
+      "diagnostics": [
+        "LAYOUT_TERMINATION"
+      ]
+    },
+    {
+      "owners": 200,
+      "edges": 5000,
+      "samples": 5,
+      "warmups": 1,
+      "timings": {
+        "preparationMs": {
+          "p50": 30.300000190734863,
+          "p95": 32.799999713897705
+        },
+        "localGeometryMs": {
+          "p50": 0.09999990463256836,
+          "p95": 0.20000028610229492
+        },
+        "routeOnlyTransactionMs": {
+          "p50": 136.40000009536743,
+          "p95": 156.69999980926514
+        },
+        "sceneEmissionMs": {
+          "p50": 2,
+          "p95": 2.4000000953674316
+        },
+        "traceMs": {
+          "p50": 0,
+          "p95": 0.09999990463256836
+        },
+        "heapBytes": {
+          "p50": 131942986,
+          "p95": 143534106
+        }
+      },
+      "routedEdges": 5000,
+      "sceneEdges": 5000,
+      "status": "complete",
+      "diagnostics": [
+        "LAYOUT_TERMINATION"
+      ]
+    },
+    {
+      "owners": 1000,
+      "edges": 25000,
+      "samples": 5,
+      "warmups": 1,
+      "timings": {
+        "preparationMs": {
+          "p50": 150.90000009536743,
+          "p95": 160.80000019073486
+        },
+        "localGeometryMs": {
+          "p50": 1.6999998092651367,
+          "p95": 2.3999996185302734
+        },
+        "routeOnlyTransactionMs": {
+          "p50": 2278.5,
+          "p95": 2376.4000000953674
+        },
+        "sceneEmissionMs": {
+          "p50": 9.899999618530273,
+          "p95": 10.400000095367432
+        },
+        "traceMs": {
+          "p50": 0,
+          "p95": 0.09999990463256836
+        },
+        "heapBytes": {
+          "p50": 216941506,
+          "p95": 228716146
+        }
+      },
+      "routedEdges": 25000,
+      "sceneEdges": 25000,
+      "status": "complete",
+      "diagnostics": [
+        "LAYOUT_TERMINATION"
+      ]
+    }
+  ]
+}

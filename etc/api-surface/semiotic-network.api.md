@@ -651,6 +651,7 @@ interface-member StreamNetworkFrameHandle::method::removeEdge = required removeE
 interface-member StreamNetworkFrameHandle::method::removeNode = required removeNode(id: string): boolean
 interface-member StreamNetworkFrameHandle::method::removeNodes = optional removeNodes(ids: string[]): Datum[]
 interface-member StreamNetworkFrameHandle::method::updateEdge = required updateEdge(sourceId: string, targetId: string, updater: (data: Datum) => Datum): Datum[]
+interface-member StreamNetworkFrameHandle::method::updateEdgeById = optional updateEdgeById(id: string, updater: (data: Datum) => Datum): Datum | null
 interface-member StreamNetworkFrameHandle::method::updateNode = required updateNode(id: string, updater: (data: Datum) => Datum): Datum | null
 interface-member StreamNetworkFrameHandle::method::updateNodes = optional updateNodes(ids: string[], updater: (data: Datum) => Datum): Datum[]
 interface-member StreamNetworkFrameProps::property::accessibleTable = optional accessibleTable: AccessibleTableProp | undefined
@@ -670,6 +671,7 @@ interface-member StreamNetworkFrameProps::property::decay = optional decay: Deca
 interface-member StreamNetworkFrameProps::property::description = optional description: string | undefined
 interface-member StreamNetworkFrameProps::property::edgeColorBy = optional edgeColorBy: "gradient" | "source" | "target" | ((d: Datum) => string) | undefined
 interface-member StreamNetworkFrameProps::property::edgeIdAccessor = optional edgeIdAccessor: ((d: Datum) => string) | string | undefined
+interface-member StreamNetworkFrameProps::property::edgeIdentity = optional edgeIdentity: "id" | "pair" | undefined
 interface-member StreamNetworkFrameProps::property::edgeOpacity = optional edgeOpacity: number | undefined
 interface-member StreamNetworkFrameProps::property::edgeSort = optional edgeSort: ((a: Datum, b: Datum) => number) | undefined
 interface-member StreamNetworkFrameProps::property::edgeStyle = optional edgeStyle: ((d: Datum) => NetworkMarkStyle) | undefined

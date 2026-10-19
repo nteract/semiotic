@@ -1,15 +1,20 @@
 import * as React from "react"
 import type { NetworkViewportRect } from "semiotic/network"
-import { bounds, nodes, cardWidth, cardHeight } from "./data"
+import { compositionalPath } from "semiotic/recipes/core"
+import type { SolvedCompositionalLayout } from "semiotic/recipes/core"
+import { nodes } from "./data"
 
 /** Use the frame's world-coordinate visible window: no duplicated fitting math or scroll listeners. */
 export function PipelineMinimap({
   visibleRect,
   selected,
+  solved,
 }: {
   visibleRect: NetworkViewportRect | null
   selected: string
+  solved: SolvedCompositionalLayout
 }) {
+  const bounds = solved.bounds
   // At small scales the viewport extends beyond the content. Keep its outline in the map.
   const x = Math.max(0, visibleRect?.x ?? 0)
   const y = Math.max(0, visibleRect?.y ?? 0)
@@ -22,18 +27,27 @@ export function PipelineMinimap({
     <figure className="pipeline-minimap">
       <figcaption>Where you are</figcaption>
       <svg
-        viewBox={`-20 -20 ${bounds.width + 40} ${bounds.height + 40}`}
+        viewBox={`${bounds.x - 20} ${bounds.y - 20} ${bounds.width + 40} ${bounds.height + 40}`}
         role="img"
         aria-label="Pipeline overview with the current viewport outlined"
       >
-        {nodes.map((node) => (
+        {solved.edges.map((edge) => (
+          <path
+            key={edge.edgeId}
+            d={edge.sections.map(compositionalPath).join(" ")}
+            fill="none"
+            stroke="var(--px-muted)"
+            strokeWidth={2}
+          />
+        ))}
+        {solved.nodes.map((node) => (
           <rect
             key={node.id}
-            x={node.x}
-            y={node.y}
-            width={cardWidth}
-            height={cardHeight}
-            fill={node.color}
+            x={node.rect.x}
+            y={node.rect.y}
+            width={node.rect.width}
+            height={node.rect.height}
+            fill={nodes.find((n) => n.id === node.semantic.nodeId)?.color}
             opacity={node.id === selected ? 1 : 0.4}
           />
         ))}

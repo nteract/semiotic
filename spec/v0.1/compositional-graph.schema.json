@@ -1,0 +1,368 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semiotic.nteract.io/spec/v0.1/compositional-graph.schema.json",
+  "title": "Semiotic compositional graph v0.1",
+  "description": "Portable semantics only. Runtime preparation additionally validates identity uniqueness, containment, endpoint resolution and port directions.",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "const": "semiotic.compositional-graph.v0.1"
+    },
+    "graphId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "revision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/node"
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/connection"
+      }
+    },
+    "transfers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/transfer"
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "graphId",
+    "revision",
+    "nodes",
+    "edges"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "json": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/json"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/json"
+          }
+        }
+      ]
+    },
+    "endpoint": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "node"
+            },
+            "portId": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "part"
+            },
+            "partId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "portId": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "kind",
+            "partId"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "port": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string"
+        },
+        "direction": {
+          "enum": [
+            "in",
+            "out",
+            "inout"
+          ]
+        },
+        "channel": {
+          "type": "string"
+        },
+        "valueType": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "direction"
+      ],
+      "additionalProperties": false
+    },
+    "part": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/$defs/json"
+        },
+        "parentPartId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/port"
+          }
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "node": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/$defs/json"
+        },
+        "parentId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/port"
+          }
+        },
+        "parts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/part"
+          }
+        },
+        "tracePolicy": {
+          "enum": [
+            "atomic",
+            "explicit",
+            "opaque"
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "evidence": {
+      "type": "object",
+      "properties": {
+        "basis": {
+          "enum": [
+            "declared",
+            "observed",
+            "inferred",
+            "illustrative",
+            "unknown"
+          ]
+        },
+        "precision": {
+          "enum": [
+            "exact",
+            "conservative",
+            "unknown"
+          ]
+        },
+        "runId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "snapshotId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "referenceIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "basis",
+        "precision"
+      ],
+      "additionalProperties": false
+    },
+    "connection": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceEndpoint": {
+          "$ref": "#/$defs/endpoint"
+        },
+        "targetEndpoint": {
+          "$ref": "#/$defs/endpoint"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/$defs/json"
+        },
+        "evidence": {
+          "$ref": "#/$defs/evidence"
+        }
+      },
+      "required": [
+        "id",
+        "source",
+        "target"
+      ],
+      "additionalProperties": false
+    },
+    "transfer": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "nodeId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/endpoint"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "target": {
+          "$ref": "#/$defs/endpoint"
+        },
+        "combination": {
+          "enum": [
+            "identity",
+            "all",
+            "any",
+            "unspecified"
+          ]
+        },
+        "kind": {
+          "type": "string"
+        },
+        "evidence": {
+          "$ref": "#/$defs/evidence"
+        }
+      },
+      "required": [
+        "id",
+        "nodeId",
+        "sources",
+        "target",
+        "combination"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "combination": {
+                "const": "identity"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "sources": {
+                "type": "array",
+                "maxItems": 1
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
