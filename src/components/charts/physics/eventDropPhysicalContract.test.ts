@@ -32,6 +32,37 @@ const metadata = (layout: ReturnType<typeof board>) =>
   layout.metadata as unknown as EventDropProjectionMetadata
 
 describe("EventDrop physical meaning", () => {
+  it("keeps both arrivals materialized when the board resizes during a late drop", () => {
+    const open = board(-11)
+    const store = new PhysicsPipelineStore(open.config)
+    store.enqueue(open.initialSpawns, open.initialSpawnPacing)
+    store.settle(600)
+    const closed = board(13)
+    store.restore(reconcilePhysicsChart(store.snapshot(), open, closed, true))
+    const arrival = board(44, [early, delayed])
+    store.restore(
+      reconcilePhysicsChart(store.snapshot(), closed, arrival, true)
+    )
+    store.tick(0.1)
+    expect(store.readBodies().map((body) => body.id)).toEqual(["early", "late"])
+
+    const resized = board(44, [early, delayed], [280, 300])
+    store.restore(
+      reconcilePhysicsChart(store.snapshot(), arrival, resized, true)
+    )
+    expect(store.readBodies().map((body) => body.id)).toEqual(["early", "late"])
+    expect(store.snapshot().queue).toEqual([])
+    store.settle(600)
+    expect(
+      readEventDropOccupancy(metadata(resized), store.readBodies())
+    ).toEqual({
+      accepted: [1, 0],
+      late: 1,
+      inFlight: 0,
+      total: 2
+    })
+  })
+
   it("admits, closes above retained history, and diverts the next arrival to the far-left bin", () => {
     const open = board(-11)
     const store = new PhysicsPipelineStore(open.config)

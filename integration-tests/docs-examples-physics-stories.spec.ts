@@ -102,6 +102,9 @@ for (const reducedMotion of ["reduce", "no-preference"] as const) {
       await expect(reading).toHaveText(
         "1 in event-time bins + 0 in the far-left bin + 1 in flight = 2 arrivals"
       )
+    // A responsive relayout must not send an already visible arrival back
+    // into its original 25-second source-time queue.
+    await page.setViewportSize({ width: 440, height: 844 })
     await expect(reading).toHaveText(
       "1 in event-time bins + 1 in the far-left bin + 0 in flight = 2 arrivals",
       { timeout: 15_000 }

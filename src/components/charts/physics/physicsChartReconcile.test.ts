@@ -4,7 +4,10 @@ import { createPhysicsWorkerRuntime } from "../../stream/physics/PhysicsWorkerRu
 import { buildGaltonBoardPhysics } from "./galtonBoardPhysics"
 import { reconcilePhysicsChart } from "./physicsChartReconcile"
 
-const build = (data: Array<{ id: string; value: number; label?: string }>) =>
+const build = (
+  data: Array<{ id: string; value: number; label?: string }>,
+  size: [number, number] = [500, 300]
+) =>
   buildGaltonBoardPhysics({
     data,
     valueAccessor: "value",
@@ -12,10 +15,105 @@ const build = (data: Array<{ id: string; value: number; label?: string }>) =>
     bins: 5,
     ballRadius: 6,
     seed: 1,
-    size: [500, 300]
+    size
   })
 
 describe("physics chart reconciliation", () => {
+  it("keeps pending arrival deadlines and tie order when geometry changes", () => {
+    const rows = [
+      { id: "a", value: 1 },
+      { id: "b", value: 3 },
+      { id: "c", value: 6 },
+      { id: "d", value: 9 }
+    ]
+    const first = build(rows)
+    const store = new PhysicsPipelineStore(first.config)
+    store.enqueue(
+      first.initialSpawns.map((spawn, index) => ({
+        ...spawn,
+        spawnAt: [0, 1, 1, 2][index]
+      }))
+    )
+    store.tick(0.1)
+    const before = store.snapshot()
+    const next = build(rows, [360, 300])
+    const result = reconcilePhysicsChart(before, first, next, true)
+    expect(result.world.bodies.map((body) => body.id)).toEqual(["a"])
+    expect(result.queue).toEqual(
+      before.queue.map((spawn) => ({
+        ...next.initialSpawns.find((candidate) => candidate.id === spawn.id),
+        spawnAt: spawn.spawnAt,
+        sequence: spawn.sequence
+      }))
+    )
+    expect(result.elapsedSeconds).toBe(before.elapsedSeconds)
+
+    const worker = createPhysicsWorkerRuntime()
+    worker.handle({ type: "init", snapshot: before })
+    worker.handle({ type: "restore", snapshot: result })
+    store.restore(result)
+    store.settle()
+    worker.handle({ type: "settle" })
+    const response = worker.handle({ type: "snapshot" })
+    if (response.type !== "snapshot") throw new Error("Missing snapshot")
+    expect(store.readBodies().map((body) => body.id)).toEqual([
+      "a",
+      "b",
+      "c",
+      "d"
+    ])
+    expect(response.snapshot.world.bodies).toEqual(
+      store.snapshot().world.bodies
+    )
+  })
+
+  it("paces only new rows when existing bodies also need new placement", () => {
+    const rows = [
+      { id: "a", value: 1 },
+      { id: "b", value: 3 }
+    ]
+    const first = build(rows)
+    const store = new PhysicsPipelineStore(first.config)
+    for (const spawn of first.initialSpawns) store.spawnNow(spawn)
+    store.tick(0.1)
+    const next = build(
+      [...rows, { id: "c", value: 6 }, { id: "d", value: 9 }],
+      [360, 300]
+    )
+    const result = reconcilePhysicsChart(store.snapshot(), first, next, true)
+    expect(result.world.bodies.map((body) => body.id)).toEqual(["a", "b", "c"])
+    expect(result.queue.map((spawn) => spawn.id)).toEqual(["d"])
+    expect(result.queue[0].spawnAt).toBeCloseTo(result.elapsedSeconds + 1 / 55)
+  })
+
+  it("does not resurrect removed bodies when the chart resizes", () => {
+    const rows = [
+      { id: "a", value: 1 },
+      { id: "b", value: 3 }
+    ]
+    const first = build(rows)
+    const store = new PhysicsPipelineStore(first.config)
+    for (const spawn of first.initialSpawns) store.spawnNow(spawn)
+    store.remove(["a"])
+    const next = build(rows, [360, 300])
+    const result = reconcilePhysicsChart(store.snapshot(), first, next, true)
+    expect(result.world.bodies.map((body) => body.id)).toEqual(["b"])
+    expect(result.queue).toEqual([])
+  })
+
+  it("reports running when a settled body's replacement needs to fall again", () => {
+    const rows = [{ id: "a", value: 1 }]
+    const first = build(rows)
+    const store = new PhysicsPipelineStore(first.config)
+    store.enqueue(first.initialSpawns)
+    store.settle()
+    expect(store.snapshot().simulationState).toBe("settled")
+    const next = build(rows, [360, 300])
+    const result = reconcilePhysicsChart(store.snapshot(), first, next, true)
+    expect(result.world.bodies[0].sleeping).toBe(false)
+    expect(result.simulationState).toBe("running")
+  })
+
   it("preserves motion, clock, and authored colliders when a placement stays the same", () => {
     const first = build([{ id: "a", value: 1, label: "before" }])
     const store = new PhysicsPipelineStore(first.config)

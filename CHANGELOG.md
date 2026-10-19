@@ -39,6 +39,10 @@ default arrow-key node navigation retain their behavior.
 
 ### Fixed
 
+- Physics chart resizes and encoding changes preserve arrival state: visible
+  bodies stay visible, queued arrivals keep their deadlines and order, and
+  removed bodies stay removed. This fixes late arrivals disappearing from the
+  watermark lesson during responsive relayouts.
 - Tooltips measure after browser layout and commit their placement before paint,
   avoiding forced synchronous layout when hover content appears while preserving
   flipping, boundary clamping, transitions and resize behavior.

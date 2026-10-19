@@ -63,8 +63,12 @@ export function reconcilePhysicsChart(
       }))
     },
     queue: snapshot.queue.map((spawn) => ({
-      ...spawn,
-      datum: after.get(spawn.id)?.datum ?? spawn.datum
+      // Relayout changes geometry, not an existing arrival's deadline or
+      // order among tied arrivals. Keep future bodies in their original queue.
+      ...(replaced.has(spawn.id) ? (after.get(spawn.id) ?? spawn) : spawn),
+      datum: after.get(spawn.id)?.datum ?? spawn.datum,
+      spawnAt: spawn.spawnAt,
+      sequence: spawn.sequence
     }))
   })
   const chartColliderIds = new Set(
@@ -77,9 +81,18 @@ export function reconcilePhysicsChart(
     ...next.config,
     colliders: [...(next.config.colliders ?? []), ...extraColliders]
   })
-  store.remove(Array.from(replaced))
+  store.remove(
+    Array.from(replaced).filter((id) => bodies.has(id) || !after.has(id))
+  )
+  // Already materialized bodies must stay materialized after a resize or
+  // encoding correction. Replaying their pacing would make them disappear
+  // until their source-time gap elapses again. Intentionally removed bodies
+  // have neither a live body nor a queued arrival and remain absent.
+  for (const spawn of next.initialSpawns) {
+    if (replaced.has(spawn.id) && bodies.has(spawn.id)) store.spawnNow(spawn)
+  }
   const spawns = next.initialSpawns
-    .filter((spawn) => !before.has(spawn.id) || replaced.has(spawn.id))
+    .filter((spawn) => !before.has(spawn.id))
     .map((spawn) => ({ ...spawn, spawnAt: undefined }))
   store.enqueue(
     spawns,
