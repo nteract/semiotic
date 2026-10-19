@@ -449,7 +449,7 @@ jobs:
       matrix:
         mode: [production, profiling]
     # Each mode owns its runner and runs one browser worker. Profiling checks
-    # commit counts; only production enforces the unchanged S3/S4 time budgets.
+    # commit counts; only production enforces the shared release time budgets.
     env:
       NETWORK_CAMERA_PROFILE: ${{ matrix.mode == 'profiling' && '1' || '0' }}
     steps:

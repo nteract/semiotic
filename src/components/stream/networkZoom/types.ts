@@ -30,8 +30,11 @@ export interface NetworkZoomOptions {
   pinchZoom?: boolean
   /** Double click/tap zoom; Shift reverses mouse double click. @default true */
   doubleClickZoom?: boolean
-  /** +/- zoom, Alt+arrows pan. Ordinary arrows retain chart navigation. @default true */
-  keyboard?: boolean
+  /** Camera shortcuts: +/- zoom and Alt+arrows pan by 60 screen pixels.
+   * True preserves ordinary arrow-key node navigation; false disables camera
+   * shortcuts. Opt into { arrowKeys: "pan" } to also pan with ordinary arrows.
+   * Editors and Ctrl/Meta browser shortcuts remain untouched. @default true */
+  keyboard?: boolean | { arrowKeys: "navigate" | "pan" }
   /** Delay after motion before expensive LOD promotion is allowed. @default 160 */
   settleDelay?: number
   /** Control/keyboard transition duration. Wheel, drag and pinch follow input each frame.

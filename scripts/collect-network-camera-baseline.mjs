@@ -3,6 +3,7 @@ import { resolve } from "node:path"
 import { execFileSync } from "node:child_process"
 import { fileURLToPath } from "node:url"
 import {
+  networkCameraBudgets,
   cameraBudgetFailures,
   pointerBudgetFailures,
   validateCameraReports,
@@ -91,6 +92,7 @@ baseline[profiling ? "profiling" : "production"] = {
     process.argv[4] ??
     "Working tree at measurement time; see the strategy notes",
   timingBudgets: {
+    limits: networkCameraBudgets,
     status: profiling
       ? "diagnostic"
       : timingBudgetFailures.length

@@ -2,7 +2,7 @@
   "schemaVersion": 2,
   "package": {
     "name": "semiotic",
-    "version": "3.12.1"
+    "version": "3.13.0"
   },
   "method": {
     "artifact": "npm pack --ignore-scripts tarball",
@@ -70,8 +70,8 @@
       "importPath": "semiotic/atlas",
       "symbol": "MotifBraidChart",
       "platform": "browser",
-      "rawBytes": 318730,
-      "gzipBytes": 108909,
+      "rawBytes": 320091,
+      "gzipBytes": 109335,
       "lazyRawBytes": 91302,
       "lazyGzipBytes": 29989,
       "packedPackageInputFiles": 47
@@ -92,10 +92,10 @@
       "importPath": "semiotic",
       "symbol": "LineChart",
       "platform": "browser",
-      "rawBytes": 361173,
-      "gzipBytes": 121282,
-      "lazyRawBytes": 120960,
-      "lazyGzipBytes": 44775,
+      "rawBytes": 361195,
+      "gzipBytes": 121287,
+      "lazyRawBytes": 120955,
+      "lazyGzipBytes": 44778,
       "packedPackageInputFiles": 67
     },
     {
@@ -103,8 +103,8 @@
       "importPath": "semiotic/xy",
       "symbol": "LineChart",
       "platform": "browser",
-      "rawBytes": 361120,
-      "gzipBytes": 120811,
+      "rawBytes": 361135,
+      "gzipBytes": 120824,
       "lazyRawBytes": 93068,
       "lazyGzipBytes": 32421,
       "packedPackageInputFiles": 60
@@ -114,10 +114,10 @@
       "importPath": "semiotic/line",
       "symbol": "LineChart",
       "platform": "browser",
-      "rawBytes": 361055,
-      "gzipBytes": 120982,
+      "rawBytes": 361110,
+      "gzipBytes": 121019,
       "lazyRawBytes": 93085,
-      "lazyGzipBytes": 32466,
+      "lazyGzipBytes": 32460,
       "packedPackageInputFiles": 60
     },
     {
@@ -125,8 +125,8 @@
       "importPath": "semiotic/ordinal",
       "symbol": "BarChart",
       "platform": "browser",
-      "rawBytes": 320915,
-      "gzipBytes": 104274,
+      "rawBytes": 320973,
+      "gzipBytes": 104284,
       "lazyRawBytes": 44250,
       "lazyGzipBytes": 15046,
       "packedPackageInputFiles": 37
@@ -136,8 +136,8 @@
       "importPath": "semiotic/network",
       "symbol": "SankeyDiagram",
       "platform": "browser",
-      "rawBytes": 400155,
-      "gzipBytes": 133036,
+      "rawBytes": 401548,
+      "gzipBytes": 133466,
       "lazyRawBytes": 15246,
       "lazyGzipBytes": 6795,
       "packedPackageInputFiles": 46
@@ -147,8 +147,8 @@
       "importPath": "semiotic/network/zoom",
       "symbol": "ZoomableNetworkCustomChart",
       "platform": "browser",
-      "rawBytes": 324750,
-      "gzipBytes": 111115,
+      "rawBytes": 326188,
+      "gzipBytes": 111522,
       "lazyRawBytes": 91325,
       "lazyGzipBytes": 29982,
       "packedPackageInputFiles": 49
@@ -169,10 +169,10 @@
       "importPath": "semiotic/realtime",
       "symbol": "RealtimeLineChart",
       "platform": "browser",
-      "rawBytes": 353384,
-      "gzipBytes": 118020,
-      "lazyRawBytes": 115067,
-      "lazyGzipBytes": 42448,
+      "rawBytes": 353455,
+      "gzipBytes": 118044,
+      "lazyRawBytes": 115057,
+      "lazyGzipBytes": 42444,
       "packedPackageInputFiles": 63
     },
     {
@@ -202,8 +202,8 @@
       "importPath": "semiotic/physics",
       "symbol": "GaltonBoardChart",
       "platform": "browser",
-      "rawBytes": 270281,
-      "gzipBytes": 89910,
+      "rawBytes": 270356,
+      "gzipBytes": 89936,
       "lazyRawBytes": 7069,
       "lazyGzipBytes": 2410,
       "packedPackageInputFiles": 19
@@ -235,8 +235,8 @@
       "importPath": "semiotic/server",
       "symbol": "renderChart",
       "platform": "node",
-      "rawBytes": 955164,
-      "gzipBytes": 294656,
+      "rawBytes": 955154,
+      "gzipBytes": 294652,
       "lazyRawBytes": 0,
       "lazyGzipBytes": 0,
       "packedPackageInputFiles": 2
@@ -257,8 +257,8 @@
       "importPath": "semiotic/server/node",
       "symbol": "renderToImage",
       "platform": "node",
-      "rawBytes": 956139,
-      "gzipBytes": 295064,
+      "rawBytes": 956129,
+      "gzipBytes": 295060,
       "lazyRawBytes": 971,
       "lazyGzipBytes": 613,
       "packedPackageInputFiles": 3
@@ -268,8 +268,8 @@
       "importPath": "semiotic/ai",
       "symbol": "suggestCharts",
       "platform": "browser",
-      "rawBytes": 125703,
-      "gzipBytes": 38763,
+      "rawBytes": 125721,
+      "gzipBytes": 38770,
       "lazyRawBytes": 32469,
       "lazyGzipBytes": 13945,
       "packedPackageInputFiles": 19
@@ -345,8 +345,8 @@
       "importPath": "semiotic/geo",
       "symbol": "ChoroplethMap",
       "platform": "browser",
-      "rawBytes": 320506,
-      "gzipBytes": 107832,
+      "rawBytes": 320552,
+      "gzipBytes": 107854,
       "lazyRawBytes": 3483,
       "lazyGzipBytes": 1743,
       "packedPackageInputFiles": 30

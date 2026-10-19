@@ -18,10 +18,12 @@ declare global {
     networkZoomLayoutCalls: number
     networkZoomDemoLayoutCalls: number
     networkZoomChanges: { x: number; y: number; k: number }[]
+    networkZoomFocusIds: string[]
   }
 }
 window.networkZoomLayoutCalls = 0
 window.networkZoomChanges = []
+window.networkZoomFocusIds = []
 const nodes = [{ id: "a" }, { id: "b" }],
   edges: [] = []
 const layout: NetworkCustomLayout = () => {
@@ -145,6 +147,7 @@ const emptyResults: Record<string, React.ReactNode> = {
 }
 
 export function ZoomFixture() {
+  const keyboardMode = new URLSearchParams(location.search).get("keyboard")
   const tooltipMode = new URLSearchParams(location.search).get("tooltip")
   const rawTooltip = new URLSearchParams(location.search).has("raw-tooltip")
   const [width, setWidth] = React.useState(540)
@@ -171,6 +174,9 @@ export function ZoomFixture() {
   const [controlled, setControlled] = React.useState(false)
   const [accept, setAccept] = React.useState(false)
   const [options, setOptions] = React.useState<NetworkZoomOptions>({
+    keyboard: keyboardMode === "pan" || keyboardMode === "navigate"
+      ? { arrowKeys: keyboardMode }
+      : keyboardMode !== "off",
     wheelZoom: true,
     duration: new URLSearchParams(location.search).has("animated") ? 180 : 0,
     minZoom: 0.25,
@@ -224,6 +230,7 @@ export function ZoomFixture() {
         accessibleTable={false}
         tooltip={tooltipMode === "false" ? false : tooltipMode === "declarative" ? { content: declarativeTooltip, chrome: "none" } : tooltip}
         onObservation={(event) => {
+          if (event.type === "focus") window.networkZoomFocusIds.push(String(event.datum?.id))
           if (event.type === "hover") setHover(String(event.datum?.id))
           if (event.type === "hover-end") setHover("none")
           if (event.type === "activate") setActivation(String(event.datum?.id))
