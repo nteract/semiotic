@@ -90,7 +90,13 @@ const layout: NetworkCustomLayout = () => {
           <input
             aria-label="Draft"
             defaultValue="hello"
-            style={{ pointerEvents: "auto", width: 70, margin: 8 }}
+            // Native input borders depend on the host OS theme. Author the
+            // fixture's outline so tooltip/camera snapshots stay deterministic.
+            style={{
+              pointerEvents: "auto", width: 70, margin: 8,
+              appearance: "none", border: "2px solid #767676", borderRadius: 0,
+              background: "white", color: "black", padding: "1px 2px"
+            }}
           />
         )
       },

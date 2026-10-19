@@ -1,5 +1,11 @@
 import { expect, test } from "@playwright/test"
 
+declare global {
+  interface Window {
+    tooltipPlacementsBeforePaint: { placed: boolean; contained: boolean }[]
+  }
+}
+
 for (const raw of [false, true]) {
   for (const mode of raw ? ["owned", "plain"] : ["owned", "plain", "declarative"]) {
     test(`${raw ? "frame" : "chart"} ${mode} renderer keeps one surface through zoom, pan and resize`, async ({
@@ -7,6 +13,29 @@ for (const raw of [false, true]) {
     }) => {
       const errors: string[] = []
       page.on("pageerror", (error) => errors.push(error.message))
+      await page.addInitScript(() => {
+        window.tooltipPlacementsBeforePaint = []
+        const BrowserResizeObserver = window.ResizeObserver
+        window.ResizeObserver = class extends BrowserResizeObserver {
+          constructor(callback: ResizeObserverCallback) {
+            super((entries, observer) => {
+              callback(entries, observer)
+              for (const { target } of entries) {
+                if (!target.matches(".stream-network-tooltip") || !target.isConnected) continue
+                // This runs before the observer returns to the browser's
+                // pre-paint loop, not after an expect/poll or another frame.
+                const tip = target.getBoundingClientRect()
+                const frame = target.closest(".stream-network-frame")!.getBoundingClientRect()
+                window.tooltipPlacementsBeforePaint.push({
+                  placed: target.getAttribute("data-placement") === "placed",
+                  contained: tip.left >= frame.left && tip.top >= frame.top &&
+                    tip.right <= frame.right && tip.bottom <= frame.bottom
+                })
+              }
+            })
+          }
+        }
+      })
       await page.goto(
         `/network-custom-layout-examples/?zoom-test&tooltip=${mode}${raw ? "&raw-tooltip" : ""}`
       )
@@ -61,6 +90,9 @@ for (const raw of [false, true]) {
       }
       await page.mouse.move(0, 0)
       await expect(tooltip).toHaveCount(0)
+      const placements = await page.evaluate(() => window.tooltipPlacementsBeforePaint)
+      expect(placements.length).toBeGreaterThan(0)
+      expect(placements.every(({ placed, contained }) => placed && contained)).toBe(true)
       expect(errors).toEqual([])
     })
   }

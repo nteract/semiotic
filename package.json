@@ -350,6 +350,7 @@
     "bench:pr-vs-main": "node scripts/bench-pr-vs-main.mjs",
     "test:network-camera": "playwright test --config playwright.network-camera.config.ts",
     "test:network-camera:contracts": "node --experimental-strip-types --test scripts/network-camera-budgets.test.mjs",
+    "test:network-camera:diagnostics": "playwright test --config playwright.network-camera-diagnostics.config.ts",
     "bench:release-vs-previous": "node scripts/bench-pr-vs-main.mjs --previous-tag",
     "baseline:machine": "node scripts/machine-baseline.mjs --write",
     "compare:machine-baseline": "node scripts/machine-baseline.mjs --compare",

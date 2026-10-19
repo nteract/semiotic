@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test"
-import { waitForChartReady, waitForAllChartsReady, waitForRafs } from "./helpers"
+import { expectTooltipWithinPlot, waitForChartReady, waitForAllChartsReady } from "./helpers"
 
 test.describe("Geo Charts - ChoroplethMap", () => {
   test.beforeEach(async ({ page }) => {
@@ -161,25 +161,22 @@ test.describe("Geo Charts - Hover interaction", () => {
     await page.goto("/geo-examples/")
   })
 
-  test("hovering over choropleth does not crash", async ({ page }) => {
+  test("choropleth hover retains content, placement and dismissal after resize", async ({ page }) => {
     await waitForChartReady(page, "geo-choropleth")
     const testCase = page.locator('[data-testid="geo-choropleth"]')
     const canvas = testCase.locator("canvas").first()
-    const box = await canvas.boundingBox()
-
-    if (box) {
-      // Move across the canvas to trigger hover events
-      await page.mouse.move(box.x + box.width * 0.3, box.y + box.height * 0.3)
-      await waitForRafs(page)
-      await page.mouse.move(box.x + box.width * 0.6, box.y + box.height * 0.6)
-      await waitForRafs(page)
-
-      // Chart should still have its scene drawn after the hover sweep —
-      // `aria-label` from `computeCanvasAriaLabel` carries a region
-      // count that only stays populated while the geo scene survives.
-      const dataCanvas = testCase.locator("canvas[aria-label]").first()
-      await expect(dataCanvas).toHaveAttribute("aria-label", /\d+/)
+    const tooltip = testCase.locator(".stream-frame-tooltip")
+    for (const width of [900, 700]) {
+      await page.setViewportSize({ width, height: 800 })
+      await canvas.hover({ position: { x: 150, y: 105 } })
+      await expect(tooltip).toHaveText("Region D75")
+      await expect(tooltip).toHaveAttribute("data-placement", "placed")
+      await expectTooltipWithinPlot(testCase, { left: 0, right: 0, top: 0, bottom: 0 })
+      await testCase.locator("h2").hover()
+      await expect(tooltip).toHaveCount(0)
     }
+    const dataCanvas = testCase.locator("canvas[aria-label]").first()
+    await expect(dataCanvas).toHaveAttribute("aria-label", /\d+/)
   })
 })
 

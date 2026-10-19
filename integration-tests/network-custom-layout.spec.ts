@@ -137,7 +137,14 @@ test("one viewport drives cards, edge culling and the minimap without relayout",
     )
   const input = page.getByLabel("Card 0", { exact: true })
   await input.fill("unsaved edit")
-  await root.evaluate((element) => {
+  const focusedCard = await input.elementHandle()
+  await root.evaluate(async (element) => {
+    // Firefox queues caret scrolling when a controlled input synchronizes
+    // defaultValue after editing (also reproducible without React). Let that
+    // edit paint before the separate user action of scrolling the viewport.
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+    )
     element.scrollTop = 810
   })
   await expect
@@ -145,6 +152,7 @@ test("one viewport drives cards, edge culling and the minimap without relayout",
     .toBeGreaterThan(700)
   await expect(input).toBeFocused()
   await expect(input).toHaveValue("unsaved edit")
+  expect(await input.evaluate((current, previous) => current === previous, focusedCard)).toBe(true)
   await expect(page.getByLabel("Card 1", { exact: true })).toBeAttached()
   expect((await snapshot()).visibleMarkIds).not.toContain("0")
   expect((await snapshot()).visibleMarkIds).not.toContain("1")

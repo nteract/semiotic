@@ -256,6 +256,24 @@ test("4500 edges: cold queries, overlapping bundles and committed-scene preparat
     })
   })
   console.log(JSON.stringify(reports))
+  const combinedScene = await page.evaluate(() =>
+    window.cameraScale.hitPreparationCost(window.cameraScale.result!)
+  )
+  expect(combinedScene).toMatchObject({ nodes: 3000, edges: 4500, trials: 30 })
+  expect(combinedScene.reports.map((report) => report.name)).toEqual([
+    "fresh scene", "unchanged scene", "edge restyle", "one rectangle",
+    "all rectangles", "one path", "all paths", "replacement scene"
+  ])
+  for (const report of combinedScene.reports) {
+    for (const stats of [report.sceneCommitMs, report.preparationMs, ...Object.values(report.firstQueryMs)]) {
+      expect(stats.samples).toBe(30)
+      for (const value of [stats.mean, stats.p95, stats.max]) {
+        expect(Number.isFinite(value)).toBe(true)
+        expect(value).toBeGreaterThanOrEqual(0)
+      }
+    }
+  }
+  console.log(JSON.stringify({ combinedScene }))
   await writeFile(
     testInfo.outputPath("edge-cold.json"),
     JSON.stringify(
@@ -263,6 +281,8 @@ test("4500 edges: cold queries, overlapping bundles and committed-scene preparat
         browser: browser.version(),
         cpu: cpus()[0].model,
         cpuThrottle: 4,
+        profiling: await page.evaluate(() => window.cameraScale.profiling),
+        combinedScene,
         reports
       },
       null,

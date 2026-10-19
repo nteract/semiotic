@@ -479,6 +479,10 @@ jobs:
           test-results/network-camera/${{ matrix.mode }}-measurements.json
           "CI ${{ github.sha }} / ${{ runner.os }} / ${{ runner.arch }} / run ${{ github.run_id }} attempt ${{ github.run_attempt }}"
 
+      - name: Diagnose failed production timings separately
+        if: failure() && matrix.mode == 'production' && hashFiles('test-results/network-camera/production-measurements.json') != ''
+        run: npm run test:network-camera:diagnostics
+
       - name: Upload timing and correctness reports
         if: always() && hashFiles('test-results/network-camera/**') != ''
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
