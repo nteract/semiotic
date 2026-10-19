@@ -143,6 +143,54 @@ test("virtual camera preserves focused drafts and discovers distant cards", asyn
   )
 })
 
+for (const mode of ["default", "navigate", "off"]) {
+  test(`keyboard ${mode} keeps ordinary arrows for node navigation`, async ({ page }) => {
+    await page.goto(`/network-custom-layout-examples/?zoom-test&keyboard=${mode}`)
+    const frame = page.locator(".stream-network-frame")
+    await frame.focus()
+    await frame.press("ArrowRight")
+    await expect.poll(() => page.evaluate(() => window.networkZoomFocusIds)).toEqual(["a"])
+    expect(await page.evaluate(() => window.networkZoomHandle!.getZoom())).toEqual({ x: 0, y: 0, k: 1 })
+    await expect(frame).toBeFocused()
+  })
+}
+
+test("opt-in ordinary-arrow pan preserves focus, tooltip alignment and editor keys", async ({ page }) => {
+  await page.goto("/network-custom-layout-examples/?zoom-test&keyboard=pan")
+  const frame = page.locator(".stream-network-frame")
+  await frame.focus()
+  await frame.press("ArrowRight")
+  await frame.press("Alt+ArrowDown")
+  await expect.poll(() => page.evaluate(() => window.networkZoomHandle!.getZoom()))
+    .toEqual({ x: -60, y: -60, k: 1 })
+  expect(await page.evaluate(() => window.networkZoomFocusIds)).toEqual([])
+  await expect(frame).toBeFocused()
+
+  // Hover the actual projected node after keyboard panning, then dismiss it.
+  await frame.locator("canvas").hover({ position: { x: 130, y: 80 } })
+  const tooltip = page.getByTestId("zoom-tooltip")
+  await expect(tooltip).toHaveText("a")
+  const bounds = (await frame.boundingBox())!
+  const tip = (await tooltip.boundingBox())!
+  expect(tip.x).toBeGreaterThanOrEqual(bounds.x)
+  expect(tip.y).toBeGreaterThanOrEqual(bounds.y)
+  expect(tip.x + tip.width).toBeLessThanOrEqual(bounds.x + bounds.width)
+  expect(tip.y + tip.height).toBeLessThanOrEqual(bounds.y + bounds.height)
+  await page.mouse.move(0, 0)
+  await expect(tooltip).toHaveCount(0)
+
+  const editor = page.getByLabel("Draft", { exact: true })
+  await editor.fill("edit")
+  const view = await page.evaluate(() => window.networkZoomHandle!.getZoom())
+  await editor.evaluate((input: HTMLInputElement) => input.setSelectionRange(0, 0))
+  await editor.press("ArrowRight")
+  await editor.press("X")
+  await expect(editor).toHaveValue("eXdit")
+  expect(await page.evaluate(() => window.networkZoomHandle!.getZoom())).toEqual(view)
+  await editor.press("Tab")
+  await expect(editor).not.toBeFocused()
+})
+
 test("keyboard navigation reveals a distant retained node", async ({
   page
 }) => {

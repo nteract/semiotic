@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "package": "3.12.1",
-  "generatedAt": "2026-10-06T00:28:53.284Z",
+  "package": "3.13.0",
+  "generatedAt": "2026-10-19T04:46:55.403Z",
   "environment": {
     "platform": "darwin",
     "architecture": "arm64",
@@ -11,7 +11,7 @@
     "artifact": "npm pack --ignore-scripts production tarball",
     "externalized": "Packed Semiotic package with individual d3 runtime dependencies resolved by the consumer bundler.",
     "bundled": "Synthetic package generated from the packed family ESM entries with all d3 modules folded into its split ESM graph; React, optional adapters, and topojson-client remain external.",
-    "webpack": "5.110.3",
+    "webpack": "5.112.0",
     "next": "16.3.4",
     "nextBundler": "webpack",
     "esbuild": "0.28.2",
@@ -30,8 +30,8 @@
     ]
   },
   "bundledVariant": {
-    "rawBytes": 1527936,
-    "gzipBytes": 503677,
+    "rawBytes": 1547706,
+    "gzipBytes": 514427,
     "files": 79,
     "outputFiles": 73
   },
@@ -70,20 +70,20 @@
       "subpath": "xy",
       "symbol": "LineChart",
       "externalized": {
-        "rawBytes": 472108,
-        "gzipBytes": 155273,
+        "rawBytes": 473408,
+        "gzipBytes": 156350,
         "files": 11,
         "resolvedD3Modules": 29
       },
       "bundled": {
-        "rawBytes": 593590,
-        "gzipBytes": 189072,
+        "rawBytes": 594855,
+        "gzipBytes": 190100,
         "files": 14,
         "resolvedD3Modules": 0
       },
       "delta": {
-        "rawBytes": 121482,
-        "gzipBytes": 33799
+        "rawBytes": 121447,
+        "gzipBytes": 33750
       }
     },
     {
@@ -91,20 +91,20 @@
       "subpath": "ordinal",
       "symbol": "BarChart",
       "externalized": {
-        "rawBytes": 372798,
-        "gzipBytes": 119764,
+        "rawBytes": 374155,
+        "gzipBytes": 120666,
         "files": 4,
         "resolvedD3Modules": 6
       },
       "bundled": {
-        "rawBytes": 468420,
-        "gzipBytes": 140000,
+        "rawBytes": 469726,
+        "gzipBytes": 140811,
         "files": 4,
         "resolvedD3Modules": 0
       },
       "delta": {
-        "rawBytes": 95622,
-        "gzipBytes": 20236
+        "rawBytes": 95571,
+        "gzipBytes": 20145
       }
     },
     {
@@ -112,20 +112,20 @@
       "subpath": "network",
       "symbol": "SankeyDiagram",
       "externalized": {
-        "rawBytes": 551606,
-        "gzipBytes": 184481,
+        "rawBytes": 563992,
+        "gzipBytes": 189696,
         "files": 12,
         "resolvedD3Modules": 46
       },
       "bundled": {
-        "rawBytes": 674023,
-        "gzipBytes": 220747,
+        "rawBytes": 686304,
+        "gzipBytes": 225943,
         "files": 12,
         "resolvedD3Modules": 4
       },
       "delta": {
-        "rawBytes": 122417,
-        "gzipBytes": 36266
+        "rawBytes": 122312,
+        "gzipBytes": 36247
       }
     },
     {
@@ -133,20 +133,20 @@
       "subpath": "geo",
       "symbol": "ChoroplethMap",
       "externalized": {
-        "rawBytes": 1794388,
-        "gzipBytes": 566880,
+        "rawBytes": 1797098,
+        "gzipBytes": 568512,
         "files": 7,
         "resolvedD3Modules": 0
       },
       "bundled": {
-        "rawBytes": 1842346,
-        "gzipBytes": 580097,
+        "rawBytes": 1844995,
+        "gzipBytes": 581657,
         "files": 7,
         "resolvedD3Modules": 0
       },
       "delta": {
-        "rawBytes": 47958,
-        "gzipBytes": 13217
+        "rawBytes": 47897,
+        "gzipBytes": 13145
       }
     }
   ],
@@ -156,18 +156,18 @@
       "symbol": "LineChart"
     },
     "externalized": {
-      "rawBytes": 1354697,
-      "gzipBytes": 425768,
+      "rawBytes": 1355951,
+      "gzipBytes": 426897,
       "files": 28
     },
     "bundled": {
-      "rawBytes": 1482855,
-      "gzipBytes": 462681,
+      "rawBytes": 1484045,
+      "gzipBytes": 463814,
       "files": 32
     },
     "delta": {
-      "rawBytes": 128158,
-      "gzipBytes": 36913
+      "rawBytes": 128094,
+      "gzipBytes": 36917
     }
   },
   "decision": {

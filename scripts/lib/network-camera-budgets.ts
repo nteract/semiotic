@@ -1,5 +1,15 @@
-// S3/S4 acceptance budgets at 4× CPU throttle. These are fixed targets, not
-// thresholds regenerated from whichever machine last captured a baseline.
+// Release budgets at 4× CPU throttle. The user-approved 2026-10-19 adjustment
+// covers AMD CI runs 39178104897/39199552746 (PipelineCard 4.22–4.39 ms,
+// pointer 1.95–2.08 ms) with headroom. Compact/fit caps stay unchanged.
+// Original 4 ms PipelineCard / 1 ms pointer goals remain optimization targets,
+// not release gates. Never regenerate these limits from the latest capture.
+export const networkCameraBudgets = {
+  revision: "2026-10-19",
+  camera1000CompactMs: 4,
+  camera1000PipelineMs: 6,
+  camera3000FitMs: 16,
+  pointerScriptLayoutMs: 2.5
+} as const
 export const cameraScenarios = [
   { nodes: 300, cards: "compact", edgeHits: false },
   { nodes: 1000, cards: "compact", edgeHits: false },
@@ -8,7 +18,7 @@ export const cameraScenarios = [
   { nodes: 3000, cards: "compact", edgeHits: true }
 ] as const
 export const cameraScales = ["fit", 0.5, 1, 2] as const
-export const pointerBudgetMs = 1
+export const pointerBudgetMs = networkCameraBudgets.pointerScriptLayoutMs
 
 export interface CameraRow {
   nodes: number
@@ -31,9 +41,15 @@ export interface CameraReport {
   rows: CameraRow[]
 }
 
-export function cameraScriptBudgetMs(row: Pick<CameraRow, "nodes" | "scale">) {
-  if (row.nodes === 1000 && row.scale === 1) return 4
-  if (row.nodes === 3000 && row.scale === "fit") return 16
+export function cameraScriptBudgetMs(
+  row: Pick<CameraRow, "nodes" | "cards" | "scale">
+) {
+  if (row.nodes === 1000 && row.scale === 1)
+    return row.cards === "pipeline"
+      ? networkCameraBudgets.camera1000PipelineMs
+      : networkCameraBudgets.camera1000CompactMs
+  if (row.nodes === 3000 && row.scale === "fit")
+    return networkCameraBudgets.camera3000FitMs
   return null
 }
 

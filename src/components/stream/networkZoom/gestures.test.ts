@@ -326,12 +326,72 @@ describe("network pointer driver", () => {
       expect(vi.getTimerCount()).toBe(0)
     }
   )
+  it.each([undefined, true, { arrowKeys: "navigate" }, false] as const)(
+    "preserves ordinary arrow navigation with keyboard=%j",
+    (keyboard) => {
+      options.keyboard = keyboard
+      const navigation = vi.fn()
+      const frame = document.createElement("div")
+      frame.addEventListener("keydown", navigation)
+      element.append(frame)
+      const event = new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true })
+      frame.dispatchEvent(event)
+      vi.advanceTimersByTime(20)
+      expect(event.defaultPrevented).toBe(false)
+      expect(navigation).toHaveBeenCalledOnce()
+      expect(view).toEqual({ x: 0, y: 0, k: 1 })
+    }
+  )
+  it.each([0.5, 2])("opts ordinary arrows into screen-pixel pan at scale %s", (k) => {
+    options.keyboard = { arrowKeys: "pan" }
+    view = { x: 0, y: 0, k }
+    const frame = document.createElement("div")
+    const navigation = vi.fn()
+    frame.addEventListener("keydown", navigation)
+    element.append(frame)
+    for (const [key, x, y] of [
+      ["ArrowRight", -60, 0], ["ArrowDown", -60, -60],
+      ["ArrowLeft", 0, -60], ["ArrowUp", 0, 0]
+    ] as const) {
+      const event = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true })
+      frame.dispatchEvent(event)
+      vi.advanceTimersByTime(20)
+      expect(event.defaultPrevented).toBe(true)
+      expect(view).toEqual({ x, y, k })
+    }
+    expect(navigation).not.toHaveBeenCalled()
+    expect(change.mock.calls.every(([, event]) => event.source === "keyboard")).toBe(true)
+  })
+  it("reads keyboard policy changes and preserves Alt pan, axis limits and browser shortcuts", () => {
+    const press = (key: string, modifiers: KeyboardEventInit = {}) => {
+      const event = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true, ...modifiers })
+      element.dispatchEvent(event)
+      vi.advanceTimersByTime(20)
+      return event
+    }
+    expect(press("ArrowRight", { altKey: true }).defaultPrevented).toBe(true)
+    expect(view.x).toBe(-60)
+    options.keyboard = { arrowKeys: "pan" }
+    options.pan = "x"
+    press("ArrowDown")
+    expect(view.y).toBe(0)
+    for (const modifier of [{ ctrlKey: true }, { metaKey: true }])
+      expect(press("ArrowRight", modifier).defaultPrevented).toBe(false)
+    expect(view.x).toBe(-60)
+    options.keyboard = { arrowKeys: "navigate" }
+    expect(press("ArrowRight").defaultPrevented).toBe(false)
+    options.keyboard = false
+    expect(press("ArrowRight", { altKey: true }).defaultPrevented).toBe(false)
+    expect(press("+").defaultPrevented).toBe(false)
+    expect(view).toEqual({ x: -60, y: 0, k: 1 })
+  })
   it("respects reduced motion and leaves browser keyboard zoom and editors alone", () => {
     vi.stubGlobal(
       "matchMedia",
       vi.fn(() => ({ matches: true }))
     )
     options.duration = 500
+    options.keyboard = { arrowKeys: "pan" }
     driver.zoomBy(2)
     vi.advanceTimersByTime(20)
     expect(view.k).toBe(2)
@@ -352,6 +412,11 @@ describe("network pointer driver", () => {
     })
     input.dispatchEvent(edit)
     expect(edit.defaultPrevented).toBe(false)
+    const editArrow = new KeyboardEvent("keydown", {
+      key: "ArrowRight", bubbles: true, cancelable: true
+    })
+    input.dispatchEvent(editArrow)
+    expect(editArrow.defaultPrevented).toBe(false)
     vi.advanceTimersByTime(200)
     expect(view.k).toBe(2)
   })

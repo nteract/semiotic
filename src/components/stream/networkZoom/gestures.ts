@@ -365,9 +365,10 @@ export function bindNetworkZoom(element: HTMLElement, host: Host) {
     zoomBy(event.shiftKey ? 0.5 : 2, "control", plotPoint(event))
   }
   const key = (event: KeyboardEvent) => {
+    const keyboard = host.getOptions().keyboard
     if (
       host.getOptions().locked ||
-      host.getOptions().keyboard === false ||
+      keyboard === false ||
       ignores(event.target) ||
       event.ctrlKey ||
       event.metaKey
@@ -377,7 +378,10 @@ export function bindNetworkZoom(element: HTMLElement, host: Host) {
       event.preventDefault()
       event.stopPropagation()
       zoomBy(event.key === "+" || event.key === "=" ? 2 : 0.5, "keyboard")
-    } else if (event.altKey && event.key.startsWith("Arrow")) {
+    } else if (
+      (event.altKey || (typeof keyboard === "object" && keyboard.arrowKeys === "pan")) &&
+      ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)
+    ) {
       event.preventDefault()
       event.stopPropagation()
       panBy(

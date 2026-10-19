@@ -16,7 +16,7 @@ test("4500 edges: complete coalesced pointer updates with real tooltip chrome", 
   )
   await expect
     .poll(() =>
-      page.evaluate(() => !!window.cameraScale?.handle?.getCustomLayout())
+      page.evaluate(() => !!window.cameraScale?.handle?.getCustomLayout?.())
     )
     .toBe(true)
   const rows = []
@@ -113,7 +113,7 @@ test("4500 edges: complete coalesced pointer updates with real tooltip chrome", 
       }
       rows.push(row)
       console.log(JSON.stringify(row))
-      // The original 1ms budget, including script and browser layout. Profiling
+      // The shared release budget includes script and browser layout. Profiling
       // builds establish commit attribution; production establishes timing.
       if (!(await page.evaluate(() => window.cameraScale.profiling)))
         expect.soft(row.scriptMs + row.layoutMs, `${scenario}/k=${k}: pointer script + layout ms`)
@@ -149,7 +149,7 @@ test("4500 edges: cold queries, overlapping bundles and committed-scene preparat
   )
   await expect
     .poll(() =>
-      page.evaluate(() => !!window.cameraScale?.handle?.getCustomLayout())
+      page.evaluate(() => !!window.cameraScale?.handle?.getCustomLayout?.())
     )
     .toBe(true)
   const reports = await page.evaluate(() => {

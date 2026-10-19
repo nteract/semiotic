@@ -7,8 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.13.0]
+
+### Network camera and semantic zoom
+
+The opt-in `semiotic/network/zoom` camera keeps custom layouts in authored
+coordinates while synchronizing canvas, SVG, HTML cards, hit testing and
+keyboard focus. This release improves camera and pointer-update performance,
+adds discrete LOD subscriptions and retained-scene SVG export, and supports
+ordinary-arrow panning as an explicit keyboard policy. Existing charts and
+default arrow-key node navigation retain their behavior.
+
 ### Added
 
+- `zoomOptions.keyboard: { arrowKeys: "pan" }` opts ordinary arrow keys into
+  60-screen-pixel panning. Alt+arrows still pan and plus/minus still zoom.
+  Boolean settings retain their behavior; `{ arrowKeys: "navigate" }` explicitly
+  selects default node navigation. Editable content and browser shortcuts are
+  unaffected.
 - `exportNetworkViewSVG` from `semiotic/server`, `semiotic/server/node` and
   `semiotic/server/edge` exports a retained network scene with a fitted, identity
   or explicit camera. SVG backgrounds, marks and card overlays are preserved;
@@ -23,6 +39,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Tooltips measure after browser layout and commit their placement before paint,
+  avoiding forced synchronous layout when hover content appears while preserving
+  flipping, boundary clamping, transitions and resize behavior.
 - Static network exports apply default label colors without mutating retained
   labels, supporting frozen scenes and reuse across themes.
 - Static network rendering preserves custom scenes and SVG decorations supplied

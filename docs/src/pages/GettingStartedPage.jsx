@@ -184,7 +184,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/ai",
-    "kb": 645,
+    "kb": 646,
     "blurb": "All schema-backed charts + validation — optimized for LLM code generation"
   },
   {

@@ -107,7 +107,7 @@
     "src/components/store/selectionProvenance.ts"
   ],
   "inventoryVersion": 1,
-  "repositoryVersion": "3.12.1",
+  "repositoryVersion": "3.13.0",
   "relations": [
     {
       "id": "claim-support",
@@ -4600,6 +4600,7 @@
         "applyAudienceBias",
         "effectiveFamiliarity",
         "receivabilityBias",
+        "receivabilityBiasFromFindings",
         "stretchFamiliarityCeiling"
       ]
     },

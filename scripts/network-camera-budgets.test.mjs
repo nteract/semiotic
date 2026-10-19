@@ -16,6 +16,8 @@ import {
   cameraScales,
   cameraScriptBudgetMs,
   cameraBudgetFailures,
+  networkCameraBudgets,
+  pointerBudgetMs,
   validateCameraReports,
   validatePointerReport,
   pointerBudgetFailures
@@ -63,7 +65,7 @@ function capture(profiling = false) {
   return { reports, pointer }
 }
 
-test("the complete production matrix passes the unchanged S3/S4 boundaries", () => {
+test("the complete production matrix enforces the approved release boundaries", () => {
   const { reports, pointer } = capture()
   const gated = []
   for (const report of reports)
@@ -77,10 +79,11 @@ test("the complete production matrix passes the unchanged S3/S4 boundaries", () 
   assert.deepEqual(gated, [
     [1000, "compact", false, 1, 4],
     [3000, "compact", false, "fit", 16],
-    [1000, "pipeline", false, 1, 4],
+    [1000, "pipeline", false, 1, 6],
     [3000, "compact", true, "fit", 16]
   ])
-  for (const row of pointer.rows) row.layoutMs = 0.5
+  assert.equal(pointerBudgetMs, 2.5)
+  for (const row of pointer.rows) row.layoutMs = pointerBudgetMs - row.scriptMs
   validateCameraReports(reports)
   validatePointerReport(pointer, reports[0])
   assert.deepEqual(cameraBudgetFailures(reports), [])
@@ -90,6 +93,24 @@ test("the complete production matrix passes the unchanged S3/S4 boundaries", () 
   pointer.rows[0].layoutMs += 0.001
   assert.equal(cameraBudgetFailures(reports).length, 4)
   assert.equal(pointerBudgetFailures(pointer).length, 1)
+})
+
+test("saved AMD and Intel evidence fits the revised policy without rewriting its original result", () => {
+  for (const name of [
+    "ci-39178104897", "ci-39188103177", "ci-39199552746", "main-39199597493"
+  ]) {
+    const saved = JSON.parse(readFileSync(new URL(
+      `../benchmarks/setup/network-camera-scale-s6-${name}.json`, import.meta.url
+    ), "utf8"))
+    const before = structuredClone(saved)
+    const { reports, edgePointer } = saved.production
+    validateCameraReports(reports)
+    validatePointerReport(edgePointer, reports[0])
+    assert.deepEqual(cameraBudgetFailures(reports), [], name)
+    assert.deepEqual(pointerBudgetFailures(edgePointer), [], name)
+    assert.deepEqual(saved, before)
+    assert.equal(saved.production.timingBudgets.status, name.startsWith("ci-") ? "failed" : "passed")
+  }
 })
 
 test("profiling retains structural checks but never supplies timing acceptance", () => {
@@ -110,14 +131,14 @@ test("CPU replays select only failed production rows without changing acceptance
   const saved = { production: { reports, edgePointer: pointer } }
   assert.deepEqual(networkCameraDiagnostics(saved), [])
   const camera = reports[3].rows.find((row) => row.scale === 1)
-  camera.scriptMs = 4.01
+  camera.scriptMs = 6.01
   // Diagnostic-only scales never acquire an acceptance threshold.
   reports[0].rows[0].scriptMs = 1000
-  pointer.rows[0].scriptMs = 1.01
+  pointer.rows[0].scriptMs = 2.51
   const before = structuredClone(saved)
   assert.deepEqual(networkCameraDiagnostics(saved), [
-    { kind: "camera", row: camera, budget: 4 },
-    { kind: "pointer", row: pointer.rows[0], budget: 1 }
+    { kind: "camera", row: camera, budget: 6 },
+    { kind: "pointer", row: pointer.rows[0], budget: 2.5 }
   ])
   assert.deepEqual(saved, before)
   assert.throws(() => networkCameraDiagnostics({}), /production capture/)
@@ -253,7 +274,7 @@ test("collector preserves failed production evidence when adding profiling diagn
   }
   const { reports, pointer } = capture()
   reports[1].rows[2].scriptMs = 4.001
-  pointer.rows[0].scriptMs = 1
+  pointer.rows[0].scriptMs = 2.5
   for (const [index, report] of reports.entries()) {
     const dir = join(root, `network-camera-scale-measure-${index}`)
     mkdirSync(dir)
@@ -295,6 +316,7 @@ test("collector preserves failed production evidence when adding profiling diagn
   const recorded = JSON.parse(readFileSync(destination, "utf8"))
   assert.equal(recorded.production.sourceCommit, commit)
   assert.equal(recorded.production.timingBudgets.status, "failed")
+  assert.deepEqual(recorded.production.timingBudgets.limits, networkCameraBudgets)
   assert.equal(recorded.production.timingBudgets.failures.length, 2)
   assert.equal(recorded.production.reports.length, 5)
   assert.deepEqual(recorded.production.edgeQueries, cold)

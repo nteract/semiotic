@@ -1366,6 +1366,17 @@ function Card() {
           <code> settleDelay</code> defers detail promotion without delaying camera movement.
         </p>
         <p>
+          For an explorer that uses ordinary arrows to move the camera, opt into
+          <code>{' zoomOptions={{ keyboard: { arrowKeys: "pan" } }}'}</code>.
+          Each arrow pans by 60 screen pixels, independent of zoom; Alt+arrows
+          still pan, and plus/minus still zoom. The default <code>keyboard: true</code>
+          and explicit <code>{'{ arrowKeys: "navigate" }'}</code> keep ordinary arrows
+          for node navigation. <code>keyboard: false</code> disables camera shortcuts
+          while preserving node navigation. Inputs, editable card content, browser
+          shortcuts and Tab keep their native behavior. Provide node access through
+          your cards or accessible table when choosing ordinary-arrow panning.
+        </p>
+        <p>
           <code>zoomOptions</code> also exposes <code>locked</code>, <code>zoomEnabled</code>,
           <code> pan</code> (true, false, "x" or "y"), and separate gesture switches.
           Scale and pan bounds apply to fit and imperative movement too. Content
