@@ -89,7 +89,8 @@ export function reconcilePhysicsChart(
   // until their source-time gap elapses again. Intentionally removed bodies
   // have neither a live body nor a queued arrival and remain absent.
   for (const spawn of next.initialSpawns) {
-    if (replaced.has(spawn.id) && bodies.has(spawn.id)) store.spawnNow(spawn)
+    if (replaced.has(spawn.id) && bodies.has(spawn.id))
+      store.enqueue({ ...spawn, spawnAt: undefined })
   }
   const spawns = next.initialSpawns
     .filter((spawn) => !before.has(spawn.id))
@@ -98,7 +99,8 @@ export function reconcilePhysicsChart(
     spawns,
     paceNewBodies && !snapshot.paused ? next.initialSpawnPacing : undefined
   )
-  // Data updates are visible even while playback is paused.
+  // Commit immediate replacements and synchronize simulation-state observers,
+  // even while playback is paused. Future arrivals retain their deadlines.
   store.materializeDueSpawns()
   return store.snapshot()
 }
