@@ -9,6 +9,7 @@ import { EventDropChart } from "./EventDropChart"
 import { GaltonBoardChart } from "./GaltonBoardChart"
 import { PacketFlowChart } from "./PacketFlowChart"
 import { UnitPileChart } from "./UnitPileChart"
+import { ProcessFlowChart } from "./ProcessFlowChart"
 
 let lastFrameProps: StreamPhysicsFrameProps | null = null
 
@@ -94,6 +95,35 @@ describe("physics HOC frame bodyStyle composition", () => {
   afterEach(() => {
     vi.unstubAllGlobals()
   })
+
+  it.each([
+    [{ opacity: 0.5 }, "triangle"],
+    [() => ({ opacity: 0.5 }), "triangle"],
+    [{ mark: "hexagon", opacity: 0.5 }, "hexagon"]
+  ] as const)(
+    "preserves rule marks unless frame bodyStyle explicitly overrides them",
+    (bodyStyle, mark) => {
+      const datum = { id: "work", stage: "a", mark: "circle" }
+      render(
+        <ProcessFlowChart
+          data={[datum]}
+          stages={[{ id: "a" }]}
+          styleRules={[{ style: { mark: "triangle" } }]}
+          bodyMark="square"
+          frameProps={{ bodyStyle }}
+        />
+      )
+      const resolved = lastFrameProps?.bodyStyle
+      expect(typeof resolved).toBe("function")
+      expect(
+        typeof resolved === "function" &&
+          resolved({ datum } as never, {
+            selected: false,
+            simulationState: "paused"
+          })
+      ).toMatchObject({ mark, opacity: 0.5 })
+    }
+  )
 
   it.each(cases)(
     "$name preserves generated defaults and applies authored fill/cursor",

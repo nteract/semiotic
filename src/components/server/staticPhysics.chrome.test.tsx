@@ -43,6 +43,30 @@ function settledBodyX(svg: string): number {
 }
 
 describe("static physics chrome", () => {
+  it.each(["light", "dark", { mode: "auto" }])("applies the physics palette to concrete chrome while retaining %j typography", (theme) => {
+    const { svg, evidence } = renderChartWithEvidence("EventDropChart", {
+      data: [{ time: 1, arrivalTime: 0 }],
+      title: "Palette title",
+      annotations: [{ type: "label", x: 40, y: 30, label: "Palette note" }],
+      legend: { legendGroups: [{
+        styleFn: () => ({ fill: "#ff0000" }),
+        items: [{ label: "Source A" }]
+      }] },
+      theme,
+      frameProps: {
+        theme: { background: "#102030", text: "#ffffff" }
+      }
+    })
+    expect(svg.match(/<text\b[^>]*class="semiotic-chart-title"[^>]*>/)?.[0])
+      .toContain('fill="#ffffff"')
+    expect(svg.match(/<text[^>]*class="annotation-note-label"[^>]*>/)?.[0])
+      .toContain('fill="#ffffff"')
+    expect(svg).toContain("Source A")
+    expect(svg.match(/<text[^>]*fill="#ffffff"[^>]*>Source A<\/text>/)).not.toBeNull()
+    expect(evidence.markCount).toBe(1)
+    if (typeof theme === "object") expect(svg).toContain("prefers-color-scheme")
+  })
+
   it("matches the live overlay's unthemed title size", () => {
     const svg = renderToStaticSVG("physics", {
       ...movingFrame,

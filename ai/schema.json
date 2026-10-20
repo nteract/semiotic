@@ -375,6 +375,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -1016,6 +1095,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -1650,6 +1808,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -2262,6 +2499,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -2873,6 +3189,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -3495,6 +3890,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -4041,6 +4515,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -4554,6 +5107,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -5158,6 +5790,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -5734,6 +6445,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -6362,6 +7152,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -6937,6 +7806,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -7521,6 +8469,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -8058,6 +9085,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -8647,6 +9753,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -9186,6 +10371,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -9718,6 +10982,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -10274,6 +11617,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -10809,6 +12231,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -11356,6 +12857,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -11855,6 +13435,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -12363,6 +14022,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -12938,6 +14676,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -13409,6 +15226,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -14238,6 +16134,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -15048,6 +17023,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -15836,6 +17890,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -16628,6 +18761,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -17401,6 +19613,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -18166,6 +20457,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -18949,6 +21319,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -19451,6 +21900,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -19980,6 +22508,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -20468,6 +23075,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -20944,6 +23630,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -21523,6 +24288,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -22103,6 +24947,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -22586,6 +25509,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -23118,6 +26120,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -23699,6 +26780,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -24245,6 +27405,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -24902,6 +28141,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -25459,6 +28777,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -26072,6 +29469,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -27190,6 +30666,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -27638,6 +31193,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -28352,6 +31986,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -28592,11 +32305,15 @@
               "description": "Touch-first interaction policy."
             },
             "colorBy": {
-              "type": "string",
-              "description": "Categorical field or accessor used to color simulated bodies.",
+              "type": [
+                "string",
+                "object"
+              ],
+              "description": "Source category accessor, or { window: cycle | string[] } for a cyclic window palette.",
               "x-semiotic-runtime-types": [
                 "string",
-                "function"
+                "function",
+                "object"
               ]
             },
             "color": {
@@ -28799,6 +32516,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -28864,6 +32660,64 @@
                 "additionalProperties": false
               }
             },
+            "sources": {
+              "type": "array",
+              "description": "Source definitions: id, label, color, mark, glyph, active, visible, description. Source identity sets body defaults and accessible rail tiles."
+            },
+            "sourceAccessor": {
+              "type": "string",
+              "description": "Source identity field for per-source ledger totals and marks.",
+              "default": "source",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "sourceRail": {
+              "type": "object",
+              "description": "Source rail placement: { side: left | top | none, tileSize? }."
+            },
+            "onSourceClick": {
+              "description": "Called with the source definition when its tile is clicked or keyboard-activated; update source.active in the host.",
+              "x-semiotic-runtime-types": [
+                "function"
+              ]
+            },
+            "timeUnit": {
+              "type": "string",
+              "enum": [
+                "ms",
+                "s"
+              ],
+              "description": "Time units for arrival pacing. Explicit units are recommended; omitted infers ms when an absolute event or arrival time exceeds 100000, otherwise seconds."
+            },
+            "onLedgerChange": {
+              "description": "Receives source admission ledger rows on lifecycle changes or at most every 500ms during accumulation. Counts describe the source snapshot.",
+              "x-semiotic-runtime-types": [
+                "function"
+              ]
+            },
+            "onWatermarkChange": {
+              "description": "Receives (value, previous) when the snapshot watermark advances.",
+              "x-semiotic-runtime-types": [
+                "function"
+              ]
+            },
+            "onClockTick": {
+              "description": "Throttled simulation HUD callback with simTime, eventTimeFrontier, watermark, timeScale and paused. Uses the synchronous callback path.",
+              "x-semiotic-runtime-types": [
+                "function"
+              ]
+            },
+            "clockTickMs": {
+              "type": "number",
+              "description": "Minimum wall-clock milliseconds between HUD notifications; clamped to at least 100.",
+              "default": 100
+            },
+            "windowChrome": {
+              "type": "object",
+              "description": "{ show?, fill? }: hide the window paint while retaining colliders, or set a fill color / React ledger-row callback."
+            },
             "timeAccessor": {
               "type": "string",
               "description": "Event-time field used to assign drops to windows.",
@@ -28896,7 +32750,7 @@
             },
             "watermark": {
               "type": "object",
-              "description": "Watermark config: { delay } or a latest-event-time function replays a monotonic watermark in arrival order; { value } tests one fixed admission policy. Use watermarkAtArrivalAccessor to retain recorded decisions independently of current closure.",
+              "description": "Watermark config: { delay, perSource?, idleTimeout?, allowedLateness?, external? } or a latest-event-time function replays a monotonic watermark in arrival order; { value } tests one fixed admission policy. Use watermarkAtArrivalAccessor to retain recorded decisions independently of current closure.",
               "x-semiotic-runtime-types": [
                 "object",
                 "function"
@@ -29250,6 +33104,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -29694,6 +33627,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -30307,6 +34319,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -31193,6 +35284,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -31342,7 +35512,9 @@
                 "faceted",
                 "pill",
                 "diamond",
-                "square"
+                "square",
+                "triangle",
+                "hexagon"
               ]
             }
           },
@@ -33020,6 +37192,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -33931,6 +38182,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {
@@ -34469,6 +38799,85 @@
                   "style": {
                     "type": "object",
                     "properties": {
+                      "mark": {
+                        "type": "string",
+                        "enum": [
+                          "circle",
+                          "halo",
+                          "faceted",
+                          "pill",
+                          "diamond",
+                          "square",
+                          "triangle",
+                          "hexagon"
+                        ]
+                      },
+                      "glyph": {
+                        "type": "object",
+                        "properties": {
+                          "viewBox": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "anchor": {
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            },
+                            "minItems": 2,
+                            "maxItems": 2
+                          },
+                          "parts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "d": {
+                                  "type": "string"
+                                },
+                                "fill": {
+                                  "type": "string"
+                                },
+                                "stroke": {
+                                  "type": "string"
+                                },
+                                "strokeWidth": {
+                                  "type": "number"
+                                },
+                                "opacity": {
+                                  "type": "number"
+                                },
+                                "strokeLinecap": {
+                                  "enum": [
+                                    "butt",
+                                    "round",
+                                    "square"
+                                  ]
+                                },
+                                "strokeLinejoin": {
+                                  "enum": [
+                                    "miter",
+                                    "round",
+                                    "bevel"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "d"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "parts"
+                        ],
+                        "additionalProperties": false
+                      },
                       "fill": {
                         "oneOf": [
                           {

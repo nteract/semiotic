@@ -22,7 +22,8 @@ import { getDevicePixelRatio, prepareCanvas, subscribeToCanvasFontInvalidation }
 import {
   createPhysicsCanvasThemeCache,
   physicsCanvasColorWithAlpha,
-  physicsCanvasThemeCSSValue
+  physicsCanvasThemeCSSValue,
+  physicsThemeVariables
 } from "./PhysicsCanvasTheme"
 import { resolveCanvasPaint } from "../renderers/canvasRenderHelpers"
 import {
@@ -215,6 +216,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
         stroke,
         strokeWidth,
         summary,
+        theme,
         suspendWhenHidden = true,
         svgAnnotationRules,
         title,
@@ -750,7 +752,8 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
         sceneRevisionDiagnosticsRef.current.afterCompute(
           sceneRevisionCheck,
           true,
-          false
+          // Theme/style invalidation requests a repaint of retained geometry.
+          dirtyRef.current
         )
         dirtyRef.current = false
       }, [
@@ -1406,6 +1409,11 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
         requestRender()
         return () => { readyToStepRef.current = false }
       }, [requestRender])
+      useEffect(() => {
+        themeCacheRef.current?.invalidate()
+        dirtyRef.current = true
+        requestRender()
+      }, [theme, requestRender])
 
       const serverLikeRender =
         isServerEnvironment || (!hydrated && wasHydratingFromSSR)
@@ -1504,6 +1512,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
             role="group"
             aria-label={ariaLabel}
             style={{
+              ...physicsThemeVariables(theme),
               width: responsiveWidth ? "100%" : size[0],
               height: responsiveHeight ? "100%" : size[1]
             }}
@@ -1527,6 +1536,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
           aria-describedby={focusedSemanticItem ? liveRegionId : undefined}
           tabIndex={0}
           style={{
+            ...physicsThemeVariables(theme),
             position: "relative",
             width: responsiveWidth ? "100%" : size[0],
             height: responsiveHeight ? "100%" : size[1]

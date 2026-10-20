@@ -1,3 +1,7 @@
+import { eventDropWindowBackground } from "../charts/physics/eventDropWindowBackground"
+import { physicsCanvasThemeCSSValue } from "../stream/physics/PhysicsCanvasTheme"
+import { eventDropBodyStyle } from "../charts/physics/eventDropStyle"
+import { eventDropSourceRail } from "../charts/physics/eventDropSources"
 import { fnv1a32 } from "../utils/hash"
 import * as React from "react"
 import {
@@ -182,7 +186,8 @@ export const galtonBoardChart: ChartConfig = {
       data: rows,
       valueAccessor: rest.valueAccessor || "value",
       bins,
-      ballRadius: rest.ballRadius ??
+      ballRadius:
+        rest.ballRadius ??
         (rest.mode === "sparkline" ? 1.5 : rest.mode === "context" ? 4 : 6),
       seed,
       size,
@@ -226,6 +231,10 @@ export const eventDropChart: ChartConfig = {
       timeAccessor: rest.timeAccessor || "time",
       arrivalAccessor: rest.arrivalAccessor || "arrivalTime",
       watermarkAtArrivalAccessor: rest.watermarkAtArrivalAccessor,
+      sources: rest.sources,
+      sourceAccessor: rest.sourceAccessor,
+      sourceRail: rest.sourceRail,
+      timeUnit: rest.timeUnit,
       windows: rest.windows || { size: 10 },
       watermark: rest.watermark,
       ballRadius: rest.ballRadius ?? 7,
@@ -234,21 +243,40 @@ export const eventDropChart: ChartConfig = {
       timeExtent: rest.timeExtent,
       timeScale: rest.timeScale ?? 1
     })
+    const windowBackground = eventDropWindowBackground(
+      layout.metadata as Parameters<typeof eventDropWindowBackground>[0],
+      physicsChromeEnabled(common, rest, "showProjection"),
+      rest.windowChrome
+    )
     return {
       ...common,
+      backgroundGraphics: composePhysicsGraphics(
+        common.backgroundGraphics as FrameGraphicsProp | undefined,
+        windowBackground
+      ),
+      backgroundGraphicsBackdrop:
+        common.backgroundGraphicsBackdrop ??
+        (windowBackground && !common.backgroundGraphics
+          ? (common.background ?? physicsCanvasThemeCSSValue("background"))
+          : undefined),
       config: layout.config,
       initialSpawns: layout.initialSpawns,
       initialSpawnPacing: layout.initialSpawnPacing,
       projectionRows: layout.projectionRows,
+      eventDropMetadata: layout.metadata,
       foregroundGraphics: composePhysicsGraphics(
         eventDropOverlay(
           layout.projectionRows,
           layout.metadata as Parameters<typeof eventDropOverlay>[1],
-          physicsChromeEnabled(common, rest, "showProjection")
+          physicsChromeEnabled(common, rest, "showProjection"),
+          rest.windowChrome
         ),
-        common.foregroundGraphics as FrameGraphicsProp | undefined
+        composePhysicsGraphics(
+          eventDropSourceRail(rest.sources, rest.sourceRail, size),
+          common.foregroundGraphics as FrameGraphicsProp | undefined
+        )
       ),
-      bodyStyle: styleFromColorAccessor(colorBy || rest.colorBy, "#4e79a7", {
+      bodyStyle: eventDropBodyStyle(rest.sources, colorBy || rest.colorBy, {
         styleRules: rest.styleRules,
         valueAccessor: rest.valueAccessor || rest.timeAccessor || "time"
       })
@@ -292,7 +320,9 @@ export const unitPileChart: ChartConfig = {
           layout.projectionRows,
           rest.ballRadius ?? 8,
           physicsChromeEnabled(common, rest, "showProjection"),
-          Number.isFinite(rest.unitValue) && rest.unitValue > 0 ? rest.unitValue : 1
+          Number.isFinite(rest.unitValue) && rest.unitValue > 0
+            ? rest.unitValue
+            : 1
         ),
         common.foregroundGraphics as FrameGraphicsProp | undefined
       ),

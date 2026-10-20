@@ -94,7 +94,8 @@ function DetailsPanel(props: HoverDetailsPanelProps): React.ReactElement<unknown
 function DifferenceChart<TDatum extends Datum = Datum>(props: DifferenceChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function DonutChart<TDatum extends Datum = Datum>(props: DonutChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function DotPlot<TDatum extends Datum = Datum>(props: DotPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function EventDropChart(props: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").EventDropChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
+function EventDropChart(props: EventDropChartProps<Datum> & {ref?: React.Ref<EventDropChartHandle> | React.RefObject<PhysicsFrameHandle | null>;}): React.ReactNode
+function EventDropChart(props: React.RefAttributes<import("semiotic-internal/semiotic-physics").EventDropChartHandle> & import("semiotic-internal/semiotic-physics").EventDropChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
 function ForceDirectedGraph<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ForceDirectedGraphProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function FunnelChart<TDatum extends Datum = Datum>(props: FunnelChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function GaltonBoardChart(props: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").GaltonBoardChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
@@ -798,7 +799,7 @@ interface-member AccessibleNavTreeProps::property::className = optional classNam
 interface-member AccessibleNavTreeProps::property::label = optional label: string | undefined
 interface-member AccessibleNavTreeProps::property::onActiveChange = optional onActiveChange: ((node: NavTreeNode) => void) | undefined
 interface-member AccessibleNavTreeProps::property::onAnnotationActivate = optional onAnnotationActivate: OnAnnotationActivateCallback | undefined
-interface-member AccessibleNavTreeProps::property::onObservation = optional onObservation: OnObservationCallback | undefined
+interface-member AccessibleNavTreeProps::property::onObservation = optional onObservation: ((observation: import("./semiotic-ai-observations").ChartObservation) => void) | undefined
 interface-member AccessibleNavTreeProps::property::tree = required tree: NavTreeNode
 interface-member AccessibleNavTreeProps::property::visible = optional visible: boolean | undefined
 interface-member AccountabilityContract::property::actions = optional actions: ActionRecord[] | undefined
@@ -2102,7 +2103,7 @@ interface-member ObservationReadoutProps::property::fallback = optional fallback
 interface-member ObservationReadoutProps::property::live = optional live: "assertive" | "off" | "polite" | undefined
 interface-member ObservationReadoutProps::property::observation = optional observation: ChartObservation | null | undefined
 interface-member ObservationReadoutProps::property::style = optional style: React.CSSProperties | undefined
-interface-member ObservationReadoutProps::property::types = optional types: ("activate" | "annotation-activate" | "brush" | "brush-end" | "click" | "click-end" | "focus" | "hover" | "hover-end" | "late-data" | "selection" | "selection-end" | import("./DirectManipulationControl").ControlObservationPhase)[] | undefined
+interface-member ObservationReadoutProps::property::types = optional types: ("activate" | "annotation-activate" | "brush" | "brush-end" | "click" | "click-end" | "focus" | "hover" | "hover-end" | "late-data" | "selection" | "selection-end" | import("./DirectManipulationControl").ControlObservationPhase | import("./semiotic-experimental").UnstablePhysicsObservationEventType | import("./semiotic-physics").PhysicsLifecycleObservationEventType)[] | undefined
 interface-member ObservedAuditFinding::property::category = required category: "accessibility" | "coverage" | "geometry" | "identity" | "interaction" | "manual-at" | "visual"
 interface-member ObservedAuditFinding::property::evidence = optional evidence: Record<string, unknown> | undefined
 interface-member ObservedAuditFinding::property::id = required id: string
@@ -2804,7 +2805,7 @@ interface-member UnknownFieldSummary::property::type = required type: "unknown"
 interface-member UnplacedDataQualityResult::property::reason = required reason: string
 interface-member UnplacedDataQualityResult::property::result = required result: DataQualityResult
 interface-member UseChartFocusOptions::property::chartId = optional chartId: string | undefined
-interface-member UseChartFocusOptions::property::types = optional types: ("activate" | "annotation-activate" | "brush" | "brush-end" | "click" | "click-end" | "focus" | "hover" | "hover-end" | "late-data" | "selection" | "selection-end" | import("../DirectManipulationControl").ControlObservationPhase)[] | undefined
+interface-member UseChartFocusOptions::property::types = optional types: ("activate" | "annotation-activate" | "brush" | "brush-end" | "click" | "click-end" | "focus" | "hover" | "hover-end" | "late-data" | "selection" | "selection-end" | import("../DirectManipulationControl").ControlObservationPhase | import("../semiotic-experimental").UnstablePhysicsObservationEventType | import("../semiotic-physics").PhysicsLifecycleObservationEventType)[] | undefined
 interface-member UseChartInterrogationOptions::property::componentName = optional componentName: string | undefined
 interface-member UseChartInterrogationOptions::property::data = required data: null | readonly Datum[] | undefined
 interface-member UseChartInterrogationOptions::property::focus = optional focus: InterrogationFocus | null | undefined
@@ -2826,7 +2827,7 @@ interface-member UseChartInterrogationResult::property::reset = required reset: 
 interface-member UseChartInterrogationResult::property::summary = required summary: DataSummary
 interface-member UseChartObserverOptions::property::chartId = optional chartId: string | undefined
 interface-member UseChartObserverOptions::property::limit = optional limit: number | undefined
-interface-member UseChartObserverOptions::property::types = optional types: ("activate" | "annotation-activate" | "brush" | "brush-end" | "click" | "click-end" | "focus" | "hover" | "hover-end" | "late-data" | "selection" | "selection-end" | import("../DirectManipulationControl").ControlObservationPhase)[] | undefined
+interface-member UseChartObserverOptions::property::types = optional types: ("activate" | "annotation-activate" | "brush" | "brush-end" | "click" | "click-end" | "focus" | "hover" | "hover-end" | "late-data" | "selection" | "selection-end" | import("../DirectManipulationControl").ControlObservationPhase | import("../semiotic-experimental").UnstablePhysicsObservationEventType | import("../semiotic-physics").PhysicsLifecycleObservationEventType)[] | undefined
 interface-member UseChartObserverResult::property::clear = required clear: () => void
 interface-member UseChartObserverResult::property::latest = required latest: ChartObservation | null
 interface-member UseChartObserverResult::property::observations = required observations: ChartObservation[]
@@ -3000,7 +3001,7 @@ type ChartContainerDataAudit = ChartContainerDataAuditOptions | boolean
 type ChartFamily = "categorical" | "custom" | "distribution" | "flow" | "geo" | "hierarchy" | "network" | "realtime" | "relationship" | "time-series" | "value"
 type ChartImportPath = "semiotic" | "semiotic/ai" | "semiotic/geo" | "semiotic/network" | "semiotic/ordinal" | "semiotic/physics" | "semiotic/realtime" | "semiotic/value" | "semiotic/xy"
 type ChartNotificationLevel = "error" | "info" | "neutral" | "success" | "warning"
-type ChartObservation = ActivateObservation | AnnotationActivateObservation | BrushEndObservation | BrushObservation | ClickEndObservation | ClickObservation | ControlObservation | FocusObservation | HoverEndObservation | HoverObservation | LateDataObservation | SelectionEndObservation | SelectionObservation
+type ChartObservation = ActivateObservation | AnnotationActivateObservation | BrushEndObservation | BrushObservation | ClickEndObservation | ClickObservation | ControlObservation | FocusObservation | HoverEndObservation | HoverObservation | LateDataObservation | SelectionEndObservation | SelectionObservation | import("../stream/physics/PhysicsPipelineTypes").PhysicsLifecycleObservationEvent | import("../stream/physics/PhysicsPipelineTypes").PhysicsObservationEvent
 type ChartRecipeFrameFamily = "GeoCustomChart" | "GeoFrame" | "NetworkCustomChart" | "NetworkFrame" | "OrdinalCustomChart" | "OrdinalFrame" | "Other" | "XYCustomChart" | "XYFrame"
 type ChartRecipePortability = "local" | "portable"
 type ClaimKind = "aggregation" | "alert" | "description" | "forecast" | "inference" | "normative" | "observation" | "recommendation" | "simulation"
@@ -3061,7 +3062,7 @@ type ObligationStatus = "fail" | "manual" | "not-applicable" | "pass" | "unknown
 type ObservationInputType = "keyboard" | "navigation-tree" | "pointer" | "touch"
 type ObservedAuditStatus = "fail" | "manual" | "not-applicable" | "pass" | "warn"
 type OnAnnotationActivateCallback = (event: AnnotationActivationEvent) => void
-type OnObservationCallback = (observation: ChartObservation) => void
+type OnObservationCallback = {observe(observation: ChartObservation): void;}["observe"]
 type PortableArtifactContract = ArtifactContract | UnknownArtifactContract
 type PreservationClass = "claim-evidence-preserved" | "full-fidelity" | "lossy" | "unknown" | "visual-only"
 type PrimaryRole = "category" | "series" | "size" | "time" | "x" | "y"

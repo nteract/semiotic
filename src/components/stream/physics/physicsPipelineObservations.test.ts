@@ -10,6 +10,24 @@ const spawn = {
 }
 
 describe("physics observation materialization", () => {
+  it("records ledger evidence without sending ledger events to kernel/controller callbacks", () => {
+    const onObservation = vi.fn()
+    const store = new PhysicsPipelineStore({
+      observation: { chartId: "ledger", chartType: "EventDropChart", onObservation }
+    })
+    const event = store.recordLifecycleObservation({
+      type: "physics-window-update", windowId: "0-10", accepted: 2, retractions: 1
+    })
+    expect(event).toMatchObject({
+      type: "physics-window-update", chartId: "ledger", chartType: "EventDropChart",
+      timestamp: 0, windowId: "0-10", accepted: 2, retractions: 1
+    })
+    expect(store.getLastUpdateResult().changed).toContain("evidence")
+    expect(onObservation).not.toHaveBeenCalled()
+    store.recordObservation({ type: "physics-late", count: 1 })
+    expect(onObservation).toHaveBeenCalledTimes(1)
+  })
+
   it("admits bodies without copying the world when no spawn observation is consumed", () => {
     const world = createDefaultPhysicsEngineAdapter()
     const store = new PhysicsPipelineStore({ engine: world })

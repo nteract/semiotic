@@ -1,5 +1,11 @@
 import { scaleLinear } from "d3-scale"
 import { resolveEventDropAdmissions } from "./eventDropAdmission"
+import type {
+  EventDropLedgerRow,
+  EventDropLedgerEvent,
+  EventDropWatermark
+} from "./eventDropLedger"
+import type { EventDropSource, EventDropSourceRail } from "./eventDropSources"
 import type { Datum } from "../shared/datumTypes"
 import type { ChartAccessor } from "../shared/types"
 import {
@@ -50,6 +56,11 @@ export interface EventDropProjectionMetadata {
   windowCount: number
   windowSize: number
   windowStart: number
+  ledger?: EventDropLedgerRow[]
+  lifecycleEvents?: EventDropLedgerEvent[]
+  eventTimeFrontier?: number
+  arrivalFrontier?: number
+  timeUnit?: "ms" | "s"
 }
 
 export interface EventDropPhysicsOptions<TDatum extends Datum = Datum> {
@@ -57,8 +68,11 @@ export interface EventDropPhysicsOptions<TDatum extends Datum = Datum> {
   timeAccessor: ChartAccessor<TDatum, number>
   arrivalAccessor: ChartAccessor<TDatum, number>
   windows: EventDropWindowOptions
-  watermark?:
-    { delay?: number; value?: number } | ((latestEventTime: number) => number)
+  watermark?: EventDropWatermark
+  sourceAccessor?: ChartAccessor<TDatum, string>
+  sources?: readonly EventDropSource[]
+  sourceRail?: EventDropSourceRail
+  timeUnit?: "ms" | "s"
   watermarkAtArrivalAccessor?: ChartAccessor<TDatum, number>
   ballRadius: number
   seed: number
@@ -208,15 +222,32 @@ export function buildEventDropPhysics<TDatum extends Datum>(
     timeExtent,
     timeScale = 1
   } = options
-  const { events, watermarkValue } = resolveEventDropAdmissions({
-    data,
-    timeAccessor,
-    arrivalAccessor,
-    watermark,
-    watermarkAtArrivalAccessor,
-    windowSize: windows.size
-  })
+  const { events, watermarkValue, ledger, lifecycleEvents } =
+    resolveEventDropAdmissions({
+      data,
+      timeAccessor,
+      arrivalAccessor,
+      watermark,
+      watermarkAtArrivalAccessor,
+      sourceAccessor: options.sourceAccessor,
+      sourceIds: options.sources?.map((source) => source.id),
+      windowSize: windows.size
+    })
+  const ledgerByStart = new Map(ledger.map((row) => [row.start, row]))
   const area = physicsChartArea(size)
+  if (
+    options.sources?.some((source) => source.visible !== false) &&
+    options.sourceRail?.side !== "none"
+  ) {
+    const tileSize = Math.max(48, options.sourceRail?.tileSize ?? 80)
+    if (options.sourceRail?.side === "top") {
+      area.plot.y += tileSize
+      area.plot.height = Math.max(1, area.plot.height - tileSize)
+    } else {
+      area.plot.x += tileSize
+      area.plot.width = Math.max(1, area.plot.width - tileSize)
+    }
+  }
   let firstArrival = events.length ? Infinity : 0
   let dataMinTime = events.length ? Infinity : 0
   let dataMaxTime = events.length ? -Infinity : windows.size
@@ -225,6 +256,15 @@ export function buildEventDropPhysics<TDatum extends Datum>(
     dataMinTime = Math.min(dataMinTime, event.eventTime)
     dataMaxTime = Math.max(dataMaxTime, event.eventTime)
   }
+  const timeUnit =
+    options.timeUnit ??
+    (events.some(
+      (event) =>
+        Math.abs(event.eventTime) > 1e5 || Math.abs(event.arrivalTime) > 1e5
+    )
+      ? "ms"
+      : "s")
+  const secondsPerUnit = timeUnit === "ms" ? 0.001 : 1
   const extentStart = finiteNumber(timeExtent?.[0])
   const extentEnd = finiteNumber(timeExtent?.[1])
   const minTime = Math.min(extentStart ?? dataMinTime, dataMinTime)
@@ -290,6 +330,10 @@ export function buildEventDropPhysics<TDatum extends Datum>(
           eventTime,
           arrivalTime,
           windowIndex,
+          windowId: `${windowStart + windowIndex * windows.size}-${windowStart + (windowIndex + 1) * windows.size}`,
+          source: String(
+            readAccessor(datum, index, options.sourceAccessor ?? "source") ?? ""
+          ),
           watermarkAtArrival,
           late
         }
@@ -383,14 +427,15 @@ export function buildEventDropPhysics<TDatum extends Datum>(
         // History that the current apparatus cannot admit is already present.
         const closed = datum.windowIndex < closedWindowCount
         const history = (closed && !datum.late) || (!closed && datum.late)
-        return history ? firstArrival : datum.arrivalTime
+        return (history ? firstArrival : datum.arrivalTime) * secondsPerUnit
       },
       timeScale
     },
     projectionRows: rows.map((row, index) => ({
       label: `${windowStart + index * windows.size}-${windowStart + (index + 1) * windows.size}`,
       value: row.value,
-      secondary: row.secondary
+      secondary: row.secondary,
+      ...ledgerByStart.get(windowStart + index * windows.size)
     })),
     metadata: {
       kind: "event-drop",
@@ -410,7 +455,15 @@ export function buildEventDropPhysics<TDatum extends Datum>(
       watermarkValue,
       windowCount,
       windowSize: windows.size,
-      windowStart
+      windowStart,
+      ledger,
+      lifecycleEvents,
+      timeUnit,
+      eventTimeFrontier: events.length ? dataMaxTime : 0,
+      arrivalFrontier: events.reduce(
+        (max, event) => Math.max(max, event.arrivalTime),
+        0
+      )
     } satisfies EventDropProjectionMetadata
   }
 }

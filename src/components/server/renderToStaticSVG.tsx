@@ -603,7 +603,11 @@ function renderChartInternal(
         )
         break
       case "physics":
-        svg = renderPhysicsFrame(frameProps2 as StaticPhysicsFrameProps, sink)
+        svg = renderPhysicsFrame({
+          ...frameProps2 as StaticPhysicsFrameProps,
+          physicsTheme: (framePropsOverrides as Datum).theme,
+          frameBodyStyle: (framePropsOverrides as Datum).bodyStyle
+        }, sink)
         break
     }
   }

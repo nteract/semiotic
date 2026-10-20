@@ -14,6 +14,8 @@ import type { PhysicsBodyBudgetOptions } from "./PhysicsBodyBudget"
 import type {
   PhysicsBoundsColliderOptions,
   PhysicsObservationEvent,
+  PhysicsObservationRecord,
+  PhysicsLifecycleObservationRecord,
   PhysicsPipelineConfig,
   PhysicsPipelineObservationOptions,
   PhysicsPipelineQueuedSpawnSnapshot,
@@ -57,6 +59,19 @@ export interface NormalizedObservationConfig {
     state: PhysicsSimulationState,
     previousState: PhysicsSimulationState
   ) => void
+}
+
+export function stampPhysicsObservation<T extends PhysicsObservationRecord | PhysicsLifecycleObservationRecord>(
+  record: T,
+  elapsed: number,
+  defaults: Pick<NormalizedObservationConfig, "chartId" | "chartType">
+) {
+  return {
+    ...record,
+    timestamp: record.timestamp ?? elapsed,
+    chartType: record.chartType ?? defaults.chartType,
+    chartId: record.chartId ?? defaults.chartId
+  }
 }
 
 export const DEFAULT_OBSERVATION_CONFIG: NormalizedObservationConfig = {

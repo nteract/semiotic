@@ -17,6 +17,11 @@ import { join } from "node:path"
 import { describe, expect, it } from "vitest"
 import { themeToCSS, themeToCSSVariables } from "./themeSerialization"
 import { HIGH_CONTRAST_THEME, LIGHT_THEME } from "./ThemeStore"
+import {
+  DEFAULT_PHYSICS_CANVAS_THEME,
+  physicsCanvasThemeCSSValue,
+  physicsThemeVariables
+} from "../stream/physics/PhysicsCanvasTheme"
 
 /**
  * Names intentionally *not* theme-emitted: opt-in overrides a consumer sets to
@@ -24,21 +29,28 @@ import { HIGH_CONTRAST_THEME, LIGHT_THEME } from "./ThemeStore"
  * with a reason — if a name belongs to the theme, emit it instead.
  */
 const CONSUMER_KNOBS: Record<string, string> = {
-  "--semiotic-adjacency-flow-arrow-fill": "Adjacency Flow direction-marker fill override",
+  "--semiotic-adjacency-flow-arrow-fill":
+    "Adjacency Flow direction-marker fill override",
   "--semiotic-data-table-bg": "accessible data-table surface override",
   "--semiotic-data-table-border": "accessible data-table border override",
   "--semiotic-data-table-text": "accessible data-table text override",
-  "--semiotic-data-table-muted-text": "accessible data-table muted text override",
+  "--semiotic-data-table-muted-text":
+    "accessible data-table muted text override",
   "--semiotic-data-table-z-index": "accessible data-table stacking override",
   "--semiotic-overlay-z-index": "overlay stacking override",
   "--semiotic-small-multiple-columns": "ChartGrid small-multiple column count",
   "--semiotic-small-multiple-gap": "ChartGrid small-multiple gap",
   "--semiotic-gauge-label-font-size": "GaugeChart label sizing override",
-  "--semiotic-process-border": "processChrome kit (documented --semiotic-process-*)",
-  "--semiotic-process-floor": "processChrome kit (documented --semiotic-process-*)",
-  "--semiotic-process-lane": "processChrome kit (documented --semiotic-process-*)",
-  "--semiotic-process-muted": "processChrome kit (documented --semiotic-process-*)",
-  "--semiotic-process-text": "processChrome kit (documented --semiotic-process-*)"
+  "--semiotic-process-border":
+    "processChrome kit (documented --semiotic-process-*)",
+  "--semiotic-process-floor":
+    "processChrome kit (documented --semiotic-process-*)",
+  "--semiotic-process-lane":
+    "processChrome kit (documented --semiotic-process-*)",
+  "--semiotic-process-muted":
+    "processChrome kit (documented --semiotic-process-*)",
+  "--semiotic-process-text":
+    "processChrome kit (documented --semiotic-process-*)"
 }
 
 function sourceFiles(dir: string, out: string[] = []): string[] {
@@ -68,7 +80,7 @@ function emittedTokens(): Set<string> {
       annotation: "#000000",
       cellBorder: "#000000",
       categorical: Array.from({ length: 64 }, () => "#000000"),
-      diverging: "RdBu",
+      diverging: "RdBu"
     },
     typography: {
       ...HIGH_CONTRAST_THEME.typography,
@@ -78,18 +90,29 @@ function emittedTokens(): Set<string> {
       tickFontFamily: "sans-serif",
       titleFontSize: 16,
       titleFontFamily: "sans-serif",
-      titleFontWeight: 600,
-    },
+      titleFontWeight: 600
+    }
   }
-  return new Set(Object.keys(themeToCSSVariables(exhaustiveTheme)))
+  return new Set([
+    ...Object.keys(themeToCSSVariables(exhaustiveTheme)),
+    ...Object.keys(physicsThemeVariables(DEFAULT_PHYSICS_CANVAS_THEME))
+  ])
+}
+
+function tokensInCSS(text: string): string[] {
+  // Match complete variable names, including camelCase palette keys. A
+  // template prefix such as `--semiotic-physics-${key}` is not a CSS token.
+  return Array.from(
+    text.matchAll(/var\(\s*(--semiotic-[a-zA-Z0-9_-]+)(?=\s*(?:,|\)))/g),
+    (match) => match[1]
+  )
 }
 
 function referencedTokens(): Map<string, string[]> {
   const found = new Map<string, string[]>()
   for (const file of sourceFiles(join(process.cwd(), "src", "components"))) {
     const text = readFileSync(file, "utf8")
-    for (const match of text.matchAll(/var\(\s*(--semiotic-[a-z0-9-]+)/g)) {
-      const token = match[1]
+    for (const token of tokensInCSS(text)) {
       const files = found.get(token) ?? []
       if (!files.includes(file)) files.push(file)
       found.set(token, files)
@@ -99,14 +122,29 @@ function referencedTokens(): Map<string, string[]> {
 }
 
 describe("theme token vocabulary", () => {
+  it("checks complete literal and generated physics names without treating template prefixes as tokens", () => {
+    expect(
+      tokensInCSS("var(--semiotic-misspelled, red) var(--semiotic-text)")
+    ).toEqual(["--semiotic-misspelled", "--semiotic-text"])
+    expect(tokensInCSS("var(--semiotic-physics-${key}, red)")).toEqual([])
+    const emitted = emittedTokens()
+    for (const key of Object.keys(DEFAULT_PHYSICS_CANVAS_THEME) as Array<
+      keyof typeof DEFAULT_PHYSICS_CANVAS_THEME
+    >) {
+      const referenced = tokensInCSS(physicsCanvasThemeCSSValue(key))
+      expect(referenced[0]).toBe(`--semiotic-physics-${key}`)
+      expect(referenced.filter((token) => !emitted.has(token))).toEqual([])
+    }
+  })
+
   it("projects title and legend fallback typography", () => {
     const variables = themeToCSSVariables({
       ...LIGHT_THEME,
       typography: {
         ...LIGHT_THEME.typography,
         titleSize: 22,
-        labelSize: 19,
-      },
+        labelSize: 19
+      }
     })
 
     expect(variables["--semiotic-title-font-size"]).toBe("22px")
@@ -174,6 +212,9 @@ describe("theme token vocabulary", () => {
     const unused = Object.keys(CONSUMER_KNOBS).filter(
       (token) => !referenced.has(token)
     )
-    expect(unused, "Unreferenced CONSUMER_KNOBS entries should be removed.").toEqual([])
+    expect(
+      unused,
+      "Unreferenced CONSUMER_KNOBS entries should be removed."
+    ).toEqual([])
   })
 })

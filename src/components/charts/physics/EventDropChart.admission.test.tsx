@@ -89,9 +89,44 @@ describe("EventDrop admission across rendering and source edits", () => {
       timeScale: 10
     })
     expect(layout.projectionRows).toEqual([
-      { label: "0-10", value: 1, secondary: 0 },
-      { label: "10-20", value: 1, secondary: 0 },
-      { label: "20-30", value: 1, secondary: 0 }
+      {
+        label: "0-10",
+        windowId: "0-10",
+        start: 0,
+        end: 10,
+        value: 1,
+        secondary: 0,
+        accepted: 1,
+        late: 0,
+        bySource: { "": { accepted: 1, late: 0 } },
+        open: false,
+        closedAt: 20,
+        watermarkAtClose: 15
+      },
+      {
+        label: "10-20",
+        windowId: "10-20",
+        start: 10,
+        end: 20,
+        value: 1,
+        secondary: 0,
+        accepted: 1,
+        late: 0,
+        bySource: { "": { accepted: 1, late: 0 } },
+        open: true
+      },
+      {
+        label: "20-30",
+        windowId: "20-30",
+        start: 20,
+        end: 30,
+        value: 1,
+        secondary: 0,
+        accepted: 1,
+        late: 0,
+        bySource: { "": { accepted: 1, late: 0 } },
+        open: true
+      }
     ])
     const metadata = layout.metadata as unknown as EventDropProjectionMetadata
     expect(metadata.closedWindowCount).toBe(1)
@@ -132,6 +167,8 @@ describe("EventDrop admission across rendering and source edits", () => {
         ...row,
         eventTime: row.time,
         windowIndex,
+        windowId: `${row.time}-${row.time + 10}`,
+        source: "",
         watermarkAtArrival: row.time - 5,
         late: false
       }))

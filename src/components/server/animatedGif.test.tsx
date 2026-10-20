@@ -439,6 +439,29 @@ describe("generateFrameSequence", () => {
 // ═══════════════════════════════════════════════════════════════════════
 
 describe("generatePhysicsFrameSVGs", () => {
+  it("keeps authored polygon and glyph marks in simulation exports", () => {
+    const triangle = generatePhysicsFrameSVGs(
+      {
+        ...physicsProps,
+        bodyStyle: { mark: "triangle", fill: "#123456" }
+      },
+      { frameCount: 1 }
+    )[0]
+    expect(triangle).toContain("<path")
+    const glyph = generatePhysicsFrameSVGs(
+      {
+        ...physicsProps,
+        bodyStyle: {
+          glyph: { parts: [{ d: "M0,0H40V40H0Z" }] },
+          fill: "#abcdef"
+        }
+      },
+      { frameCount: 1 }
+    )[0]
+    expect(glyph).toContain('d="M0,0H40V40H0Z"')
+    expect(glyph).toContain('fill="#abcdef"')
+  })
+
   it("steps physics time instead of slicing data", () => {
     const frames = generatePhysicsFrameSVGs(physicsProps, {
       frameCount: 5,

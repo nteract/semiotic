@@ -83,6 +83,15 @@ export interface PhysicsPipelineQueuedSpawnSnapshot extends PhysicsQueuedSpawn {
   spawnAt: number
 }
 
+/** EventDrop ledger transitions are separate from kernel/controller events. */
+export type PhysicsLifecycleObservationEventType =
+  | "physics-window-open"
+  | "physics-window-close"
+  | "physics-window-update"
+  | "physics-watermark-advance"
+  | "physics-source-idle"
+  | "physics-watermark-held"
+
 export type PhysicsObservationEventType =
   | "physics-spawn"
   | "physics-settle"
@@ -129,6 +138,18 @@ export interface PhysicsObservationEvent {
   warnAt?: number
   simulationState?: PhysicsSimulationState
   previousSimulationState?: PhysicsSimulationState
+  windowId?: string
+  start?: number
+  end?: number
+  accepted?: number
+  late?: number
+  bySource?: Record<string, { accepted: number; late: number }>
+  watermark?: number
+  from?: number
+  to?: number
+  cause?: "arrival" | "external"
+  sourceId?: string
+  retractions?: number
   /** Capacitated region id for capacity queue controllers. */
   regionId?: string
   /** Work units processed when a capacity queue releases a body. */
@@ -152,6 +173,14 @@ export type PhysicsObservationRecord = Omit<
   "timestamp" | "chartType" | "chartId"
 > &
   Partial<Pick<PhysicsObservationEvent, "timestamp" | "chartType" | "chartId">>
+
+export type PhysicsLifecycleObservationEvent = Omit<PhysicsObservationEvent, "type"> & {
+  type: PhysicsLifecycleObservationEventType
+}
+
+export type PhysicsLifecycleObservationRecord = Omit<PhysicsObservationRecord, "type"> & {
+  type: PhysicsLifecycleObservationEventType
+}
 
 export interface PhysicsSensorObservationConfig {
   binId?: string

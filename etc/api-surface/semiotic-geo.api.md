@@ -506,7 +506,7 @@ interface-member StreamGeoFrameHandle::method::resetZoom = required resetZoom():
 interface-member StreamGeoFrameProps::property::accessibleTable = optional accessibleTable: AccessibleTableProp | undefined
 interface-member StreamGeoFrameProps::property::allowTooltipOverflow = optional allowTooltipOverflow: boolean | undefined
 interface-member StreamGeoFrameProps::property::animate = optional animate: AnimateProp | undefined
-interface-member StreamGeoFrameProps::property::annotationObservationCallback = optional annotationObservationCallback: OnObservationCallback | undefined
+interface-member StreamGeoFrameProps::property::annotationObservationCallback = optional annotationObservationCallback: ((observation: import("../semiotic-ai-observations").ChartObservation) => void) | undefined
 interface-member StreamGeoFrameProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member StreamGeoFrameProps::property::areaStyle = optional areaStyle: ((d: GeoJSON.Feature) => Style) | Style | undefined
 interface-member StreamGeoFrameProps::property::areas = optional areas: import("geojson").Feature<import("geojson").Geometry, import("geojson").GeoJsonProperties>[] | undefined
@@ -552,7 +552,7 @@ interface-member StreamGeoFrameProps::property::maxDevicePixelRatio = optional m
 interface-member StreamGeoFrameProps::property::onAnnotationActivate = optional onAnnotationActivate: OnAnnotationActivateCallback | undefined
 interface-member StreamGeoFrameProps::property::onCategoriesChange = optional onCategoriesChange: ((categories: string[]) => void) | undefined
 interface-member StreamGeoFrameProps::property::onLayoutError = optional onLayoutError: ((diagnostic: CustomLayoutFailureDiagnostic) => void) | undefined
-interface-member StreamGeoFrameProps::property::onObservation = optional onObservation: OnObservationCallback | undefined
+interface-member StreamGeoFrameProps::property::onObservation = optional onObservation: ((observation: import("../semiotic-ai-observations").ChartObservation) => void) | undefined
 interface-member StreamGeoFrameProps::property::onZoom = optional onZoom: ((state: {projection: GeoProjection; zoom: number;}) => void) | undefined
 interface-member StreamGeoFrameProps::property::particleStyle = optional particleStyle: GeoParticleStyle | undefined
 interface-member StreamGeoFrameProps::property::paused = optional paused: boolean | undefined
@@ -592,8 +592,10 @@ interface-member Style::property::_edgeFade = optional _edgeFade: boolean | unde
 interface-member Style::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
 interface-member Style::property::fill = optional fill: CanvasPattern | HatchFill | string | undefined
 interface-member Style::property::fillOpacity = optional fillOpacity: number | undefined
+interface-member Style::property::glyph = optional glyph: ((datum: Record<string, unknown>) => GlyphDef) | GlyphDef | undefined
 interface-member Style::property::icon = optional icon: HTMLCanvasElement | HTMLImageElement | undefined
 interface-member Style::property::iconPadding = optional iconPadding: number | undefined
+interface-member Style::property::mark = optional mark: import("./physics/physicsBodyCanvas").PhysicsBodyMark | undefined
 interface-member Style::property::opacity = optional opacity: number | undefined
 interface-member Style::property::r = optional r: number | undefined
 interface-member Style::property::stroke = optional stroke: string | undefined
@@ -614,6 +616,8 @@ interface-member StyleRuleContext::property::y = optional y: number | undefined
 interface-member StyleRuleStyle::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
 interface-member StyleRuleStyle::property::fill = optional fill: HatchFill | string | undefined
 interface-member StyleRuleStyle::property::fillOpacity = optional fillOpacity: number | undefined
+interface-member StyleRuleStyle::property::glyph = optional glyph: ((datum: Record<string, unknown>) => import("../../semiotic-physics").GlyphDef) | import("../../semiotic-physics").GlyphDef | undefined
+interface-member StyleRuleStyle::property::mark = optional mark: import("../../semiotic-physics").PhysicsBodyMark | undefined
 interface-member StyleRuleStyle::property::opacity = optional opacity: number | undefined
 interface-member StyleRuleStyle::property::stroke = optional stroke: string | undefined
 interface-member StyleRuleStyle::property::strokeDasharray = optional strokeDasharray: string | undefined

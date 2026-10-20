@@ -1,3 +1,4 @@
+import { EventDropLedger, type EventDropWatermark } from "./eventDropLedger"
 import type { Datum } from "../shared/datumTypes"
 import type { ChartAccessor } from "../shared/types"
 import { finiteNumber, readAccessor } from "./physicsChartShared"
@@ -8,8 +9,9 @@ export interface EventDropAdmissionOptions<TDatum extends Datum = Datum> {
   timeAccessor: ChartAccessor<TDatum, number>
   arrivalAccessor: ChartAccessor<TDatum, number>
   windowSize: number
-  watermark?:
-    { delay?: number; value?: number } | ((latestEventTime: number) => number)
+  watermark?: EventDropWatermark
+  sourceAccessor?: ChartAccessor<TDatum, string>
+  sourceIds?: readonly string[]
   /** Recorded admission thresholds; independent of the current closure watermark. */
   watermarkAtArrivalAccessor?: ChartAccessor<TDatum, number>
 }
@@ -56,30 +58,36 @@ export function resolveEventDropAdmissions<TDatum extends Datum>(
     typeof watermark === "function"
       ? windowSize
       : (finiteNumber(watermark?.delay) ?? windowSize)
-  let latest = -Infinity
-  let current = -Infinity
+  const ledger = new EventDropLedger(windowSize, watermark, options.sourceIds)
   for (const event of events
     .slice()
     .sort((a, b) => a.arrivalTime - b.arrivalTime || a.index - b.index)) {
-    latest = Math.max(latest, event.eventTime)
-    const proposed =
-      typeof watermark === "function"
-        ? finiteNumber(watermark(latest))
-        : latest - delay
-    current =
-      fixedWatermark ?? Math.max(current, proposed ?? latest - windowSize)
     const recorded = watermarkAtArrivalAccessor
       ? finiteNumber(
           readAccessor(event.datum, event.index, watermarkAtArrivalAccessor)
         )
       : null
-    event.watermarkAtArrival = recorded ?? current
-    const windowEnd =
-      (Math.floor(event.eventTime / windowSize) + 1) * windowSize
-    event.late = windowEnd <= event.watermarkAtArrival
+    const decision = ledger.append({
+      eventTime: event.eventTime,
+      arrivalTime: event.arrivalTime,
+      source: String(
+        readAccessor(
+          event.datum,
+          event.index,
+          options.sourceAccessor ?? "source"
+        ) ?? ""
+      ),
+      watermarkAtArrival: recorded ?? undefined
+    })
+    event.watermarkAtArrival = decision.watermarkAtArrival
+    event.late = decision.late
   }
   return {
     events,
-    watermarkValue: events.length ? current : (fixedWatermark ?? -delay)
+    watermarkValue: events.length
+      ? ledger.getWatermark()
+      : (fixedWatermark ?? -delay),
+    ledger: ledger.getLedger(),
+    lifecycleEvents: ledger.drainEvents()
   }
 }

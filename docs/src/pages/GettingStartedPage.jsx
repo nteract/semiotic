@@ -9,7 +9,7 @@ import PageLayout from "../components/PageLayout"
 const bundleSizeRows = Object.freeze([
   {
     "importPath": "semiotic/atlas",
-    "kb": 303,
+    "kb": 309,
     "blurb": "Motif Braid, Dependency Forest, and Flow Circuit readers"
   },
   {
@@ -19,17 +19,17 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/access",
-    "kb": 29,
+    "kb": 30,
     "blurb": "Chart Access Contract factory and first-wave baseline contracts"
   },
   {
     "importPath": "semiotic/evidence",
-    "kb": 45,
+    "kb": 46,
     "blurb": "Chart Evidence Envelope, deterministic hashing, and publication gate"
   },
   {
     "importPath": "semiotic/artifact",
-    "kb": 123,
+    "kb": 125,
     "blurb": "Renderer-independent contracts, claims, time, policy, grounding, and transfer audits"
   },
   {
@@ -39,7 +39,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/line",
-    "kb": 140,
+    "kb": 141,
     "blurb": "LineChart only — one-chart micro boundary"
   },
   {
@@ -54,12 +54,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/network",
-    "kb": 177,
+    "kb": 178,
     "blurb": "ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more"
   },
   {
     "importPath": "semiotic/network/zoom",
-    "kb": 185,
+    "kb": 186,
     "blurb": "Optional virtual network viewport, camera controls and consumer-owned LOD"
   },
   {
@@ -84,12 +84,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/realtime",
-    "kb": 210,
+    "kb": 211,
     "blurb": "RealtimeLineChart, RealtimeHistogram, + 4 streaming charts"
   },
   {
     "importPath": "semiotic/realtime/core",
-    "kb": 208,
+    "kb": 209,
     "blurb": "Streaming chart types, HOCs, and buffer helpers"
   },
   {
@@ -99,27 +99,27 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/server",
-    "kb": 268,
+    "kb": 272,
     "blurb": "renderChart, renderDashboard, renderToImage, renderToAnimatedGif"
   },
   {
     "importPath": "semiotic/server/node",
-    "kb": 268,
+    "kb": 272,
     "blurb": "renderChart, renderDashboard, renderToImage, renderToAnimatedGif"
   },
   {
     "importPath": "semiotic/server/edge",
-    "kb": 274,
+    "kb": 278,
     "blurb": "renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard"
   },
   {
     "importPath": "semiotic/utils",
-    "kb": 110,
+    "kb": 112,
     "blurb": "ThemeProvider, numeric/accessibility audits, serialization — no chart components"
   },
   {
     "importPath": "semiotic/utils/core",
-    "kb": 100,
+    "kb": 102,
     "blurb": "Pure theme helpers, numeric/accessibility audits, and serialization"
   },
   {
@@ -169,7 +169,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/physics",
-    "kb": 171,
+    "kb": 176,
     "blurb": "GaltonBoardChart, EventDropChart, UnitPileChart, CollisionSwarmChart, PacketFlowChart, PhysicsCustomChart"
   },
   {
@@ -184,12 +184,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/ai",
-    "kb": 647,
+    "kb": 652,
     "blurb": "All schema-backed charts + validation — optimized for LLM code generation"
   },
   {
     "importPath": "semiotic/ai/core",
-    "kb": 141,
+    "kb": 142,
     "blurb": "suggestCharts, auditData, describeChart, repairChartConfig, tool adapters — no chart components"
   },
   {
@@ -209,7 +209,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic",
-    "kb": 422,
+    "kb": 424,
     "blurb": "Full chart API and shared utilities"
   }
 ])

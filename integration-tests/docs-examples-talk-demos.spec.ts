@@ -135,7 +135,9 @@ test.describe("talk demos stay browser-local and deterministic", () => {
     // Load the only lazy demo chunk under throttling, then prove the complete
     // decision arc still runs after the browser is taken fully offline.
     await stage.getByRole("button", { name: /Keep the custom-chart exit/ }).click()
-    await expect(stage.getByRole("button", { name: /Morph to snapshot/ })).toBeVisible()
+    // The throttle also applies to the lazy entry's dependency requests. Wait
+    // for the complete local graph before cutting the network for the demo.
+    await expect(stage.getByRole("button", { name: /Morph to snapshot/ })).toBeVisible({ timeout: 15_000 })
     await stage.getByRole("button", { name: /Question → candidates/ }).click()
     await page.context().setOffline(true)
 

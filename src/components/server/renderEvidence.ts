@@ -29,6 +29,11 @@ export type SemanticViabilityStatus =
   "meaningful" | "degraded" | "degenerate" | "not-assessed"
 
 export interface RenderEvidence {
+  /** EventDrop admission accounting, independent of current body positions. */
+  watermarkValue?: number
+  openWindows?: number
+  closedWindows?: number
+  lateCount?: number
   /** Optional post-placement label assessment; mark emptiness retains its meaning. */
   layout?: LabelLayoutEvidence
   /** SHA-256 of the final SVG and coordinate context, including chrome, with document IDs normalized. */
@@ -302,7 +307,9 @@ export function buildEvidence(input: BuildEvidenceInput): RenderEvidence {
       ? { legendItems: input.legendItems }
       : {}),
     annotationCount,
-    ...(input.annotationRender?.layout ? { layout: input.annotationRender.layout } : {}),
+    ...(input.annotationRender?.layout
+      ? { layout: input.annotationRender.layout }
+      : {}),
     ...(input.annotationRender
       ? {
           annotationInputCount: input.annotationRender.inputCount,

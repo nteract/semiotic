@@ -111,7 +111,43 @@ const THEME_CANDIDATES: Record<
   }
 }
 
-export type PhysicsCanvasThemeCSSKey = keyof typeof THEME_CANDIDATES
+export type PhysicsCanvasThemeCSSKey = keyof PhysicsCanvasTheme
+
+/** Each palette key has a dedicated camelCase CSS custom property. */
+export function physicsThemeVariables(
+  theme?: Partial<PhysicsCanvasTheme>
+): Record<string, string> {
+  const variables = Object.fromEntries(
+    Object.entries(theme ?? {})
+      .filter(([, value]) => value != null)
+      .map(([key, value]) => [`--semiotic-physics-${key}`, value])
+  )
+  // Shared title/legend chrome reads the general tokens. Explicit frame
+  // overrides scope those too, so an object palette reaches every layer.
+  for (const key of Object.keys(THEME_CANDIDATES) as Array<
+    keyof typeof THEME_CANDIDATES
+  >) {
+    if (theme?.[key] != null)
+      variables[THEME_CANDIDATES[key].names[0]] = theme[key]!
+  }
+  return variables
+}
+
+const DERIVED_THEME_KEYS: Partial<
+  Record<keyof PhysicsCanvasTheme, [keyof typeof THEME_CANDIDATES, number?]>
+> = {
+  annotationBackground: ["background", 0.94],
+  annotationStroke: ["border"],
+  annotationText: ["text"],
+  closedWindowFill: ["danger", 0.08],
+  closedWindowStroke: ["danger", 0.55],
+  gutterFill: ["textSecondary", 0.14],
+  lateFill: ["warning"],
+  openWindowFill: ["primary", 0.07],
+  openWindowStroke: ["primary", 0.3],
+  selectedFill: ["warning"],
+  selectedStroke: ["focus"]
+}
 
 /**
  * Serialize the canvas theme's ordered CSS-variable candidates for SVG/SSR.
@@ -123,11 +159,22 @@ export type PhysicsCanvasThemeCSSKey = keyof typeof THEME_CANDIDATES
 export function physicsCanvasThemeCSSValue(
   key: PhysicsCanvasThemeCSSKey
 ): string {
-  const candidate = THEME_CANDIDATES[key]
-  return candidate.names.reduceRight(
-    (fallback, name) => `var(${name}, ${fallback})`,
-    candidate.fallback
-  )
+  const candidate = THEME_CANDIDATES[key as keyof typeof THEME_CANDIDATES]
+  const derived = DERIVED_THEME_KEYS[key]
+  let fallback = DEFAULT_PHYSICS_CANVAS_THEME[key]
+  if (candidate)
+    fallback = candidate.names.reduceRight(
+      (value, name) => `var(${name}, ${value})`,
+      candidate.fallback
+    )
+  else if (derived) {
+    const base = physicsCanvasThemeCSSValue(derived[0])
+    fallback =
+      derived[1] == null
+        ? base
+        : `color-mix(in srgb, ${base} ${derived[1] * 100}%, transparent)`
+  }
+  return `var(--semiotic-physics-${key}, ${fallback})`
 }
 
 function readCSSVar(
@@ -177,40 +224,29 @@ export function resolvePhysicsCanvasTheme(
     typeof getComputedStyle === "function" && canvas
       ? getComputedStyle(canvas)
       : null
-  const primary = readCSSVar(ctx, style, THEME_CANDIDATES.primary)
-  const danger = readCSSVar(ctx, style, THEME_CANDIDATES.danger)
-  const warning = readCSSVar(ctx, style, THEME_CANDIDATES.warning)
-  const success = readCSSVar(ctx, style, THEME_CANDIDATES.success)
-  const border = readCSSVar(ctx, style, THEME_CANDIDATES.border)
-  const background = readCSSVar(ctx, style, THEME_CANDIDATES.background)
-  const text = readCSSVar(ctx, style, THEME_CANDIDATES.text)
-  const textSecondary = readCSSVar(ctx, style, THEME_CANDIDATES.textSecondary)
-  const focus = readCSSVar(ctx, style, THEME_CANDIDATES.focus)
-  const grid = readCSSVar(ctx, style, THEME_CANDIDATES.grid)
-
-  return {
-    annotationBackground: physicsCanvasColorWithAlpha(background, 0.94),
-    annotationStroke: border,
-    annotationText: text,
-    background,
-    border,
-    closedWindowFill: physicsCanvasColorWithAlpha(danger, 0.08),
-    closedWindowStroke: physicsCanvasColorWithAlpha(danger, 0.55),
-    danger,
-    focus,
-    grid,
-    gutterFill: physicsCanvasColorWithAlpha(textSecondary, 0.14),
-    lateFill: warning,
-    openWindowFill: physicsCanvasColorWithAlpha(primary, 0.07),
-    openWindowStroke: physicsCanvasColorWithAlpha(primary, 0.3),
-    primary,
-    selectedFill: warning,
-    selectedStroke: focus,
-    success,
-    text,
-    textSecondary,
-    warning
+  const theme = { ...DEFAULT_PHYSICS_CANVAS_THEME }
+  for (const key of Object.keys(THEME_CANDIDATES) as Array<
+    keyof typeof THEME_CANDIDATES
+  >) {
+    const candidate = THEME_CANDIDATES[key]
+    theme[key] = readCSSVar(ctx, style, {
+      ...candidate,
+      names: [`--semiotic-physics-${key}`, ...candidate.names]
+    })
   }
+  for (const key of Object.keys(DERIVED_THEME_KEYS) as Array<
+    keyof PhysicsCanvasTheme
+  >) {
+    const [base, alpha] = DERIVED_THEME_KEYS[key]!
+    theme[key] = readCSSVar(ctx, style, {
+      names: [`--semiotic-physics-${key}`],
+      fallback:
+        alpha == null
+          ? theme[base]
+          : physicsCanvasColorWithAlpha(theme[base], alpha)
+    })
+  }
+  return theme
 }
 
 /**

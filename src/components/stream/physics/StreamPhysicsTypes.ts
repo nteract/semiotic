@@ -179,6 +179,8 @@ export interface StreamPhysicsExecutionState {
 }
 
 export interface PhysicsSemanticItem {
+  /** Additional columns in the semantic table, such as per-source counts. */
+  tableFields?: Record<string, string | number>
   bodyId?: string
   id?: string
   label: string
@@ -239,6 +241,8 @@ export interface PhysicsCanvasPaintContext {
 }
 
 export interface StreamPhysicsFrameProps {
+  /** Override physics palette tokens in canvas, overlays, and settled SVG. */
+  theme?: Partial<PhysicsCanvasTheme>
   accessibleTable?: AccessibleTableProp
   /**
    * Canvas fill. When set, overrides the theme background unless

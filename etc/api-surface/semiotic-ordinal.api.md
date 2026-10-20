@@ -514,7 +514,7 @@ interface-member StreamOrdinalFrameProps::property::accessibleTable = optional a
 interface-member StreamOrdinalFrameProps::property::accessorRevision = optional accessorRevision: number | undefined
 interface-member StreamOrdinalFrameProps::property::amplitude = optional amplitude: number | undefined
 interface-member StreamOrdinalFrameProps::property::animate = optional animate: AnimateProp | undefined
-interface-member StreamOrdinalFrameProps::property::annotationObservationCallback = optional annotationObservationCallback: OnObservationCallback | undefined
+interface-member StreamOrdinalFrameProps::property::annotationObservationCallback = optional annotationObservationCallback: ((observation: import("../semiotic-ai-observations").ChartObservation) => void) | undefined
 interface-member StreamOrdinalFrameProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member StreamOrdinalFrameProps::property::autoPlaceAnnotations = optional autoPlaceAnnotations: AutoPlaceAnnotations | undefined
 interface-member StreamOrdinalFrameProps::property::axisExtent = optional axisExtent: import("../charts/shared/axisExtent").AxisExtentMode | undefined
@@ -581,7 +581,7 @@ interface-member StreamOrdinalFrameProps::property::onAnnotationActivate = optio
 interface-member StreamOrdinalFrameProps::property::onBrush = optional onBrush: ((extent: {r: [number, number];} | null) => void) | undefined
 interface-member StreamOrdinalFrameProps::property::onCategoriesChange = optional onCategoriesChange: ((categories: string[]) => void) | undefined
 interface-member StreamOrdinalFrameProps::property::onLayoutError = optional onLayoutError: ((diagnostic: import("./customLayoutFailure").CustomLayoutFailureDiagnostic) => void) | undefined
-interface-member StreamOrdinalFrameProps::property::onObservation = optional onObservation: OnObservationCallback | undefined
+interface-member StreamOrdinalFrameProps::property::onObservation = optional onObservation: ((observation: import("../semiotic-ai-observations").ChartObservation) => void) | undefined
 interface-member StreamOrdinalFrameProps::property::paused = optional paused: boolean | undefined
 interface-member StreamOrdinalFrameProps::property::pieceStyle = optional pieceStyle: ((d: Datum, category?: string) => Style) | undefined
 interface-member StreamOrdinalFrameProps::property::projection = optional projection: "horizontal" | "radial" | "vertical" | undefined
@@ -630,8 +630,10 @@ interface-member Style::property::_edgeFade = optional _edgeFade: boolean | unde
 interface-member Style::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
 interface-member Style::property::fill = optional fill: CanvasPattern | HatchFill | string | undefined
 interface-member Style::property::fillOpacity = optional fillOpacity: number | undefined
+interface-member Style::property::glyph = optional glyph: ((datum: Record<string, unknown>) => GlyphDef) | GlyphDef | undefined
 interface-member Style::property::icon = optional icon: HTMLCanvasElement | HTMLImageElement | undefined
 interface-member Style::property::iconPadding = optional iconPadding: number | undefined
+interface-member Style::property::mark = optional mark: import("./physics/physicsBodyCanvas").PhysicsBodyMark | undefined
 interface-member Style::property::opacity = optional opacity: number | undefined
 interface-member Style::property::r = optional r: number | undefined
 interface-member Style::property::stroke = optional stroke: string | undefined
@@ -652,6 +654,8 @@ interface-member StyleRuleContext::property::y = optional y: number | undefined
 interface-member StyleRuleStyle::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
 interface-member StyleRuleStyle::property::fill = optional fill: HatchFill | string | undefined
 interface-member StyleRuleStyle::property::fillOpacity = optional fillOpacity: number | undefined
+interface-member StyleRuleStyle::property::glyph = optional glyph: ((datum: Record<string, unknown>) => import("../../semiotic-physics").GlyphDef) | import("../../semiotic-physics").GlyphDef | undefined
+interface-member StyleRuleStyle::property::mark = optional mark: import("../../semiotic-physics").PhysicsBodyMark | undefined
 interface-member StyleRuleStyle::property::opacity = optional opacity: number | undefined
 interface-member StyleRuleStyle::property::stroke = optional stroke: string | undefined
 interface-member StyleRuleStyle::property::strokeDasharray = optional strokeDasharray: string | undefined

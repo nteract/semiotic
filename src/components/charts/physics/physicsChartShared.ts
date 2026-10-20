@@ -18,7 +18,11 @@ export interface PhysicsChartLayout {
   config: PhysicsPipelineConfig
   initialSpawns: PhysicsQueuedSpawn[]
   initialSpawnPacing?: PhysicsSpawnPacingOptions
-  projectionRows: Array<{ label: string; value: number; secondary?: number }>
+  projectionRows: Array<{
+    label: string; value: number; secondary?: number
+    windowId?: string
+    bySource?: Record<string, { accepted: number; late: number }>
+  }>
   metadata?: Record<string, unknown>
 }
 

@@ -80,6 +80,10 @@ export type RuntimeMode = "bounded" | "streaming"
 // ── Scene graph ────────────────────────────────────────────────────────
 
 export interface Style {
+  /** Physics paint geometry; does not change the body's collider. */
+  mark?: import("./physics/physicsBodyCanvas").PhysicsBodyMark
+  /** Physics pictogram, sized to the body's diameter. */
+  glyph?: GlyphDef | ((datum: Record<string, unknown>) => GlyphDef)
   stroke?: string
   strokeWidth?: number
   /** Opacity applied to the stroke independently of fill/mark opacity. */

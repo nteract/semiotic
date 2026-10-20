@@ -453,7 +453,7 @@ interface-member AccessibleNavTreeProps::property::className = optional classNam
 interface-member AccessibleNavTreeProps::property::label = optional label: string | undefined
 interface-member AccessibleNavTreeProps::property::onActiveChange = optional onActiveChange: ((node: NavTreeNode) => void) | undefined
 interface-member AccessibleNavTreeProps::property::onAnnotationActivate = optional onAnnotationActivate: OnAnnotationActivateCallback | undefined
-interface-member AccessibleNavTreeProps::property::onObservation = optional onObservation: OnObservationCallback | undefined
+interface-member AccessibleNavTreeProps::property::onObservation = optional onObservation: ((observation: import("./semiotic-ai-observations").ChartObservation) => void) | undefined
 interface-member AccessibleNavTreeProps::property::tree = required tree: NavTreeNode
 interface-member AccessibleNavTreeProps::property::visible = optional visible: boolean | undefined
 interface-member ActivateObservation::property::datum = required datum: Datum
@@ -639,7 +639,7 @@ interface-member BaseChartProps::property::mobileInteraction = optional mobileIn
 interface-member BaseChartProps::property::mobileSemantics = optional mobileSemantics: MobileVisualizationContract | undefined
 interface-member BaseChartProps::property::mode = optional mode: ChartMode | undefined
 interface-member BaseChartProps::property::onClick = optional onClick: ((datum: Datum, event: {x: number; y: number;}) => void) | undefined
-interface-member BaseChartProps::property::onObservation = optional onObservation: OnObservationCallback | undefined
+interface-member BaseChartProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic-ai-observations").ChartObservation) => void) | undefined
 interface-member BaseChartProps::property::opacity = optional opacity: number | undefined
 interface-member BaseChartProps::property::pointIdAccessor = optional pointIdAccessor: ((d: Datum) => string) | string | undefined
 interface-member BaseChartProps::property::responsiveHeight = optional responsiveHeight: boolean | undefined
@@ -1493,7 +1493,7 @@ interface-member MinimapChartProps::property::lineWidth = optional lineWidth: nu
 interface-member MinimapChartProps::property::minimap = optional minimap: MinimapConfig | undefined
 interface-member MinimapChartProps::property::onBrush = optional onBrush: ((extent: [number, number] | null) => void) | undefined
 interface-member MinimapChartProps::property::onBrushEnd = optional onBrushEnd: ((extent: [number, number] | null, meta: MinimapBrushEndMeta) => void) | undefined
-interface-member MinimapChartProps::property::onObservation = optional onObservation: OnObservationCallback | undefined
+interface-member MinimapChartProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic-ai-observations").ChartObservation) => void) | undefined
 interface-member MinimapChartProps::property::pointRadius = optional pointRadius: number | undefined
 interface-member MinimapChartProps::property::renderBefore = optional renderBefore: boolean | undefined
 interface-member MinimapChartProps::property::showGrid = optional showGrid: boolean | undefined
@@ -1739,7 +1739,7 @@ interface-member ObservationReadoutProps::property::fallback = optional fallback
 interface-member ObservationReadoutProps::property::live = optional live: "assertive" | "off" | "polite" | undefined
 interface-member ObservationReadoutProps::property::observation = optional observation: ChartObservation | null | undefined
 interface-member ObservationReadoutProps::property::style = optional style: React.CSSProperties | undefined
-interface-member ObservationReadoutProps::property::types = optional types: ("activate" | "annotation-activate" | "brush" | "brush-end" | "click" | "click-end" | "focus" | "hover" | "hover-end" | "late-data" | "selection" | "selection-end" | import("./DirectManipulationControl").ControlObservationPhase)[] | undefined
+interface-member ObservationReadoutProps::property::types = optional types: ("activate" | "annotation-activate" | "brush" | "brush-end" | "click" | "click-end" | "focus" | "hover" | "hover-end" | "late-data" | "selection" | "selection-end" | import("./DirectManipulationControl").ControlObservationPhase | import("./semiotic-experimental").UnstablePhysicsObservationEventType | import("./semiotic-physics").PhysicsLifecycleObservationEventType)[] | undefined
 interface-member OrbitDiagramProps::property::animated = optional animated: boolean | undefined
 interface-member OrbitDiagramProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member OrbitDiagramProps::property::childrenAccessor = optional childrenAccessor: ((d: TDatum) => TDatum[] | null | undefined) | string | undefined
@@ -1971,7 +1971,7 @@ interface-member RealtimeHeatmapProps::property::mobileInteraction = optional mo
 interface-member RealtimeHeatmapProps::property::mobileSemantics = optional mobileSemantics: MobileVisualizationContract | undefined
 interface-member RealtimeHeatmapProps::property::mode = optional mode: ChartMode | undefined
 interface-member RealtimeHeatmapProps::property::onHover = optional onHover: ((d: HoverData | null) => void) | undefined
-interface-member RealtimeHeatmapProps::property::onObservation = optional onObservation: OnObservationCallback | undefined
+interface-member RealtimeHeatmapProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic-ai-observations").ChartObservation) => void) | undefined
 interface-member RealtimeHeatmapProps::property::pointIdAccessor = optional pointIdAccessor: RealtimePointIdAccessor<TDatum> | undefined
 interface-member RealtimeHeatmapProps::property::pulse = optional pulse: PulseConfig | undefined
 interface-member RealtimeHeatmapProps::property::responsiveHeight = optional responsiveHeight: boolean | undefined
@@ -2035,7 +2035,7 @@ interface-member RealtimeHistogramProps::property::mobileSemantics = optional mo
 interface-member RealtimeHistogramProps::property::mode = optional mode: ChartMode | undefined
 interface-member RealtimeHistogramProps::property::onBrush = optional onBrush: ((extent: {x: [number, number]; y: [number, number];} | null) => void) | undefined
 interface-member RealtimeHistogramProps::property::onHover = optional onHover: ((d: HoverData | null) => void) | undefined
-interface-member RealtimeHistogramProps::property::onObservation = optional onObservation: OnObservationCallback | undefined
+interface-member RealtimeHistogramProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic-ai-observations").ChartObservation) => void) | undefined
 interface-member RealtimeHistogramProps::property::opacity = optional opacity: number | undefined
 interface-member RealtimeHistogramProps::property::pointIdAccessor = optional pointIdAccessor: RealtimePointIdAccessor<TDatum> | undefined
 interface-member RealtimeHistogramProps::property::pulse = optional pulse: PulseConfig | undefined
@@ -2097,7 +2097,7 @@ interface-member RealtimeLineChartProps::property::mobileInteraction = optional 
 interface-member RealtimeLineChartProps::property::mobileSemantics = optional mobileSemantics: MobileVisualizationContract | undefined
 interface-member RealtimeLineChartProps::property::mode = optional mode: ChartMode | undefined
 interface-member RealtimeLineChartProps::property::onHover = optional onHover: ((d: HoverData | null) => void) | undefined
-interface-member RealtimeLineChartProps::property::onObservation = optional onObservation: OnObservationCallback | undefined
+interface-member RealtimeLineChartProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic-ai-observations").ChartObservation) => void) | undefined
 interface-member RealtimeLineChartProps::property::opacity = optional opacity: number | undefined
 interface-member RealtimeLineChartProps::property::pointIdAccessor = optional pointIdAccessor: RealtimePointIdAccessor<TDatum> | undefined
 interface-member RealtimeLineChartProps::property::pulse = optional pulse: PulseConfig | undefined
@@ -2157,7 +2157,7 @@ interface-member RealtimeSwarmChartProps::property::mobileInteraction = optional
 interface-member RealtimeSwarmChartProps::property::mobileSemantics = optional mobileSemantics: MobileVisualizationContract | undefined
 interface-member RealtimeSwarmChartProps::property::mode = optional mode: ChartMode | undefined
 interface-member RealtimeSwarmChartProps::property::onHover = optional onHover: ((d: HoverData | null) => void) | undefined
-interface-member RealtimeSwarmChartProps::property::onObservation = optional onObservation: OnObservationCallback | undefined
+interface-member RealtimeSwarmChartProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic-ai-observations").ChartObservation) => void) | undefined
 interface-member RealtimeSwarmChartProps::property::opacity = optional opacity: number | undefined
 interface-member RealtimeSwarmChartProps::property::pointIdAccessor = optional pointIdAccessor: RealtimePointIdAccessor<TDatum> | undefined
 interface-member RealtimeSwarmChartProps::property::pointStyle = optional pointStyle: ((datum: TDatum) => Style & {r?: number;}) | undefined
@@ -2219,7 +2219,7 @@ interface-member RealtimeWaterfallChartProps::property::mobileSemantics = option
 interface-member RealtimeWaterfallChartProps::property::mode = optional mode: ChartMode | undefined
 interface-member RealtimeWaterfallChartProps::property::negativeColor = optional negativeColor: string | undefined
 interface-member RealtimeWaterfallChartProps::property::onHover = optional onHover: ((d: HoverData | null) => void) | undefined
-interface-member RealtimeWaterfallChartProps::property::onObservation = optional onObservation: OnObservationCallback | undefined
+interface-member RealtimeWaterfallChartProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic-ai-observations").ChartObservation) => void) | undefined
 interface-member RealtimeWaterfallChartProps::property::opacity = optional opacity: number | undefined
 interface-member RealtimeWaterfallChartProps::property::pointIdAccessor = optional pointIdAccessor: RealtimePointIdAccessor<TDatum> | undefined
 interface-member RealtimeWaterfallChartProps::property::positiveColor = optional positiveColor: string | undefined
@@ -2653,7 +2653,7 @@ interface-member StreamOrdinalFrameProps::property::accessibleTable = optional a
 interface-member StreamOrdinalFrameProps::property::accessorRevision = optional accessorRevision: number | undefined
 interface-member StreamOrdinalFrameProps::property::amplitude = optional amplitude: number | undefined
 interface-member StreamOrdinalFrameProps::property::animate = optional animate: AnimateProp | undefined
-interface-member StreamOrdinalFrameProps::property::annotationObservationCallback = optional annotationObservationCallback: OnObservationCallback | undefined
+interface-member StreamOrdinalFrameProps::property::annotationObservationCallback = optional annotationObservationCallback: ((observation: import("../semiotic-ai-observations").ChartObservation) => void) | undefined
 interface-member StreamOrdinalFrameProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member StreamOrdinalFrameProps::property::autoPlaceAnnotations = optional autoPlaceAnnotations: AutoPlaceAnnotations | undefined
 interface-member StreamOrdinalFrameProps::property::axisExtent = optional axisExtent: import("../charts/shared/axisExtent").AxisExtentMode | undefined
@@ -2720,7 +2720,7 @@ interface-member StreamOrdinalFrameProps::property::onAnnotationActivate = optio
 interface-member StreamOrdinalFrameProps::property::onBrush = optional onBrush: ((extent: {r: [number, number];} | null) => void) | undefined
 interface-member StreamOrdinalFrameProps::property::onCategoriesChange = optional onCategoriesChange: ((categories: string[]) => void) | undefined
 interface-member StreamOrdinalFrameProps::property::onLayoutError = optional onLayoutError: ((diagnostic: import("./customLayoutFailure").CustomLayoutFailureDiagnostic) => void) | undefined
-interface-member StreamOrdinalFrameProps::property::onObservation = optional onObservation: OnObservationCallback | undefined
+interface-member StreamOrdinalFrameProps::property::onObservation = optional onObservation: ((observation: import("../semiotic-ai-observations").ChartObservation) => void) | undefined
 interface-member StreamOrdinalFrameProps::property::paused = optional paused: boolean | undefined
 interface-member StreamOrdinalFrameProps::property::pieceStyle = optional pieceStyle: ((d: Datum, category?: string) => Style) | undefined
 interface-member StreamOrdinalFrameProps::property::projection = optional projection: "horizontal" | "radial" | "vertical" | undefined
@@ -2912,8 +2912,10 @@ interface-member Style::property::_edgeFade = optional _edgeFade: boolean | unde
 interface-member Style::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
 interface-member Style::property::fill = optional fill: CanvasPattern | HatchFill | string | undefined
 interface-member Style::property::fillOpacity = optional fillOpacity: number | undefined
+interface-member Style::property::glyph = optional glyph: ((datum: Record<string, unknown>) => GlyphDef) | GlyphDef | undefined
 interface-member Style::property::icon = optional icon: HTMLCanvasElement | HTMLImageElement | undefined
 interface-member Style::property::iconPadding = optional iconPadding: number | undefined
+interface-member Style::property::mark = optional mark: import("./physics/physicsBodyCanvas").PhysicsBodyMark | undefined
 interface-member Style::property::opacity = optional opacity: number | undefined
 interface-member Style::property::r = optional r: number | undefined
 interface-member Style::property::stroke = optional stroke: string | undefined
@@ -2934,6 +2936,8 @@ interface-member StyleRuleContext::property::y = optional y: number | undefined
 interface-member StyleRuleStyle::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
 interface-member StyleRuleStyle::property::fill = optional fill: HatchFill | string | undefined
 interface-member StyleRuleStyle::property::fillOpacity = optional fillOpacity: number | undefined
+interface-member StyleRuleStyle::property::glyph = optional glyph: ((datum: Record<string, unknown>) => import("../../semiotic-physics").GlyphDef) | import("../../semiotic-physics").GlyphDef | undefined
+interface-member StyleRuleStyle::property::mark = optional mark: import("../../semiotic-physics").PhysicsBodyMark | undefined
 interface-member StyleRuleStyle::property::opacity = optional opacity: number | undefined
 interface-member StyleRuleStyle::property::stroke = optional stroke: string | undefined
 interface-member StyleRuleStyle::property::strokeDasharray = optional strokeDasharray: string | undefined
@@ -3097,7 +3101,7 @@ interface-member UseBrushSelectionResult::property::isActive = required isActive
 interface-member UseBrushSelectionResult::property::predicate = required predicate: (datum: Datum) => boolean
 interface-member UseChartObserverOptions::property::chartId = optional chartId: string | undefined
 interface-member UseChartObserverOptions::property::limit = optional limit: number | undefined
-interface-member UseChartObserverOptions::property::types = optional types: ("activate" | "annotation-activate" | "brush" | "brush-end" | "click" | "click-end" | "focus" | "hover" | "hover-end" | "late-data" | "selection" | "selection-end" | import("../DirectManipulationControl").ControlObservationPhase)[] | undefined
+interface-member UseChartObserverOptions::property::types = optional types: ("activate" | "annotation-activate" | "brush" | "brush-end" | "click" | "click-end" | "focus" | "hover" | "hover-end" | "late-data" | "selection" | "selection-end" | import("../DirectManipulationControl").ControlObservationPhase | import("../semiotic-experimental").UnstablePhysicsObservationEventType | import("../semiotic-physics").PhysicsLifecycleObservationEventType)[] | undefined
 interface-member UseChartObserverResult::property::clear = required clear: () => void
 interface-member UseChartObserverResult::property::latest = required latest: ChartObservation | null
 interface-member UseChartObserverResult::property::observations = required observations: ChartObservation[]
@@ -3279,7 +3283,7 @@ type ChartAnnotation = Datum
 type ChartContainerDataAudit = ChartContainerDataAuditOptions | boolean
 type ChartMode = "context" | "mobile" | "primary" | "sparkline"
 type ChartNotificationLevel = "error" | "info" | "neutral" | "success" | "warning"
-type ChartObservation = ActivateObservation | AnnotationActivateObservation | BrushEndObservation | BrushObservation | ClickEndObservation | ClickObservation | ControlObservation | FocusObservation | HoverEndObservation | HoverObservation | LateDataObservation | SelectionEndObservation | SelectionObservation
+type ChartObservation = ActivateObservation | AnnotationActivateObservation | BrushEndObservation | BrushObservation | ClickEndObservation | ClickObservation | ControlObservation | FocusObservation | HoverEndObservation | HoverObservation | LateDataObservation | SelectionEndObservation | SelectionObservation | import("../stream/physics/PhysicsPipelineTypes").PhysicsLifecycleObservationEvent | import("../stream/physics/PhysicsPipelineTypes").PhysicsObservationEvent
 type ControlAuditStatus = "fail" | "pass" | "warn"
 type ControlInputSource = "keyboard" | "pointer" | "programmatic"
 type ControlObservationCallback = (observation: ControlObservation) => void
@@ -3321,7 +3325,7 @@ type NetworkSceneEdge = NetworkBezierEdge | NetworkCurvedEdge | NetworkLineEdge 
 type NetworkSceneNode = NetworkArcNode | NetworkCircleNode | NetworkGlyphNode | NetworkRectNode | NetworkSymbolNode
 type ObservationInputType = "keyboard" | "navigation-tree" | "pointer" | "touch"
 type OnAnnotationActivateCallback = (event: AnnotationActivationEvent) => void
-type OnObservationCallback = (observation: ChartObservation) => void
+type OnObservationCallback = {observe(observation: ChartObservation): void;}["observe"]
 type OrdinalChartType = "bar" | "bar-funnel" | "boxplot" | "clusterbar" | "custom" | "donut" | "funnel" | "histogram" | "pie" | "point" | "ridgeline" | "swarm" | "swimlane" | "timeline" | "violin"
 type OrdinalSceneNode = BoxplotSceneNode | ConnectorSceneNode | GlyphSceneNode | PointSceneNode | RectSceneNode | SymbolSceneNode | TrapezoidSceneNode | ViolinSceneNode | WedgeSceneNode
 type ProcessSankeyTimeLike = Date | number | string
