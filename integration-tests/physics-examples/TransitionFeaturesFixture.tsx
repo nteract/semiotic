@@ -83,7 +83,12 @@ export function TransitionFeaturesFixture() {
           description="Three source marks, counted by event-time window."
         />
       </div>
-      <div data-testid="physics-mark-matrix">
+      {/* Keep the canvas origin on whole pixels, independent of native button
+          metrics above it, so browser screenshots use its exact 300 × 110 box. */}
+      <div
+        data-testid="physics-mark-matrix"
+        style={{ position: "absolute", left: 8, top: 420 }}
+      >
         <StreamPhysicsFrame
           size={[300, 110]}
           config={{ kernel: { gravity: { x: 0, y: 0 } } }}
