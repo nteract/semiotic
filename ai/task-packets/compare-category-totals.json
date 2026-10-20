@@ -7,16 +7,16 @@
   "route": "/tasks/compare-category-totals",
   "identity": {
     "packageName": "semiotic",
-    "packageVersion": "3.12.1",
+    "packageVersion": "3.13.0",
     "channel": "source",
-    "sourceRevision": "sha256:415aa92ac23ce75abec1d2d9b7b49bbd0bdd6545ec89a329e049b13ccccf03fe",
+    "sourceRevision": "sha256:d22ecc6b38a4e3ec5c7ae6b1e5a4c6b682d11cc3baf9148e20ec7c887524cb06",
     "revisionKind": "content-digest",
     "runtime": {
-      "digest": "sha256:e7288e0a87a86a4a8d001a9c988f704d8190a2453b9b66fb16c5f9beab56418a",
-      "fileCount": 1354
+      "digest": "sha256:786a54eb6524608fd62a28260f6cd64f14b1bc536ea8482762bfadeb5a658ec2",
+      "fileCount": 1442
     },
     "taskSources": {
-      "digest": "sha256:02b82e02fce5ebddcc620ba99dc912345c0701ae543b5ed26b962c89c04fa6d2",
+      "digest": "sha256:37f1e0fd330e5ed6b2f088d56fb6af4ebdbc5c767d090a4fb59da5fe4f43fbfc",
       "fileCount": 36
     },
     "availability": "Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks."

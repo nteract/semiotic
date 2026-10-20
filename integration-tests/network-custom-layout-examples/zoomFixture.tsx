@@ -18,10 +18,12 @@ declare global {
     networkZoomLayoutCalls: number
     networkZoomDemoLayoutCalls: number
     networkZoomChanges: { x: number; y: number; k: number }[]
+    networkZoomFocusIds: string[]
   }
 }
 window.networkZoomLayoutCalls = 0
 window.networkZoomChanges = []
+window.networkZoomFocusIds = []
 const nodes = [{ id: "a" }, { id: "b" }],
   edges: [] = []
 const layout: NetworkCustomLayout = () => {
@@ -47,9 +49,21 @@ const layout: NetworkCustomLayout = () => {
         datum: { id: "b" },
         id: "b",
         style: { fill: "#6688aa" }
-      }
+      },
+      ...(new URLSearchParams(location.search).has("node-hit-test") ? [
+        { type: "circle" as const, cx: 500, cy: 400, r: 1, datum: { id: "tiny-node" }, style: { fill: "orange" } }
+      ] : []),
+      ...(new URLSearchParams(location.search).has("hit-test") ? [
+        { type: "circle" as const, cx: 50, cy: 55, r: 10, datum: { id: "foreground-circle" }, style: { fill: "orange" } },
+        { type: "rect" as const, x: 30, y: 35, w: 40, h: 40, datum: { id: "background-rect" }, style: { fill: "gray" } },
+        { type: "circle" as const, cx: 50, cy: 145, r: 30, depth: 0, datum: { id: "parent-circle" }, style: { fill: "steelblue" } },
+        { type: "circle" as const, cx: 65, cy: 145, r: 10, depth: 1, datum: { id: "child-circle" }, style: { fill: "orange" } }
+      ] : [])
     ],
     sceneEdges: [
+      ...(new URLSearchParams(location.search).has("node-hit-test") ? [
+        { type: "line" as const, x1: 500, y1: 400, x2: 1000, y2: 400, datum: { id: "node-edge" }, style: { stroke: "green", strokeWidth: 2 } }
+      ] : []),
       {
         type: "line",
         x1: 100,
@@ -58,7 +72,14 @@ const layout: NetworkCustomLayout = () => {
         y2: 200,
         datum: { id: "edge" },
         style: { stroke: "#228844", strokeWidth: 2 }
-      }
+      },
+      ...(new URLSearchParams(location.search).has("hit-test") ? [
+        { type: "bezier" as const, pathD: "M100,180 L350,180 L350,240 L100,240 Z", datum: { id: "bottom-band" }, style: { fill: "steelblue", stroke: "none" } },
+        { type: "ribbon" as const, pathD: "M150,195 L300,195 L300,225 L150,225 Z", datum: { id: "top-band" }, style: { fill: "orange", stroke: "none" } },
+        { type: "curved" as const, pathD: "M100,260 L350,260", datum: null, style: { stroke: "gray" } },
+        { type: "curved" as const, pathD: "M100,285 L350,285", datum: { id: "wide-path" }, style: { fill: "none", stroke: "navy", strokeWidth: 20 } },
+        { type: "line" as const, x1: 100, y1: 315, x2: 350, y2: 315, datum: { id: "wide-line" }, style: { stroke: "green", strokeWidth: 20 } }
+      ] : [])
     ],
     htmlMarks: [
       {
@@ -71,7 +92,13 @@ const layout: NetworkCustomLayout = () => {
           <input
             aria-label="Draft"
             defaultValue="hello"
-            style={{ pointerEvents: "auto", width: 70, margin: 8 }}
+            // Native input borders depend on the host OS theme. Author the
+            // fixture's outline so tooltip/camera snapshots stay deterministic.
+            style={{
+              pointerEvents: "auto", width: 70, margin: 8,
+              appearance: "none", border: "2px solid #767676", borderRadius: 0,
+              background: "white", color: "black", padding: "1px 2px"
+            }}
           />
         )
       },
@@ -128,6 +155,7 @@ const emptyResults: Record<string, React.ReactNode> = {
 }
 
 export function ZoomFixture() {
+  const keyboardMode = new URLSearchParams(location.search).get("keyboard")
   const tooltipMode = new URLSearchParams(location.search).get("tooltip")
   const rawTooltip = new URLSearchParams(location.search).has("raw-tooltip")
   const [width, setWidth] = React.useState(540)
@@ -149,6 +177,7 @@ export function ZoomFixture() {
   const [viewport, setViewport] =
     React.useState<NetworkViewportSnapshot | null>(null)
   const [hover, setHover] = React.useState("none")
+  const [activation, setActivation] = React.useState("none")
   const [zoom, setZoom] = React.useState<NetworkViewTransform>({
     x: 0,
     y: 0,
@@ -157,6 +186,9 @@ export function ZoomFixture() {
   const [controlled, setControlled] = React.useState(false)
   const [accept, setAccept] = React.useState(false)
   const [options, setOptions] = React.useState<NetworkZoomOptions>({
+    keyboard: keyboardMode === "pan" || keyboardMode === "navigate"
+      ? { arrowKeys: keyboardMode }
+      : keyboardMode !== "off",
     wheelZoom: true,
     duration: new URLSearchParams(location.search).has("animated") ? 180 : 0,
     minZoom: 0.25,
@@ -210,8 +242,10 @@ export function ZoomFixture() {
         accessibleTable={false}
         tooltip={tooltipMode === "false" ? false : tooltipMode === "declarative" ? { content: declarativeTooltip, chrome: "none" } : tooltip}
         onObservation={(event) => {
+          if (event.type === "focus") window.networkZoomFocusIds.push(String(event.datum?.id))
           if (event.type === "hover") setHover(String(event.datum?.id))
           if (event.type === "hover-end") setHover("none")
+          if (event.type === "activate") setActivation(String(event.datum?.id))
         }}
         frameProps={{
           ...(rawTooltip ? {
@@ -228,6 +262,7 @@ export function ZoomFixture() {
       />
       <output data-testid="zoom-viewport">{JSON.stringify(viewport)}</output>
       <output data-testid="zoom-hover">{hover}</output>
+      <output data-testid="zoom-activate">{activation}</output>
     </>
   )
 }
