@@ -74,6 +74,10 @@ export class PhysicsQuiescenceTracker {
     const thresholdSq = this.speed * this.speed
     let quiescent = true
     for (const body of bodies) {
+      if (body.travel) {
+        quiescent = false
+        break
+      }
       if (body.sleeping) continue
       const dx = body.x - body.prevX
       const dy = body.y - body.prevY

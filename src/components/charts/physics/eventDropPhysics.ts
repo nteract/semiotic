@@ -1,5 +1,6 @@
 import { scaleLinear } from "d3-scale"
 import { resolveEventDropAdmissions } from "./eventDropAdmission"
+import { choreographEventDropArrival, type EventDropArrival } from "./eventDropArrival"
 import type {
   EventDropLedgerRow,
   EventDropLedgerEvent,
@@ -67,6 +68,7 @@ export interface EventDropPhysicsOptions<TDatum extends Datum = Datum> {
   data: readonly TDatum[]
   timeAccessor: ChartAccessor<TDatum, number>
   arrivalAccessor: ChartAccessor<TDatum, number>
+  arrival?: EventDropArrival
   windows: EventDropWindowOptions
   watermark?: EventDropWatermark
   sourceAccessor?: ChartAccessor<TDatum, string>
@@ -411,6 +413,9 @@ export function buildEventDropPhysics<TDatum extends Datum>(
     }))
   ]
 
+  choreographEventDropArrival(spawns, {
+    ...options, secondsPerUnit, timeScale, firstArrival, closedWindowCount
+  })
   return {
     config: baseConfig(seed, colliders, "EventDropChart", {
       friction: 0.08
@@ -418,17 +423,7 @@ export function buildEventDropPhysics<TDatum extends Datum>(
     initialSpawns: spawns,
     initialSpawnPacing: {
       pacing: "arrival",
-      timeAccessor: (spawn) => {
-        const datum = spawn.datum as {
-          arrivalTime: number
-          windowIndex: number
-          late: boolean
-        }
-        // History that the current apparatus cannot admit is already present.
-        const closed = datum.windowIndex < closedWindowCount
-        const history = (closed && !datum.late) || (!closed && datum.late)
-        return (history ? firstArrival : datum.arrivalTime) * secondsPerUnit
-      },
+      timeAccessor: "__eventDropSpawnTime",
       timeScale
     },
     projectionRows: rows.map((row, index) => ({
@@ -498,7 +493,7 @@ function eventDropSpawnY(
  */
 export function readEventDropOccupancy(
   metadata: EventDropProjectionMetadata,
-  bodies: readonly { x: number; y: number }[]
+  bodies: readonly { x: number; y: number; travel?: unknown }[]
 ): { accepted: number[]; late: number; inFlight: number; total: number } {
   const { windowPlot, gutter, windowCount, lidSegments } = metadata
   const accepted = Array<number>(windowCount).fill(0)
@@ -507,6 +502,10 @@ export function readEventDropOccupancy(
   let late = 0
   let inFlight = 0
   for (const body of bodies) {
+    if (body.travel) {
+      inFlight++
+      continue
+    }
     if (
       body.x >= gutter.x &&
       body.x < windowPlot.x &&

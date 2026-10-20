@@ -229,6 +229,7 @@ const LDATopicCrucibleExamplePage = lazy(
 const ClimateAnomalyExamplePage = lazy(() => import("./pages/examples/ClimateAnomalyExamplePage"))
 const ChainReactionExamplePage = lazy(() => import("./pages/examples/ChainReactionExamplePage"))
 const WatermarksExamplePage = lazy(() => import("./pages/examples/WatermarksExamplePage"))
+const EmitterPlaygroundPage = lazy(() => import("./pages/examples/EmitterPlaygroundPage"))
 const StakeholderJourneyExamplePage = lazy(
   () => import("./pages/examples/StakeholderJourneyExamplePage"),
 )
@@ -385,6 +386,7 @@ const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
   "LDATopicCrucibleExamplePage.jsx": LDATopicCrucibleExamplePage,
   "ChainReactionExamplePage.jsx": ChainReactionExamplePage,
   "WatermarksExamplePage.jsx": WatermarksExamplePage,
+  "EmitterPlaygroundPage.tsx": EmitterPlaygroundPage,
   "StakeholderJourneyExamplePage.jsx": StakeholderJourneyExamplePage,
   "MergePressureExamplePage.jsx": MergePressureExamplePage,
   "NimbyExamplePage.jsx": NimbyExamplePage,

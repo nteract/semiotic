@@ -7,6 +7,7 @@ import React from "react"
 import { createRoot } from "react-dom/client"
 import { SegmentContactsFixture } from "./SegmentContactsFixture"
 import { TransitionFeaturesFixture } from "./TransitionFeaturesFixture"
+import { TravelFixture } from "./TravelFixture"
 
 window.__physicsChartHandles = {}
 
@@ -102,7 +103,10 @@ function App() {
 
 const root = createRoot(document.getElementById("root"))
 const segments = new URLSearchParams(window.location.search).get("segments")
-root.render(new URLSearchParams(window.location.search).has("transition")
+const travel = new URLSearchParams(window.location.search).get("travel")
+root.render(travel
+  ? React.createElement(TravelFixture, { execution: travel === "worker" ? "worker" : "sync" })
+  : new URLSearchParams(window.location.search).has("transition")
   ? React.createElement(TransitionFeaturesFixture)
   : segments
   ? React.createElement(SegmentContactsFixture, { execution: segments === "worker" ? "worker" : "sync" })

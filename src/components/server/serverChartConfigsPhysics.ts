@@ -230,6 +230,7 @@ export const eventDropChart: ChartConfig = {
       data: Array.isArray(data) ? data : [],
       timeAccessor: rest.timeAccessor || "time",
       arrivalAccessor: rest.arrivalAccessor || "arrivalTime",
+      arrival: rest.arrival,
       watermarkAtArrivalAccessor: rest.watermarkAtArrivalAccessor,
       sources: rest.sources,
       sourceAccessor: rest.sourceAccessor,

@@ -23,12 +23,14 @@ function frameFromStore(
     structural ||
     result.spawned.length ||
     result.evicted.length ||
-    result.sedimented.length
+    result.sedimented.length ||
+    result.events.some((event) => event.type === "travel-end")
       ? store.snapshot()
       : undefined
-  const frame = packPhysicsWorkerFrame(
-    result,
-    store.readBodies(), [], snapshot)
+  const bodies = store.readBodies()
+  const frame = packPhysicsWorkerFrame(result, bodies, [], snapshot)
+  if (bodies.some((body) => body.travel))
+    frame.travelElapsed = Float64Array.from(bodies, (body) => body.travel?.elapsedSeconds ?? 0)
   // Body metadata lives in structural snapshots. Stable ticks transfer only
   // motion buffers and scheduling state, without another datum-bearing copy.
   frame.sleepTimes = store.workerSleepTimes(frame.ids)

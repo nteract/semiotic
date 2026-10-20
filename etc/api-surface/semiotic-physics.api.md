@@ -205,7 +205,7 @@ function processLaneWalls(options: {idPrefix?: string; left: number; right: numb
 function processStageLayout(options: ProcessVolumeLayoutOptions): ProcessVolumeLayout
 function processStageRegions(layout: ProcessVolumeLayout, options?: ProcessStageRegionOptions | undefined): StreamPhysicsRegionEffect[]
 function processVolumePolygons(layout: ProcessVolumeLayout): ProcessVolumePolygon[]
-function readEventDropOccupancy(metadata: EventDropProjectionMetadata, bodies: readonly {x: number; y: number;}[]): {accepted: number[]; late: number; inFlight: number; total: number;}
+function readEventDropOccupancy(metadata: EventDropProjectionMetadata, bodies: readonly {x: number; y: number; travel?: unknown;}[]): {accepted: number[]; late: number; inFlight: number; total: number;}
 function regionCountsToProjectionRows(counts: RegionCountMap, order?: readonly string[] | undefined): {label: string; value: number;}[]
 function replaceGauntletNegative<TDatum extends Datum>(project: GauntletProjectState<TDatum>, options: GauntletNegativeReplacementOptions): GauntletEffect
 function replayCruciblePlan<TDatum extends Datum>(plan: Pick<CrucibleCompiledPlan<TDatum>, "duration" | "events" | "initialState" | "outlets" | "phases" | "products">, throughTime?: number | undefined): CrucibleReplayResult<TDatum>
@@ -391,6 +391,7 @@ interface PhysicsBodySemanticItemContext
 interface PhysicsBodySpec
 interface PhysicsBodyState
 interface PhysicsBodyStyleContext
+interface PhysicsBodyTravel
 interface PhysicsCanvasPaintContext
 interface PhysicsCanvasTheme
 interface PhysicsChartLayout
@@ -442,6 +443,7 @@ interface PhysicsTimeEncoding<TDatum> extends MotionTimeEncoding<TDatum>
 interface PhysicsTraceComparison
 interface PhysicsTraceComparisonOptions<TSample>
 interface PhysicsTraceComparisonPoint
+interface PhysicsTravelPoint
 interface PhysicsZone
 interface ProcessChromeGroup
 interface ProcessChromeLayout
@@ -1173,6 +1175,7 @@ interface-member EventDropChartHandle::property::getSourceStats = required getSo
 interface-member EventDropChartHandle::property::getStore = required getStore: () => ReturnType<StreamPhysicsFrameHandle["getStore"]> | null
 interface-member EventDropChartHandle::property::getWatermark = required getWatermark: () => number
 interface-member EventDropChartHandle::property::setTimeScale = required setTimeScale: (scale: number) => void
+interface-member EventDropChartProps::property::arrival = optional arrival: EventDropArrival | undefined
 interface-member EventDropChartProps::property::arrivalAccessor = optional arrivalAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member EventDropChartProps::property::ballRadius = optional ballRadius: number | undefined
 interface-member EventDropChartProps::property::clockTickMs = optional clockTickMs: number | undefined
@@ -1226,6 +1229,7 @@ interface-member EventDropLedgerRow::property::open = required open: boolean
 interface-member EventDropLedgerRow::property::start = required start: number
 interface-member EventDropLedgerRow::property::watermarkAtClose = optional watermarkAtClose: number | undefined
 interface-member EventDropLedgerRow::property::windowId = required windowId: string
+interface-member EventDropPhysicsOptions::property::arrival = optional arrival: EventDropArrival | undefined
 interface-member EventDropPhysicsOptions::property::arrivalAccessor = required arrivalAccessor: ChartAccessor<TDatum, number>
 interface-member EventDropPhysicsOptions::property::ballRadius = required ballRadius: number
 interface-member EventDropPhysicsOptions::property::data = required data: readonly TDatum[]
@@ -1671,6 +1675,7 @@ interface-member PhysicsBodySpec::property::id = required id: string
 interface-member PhysicsBodySpec::property::mass = optional mass: number | undefined
 interface-member PhysicsBodySpec::property::restitution = optional restitution: number | undefined
 interface-member PhysicsBodySpec::property::shape = required shape: PhysicsBodyShape
+interface-member PhysicsBodySpec::property::travel = optional travel: PhysicsBodyTravel | undefined
 interface-member PhysicsBodySpec::property::vx = optional vx: number | undefined
 interface-member PhysicsBodySpec::property::vy = optional vy: number | undefined
 interface-member PhysicsBodySpec::property::x = required x: number
@@ -1685,6 +1690,7 @@ interface-member PhysicsBodyState::property::prevX = required prevX: number
 interface-member PhysicsBodyState::property::prevY = required prevY: number
 interface-member PhysicsBodyState::property::shape = required shape: PhysicsBodyShape
 interface-member PhysicsBodyState::property::sleeping = required sleeping: boolean
+interface-member PhysicsBodyState::property::travel = optional travel: PhysicsBodyTravel | undefined
 interface-member PhysicsBodyState::property::vx = required vx: number
 interface-member PhysicsBodyState::property::vy = required vy: number
 interface-member PhysicsBodyState::property::x = required x: number
@@ -1693,6 +1699,9 @@ interface-member PhysicsBodyStyleContext::property::regionState = optional regio
 interface-member PhysicsBodyStyleContext::property::regions = optional regions: StreamPhysicsRegionEffect[] | undefined
 interface-member PhysicsBodyStyleContext::property::selected = required selected: boolean
 interface-member PhysicsBodyStyleContext::property::simulationState = required simulationState: PhysicsSimulationState
+interface-member PhysicsBodyTravel::property::durationSeconds = required durationSeconds: number
+interface-member PhysicsBodyTravel::property::elapsedSeconds = optional elapsedSeconds: number | undefined
+interface-member PhysicsBodyTravel::property::points = required points: PhysicsTravelPoint[]
 interface-member PhysicsCanvasPaintContext::property::resolvePaint = required resolvePaint: (Style["stroke"] | null | paint: Style["fill"] | undefined, fallback: string) => string | CanvasPattern
 interface-member PhysicsCanvasPaintContext::property::theme = required theme: PhysicsCanvasTheme
 interface-member PhysicsCanvasPaintContext::property::withAlpha = required withAlpha: (color: string, opacity: number) => string
@@ -2092,6 +2101,8 @@ interface-member PhysicsTraceComparisonPoint::property::status = required status
 interface-member PhysicsTraceComparisonPoint::property::time = required time: number
 interface-member PhysicsTraceComparisonPoint::property::upper = required upper: null | number
 interface-member PhysicsTraceComparisonPoint::property::value = required value: null | number
+interface-member PhysicsTravelPoint::property::x = required x: number
+interface-member PhysicsTravelPoint::property::y = required y: number
 interface-member PhysicsZone::property::height = required height: number
 interface-member PhysicsZone::property::width = required width: number
 interface-member PhysicsZone::property::x = required x: number
@@ -2660,6 +2671,7 @@ type DependencyMachineDiagnosticCode = "cycle" | "duplicate-task-id" | "missing-
 type DependencyReplayClock = Date | number | {currentTime: Date | number;}
 type DependencyReplayEvent = {type: "dependency-delivered"; edgeID: string; at: Date | number;} | {type: "task-armed"; taskID: string; at: Date | number;} | {type: "task-blocked"; taskID: string; reason: string; at: Date | number;} | {type: "task-completed"; taskID: string; at: Date | number;} | {type: "task-unblocked"; taskID: string; at: Date | number;}
 type DependencyTaskStatus = "blocked" | "done" | "in-progress" | "waiting"
+type EventDropArrival = "drop" | {mode: "travel"; /** Travel milliseconds, independent of timeUnit. Defaults to 800. */ durationMs?: number; /** Speed ceiling: the longest path sets one shared chart-wide duration. */ speedPxPerSec?: number; path?: "connector" | "straight" | ((from: PhysicsTravelPoint, to: PhysicsTravelPoint) => PhysicsTravelPoint[]);}
 type EventDropWatermark = ((latestEventTime: number) => number) | EventDropWatermarkOptions
 type FrameTextAnnotation = ({label: number | string; text?: number | string;} | {text: number | string; label?: number | string;}) & FrameTextAnnotationBase
 type FrameTextPosition = (typeof FRAME_TEXT_POSITIONS)[number]

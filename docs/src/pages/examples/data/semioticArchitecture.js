@@ -1136,6 +1136,23 @@ const EXPLICIT_EXAMPLE_PROFILES = [
     ],
   },
   {
+    id: "emitter-playground",
+    shortLabel: "One emitter",
+    note: "One clock-driven synthetic source pushes events through EventDropChart travel, with explicit pause, source gating, and an admission ledger updated at board entry.",
+    uses: [
+      "input-push",
+      "hoc-event-drop",
+      "feature-accessors",
+      "feature-stream-windows",
+      "feature-tooltips",
+      "feature-observation",
+      "feature-accessibility",
+      "feature-responsive",
+      "feature-theme",
+      "feature-canvas-svg",
+    ],
+  },
+  {
     id: "climate-radial-weather",
     note: "A radial OrdinalCustomChart, layered TemporalHistograms, and a first-class CircularBrush over shared static snapshots.",
     uses: [

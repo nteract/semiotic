@@ -60,6 +60,8 @@ export interface PhysicsWorkerFrame {
   velocities: Float32Array
   sleepTimes?: Float32Array
   previousPositions?: Float32Array
+  /** Travel progress stays exact when a worker hands simulation back to sync. */
+  travelElapsed?: Float64Array
   state?: PhysicsWorkerState
 }
 
@@ -272,6 +274,7 @@ export function physicsWorkerFrameTransferables(
     frame.velocities.buffer,
     frame.sleeping.buffer,
     ...(frame.sleepTimes ? [frame.sleepTimes.buffer] : []),
+    ...(frame.travelElapsed ? [frame.travelElapsed.buffer] : []),
     ...(frame.previousPositions ? [frame.previousPositions.buffer] : [])
   ] as Transferable[]
 }

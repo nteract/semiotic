@@ -84,6 +84,23 @@ const UNASSESSED_EXAMPLE_CONTRACT = Object.freeze({
 /** @type {readonly ExampleDefinition[]} */
 const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
   {
+    id: "emitter-playground",
+    path: "/examples/emitter-playground",
+    sourceFile: "EmitterPlaygroundPage.tsx",
+    sourceFiles: ["EmitterPlaygroundPage.tsx", "emitterPlaygroundModel.ts", "emitterPlayground.css"],
+    isPilot: true,
+    contract: {
+      publicImports: ["semiotic/physics"],
+      data: { states: ["live"], fixture: { kind: "bounded-single-synthetic-emitter", replay: true, schemaVersion: "1" } },
+      provenance: { source: "Authored one-emitter study inspired by flink-watermarks.wtf", capturedAt: "2026-10-20", freshnessOwner: "Semiotic maintainers", reviewCadence: "Physics arrival or emitter API changes" },
+      accessibility: { summary: "Live arrival ledger, explicit clock, watermark and conservation counts", navigation: "Native play/pause, settings, reset and older-event controls; keyboard source toggle and chart inspection", keyboard: "Native controls and focusable source tile", forcedColors: "not-reviewed" },
+      motion: { reducedMotion: "Manual one-second steps with settled batches", visibility: "Uses the frame simulation clock and inherited hidden-page suspension" },
+      responsive: { status: "Chromium hover and resize reviewed at 390 and 1280px", viewports: [390, 1280], selectionIdentity: "event ID" },
+      ssr: { status: "static initial board with an empty ledger", hydration: "source route mounted in Chromium without page errors" },
+      performance: { status: "bounded-not-benchmarked", budgets: { bundle: "lazy route using semiotic/physics", interaction: "100ms readout cadence", memory: "24 seconds of emissions, at most 96 regular and 16 older events", hiddenPage: "frame suspendWhenHidden" } },
+    },
+  },
+  {
     id: "compositional-dag",
     path: "/examples/compositional-dag",
     sourceFile: "CompositionalDagExamplePage.tsx",
@@ -2421,6 +2438,18 @@ const EXAMPLE_REGISTRY_METADATA = [
     preview: "watermarks",
     badges: ["EventDropChart", "Physics", "Agent-readable"],
     frames: ["stream-physics", "xy"],
+    topics: ["process", "realtime"],
+  },
+  {
+    title: "One emitter, six windows",
+    path: "/examples/emitter-playground",
+    publishedAt: "2026-10-20T09:00:00-07:00",
+    eyebrow: "Source-to-board travel",
+    description:
+      "Start one emitter, pause events mid-flight, and send an older event toward a closed window. A small interactive playground for arrival choreography.",
+    preview: "emitter-playground",
+    badges: ["EventDropChart", "Travel", "Live ledger"],
+    frames: ["stream-physics"],
     topics: ["process", "realtime"],
   },
   {

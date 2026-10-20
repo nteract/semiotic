@@ -68,6 +68,7 @@ import {
   resolvePhysicsSimulationState
 } from "./physicsPipelineObservations"
 import { PhysicsSpawnQueue, enqueuePhysicsSpawns } from "./PhysicsSpawnQueue"
+import { physicsTravelHorizon } from "./physicsBodyTravel"
 import { evictPhysicsOverflow } from "./physicsPipelineEviction"
 import { PhysicsQuiescenceTracker } from "./physicsPipelineQuiescence"
 import { createPhysicsStepObserver, runPhysicsSettleSteps, type PhysicsSettleHost, type PhysicsSettleRun, type PhysicsSettleSink } from "./physicsPipelineSettle"
@@ -447,7 +448,7 @@ export class PhysicsPipelineStore {
       atRest: () => this.atRest(),
       elapsed: () => this.elapsedSeconds,
       nextArrival: () => this.queue.firstArrival(),
-      lastArrival: () => this.queue.lastArrival(),
+      lastArrival: () => physicsTravelHorizon(this.elapsedSeconds, this.readBodies(), this.queue.sorted()),
       advanceTime: (s) => { this.elapsedSeconds += s },
       spawnDue: (spawned, obs) => this.spawnDue(spawned, obs),
       observeBodyBudget: (obs) => this.observeBodyBudget(obs),

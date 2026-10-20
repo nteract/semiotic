@@ -7,6 +7,7 @@ import type {
   PhysicsKernelSnapshotCollider
 } from "./PhysicsKernel"
 import { cloneFixedPosition } from "./physicsFixedPosition"
+import { clonePhysicsTravel } from "./physicsBodyTravel"
 
 export function cloneShape(shape: PhysicsBodyShape): PhysicsBodyShape {
   return shape.type === "circle"
@@ -51,6 +52,7 @@ export function cloneBodyState(body: PhysicsBodyState): PhysicsBodyState {
     angle: body.angle,
     mass: body.mass,
     bodyCollisions: body.bodyCollisions,
+    ...(body.travel ? { travel: clonePhysicsTravel(body.travel) } : {}),
     ...(body.fixedPosition
       ? { fixedPosition: cloneFixedPosition(body.fixedPosition) }
       : {}),

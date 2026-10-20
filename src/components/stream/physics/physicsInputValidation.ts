@@ -5,6 +5,7 @@ import type {
   PhysicsKernelSnapshot,
   PhysicsSpringSpec
 } from "./PhysicsKernel"
+import { validatePhysicsTravel } from "./physicsBodyTravel"
 import type {
   PhysicsPipelineConfig,
   PhysicsPipelineSnapshot,
@@ -41,6 +42,10 @@ export function validatePhysicsBody(spec: PhysicsBodySpec): void {
     if (spec[key] != null) finite(spec[key], `${label}.${key}`)
   }
   if (spec.mass != null) positive(spec.mass, `${label}.mass`)
+  if (spec.travel) {
+    validatePhysicsTravel(spec.travel)
+    if (spec.fixedPosition) throw new RangeError("Physics travel cannot use fixedPosition")
+  }
   if (spec.shape.type === "circle")
     positive(spec.shape.radius, `${label}.radius`)
   else {

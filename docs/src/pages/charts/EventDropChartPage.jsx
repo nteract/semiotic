@@ -1,4 +1,5 @@
 import React from "react"
+import { Link } from "react-router-dom"
 import { EventDropChart } from "semiotic/physics"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -18,6 +19,7 @@ const eventDropData = [
 ]
 
 const eventDropChartProps = [
+  { name: "arrival", type: "string | object", default: '"drop"', description: 'Source choreography: "drop" or { mode: "travel", durationMs?: 800, speedPxPerSec?, path?: "straight" | "connector" | callback }. Choose duration or speed. Requires a visible source and the built-in engine.' },
   { name: "sources", type: "array", description: "Source identities with id, label, color, mark, glyph, active and visible. Historical counts remain when a tile is hidden." },
   { name: "sourceAccessor", type: "string | function", default: '"source"', description: "Field identifying an event's source." },
   { name: "sourceRail", type: "object", description: "{ side: left | top | none, tileSize? }. Use top for a narrow board." },
@@ -157,7 +159,51 @@ const counts = readEventDropOccupancy(metadata, controls.readBodies())
 // sum(accepted) + late + inFlight === total
 // total covers materialized bodies; queued arrivals are not included.`} />
 
-      <h2 id="props">Props</h2>
+      <h2 id="arrival-travel">Travel from source to board</h2>
+      <p>
+        <Link to="/examples/emitter-playground">Try the single-emitter playground</Link>
+        {" "}to pause a journey, turn the source on and off, and send an older event
+        toward a closed window.
+      </p>
+      <p>
+        Set <code>arrival={"{ mode: \"travel\", durationMs: 800, path: \"connector\" }"}</code>
+        {" "}to move events from their source tiles before releasing them to gravity.
+        Arrival times still mean board entry. Finite replay starts early enough to
+        show the first journey; timeScale speeds up both travel and arrival pacing.
+        Choose durationMs (milliseconds in either timeUnit) or speedPxPerSec,
+        a speed ceiling that derives one shared duration from the longest path.
+        A constant duration preserves arrival ties across sources.
+      </p>
+      <CodeBlock language="tsx" code={`<EventDropChart
+  data={[
+    { id: "newer", source: "p1", time: 35, arrivalTime: 0 },
+    { id: "older", source: "p2", time: 5, arrivalTime: 0.25 }
+  ]}
+  sources={[{ id: "p1", label: "P1" }, { id: "p2", label: "P2" }]}
+  sourceRail={{ side: "top" }}
+  arrival={{ mode: "travel", durationMs: 2000, path: "straight" }}
+  timeUnit="s"
+  windows={{ size: 10 }}
+  watermark={{ delay: 100 }}
+  title="Out-of-order events"
+  description="P2 emits later and travels toward an older event-time window."
+/>`} />
+      <p>
+        React paths may be callbacks returning finite points, including the supplied
+        source and destination endpoints. The compiled path runs in the built-in
+        kernel on both sync and worker execution. Travelling bodies ignore contacts
+        and sensors and count as inFlight. Their tooltip/style datum carries
+        __phase: travel, board, late, or settled. Reduced motion and server rendering
+        show the same settled board as drop mode. Replay projection totals still
+        describe all supplied rows, regardless of animation progress.
+      </p>
+      <p>
+        Historical admissions already beneath closed lids, or recorded rejections
+        whose lids have reopened, appear directly in their containers. Rows without
+        a visible source tile use ordinary drops. A resize preserves elapsed travel;
+        admitted bodies stay on the board. Imperative pushes begin their journey
+        immediately; scheduling an unbounded stream remains application-owned.
+      </p>
       <h2 id="sources-and-accounting">Sources and admission accounting</h2>
       <p>
         Source tiles are keyboard accessible and can use circle, square, triangle,
@@ -209,7 +255,7 @@ const events = Array.from({ length: 60 }, () => stream.next().value!)
       </p>
       <p>
         These APIs provide deterministic replay and accounting. The following-camera
-        live board, window retirement, travel choreography, and parameter reflow
+        live board, window retirement, and parameter reflow
         remain work in the transition plan. Keep application-driven demonstrations
         bounded until that runtime is available.
       </p>
@@ -230,6 +276,7 @@ const events = Array.from({ length: 60 }, () => stream.next().value!)
         Both settled SVG and animated exports preserve the built-in marks.
         diagnoseConfig warns when a declarative glyph's aspect ratio exceeds 1.5.
       </p>
+      <h2 id="props">Props</h2>
       <PropTable componentName="EventDropChart" props={eventDropChartProps} />
     </PageLayout>
   )

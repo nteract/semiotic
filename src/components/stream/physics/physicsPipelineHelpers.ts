@@ -10,6 +10,7 @@ import {
   type PhysicsKernelOptions,
   type PhysicsKernelSnapshot
 } from "./PhysicsKernel"
+import { clonePhysicsTravel } from "./physicsBodyTravel"
 import type { PhysicsBodyBudgetOptions } from "./PhysicsBodyBudget"
 import type {
   PhysicsBoundsColliderOptions,
@@ -100,6 +101,7 @@ export function cloneSpawn(spawn: PhysicsQueuedSpawn): PhysicsQueuedSpawn {
   return {
     ...spawn,
     shape: { ...spawn.shape },
+    ...(spawn.travel ? { travel: clonePhysicsTravel(spawn.travel) } : {}),
     ...(spawn.fixedPosition ? { fixedPosition: { ...spawn.fixedPosition } } : {}),
     datum: spawn.datum,
     springs: spawn.springs?.map((spring) => ({

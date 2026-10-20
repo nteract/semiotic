@@ -32736,6 +32736,14 @@
                 "function"
               ]
             },
+            "arrival": {
+              "type": [
+                "string",
+                "object"
+              ],
+              "description": "drop or { mode: travel, durationMs?: 800, speedPxPerSec?, path?: straight | connector }. Travels from visible source tiles with the built-in engine. Choose duration or a speed ceiling that sets one shared duration from the longest path. React also accepts a path callback returning points including both endpoints. Arrival times describe board entry; finite replay adds pre-roll. Historical admissions bypass travel.",
+              "default": "drop"
+            },
             "watermarkAtArrivalAccessor": {
               "type": "string",
               "description": "Recorded watermark at each event's arrival. Overrides computed admission thresholds while watermark.value can advance current window closure.",

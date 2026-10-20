@@ -1,4 +1,5 @@
 import { physicsCollidersEqual } from "./physicsColliderEquality"
+import { advancePhysicsTravel, clonePhysicsTravel, physicsPhaseDatum, physicsBoardPhase, type PhysicsBodyTravel } from "./physicsBodyTravel"
 import { matchesPhysicsBodyFilter } from "./physicsBodyFilter"
 export { matchesPhysicsBodyFilter, valueAtPath } from "./physicsBodyFilter"
 import type { PhysicsWorkerFrame } from "./PhysicsWorkerProtocol"
@@ -65,6 +66,8 @@ export interface PhysicsBodySpec {
   bodyCollisions?: boolean
   /** Hold either coordinate exactly, allowing motion on the other axis. */
   fixedPosition?: { x?: number; y?: number }
+  /** Collision-free travel before release to ordinary physics (built-in engine). */
+  travel?: PhysicsBodyTravel
   shape: PhysicsBodyShape
   datum?: unknown
 }
@@ -81,6 +84,7 @@ export interface PhysicsBodyState {
   mass: number
   bodyCollisions?: boolean
   fixedPosition?: { x?: number; y?: number }
+  travel?: PhysicsBodyTravel
   shape: PhysicsBodyShape
   sleeping: boolean
   datum?: unknown
@@ -141,6 +145,7 @@ export interface PhysicsKernelSnapshotSpring extends Required<
 }
 
 export type PhysicsKernelEvent =
+  | { type: "travel-end"; bodyId: string }
   | { type: "contact"; bodyId: string; otherId: string; sensor: false } | { type: "sensor-enter"; bodyId: string; sensorId: string } | { type: "sensor-exit"; bodyId: string; sensorId: string } | { type: "sleep"; bodyId: string } | { type: "wake"; bodyId: string }
 
 export interface PhysicsActiveSensorPair { sensorId: string; bodyId: string }
@@ -447,6 +452,7 @@ export class PhysicsKernelWorld {
       mass: Math.max(EPSILON, spec.mass ?? 1),
       bodyCollisions: spec.bodyCollisions ?? true,
       ...(spec.fixedPosition ? { fixedPosition: cloneFixedPosition(spec.fixedPosition) } : {}),
+      ...(spec.travel ? { travel: clonePhysicsTravel(spec.travel) } : {}),
       shape: cloneShape(spec.shape),
       sleeping: false,
       datum: spec.datum,
@@ -455,6 +461,7 @@ export class PhysicsKernelWorld {
       index: this.nextBodyIndex,
       sleepTime: 0
     }
+    if (body.travel) advancePhysicsTravel(body, 0)
     enforceFixedPosition(body)
     this.nextBodyIndex += 1
     this.bodies.set(spec.id, body)
@@ -522,8 +529,10 @@ export class PhysicsKernelWorld {
     if (dt === 0) return
     this.reboundingThisStep.clear()
 
-    const bodies = this.sortedBodies()
-    for (const body of bodies) {
+    const allBodies = this.sortedBodies()
+    const bodies = allBodies.some((body) => body.travel)
+      ? allBodies.filter((body) => !body.travel) : allBodies
+    for (const body of allBodies) {
       body.prevX = body.x
       body.prevY = body.y
     }
@@ -605,6 +614,10 @@ export class PhysicsKernelWorld {
     this.reconcileSupportedVelocity(bodies, dt)
     this.updateSensors(bodies)
     this.updateSleeping(bodies, dt)
+    for (const body of allBodies) {
+      if (advancePhysicsTravel(body, dt))
+        this.lastEvents.push({ type: "travel-end", bodyId: body.id })
+    }
   }
 
   settle(maxSteps = 1200, dtSeconds = this.options.fixedDt): number {
@@ -647,6 +660,10 @@ export class PhysicsKernelWorld {
       body.sleeping = frame.sleeping[i] === 1
       body.sleepTime =
         frame.sleepTimes?.[i] ?? (body.sleeping ? this.options.sleepAfter : 0)
+      if (body.travel && frame.travelElapsed)
+        body.travel.elapsedSeconds = frame.travelElapsed[i]
+      body.datum = physicsPhaseDatum(body.datum,
+        body.travel ? "travel" : body.sleeping ? "settled" : physicsBoardPhase(body.datum))
     })
     this.lastEvents = frame.result.events
     if (frame.state) this.activeSensors = new Set(frame.state.activeSensorPairs)
@@ -752,7 +769,7 @@ export class PhysicsKernelWorld {
       a.id < b.id ? -1 : a.id > b.id ? 1 : 0
     )) {
       const body = this.bodies.get(spring.bodyId)
-      if (!body || body.sleeping) continue
+      if (!body || body.sleeping || body.travel) continue
       const target =
         spring.target.type === "point"
           ? spring.target
@@ -1081,6 +1098,7 @@ export class PhysicsKernelWorld {
           body.sleeping = true
           body.vx = 0
           body.vy = 0
+          body.datum = physicsPhaseDatum(body.datum, "settled")
           this.lastEvents.push({ type: "sleep", bodyId: body.id })
         }
       } else if (body.sleeping) {
@@ -1133,6 +1151,8 @@ export class PhysicsKernelWorld {
   }
 
   private wake(body: MutableBody): void {
+    if (!body.travel)
+      body.datum = physicsPhaseDatum(body.datum, physicsBoardPhase(body.datum))
     if (body.sleeping) {
       this.lastEvents.push({ type: "wake", bodyId: body.id })
     }

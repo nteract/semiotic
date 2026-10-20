@@ -231,6 +231,8 @@ export type {
 
 export type { CollisionSwarmChartProps } from "./charts/physics/CollisionSwarmChart"
 export type { EventDropChartProps } from "./charts/physics/EventDropChart"
+export type { EventDropArrival } from "./charts/physics/eventDropArrival"
+export type { PhysicsBodyTravel, PhysicsTravelPoint } from "./stream/physics/physicsBodyTravel"
 export * from "./charts/physics/CrucibleChart"
 export type { GauntletTerminalOptions } from "./charts/physics/gauntletTerminal"
 export type {

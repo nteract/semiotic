@@ -439,6 +439,20 @@ describe("generateFrameSequence", () => {
 // ═══════════════════════════════════════════════════════════════════════
 
 describe("generatePhysicsFrameSVGs", () => {
+  it("exports the source journey before gravity-driven board motion", () => {
+    const frames = generatePhysicsFrameSVGs({
+      width: 220, height: 180,
+      initialSpawns: [{
+        id: "travelling", x: 20, y: 20, shape: { type: "circle", radius: 4 },
+        travel: { points: [{ x: 20, y: 20 }, { x: 160, y: 60 }], durationSeconds: 1 },
+        datum: { __phase: "travel" }
+      }]
+    }, { frameCount: 4, stepsPerFrame: 30, stepDt: 1 / 60 })
+    const x = (svg: string) => Number(svg.match(/<circle[^>]*cx="([^"]+)"/)?.[1])
+    expect(x(frames[1])).toBeGreaterThan(x(frames[0]))
+    expect(x(frames[2])).toBe(160)
+    expect(firstCircleY(frames[3])).toBeGreaterThan(60)
+  })
   it("keeps authored polygon and glyph marks in simulation exports", () => {
     const triangle = generatePhysicsFrameSVGs(
       {

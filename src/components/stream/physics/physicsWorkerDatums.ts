@@ -2,6 +2,7 @@ import type {
   PhysicsPipelineSnapshot,
   PhysicsQueuedSpawn
 } from "./PhysicsPipelineStore"
+import { physicsPhaseDatum } from "./physicsBodyTravel"
 import type {
   PhysicsWorkerCommand,
   PhysicsWorkerResponsePayload
@@ -12,6 +13,13 @@ export class PhysicsWorkerDatums {
   private datums = new Map<string, { datum: unknown; revision: number }>()
   private revision = 0
   private ids: string[] = []
+
+  private runtimeDatum(original: unknown, runtime: unknown): unknown {
+    return runtime && typeof runtime === "object" && "__phase" in runtime &&
+      typeof runtime.__phase === "string"
+      ? physicsPhaseDatum(original, runtime.__phase)
+      : original
+  }
 
   private remember(bodies: PhysicsQueuedSpawn[]): void {
     for (const body of bodies)
@@ -38,7 +46,7 @@ export class PhysicsWorkerDatums {
   private restore(snapshot: PhysicsPipelineSnapshot): void {
     for (const body of [...snapshot.world.bodies, ...snapshot.queue]) {
       const original = this.datums.get(body.id)
-      if (original) body.datum = original.datum
+      if (original) body.datum = this.runtimeDatum(original.datum, body.datum)
     }
   }
 
@@ -53,7 +61,7 @@ export class PhysicsWorkerDatums {
     const frame = payload.frame
     for (const event of frame.result.observations) {
       const original = event.bodyId && this.datums.get(event.bodyId)
-      if (original) event.datum = original.datum
+      if (original) event.datum = this.runtimeDatum(original.datum, event.datum)
     }
     if (frame.snapshot) {
       this.restore(frame.snapshot)

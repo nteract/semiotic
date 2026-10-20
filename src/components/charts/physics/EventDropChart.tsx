@@ -45,6 +45,7 @@ import {
 } from "./eventDropSources"
 import { eventDropBodyStyle, type EventDropColorBy } from "./eventDropStyle"
 import type { EventDropWatermark } from "./eventDropLedger"
+import type { EventDropArrival } from "./eventDropArrival"
 import { eventDropWindowBackground } from "./eventDropWindowBackground"
 import { physicsCanvasThemeCSSValue } from "../../stream/physics/PhysicsCanvasTheme"
 import {
@@ -70,6 +71,8 @@ export interface EventDropChartProps<TDatum extends Datum = Datum>
   size?: [number, number]
   timeAccessor?: ChartAccessor<TDatum, number>
   arrivalAccessor?: ChartAccessor<TDatum, number>
+  /** Source-to-board choreography; requires a visible source rail. */
+  arrival?: EventDropArrival
   windows?: EventDropWindowOptions
   watermark?: EventDropWatermark
   /** Explicit time units avoid magnitude-based inference (above 1e5 uses ms). */
@@ -221,6 +224,7 @@ export const EventDropChart = /* @__PURE__ */ forwardRef(
     // Inline option objects are ordinary JSX. Preserve the compiler identity
     // across observer-driven rerenders when their values have not changed.
     const windows = useStableShallow(windowsProp ?? { size: 10 })
+    const arrival = useStableShallow(props.arrival)
     const watermark = useStableShallow(watermarkProp)
     const timeExtent = useStableShallow(timeExtentProp)
     const layoutMode = usePhysicsChartMode(props, EVENT_DROP_CHART_SIZE)
@@ -244,6 +248,7 @@ export const EventDropChart = /* @__PURE__ */ forwardRef(
           data: rows,
           timeAccessor,
           arrivalAccessor,
+          arrival,
           sources,
           sourceAccessor,
           sourceRail,
@@ -259,6 +264,7 @@ export const EventDropChart = /* @__PURE__ */ forwardRef(
         }),
       [
         arrivalAccessor,
+        arrival,
         sources,
         sourceAccessor,
         sourceRail,
