@@ -5,6 +5,7 @@ _Edit dist/semiotic-physics.d.ts's sources, then re-run `npm run docs:api-surfac
 
 ```
 class BuiltInPhysicsEngineAdapter implements PhysicsEngineAdapter
+class EventDropLedger
 class PhysicsPipelineStore
 class PhysicsSedimentAccumulator
 class-member BuiltInPhysicsEngineAdapter::construct::%24construct = required new (options?: PhysicsKernelOptions | undefined): BuiltInPhysicsEngineAdapter
@@ -30,6 +31,16 @@ class-member BuiltInPhysicsEngineAdapter::method::step = required step(dtSeconds
 class-member BuiltInPhysicsEngineAdapter::method::workerSleepTimes = required workerSleepTimes(ids: string[]): Float32Array<ArrayBufferLike>
 class-member BuiltInPhysicsEngineAdapter::property::capabilities = required readonly capabilities: PhysicsEngineCapabilities
 class-member BuiltInPhysicsEngineAdapter::property::id = required readonly id: "builtin"
+class-member EventDropLedger::construct::%24construct = required new (windowSize: number, policy?: EventDropWatermark | undefined, sourceIds?: readonly string[] | undefined): EventDropLedger
+class-member EventDropLedger::method::advance = required advance(now: number, cause?: "arrival" | "external" | undefined): void
+class-member EventDropLedger::method::append = required append(event: {eventTime: number; arrivalTime: number; source?: string; watermarkAtArrival?: number;}): {windowId: string; start: number; end: number; late: boolean; watermarkAtArrival: number;}
+class-member EventDropLedger::method::drainEvents = required drainEvents(): EventDropLedgerEvent[]
+class-member EventDropLedger::method::getArrivalFrontier = required getArrivalFrontier(): number
+class-member EventDropLedger::method::getLatestEventTime = required getLatestEventTime(): number
+class-member EventDropLedger::method::getLedger = required getLedger(): EventDropLedgerRow[]
+class-member EventDropLedger::method::getWatermark = required getWatermark(): number
+class-member EventDropLedger::method::setWatermark = required setWatermark(policy: EventDropWatermark): void
+class-member EventDropLedger::property::windowSize = required readonly windowSize: number
 class-member PhysicsPipelineStore::construct::%24construct = required new (config?: PhysicsPipelineConfig | undefined): PhysicsPipelineStore
 class-member PhysicsPipelineStore::method::allSleeping = required allSleeping(): boolean
 class-member PhysicsPipelineStore::method::applyImpulse = required applyImpulse(id: string, ix: number, iy: number): void
@@ -56,7 +67,7 @@ class-member PhysicsPipelineStore::method::recordObservation = required recordOb
 class-member PhysicsPipelineStore::method::remove = required remove(ids: string[]): string[]
 class-member PhysicsPipelineStore::method::removeConstraint = required removeConstraint(id: string): void
 class-member PhysicsPipelineStore::method::restore = required restore(snapshot: PhysicsPipelineSnapshot): void
-class-member PhysicsPipelineStore::method::runtimeState = required runtimeState(): {fixedDt: number; paused: boolean; visible: boolean; simulationState: PhysicsSimulationState;}
+class-member PhysicsPipelineStore::method::runtimeState = required runtimeState(): {elapsedSeconds: number; timeScale: number; fixedDt: number; paused: boolean; visible: boolean; simulationState: PhysicsSimulationState;}
 class-member PhysicsPipelineStore::method::sedimentHeightfield = required sedimentHeightfield(options?: PhysicsSedimentHeightfieldOptions | undefined): PhysicsSedimentColumn[]
 class-member PhysicsPipelineStore::method::sedimentTotals = required sedimentTotals(): PhysicsSedimentTotals
 class-member PhysicsPipelineStore::method::setColliders = required setColliders(colliders: PhysicsColliderSpec[]): void
@@ -86,6 +97,7 @@ const DEFAULT_CRUCIBLE_HEIGHT: 520
 const DEFAULT_CRUCIBLE_OUTLETS: readonly CrucibleOutlet[]
 const DEFAULT_CRUCIBLE_SIZE: [number, number]
 const DEFAULT_CRUCIBLE_WIDTH: 900
+const WATERMARK_LONG_TAIL_JITTER: readonly ArrivalJitterBucket[]
 function ChainReactionChart<TDatum extends Datum = Datum>(props: ChainReactionChartProps<TDatum> & React.RefAttributes<ChainReactionChartHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function CollisionSwarmChart(props: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").CollisionSwarmChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
 function CrucibleChart<TDatum extends Datum = Datum>(props: CrucibleChartProps<TDatum> & React.RefAttributes<CrucibleChartHandle<TDatum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
@@ -147,6 +159,7 @@ function createPortalController(options: {id?: string; fromRegionId: string; imp
 function createProcessJourneyLedger(options: {stages: readonly ProcessJourneyStage[]; bodyIds?: readonly string[];}): ProcessJourneyLedger
 function createServiceLevelController(options: ServiceLevelControllerOptions): ServiceLevelController
 function createServiceResourcePoolController(options: ServiceResourcePoolOptions): ServiceResourcePoolController
+function createSyntheticEmitter(spec: readonly SyntheticSourceSpec[], seed?: number | undefined): {getTime: () => number; advance(deltaMs: number, options?: { paused?: boolean; rate?: number; active?: Readonly<Record<string, boolean>>; }): SyntheticArrival[];}
 function crucibleBondId(productId: string, sourceId: string): string
 function crucibleBoundaryColliders(layout: CrucibleLayout): PhysicsColliderSpec[]
 function crucibleComponentBodyId(componentId: string): string
@@ -212,7 +225,9 @@ function sedimentBake(bins: PhysicsSedimentBinSnapshot[], options?: SedimentBake
 function sedimentHeightfield(bins: PhysicsSedimentBinSnapshot[], options?: PhysicsSedimentHeightfieldOptions | undefined): PhysicsSedimentColumn[]
 function spawnFromTokens<D = unknown>(tokens: readonly VisualToken<D>[], options?: SpawnFromTokensOptions<D> | undefined): PhysicsQueuedSpawn[]
 function stageTargetInVolume(layout: ProcessVolumeLayout, stageId: string, options?: undefined | {random?: () => number; along?: number; jitterX?: number; padY?: number;}): {x: number; y: number;}
+function syntheticArrivals(spec: readonly SyntheticSourceSpec[], seed?: number | undefined): Generator<SyntheticArrival, void, any>
 function updateProcessJourney(previous: ProcessJourneyLedger, event: Pick<StreamPhysicsRegionEvent, "bodyId" | "datum" | "observation" | "region" | "type">, options?: ProcessJourneyUpdateOptions | undefined): ProcessJourneyLedger
+interface ArrivalJitterBucket
 interface ArrivalReplayOptions
 interface BlockerAmplification
 interface BlockerAmplificationOptions<TDatum extends Datum = Datum>
@@ -306,9 +321,16 @@ interface DependencyTrackDimensions
 interface DependencyTrackLayout
 interface DependencyTrackOptions
 interface DependencyTrackRoute
-interface EventDropChartProps<TDatum extends Datum = Datum> extends Omit<BaseChartProps, "margin" | "selection">, PhysicsSharedChartProps
+interface EventDropChartHandle extends PhysicsFrameHandle
+interface EventDropChartProps<TDatum extends Datum = Datum> extends Omit<BaseChartProps, "margin" | "selection">, PhysicsSharedChartProps, EventDropReadoutProps
+interface EventDropClock
+interface EventDropLedgerEvent
+interface EventDropLedgerRow extends EventDropSourceCount
 interface EventDropPhysicsOptions<TDatum extends Datum = Datum>
 interface EventDropProjectionMetadata
+interface EventDropSource
+interface EventDropSourceRail
+interface EventDropWatermarkOptions
 interface EventDropWindowOptions
 interface GaltonBoardChartProps<TDatum extends Datum = Datum> extends Omit<BaseChartProps, "margin" | "mode" | "selection">, PhysicsSharedChartProps
 interface GaltonBoardPhysicsOptions<TDatum extends Datum = Datum>
@@ -330,6 +352,8 @@ interface GauntletPropertyForceContext<TDatum extends Datum = Datum>
 interface GauntletPropertyWorkPlan
 interface GauntletPropertyWorkPlanOptions
 interface GauntletTerminalOptions<TDatum extends Datum = Datum>
+interface GlyphDef
+interface GlyphPart
 interface GradientLegendConfig
 interface GradientLegendValue
 interface HatchFill
@@ -366,6 +390,7 @@ interface PhysicsBodySpec
 interface PhysicsBodyState
 interface PhysicsBodyStyleContext
 interface PhysicsCanvasPaintContext
+interface PhysicsCanvasTheme
 interface PhysicsChartLayout
 interface PhysicsColliderBodyFilterSpec
 interface PhysicsColliderSpec
@@ -472,10 +497,15 @@ interface StyleRule
 interface StyleRuleContext
 interface StyleRuleStyle
 interface StyleRuleThreshold
+interface SyntheticArrival
+interface SyntheticSourceSpec
 interface TooltipConfig
 interface TooltipField
 interface TooltipRootProps extends React.HTMLAttributes<HTMLDivElement>
 interface UnitPileChartProps<TDatum extends Datum = Datum> extends Omit<BaseChartProps, "margin" | "mode" | "selection">, PhysicsSharedChartProps
+interface-member ArrivalJitterBucket::property::max = required max: number
+interface-member ArrivalJitterBucket::property::min = required min: number
+interface-member ArrivalJitterBucket::property::weight = required weight: number
 interface-member ArrivalReplayOptions::property::rebase = optional rebase: boolean | undefined
 interface-member ArrivalReplayOptions::property::sort = optional sort: boolean | undefined
 interface-member ArrivalReplayOptions::property::startAt = optional startAt: number | undefined
@@ -651,7 +681,7 @@ interface-member ChainReactionMachineState::property::tasks = required tasks: Ch
 interface-member CollisionSwarmChartProps::property::collisionIterations = optional collisionIterations: number | undefined
 interface-member CollisionSwarmChartProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
 interface-member CollisionSwarmChartProps::property::data = optional data: TDatum[] | undefined
-interface-member CollisionSwarmChartProps::property::frameProps = optional frameProps: Partial<Omit<import("../../semiotic-experimental").UnstableStreamPhysicsFrameProps, "config" | "initialSpawnPacing" | "initialSpawns" | "size">> | undefined
+interface-member CollisionSwarmChartProps::property::frameProps = optional frameProps: Partial<Omit<import("../../semiotic-physics").StreamPhysicsFrameProps, "config" | "initialSpawnPacing" | "initialSpawns" | "size">> | undefined
 interface-member CollisionSwarmChartProps::property::groupAccessor = optional groupAccessor: ChartAccessor<TDatum, string> | undefined
 interface-member CollisionSwarmChartProps::property::paused = optional paused: boolean | undefined
 interface-member CollisionSwarmChartProps::property::pointRadius = optional pointRadius: number | undefined
@@ -735,7 +765,7 @@ interface-member CrucibleChartProps::property::emptyContent = optional emptyCont
 interface-member CrucibleChartProps::property::events = optional events: readonly CrucibleEvent[] | undefined
 interface-member CrucibleChartProps::property::frameProps = optional frameProps: Partial<Omit<StreamPhysicsFrameProps, "bodyForces" | "initialSpawnPacing" | "initialSpawns" | "size">> | undefined
 interface-member CrucibleChartProps::property::idAccessor = optional idAccessor: ChartAccessor<TDatum, string> | undefined
-interface-member CrucibleChartProps::property::initialSpawnPacing = optional initialSpawnPacing: import("../../semiotic-experimental").UnstablePhysicsSpawnPacingOptions | undefined
+interface-member CrucibleChartProps::property::initialSpawnPacing = optional initialSpawnPacing: import("../../semiotic-physics").PhysicsSpawnPacingOptions | undefined
 interface-member CrucibleChartProps::property::initialStateAccessor = optional initialStateAccessor: ChartAccessor<TDatum, CrucibleComponentStatus> | undefined
 interface-member CrucibleChartProps::property::labelAccessor = optional labelAccessor: ChartAccessor<TDatum, string> | undefined
 interface-member CrucibleChartProps::property::loading = optional loading: boolean | undefined
@@ -1135,47 +1165,109 @@ interface-member DependencyTrackRoute::property::points = required points: Depen
 interface-member DependencyTrackRoute::property::socketID = required socketID: string
 interface-member DependencyTrackRoute::property::sourceID = required sourceID: string
 interface-member DependencyTrackRoute::property::targetID = required targetID: string
+interface-member EventDropChartHandle::property::getClock = required getClock: () => EventDropClock
+interface-member EventDropChartHandle::property::getLedger = required getLedger: () => EventDropLedgerRow[]
+interface-member EventDropChartHandle::property::getSourceStats = required getSourceStats: (id: string) => {emitted: number; accepted: number; late: number; inFlight: number;}
+interface-member EventDropChartHandle::property::getStore = required getStore: () => ReturnType<StreamPhysicsFrameHandle["getStore"]> | null
+interface-member EventDropChartHandle::property::getWatermark = required getWatermark: () => number
+interface-member EventDropChartHandle::property::setTimeScale = required setTimeScale: (scale: number) => void
 interface-member EventDropChartProps::property::arrivalAccessor = optional arrivalAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member EventDropChartProps::property::ballRadius = optional ballRadius: number | undefined
-interface-member EventDropChartProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
+interface-member EventDropChartProps::property::colorBy = optional colorBy: EventDropColorBy<TDatum> | undefined
 interface-member EventDropChartProps::property::data = optional data: TDatum[] | undefined
-interface-member EventDropChartProps::property::frameProps = optional frameProps: Partial<Omit<import("../../semiotic-experimental").UnstableStreamPhysicsFrameProps, "config" | "initialSpawnPacing" | "initialSpawns" | "size">> | undefined
+interface-member EventDropChartProps::property::frameProps = optional frameProps: Partial<Omit<import("../../semiotic-physics").StreamPhysicsFrameProps, "config" | "initialSpawnPacing" | "initialSpawns" | "size">> | undefined
+interface-member EventDropChartProps::property::onSourceClick = optional onSourceClick: ((source: EventDropSource) => void) | undefined
 interface-member EventDropChartProps::property::paused = optional paused: boolean | undefined
 interface-member EventDropChartProps::property::rerunMS = optional rerunMS: PhysicsRerunMS | undefined
 interface-member EventDropChartProps::property::seed = optional seed: number | undefined
 interface-member EventDropChartProps::property::showProjection = optional showProjection: boolean | undefined
 interface-member EventDropChartProps::property::size = optional size: [number, number] | undefined
+interface-member EventDropChartProps::property::sourceAccessor = optional sourceAccessor: ChartAccessor<TDatum, string> | undefined
+interface-member EventDropChartProps::property::sourceRail = optional sourceRail: EventDropSourceRail | undefined
+interface-member EventDropChartProps::property::sources = optional sources: EventDropSource[] | undefined
 interface-member EventDropChartProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member EventDropChartProps::property::timeAccessor = optional timeAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member EventDropChartProps::property::timeExtent = optional timeExtent: [number, number] | undefined
 interface-member EventDropChartProps::property::timeScale = optional timeScale: number | undefined
+interface-member EventDropChartProps::property::timeUnit = optional timeUnit: "ms" | "s" | undefined
 interface-member EventDropChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
-interface-member EventDropChartProps::property::watermark = optional watermark: ((latestEventTime: number) => number) | undefined | {delay?: number; value?: number;}
+interface-member EventDropChartProps::property::watermark = optional watermark: EventDropWatermark | undefined
 interface-member EventDropChartProps::property::watermarkAtArrivalAccessor = optional watermarkAtArrivalAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member EventDropChartProps::property::windowChrome = optional windowChrome: EventDropWindowChrome | undefined
 interface-member EventDropChartProps::property::windows = optional windows: EventDropWindowOptions | undefined
+interface-member EventDropClock::property::eventTimeFrontier = required eventTimeFrontier: number
+interface-member EventDropClock::property::paused = required paused: boolean
+interface-member EventDropClock::property::simTime = required simTime: number
+interface-member EventDropClock::property::timeScale = required timeScale: number
+interface-member EventDropClock::property::watermark = required watermark: number
+interface-member EventDropLedgerEvent::property::accepted = optional accepted: number | undefined
+interface-member EventDropLedgerEvent::property::bySource = optional bySource: Record<string, EventDropSourceCount> | undefined
+interface-member EventDropLedgerEvent::property::cause = optional cause: "arrival" | "external" | undefined
+interface-member EventDropLedgerEvent::property::end = optional end: number | undefined
+interface-member EventDropLedgerEvent::property::from = optional from: number | undefined
+interface-member EventDropLedgerEvent::property::late = optional late: number | undefined
+interface-member EventDropLedgerEvent::property::retractions = optional retractions: number | undefined
+interface-member EventDropLedgerEvent::property::sourceId = optional sourceId: string | undefined
+interface-member EventDropLedgerEvent::property::start = optional start: number | undefined
+interface-member EventDropLedgerEvent::property::to = optional to: number | undefined
+interface-member EventDropLedgerEvent::property::type = required type: "physics-source-idle" | "physics-watermark-advance" | "physics-watermark-held" | "physics-window-close" | "physics-window-open" | "physics-window-update"
+interface-member EventDropLedgerEvent::property::watermark = optional watermark: number | undefined
+interface-member EventDropLedgerEvent::property::windowId = optional windowId: string | undefined
+interface-member EventDropLedgerRow::property::bySource = required bySource: Record<string, EventDropSourceCount>
+interface-member EventDropLedgerRow::property::closedAt = optional closedAt: number | undefined
+interface-member EventDropLedgerRow::property::end = required end: number
+interface-member EventDropLedgerRow::property::open = required open: boolean
+interface-member EventDropLedgerRow::property::start = required start: number
+interface-member EventDropLedgerRow::property::watermarkAtClose = optional watermarkAtClose: number | undefined
+interface-member EventDropLedgerRow::property::windowId = required windowId: string
 interface-member EventDropPhysicsOptions::property::arrivalAccessor = required arrivalAccessor: ChartAccessor<TDatum, number>
 interface-member EventDropPhysicsOptions::property::ballRadius = required ballRadius: number
 interface-member EventDropPhysicsOptions::property::data = required data: readonly TDatum[]
 interface-member EventDropPhysicsOptions::property::seed = required seed: number
 interface-member EventDropPhysicsOptions::property::size = required size: [number, number]
+interface-member EventDropPhysicsOptions::property::sourceAccessor = optional sourceAccessor: ChartAccessor<TDatum, string> | undefined
+interface-member EventDropPhysicsOptions::property::sourceRail = optional sourceRail: EventDropSourceRail | undefined
+interface-member EventDropPhysicsOptions::property::sources = optional sources: readonly EventDropSource[] | undefined
 interface-member EventDropPhysicsOptions::property::timeAccessor = required timeAccessor: ChartAccessor<TDatum, number>
 interface-member EventDropPhysicsOptions::property::timeExtent = optional timeExtent: [number, number] | undefined
 interface-member EventDropPhysicsOptions::property::timeScale = optional timeScale: number | undefined
-interface-member EventDropPhysicsOptions::property::watermark = optional watermark: ((latestEventTime: number) => number) | undefined | {delay?: number; value?: number;}
+interface-member EventDropPhysicsOptions::property::timeUnit = optional timeUnit: "ms" | "s" | undefined
+interface-member EventDropPhysicsOptions::property::watermark = optional watermark: EventDropWatermark | undefined
 interface-member EventDropPhysicsOptions::property::watermarkAtArrivalAccessor = optional watermarkAtArrivalAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member EventDropPhysicsOptions::property::windows = required windows: EventDropWindowOptions
+interface-member EventDropProjectionMetadata::property::arrivalFrontier = optional arrivalFrontier: number | undefined
 interface-member EventDropProjectionMetadata::property::closedWindowCount = required closedWindowCount: number
+interface-member EventDropProjectionMetadata::property::eventTimeFrontier = optional eventTimeFrontier: number | undefined
 interface-member EventDropProjectionMetadata::property::gutter = required gutter: EventDropPlotRegion
 interface-member EventDropProjectionMetadata::property::kind = required kind: "event-drop"
 interface-member EventDropProjectionMetadata::property::lateCount = required lateCount: number
+interface-member EventDropProjectionMetadata::property::ledger = optional ledger: EventDropLedgerRow[] | undefined
 interface-member EventDropProjectionMetadata::property::lidSegments = required lidSegments: EventDropLidSegment[]
+interface-member EventDropProjectionMetadata::property::lifecycleEvents = optional lifecycleEvents: EventDropLedgerEvent[] | undefined
 interface-member EventDropProjectionMetadata::property::plot = required plot: {x: number; y: number; width: number; height: number;}
+interface-member EventDropProjectionMetadata::property::timeUnit = optional timeUnit: "ms" | "s" | undefined
 interface-member EventDropProjectionMetadata::property::watermarkValue = required watermarkValue: number
 interface-member EventDropProjectionMetadata::property::windowCount = required windowCount: number
 interface-member EventDropProjectionMetadata::property::windowPlot = required windowPlot: EventDropPlotRegion
 interface-member EventDropProjectionMetadata::property::windowSize = required windowSize: number
 interface-member EventDropProjectionMetadata::property::windowStart = required windowStart: number
 interface-member EventDropProjectionMetadata::property::windowWalls = optional windowWalls: (EventDropPlotRegion & {id: string;})[] | undefined
+interface-member EventDropSource::property::active = optional active: boolean | undefined
+interface-member EventDropSource::property::color = optional color: string | undefined
+interface-member EventDropSource::property::description = optional description: string | undefined
+interface-member EventDropSource::property::glyph = optional glyph: GlyphDef | undefined
+interface-member EventDropSource::property::id = required id: string
+interface-member EventDropSource::property::label = required label: string
+interface-member EventDropSource::property::mark = optional mark: PhysicsBodyMark | undefined
+interface-member EventDropSource::property::visible = optional visible: boolean | undefined
+interface-member EventDropSourceRail::property::side = optional side: "left" | "none" | "top" | undefined
+interface-member EventDropSourceRail::property::tileSize = optional tileSize: number | undefined
+interface-member EventDropWatermarkOptions::property::allowedLateness = optional allowedLateness: number | undefined
+interface-member EventDropWatermarkOptions::property::delay = optional delay: number | undefined
+interface-member EventDropWatermarkOptions::property::external = optional external: (() => number) | undefined
+interface-member EventDropWatermarkOptions::property::idleTimeout = optional idleTimeout: number | undefined
+interface-member EventDropWatermarkOptions::property::perSource = optional perSource: boolean | undefined
+interface-member EventDropWatermarkOptions::property::value = optional value: number | undefined
 interface-member EventDropWindowOptions::property::gapPolicy = optional gapPolicy: "drop" | "keep" | undefined
 interface-member EventDropWindowOptions::property::size = required size: number
 interface-member GaltonBoardChartProps::property::ballRadius = optional ballRadius: number | undefined
@@ -1183,7 +1275,7 @@ interface-member GaltonBoardChartProps::property::bins = optional bins: number |
 interface-member GaltonBoardChartProps::property::branchProbability = optional branchProbability: number | undefined
 interface-member GaltonBoardChartProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
 interface-member GaltonBoardChartProps::property::data = optional data: TDatum[] | undefined
-interface-member GaltonBoardChartProps::property::frameProps = optional frameProps: Partial<Omit<import("../../semiotic-experimental").UnstableStreamPhysicsFrameProps, "config" | "initialSpawnPacing" | "initialSpawns" | "size">> | undefined
+interface-member GaltonBoardChartProps::property::frameProps = optional frameProps: Partial<Omit<import("../../semiotic-physics").StreamPhysicsFrameProps, "config" | "initialSpawnPacing" | "initialSpawns" | "size">> | undefined
 interface-member GaltonBoardChartProps::property::mechanicalCount = optional mechanicalCount: number | undefined
 interface-member GaltonBoardChartProps::property::mode = optional mode: ChartMode | PhysicsSimulationMode | undefined
 interface-member GaltonBoardChartProps::property::paused = optional paused: boolean | undefined
@@ -1237,7 +1329,7 @@ interface-member GauntletChartProps::property::events = optional events: ((proje
 interface-member GauntletChartProps::property::frameProps = optional frameProps: Partial<Omit<StreamPhysicsFrameProps, "bodyForces" | "initialSpawnPacing" | "initialSpawns" | "size">> | undefined
 interface-member GauntletChartProps::property::gates = optional gates: readonly GauntletGate[] | undefined
 interface-member GauntletChartProps::property::idAccessor = optional idAccessor: ChartAccessor<TDatum, string> | undefined
-interface-member GauntletChartProps::property::initialSpawnPacing = optional initialSpawnPacing: import("../../semiotic-experimental").UnstablePhysicsSpawnPacingOptions | undefined
+interface-member GauntletChartProps::property::initialSpawnPacing = optional initialSpawnPacing: import("../../semiotic-physics").PhysicsSpawnPacingOptions | undefined
 interface-member GauntletChartProps::property::initialViability = optional initialViability: ChartAccessor<TDatum, number> | undefined
 interface-member GauntletChartProps::property::labelAccessor = optional labelAccessor: ChartAccessor<TDatum, string> | undefined
 interface-member GauntletChartProps::property::loading = optional loading: boolean | undefined
@@ -1380,6 +1472,16 @@ interface-member GauntletTerminalOptions::property::outcome = optional outcome: 
 interface-member GauntletTerminalOptions::property::positiveProperties = required positiveProperties: Map<string, GauntletPropertyDefinition>
 interface-member GauntletTerminalOptions::property::projects = required projects: readonly GauntletProjectState<TDatum>[]
 interface-member GauntletTerminalOptions::property::viability = optional viability: GauntletViabilityFn<TDatum> | undefined
+interface-member GlyphDef::property::anchor = optional anchor: [number, number] | undefined
+interface-member GlyphDef::property::parts = required parts: GlyphPart[]
+interface-member GlyphDef::property::viewBox = optional viewBox: [number, number] | undefined
+interface-member GlyphPart::property::d = required d: string
+interface-member GlyphPart::property::fill = optional fill: "accent" | "color" | "none" | (string & {}) | undefined
+interface-member GlyphPart::property::opacity = optional opacity: number | undefined
+interface-member GlyphPart::property::stroke = optional stroke: "accent" | "color" | "none" | (string & {}) | undefined
+interface-member GlyphPart::property::strokeLinecap = optional strokeLinecap: "butt" | "round" | "square" | undefined
+interface-member GlyphPart::property::strokeLinejoin = optional strokeLinejoin: "bevel" | "miter" | "round" | undefined
+interface-member GlyphPart::property::strokeWidth = optional strokeWidth: number | undefined
 interface-member GradientLegendConfig::property::colorFn = required colorFn: (value: number) => string
 interface-member GradientLegendConfig::property::domain = required domain: [number, number]
 interface-member GradientLegendConfig::property::format = optional format: ((v: number) => string) | undefined
@@ -1466,7 +1568,7 @@ interface-member PacketFlowChartProps::property::coordinateMode = optional coord
 interface-member PacketFlowChartProps::property::data = optional data: TLink[] | undefined
 interface-member PacketFlowChartProps::property::edges = optional edges: TLink[] | undefined
 interface-member PacketFlowChartProps::property::flowSpeed = optional flowSpeed: number | undefined
-interface-member PacketFlowChartProps::property::frameProps = optional frameProps: Partial<Omit<import("../../semiotic-experimental").UnstableStreamPhysicsFrameProps, "config" | "initialSpawnPacing" | "initialSpawns" | "size">> | undefined
+interface-member PacketFlowChartProps::property::frameProps = optional frameProps: Partial<Omit<import("../../semiotic-physics").StreamPhysicsFrameProps, "config" | "initialSpawnPacing" | "initialSpawns" | "size">> | undefined
 interface-member PacketFlowChartProps::property::links = optional links: TLink[] | undefined
 interface-member PacketFlowChartProps::property::maxParticles = optional maxParticles: number | undefined
 interface-member PacketFlowChartProps::property::nodeIdAccessor = optional nodeIdAccessor: ChartAccessor<TNode, string> | undefined
@@ -1588,11 +1690,32 @@ interface-member PhysicsBodyStyleContext::property::simulationState = required s
 interface-member PhysicsCanvasPaintContext::property::resolvePaint = required resolvePaint: (Style["stroke"] | null | paint: Style["fill"] | undefined, fallback: string) => string | CanvasPattern
 interface-member PhysicsCanvasPaintContext::property::theme = required theme: PhysicsCanvasTheme
 interface-member PhysicsCanvasPaintContext::property::withAlpha = required withAlpha: (color: string, opacity: number) => string
+interface-member PhysicsCanvasTheme::property::annotationBackground = required annotationBackground: string
+interface-member PhysicsCanvasTheme::property::annotationStroke = required annotationStroke: string
+interface-member PhysicsCanvasTheme::property::annotationText = required annotationText: string
+interface-member PhysicsCanvasTheme::property::background = required background: string
+interface-member PhysicsCanvasTheme::property::border = required border: string
+interface-member PhysicsCanvasTheme::property::closedWindowFill = required closedWindowFill: string
+interface-member PhysicsCanvasTheme::property::closedWindowStroke = required closedWindowStroke: string
+interface-member PhysicsCanvasTheme::property::danger = required danger: string
+interface-member PhysicsCanvasTheme::property::focus = required focus: string
+interface-member PhysicsCanvasTheme::property::grid = required grid: string
+interface-member PhysicsCanvasTheme::property::gutterFill = required gutterFill: string
+interface-member PhysicsCanvasTheme::property::lateFill = required lateFill: string
+interface-member PhysicsCanvasTheme::property::openWindowFill = required openWindowFill: string
+interface-member PhysicsCanvasTheme::property::openWindowStroke = required openWindowStroke: string
+interface-member PhysicsCanvasTheme::property::primary = required primary: string
+interface-member PhysicsCanvasTheme::property::selectedFill = required selectedFill: string
+interface-member PhysicsCanvasTheme::property::selectedStroke = required selectedStroke: string
+interface-member PhysicsCanvasTheme::property::success = required success: string
+interface-member PhysicsCanvasTheme::property::text = required text: string
+interface-member PhysicsCanvasTheme::property::textSecondary = required textSecondary: string
+interface-member PhysicsCanvasTheme::property::warning = required warning: string
 interface-member PhysicsChartLayout::property::config = required config: PhysicsPipelineConfig
 interface-member PhysicsChartLayout::property::initialSpawnPacing = optional initialSpawnPacing: PhysicsSpawnPacingOptions | undefined
 interface-member PhysicsChartLayout::property::initialSpawns = required initialSpawns: PhysicsQueuedSpawn[]
 interface-member PhysicsChartLayout::property::metadata = optional metadata: Record<string, unknown> | undefined
-interface-member PhysicsChartLayout::property::projectionRows = required projectionRows: {label: string; value: number; secondary?: number;}[]
+interface-member PhysicsChartLayout::property::projectionRows = required projectionRows: {label: string; value: number; secondary?: number; windowId?: string; bySource?: Record<string, {accepted: number; late: number;}>;}[]
 interface-member PhysicsColliderBodyFilterSpec::property::equals = optional equals: unknown
 interface-member PhysicsColliderBodyFilterSpec::property::notEquals = optional notEquals: unknown
 interface-member PhysicsColliderBodyFilterSpec::property::notOneOf = optional notOneOf: undefined | unknown[]
@@ -1639,7 +1762,7 @@ interface-member PhysicsCustomLayoutContext::property::world = required world: P
 interface-member PhysicsCustomLayoutResult::property::backgroundOverlays = optional backgroundOverlays: React.ReactNode
 interface-member PhysicsCustomLayoutResult::property::bodies = optional bodies: PhysicsQueuedSpawn[] | undefined
 interface-member PhysicsCustomLayoutResult::property::bodyForces = optional bodyForces: StreamPhysicsBodyForce | undefined
-interface-member PhysicsCustomLayoutResult::property::bodyStyle = optional bodyStyle: ((body: import("../../semiotic-physics").PhysicsBodyState, context: import("../../semiotic-experimental").UnstablePhysicsBodyStyleContext) => import("../../semiotic-geo").Style) | import("../../semiotic-geo").Style | undefined
+interface-member PhysicsCustomLayoutResult::property::bodyStyle = optional bodyStyle: ((body: import("../../semiotic-physics").PhysicsBodyState, context: import("../../semiotic-physics").PhysicsBodyStyleContext) => import("../../semiotic-physics").Style) | import("../../semiotic-physics").Style | undefined
 interface-member PhysicsCustomLayoutResult::property::colliders = optional colliders: PhysicsColliderSpec[] | undefined
 interface-member PhysicsCustomLayoutResult::property::config = optional config: PhysicsPipelineConfig | undefined
 interface-member PhysicsCustomLayoutResult::property::constraints = optional constraints: PhysicsSpringSpec[] | undefined
@@ -1648,7 +1771,7 @@ interface-member PhysicsCustomLayoutResult::property::initialSpawnPacing = optio
 interface-member PhysicsCustomLayoutResult::property::initialSpawns = optional initialSpawns: PhysicsQueuedSpawn[] | undefined
 interface-member PhysicsCustomLayoutResult::property::overlays = optional overlays: React.ReactNode
 interface-member PhysicsCustomLayoutResult::property::regionEffects = optional regionEffects: StreamPhysicsRegionEffect[] | undefined
-interface-member PhysicsCustomLayoutResult::property::selectedBodyStyle = optional selectedBodyStyle: ((body: import("../../semiotic-physics").PhysicsBodyState, context: import("../../semiotic-experimental").UnstablePhysicsBodyStyleContext) => import("../../semiotic-geo").Style) | import("../../semiotic-geo").Style | undefined
+interface-member PhysicsCustomLayoutResult::property::selectedBodyStyle = optional selectedBodyStyle: ((body: import("../../semiotic-physics").PhysicsBodyState, context: import("../../semiotic-physics").PhysicsBodyStyleContext) => import("../../semiotic-physics").Style) | import("../../semiotic-physics").Style | undefined
 interface-member PhysicsCustomLayoutResult::property::semanticItems = optional semanticItems: PhysicsSemanticItem[] | undefined
 interface-member PhysicsCustomLayoutResult::property::sensors = optional sensors: PhysicsColliderSpec[] | undefined
 interface-member PhysicsDestinationZone::property::centerX = required centerX: number
@@ -2006,7 +2129,7 @@ interface-member ProcessChromeStage::property::x0 = required x0: number
 interface-member ProcessChromeStage::property::x1 = required x1: number
 interface-member ProcessFlowChartProps::property::ballRadius = optional ballRadius: number | undefined
 interface-member ProcessFlowChartProps::property::bodyLimit = optional bodyLimit: number | undefined
-interface-member ProcessFlowChartProps::property::bodyMark = optional bodyMark: "circle" | "diamond" | "faceted" | "halo" | "pill" | "square" | undefined
+interface-member ProcessFlowChartProps::property::bodyMark = optional bodyMark: PhysicsBodyMark | undefined
 interface-member ProcessFlowChartProps::property::chromeOptions = optional chromeOptions: ProcessChromeOptions | undefined
 interface-member ProcessFlowChartProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
 interface-member ProcessFlowChartProps::property::data = optional data: TDatum[] | undefined
@@ -2018,7 +2141,7 @@ interface-member ProcessFlowChartProps::property::groupBy = optional groupBy: Ch
 interface-member ProcessFlowChartProps::property::groupCompletion = optional groupCompletion: "allAbsorbed" | "none" | undefined
 interface-member ProcessFlowChartProps::property::groupLabelAccessor = optional groupLabelAccessor: ChartAccessor<TDatum, string> | undefined
 interface-member ProcessFlowChartProps::property::idAccessor = optional idAccessor: ChartAccessor<TDatum, string> | undefined
-interface-member ProcessFlowChartProps::property::initialSpawnPacing = optional initialSpawnPacing: import("../../semiotic-experimental").UnstablePhysicsSpawnPacingOptions | undefined
+interface-member ProcessFlowChartProps::property::initialSpawnPacing = optional initialSpawnPacing: import("../../semiotic-physics").PhysicsSpawnPacingOptions | undefined
 interface-member ProcessFlowChartProps::property::liveCapacity = optional liveCapacity: boolean | undefined
 interface-member ProcessFlowChartProps::property::onCapacityChange = optional onCapacityChange: ((stats: CapacityQueueSnapshot[]) => void) | undefined
 interface-member ProcessFlowChartProps::property::paused = optional paused: boolean | undefined
@@ -2382,6 +2505,7 @@ interface-member StreamPhysicsFrameProps::property::strokeWidth = optional strok
 interface-member StreamPhysicsFrameProps::property::summary = optional summary: string | undefined
 interface-member StreamPhysicsFrameProps::property::suspendWhenHidden = optional suspendWhenHidden: boolean | undefined
 interface-member StreamPhysicsFrameProps::property::svgAnnotationRules = optional svgAnnotationRules: ((annotation: Datum, index: number, context: AnnotationContext) => React.ReactNode) | undefined
+interface-member StreamPhysicsFrameProps::property::theme = optional theme: Partial<PhysicsCanvasTheme> | undefined
 interface-member StreamPhysicsFrameProps::property::title = optional title: React.ReactNode
 interface-member StreamPhysicsFrameProps::property::tooltipContent = optional tooltipContent: ((hover: PhysicsHoverData) => React.ReactNode) | undefined
 interface-member StreamPhysicsFrameProps::property::workerBodyThreshold = optional workerBodyThreshold: number | undefined
@@ -2428,8 +2552,10 @@ interface-member Style::property::_edgeFade = optional _edgeFade: boolean | unde
 interface-member Style::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
 interface-member Style::property::fill = optional fill: CanvasPattern | HatchFill | string | undefined
 interface-member Style::property::fillOpacity = optional fillOpacity: number | undefined
+interface-member Style::property::glyph = optional glyph: ((datum: Record<string, unknown>) => GlyphDef) | GlyphDef | undefined
 interface-member Style::property::icon = optional icon: HTMLCanvasElement | HTMLImageElement | undefined
 interface-member Style::property::iconPadding = optional iconPadding: number | undefined
+interface-member Style::property::mark = optional mark: import("./physics/physicsBodyCanvas").PhysicsBodyMark | undefined
 interface-member Style::property::opacity = optional opacity: number | undefined
 interface-member Style::property::r = optional r: number | undefined
 interface-member Style::property::stroke = optional stroke: string | undefined
@@ -2450,6 +2576,8 @@ interface-member StyleRuleContext::property::y = optional y: number | undefined
 interface-member StyleRuleStyle::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
 interface-member StyleRuleStyle::property::fill = optional fill: HatchFill | string | undefined
 interface-member StyleRuleStyle::property::fillOpacity = optional fillOpacity: number | undefined
+interface-member StyleRuleStyle::property::glyph = optional glyph: ((datum: Record<string, unknown>) => import("../../semiotic-physics").GlyphDef) | import("../../semiotic-physics").GlyphDef | undefined
+interface-member StyleRuleStyle::property::mark = optional mark: import("../../semiotic-physics").PhysicsBodyMark | undefined
 interface-member StyleRuleStyle::property::opacity = optional opacity: number | undefined
 interface-member StyleRuleStyle::property::stroke = optional stroke: string | undefined
 interface-member StyleRuleStyle::property::strokeDasharray = optional strokeDasharray: string | undefined
@@ -2465,6 +2593,15 @@ interface-member StyleRuleThreshold::property::lte = optional lte: number | unde
 interface-member StyleRuleThreshold::property::ne = optional ne: number | string | undefined
 interface-member StyleRuleThreshold::property::outside = optional outside: [number, number] | undefined
 interface-member StyleRuleThreshold::property::within = optional within: [number, number] | undefined
+interface-member SyntheticArrival::property::arrivalTime = required arrivalTime: number
+interface-member SyntheticArrival::property::eventTime = required eventTime: number
+interface-member SyntheticArrival::property::id = required id: string
+interface-member SyntheticArrival::property::source = required source: string
+interface-member SyntheticSourceSpec::property::burst = optional burst: undefined | {min: number; max: number; gapMs?: [number, number]; intraMs: number;}
+interface-member SyntheticSourceSpec::property::id = required id: string
+interface-member SyntheticSourceSpec::property::interval = optional interval: number | undefined
+interface-member SyntheticSourceSpec::property::jitter = optional jitter: "none" | "watermarks" | ((rng: () => number) => number) | undefined | {kind: "long-tail"; buckets: readonly ArrivalJitterBucket[];}
+interface-member SyntheticSourceSpec::property::ratePerSec = optional ratePerSec: number | undefined
 interface-member TooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
 interface-member TooltipConfig::property::className = optional className: string | undefined
 interface-member TooltipConfig::property::fields = optional fields: (TooltipField | string)[] | undefined
@@ -2480,7 +2617,7 @@ interface-member UnitPileChartProps::property::ballRadius = optional ballRadius:
 interface-member UnitPileChartProps::property::categoryAccessor = optional categoryAccessor: ChartAccessor<TDatum, string> | undefined
 interface-member UnitPileChartProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
 interface-member UnitPileChartProps::property::data = optional data: TDatum[] | undefined
-interface-member UnitPileChartProps::property::frameProps = optional frameProps: Partial<Omit<import("../../semiotic-experimental").UnstableStreamPhysicsFrameProps, "config" | "initialSpawnPacing" | "initialSpawns" | "size">> | undefined
+interface-member UnitPileChartProps::property::frameProps = optional frameProps: Partial<Omit<import("../../semiotic-physics").StreamPhysicsFrameProps, "config" | "initialSpawnPacing" | "initialSpawns" | "size">> | undefined
 interface-member UnitPileChartProps::property::mechanicalCategories = optional mechanicalCategories: readonly string[] | undefined
 interface-member UnitPileChartProps::property::mechanicalCount = optional mechanicalCount: number | undefined
 interface-member UnitPileChartProps::property::mode = optional mode: ChartMode | PhysicsSimulationMode | undefined
@@ -2517,6 +2654,7 @@ type DependencyMachineDiagnosticCode = "cycle" | "duplicate-task-id" | "missing-
 type DependencyReplayClock = Date | number | {currentTime: Date | number;}
 type DependencyReplayEvent = {type: "dependency-delivered"; edgeID: string; at: Date | number;} | {type: "task-armed"; taskID: string; at: Date | number;} | {type: "task-blocked"; taskID: string; reason: string; at: Date | number;} | {type: "task-completed"; taskID: string; at: Date | number;} | {type: "task-unblocked"; taskID: string; at: Date | number;}
 type DependencyTaskStatus = "blocked" | "done" | "in-progress" | "waiting"
+type EventDropWatermark = ((latestEventTime: number) => number) | EventDropWatermarkOptions
 type FrameTextAnnotation = ({label: number | string; text?: number | string;} | {text: number | string; label?: number | string;}) & FrameTextAnnotationBase
 type FrameTextPosition = (typeof FRAME_TEXT_POSITIONS)[number]
 type GauntletPopSpec = readonly string[] | {candidates?: readonly string[]; count?: number; ids?: readonly string[];}
@@ -2534,7 +2672,7 @@ type PhysicalFlowRawPath = ReadonlyArray<PhysicalFlowPoint | readonly [number, n
 type PhysicsAnnotationAnchorNode = {pointId?: string; x: number; y: number; r: number;}
 type PhysicsBodyBudgetAction = "continue" | "evict" | "retain" | "sediment"
 type PhysicsBodyBudgetState = "ok" | "overflow" | "warning"
-type PhysicsBodyMark = "circle" | "diamond" | "faceted" | "halo" | "pill" | "square"
+type PhysicsBodyMark = "circle" | "diamond" | "faceted" | "halo" | "hexagon" | "pill" | "square" | "triangle"
 type PhysicsBodySemanticItemAccessor = (body: PhysicsBodyState, context: PhysicsBodySemanticItemContext) => false | Partial<PhysicsSemanticItem> | null | undefined
 type PhysicsBodyShape = {type: "aabb"; width: number; height: number;} | {type: "circle"; radius: number;}
 type PhysicsColliderBodyFilter = ((body: PhysicsBodyState) => boolean) | PhysicsColliderBodyFilterSpec

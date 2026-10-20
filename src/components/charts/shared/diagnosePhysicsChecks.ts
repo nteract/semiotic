@@ -25,6 +25,34 @@ export function checkPhysicsConfig(
   out: Diagnosis[]
 ): void {
   if (!PHYSICS_DIAGNOSTIC_CHARTS.has(component)) return
+  const glyphs = [
+    props.bodyStyle?.glyph,
+    props.frameProps?.bodyStyle?.glyph,
+    ...(Array.isArray(props.styleRules)
+      ? props.styleRules.map((rule) => rule.style?.glyph)
+      : []),
+    ...(Array.isArray(props.sources)
+      ? props.sources.map((source) => source.glyph)
+      : [])
+  ]
+  if (
+    glyphs.some((glyph) => {
+      const box = glyph && typeof glyph === "object" ? glyph.viewBox : undefined
+      return (
+        Array.isArray(box) &&
+        box[0] > 0 &&
+        box[1] > 0 &&
+        Math.max(box[0] / box[1], box[1] / box[0]) > 1.5
+      )
+    })
+  )
+    out.push({
+      severity: "warning",
+      code: "PHYSICS_GLYPH_ASPECT_RATIO",
+      message:
+        "A physics glyph has aspect ratio above 1.5; its visual bounds differ substantially from the circular collider.",
+      fix: "Use a compact glyph or matching custom collision geometry. Glyphs change paint only, including in settled SVG."
+    })
 
   if (
     [

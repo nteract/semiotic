@@ -6,6 +6,7 @@ import type { FrameGraphicsProp, FrameMargin } from "../useFrame"
 import type { PhysicsBodyState } from "./PhysicsKernel"
 import type { PhysicsSettledEvidence } from "./PhysicsEvidence"
 import type { PhysicsPipelineStore } from "./PhysicsPipelineStore"
+import { physicsBodySVG } from "./physicsBodySVG"
 import {
   buildPhysicsSettledScene,
   type PhysicsSettledScene,
@@ -138,7 +139,10 @@ export function createPhysicsSettledSVG(
         aria-label={
           decorative
             ? undefined
-            : description || title || `physics chart, ${scene.sceneNodes.length} marks`}
+            : description ||
+              title ||
+              `physics chart, ${scene.sceneNodes.length} marks`
+        }
         style={style}
       >
         {!decorative && title && <title id={titleId}>{title}</title>}
@@ -171,9 +175,12 @@ export function createPhysicsSettledSVG(
           {scene.sceneNodes.map((node, index) => {
             const body = scene.bodies[index]
             const custom =
-              body && renderBodySVG
+              (body && renderBodySVG
                 ? renderBodySVG(body, node.style ?? {}, index, prefix)
-                : undefined
+                : undefined) ??
+              (body
+                ? physicsBodySVG(body, node.style ?? {}, index, prefix)
+                : undefined)
             return custom != null
               ? withSceneMarkCursor(custom, node, index)
               : withSceneMarkCursor(

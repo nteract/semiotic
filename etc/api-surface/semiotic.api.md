@@ -1739,7 +1739,7 @@ interface-member ObservationReadoutProps::property::fallback = optional fallback
 interface-member ObservationReadoutProps::property::live = optional live: "assertive" | "off" | "polite" | undefined
 interface-member ObservationReadoutProps::property::observation = optional observation: ChartObservation | null | undefined
 interface-member ObservationReadoutProps::property::style = optional style: React.CSSProperties | undefined
-interface-member ObservationReadoutProps::property::types = optional types: ("activate" | "annotation-activate" | "brush" | "brush-end" | "click" | "click-end" | "focus" | "hover" | "hover-end" | "late-data" | "selection" | "selection-end" | import("./DirectManipulationControl").ControlObservationPhase)[] | undefined
+interface-member ObservationReadoutProps::property::types = optional types: ("activate" | "annotation-activate" | "brush" | "brush-end" | "click" | "click-end" | "focus" | "hover" | "hover-end" | "late-data" | "selection" | "selection-end" | import("./DirectManipulationControl").ControlObservationPhase | import("./semiotic-experimental").UnstablePhysicsObservationEventType)[] | undefined
 interface-member OrbitDiagramProps::property::animated = optional animated: boolean | undefined
 interface-member OrbitDiagramProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member OrbitDiagramProps::property::childrenAccessor = optional childrenAccessor: ((d: TDatum) => TDatum[] | null | undefined) | string | undefined
@@ -2912,8 +2912,10 @@ interface-member Style::property::_edgeFade = optional _edgeFade: boolean | unde
 interface-member Style::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
 interface-member Style::property::fill = optional fill: CanvasPattern | HatchFill | string | undefined
 interface-member Style::property::fillOpacity = optional fillOpacity: number | undefined
+interface-member Style::property::glyph = optional glyph: ((datum: Record<string, unknown>) => GlyphDef) | GlyphDef | undefined
 interface-member Style::property::icon = optional icon: HTMLCanvasElement | HTMLImageElement | undefined
 interface-member Style::property::iconPadding = optional iconPadding: number | undefined
+interface-member Style::property::mark = optional mark: import("./physics/physicsBodyCanvas").PhysicsBodyMark | undefined
 interface-member Style::property::opacity = optional opacity: number | undefined
 interface-member Style::property::r = optional r: number | undefined
 interface-member Style::property::stroke = optional stroke: string | undefined
@@ -2934,6 +2936,8 @@ interface-member StyleRuleContext::property::y = optional y: number | undefined
 interface-member StyleRuleStyle::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
 interface-member StyleRuleStyle::property::fill = optional fill: HatchFill | string | undefined
 interface-member StyleRuleStyle::property::fillOpacity = optional fillOpacity: number | undefined
+interface-member StyleRuleStyle::property::glyph = optional glyph: ((datum: Record<string, unknown>) => import("../../semiotic-physics").GlyphDef) | import("../../semiotic-physics").GlyphDef | undefined
+interface-member StyleRuleStyle::property::mark = optional mark: import("../../semiotic-physics").PhysicsBodyMark | undefined
 interface-member StyleRuleStyle::property::opacity = optional opacity: number | undefined
 interface-member StyleRuleStyle::property::stroke = optional stroke: string | undefined
 interface-member StyleRuleStyle::property::strokeDasharray = optional strokeDasharray: string | undefined
@@ -3097,7 +3101,7 @@ interface-member UseBrushSelectionResult::property::isActive = required isActive
 interface-member UseBrushSelectionResult::property::predicate = required predicate: (datum: Datum) => boolean
 interface-member UseChartObserverOptions::property::chartId = optional chartId: string | undefined
 interface-member UseChartObserverOptions::property::limit = optional limit: number | undefined
-interface-member UseChartObserverOptions::property::types = optional types: ("activate" | "annotation-activate" | "brush" | "brush-end" | "click" | "click-end" | "focus" | "hover" | "hover-end" | "late-data" | "selection" | "selection-end" | import("../DirectManipulationControl").ControlObservationPhase)[] | undefined
+interface-member UseChartObserverOptions::property::types = optional types: ("activate" | "annotation-activate" | "brush" | "brush-end" | "click" | "click-end" | "focus" | "hover" | "hover-end" | "late-data" | "selection" | "selection-end" | import("../DirectManipulationControl").ControlObservationPhase | import("../semiotic-experimental").UnstablePhysicsObservationEventType)[] | undefined
 interface-member UseChartObserverResult::property::clear = required clear: () => void
 interface-member UseChartObserverResult::property::latest = required latest: ChartObservation | null
 interface-member UseChartObserverResult::property::observations = required observations: ChartObservation[]
@@ -3279,7 +3283,7 @@ type ChartAnnotation = Datum
 type ChartContainerDataAudit = ChartContainerDataAuditOptions | boolean
 type ChartMode = "context" | "mobile" | "primary" | "sparkline"
 type ChartNotificationLevel = "error" | "info" | "neutral" | "success" | "warning"
-type ChartObservation = ActivateObservation | AnnotationActivateObservation | BrushEndObservation | BrushObservation | ClickEndObservation | ClickObservation | ControlObservation | FocusObservation | HoverEndObservation | HoverObservation | LateDataObservation | SelectionEndObservation | SelectionObservation
+type ChartObservation = ActivateObservation | AnnotationActivateObservation | BrushEndObservation | BrushObservation | ClickEndObservation | ClickObservation | ControlObservation | FocusObservation | HoverEndObservation | HoverObservation | LateDataObservation | SelectionEndObservation | SelectionObservation | import("../stream/physics/PhysicsPipelineTypes").PhysicsObservationEvent
 type ControlAuditStatus = "fail" | "pass" | "warn"
 type ControlInputSource = "keyboard" | "pointer" | "programmatic"
 type ControlObservationCallback = (observation: ControlObservation) => void

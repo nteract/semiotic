@@ -6,6 +6,7 @@ import {
   physicsCanvasThemeCSSValue,
   resolvePhysicsCanvasTheme
 } from "./PhysicsCanvasTheme"
+import { DEFAULT_PHYSICS_CANVAS_THEME } from "./PhysicsCanvasTheme"
 
 afterEach(() => {
   _resetCSSColorCacheForTest()
@@ -18,15 +19,36 @@ function canvasContext(): CanvasRenderingContext2D {
 }
 
 describe("physics canvas theme", () => {
+  it("lets every dedicated token override both derived and general theme colors", () => {
+    const ctx = canvasContext()
+    try {
+      ctx.canvas.style.setProperty("--semiotic-primary", "#112233")
+      const keys = Object.keys(DEFAULT_PHYSICS_CANVAS_THEME) as Array<
+        keyof typeof DEFAULT_PHYSICS_CANVAS_THEME
+      >
+      keys.forEach((key) =>
+        ctx.canvas.style.setProperty(`--semiotic-physics-${key}`, "#abcdef")
+      )
+      const theme = resolvePhysicsCanvasTheme(ctx)
+      for (const key of keys) {
+        expect(theme[key]).toBe("#abcdef")
+        expect(physicsCanvasThemeCSSValue(key)).toMatch(
+          new RegExp(`^var\\(--semiotic-physics-${key}, `)
+        )
+      }
+    } finally {
+      ctx.canvas.remove()
+    }
+  })
   it("serializes the canvas candidate order for settled SVG", () => {
     expect(physicsCanvasThemeCSSValue("background")).toBe(
-      "var(--semiotic-bg, var(--surface-1, var(--surface-0, #f8fafc)))"
+      "var(--semiotic-physics-background, var(--semiotic-bg, var(--surface-1, var(--surface-0, #f8fafc))))"
     )
     expect(physicsCanvasThemeCSSValue("primary")).toBe(
-      "var(--semiotic-primary, var(--accent, var(--viz-5, #0ea5e9)))"
+      "var(--semiotic-physics-primary, var(--semiotic-primary, var(--accent, var(--viz-5, #0ea5e9))))"
     )
     expect(physicsCanvasThemeCSSValue("text")).toBe(
-      "var(--semiotic-text, var(--text-primary, #0f172a))"
+      "var(--semiotic-physics-text, var(--semiotic-text, var(--text-primary, #0f172a)))"
     )
   })
 

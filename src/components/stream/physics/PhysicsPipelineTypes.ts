@@ -84,6 +84,12 @@ export interface PhysicsPipelineQueuedSpawnSnapshot extends PhysicsQueuedSpawn {
 }
 
 export type PhysicsObservationEventType =
+  | "physics-window-open"
+  | "physics-window-close"
+  | "physics-window-update"
+  | "physics-watermark-advance"
+  | "physics-source-idle"
+  | "physics-watermark-held"
   | "physics-spawn"
   | "physics-settle"
   | "physics-sediment"
@@ -129,6 +135,18 @@ export interface PhysicsObservationEvent {
   warnAt?: number
   simulationState?: PhysicsSimulationState
   previousSimulationState?: PhysicsSimulationState
+  windowId?: string
+  start?: number
+  end?: number
+  accepted?: number
+  late?: number
+  bySource?: Record<string, { accepted: number; late: number }>
+  watermark?: number
+  from?: number
+  to?: number
+  cause?: "arrival" | "external"
+  sourceId?: string
+  retractions?: number
   /** Capacitated region id for capacity queue controllers. */
   regionId?: string
   /** Work units processed when a capacity queue releases a body. */

@@ -6,6 +6,8 @@
 import type { Style } from "../types"
 import type { PhysicsBodyState } from "./PhysicsKernel"
 import { coerceCanvasFill } from "../renderers/canvasRenderHelpers"
+import { drawGlyphParts, glyphPlacement } from "../glyphDef"
+import { resolveBodyGlyph, physicsPolygonVertices } from "./physicsBodyGeometry"
 
 /**
  * Body mark kinds for process identity without custom renderBody.
@@ -18,6 +20,8 @@ export type PhysicsBodyMark =
   | "pill"
   | "diamond"
   | "square"
+  | "triangle"
+  | "hexagon"
 
 export interface StreamPhysicsPopOptions {
   color?: string
@@ -54,7 +58,9 @@ export function resolveBodyMark(
     fromDatum === "faceted" ||
     fromDatum === "pill" ||
     fromDatum === "diamond" ||
-    fromDatum === "square"
+    fromDatum === "square" ||
+    fromDatum === "triangle" ||
+    fromDatum === "hexagon"
   ) {
     return fromDatum
   }
@@ -83,6 +89,26 @@ export function drawBody(
 
   ctx.save()
   ctx.globalAlpha *= opacity
+  const glyph = resolveBodyGlyph(body, style)
+  if (glyph) {
+    const placement = glyphPlacement(glyph, radius * 2)
+    ctx.translate(body.x + placement.offsetX, body.y + placement.offsetY)
+    ctx.scale(placement.scale, placement.scale)
+    ctx.globalAlpha *= fillOpacity
+    drawGlyphParts(
+      ctx,
+      glyph,
+      typeof fill === "string" ? fill : undefined,
+      typeof stroke === "string" ? stroke : undefined,
+      undefined,
+      (paint) => {
+        const resolved = coerceCanvasFill(ctx, paint)
+        return typeof resolved === "string" ? resolved : paint
+      }
+    )
+    ctx.restore()
+    return
+  }
   ctx.beginPath()
   if (mark === "pill" || mark === "square" || body.shape.type === "aabb") {
     const w =
@@ -112,12 +138,13 @@ export function drawBody(
     ctx.lineTo(body.x, body.y + radius)
     ctx.lineTo(body.x - radius, body.y)
     ctx.closePath()
-  } else if (mark === "faceted") {
-    const n = 6
-    for (let i = 0; i < n; i += 1) {
-      const a = (Math.PI * 2 * i) / n - Math.PI / 2
-      const px = body.x + Math.cos(a) * radius
-      const py = body.y + Math.sin(a) * radius
+  } else if (mark === "faceted" || mark === "hexagon" || mark === "triangle") {
+    for (const [i, [px, py]] of physicsPolygonVertices(
+      body.x,
+      body.y,
+      radius,
+      mark === "triangle" ? 3 : 6
+    ).entries()) {
       if (i === 0) ctx.moveTo(px, py)
       else ctx.lineTo(px, py)
     }

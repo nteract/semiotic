@@ -26,6 +26,9 @@ import type { CSSProperties } from "react"
 
 /** The style a rule applies. `fill` may be a solid color or a {@link HatchFill}. */
 export interface StyleRuleStyle {
+  /** Physics mark geometry; the collision shape is unchanged. */
+  mark?: import("../../stream/physics/physicsBodyCanvas").PhysicsBodyMark
+  glyph?: import("../../stream/types").Style["glyph"]
   /** Solid color string, a CSS var, or a declarative hatch descriptor. */
   fill?: string | HatchFill
   fillOpacity?: number
@@ -104,7 +107,10 @@ export interface StyleRuleContext {
 }
 
 /** A `when` predicate: full programmatic control over matching. */
-export type StyleRulePredicate = (datum: Datum, ctx: StyleRuleContext) => boolean
+export type StyleRulePredicate = (
+  datum: Datum,
+  ctx: StyleRuleContext
+) => boolean
 
 /**
  * One declarative style rule. `when` may be:
@@ -119,7 +125,8 @@ export interface StyleRule {
   /** Match condition. Omitted / `true` ⇒ always applies. */
   when?: StyleRulePredicate | StyleRuleThreshold | boolean
   /** Style to apply when matched. Object, or a per-datum function. */
-  style: StyleRuleStyle | ((datum: Datum, ctx: StyleRuleContext) => StyleRuleStyle)
+  style:
+    StyleRuleStyle | ((datum: Datum, ctx: StyleRuleContext) => StyleRuleStyle)
   /** Optional human label (legend / documentation only). */
   label?: string
 }
@@ -131,10 +138,11 @@ export interface StyleRule {
  * component keyed on the accessor (string accessors are already stable).
  */
 export function makeRuleValueResolver(
-  accessor: string | ((d: Datum) => unknown) | undefined,
+  accessor: string | ((d: Datum) => unknown) | undefined
 ): (d: Datum) => number | undefined {
   if (accessor == null) return () => undefined
-  const read = typeof accessor === "function" ? accessor : (d: Datum) => d[accessor]
+  const read =
+    typeof accessor === "function" ? accessor : (d: Datum) => d[accessor]
   return (d: Datum) => toNum(read(d))
 }
 
@@ -147,7 +155,7 @@ export function makeRuleValueResolver(
  */
 export function makeXYRuleContext(
   xAccessor: string | ((d: Datum) => unknown) | undefined,
-  yAccessor: string | ((d: Datum) => unknown) | undefined,
+  yAccessor: string | ((d: Datum) => unknown) | undefined
 ): (d: Datum, category?: string) => StyleRuleContext {
   const readX = makeRuleValueResolver(xAccessor)
   const readY = makeRuleValueResolver(yAccessor)
@@ -165,7 +173,7 @@ export function makeXYRuleContext(
  */
 export function makeNodeRuleContext(
   colorBy: string | ((d: Datum) => unknown) | undefined,
-  valueAccessor?: string | ((d: Datum) => unknown),
+  valueAccessor?: string | ((d: Datum) => unknown)
 ): (raw: Datum) => StyleRuleContext {
   const readValue = makeRuleValueResolver(valueAccessor ?? "value")
   const readGroup =
@@ -176,7 +184,10 @@ export function makeNodeRuleContext(
         : (d: Datum) => d[colorBy]
   return (raw: Datum) => {
     const g = readGroup ? readGroup(raw) : undefined
-    return { value: readValue(raw), category: g == null ? undefined : String(g) }
+    return {
+      value: readValue(raw),
+      category: g == null ? undefined : String(g)
+    }
   }
 }
 
@@ -197,7 +208,7 @@ function toNum(v: unknown): number | undefined {
 export function matchesThreshold(
   threshold: StyleRuleThreshold,
   datum: Datum,
-  ctx: StyleRuleContext,
+  ctx: StyleRuleContext
 ): boolean {
   // Resolve the compared value: axis channel > raw field > context value.
   const rawField =
@@ -208,7 +219,11 @@ export function matchesThreshold(
         : ctx.value
   if (threshold.eq !== undefined && rawField !== threshold.eq) return false
   if (threshold.ne !== undefined && rawField === threshold.ne) return false
-  if (threshold.in !== undefined && !threshold.in.includes(rawField as number | string)) return false
+  if (
+    threshold.in !== undefined &&
+    !threshold.in.includes(rawField as number | string)
+  )
+    return false
 
   // Numeric operators need a finite number.
   const needsNumeric =
@@ -238,7 +253,11 @@ export function matchesThreshold(
 }
 
 /** Does a single rule's `when` condition match this datum? */
-export function ruleMatches(rule: StyleRule, datum: Datum, ctx: StyleRuleContext): boolean {
+export function ruleMatches(
+  rule: StyleRule,
+  datum: Datum,
+  ctx: StyleRuleContext
+): boolean {
   const when = rule.when
   if (when === undefined || when === true) return true
   if (when === false) return false
@@ -255,13 +274,14 @@ export function ruleMatches(rule: StyleRule, datum: Datum, ctx: StyleRuleContext
 export function resolveStyleRules(
   datum: Datum,
   rules: ReadonlyArray<StyleRule> | undefined,
-  ctx: StyleRuleContext,
+  ctx: StyleRuleContext
 ): StyleRuleStyle {
   if (!rules || rules.length === 0) return {}
   let merged: StyleRuleStyle = {}
   for (const rule of rules) {
     if (!ruleMatches(rule, datum, ctx)) continue
-    const style = typeof rule.style === "function" ? rule.style(datum, ctx) : rule.style
+    const style =
+      typeof rule.style === "function" ? rule.style(datum, ctx) : rule.style
     if (style) merged = { ...merged, ...style }
   }
   return merged
@@ -289,7 +309,7 @@ export function composeStyleRules<A = string>(
   baseStyleFn: ((d: Datum, arg?: A) => Datum) | undefined,
   rules: ReadonlyArray<StyleRule> | undefined,
   buildContext: (raw: Datum, arg?: A) => StyleRuleContext,
-  unwrap: (d: Datum) => Datum = (d) => d,
+  unwrap: (d: Datum) => Datum = (d) => d
 ): (d: Datum, arg?: A) => Datum {
   const base = baseStyleFn ?? ((): Datum => ({}))
   if (!rules || rules.length === 0) return base
@@ -321,7 +341,7 @@ export function composeStyleRules<A = string>(
 export function makeStyleRuleStyleFn(
   rules: ReadonlyArray<StyleRule> | undefined,
   buildContext: (d: Datum, arg?: string) => StyleRuleContext,
-  userStyleFn?: MarkStyleFn,
+  userStyleFn?: MarkStyleFn
 ): MarkStyleFn | undefined {
   if (!rules || rules.length === 0) return userStyleFn
   return (d: Datum, arg?: string) => {
@@ -341,7 +361,7 @@ export function styleRulesToNodeStyle(
   rules: ReadonlyArray<StyleRule> | undefined,
   colorBy: string | ((d: Datum) => unknown) | undefined,
   valueAccessor: string | ((d: Datum) => unknown) | undefined,
-  userNodeStyle?: (d: Datum, arg?: number) => Datum,
+  userNodeStyle?: (d: Datum, arg?: number) => Datum
 ): ((d: Datum, arg?: number) => Datum) | undefined {
   if (!rules || rules.length === 0) return userNodeStyle
   const buildCtx = makeNodeRuleContext(colorBy, valueAccessor)
@@ -361,9 +381,13 @@ export function styleRulesToXYStyle(
   rules: ReadonlyArray<StyleRule> | undefined,
   xAccessor: string | ((d: Datum) => unknown) | undefined,
   yAccessor: string | ((d: Datum) => unknown) | undefined,
-  userStyle?: MarkStyleFn,
+  userStyle?: MarkStyleFn
 ): MarkStyleFn | undefined {
-  return makeStyleRuleStyleFn(rules, makeXYRuleContext(xAccessor, yAccessor), userStyle)
+  return makeStyleRuleStyleFn(
+    rules,
+    makeXYRuleContext(xAccessor, yAccessor),
+    userStyle
+  )
 }
 
 /**
@@ -378,12 +402,12 @@ export function styleRulesToXYStyle(
 export function styleRulesToPieceStyle(
   rules: ReadonlyArray<StyleRule> | undefined,
   valueAccessor: string | ((d: Datum) => unknown) | undefined,
-  userPieceStyle?: MarkStyleFn,
+  userPieceStyle?: MarkStyleFn
 ): MarkStyleFn | undefined {
   const resolveValue = makeRuleValueResolver(valueAccessor)
   return makeStyleRuleStyleFn(
     rules,
     (d, category) => ({ value: resolveValue(d), category }),
-    userPieceStyle,
+    userPieceStyle
   )
 }

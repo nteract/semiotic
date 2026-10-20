@@ -13,7 +13,6 @@ import {
   buildEventDropPhysics,
   composePhysicsBodyStyle,
   projectionRowsToSemanticItems,
-  styleFromColorAccessor,
   type EventDropProjectionMetadata,
   type EventDropWindowOptions
 } from "./physicsChartUtils"
@@ -34,7 +33,23 @@ import {
   type PhysicsSharedChartProps,
   type TooltipProp
 } from "./physicsHocUtils"
-import { eventDropOverlay } from "./physicsProjectionOverlays"
+import {
+  useEventDropHandle,
+  type EventDropReadoutProps
+} from "./useEventDropHandle"
+import {
+  eventDropSourceRail,
+  type EventDropSource,
+  type EventDropSourceRail
+} from "./eventDropSources"
+import { eventDropBodyStyle, type EventDropColorBy } from "./eventDropStyle"
+import type { EventDropWatermark } from "./eventDropLedger"
+import { eventDropWindowBackground } from "./eventDropWindowBackground"
+import { physicsCanvasThemeCSSValue } from "../../stream/physics/PhysicsCanvasTheme"
+import {
+  eventDropOverlay,
+  type EventDropWindowChrome
+} from "./physicsProjectionOverlays"
 
 type ProjectionRow = {
   label: string
@@ -45,18 +60,25 @@ type ProjectionRow = {
 export interface EventDropChartProps<TDatum extends Datum = Datum>
   extends
     Omit<BaseChartProps, "margin" | "selection">,
-    PhysicsSharedChartProps {
+    PhysicsSharedChartProps,
+    EventDropReadoutProps {
   data?: TDatum[]
   size?: [number, number]
   timeAccessor?: ChartAccessor<TDatum, number>
   arrivalAccessor?: ChartAccessor<TDatum, number>
   windows?: EventDropWindowOptions
-  watermark?:
-    { delay?: number; value?: number } | ((latestEventTime: number) => number)
+  watermark?: EventDropWatermark
+  /** Explicit time units avoid magnitude-based inference (above 1e5 uses ms). */
+  timeUnit?: "ms" | "s"
+  sources?: EventDropSource[]
+  sourceAccessor?: ChartAccessor<TDatum, string>
+  sourceRail?: EventDropSourceRail
+  onSourceClick?: (source: EventDropSource) => void
   /** Recorded watermark for each arrival; later closure changes preserve this decision. */
   watermarkAtArrivalAccessor?: ChartAccessor<TDatum, number>
   ballRadius?: number
-  colorBy?: ChartAccessor<TDatum, string>
+  colorBy?: EventDropColorBy<TDatum>
+  windowChrome?: EventDropWindowChrome
   /**
    * Declarative, threshold-aware drop styling. Ordered `{ when, style }`
    * rules; last applicable rule wins. `ctx` = `{ value, category }` (value =
@@ -80,7 +102,8 @@ export interface EventDropChartProps<TDatum extends Datum = Datum>
 function eventDropSemanticItems(
   rows: ProjectionRow[],
   metadata: EventDropProjectionMetadata | undefined,
-  chartSize: [number, number]
+  chartSize: [number, number],
+  sources: readonly EventDropSource[] = []
 ) {
   if (!metadata) return projectionRowsToSemanticItems(rows, chartSize, "window")
   const laneWidth = metadata.windowPlot.width / Math.max(1, rows.length)
@@ -88,6 +111,7 @@ function eventDropSemanticItems(
   const maxHeight = metadata.windowPlot.height * 0.62
   const yBottom = metadata.windowPlot.y + metadata.windowPlot.height
 
+  const ledgerById = new Map(metadata.ledger?.map((row) => [row.windowId, row]))
   const items = rows.map((row, index) => {
     const barHeight = Math.max(8, (row.value / maxValue) * maxHeight)
     const x = metadata.windowPlot.x + (index + 0.5) * laneWidth
@@ -95,7 +119,8 @@ function eventDropSemanticItems(
     const late = row.secondary
       ? `, ${row.secondary} late sent to the far-left bin`
       : ""
-    const label = `window ${row.label}: ${row.value} on time${late}`
+    const ledger = ledgerById.get(row.label)
+    const label = `window ${row.label}: ${row.value} on time${late}, ${index < metadata.closedWindowCount ? "closed" : "open"}`
     return {
       id: `window-${row.label}`,
       label,
@@ -106,7 +131,15 @@ function eventDropSemanticItems(
       shape: "rect" as const,
       width: Math.max(12, laneWidth * 0.58),
       height: barHeight,
-      group: "window"
+      group: "window",
+      tableFields: Object.fromEntries(
+        sources
+          .filter((source) => source.visible !== false)
+          .map((source) => [
+            source.label,
+            `${ledger?.bySource[source.id]?.accepted ?? 0} accepted, ${ledger?.bySource[source.id]?.late ?? 0} late`
+          ])
+      )
     }
   })
   return [
@@ -152,183 +185,227 @@ function eventDropSemanticItems(
  * />
  * ```
  */
-export const EventDropChart = /* @__PURE__ */ forwardRef(function EventDropChart<
-  TDatum extends Datum = Datum
->(props: EventDropChartProps<TDatum>, ref: React.Ref<PhysicsFrameHandle>) {
-  const {
-    arrivalAccessor = "arrivalTime" as ChartAccessor<TDatum, number>,
-    ballRadius = 7,
-    colorBy,
-    styleRules,
-    data,
-    emptyContent,
-    frameProps,
-    loading,
-    loadingContent,
-    paused,
-    rerunMS,
-    seed = 1,
-    timeAccessor = "time" as ChartAccessor<TDatum, number>,
-    timeExtent: timeExtentProp,
-    timeScale = 1,
-    watermark: watermarkProp,
-    watermarkAtArrivalAccessor,
-    windows: windowsProp
-  } = props
-  // Inline option objects are ordinary JSX. Preserve the compiler identity
-  // across observer-driven rerenders when their values have not changed.
-  const windows = useStableShallow(windowsProp ?? { size: 10 })
-  const watermark = useStableShallow(watermarkProp)
-  const timeExtent = useStableShallow(timeExtentProp)
-  const layoutMode = usePhysicsChartMode(props, EVENT_DROP_CHART_SIZE)
-  const {
-    chartSize,
-    showProjection,
-    className: modeClassName,
-    title: modeTitle,
-    chartMode,
-    margin: modeMargin,
-    enableHover: modeEnableHover,
-    description: modeDescription,
-    summary: modeSummary,
-    accessibleTable: modeAccessibleTable
-  } = layoutMode
-  const frameRef = useRef<StreamPhysicsFrameHandle>(null)
-  const buildLayout = useCallback(
-    (rows: TDatum[]) =>
-      buildEventDropPhysics({
-        data: rows,
-        timeAccessor,
-        arrivalAccessor,
-        windows,
-        watermark,
-        watermarkAtArrivalAccessor,
-        ballRadius,
-        seed,
-        size: chartSize,
-        timeExtent,
-        timeScale
-      }),
-    [
-      arrivalAccessor,
-      ballRadius,
-      chartSize,
-      seed,
-      timeAccessor,
-      timeExtent,
-      timeScale,
-      watermark,
+export const EventDropChart = /* @__PURE__ */ forwardRef(
+  function EventDropChart<TDatum extends Datum = Datum>(
+    props: EventDropChartProps<TDatum>,
+    ref: React.Ref<PhysicsFrameHandle>
+  ) {
+    const {
+      arrivalAccessor = "arrivalTime" as ChartAccessor<TDatum, number>,
+      ballRadius = 7,
+      colorBy,
+      styleRules,
+      sources,
+      sourceAccessor,
+      sourceRail,
+      timeUnit,
+      data,
+      emptyContent,
+      frameProps,
+      loading,
+      loadingContent,
+      paused,
+      rerunMS,
+      seed = 1,
+      timeAccessor = "time" as ChartAccessor<TDatum, number>,
+      timeExtent: timeExtentProp,
+      timeScale = 1,
+      watermark: watermarkProp,
       watermarkAtArrivalAccessor,
-      windows
-    ]
-  )
-  const { layout, resetSeed } = usePhysicsChartData({
-    ref,
-    frameRef,
-    data,
-    idPrefix: "event",
-    buildLayout
-  })
-  const rerun = usePhysicsRerun(
-    layout.config,
-    rerunMS,
-    paused,
-    resetSeed,
-    props.onSimulationStateChange
-  )
-
-  const metadata = layout.metadata as EventDropProjectionMetadata | undefined
-  const generatedBodyStyle = useMemo(
-    () =>
-      styleFromColorAccessor(
-        colorBy as ChartAccessor<Datum, string> | undefined,
-        "#4e79a7",
-        {
-          styleRules,
-          valueAccessor: timeAccessor as string | ((d: Datum) => unknown)
-        }
-      ),
-    [colorBy, styleRules, timeAccessor]
-  )
-  const bodyStyle = useMemo(
-    () => composePhysicsBodyStyle(generatedBodyStyle, frameProps?.bodyStyle),
-    [generatedBodyStyle, frameProps?.bodyStyle]
-  )
-  const semanticItems = useMemo(
-    () => eventDropSemanticItems(layout.projectionRows, metadata, chartSize),
-    [chartSize, layout.projectionRows, metadata]
-  )
-
-  const { selection: bodySelection, onBodyHover } = usePhysicsSelection({
-    selection: props.selection,
-    linkedHover: props.linkedHover,
-    colorBy,
-    chartType: "EventDropChart",
-    chartId: props.chartId,
-    onObservation: props.onObservation,
-    onClick: props.onClick,
-    onBodyHover: frameProps?.onBodyHover,
-    fallbackFields:
-      typeof timeAccessor === "string" ? [timeAccessor] : undefined
-  })
-
-  const stateEl = renderPhysicsChartState({
-    responsive: props,
-    data,
-    emptyContent,
-    loading,
-    loadingContent,
-    size: chartSize
-  })
-  if (stateEl) return stateEl
-  const projectionOverlay = eventDropOverlay(
-    layout.projectionRows,
-    layout.metadata as EventDropProjectionMetadata | undefined,
-    showProjection
-  )
-  const tooltipProps = resolvePhysicsTooltipProps(props.tooltip, frameProps)
-  const sharedFrameProps = resolvePhysicsFrameSharedProps(
-    props,
-    frameProps,
-    semanticItems,
-    {
-      selection: bodySelection,
-      chartMode,
+      windows: windowsProp
+    } = props
+    // Inline option objects are ordinary JSX. Preserve the compiler identity
+    // across observer-driven rerenders when their values have not changed.
+    const windows = useStableShallow(windowsProp ?? { size: 10 })
+    const watermark = useStableShallow(watermarkProp)
+    const timeExtent = useStableShallow(timeExtentProp)
+    const layoutMode = usePhysicsChartMode(props, EVENT_DROP_CHART_SIZE)
+    const {
+      chartSize,
+      showProjection,
       className: modeClassName,
       title: modeTitle,
+      chartMode,
+      margin: modeMargin,
+      enableHover: modeEnableHover,
       description: modeDescription,
       summary: modeSummary,
-      accessibleTable: modeAccessibleTable,
-      enableHover: modeEnableHover,
-      margin: modeMargin
-    }
-  )
+      accessibleTable: modeAccessibleTable
+    } = layoutMode
+    const frameRef = useRef<StreamPhysicsFrameHandle>(null)
+    const dataRef = useRef<PhysicsFrameHandle>(null)
+    const buildLayout = useCallback(
+      (rows: TDatum[]) =>
+        buildEventDropPhysics({
+          data: rows,
+          timeAccessor,
+          arrivalAccessor,
+          sources,
+          sourceAccessor,
+          sourceRail,
+          timeUnit,
+          windows,
+          watermark,
+          watermarkAtArrivalAccessor,
+          ballRadius,
+          seed,
+          size: chartSize,
+          timeExtent,
+          timeScale
+        }),
+      [
+        arrivalAccessor,
+        sources,
+        sourceAccessor,
+        sourceRail,
+        timeUnit,
+        ballRadius,
+        chartSize,
+        seed,
+        timeAccessor,
+        timeExtent,
+        timeScale,
+        watermark,
+        watermarkAtArrivalAccessor,
+        windows
+      ]
+    )
+    const { layout, resetSeed } = usePhysicsChartData({
+      ref: dataRef,
+      frameRef,
+      data,
+      idPrefix: "event",
+      buildLayout
+    })
+    const rerun = usePhysicsRerun(
+      layout.config,
+      rerunMS,
+      paused,
+      resetSeed,
+      props.onSimulationStateChange
+    )
 
-  return renderPhysicsFrame(
-    "EventDropChart",
-    chartSize,
-    <StreamPhysicsFrame
-      {...frameProps}
-      {...tooltipProps}
-      {...sharedFrameProps}
-      ref={frameRef}
-      onBodyHover={onBodyHover}
-      key={rerun.rerunKey}
-      config={rerun.config}
-      foregroundGraphics={composePhysicsFrameGraphics(
-        projectionOverlay,
-        frameProps?.foregroundGraphics
-      )}
-      initialSpawns={layout.initialSpawns}
-      initialSpawnPacing={layout.initialSpawnPacing}
-      paused={paused}
-      responsiveHeight={false}
-      responsiveWidth={false}
-      size={chartSize}
-      bodyStyle={bodyStyle}
-    />,
-    layoutMode
-  )
-})
+    const metadata = layout.metadata as EventDropProjectionMetadata | undefined
+    const onTick = useEventDropHandle(ref, dataRef, frameRef, metadata, props)
+    const generatedBodyStyle = useMemo(
+      () =>
+        eventDropBodyStyle(sources, colorBy as EventDropColorBy | undefined, {
+          styleRules,
+          valueAccessor: timeAccessor as string | ((d: Datum) => unknown)
+        }),
+      [sources, colorBy, styleRules, timeAccessor]
+    )
+    const bodyStyle = useMemo(
+      () => composePhysicsBodyStyle(generatedBodyStyle, frameProps?.bodyStyle),
+      [generatedBodyStyle, frameProps?.bodyStyle]
+    )
+    const semanticItems = useMemo(
+      () =>
+        eventDropSemanticItems(
+          layout.projectionRows,
+          metadata,
+          chartSize,
+          sources
+        ),
+      [chartSize, layout.projectionRows, metadata, sources]
+    )
+
+    const { selection: bodySelection, onBodyHover } = usePhysicsSelection({
+      selection: props.selection,
+      linkedHover: props.linkedHover,
+      colorBy: typeof colorBy === "object" ? undefined : colorBy,
+      chartType: "EventDropChart",
+      chartId: props.chartId,
+      onObservation: props.onObservation,
+      onClick: props.onClick,
+      onBodyHover: frameProps?.onBodyHover,
+      fallbackFields:
+        typeof timeAccessor === "string" ? [timeAccessor] : undefined
+    })
+
+    const stateEl = renderPhysicsChartState({
+      responsive: props,
+      data,
+      emptyContent,
+      loading,
+      loadingContent,
+      size: chartSize
+    })
+    if (stateEl) return stateEl
+    const windowBackground = eventDropWindowBackground(
+      metadata,
+      showProjection,
+      props.windowChrome
+    )
+    const projectionOverlay = eventDropOverlay(
+      layout.projectionRows,
+      layout.metadata as EventDropProjectionMetadata | undefined,
+      showProjection,
+      props.windowChrome
+    )
+    const tooltipProps = resolvePhysicsTooltipProps(props.tooltip, frameProps)
+    const sharedFrameProps = resolvePhysicsFrameSharedProps(
+      props,
+      frameProps,
+      semanticItems,
+      {
+        selection: bodySelection,
+        chartMode,
+        className: modeClassName,
+        title: modeTitle,
+        description: modeDescription,
+        summary: modeSummary,
+        accessibleTable: modeAccessibleTable,
+        enableHover: modeEnableHover,
+        margin: modeMargin
+      }
+    )
+
+    return renderPhysicsFrame(
+      "EventDropChart",
+      chartSize,
+      <StreamPhysicsFrame
+        {...frameProps}
+        {...tooltipProps}
+        {...sharedFrameProps}
+        ref={frameRef}
+        onBodyHover={onBodyHover}
+        onTick={onTick}
+        key={rerun.rerunKey}
+        config={rerun.config}
+        backgroundGraphics={composePhysicsFrameGraphics(
+          frameProps?.backgroundGraphics,
+          windowBackground
+        )}
+        backgroundGraphicsBackdrop={
+          frameProps?.backgroundGraphicsBackdrop ??
+          (windowBackground && !frameProps?.backgroundGraphics
+            ? (props.background ?? physicsCanvasThemeCSSValue("background"))
+            : undefined)
+        }
+        foregroundGraphics={composePhysicsFrameGraphics(
+          composePhysicsFrameGraphics(
+            projectionOverlay,
+            eventDropSourceRail(
+              sources,
+              sourceRail,
+              chartSize,
+              props.onSourceClick
+            )
+          ),
+          frameProps?.foregroundGraphics
+        )}
+        initialSpawns={layout.initialSpawns}
+        initialSpawnPacing={layout.initialSpawnPacing}
+        paused={paused}
+        responsiveHeight={false}
+        responsiveWidth={false}
+        size={chartSize}
+        bodyStyle={bodyStyle}
+      />,
+      layoutMode
+    )
+  }
+)
 
 export default EventDropChart

@@ -22,8 +22,15 @@ import {
 } from "./staticPhysicsChrome"
 import type { StaticAnnotationRenderResult } from "./staticAnnotations"
 import type { StreamPhysicsFrameProps } from "../stream/physics/StreamPhysicsTypes"
+import { physicsThemeVariables } from "../stream/physics/PhysicsCanvasTheme"
 
-export type StaticPhysicsFrameProps = Omit<PhysicsSettledSVGOptions, "title"> & {
+export type StaticPhysicsFrameProps = Omit<
+  PhysicsSettledSVGOptions,
+  "title"
+> & {
+  physicsTheme?: StreamPhysicsFrameProps["theme"]
+  frameBodyStyle?: StreamPhysicsFrameProps["bodyStyle"]
+  eventDropMetadata?: import("../charts/physics/eventDropPhysics").EventDropProjectionMetadata
   config?: ConstructorParameters<typeof PhysicsPipelineStore>[0]
   initialSpawns?: PhysicsQueuedSpawn[]
   projectionRows?: PhysicsSettledSVGOptions["projectionRows"]
@@ -43,7 +50,8 @@ export function renderPhysicsFrame(
   const theme = resolveTheme(props.theme)
   const themeVariables =
     props.theme === undefined || theme.mode === "auto"
-      ? {} : themeToCSSVariables(theme)
+      ? {}
+      : themeToCSSVariables(theme)
   const authoredBodyStyle = props.bodyStyle
   // Physics chrome overlays titles by design. Reserve only the legend's plot
   // box here; title placement remains owned by the physics-specific chrome.
@@ -90,18 +98,28 @@ export function renderPhysicsFrame(
     title: staticTitleText(props.title) || undefined,
     width: size[0],
     height: size[1],
-    background: props.background ?? theme.colors.background,
+    background:
+      props.background ??
+      props.physicsTheme?.background ??
+      theme.colors.background,
     bodyStyle: (body, context) => ({
-      fill: theme.colors.primary,
-      stroke: theme.colors.text,
+      fill: props.physicsTheme?.primary ?? theme.colors.primary,
+      stroke: props.physicsTheme?.text ?? theme.colors.text,
       strokeWidth: 1,
       opacity: 0.9,
       ...(typeof authoredBodyStyle === "function"
         ? authoredBodyStyle(body, context)
-        : authoredBodyStyle)
+        : authoredBodyStyle),
+      ...(typeof props.frameBodyStyle === "function"
+        ? props.frameBodyStyle(body, {
+            selected: false,
+            simulationState: context.simulationState
+          })
+        : props.frameBodyStyle)
     }),
     style: {
       ...themeVariables,
+      ...physicsThemeVariables(props.physicsTheme),
       fontFamily: theme.typography.fontFamily,
       ...props.style
     },
@@ -119,7 +137,10 @@ export function renderPhysicsFrame(
         theme
       )
       annotationRender = chrome.annotationRender
-      const mediaCSS = themeMediaCSS(theme, `#${physicsSVGRootId(props.idPrefix ?? props._idPrefix ?? "physics")}`)
+      const mediaCSS = themeMediaCSS(
+        theme,
+        `#${physicsSVGRootId(props.idPrefix ?? props._idPrefix ?? "physics")}`
+      )
       return (
         <>
           {mediaCSS && <style>{mediaCSS}</style>}
@@ -145,6 +166,15 @@ export function renderPhysicsFrame(
         ...result.scene.evidence.warnings
       ]
     })
+    if (props.eventDropMetadata) {
+      const metadata = props.eventDropMetadata
+      Object.assign(sink.evidence, {
+        watermarkValue: metadata.watermarkValue,
+        openWindows: metadata.windowCount - metadata.closedWindowCount,
+        closedWindows: metadata.closedWindowCount,
+        lateCount: metadata.lateCount
+      })
+    }
   }
   return result.svg
 }

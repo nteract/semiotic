@@ -694,6 +694,8 @@ export class PhysicsPipelineStore {
   /** Runtime policy reads do not copy bodies, queued datums, or sensor pairs. */
   runtimeState() {
     return {
+      elapsedSeconds: this.elapsedSeconds,
+      timeScale: this.config.timeScale,
       fixedDt: this.config.fixedDt,
       paused: this.paused,
       visible: this.visible,

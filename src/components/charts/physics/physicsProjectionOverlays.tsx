@@ -1,3 +1,4 @@
+import { physicsCanvasThemeCSSValue as themeColor } from "../../stream/physics/PhysicsCanvasTheme"
 import * as React from "react"
 import type { StreamPhysicsFrameProps } from "../../stream/physics/StreamPhysicsTypes"
 import {
@@ -167,12 +168,21 @@ export function galtonBoardOverlay(
   }
 }
 
+export interface EventDropWindowChrome {
+  show?: boolean
+  /** Window fill, or a scale evaluated on the window's admission ledger row. */
+  fill?:
+    | string
+    | ((window: import("./eventDropLedger").EventDropLedgerRow) => string)
+}
+
 export function eventDropOverlay(
   rows: EventProjectionRow[],
   metadata: EventDropProjectionMetadata | undefined,
-  enabled: boolean | undefined
+  enabled: boolean | undefined,
+  chrome?: EventDropWindowChrome
 ): StreamPhysicsFrameProps["foregroundGraphics"] | undefined {
-  if (enabled === false || !metadata) return undefined
+  if (enabled === false || chrome?.show === false || !metadata) return undefined
   return ({ size }) => {
     const resolvedSize: [number, number] = [
       Number(size[0]) || 760,
@@ -216,25 +226,17 @@ export function eventDropOverlay(
           width={plot.width}
           height={plot.height}
           fill="none"
-          stroke="var(--semiotic-border, #d1d5db)"
+          stroke={themeColor("border")}
           strokeOpacity={0.7}
           strokeWidth={1}
         />
         {gutter.width > 0 ? (
           <g>
-            <rect
-              x={gutter.x}
-              y={gutterTop}
-              width={gutter.width}
-              height={yBottom - gutterTop}
-              fill="var(--semiotic-danger, #e15759)"
-              fillOpacity={0.07}
-            />
             <text
               x={gutter.x + gutter.width / 2}
               y={gutterTop - 8}
               textAnchor="middle"
-              fill="var(--semiotic-danger, #e15759)"
+              fill={themeColor("lateFill")}
               fontSize={10}
               fontWeight={700}
             >
@@ -248,18 +250,6 @@ export function eventDropOverlay(
           const closed = index < metadata.closedWindowCount
           return (
             <g key={`window-${index}`}>
-              <rect
-                x={x}
-                y={windowTop}
-                width={laneWidth}
-                height={yBottom - windowTop}
-                fill={
-                  closed
-                    ? "var(--semiotic-danger, #e15759)"
-                    : "var(--semiotic-primary, #4e79a7)"
-                }
-                fillOpacity={closed ? 0.08 : 0.06}
-              />
               {closed
                 ? metadata.lidSegments
                     .filter((segment) => segment.windowIndex === index)
@@ -270,7 +260,7 @@ export function eventDropOverlay(
                         x2={segment.x2}
                         y1={segment.y1}
                         y2={segment.y2}
-                        stroke="var(--semiotic-danger, #e15759)"
+                        stroke={themeColor("closedWindowStroke")}
                         strokeOpacity={0.78}
                         strokeWidth={2}
                         strokeLinecap="round"
@@ -281,7 +271,7 @@ export function eventDropOverlay(
                 x={x + laneWidth / 2}
                 y={windowTop - 8}
                 textAnchor="middle"
-                fill="var(--semiotic-text-secondary, #555)"
+                fill={themeColor("textSecondary")}
                 fontSize={10}
                 fontWeight={700}
               >
@@ -291,7 +281,7 @@ export function eventDropOverlay(
                 x={x + laneWidth / 2}
                 y={Math.min(resolvedSize[1] - 8, yBottom + 16)}
                 textAnchor="middle"
-                fill="var(--semiotic-text-secondary, #555)"
+                fill={themeColor("textSecondary")}
                 fontSize={10}
               >
                 {row?.label ?? ""}
@@ -303,7 +293,7 @@ export function eventDropOverlay(
           <rect
             key={id}
             {...wall}
-            fill="var(--semiotic-border, #d1d5db)"
+            fill={themeColor("border")}
             fillOpacity={0.68}
           />
         ))}
@@ -316,7 +306,7 @@ export function eventDropOverlay(
               x2={segment.x2}
               y1={segment.y1}
               y2={segment.y2}
-              stroke="var(--semiotic-danger, #e15759)"
+              stroke={themeColor("closedWindowStroke")}
               strokeOpacity={0.62}
               strokeWidth={2}
               strokeLinecap="round"
@@ -327,7 +317,7 @@ export function eventDropOverlay(
           x2={plot.x + plot.width}
           y1={yBottom}
           y2={yBottom}
-          stroke="var(--semiotic-border, #d1d5db)"
+          stroke={themeColor("border")}
           strokeWidth={1.5}
         />
         <line
@@ -336,14 +326,14 @@ export function eventDropOverlay(
           x2={watermarkX}
           y1={plot.y + 8}
           y2={yBottom}
-          stroke="var(--semiotic-warning, #f28e2b)"
+          stroke={themeColor("warning")}
           strokeDasharray="5 4"
           strokeWidth={2}
         />
         <text
           x={Math.min(plot.x + plot.width - 4, watermarkX + 6)}
           y={plot.y + 16}
-          fill="var(--semiotic-warning, #f28e2b)"
+          fill={themeColor("warning")}
           fontSize={10}
           fontWeight={700}
         >
@@ -494,7 +484,9 @@ export function collisionSwarmProjectionOverlay(
             fill="var(--semiotic-warning, #b45309)"
             fontSize={10}
           >
-            {resolvedSize[0] < 360 ? "Points overlap" : "Points overlap. Reduce radius or increase height."}
+            {resolvedSize[0] < 360
+              ? "Points overlap"
+              : "Points overlap. Reduce radius or increase height."}
           </text>
         ) : null}
         {metadata.groups.map((group) => (
@@ -524,7 +516,8 @@ export function collisionSwarmProjectionOverlay(
               fill="var(--semiotic-text-secondary, #555)"
               fontSize={10}
             >
-              n={group.count}{group.overlapping ? " · overlaps" : ""}
+              n={group.count}
+              {group.overlapping ? " · overlaps" : ""}
             </text>
           </g>
         ))}

@@ -934,8 +934,10 @@ interface-member Style::property::_edgeFade = optional _edgeFade: boolean | unde
 interface-member Style::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
 interface-member Style::property::fill = optional fill: CanvasPattern | HatchFill | string | undefined
 interface-member Style::property::fillOpacity = optional fillOpacity: number | undefined
+interface-member Style::property::glyph = optional glyph: ((datum: Record<string, unknown>) => GlyphDef) | GlyphDef | undefined
 interface-member Style::property::icon = optional icon: HTMLCanvasElement | HTMLImageElement | undefined
 interface-member Style::property::iconPadding = optional iconPadding: number | undefined
+interface-member Style::property::mark = optional mark: import("./physics/physicsBodyCanvas").PhysicsBodyMark | undefined
 interface-member Style::property::opacity = optional opacity: number | undefined
 interface-member Style::property::r = optional r: number | undefined
 interface-member Style::property::stroke = optional stroke: string | undefined

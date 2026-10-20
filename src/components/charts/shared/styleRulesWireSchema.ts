@@ -1,14 +1,14 @@
 import type { ChartPropSpec } from "./chartSpecCore"
 
 const NUMBER_OR_STRING_SCHEMA = {
-  type: ["number", "string"],
+  type: ["number", "string"]
 } as const
 
 const TWO_NUMBER_TUPLE_SCHEMA = {
   type: "array",
   items: { type: "number" },
   minItems: 2,
-  maxItems: 2,
+  maxItems: 2
 } as const
 
 /** JSON-safe subset of `HatchFill` accepted by declarative style rules. */
@@ -21,10 +21,38 @@ export const HATCH_FILL_WIRE_SCHEMA = {
     lineWidth: { type: "number" },
     spacing: { type: "number" },
     angle: { type: "number" },
-    lineOpacity: { type: "number" },
+    lineOpacity: { type: "number" }
   },
   required: ["type"],
-  additionalProperties: false,
+  additionalProperties: false
+} as const
+
+/** Serializable pictograms; datum callbacks are available only in React. */
+export const PHYSICS_GLYPH_WIRE_SCHEMA = {
+  type: "object",
+  properties: {
+    viewBox: TWO_NUMBER_TUPLE_SCHEMA,
+    anchor: TWO_NUMBER_TUPLE_SCHEMA,
+    parts: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          d: { type: "string" },
+          fill: { type: "string" },
+          stroke: { type: "string" },
+          strokeWidth: { type: "number" },
+          opacity: { type: "number" },
+          strokeLinecap: { enum: ["butt", "round", "square"] },
+          strokeLinejoin: { enum: ["miter", "round", "bevel"] }
+        },
+        required: ["d"],
+        additionalProperties: false
+      }
+    }
+  },
+  required: ["parts"],
+  additionalProperties: false
 } as const
 
 /** JSON-safe declarative threshold; predicate functions remain React-only. */
@@ -46,12 +74,12 @@ export const STYLE_RULE_WHEN_WIRE_SCHEMA = {
         outside: TWO_NUMBER_TUPLE_SCHEMA,
         in: {
           type: "array",
-          items: NUMBER_OR_STRING_SCHEMA,
-        },
+          items: NUMBER_OR_STRING_SCHEMA
+        }
       },
-      additionalProperties: false,
-    },
-  ],
+      additionalProperties: false
+    }
+  ]
 } as const
 
 /** Nested authoring contract shared by every chart with wired `styleRules`. */
@@ -65,25 +93,36 @@ export const STYLE_RULES_WIRE_SCHEMA = {
       style: {
         type: "object",
         properties: {
+          mark: {
+            type: "string",
+            enum: [
+              "circle",
+              "halo",
+              "faceted",
+              "pill",
+              "diamond",
+              "square",
+              "triangle",
+              "hexagon"
+            ]
+          },
+          glyph: PHYSICS_GLYPH_WIRE_SCHEMA,
           fill: {
-            oneOf: [
-              { type: "string" },
-              HATCH_FILL_WIRE_SCHEMA,
-            ],
+            oneOf: [{ type: "string" }, HATCH_FILL_WIRE_SCHEMA]
           },
           fillOpacity: { type: "number" },
           stroke: { type: "string" },
           strokeWidth: { type: "number" },
           strokeDasharray: { type: "string" },
           opacity: { type: "number" },
-          cursor: { type: "string" },
+          cursor: { type: "string" }
         },
-        additionalProperties: false,
-      },
+        additionalProperties: false
+      }
     },
     required: ["style"],
-    additionalProperties: false,
-  },
+    additionalProperties: false
+  }
 } as const
 
 /**
@@ -95,5 +134,5 @@ export const STYLE_RULES_PROP_SPEC = {
   type: "array",
   description:
     "Ordered declarative style rules; matching styles merge in order and the last value wins per property. Wire configs accept boolean/declarative-threshold `when` values and object styles (including cursor and solid or HatchFill fill). Predicate and style functions are React-only.",
-  schema: STYLE_RULES_WIRE_SCHEMA,
+  schema: STYLE_RULES_WIRE_SCHEMA
 } as const satisfies ChartPropSpec

@@ -102,10 +102,21 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       "Physics-backed event-time drop chart for arrival replay, window barriers, and late/watermark handling.",
     required: ["data"],
     dataShape: "array",
-    dataAccessors: ["timeAccessor", "arrivalAccessor", "watermarkAtArrivalAccessor"],
+    dataAccessors: ["timeAccessor", "arrivalAccessor", "watermarkAtArrivalAccessor", "sourceAccessor"],
     propBags: ["physics"],
     ownProps: {
       styleRules: STYLE_RULES_PROP_SPEC,
+      sources: { type: "array", description: "Source definitions: id, label, color, mark, glyph, active, visible, description. Source identity sets body defaults and accessible rail tiles." },
+      sourceAccessor: { type: ["string", "function"], default: "source", description: "Source identity field for per-source ledger totals and marks." },
+      sourceRail: { type: "object", description: "Source rail placement: { side: left | top | none, tileSize? }." },
+      onSourceClick: { type: "function", description: "Called with the source definition when its tile is clicked or keyboard-activated; update source.active in the host." },
+      timeUnit: { type: "string", enum: ["ms", "s"] as const, description: "Time units for arrival pacing. Explicit units are recommended; omitted infers ms when an absolute event or arrival time exceeds 100000, otherwise seconds." },
+      onLedgerChange: { type: "function", description: "Receives source admission ledger rows on lifecycle changes or at most every 500ms during accumulation. Counts describe the source snapshot." },
+      onWatermarkChange: { type: "function", description: "Receives (value, previous) when the snapshot watermark advances." },
+      onClockTick: { type: "function", description: "Throttled simulation HUD callback with simTime, eventTimeFrontier, watermark, timeScale and paused. Uses the synchronous callback path." },
+      clockTickMs: { type: "number", default: 100, description: "Minimum wall-clock milliseconds between HUD notifications; clamped to at least 100." },
+      colorBy: { type: ["string", "function", "object"], description: "Source category accessor, or { window: cycle | string[] } for a cyclic window palette." },
+      windowChrome: { type: "object", description: "{ show?, fill? }: hide the window paint while retaining colliders, or set a fill color / React ledger-row callback." },
       timeAccessor: {
         type: ["string", "function"],
         default: "time",
@@ -127,7 +138,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       watermark: {
         type: ["object", "function"],
         description:
-          "Watermark config: { delay } or a latest-event-time function replays a monotonic watermark in arrival order; { value } tests one fixed admission policy. Use watermarkAtArrivalAccessor to retain recorded decisions independently of current closure."
+          "Watermark config: { delay, perSource?, idleTimeout?, allowedLateness?, external? } or a latest-event-time function replays a monotonic watermark in arrival order; { value } tests one fixed admission policy. Use watermarkAtArrivalAccessor to retain recorded decisions independently of current closure."
       },
       timeExtent: {
         type: "array",
@@ -732,7 +743,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       initialSpawnPacing: { type: "object" },
       liveCapacity: { type: "boolean", default: true },
       bodyLimit: { type: "number", description: "Soft cap on live simulated bodies." },
-      bodyMark: { type: "string", enum: ["circle", "halo", "faceted", "pill", "diamond", "square"] as const },
+      bodyMark: { type: "string", enum: ["circle", "halo", "faceted", "pill", "diamond", "square", "triangle", "hexagon"] as const },
       seed: {
         type: "number",
         default: 1,

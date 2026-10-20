@@ -5,10 +5,17 @@
 
 import { GaltonBoardChart } from "./charts/physics/GaltonBoardChart"
 import { EventDropChart } from "./charts/physics/EventDropChart"
-import {
-  UnitPileChart,
-  PhysicsPileChart
-} from "./charts/physics/UnitPileChart"
+export {
+  syntheticArrivals,
+  createSyntheticEmitter,
+  WATERMARK_LONG_TAIL_JITTER
+} from "./recipes/syntheticArrivals"
+export type {
+  SyntheticArrival,
+  SyntheticSourceSpec,
+  ArrivalJitterBucket
+} from "./recipes/syntheticArrivals"
+import { UnitPileChart, PhysicsPileChart } from "./charts/physics/UnitPileChart"
 import { PhysicsCustomChart } from "./charts/physics/PhysicsCustomChart"
 import { CollisionSwarmChart } from "./charts/physics/CollisionSwarmChart"
 import {
@@ -68,7 +75,7 @@ export type {
   LegendGroup,
   LegendItem,
   LegendLayout,
-  LegendValue,
+  LegendValue
 } from "./types/legendTypes"
 export type { Style } from "./stream/types"
 export type {
@@ -577,3 +584,21 @@ export {
   hatchFillId
 } from "./charts/shared/hatchFill"
 export type { HatchFill } from "./charts/shared/hatchFill"
+
+export { EventDropLedger } from "./charts/physics/eventDropLedger"
+export type {
+  EventDropLedgerRow,
+  EventDropWatermark,
+  EventDropWatermarkOptions,
+  EventDropLedgerEvent
+} from "./charts/physics/eventDropLedger"
+export type {
+  EventDropChartHandle,
+  EventDropClock
+} from "./charts/physics/useEventDropHandle"
+export type {
+  EventDropSource,
+  EventDropSourceRail
+} from "./charts/physics/eventDropSources"
+export type { PhysicsCanvasTheme } from "./stream/physics/PhysicsCanvasTheme"
+export type { GlyphDef, GlyphPart } from "./stream/glyphDef"

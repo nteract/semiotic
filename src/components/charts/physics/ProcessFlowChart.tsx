@@ -1,4 +1,5 @@
 "use client"
+import type { PhysicsBodyMark } from "../../stream/physics/physicsBodyCanvas"
 import { PROCESS_FLOW_CHART_SIZE } from "../shared/chartSizeDefaultsPhysics"
 
 import * as React from "react"
@@ -118,7 +119,7 @@ export interface ProcessFlowChartProps<TDatum extends Datum = Datum>
    */
   bodyLimit?: number
   /** Mark kind for all bodies, or read per-row from datum.__physicsMark / mark. */
-  bodyMark?: "circle" | "halo" | "faceted" | "pill" | "diamond" | "square"
+  bodyMark?: PhysicsBodyMark
   /** Frame passthrough; HOC-owned `config` is merged after the built pipeline config. */
   frameProps?: PhysicsHocFrameProps
 }
@@ -435,10 +436,10 @@ export const ProcessFlowChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ 
         ...fromBase,
         ...fromFrame,
         mark:
-          (fromFrame as { mark?: string } | undefined)?.mark ??
-          (body.datum as { __physicsMark?: string; mark?: string } | undefined)
+          fromFrame?.mark ??
+          (body.datum as { __physicsMark?: PhysicsBodyMark; mark?: PhysicsBodyMark } | undefined)
             ?.__physicsMark ??
-          (body.datum as { mark?: string } | undefined)?.mark ??
+          (body.datum as { mark?: PhysicsBodyMark } | undefined)?.mark ??
           bodyMark
       }
     }

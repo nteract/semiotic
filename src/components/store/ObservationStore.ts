@@ -103,6 +103,7 @@ export interface LateDataObservation extends ObservationBase {
 }
 
 export type ChartObservation =
+  | import("../stream/physics/PhysicsPipelineTypes").PhysicsObservationEvent
   | HoverObservation
   | HoverEndObservation
   | BrushObservation

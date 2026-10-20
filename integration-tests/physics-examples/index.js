@@ -6,6 +6,7 @@ import {
 import React from "react"
 import { createRoot } from "react-dom/client"
 import { SegmentContactsFixture } from "./SegmentContactsFixture"
+import { TransitionFeaturesFixture } from "./TransitionFeaturesFixture"
 
 window.__physicsChartHandles = {}
 
@@ -101,6 +102,8 @@ function App() {
 
 const root = createRoot(document.getElementById("root"))
 const segments = new URLSearchParams(window.location.search).get("segments")
-root.render(segments
+root.render(new URLSearchParams(window.location.search).has("transition")
+  ? React.createElement(TransitionFeaturesFixture)
+  : segments
   ? React.createElement(SegmentContactsFixture, { execution: segments === "worker" ? "worker" : "sync" })
   : React.createElement(App))

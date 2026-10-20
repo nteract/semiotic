@@ -1,3 +1,4 @@
+import { physicsBodySVG } from "../stream/physics/physicsBodySVG"
 import type { Datum } from "../charts/shared/datumTypes"
 /**
  * Animated GIF generation from semiotic chart data.
@@ -348,7 +349,8 @@ function renderPhysicsFrameSVG(
   const idPrefix = props.idPrefix ?? "physics-gif"
   const chrome = gifAccessibleChrome(idPrefix, frameIndex, props.title, props.description)
   const { titleId, descId, labelledBy } = chrome
-  const sceneNodes = physicsBodiesToXYSceneNodes(store.readBodies(), {
+  const bodies = store.readBodies()
+  const sceneNodes = physicsBodiesToXYSceneNodes(bodies, {
     bodyStyle: props.bodyStyle,
     getBodyLabel: props.getBodyLabel
   })
@@ -371,6 +373,7 @@ function renderPhysicsFrameSVG(
       ) : null}
       <g id={`${idPrefix}-frame-${frameIndex}`}>
         {sceneNodes.map((node, index) =>
+          physicsBodySVG(bodies[index], node.style ?? {}, index, `${idPrefix}-${frameIndex}`) ??
           xySceneNodeToSVG(node, index, `${idPrefix}-${frameIndex}`)
         )}
       </g>

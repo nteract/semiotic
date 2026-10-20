@@ -8,10 +8,21 @@ import { SR_ONLY_STYLE } from "../../screenReaderStyles"
 export { SR_ONLY_STYLE } from "../../screenReaderStyles"
 import { AccessibleTableMoreRows } from "../AccessibleTableMoreRows"
 import { AccessibleTableShell } from "../AccessibleTableShell"
-import { SAMPLE_SIZE as PHYSICS_TABLE_SAMPLE_SIZE, PAGE_SIZE as PHYSICS_TABLE_PAGE_SIZE, VISIBLE_TABLE_STYLE as TABLE_STYLE, VISIBLE_TH_STYLE as TABLE_TH_STYLE, VISIBLE_TD_STYLE as TABLE_TD_STYLE, CAPTION_STYLE as TABLE_CAPTION_STYLE } from "../accessibleTableStyles"
+import {
+  SAMPLE_SIZE as PHYSICS_TABLE_SAMPLE_SIZE,
+  PAGE_SIZE as PHYSICS_TABLE_PAGE_SIZE,
+  VISIBLE_TABLE_STYLE as TABLE_STYLE,
+  VISIBLE_TH_STYLE as TABLE_TH_STYLE,
+  VISIBLE_TD_STYLE as TABLE_TD_STYLE,
+  CAPTION_STYLE as TABLE_CAPTION_STYLE
+} from "../accessibleTableStyles"
 import { useAccessibleTableInteraction } from "../useAccessibleTableInteraction"
 import { FlippingTooltip } from "../../Tooltip/FlippingTooltip"
-import { hasOwnTooltipChrome, hasTooltipContent, markTooltipChrome } from "../../Tooltip/tooltipChrome"
+import {
+  hasOwnTooltipChrome,
+  hasTooltipContent,
+  markTooltipChrome
+} from "../../Tooltip/tooltipChrome"
 import type { FrameMargin } from "../useFrame"
 import { defaultTooltipStyle } from "../../Tooltip/Tooltip"
 import type { PhysicsBodyState } from "./PhysicsKernel"
@@ -69,10 +80,9 @@ function physicsHoverData(body: PhysicsBodyState): PhysicsHoverData {
   }
 }
 
-function bodySemanticShape(body: PhysicsBodyState): Pick<
-  PhysicsSemanticItem,
-  "height" | "shape" | "width"
-> {
+function bodySemanticShape(
+  body: PhysicsBodyState
+): Pick<PhysicsSemanticItem, "height" | "shape" | "width"> {
   if (body.shape.type === "circle") {
     const diameter = Math.max(4, body.shape.radius * 2)
     return {
@@ -120,7 +130,11 @@ function createBodySemanticItems(
   const maxItems = Math.max(0, Math.floor(limit))
   if (!maxItems) return []
   const items: PhysicsSemanticItem[] = []
-  for (let index = 0; index < bodies.length && items.length < maxItems; index += 1) {
+  for (
+    let index = 0;
+    index < bodies.length && items.length < maxItems;
+    index += 1
+  ) {
     const body = bodies[index]
     const context = { index, simulationState }
     const override =
@@ -174,7 +188,7 @@ function physicsTooltipRows(data: unknown): Array<[string, string]> {
     .map(([key, value]) => {
       if (key.startsWith("_")) return null
       const text = primitiveValueText(value)
-      return text == null ? null : [key, text] as [string, string]
+      return text == null ? null : ([key, text] as [string, string])
     })
     .filter((entry): entry is [string, string] => entry != null)
     .slice(0, 8)
@@ -218,26 +232,28 @@ export function renderPhysicsTooltip({
 }
 
 // Marked so FlippingTooltip knows this component paints its own chrome.
-const DefaultPhysicsTooltip = /* @__PURE__ */ markTooltipChrome(function DefaultPhysicsTooltip({
-  hover
-}: {
-  hover: PhysicsHoverData
-}): React.ReactElement {
-  const rows = physicsTooltipRows(hover.data)
-  return (
-    <div className="semiotic-tooltip" style={defaultTooltipStyle}>
-      <div style={{ fontWeight: 700, marginBottom: rows.length ? 4 : 0 }}>
-        {hover.id}
-      </div>
-      {rows.map(([key, value]) => (
-        <div key={key}>
-          <span style={{ opacity: 0.72 }}>{key}: </span>
-          <span>{value}</span>
+const DefaultPhysicsTooltip = /* @__PURE__ */ markTooltipChrome(
+  function DefaultPhysicsTooltip({
+    hover
+  }: {
+    hover: PhysicsHoverData
+  }): React.ReactElement {
+    const rows = physicsTooltipRows(hover.data)
+    return (
+      <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+        <div style={{ fontWeight: 700, marginBottom: rows.length ? 4 : 0 }}>
+          {hover.id}
         </div>
-      ))}
-    </div>
-  )
-})
+        {rows.map(([key, value]) => (
+          <div key={key}>
+            <span style={{ opacity: 0.72 }}>{key}: </span>
+            <span>{value}</span>
+          </div>
+        ))}
+      </div>
+    )
+  }
+)
 
 function semanticItemDataText(item: PhysicsSemanticItem): string {
   if (!item.datum || typeof item.datum !== "object") return ""
@@ -281,7 +297,10 @@ function PhysicsSemanticDataTable(props: {
   )
   const interaction = useAccessibleTableInteraction()
   const { isExpanded, revealRows } = interaction
-  const summary = React.useMemo(() => isExpanded ? semanticItemsSummary(items) : "", [isExpanded, items])
+  const summary = React.useMemo(
+    () => (isExpanded ? semanticItemsSummary(items) : ""),
+    [isExpanded, items]
+  )
   const regionLabel = chartTitle
     ? `Data summary for ${chartTitle}`
     : `Data summary for physics chart ${tableId}`
@@ -294,14 +313,27 @@ function PhysicsSemanticDataTable(props: {
     return <span id={tableId} tabIndex={-1} style={SR_ONLY_STYLE} />
   }
 
-  const shell = { interaction, tableId, regionLabel, countLabel: `${items.length} semantic items` }
+  const shell = {
+    interaction,
+    tableId,
+    regionLabel,
+    countLabel: `${items.length} semantic items`
+  }
   if (!isExpanded) return <AccessibleTableShell {...shell} />
 
   const shownCount = Math.min(visibleCount, items.length)
   const sampleItems = items.slice(0, shownCount)
+  const columns = Array.from(
+    new Set(items.flatMap((item) => Object.keys(item.tableFields ?? {})))
+  )
   const remaining = items.length - shownCount
   const showMore = (event: React.MouseEvent<HTMLButtonElement>) => {
-    revealRows(event.currentTarget, shownCount, Math.min(shownCount + PHYSICS_TABLE_PAGE_SIZE, items.length), items.length)
+    revealRows(
+      event.currentTarget,
+      shownCount,
+      Math.min(shownCount + PHYSICS_TABLE_PAGE_SIZE, items.length),
+      items.length
+    )
     setVisibleCount((count) => count + PHYSICS_TABLE_PAGE_SIZE)
   }
 
@@ -338,6 +370,11 @@ function PhysicsSemanticDataTable(props: {
             <th scope="col" style={TABLE_TH_STYLE}>
               Data
             </th>
+            {columns.map((column) => (
+              <th key={column} scope="col" style={TABLE_TH_STYLE}>
+                {column}
+              </th>
+            ))}
           </tr>
         </thead>
         <tbody>
@@ -352,11 +389,20 @@ function PhysicsSemanticDataTable(props: {
                 {Math.round(item.x)}, {Math.round(item.y)}
               </td>
               <td style={TABLE_TD_STYLE}>{semanticItemDataText(item)}</td>
+              {columns.map((column) => (
+                <td key={column} style={TABLE_TD_STYLE}>
+                  {item.tableFields?.[column] ?? ""}
+                </td>
+              ))}
             </tr>
           ))}
         </tbody>
       </table>
-      <AccessibleTableMoreRows remaining={remaining} onClick={showMore} kind="row" />
+      <AccessibleTableMoreRows
+        remaining={remaining}
+        onClick={showMore}
+        kind="row"
+      />
     </AccessibleTableShell>
   )
 }
