@@ -61,8 +61,11 @@ type ProjectionRow = {
 export interface EventDropChartProps<TDatum extends Datum = Datum>
   extends
     Omit<BaseChartProps, "margin" | "selection">,
-    PhysicsSharedChartProps,
-    EventDropReadoutProps {
+    PhysicsSharedChartProps {
+  onLedgerChange?: EventDropReadoutProps["onLedgerChange"]
+  onWatermarkChange?: EventDropReadoutProps["onWatermarkChange"]
+  onClockTick?: EventDropReadoutProps["onClockTick"]
+  clockTickMs?: EventDropReadoutProps["clockTickMs"]
   data?: TDatum[]
   size?: [number, number]
   timeAccessor?: ChartAccessor<TDatum, number>
@@ -413,7 +416,7 @@ export const EventDropChart = /* @__PURE__ */ forwardRef(
   // refs and ComponentRef infer the complete EventDrop handle below.
   (
     props: EventDropChartProps & {
-      ref:
+      ref?:
         | React.RefObject<PhysicsFrameHandle | null>
         | React.Ref<EventDropChartHandle>
     }

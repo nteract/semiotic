@@ -514,7 +514,7 @@ interface-member StreamOrdinalFrameProps::property::accessibleTable = optional a
 interface-member StreamOrdinalFrameProps::property::accessorRevision = optional accessorRevision: number | undefined
 interface-member StreamOrdinalFrameProps::property::amplitude = optional amplitude: number | undefined
 interface-member StreamOrdinalFrameProps::property::animate = optional animate: AnimateProp | undefined
-interface-member StreamOrdinalFrameProps::property::annotationObservationCallback = optional annotationObservationCallback: OnObservationCallback | undefined
+interface-member StreamOrdinalFrameProps::property::annotationObservationCallback = optional annotationObservationCallback: ((observation: import("../semiotic-ai-observations").ChartObservation) => void) | undefined
 interface-member StreamOrdinalFrameProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member StreamOrdinalFrameProps::property::autoPlaceAnnotations = optional autoPlaceAnnotations: AutoPlaceAnnotations | undefined
 interface-member StreamOrdinalFrameProps::property::axisExtent = optional axisExtent: import("../charts/shared/axisExtent").AxisExtentMode | undefined
@@ -581,7 +581,7 @@ interface-member StreamOrdinalFrameProps::property::onAnnotationActivate = optio
 interface-member StreamOrdinalFrameProps::property::onBrush = optional onBrush: ((extent: {r: [number, number];} | null) => void) | undefined
 interface-member StreamOrdinalFrameProps::property::onCategoriesChange = optional onCategoriesChange: ((categories: string[]) => void) | undefined
 interface-member StreamOrdinalFrameProps::property::onLayoutError = optional onLayoutError: ((diagnostic: import("./customLayoutFailure").CustomLayoutFailureDiagnostic) => void) | undefined
-interface-member StreamOrdinalFrameProps::property::onObservation = optional onObservation: OnObservationCallback | undefined
+interface-member StreamOrdinalFrameProps::property::onObservation = optional onObservation: ((observation: import("../semiotic-ai-observations").ChartObservation) => void) | undefined
 interface-member StreamOrdinalFrameProps::property::paused = optional paused: boolean | undefined
 interface-member StreamOrdinalFrameProps::property::pieceStyle = optional pieceStyle: ((d: Datum, category?: string) => Style) | undefined
 interface-member StreamOrdinalFrameProps::property::projection = optional projection: "horizontal" | "radial" | "vertical" | undefined

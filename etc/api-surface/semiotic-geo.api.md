@@ -506,7 +506,7 @@ interface-member StreamGeoFrameHandle::method::resetZoom = required resetZoom():
 interface-member StreamGeoFrameProps::property::accessibleTable = optional accessibleTable: AccessibleTableProp | undefined
 interface-member StreamGeoFrameProps::property::allowTooltipOverflow = optional allowTooltipOverflow: boolean | undefined
 interface-member StreamGeoFrameProps::property::animate = optional animate: AnimateProp | undefined
-interface-member StreamGeoFrameProps::property::annotationObservationCallback = optional annotationObservationCallback: OnObservationCallback | undefined
+interface-member StreamGeoFrameProps::property::annotationObservationCallback = optional annotationObservationCallback: ((observation: import("../semiotic-ai-observations").ChartObservation) => void) | undefined
 interface-member StreamGeoFrameProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member StreamGeoFrameProps::property::areaStyle = optional areaStyle: ((d: GeoJSON.Feature) => Style) | Style | undefined
 interface-member StreamGeoFrameProps::property::areas = optional areas: import("geojson").Feature<import("geojson").Geometry, import("geojson").GeoJsonProperties>[] | undefined
@@ -552,7 +552,7 @@ interface-member StreamGeoFrameProps::property::maxDevicePixelRatio = optional m
 interface-member StreamGeoFrameProps::property::onAnnotationActivate = optional onAnnotationActivate: OnAnnotationActivateCallback | undefined
 interface-member StreamGeoFrameProps::property::onCategoriesChange = optional onCategoriesChange: ((categories: string[]) => void) | undefined
 interface-member StreamGeoFrameProps::property::onLayoutError = optional onLayoutError: ((diagnostic: CustomLayoutFailureDiagnostic) => void) | undefined
-interface-member StreamGeoFrameProps::property::onObservation = optional onObservation: OnObservationCallback | undefined
+interface-member StreamGeoFrameProps::property::onObservation = optional onObservation: ((observation: import("../semiotic-ai-observations").ChartObservation) => void) | undefined
 interface-member StreamGeoFrameProps::property::onZoom = optional onZoom: ((state: {projection: GeoProjection; zoom: number;}) => void) | undefined
 interface-member StreamGeoFrameProps::property::particleStyle = optional particleStyle: GeoParticleStyle | undefined
 interface-member StreamGeoFrameProps::property::paused = optional paused: boolean | undefined

@@ -160,13 +160,13 @@ export function useEventDropHandle(
       if (occurrence <= (emitted.current.get(key) ?? 0)) continue
       emitted.current.set(key, occurrence)
       lifecycle = true
-      dispatchObservation(store.recordObservation(event))
+      dispatchObservation(store.recordLifecycleObservation(event))
     }
     if (metadata.watermarkValue > previous.current) {
       const before = previous.current
       previous.current = metadata.watermarkValue
       props.onWatermarkChange?.(metadata.watermarkValue, before)
-      const observation = store.recordObservation({
+      const observation = store.recordLifecycleObservation({
         type: "physics-watermark-advance",
         from: before,
         to: metadata.watermarkValue,

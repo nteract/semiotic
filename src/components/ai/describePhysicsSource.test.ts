@@ -175,7 +175,7 @@ describe("physics descriptions derived from source records", () => {
         ballRadius: 7,
         seed: 1,
         size
-      }).projectionRows
+      }).projectionRows.map(({ label, value, secondary }) => ({ label, value, secondary }))
     )
     expect(describeChart("EventDropChart", props).levels.l2).toBe(
       "The source projection classifies 3 events across 3 time windows: 2 accepted and 1 late."

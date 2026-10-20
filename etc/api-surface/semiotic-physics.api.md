@@ -63,6 +63,7 @@ class-member PhysicsPipelineStore::method::nextRandom = required nextRandom(): n
 class-member PhysicsPipelineStore::method::queueSize = required queueSize(): number
 class-member PhysicsPipelineStore::method::readBodies = required readBodies(out?: PhysicsBodyState[] | undefined): PhysicsBodyState[]
 class-member PhysicsPipelineStore::method::readSediment = required readSediment(): PhysicsSedimentBinSnapshot[]
+class-member PhysicsPipelineStore::method::recordLifecycleObservation = required recordLifecycleObservation(record: PhysicsLifecycleObservationRecord): PhysicsLifecycleObservationEvent
 class-member PhysicsPipelineStore::method::recordObservation = required recordObservation(record: PhysicsObservationRecord): PhysicsObservationEvent
 class-member PhysicsPipelineStore::method::remove = required remove(ids: string[]): string[]
 class-member PhysicsPipelineStore::method::removeConstraint = required removeConstraint(id: string): void
@@ -101,7 +102,7 @@ const WATERMARK_LONG_TAIL_JITTER: readonly ArrivalJitterBucket[]
 function ChainReactionChart<TDatum extends Datum = Datum>(props: ChainReactionChartProps<TDatum> & React.RefAttributes<ChainReactionChartHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function CollisionSwarmChart(props: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").CollisionSwarmChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
 function CrucibleChart<TDatum extends Datum = Datum>(props: CrucibleChartProps<TDatum> & React.RefAttributes<CrucibleChartHandle<TDatum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function EventDropChart(props: EventDropChartProps<Datum> & {ref: React.Ref<EventDropChartHandle> | React.RefObject<PhysicsFrameHandle | null>;}): React.ReactNode
+function EventDropChart(props: EventDropChartProps<Datum> & {ref?: React.Ref<EventDropChartHandle> | React.RefObject<PhysicsFrameHandle | null>;}): React.ReactNode
 function EventDropChart(props: React.RefAttributes<import("semiotic-internal/semiotic-physics").EventDropChartHandle> & import("semiotic-internal/semiotic-physics").EventDropChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
 function GaltonBoardChart(props: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").GaltonBoardChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
 function GauntletChart<TDatum extends Datum = Datum>(props: GauntletChartProps<TDatum> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
@@ -323,7 +324,7 @@ interface DependencyTrackLayout
 interface DependencyTrackOptions
 interface DependencyTrackRoute
 interface EventDropChartHandle extends PhysicsFrameHandle
-interface EventDropChartProps<TDatum extends Datum = Datum> extends Omit<BaseChartProps, "margin" | "selection">, PhysicsSharedChartProps, EventDropReadoutProps
+interface EventDropChartProps<TDatum extends Datum = Datum> extends Omit<BaseChartProps, "margin" | "selection">, PhysicsSharedChartProps
 interface EventDropClock
 interface EventDropLedgerEvent
 interface EventDropLedgerRow extends EventDropSourceCount
@@ -1174,10 +1175,14 @@ interface-member EventDropChartHandle::property::getWatermark = required getWate
 interface-member EventDropChartHandle::property::setTimeScale = required setTimeScale: (scale: number) => void
 interface-member EventDropChartProps::property::arrivalAccessor = optional arrivalAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member EventDropChartProps::property::ballRadius = optional ballRadius: number | undefined
+interface-member EventDropChartProps::property::clockTickMs = optional clockTickMs: number | undefined
 interface-member EventDropChartProps::property::colorBy = optional colorBy: EventDropColorBy<TDatum> | undefined
 interface-member EventDropChartProps::property::data = optional data: TDatum[] | undefined
 interface-member EventDropChartProps::property::frameProps = optional frameProps: Partial<Omit<import("../../semiotic-physics").StreamPhysicsFrameProps, "config" | "initialSpawnPacing" | "initialSpawns" | "size">> | undefined
+interface-member EventDropChartProps::property::onClockTick = optional onClockTick: ((clock: import("./useEventDropHandle").EventDropClock) => void) | undefined
+interface-member EventDropChartProps::property::onLedgerChange = optional onLedgerChange: ((ledger: import("./eventDropLedger").EventDropLedgerRow[]) => void) | undefined
 interface-member EventDropChartProps::property::onSourceClick = optional onSourceClick: ((source: EventDropSource) => void) | undefined
+interface-member EventDropChartProps::property::onWatermarkChange = optional onWatermarkChange: ((value: number, previous: number) => void) | undefined
 interface-member EventDropChartProps::property::paused = optional paused: boolean | undefined
 interface-member EventDropChartProps::property::rerunMS = optional rerunMS: PhysicsRerunMS | undefined
 interface-member EventDropChartProps::property::seed = optional seed: number | undefined
@@ -1981,7 +1986,7 @@ interface-member PhysicsSVGOverlayProps::property::legendLayout = optional legen
 interface-member PhysicsSVGOverlayProps::property::legendPosition = optional legendPosition: "bottom" | "left" | "right" | "top" | undefined
 interface-member PhysicsSVGOverlayProps::property::margin = required margin: {top: number; right: number; bottom: number; left: number;}
 interface-member PhysicsSVGOverlayProps::property::onAnnotationActivate = optional onAnnotationActivate: OnAnnotationActivateCallback | undefined
-interface-member PhysicsSVGOverlayProps::property::onObservation = optional onObservation: OnObservationCallback | undefined
+interface-member PhysicsSVGOverlayProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic-ai-observations").ChartObservation) => void) | undefined
 interface-member PhysicsSVGOverlayProps::property::pointNodes = optional pointNodes: PhysicsAnnotationAnchorNode[] | undefined
 interface-member PhysicsSVGOverlayProps::property::svgAnnotationRules = optional svgAnnotationRules: ((annotation: Datum, index: number, context: AnnotationContext) => ReactNode) | undefined
 interface-member PhysicsSVGOverlayProps::property::title = optional title: React.ReactNode
@@ -2482,7 +2487,7 @@ interface-member StreamPhysicsFrameProps::property::onAnnotationActivate = optio
 interface-member StreamPhysicsFrameProps::property::onBodyHover = optional onBodyHover: ((body: PhysicsBodyState | null, hover: PhysicsHoverData | null) => void) | undefined
 interface-member StreamPhysicsFrameProps::property::onBodyPointerDown = optional onBodyPointerDown: ((body: PhysicsBodyState | null, event: React.PointerEvent<HTMLCanvasElement>) => void) | undefined
 interface-member StreamPhysicsFrameProps::property::onClick = optional onClick: ((datum: Datum | null, event: {x: number; y: number; body: PhysicsBodyState | null;}) => void) | undefined
-interface-member StreamPhysicsFrameProps::property::onObservation = optional onObservation: OnObservationCallback | undefined
+interface-member StreamPhysicsFrameProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic-ai-observations").ChartObservation) => void) | undefined
 interface-member StreamPhysicsFrameProps::property::onRegionEvent = optional onRegionEvent: ((event: StreamPhysicsRegionEvent) => void) | undefined
 interface-member StreamPhysicsFrameProps::property::onSemanticItemActivate = optional onSemanticItemActivate: ((item: PhysicsSemanticItem) => void) | undefined
 interface-member StreamPhysicsFrameProps::property::onSemanticItemFocus = optional onSemanticItemFocus: ((item: PhysicsSemanticItem | null) => void) | undefined
@@ -2688,6 +2693,9 @@ type PhysicsEngineAdapterInput = PhysicsEngineAdapter | PhysicsEngineAdapterFact
 type PhysicsEngineDeterminism = "none" | "strict" | "tolerance"
 type PhysicsExecution = "auto" | "sync" | "worker"
 type PhysicsKinematicsEncoding<TDatum> = MotionKinematicsEncoding<TDatum>
+type PhysicsLifecycleObservationEvent = Omit<PhysicsObservationEvent, "type"> & {type: PhysicsLifecycleObservationEventType;}
+type PhysicsLifecycleObservationEventType = "physics-source-idle" | "physics-watermark-advance" | "physics-watermark-held" | "physics-window-close" | "physics-window-open" | "physics-window-update"
+type PhysicsLifecycleObservationRecord = Omit<PhysicsObservationRecord, "type"> & {type: PhysicsLifecycleObservationEventType;}
 type PhysicsPileChartProps<TDatum extends Datum = Datum> = UnitPileChartProps<TDatum>
 type PhysicsPlacementEncoding<TDatum> = MotionPlacementEncoding<TDatum>
 type PhysicsProcessEncoding<TDatum> = MotionProcessEncoding<TDatum>

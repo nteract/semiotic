@@ -59,7 +59,7 @@ interface-member BigNumberProps::property::loadingContent = optional loadingCont
 interface-member BigNumberProps::property::locale = optional locale: string | undefined
 interface-member BigNumberProps::property::mode = optional mode: BigNumberMode | undefined
 interface-member BigNumberProps::property::onClick = optional onClick: ((datum: {value: number; level: BigNumberLevel; delta: null | number;}, event: {x: number; y: number;}) => void) | undefined
-interface-member BigNumberProps::property::onObservation = optional onObservation: import("../../semiotic-ai-observations").OnObservationCallback | undefined
+interface-member BigNumberProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic-ai-observations").ChartObservation) => void) | undefined
 interface-member BigNumberProps::property::padding = optional padding: number | undefined | {top?: number; right?: number; bottom?: number; left?: number;}
 interface-member BigNumberProps::property::precision = optional precision: number | undefined
 interface-member BigNumberProps::property::prefix = optional prefix: string | undefined

@@ -104,6 +104,7 @@ export interface LateDataObservation extends ObservationBase {
 
 export type ChartObservation =
   | import("../stream/physics/PhysicsPipelineTypes").PhysicsObservationEvent
+  | import("../stream/physics/PhysicsPipelineTypes").PhysicsLifecycleObservationEvent
   | HoverObservation
   | HoverEndObservation
   | BrushObservation
@@ -118,7 +119,11 @@ export type ChartObservation =
   | ControlObservation
   | LateDataObservation
 
-export type OnObservationCallback = (observation: ChartObservation) => void
+// Like React event handlers, observers remain assignable when a release adds
+// an observation variant. Existing handlers can retain their event vocabulary.
+export type OnObservationCallback = {
+  observe(observation: ChartObservation): void
+}["observe"]
 
 // ── Store ────────────────────────────────────────────────────────────────
 

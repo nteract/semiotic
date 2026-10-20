@@ -88,9 +88,9 @@ test("source keyboard controls, themed marks, and real body hover survive resize
     return window.__eventDropTransition.getCustomLayout().world.bodies
   })
   await assertVisibleBodies()
-  await expect(page.getByTestId("physics-mark-matrix")).toHaveScreenshot(
-    "marks-light.png"
-  )
+  await expect(
+    page.getByTestId("physics-mark-matrix").locator("canvas")
+  ).toHaveScreenshot("marks-light.png")
   await page.screenshot({
     path: testInfo.outputPath("physics-transition-light.png")
   })
@@ -113,9 +113,9 @@ test("source keyboard controls, themed marks, and real body hover survive resize
     )
   ).toEqual(before)
   await assertVisibleBodies()
-  await expect(page.getByTestId("physics-mark-matrix")).toHaveScreenshot(
-    "marks-dark.png"
-  )
+  await expect(
+    page.getByTestId("physics-mark-matrix").locator("canvas")
+  ).toHaveScreenshot("marks-dark.png")
   await page.screenshot({
     path: testInfo.outputPath("physics-transition-dark.png")
   })

@@ -23,6 +23,8 @@ import { evaluatePhysicsBodyBudget, type PhysicsBodyBudgetDecision, type Physics
 import type {
   PhysicsObservationEvent,
   PhysicsObservationRecord,
+  PhysicsLifecycleObservationEvent,
+  PhysicsLifecycleObservationRecord,
   PhysicsPipelineConfig,
   PhysicsPipelineExecution,
   PhysicsPipelineControlSurface,
@@ -39,6 +41,7 @@ import {
   cloneQueuedSpawn,
   cloneSpawn,
   normalizeObservationConfig,
+  stampPhysicsObservation,
   requiredKernelOptions,
   type NormalizedObservationConfig,
   type PhysicsPipelineEvictionResult
@@ -81,6 +84,9 @@ export type {
   PhysicsSpawnPacingOptions,
   PhysicsPipelineQueuedSpawnSnapshot,
   PhysicsObservationEventType,
+  PhysicsLifecycleObservationEventType,
+  PhysicsLifecycleObservationEvent,
+  PhysicsLifecycleObservationRecord,
   PhysicsSimulationState,
   PhysicsObservationEvent,
   PhysicsObservationRecord,
@@ -587,16 +593,15 @@ export class PhysicsPipelineStore {
   }
 
   recordObservation(record: PhysicsObservationRecord): PhysicsObservationEvent {
-    const { timestamp, chartType, chartId, ...rest } = record
-    const event: PhysicsObservationEvent = {
-      ...rest,
-      timestamp: timestamp ?? this.elapsedSeconds,
-      chartType: chartType ?? this.observation.chartType,
-      chartId: chartId ?? this.observation.chartId
-    }
+    const event = stampPhysicsObservation(record, this.elapsedSeconds, this.observation)
     this.emitObservation(event)
     this.updateResults.record({ kind: "update", count: 1 }, ["evidence"])
     return event
+  }
+
+  recordLifecycleObservation(record: PhysicsLifecycleObservationRecord): PhysicsLifecycleObservationEvent {
+    this.updateResults.record({ kind: "update", count: 1 }, ["evidence"])
+    return stampPhysicsObservation(record, this.elapsedSeconds, this.observation)
   }
 
   /** Most recent explicit update result for a revision-aware host or tool. */
