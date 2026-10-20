@@ -12,9 +12,12 @@ export {
 } from "./recipes/syntheticArrivals"
 export type {
   SyntheticArrival,
+  SyntheticEmitterLimits,
   SyntheticSourceSpec,
   ArrivalJitterBucket
 } from "./recipes/syntheticArrivals"
+export { useEmitters } from "./recipes/useEmitters"
+export type { EmittersHandle, UseEmittersOptions } from "./recipes/useEmitters"
 import { UnitPileChart, PhysicsPileChart } from "./charts/physics/UnitPileChart"
 import { PhysicsCustomChart } from "./charts/physics/PhysicsCustomChart"
 import { CollisionSwarmChart } from "./charts/physics/CollisionSwarmChart"

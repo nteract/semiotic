@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Link } from "react-router-dom"
-import { EventDropChart, buildEventDropPhysics } from "semiotic/physics"
+import { EventDropChart, buildEventDropPhysics, useEmitters } from "semiotic/physics"
 import type {
   EventDropChartHandle,
   EventDropProjectionMetadata,
@@ -15,6 +15,8 @@ import {
   RUN_SECONDS,
   TRAVEL_SECONDS,
   WINDOW_SECONDS,
+  playgroundSources,
+  type EmitterPattern,
 } from "./emitterPlaygroundModel"
 import "./emitterPlayground.css"
 
@@ -27,12 +29,16 @@ function EmitterRun({
   rate,
   delay,
   path,
+  pattern,
+  timeScale,
 }: {
   rate: number
   delay: number
   path: "straight" | "connector"
+  pattern: EmitterPattern
+  timeScale: number
 }) {
-  const model = useMemo(() => createEmitterPlayground(rate, delay), [rate, delay])
+  const model = useMemo(() => createEmitterPlayground(delay), [delay])
   const chart = useRef<EventDropChartHandle>(null)
   const lastPhysicsTime = useRef(0)
   const lastReadoutTime = useRef(-1)
@@ -59,6 +65,7 @@ function EmitterRun({
   const arrival = useMemo(
     () => ({
       mode: "travel" as const,
+      history: "travel" as const,
       durationMs: TRAVEL_SECONDS * 1000,
       path,
     }),
@@ -173,15 +180,18 @@ function EmitterRun({
     return () => media.removeEventListener("change", update)
   }, [])
 
+  useEffect(() => {
+    chart.current?.setTimeScale(timeScale)
+  }, [timeScale])
+
   const observe = useCallback(
     (result: PhysicsPipelineTickResult, controls: PhysicsPipelineControlSurface) => {
       const delta = Math.max(0, result.elapsedSeconds - lastPhysicsTime.current)
       lastPhysicsTime.current = result.elapsedSeconds
       const arrivalsChanged = model.observe(controls.readBodies())
-      const incoming = reducedMotion ? [] : model.advance(delta, active)
-      if (incoming.length) chart.current?.pushMany(incoming)
+      if (!reducedMotion) model.advance(delta)
       const next = model.read()
-      if (arrivalsChanged || incoming.length || next.time - lastReadoutTime.current >= 0.1) {
+      if (arrivalsChanged || next.time - lastReadoutTime.current >= 0.1) {
         lastReadoutTime.current = next.time
         setReading(next)
       }
@@ -190,12 +200,23 @@ function EmitterRun({
         setPlaying(false)
       }
     },
-    [model, active, reducedMotion],
+    [model, reducedMotion],
   )
 
+  const emitters = useEmitters(chart, playgroundSources(pattern), {
+    seed: 42,
+    rate: rate / 2,
+    active: { p1: active },
+    manual: reducedMotion,
+    durationMs: EMISSION_SECONDS * 1000,
+    maxEvents: 120,
+    mapArrival: model.receive,
+    onTick: observe,
+  })
+
   const step = () => {
-    const incoming = model.advance(1, active)
-    if (incoming.length) chart.current?.pushMany(incoming)
+    model.advance(1)
+    emitters.advance(1000)
     setReading(model.read())
   }
   const sendOlder = () => {
@@ -297,14 +318,13 @@ function EmitterRun({
               <span>Event time: {seconds(Number(datum.eventTime))}</span>
               <span>Window: {String(datum.windowId)}s</span>
               <span>Phase: {String(datum.__phase)}</span>
-              <span>
-                {datum.late ? "Route: late bin · window already closed" : "Route: event-time window"}
-              </span>
+              <span>{datum.late ? "Route: late bin" : "Route: event-time window"}</span>
             </div>
           )}
           frameProps={{
+            ...emitters.frameProps,
+            // Keep the clock alive for the final journeys after emission ends.
             continuous: !reducedMotion && playing,
-            onTick: observe,
             background: "var(--surface-1)",
             foregroundGraphics: board,
             bodyStyle: (body) => ({
@@ -320,7 +340,7 @@ function EmitterRun({
           <i className="emitter-demo__dot" /> Current events
         </span>
         <span>
-          <i className="emitter-demo__dot emitter-demo__dot--older" /> Older event (time 1s)
+          <i className="emitter-demo__dot emitter-demo__dot--older" /> Delayed event
         </span>
         <span>Click the emitter to turn it {active ? "off" : "on"}.</span>
       </div>
@@ -372,6 +392,8 @@ export default function EmitterPlaygroundPage() {
   const [rate, setRate] = useState(2)
   const [delay, setDelay] = useState(3)
   const [path, setPath] = useState<"straight" | "connector">("straight")
+  const [pattern, setPattern] = useState<EmitterPattern>("regular")
+  const [timeScale, setTimeScale] = useState(1)
   const [run, setRun] = useState(0)
   return (
     <ExamplePageLayout
@@ -386,13 +408,34 @@ export default function EmitterPlaygroundPage() {
       </p>
       <div className="emitter-settings" aria-label="Stream settings">
         <label>
-          Events per second
+          Emission rate
           <select value={rate} onChange={(event) => setRate(Number(event.target.value))}>
             {[1, 2, 4].map((value) => (
               <option key={value} value={value}>
-                {value}
+                {value / 2}× {pattern === "bursty" ? "burst pace" : `(${value}/s)`}
               </option>
             ))}
+          </select>
+        </label>
+        <label>
+          Simulation speed
+          <select value={timeScale} onChange={(event) => setTimeScale(Number(event.target.value))}>
+            {[0.5, 1, 2].map((value) => (
+              <option key={value} value={value}>
+                {value}×
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Producer behavior
+          <select
+            value={pattern}
+            onChange={(event) => setPattern(event.target.value as EmitterPattern)}
+          >
+            <option value="regular">Regular</option>
+            <option value="jittered">Jittered event times</option>
+            <option value="bursty">Seeded bursts</option>
           </select>
         </label>
         <label>
@@ -413,16 +456,24 @@ export default function EmitterPlaygroundPage() {
           </select>
         </label>
         <button onClick={() => setRun((value) => value + 1)}>New run</button>
-        <small>Changing a setting starts a fresh run.</small>
+        <small>Rate and simulation speed change live. Other settings start a fresh run.</small>
       </div>
-      <EmitterRun key={`${rate}-${delay}-${path}-${run}`} rate={rate} delay={delay} path={path} />
+      <EmitterRun
+        key={`${pattern}-${delay}-${path}-${run}`}
+        rate={rate}
+        delay={delay}
+        path={path}
+        pattern={pattern}
+        timeScale={timeScale}
+      />
       <div className="emitter-notes">
         <div>
           <h2>What to try</h2>
           <p>
             Start the emitter, pause mid-flight, then resume. Turn the source off: existing events
             finish their journeys. Send an older event after a lid closes, then try a longer
-            watermark delay in a new run.
+            watermark delay in a new run. Change emission rate mid-flight, or try jittered event
+            times and seeded bursts from the same source.
           </p>
         </div>
         <div>
@@ -430,7 +481,9 @@ export default function EmitterPlaygroundPage() {
           <p>
             The watermark is the newest event time to reach the board minus your chosen delay. A
             window closes when the watermark reaches its end. Counts come from the admission ledger,
-            not from the pile's height.
+            not from the pile's height. The shared useEmitters hook schedules arrivals on the
+            physics clock. Jitter uses the watermarks preset, with event times before this study
+            clamped to zero.
           </p>
         </div>
       </div>

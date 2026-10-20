@@ -44,6 +44,51 @@ function storeFor(layout: ReturnType<typeof build>) {
 }
 
 describe("EventDrop arrival choreography", () => {
+  it("can travel recorded history without changing its admission, including worker transport", () => {
+    const recorded = {
+      ...options,
+      windows: { size: 5 },
+      watermark: { value: 5 },
+      watermarkAtArrivalAccessor: "recorded" as const,
+      data: [
+        { id: "accepted", time: 1, arrivalTime: 0, source: "p1", recorded: -1 },
+        { id: "rejected", time: 11, arrivalTime: 0, source: "p2", recorded: 20 }
+      ]
+    }
+    const present = buildEventDropPhysics({ ...recorded, arrival: travel })
+    expect(present.initialSpawns.every((spawn) => !spawn.travel)).toBe(true)
+    const moving = buildEventDropPhysics({
+      ...recorded,
+      arrival: { ...travel, history: "travel" }
+    })
+    expect(moving.projectionRows).toEqual(present.projectionRows)
+    expect(moving.initialSpawns.every((spawn) => spawn.travel)).toBe(true)
+    const sync = storeFor(moving)
+    sync.tick(0)
+    const worker = createPhysicsWorkerRuntime()
+    worker.handle({ type: "init", snapshot: sync.snapshot() })
+    for (let i = 0; i < 60; i++) {
+      sync.tick(1 / 120)
+      worker.handle({ type: "tick", deltaSeconds: 1 / 120 })
+    }
+    expect(sync.readBodies().every((body) => body.travel)).toBe(true)
+    const result = worker.handle({ type: "snapshot" })
+    expect(result.type).toBe("snapshot")
+    if (result.type === "snapshot")
+      expect(result.snapshot).toEqual(sync.snapshot())
+    sync.settle()
+    expect(sync.readBodies().every((body) => !body.travel)).toBe(true)
+    expect(
+      sync.readBodies().map((body) => (body.datum as { late: boolean }).late)
+    ).toEqual([false, true])
+    expect(() =>
+      build({
+        mode: "travel",
+        history: "unknown" as "present"
+      })
+    ).toThrow(/arrival.history/)
+  })
+
   it("preserves admission and projection across 5000 seeded out-of-order arrivals", () => {
     const rng = mulberry32(151)
     const data = Array.from({ length: 5000 }, (_, i) => ({
@@ -238,14 +283,18 @@ describe("EventDrop arrival choreography", () => {
   it("keeps admitted body positions when closure converts travel spawns to historical drops", () => {
     const initial = build()
     const closed = buildEventDropPhysics({
-      ...options, arrival: travel, watermark: { value: 11 },
+      ...options,
+      arrival: travel,
+      watermark: { value: 11 },
       watermarkAtArrivalAccessor: () => -100
     })
     const store = storeFor(initial)
     store.settle()
     const before = store.readBodies().map(({ id, x, y }) => ({ id, x, y }))
     store.restore(reconcilePhysicsChart(store.snapshot(), initial, closed))
-    expect(store.readBodies().map(({ id, x, y }) => ({ id, x, y }))).toEqual(before)
+    expect(store.readBodies().map(({ id, x, y }) => ({ id, x, y }))).toEqual(
+      before
+    )
     expect(store.readBodies().every((body) => !body.travel)).toBe(true)
   })
 })

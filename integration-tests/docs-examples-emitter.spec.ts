@@ -22,6 +22,7 @@ async function hoverPaintedEvent(page: Page) {
     const pixels = element
       .getContext("2d")!
       .getImageData(0, 0, width, height).data
+    const bounds = element.getBoundingClientRect()
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         const i = (y * width + x) * 4
@@ -31,11 +32,19 @@ async function hoverPaintedEvent(page: Page) {
           Math.abs(pixels[i + 2] - 235) < 5 &&
           pixels[i + 3] > 240
         ) {
-          const bounds = element.getBoundingClientRect()
-          return {
+          const point = {
             x: (x * bounds.width) / width,
             y: ((y + 2) * bounds.height) / height
           }
+          // Newly emitted bodies may be behind the source. Use a visible mark
+          // without bypassing the real pointer hit target.
+          if (
+            document.elementFromPoint(
+              bounds.x + point.x,
+              bounds.y + point.y
+            ) === element
+          )
+            return point
         }
       }
     }
@@ -65,8 +74,22 @@ test("travel pauses, survives mobile resize, and supports real mark hover", asyn
   await page.goto("/examples/emitter-playground")
   await page.getByRole("button", { name: "Start emitter", exact: true }).click()
   await expect(page.getByTestId("emitter-travelling")).not.toHaveText("0")
+  await expect
+    .poll(async () =>
+      parseFloat(await page.getByTestId("emitter-clock").innerText())
+    )
+    .toBeGreaterThanOrEqual(1.5)
   await page.getByRole("button", { name: "Pause", exact: true }).click()
   const clock = await page.getByTestId("emitter-clock").innerText()
+  const countsBeforeRateChange = await page
+    .getByTestId("emitter-conservation")
+    .innerText()
+  await page.getByLabel("Emission rate").selectOption("4")
+  await page.getByLabel("Simulation speed").selectOption("2")
+  await expect(page.getByTestId("emitter-clock")).toHaveText(clock)
+  await expect(page.getByTestId("emitter-conservation")).toHaveText(
+    countsBeforeRateChange
+  )
   await expect(page.getByTestId("emitter-accepted")).toHaveText("0")
   await page.waitForTimeout(300)
   await expect(page.getByTestId("emitter-clock")).toHaveText(clock)
@@ -91,9 +114,50 @@ test("travel pauses, survives mobile resize, and supports real mark hover", asyn
   )
   await page.getByRole("button", { name: "Start emitter", exact: true }).click()
   await expect(page.getByTestId("emitter-travelling")).not.toHaveText("0")
+  await expect
+    .poll(async () =>
+      parseFloat(await page.getByTestId("emitter-clock").innerText())
+    )
+    .toBeGreaterThanOrEqual(1.5)
   await page.getByRole("button", { name: "Pause", exact: true }).click()
   await hoverPaintedEvent(page)
   expect(errors).toEqual([])
+})
+
+test("live rates preserve the sequence and each producer behavior conserves a bounded run", async ({
+  page
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" })
+  await page.goto("/examples/emitter-playground")
+  const step = page.getByRole("button", {
+    name: "Advance 1 second",
+    exact: true
+  })
+  await step.click()
+  await expect(page.getByTestId("emitter-accepted")).toHaveText("2")
+  await page.getByLabel("Emission rate").selectOption("4")
+  await expect(page.getByTestId("emitter-clock")).toHaveText("1.0s")
+  await step.click()
+  await expect(page.getByTestId("emitter-accepted")).toHaveText("6")
+  await page.getByLabel("Emission rate").selectOption("2")
+  for (const pattern of ["jittered", "bursty"]) {
+    await page.getByLabel("Producer behavior").selectOption(pattern)
+    await expect(page.getByTestId("emitter-clock")).toHaveText("0.0s")
+    for (let i = 0; i < 28; i++) {
+      await step.click()
+      await expect(page.getByTestId("emitter-clock")).toHaveText(`${i + 1}.0s`)
+    }
+    await expect(step).toBeDisabled()
+    await expect(page.getByTestId("emitter-travelling")).toHaveText("0")
+    const counts = (await page.getByTestId("emitter-conservation").innerText())
+      .match(/\d+/g)!
+      .map(Number)
+    expect(counts[0]).toBeGreaterThan(30)
+    expect(counts[0]).toBeLessThanOrEqual(120)
+    expect(counts[0]).toBe(counts[2] + counts[3])
+    if (pattern === "jittered") expect(counts[3]).toBeGreaterThan(0)
+    await hoverPaintedEvent(page)
+  }
 })
 
 test("the source toggle gates emission and a closed window routes older events late", async ({

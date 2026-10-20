@@ -152,4 +152,40 @@ describe("synthetic arrivals", () => {
     expect(() => createSyntheticEmitter([{ id: "a" }, { id: "a" }])).toThrow()
     expect(() => createSyntheticEmitter(sources).advance(Infinity)).toThrow()
   })
+
+  it("bounds both long bursts and tied arrivals without generating discarded events", () => {
+    const spec = [
+      { id: "a", interval: 10 },
+      { id: "b", interval: 10 }
+    ]
+    const emitter = createSyntheticEmitter(spec, 42, { maxEvents: 3 })
+    expect(emitter.advance(1e9).map((row) => row.id)).toEqual([
+      "a-0",
+      "b-0",
+      "a-1"
+    ])
+    expect(emitter.getTime()).toBe(20)
+    expect(emitter.getEmittedCount()).toBe(3)
+    expect(emitter.isComplete()).toBe(true)
+    expect(emitter.advance(1000)).toEqual([])
+    const timed = createSyntheticEmitter(spec, 42, { durationMs: 20 })
+    expect(timed.advance(1e9)).toHaveLength(4)
+    expect(timed.getTime()).toBe(20)
+    expect(timed.isComplete()).toBe(true)
+    expect(timed.advance(1000)).toEqual([])
+    expect(createSyntheticEmitter([], 1).isComplete()).toBe(true)
+    expect(
+      createSyntheticEmitter(spec, 1, { maxEvents: 0 }).advance(1000)
+    ).toEqual([])
+  })
+
+  it.each([
+    { durationMs: -1 },
+    { durationMs: Infinity },
+    { durationMs: NaN },
+    { maxEvents: 1.5 },
+    { maxEvents: Number.MAX_SAFE_INTEGER + 1 }
+  ])("rejects invalid run limits: %j", (limits) => {
+    expect(() => createSyntheticEmitter(sources, 1, limits)).toThrow(RangeError)
+  })
 })

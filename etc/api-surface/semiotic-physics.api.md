@@ -161,7 +161,7 @@ function createPortalController(options: {id?: string; fromRegionId: string; imp
 function createProcessJourneyLedger(options: {stages: readonly ProcessJourneyStage[]; bodyIds?: readonly string[];}): ProcessJourneyLedger
 function createServiceLevelController(options: ServiceLevelControllerOptions): ServiceLevelController
 function createServiceResourcePoolController(options: ServiceResourcePoolOptions): ServiceResourcePoolController
-function createSyntheticEmitter(spec: readonly SyntheticSourceSpec[], seed?: number | undefined): {getTime: () => number; advance(deltaMs: number, options?: { paused?: boolean; rate?: number; active?: Readonly<Record<string, boolean>>; }): SyntheticArrival[];}
+function createSyntheticEmitter(spec: readonly SyntheticSourceSpec[], seed?: number | undefined, limits?: SyntheticEmitterLimits | undefined): {getTime: () => number; getEmittedCount: () => number; isComplete: () => boolean; advance(deltaMs: number, options?: { paused?: boolean; rate?: number; active?: Readonly<Record<string, boolean>>; }): SyntheticArrival[];}
 function crucibleBondId(productId: string, sourceId: string): string
 function crucibleBoundaryColliders(layout: CrucibleLayout): PhysicsColliderSpec[]
 function crucibleComponentBodyId(componentId: string): string
@@ -229,6 +229,7 @@ function spawnFromTokens<D = unknown>(tokens: readonly VisualToken<D>[], options
 function stageTargetInVolume(layout: ProcessVolumeLayout, stageId: string, options?: undefined | {random?: () => number; along?: number; jitterX?: number; padY?: number;}): {x: number; y: number;}
 function syntheticArrivals(spec: readonly SyntheticSourceSpec[], seed?: number | undefined): Generator<SyntheticArrival, void, any>
 function updateProcessJourney(previous: ProcessJourneyLedger, event: Pick<StreamPhysicsRegionEvent, "bodyId" | "datum" | "observation" | "region" | "type">, options?: ProcessJourneyUpdateOptions | undefined): ProcessJourneyLedger
+function useEmitters<T>(target: RefObject<null | {pushMany: (rows: T[]) => void;}>, specs: readonly SyntheticSourceSpec[], options: UseEmittersOptions<T>): EmittersHandle
 interface ArrivalJitterBucket
 interface ArrivalReplayOptions
 interface BlockerAmplification
@@ -323,6 +324,7 @@ interface DependencyTrackDimensions
 interface DependencyTrackLayout
 interface DependencyTrackOptions
 interface DependencyTrackRoute
+interface EmittersHandle
 interface EventDropChartHandle extends PhysicsFrameHandle
 interface EventDropChartProps<TDatum extends Datum = Datum> extends Omit<BaseChartProps, "margin" | "selection">, PhysicsSharedChartProps
 interface EventDropClock
@@ -502,11 +504,13 @@ interface StyleRuleContext
 interface StyleRuleStyle
 interface StyleRuleThreshold
 interface SyntheticArrival
+interface SyntheticEmitterLimits
 interface SyntheticSourceSpec
 interface TooltipConfig
 interface TooltipField
 interface TooltipRootProps extends React.HTMLAttributes<HTMLDivElement>
 interface UnitPileChartProps<TDatum extends Datum = Datum> extends Omit<BaseChartProps, "margin" | "mode" | "selection">, PhysicsSharedChartProps
+interface UseEmittersOptions<T> extends SyntheticEmitterLimits
 interface-member ArrivalJitterBucket::property::max = required max: number
 interface-member ArrivalJitterBucket::property::min = required min: number
 interface-member ArrivalJitterBucket::property::weight = required weight: number
@@ -1169,6 +1173,11 @@ interface-member DependencyTrackRoute::property::points = required points: Depen
 interface-member DependencyTrackRoute::property::socketID = required socketID: string
 interface-member DependencyTrackRoute::property::sourceID = required sourceID: string
 interface-member DependencyTrackRoute::property::targetID = required targetID: string
+interface-member EmittersHandle::property::advance = required advance: (deltaMs: number) => number
+interface-member EmittersHandle::property::frameProps = required frameProps: Pick<StreamPhysicsFrameProps, "continuous" | "onTick">
+interface-member EmittersHandle::property::getEmittedCount = required getEmittedCount: () => number
+interface-member EmittersHandle::property::getTime = required getTime: () => number
+interface-member EmittersHandle::property::isComplete = required isComplete: () => boolean
 interface-member EventDropChartHandle::property::getClock = required getClock: () => EventDropClock
 interface-member EventDropChartHandle::property::getLedger = required getLedger: () => EventDropLedgerRow[]
 interface-member EventDropChartHandle::property::getSourceStats = required getSourceStats: (id: string) => {emitted: number; accepted: number; late: number; inFlight: number;}
@@ -2614,6 +2623,8 @@ interface-member SyntheticArrival::property::arrivalTime = required arrivalTime:
 interface-member SyntheticArrival::property::eventTime = required eventTime: number
 interface-member SyntheticArrival::property::id = required id: string
 interface-member SyntheticArrival::property::source = required source: string
+interface-member SyntheticEmitterLimits::property::durationMs = optional durationMs: number | undefined
+interface-member SyntheticEmitterLimits::property::maxEvents = optional maxEvents: number | undefined
 interface-member SyntheticSourceSpec::property::burst = optional burst: undefined | {min: number; max: number; gapMs?: [number, number]; intraMs: number;}
 interface-member SyntheticSourceSpec::property::id = required id: string
 interface-member SyntheticSourceSpec::property::interval = optional interval: number | undefined
@@ -2649,6 +2660,13 @@ interface-member UnitPileChartProps::property::styleRules = optional styleRules:
 interface-member UnitPileChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member UnitPileChartProps::property::unitValue = optional unitValue: number | undefined
 interface-member UnitPileChartProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TDatum, number> | undefined
+interface-member UseEmittersOptions::property::active = optional active: Readonly<Record<string, boolean>> | undefined
+interface-member UseEmittersOptions::property::manual = optional manual: boolean | undefined
+interface-member UseEmittersOptions::property::mapArrival = required mapArrival: (arrival: SyntheticArrival) => T
+interface-member UseEmittersOptions::property::onTick = optional onTick: ((result: import("../semiotic-physics").PhysicsPipelineTickResult, controls: import("../semiotic-physics").PhysicsPipelineControlSurface) => void) | undefined
+interface-member UseEmittersOptions::property::paused = optional paused: boolean | undefined
+interface-member UseEmittersOptions::property::rate = optional rate: number | undefined
+interface-member UseEmittersOptions::property::seed = optional seed: number | undefined
 type BandScale<T = string | number> = ((value: T) => number | undefined) & {bandwidth?: () => number;}
 type ChainReactionInsight = "blocker-amplification" | "none"
 type ChainReactionMode = "mechanical" | "replay" | "snapshot"
@@ -2671,7 +2689,7 @@ type DependencyMachineDiagnosticCode = "cycle" | "duplicate-task-id" | "missing-
 type DependencyReplayClock = Date | number | {currentTime: Date | number;}
 type DependencyReplayEvent = {type: "dependency-delivered"; edgeID: string; at: Date | number;} | {type: "task-armed"; taskID: string; at: Date | number;} | {type: "task-blocked"; taskID: string; reason: string; at: Date | number;} | {type: "task-completed"; taskID: string; at: Date | number;} | {type: "task-unblocked"; taskID: string; at: Date | number;}
 type DependencyTaskStatus = "blocked" | "done" | "in-progress" | "waiting"
-type EventDropArrival = "drop" | {mode: "travel"; /** Travel milliseconds, independent of timeUnit. Defaults to 800. */ durationMs?: number; /** Speed ceiling: the longest path sets one shared chart-wide duration. */ speedPxPerSec?: number; path?: "connector" | "straight" | ((from: PhysicsTravelPoint, to: PhysicsTravelPoint) => PhysicsTravelPoint[]);}
+type EventDropArrival = "drop" | {mode: "travel"; /** Present recorded history immediately (default), or travel every row. */ history?: "present" | "travel"; /** Travel milliseconds, independent of timeUnit. Defaults to 800. */ durationMs?: number; /** Speed ceiling: the longest path sets one shared chart-wide duration. */ speedPxPerSec?: number; path?: "connector" | "straight" | ((from: PhysicsTravelPoint, to: PhysicsTravelPoint) => PhysicsTravelPoint[]);}
 type EventDropWatermark = ((latestEventTime: number) => number) | EventDropWatermarkOptions
 type FrameTextAnnotation = ({label: number | string; text?: number | string;} | {text: number | string; label?: number | string;}) & FrameTextAnnotationBase
 type FrameTextPosition = (typeof FRAME_TEXT_POSITIONS)[number]

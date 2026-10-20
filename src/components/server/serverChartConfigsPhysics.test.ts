@@ -12,7 +12,7 @@ import { auditAccessibility } from "../charts/shared/auditAccessibility"
 import { diagnoseConfig } from "../charts/shared/diagnoseConfig"
 
 describe("physics server configuration parity", () => {
-  it("serializes travel while keeping settled marks and evidence identical to drop", () => {
+  it.each(["present", "travel"])("serializes travel with history=%s while preserving settled marks and evidence", (history) => {
     const config = {
       data: [
         { id: "a", time: 25, arrivalTime: 0, source: "p1" },
@@ -27,9 +27,9 @@ describe("physics server configuration parity", () => {
     }
     const drop = renderChartWithEvidence("EventDropChart", config)
     const travel = renderChartWithEvidence("EventDropChart", {
-      ...config, arrival: { mode: "travel", durationMs: 1000 }
+      ...config, arrival: { mode: "travel", durationMs: 1000, history }
     })
-    const travelConfig = { ...config, arrival: { mode: "travel", durationMs: 1000 } }
+    const travelConfig = { ...config, arrival: { mode: "travel", durationMs: 1000, history } }
     expect(diagnoseConfig("EventDropChart", travelConfig).ok).toBe(true)
     const audit = auditAccessibility("EventDropChart", travelConfig)
     expect(audit.ok).toBe(true)
@@ -39,7 +39,7 @@ describe("physics server configuration parity", () => {
     const marks = (svg: string) => Array.from(svg.matchAll(/<circle[^>]+>/g), (match) => match[0])
     expect(marks(travel.svg)).toEqual(marks(drop.svg))
     const props = eventDropChart.buildProps(config.data, undefined, undefined, { size: [600, 400] }, {
-      ...config, arrival: { mode: "travel", durationMs: 1000 }
+      ...config, arrival: { mode: "travel", durationMs: 1000, history }
     })
     expect(props.initialSpawns.every((spawn: { travel?: unknown }) => spawn.travel)).toBe(true)
   })

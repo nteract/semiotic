@@ -1,15 +1,30 @@
 import { describe, expect, it } from "vitest"
-import { buildEventDropPhysics, PhysicsPipelineStore } from "semiotic/physics"
+import {
+  buildEventDropPhysics,
+  createSyntheticEmitter,
+  EventDropLedger,
+  PhysicsPipelineStore,
+} from "semiotic/physics"
 import { reconcilePhysicsChart } from "../../../../src/components/charts/physics/physicsChartReconcile"
 import {
   createEmitterPlayground,
   RUN_SECONDS,
+  EMISSION_SECONDS,
+  playgroundSources,
+  type EmitterPattern,
   type PlaygroundEvent,
 } from "./emitterPlaygroundModel"
 
-function experiment() {
-  const model = createEmitterPlayground(2, 3)
+function experiment(pattern: EmitterPattern = "regular") {
+  const model = createEmitterPlayground(3)
+  const emitter = createSyntheticEmitter(playgroundSources(pattern), 42, {
+    durationMs: EMISSION_SECONDS * 1000,
+    maxEvents: 120,
+  })
   const data: PlaygroundEvent[] = []
+  // Derive admission at actual board entry without reserved watermarks.
+  const oracle = new EventDropLedger(5, { delay: 3 }, ["p1"])
+  const seen = new Set<string>()
   const compile = () =>
     buildEventDropPhysics({
       data,
@@ -23,7 +38,7 @@ function experiment() {
       watermark: { value: model.read().watermark },
       sources: [{ id: "p1", label: "Emitter" }],
       sourceRail: { side: "left", tileSize: 100 },
-      arrival: { mode: "travel", durationMs: 1200 },
+      arrival: { mode: "travel", history: "travel", durationMs: 1200 },
       ballRadius: 6,
       seed: 42,
     })
@@ -37,11 +52,28 @@ function experiment() {
   }
   const tick = (active = true) => {
     store.tick(1 / 120)
+    for (const body of store.readBodies()) {
+      if (body.travel || seen.has(body.id)) continue
+      seen.add(body.id)
+      const row = body.datum as PlaygroundEvent
+      const lateBefore = oracle.getLedger().reduce((sum, window) => sum + window.late, 0)
+      oracle.append({ eventTime: row.time, source: row.source, arrivalTime: store.elapsed() })
+      const lateAfter = oracle.getLedger().reduce((sum, window) => sum + window.late, 0)
+      expect(
+        (body.datum as { late: boolean }).late,
+        JSON.stringify({
+          row,
+          enteredAt: store.elapsed(),
+          watermark: oracle.getWatermark(),
+        }),
+      ).toBe(lateAfter > lateBefore)
+    }
     const changed = model.observe(store.readBodies())
-    const incoming = model.advance(1 / 120, active)
+    model.advance(1 / 120)
+    const incoming = emitter.advance(1000 / 120, { active: { p1: active } }).map(model.receive)
     if (changed || incoming.length) sync(incoming)
   }
-  return { model, store, tick, sync }
+  return { model, emitter, oracle, store, tick, sync }
 }
 
 describe("single emitter docs integration", () => {
@@ -85,13 +117,51 @@ describe("single emitter docs integration", () => {
     })
     const reduced = experiment()
     for (let i = 0; i < RUN_SECONDS; i++) {
-      reduced.sync(reduced.model.advance(1, true))
+      reduced.model.advance(1)
+      reduced.sync(reduced.emitter.advance(1000).map(reduced.model.receive))
       reduced.store.settle()
       reduced.model.observe(reduced.store.readBodies())
     }
     expect(reduced.model.read().rows.map(({ closedAt: _closedAt, ...row }) => row)).toEqual(
       animated.model.read().rows.map(({ closedAt: _closedAt, ...row }) => row),
     )
-    expect(reduced.model.advance(100, true)).toEqual([])
+    expect(reduced.emitter.advance(100000)).toEqual([])
   })
+
+  it.each(["jittered", "bursty"] as const)(
+    "reserves ordered admission across travel and conserves %s events",
+    (pattern) => {
+      const run = experiment(pattern)
+      for (let i = 0; i < RUN_SECONDS * 120 + 2; i++) run.tick()
+      const state = run.model.read()
+      expect(state.emitted).toBeGreaterThan(30)
+      expect(state.emitted).toBeLessThanOrEqual(120)
+      expect(state.travelling).toBe(0)
+      expect(state.accepted + state.late).toBe(state.emitted)
+      expect(state.rows.map(({ start, accepted, late }) => ({ start, accepted, late }))).toEqual(
+        run.oracle.getLedger().map(({ start, accepted, late }) => ({ start, accepted, late })),
+      )
+      const lateBodies = run.store
+        .readBodies()
+        .filter((body) => (body.datum as { late: boolean }).late)
+      expect(lateBodies).toHaveLength(state.late)
+      if (pattern === "jittered") {
+        expect(state.late).toBeGreaterThan(0)
+        expect(lateBodies.every((body) => body.x < 200)).toBe(true)
+      }
+      const reduced = experiment(pattern)
+      for (let i = 0; i < RUN_SECONDS; i++) {
+        reduced.model.advance(1)
+        reduced.sync(reduced.emitter.advance(1000).map(reduced.model.receive))
+        reduced.store.settle()
+        reduced.model.observe(reduced.store.readBodies())
+      }
+      expect(reduced.model.read()).toMatchObject({
+        emitted: state.emitted,
+        accepted: state.accepted,
+        late: state.late,
+        travelling: 0,
+      })
+    },
+  )
 })

@@ -14,6 +14,8 @@ export type EventDropArrival =
   | "drop"
   | {
       mode: "travel"
+      /** Present recorded history immediately (default), or travel every row. */
+      history?: "present" | "travel"
       /** Travel milliseconds, independent of timeUnit. Defaults to 800. */
       durationMs?: number
       /** Speed ceiling: the longest path sets one shared chart-wide duration. */
@@ -50,6 +52,12 @@ export function choreographEventDropArrival(
   if (arrival && arrival !== "drop") {
     if (arrival.mode !== "travel")
       throw new RangeError("arrival.mode must be travel")
+    if (
+      arrival.history != null &&
+      arrival.history !== "present" &&
+      arrival.history !== "travel"
+    )
+      throw new RangeError("arrival.history must be present or travel")
     for (const value of [arrival.durationMs, arrival.speedPxPerSec])
       if (value != null && (!Number.isFinite(value) || value <= 0))
         throw new RangeError(
@@ -90,7 +98,10 @@ export function choreographEventDropArrival(
     if (arrival && arrival !== "drop")
       datum.__phase = datum.late ? "late" : "board"
     const closed = datum.windowIndex < options.closedWindowCount
-    const history = (closed && !datum.late) || (!closed && datum.late)
+    const history =
+      arrival && arrival !== "drop" && arrival.history === "travel"
+        ? false
+        : (closed && !datum.late) || (!closed && datum.late)
     if (history) historical.push(spawn)
     // Retained history is present at the start, as on the drop-only board.
     const boardTime =

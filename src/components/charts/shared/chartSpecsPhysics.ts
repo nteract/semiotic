@@ -130,7 +130,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       arrival: {
         type: ["string", "object"],
         default: "drop",
-        description: "drop or { mode: travel, durationMs?: 800, speedPxPerSec?, path?: straight | connector }. Travels from visible source tiles with the built-in engine. Choose duration or a speed ceiling that sets one shared duration from the longest path. React also accepts a path callback returning points including both endpoints. Arrival times describe board entry; finite replay adds pre-roll. Historical admissions bypass travel."
+        description: "drop or { mode: travel, durationMs?: 800, speedPxPerSec?, path?: straight | connector, history?: present | travel }. Travels from visible source tiles with the built-in engine. Choose duration or a speed ceiling that sets one shared duration from the longest path. React also accepts a path callback returning points including both endpoints. Arrival times describe board entry; finite replay adds pre-roll. History defaults to present (recorded admissions bypass travel); travel sends every row from its source."
       },
       watermarkAtArrivalAccessor: {
         type: ["string", "function"],

@@ -19,7 +19,7 @@ const eventDropData = [
 ]
 
 const eventDropChartProps = [
-  { name: "arrival", type: "string | object", default: '"drop"', description: 'Source choreography: "drop" or { mode: "travel", durationMs?: 800, speedPxPerSec?, path?: "straight" | "connector" | callback }. Choose duration or speed. Requires a visible source and the built-in engine.' },
+  { name: "arrival", type: "string | object", default: '"drop"', description: 'Source choreography: "drop" or { mode: "travel", durationMs?: 800, speedPxPerSec?, path?: "straight" | "connector" | callback, history?: "present" | "travel" }. History defaults to present; travel animates every row. Choose duration or speed. Requires a visible source and the built-in engine.' },
   { name: "sources", type: "array", description: "Source identities with id, label, color, mark, glyph, active and visible. Historical counts remain when a tile is hidden." },
   { name: "sourceAccessor", type: "string | function", default: '"source"', description: "Field identifying an event's source." },
   { name: "sourceRail", type: "object", description: "{ side: left | top | none, tileSize? }. Use top for a narrow board." },
@@ -258,6 +258,67 @@ const events = Array.from({ length: 60 }, () => stream.next().value!)
         live board, window retirement, and parameter reflow
         remain work in the transition plan. Keep application-driven demonstrations
         bounded until that runtime is available.
+      </p>
+      <h2 id="clock-driven-emitters">Clock-driven emitters</h2>
+      <p>
+        <code>useEmitters(ref, specs, options)</code> connects a synthetic source to a
+        push-mode chart. Spread its <code>frameProps</code> onto the chart and omit
+        <code> data</code>. It uses simulated time, keeps an empty frame running, and
+        stops emission while the chart is paused or hidden. See the{" "}
+        <Link to="/examples/emitter-playground">interactive emitter playground</Link>{" "}
+        for regular, jittered and bursty producers with live rate and speed controls.
+      </p>
+      <CodeBlock language="tsx" code={`import { useRef } from "react"
+import { EventDropChart, useEmitters } from "semiotic/physics"
+import type { EventDropChartHandle } from "semiotic/physics"
+
+function Producer({ active = true, rate = 1, paused = false }) {
+  const ref = useRef<EventDropChartHandle>(null)
+  const emitters = useEmitters(ref, [{ id: "p1", ratePerSec: 2 }], {
+    seed: 42,
+    durationMs: 24000,
+    maxEvents: 96,
+    rate,
+    active: { p1: active },
+    mapArrival: (event) => ({ ...event, time: event.eventTime })
+  })
+  return <EventDropChart
+    ref={ref}
+    timeUnit="ms"
+    timeExtent={[0, 24000]}
+    windows={{ size: 5000 }}
+    watermark={{ delay: 3000 }}
+    sources={[{ id: "p1", label: "Producer", active }]}
+    paused={paused}
+    frameProps={emitters.frameProps}
+    title="A bounded event stream"
+  />
+}`} />
+      <p>
+        Specs, seed, duration and maximum event count are captured on mount; remount
+        the producer for a new run. Rate and active flags update without restarting
+        ids or the remaining interval. A source switched off does not catch up when
+        enabled again. Limits bound total generated events, not retained chart memory.
+        The pure <code>createSyntheticEmitter</code> accepts the same limits as its
+        third argument.
+      </p>
+      <p>
+        The hook uses synchronous <code>onTick</code>. Pass an observer through its
+        <code> options.onTick</code> to run after emission. For reduced-motion controls,
+        set <code>manual: true</code> and call <code>advance(deltaMs)</code> explicitly.
+        Use the chart handle&apos;s <code>setTimeScale</code> to change simulation speed;
+        EventDrop&apos;s <code>timeScale</code> prop controls recorded replay pacing.
+        Frame snapshots do not contain emitter state: a frame rewind rebases the
+        hook&apos;s clock and keeps the emitted sequence.
+      </p>
+      <p>
+        With arrival choreography, <code>history: "present"</code> is the default:
+        accepted history beneath closed lids and recorded rejections belonging to
+        currently open windows appear directly in their containers. The playground
+        uses <code>arrival={"{ mode: 'travel', history: 'travel', durationMs: 1200 }"}</code>{" "}
+        so every emitted row makes the full journey. Its admission reservations
+        assume equal travel durations and an unchanged watermark policy; arbitrary
+        live admission remains separate work.
       </p>
       <h2 id="physics-theme">Physics theme tokens</h2>
       <p>

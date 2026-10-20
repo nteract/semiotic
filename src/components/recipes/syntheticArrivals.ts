@@ -43,6 +43,13 @@ export interface SyntheticArrival {
   arrivalTime: number
 }
 
+export interface SyntheticEmitterLimits {
+  /** Stop at this simulated millisecond, including arrivals at the boundary. */
+  durationMs?: number
+  /** Maximum number of arrivals across all sources, including tied arrivals. */
+  maxEvents?: number
+}
+
 interface SourceCursor {
   spec: SyntheticSourceSpec
   random: () => number
@@ -182,13 +189,27 @@ function elapse(source: SourceCursor, elapsed: number): void {
  */
 export function createSyntheticEmitter(
   spec: readonly SyntheticSourceSpec[],
-  seed = 1
+  seed = 1,
+  limits: SyntheticEmitterLimits = {}
 ) {
   const sources = makeSources(spec, seed)
+  for (const [name, value] of Object.entries(limits)) {
+    if (value !== undefined && (!Number.isFinite(value) || value < 0))
+      throw new RangeError(`${name} must be finite and nonnegative`)
+  }
+  if (limits.maxEvents !== undefined && !Number.isSafeInteger(limits.maxEvents))
+    throw new RangeError("maxEvents must be a safe integer")
+  const duration = limits.durationMs ?? Infinity
+  const maximum = limits.maxEvents ?? Infinity
+  let emitted = 0
   let time = 0
   let timeError = 0
+  const isComplete = () =>
+    sources.length === 0 || time >= duration || emitted >= maximum
   return {
     getTime: () => time,
+    getEmittedCount: () => emitted,
+    isComplete,
     advance(
       deltaMs: number,
       options: {
@@ -200,7 +221,8 @@ export function createSyntheticEmitter(
       if (!Number.isFinite(deltaMs) || deltaMs < 0)
         throw new RangeError("deltaMs must be finite and nonnegative")
       const rate = positive(options.rate ?? 1, "rate")
-      if (options.paused || deltaMs === 0) return []
+      if (options.paused || deltaMs === 0 || isComplete()) return []
+      deltaMs = Math.min(deltaMs, duration - time)
       const events: SyntheticArrival[] = []
       const active = sources.filter(
         (source) => options.active?.[source.spec.id] !== false
@@ -231,9 +253,17 @@ export function createSyntheticEmitter(
         remainingMs = Math.max(0, deltaMs - elapsed)
         const arrivalTime = time + Math.min(deltaMs, elapsed)
         // Drain tied arrivals at the end of a step in source declaration order.
-        for (const source of active)
-          if (source === next || source.remaining / rate <= tolerance)
+        for (const source of active) {
+          if (source === next || source.remaining / rate <= tolerance) {
             events.push(emit(source, arrivalTime))
+            emitted++
+            if (emitted >= maximum) break
+          }
+        }
+        if (emitted >= maximum) {
+          deltaMs = elapsed
+          break
+        }
       }
       const adjusted = deltaMs - timeError
       const total = time + adjusted
