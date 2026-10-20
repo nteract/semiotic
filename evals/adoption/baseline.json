@@ -6,7 +6,7 @@
     "packageVersion": "3.13.0",
     "releaseChannel": "development",
     "revisionKind": "sha256-of-inventoried-source-content",
-    "revision": "c37563ba68b878c732f8d3ac0852b27c917a1d7aba04613bb3788e820319e329",
+    "revision": "c4c742933de0b9969a2f6716ba46c0e180ef61fd13cf57ab8cc4d483d2bd63a3",
     "packedPackage": "not-assessed",
     "deployedDocumentation": "not-assessed",
     "deployedMCP": "not-assessed"
@@ -70,7 +70,7 @@
         "ai/reference.md",
         "docs/public/llms.txt"
       ],
-      "bytes": 178586,
+      "bytes": 178661,
       "measurement": "UTF-8 source bytes; not token usage or billed cost"
     },
     "historicalSkill": {
@@ -78,7 +78,7 @@
         "ai/reference.md",
         "agent-skill/semiotic-charts/SKILL.md"
       ],
-      "bytes": 175320,
+      "bytes": 175395,
       "measurement": "UTF-8 source bytes; not token usage or billed cost"
     },
     "candidateFixedPackets": {
@@ -199,8 +199,8 @@
     },
     {
       "path": "ai/reference.md",
-      "bytes": 166958,
-      "sha256": "b914be6fbf0bdd44b545894d3752b0beaa5f210b1fc32968215ef598744b774f"
+      "bytes": 167033,
+      "sha256": "a102f5fd6e3532aef6de4e1ba1a024f4930ebad77dd93414fa1c8260f4863499"
     },
     {
       "path": "ai/schema.json",
