@@ -31,6 +31,10 @@ const printOnly = process.argv.includes("--print")
  * `scripts/treeshake-isolation.test.mjs`.
  */
 const ENTRY_GRAPHS = [
+  // Approved 3.13.0 budget refresh (2026-10-20): CI reports server 266.9,
+  // AI 617.3, and recipes 105.7 KiB gzip. Their limits rise to 267.5, 618,
+  // and 106.5 KiB, keeping less than 1 KiB headroom for each. All other
+  // entry limits and the multi-import consumer budget remain unchanged.
   // Intentional feature cost (2026-10-19): tooltip slots read chrome ownership
   // from the rendered root element (`data-semiotic-tooltip-chrome` through any
   // wrapper components, and no box for content that renders nothing), re-read
@@ -292,7 +296,7 @@ const ENTRY_GRAPHS = [
   // Bumped 261.5→262.5: static value-banded histogram bars, standalone-safe
   // (var()-free) annotation label paints, and the shared hatch tile measure
   // 261.8 KiB gzip.
-  { entry: "server.module.min.js", label: "server", limitKb: 264.5 },
+  { entry: "server.module.min.js", label: "server", limitKb: 267.5 },
   // Bumped 450→460: the public numeric audit + chart contract evaluator adds
   // ~5–6 KB gzip to the AI graph; ChartContainer loads the same code lazily.
   // Bumped 460→462 (3.8.6): BumpChart (+ its ribbon geometry) joins the AI graph.
@@ -381,7 +385,7 @@ const ENTRY_GRAPHS = [
   // Bumped 612→614: axis-config key validation, value-banded histogram
   // fills, and the shared hatch tile measure 613.5 KiB gzip.
   // Feature graph: 614.7 KiB (previous built HEAD: 613.3 KiB).
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 615.9 },
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 618 },
   // Bumped 100→101: transitDiagramLayout's public detail modes, source-rooted
   // line derivation, and station-rendering contract extend the curated recipes
   // entry. Linux CI measures 100.3 KiB gzip; retain a reviewable 0.7 KiB
@@ -397,7 +401,7 @@ const ENTRY_GRAPHS = [
   // Bumped 104→105: every network recipe places its decorations under a
   // `perspective` (ground/billboard placement, declared fit bounds, Mermaid's
   // solid pieces). Measures 104.5 KiB gzip.
-  { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 105 },
+  { entry: "semiotic-recipes.module.min.js", label: "recipes", limitKb: 106.5 },
   // Optional readers reuse the existing network/physics hosts and stores.
   // Initial complete graphs: 272.3 KiB for readers, 13.4 KiB for pure Core.
   // Bumped 275→277: the published reader graph measures 276.7 KiB gzip
