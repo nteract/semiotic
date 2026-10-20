@@ -71,6 +71,18 @@ default arrow-key node navigation retain their behavior.
 - Network zoom gestures preserve node and edge clicks and touch taps while
   drag-to-pan is enabled. Pointer capture now stays on the original target;
   clicks following a drag remain suppressed.
+- Tooltip content that paints its own surface inside a component (a
+  styled-components tooltip, for example) shows one box. Semiotic reads
+  `data-semiotic-tooltip-chrome` on the rendered root element, through any
+  wrapper components, in addition to the element a renderer returns, so neither
+  the renderer nor its wrappers need `markTooltipChrome`. Content that renders
+  nothing, such as a wrapper component returning `null`, shows no box. This
+  covers every frame tooltip (XY, ordinal, network, geo, physics, and
+  ScatterplotMatrix) and `TooltipRoot` without an explicit `chrome`; an explicit
+  chart `chrome` config still wins.
+- A tooltip whose chrome is dropped after rendering is placed from its
+  re-measured box, and that first placement jumps instead of easing from the
+  chrome-sized position.
 
 ### Security
 

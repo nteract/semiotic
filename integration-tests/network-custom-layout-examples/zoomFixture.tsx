@@ -141,6 +141,14 @@ function DeclarativeTooltip({ label }: { label: string }) {
 const DeclarativeOuter = ({ label }: { label: string }) => <DeclarativeTooltip label={label} />
 const declarativeTooltip = (datum: Record<string, unknown>) => <DeclarativeOuter label={String(datum.id)} />
 const ownedTooltip = markTooltipChrome((datum: Record<string, unknown>) => <MyTooltip label={String(datum.id)} />)
+// Unmarked wrappers around a component whose rendered root declares its chrome.
+function RenderedTooltip({ label }: { label: string }) {
+  return <div data-testid="rendered-surface" data-semiotic-tooltip-chrome style={{ background: "navy", color: "white", padding: 12, borderRadius: 4 }}>{label}</div>
+}
+const RenderedOuter = ({ label }: { label: string }) => <RenderedTooltip label={label} />
+const renderedTooltip = (datum: Record<string, unknown>) => <RenderedOuter label={String(datum.id)} />
+const RenderedNothing = () => null
+const renderedEmptyTooltip = () => <RenderedNothing />
 const emptyResults: Record<string, React.ReactNode> = {
   null: null, undefined: undefined, boolean: false, true: true,
   text: "", whitespace: "  ", array: [], fragment: <>{null}{false}</>
@@ -153,15 +161,19 @@ export function ZoomFixture() {
   const [width, setWidth] = React.useState(540)
   const tooltip = tooltipMode === "owned"
     ? ownedTooltip
-    : tooltipMode && Object.hasOwn(emptyResults, tooltipMode)
-      ? markTooltipChrome(() => {
-          // A wrapping library suppresses empty consumer results before adding its surface.
-          const result = emptyResults[tooltipMode]
-          return hasTooltipContent(result) ? <MyTooltip label={String(result)} /> : null
-        })
-      : tooltipMode === "zero"
-        ? () => 0
-        : (datum: Record<string, unknown>) => <span data-testid="zoom-tooltip">{String(datum.id)}</span>
+    : tooltipMode === "rendered"
+      ? renderedTooltip
+      : tooltipMode === "rendered-empty"
+        ? renderedEmptyTooltip
+        : tooltipMode && Object.hasOwn(emptyResults, tooltipMode)
+          ? markTooltipChrome(() => {
+              // A wrapping library suppresses empty consumer results before adding its surface.
+              const result = emptyResults[tooltipMode]
+              return hasTooltipContent(result) ? <MyTooltip label={String(result)} /> : null
+            })
+          : tooltipMode === "zero"
+            ? () => 0
+            : (datum: Record<string, unknown>) => <span data-testid="zoom-tooltip">{String(datum.id)}</span>
   const [viewport, setViewport] =
     React.useState<NetworkViewportSnapshot | null>(null)
   const [hover, setHover] = React.useState("none")

@@ -1,10 +1,10 @@
 import * as React from "react"
-import { flushSync } from "react-dom"
 import { useTooltipChrome } from "./tooltipChrome"
 import {
   defaultTooltipStyle,
   hasOwnTooltipChrome,
-  hasTooltipContent
+  hasTooltipContent,
+  useRenderedRootOwnsChrome
 } from "./tooltipChrome"
 
 interface FlippingTooltipProps {
@@ -37,6 +37,11 @@ interface FlippingTooltipProps {
  *   2. An inline `background` / `backgroundColor` on `style`.
  *   3. `data-semiotic-tooltip-chrome` for CSS-class-only chrome
  *      where the background is defined outside the React element.
+ *
+ * These read the React element before it renders. After rendering,
+ * `FlippingTooltip` also reads the DOM: a single rendered root element
+ * carrying `data-semiotic-tooltip-chrome` owns chrome however many
+ * components produced it.
  *
  * **`.semiotic-tooltip` class alone is NOT ownership.** Charts and
  * examples repeatedly return `<div className="semiotic-tooltip">…</div>`
@@ -100,9 +105,17 @@ export function FlippingTooltip({
   const hasContent = hasTooltipContent(children)
 
   const ref = React.useRef<HTMLDivElement>(null)
+  const declaresChrome =
+    themeChrome === "none" || contentOwnsChrome || hasOwnTooltipChrome(children)
+  const rendersOwnChrome = useRenderedRootOwnsChrome(
+    ref,
+    !declaresChrome && positionFinite && hasContent
+  )
+  const ownsChrome = declaresChrome || rendersOwnChrome
   const [measured, setMeasured] = React.useState<{
     width: number
     height: number
+    ownsChrome: boolean
   } | null>(null)
 
   // Measure once on mount/container changes, then let ResizeObserver report
@@ -110,6 +123,8 @@ export function FlippingTooltip({
   // tooltip React element re-run this layout effect after every parent hover
   // render. In browsers, fractional layout jitter could then alternate the
   // measured width by a tiny amount and synchronously set state forever.
+  // Dropping fallback chrome changes the box, so each size records the chrome
+  // it was taken with and a chrome change re-measures before the first paint.
   React.useLayoutEffect(() => {
     const el = ref.current
     if (!el) return
@@ -122,27 +137,22 @@ export function FlippingTooltip({
         // cannot create a measurement → render → measurement feedback loop.
         if (
           prev &&
+          prev.ownsChrome === ownsChrome &&
           Math.abs(prev.width - rect.width) < 0.5 &&
           Math.abs(prev.height - rect.height) < 0.5
         ) {
           return prev
         }
-        return { width: rect.width, height: rect.height }
+        return { width: rect.width, height: rect.height, ownsChrome }
       })
     }
 
-    if (typeof ResizeObserver === "undefined") {
-      measure()
-      return
-    }
-    // ResizeObserver delivers the initial size after layout and before paint.
-    // Reading here avoids forcing synchronous layout during every tooltip
-    // mount. Commit placement in this same pre-paint phase so the heuristic
-    // position never flashes and first/flip transitions remain disabled.
-    const observer = new ResizeObserver(() => flushSync(measure))
+    measure()
+    if (typeof ResizeObserver === "undefined") return
+    const observer = new ResizeObserver(measure)
     observer.observe(el)
     return () => observer.disconnect()
-  }, [className, containerWidth, containerHeight, positionFinite, hasContent])
+  }, [className, containerWidth, containerHeight, positionFinite, hasContent, ownsChrome])
 
   // The placement of the last committed render. Read during render and
   // written after commit, so a StrictMode double render compares against the
@@ -150,6 +160,9 @@ export function FlippingTooltip({
   const committedPlacement = React.useRef<{ flipX: boolean; flipY: boolean } | null>(null)
 
   const offset = 12
+  // A size taken under the other chrome describes a different box, so the
+  // tooltip stays unplaced until the current box is measured.
+  const size = measured?.ownsChrome === ownsChrome ? measured : null
 
   // Compute position
   let left = x
@@ -157,28 +170,28 @@ export function FlippingTooltip({
   let transform: string
   let flipX = false
   let flipY = false
-  if (measured) {
+  if (size) {
     // Precise flip based on actual tooltip dimensions
     const spaceRight = containerWidth - x
     const spaceBelow = containerHeight - y
 
-    flipX = spaceRight < measured.width + offset
-    flipY = spaceBelow < measured.height + offset
+    flipX = spaceRight < size.width + offset
+    flipY = spaceBelow < size.height + offset
 
     // Flipping alone can overflow the opposite edge in a narrow chart, or
     // when a camera projects the hovered mark's center outside the viewport.
     left = Math.max(
       0,
       Math.min(
-        x + (flipX ? -measured.width - offset : offset),
-        containerWidth - measured.width
+        x + (flipX ? -size.width - offset : offset),
+        containerWidth - size.width
       )
     )
     top = Math.max(
       0,
       Math.min(
-        y + (flipY ? -measured.height - 4 : 4),
-        containerHeight - measured.height
+        y + (flipY ? -size.height - 4 : 4),
+        containerHeight - size.height
       )
     )
     transform = "none"
@@ -196,7 +209,7 @@ export function FlippingTooltip({
   // tooltip is never transparent. Prefer intrinsic width, capped to the plot
   // width so block content can wrap before placement is measured. Border-box
   // sizing includes the default chrome's padding in this cap.
-  const placement = measured ? { flipX, flipY } : null
+  const placement = size ? { flipX, flipY } : null
   const previous = committedPlacement.current
   // A consumer's CSS transition should only ease moves along the same side.
   // The first measured placement and every flip jump instead.
@@ -206,7 +219,6 @@ export function FlippingTooltip({
     committedPlacement.current = placement
   })
 
-  const ownsChrome = themeChrome === "none" || contentOwnsChrome || hasOwnTooltipChrome(children)
   const chromeStyle = ownsChrome ? null : defaultTooltipStyle
   const compositeClassName = ownsChrome
     ? className

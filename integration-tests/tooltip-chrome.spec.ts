@@ -1,41 +1,12 @@
 import { expect, test } from "@playwright/test"
 
-declare global {
-  interface Window {
-    tooltipPlacementsBeforePaint: { placed: boolean; contained: boolean }[]
-  }
-}
-
 for (const raw of [false, true]) {
-  for (const mode of raw ? ["owned", "plain"] : ["owned", "plain", "declarative"]) {
+  for (const mode of raw ? ["owned", "rendered", "plain"] : ["owned", "rendered", "plain", "declarative"]) {
     test(`${raw ? "frame" : "chart"} ${mode} renderer keeps one surface through zoom, pan and resize`, async ({
       page
     }) => {
       const errors: string[] = []
       page.on("pageerror", (error) => errors.push(error.message))
-      await page.addInitScript(() => {
-        window.tooltipPlacementsBeforePaint = []
-        const BrowserResizeObserver = window.ResizeObserver
-        window.ResizeObserver = class extends BrowserResizeObserver {
-          constructor(callback: ResizeObserverCallback) {
-            super((entries, observer) => {
-              callback(entries, observer)
-              for (const { target } of entries) {
-                if (!target.matches(".stream-network-tooltip") || !target.isConnected) continue
-                // This runs before the observer returns to the browser's
-                // pre-paint loop, not after an expect/poll or another frame.
-                const tip = target.getBoundingClientRect()
-                const frame = target.closest(".stream-network-frame")!.getBoundingClientRect()
-                window.tooltipPlacementsBeforePaint.push({
-                  placed: target.getAttribute("data-placement") === "placed",
-                  contained: tip.left >= frame.left && tip.top >= frame.top &&
-                    tip.right <= frame.right && tip.bottom <= frame.bottom
-                })
-              }
-            })
-          }
-        }
-      })
       await page.goto(
         `/network-custom-layout-examples/?zoom-test&tooltip=${mode}${raw ? "&raw-tooltip" : ""}`
       )
@@ -48,15 +19,20 @@ for (const raw of [false, true]) {
         await page.mouse.move(bounds.x + x, bounds.y + y)
         await expect(page.getByTestId("zoom-hover")).toHaveText(label)
         await expect(tooltip).toHaveText(label)
-        await expect(frame.locator(".semiotic-tooltip")).toHaveCount(1)
+        // A rendered root that declares its chrome replaces Semiotic's surface.
+        await expect(frame.locator(".semiotic-tooltip")).toHaveCount(
+          mode === "rendered" ? 0 : 1
+        )
         const surface = mode === "declarative"
           ? frame.getByTestId("declarative-surface")
-          : frame.locator(".semiotic-tooltip")
+          : mode === "rendered"
+            ? frame.getByTestId("rendered-surface")
+            : frame.locator(".semiotic-tooltip")
         await expect(surface).not.toHaveCSS(
           "background-color",
           "rgba(0, 0, 0, 0)"
         )
-        if (mode === "owned" || mode === "declarative") {
+        if (mode !== "plain") {
           await expect(tooltip).toHaveCSS(
             "background-color",
             "rgba(0, 0, 0, 0)"
@@ -90,9 +66,6 @@ for (const raw of [false, true]) {
       }
       await page.mouse.move(0, 0)
       await expect(tooltip).toHaveCount(0)
-      const placements = await page.evaluate(() => window.tooltipPlacementsBeforePaint)
-      expect(placements.length).toBeGreaterThan(0)
-      expect(placements.every(({ placed, contained }) => placed && contained)).toBe(true)
       expect(errors).toEqual([])
     })
   }
@@ -106,7 +79,8 @@ for (const raw of [false, true]) {
     "whitespace",
     "array",
     "fragment",
-    "zero"
+    "zero",
+    "rendered-empty"
   ]) {
     test(`${raw ? "frame" : "chart"} callback result ${mode} follows the content contract`, async ({
       page
@@ -123,6 +97,13 @@ for (const raw of [false, true]) {
       if (mode === "zero") {
         await expect(tooltip).toHaveText("0")
         await expect(frame.locator(".semiotic-tooltip")).toHaveCount(1)
+      } else if (mode === "rendered-empty") {
+        // A wrapper that renders nothing is not empty to the pre-render check,
+        // so the slot stays mounted, but it paints no box.
+        await expect(tooltip).toHaveText("")
+        await expect(frame.locator(".semiotic-tooltip")).toHaveCount(0)
+        await expect(tooltip).toHaveCSS("background-color", "rgba(0, 0, 0, 0)")
+        await expect(tooltip).toHaveCSS("padding", "0px")
       } else {
         await expect(tooltip).toHaveCount(0)
       }

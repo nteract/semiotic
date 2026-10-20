@@ -40,14 +40,16 @@ test("multi-import size is independent of temporary consumer paths", () => {
   const measure = () => {
     const output = execFileSync(
       process.execPath,
-      [join(root, "scripts/check-multi-import-size.mjs"), "--print"],
+      [join(root, "scripts/check-multi-import-size.mjs"), "--print", "--analyze"],
       { cwd: root, encoding: "utf8" }
     )
     const bytes = output.match(/gzip:.*\((\d+) bytes\)/)?.[1]
     assert.ok(bytes, "the consumer should report a gzip byte count")
-    return Number(bytes)
+    const files = output.match(/ {2}initial output files:\n([\s\S]*?) {2}largest retained inputs:/)?.[1]
+    assert.ok(files, "the consumer should report its initial chunk filenames and sizes")
+    return { gzipBytes: Number(bytes), files }
   }
-  assert.equal(measure(), measure())
+  assert.deepEqual(measure(), measure())
 })
 
 async function eagerBundle(exportKey, symbol) {

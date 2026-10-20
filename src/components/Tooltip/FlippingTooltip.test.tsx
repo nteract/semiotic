@@ -11,54 +11,10 @@
  * implementations stay untouched.
  */
 import * as React from "react"
-import { act, render as renderDOM } from "@testing-library/react"
-import { afterEach, beforeEach, describe, it, expect, vi } from "vitest"
+import { render } from "@testing-library/react"
+import { describe, it, expect, vi } from "vitest"
 import { FlippingTooltip } from "./FlippingTooltip"
 import { defaultTooltipStyle, TooltipRoot } from "./Tooltip"
-
-let initialSizes: Set<() => void>
-let resizeNotifications: Set<() => void>
-beforeEach(() => {
-  initialSizes = new Set()
-  resizeNotifications = new Set()
-  vi.stubGlobal("ResizeObserver", class {
-    notify: () => void
-    constructor(callback: ResizeObserverCallback) {
-      this.notify = () => callback([], this as unknown as ResizeObserver)
-    }
-    observe() {
-      initialSizes.add(this.notify)
-      resizeNotifications.add(this.notify)
-    }
-    disconnect() {
-      initialSizes.delete(this.notify)
-      resizeNotifications.delete(this.notify)
-    }
-    unobserve() { this.disconnect() }
-  })
-})
-afterEach(() => vi.unstubAllGlobals())
-
-// Deliver the browser's initial post-layout notification separately from the
-// React commit; rerenders alone do not invent a content-size change.
-function deliverInitialSizes() {
-  act(() => {
-    const pending = [...initialSizes]
-    initialSizes.clear()
-    pending.forEach((notify) => notify())
-  })
-}
-function render(element: React.ReactElement) {
-  const view = renderDOM(element)
-  deliverInitialSizes()
-  return {
-    ...view,
-    rerender(next: React.ReactElement) {
-      view.rerender(next)
-      deliverInitialSizes()
-    }
-  }
-}
 
 // The string `FlippingTooltip` assigns to `wrapper.style.background`
 // when it auto-applies chrome. jsdom keeps `var(...)` declarations
@@ -386,52 +342,6 @@ describe("FlippingTooltip — non-finite position guard", () => {
 })
 
 describe("FlippingTooltip — stable measurement", () => {
-  it("measures after layout and commits initial placement before observer delivery returns", () => {
-    const rect = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect")
-      .mockReturnValue({ width: 100, height: 40 } as DOMRect)
-    try {
-      const view = renderDOM(
-        <FlippingTooltip {...baseProps} x={350}><div>Value</div></FlippingTooltip>
-      )
-      const wrapper = view.container.firstChild as HTMLElement
-      expect(rect).not.toHaveBeenCalled()
-      expect(wrapper.dataset.placement).toBe("pending")
-      act(() => {
-        for (const notify of initialSizes) notify()
-        // Inspect before act's own flush: the observer must finish placement
-        // synchronously, while the browser is still before paint.
-        expect(wrapper.dataset.placement).toBe("placed")
-        expect(wrapper.dataset.flipX).toBe("true")
-        expect(wrapper.style.left).toBe(`${baseProps.margin.left + 238}px`)
-        expect(wrapper.style.transition).toBe("none")
-      })
-      rect.mockReturnValue({ width: 180, height: 60 } as DOMRect)
-      act(() => {
-        for (const notify of resizeNotifications) notify()
-        expect(wrapper.style.left).toBe(`${baseProps.margin.left + 158}px`)
-      })
-      view.unmount()
-      expect(resizeNotifications.size).toBe(0)
-    } finally {
-      rect.mockRestore()
-    }
-  })
-
-  it("keeps synchronous placement when ResizeObserver is unavailable", () => {
-    vi.stubGlobal("ResizeObserver", undefined)
-    const rect = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect")
-      .mockReturnValue({ width: 100, height: 40 } as DOMRect)
-    try {
-      const { container } = renderDOM(
-        <FlippingTooltip {...baseProps} x={350}><div>Value</div></FlippingTooltip>
-      )
-      expect((container.firstChild as HTMLElement).dataset.placement).toBe("placed")
-      expect((container.firstChild as HTMLElement).style.left).toBe(`${baseProps.margin.left + 238}px`)
-    } finally {
-      rect.mockRestore()
-    }
-  })
-
   it("does not synchronously remeasure when a hover parent recreates equivalent children", () => {
     const rect = vi
       .spyOn(HTMLElement.prototype, "getBoundingClientRect")
@@ -468,6 +378,79 @@ describe("FlippingTooltip — stable measurement", () => {
     } finally {
       rect.mockRestore()
     }
+  })
+})
+
+describe("FlippingTooltip — rendered root chrome", () => {
+  // Chrome lives in a class inside a component, so only the rendered root's
+  // marker can tell FlippingTooltip about it.
+  const Card = () => (
+    <div className="card-surface" data-semiotic-tooltip-chrome>
+      Owned
+    </div>
+  )
+
+  it("drops its chrome for a marked rendered root and measures the final box", () => {
+    const widths = [220, 196]
+    const rect = vi
+      .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+      .mockImplementation(() => {
+        const width = widths.shift() ?? 196
+        return {
+          x: 0,
+          y: 0,
+          width,
+          height: 40,
+          top: 0,
+          right: width,
+          bottom: 40,
+          left: 0,
+          toJSON: () => ({})
+        }
+      })
+
+    try {
+      const { container, rerender } = render(
+        <FlippingTooltip {...baseProps} x={380}>
+          <Card />
+        </FlippingTooltip>
+      )
+      const wrapper = container.firstChild as HTMLElement
+      expect(wrapper.style.background).toBe("")
+      expect(wrapper.style.padding).toBe("")
+      expect(wrapper.classList.contains("semiotic-tooltip")).toBe(false)
+      expect(wrapper.style.maxWidth).toBe("400px")
+      // Measured with chrome, then again without it, before paint.
+      expect(rect).toHaveBeenCalledTimes(2)
+      // Flipped left of the pointer by the final 196px width, as a first
+      // placement: a CSS transition must not ease it from the chrome'd size.
+      expect(wrapper.style.left).toBe(`${20 + 380 - 196 - 12}px`)
+      expect(wrapper.dataset.placement).toBe("placed")
+      expect(wrapper.style.transition).toBe("none")
+
+      for (let index = 0; index < 10; index += 1) {
+        rerender(
+          <FlippingTooltip {...baseProps} x={380}>
+            <Card />
+          </FlippingTooltip>
+        )
+      }
+      expect(rect).toHaveBeenCalledTimes(2)
+    } finally {
+      rect.mockRestore()
+    }
+  })
+
+  it("keeps chrome for an unmarked rendered root", () => {
+    const Plain = () => <div className="card-surface">Plain</div>
+    const { container } = render(
+      <FlippingTooltip {...baseProps}>
+        <Plain />
+      </FlippingTooltip>
+    )
+    const wrapper = container.firstChild as HTMLElement
+    expect(wrapper.style.background).toBe(EXPECTED_CHROME_BACKGROUND)
+    expect(wrapper.classList.contains("semiotic-tooltip")).toBe(true)
   })
 })
 

@@ -50,7 +50,7 @@ it.each(empty)("does not wrap a %s chart tooltip result", (_name, content) => {
   expect(tooltip({ value: 0 })).toBeNull()
 })
 
-it("keeps zero visible and measures when previously empty content appears", () => {
+it("places zero content immediately and tracks resizes after empty content", () => {
   const notifications = new Set<() => void>()
   vi.stubGlobal("ResizeObserver", class {
     notify: () => void
@@ -63,38 +63,56 @@ it("keeps zero visible and measures when previously empty content appears", () =
   const deliverSize = () => act(() => {
     for (const notify of notifications) notify()
   })
+  let width = 180
   const rect = vi
     .spyOn(HTMLElement.prototype, "getBoundingClientRect")
-    .mockReturnValue({
+    .mockImplementation(() => ({
       x: 0,
       y: 0,
       left: 0,
       top: 0,
-      right: 180,
+      right: width,
       bottom: 50,
-      width: 180,
+      width,
       height: 50,
       toJSON: () => ({})
-    })
+    }))
   try {
     const view = render(<FlippingTooltip {...position}>{null}</FlippingTooltip>)
     expect(rect).not.toHaveBeenCalled()
+    expect(notifications.size).toBe(0)
     view.rerender(<FlippingTooltip {...position}>{0}</FlippingTooltip>)
     expect(view.container.textContent).toBe("0")
-    expect(rect).not.toHaveBeenCalled()
-    deliverSize()
+    // Initial placement is measured in the layout effect, before an observer
+    // notification, so a newly visible tooltip does not flash at a heuristic position.
     expect(rect).toHaveBeenCalledTimes(1)
+    expect(notifications.size).toBe(1)
     // 150px to the right cannot fit the measured 180px tooltip.
     const wrapper = view.container.firstChild as HTMLElement
+    expect(wrapper.dataset.placement).toBe("placed")
+    expect(wrapper.dataset.flipX).toBe("true")
+    const initialLeft = Number.parseFloat(wrapper.style.left)
     expect(Number.parseFloat(wrapper.style.left) + 180).toBeLessThan(
       position.margin.left + position.x
     )
+    deliverSize()
+    expect(rect).toHaveBeenCalledTimes(2)
+    expect(Number.parseFloat(wrapper.style.left)).toBe(initialLeft)
+    width = 220
+    deliverSize()
+    expect(rect).toHaveBeenCalledTimes(3)
+    expect(Number.parseFloat(wrapper.style.left)).toBe(initialLeft - 40)
     view.rerender(<FlippingTooltip {...position}>{false}</FlippingTooltip>)
     expect(view.container.firstChild).toBeNull()
     expect(notifications.size).toBe(0)
-    view.rerender(<FlippingTooltip {...position}>Restored</FlippingTooltip>)
     deliverSize()
-    expect(rect).toHaveBeenCalledTimes(2)
+    expect(rect).toHaveBeenCalledTimes(3)
+    view.rerender(<FlippingTooltip {...position}>Restored</FlippingTooltip>)
+    expect(rect).toHaveBeenCalledTimes(4)
+    expect(notifications.size).toBe(1)
+    expect((view.container.firstChild as HTMLElement).dataset.placement).toBe("placed")
+    deliverSize()
+    expect(rect).toHaveBeenCalledTimes(5)
     expect(view.container.textContent).toBe("Restored")
     const tooltip = normalizeTooltip(() => 0)
     if (typeof tooltip !== "function")
