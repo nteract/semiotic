@@ -105,6 +105,14 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: ["timeAccessor", "arrivalAccessor", "watermarkAtArrivalAccessor", "sourceAccessor"],
     propBags: ["physics"],
     ownProps: {
+      live: {
+        type: ["boolean", "object"], omitFromSchema: true,
+        description: "React live mode: true or { follow: watermark | now, horizon, retain } in timeUnit. Incremental admission, camera follow and body retirement preserve a historical ledger. Defaults to an eight-window retained history and one-window horizon. Static serialized rendering requires finite replay data."
+      },
+      emitters: {
+        type: "object", omitFromSchema: true,
+        description: "Fixed-step sources in live push mode (omit data): { sources, seed?, rate?, active?, paused?, durationMs?, maxEvents? }. Sync and worker execution share portable emitter progress in frame snapshots. Source specs, seed and limits belong to a run."
+      },
       styleRules: STYLE_RULES_PROP_SPEC,
       sources: { type: "array", description: "Source definitions: id, label, color, mark, glyph, active, visible, description. Source identity sets body defaults and accessible rail tiles." },
       sourceAccessor: { type: ["string", "function"], default: "source", description: "Source identity field for per-source ledger totals and marks." },
@@ -113,7 +121,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       timeUnit: { type: "string", enum: ["ms", "s"] as const, description: "Time units for arrival pacing. Explicit units are recommended; omitted infers ms when an absolute event or arrival time exceeds 100000, otherwise seconds." },
       onLedgerChange: { type: "function", description: "Receives source admission ledger rows on lifecycle changes or at most every 500ms during accumulation. Counts describe the source snapshot." },
       onWatermarkChange: { type: "function", description: "Receives (value, previous) when the snapshot watermark advances." },
-      onClockTick: { type: "function", description: "Throttled simulation HUD callback with simTime, eventTimeFrontier, watermark, timeScale and paused. Uses the synchronous callback path." },
+      onClockTick: { type: "function", description: "Throttled simulation HUD callback with simTime, eventTimeFrontier, watermark, timeScale and paused. Works with sync and worker execution." },
       clockTickMs: { type: "number", default: 100, description: "Minimum wall-clock milliseconds between HUD notifications; clamped to at least 100." },
       colorBy: { type: ["string", "function", "object"], description: "Source category accessor, or { window: cycle | string[] } for a cyclic window palette." },
       windowChrome: { type: "object", description: "{ show?, fill? }: hide the window paint while retaining colliders, or set a fill color / React ledger-row callback." },

@@ -15,6 +15,38 @@ const identity = (row: SyntheticArrival) => row
 describe("useEmitters", () => {
   afterEach(cleanup)
 
+  it("restores a completed producer's sequence, deadlines and running state", () => {
+    const rows: SyntheticArrival[] = []
+    const target = {
+      current: { pushMany: (batch: SyntheticArrival[]) => rows.push(...batch) }
+    }
+    const { result } = renderHook(() =>
+      useEmitters(target, specs, {
+        mapArrival: identity,
+        maxEvents: 2
+      })
+    )
+    act(() => {
+      result.current.advance(1000)
+    })
+    const saved = result.current.snapshot()
+    act(() => {
+      result.current.advance(1000)
+    })
+    expect(result.current.isComplete()).toBe(true)
+    expect(result.current.frameProps.continuous).toBe(false)
+    const expected = rows.at(-1)
+    act(() => {
+      result.current.restore(saved)
+    })
+    expect(result.current.isComplete()).toBe(false)
+    expect(result.current.frameProps.continuous).toBe(true)
+    act(() => {
+      result.current.advance(1000)
+    })
+    expect(rows.at(-1)).toEqual(expected)
+  })
+
   it("updates rate within the current interval, freezes sources, and composes callbacks", () => {
     const rows: SyntheticArrival[] = []
     const target = {

@@ -39,10 +39,12 @@ describe("StreamPhysicsFrame authored cursors", () => {
     { pointerType: "mouse", scaleX: 0.5, scaleY: 0.5, margin: 0 },
     { pointerType: "touch", scaleX: 0.25, scaleY: 0.75, margin: 0 },
     { pointerType: "mouse", scaleX: 0.5, scaleY: 0.5, margin: 20 },
-    { pointerType: "touch", scaleX: 0.25, scaleY: 0.75, margin: 20 }
+    { pointerType: "touch", scaleX: 0.25, scaleY: 0.75, margin: 20 },
+    { pointerType: "mouse", scaleX: 0.5, scaleY: 0.5, margin: 20, camera: { x: -40, y: 10 } },
+    { pointerType: "touch", scaleX: 0.25, scaleY: 0.75, margin: 20, camera: { x: -40, y: 10 } }
   ])(
     "keeps $pointerType hover and activation on the painted body after CSS scaling",
-    ({ pointerType, scaleX, scaleY, margin }) => {
+    ({ pointerType, scaleX, scaleY, margin, camera = { x: 0, y: 0 } }) => {
       const onBodyHover = vi.fn()
       const onBodyPointerDown = vi.fn()
       const onClick = vi.fn()
@@ -51,7 +53,7 @@ describe("StreamPhysicsFrame authored cursors", () => {
           size={[200, 120]}
           margin={{ left: margin, top: margin, right: 0, bottom: 0 }}
           paused
-          config={{ kernel: quietKernel }}
+          config={{ kernel: quietKernel, viewTransform: camera }}
           initialSpawns={[
             { ...circle("scaled-body", 100, 60), datum: { id: "record" } }
           ]}
@@ -76,8 +78,8 @@ describe("StreamPhysicsFrame authored cursors", () => {
         new DOMRect(20, 30, 200 * scaleX, 120 * scaleY)
       )
       const pointer = {
-        clientX: 20 + (100 + margin) * scaleX,
-        clientY: 30 + (60 + margin) * scaleY,
+        clientX: 20 + (100 + camera.x + margin) * scaleX,
+        clientY: 30 + (60 + camera.y + margin) * scaleY,
         pointerType
       }
       fireEvent.pointerMove(canvas, pointer)
@@ -93,7 +95,7 @@ describe("StreamPhysicsFrame authored cursors", () => {
       )
       expect(onClick).toHaveBeenCalledWith(
         { id: "record" },
-        expect.objectContaining({ x: 100, y: 60 })
+        expect.objectContaining({ x: 100 + camera.x, y: 60 + camera.y })
       )
       fireEvent.pointerDown(canvas, {
         clientX: 20 + (180 + margin) * scaleX,

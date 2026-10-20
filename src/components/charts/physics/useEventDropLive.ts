@@ -1,0 +1,173 @@
+import {
+  useCallback,
+  useImperativeHandle,
+  useLayoutEffect,
+  useRef,
+  useState
+} from "react"
+import type { RefObject } from "react"
+import type { Datum } from "../shared/datumTypes"
+import type { EventDropChartProps } from "./EventDropChart"
+import { readAccessor, type PhysicsChartLayout } from "./physicsChartShared"
+import {
+  EventDropLiveRuntime,
+  type EventDropLiveConfig
+} from "./EventDropLiveRuntime"
+import type { PhysicsFrameHandle } from "./physicsHocHandle"
+import type { StreamPhysicsFrameHandle } from "../../stream/physics/StreamPhysicsTypes"
+import type { PhysicsPipelineStore } from "../../stream/physics/PhysicsPipelineStore"
+import type { EventDropProjectionMetadata } from "./eventDropPhysics"
+
+export function eventDropLiveSpawn(
+  datum: Datum,
+  index: number,
+  props: EventDropChartProps
+) {
+  const eventTime = Number(
+    readAccessor(datum, index, props.timeAccessor ?? "time")
+  )
+  const source = String(
+    readAccessor(datum, index, props.sourceAccessor ?? "source") ?? ""
+  )
+  const id = String(datum.id ?? `event-live-${index}`)
+  return {
+    id,
+    x: 0,
+    y: 0,
+    shape: { type: "circle" as const, radius: props.ballRadius ?? 7 },
+    datum: { ...datum, id, eventTime, source }
+  }
+}
+
+export function buildLiveEventDropLayout(
+  config: EventDropLiveConfig,
+  props: EventDropChartProps
+): PhysicsChartLayout {
+  if (props.emitters && props.data !== undefined)
+    throw new Error("EventDrop emitters require push mode: omit data")
+  const runtime = new EventDropLiveRuntime(config)
+  const metadata = runtime.metadata()
+  return {
+    config: {
+      kernel: { gravity: { x: 0, y: 900 }, seed: config.seed },
+      bodyLimit: 400,
+      eviction: "sleeping-first",
+      ...props.frameProps?.config,
+      timeScale:
+        (props.frameProps?.config?.timeScale ?? 1) * (props.timeScale ?? 1),
+      ...(props.emitters && {
+        emitters: {
+          ...props.emitters,
+          active: {
+            ...Object.fromEntries(
+              (props.sources ?? []).map((source) => [
+                source.id,
+                source.active !== false
+              ])
+            ),
+            ...props.emitters.active
+          },
+          timeUnit: config.timeUnit,
+          originTime: config.originTime,
+          templates: Object.fromEntries(
+            props.emitters.sources.map((source) => [
+              source.id,
+              {
+                x: 0,
+                y: 0,
+                shape: { type: "circle" as const, radius: config.ballRadius }
+              }
+            ])
+          )
+        }
+      }),
+      eventDrop: config
+    },
+    initialSpawns: (props.data ?? []).map((row, i) =>
+      eventDropLiveSpawn(row, i, props)
+    ),
+    projectionRows: [],
+    metadata: { ...metadata }
+  }
+}
+
+/** Push directly into the retained pipeline; never accumulate the input history. */
+export function useEventDropLive(
+  dataRef: RefObject<PhysicsFrameHandle | null>,
+  frameRef: RefObject<StreamPhysicsFrameHandle | null>,
+  props: EventDropChartProps
+) {
+  const latest = useRef(props)
+  latest.current = props
+  const nextId = useRef(props.data?.length ?? 0)
+  const seed = useRef(props.data)
+  const [metadata, setMetadata] = useState<EventDropProjectionMetadata>()
+  const lastVersion = useRef("")
+  const onFrame = useCallback((store: PhysicsPipelineStore) => {
+    latest.current.frameProps?.onFrame?.(store)
+    if (!latest.current.live) return
+    const key = `${store.version()}:${store.runtimeState().elapsedSeconds}`
+    if (key === lastVersion.current) return
+    lastVersion.current = key
+    setMetadata(store.eventDropState()?.metadata)
+  }, [])
+  useImperativeHandle(
+    props.live ? dataRef : undefined,
+    (): PhysicsFrameHandle => {
+      const getData = () =>
+        (frameRef.current?.getStore().readBodies() ?? []).map(
+          (b) => b.datum as Datum
+        )
+      return {
+        push: (row) => dataRef.current?.pushMany([row]),
+        pushMany: (rows) => {
+          if (latest.current.data !== undefined) return
+          frameRef.current?.pushMany(
+            rows.map((row) =>
+              eventDropLiveSpawn(row, nextId.current++, latest.current)
+            )
+          )
+        },
+        remove: (ids) => {
+          const wanted = new Set(Array.isArray(ids) ? ids : [ids])
+          const rows = getData().filter((row) => wanted.has(String(row.id)))
+          frameRef.current?.remove(Array.from(wanted))
+          return rows
+        },
+        update: () => {
+          throw new Error(
+            "Live admissions are immutable; clear and replay to correct history"
+          )
+        },
+        clear: () => {
+          nextId.current = 0
+          frameRef.current?.clear()
+        },
+        getData,
+        getScales: () => null,
+        getCustomLayout: () => frameRef.current?.snapshot() ?? null,
+        popBodies: (ids, options) =>
+          frameRef.current?.popBodies(ids, options) ?? []
+      }
+    }
+  )
+  useLayoutEffect(() => {
+    if (!props.live || seed.current === props.data) return
+    seed.current = props.data
+    const frame = frameRef.current
+    if (!frame) return
+    nextId.current = 0
+    const store = frame.getStore()
+    store.clear()
+    store.enqueue(
+      (props.data ?? []).map((row) =>
+        eventDropLiveSpawn(row, nextId.current++, props)
+      )
+    )
+    // Replacement data has the same seed-body semantics as first mount,
+    // including paused charts. Restore once to transfer this state to a worker.
+    store.materializeDueSpawns()
+    frame.restore(store.snapshot())
+  }, [props.data, props.live, frameRef, props])
+  return { metadata, onFrame }
+}

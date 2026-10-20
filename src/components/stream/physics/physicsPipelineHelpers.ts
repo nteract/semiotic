@@ -40,6 +40,8 @@ export const DEFAULT_PHYSICS_PIPELINE_CONFIG: Required<
     | "kernel"
     | "observation"
     | "sediment"
+    | "emitters"
+    | "eventDrop"
   >
 > = {
   bodyLimit: Number.POSITIVE_INFINITY,
@@ -48,7 +50,8 @@ export const DEFAULT_PHYSICS_PIPELINE_CONFIG: Required<
   maxDeltaSeconds: 0.1,
   maxSubsteps: 8,
   settleStepLimit: 1200,
-  timeScale: 1
+  timeScale: 1,
+  viewTransform: { x: 0, y: 0 }
 }
 
 export interface NormalizedObservationConfig {
@@ -62,7 +65,9 @@ export interface NormalizedObservationConfig {
   ) => void
 }
 
-export function stampPhysicsObservation<T extends PhysicsObservationRecord | PhysicsLifecycleObservationRecord>(
+export function stampPhysicsObservation<
+  T extends PhysicsObservationRecord | PhysicsLifecycleObservationRecord
+>(
   record: T,
   elapsed: number,
   defaults: Pick<NormalizedObservationConfig, "chartId" | "chartType">
@@ -102,7 +107,9 @@ export function cloneSpawn(spawn: PhysicsQueuedSpawn): PhysicsQueuedSpawn {
     ...spawn,
     shape: { ...spawn.shape },
     ...(spawn.travel ? { travel: clonePhysicsTravel(spawn.travel) } : {}),
-    ...(spawn.fixedPosition ? { fixedPosition: { ...spawn.fixedPosition } } : {}),
+    ...(spawn.fixedPosition
+      ? { fixedPosition: { ...spawn.fixedPosition } }
+      : {}),
     datum: spawn.datum,
     springs: spawn.springs?.map((spring) => ({
       ...spring,
@@ -125,10 +132,7 @@ export function finiteNumber(value: unknown): number | undefined {
   return Number.isFinite(number) ? number : undefined
 }
 
-function spawnRecordValue(
-  spawn: PhysicsQueuedSpawn,
-  key: string
-): unknown {
+function spawnRecordValue(spawn: PhysicsQueuedSpawn, key: string): unknown {
   const spawnRecord = spawn as unknown as Record<string, unknown>
   if (spawnRecord[key] != null) return spawnRecord[key]
   const datum = spawn.datum
@@ -202,7 +206,9 @@ export function schedulePhysicsSpawns(
   }))
 }
 
-export function cloneQueuedSpawn(spawn: InternalQueuedSpawn): InternalQueuedSpawn {
+export function cloneQueuedSpawn(
+  spawn: InternalQueuedSpawn
+): InternalQueuedSpawn {
   return {
     ...cloneSpawn(spawn),
     sequence: spawn.sequence,
@@ -233,7 +239,10 @@ export function cloneBodyBudgetOptions(
   return options === false ? false : { ...options }
 }
 
-export function sortQueue(a: InternalQueuedSpawn, b: InternalQueuedSpawn): number {
+export function sortQueue(
+  a: InternalQueuedSpawn,
+  b: InternalQueuedSpawn
+): number {
   return a.spawnAt === b.spawnAt
     ? a.sequence - b.sequence
     : a.spawnAt - b.spawnAt
@@ -307,7 +316,13 @@ export function collidersFromPlotBounds(
   const colliders: PhysicsColliderSpec[] = []
   const midX = bounds.x + bounds.width / 2
   const midY = bounds.y + bounds.height / 2
-  const addWall = (name: string, x: number, y: number, width: number, height: number) => {
+  const addWall = (
+    name: string,
+    x: number,
+    y: number,
+    width: number,
+    height: number
+  ) => {
     colliders.push({
       id: `${idPrefix}-${name}`,
       shape: { type: "aabb", x, y, width, height }
@@ -315,20 +330,40 @@ export function collidersFromPlotBounds(
   }
 
   if (includeFloor) {
-    addWall("floor", midX, bounds.y + bounds.height + floorThickness / 2,
-      bounds.width + wallThickness * 2, floorThickness)
+    addWall(
+      "floor",
+      midX,
+      bounds.y + bounds.height + floorThickness / 2,
+      bounds.width + wallThickness * 2,
+      floorThickness
+    )
   }
   if (includeCeiling) {
-    addWall("ceiling", midX, bounds.y - floorThickness / 2,
-      bounds.width + wallThickness * 2, floorThickness)
+    addWall(
+      "ceiling",
+      midX,
+      bounds.y - floorThickness / 2,
+      bounds.width + wallThickness * 2,
+      floorThickness
+    )
   }
   if (includeLeftWall) {
-    addWall("left-wall", bounds.x - wallThickness / 2, midY,
-      wallThickness, bounds.height + floorThickness * 2)
+    addWall(
+      "left-wall",
+      bounds.x - wallThickness / 2,
+      midY,
+      wallThickness,
+      bounds.height + floorThickness * 2
+    )
   }
   if (includeRightWall) {
-    addWall("right-wall", bounds.x + bounds.width + wallThickness / 2, midY,
-      wallThickness, bounds.height + floorThickness * 2)
+    addWall(
+      "right-wall",
+      bounds.x + bounds.width + wallThickness / 2,
+      midY,
+      wallThickness,
+      bounds.height + floorThickness * 2
+    )
   }
 
   return colliders

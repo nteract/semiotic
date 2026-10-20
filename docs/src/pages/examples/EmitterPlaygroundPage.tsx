@@ -19,6 +19,7 @@ import {
   type EmitterPattern,
 } from "./emitterPlaygroundModel"
 import "./emitterPlayground.css"
+import LiveEmitterPlayground from "./LiveEmitterPlayground"
 
 const WINDOWS = { size: WINDOW_SECONDS }
 // Reserve the window beginning at 25s; emission stops before it is needed.
@@ -406,7 +407,7 @@ export default function EmitterPlaygroundPage() {
         An event leaves its source, travels to the board, and drops into the window for its event
         time. As newer events arrive, the watermark advances and closes older windows.
       </p>
-      <div className="emitter-settings" aria-label="Stream settings">
+      <div className="emitter-settings" role="group" aria-label="Stream settings">
         <label>
           Emission rate
           <select value={rate} onChange={(event) => setRate(Number(event.target.value))}>
@@ -490,11 +491,12 @@ export default function EmitterPlaygroundPage() {
       <p className="emitter-footnote">
         A small, bounded study inspired by{" "}
         <a href="https://flink-watermarks.wtf/">Flink Watermarks…WTF?</a>. The emitter runs for{" "}
-        {EMISSION_SECONDS} simulated seconds, then lets its last events finish. Window retirement
-        and an unbounded following board are still in progress. See the{" "}
+        {EMISSION_SECONDS} simulated seconds, then lets its last events finish. The continuous
+        version below adds a following board and window retirement. See the{" "}
         <Link to="/charts/event-drop-chart#arrival-travel">arrival API</Link> or the{" "}
         <Link to="/examples/watermarks">full watermarks explainer</Link>.
       </p>
+      <LiveEmitterPlayground />
     </ExamplePageLayout>
   )
 }

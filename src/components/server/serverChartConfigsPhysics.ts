@@ -225,6 +225,10 @@ export const eventDropChart: ChartConfig = {
   frameType: "physics",
   layout: PHYSICS_CHART_LAYOUT,
   buildProps: (data, colorBy, _colorScheme, common, rest) => {
+    if (rest.live || rest.emitters)
+      throw new Error(
+        "Live EventDrop requires React. Use finite replay data or export a saved physics snapshot."
+      )
     const size = (common.size as [number, number]) ?? [600, 400]
     const layout = buildEventDropPhysics({
       data: Array.isArray(data) ? data : [],

@@ -19,6 +19,8 @@ const eventDropData = [
 ]
 
 const eventDropChartProps = [
+  { name: "live", type: "boolean | object", default: "false", description: 'React continuous mode: true or { follow: "watermark" | "now", horizon, retain }. Times use timeUnit, which defaults to seconds in live mode. Retires old bodies while preserving historical counts.' },
+  { name: "emitters", type: "object", description: "Fixed-step producers in live push mode: { sources, seed?, rate?, active?, paused?, durationMs?, maxEvents? }. Omit data. Supports sync and worker execution and frame snapshots." },
   { name: "arrival", type: "string | object", default: '"drop"', description: 'Source choreography: "drop" or { mode: "travel", durationMs?: 800, speedPxPerSec?, path?: "straight" | "connector" | callback, history?: "present" | "travel" }. History defaults to present; travel animates every row. Choose duration or speed. Requires a visible source and the built-in engine.' },
   { name: "sources", type: "array", description: "Source identities with id, label, color, mark, glyph, active and visible. Historical counts remain when a tile is hidden." },
   { name: "sourceAccessor", type: "string | function", default: '"source"', description: "Field identifying an event's source." },
@@ -27,7 +29,7 @@ const eventDropChartProps = [
   { name: "timeUnit", type: '"ms" | "s"', description: "Explicit arrival-time units. Omitted infers ms above an absolute timestamp of 100000; use explicit units for stable streaming behavior." },
   { name: "onLedgerChange", type: "function", description: "Receives admission ledger rows, on lifecycle transitions or at most every 500ms during accumulation." },
   { name: "onWatermarkChange", type: "function", description: "Receives (value, previous) on watermark advances." },
-  { name: "onClockTick", type: "function", description: "Simulation clock HUD callback, at most 10Hz. Uses synchronous execution." },
+  { name: "onClockTick", type: "function", description: "Simulation clock HUD callback, at most 10Hz, in sync and worker execution." },
   { name: "clockTickMs", type: "number", default: "100", description: "Minimum milliseconds between clock HUD callbacks; minimum 100." },
   { name: "windowChrome", type: "object", description: "{ show?, fill? }. Hide window paint without removing colliders, or supply a color / ledger-row fill callback." },
   { name: "data", type: "array", required: true, default: null, description: "Event rows with event and arrival times." },
@@ -253,11 +255,69 @@ const events = Array.from({ length: 60 }, () => stream.next().value!)
         watermark policy also supports perSource, idleTimeout and allowedLateness.
         Replay charts evaluate those policies at arrival checkpoints.
       </p>
+      <h2 id="continuous-streams">Continuous streams</h2>
       <p>
-        These APIs provide deterministic replay and accounting. The following-camera
-        live board, window retirement, and parameter reflow
-        remain work in the transition plan. Keep application-driven demonstrations
-        bounded until that runtime is available.
+        Enable <code>live</code> for incremental admission and a moving board.
+        Events enter the ledger when their source-to-board journey finishes.
+        Old bodies and window colliders retire as the camera advances; historical
+        counts stay in <code>getLedger()</code> and the accessible table.
+        Omit <code>data</code> to accept ref pushes or built-in emitters.
+      </p>
+      <CodeBlock language="tsx" code={`import { useRef } from "react"
+import { EventDropChart } from "semiotic/physics"
+import type { EventDropChartHandle } from "semiotic/physics"
+
+function LiveStream() {
+  const chart = useRef<EventDropChartHandle>(null)
+  return <EventDropChart
+    ref={chart}
+    live={{ follow: "now", horizon: 5, retain: 15 }}
+    emitters={{ sources: [{ id: "p1", ratePerSec: 3 }], seed: 42 }}
+    sources={[{ id: "p1", label: "Producer", color: "#2563eb" }]}
+    arrival={{ mode: "travel", path: "connector", durationMs: 700 }}
+    windows={{ size: 2.5 }}
+    watermark={{ delay: 1 }}
+    timeUnit="s"
+    frameProps={{ simulationExecution: "worker", config: { bodyLimit: 160 } }}
+    title="A continuous event stream"
+    description="Events travel into time windows; old bodies retire and counts remain."
+    accessibleTable
+  />
+}`} />
+      <p>
+        <code>live=true</code> follows the watermark with a one-window horizon
+        and eight windows of retained history. Explicit <code>timeExtent[0]</code>
+        supplies a timestamp origin. Live mode defaults to seconds; emitter
+        intervals, jitter and duration limits always use milliseconds.
+        <code>timeScale</code> scales the shared live clock. Pause freezes travel,
+        sources, watermark polling and the camera together.
+      </p>
+      <p>
+        Source <code>active</code> flags gate built-in emitters; an explicit
+        <code>emitters.active</code> entry takes precedence. Rate, source activity,
+        speed, watermark policy and size can update during a run. Source schedules,
+        seed and limits belong to the run. Changing window size, units or timestamp
+        origin requires a new React <code>key</code>; reflow is not implemented.
+        Supplied data arrays remain authoritative, and imperative corrections to
+        live admissions require clearing and replaying the run.
+      </p>
+      <p>
+        <code>chart.current.snapshot()</code> captures bodies, pending travel,
+        historical counts, clock and built-in emitter progress.
+        <code>chart.current.restore(saved)</code> restores that state, including
+        random generators and pause state. Structured-cloneable configurations
+        work in workers; callback jitter, watermark or travel paths select sync.
+        The <Link to="/examples/emitter-playground">playground</Link> includes
+        snapshot controls, a three-source comparison and reduced-motion batches.
+      </p>
+      <p>
+        Live mode bounds bodies and colliders, not the historical ledger, which
+        keeps one row per observed window. Serialized server/MCP rendering requires
+        finite replay data and rejects live programs. React SSR draws the initial
+        live board without advancing its producers. Export a saved store through
+        <code>unstable_renderPhysicsSettledSVG(store, {"{ maxSteps: 0 }"})</code>
+        from <code>semiotic/experimental</code> to preserve the current camera
+        and body positions.
       </p>
       <h2 id="clock-driven-emitters">Clock-driven emitters</h2>
       <p>
@@ -308,8 +368,10 @@ function Producer({ active = true, rate = 1, paused = false }) {
         set <code>manual: true</code> and call <code>advance(deltaMs)</code> explicitly.
         Use the chart handle&apos;s <code>setTimeScale</code> to change simulation speed;
         EventDrop&apos;s <code>timeScale</code> prop controls recorded replay pacing.
-        Frame snapshots do not contain emitter state: a frame rewind rebases the
-        hook&apos;s clock and keeps the emitted sequence.
+        This hook keeps its emitter outside the frame. Save and restore its
+        <code>snapshot()</code> alongside the frame snapshot to rewind both;
+        restoring only the frame rebases the hook clock and keeps its sequence.
+        The pure emitter exposes the same snapshot/restore methods.
       </p>
       <p>
         With arrival choreography, <code>history: "present"</code> is the default:
@@ -317,8 +379,9 @@ function Producer({ active = true, rate = 1, paused = false }) {
         currently open windows appear directly in their containers. The playground
         uses <code>arrival={"{ mode: 'travel', history: 'travel', durationMs: 1200 }"}</code>{" "}
         so every emitted row makes the full journey. Its admission reservations
-        assume equal travel durations and an unchanged watermark policy; arbitrary
-        live admission remains separate work.
+        assume equal travel durations and an unchanged watermark policy. Use
+        <code>live</code> with built-in <code>emitters</code> for admission at the
+        actual handoff, including worker execution.
       </p>
       <h2 id="physics-theme">Physics theme tokens</h2>
       <p>

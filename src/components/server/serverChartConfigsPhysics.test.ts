@@ -12,6 +12,14 @@ import { auditAccessibility } from "../charts/shared/auditAccessibility"
 import { diagnoseConfig } from "../charts/shared/diagnoseConfig"
 
 describe("physics server configuration parity", () => {
+  it.each([{ live: true }, { emitters: { sources: [] } }])(
+    "rejects unbounded live programs in serialized static configs: %j",
+    (options) => {
+      expect(() => eventDropChart.buildProps(
+        [{ time: 1 }], undefined, undefined, { size: [400, 260] }, options
+      )).toThrow(/Live EventDrop requires React/)
+    }
+  )
   it.each(["present", "travel"])("serializes travel with history=%s while preserving settled marks and evidence", (history) => {
     const config = {
       data: [

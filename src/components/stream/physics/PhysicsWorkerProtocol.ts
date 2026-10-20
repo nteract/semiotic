@@ -9,9 +9,7 @@ import type {
   PhysicsSensorObservationConfig,
   PhysicsSpawnPacingOptions
 } from "./PhysicsPipelineStore"
-import type {
-  PhysicsSedimentBinSnapshot,
-} from "./PhysicsSediment"
+import type { PhysicsSedimentBinSnapshot } from "./PhysicsSediment"
 
 export type PhysicsExecution = "auto" | "worker" | "sync"
 
@@ -40,6 +38,7 @@ export type PhysicsWorkerPipelineConfig = Omit<
 }
 
 export interface PhysicsWorkerState {
+  emitterProgress?: import("../../recipes/syntheticArrivals").SyntheticEmitterSnapshot
   accumulator: number
   activeSensorPairs: string[]
   elapsedSeconds: number
@@ -172,8 +171,7 @@ function workerObservationConfig(
     chartId: observation.chartId,
     chartType: observation.chartType,
     sensors: observation.sensors as
-      Record<string, PhysicsSensorObservationConfig>
-      | undefined
+      Record<string, PhysicsSensorObservationConfig> | undefined
   }
 }
 
@@ -193,6 +191,15 @@ export function isPhysicsWorkerConfigSupported(
   if (!config) return true
   return (
     !config.engine &&
+    (!config.emitters ||
+      config.emitters.sources.every(
+        (source) => typeof source.jitter !== "function"
+      )) &&
+    (!config.eventDrop ||
+      (typeof config.eventDrop.watermark !== "function" &&
+        !config.eventDrop.watermark?.external &&
+        (config.eventDrop.arrival === "drop" ||
+          typeof config.eventDrop.arrival?.path !== "function"))) &&
     isSerializableSedimentConfig(config.sediment) &&
     isSerializableColliderConfig(config.colliders)
   )

@@ -74,18 +74,25 @@ test("travel pauses, survives mobile resize, and supports real mark hover", asyn
   await page.goto("/examples/emitter-playground")
   await page.getByRole("button", { name: "Start emitter", exact: true }).click()
   await expect(page.getByTestId("emitter-travelling")).not.toHaveText("0")
+  // Pause well before the first 1.7s handoff so input latency cannot admit it.
   await expect
     .poll(async () =>
       parseFloat(await page.getByTestId("emitter-clock").innerText())
     )
-    .toBeGreaterThanOrEqual(1.5)
+    .toBeGreaterThanOrEqual(1)
   await page.getByRole("button", { name: "Pause", exact: true }).click()
   const clock = await page.getByTestId("emitter-clock").innerText()
   const countsBeforeRateChange = await page
     .getByTestId("emitter-conservation")
     .innerText()
-  await page.getByLabel("Emission rate").selectOption("4")
-  await page.getByLabel("Simulation speed").selectOption("2")
+  await page
+    .getByRole("group", { name: "Stream settings", exact: true })
+    .getByLabel("Emission rate")
+    .selectOption("4")
+  await page
+    .getByRole("group", { name: "Stream settings", exact: true })
+    .getByLabel("Simulation speed")
+    .selectOption("2")
   await expect(page.getByTestId("emitter-clock")).toHaveText(clock)
   await expect(page.getByTestId("emitter-conservation")).toHaveText(
     countsBeforeRateChange
@@ -118,7 +125,7 @@ test("travel pauses, survives mobile resize, and supports real mark hover", asyn
     .poll(async () =>
       parseFloat(await page.getByTestId("emitter-clock").innerText())
     )
-    .toBeGreaterThanOrEqual(1.5)
+    .toBeGreaterThanOrEqual(1)
   await page.getByRole("button", { name: "Pause", exact: true }).click()
   await hoverPaintedEvent(page)
   expect(errors).toEqual([])
@@ -135,11 +142,17 @@ test("live rates preserve the sequence and each producer behavior conserves a bo
   })
   await step.click()
   await expect(page.getByTestId("emitter-accepted")).toHaveText("2")
-  await page.getByLabel("Emission rate").selectOption("4")
+  await page
+    .getByRole("group", { name: "Stream settings", exact: true })
+    .getByLabel("Emission rate")
+    .selectOption("4")
   await expect(page.getByTestId("emitter-clock")).toHaveText("1.0s")
   await step.click()
   await expect(page.getByTestId("emitter-accepted")).toHaveText("6")
-  await page.getByLabel("Emission rate").selectOption("2")
+  await page
+    .getByRole("group", { name: "Stream settings", exact: true })
+    .getByLabel("Emission rate")
+    .selectOption("2")
   for (const pattern of ["jittered", "bursty"]) {
     await page.getByLabel("Producer behavior").selectOption(pattern)
     await expect(page.getByTestId("emitter-clock")).toHaveText("0.0s")

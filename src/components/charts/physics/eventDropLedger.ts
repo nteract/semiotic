@@ -48,6 +48,15 @@ export interface EventDropLedgerEvent {
   retractions?: number
 }
 
+export interface EventDropLedgerSnapshot {
+  windows: EventDropLedgerRow[]
+  sources: Array<[string, { latest: number; arrival: number; idle: boolean }]>
+  latest: number
+  frontier: number
+  value: number
+  heldBy?: string
+}
+
 function copyRow(row: EventDropLedgerRow): EventDropLedgerRow {
   return {
     ...row,
@@ -128,6 +137,71 @@ export class EventDropLedger {
     const events = this.pending
     this.pending = []
     return events
+  }
+
+  snapshot(): EventDropLedgerSnapshot {
+    return {
+      windows: this.getLedger(),
+      sources: Array.from(this.sources, ([id, source]) => [id, { ...source }]),
+      latest: this.latest,
+      frontier: this.frontier,
+      value: this.value,
+      heldBy: this.heldBy
+    }
+  }
+
+  restore(snapshot: EventDropLedgerSnapshot): void {
+    const frontier = (n: number) => Number.isFinite(n) || n === -Infinity
+    const count = (n: number) => Number.isSafeInteger(n) && n >= 0
+    if (
+      ![snapshot.latest, snapshot.frontier, snapshot.value].every(frontier) ||
+      new Set(snapshot.windows.map((row) => row.windowId)).size !==
+        snapshot.windows.length ||
+      new Set(snapshot.sources.map(([id]) => id)).size !==
+        snapshot.sources.length ||
+      snapshot.sources.some(
+        ([, source]) => !frontier(source.latest) || !frontier(source.arrival)
+      ) ||
+      snapshot.windows.some(
+        (row) =>
+          !Number.isFinite(row.start) ||
+          !Number.isFinite(row.end) ||
+          row.end <= row.start ||
+          !count(row.accepted) ||
+          !count(row.late) ||
+          Object.values(row.bySource).some(
+            (source) => !count(source.accepted) || !count(source.late)
+          ) ||
+          Object.values(row.bySource).reduce(
+            (n, source) => n + source.accepted,
+            0
+          ) !== row.accepted ||
+          Object.values(row.bySource).reduce(
+            (n, source) => n + source.late,
+            0
+          ) !== row.late
+      )
+    )
+      throw new RangeError("Invalid EventDrop ledger snapshot")
+    this.windows = new Map(
+      snapshot.windows.map((row) => {
+        const restored = copyRow(row)
+        // Match newly admitted windows: source IDs are arbitrary dictionary keys.
+        Object.setPrototypeOf(restored.bySource, null)
+        return [row.windowId, restored]
+      })
+    )
+    this.openWindows = new Set(
+      Array.from(this.windows.values()).filter((row) => row.open)
+    )
+    this.sources = new Map(
+      snapshot.sources.map(([id, source]) => [id, { ...source }])
+    )
+    this.latest = snapshot.latest
+    this.frontier = snapshot.frontier
+    this.value = snapshot.value
+    this.heldBy = snapshot.heldBy
+    this.pending = []
   }
 
   advance(now: number, cause: "arrival" | "external" = "external"): void {

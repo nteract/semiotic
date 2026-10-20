@@ -52,12 +52,28 @@ export interface SyntheticEmitterLimits {
 
 interface SourceCursor {
   spec: SyntheticSourceSpec
-  random: () => number
+  random: ReturnType<typeof mulberry32>
   remaining: number
   remainingError: number
   burstRemaining: number
   sequence: number
   interval: number
+}
+
+/** Portable progress; restore against the same source specs, seed and limits. */
+export interface SyntheticEmitterSnapshot {
+  version: 1
+  time: number
+  timeError: number
+  emitted: number
+  sources: Array<{
+    id: string
+    randomState: number
+    remaining: number
+    remainingError: number
+    burstRemaining: number
+    sequence: number
+  }>
 }
 
 function positive(value: number, name: string): number {
@@ -210,6 +226,63 @@ export function createSyntheticEmitter(
     getTime: () => time,
     getEmittedCount: () => emitted,
     isComplete,
+    snapshot: (): SyntheticEmitterSnapshot => ({
+      version: 1,
+      time,
+      timeError,
+      emitted,
+      sources: sources.map((source) => ({
+        id: source.spec.id,
+        randomState: source.random.getState(),
+        remaining: source.remaining,
+        remainingError: source.remainingError,
+        burstRemaining: source.burstRemaining,
+        sequence: source.sequence
+      }))
+    }),
+    restore(snapshot: SyntheticEmitterSnapshot): void {
+      // Validate the entire snapshot before changing any cursor.
+      if (
+        snapshot.version !== 1 ||
+        !Number.isFinite(snapshot.time) ||
+        snapshot.time < 0 ||
+        snapshot.time > duration ||
+        !Number.isFinite(snapshot.timeError) ||
+        !Number.isSafeInteger(snapshot.emitted) ||
+        snapshot.emitted < 0 ||
+        snapshot.emitted > maximum ||
+        snapshot.sources.length !== sources.length ||
+        snapshot.sources.some(
+          (saved, index) =>
+            saved.id !== sources[index].spec.id ||
+            !Number.isInteger(saved.randomState) ||
+            saved.randomState < 0 ||
+            saved.randomState > 0xffffffff ||
+            !Number.isFinite(saved.remaining) ||
+            saved.remaining < 0 ||
+            !Number.isFinite(saved.remainingError) ||
+            !Number.isSafeInteger(saved.sequence) ||
+            saved.sequence < 0 ||
+            !Number.isSafeInteger(saved.burstRemaining) ||
+            saved.burstRemaining < 0 ||
+            saved.burstRemaining >= (sources[index].spec.burst?.max ?? 1)
+        ) ||
+        snapshot.sources.reduce((sum, source) => sum + source.sequence, 0) !==
+          snapshot.emitted
+      )
+        throw new RangeError(
+          "Invalid or incompatible synthetic emitter snapshot"
+        )
+      time = snapshot.time
+      timeError = snapshot.timeError
+      emitted = snapshot.emitted
+      snapshot.sources.forEach((saved, index) => {
+        const { id: _id, randomState, ...progress } = saved
+        Object.assign(sources[index], progress, {
+          random: mulberry32(randomState)
+        })
+      })
+    },
     advance(
       deltaMs: number,
       options: {

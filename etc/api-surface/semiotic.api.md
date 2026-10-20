@@ -793,7 +793,7 @@ interface-member ChartContainerMobileOptions::property::chartMode = optional cha
 interface-member ChartContainerMobileOptions::property::hideToolbar = optional hideToolbar: boolean | undefined
 interface-member ChartContainerMobileOptions::property::mobileInteraction = optional mobileInteraction: MobileInteractionProp | undefined
 interface-member ChartContainerMobileOptions::property::semantics = optional semantics: MobileVisualizationContract | undefined
-interface-member ChartContainerMobileOptions::property::standardControls = optional standardControls: MobileStandardControlsProps | import("./MobileStandardControls").MobileStandardControlsMode | undefined
+interface-member ChartContainerMobileOptions::property::standardControls = optional standardControls: MobileStandardControlsProps | import("./charts").MobileStandardControlsMode | undefined
 interface-member ChartContainerMobileOptions::property::summary = optional summary: React.ReactNode
 interface-member ChartContainerProps::property::actions = optional actions: undefined | {export?: boolean | {format?: "png" | "svg"; scale?: number; filename?: string;}; fullscreen?: boolean; copyConfig?: boolean | {format?: CopyFormat;}; dataSummary?: boolean;}
 interface-member ChartContainerProps::property::banner = optional banner: React.ReactNode
@@ -1739,7 +1739,7 @@ interface-member ObservationReadoutProps::property::fallback = optional fallback
 interface-member ObservationReadoutProps::property::live = optional live: "assertive" | "off" | "polite" | undefined
 interface-member ObservationReadoutProps::property::observation = optional observation: ChartObservation | null | undefined
 interface-member ObservationReadoutProps::property::style = optional style: React.CSSProperties | undefined
-interface-member ObservationReadoutProps::property::types = optional types: ("activate" | "annotation-activate" | "brush" | "brush-end" | "click" | "click-end" | "focus" | "hover" | "hover-end" | "late-data" | "selection" | "selection-end" | import("./DirectManipulationControl").ControlObservationPhase | import("./semiotic-experimental").UnstablePhysicsObservationEventType | import("./semiotic-physics").PhysicsLifecycleObservationEventType)[] | undefined
+interface-member ObservationReadoutProps::property::types = optional types: ("activate" | "annotation-activate" | "brush" | "brush-end" | "click" | "click-end" | "control-change" | "control-end" | "control-start" | "focus" | "hover" | "hover-end" | "late-data" | "physics-barrier-cross" | "physics-bin-enter" | "physics-bin-exit" | "physics-budget-overflow" | "physics-budget-warning" | "physics-capacity-abandoned" | "physics-capacity-blocked" | "physics-capacity-processed" | "physics-capacity-queued" | "physics-late" | "physics-proximity-enter" | "physics-proximity-exit" | "physics-sediment" | "physics-settle" | "physics-source-idle" | "physics-spawn" | "physics-watermark-advance" | "physics-watermark-held" | "physics-window-close" | "physics-window-open" | "physics-window-update" | "selection" | "selection-end" | "sim-active" | "sim-idle")[] | undefined
 interface-member OrbitDiagramProps::property::animated = optional animated: boolean | undefined
 interface-member OrbitDiagramProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member OrbitDiagramProps::property::childrenAccessor = optional childrenAccessor: ((d: TDatum) => TDatum[] | null | undefined) | string | undefined
@@ -2936,7 +2936,7 @@ interface-member StyleRuleContext::property::y = optional y: number | undefined
 interface-member StyleRuleStyle::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
 interface-member StyleRuleStyle::property::fill = optional fill: HatchFill | string | undefined
 interface-member StyleRuleStyle::property::fillOpacity = optional fillOpacity: number | undefined
-interface-member StyleRuleStyle::property::glyph = optional glyph: ((datum: Record<string, unknown>) => import("../../semiotic-physics").GlyphDef) | import("../../semiotic-physics").GlyphDef | undefined
+interface-member StyleRuleStyle::property::glyph = optional glyph: ((datum: Record<string, unknown>) => import("../../semiotic-geo").GlyphDef) | import("../../semiotic-geo").GlyphDef | undefined
 interface-member StyleRuleStyle::property::mark = optional mark: import("../../semiotic-physics").PhysicsBodyMark | undefined
 interface-member StyleRuleStyle::property::opacity = optional opacity: number | undefined
 interface-member StyleRuleStyle::property::stroke = optional stroke: string | undefined
@@ -3101,7 +3101,7 @@ interface-member UseBrushSelectionResult::property::isActive = required isActive
 interface-member UseBrushSelectionResult::property::predicate = required predicate: (datum: Datum) => boolean
 interface-member UseChartObserverOptions::property::chartId = optional chartId: string | undefined
 interface-member UseChartObserverOptions::property::limit = optional limit: number | undefined
-interface-member UseChartObserverOptions::property::types = optional types: ("activate" | "annotation-activate" | "brush" | "brush-end" | "click" | "click-end" | "focus" | "hover" | "hover-end" | "late-data" | "selection" | "selection-end" | import("../DirectManipulationControl").ControlObservationPhase | import("../semiotic-experimental").UnstablePhysicsObservationEventType | import("../semiotic-physics").PhysicsLifecycleObservationEventType)[] | undefined
+interface-member UseChartObserverOptions::property::types = optional types: ("activate" | "annotation-activate" | "brush" | "brush-end" | "click" | "click-end" | "control-change" | "control-end" | "control-start" | "focus" | "hover" | "hover-end" | "late-data" | "physics-barrier-cross" | "physics-bin-enter" | "physics-bin-exit" | "physics-budget-overflow" | "physics-budget-warning" | "physics-capacity-abandoned" | "physics-capacity-blocked" | "physics-capacity-processed" | "physics-capacity-queued" | "physics-late" | "physics-proximity-enter" | "physics-proximity-exit" | "physics-sediment" | "physics-settle" | "physics-source-idle" | "physics-spawn" | "physics-watermark-advance" | "physics-watermark-held" | "physics-window-close" | "physics-window-open" | "physics-window-update" | "selection" | "selection-end" | "sim-active" | "sim-idle")[] | undefined
 interface-member UseChartObserverResult::property::clear = required clear: () => void
 interface-member UseChartObserverResult::property::latest = required latest: ChartObservation | null
 interface-member UseChartObserverResult::property::observations = required observations: ChartObservation[]

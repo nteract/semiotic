@@ -2,7 +2,6 @@ import type {
   PhysicsPipelineSnapshot,
   PhysicsQueuedSpawn
 } from "./PhysicsPipelineStore"
-import { physicsPhaseDatum } from "./physicsBodyTravel"
 import type {
   PhysicsWorkerCommand,
   PhysicsWorkerResponsePayload
@@ -15,10 +14,25 @@ export class PhysicsWorkerDatums {
   private ids: string[] = []
 
   private runtimeDatum(original: unknown, runtime: unknown): unknown {
-    return runtime && typeof runtime === "object" && "__phase" in runtime &&
-      typeof runtime.__phase === "string"
-      ? physicsPhaseDatum(original, runtime.__phase)
-      : original
+    if (!runtime || typeof runtime !== "object" || !("__phase" in runtime))
+      return original
+    const next = { ...(original as object) } as Record<string, unknown>
+    // Admission metadata is owned by the live worker. Preserve authored values
+    // (including functions) outside these runtime-owned fields.
+    for (const key of [
+      "__phase",
+      "eventTime",
+      "arrivalTime",
+      "windowIndex",
+      "windowId",
+      "source",
+      "watermarkAtArrival",
+      "late",
+      "time"
+    ]) {
+      if (key in runtime) next[key] = (runtime as Record<string, unknown>)[key]
+    }
+    return next
   }
 
   private remember(bodies: PhysicsQueuedSpawn[]): void {
@@ -44,7 +58,11 @@ export class PhysicsWorkerDatums {
   }
 
   private restore(snapshot: PhysicsPipelineSnapshot): void {
-    for (const body of [...snapshot.world.bodies, ...snapshot.queue]) {
+    for (const body of [
+      ...snapshot.world.bodies,
+      ...snapshot.queue,
+      ...(snapshot.eventDrop?.pending.map((entry) => entry.spawn) ?? [])
+    ]) {
       const original = this.datums.get(body.id)
       if (original) body.datum = this.runtimeDatum(original.datum, body.datum)
     }

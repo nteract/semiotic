@@ -350,6 +350,7 @@ function renderPhysicsFrameSVG(
   const chrome = gifAccessibleChrome(idPrefix, frameIndex, props.title, props.description)
   const { titleId, descId, labelledBy } = chrome
   const bodies = store.readBodies()
+  const camera = store.viewTransform()
   const sceneNodes = physicsBodiesToXYSceneNodes(bodies, {
     bodyStyle: props.bodyStyle,
     getBodyLabel: props.getBodyLabel
@@ -371,7 +372,10 @@ function renderPhysicsFrameSVG(
       {bg && bg !== "transparent" ? (
         <rect x={0} y={0} width={size[0]} height={size[1]} fill={bg} />
       ) : null}
-      <g id={`${idPrefix}-frame-${frameIndex}`}>
+      <g
+        id={`${idPrefix}-frame-${frameIndex}`}
+        transform={camera.x || camera.y ? `translate(${camera.x},${camera.y})` : undefined}
+      >
         {sceneNodes.map((node, index) =>
           physicsBodySVG(bodies[index], node.style ?? {}, index, `${idPrefix}-${frameIndex}`) ??
           xySceneNodeToSVG(node, index, `${idPrefix}-${frameIndex}`)

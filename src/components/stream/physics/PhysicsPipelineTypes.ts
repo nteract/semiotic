@@ -24,6 +24,14 @@ import type {
   PhysicsBodyBudgetDecision,
   PhysicsBodyBudgetOptions
 } from "./PhysicsBodyBudget"
+import type {
+  PhysicsEmitterOptions,
+  PhysicsEmitterSnapshot
+} from "./PhysicsEmitterSchedule"
+import type {
+  EventDropLiveConfig,
+  EventDropLiveSnapshot
+} from "../../charts/physics/EventDropLiveRuntime"
 
 export interface PhysicsPlotBounds {
   x: number
@@ -93,6 +101,7 @@ export type PhysicsLifecycleObservationEventType =
   | "physics-watermark-held"
 
 export type PhysicsObservationEventType =
+  | PhysicsLifecycleObservationEventType
   | "physics-spawn"
   | "physics-settle"
   | "physics-sediment"
@@ -174,11 +183,17 @@ export type PhysicsObservationRecord = Omit<
 > &
   Partial<Pick<PhysicsObservationEvent, "timestamp" | "chartType" | "chartId">>
 
-export type PhysicsLifecycleObservationEvent = Omit<PhysicsObservationEvent, "type"> & {
+export type PhysicsLifecycleObservationEvent = Omit<
+  PhysicsObservationEvent,
+  "type"
+> & {
   type: PhysicsLifecycleObservationEventType
 }
 
-export type PhysicsLifecycleObservationRecord = Omit<PhysicsObservationRecord, "type"> & {
+export type PhysicsLifecycleObservationRecord = Omit<
+  PhysicsObservationRecord,
+  "type"
+> & {
   type: PhysicsLifecycleObservationEventType
 }
 
@@ -200,6 +215,12 @@ export interface PhysicsPipelineObservationOptions {
 }
 
 export interface PhysicsPipelineConfig {
+  /** Plot-space camera translation; does not move bodies or colliders. */
+  viewTransform?: { x: number; y: number }
+  /** Incremental EventDrop program, normally configured by EventDropChart.live. */
+  eventDrop?: EventDropLiveConfig | false
+  /** Serializable fixed-step sources; clear the pipeline to restart their sequences. */
+  emitters?: PhysicsEmitterOptions | false
   bodyBudget?: false | PhysicsBodyBudgetOptions
   engine?: PhysicsEngineAdapterInput
   kernel?: PhysicsKernelOptions
@@ -231,6 +252,20 @@ export interface PhysicsPipelineTickResult {
   steps: number
 }
 
+export type PhysicsPipelineRuntimeConfig = Required<
+  Omit<
+    PhysicsPipelineConfig,
+    | "bodyBudget"
+    | "colliders"
+    | "engine"
+    | "kernel"
+    | "observation"
+    | "sediment"
+    | "emitters"
+    | "eventDrop"
+  >
+>
+
 /** Optional fixed-step execution for authored forces and process controllers. */
 export interface PhysicsPipelineExecution {
   /** Called once after admitting due bodies (steps=0), then after each fixed step.
@@ -242,20 +277,15 @@ export interface PhysicsPipelineExecution {
 }
 
 export interface PhysicsPipelineSnapshot {
+  /** Preserves enqueue ordering even when the pending queue is empty. */
+  nextSequence?: number
   accumulator: number
   activeSensorPairs: string[]
   bodyBudget: false | PhysicsBodyBudgetOptions
-  config: Required<
-    Omit<
-      PhysicsPipelineConfig,
-      | "bodyBudget"
-      | "colliders"
-      | "engine"
-      | "kernel"
-      | "observation"
-      | "sediment"
-    >
-  > & { kernel: Required<PhysicsKernelOptions> }
+  config: Omit<PhysicsPipelineRuntimeConfig, "viewTransform"> & {
+    kernel: Required<PhysicsKernelOptions>
+    viewTransform?: { x: number; y: number }
+  }
   elapsedSeconds: number
   paused: boolean
   queue: PhysicsPipelineQueuedSpawnSnapshot[]
@@ -265,6 +295,8 @@ export interface PhysicsPipelineSnapshot {
   liveBodyOrder: string[]
   visible: boolean
   world: PhysicsKernelSnapshot
+  emitters?: PhysicsEmitterSnapshot
+  eventDrop?: EventDropLiveSnapshot
 }
 
 export interface PhysicsPipelineControlSurface {

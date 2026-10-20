@@ -85,6 +85,10 @@ export function usePhysicsCanvasPointer({
   })
   const bodyCursorCollectionRef =
     React.useRef<PhysicsBodyCursorCollection | null>(null)
+  const lastHoverPick = React.useRef<{
+    key: string
+    body: PhysicsBodyState | null
+  } | null>(null)
   bodyCursorCollectionRef.current ??= { maxSearchRadius: 0 }
   useCanvasMarkCursorCleanup(canvasRef)
 
@@ -125,6 +129,49 @@ export function usePhysicsCanvasPointer({
     []
   )
 
+  const publishHoverAt = React.useCallback(
+    (store: PhysicsPipelineStore, x: number, y: number) => {
+      if (!enableHover) {
+        lastHoverPick.current = null
+        return
+      }
+      const key = `${store.version()}:${x}:${y}:${hoverRadius}`
+      const hit =
+        lastHoverPick.current?.key === key
+          ? lastHoverPick.current.body
+          : store.hitTest(x, y, hoverRadius)
+      lastHoverPick.current = { key, body: hit }
+      const body = hit && resolveSemanticBody ? resolveSemanticBody(hit) : hit
+      if (!body) {
+        if (hoverDataRef.current) clearHover()
+        return
+      }
+      const hover = physicsHoverData(body, store.viewTransform())
+      const current = hoverDataRef.current
+      if (
+        current?.id === hover.id &&
+        current.data === hover.data &&
+        current.x === hover.x &&
+        current.y === hover.y
+      )
+        return
+      hoverDataRef.current = hover
+      setHoverData(hover)
+      onBodyHover?.(body, hover)
+      emitObservation("hover", { datum: body.datum, x: hover.x, y: hover.y })
+    },
+    [
+      enableHover,
+      hoverRadius,
+      resolveSemanticBody,
+      hoverDataRef,
+      clearHover,
+      setHoverData,
+      onBodyHover,
+      emitObservation
+    ]
+  )
+
   const handlePointerMove = React.useCallback(
     (event: React.PointerEvent<HTMLCanvasElement>) => {
       if (!enableHover && !bodyCursorCollectionRef.current?.targets?.size)
@@ -140,59 +187,36 @@ export function usePhysicsCanvasPointer({
         event.currentTarget,
         event.clientX,
         event.clientY,
-        margin
+        margin,
+        store?.viewTransform()
       )
       const pointer = pointerRef.current
       pointer.inside = true
-      pointer.x = x
-      pointer.y = y
+      const camera = store?.viewTransform() ?? { x: 0, y: 0 }
+      pointer.x = x + camera.x
+      pointer.y = y + camera.y
       pointer.pointerType = event.pointerType
       if (!store) return
 
       if (event.pointerType === "touch")
         setCanvasMarkCursor(event.currentTarget)
       else setCursorAt(event.currentTarget, store, x, y)
-      if (!enableHover) return
-      // Cursor geometry is presentation-only and may use an authored visual
-      // radius. It must not change the established collision/hover selection.
-      const hit = store.hitTest(x, y, hoverRadius)
-      const body = hit && resolveSemanticBody ? resolveSemanticBody(hit) : hit
-      if (!body) {
-        clearHover()
-        return
-      }
-      const hover = physicsHoverData(body)
-      const current = hoverDataRef.current
-      if (
-        current?.id === hover.id &&
-        current.data === hover.data &&
-        current.x === hover.x &&
-        current.y === hover.y
-      ) return
-      hoverDataRef.current = hover
-      setHoverData(hover)
-      onBodyHover?.(body, hover)
-      emitObservation("hover", { datum: body.datum, x: body.x, y: body.y })
+      publishHoverAt(store, x, y)
     },
     [
-      clearHover,
       clearKeyboardFocus,
       margin,
-      emitObservation,
       enableHover,
-      hoverRadius,
-      hoverDataRef,
-      onBodyHover,
-      resolveSemanticBody,
       setCursorAt,
-      setHoverData,
-      storeRef
+      storeRef,
+      publishHoverAt
     ]
   )
 
   const handlePointerLeave = React.useCallback(
     (event: React.PointerEvent<HTMLCanvasElement>) => {
       pointerRef.current.inside = false
+      lastHoverPick.current = null
       setCanvasMarkCursor(event.currentTarget)
       clearHover()
     },
@@ -206,17 +230,21 @@ export function usePhysicsCanvasPointer({
       collection: PhysicsBodyCursorCollection
     ) => {
       const pointer = pointerRef.current
+      const camera = store.viewTransform()
+      const x = pointer.x - camera.x
+      const y = pointer.y - camera.y
       if (
         pointer.inside &&
         pointer.pointerType !== "touch" &&
         collection.targets?.size
       ) {
-        setCursorAt(canvas, store, pointer.x, pointer.y)
+        setCursorAt(canvas, store, x, y)
       } else {
         setCanvasMarkCursor(canvas)
       }
+      if (pointer.inside) publishHoverAt(store, x, y)
     },
-    [setCursorAt]
+    [setCursorAt, publishHoverAt]
   )
 
   return React.useMemo(

@@ -6,6 +6,7 @@ import {
   createSyntheticEmitter,
   type SyntheticArrival,
   type SyntheticEmitterLimits,
+  type SyntheticEmitterSnapshot,
   type SyntheticSourceSpec
 } from "./syntheticArrivals"
 import type { StreamPhysicsFrameProps } from "../stream/physics/StreamPhysicsTypes"
@@ -35,6 +36,9 @@ export interface EmittersHandle {
   getTime: () => number
   getEmittedCount: () => number
   isComplete: () => boolean
+  snapshot: () => SyntheticEmitterSnapshot
+  /** Restore alongside the matching chart snapshot; rebases the frame clock. */
+  restore: (snapshot: SyntheticEmitterSnapshot) => void
 }
 
 /**
@@ -43,8 +47,8 @@ export interface EmittersHandle {
  * timeScale follow actual simulated steps. This hook uses synchronous onTick.
  *
  * Specs, seed and limits belong to one mounted run. Rate, active, paused,
- * manual and callbacks update live. Frame snapshots do not include emitter
- * state: rewinding a frame rebases the clock without replaying emitted ids.
+ * manual and callbacks update live. Save and restore the emitter snapshot
+ * alongside the frame snapshot to replay the same source sequences.
  */
 export function useEmitters<T>(
   target: RefObject<{ pushMany: (rows: T[]) => void } | null>,
@@ -105,6 +109,12 @@ export function useEmitters<T>(
     advance,
     getTime: emitter.getTime,
     getEmittedCount: emitter.getEmittedCount,
-    isComplete: emitter.isComplete
+    isComplete: emitter.isComplete,
+    snapshot: emitter.snapshot,
+    restore: (snapshot) => {
+      emitter.restore(snapshot)
+      previousTime.current = undefined
+      setComplete(emitter.isComplete())
+    }
   }
 }

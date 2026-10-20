@@ -19,6 +19,19 @@ export interface PhysicsObservationContext {
   emit: (event: PhysicsObservationEvent) => void
 }
 
+/** Deduplicate budget warnings until either the action or budget state changes. */
+export function observePhysicsBudgetDecision(
+  decision: PhysicsBodyBudgetDecision,
+  enabled: boolean,
+  previousKey: string,
+  context: PhysicsObservationContext
+): string {
+  if (!enabled || decision.state === "ok") return "ok"
+  const key = `${decision.state}:${decision.action}`
+  if (key !== previousKey) emitPhysicsBodyBudgetObservation(decision, context)
+  return key
+}
+
 export function emitPhysicsSpawnObservation(
   world: PhysicsEngineAdapter,
   spawn: PhysicsQueuedSpawn,
@@ -44,7 +57,10 @@ export function observePhysicsKernelEvents(
 ): void {
   const sleepEvents = events.filter((event) => event.type === "sleep")
   if (sleepEvents.length === 0) return
-  const readBody = physicsBodyLookup(world, sleepEvents.map((event) => event.bodyId))
+  const readBody = physicsBodyLookup(
+    world,
+    sleepEvents.map((event) => event.bodyId)
+  )
   for (const event of sleepEvents) {
     const body = readBody(event.bodyId)
     context.emit({
@@ -66,7 +82,9 @@ export function observePhysicsSensorTransitions(
   context: PhysicsObservationContext
 ): Set<string> {
   const currentPairs = new Set(
-    world.activeSensorPairs().map((pair) => sensorPairKey(pair.sensorId, pair.bodyId))
+    world
+      .activeSensorPairs()
+      .map((pair) => sensorPairKey(pair.sensorId, pair.bodyId))
   )
   let changed = currentPairs.size !== previousPairs.size
   if (!changed) {
@@ -78,18 +96,26 @@ export function observePhysicsSensorTransitions(
     }
   }
   if (!changed) return currentPairs
-  const entered = Array.from(currentPairs).filter((key) => !previousPairs.has(key)).sort()
-  const exited = Array.from(previousPairs).filter((key) => !currentPairs.has(key)).sort()
-  const readBody = physicsBodyLookup(world, [...entered, ...exited].map((key) => parseSensorPairKey(key).bodyId))
+  const entered = Array.from(currentPairs)
+    .filter((key) => !previousPairs.has(key))
+    .sort()
+  const exited = Array.from(previousPairs)
+    .filter((key) => !currentPairs.has(key))
+    .sort()
+  const readBody = physicsBodyLookup(
+    world,
+    [...entered, ...exited].map((key) => parseSensorPairKey(key).bodyId)
+  )
 
   const emit = (direction: "enter" | "exit", key: string) => {
     const { sensorId, bodyId } = parseSensorPairKey(key)
     const sensor = context.observation.sensors[sensorId]
     const body = readBody(bodyId)
     context.emit({
-      type: direction === "enter"
-        ? (sensor?.enterType ?? "physics-bin-enter")
-        : (sensor?.exitType ?? "physics-bin-exit"),
+      type:
+        direction === "enter"
+          ? (sensor?.enterType ?? "physics-bin-enter")
+          : (sensor?.exitType ?? "physics-bin-exit"),
       timestamp: context.elapsedSeconds,
       chartType: context.observation.chartType,
       chartId: context.observation.chartId,

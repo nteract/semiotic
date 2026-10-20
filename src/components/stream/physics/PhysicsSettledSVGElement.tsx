@@ -118,6 +118,7 @@ export function createPhysicsSettledSVG(
   const plotWidth = Math.max(1, width - margin.left - margin.right)
   const plotHeight = Math.max(1, height - margin.top - margin.bottom)
   const plotClipId = `${prefix}-plot-clip`
+  const camera = store.viewTransform()
   const translatedBackground =
     plotTransform && resolvedBackground != null ? (
       <g transform={plotTransform}>{resolvedBackground}</g>
@@ -172,25 +173,33 @@ export function createPhysicsSettledSVG(
           transform={plotTransform}
           clipPath={`url(#${plotClipId})`}
         >
-          {scene.sceneNodes.map((node, index) => {
-            const body = scene.bodies[index]
-            const custom =
-              (body && renderBodySVG
-                ? renderBodySVG(body, node.style ?? {}, index, prefix)
-                : undefined) ??
-              (body
-                ? physicsBodySVG(body, node.style ?? {}, index, prefix)
-                : undefined)
-            return custom != null
-              ? withSceneMarkCursor(custom, node, index)
-              : withSceneMarkCursor(
-                  node.type === "point" || node.type === "rect"
-                    ? pointOrRectSceneNodeToSVG(node, index, prefix)
-                    : null,
-                  node,
-                  `xy-cursor-${index}`
-                )
-          })}
+          <g
+            transform={
+              camera.x || camera.y
+                ? `translate(${camera.x},${camera.y})`
+                : undefined
+            }
+          >
+            {scene.sceneNodes.map((node, index) => {
+              const body = scene.bodies[index]
+              const custom =
+                (body && renderBodySVG
+                  ? renderBodySVG(body, node.style ?? {}, index, prefix)
+                  : undefined) ??
+                (body
+                  ? physicsBodySVG(body, node.style ?? {}, index, prefix)
+                  : undefined)
+              return custom != null
+                ? withSceneMarkCursor(custom, node, index)
+                : withSceneMarkCursor(
+                    node.type === "point" || node.type === "rect"
+                      ? pointOrRectSceneNodeToSVG(node, index, prefix)
+                      : null,
+                    node,
+                    `xy-cursor-${index}`
+                  )
+            })}
+          </g>
         </g>
         {resolvedForeground}
         {renderChrome?.(scene)}

@@ -439,6 +439,17 @@ describe("generateFrameSequence", () => {
 // ═══════════════════════════════════════════════════════════════════════
 
 describe("generatePhysicsFrameSVGs", () => {
+  it("applies the physics camera to every frame without relocating body coordinates", () => {
+    const frames = generatePhysicsFrameSVGs({
+      ...physicsProps,
+      config: { ...physicsProps.config, viewTransform: { x: -10, y: 20 } }
+    }, { frameCount: 3 })
+    expect(frames).toHaveLength(3)
+    for (const svg of frames) {
+      expect(svg).toContain('transform="translate(-10,20)"')
+      expect(svg).toContain(`cx="${physicsProps.initialSpawns[0].x}"`)
+    }
+  })
   it("exports the source journey before gravity-driven board motion", () => {
     const frames = generatePhysicsFrameSVGs({
       width: 220, height: 180,

@@ -13,11 +13,21 @@ export {
 export type {
   SyntheticArrival,
   SyntheticEmitterLimits,
+  SyntheticEmitterSnapshot,
   SyntheticSourceSpec,
   ArrivalJitterBucket
 } from "./recipes/syntheticArrivals"
 export { useEmitters } from "./recipes/useEmitters"
 export type { EmittersHandle, UseEmittersOptions } from "./recipes/useEmitters"
+export type {
+  PhysicsEmitterOptions,
+  PhysicsEmitterSnapshot
+} from "./stream/physics/PhysicsEmitterSchedule"
+export type {
+  EventDropLiveOptions,
+  EventDropLiveConfig,
+  EventDropLiveSnapshot
+} from "./charts/physics/EventDropLiveRuntime"
 import { UnitPileChart, PhysicsPileChart } from "./charts/physics/UnitPileChart"
 import { PhysicsCustomChart } from "./charts/physics/PhysicsCustomChart"
 import { CollisionSwarmChart } from "./charts/physics/CollisionSwarmChart"
@@ -235,7 +245,10 @@ export type {
 export type { CollisionSwarmChartProps } from "./charts/physics/CollisionSwarmChart"
 export type { EventDropChartProps } from "./charts/physics/EventDropChart"
 export type { EventDropArrival } from "./charts/physics/eventDropArrival"
-export type { PhysicsBodyTravel, PhysicsTravelPoint } from "./stream/physics/physicsBodyTravel"
+export type {
+  PhysicsBodyTravel,
+  PhysicsTravelPoint
+} from "./stream/physics/physicsBodyTravel"
 export * from "./charts/physics/CrucibleChart"
 export type { GauntletTerminalOptions } from "./charts/physics/gauntletTerminal"
 export type {

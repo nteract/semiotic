@@ -32704,7 +32704,7 @@
               ]
             },
             "onClockTick": {
-              "description": "Throttled simulation HUD callback with simTime, eventTimeFrontier, watermark, timeScale and paused. Uses the synchronous callback path.",
+              "description": "Throttled simulation HUD callback with simTime, eventTimeFrontier, watermark, timeScale and paused. Works with sync and worker execution.",
               "x-semiotic-runtime-types": [
                 "function"
               ]

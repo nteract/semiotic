@@ -1,10 +1,11 @@
-import { useEffect, useImperativeHandle, useRef } from "react"
+import { useCallback, useEffect, useImperativeHandle, useRef } from "react"
 import type { Ref, RefObject } from "react"
 import type { PhysicsFrameHandle } from "./physicsHocHandle"
 import type {
   StreamPhysicsFrameHandle,
   StreamPhysicsFrameProps
 } from "../../stream/physics/StreamPhysicsTypes"
+import type { PhysicsPipelineSnapshot } from "../../stream/physics/PhysicsPipelineTypes"
 import type { EventDropProjectionMetadata } from "./eventDropPhysics"
 import { readEventDropOccupancy } from "./eventDropPhysics"
 import type { EventDropLedgerRow } from "./eventDropLedger"
@@ -22,6 +23,8 @@ export interface EventDropClock {
 }
 
 export interface EventDropChartHandle extends PhysicsFrameHandle {
+  snapshot: () => PhysicsPipelineSnapshot | null
+  restore: (snapshot: PhysicsPipelineSnapshot) => void
   getStore: () => ReturnType<StreamPhysicsFrameHandle["getStore"]> | null
   getLedger: () => EventDropLedgerRow[]
   getWatermark: () => number
@@ -56,7 +59,7 @@ export function useEventDropHandle(
       "onTick" | "clock" | "onObservation"
     >
   }
-): StreamPhysicsFrameProps["onTick"] {
+): Pick<StreamPhysicsFrameProps, "onTick" | "onFrame"> {
   const latest = useRef({ metadata, props })
   latest.current = { metadata, props }
   const onObservationRef = useRef(props.onObservation)
@@ -64,23 +67,35 @@ export function useEventDropHandle(
     props.onObservation ?? props.frameProps?.onObservation
   const dispatchObservation = usePhysicsObservationDispatcher(onObservationRef)
   const lastTick = useRef(-Infinity)
-  const getLedger = () =>
-    (latest.current.metadata?.ledger ?? []).map((row) => ({
-      ...row,
-      bySource: Object.fromEntries(
-        Object.entries(row.bySource).map(([id, count]) => [id, { ...count }])
-      )
-    }))
+  const readMetadata = useCallback(
+    () =>
+      frameRef.current?.getStore().eventDropState()?.metadata ??
+      latest.current.metadata,
+    [frameRef]
+  )
+  const getLedger = useCallback(
+    () =>
+      (readMetadata()?.ledger ?? []).map((row) => ({
+        ...row,
+        bySource: Object.fromEntries(
+          Object.entries(row.bySource).map(([id, count]) => [id, { ...count }])
+        )
+      })),
+    [readMetadata]
+  )
   const getClock = (): EventDropClock => {
     const state = frameRef.current?.getStore().runtimeState()
-    const metadata = latest.current.metadata
+    const metadata = readMetadata()
     return {
       simTime:
         (state?.elapsedSeconds ?? 0) * (metadata?.timeUnit === "ms" ? 1000 : 1),
       eventTimeFrontier: metadata?.eventTimeFrontier ?? 0,
       watermark: metadata?.watermarkValue ?? -Infinity,
       timeScale:
-        (state?.timeScale ?? 1) * (latest.current.props.timeScale ?? 1),
+        (state?.timeScale ?? 1) *
+        (frameRef.current?.getStore().isEventDropLive()
+          ? 1
+          : (latest.current.props.timeScale ?? 1)),
       paused: state?.paused ?? false
     }
   }
@@ -99,8 +114,15 @@ export function useEventDropHandle(
     getCustomLayout: () => dataRef.current?.getCustomLayout?.() ?? null,
     popBodies: (ids, options) => dataRef.current?.popBodies(ids, options) ?? [],
     getStore: () => frameRef.current?.getStore() ?? null,
+    snapshot: () => frameRef.current?.snapshot() ?? null,
+    restore: (snapshot) => {
+      previous.current = snapshot.eventDrop?.ledger.value ?? -Infinity
+      emitted.current.clear()
+      deliveredLedger.current = undefined
+      frameRef.current?.restore(snapshot)
+    },
     getLedger,
-    getWatermark: () => latest.current.metadata?.watermarkValue ?? -Infinity,
+    getWatermark: () => readMetadata()?.watermarkValue ?? -Infinity,
     getClock,
     setTimeScale: (value) => {
       if (!Number.isFinite(value) || value <= 0)
@@ -112,7 +134,11 @@ export function useEventDropHandle(
           ...snapshot,
           config: {
             ...snapshot.config,
-            timeScale: value / (latest.current.props.timeScale ?? 1)
+            timeScale:
+              value /
+              (frame.getStore().isEventDropLive()
+                ? 1
+                : (latest.current.props.timeScale ?? 1))
           }
         })
       }
@@ -121,15 +147,33 @@ export function useEventDropHandle(
       const snapshot = frameRef.current?.snapshot()
       const belongs = (body: { datum?: unknown }) =>
         (body.datum as { source?: string })?.source === id
-      const metadata = latest.current.metadata
+      const totals = eventDropSourceStats(getLedger(), id)
+      const queued = snapshot?.queue.filter(belongs).length ?? 0
+      if (snapshot?.eventDrop) {
+        // Admission remains pending even if the body budget evicts a traveller.
+        const inFlight =
+          queued +
+          snapshot.eventDrop.pending.filter(({ spawn }) => belongs(spawn))
+            .length
+        return { ...totals, emitted: totals.emitted + inFlight, inFlight }
+      }
+      const metadata = readMetadata()
+      const camera = frameRef.current?.getStore().viewTransform() ?? {
+        x: 0,
+        y: 0
+      }
       return {
-        ...eventDropSourceStats(getLedger(), id),
+        ...totals,
         inFlight:
-          (snapshot?.queue.filter(belongs).length ?? 0) +
+          queued +
           (snapshot && metadata
             ? readEventDropOccupancy(
                 metadata,
-                snapshot.world.bodies.filter(belongs)
+                snapshot.world.bodies.filter(belongs).map((body) => ({
+                  ...body,
+                  x: body.x + camera.x,
+                  y: body.y + camera.y
+                }))
               ).inFlight
             : 0)
       }
@@ -166,13 +210,15 @@ export function useEventDropHandle(
       const before = previous.current
       previous.current = metadata.watermarkValue
       props.onWatermarkChange?.(metadata.watermarkValue, before)
-      const observation = store.recordLifecycleObservation({
-        type: "physics-watermark-advance",
-        from: before,
-        to: metadata.watermarkValue,
-        cause: "external"
-      })
-      dispatchObservation(observation)
+      if (!store.isEventDropLive())
+        dispatchObservation(
+          store.recordLifecycleObservation({
+            type: "physics-watermark-advance",
+            from: before,
+            to: metadata.watermarkValue,
+            cause: "external"
+          })
+        )
     }
     const ledgerKey = JSON.stringify(metadata.ledger ?? [])
     if (!props.onLedgerChange || ledgerKey === deliveredLedger.current) {
@@ -194,7 +240,7 @@ export function useEventDropHandle(
       deliverLedger()
     } else if (!ledgerTimer.current)
       ledgerTimer.current = setTimeout(deliverLedger, 500)
-  }, [metadata, frameRef, dispatchObservation])
+  }, [metadata, frameRef, dispatchObservation, getLedger])
   useEffect(
     () => () => {
       if (ledgerTimer.current) clearTimeout(ledgerTimer.current)
@@ -202,16 +248,19 @@ export function useEventDropHandle(
     },
     []
   )
-  if (!props.onClockTick) return props.frameProps?.onTick
-  return (result, controls) => {
-    latest.current.props.frameProps?.onTick?.(result, controls)
-    const now = latest.current.props.frameProps?.clock?.() ?? performance.now()
-    if (
-      now - lastTick.current <
-      Math.max(100, latest.current.props.clockTickMs ?? 100)
-    )
-      return
-    lastTick.current = now
-    latest.current.props.onClockTick?.(getClock())
+  return {
+    onTick: props.frameProps?.onTick,
+    onFrame: () => {
+      if (!latest.current.props.onClockTick) return
+      const now =
+        latest.current.props.frameProps?.clock?.() ?? performance.now()
+      if (
+        now - lastTick.current <
+        Math.max(100, latest.current.props.clockTickMs ?? 100)
+      )
+        return
+      lastTick.current = now
+      latest.current.props.onClockTick?.(getClock())
+    }
   }
 }

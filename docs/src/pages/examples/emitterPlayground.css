@@ -83,6 +83,13 @@
   font-size: 25px;
   font-variant-numeric: tabular-nums;
 }
+.emitter-demo__live-controls {
+  margin: 0;
+  padding: 20px;
+}
+.emitter-demo__live-metrics {
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+}
 .emitter-demo__chart {
   width: 100%;
   min-width: 0;

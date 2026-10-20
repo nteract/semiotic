@@ -68,15 +68,18 @@ function primitiveValueText(value: unknown): string | null {
   return null
 }
 
-function physicsHoverData(body: PhysicsBodyState): PhysicsHoverData {
+function physicsHoverData(
+  body: PhysicsBodyState,
+  viewTransform = { x: 0, y: 0 }
+): PhysicsHoverData {
   return {
     __semioticHoverData: true,
     body,
     data: body.datum ?? body,
     id: body.id,
     type: "body",
-    x: body.x,
-    y: body.y
+    x: body.x + viewTransform.x,
+    y: body.y + viewTransform.y
   }
 }
 

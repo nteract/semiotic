@@ -87,7 +87,7 @@ const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
     id: "emitter-playground",
     path: "/examples/emitter-playground",
     sourceFile: "EmitterPlaygroundPage.tsx",
-    sourceFiles: ["EmitterPlaygroundPage.tsx", "emitterPlaygroundModel.ts", "emitterPlayground.css"],
+    sourceFiles: ["EmitterPlaygroundPage.tsx", "LiveEmitterPlayground.tsx", "emitterPlaygroundModel.ts", "emitterPlayground.css"],
     isPilot: true,
     contract: {
       publicImports: ["semiotic/physics"],

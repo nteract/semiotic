@@ -78,7 +78,11 @@ export function usePhysicsChartData<T extends Datum>(options: {
     const frame = frameRef.current
     if (!frame) return
     const store = frame.getStore()
-    if (applied.current?.store === store && applied.current.layout !== next) {
+    if (
+      !next.config.eventDrop &&
+      applied.current?.store === store &&
+      applied.current.layout !== next
+    ) {
       frame.restore(
         reconcilePhysicsChart(
           frame.snapshot(),
