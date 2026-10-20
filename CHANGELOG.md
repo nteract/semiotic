@@ -7,79 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [3.13.0]
-
-### Network camera and semantic zoom
-
-The opt-in `semiotic/network/zoom` camera keeps custom layouts in authored
-coordinates while synchronizing canvas, SVG, HTML cards, hit testing and
-keyboard focus. This release improves camera and pointer-update performance,
-adds discrete LOD subscriptions and retained-scene SVG export, and supports
-ordinary-arrow panning as an explicit keyboard policy. Existing charts and
-default arrow-key node navigation retain their behavior.
-
-### Added
-
-- `zoomOptions.keyboard: { arrowKeys: "pan" }` opts ordinary arrow keys into
-  60-screen-pixel panning. Alt+arrows still pan and plus/minus still zoom.
-  Boolean settings retain their behavior; `{ arrowKeys: "navigate" }` explicitly
-  selects default node navigation. Editable content and browser shortcuts are
-  unaffected.
-- `exportNetworkViewSVG` from `semiotic/server`, `semiotic/server/node` and
-  `semiotic/server/edge` exports a retained network scene with a fitted, identity
-  or explicit camera. SVG backgrounds, marks and card overlays are preserved;
-  HTML cards require SVG equivalents. Fit supports explicit decoration bounds
-  and scales outside the interactive camera's limits.
-- Custom network layouts can return `edgeHitTesting: false` to keep node
-  interactions while skipping edge hover, clicks, and cursors.
-- `useNetworkLODLevel(width, options)` from `semiotic/network/zoom` returns a
-  discrete detail level without rerendering cards for unchanged levels during
-  camera movement. It preserves hysteresis, settle-only promotion, and focused
-  editor detail through `keepDetail`.
-
 ### Fixed
 
-- Physics chart resizes and encoding changes preserve arrival state: visible
-  bodies stay visible, queued arrivals keep their deadlines and order, and
-  removed bodies stay removed. This fixes late arrivals disappearing from the
-  watermark lesson during responsive relayouts.
-- Tooltips measure after browser layout and commit their placement before paint,
-  avoiding forced synchronous layout when hover content appears while preserving
-  flipping, boundary clamping, transitions and resize behavior.
-- Static network exports apply default label colors without mutating retained
-  labels, supporting frozen scenes and reuse across themes.
-- Static network rendering preserves custom scenes and SVG decorations supplied
-  without raw topology, including saved layouts used for export.
-- Network content bounds include pointed and rotated symbol paths, preventing
-  automatic fit from clipping triangles, stars and custom symbols.
-- Network tooltip and keyboard-focus updates subscribe independently of the
-  retained frame. Custom edge indexes preserve exact Canvas hits, node priority
-  and paint order while pruning overlapping cubic links with conservative
-  sub-curve bounds. Color-only restyles reuse the index; geometry, stroke and
-  fill changes refresh it. Keyboard announcements now honor authored
-  `accessibility.tableFields`, matching accessible data tables.
-- Network path hits reject distant candidates using cached conservative
-  bounds before exact Canvas tests. Custom layouts prepare a spatial index at
-  scene commit, preserving first-hover responsiveness, stroke tolerance under zoom,
-  filled bands, sharp joins, and changes to retained geometry or styles.
-- Uncontrolled network camera updates apply HTML/SVG transforms and repaint
-  canvas synchronously without rerendering the chart. Culling updates mounted
-  cards only when membership changes; viewport reports, focused tooltips and
-  annotation widgets stay current during motion. Existing projected-size and
-  LOD hooks retain live sizes. Invisible semantic edge targets skip Canvas paint
-  while remaining interactive.
-- Network zoom gestures preserve node and edge clicks and touch taps while
-  drag-to-pan is enabled. Pointer capture now stays on the original target;
-  clicks following a drag remain suppressed.
-
-### Security
-
-- MCP HTTP mode now rejects browser origins unless explicitly listed in
-  `MCP_ALLOWED_ORIGINS` and validates Host against the bind hostname by default.
-  These checks also cover preflight, health, and challenge requests. Configure
-  `MCP_ALLOWED_HOSTS` for hosted services and tunnels; binding to all interfaces
-  does not disable Host validation. Native clients without Origin and the
-  default stdio transport continue to work. CORS no longer grants wildcard access.
+- Tooltip content that paints its own surface inside a component (a
+  styled-components tooltip, for example) shows one box. Semiotic reads
+  `data-semiotic-tooltip-chrome` on the rendered root element, through any
+  wrapper components, in addition to the element a renderer returns, so neither
+  the renderer nor its wrappers need `markTooltipChrome`. Content that renders
+  nothing, such as a wrapper component returning `null`, shows no box. This
+  covers every frame tooltip (XY, ordinal, network, geo, physics, and
+  ScatterplotMatrix) and `TooltipRoot` without an explicit `chrome`; an explicit
+  chart `chrome` config still wins.
+- A tooltip whose chrome is dropped after rendering is placed from its
+  re-measured box, and that first placement jumps instead of easing from the
+  chrome-sized position.
 
 ## [3.12.1] - 2026-10-05
 

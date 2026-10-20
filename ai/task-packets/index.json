@@ -8,8 +8,8 @@
       "title": "Compare category totals you can check",
       "summary": "Compare three totals in React, inspect their exact values, and verify the server-rendered bar geometry.",
       "route": "/tasks/compare-category-totals",
-      "packageVersion": "3.13.0",
-      "sourceRevision": "sha256:4b3610fb3eb6813adc03c2506b10f73f9d119887bcb1736e7a824c93eef13567",
+      "packageVersion": "3.12.1",
+      "sourceRevision": "sha256:415aa92ac23ce75abec1d2d9b7b49bbd0bdd6545ec89a329e049b13ccccf03fe",
       "markdown": "/tasks/compare-category-totals.md",
       "json": "/tasks/compare-category-totals.json",
       "evidenceStatus": "stale"
@@ -19,8 +19,8 @@
       "title": "Update a live chart by record ID",
       "summary": "Maintain a bounded window of incoming records, apply corrections, and reconcile the display after reconnecting.",
       "route": "/tasks/update-live-chart",
-      "packageVersion": "3.13.0",
-      "sourceRevision": "sha256:45e55eb7b2201c8ec474c4736ad3bd78ee6e5590fd4db9eceb8b0e37f4b93a05",
+      "packageVersion": "3.12.1",
+      "sourceRevision": "sha256:1d77d443f819be50ea945039f7ea1a404dac81aead3560208e2d3640f1872698",
       "markdown": "/tasks/update-live-chart.md",
       "json": "/tasks/update-live-chart.json",
       "evidenceStatus": "stale"
@@ -30,8 +30,8 @@
       "title": "Correct a chart after its source changes",
       "summary": "Apply a source correction, replace affected claims explicitly, and preserve the context a later reader needs.",
       "route": "/tasks/correct-published-chart",
-      "packageVersion": "3.13.0",
-      "sourceRevision": "sha256:70678bea1c2f730c44566747a2aa47db24b6896a233e28fe437fed598caef7cd",
+      "packageVersion": "3.12.1",
+      "sourceRevision": "sha256:986cd6f99dda8ec3d9b7c984b054ec06b7a247d0d1af4f259a0801f6aee5f0f9",
       "markdown": "/tasks/correct-published-chart.md",
       "json": "/tasks/correct-published-chart.json",
       "evidenceStatus": "stale"

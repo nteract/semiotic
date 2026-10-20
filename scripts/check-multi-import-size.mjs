@@ -72,14 +72,10 @@ const analyze = process.argv.includes("--analyze")
 // shares a published chunk (306.0 KiB measured). The note above about a
 // "non-splitting" build was inaccurate: this check has always split and
 // counted only the static graph.
-// Bumped 308→310 (2026-10-08): after purity-annotation cleanup and inert-chunk
-// minification fixes, a fresh production union measures 308.7 KiB gzip across
-// 27 initial files (316,131 bytes in CI; 316,135 locally). Keep 1.3 KiB of
-// headroom; single-entry budgets and tree-shaking isolation gates are unchanged.
-// Bumped 310→310.25 (2026-10-13): the current production union is 317,460
-// bytes, 20 bytes above the old limit. Allow 256 bytes for the accepted
-// accessibility-total fix while retaining the existing graph/isolation checks.
-const MULTI_IMPORT_GZIP_BUDGET = 310.25 * 1024
+// Bumped 308→308.5 (2026-10-19): tooltip slots read chrome ownership from the
+// rendered root element and re-place from the re-measured box (308.2 KiB
+// measured on the same union).
+const MULTI_IMPORT_GZIP_BUDGET = 308.5 * 1024
 
 const MULTI_IMPORT_SOURCE = `
 export { LineChart } from "semiotic/xy"
@@ -114,14 +110,10 @@ function linkWorkspaceNodeModules(consumerNodeModules) {
 
 async function measureMultiImportGzip() {
   const pkg = JSON.parse(readFileSync(join(REPO_ROOT, "package.json"), "utf8"))
+  const packageRoot = mkdtempSync(join(tmpdir(), "semiotic-multi-import-pkg-"))
   const consumerRoot = mkdtempSync(join(tmpdir(), "semiotic-multi-import-consumer-"))
-  const consumerNm = join(consumerRoot, "node_modules")
-  const packageRoot = join(consumerNm, "semiotic")
 
   try {
-    // Keep esbuild's module paths relative to one consumer root. Separate
-    // random package roots leak into module initializer names and gzip totals.
-    mkdirSync(packageRoot, { recursive: true })
     cpSync(join(REPO_ROOT, "dist"), join(packageRoot, "dist"), { recursive: true })
     writeFileSync(
       join(packageRoot, "package.json"),
@@ -139,6 +131,9 @@ async function measureMultiImportGzip() {
       )
     )
 
+    const consumerNm = join(consumerRoot, "node_modules")
+    mkdirSync(consumerNm)
+    symlinkSync(packageRoot, join(consumerNm, "semiotic"))
     linkWorkspaceNodeModules(consumerNm)
 
     writeFileSync(join(consumerRoot, "entry.js"), MULTI_IMPORT_SOURCE)
@@ -213,6 +208,7 @@ async function measureMultiImportGzip() {
       inputBytes: [...inputBytes].sort((a, b) => b[1] - a[1])
     }
   } finally {
+    rmSync(packageRoot, { recursive: true, force: true })
     rmSync(consumerRoot, { recursive: true, force: true })
   }
 }

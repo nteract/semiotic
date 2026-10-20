@@ -232,7 +232,23 @@ export default function TooltipsPage() {
 
       <h3 id="chrome-ownership">Chrome ownership through wrapper components</h3>
       <p>
-        Declare consumer-owned chrome directly with
+        A component that paints its own background, padding and shadow declares
+        it on its root element with <code>data-semiotic-tooltip-chrome</code>.
+        Semiotic reads the rendered root of the tooltip, so a renderer can return
+        that component directly or through any number of wrapper components and
+        Semiotic adds positioning without a second box. The marked element must be
+        the content's only element: text or another element beside it keeps
+        Semiotic's surface. Content that renders nothing shows no box.
+      </p>
+      <CodeBlock language="jsx" code={`const MyTooltip = ({ label }) => (
+  <div className="my-tooltip" data-semiotic-tooltip-chrome>{label}</div>
+)
+const Readout = props => <MyTooltip {...props} />
+
+<Scatterplot data={data} xAccessor="x" yAccessor="y"
+  tooltip={d => <Readout label={d.name} />} />`} />
+      <p>
+        A chart or a scope can declare the policy instead, with
         <code>{'tooltip={{ content: renderer, chrome: "none" }}'}</code>.
         The renderer receives authored data and can return nested components;
         Semiotic adds positioning without adding a background, padding, or shadow.
@@ -248,36 +264,37 @@ export default function TooltipsPage() {
     tooltip={d => <MyTooltip label={d.name} />} />
 </ThemeProvider>`} />
       <p>
-        Chart configs override the theme. Field tooltip configs also accept
-        <code>chrome</code>; raw frame callbacks inherit the theme policy.
-        Existing marker APIs remain supported.
+        Chart configs override the theme and the rendered root. Field tooltip
+        configs also accept <code>chrome</code>; raw frame callbacks inherit the
+        theme policy.
       </p>
       <p>
-        Use <code>markTooltipChrome(renderer)</code> when a custom renderer supplies
-        its own background, padding and shadow. Pass that renderer to <code>tooltip</code>,
-        multi-mode <code>content</code>, or a frame's <code>tooltipContent</code>.
-        Ownership applies to every non-empty result, even through unmarked wrapper
-        components. Existing component markers, <code>TooltipRoot</code>, inline
-        backgrounds and <code>data-semiotic-tooltip-chrome</code> still work.
+        <code>TooltipRoot</code> marks its own root, so a component built on it
+        keeps one box through any wrappers. <code>markTooltipChrome(renderer)</code>{" "}
+        declares ownership for every non-empty result of a renderer passed to{" "}
+        <code>tooltip</code>, multi-mode <code>content</code>, or a frame's{" "}
+        <code>tooltipContent</code>. Component markers and inline backgrounds on the
+        returned element work too.
       </p>
       <CodeBlock
-        code={`import { Scatterplot, TooltipRoot, markTooltipChrome } from "semiotic/xy"
+        code={`import { Scatterplot, TooltipRoot } from "semiotic/xy"
 
 function ChartTooltip({ label }) {
   return <TooltipRoot>{label}</TooltipRoot>
 }
 const MyTooltip = props => <ChartTooltip {...props} />
-const renderTooltip = markTooltipChrome(d => <MyTooltip label={d.name} />)
 
-<Scatterplot data={data} xAccessor="x" yAccessor="y" tooltip={renderTooltip} />`}
+<Scatterplot data={data} xAccessor="x" yAccessor="y"
+  tooltip={d => <MyTooltip label={d.name} />} />`}
         language="jsx"
       />
       <p>
         Leave plain renderers such as <code>{"d => d.name"}</code> unmarked so
         Semiotic supplies its default surface. <code>hasOwnTooltipChrome</code>
-        accepts a renderer or its returned element. Detection inspects explicit
-        metadata and the immediate element; it does not render components or inspect
-        computed CSS. Marking a renderer preserves its identity and does not call it.
+        accepts a renderer or its returned element and reads explicit metadata on
+        it before it renders; the rendered root is read after rendering, before the
+        tooltip paints. Neither inspects computed CSS. Marking a renderer preserves
+        its identity and does not call it.
       </p>
       <p>
         Wrapping libraries can import <code>hasTooltipContent</code> from their chart

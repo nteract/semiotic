@@ -66,7 +66,9 @@ export interface TooltipRootProps extends React.HTMLAttributes<HTMLDivElement> {
    * `"default"` applies Semiotic's theme-aware chrome. Use `"none"` or `"css"` when the
    * supplied class owns background, text color, border, padding, and shadow.
    * In both modes the root is marked so FlippingTooltip never adds a second
-   * box around it.
+   * box around it. When this prop is omitted, the chrome comes from the theme
+   * policy (else `"default"`) and yields to content whose rendered root
+   * element carries `data-semiotic-tooltip-chrome`.
    * @default "default"
    */
   chrome?: TooltipChromeMode
@@ -95,21 +97,92 @@ export const TooltipRoot = /* @__PURE__ */ markTooltipChrome(function TooltipRoo
   ...rest
 }: TooltipRootProps) {
   const inheritedChrome = useTooltipChrome()
-  const resolvedStyle = (chrome ?? inheritedChrome ?? "default") === "default"
-    ? { ...defaultTooltipStyle, ...style }
-    : style
+  const paintsDefault = (chrome ?? inheritedChrome ?? "default") === "default"
+  const ref = React.useRef<HTMLDivElement>(null)
+  // React 19 passes a consumer's `ref` as a prop; keep forwarding it.
+  React.useImperativeHandle(
+    (rest as { ref?: React.Ref<HTMLDivElement> }).ref,
+    () => ref.current as HTMLDivElement
+  )
+  // An explicit `chrome` prop is kept as given. Inherited or default chrome
+  // gives way to content that declares its own.
+  const contentOwnsChrome = useRenderedRootOwnsChrome(
+    ref,
+    chrome === undefined && paintsDefault
+  )
 
   return (
     <div
       {...rest}
+      ref={ref}
       data-semiotic-tooltip-chrome
-      className={`semiotic-tooltip ${className}`.trim()}
-      style={resolvedStyle}
+      className={contentOwnsChrome ? className : `semiotic-tooltip ${className}`.trim()}
+      style={
+        paintsDefault && !contentOwnsChrome ? { ...defaultTooltipStyle, ...style } : style
+      }
     >
       {children}
     </div>
   )
 })
+
+/**
+ * Whether a tooltip slot needs no fallback chrome from what it rendered:
+ * either a single root element carrying `data-semiotic-tooltip-chrome`, or
+ * nothing at all (a component that rendered `null` leaves no box to draw).
+ * Only the slot's direct children are read, so the marker counts however
+ * many components sit above that element. Whitespace text and comments are
+ * ignored; any other text or a second element keeps the fallback chrome.
+ */
+export function renderedRootOwnsChrome(slot: Element): boolean {
+  let root: Element | undefined
+  for (const node of slot.childNodes) {
+    // nodeType 1 is an element and 3 is text.
+    if (node.nodeType === 1) {
+      if (root) return false
+      root = node as Element
+    } else if (node.nodeType === 3 && node.textContent?.trim()) return false
+  }
+  const marker = root?.getAttribute("data-semiotic-tooltip-chrome")
+  return !root || (marker != null && marker !== "false")
+}
+
+/**
+ * `renderedRootOwnsChrome` for the element behind `ref`. It is read after
+ * every commit and before paint, so a slot that paints fallback chrome drops
+ * it in the same frame its content renders a marked root, and again whenever
+ * the content's DOM changes without the slot re-rendering (a nested
+ * component's own state update). Always `false` while `enabled` is false;
+ * the caller keeps `ref` attached to a mounted element whenever `enabled` is
+ * true.
+ */
+export function useRenderedRootOwnsChrome(
+  ref: React.RefObject<Element | null>,
+  enabled: boolean
+): boolean {
+  const [owns, setOwns] = React.useState(false)
+  // Resolved here rather than at module scope: neutral entries load this
+  // module under react-server, where neither hook exists.
+  const useCommitEffect =
+    typeof window === "undefined" ? React.useEffect : React.useLayoutEffect
+  useCommitEffect(() => {
+    const next = enabled && ref.current !== null && renderedRootOwnsChrome(ref.current)
+    if (next !== owns) setOwns(next)
+  })
+  React.useEffect(() => {
+    const slot = ref.current
+    if (!enabled || !slot) return
+    const observer = new MutationObserver(() => setOwns(renderedRootOwnsChrome(slot)))
+    observer.observe(slot, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributeFilter: ["data-semiotic-tooltip-chrome"]
+    })
+    return () => observer.disconnect()
+  }, [enabled, ref])
+  return enabled && owns
+}
 
 /**
  * Mark a component or tooltip renderer as owning its tooltip chrome. Marking
@@ -138,6 +211,11 @@ function paintsInlineBackground(value: unknown): boolean {
  * Whether a renderer or the immediate tooltip content owns its visual chrome.
  * A class name alone is deliberately not enough: many callbacks use a class
  * only for internal layout and would otherwise become transparent.
+ *
+ * This reads React elements before they render. Content whose chrome lives
+ * inside a component declares it on the rendered root element instead
+ * (`data-semiotic-tooltip-chrome`), which the tooltip slot reads after
+ * rendering (`renderedRootOwnsChrome`).
  */
 export function hasOwnTooltipChrome(
   node: React.ReactNode | ((...args: never[]) => React.ReactNode)
