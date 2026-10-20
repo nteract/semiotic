@@ -31,6 +31,12 @@ const printOnly = process.argv.includes("--print")
  * `scripts/treeshake-isolation.test.mjs`.
  */
 const ENTRY_GRAPHS = [
+  // Approved physics transition cost (2026-10-20): source/window ledger, glyphs,
+  // themes, and static/AI evidence parity. Clean production graphs measure
+  // root 389.6, artifact 124.7, physics 172.2, server 270.9, AI 622.1,
+  // Atlas 298.5, and utils 110.8 KiB gzip in both local and Linux CI builds.
+  // No dependency or module-count increase; retain <1 KiB headroom and keep
+  // all unaffected graph limits, isolation checks, and coverage floors intact.
   // Approved 3.13.0 budget refresh (2026-10-20): CI reports server 266.9,
   // AI 617.3, and recipes 105.7 KiB gzip. Their limits rise to 267.5, 618,
   // and 106.5 KiB, keeping less than 1 KiB headroom for each. All other
@@ -109,7 +115,7 @@ const ENTRY_GRAPHS = [
   // control layer, and diagnoseConfig gains the annotation field-typo check;
   // measures 385.5 KiB gzip.
   // Feature graph: 387.3 KiB (previous built HEAD: 385.9 KiB).
-  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 388.7 },
+  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 390 },
   // Bumped 150→154: custom-layout painter registration now loads on demand
   // rather than retaining every painter in every chart HOC. The lightweight
   // readiness bridge and fallback paint selection live in the shared XY
@@ -192,7 +198,7 @@ const ENTRY_GRAPHS = [
     // identities. The published contract graph now measures 121.6 KiB gzip.
     // Bumped 122→123: histogram valueBands and annotation labelColor in the
     // chart specs measure 122.2 KiB gzip.
-    limitKb: 123.1
+    limitKb: 125
   },
   {
     entry: "semiotic-artifact-react.module.min.js",
@@ -275,7 +281,7 @@ const ENTRY_GRAPHS = [
   // Bumped 168→169: the shared hatch tile and tooltip flip state measure
   // 167.9 KiB gzip.
   // Feature graph: 169.4 KiB (previous built HEAD: 168.3 KiB).
-  { entry: "physics.module.min.js", label: "physics", limitKb: 170.2 },
+  { entry: "physics.module.min.js", label: "physics", limitKb: 172.6 },
   // Bumped 240→242 (3.9.0): static Gauge SVG content and opt-in geometry
   // precision add serializer/runtime code to the server entry.
   // Bumped 242→244: the published Atlas readers and renderer-aware server
@@ -296,7 +302,7 @@ const ENTRY_GRAPHS = [
   // Bumped 261.5→262.5: static value-banded histogram bars, standalone-safe
   // (var()-free) annotation label paints, and the shared hatch tile measure
   // 261.8 KiB gzip.
-  { entry: "server.module.min.js", label: "server", limitKb: 267.5 },
+  { entry: "server.module.min.js", label: "server", limitKb: 271.5 },
   // Bumped 450→460: the public numeric audit + chart contract evaluator adds
   // ~5–6 KB gzip to the AI graph; ChartContainer loads the same code lazily.
   // Bumped 460→462 (3.8.6): BumpChart (+ its ribbon geometry) joins the AI graph.
@@ -385,7 +391,7 @@ const ENTRY_GRAPHS = [
   // Bumped 612→614: axis-config key validation, value-banded histogram
   // fills, and the shared hatch tile measure 613.5 KiB gzip.
   // Feature graph: 614.7 KiB (previous built HEAD: 613.3 KiB).
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 618 },
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 623 },
   // Bumped 100→101: transitDiagramLayout's public detail modes, source-rooted
   // line derivation, and station-rendering contract extend the curated recipes
   // entry. Linux CI measures 100.3 KiB gzip; retain a reviewable 0.7 KiB
@@ -417,13 +423,13 @@ const ENTRY_GRAPHS = [
   // tooltip flip state measure 289.8 KiB gzip.
   // Shared lazy-module loading changes measure 290.5 KiB; allow 0.5 KiB headroom.
   // Feature graph: 291.8 KiB (previous built HEAD: 290.6 KiB).
-  { entry: "semiotic-atlas.module.min.js", label: "atlas", limitKb: 293.7 },
+  { entry: "semiotic-atlas.module.min.js", label: "atlas", limitKb: 299 },
   { entry: "semiotic-atlas-core.module.min.js", label: "atlas/core", limitKb: 15 },
   // Config serialization preserves and validates the optional interpretation
   // sidecar. Isolating the neutral utility graph removes unrelated shared
   // contract chunks and returns production to 96.5 KiB, so restore the 110 KiB
   // ceiling rather than retaining transient graph-inflation allowances.
-  { entry: "semiotic-utils.module.min.js", label: "utils", limitKb: 110 },
+  { entry: "semiotic-utils.module.min.js", label: "utils", limitKb: 111.2 },
   { entry: "semiotic-value.module.min.js", label: "value", limitKb: 25 }
 ]
 

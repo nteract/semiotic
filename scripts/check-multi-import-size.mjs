@@ -75,7 +75,9 @@ const analyze = process.argv.includes("--analyze")
 // Bumped 308→308.5 (2026-10-19): tooltip slots read chrome ownership from the
 // rendered root element and re-place from the re-measured box (308.2 KiB
 // measured on the same union).
-const MULTI_IMPORT_GZIP_BUDGET = 308.5 * 1024
+// Physics transition evidence and schema growth measure 309.6 KiB on this
+// unchanged consumer union; keep 0.4 KiB headroom with isolation still enforced.
+const MULTI_IMPORT_GZIP_BUDGET = 310 * 1024
 
 const MULTI_IMPORT_SOURCE = `
 export { LineChart } from "semiotic/xy"
