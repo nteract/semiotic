@@ -13,6 +13,22 @@ interface CurrentRef<T> {
   current: T
 }
 
+/** Publish an observation to the chart callback and the shared observer store. */
+export function usePhysicsObservationDispatcher(
+  onObservationRef: CurrentRef<OnObservationCallback | undefined>
+): OnObservationCallback {
+  const pushObservation = useObservationSelector(
+    (state) => state.pushObservation
+  )
+  return useCallback(
+    (observation: ChartObservation) => {
+      onObservationRef.current?.(observation)
+      pushObservation(observation)
+    },
+    [onObservationRef, pushObservation]
+  )
+}
+
 export type PhysicsFrameObservationType =
   "hover" | "hover-end" | "click" | "click-end" | "focus" | "activate"
 
@@ -38,16 +54,9 @@ export function usePhysicsFrameObservationEmitter({
   type: PhysicsFrameObservationType,
   payload?: PhysicsFrameObservationPayload
 ) => void {
-  const pushObservation = useObservationSelector(
-    (state) => state.pushObservation
-  )
+  const onObservation = usePhysicsObservationDispatcher(onObservationRef)
   return useCallback(
     (type, payload) => {
-      const onObservation = (observation: ChartObservation) => {
-        onObservationRef.current?.(observation)
-        pushObservation(observation)
-      }
-
       const base = {
         timestamp: wallClockRef.current(),
         chartType: CHART_TYPE,
@@ -82,6 +91,6 @@ export function usePhysicsFrameObservationEmitter({
         onObservation({ ...base, type })
       }
     },
-    [chartIdRef, onObservationRef, wallClockRef, pushObservation]
+    [chartIdRef, onObservation, wallClockRef]
   )
 }

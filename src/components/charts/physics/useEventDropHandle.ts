@@ -10,6 +10,7 @@ import { readEventDropOccupancy } from "./eventDropPhysics"
 import type { EventDropLedgerRow } from "./eventDropLedger"
 import { eventDropSourceStats } from "./eventDropSources"
 import type { OnObservationCallback } from "../../store/ObservationStore"
+import { usePhysicsObservationDispatcher } from "../../stream/physics/physicsFrameObservations"
 
 export interface EventDropClock {
   /** Elapsed simulation time in the chart's timeUnit. */
@@ -43,18 +44,25 @@ export interface EventDropReadoutProps {
 }
 
 export function useEventDropHandle(
-  ref: Ref<PhysicsFrameHandle>,
+  ref: Ref<EventDropChartHandle>,
   dataRef: RefObject<PhysicsFrameHandle | null>,
   frameRef: RefObject<StreamPhysicsFrameHandle | null>,
   metadata: EventDropProjectionMetadata | undefined,
   props: EventDropReadoutProps & {
     onObservation?: OnObservationCallback
     timeScale?: number
-    frameProps?: Pick<StreamPhysicsFrameProps, "onTick" | "clock">
+    frameProps?: Pick<
+      StreamPhysicsFrameProps,
+      "onTick" | "clock" | "onObservation"
+    >
   }
 ): StreamPhysicsFrameProps["onTick"] {
   const latest = useRef({ metadata, props })
   latest.current = { metadata, props }
+  const onObservationRef = useRef(props.onObservation)
+  onObservationRef.current =
+    props.onObservation ?? props.frameProps?.onObservation
+  const dispatchObservation = usePhysicsObservationDispatcher(onObservationRef)
   const lastTick = useRef(-Infinity)
   const getLedger = () =>
     (latest.current.metadata?.ledger ?? []).map((row) => ({
@@ -127,51 +135,70 @@ export function useEventDropHandle(
       }
     }
   }))
-  const emitted = useRef(new Set<string>())
+  const emitted = useRef(new Map<string, number>())
   const previous = useRef(-Infinity)
+  const deliveredLedger = useRef<string | undefined>(undefined)
   const ledgerTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => {
     const props = latest.current.props
-    if (!metadata) return
+    const store = frameRef.current?.getStore()
+    if (!metadata || !store) return
     let lifecycle = false
+    const occurrences = new Map<string, number>()
     for (const event of metadata.lifecycleEvents ?? []) {
-      if (
-        event.type !== "physics-window-open" &&
-        event.type !== "physics-window-close"
-      )
-        continue
-      const key = `${event.type}:${event.windowId}`
-      if (emitted.current.has(key)) continue
-      emitted.current.add(key)
+      // Watermark changes below describe the committed frontier. All other
+      // transitions come from replayed history, including repeated idle/held
+      // transitions with identical payloads.
+      if (event.type === "physics-watermark-advance") continue
+      const key =
+        event.type === "physics-window-open" ||
+        event.type === "physics-window-close"
+          ? `${event.type}:${event.windowId}`
+          : JSON.stringify(event)
+      const occurrence = (occurrences.get(key) ?? 0) + 1
+      occurrences.set(key, occurrence)
+      if (occurrence <= (emitted.current.get(key) ?? 0)) continue
+      emitted.current.set(key, occurrence)
       lifecycle = true
-      const observation = frameRef.current?.getStore().recordObservation(event)
-      if (observation) props.onObservation?.(observation)
+      dispatchObservation(store.recordObservation(event))
     }
     if (metadata.watermarkValue > previous.current) {
       const before = previous.current
       previous.current = metadata.watermarkValue
       props.onWatermarkChange?.(metadata.watermarkValue, before)
-      const observation = frameRef.current?.getStore().recordObservation({
+      const observation = store.recordObservation({
         type: "physics-watermark-advance",
         from: before,
         to: metadata.watermarkValue,
         cause: "external"
       })
-      if (observation) props.onObservation?.(observation)
+      dispatchObservation(observation)
+    }
+    const ledgerKey = JSON.stringify(metadata.ledger ?? [])
+    if (!props.onLedgerChange || ledgerKey === deliveredLedger.current) {
+      if (ledgerTimer.current) clearTimeout(ledgerTimer.current)
+      ledgerTimer.current = null
+      return
+    }
+    const deliverLedger = () => {
+      ledgerTimer.current = null
+      const callback = latest.current.props.onLedgerChange
+      const ledger = getLedger()
+      const key = JSON.stringify(ledger)
+      if (!callback || key === deliveredLedger.current) return
+      deliveredLedger.current = key
+      callback(ledger)
     }
     if (lifecycle) {
       if (ledgerTimer.current) clearTimeout(ledgerTimer.current)
-      ledgerTimer.current = null
-      props.onLedgerChange?.(getLedger())
+      deliverLedger()
     } else if (!ledgerTimer.current)
-      ledgerTimer.current = setTimeout(() => {
-        ledgerTimer.current = null
-        latest.current.props.onLedgerChange?.(getLedger())
-      }, 500)
-  }, [metadata, frameRef])
+      ledgerTimer.current = setTimeout(deliverLedger, 500)
+  }, [metadata, frameRef, dispatchObservation])
   useEffect(
     () => () => {
       if (ledgerTimer.current) clearTimeout(ledgerTimer.current)
+      ledgerTimer.current = null
     },
     []
   )

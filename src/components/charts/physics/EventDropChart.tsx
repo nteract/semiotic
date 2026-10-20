@@ -35,6 +35,7 @@ import {
 } from "./physicsHocUtils"
 import {
   useEventDropHandle,
+  type EventDropChartHandle,
   type EventDropReadoutProps
 } from "./useEventDropHandle"
 import {
@@ -188,7 +189,7 @@ function eventDropSemanticItems(
 export const EventDropChart = /* @__PURE__ */ forwardRef(
   function EventDropChart<TDatum extends Datum = Datum>(
     props: EventDropChartProps<TDatum>,
-    ref: React.Ref<PhysicsFrameHandle>
+    ref: React.Ref<EventDropChartHandle>
   ) {
     const {
       arrivalAccessor = "arrivalTime" as ChartAccessor<TDatum, number>,
@@ -380,7 +381,8 @@ export const EventDropChart = /* @__PURE__ */ forwardRef(
         backgroundGraphicsBackdrop={
           frameProps?.backgroundGraphicsBackdrop ??
           (windowBackground && !frameProps?.backgroundGraphics
-            ? (props.background ?? physicsCanvasThemeCSSValue("background"))
+            ? (sharedFrameProps.background ??
+              physicsCanvasThemeCSSValue("background"))
             : undefined)
         }
         foregroundGraphics={composePhysicsFrameGraphics(
@@ -406,6 +408,18 @@ export const EventDropChart = /* @__PURE__ */ forwardRef(
       layoutMode
     )
   }
-)
+) as {
+  // Existing object refs can keep the common physics handle type. Callback
+  // refs and ComponentRef infer the complete EventDrop handle below.
+  (
+    props: EventDropChartProps & {
+      ref:
+        | React.RefObject<PhysicsFrameHandle | null>
+        | React.Ref<EventDropChartHandle>
+    }
+  ): React.ReactNode
+} & React.ForwardRefExoticComponent<
+  EventDropChartProps & React.RefAttributes<EventDropChartHandle>
+>
 
 export default EventDropChart

@@ -1,6 +1,14 @@
 import * as React from "react"
 import { act, fireEvent, render } from "@testing-library/react"
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  expectTypeOf,
+  it,
+  vi
+} from "vitest"
 import { renderToStaticMarkup } from "react-dom/server"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
 import { renderChartWithEvidence } from "../../server/renderToStaticSVG"
@@ -26,6 +34,66 @@ describe("EventDrop sources, ledger and clock", () => {
     cleanup = setupCanvasMock({ stubRaf: "noop" })
   })
   afterEach(() => cleanup())
+
+  it("infers the full handle for object and callback refs", () => {
+    expectTypeOf<
+      React.ComponentRef<typeof EventDropChart>
+    >().toEqualTypeOf<EventDropChartHandle>()
+    const ref = React.createRef<React.ComponentRef<typeof EventDropChart>>()
+    const { unmount } = render(<EventDropChart ref={ref} data={rows} paused />)
+    expect(ref.current!.getLedger()).toHaveLength(2)
+    expect(ref.current!.getClock().paused).toBe(true)
+    act(() => ref.current!.setTimeScale(2))
+    expect(ref.current!.getClock().timeScale).toBe(2)
+    unmount()
+    const received = vi.fn()
+    render(
+      <EventDropChart
+        data={rows}
+        paused
+        ref={(handle) => {
+          expectTypeOf(handle).toEqualTypeOf<EventDropChartHandle | null>()
+          if (handle) {
+            received(handle.getLedger(), handle.getClock())
+            handle.setTimeScale(2)
+          }
+        }}
+      />
+    )
+    expect(received).toHaveBeenCalledWith(
+      expect.any(Array),
+      expect.objectContaining({ paused: true })
+    )
+  })
+
+  it.each([
+    { frameProps: { background: "#123456" }, expected: "#123456" },
+    {
+      background: "#abcdef",
+      frameProps: { background: "#123456" },
+      expected: "#abcdef"
+    },
+    {
+      background: "#abcdef",
+      frameProps: { backgroundGraphicsBackdrop: "#654321" },
+      expected: "#654321"
+    }
+  ])(
+    "preserves background precedence through both SVG entry points: $expected",
+    ({ expected, ...props }) => {
+      const config = { data: rows, ...props }
+      for (const markup of [
+        renderToStaticMarkup(<EventDropChart {...config} />),
+        renderChartWithEvidence("EventDropChart", config).svg
+      ]) {
+        expect(
+          markup.match(
+            /<rect[^>]*class="stream-frame-background__backdrop"[^>]*>/
+          )?.[0]
+        ).toContain(`fill="${expected}"`)
+      }
+    }
+  )
 
   it("exposes source accounting and emits each lifecycle edge once across rerenders", () => {
     const ref = React.createRef<EventDropChartHandle>()

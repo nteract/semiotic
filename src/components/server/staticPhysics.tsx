@@ -48,6 +48,22 @@ export function renderPhysicsFrame(
 ): string {
   const size = props.size ?? [props.width ?? 600, props.height ?? 400]
   const theme = resolveTheme(props.theme)
+  // Static chrome uses concrete paint attributes. Apply the frame palette to
+  // its resolved theme as well as the root CSS variables, retaining typography
+  // and the original auto-theme identity for scoped media rules.
+  const chromeTheme = props.physicsTheme
+    ? {
+        ...theme,
+        colors: {
+          ...theme.colors,
+          ...Object.fromEntries(
+            Object.entries(props.physicsTheme).filter(
+              ([key, value]) => key in theme.colors && value != null
+            )
+          )
+        }
+      }
+    : theme
   const themeVariables =
     props.theme === undefined || theme.mode === "auto"
       ? {}
@@ -134,7 +150,7 @@ export function renderPhysicsFrame(
         props,
         size,
         margin,
-        theme
+        chromeTheme
       )
       annotationRender = chrome.annotationRender
       const mediaCSS = themeMediaCSS(

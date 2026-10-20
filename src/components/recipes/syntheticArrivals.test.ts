@@ -105,6 +105,43 @@ describe("synthetic arrivals", () => {
     ])
   })
 
+  it.each([
+    { interval: 0.1, delta: 3, ticks: 30, rate: 1, count: 30 },
+    { interval: 0.1, delta: 1000, ticks: 10000, rate: 1, count: 10000 },
+    { interval: 0.3, delta: 3, ticks: 30, rate: 1.5, count: 15 }
+  ])(
+    "uses the same fractional deadline policy across tick sizes: %j",
+    ({ interval, delta, ticks, rate, count }) => {
+      const spec = [
+        { id: "a", interval },
+        { id: "b", interval: interval * 3 }
+      ]
+      const whole = createSyntheticEmitter(spec)
+      const chunked = createSyntheticEmitter(spec)
+      const expected = whole.advance(delta, { rate })
+      const actual = Array.from({ length: ticks }, () =>
+        chunked.advance(delta / ticks, { rate })
+      ).flat()
+      expect(expected.filter((e) => e.source === "a")).toHaveLength(count)
+      expect(actual.map((e) => e.id)).toEqual(expected.map((e) => e.id))
+      actual.forEach((event, i) => {
+        expect(event.arrivalTime).toBeCloseTo(expected[i].arrivalTime, 8)
+        expect(event.eventTime).toBeCloseTo(expected[i].eventTime, 8)
+      })
+      expect(whole.getTime()).toBe(delta)
+      expect(chunked.getTime()).toBeCloseTo(delta, 10)
+    }
+  )
+
+  it("does not round a genuinely later fractional deadline into the current tick", () => {
+    const emitter = createSyntheticEmitter([{ id: "a", interval: 0.1 }])
+    expect(emitter.advance(0.1 - 1e-10)).toEqual([])
+    expect(emitter.advance(1e-10)).toHaveLength(1)
+    expect(emitter.advance(0.1)).toMatchObject([
+      { id: "a-1", arrivalTime: 0.2 }
+    ])
+  })
+
   it("rejects invalid schedules instead of looping forever", () => {
     expect(() => createSyntheticEmitter([{ id: "a", interval: 0 }])).toThrow()
     expect(() =>

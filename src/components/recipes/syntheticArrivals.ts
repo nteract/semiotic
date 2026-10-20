@@ -47,6 +47,7 @@ interface SourceCursor {
   spec: SyntheticSourceSpec
   random: () => number
   remaining: number
+  remainingError: number
   burstRemaining: number
   sequence: number
   interval: number
@@ -112,6 +113,7 @@ function makeSources(
       random: mulberry32(seed + index * 0x9e3779b9),
       interval,
       remaining: interval,
+      remainingError: 0,
       burstRemaining: 0,
       sequence: 0
     }
@@ -139,6 +141,7 @@ function sampleJitter(source: SourceCursor): number {
 }
 
 function emit(source: SourceCursor, time: number): SyntheticArrival {
+  source.remainingError = 0
   const event = {
     id: `${source.spec.id}-${source.sequence++}`,
     source: source.spec.id,
@@ -163,6 +166,15 @@ function emit(source: SourceCursor, time: number): SyntheticArrival {
   return event
 }
 
+// Compensated subtraction keeps long advances from drifting past a deadline
+// merely because another source fires many times within the same interval.
+function elapse(source: SourceCursor, elapsed: number): void {
+  const adjusted = -elapsed - source.remainingError
+  const remaining = source.remaining + adjusted
+  source.remainingError = remaining - source.remaining - adjusted
+  source.remaining = remaining
+}
+
 /**
  * Deterministic simulator for synthetic sources. Advance with *simulated*
  * milliseconds (e.g. controller `dt * 1000`), never wall-clock deltas.
@@ -174,6 +186,7 @@ export function createSyntheticEmitter(
 ) {
   const sources = makeSources(spec, seed)
   let time = 0
+  let timeError = 0
   return {
     getTime: () => time,
     advance(
@@ -192,6 +205,8 @@ export function createSyntheticEmitter(
       const active = sources.filter(
         (source) => options.active?.[source.spec.id] !== false
       )
+      let elapsed = 0
+      let elapsedError = 0
       let remainingMs = deltaMs
       while (remainingMs > 0) {
         const next = active.reduce<SourceCursor | undefined>(
@@ -200,20 +215,30 @@ export function createSyntheticEmitter(
           undefined
         )
         const until = next ? next.remaining / rate : Infinity
-        if (until > remainingMs || !next) {
-          for (const source of active) source.remaining -= remainingMs * rate
-          time += remainingMs
+        // Treat only floating-point roundoff at a deadline as equality. Use
+        // the same policy for call boundaries and tied source deadlines.
+        const tolerance = 16 * Number.EPSILON * Math.max(deltaMs, until)
+        if (!next || until - remainingMs > tolerance) {
+          for (const source of active) elapse(source, remainingMs * rate)
           break
         }
-        for (const source of active) source.remaining -= until * rate
-        time += until
-        remainingMs -= until
-        events.push(emit(next, time))
+        const step = Math.min(remainingMs, Math.max(0, until))
+        for (const source of active) elapse(source, step * rate)
+        const adjusted = step - elapsedError
+        const total = elapsed + adjusted
+        elapsedError = total - elapsed - adjusted
+        elapsed = total
+        remainingMs = Math.max(0, deltaMs - elapsed)
+        const arrivalTime = time + Math.min(deltaMs, elapsed)
         // Drain tied arrivals at the end of a step in source declaration order.
         for (const source of active)
-          if (source !== next && source.remaining <= 0)
-            events.push(emit(source, time))
+          if (source === next || source.remaining / rate <= tolerance)
+            events.push(emit(source, arrivalTime))
       }
+      const adjusted = deltaMs - timeError
+      const total = time + adjusted
+      timeError = total - time - adjusted
+      time = total
       return events
     }
   }

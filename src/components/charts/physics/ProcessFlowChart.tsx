@@ -437,6 +437,7 @@ export const ProcessFlowChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ 
         ...fromFrame,
         mark:
           fromFrame?.mark ??
+          fromBase?.mark ??
           (body.datum as { __physicsMark?: PhysicsBodyMark; mark?: PhysicsBodyMark } | undefined)
             ?.__physicsMark ??
           (body.datum as { mark?: PhysicsBodyMark } | undefined)?.mark ??
