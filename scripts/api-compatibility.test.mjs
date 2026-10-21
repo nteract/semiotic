@@ -392,4 +392,17 @@ describe("public API compatibility comparison", () => {
       rmSync(directory, { recursive: true, force: true })
     }
   })
+
+  it("preserves released EventDrop ref and frame-prop patterns through public imports", () => {
+    const compiled = spawnSync(process.execPath, [
+      "node_modules/typescript/bin/tsc",
+      "--project", "scripts/fixtures/packed-typescript-consumer/tsconfig.json",
+      "--pretty", "false",
+    ], { cwd: repoRoot, encoding: "utf8", timeout: 120_000 })
+    assert.equal(
+      compiled.status,
+      0,
+      compiled.stderr || compiled.stdout || compiled.error?.message,
+    )
+  })
 })

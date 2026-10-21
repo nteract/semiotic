@@ -132,6 +132,44 @@
         "function suggestStreamCharts(schema: StreamSchema, options?: SuggestStreamChartsOptions | undefined): SuggestStreamChartsResult"
       ],
       "reason": "Reviewed stream-suggester result expansion: callers now receive { suggestions, excluded, stretchSuggestions } so empty fits can be explained instead of a silent array. Migration is const { suggestions } = suggestStreamCharts(...)."
+    },
+    {
+      "against": "v3.12.1",
+      "entry": "semiotic-ai",
+      "symbol": "EventDropChart",
+      "previous": [
+        "function EventDropChart(props: React.RefAttributes<import(\"semiotic-internal/semiotic-physics\").PhysicsFrameHandle> & import(\"semiotic-internal/semiotic-physics\").EventDropChartProps<import(\"semiotic-internal/components/stream/networkColorAccessors\").Datum>): React.ReactNode"
+      ],
+      "current": [
+        "function EventDropChart(props: EventDropChartProps<Datum> & {ref?: React.Ref<EventDropChartHandle> | React.RefObject<PhysicsFrameHandle | null>;}): React.ReactNode",
+        "function EventDropChart(props: React.RefAttributes<import(\"semiotic-internal/semiotic-physics\").EventDropChartHandle> & import(\"semiotic-internal/semiotic-physics\").EventDropChartProps<import(\"semiotic-internal/components/stream/networkColorAccessors\").Datum>): React.ReactNode"
+      ],
+      "reason": "Reviewed EventDrop handle extension: EventDropChartHandle extends the released PhysicsFrameHandle. The compatibility overload preserves common-handle object refs, callback refs and forwardRef wrappers while ComponentRef and inferred callbacks expose the complete EventDrop handle. The packed TypeScript consumer compiles these patterns through semiotic/physics and semiotic/ai with negative type assertions. Cross-release assignability also reaches the additive travel-end event through frame callbacks and cannot prove this composite signature; this exception is limited to the exact v3.12.1 declarations."
+    },
+    {
+      "against": "v3.12.1",
+      "entry": "semiotic-physics",
+      "symbol": "EventDropChart",
+      "previous": [
+        "function EventDropChart(props: React.RefAttributes<import(\"semiotic-internal/semiotic-physics\").PhysicsFrameHandle> & import(\"semiotic-internal/semiotic-physics\").EventDropChartProps<import(\"semiotic-internal/components/stream/networkColorAccessors\").Datum>): React.ReactNode"
+      ],
+      "current": [
+        "function EventDropChart(props: EventDropChartProps<Datum> & {ref?: React.Ref<EventDropChartHandle> | React.RefObject<PhysicsFrameHandle | null>;}): React.ReactNode",
+        "function EventDropChart(props: React.RefAttributes<import(\"semiotic-internal/semiotic-physics\").EventDropChartHandle> & import(\"semiotic-internal/semiotic-physics\").EventDropChartProps<import(\"semiotic-internal/components/stream/networkColorAccessors\").Datum>): React.ReactNode"
+      ],
+      "reason": "Reviewed EventDrop handle extension: EventDropChartHandle extends the released PhysicsFrameHandle. The compatibility overload preserves common-handle object refs, callback refs and forwardRef wrappers while ComponentRef and inferred callbacks expose the complete EventDrop handle. The packed TypeScript consumer compiles these patterns through semiotic/physics and semiotic/ai with negative type assertions. Cross-release assignability also reaches the additive travel-end event through frame callbacks and cannot prove this composite signature; this exception is limited to the exact v3.12.1 declarations."
+    },
+    {
+      "against": "v3.12.1",
+      "entry": "semiotic-physics",
+      "symbol": "interface-member EventDropChartProps::property::frameProps",
+      "previous": [
+        "interface-member EventDropChartProps::property::frameProps = optional frameProps: Partial<Omit<import(\"../../semiotic-experimental\").UnstableStreamPhysicsFrameProps, \"config\" | \"initialSpawnPacing\" | \"initialSpawns\" | \"size\">> | undefined"
+      ],
+      "current": [
+        "interface-member EventDropChartProps::property::frameProps = optional frameProps: Partial<Omit<import(\"../../semiotic-experimental\").UnstableStreamPhysicsFrameProps, \"initialSpawnPacing\" | \"initialSpawns\" | \"size\">> | undefined"
+      ],
+      "reason": "Reviewed optional frame-config addition: frameProps now permits config as well as every previously exposed override; config remains optional and typed. The packed EventDrop consumer compiles the released config-omitting frame-prop shape, including onFrame, controllers and bodyForces, plus new config overrides. Cross-release comparison of these recursive callback contexts also reaches the additive travel-end event and cannot prove the outer property widening; this exception is limited to the exact v3.12.1 declarations."
     }
   ]
 }
