@@ -562,7 +562,7 @@
     "@chenglou/pretext": "0.0.9",
     "@eslint/compat": "^2.1.0",
     "@eslint/js": "^9.39.5",
-    "@modelcontextprotocol/sdk": "^1.31.0",
+    "@modelcontextprotocol/sdk": "^1.32.0",
     "@playwright/test": "1.61.1",
     "@size-limit/file": "^14.1.0",
     "@testing-library/dom": "^10.4.1",
@@ -618,7 +618,7 @@
     "typedoc": "^0.28.20",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.63.0",
-    "vite": "^8.1.4",
+    "vite": "^8.3.3",
     "vitest": "4.1.11",
     "world-atlas": "^2.0.2"
   },
