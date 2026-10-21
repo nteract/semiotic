@@ -41,7 +41,14 @@ test("heavy physics simulations run serially without losing or duplicating shard
 
     const simulationPaths = [
       resolve(root, "src/components/stream/physics/PhysicsConfinement.test.ts"),
-      resolve(root, "src/components/charts/physics/EventDropLiveRuntime.test.ts")
+      resolve(
+        root,
+        "src/components/stream/physics/PhysicsReducedMotionSettle.test.ts"
+      ),
+      resolve(root, "src/components/charts/physics/EventDropLiveRuntime.test.ts"),
+      resolve(root, "src/components/charts/physics/PhysicsReducedMotion.test.tsx"),
+      resolve(root, "src/components/charts/physics/PhysicsCharts.server.test.tsx"),
+      resolve(root, "docs/src/pages/examples/emitterPlaygroundModel.test.ts")
     ].sort()
     const simulations = specs.filter((spec) =>
       simulationPaths.includes(spec.moduleId)
@@ -62,6 +69,11 @@ test("heavy physics simulations run serially without losing or duplicating shard
     )
     assert.equal(project.config.maxWorkers, 1)
     assert.equal(project.config.fileParallelism, false)
+    assert.equal(project.config.testTimeout, 60_000)
+    assert.equal(
+      ctx.projects.find((p) => p.name === "unit").config.testTimeout,
+      5_000
+    )
     assert(specs.some((spec) => spec.project !== project))
     assert(
       specs.every(

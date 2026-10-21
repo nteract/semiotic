@@ -7,7 +7,11 @@ const repoRoot = dirname(fileURLToPath(import.meta.url))
 const isCoverageShard = process.env.SEMIOTIC_COVERAGE_SHARD === 'true'
 const physicsSimulationTests = [
   'src/components/stream/physics/PhysicsConfinement.test.ts',
-  'src/components/charts/physics/EventDropLiveRuntime.test.ts'
+  'src/components/stream/physics/PhysicsReducedMotionSettle.test.ts',
+  'src/components/charts/physics/EventDropLiveRuntime.test.ts',
+  'src/components/charts/physics/PhysicsReducedMotion.test.tsx',
+  'src/components/charts/physics/PhysicsCharts.server.test.tsx',
+  'docs/src/pages/examples/emitterPlaygroundModel.test.ts'
 ]
 
 export default defineConfig(({ mode }) => ({
@@ -20,9 +24,10 @@ export default defineConfig(({ mode }) => ({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/setupTests.ts'],
-    // V8 coverage makes the 1,000-body and long-running live simulations CPU
-    // intensive. Give them an exclusive, serial worker group so other files
-    // cannot consume their timeout.
+    // V8 coverage makes large and long-running simulations CPU intensive,
+    // including SSR, reduced-motion settling, and the docs emitter model.
+    // Give them a bounded timeout and an exclusive, serial worker group so
+    // other files cannot consume their timeout. Ordinary unit limits stay put.
     // Both projects still contribute to the same coverage map and shards.
     // Benchmarks retain their existing single-project configuration.
     projects: mode === 'benchmark' ? undefined : [
@@ -40,6 +45,7 @@ export default defineConfig(({ mode }) => ({
           name: 'physics-simulations',
           include: physicsSimulationTests,
           fileParallelism: false,
+          testTimeout: 60_000,
           sequence: { groupOrder: 1 }
         }
       }
