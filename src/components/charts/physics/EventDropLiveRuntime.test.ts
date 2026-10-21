@@ -95,6 +95,8 @@ describe("live EventDrop runtime", () => {
     ).toBe(true)
     expect(store.runtimeState().simulationState).toBe("running")
   })
+  // This 100-second simulation keeps its full admission/retirement workload
+  // under V8 coverage; it runs in the serial physics-simulations worker group.
   it("retires bodies and geometry while preserving every admission", () => {
     const store = new PhysicsPipelineStore(layout().config)
     const oracle = new EventDropLedger(2.5, { delay: 1 })
@@ -134,7 +136,7 @@ describe("live EventDrop runtime", () => {
     expect(maximum).toBeLessThan(250)
     expect(store.snapshot().world.bodies.length).toBeLessThan(250)
     expect(history.length).toBeGreaterThan(35)
-  }, 15_000)
+  }, 60_000)
 
   it("keeps settled world coordinates unchanged as its camera follows time", () => {
     const store = new PhysicsPipelineStore({
