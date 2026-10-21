@@ -19,17 +19,21 @@ function frameFromStore(
   result: PhysicsPipelineTickResult,
   structural = false
 ): PhysicsWorkerFrame {
-  const snapshot =
-    structural ||
-    store.isEventDropLive() ||
+  const live = store.workerLiveDelta()
+  const bodiesChanged =
+    live?.bodiesChanged ||
     result.spawned.length ||
     result.evicted.length ||
     result.sedimented.length ||
     result.events.some((event) => event.type === "travel-end")
-      ? store.snapshot()
-      : undefined
+  const snapshot =
+    structural || (!live && bodiesChanged) ? store.snapshot() : undefined
   const bodies = store.readBodies()
   const frame = packPhysicsWorkerFrame(result, bodies, [], snapshot)
+  if (live && !snapshot) {
+    frame.live = live
+    if (bodiesChanged) frame.structure = store.workerStructure()
+  }
   if (bodies.some((body) => body.travel))
     frame.travelElapsed = Float64Array.from(
       bodies,
@@ -39,7 +43,7 @@ function frameFromStore(
   // motion buffers and scheduling state, without another datum-bearing copy.
   frame.sleepTimes = store.workerSleepTimes(frame.ids)
   frame.bodies = []
-  if (!snapshot) frame.ids = []
+  if (!snapshot && !frame.structure) frame.ids = []
   frame.state = store.workerState()
   return frame
 }

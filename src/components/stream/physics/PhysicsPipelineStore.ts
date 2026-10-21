@@ -1,6 +1,7 @@
 import type {
   PhysicsWorkerFrame,
-  PhysicsWorkerState
+  PhysicsWorkerState,
+  PhysicsWorkerStructure
 } from "./PhysicsWorkerProtocol"
 import { validatePhysicsSpawn, validatePhysicsPipelineConfig, validatePhysicsPipelineSnapshot } from "./physicsInputValidation"
 import {
@@ -70,6 +71,7 @@ import {
 } from "./physicsPipelineObservations"
 import { PhysicsSpawnQueue, enqueuePhysicsSpawns } from "./PhysicsSpawnQueue"
 import { physicsTravelHorizon } from "./physicsBodyTravel"
+import { restoredPhysicsPipelineFields } from "./physicsPipelineSnapshot"
 import { PhysicsPipelinePrograms } from "./PhysicsPipelinePrograms"
 import { evictPhysicsOverflow } from "./physicsPipelineEviction"
 import { PhysicsQuiescenceTracker } from "./physicsPipelineQuiescence"
@@ -130,7 +132,8 @@ export class PhysicsPipelineStore {
       eventDrop,
       ...storeConfig
     } = config
-    this.config = { ...DEFAULT_PHYSICS_PIPELINE_CONFIG, ...storeConfig }
+    this.config = { ...DEFAULT_PHYSICS_PIPELINE_CONFIG, ...storeConfig,
+      viewTransform: { ...(storeConfig.viewTransform ?? DEFAULT_PHYSICS_PIPELINE_CONFIG.viewTransform) } }
     this.configInput = clonePhysicsConfigInput(config)
     this.bodyBudget = bodyBudget ?? {}
     this.engineInput = engine
@@ -160,7 +163,8 @@ export class PhysicsPipelineStore {
       ...storeConfig
     } = config
     this.programs.configure({ emitters, eventDrop }, this.world)
-    this.config = { ...this.config, ...storeConfig }
+    this.config = { ...this.config, ...storeConfig,
+      viewTransform: { ...(storeConfig.viewTransform ?? this.config.viewTransform) } }
     if (changedConfigKeys.includes("eventDrop")) this.revision += 1
     if (bodyBudget !== undefined) {
       this.bodyBudget = bodyBudget
@@ -701,14 +705,26 @@ export class PhysicsPipelineStore {
   }
 
   viewTransform(): { x: number; y: number } {
-    return this.programs.eventDrop?.viewTransform() ?? this.config.viewTransform
+    return this.programs.eventDrop?.viewTransform() ?? { ...this.config.viewTransform }
   }
   isEventDropLive(): boolean { return Boolean(this.programs.eventDrop) }
+
+  /** Next generated input ID, preserved through snapshots without copying history. */
+  enqueueSequence(): number { return this.nextSequence }
+
+  workerLiveDelta() { return this.programs.eventDrop?.drainWorkerDelta() }
+
+  /** Bounded structural state; historical ledger rows use their own delta. */
+  workerStructure(): PhysicsWorkerStructure {
+    return { world: this.world.snapshot(), queue: this.queue.sorted().map(cloneQueuedSpawn),
+      liveBodyOrder: Array.from(this.liveBodyOrder), sediment: this.readSediment() }
+  }
 
   /** Scalar scheduling state, without cloning the world or queued datums. */
   workerState(): PhysicsWorkerState {
     return {
       ...(this.programs.emitters && { emitterProgress: this.programs.emitters.progress() }),
+      nextSequence: this.nextSequence,
       accumulator: this.accumulator,
       activeSensorPairs: Array.from(this.activeSensorPairs),
       elapsedSeconds: this.elapsedSeconds,
@@ -735,7 +751,16 @@ export class PhysicsPipelineStore {
     if (!frame.state || !this.world.applyWorkerMotion) {
       throw new Error("Physics worker motion frame requires a built-in mirror")
     }
-    this.world.applyWorkerMotion(frame)
+    if (frame.structure) {
+      this.world.restore(frame.structure.world)
+      this.queue.restore(frame.structure.queue.map(cloneQueuedSpawn))
+      this.liveBodyOrder = new Set(frame.structure.liveBodyOrder)
+      this.sediment.restore(frame.structure.sediment)
+      this.bodySpatialIndex = new PhysicsBodySpatialIndex()
+    } else if (frame.state.revision !== this.revision || frame.state.elapsedSeconds !== this.elapsedSeconds) {
+      this.world.applyWorkerMotion(frame)
+    }
+    if (frame.live) this.programs.eventDrop?.applyWorkerDelta(frame.live, this.world)
     const previousState = this.simulationState
     const { emitterProgress, ...state } = frame.state
     if (emitterProgress) this.programs.emitters?.restoreProgress(emitterProgress)
@@ -760,6 +785,7 @@ export class PhysicsPipelineStore {
       bodyBudget: cloneBodyBudgetOptions(this.bodyBudget),
       config: {
         ...this.config,
+        viewTransform: { ...this.config.viewTransform },
         kernel: requiredKernelOptions(world.options)
       },
       queue: this.queue.sorted().map(cloneQueuedSpawn),
@@ -777,44 +803,12 @@ export class PhysicsPipelineStore {
     this.programs = programs
     this.observedInitialBoundary = false
     const previousState = this.simulationState
-    this.config = {
-      bodyLimit: snapshot.config.bodyLimit,
-      eviction: snapshot.config.eviction,
-      fixedDt: snapshot.config.fixedDt,
-      maxDeltaSeconds: snapshot.config.maxDeltaSeconds,
-      maxSubsteps: snapshot.config.maxSubsteps,
-      settleStepLimit: snapshot.config.settleStepLimit,
-      timeScale: snapshot.config.timeScale,
-      viewTransform: snapshot.config.viewTransform ?? { x: 0, y: 0 }
-    }
-    this.configInput = {
-      ...snapshot.config,
-      bodyBudget: cloneBodyBudgetOptions(snapshot.bodyBudget ?? {}),
-      kernel: requiredKernelOptions(snapshot.world.options),
-      ...(snapshot.emitters && { emitters: snapshot.emitters.options }),
-      ...(snapshot.eventDrop && { eventDrop: snapshot.eventDrop.config })
-    }
-    this.bodyBudget = cloneBodyBudgetOptions(snapshot.bodyBudget ?? {})
+    Object.assign(this, restoredPhysicsPipelineFields(snapshot))
     this.bodyBudgetObservationKey = "ok"
     this.quiescence.setKernelOptions(snapshot.world.options)
     this.quiescence.reset()
-    this.activeSensorPairs = new Set(snapshot.activeSensorPairs)
-    this.accumulator = snapshot.accumulator
-    this.elapsedSeconds = snapshot.elapsedSeconds
-    this.paused = snapshot.paused
     this.queue.restore(snapshot.queue.map(cloneQueuedSpawn))
-    this.revision = snapshot.revision
     this.sediment.restore(snapshot.sediment ?? [])
-    this.simulationState = snapshot.simulationState ?? resolvePhysicsSimulationState(
-      snapshot.paused,
-      snapshot.visible,
-      snapshot.queue.length > 0,
-      snapshot.world.bodies.every((body) => body.sleeping)
-    )
-    this.liveBodyOrder = new Set(snapshot.liveBodyOrder)
-    this.visible = snapshot.visible
-    this.nextSequence = snapshot.nextSequence ??
-      snapshot.queue.reduce((max, spawn) => Math.max(max, spawn.sequence), -1) + 1
     this.world.restore(snapshot.world)
     this.updateResults.record({ kind: "restore" }, PHYSICS_BODY_INVALIDATIONS)
     if (this.simulationState !== previousState) {

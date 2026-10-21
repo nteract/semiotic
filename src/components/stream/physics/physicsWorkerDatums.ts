@@ -52,17 +52,24 @@ export class PhysicsWorkerDatums {
     ) {
       this.remember(command.snapshot.world.bodies)
       this.remember(command.snapshot.queue)
+      this.remember(
+        command.snapshot.eventDrop?.pending.map((entry) => entry.spawn) ?? []
+      )
     }
     if (command.type === "enqueue") this.remember(command.spawns)
     return this.revision
   }
 
   private restore(snapshot: PhysicsPipelineSnapshot): void {
-    for (const body of [
+    this.restoreBodies([
       ...snapshot.world.bodies,
       ...snapshot.queue,
       ...(snapshot.eventDrop?.pending.map((entry) => entry.spawn) ?? [])
-    ]) {
+    ])
+  }
+
+  private restoreBodies(bodies: PhysicsQueuedSpawn[]): void {
+    for (const body of bodies) {
       const original = this.datums.get(body.id)
       if (original) body.datum = this.runtimeDatum(original.datum, body.datum)
     }
@@ -81,12 +88,17 @@ export class PhysicsWorkerDatums {
       const original = event.bodyId && this.datums.get(event.bodyId)
       if (original) event.datum = this.runtimeDatum(original.datum, event.datum)
     }
-    if (frame.snapshot) {
-      this.restore(frame.snapshot)
+    const structure = frame.snapshot ?? frame.structure
+    const pending =
+      frame.snapshot?.eventDrop?.pending ?? frame.live?.pending ?? []
+    this.restoreBodies(pending.map((entry) => entry.spawn))
+    if (structure) {
+      this.restoreBodies([...structure.world.bodies, ...structure.queue])
       this.ids = frame.ids
       const retained = new Set([
         ...this.ids,
-        ...frame.snapshot.queue.map((body) => body.id)
+        ...structure.queue.map((body) => body.id),
+        ...pending.map((entry) => entry.spawn.id)
       ])
       for (const [id, original] of this.datums)
         if (!retained.has(id) && original.revision <= revision)

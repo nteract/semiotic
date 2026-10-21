@@ -40,8 +40,20 @@ describe("StreamPhysicsFrame authored cursors", () => {
     { pointerType: "touch", scaleX: 0.25, scaleY: 0.75, margin: 0 },
     { pointerType: "mouse", scaleX: 0.5, scaleY: 0.5, margin: 20 },
     { pointerType: "touch", scaleX: 0.25, scaleY: 0.75, margin: 20 },
-    { pointerType: "mouse", scaleX: 0.5, scaleY: 0.5, margin: 20, camera: { x: -40, y: 10 } },
-    { pointerType: "touch", scaleX: 0.25, scaleY: 0.75, margin: 20, camera: { x: -40, y: 10 } }
+    {
+      pointerType: "mouse",
+      scaleX: 0.5,
+      scaleY: 0.5,
+      margin: 20,
+      camera: { x: -40, y: 10 }
+    },
+    {
+      pointerType: "touch",
+      scaleX: 0.25,
+      scaleY: 0.75,
+      margin: 20,
+      camera: { x: -40, y: 10 }
+    }
   ])(
     "keeps $pointerType hover and activation on the painted body after CSS scaling",
     ({ pointerType, scaleX, scaleY, margin, camera = { x: 0, y: 0 } }) => {
@@ -357,5 +369,79 @@ describe("StreamPhysicsFrame authored cursors", () => {
 
     expect(html).toContain('data-semiotic-mark-cursor="pointer"')
     expect(html).toContain('style="cursor:pointer"')
+  })
+
+  it.each([false, true])(
+    "invalidates a stationary pointer's cached hit/miss on restore (miss=%s)",
+    (miss) => {
+      const ref = React.createRef<StreamPhysicsFrameHandle>()
+      const onBodyHover = vi.fn()
+      const { container } = render(
+        <StreamPhysicsFrame
+          ref={ref}
+          size={[200, 120]}
+          paused
+          config={{ kernel: quietKernel }}
+          enableHover
+          onBodyHover={onBodyHover}
+          initialSpawns={[circle("old", miss ? 100 : 50, 50)]}
+        />
+      )
+      const canvas = container.querySelector("canvas")!
+      fireEvent.pointerMove(canvas, { clientX: 50, clientY: 50 })
+      const saved = ref.current!.snapshot()
+      saved.world.bodies[0] = {
+        ...saved.world.bodies[0],
+        id: "restored",
+        x: 50
+      }
+      saved.liveBodyOrder = ["restored"]
+      act(() => {
+        ref.current!.restore(saved)
+        ref.current!.step(0)
+      })
+      expect(ref.current!.snapshot().revision).toBe(saved.revision)
+      expect(onBodyHover).toHaveBeenLastCalledWith(
+        expect.objectContaining({ id: "restored" }),
+        expect.objectContaining({ id: "restored" })
+      )
+      expect(
+        container.querySelector(".stream-physics-tooltip")!.textContent
+      ).toContain("restored")
+    }
+  )
+
+  it("keeps keyboard tooltip ownership through repaint, pointer leave and Escape", () => {
+    const ref = React.createRef<StreamPhysicsFrameHandle>()
+    const { container } = render(
+      <StreamPhysicsFrame
+        ref={ref}
+        size={[200, 120]}
+        paused
+        config={{ kernel: quietKernel }}
+        enableHover
+        bodySemanticItems
+        initialSpawns={[
+          circle("pointer-body", 50, 50),
+          circle("keyboard-body", 100, 50)
+        ]}
+      />
+    )
+    const canvas = container.querySelector("canvas")!
+    const frame = container.querySelector(".stream-physics-frame")!
+    const tooltip = () => container.querySelector(".stream-physics-tooltip")
+    fireEvent.pointerMove(canvas, { clientX: 50, clientY: 50 })
+    fireEvent.keyDown(frame, { key: "ArrowRight" })
+    fireEvent.keyDown(frame, { key: "ArrowRight" })
+    expect(tooltip()!.textContent).toContain("keyboard-body")
+    act(() => ref.current!.step(0))
+    expect(tooltip()!.textContent).toContain("keyboard-body")
+    fireEvent.pointerLeave(canvas)
+    expect(tooltip()!.textContent).toContain("keyboard-body")
+    fireEvent.pointerMove(canvas, { clientX: 50, clientY: 50 })
+    expect(tooltip()!.textContent).toContain("pointer-body")
+    fireEvent.keyDown(frame, { key: "Escape" })
+    act(() => ref.current!.step(0))
+    expect(tooltip()).toBeNull()
   })
 })

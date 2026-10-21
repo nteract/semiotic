@@ -84,6 +84,7 @@ export class EventDropLedger {
   private value = -Infinity
   private heldBy: string | undefined
   private pending: EventDropLedgerEvent[] = []
+  private changedWindows?: Set<string>
 
   constructor(
     readonly windowSize: number,
@@ -140,8 +141,21 @@ export class EventDropLedger {
   }
 
   snapshot(): EventDropLedgerSnapshot {
+    return this.state(this.getLedger())
+  }
+
+  /** Worker transport visits only rows changed since the previous frame. */
+  drainDelta(): EventDropLedgerSnapshot {
+    const rows = Array.from(this.changedWindows ?? [], (id) =>
+      copyRow(this.windows.get(id)!)
+    )
+    this.changedWindows = new Set()
+    return this.state(rows)
+  }
+
+  private state(windows: EventDropLedgerRow[]): EventDropLedgerSnapshot {
     return {
-      windows: this.getLedger(),
+      windows,
       sources: Array.from(this.sources, ([id, source]) => [id, { ...source }]),
       latest: this.latest,
       frontier: this.frontier,
@@ -151,6 +165,17 @@ export class EventDropLedger {
   }
 
   restore(snapshot: EventDropLedgerSnapshot): void {
+    this.applySnapshot(snapshot, true)
+  }
+
+  applyDelta(delta: EventDropLedgerSnapshot): void {
+    this.applySnapshot(delta, false)
+  }
+
+  private applySnapshot(
+    snapshot: EventDropLedgerSnapshot,
+    replace: boolean
+  ): void {
     const frontier = (n: number) => Number.isFinite(n) || n === -Infinity
     const count = (n: number) => Number.isSafeInteger(n) && n >= 0
     if (
@@ -183,17 +208,20 @@ export class EventDropLedger {
       )
     )
       throw new RangeError("Invalid EventDrop ledger snapshot")
-    this.windows = new Map(
-      snapshot.windows.map((row) => {
-        const restored = copyRow(row)
-        // Match newly admitted windows: source IDs are arbitrary dictionary keys.
-        Object.setPrototypeOf(restored.bySource, null)
-        return [row.windowId, restored]
-      })
-    )
-    this.openWindows = new Set(
-      Array.from(this.windows.values()).filter((row) => row.open)
-    )
+    if (replace) {
+      this.windows.clear()
+      this.openWindows.clear()
+    }
+    for (const row of snapshot.windows) {
+      const previous = this.windows.get(row.windowId)
+      if (previous) this.openWindows.delete(previous)
+      const restored = copyRow(row)
+      // Source IDs are arbitrary dictionary keys on full restores and deltas.
+      Object.setPrototypeOf(restored.bySource, null)
+      this.windows.set(row.windowId, restored)
+      if (restored.open) this.openWindows.add(restored)
+    }
+    this.changedWindows?.clear()
     this.sources = new Map(
       snapshot.sources.map(([id, source]) => [id, { ...source }])
     )
@@ -254,6 +282,7 @@ export class EventDropLedger {
   }
 
   private close(row: EventDropLedgerRow, now: number): void {
+    this.changedWindows?.add(row.windowId)
     row.open = false
     row.closedAt = now
     row.watermarkAtClose = this.value
@@ -311,6 +340,7 @@ export class EventDropLedger {
     const count = (row.bySource[source] ??= { accepted: 0, late: 0 })
     const key = late ? "late" : "accepted"
     row[key]++
+    this.changedWindows?.add(windowId)
     count[key]++
     if (!row.open && !late)
       this.pending.push({

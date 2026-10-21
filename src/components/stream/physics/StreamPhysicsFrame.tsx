@@ -543,6 +543,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
         wallClockRef
       })
       const {
+        keyboardOwnsFocus,
         clearSemanticFocus,
         resolveSemanticBody,
         clearHover,
@@ -602,6 +603,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
         ]
       })
       const physicsCanvasPointer = usePhysicsCanvasPointer({
+        keyboardOwnsFocus,
         margin,
         clearKeyboardFocus: clearSemanticFocus,
         hoverDataRef,

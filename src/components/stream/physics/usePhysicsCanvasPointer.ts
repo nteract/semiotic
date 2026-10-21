@@ -27,6 +27,7 @@ type PhysicsFrameObservationEmitter = (
 interface PhysicsCanvasPointerOptions {
   margin?: { left: number; top: number }
   clearKeyboardFocus?: () => void
+  keyboardOwnsFocus?: React.MutableRefObject<boolean>
   resolveSemanticBody?: (body: PhysicsBodyState) => PhysicsBodyState
   canvasRef: React.RefObject<HTMLCanvasElement | null>
   clearHover: () => void
@@ -66,6 +67,7 @@ function collectPhysicsBodyCursor(
 export function usePhysicsCanvasPointer({
   margin,
   clearKeyboardFocus,
+  keyboardOwnsFocus,
   resolveSemanticBody,
   canvasRef,
   clearHover,
@@ -135,7 +137,7 @@ export function usePhysicsCanvasPointer({
         lastHoverPick.current = null
         return
       }
-      const key = `${store.version()}:${x}:${y}:${hoverRadius}`
+      const key = `${store.getUpdateSnapshot().revisions.sceneGeometry}:${x}:${y}:${hoverRadius}`
       const hit =
         lastHoverPick.current?.key === key
           ? lastHoverPick.current.body
@@ -218,9 +220,9 @@ export function usePhysicsCanvasPointer({
       pointerRef.current.inside = false
       lastHoverPick.current = null
       setCanvasMarkCursor(event.currentTarget)
-      clearHover()
+      if (!keyboardOwnsFocus?.current) clearHover()
     },
-    [clearHover]
+    [clearHover, keyboardOwnsFocus]
   )
 
   const syncBodyCursors = React.useCallback(
@@ -242,9 +244,10 @@ export function usePhysicsCanvasPointer({
       } else {
         setCanvasMarkCursor(canvas)
       }
-      if (pointer.inside) publishHoverAt(store, x, y)
+      if (pointer.inside && !keyboardOwnsFocus?.current)
+        publishHoverAt(store, x, y)
     },
-    [setCursorAt, publishHoverAt]
+    [setCursorAt, publishHoverAt, keyboardOwnsFocus]
   )
 
   return React.useMemo(

@@ -66,6 +66,7 @@ interface PhysicsSemanticNavigationOptions {
 }
 
 export interface PhysicsSemanticNavigationResult {
+  keyboardOwnsFocus: MutableRefObject<boolean>
   clearSemanticFocus: () => void
   resolveSemanticBody: (body: PhysicsBodyState) => PhysicsBodyState
   clearHover: () => void
@@ -104,6 +105,7 @@ export function usePhysicsSemanticNavigation({
   storeRef
 }: PhysicsSemanticNavigationOptions): PhysicsSemanticNavigationResult {
   const semanticFocusIndexRef = useRef(-1)
+  const keyboardOwnsFocus = useRef(false)
   const [focusedSemanticItem, setFocusedSemanticItem] =
     useState<PhysicsSemanticItem | null>(null)
   const [hoverData, setHoverData] = useState<PhysicsHoverData | null>(null)
@@ -179,6 +181,7 @@ export function usePhysicsSemanticNavigation({
   const focusSemanticItem = useCallback(
     (index: number) => {
       if (!allSemanticItems.length) return
+      keyboardOwnsFocus.current = true
       const nextIndex = Math.max(
         0,
         Math.min(index, allSemanticItems.length - 1)
@@ -218,6 +221,7 @@ export function usePhysicsSemanticNavigation({
   )
 
   const clearSemanticFocus = useCallback(() => {
+    keyboardOwnsFocus.current = false
     if (semanticFocusIndexRef.current < 0 && focusedBodyIdRef.current === null)
       return
     semanticFocusIndexRef.current = -1
@@ -350,6 +354,7 @@ export function usePhysicsSemanticNavigation({
         else if (semanticFocusIndexRef.current >= 0)
           emitObservation("hover-end")
         clearSemanticFocus()
+        keyboardOwnsFocus.current = true
         return
       }
       if (
@@ -423,6 +428,7 @@ export function usePhysicsSemanticNavigation({
   )
 
   return {
+    keyboardOwnsFocus,
     clearSemanticFocus,
     resolveSemanticBody,
     clearHover,

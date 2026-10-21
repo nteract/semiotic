@@ -48,6 +48,14 @@ export interface EventDropLiveSnapshot {
   pending: Array<{ spawn: PhysicsQueuedSpawn; due: number }>
 }
 
+/** Bounded runtime state plus changed historical rows, relative to the last frame. */
+export interface EventDropLiveDelta extends Omit<
+  EventDropLiveSnapshot,
+  "config"
+> {
+  bodiesChanged: boolean
+}
+
 /**
  * Incremental admission and bounded geometry. World x coordinates are permanent;
  * only the view translation follows time. Historical counters outlive bodies.
@@ -64,6 +72,7 @@ export class EventDropLiveRuntime {
   private geometryKey = ""
   private laneWidth = 1
   private offset = 0
+  private bodiesChanged = false
 
   constructor(private config: EventDropLiveConfig) {
     this.validate(config)
@@ -252,6 +261,7 @@ export class EventDropLiveRuntime {
 
   /** Called once for each newly materialized input, including worker emitters. */
   prepare(input: PhysicsQueuedSpawn, elapsed: number): PhysicsQueuedSpawn {
+    this.bodiesChanged = true
     const datum = input.datum as Datum
     const eventTime = Number(datum.eventTime ?? datum.time)
     if (!Number.isFinite(eventTime))
@@ -334,6 +344,7 @@ export class EventDropLiveRuntime {
         world.readBody?.(spawn.id) ??
         world.readState().find((b) => b.id === spawn.id)
       if (body) {
+        this.bodiesChanged = true
         const metadata = this.layout
           .metadata as unknown as EventDropProjectionMetadata
         const closed = decision.end <= this.ledger.getWatermark()
@@ -375,7 +386,7 @@ export class EventDropLiveRuntime {
     this.refresh()
     if (previous !== this.geometryKey) world.setColliders(this.colliders())
     const cutoff = this.anchor - this.config.live.retain
-    return world
+    const retired = world
       .readState()
       .filter((body) => {
         if (this.pending.has(body.id)) return false
@@ -388,12 +399,41 @@ export class EventDropLiveRuntime {
               cutoff
       })
       .map((body) => body.id)
+    this.bodiesChanged ||= retired.length > 0
+    return retired
+  }
+
+  drainWorkerDelta(): EventDropLiveDelta {
+    const delta = {
+      ...this.runtimeState(),
+      ledger: this.ledger.drainDelta(),
+      bodiesChanged: this.bodiesChanged
+    }
+    this.bodiesChanged = false
+    return delta
+  }
+
+  applyWorkerDelta(
+    delta: EventDropLiveDelta,
+    world: PhysicsEngineAdapter
+  ): void {
+    validateLiveState(delta)
+    this.ledger.applyDelta(delta.ledger)
+    const previous = this.geometryKey
+    this.applyState(delta)
+    if (previous !== this.geometryKey) world.setColliders(this.colliders())
   }
 
   snapshot(): EventDropLiveSnapshot {
     return {
       config: this.config,
       ledger: this.ledger.snapshot(),
+      ...this.runtimeState()
+    }
+  }
+
+  private runtimeState() {
+    return {
       anchor: this.anchor,
       elapsed: this.elapsed,
       pending: Array.from(this.pending.values(), (entry) => ({
@@ -404,31 +444,42 @@ export class EventDropLiveRuntime {
   }
 
   static restore(snapshot: EventDropLiveSnapshot): EventDropLiveRuntime {
-    if (
-      !Number.isFinite(snapshot.anchor) ||
-      !Number.isFinite(snapshot.elapsed) ||
-      snapshot.elapsed < 0 ||
-      new Set(snapshot.pending.map((p) => p.spawn.id)).size !==
-        snapshot.pending.length
-    )
-      throw new RangeError("Invalid live EventDrop snapshot")
-    for (const pending of snapshot.pending) {
-      if (!Number.isFinite(pending.due) || pending.due < 0)
-        throw new RangeError("Invalid live EventDrop handoff")
-      validatePhysicsSpawn(pending.spawn)
-    }
+    validateLiveState(snapshot)
     const runtime = new EventDropLiveRuntime(snapshot.config)
     runtime.ledger.restore(snapshot.ledger)
-    runtime.anchor = snapshot.anchor
-    runtime.elapsed = snapshot.elapsed
-    runtime.pending = new Map(
+    runtime.applyState(snapshot)
+    return runtime
+  }
+
+  private applyState(
+    snapshot: Pick<EventDropLiveSnapshot, "anchor" | "elapsed" | "pending">
+  ): void {
+    this.anchor = snapshot.anchor
+    this.elapsed = snapshot.elapsed
+    this.pending = new Map(
       snapshot.pending.map((p) => [
         p.spawn.id,
         { due: p.due, spawn: cloneSpawn(p.spawn) }
       ])
     )
-    runtime.geometryKey = ""
-    runtime.refresh()
-    return runtime
+    this.refresh()
+  }
+}
+
+function validateLiveState(
+  snapshot: Pick<EventDropLiveSnapshot, "anchor" | "elapsed" | "pending">
+): void {
+  if (
+    !Number.isFinite(snapshot.anchor) ||
+    !Number.isFinite(snapshot.elapsed) ||
+    snapshot.elapsed < 0 ||
+    new Set(snapshot.pending.map((p) => p.spawn.id)).size !==
+      snapshot.pending.length
+  )
+    throw new RangeError("Invalid live EventDrop snapshot")
+  for (const pending of snapshot.pending) {
+    if (!Number.isFinite(pending.due) || pending.due < 0)
+      throw new RangeError("Invalid live EventDrop handoff")
+    validatePhysicsSpawn(pending.spawn)
   }
 }

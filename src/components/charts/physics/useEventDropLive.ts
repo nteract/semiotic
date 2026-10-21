@@ -55,6 +55,7 @@ export function buildLiveEventDropLayout(
       ...props.frameProps?.config,
       timeScale:
         (props.frameProps?.config?.timeScale ?? 1) * (props.timeScale ?? 1),
+      emitters: props.frameProps?.config?.emitters ?? false,
       ...(props.emitters && {
         emitters: {
           ...props.emitters,
@@ -106,7 +107,7 @@ export function useEventDropLive(
   const onFrame = useCallback((store: PhysicsPipelineStore) => {
     latest.current.frameProps?.onFrame?.(store)
     if (!latest.current.live) return
-    const key = `${store.version()}:${store.runtimeState().elapsedSeconds}`
+    const key = `${store.getUpdateSnapshot().revisions.sceneGeometry}:${store.runtimeState().elapsedSeconds}`
     if (key === lastVersion.current) return
     lastVersion.current = key
     setMetadata(store.eventDropState()?.metadata)
@@ -122,11 +123,19 @@ export function useEventDropLive(
         push: (row) => dataRef.current?.pushMany([row]),
         pushMany: (rows) => {
           if (latest.current.data !== undefined) return
-          frameRef.current?.pushMany(
-            rows.map((row) =>
-              eventDropLiveSpawn(row, nextId.current++, latest.current)
+          const frame = frameRef.current
+          if (!frame) return
+          // In-flight worker responses can temporarily precede optimistic pushes.
+          const firstId = Math.max(
+            frame.getStore().enqueueSequence(),
+            nextId.current
+          )
+          frame.pushMany(
+            rows.map((row, index) =>
+              eventDropLiveSpawn(row, firstId + index, latest.current)
             )
           )
+          nextId.current = firstId + rows.length
         },
         remove: (ids) => {
           const wanted = new Set(Array.isArray(ids) ? ids : [ids])

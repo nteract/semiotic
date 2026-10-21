@@ -38,6 +38,7 @@ export type PhysicsWorkerPipelineConfig = Omit<
 }
 
 export interface PhysicsWorkerState {
+  nextSequence?: number
   emitterProgress?: import("../../recipes/syntheticArrivals").SyntheticEmitterSnapshot
   accumulator: number
   activeSensorPairs: string[]
@@ -48,7 +49,14 @@ export interface PhysicsWorkerState {
   visible: boolean
 }
 
+export type PhysicsWorkerStructure = Pick<
+  PhysicsPipelineSnapshot,
+  "world" | "queue" | "liveBodyOrder" | "sediment"
+>
+
 export interface PhysicsWorkerFrame {
+  live?: import("../../charts/physics/EventDropLiveRuntime").EventDropLiveDelta
+  structure?: PhysicsWorkerStructure
   bodies: PhysicsBodyState[]
   ids: string[]
   positions: Float32Array

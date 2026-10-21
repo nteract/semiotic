@@ -8,6 +8,7 @@ import { cloneColliders } from "./physicsPipelineHelpers"
 export function clonePhysicsConfigInput(config: PhysicsPipelineConfig): PhysicsPipelineConfig {
   return {
     ...config,
+    ...(config.viewTransform && { viewTransform: { ...config.viewTransform } }),
     ...(config.colliders && { colliders: cloneColliders(config.colliders) }),
     ...(config.kernel && { kernel: {
       ...config.kernel,
@@ -159,6 +160,10 @@ export function changedPhysicsConfigKeys(
   previous: PhysicsPipelineConfig
 ): string[] {
   return Object.keys(config).filter((key) => {
+    if (key === "viewTransform") {
+      return config.viewTransform?.x !== previous.viewTransform?.x ||
+        config.viewTransform?.y !== previous.viewTransform?.y
+    }
     if (key === "colliders") {
       return !physicsCollidersEqual(config.colliders, previous.colliders)
     }
