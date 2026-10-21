@@ -210,6 +210,18 @@ test("all eight readers use the ledger and expose real mark tooltips", async ({
   )
   await page.keyboard.press("Escape")
   await expect(tooltip(page)).toHaveCount(0)
+  // A resize repaints the retained physics scene at the old pointer. Dismissal
+  // lasts until fresh interaction, and the resized module remains inspectable.
+  await page.setViewportSize({ width: 1180, height: 900 })
+  await page.evaluate(
+    () => new Promise((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(resolve)))
+  )
+  await expect(tooltip(page)).toHaveCount(0)
+  await moveToNode(page, circuit, "circuit")
+  await expect(tooltip(page).first()).toContainText("63 visits")
+  await page.keyboard.press("Escape")
+  await expect(tooltip(page)).toHaveCount(0)
   const pipe = circuit
     .locator('[data-circuit-edge="Editor→Copy:standard"] path')
     .first()
@@ -223,7 +235,27 @@ test("all eight readers use the ledger and expose real mark tooltips", async ({
   await expect(tooltip(page).first()).toContainText(
     "Editor → Copy: 45 handoffs"
   )
+  const pipeTooltip = (await tooltip(page).first().boundingBox())!
+  expect(pipeTooltip.x).toBeGreaterThanOrEqual(0)
+  expect(pipeTooltip.x + pipeTooltip.width).toBeLessThanOrEqual(
+    page.viewportSize()!.width
+  )
+  await page.keyboard.press("Escape")
+  await expect(tooltip(page)).toHaveCount(0)
+  await page.mouse.move(point.x + 1, point.y)
+  await expect(tooltip(page).first()).toContainText("45 handoffs")
   await page.mouse.move(2, 2)
+  await expect(tooltip(page)).toHaveCount(0)
+  await circuit.locator(".stream-physics-frame").evaluate((frame: HTMLElement) =>
+    frame.focus({ preventScroll: true })
+  )
+  await page.keyboard.press("Home")
+  await expect(tooltip(page).first()).toContainText("Queue and capacity: unmeasured")
+  await page.keyboard.press("Escape")
+  await expect(tooltip(page)).toHaveCount(0)
+  await page.keyboard.press("ArrowRight")
+  await expect(tooltip(page).first()).toContainText("visits")
+  await page.keyboard.press("Escape")
   await expect(tooltip(page)).toHaveCount(0)
   expect(errors).toEqual([])
 })
