@@ -225,6 +225,23 @@ export function usePhysicsCanvasPointer({
     [clearHover, keyboardOwnsFocus]
   )
 
+  // WCAG 1.4.13: Escape dismisses the pointer tooltip as leaving does. Repaints
+  // re-publish hover only while the pointer is inside, so the dismissal holds
+  // until the pointer moves again.
+  React.useEffect(() => {
+    if (typeof document === "undefined") return
+    const onKeyDown = (event: KeyboardEvent) => {
+      const pointer = pointerRef.current
+      if (event.key !== "Escape" || !pointer.inside) return
+      pointer.inside = false
+      lastHoverPick.current = null
+      if (canvasRef.current) setCanvasMarkCursor(canvasRef.current)
+      if (!keyboardOwnsFocus?.current) clearHover()
+    }
+    document.addEventListener("keydown", onKeyDown)
+    return () => document.removeEventListener("keydown", onKeyDown)
+  }, [canvasRef, clearHover, keyboardOwnsFocus])
+
   const syncBodyCursors = React.useCallback(
     (
       canvas: HTMLCanvasElement,

@@ -10,8 +10,14 @@ import { circuitModuleDatum } from "./flowCircuitSemantics"
 import type { BaseChartProps } from "../../charts/shared/types"
 import type { NetworkCustomChartProps } from "../../charts/custom/NetworkCustomChart"
 import { normalizePhysicsAnnotations } from "../../stream/physics/physicsAnnotationContext"
+import type { TooltipProp } from "../../Tooltip/Tooltip"
 
-const noTooltip = () => null
+/** Default text for a module or pipe datum, shared by the flat and projected views. */
+export function flowCircuitTooltipText(datum: Record<string, unknown>): string {
+  if (datum.kind === "circuit-pipe")
+    return `${datum.source} → ${datum.target}: ${datum.perSecond ?? "unmeasured"} ${datum.unit}/s`
+  return `${datum.label ?? datum.id ?? "Circuit"}: ${datum.completions ?? "unmeasured"} ${datum.unit ?? "units"}/s completed; queue ${datum.queued ?? "unmeasured"}`
+}
 
 export type FlowCircuitChartProps = FlowCircuitLayoutConfig &
   AtlasChartOptions & {
@@ -27,6 +33,12 @@ export type FlowCircuitChartProps = FlowCircuitLayoutConfig &
     /** Named linked-view selection, separate from the local graph selection. */
     linkedSelection?: Pick<NonNullable<BaseChartProps["selection"]>, "name">
     onSelectNode?: (id: string) => void
+    /**
+     * Module and pipe tooltips in both views. A callback receives the module
+     * or pipe datum (`kind` is "circuit-module" or "circuit-pipe"); `false`
+     * hides tooltips and keeps hover observations.
+     */
+    tooltip?: TooltipProp
   }
 
 export function flowCircuitChartProps({
@@ -46,6 +58,7 @@ export function flowCircuitChartProps({
   networkFrameProps: _networkFrameProps,
   linkedSelection: _linkedSelection,
   onSelectNode: _onSelectNode,
+  tooltip = flowCircuitTooltipText,
   ...config
 }: FlowCircuitChartProps) {
   return {
@@ -77,8 +90,7 @@ export function flowCircuitChartProps({
       `${config.edition.label}. ${config.edition.kind} aggregate interval tape at ${config.reading.observedAt} seconds. Pipe widths encode transferred volume per second in their labeled units; module readouts separate completions, capacity and queue stock. Individual timings are unavailable.`,
     summary: summary ?? config.edition.assumptions.join(" "),
     accessibleTable,
-    tooltip:
-      chartId || linkedHover || onObservation ? noTooltip : (false as const)
+    tooltip
   }
 }
 
@@ -101,6 +113,5 @@ export function flowCircuitNetworkChartProps(props: FlowCircuitChartProps) {
       }),
       ...props.networkFrameProps
     },
-    tooltip: (datum: Record<string, unknown>) => `${datum.label ?? datum.id ?? "Circuit"}: ${datum.kind === "circuit-pipe" ? `${datum.perSecond ?? "unmeasured"} ${datum.unit}/s` : `${datum.completions ?? "unmeasured"} ${datum.unit ?? "units"}/s completed; queue ${datum.queued ?? "unmeasured"}`}`
   }
 }

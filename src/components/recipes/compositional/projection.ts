@@ -1,9 +1,13 @@
 import type {
+  BoundaryExposure,
   CompositionalNode,
+  EndpointAnchorSpec,
   LayoutRequest,
   NodeMeasure,
+  NodePresentation,
   PlacedNode,
   Point,
+  PortOrderConstraint,
   TerminalGeometry,
   EndpointRef
 } from "./types"
@@ -28,7 +32,43 @@ export interface Projection {
   hidden: Map<string, string>
   bySemantic: Map<string, PlacedNode>
   measures: Map<string, NodeMeasure>
+  semantics: Map<string, CompositionalNode>
+  /** Indexed view lookups; terminals run twice per edge per candidate solve. */
+  presentations: Map<string, NodePresentation>
+  anchors: Map<string, EndpointAnchorSpec>
+  exposures: Map<string, BoundaryExposure>
+  portOrders: Map<string, PortOrderConstraint>
+  byId: Map<string, PlacedNode>
 }
+/** First item per key, matching the `find` order these lookups replace. */
+function firstBy<T>(
+  items: readonly T[] | undefined,
+  key: (item: T) => string
+): Map<string, T> {
+  const index = new Map<string, T>()
+  for (const item of items ?? []) {
+    const k = key(item)
+    if (!index.has(k)) index.set(k, item)
+  }
+  return index
+}
+const exposureKey = (containerNodeId: string, anchor: string) =>
+  JSON.stringify([containerNodeId, anchor])
+const portOrderKey = (
+  nodeId: string,
+  partId: string | undefined,
+  use: string,
+  side: string
+) => JSON.stringify([nodeId, partId ?? null, use, side])
+// Solved layouts are deeply frozen. Copy caller-owned measure geometry into
+// them so the freeze never reaches application objects.
+const copyAnchor = <T extends { point: Point; normal: Point }>(
+  anchor: T
+): T => ({
+  ...anchor,
+  point: { ...anchor.point },
+  normal: { ...anchor.normal }
+})
 /** Shared visibility rules for projection and external-engine acceptance. */
 export function projectionOwners(request: LayoutRequest) {
   const { graph } = request.prepared
@@ -115,11 +155,12 @@ export function project(
       rect: { ...position, width: measure.width, height: measure.height },
       parts: measure.parts.map((p) => ({
         ...p,
+        rect: { ...p.rect },
         semantic: endpoint(n.id, { kind: "part", partId: p.partId })
       })),
-      partOrder: measure.actualPartOrder,
-      markAnchors: measure.markAnchors,
-      slotAnchors: measure.slotAnchors
+      partOrder: measure.actualPartOrder && [...measure.actualPartOrder],
+      markAnchors: measure.markAnchors?.map(copyAnchor),
+      slotAnchors: measure.slotAnchors?.map(copyAnchor)
     }
     nodes.push(placed)
     bySemantic.set(n.id, placed)
@@ -182,7 +223,23 @@ export function project(
           nodeIds: [a.id, b.id]
         })
     }
-  return { nodes, hidden, bySemantic, measures }
+  const { view } = request
+  return {
+    nodes,
+    hidden,
+    bySemantic,
+    measures,
+    semantics,
+    presentations: views,
+    anchors: firstBy(view.anchors, (a) => anchorKey(a.ref, a.use)),
+    exposures: firstBy(view.boundaryExposures, (e) =>
+      exposureKey(e.containerNodeId, anchorKey(e.inner, e.use))
+    ),
+    portOrders: firstBy(view.portOrders, (o) =>
+      portOrderKey(o.nodeId, o.partId, o.use, o.side)
+    ),
+    byId: new Map(nodes.map((n) => [n.id, n]))
+  }
 }
 
 export function terminal(
@@ -193,22 +250,18 @@ export function terminal(
   use: "source" | "target"
 ): TerminalGeometry {
   const { view } = request
-  const semantics = new Map(request.prepared.graph.nodes.map((n) => [n.id, n]))
+  const { semantics } = projection
   const hiddenBy = projection.hidden.get(ref.nodeId)
   const ownerId = hiddenBy ?? ref.nodeId
   let node = projection.bySemantic.get(ownerId)!
   const measure = projection.measures.get(ownerId)!
-  const presentation = view.nodes.find((n) => n.nodeId === ownerId)
+  const presentation = projection.presentations.get(ownerId)
   const isSummaryPart =
     presentation?.mode === "summary" &&
     (ref.endpoint.kind === "part" || !!ref.endpoint.portId)
   const exposure =
     hiddenBy || isSummaryPart
-      ? view.boundaryExposures?.find(
-          (e) =>
-            e.containerNodeId === ownerId &&
-            anchorKey(e.inner, e.use) === anchorKey(ref, use)
-        )
+      ? projection.exposures.get(exposureKey(ownerId, anchorKey(ref, use)))
       : undefined
   if ((hiddenBy || isSummaryPart) && !exposure)
     fail(
@@ -216,9 +269,7 @@ export function terminal(
       "Collapsed endpoints need explicit boundary exposures.",
       { endpointRefs: [ref] }
     )
-  const spec = view.anchors?.find(
-    (a) => anchorKey(a.ref, a.use) === anchorKey(ref, use)
-  )
+  const spec = projection.anchors.get(anchorKey(ref, use))
   let binding = exposure?.binding ?? spec?.binding
   const side = defaultSide(view.direction, use)
   if (!binding) {
@@ -232,9 +283,7 @@ export function terminal(
         })
       rect = part.rect
       if (presentation?.mode === "exploded") {
-        node = projection.nodes.find(
-          (n) => n.id === JSON.stringify(["part", ownerId, partId])
-        )!
+        node = projection.byId.get(JSON.stringify(["part", ownerId, partId]))!
         rect = { ...rect, x: 0, y: 0 }
       }
     }
@@ -254,12 +303,8 @@ export function terminal(
         )
         .map((p) => p.id)
         .sort(compareIds)
-      const policy = view.portOrders?.find(
-        (o) =>
-          o.nodeId === ref.nodeId &&
-          o.partId === partId &&
-          o.use === use &&
-          o.side === side
+      const policy = projection.portOrders.get(
+        portOrderKey(ref.nodeId, partId, use, side)
       )
       if (policy) validateOrder(policy.order, matching)
       const ids = policy ? orderIds(policy.order) : matching
@@ -276,7 +321,7 @@ export function terminal(
   const local = bindingPoint(binding, node, measure)
   finite(local.point.x, "anchor x", false)
   finite(local.point.y, "anchor y", false)
-  const { normal } = local
+  const normal = { x: local.normal.x, y: local.normal.y }
   if (!(
     (Math.abs(normal.x) === 1 && normal.y === 0) ||
     (Math.abs(normal.y) === 1 && normal.x === 0)

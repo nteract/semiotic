@@ -44,7 +44,7 @@ const galtonBoardChartProps = [
   { name: "height", type: "number", required: false, default: "420", description: "Height alias used when size is omitted." },
   { name: "hoverRadius", type: "number", required: false, default: "16", description: "Pixel hit radius for body hover tooltips." },
   { name: "paused", type: "boolean", required: false, default: "false", description: "Pause the simulation." },
-  { name: "tooltip", type: "boolean | function | object", required: false, default: "true", description: "Enable the default body tooltip, pass a custom tooltip renderer/config, or set false to disable hover tooltips." },
+  { name: "tooltip", type: "boolean | function | object", required: false, default: "true", description: "Enable the default body tooltip, pass a custom tooltip renderer/config, or set false to hide tooltips while hover observations continue." },
   { name: "frameProps", type: "object", required: false, default: null, description: "Advanced StreamPhysicsFrame props." },
 ]
 

@@ -299,7 +299,7 @@ describe("renderChart composite server implementations", () => {
       { width: 900, layout: { columns: 2 } }
     )
 
-    const prefix = svg.match(/id="(dashboard-\d+)-chart-0-title"/)?.[1]
+    const prefix = svg.match(/id="(dashboard-[a-z0-9]+)-chart-0-title"/)?.[1]
     expect(prefix).toBeDefined()
     for (let index = 0; index < 6; index++) {
       expect(svg).toContain(`id="${prefix}-chart-${index}-title"`)
@@ -309,7 +309,7 @@ describe("renderChart composite server implementations", () => {
       )
     }
     expect(
-      new Set(svg.match(/id="dashboard-\d+-chart-\d+-(?:title|description)"/g)).size
+      new Set(svg.match(/id="dashboard-[a-z0-9]+-chart-\d+-(?:title|description)"/g)).size
     ).toBe(12)
   })
 })

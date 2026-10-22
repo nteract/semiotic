@@ -1,11 +1,19 @@
 import { describe, expect, it } from "vitest"
 import {
+  anchorZoom,
+  centerZoom,
   constrainZoom,
   fitZoom,
   getNetworkContentBounds,
+  getNetworkMarkBounds,
+  getNetworkMarksBounds,
   panZoom,
-  zoomAt
+  unionNetworkBounds,
+  usableViewport,
+  zoomAt,
+  zoomLimits
 } from "./geometry"
+import { fitNetworkView } from "../networkViewGeometry"
 import {
   invertNetworkRect,
   normalizeNetworkView,
@@ -151,5 +159,99 @@ describe("network camera geometry", () => {
         }).kind
       ).toBe("miss-outside")
     }
+  })
+
+  it("fits without insets exactly as before insets existed, including fractional inputs", () => {
+    type Rect = { x: number; y: number; width: number; height: number }
+    const previousFit = (bounds: Rect, area: Rect, fitPadding: number | undefined, [min, max]: [number, number]) => {
+      const padding = Number.isFinite(fitPadding) ? Math.max(0, fitPadding!) : 24
+      const k = Math.max(
+        min,
+        Math.min(
+          max,
+          Math.max(1, area.width - padding * 2) / bounds.width,
+          Math.max(1, area.height - padding * 2) / bounds.height
+        )
+      )
+      return {
+        k,
+        x: area.width / 2 - (bounds.x + bounds.width / 2) * k,
+        y: area.height / 2 - (bounds.y + bounds.height / 2) * k
+      }
+    }
+    const cases = [
+      { bounds: { x: 0, y: 0, width: 3000, height: 600 }, plot: { x: 0, y: 0, width: 1200, height: 400 }, options: {} },
+      { bounds: { x: -12.3, y: 7.7, width: 91.1, height: 13.9 }, plot: { x: 5, y: 3, width: 333.3, height: 222.2 }, options: { fitPadding: 10.5, maxZoom: 3 } },
+      { bounds: { x: 1, y: 2, width: 0.3, height: 0.7 }, plot, options: { minZoom: 0.2, maxZoom: 8, fitPadding: 0 } }
+    ]
+    for (const { bounds, plot: area, options } of cases) {
+      const previous = previousFit(bounds, area, options.fitPadding, zoomLimits(options))
+      expect(fitZoom(bounds, area, options)).toEqual(constrainZoom(previous, area, options))
+      expect(fitNetworkView(bounds, { ...area, x: 0, y: 0 }, options.fitPadding)).toEqual(
+        previousFit(bounds, area, options.fitPadding, [Number.MIN_VALUE, Number.MAX_VALUE])
+      )
+    }
+  })
+  it("fits into the plot minus insets, with per-side padding and fit-specific limits", () => {
+    const wide = { x: 0, y: 0, width: 1400, height: 600 }
+    const content = { x: 0, y: 0, width: 1000, height: 300 }
+    expect(usableViewport(wide, { right: 690, top: -5 })).toEqual({ x: 0, y: 0, width: 710, height: 600 })
+    const view = fitZoom(content, wide, { insets: { right: 690 } })!
+    expect(view.k).toBeCloseTo(662 / 1000, 12)
+    expect(view.x + (content.width / 2) * view.k).toBeCloseTo(355, 9)
+    expect(fitZoom(content, wide, { insets: { right: 690 } }, { maxZoom: 0.5 })!.k).toBe(0.5)
+    expect(fitZoom(content, wide, { minZoom: 2 }, { maxZoom: 0.5 })!.k).toBe(2)
+    const padded = fitZoom(content, wide, {}, { padding: { left: 100, right: 0, top: 0, bottom: 0 } })!
+    expect(padded.k).toBeCloseTo(1.3, 12)
+    expect(padded.x).toBeCloseTo(100, 9)
+    // Unspecified sides keep fitPadding; null padding behaves like none.
+    const partial = fitZoom(content, wide, { fitPadding: 10 }, { padding: { left: 100 } })!
+    expect(partial.k).toBeCloseTo(1.29, 12)
+    expect(partial.x).toBeCloseTo(100, 9)
+    expect(fitZoom(content, wide, { fitPadding: null as never }, { padding: null as never })).toEqual(
+      fitZoom(content, wide, {})
+    )
+  })
+  it("centers rects and points in the usable viewport and anchors by mark centers", () => {
+    const wide = { x: 0, y: 0, width: 1400, height: 600 }
+    const view = { x: 10, y: 20, k: 2 }
+    expect(centerZoom({ x: 100, y: 50, width: 20, height: 10 }, view, wide, { insets: { right: 690 } })).toEqual({
+      k: 2,
+      x: 355 - 110 * 2,
+      y: 300 - 55 * 2
+    })
+    expect(centerZoom({ x: 0, y: 0 }, view, wide, { maxZoom: 4 }, { k: 9 })).toEqual({ k: 4, x: 700, y: 300 })
+    expect(centerZoom({ x: NaN, y: 0 }, view, wide, {})).toBeNull()
+    const anchored = anchorZoom(view, { x: 0, y: 0, width: 10, height: 10 }, { x: 300, y: -40, width: 30, height: 10 })
+    expect(anchored).toEqual({ k: 2, x: 10 - 2 * 310, y: 20 + 2 * 40 })
+  })
+  it("keeps content inside the usable viewport when pan bounds apply", () => {
+    const wide = { x: 0, y: 0, width: 1400, height: 600 }
+    const options = { panBounds: { x: 0, y: 0, width: 300, height: 600 }, insets: { left: 100, right: 690 } }
+    expect(constrainZoom({ x: 0, y: 0, k: 1 }, wide, options).x).toBe(100 + (610 - 300) / 2)
+    const tight = { ...options, panBounds: { x: 0, y: 0, width: 2000, height: 600 } }
+    expect(constrainZoom({ x: 500, y: 0, k: 1 }, wide, tight).x).toBe(100)
+    expect(constrainZoom({ x: -5000, y: 0, k: 1 }, wide, tight).x).toBe(710 - 2000)
+  })
+  it("reads mark bounds from the current layout, preferring HTML marks", () => {
+    const layout = {
+      sceneNodes: [
+        { type: "circle" as const, id: "a", cx: 10, cy: 10, r: 5, style: {}, datum: {} },
+        { type: "rect" as const, id: "b", x: 0, y: 0, w: 4, h: 6, style: {}, datum: {} }
+      ],
+      htmlMarks: [{ id: "a", x: 1, y: 2, width: 30, height: 20, content: null }]
+    }
+    expect(getNetworkMarkBounds(layout, "a")).toEqual({ x: 1, y: 2, width: 30, height: 20 })
+    expect(getNetworkMarkBounds(layout, "b")).toEqual({ x: 0, y: 0, width: 4, height: 6 })
+    expect(getNetworkMarksBounds(layout, ["a", "missing", "b"])).toEqual({ x: 0, y: 0, width: 31, height: 22 })
+    expect(unionNetworkBounds([getNetworkMarkBounds(layout, "a"), null, getNetworkMarkBounds(layout, "b")])).toEqual(
+      getNetworkMarksBounds(layout, ["a", "b"])
+    )
+    // Layouts may reuse and update their mark objects between runs.
+    layout.htmlMarks[0].x = 99
+    expect(getNetworkMarkBounds(layout, "a")!.x).toBe(99)
+    expect(getNetworkMarkBounds(null, "a")).toBeNull()
+    expect(getNetworkMarksBounds(layout, [])).toBeNull()
+    expect(unionNetworkBounds([])).toBeNull()
   })
 })

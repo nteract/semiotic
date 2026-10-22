@@ -404,8 +404,10 @@ export interface CustomTooltipConfig {
  * `false` disables the tooltip without disabling hover observations. A custom
  * renderer receives authored data; return `null` directly to omit a datum's
  * tooltip (including its background). Other React-empty results also suppress
- * it; numeric zero remains visible. Use TooltipRoot for custom chrome, or
- * markTooltipChrome(renderer) when chrome is inside wrapper components.
+ * it; numeric zero remains visible. Use TooltipRoot for custom chrome, or put
+ * data-semiotic-tooltip-chrome on the root element a consumer component
+ * renders; wrapper components need no marking, and markTooltipChrome(renderer)
+ * remains supported for renderers that always own chrome.
  */
 export type TooltipProp =
   | boolean

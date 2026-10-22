@@ -5,17 +5,24 @@ _Edit dist/semiotic-network-zoom.d.ts's sources, then re-run `npm run docs:api-s
 
 ```
 function ZoomableNetworkCustomChart<TNode extends Datum = Datum, TEdge extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: React.RefAttributes<ZoomableNetworkCustomChartHandle> & ZoomableNetworkCustomChartProps<TNode, TEdge, TConfig>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
+function centerNetworkZoom(target: NetworkViewportRect | {x: number; y: number;}, view: NetworkViewTransform, plot: NetworkViewportRect, options: NetworkZoomOptions, center?: NetworkZoomCenterOptions | undefined): NetworkViewTransform | null
+function fitNetworkZoom(bounds: NetworkViewportRect, plot: NetworkViewportRect, options: NetworkZoomOptions, fit?: NetworkZoomFitOptions | undefined): NetworkViewTransform | null
 function getNetworkContentBounds(layout: NetworkLayoutResult | null | undefined): NetworkViewportRect | null
 function invertNetworkRect(rect: NetworkViewportRect, view: NetworkViewTransform): NetworkViewportRect
 function projectNetworkPoint<T extends {x: number; y: number;}>(point: T, view: NetworkViewTransform): T
+function usableNetworkViewport(plot: NetworkViewportRect, insets?: NetworkZoomInsets | undefined): NetworkViewportRect
 function useNetworkLOD(width: number, height: number, options: NetworkLODOptions): {level: number; width: number; height: number; settledWidth: number; settledHeight: number; isInteracting: boolean;}
 function useNetworkLODLevel(width: number, options: NetworkLODOptions): number
 function useNetworkProjectedSize(width: number, height: number): {width: number; height: number; settledWidth: number; settledHeight: number; isInteracting: boolean;}
 function useNetworkZoom(): NetworkZoomState
+function useNetworkZoom<T>(selector: (state: NetworkZoomState) => T, isEqual?: ((previous: T, next: T) => boolean) | undefined): T
 interface NetworkLODOptions
 interface NetworkViewTransform
 interface NetworkViewportRect
+interface NetworkZoomCenterOptions
 interface NetworkZoomChange
+interface NetworkZoomFitOptions
+interface NetworkZoomInsets
 interface NetworkZoomOptions
 interface NetworkZoomState
 interface ZoomableNetworkCustomChartHandle extends RealtimeFrameHandle
@@ -30,12 +37,25 @@ interface-member NetworkViewportRect::property::height = required height: number
 interface-member NetworkViewportRect::property::width = required width: number
 interface-member NetworkViewportRect::property::x = required x: number
 interface-member NetworkViewportRect::property::y = required y: number
+interface-member NetworkZoomCenterOptions::property::duration = optional duration: number | undefined
+interface-member NetworkZoomCenterOptions::property::insets = optional insets: NetworkZoomInsets | undefined
+interface-member NetworkZoomCenterOptions::property::k = optional k: number | undefined
 interface-member NetworkZoomChange::property::phase = required phase: "idle" | "moving"
 interface-member NetworkZoomChange::property::source = required source: NetworkZoomSource
+interface-member NetworkZoomFitOptions::property::duration = optional duration: number | undefined
+interface-member NetworkZoomFitOptions::property::maxZoom = optional maxZoom: number | undefined
+interface-member NetworkZoomFitOptions::property::minZoom = optional minZoom: number | undefined
+interface-member NetworkZoomFitOptions::property::padding = optional padding: NetworkZoomInsets | number | undefined
+interface-member NetworkZoomInsets::property::bottom = optional bottom: number | undefined
+interface-member NetworkZoomInsets::property::left = optional left: number | undefined
+interface-member NetworkZoomInsets::property::right = optional right: number | undefined
+interface-member NetworkZoomInsets::property::top = optional top: number | undefined
+interface-member NetworkZoomOptions::property::anchor = optional anchor: null | undefined | {markId: string;}
 interface-member NetworkZoomOptions::property::doubleClickZoom = optional doubleClickZoom: boolean | undefined
 interface-member NetworkZoomOptions::property::dragPan = optional dragPan: boolean | undefined
 interface-member NetworkZoomOptions::property::duration = optional duration: number | undefined
 interface-member NetworkZoomOptions::property::fitPadding = optional fitPadding: number | undefined
+interface-member NetworkZoomOptions::property::insets = optional insets: NetworkZoomInsets | undefined
 interface-member NetworkZoomOptions::property::keyboard = optional keyboard: boolean | undefined | {arrowKeys: "navigate" | "pan";}
 interface-member NetworkZoomOptions::property::locked = optional locked: boolean | undefined
 interface-member NetworkZoomOptions::property::maxZoom = optional maxZoom: number | undefined
@@ -50,17 +70,23 @@ interface-member NetworkZoomState::property::isInteracting = required isInteract
 interface-member NetworkZoomState::property::settledZoom = required settledZoom: NetworkViewTransform
 interface-member NetworkZoomState::property::visibleRect = required visibleRect: NetworkViewportRect | null
 interface-member NetworkZoomState::property::zoom = required zoom: NetworkViewTransform
-interface-member ZoomableNetworkCustomChartHandle::method::fitToContent = required fitToContent(bounds?: NetworkViewportRect | undefined): void
+interface-member ZoomableNetworkCustomChartHandle::method::centerOn = required centerOn(target: NetworkViewportRect | {x: number; y: number;}, options?: NetworkZoomCenterOptions | undefined): void
+interface-member ZoomableNetworkCustomChartHandle::method::centerOnMark = required centerOnMark(id: string, options?: NetworkZoomCenterOptions | undefined): void
+interface-member ZoomableNetworkCustomChartHandle::method::fitToContent = required fitToContent(bounds?: NetworkViewportRect | undefined, options?: NetworkZoomFitOptions | undefined): void
+interface-member ZoomableNetworkCustomChartHandle::method::fitToMarks = required fitToMarks(ids: readonly string[], options?: NetworkZoomFitOptions | undefined): void
+interface-member ZoomableNetworkCustomChartHandle::method::getMarkBounds = required getMarkBounds(id: string): NetworkViewportRect | null
 interface-member ZoomableNetworkCustomChartHandle::method::getZoom = required getZoom(): NetworkViewTransform
 interface-member ZoomableNetworkCustomChartHandle::method::panBy = required panBy(x: number, y: number): void
 interface-member ZoomableNetworkCustomChartHandle::method::resetZoom = required resetZoom(): void
+interface-member ZoomableNetworkCustomChartHandle::method::revealMark = required revealMark(id: string): void
 interface-member ZoomableNetworkCustomChartHandle::method::zoomIn = required zoomIn(): void
 interface-member ZoomableNetworkCustomChartHandle::method::zoomOut = required zoomOut(): void
 interface-member ZoomableNetworkCustomChartHandle::method::zoomTo = required zoomTo(zoom: NetworkViewTransform, duration?: number | undefined): void
 interface-member ZoomableNetworkCustomChartProps::property::defaultZoom = optional defaultZoom: NetworkViewTransform | undefined
+interface-member ZoomableNetworkCustomChartProps::property::onLayoutCommit = optional onLayoutCommit: ((null | result: NetworkLayoutResult, null | previous: NetworkLayoutResult) => void) | undefined
 interface-member ZoomableNetworkCustomChartProps::property::onZoomChange = optional onZoomChange: ((zoom: NetworkViewTransform, event: NetworkZoomChange) => void) | undefined
 interface-member ZoomableNetworkCustomChartProps::property::zoom = optional zoom: NetworkViewTransform | undefined
 interface-member ZoomableNetworkCustomChartProps::property::zoomControls = optional zoomControls: boolean | undefined
 interface-member ZoomableNetworkCustomChartProps::property::zoomOptions = optional zoomOptions: NetworkZoomOptions | undefined
-type NetworkZoomSource = "control" | "drag" | "fit" | "keyboard" | "pinch" | "reset" | "wheel"
+type NetworkZoomSource = "anchor" | "center" | "control" | "drag" | "fit" | "keyboard" | "pinch" | "reset" | "wheel"
 ```

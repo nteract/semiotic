@@ -34,7 +34,7 @@ const packetFlowChartProps = [
   { name: "summary", type: "string", required: false, default: null, description: "Screen-reader-only summary text for the chart." },
   { name: "seed", type: "number", required: false, default: "1", description: "Deterministic seed." },
   { name: "hoverRadius", type: "number", required: false, default: "16", description: "Pixel hit radius for packet hover tooltips." },
-  { name: "tooltip", type: "boolean | function | object", required: false, default: "true", description: "Enable the default packet tooltip, pass a custom tooltip renderer/config, or set false to disable hover tooltips." },
+  { name: "tooltip", type: "boolean | function | object", required: false, default: "true", description: "Enable the default packet tooltip, pass a custom tooltip renderer/config, or set false to hide tooltips while hover observations continue." },
   { name: "frameProps", type: "object", required: false, default: null, description: "Advanced StreamPhysicsFrame props." },
 ]
 

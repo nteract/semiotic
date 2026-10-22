@@ -92,6 +92,13 @@ export interface LineageDagConfig {
   // ── visuals ─────────────────────────────────────────────────────────────
   /** Fill per partition. Overridable; recipe ships dark-theme-friendly defaults. */
   partitionColors?: Partial<Record<string, string>>
+  /**
+   * Outline per partition. In `dot` LOD it rims each circle (no rim otherwise);
+   * in the other LODs it replaces `borderColor`. The selection ring still wins.
+   */
+  partitionStrokeColors?: Partial<Record<string, string>>
+  /** `dot`-LOD rim width in px, for a partition in `partitionStrokeColors`. @default 1 */
+  dotStrokeWidth?: number
   /** Edge stroke per edgeType, plus `back` for back-edges. */
   edgeColors?: Partial<Record<string, string>>
   /** Selection-ring stroke. @default var(--semiotic-focus, #ffcc33) */
@@ -108,6 +115,13 @@ export interface LineageDagConfig {
   edgeWidth?: number
   /** Back-edge stroke width in px. @default `edgeWidth`, else 1.5 */
   backEdgeWidth?: number
+  /**
+   * Opacity of an edge left undimmed while `reachableIds` or a shared selection
+   * dims others (the highlighted path). @default `edgeOpacity`
+   */
+  highlightEdgeOpacity?: number
+  /** Stroke width in px of such an edge. @default its unhighlighted width */
+  highlightEdgeWidth?: number
   /** Hull fill/stroke color overrides keyed by stringified group value. */
   hullColors?: Partial<Record<string, string>>
   /** Space in px between node rectangles and their group hull. @default 16 */
@@ -212,6 +226,8 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
   const edgeTypeAcc = cfg.edgeTypeAccessor ?? "edgeType"
 
   const partColors = { ...DEFAULT_PARTITION_COLORS, ...cfg.partitionColors }
+  const partStrokes = cfg.partitionStrokeColors ?? {}
+  const dotStrokeWidth = cfg.dotStrokeWidth ?? 1
   const edgeColors = { ...DEFAULT_EDGE_COLORS, ...cfg.edgeColors }
   const accent = cfg.accentColor ?? "var(--semiotic-focus, #ffcc33)"
   const border = cfg.borderColor ?? "var(--semiotic-border, #555)"
@@ -230,6 +246,7 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
   const reachSet = cfg.reachableIds ? new Set(cfg.reachableIds) : null
   const selId = cfg.selectedId ?? null
   const sel = ctx.selection
+  const highlighting = reachSet !== null || sel?.isActive === true
 
   const positions = new Map<string, { cx: number; cy: number }>()
   const dimById = new Map<string, boolean>()
@@ -278,6 +295,8 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
     const opacity = dimmed && !selected ? dimOpacity : 1
     const fill = Object.prototype.hasOwnProperty.call(partColors, partition)
       ? partColors[partition] : partColors.unknown
+    const outline = Object.prototype.hasOwnProperty.call(partStrokes, partition)
+      ? partStrokes[partition] : undefined
 
     if (lod === "dot") {
       const dot: NetworkCircleNode = {
@@ -288,8 +307,8 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
         style: {
           fill,
           opacity,
-          stroke: selected ? accent : "transparent",
-          strokeWidth: selected ? 2 : 0,
+          stroke: selected ? accent : outline ?? "transparent",
+          strokeWidth: selected ? 2 : outline ? dotStrokeWidth : 0,
         },
         datum: rawDatum,
         id,
@@ -306,7 +325,7 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
         style: {
           fill,
           opacity,
-          stroke: selected ? accent : border,
+          stroke: selected ? accent : outline ?? border,
           strokeWidth: selected ? 3 : 1,
         },
         datum: rawDatum,
@@ -341,7 +360,13 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
     const isBack = Boolean(readField(edge, backAcc, null) ?? (s.cx >= t.cx))
     const edgeType = String(readField(edge, edgeTypeAcc, "internal"))
     const dimmed = dimById.get(sId) || dimById.get(tId)
-    const opacity = dimmed ? Math.min(edgeOpacity, dimOpacity * 1.4) : edgeOpacity
+    const lit = highlighting && !dimmed
+    const opacity = dimmed
+      ? Math.min(edgeOpacity, dimOpacity * 1.4)
+      : lit ? cfg.highlightEdgeOpacity ?? edgeOpacity : edgeOpacity
+    const strokeWidth = lit && cfg.highlightEdgeWidth != null
+      ? cfg.highlightEdgeWidth
+      : isBack ? backEdgeWidth : edgeWidth
     const stroke = isBack
       ? edgeColors.back
       : Object.prototype.hasOwnProperty.call(edgeColors, edgeType)
@@ -392,7 +417,7 @@ export const lineageDagLayout: NetworkCustomLayout<LineageDagConfig> = (ctx) => 
       pathD,
       style: {
         stroke,
-        strokeWidth: isBack ? backEdgeWidth : edgeWidth,
+        strokeWidth,
         fill: "none",
         opacity,
         ...(isBack ? { strokeDasharray: "5 4", strokeLinecap: "round" as const } : {}),

@@ -43,6 +43,7 @@ import { StalenessBadge } from "./StalenessBadge"
 import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
 import { NetworkViewGroup } from "./networkViewTransform"
 import { useNetworkCameraPaint } from "./useNetworkCamera"
+import { useNetworkLayoutCommit } from "./useNetworkLayoutCommit"
 import { NetworkHtmlMarksLayer } from "./NetworkHtmlMarksLayer"
 import { isServerEnvironment } from "./isServerEnvironment"
 import { NetworkSSRFrame } from "./NetworkSSRFrame"
@@ -1327,6 +1328,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
   // ── Render function ──────────────────────────────────────────────────
 
   const cameraPaint = useNetworkCameraPaint(props.viewTransform, renderFnRef, hoverLeaveRef, kbFocusIndexRef)
+  const layoutCommitPending = useNetworkLayoutCommit(props.viewTransform, storeRef.current)
   renderFnRef.current = () => {
     // The scheduled paint is also the commit boundary for burst layout work.
     // Commit before canvas guards so data/layout semantics do not depend on
@@ -1359,6 +1361,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       renderMode,
       viewTransform: props.viewTransform,
       cameraOnly: cameraPaint.current,
+      layoutCommitPending: layoutCommitPending(store),
       hasBackgroundGraphics: Boolean(backgroundGraphics || store.customLayoutBackgrounds),
       dirtyRef,
       resolutionDirtyRef,

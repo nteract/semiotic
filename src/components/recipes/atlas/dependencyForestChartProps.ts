@@ -15,6 +15,8 @@ export type DependencyForestChartProps = DependencyForestLayoutConfig &
     perspective?: NetworkCustomChartProps["perspective"]
     linkedSelection?: Pick<NonNullable<NetworkCustomChartProps["selection"]>, "name">
     onSelectNode?: (id: string) => void
+    /** A callback receives the authored node or edge datum; `false` hides tooltips and keeps hover observations. */
+    tooltip?: NetworkCustomChartProps["tooltip"]
   }
 
 /** Shared props for the React reader and the public SVG renderer. */
@@ -34,6 +36,7 @@ export function dependencyForestChartProps({
   frameProps,
   perspective,
   onSelectNode: _onSelectNode,
+  tooltip,
   ...config
 }: DependencyForestChartProps) {
   return {
@@ -55,6 +58,7 @@ export function dependencyForestChartProps({
     annotations,
     frameProps,
     perspective,
+    tooltip,
     animate: false as const,
     margin: { top: 12, right: 24, bottom: 12, left: 12 },
     description:

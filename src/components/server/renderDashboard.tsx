@@ -5,7 +5,7 @@ import type { RenderChartName } from "./renderToStaticSVG"
 import type { FrameType, StaticFrameProps } from "./staticSVGChrome"
 import { resolveTheme, themeStyles, type ThemeInput } from "./themeResolver"
 import { setSvgRootAttributes } from "../shared/svgRoot"
-import { createSvgIdPrefix } from "../shared/svgNamespace"
+import { renderWithContentSvgIdPrefix } from "../shared/svgNamespace"
 import {
   finiteDimension,
   renderedSvgDimensions,
@@ -53,6 +53,17 @@ export function composeDashboard(
   options: RenderDashboardOptions,
   renderers: DashboardRenderers
 ): string {
+  return renderWithContentSvgIdPrefix("dashboard", (idPrefix) =>
+    composeDashboardScoped(charts, options, renderers, idPrefix)
+  )
+}
+
+function composeDashboardScoped(
+  charts: DashboardChart[],
+  options: RenderDashboardOptions,
+  renderers: DashboardRenderers,
+  idPrefix: string
+): string {
   const {
     title,
     subtitle,
@@ -75,8 +86,6 @@ export function composeDashboard(
       : 16,
     width / (columns + 1)
   )
-  const idPrefix = createSvgIdPrefix("dashboard")
-
   let headerHeight = 0
   if (title) headerHeight += 30
   if (subtitle) headerHeight += 20

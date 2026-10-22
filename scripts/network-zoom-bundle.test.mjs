@@ -54,10 +54,13 @@ test("opt-in gestures stay small and published zoom entries reuse the canonical 
   const zoom = await consumer("./src/components/semiotic-network-zoom")
   const driver = await consumer("./src/components/stream/networkZoom/gestures")
   const gzip = (result) => gzipSync(result.outputFiles[0].contents).length
-  // Initial measured overhead is ~4 KiB. This cap includes the wrapper,
-  // geometry, controls and LOD, and deliberately excludes the existing chart.
+  // Measured overhead is 6.8 KiB (2026-10-22), up from ~5.7 KiB with viewport
+  // insets, centerOn, mark-id navigation, layout anchoring, onLayoutCommit,
+  // the exported fit/center helpers and the useNetworkZoom selector. This cap
+  // includes the wrapper, geometry, controls and LOD, and deliberately
+  // excludes the existing chart.
   assert.ok(
-    gzip(zoom) - gzip(base) < 6 * 1024,
+    gzip(zoom) - gzip(base) < 7 * 1024,
     `Optional runtime: ${gzip(zoom) - gzip(base)} gzip bytes`
   )
   assert.ok(

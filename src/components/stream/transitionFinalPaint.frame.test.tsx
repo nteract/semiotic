@@ -309,7 +309,7 @@ describe("terminal transition paint", () => {
   })
 
   it.each(["flat", "isometric"] as const)(
-    "updates Network's %s scene label while overlay commits are throttled",
+    "updates Network's %s scene label and commits each rebuild in the frame that paints it",
     (perspective) => {
       registerNetworkPerspective()
       const store = new NetworkPipelineStore({
@@ -338,11 +338,12 @@ describe("terminal transition paint", () => {
       const canvas = document.createElement("canvas")
       const setAnnotationFrame = vi.fn()
       const pendingAnnotationFrameRef = { current: false }
+      const lastAnnotationFrameTimeRef = { current: 100 }
       const label =
         perspective === "flat"
           ? "Network chart"
           : "Network chart (isometric perspective)"
-      const paint = (now: number) =>
+      const paint = (now: number, dirty = true) =>
         paintNetworkFrame({
           canvas,
           store,
@@ -350,7 +351,7 @@ describe("terminal transition paint", () => {
           margin: { top: 0, right: 0, bottom: 0, left: 0 },
           adjustedWidth: 200,
           adjustedHeight: 100,
-          dirtyRef: { current: true },
+          dirtyRef: { current: dirty },
           lastFrameTimeRef: { current: 0 },
           now,
           random: () => 0.5,
@@ -361,7 +362,7 @@ describe("terminal transition paint", () => {
           particleStyle: {},
           getParticleColor: () => "navy",
           pendingAnnotationFrameRef,
-          lastAnnotationFrameTimeRef: { current: 100 },
+          lastAnnotationFrameTimeRef,
           setAnnotationFrame,
           scheduleNextFrame: vi.fn()
         })
@@ -383,8 +384,17 @@ describe("terminal transition paint", () => {
       store.ingestBounded([], [], [200, 100])
       paint(130)
       expect(canvas.getAttribute("aria-label")).toBe(`${label}, empty`)
-      expect(setAnnotationFrame).not.toHaveBeenCalled()
+      expect(setAnnotationFrame).toHaveBeenCalledTimes(3)
+      expect(pendingAnnotationFrameRef.current).toBe(false)
+
+      // A frame that only carries a deferred overlay update keeps the throttle.
+      pendingAnnotationFrameRef.current = true
+      paint(140, false)
+      expect(setAnnotationFrame).toHaveBeenCalledTimes(3)
       expect(pendingAnnotationFrameRef.current).toBe(true)
+      paint(170, false)
+      expect(setAnnotationFrame).toHaveBeenCalledTimes(4)
+      expect(pendingAnnotationFrameRef.current).toBe(false)
     }
   )
 })

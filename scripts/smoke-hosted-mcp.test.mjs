@@ -35,7 +35,7 @@ function fixtureIdentity(options) {
         ? "stable"
         : "nightly"
       : expectedChannel,
-    packageVersion: "3.8.3",
+    packageVersion: options.packageVersion ?? "3.8.3",
     surfaceVersion: "3.8.3-ai",
     commitSha,
     shortCommitSha: commitSha.slice(0, 7),
@@ -77,6 +77,15 @@ async function createFixture(options = {}) {
   let healthRequests = 0
   const server = http.createServer(async (req, res) => {
     const pathname = new URL(req.url || "/", "http://fixture.invalid").pathname
+
+    if (req.method === "GET" && pathname === "/health" && req.headers.origin) {
+      if (options.wildcardCors) {
+        json(res, 200, healthBody(options), { "Access-Control-Allow-Origin": "*" })
+      } else {
+        json(res, 403, { error: { message: "Forbidden origin" } })
+      }
+      return
+    }
 
     if (req.method === "GET" && pathname === "/health") {
       healthRequests += 1
@@ -327,6 +336,20 @@ describe("smoke-hosted-mcp", () => {
       assert.match(`${result.stdout}${result.stderr}`, /packageVersion did not match/)
     })
   })
+  it("probes browser-origin enforcement from 3.13.0 and skips it for older releases", async () => {
+    await withFixture({ packageVersion: "3.13.0" }, async (fixture) => {
+      const result = await runSmoke(fixture.endpoint)
+      assert.equal(result.code, 0, `${result.stdout}\n${result.stderr}`)
+      assert.match(result.stdout, /checks: health, origin, /)
+    })
+    await withFixture({}, async (fixture) => {
+      const result = await runSmoke(fixture.endpoint)
+      assert.equal(result.code, 0, `${result.stdout}\n${result.stderr}`)
+      assert.doesNotMatch(result.stdout, /origin/)
+    })
+  })
+  it("fails when a 3.13.0 deployment grants an unlisted origin", () =>
+    expectFailure({ packageVersion: "3.13.0", wildcardCors: true }, /hosted MCP smoke failed at origin/))
   it("fails when a public tool is missing", () => expectFailure({ missingTool: true }, /exactly the five public tools/))
   it("fails when rendering is cancelled", () => expectFailure({ cancelledRender: true }, /MCP_RENDER_CANCELLED/))
   it("fails when health returns HTTP 404", () => expectFailure({ healthStatus: 404 }, /health returned HTTP 404/))

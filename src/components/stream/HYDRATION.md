@@ -56,9 +56,13 @@ consume a live ref.
 
    After an SSR hydration reaches `hydrated === true`, the layout effect cancels
    intro state, invalidates the scene, cancels a queued paint, and paints
-   synchronously before the browser displays the canvas. Fresh client mounts
-   paint through the family scheduler after data/config effects and initial
-   responsive measurement settle, avoiding an empty layout before ingestion.
+   synchronously before the browser displays the canvas. A fresh client mount
+   requests one follow-up commit instead. React flushes the first commit's
+   passive data/config effects before rendering it and applies the initial
+   responsive measurement in it, so its layout effect runs the queued paint
+   (`flushRender`) against the ingested store. The first displayed frame then
+   holds the canvas scene and the SVG overlay state that paint sets, without
+   an empty layout before ingestion.
    The handoff effect runs when its hydration signals change, not on every commit.
    The separate unmount cleanup releases XY/ordinal data adapters and
    geographic tile caches. Physics owns worker/store cleanup in its simulation

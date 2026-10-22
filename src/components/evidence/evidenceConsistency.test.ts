@@ -563,7 +563,7 @@ describe("versioned rendered-scene hashes", () => {
     }
     const original = renderChartWithEvidence("LineChart", stableProps)
     const annotated = renderChartWithEvidence("LineChart", extra)
-    expect(original.svg).not.toBe(annotated.svg)
+    expect(annotated.svg).toBe(original.svg)
     expect(original.evidence.sceneHash).toBe(annotated.evidence.sceneHash)
     expect(toEvidenceEnvelope("LineChart", stableProps).input.hash).not.toBe(
       toEvidenceEnvelope("LineChart", extra).input.hash

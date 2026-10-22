@@ -9,6 +9,7 @@ import {
   type PhysicsWorkerFrame,
   type PhysicsWorkerResponsePayload
 } from "./PhysicsWorkerProtocol"
+import { registerPhysicsLivePrograms } from "../../charts/physics/registerPhysicsLivePrograms"
 
 export interface PhysicsWorkerRuntime {
   handle: (command: PhysicsWorkerCommand) => PhysicsWorkerResponsePayload
@@ -53,6 +54,8 @@ function zeroTickFrame(store: PhysicsPipelineStore): PhysicsWorkerFrame {
 }
 
 export function createPhysicsWorkerRuntime(): PhysicsWorkerRuntime {
+  // The worker accepts any structured-cloneable host config, including live programs.
+  registerPhysicsLivePrograms()
   let store = new PhysicsPipelineStore()
 
   return {

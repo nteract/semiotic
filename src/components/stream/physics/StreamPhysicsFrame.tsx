@@ -36,7 +36,9 @@ import type { PhysicsWorkerSession } from "./PhysicsWorkerClient"
 import {
   PhysicsPipelineStore,
   type PhysicsObservationEvent,
-  type PhysicsPipelineSnapshot
+  type PhysicsPipelineSnapshot,
+  type PhysicsQueuedSpawn,
+  type PhysicsSpawnPacingOptions
 } from "./PhysicsPipelineStore"
 import {
   createPhysicsFrameStore,
@@ -52,9 +54,9 @@ import {
   isPhysicsWorkerPacingSupported,
   shouldUsePhysicsWorker,
   type PhysicsWorkerCommand,
-  type PhysicsWorkerFrame,
-  type PhysicsWorkerResponsePayload
+  type PhysicsWorkerFrame
 } from "./PhysicsWorkerProtocol"
+import { PhysicsWorkerHostMutations, physicsWorkerPayloadFrame, replacesPhysicsMirror, type PhysicsWorkerHostMutation } from "./physicsWorkerHostMutations"
 import {
   isPhysicsDocumentVisible,
   usePhysicsFrameLifecyclePolicy
@@ -104,6 +106,7 @@ import type {
 import { usePhysicsFrameObservationEmitter } from "./physicsFrameObservations"
 import { resolvePhysicsFramePipelineConfig } from "./physicsFramePipelineConfig"
 import { usePhysicsCanvasPointer } from "./usePhysicsCanvasPointer"
+import { usePhysicsItemHover } from "./usePhysicsItemHover"
 import { usePhysicsSemanticNavigation } from "./usePhysicsSemanticNavigation"
 
 export type {
@@ -211,6 +214,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
         selectedBodyStyle = DEFAULT_SELECTED_BODY_STYLE,
         selection,
         semanticItems = [],
+        semanticItemTooltipContent,
         simulationExecution = "auto",
         size: sizeProp = DEFAULT_SIZE,
         stroke,
@@ -528,6 +532,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
       const workerPendingRef = useRef(false)
       const workerRenderRequestedRef = useRef(false)
       const workerSessionRef = useRef<PhysicsWorkerSession | null>(null)
+      const [hostMutations] = React.useState(() => new PhysicsWorkerHostMutations())
       const workerStartingRef = useRef(false)
       const logicalClockRef = useRef<() => number>(frameRuntime.now)
       logicalClockRef.current = frameRuntime.now
@@ -602,6 +607,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
           scheduleRender
         ]
       })
+      const itemHover = usePhysicsItemHover(allSemanticItems, margin, enableHover, emitObservation, clearSemanticFocus, clearHover)
       const physicsCanvasPointer = usePhysicsCanvasPointer({
         keyboardOwnsFocus,
         margin,
@@ -819,9 +825,10 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
           workerStartingRef.current = false
           workerSessionRef.current?.terminate()
           workerSessionRef.current = null
+          hostMutations.clear()
           if (report) reportExecutionState("sync", reason)
         },
-        [reportExecutionState]
+        [hostMutations, reportExecutionState]
       )
 
       const workerUnsupportedReason = useCallback((): string | null => {
@@ -877,6 +884,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
           const store = storeRef.current
           if (!store) return store
           store.applyWorkerFrame(frame)
+          hostMutations.reapply(store, frame)
           // Worker callbacks are stripped for structured cloning. Deliver their
           // observations after restoring bodies so region callbacks have context.
           if (replayObservations)
@@ -886,7 +894,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
           dirtyRef.current = true
           return store
         },
-        [augmentedConfig]
+        [augmentedConfig, hostMutations]
       )
 
       const finishWorkerFrame = useCallback(
@@ -990,26 +998,18 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
         workerChoice
       ])
 
-      const frameFromPayload = useCallback(
-        (payload: PhysicsWorkerResponsePayload): PhysicsWorkerFrame | null => {
-          if (payload.type === "frame" || payload.type === "removed") {
-            return payload.frame
-          }
-          return null
-        },
-        []
-      )
-
       const postWorkerCommand = useCallback(
-        (command: PhysicsWorkerCommand, notifyTick = true) => {
+        (command: PhysicsWorkerCommand, notifyTick = true, mutation?: PhysicsWorkerHostMutation, supersedes = false) => {
           const session = workerSessionRef.current
           if (!session || !workerActiveRef.current) return
           const generation = workerGenerationRef.current
+          const token = mutation && hostMutations.track(mutation, supersedes)
           session
             .request(command)
             .then((payload) => {
               if (workerGenerationRef.current !== generation) return
-              const frame = frameFromPayload(payload)
+              hostMutations.acknowledge(token)
+              const frame = physicsWorkerPayloadFrame(payload)
               // Imperative tick/settle already deliver observations in the
               // synchronous mirror used to provide their immediate return value.
               if (frame)
@@ -1019,9 +1019,10 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
                   command.type !== "tick" && command.type !== "settle"
                 )
             })
-            .catch(handleWorkerError)
+            // Replacing a worker rejects its pending commands; only the current one can fail.
+            .catch((error) => { if (workerGenerationRef.current === generation) handleWorkerError(error) })
         },
-        [finishWorkerFrame, frameFromPayload, handleWorkerError]
+        [finishWorkerFrame, handleWorkerError, hostMutations]
       )
 
       const runObservedSteps = useCallback((options: { deltaSeconds?: number; maxSteps?: number } = {}) => {
@@ -1265,6 +1266,13 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
         paint()
       }, [paint])
 
+      const enqueueSpawns = useCallback((spawns: PhysicsQueuedSpawn[], pacing?: PhysicsSpawnPacingOptions) => {
+        storeRef.current!.enqueue(spawns, pacing)
+        if (isPhysicsWorkerPacingSupported(pacing))
+          postWorkerCommand({ type: "enqueue", spawns, pacing }, true, (store, frame) => { if (replacesPhysicsMirror(frame)) store.enqueue(spawns, pacing) })
+        else if (workerActiveRef.current || workerStartingRef.current) stopWorker("spawn pacing is not worker-cloneable")
+        requestRender()
+      }, [postWorkerCommand, requestRender, stopWorker])
       useImperativeHandle(
         ref,
         (): StreamPhysicsFrameHandle => ({
@@ -1278,7 +1286,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
             storeRef.current!.clear()
             regionStateRef.current.clear()
             popAnimationsRef.current.clear()
-            postWorkerCommand({ type: "clear" })
+            postWorkerCommand({ type: "clear" }, true, (store) => store.clear(), true)
             requestRender()
           },
           clearRegionState: (bodyId) => {
@@ -1298,27 +1306,11 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
             lastFrameTimeRef.current = null
             cancelRender()
             storeRef.current!.setPaused(true)
-            postWorkerCommand({ type: "setPaused", paused: true }, false)
+            postWorkerCommand({ type: "setPaused", paused: true }, false, (store) => store.setPaused(true))
             requestRender()
           },
-          push: (spawn, pacing) => {
-            storeRef.current!.enqueue(spawn, pacing)
-            if (isPhysicsWorkerPacingSupported(pacing)) {
-              postWorkerCommand({ type: "enqueue", spawns: [spawn], pacing })
-            } else if (workerActiveRef.current || workerStartingRef.current) {
-              stopWorker("spawn pacing is not worker-cloneable")
-            }
-            requestRender()
-          },
-          pushMany: (spawns, pacing) => {
-            storeRef.current!.enqueue(spawns, pacing)
-            if (isPhysicsWorkerPacingSupported(pacing)) {
-              postWorkerCommand({ type: "enqueue", spawns, pacing })
-            } else if (workerActiveRef.current || workerStartingRef.current) {
-              stopWorker("spawn pacing is not worker-cloneable")
-            }
-            requestRender()
-          },
+          push: (spawn, pacing) => enqueueSpawns([spawn], pacing),
+          pushMany: enqueueSpawns,
           popBodies: (ids, options = {}) => {
             const store = storeRef.current!
             const bodyById = new Map(
@@ -1350,7 +1342,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
               setHoverData((current) => (current?.id === id ? null : current))
             }
             if (removed.length) {
-              postWorkerCommand({ type: "remove", ids: removed })
+              postWorkerCommand({ type: "remove", ids: removed }, true, (store) => { store.remove(removed) })
               requestRender()
             }
             return removed
@@ -1358,7 +1350,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
           remove: (ids) => {
             const removed = storeRef.current!.remove(ids)
             for (const id of ids) regionStateRef.current.delete(id)
-            postWorkerCommand({ type: "remove", ids })
+            postWorkerCommand({ type: "remove", ids }, true, (store) => { store.remove(ids) })
             requestRender()
             return removed
           },
@@ -1366,14 +1358,14 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
             storeRef.current!.restore(snapshot)
             regionStateRef.current.clear()
             popAnimationsRef.current.clear()
-            postWorkerCommand({ type: "restore", snapshot }, false)
+            postWorkerCommand({ type: "restore", snapshot }, false, (store) => store.restore(snapshot), true)
             requestRender()
           },
           resume: () => {
             frameRuntime.setPaused(false)
             lastFrameTimeRef.current = null
             storeRef.current!.setPaused(false)
-            postWorkerCommand({ type: "setPaused", paused: false }, false)
+            postWorkerCommand({ type: "setPaused", paused: false }, false, (store) => store.setPaused(false))
             requestRender()
           },
           settle: (maxSteps) => {
@@ -1397,6 +1389,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
         }),
         [
           cancelRender,
+          enqueueSpawns,
           focusedBodyIdRef,
           frameRuntime,
           paint,
@@ -1405,8 +1398,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
           requestRender,
           runObservedSteps,
           setFocusedSemanticItem,
-          setHoverData,
-          stopWorker
+          setHoverData
         ]
       )
 
@@ -1442,7 +1434,9 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
       const tooltipElement = renderPhysicsTooltip({
         enableHover,
         hoverData,
+        itemHover: itemHover.hover,
         tooltipContent,
+        semanticItemTooltipContent,
         plotWidth,
         plotHeight,
         margin
@@ -1571,6 +1565,8 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
             role="img"
             aria-label={ariaLabel}
             style={{ position: "relative", width: "100%", height: "100%" }}
+            onPointerMoveCapture={itemHover.onPointerMoveCapture}
+            onPointerLeave={itemHover.clear}
           >
             <CanvasFrameBackground
               size={size}

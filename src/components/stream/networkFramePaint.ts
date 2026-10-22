@@ -77,6 +77,8 @@ export interface NetworkFramePaintContext {
   staleness?: StalenessConfig
   particleStyle: ParticleStyle
   getParticleColor: (edge: RealtimeEdge, node?: unknown) => string
+  /** A custom layout run that React has not committed (HTML marks, overlays). */
+  layoutCommitPending?: boolean
   pendingAnnotationFrameRef: { current: boolean }
   lastAnnotationFrameTimeRef: { current: number }
   setAnnotationFrame: (updater: (f: number) => number) => void
@@ -359,11 +361,16 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
   if (ctx.cameraOnly) return
   dirtyRef.current = false
 
+  // Throttle overlay renders for animation and transition frames. A rebuild
+  // from new data or config, or an uncommitted layout run, commits in the
+  // frame that paints it so HTML marks and overlays match the canvas.
+  const commitNow = wasDirty || !!ctx.layoutCommitPending
   const wantsAnnotationUpdate =
-    computedScene || pendingAnnotationFrameRef.current
+    computedScene || commitNow || pendingAnnotationFrameRef.current
   if (
     wantsAnnotationUpdate &&
-    (transitionFinishedThisFrame ||
+    (commitNow ||
+      transitionFinishedThisFrame ||
       now - lastAnnotationFrameTimeRef.current >= 33)
   ) {
     setAnnotationFrame((f) => f + 1)

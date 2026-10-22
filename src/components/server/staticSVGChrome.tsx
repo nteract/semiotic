@@ -1,4 +1,4 @@
-import { createSvgIdPrefix } from "../shared/svgNamespace"
+import { createSvgIdPrefix, renderWithContentSvgIdPrefix } from "../shared/svgNamespace"
 import { resolveXYAxes } from "../stream/resolveXYAxes"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { LegendLayout, LegendValue } from "../types/legendTypes"
@@ -84,12 +84,29 @@ export function edgeEndpointId(endpoint: EdgeEndpoint): string | null {
   return null
 }
 
-/** Resolve a caller-owned ID prefix or allocate one for this render. */
-export function chartUID(props: Datum): string {
+/** The caller-owned ID prefix (`_idPrefix`, then `chartId`) as an XML name. */
+function callerSvgIdPrefix(props: Datum): string | null {
   const raw = props._idPrefix ?? props.chartId
-  if (raw == null || raw === "") return createSvgIdPrefix()
+  if (raw == null || raw === "") return null
   const sanitized = String(raw).replace(/[^a-zA-Z0-9_-]/g, "_")
   return /^[A-Za-z_]/.test(sanitized) ? sanitized : `c${sanitized}`
+}
+
+/** Resolve a caller-owned ID prefix or allocate one for this render. */
+export function chartUID(props: Datum): string {
+  return callerSvgIdPrefix(props) ?? createSvgIdPrefix()
+}
+
+/**
+ * Render with the caller's ID prefix, or one derived from the rendered markup
+ * so repeated renders of the same input stay byte-identical.
+ */
+export function renderWithSvgIdPrefix(
+  props: Datum,
+  render: (prefix: string) => string
+): string {
+  const caller = callerSvgIdPrefix(props)
+  return caller ? render(caller) : renderWithContentSvgIdPrefix("semiotic", render)
 }
 
 // ── Shared rendering helpers ──────────────────────────────────────────

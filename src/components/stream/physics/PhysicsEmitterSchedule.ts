@@ -59,6 +59,12 @@ export class PhysicsEmitterSchedule {
   }
 
   update(options: PhysicsEmitterOptions): void {
+    const ids = (sources: readonly SyntheticSourceSpec[]) =>
+      sources.map((source) => source.id).join("\u0000")
+    if (ids(options.sources) !== ids(this.options.sources))
+      throw new RangeError(
+        "Changing emitter sources requires a new run (remount with a new key)"
+      )
     const next = {
       ...options,
       sources: this.options.sources,
@@ -80,10 +86,12 @@ export class PhysicsEmitterSchedule {
     )
   }
 
-  advance(seconds: number): PhysicsQueuedSpawn[] {
+  /** `hold` advances as a paused source does: no emission and no later catch-up. */
+  advance(seconds: number, hold = false): PhysicsQueuedSpawn[] {
     const unit = this.options.timeUnit === "s" ? 0.001 : 1
     const origin = this.options.originTime ?? 0
-    return this.emitter.advance(seconds * 1000, this.options).map((event) => {
+    const controls = hold ? { ...this.options, paused: true } : this.options
+    return this.emitter.advance(seconds * 1000, controls).map((event) => {
       const template = this.options.templates[event.source]
       return {
         ...template,

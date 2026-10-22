@@ -226,8 +226,15 @@ export default function TooltipsPage() {
       <p>
         Verify custom tooltips by hovering actual marks and interactive edges:
         check expected labels and values, a single readable box, placement after
-        zoom, pan and resize, and dismissal on leave. A rendered chart or an
-        inspector does not establish that hover behavior works.
+        zoom, pan and resize, and dismissal on leave and on Escape. A rendered chart
+        or an inspector does not establish that hover behavior works.
+      </p>
+      <p>
+        Escape dismisses a pointer tooltip in every chart family without moving the
+        pointer, as WCAG 1.4.13 requires; the next pointer move shows it again, and a
+        repaint does not reopen it. <code>tooltip={"{false}"}</code> hides tooltips in
+        every family, including physics, while hover observations, linked hover and
+        selection continue.
       </p>
 
       <h3 id="chrome-ownership">Chrome ownership through wrapper components</h3>

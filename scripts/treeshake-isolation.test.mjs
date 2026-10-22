@@ -158,7 +158,10 @@ const cases = [
   {
     exportKey: "./physics",
     symbol: "GaltonBoardChart",
-    absent: ["StreamXYFrame", "PacketFlowChart", "CrucibleChart", "GauntletChart"]
+    absent: ["StreamXYFrame", "PacketFlowChart", "CrucibleChart", "GauntletChart"],
+    // The shared pipeline store must not pull the EventDrop live runtime or the
+    // emitter schedule into charts that never configure them.
+    absentText: ["Changing live windows.size", "Missing emitter template", "Live EventDrop requires a finite event time"]
   },
   {
     exportKey: "./ordinal",
@@ -191,13 +194,15 @@ const cases = [
   }
 ]
 
-for (const { exportKey, symbol, absent, maxGzipKiB, selfNamed = true } of cases) {
+for (const { exportKey, symbol, absent, absentText = [], maxGzipKiB, selfNamed = true } of cases) {
   test(`${exportKey === "." ? "semiotic" : `semiotic${exportKey.slice(1)}`} ${symbol} retains no unrelated charts`, async () => {
     const { code, gzipBytes } = await eagerBundle(exportKey, symbol)
     // Boolean asserts keep a failure message readable instead of dumping the bundle.
     if (selfNamed) assert.ok(new RegExp(`["']${symbol}["']`).test(code), `${symbol} itself should be named in its bundle`)
     const retained = absent.filter((name) => new RegExp(`["']${name}["']`).test(code))
     assert.deepEqual(retained, [], `${symbol} retained unrelated charts: ${retained.join(", ")}`)
+    const retainedText = absentText.filter((text) => code.includes(text))
+    assert.deepEqual(retainedText, [], `${symbol} retained unrelated runtime code: ${retainedText.join(", ")}`)
     if (maxGzipKiB != null) {
       assert.ok(gzipBytes <= maxGzipKiB * 1024, `${symbol} initial load is ${(gzipBytes / 1024).toFixed(1)} KiB gzip`)
     }

@@ -170,6 +170,68 @@
         "interface-member EventDropChartProps::property::frameProps = optional frameProps: Partial<Omit<import(\"../../semiotic-experimental\").UnstableStreamPhysicsFrameProps, \"initialSpawnPacing\" | \"initialSpawns\" | \"size\">> | undefined"
       ],
       "reason": "Reviewed optional frame-config addition: frameProps now permits config as well as every previously exposed override; config remains optional and typed. The packed EventDrop consumer compiles the released config-omitting frame-prop shape, including onFrame, controllers and bodyForces, plus new config overrides. Cross-release comparison of these recursive callback contexts also reaches the additive travel-end event and cannot prove the outer property widening; this exception is limited to the exact v3.12.1 declarations."
+    },
+    {
+      "against": "v3.12.1",
+      "entry": "semiotic-atlas",
+      "symbol": "FlowCircuitChartProps",
+      "previous": [
+        "type FlowCircuitChartProps = AtlasChartOptions & FlowCircuitLayoutConfig & {width?: number; height?: number; annotations?: PhysicsCustomChartProps[\"annotations\"]; /** Physics frame options for the flat view. */ frameProps?: PhysicsCustomChartProps[\"frameProps\"]; /** Network frame options for a projected view, including zoom and SVG rendering. */ networkFrameProps?: NetworkCustomChartProps[\"frameProps\"]; /** Project the fixed circuit apparatus through the network renderer. */ perspective?: NetworkCustomChartProps[\"perspective\"]; /** Named linked-view selection, separate from the local graph selection. */ linkedSelection?: Pick<NonNullable<BaseChartProps[\"selection\"]>, \"name\">; onSelectNode?: (id: string) => void;}"
+      ],
+      "current": [
+        "type FlowCircuitChartProps = AtlasChartOptions & FlowCircuitLayoutConfig & {width?: number; height?: number; annotations?: PhysicsCustomChartProps[\"annotations\"]; /** Physics frame options for the flat view. */ frameProps?: PhysicsCustomChartProps[\"frameProps\"]; /** Network frame options for a projected view, including zoom and SVG rendering. */ networkFrameProps?: NetworkCustomChartProps[\"frameProps\"]; /** Project the fixed circuit apparatus through the network renderer. */ perspective?: NetworkCustomChartProps[\"perspective\"]; /** Named linked-view selection, separate from the local graph selection. */ linkedSelection?: Pick<NonNullable<BaseChartProps[\"selection\"]>, \"name\">; onSelectNode?: (id: string) => void; /** * Module and pipe tooltips in both views. A callback receives the module * or pipe datum (`kind` is \"circuit-module\" or \"circuit-pipe\"); `false` * hides tooltips and keeps hover observations. */ tooltip?: TooltipProp;}"
+      ],
+      "reason": "Reviewed optional FlowCircuit tooltip addition: all released props remain accepted with tooltip omitted; false and datum callbacks add tooltip control in both views. Cross-release assignability cannot prove the composed layout/frame-prop alias. The packed TypeScript consumer covers the released tooltip-omitting shape and the new typed controls; existing FlowCircuit runtime tests cover chart rendering. This exception matches only the exact v3.12.1 declaration change."
+    },
+    {
+      "against": "v3.12.1",
+      "entry": "semiotic-network-zoom",
+      "symbol": "interface-member ZoomableNetworkCustomChartHandle::method::centerOn",
+      "previous": [],
+      "current": [
+        "interface-member ZoomableNetworkCustomChartHandle::method::centerOn = required centerOn(target: NetworkViewportRect | {x: number; y: number;}, options?: NetworkZoomCenterOptions | undefined): void"
+      ],
+      "reason": "Reviewed camera output-handle extension: ZoomableNetworkCustomChart always supplies centerOn; released camera methods and their signatures are unchanged. The packed TypeScript consumer covers existing ref/callback usage and typed calls to the added method, while NetworkZoomNavigation tests verify its behavior. Consumers implementing a complete handle mock must supply this method. This exception is limited to this exact v3.12.1 output-handle addition and does not relax required-member checks for other interfaces."
+    },
+    {
+      "against": "v3.12.1",
+      "entry": "semiotic-network-zoom",
+      "symbol": "interface-member ZoomableNetworkCustomChartHandle::method::centerOnMark",
+      "previous": [],
+      "current": [
+        "interface-member ZoomableNetworkCustomChartHandle::method::centerOnMark = required centerOnMark(id: string, options?: NetworkZoomCenterOptions | undefined): void"
+      ],
+      "reason": "Reviewed camera output-handle extension: ZoomableNetworkCustomChart always supplies centerOnMark; released camera methods and their signatures are unchanged. The packed TypeScript consumer covers existing ref/callback usage and typed calls to the added method, while NetworkZoomNavigation tests verify its behavior. Consumers implementing a complete handle mock must supply this method. This exception is limited to this exact v3.12.1 output-handle addition and does not relax required-member checks for other interfaces."
+    },
+    {
+      "against": "v3.12.1",
+      "entry": "semiotic-network-zoom",
+      "symbol": "interface-member ZoomableNetworkCustomChartHandle::method::fitToMarks",
+      "previous": [],
+      "current": [
+        "interface-member ZoomableNetworkCustomChartHandle::method::fitToMarks = required fitToMarks(ids: readonly string[], options?: NetworkZoomFitOptions | undefined): void"
+      ],
+      "reason": "Reviewed camera output-handle extension: ZoomableNetworkCustomChart always supplies fitToMarks; released camera methods and their signatures are unchanged. The packed TypeScript consumer covers existing ref/callback usage and typed calls to the added method, while NetworkZoomNavigation tests verify its behavior. Consumers implementing a complete handle mock must supply this method. This exception is limited to this exact v3.12.1 output-handle addition and does not relax required-member checks for other interfaces."
+    },
+    {
+      "against": "v3.12.1",
+      "entry": "semiotic-network-zoom",
+      "symbol": "interface-member ZoomableNetworkCustomChartHandle::method::getMarkBounds",
+      "previous": [],
+      "current": [
+        "interface-member ZoomableNetworkCustomChartHandle::method::getMarkBounds = required getMarkBounds(id: string): NetworkViewportRect | null"
+      ],
+      "reason": "Reviewed camera output-handle extension: ZoomableNetworkCustomChart always supplies getMarkBounds; released camera methods and their signatures are unchanged. The packed TypeScript consumer covers existing ref/callback usage and typed calls to the added method, while NetworkZoomNavigation tests verify its behavior. Consumers implementing a complete handle mock must supply this method. This exception is limited to this exact v3.12.1 output-handle addition and does not relax required-member checks for other interfaces."
+    },
+    {
+      "against": "v3.12.1",
+      "entry": "semiotic-network-zoom",
+      "symbol": "interface-member ZoomableNetworkCustomChartHandle::method::revealMark",
+      "previous": [],
+      "current": [
+        "interface-member ZoomableNetworkCustomChartHandle::method::revealMark = required revealMark(id: string): void"
+      ],
+      "reason": "Reviewed camera output-handle extension: ZoomableNetworkCustomChart always supplies revealMark; released camera methods and their signatures are unchanged. The packed TypeScript consumer covers existing ref/callback usage and typed calls to the added method, while NetworkZoomNavigation tests verify its behavior. Consumers implementing a complete handle mock must supply this method. This exception is limited to this exact v3.12.1 output-handle addition and does not relax required-member checks for other interfaces."
     }
   ]
 }

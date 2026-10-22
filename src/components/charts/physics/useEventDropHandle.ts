@@ -183,10 +183,20 @@ export function useEventDropHandle(
   const previous = useRef(-Infinity)
   const deliveredLedger = useRef<string | undefined>(undefined)
   const ledgerTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const readoutStore = useRef<ReturnType<StreamPhysicsFrameHandle["getStore"]> | null>(null)
   useEffect(() => {
     const props = latest.current.props
     const store = frameRef.current?.getStore()
     if (!metadata || !store) return
+    if (readoutStore.current !== store) {
+      readoutStore.current = store
+      emitted.current.clear()
+      previous.current = -Infinity
+      deliveredLedger.current = undefined
+      lastTick.current = -Infinity
+      if (ledgerTimer.current) clearTimeout(ledgerTimer.current)
+      ledgerTimer.current = null
+    }
     let lifecycle = false
     const occurrences = new Map<string, number>()
     for (const event of metadata.lifecycleEvents ?? []) {

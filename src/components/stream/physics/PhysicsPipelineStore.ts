@@ -422,18 +422,19 @@ export class PhysicsPipelineStore {
     }, observeInitial)
   }
 
-  /** Bind this store to the shared settle loop (see physicsPipelineSettle). */
-  private settleHost(): PhysicsSettleHost {
+  /** Bind this store to the shared settle loop (see physicsPipelineSettle). An
+   *  uncapped settle drains backlog only, so producers cannot run it to the limit. */
+  private settleHost(drainOnly = false): PhysicsSettleHost {
     return {
       fixedDt: this.config.fixedDt,
-      queueSize: () => this.queue.length + Number(this.programs.pending()),
+      queueSize: () => this.queue.length + Number(drainOnly ? this.programs.backlog() : this.programs.ownsClock()),
       atRest: () => this.atRest(),
       elapsed: () => this.elapsedSeconds,
       nextArrival: () => this.queue.firstArrival(),
       lastArrival: () => physicsTravelHorizon(this.elapsedSeconds, this.readBodies(), this.queue.sorted()),
       advanceTime: (s) => {
         this.elapsedSeconds += s
-        const spawns = this.programs.emitters?.advance(s)
+        const spawns = this.programs.emitters?.advance(s, drainOnly)
         if (spawns?.length) this.enqueue(spawns)
       },
       spawnDue: (spawned, obs) => this.spawnDue(spawned, obs),
@@ -479,7 +480,7 @@ export class PhysicsPipelineStore {
       : { spawned }
     const afterStep = this.stepObserver(execution, { spawned, evicted, sedimented, events, observations: observations ?? [] })
     const { steps, budget }: PhysicsSettleRun =
-      runPhysicsSettleSteps(this.settleHost(), maxSteps ?? this.config.settleStepLimit, sink, {
+      runPhysicsSettleSteps(this.settleHost(maxSteps === undefined), maxSteps ?? this.config.settleStepLimit, sink, {
         afterStep,
         continueWhile: execution?.continueWhile,
         shouldStop: observe ? () => this.paused || !this.visible : undefined,

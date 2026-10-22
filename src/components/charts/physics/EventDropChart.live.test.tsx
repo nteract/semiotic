@@ -1,6 +1,6 @@
 import * as React from "react"
 import { act, cleanup, render } from "@testing-library/react"
-import { afterEach, beforeEach, expect, it } from "vitest"
+import { afterEach, beforeEach, expect, it, vi } from "vitest"
 import { renderToStaticMarkup } from "react-dom/server"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
 import { EventDropChart } from "./EventDropChart"
@@ -46,6 +46,31 @@ it("admits push rows incrementally and restores the same store and history", () 
   expect(handle.getData()).toEqual([])
 })
 
+it("skips live rows without a finite event time instead of breaking the frame loop", () => {
+  const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+  try {
+    const ref = React.createRef<EventDropChartHandle>()
+    render(<EventDropChart ref={ref} live arrival="drop" timeUnit="s" paused />)
+    const handle = ref.current!
+    const store = handle.getStore()!
+    act(() =>
+      handle.pushMany([{ id: "missing" }, { id: "text", time: "soon" }, { id: "ok", time: 2 }])
+    )
+    expect(warn).toHaveBeenCalledTimes(2)
+    expect(() =>
+      act(() => {
+        store.setPaused(false)
+        store.tick(1 / 120)
+        store.setPaused(true)
+      })
+    ).not.toThrow()
+    expect(handle.getData().map((d) => d.id)).toEqual(["ok"])
+    expect(handle.getLedger()).toMatchObject([{ accepted: 1, late: 0 }])
+  } finally {
+    warn.mockRestore()
+  }
+})
+
 it("keeps supplied data authoritative and replaces it without preserving old admissions", () => {
   const ref = React.createRef<EventDropChartHandle>()
   const { rerender } = render(
@@ -63,6 +88,46 @@ it("keeps supplied data authoritative and replaces it without preserving old adm
   )
   expect(ref.current!.getData().map((d) => d.id)).toEqual(["replacement"])
   expect(ref.current!.getLedger()).toMatchObject([{ start: 20, accepted: 1 }])
+})
+
+it("filters malformed replacement rows while preserving input indices and paused admission", () => {
+  const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+  try {
+    const ref = React.createRef<EventDropChartHandle>()
+    const timeAccessor = vi.fn((row: { time?: number }) => row.time!)
+    const chart = (data: { id?: string; time?: number }[]) => (
+      <EventDropChart
+        ref={ref}
+        live
+        data={data}
+        timeAccessor={timeAccessor}
+        paused
+      />
+    )
+    const { rerender } = render(chart([{ id: "seed", time: 1 }]))
+    const store = ref.current!.getStore()
+    expect(() =>
+      rerender(
+        chart([
+          { id: "missing" },
+          { time: 21 },
+          { time: Infinity },
+          { time: 22 }
+        ])
+      )
+    ).not.toThrow()
+    expect(ref.current!.getStore()).toBe(store)
+    expect(ref.current!.getClock().paused).toBe(true)
+    expect(ref.current!.getData().map((row) => row.id)).toEqual([
+      "event-live-1",
+      "event-live-3"
+    ])
+    expect(ref.current!.getLedger()).toMatchObject([{ start: 20, accepted: 2 }])
+    expect(timeAccessor).toHaveBeenCalledWith({ time: 22 }, 3)
+    expect(warn).toHaveBeenCalled()
+  } finally {
+    warn.mockRestore()
+  }
 })
 
 it("reports the effective live speed once and preserves bodies when speed changes", () => {
@@ -153,4 +218,58 @@ it("requires live push mode for built-in emitters", () => {
       <EventDropChart live data={[]} emitters={{ sources: [] }} />
     )
   ).toThrow(/omit data/)
+})
+
+it("starts a new run instead of failing when window size or source schedules change", () => {
+  const ref = React.createRef<EventDropChartHandle>()
+  const chart = (size: number, source: string) => (
+    <EventDropChart
+      ref={ref}
+      live
+      windows={{ size }}
+      timeUnit="s"
+      sources={[{ id: source, label: source }]}
+      emitters={{ sources: [{ id: source, interval: 500 }], seed: 3 }}
+      paused
+    />
+  )
+  const { rerender } = render(chart(1, "a"))
+  const first = ref.current!.getStore()!
+  expect(() => rerender(chart(2, "a"))).not.toThrow()
+  const second = ref.current!.getStore()!
+  expect(second).not.toBe(first)
+  expect(() => rerender(chart(2, "b"))).not.toThrow()
+  expect(ref.current!.getStore()).not.toBe(second)
+  expect(ref.current!.getLedger()).toEqual([])
+})
+
+it("starts a new emitter run for a new jitter callback but retains identical callbacks and live controls", () => {
+  const ref = React.createRef<EventDropChartHandle>()
+  const immediate = vi.fn(() => 0)
+  const delayed = vi.fn(() => 1000)
+  const chart = (jitter: () => number, rate = 1) => (
+    <EventDropChart
+      ref={ref}
+      live
+      emitters={{ sources: [{ id: "a", interval: 100, jitter }], rate }}
+      paused
+    />
+  )
+  const { rerender } = render(chart(immediate))
+  const first = ref.current!.getStore()!
+  rerender(chart(immediate, 2))
+  expect(ref.current!.getStore()).toBe(first)
+  rerender(chart(delayed))
+  const second = ref.current!.getStore()!
+  expect(second).not.toBe(first)
+  act(() => {
+    second.setPaused(false)
+    for (let i = 0; i < 20; i++) second.tick(0.01)
+  })
+  expect(delayed).toHaveBeenCalled()
+  expect(second.snapshot().emitters!.options.sources[0].jitter).toBe(delayed)
+  const rows = ref.current!.getData()
+  expect(rows.length).toBeGreaterThan(0)
+  for (const row of rows)
+    expect(Number(row.arrivalTime) - Number(row.eventTime)).toBeCloseTo(1)
 })

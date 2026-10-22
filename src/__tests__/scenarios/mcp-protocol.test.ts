@@ -22,7 +22,7 @@ import * as path from "path"
 import { SERVER_DEPS_READY, spawnServer, sendRequest, initializeServer } from "./mcpStdioHarness"
 
 import { openPartialMcpUpload, requestHTTP } from "./mcpHttpUploadHarness"
-import { spawnReadyHTTPServer, waitForProcessExit } from "./mcpHttpServerHarness"
+import { spawnHTTPServer, spawnReadyHTTPServer, waitForProcessExit } from "./mcpHttpServerHarness"
 
 function parseSSEJSON(text: string): JsonRpcResponse {
   const events = text.split(/\r?\n\r?\n/)
@@ -1458,4 +1458,15 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP HTTP transport smoke", () => {
     expect(accepted.status).toBe(200)
     expect(accepted.body).toMatchObject({ status: "ok" })
   })
+
+  it.each(["*", "null", "https://app.example/path"])(
+    "refuses to start with MCP_ALLOWED_ORIGINS=%s",
+    async (origins) => {
+      const child = spawnHTTPServer(0, { MCP_ALLOWED_ORIGINS: origins })
+      const code = await new Promise<number | null>((resolve) =>
+        child.once("exit", (exitCode) => resolve(exitCode))
+      )
+      expect(code).toBe(1)
+    }
+  )
 })

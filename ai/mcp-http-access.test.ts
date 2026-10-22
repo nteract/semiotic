@@ -77,8 +77,27 @@ describe("MCP HTTP access policy", () => {
     expect(policy.allowsHost("API.EXAMPLE:3001")).toBe(true)
     expect(policy.allowsHost("tunnel.example:443")).toBe(true)
     expect(policy.allowsHost("tunnel.example:80")).toBe(false)
-    expect(policy.allowsHost("tunnel.example")).toBe(false)
+    // HTTPS clients send the default port implicitly.
+    expect(policy.allowsHost("tunnel.example")).toBe(true)
     expect(policy.allowsHost("localhost:3001")).toBe(false)
+  })
+
+  it("matches a portless Host only to default-port entries", () => {
+    const policy = createMcpHttpAccessPolicy("0.0.0.0", {
+      MCP_ALLOWED_HOSTS: "web.example:80,alt.example:8443"
+    })
+    expect(policy.allowsHost("web.example")).toBe(true)
+    expect(policy.allowsHost("web.example:443")).toBe(false)
+    expect(policy.allowsHost("alt.example")).toBe(false)
+    expect(policy.allowsHost("alt.example:8443")).toBe(true)
+  })
+
+  it("serves loopback addresses for a localhost bind", () => {
+    const policy = createMcpHttpAccessPolicy("localhost", {})
+    for (const host of ["localhost:3001", "127.0.0.1:3001", "[::1]:3001", "LOCALHOST"])
+      expect(policy.allowsHost(host)).toBe(true)
+    expect(policy.allowsHost("evil.example:3001")).toBe(false)
+    expect(policy.allowsHost("0.0.0.0:3001")).toBe(false)
   })
 
   it.each([

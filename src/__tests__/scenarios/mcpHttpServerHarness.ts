@@ -5,7 +5,7 @@ import { SERVER_PATH } from "./mcpStdioHarness"
 const HTTP_START_RETRIES = 3
 
 /** Spawn the MCP server process in Streamable HTTP mode. */
-function spawnHTTPServer(
+export function spawnHTTPServer(
   port: number,
   env: NodeJS.ProcessEnv = {},
   args: string[] = []

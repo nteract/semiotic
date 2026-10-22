@@ -1,6 +1,6 @@
 /** Convert viewport coordinates to plot-local logical CSS pixels. */
 export function physicsCanvasCoordinates(
-  canvas: HTMLCanvasElement,
+  canvas: HTMLElement,
   clientX: number,
   clientY: number,
   margin: { left: number; top: number } = { left: 0, top: 0 },

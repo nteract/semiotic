@@ -155,10 +155,10 @@ describe("ChainReactionChart tooltip contract", () => {
     })
   })
 
-  it("disables hover and content for tooltip={false}", () => {
+  it("suppresses content but keeps hover observations for tooltip={false}", () => {
     renderChart(false)
-    expect(capturedProps?.enableHover).toBe(false)
-    expect(capturedProps?.tooltipContent).toBeUndefined()
+    expect(capturedProps?.enableHover).toBe(true)
+    expect(capturedProps?.tooltipContent?.(physicsHover())).toBeNull()
   })
 
   it("degrades a multi request to a useful single authored datum", () => {

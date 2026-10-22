@@ -1,3 +1,4 @@
+import type { NetworkLayoutResult } from "./networkCustomLayout"
 import type { NetworkViewTransform } from "./networkViewportTypes"
 
 /** Internal bridge carried by the opt-in camera's stable viewTransform. No
@@ -8,6 +9,11 @@ export interface NetworkCameraSource {
   transformRef: (
     css: boolean
   ) => (element: SVGGElement | HTMLDivElement | null) => void
+  /** Called from the frame commit that renders a new custom layout result. */
+  layoutCommitted?: (
+    result: NetworkLayoutResult | null,
+    previous: NetworkLayoutResult | null
+  ) => void
 }
 
 export type NetworkCameraView = NetworkViewTransform & {

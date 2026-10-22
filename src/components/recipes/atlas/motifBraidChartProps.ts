@@ -14,6 +14,8 @@ export type MotifBraidChartProps = AtlasChartOptions & {
   annotations?: NetworkCustomChartProps["annotations"]
   frameProps?: NetworkCustomChartProps["frameProps"]
   perspective?: NetworkCustomChartProps["perspective"]
+  /** A callback receives the authored node or edge datum; `false` hides tooltips and keeps hover observations. */
+  tooltip?: NetworkCustomChartProps["tooltip"]
 }
 
 /** Shared client/static reader contract; atlas analysis precedes rendering. */

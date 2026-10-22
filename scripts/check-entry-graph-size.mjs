@@ -31,6 +31,14 @@ const printOnly = process.argv.includes("--print")
  * `scripts/treeshake-isolation.test.mjs`.
  */
 const ENTRY_GRAPHS = [
+  // Intentional fix cost (2026-10-22, review follow-ups): Escape dismissal for
+  // physics pointer tooltips, overlay semantic-item hover and its default
+  // tooltip, worker host-edit tracking, the live-program registry, and atlas
+  // reader tooltips with flow-circuit pipe hit strokes. Production gzip KiB:
+  // physics 180.5 -> 181.5, AI 631.1 -> 632.3, Atlas 306.9 -> 308.1. Other
+  // facades did not grow; the registry also drops EventDrop live code from
+  // Galton-only imports and the server graph (277.7 -> 274.3). Only those
+  // three limits change below, each keeping 0.5 KiB headroom.
   // User-approved live physics feature cost (2026-10-21): travel, clock-driven
   // emitters, live admission/camera/retirement, and worker/snapshot parity.
   // Production gzip KiB: root 390.017, artifact 125.195, physics 180.505,
@@ -46,6 +54,16 @@ const ENTRY_GRAPHS = [
   // AI 617.3, and recipes 105.7 KiB gzip. Their limits rise to 267.5, 618,
   // and 106.5 KiB, keeping less than 1 KiB headroom for each. All other
   // entry limits and the multi-import consumer budget remain unchanged.
+  // That refresh restored allowances a stale-base merge (4e2a379a3) had
+  // reverted together with their reasons: server 264.5 -> 265 (2026-10-13)
+  // retains computed Sankey/hierarchy accessibility totals; server +2 KiB
+  // (2026-10-18) adds the public exportNetworkViewSVG helper and analytic
+  // symbol-path bounds (264.9 -> 266.7 KiB), which named server imports still
+  // tree-shake; AI 615.5 -> 616 covers S6 invisible-node paint skipping,
+  // prepared rectangle hits and native pointer dispatch (615.9 KiB); AI
+  // 616 -> 617 (2026-10-19) covers explicit network edge identity, atomic
+  // mutation and SSR propagation (616.7 KiB), with the compositional solver
+  // kept in recipes; recipes 105 -> 106 (2026-10-10) is CI rounding headroom.
   // Intentional feature cost (2026-10-19): tooltip slots read chrome ownership
   // from the rendered root element (`data-semiotic-tooltip-chrome` through any
   // wrapper components, and no box for content that renders nothing), re-read
@@ -286,7 +304,7 @@ const ENTRY_GRAPHS = [
   // Bumped 168→169: the shared hatch tile and tooltip flip state measure
   // 167.9 KiB gzip.
   // Feature graph: 169.4 KiB (previous built HEAD: 168.3 KiB).
-  { entry: "physics.module.min.js", label: "physics", limitKb: 181 },
+  { entry: "physics.module.min.js", label: "physics", limitKb: 182 },
   // Bumped 240→242 (3.9.0): static Gauge SVG content and opt-in geometry
   // precision add serializer/runtime code to the server entry.
   // Bumped 242→244: the published Atlas readers and renderer-aware server
@@ -396,7 +414,7 @@ const ENTRY_GRAPHS = [
   // Bumped 612→614: axis-config key validation, value-banded histogram
   // fills, and the shared hatch tile measure 613.5 KiB gzip.
   // Feature graph: 614.7 KiB (previous built HEAD: 613.3 KiB).
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 631.5 },
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 632.8 },
   // Bumped 100→101: transitDiagramLayout's public detail modes, source-rooted
   // line derivation, and station-rendering contract extend the curated recipes
   // entry. Linux CI measures 100.3 KiB gzip; retain a reviewable 0.7 KiB
@@ -428,7 +446,7 @@ const ENTRY_GRAPHS = [
   // tooltip flip state measure 289.8 KiB gzip.
   // Shared lazy-module loading changes measure 290.5 KiB; allow 0.5 KiB headroom.
   // Feature graph: 291.8 KiB (previous built HEAD: 290.6 KiB).
-  { entry: "semiotic-atlas.module.min.js", label: "atlas", limitKb: 307.5 },
+  { entry: "semiotic-atlas.module.min.js", label: "atlas", limitKb: 308.6 },
   { entry: "semiotic-atlas-core.module.min.js", label: "atlas/core", limitKb: 15 },
   // Config serialization preserves and validates the optional interpretation
   // sidecar. Isolating the neutral utility graph removes unrelated shared

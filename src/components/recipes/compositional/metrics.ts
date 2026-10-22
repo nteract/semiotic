@@ -48,11 +48,15 @@ export function measureRoutes(
     }
   }
   // Sweep bounds before fine segments, with a disclosed cap for dense neighborhoods.
-  const spread = (axis: "x" | "y") =>
-    edges.length
-      ? Math.max(...edges.map((e) => e.bounds[axis])) -
-        Math.min(...edges.map((e) => e.bounds[axis]))
-      : 0
+  const spread = (axis: "x" | "y") => {
+    let low = Infinity,
+      high = -Infinity
+    for (const e of edges) {
+      low = Math.min(low, e.bounds[axis])
+      high = Math.max(high, e.bounds[axis])
+    }
+    return edges.length ? high - low : 0
+  }
   const axis = spread("x") >= spread("y") ? "x" : "y"
   const breadth = axis === "x" ? "width" : "height"
   const crossAxis = axis === "x" ? "y" : "x"

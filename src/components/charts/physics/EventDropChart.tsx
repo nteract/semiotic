@@ -2,7 +2,7 @@
 import { EVENT_DROP_CHART_SIZE } from "../shared/chartSizeDefaultsPhysics"
 
 import * as React from "react"
-import { forwardRef, useCallback, useMemo, useRef } from "react"
+import { forwardRef, useCallback, useEffect, useMemo, useRef } from "react"
 import { useStableShallow } from "../../stream/useStableShallow"
 import StreamPhysicsFrame, {
   type StreamPhysicsFrameHandle
@@ -54,6 +54,7 @@ import type {
 } from "./EventDropLiveRuntime"
 import type { PhysicsEmitterOptions } from "../../stream/physics/PhysicsEmitterSchedule"
 import { buildLiveEventDropLayout, useEventDropLive } from "./useEventDropLive"
+import { eventDropEmitterKey } from "./eventDropEmitterKey"
 import {
   eventDropOverlay,
   type EventDropWindowChrome
@@ -302,11 +303,6 @@ export const EventDropChart = /* @__PURE__ */ forwardRef(
     )
     const liveInputs = useRef(props)
     liveInputs.current = props
-    const liveReadout = useEventDropLive(
-      dataRef,
-      frameRef,
-      props as EventDropChartProps
-    )
     const buildLayout = useCallback(
       (rows: TDatum[]) =>
         liveConfig
@@ -363,12 +359,35 @@ export const EventDropChart = /* @__PURE__ */ forwardRef(
       idPrefix: "event",
       buildLayout
     })
+    // Window size, units, origin and emitter schedules define a live run. A
+    // change starts a new run (fresh store and ledger) instead of failing an
+    // in-place update; rate, activity, speed and watermark update live, and
+    // removing emitters stops production on the retained board.
+    const emitterSchedule = eventDropEmitterKey(props.emitters)
+    const committedSchedule = useRef(emitterSchedule)
+    const runSchedule = emitterSchedule ?? committedSchedule.current
+    useEffect(() => {
+      committedSchedule.current = runSchedule
+    })
+    const liveRunKey = JSON.stringify([
+      windows.size,
+      timeUnit ?? "s",
+      timeExtent?.[0] ?? 0,
+      runSchedule
+    ])
     const rerun = usePhysicsRerun(
       layout.config,
       rerunMS,
       paused,
       resetSeed,
       props.onSimulationStateChange
+    )
+    const frameKey = `${rerun.rerunKey}:${live ? liveRunKey : "replay"}`
+    const liveReadout = useEventDropLive(
+      dataRef,
+      frameRef,
+      props as EventDropChartProps,
+      frameKey
     )
 
     const metadata =
@@ -481,7 +500,7 @@ export const EventDropChart = /* @__PURE__ */ forwardRef(
           liveReadout.onFrame(store)
           readouts.onFrame?.(store)
         }}
-        key={`${rerun.rerunKey}:${live ? "live" : "replay"}`}
+        key={frameKey}
         config={rerun.config}
         backgroundGraphics={composePhysicsFrameGraphics(
           frameProps?.backgroundGraphics,

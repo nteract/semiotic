@@ -27,6 +27,7 @@ import type { FrameMargin } from "../useFrame"
 import { defaultTooltipStyle } from "../../Tooltip/Tooltip"
 import type { PhysicsBodyState } from "./PhysicsKernel"
 import type { PhysicsSimulationState } from "./PhysicsPipelineStore"
+import type { PhysicsItemHover } from "./usePhysicsItemHover"
 import type {
   PhysicsHoverData,
   PhysicsSemanticItem,
@@ -200,18 +201,43 @@ function physicsTooltipRows(data: unknown): Array<[string, string]> {
 export function renderPhysicsTooltip({
   enableHover,
   hoverData,
+  itemHover,
   tooltipContent,
+  semanticItemTooltipContent,
   plotWidth,
   plotHeight,
   margin
 }: {
   enableHover: boolean
   hoverData: PhysicsHoverData | null
+  itemHover?: PhysicsItemHover | null
   tooltipContent: StreamPhysicsFrameProps["tooltipContent"]
+  semanticItemTooltipContent?: StreamPhysicsFrameProps["semanticItemTooltipContent"]
   plotWidth: number
   plotHeight: number
   margin: FrameMargin
 }): React.ReactElement | null {
+  if (enableHover && !hoverData && itemHover) {
+    const content = semanticItemTooltipContent ? (
+      semanticItemTooltipContent(itemHover.item)
+    ) : (
+      <DefaultPhysicsItemTooltip item={itemHover.item} />
+    )
+    if (!hasTooltipContent(content)) return null
+    return (
+      <FlippingTooltip
+        contentOwnsChrome={hasOwnTooltipChrome(semanticItemTooltipContent)}
+        x={itemHover.x}
+        y={itemHover.y}
+        containerWidth={plotWidth}
+        containerHeight={plotHeight}
+        margin={margin}
+        className="stream-physics-tooltip"
+      >
+        {content}
+      </FlippingTooltip>
+    )
+  }
   if (!enableHover || !hoverData) return null
   const content = tooltipContent ? (
     tooltipContent(hoverData)
@@ -235,6 +261,21 @@ export function renderPhysicsTooltip({
 }
 
 // Marked so FlippingTooltip knows this component paints its own chrome.
+const DefaultPhysicsItemTooltip = /* @__PURE__ */ markTooltipChrome(
+  function DefaultPhysicsItemTooltip({
+    item
+  }: {
+    item: PhysicsSemanticItem
+  }): React.ReactElement {
+    return (
+      <div className="semiotic-tooltip" style={defaultTooltipStyle}>
+        <div style={{ fontWeight: 700 }}>{item.label}</div>
+        {item.description ? <div>{item.description}</div> : null}
+      </div>
+    )
+  }
+)
+
 const DefaultPhysicsTooltip = /* @__PURE__ */ markTooltipChrome(
   function DefaultPhysicsTooltip({
     hover

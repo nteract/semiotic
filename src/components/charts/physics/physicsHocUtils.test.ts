@@ -109,10 +109,13 @@ describe("resolvePhysicsChartSize", () => {
 })
 
 describe("resolvePhysicsTooltipProps", () => {
-  it("disables hover when tooltip is false", () => {
-    expect(resolvePhysicsTooltipProps(false, { enableHover: true })).toEqual({
-      enableHover: false
-    })
+  it("suppresses content but keeps hover when tooltip is false", () => {
+    const resolved = resolvePhysicsTooltipProps(false, { enableHover: true })
+    expect(resolved.enableHover).toBe(true)
+    expect(resolved.tooltipContent?.({} as never)).toBeNull()
+    expect(
+      resolved.semanticItemTooltipContent?.({ label: "pipe", x: 0, y: 0 })
+    ).toBeNull()
   })
 
   it("passes through frame enableHover when tooltip is undefined", () => {

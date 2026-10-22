@@ -259,6 +259,24 @@ export class EventDropLiveRuntime {
     return this.layout.config.colliders ?? []
   }
 
+  /** Handoffs still travelling, or a watermark-following camera still catching up. */
+  backlog(): boolean {
+    if (this.pending.size > 0) return true
+    if (this.config.live.follow !== "watermark") return false
+    const target = this.ledger.getWatermark()
+    return Number.isFinite(target) && target - this.anchor > 1e-9
+  }
+
+  /** The view changes with time alone: it follows the clock, or the watermark polls or times out. */
+  continuous(): boolean {
+    const policy = this.config.watermark
+    return (
+      this.config.live.follow === "now" ||
+      (typeof policy === "object" &&
+        (policy.idleTimeout != null || policy.external != null))
+    )
+  }
+
   /** Called once for each newly materialized input, including worker emitters. */
   prepare(input: PhysicsQueuedSpawn, elapsed: number): PhysicsQueuedSpawn {
     this.bodiesChanged = true

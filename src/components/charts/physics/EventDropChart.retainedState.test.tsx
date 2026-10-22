@@ -1,6 +1,6 @@
 import * as React from "react"
 import { act, cleanup, fireEvent, render } from "@testing-library/react"
-import { afterEach, beforeEach, expect, it } from "vitest"
+import { afterEach, beforeEach, expect, it, vi } from "vitest"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
 import { createFrameScheduler } from "../../stream/test-utils/frameScheduler"
 import { EventDropChart } from "./EventDropChart"
@@ -15,6 +15,67 @@ afterEach(() => {
   restoreCanvas()
 })
 const emitters = { sources: [{ id: "source", ratePerSec: 10 }] }
+
+it("replaces empty paused run metadata even when store revisions and clocks match", () => {
+  const ref = React.createRef<EventDropChartHandle>()
+  const scheduler = createFrameScheduler()
+  const chart = (size: number) => (
+    <EventDropChart
+      ref={ref}
+      live
+      paused
+      windows={{ size }}
+      frameProps={{ frameScheduler: scheduler.scheduler }}
+    />
+  )
+  const { container, rerender } = render(chart(10))
+  act(() => scheduler.flush())
+  const first = ref.current!.getStore()!
+  const labels = () =>
+    Array.from(
+      container.querySelectorAll(
+        '[data-testid="event-drop-window-overlay"] text'
+      ),
+      (element) => element.textContent
+    )
+  expect(labels()).toContain("0-10")
+  rerender(chart(20))
+  // The old readout must not override the new layout while awaiting paint.
+  expect(labels()).toContain("0-20")
+  act(() => scheduler.flush())
+  const second = ref.current!.getStore()!
+  expect(second).not.toBe(first)
+  expect(second.getUpdateSnapshot().revisions.sceneGeometry).toBe(
+    first.getUpdateSnapshot().revisions.sceneGeometry
+  )
+  expect(second.runtimeState().elapsedSeconds).toBe(
+    first.runtimeState().elapsedSeconds
+  )
+  expect(labels()).toContain("0-20")
+  expect(labels()).not.toContain("0-10")
+})
+
+it("reports the new run's watermark even when it precedes the previous run", () => {
+  const scheduler = createFrameScheduler()
+  const onWatermarkChange = vi.fn()
+  const data = [{ id: "seed", time: 2 }]
+  const chart = (size: number) => (
+    <EventDropChart
+      live
+      paused
+      data={data}
+      windows={{ size }}
+      onWatermarkChange={onWatermarkChange}
+      frameProps={{ frameScheduler: scheduler.scheduler }}
+    />
+  )
+  const { rerender } = render(chart(10))
+  act(() => scheduler.flush())
+  expect(onWatermarkChange).toHaveBeenLastCalledWith(-8, -Infinity)
+  rerender(chart(20))
+  act(() => scheduler.flush())
+  expect(onWatermarkChange).toHaveBeenLastCalledWith(-18, -Infinity)
+})
 
 it.each([false, true])(
   "stops removed producers, including authoritative data=%s",

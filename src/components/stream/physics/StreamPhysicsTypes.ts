@@ -400,6 +400,13 @@ export interface StreamPhysicsFrameProps {
   suspendWhenHidden?: boolean
   title?: string | React.ReactNode
   tooltipContent?: (hover: PhysicsHoverData) => React.ReactNode
+  /**
+   * Tooltip for a semantic item without a body, shown while the pointer is
+   * over an overlay element whose `data-semiotic-semantic-id` names the item's
+   * `id`. Defaults to its label and description. Chart `tooltip` callbacks
+   * receive the item's `datum`.
+   */
+  semanticItemTooltipContent?: (item: PhysicsSemanticItem) => React.ReactNode
   workerBodyThreshold?: number
   /**
    * Custom canvas body painter. Authored `bodyStyle.cursor` still works, but

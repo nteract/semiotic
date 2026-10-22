@@ -87,6 +87,11 @@ const props = [
     type: "function",
     description: "Pointer and keyboard activation return the canonical vertex ID.",
   },
+  {
+    name: "tooltip",
+    type: "boolean | function | object",
+    description: "Custom tooltip renderer or config; receives the authored mark datum with standard chrome. false hides tooltips while hover observations continue.",
+  },
 ]
 
 export default function DependencyForestChartPage() {

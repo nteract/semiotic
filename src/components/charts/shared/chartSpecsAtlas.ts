@@ -29,7 +29,8 @@ const common = /* @__PURE__ */ Object.fromEntries(
     "chartId",
     "onObservation",
     "annotations",
-    "frameProps"
+    "frameProps",
+    "tooltip"
   ].map((key) => [key, PROP_BAGS.common[key]])
 )
 const selection: ChartPropSpec = {

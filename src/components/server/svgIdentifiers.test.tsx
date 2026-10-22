@@ -56,11 +56,14 @@ const bars = {
 }
 
 describe("instance-local SVG identifiers", () => {
-  it("keeps default evidence deterministic while allocating distinct document IDs", () => {
+  it("renders identical input to identical SVG with stable evidence", () => {
     const first = renderChartWithEvidence("AreaChart", line)
     renderChart("BarChart", bars)
     const second = renderChartWithEvidence("AreaChart", line)
-    expect(first.svg).not.toBe(second.svg)
+    expect(second.svg).toBe(first.svg)
+    expect(renderChart("AreaChart", line)).toBe(first.svg)
+    expect(first.svg).not.toMatch(/pending/)
+    expect(JSON.stringify(first.evidence)).not.toMatch(/pending/)
     expect(first.evidence.sceneHash).toBe(second.evidence.sceneHash)
     const theme = { "--semiotic-primary": "#008800" }
     expect(
@@ -156,12 +159,13 @@ describe("instance-local SVG identifiers", () => {
     ],
     ["MinimapChart", line]
   ])(
-    "scopes every ID and local reference in two identical %s renders",
+    "scopes every ID and local reference in two different %s renders",
     (component, props) => {
       const svgs = [
         renderChart(component, props),
-        renderChart(component, props)
+        renderChart(component, { ...props, width: 320, height: 210 })
       ]
+      expect(renderChart(component, props)).toBe(svgs[0])
       const doc = new DOMParser().parseFromString(
         `<svg xmlns="http://www.w3.org/2000/svg">${svgs.join("")}</svg>`,
         "image/svg+xml"
@@ -191,13 +195,13 @@ describe("instance-local SVG identifiers", () => {
     expect(frame).not.toContain('id="data-area"')
   })
 
-  it("keeps dashboard prefixes distinct across repeated compositions", () => {
-    const a = renderDashboard([
-      { component: "BarChart", props: { ...bars, _idPrefix: "authored" } }
-    ])
-    const b = renderDashboard([
-      { component: "BarChart", props: { ...bars, _idPrefix: "authored" } }
-    ])
+  it("keeps dashboard prefixes distinct across different compositions", () => {
+    const charts = [
+      { component: "BarChart" as const, props: { ...bars, _idPrefix: "authored" } }
+    ]
+    const a = renderDashboard(charts, { subtitle: "First" })
+    const b = renderDashboard(charts, { subtitle: "Second" })
+    expect(renderDashboard(charts, { subtitle: "First" })).toBe(a)
     const doc = new DOMParser().parseFromString(
       `<svg xmlns="http://www.w3.org/2000/svg">${a}${b}</svg>`,
       "image/svg+xml"

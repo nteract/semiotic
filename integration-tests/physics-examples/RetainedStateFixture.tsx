@@ -10,6 +10,7 @@ declare global {
 
 export function RetainedStateFixture() {
   const [width, setWidth] = useState(400)
+  const items = new URLSearchParams(window.location.search).has("items")
   return (
     <>
       <button onClick={() => setWidth(300)}>Resize retained frame</button>
@@ -42,6 +43,41 @@ export function RetainedStateFixture() {
           ]}
           enableHover
           bodySemanticItems
+          semanticItems={
+            items
+              ? [
+                  {
+                    id: "pipe",
+                    label: "Pipe: 4 rec/s",
+                    x: 150,
+                    y: 40,
+                    description: "Left to right"
+                  }
+                ]
+              : []
+          }
+          foregroundGraphics={
+            items ? (
+              <svg
+                width={width}
+                height={200}
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: 0,
+                  pointerEvents: "none"
+                }}
+              >
+                <path
+                  data-semiotic-semantic-id="pipe"
+                  d={`M30,40 L${width - 30},40`}
+                  stroke="steelblue"
+                  strokeWidth={12}
+                  style={{ pointerEvents: "stroke" }}
+                />
+              </svg>
+            ) : undefined
+          }
           tooltipContent={(hover) => <span>{hover.data.label}</span>}
         />
       </div>

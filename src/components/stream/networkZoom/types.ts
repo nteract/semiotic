@@ -4,9 +4,26 @@ import type {
 } from "../networkViewportTypes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 
-/** Source of a camera proposal, including programmatic navigation. */
+/** Source of a camera proposal, including programmatic navigation. `anchor`
+ * re-solves the camera after a layout run moved the anchored mark. */
 export type NetworkZoomSource =
-  "wheel" | "drag" | "pinch" | "keyboard" | "control" | "fit" | "reset"
+  | "wheel"
+  | "drag"
+  | "pinch"
+  | "keyboard"
+  | "control"
+  | "fit"
+  | "reset"
+  | "center"
+  | "anchor"
+
+/** Screen CSS pixels at each plot edge, such as a strip covered by a side panel. */
+export interface NetworkZoomInsets {
+  top?: number
+  right?: number
+  bottom?: number
+  left?: number
+}
 
 /** Camera policy. Bounds apply to gestures, controls and imperative methods. */
 export interface NetworkZoomOptions {
@@ -42,6 +59,39 @@ export interface NetworkZoomOptions {
   duration?: number
   /** Screen-pixel space around fit bounds. @default 24 */
   fitPadding?: number
+  /**
+   * Plot strips that consumer chrome covers. Fit, center, reveal, pan bounds
+   * and centered zoom (buttons, keyboard, locked axes) use the remaining
+   * usable viewport. Changing insets moves the camera only through pan bounds
+   * or a later fit/center request.
+   */
+  insets?: NetworkZoomInsets
+  /**
+   * Keep this mark's screen position when the custom layout runs again, by
+   * translating the camera once per layout commit; the scale is unchanged.
+   * Nothing happens when the mark is absent before or after the run.
+   */
+  anchor?: { markId: string } | null
+}
+
+/** Fit options for one request. */
+export interface NetworkZoomFitOptions {
+  /**
+   * Screen-pixel space kept free inside the usable viewport (insets excluded),
+   * for all sides or per side; unspecified sides keep `fitPadding`.
+   */
+  padding?: number | NetworkZoomInsets
+  minZoom?: number
+  maxZoom?: number
+  duration?: number
+}
+
+/** Center options. The scale is kept unless `k` is given; `insets` replaces
+ * `zoomOptions.insets` for this request. */
+export interface NetworkZoomCenterOptions {
+  k?: number
+  duration?: number
+  insets?: NetworkZoomInsets
 }
 
 /** Change notification. An idle event also fires when a gesture settles. */
@@ -68,6 +118,21 @@ export interface ZoomableNetworkCustomChartHandle extends RealtimeFrameHandle {
   /** Translate by screen CSS pixels on the unlocked axes. */
   panBy(x: number, y: number): void
   /** Fit retained node/card bounds; supply bounds for decorations or edge excursions. */
-  fitToContent(bounds?: NetworkViewportRect): void
+  fitToContent(
+    bounds?: NetworkViewportRect,
+    options?: NetworkZoomFitOptions
+  ): void
   resetZoom(): void
+  /** Put the center of a layout rect or point at the usable viewport's center. */
+  centerOn(
+    target: NetworkViewportRect | { x: number; y: number },
+    options?: NetworkZoomCenterOptions
+  ): void
+  /** Layout-coordinate box of an HTML mark, else of the scene node with this id. */
+  getMarkBounds(id: string): NetworkViewportRect | null
+  /** Fit the union of the listed marks' bounds; missing ids are skipped. */
+  fitToMarks(ids: readonly string[], options?: NetworkZoomFitOptions): void
+  /** Pan the least distance that brings a mark inside the usable viewport. */
+  revealMark(id: string): void
+  centerOnMark(id: string, options?: NetworkZoomCenterOptions): void
 }

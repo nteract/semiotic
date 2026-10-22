@@ -162,14 +162,18 @@ export function defaultSide(
 }
 export function boundRects(rects: readonly Rect[]): Rect {
   if (!rects.length) return { x: 0, y: 0, width: 0, height: 0 }
-  const x = Math.min(...rects.map((r) => r.x)),
-    y = Math.min(...rects.map((r) => r.y))
-  return {
-    x,
-    y,
-    width: Math.max(...rects.map((r) => r.x + r.width)) - x,
-    height: Math.max(...rects.map((r) => r.y + r.height)) - y
+  // A loop, not Math.min(...spread): large graphs exceed the argument limit.
+  let x = Infinity,
+    y = Infinity,
+    right = -Infinity,
+    bottom = -Infinity
+  for (const r of rects) {
+    x = Math.min(x, r.x)
+    y = Math.min(y, r.y)
+    right = Math.max(right, r.x + r.width)
+    bottom = Math.max(bottom, r.y + r.height)
   }
+  return { x, y, width: right - x, height: bottom - y }
 }
 export function pointBounds(points: readonly Point[]): Rect {
   return boundRects(points.map((p) => ({ ...p, width: 0, height: 0 })))

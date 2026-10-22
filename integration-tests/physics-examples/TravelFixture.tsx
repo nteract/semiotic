@@ -18,7 +18,13 @@ const scheduler = createFrameScheduler()
 let now = 0
 const clock = () => now
 window.__advanceTravel = async (frames) => {
-  for (let i = 0; i < frames; i++) {
+  const elapsed = () =>
+    window.__travelChart.getStore()!.runtimeState().elapsedSeconds
+  const target = elapsed() + frames / 60
+  // Worker replies and resize repaints can consume display callbacks without
+  // stepping physics. Advance the acknowledged simulation clock, so the same
+  // requested duration means the same travel progress in both execution modes.
+  while (elapsed() + 1e-9 < target) {
     // Wait for a resident worker response to schedule its next display frame.
     for (let attempt = 0; !scheduler.pendingCount && attempt < 100; attempt++)
       await new Promise((resolve) => setTimeout(resolve, 5))

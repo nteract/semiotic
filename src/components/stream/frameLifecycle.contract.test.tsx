@@ -226,20 +226,30 @@ describe("all frame families share lifecycle scheduling", () => {
   )
 
   it.each(FRAME_FAMILIES)(
-    "$name cancels a pending zero handle before its first paint",
+    "$name cancels a pending zero handle before it paints",
     (family) => {
-      const scheduler = createFrameScheduler(0)
+      const mountScheduler = createFrameScheduler(0)
       const props: LifecycleProps = {
         clock: () => 0,
-        frameScheduler: scheduler.scheduler,
-        paused: false,
+        frameScheduler: mountScheduler.scheduler,
+        paused: true,
         seed: 41,
         suspendWhenHidden: true
       }
       const view = render(family.makeFrame(props))
+      act(() => mountScheduler.flush(0))
+      expect(mountScheduler.pendingCount).toBe(0)
+
+      const scheduler = createFrameScheduler(0)
+      const resumed = { ...props, frameScheduler: scheduler.scheduler }
+      act(() => {
+        view.rerender(family.makeFrame({ ...resumed, paused: false }))
+      })
       expect(scheduler.requestedHandles[0]).toBe(0)
       expect(scheduler.pendingCount).toBe(1)
-      view.rerender(family.makeFrame({ ...props, paused: true }))
+      act(() => {
+        view.rerender(family.makeFrame(resumed))
+      })
       expect(scheduler.pendingCount).toBe(0)
       expect(scheduler.cancelledHandles).toContain(0)
       view.unmount()

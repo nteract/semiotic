@@ -14,7 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 The opt-in `semiotic/network/zoom` camera keeps custom layouts in authored
 coordinates while synchronizing canvas, SVG, HTML cards, hit testing and
 keyboard focus. This release improves camera and pointer-update performance,
-adds discrete LOD subscriptions and retained-scene SVG export, and supports
+adds discrete LOD subscriptions, viewport insets, mark-id navigation, camera
+anchoring across layout runs and retained-scene SVG export, and supports
 ordinary-arrow panning as an explicit keyboard policy. Existing charts and
 default arrow-key node navigation retain their behavior.
 
@@ -36,16 +37,131 @@ default arrow-key node navigation retain their behavior.
   discrete detail level without rerendering cards for unchanged levels during
   camera movement. It preserves hysteresis, settle-only promotion, and focused
   editor detail through `keepDetail`.
+- `zoomOptions.insets` reserves screen-pixel plot strips covered by chrome such
+  as an inspect panel. Fit, reveal, pan bounds and centered zoom (buttons,
+  plus/minus keys, locked axes) use the remaining viewport; changing insets
+  alone does not move the camera. The handle adds `centerOn(rectOrPoint,
+  { k?, duration?, insets? })`, and `fitToContent` accepts `{ padding,
+  minZoom, maxZoom, duration }`; `padding` may be set per side, and
+  unspecified sides keep `fitPadding`.
+- Mark-id camera navigation: `getMarkBounds(id)` reads an HTML mark's box, or
+  else a scene node's, from the retained layout, alongside `centerOnMark`,
+  `fitToMarks` and `revealMark`. `zoomOptions.anchor: { markId }` keeps that
+  mark's center at the same screen position when the layout runs again,
+  translating the camera once per layout commit. `NetworkZoomSource` adds
+  `"center"` and `"anchor"`.
+- `useNetworkZoom(selector, isEqual?)` rerenders only when the selected camera
+  value changes.
+- Compositional DAG interfaces from `semiotic/recipes/core`:
+  `prepareCompositionalGraph` validates versioned nodes, parts, ports, edges
+  and explicit transfers, where every connection keeps its own ID;
+  `routeCompositionalGraph` solves authored positions in `route-only` mode or
+  explicit order freedoms in bounded `optimize` mode and reports infeasible
+  pins, missing anchors, unsupported compound routing and congestion through
+  diagnostics; `compositionalDagLayout` renders the solved layout through
+  `NetworkCustomChart`. `patchCompositionalGraph`, `traceCompositionalGraph`,
+  `CompositionalLayoutController`, `createCompositionalWorkerEngine`,
+  `installCompositionalWorker`, `projectCompositionalScroll` and
+  `CompositionalMeasurementTransaction` cover mutation, tracing, asynchronous
+  engines, scrolling and measurement; `CompositionalNavigator` from
+  `semiotic/recipes/react` adds keyboard access to parts and ports. Solved
+  layouts are deeply frozen without freezing the caller's graph, view or
+  geometry objects. See `/custom-charts#compositional-dags`,
+  `/examples/compositional-dag` and `/examples/pipeline-explorer`.
+- Network edge identity: `frameProps={{ edgeIdentity: "id", edgeIdAccessor }}`
+  keys edges by their own IDs instead of the source+target pair, so duplicate
+  connections between the same owners stay distinct across bounded data,
+  pushes, updates and static rendering. The frame ref adds
+  `updateEdgeById(id, updater)` and single-ID `removeEdge(id)`. Clear retained
+  push data before switching back to pair identity.
+- EventDrop live mode: `live` enables incremental admission, camera follow,
+  bounded body retirement and a historical ledger; `emitters` runs built-in
+  fixed-step sources in sync or worker execution; `arrival: { mode: "travel" }`
+  animates bodies from source tiles with `history: "present" | "travel"`;
+  `sources`, `sourceRail`, `sourceAccessor`, `onSourceClick` and `windowChrome`
+  describe and style sources and windows; `timeUnit` fixes pacing units;
+  `onLedgerChange`, `onWatermarkChange` and `onClockTick` (throttled by
+  `clockTickMs`) report admission, watermark and clock state; the handle adds
+  `getLedger`, `getSourceStats`, `getWatermark`, `getClock`, `setTimeScale`,
+  `snapshot` and `restore`. `semiotic/physics` exports `useEmitters`,
+  `syntheticArrivals`, `createSyntheticEmitter` and the pure
+  `EventDropLedger`. Live rows without a finite event time are skipped with a
+  development warning, as replay already skipped them. See
+  `/examples/emitter-playground`.
+- `registerPhysicsLivePrograms()` from `semiotic/physics` enables
+  `PhysicsPipelineStore` `emitters` and live `eventDrop` programs when you
+  construct or restore a store yourself. EventDropChart and the physics worker
+  register them automatically, so other physics charts no longer bundle the
+  EventDrop live runtime: a `GaltonBoardChart`-only import drops from
+  100.6 to 93.3 KiB gzip.
+- FlowCircuitChart, DependencyForestChart and MotifBraidChart accept
+  `tooltip`. FlowCircuitChart's flat view now shows the same module and pipe
+  tooltips as its projected view; pass `tooltip={false}` to hide them.
+- Physics frames show tooltips for semantic items drawn in SVG overlays: an
+  element whose `data-semiotic-semantic-id` names an item gets pointer hover,
+  observations and dismissal, rendered by `semanticItemTooltipContent` or a
+  chart's `tooltip` callback.
+- Escape dismisses a pointer tooltip in every frame family without moving the
+  pointer (WCAG 1.4.13); the next pointer move shows it again.
+
+### Changed
+
+- Static SVG IDs carry a per-chart prefix, so the groups named for Figma layers
+  read `<prefix>-data-area`, `<prefix>-axes` and so on. `chartId` sets the
+  prefix; otherwise it derives from the rendered markup, so identical input
+  renders byte-identical SVG while charts that differ in size, data, theme or
+  any other rendered detail never share gradient, clip, pattern or title IDs
+  when inlined in one document. Repeated identical charts share IDs unless
+  they receive distinct `chartId` values. `renderDashboard` scopes its charts
+  the same way.
+- XY charts paint their background in an SVG layer beneath the grid and keep
+  the mark canvas transparent, as ordinal charts do, so gridlines and axis
+  baselines draw under data marks instead of over them. Browser PNG export
+  composites those SVG background layers under the canvas. The first `rect`
+  in an XY chart is now that full-frame backdrop, so select annotation shapes
+  by their own classes.
+- Zero-duration programmatic camera moves (`zoomTo(view, 0)`, `panBy`, and
+  zero-duration fit, center, reset and anchoring) apply in a microtask instead
+  of the next animation frame. A correction made from a React effect therefore
+  paints in the same frame as the layout change, with newly visible cards
+  mounted; moves chained in one task compose. Wheel, drag, pinch and keyboard
+  input still apply once per animation frame.
 
 ### Fixed
 
+- Physics `tooltip={false}` hides tooltips without stopping hover
+  observations, linked hover or selection, as in every other family.
+- Live physics stores report `settled` once handoffs, bounded producers and
+  bodies finish, and an uncapped settle (including reduced motion) holds
+  producers instead of advancing the live clock to the step limit.
+- Live EventDrop changes to window size, units, origin or emitter source
+  schedules start a new run instead of failing inside an effect.
+- Physics worker mirrors keep host pushes, removals, pauses and restores
+  through worker frames computed before the worker received them, including a
+  worker restart; a removal during an in-flight tick no longer falls back to
+  synchronous execution, and replacing a worker while a command is pending no
+  longer disables worker execution for the chart.
+- Compositional worker engines reject pending requests on a Worker `error`
+  or port `messageerror`, and the worker reports a result it cannot post.
+  Acceptance rejects unknown statuses and terminals attached to another
+  node's display box. Large graphs no longer overflow the argument limit while
+  bounding, and indexed terminal lookups halve route-only solves of 800
+  owners and 4,000 edges.
+- Charts commit the overlay state a canvas repaint sets (axes, annotations,
+  interactive graphics, network HTML marks and overlays) in the same animation
+  frame, so a data or config update no longer shows new marks against the
+  previous frame's axes, annotations or cards. Network data and layout
+  rebuilds skip the 30 Hz overlay throttle, which still applies to animation
+  and transition frames. A fresh client mount paints its canvas and overlay
+  before the browser displays its first frame instead of one animation frame
+  later.
 - Physics chart resizes and encoding changes preserve arrival state: visible
   bodies stay visible, queued arrivals keep their deadlines and order, and
   removed bodies stay removed. This fixes late arrivals disappearing from the
   watermark lesson during responsive relayouts.
-- Tooltips measure after browser layout and commit their placement before paint,
-  avoiding forced synchronous layout when hover content appears while preserving
-  flipping, boundary clamping, transitions and resize behavior.
+- Tooltips commit their placement before paint, including size changes that
+  ResizeObserver reports after browser layout, while preserving flipping,
+  boundary clamping, transitions and resize behavior.
 - Static network exports apply default label colors without mutating retained
   labels, supporting frozen scenes and reuse across themes.
 - Static network rendering preserves custom scenes and SVG decorations supplied
@@ -92,6 +208,14 @@ default arrow-key node navigation retain their behavior.
   `MCP_ALLOWED_HOSTS` for hosted services and tunnels; binding to all interfaces
   does not disable Host validation. Native clients without Origin and the
   default stdio transport continue to work. CORS no longer grants wildcard access.
+  A `host:443` or `host:80` entry also matches a Host header without a port,
+  which HTTPS clients send, and a `localhost` bind accepts `127.0.0.1` and
+  `::1`. The hosted smoke test now requires a 403, without a CORS grant, for an
+  unlisted browser Origin.
+- The bundled MCP server builds against `@modelcontextprotocol/sdk` 1.32.0
+  (from 1.31.0), taking the SDK's October 2026 security releases. Semiotic does
+  not use the affected task store, bearer-auth or client transports, and its
+  own row, cell and nesting limits already bound tool input.
 
 ## [3.12.1] - 2026-10-05
 
