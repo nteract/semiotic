@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   discovery, reasoning-token cost estimates, and spend checks that reject
   partially priced model deployments. Run it with `npm run eval:ai:litellm`.
 
+### Fixed
+
+- Update the MCP SDK's transitive `ip-address` dependency to `10.7.4`, fixing
+  CVE-2026-111997 and clearing the release security audit.
+
 ## [3.13.0]
 
 ### Network camera and semantic zoom
