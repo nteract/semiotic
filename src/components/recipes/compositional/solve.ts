@@ -6,7 +6,8 @@ import type {
   NodeMeasure,
   Point,
   RoutedConnection,
-  SolvedCompositionalLayout
+  SolvedCompositionalLayout,
+  PlacedNode
 } from "./types"
 import {
   canonical,
@@ -40,6 +41,25 @@ import {
   ranks,
   validateSemanticTopology
 } from "./topology"
+
+// Solved layouts are frozen, so one index per previous solution stays valid.
+const previousNodeIndexes = /* @__PURE__ */ new WeakMap<
+  SolvedCompositionalLayout,
+  Map<string, PlacedNode>
+>()
+function previousNode(
+  request: LayoutRequest,
+  id: string
+): PlacedNode | undefined {
+  const previous = request.previous
+  if (!previous) return undefined
+  let index = previousNodeIndexes.get(previous)
+  if (!index) {
+    index = new Map(previous.nodes.map((n) => [n.id, n]))
+    previousNodeIndexes.set(previous, index)
+  }
+  return index.get(id)
+}
 
 /** Resolve and record the bounded built-in adapter's options. */
 export function compositionalLayoutOptions(
@@ -433,7 +453,7 @@ function objective(
   )
   const owners = solved.nodes.filter((n) => n.semantic.endpoint.kind === "node")
   const displacement = owners.reduce((sum, n) => {
-    const prior = request.previous?.nodes.find((p) => p.id === n.id)
+    const prior = previousNode(request, n.id)
     return sum + (prior ? distance(prior.rect, n.rect) : 0)
   }, 0)
   // Costs use actual routed attachments, never box-center crossings.
@@ -608,7 +628,7 @@ export function routeCompositionalGraph(
         reorderedParts,
         nodeDisplacement: best.nodes.reduce((sum, n) => {
           if (n.semantic.endpoint.kind !== "node") return sum
-          const prior = request.previous?.nodes.find((p) => p.id === n.id)
+          const prior = previousNode(request, n.id)
           return sum + (prior ? distance(prior.rect, n.rect) : 0)
         }, 0)
       },

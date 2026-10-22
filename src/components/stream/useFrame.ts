@@ -13,6 +13,7 @@
 import * as React from "react"
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react"
 import type { ReactNode } from "react"
+import { flushSync } from "react-dom"
 import { useThemeSelector } from "../store/ThemeStore"
 import type { SemioticTheme } from "../store/themeCore"
 import { useReducedMotion } from "./useMediaPreferences"
@@ -227,6 +228,10 @@ export interface UseFrameResult {
   /** Cancel a queued render, if any. Direct/hydration paints use this before
    * taking over so a stale rAF cannot race a synchronous frame. */
   cancelRender: () => void
+  /** Run a queued render synchronously, if one is pending. A fresh client
+   * mount calls this from a layout effect so the first displayed frame
+   * already includes the scene and its SVG overlay. */
+  flushRender: () => void
 
   // ── Hover / pointer event coalescing ─────────────────────────────────
   // Pointer events fire faster than the display refreshes — sometimes
@@ -408,7 +413,12 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
       rafRef.current = null
       pendingRafSchedulerRef.current = null
       try {
-        renderFnRef.current()
+        // A browser animation frame runs outside React's lifecycle. Commit the
+        // overlay state this paint sets (scales, annotations, HTML marks)
+        // before the browser displays the canvas it just drew. A scheduler
+        // that fires before returning runs in its caller's context instead.
+        if (synchronous) renderFnRef.current()
+        else flushSync(renderFnRef.current)
       } finally {
         if (synchronous) synchronouslyRenderingRef.current = false
       }
@@ -426,6 +436,11 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
     rafRef.current = null
     pendingRafSchedulerRef.current = null
   }, [])
+  const flushRender = useCallback(() => {
+    if (rafRef.current === null) return
+    cancelRender()
+    renderFnRef.current()
+  }, [cancelRender])
 
   // Pausing records elapsed active time before the freeze. The layout effect
   // prevents a queued paint from advancing an animation after a committed
@@ -510,6 +525,17 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
     hoverLeaveRef.current()
   }, [flushPointerMove])
 
+  // WCAG 1.4.13: Escape dismisses a pointer tooltip without moving the
+  // pointer, as leaving the frame does. The next pointer move shows it again.
+  useEffect(() => {
+    if (typeof document === "undefined") return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && pointerStateRef.current.inside) onPointerLeave()
+    }
+    document.addEventListener("keydown", onKeyDown)
+    return () => document.removeEventListener("keydown", onKeyDown)
+  }, [onPointerLeave])
+
   // Cleanup pending hover rAF on unmount alongside the render-rAF cancel.
   useEffect(() => {
     return () => {
@@ -580,6 +606,7 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
     renderFnRef,
     scheduleRender,
     cancelRender,
+    flushRender,
     hoverHandlerRef,
     hoverLeaveRef,
     onPointerMove,

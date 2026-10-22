@@ -650,7 +650,8 @@ export class PhysicsKernelWorld {
   applyWorkerMotion(frame: PhysicsWorkerFrame): void {
     frame.ids.forEach((id, i) => {
       const body = this.bodies.get(id)
-      if (!body) throw new Error(`Unknown physics worker body ${id}`)
+      // The host may have removed this body before the worker saw the removal.
+      if (!body) return
       body.prevX = frame.previousPositions?.[i * 2] ?? body.x
       body.prevY = frame.previousPositions?.[i * 2 + 1] ?? body.y
       body.x = frame.positions[i * 2]

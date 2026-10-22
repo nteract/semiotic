@@ -133,10 +133,12 @@ MCP_ALLOWED_HOSTS=mcp.example.com MCP_TOOL_PROFILE=public npx -y -p semiotic sem
       <p>
         HTTP mode rejects browser origins unless listed in <code>MCP_ALLOWED_ORIGINS</code>.
         Native clients that omit Origin continue to work. Host checks default to the bind
-        hostname plus <code>localhost</code> for loopback; an all-interface bind allows
-        only loopback hosts until <code>MCP_ALLOWED_HOSTS</code> is configured. Both lists
-        are comma-separated and apply to preflight and health requests too. CORS echoes
-        only an allowed origin. Set <code>MCP_AUTH_TOKEN</code> to require a bearer token
+        hostname plus <code>localhost</code> for loopback, and a <code>localhost</code> bind
+        also accepts <code>127.0.0.1</code> and <code>::1</code>; an all-interface bind allows
+        only loopback hosts until <code>MCP_ALLOWED_HOSTS</code> is configured. A
+        <code>host:443</code> or <code>host:80</code> entry also matches a Host header without a
+        port, which HTTPS clients send. Both lists are comma-separated and apply to preflight and
+        health requests too. CORS echoes only an allowed origin. Set <code>MCP_AUTH_TOKEN</code> to require a bearer token
         for MCP requests.
       </p>
 

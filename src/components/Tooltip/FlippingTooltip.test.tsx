@@ -11,8 +11,8 @@
  * implementations stay untouched.
  */
 import * as React from "react"
-import { render } from "@testing-library/react"
-import { describe, it, expect, vi } from "vitest"
+import { act, render } from "@testing-library/react"
+import { afterEach, beforeEach, describe, it, expect, vi } from "vitest"
 import { FlippingTooltip } from "./FlippingTooltip"
 import { defaultTooltipStyle, TooltipRoot } from "./Tooltip"
 
@@ -555,6 +555,76 @@ describe("FlippingTooltip — placement state", () => {
       )
       expect(container.firstChild).toBeNull()
       expect((again.container.firstChild as HTMLElement).style.transition).toBe("none")
+    } finally {
+      rect.mockRestore()
+    }
+  })
+})
+
+describe("FlippingTooltip — resize observer", () => {
+  let notifications: Set<() => void>
+  beforeEach(() => {
+    notifications = new Set()
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        notify: () => void
+        constructor(callback: ResizeObserverCallback) {
+          this.notify = () => callback([], this as unknown as ResizeObserver)
+        }
+        observe() {
+          notifications.add(this.notify)
+        }
+        disconnect() {
+          notifications.delete(this.notify)
+        }
+        unobserve() {
+          this.disconnect()
+        }
+      }
+    )
+  })
+  afterEach(() => vi.unstubAllGlobals())
+
+  it("commits a size change reported by the observer before the callback returns", () => {
+    const rect = vi
+      .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+      .mockReturnValue({ width: 100, height: 40 } as DOMRect)
+    try {
+      const view = render(
+        <FlippingTooltip {...baseProps} x={350}><div>Value</div></FlippingTooltip>
+      )
+      const wrapper = view.container.firstChild as HTMLElement
+      expect(wrapper.dataset.placement).toBe("placed")
+      expect(wrapper.style.left).toBe(`${baseProps.margin.left + 350 - 100 - 12}px`)
+      expect(notifications.size).toBe(1)
+
+      rect.mockReturnValue({ width: 180, height: 60 } as DOMRect)
+      act(() => {
+        for (const notify of notifications) notify()
+        // Inspect before act flushes its batch: the observer callback runs
+        // before paint, so the re-placement must already be committed.
+        expect(wrapper.style.left).toBe(`${baseProps.margin.left + 350 - 180 - 12}px`)
+      })
+      view.unmount()
+      expect(notifications.size).toBe(0)
+    } finally {
+      rect.mockRestore()
+    }
+  })
+
+  it("places synchronously when ResizeObserver is unavailable", () => {
+    vi.stubGlobal("ResizeObserver", undefined)
+    const rect = vi
+      .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+      .mockReturnValue({ width: 100, height: 40 } as DOMRect)
+    try {
+      const { container } = render(
+        <FlippingTooltip {...baseProps} x={350}><div>Value</div></FlippingTooltip>
+      )
+      const wrapper = container.firstChild as HTMLElement
+      expect(wrapper.dataset.placement).toBe("placed")
+      expect(wrapper.style.left).toBe(`${baseProps.margin.left + 350 - 100 - 12}px`)
     } finally {
       rect.mockRestore()
     }

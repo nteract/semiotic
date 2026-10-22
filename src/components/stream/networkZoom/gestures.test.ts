@@ -305,10 +305,37 @@ describe("network pointer driver", () => {
     vi.advanceTimersByTime(200)
     expect(view).toEqual({ x: 0, y: 0, k: 1 })
     options.locked = false
+    options.duration = 180
     driver.zoomBy(2)
     driver.destroy()
     vi.advanceTimersByTime(200)
     expect(change).not.toHaveBeenCalled()
+  })
+  it("applies zero-duration programmatic moves in a microtask and keeps input on frames", async () => {
+    driver.moveTo({ x: -40, y: -30, k: 2 }, "control", 0)
+    driver.panBy(10, 0)
+    expect(change).not.toHaveBeenCalled()
+    await Promise.resolve()
+    expect(view).toEqual({ x: -30, y: -30, k: 2 })
+    expect(change).toHaveBeenCalledOnce()
+    expect(change).toHaveBeenLastCalledWith(view, { source: "control", phase: "moving" })
+
+    driver.moveTo({ x: 10, y: 5, k: 2 }, "anchor", 0)
+    driver.cancel()
+    await Promise.resolve()
+    expect(view).toEqual({ x: -30, y: -30, k: 2 })
+    driver.moveTo({ x: 10, y: 5, k: 2 }, "anchor", 0)
+    await Promise.resolve()
+    expect(view).toEqual({ x: 10, y: 5, k: 2 })
+    vi.advanceTimersByTime(100)
+    expect(change).toHaveBeenLastCalledWith(view, { source: "anchor", phase: "idle" })
+
+    change.mockClear()
+    driver.panBy(30, 0, "keyboard")
+    await Promise.resolve()
+    expect(change).not.toHaveBeenCalled()
+    vi.advanceTimersByTime(16)
+    expect(view).toEqual({ x: 40, y: 5, k: 2 })
   })
   it.each(["cancel", "destroy"] as const)(
     "does not resume a tween when its host calls %s during a camera update",
@@ -385,7 +412,7 @@ describe("network pointer driver", () => {
     expect(press("+").defaultPrevented).toBe(false)
     expect(view).toEqual({ x: -60, y: 0, k: 1 })
   })
-  it("respects reduced motion and leaves browser keyboard zoom and editors alone", () => {
+  it("respects reduced motion and leaves browser keyboard zoom and editors alone", async () => {
     vi.stubGlobal(
       "matchMedia",
       vi.fn(() => ({ matches: true }))
@@ -393,7 +420,7 @@ describe("network pointer driver", () => {
     options.duration = 500
     options.keyboard = { arrowKeys: "pan" }
     driver.zoomBy(2)
-    vi.advanceTimersByTime(20)
+    await vi.advanceTimersByTimeAsync(20)
     expect(view.k).toBe(2)
     const browserZoom = new KeyboardEvent("keydown", {
       key: "+",

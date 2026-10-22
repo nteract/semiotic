@@ -1,4 +1,5 @@
 import * as React from "react"
+import { flushSync } from "react-dom"
 import { useTooltipChrome } from "./tooltipChrome"
 import {
   defaultTooltipStyle,
@@ -149,7 +150,10 @@ export function FlippingTooltip({
 
     measure()
     if (typeof ResizeObserver === "undefined") return
-    const observer = new ResizeObserver(measure)
+    // Observer callbacks run after browser layout and before paint. Commit the
+    // re-placement synchronously so a content-size change never paints one
+    // frame at the previous box; a plain state update would land after paint.
+    const observer = new ResizeObserver(() => flushSync(measure))
     observer.observe(el)
     return () => observer.disconnect()
   }, [className, containerWidth, containerHeight, positionFinite, hasContent, ownsChrome])

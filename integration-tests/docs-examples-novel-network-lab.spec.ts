@@ -5,7 +5,7 @@ import { expectCanvasPainted } from "./helpers"
 const route = "/examples/novel-network-lab"
 const tooltip = (page: Page) =>
   page
-    .locator(".stream-network-tooltip, .novel-circuit-tooltip")
+    .locator(".stream-network-tooltip, .stream-physics-tooltip")
     .filter({ visible: true })
 
 async function moveToNode(page: Page, pane: Locator, view: string) {

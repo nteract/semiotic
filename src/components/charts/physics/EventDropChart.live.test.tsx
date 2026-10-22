@@ -1,6 +1,6 @@
 import * as React from "react"
 import { act, cleanup, render } from "@testing-library/react"
-import { afterEach, beforeEach, expect, it } from "vitest"
+import { afterEach, beforeEach, expect, it, vi } from "vitest"
 import { renderToStaticMarkup } from "react-dom/server"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
 import { EventDropChart } from "./EventDropChart"
@@ -44,6 +44,31 @@ it("admits push rows incrementally and restores the same store and history", () 
   act(() => handle.clear())
   expect(handle.getLedger()).toEqual([])
   expect(handle.getData()).toEqual([])
+})
+
+it("skips live rows without a finite event time instead of breaking the frame loop", () => {
+  const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+  try {
+    const ref = React.createRef<EventDropChartHandle>()
+    render(<EventDropChart ref={ref} live arrival="drop" timeUnit="s" paused />)
+    const handle = ref.current!
+    const store = handle.getStore()!
+    act(() =>
+      handle.pushMany([{ id: "missing" }, { id: "text", time: "soon" }, { id: "ok", time: 2 }])
+    )
+    expect(warn).toHaveBeenCalledTimes(2)
+    expect(() =>
+      act(() => {
+        store.setPaused(false)
+        store.tick(1 / 120)
+        store.setPaused(true)
+      })
+    ).not.toThrow()
+    expect(handle.getData().map((d) => d.id)).toEqual(["ok"])
+    expect(handle.getLedger()).toMatchObject([{ accepted: 1, late: 0 }])
+  } finally {
+    warn.mockRestore()
+  }
 })
 
 it("keeps supplied data authoritative and replaces it without preserving old admissions", () => {
@@ -154,3 +179,27 @@ it("requires live push mode for built-in emitters", () => {
     )
   ).toThrow(/omit data/)
 })
+
+it("starts a new run instead of failing when window size or source schedules change", () => {
+  const ref = React.createRef<EventDropChartHandle>()
+  const chart = (size: number, source: string) => (
+    <EventDropChart
+      ref={ref}
+      live
+      windows={{ size }}
+      timeUnit="s"
+      sources={[{ id: source, label: source }]}
+      emitters={{ sources: [{ id: source, interval: 500 }], seed: 3 }}
+      paused
+    />
+  )
+  const { rerender } = render(chart(1, "a"))
+  const first = ref.current!.getStore()!
+  expect(() => rerender(chart(2, "a"))).not.toThrow()
+  const second = ref.current!.getStore()!
+  expect(second).not.toBe(first)
+  expect(() => rerender(chart(2, "b"))).not.toThrow()
+  expect(ref.current!.getStore()).not.toBe(second)
+  expect(ref.current!.getLedger()).toEqual([])
+})
+

@@ -258,15 +258,6 @@
 .novel-plot > div {
   max-width: none;
 }
-/* Inspect the actual pipe strokes above the physics canvas. Module hit testing
-   stays with the chart; the overlay is otherwise transparent to the pointer. */
-.novel-plot svg:has([data-circuit-edge]) {
-  z-index: 2;
-}
-.novel-plot [data-circuit-edge] > path:first-of-type {
-  pointer-events: stroke;
-  cursor: help;
-}
 .novel-pane-notes {
   border-top: 1px solid var(--lab-line);
   padding: 16px 20px 20px;
@@ -411,18 +402,6 @@
 .novel-tooltip strong,
 .novel-tooltip span {
   display: block;
-}
-.novel-circuit-tooltip {
-  position: fixed;
-  z-index: 10000;
-  width: 260px;
-  padding: 12px;
-  border: 1px solid var(--lab-line);
-  border-radius: 6px;
-  background: var(--lab-surface);
-  color: var(--lab-ink);
-  box-shadow: 0 4px 18px #0003;
-  pointer-events: none;
 }
 .novel-sr {
   position: absolute;

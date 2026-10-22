@@ -53,7 +53,7 @@ const physicsCustomChartProps = [
   { name: "description", type: "string", required: false, default: null, description: "Accessible label for the physics chart frame." },
   { name: "summary", type: "string", required: false, default: null, description: "Screen-reader-only summary text for the chart." },
   { name: "hoverRadius", type: "number", required: false, default: "16", description: "Pixel hit radius for body hover tooltips." },
-  { name: "tooltip", type: "boolean | function | object", required: false, default: "true", description: "Enable the default body tooltip, pass a custom tooltip renderer/config, or set false to disable hover tooltips." },
+  { name: "tooltip", type: "boolean | function | object", required: false, default: "true", description: "Enable the default body tooltip, pass a custom tooltip renderer/config, or set false to hide tooltips while hover observations continue." },
   { name: "frameProps", type: "object", required: false, default: null, description: "Advanced StreamPhysicsFrame props." },
 ]
 
@@ -802,6 +802,14 @@ export default function PhysicsCustomChartPage() {
           without rebuilding the page.
         </p>
         <CodeBlock language="jsx">{layoutSample}</CodeBlock>
+        <p>
+          Semantic items without a body, such as pipes or lanes drawn in an overlay, get
+          pointer tooltips when an overlay element names them: give the element
+          <code>{' data-semiotic-semantic-id={item.id}'}</code> and a hit area such as
+          <code>{' pointerEvents="stroke"'}</code>. The chart's <code>tooltip</code> callback
+          receives the item's <code>datum</code>; hover observations and Escape dismissal
+          work as they do for bodies.
+        </p>
       </section>
 
       <section>

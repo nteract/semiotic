@@ -58,7 +58,7 @@ it.each([false, true])(
 
 it.each([false, true])(
   "exposes the accepted camera before a React commit (controlled: %s)",
-  (controlled) => {
+  async (controlled) => {
     const ref = React.createRef<ZoomableNetworkCustomChartHandle>()
     const snapshots: NetworkViewTransform[] = []
     const chart = (zoom: NetworkViewTransform) => (
@@ -72,14 +72,14 @@ it.each([false, true])(
         margin={{ left: 0, right: 0, top: 0, bottom: 0 }}
         zoom={controlled ? zoom : undefined}
         onZoomChange={(_proposal, event) => {
-          // This runs inside the driver's frame callback, before React can
+          // This runs inside the driver's camera update, before React can
           // commit local state. A subsequent input can arrive at the same point.
           if (event.phase === "moving") snapshots.push(ref.current!.getZoom())
         }}
       />
     )
     const view = render(chart(initial))
-    act(() => ref.current!.zoomTo(next, 0))
+    await act(async () => ref.current!.zoomTo(next, 0))
     act(() => vi.advanceTimersByTime(16))
     expect(snapshots).toEqual([controlled ? initial : next])
     expect(ref.current!.getZoom()).toEqual(controlled ? initial : next)
@@ -112,7 +112,7 @@ it("commits controlled acceptance within the gesture frame before the next input
   }
   const view = render(<Host />)
   act(() => {
-    ref.current!.zoomTo(next, 0)
+    ref.current!.zoomTo(next, 1)
     vi.advanceTimersByTime(16)
     // Assert before act finishes and flushes its batch. The next wheel event
     // needs the accepted camera, and the browser must paint the same geometry.

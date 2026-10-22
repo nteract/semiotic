@@ -1436,7 +1436,10 @@ function Card() {
   zoomOptions={{ minZoom: 0.15, maxZoom: 4, panBounds: contentBounds }}
   frameProps={{ htmlMarkCulling: { overscan: 80, pinnedIds: selectedIds } }}
 />
-// chartRef.current.fitToContent(), zoomIn(), zoomOut(), panBy(dx, dy), resetZoom()
+// chartRef.current.fitToContent(bounds?, { padding, maxZoom, duration }),
+// zoomIn(), zoomOut(), panBy(dx, dy), resetZoom(),
+// centerOn(rectOrPoint, { k, duration, insets }), getMarkBounds(id),
+// centerOnMark(id), fitToMarks(ids), revealMark(id)
 // Supply zoom={{ x, y, k }} and onZoomChange for a controlled camera.`}</CodeBlock>
         <p>
           Wheel zoom requires Ctrl or Meta by default so an embedded chart does not
@@ -1467,6 +1470,21 @@ function Card() {
           boxes; pass explicit bounds to include arbitrary SVG decorations or edge curves.
         </p>
         <p>
+          When chrome such as an inspector panel covers part of the chart, set
+          <code>{' zoomOptions={{ insets: { right: 690 } }}'}</code> in screen pixels.
+          Fit, <code>centerOn</code>, reveal, pan bounds and centered zoom (buttons,
+          plus/minus keys and locked axes) then use the remaining viewport; changing
+          insets alone does not move the camera. <code>getMarkBounds(id)</code> reads
+          an HTML mark's box, or else a scene node's, from the retained layout, and
+          <code> centerOnMark</code>, <code>fitToMarks</code> and <code>revealMark</code>
+          navigate by id. Set <code>{' zoomOptions={{ anchor: { markId } }}'}</code> to
+          keep that mark's center at the same screen position when the layout runs
+          again: the camera translates once per layout commit and keeps its scale.
+          Zero-duration programmatic moves, such as <code>zoomTo(view, 0)</code>, apply in
+          a microtask rather than on the next animation frame, so a correction made from a
+          React effect paints in the same frame as the layout change.
+        </p>
+        <p>
           Use <code>useNetworkLODLevel(width, options)</code> for cards that only need
           a discrete detail level. It avoids rerendering during camera movement when
           that level stays unchanged. <code>useNetworkLOD</code> also returns live
@@ -1474,7 +1492,9 @@ function Card() {
           destructure its <code>level</code>.
           <code> useNetworkProjectedSize</code> exposes live and settled CSS-pixel sizes;
           <code> useNetworkZoom</code> exposes the camera and world-coordinate visible
-          rectangle for edge culling or minimaps. The LOD helper delays promotion until
+          rectangle for edge culling or minimaps; pass a selector, as in
+          <code>{' useNetworkZoom((state) => state.settledZoom.k)'}</code>, to rerender
+          only when that value changes. The LOD helper delays promotion until
           motion settles and demotes immediately outside its hysteresis band. It does
           not fetch or cache data. Store drafts outside virtualized cards if they must
           survive unmounting, and set <code>keepDetail</code> while an editor is focused.

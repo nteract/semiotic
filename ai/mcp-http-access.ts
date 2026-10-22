@@ -62,9 +62,10 @@ export function createMcpHttpAccessPolicy(
   const configuredHosts = entries(env.MCP_ALLOWED_HOSTS)
   const host = listenHost.toLowerCase()
   // An all-interface bind is not an allowlist of public DNS names. Hosted
-  // deployments and tunnels must explicitly name the hosts they serve.
+  // deployments and tunnels must explicitly name the hosts they serve. A
+  // `localhost` bind serves the loopback addresses that name resolves to.
   const defaults =
-    host === "0.0.0.0" || host === "::"
+    host === "0.0.0.0" || host === "::" || host === "localhost"
       ? ["127.0.0.1", "localhost", "::1"]
       : [
           host,
@@ -101,7 +102,12 @@ export function createMcpHttpAccessPolicy(
         hosts.some(
           (allowed) =>
             parsed.hostname === allowed.hostname &&
-            (allowed.port === undefined || parsed.port === allowed.port)
+            (allowed.port === undefined ||
+              parsed.port === allowed.port ||
+              // Clients omit a scheme's default port, and a TLS proxy hides
+              // the scheme, so a portless Host matches an 80 or 443 entry.
+              (parsed.port === undefined &&
+                (allowed.port === 80 || allowed.port === 443)))
         )
       )
     },

@@ -701,3 +701,97 @@ describe("declared trace semantics and revision boundaries", () => {
     expect(controller.updating).toBe(false)
   })
 })
+
+describe("compositional caller ownership", () => {
+  const frozenPaths = (value: unknown, path = "$", out: string[] = []) => {
+    if (value && typeof value === "object") {
+      if (Object.isFrozen(value)) out.push(path)
+      for (const [key, child] of Object.entries(value))
+        frozenPaths(child, `${path}.${key}`, out)
+    }
+    return out
+  }
+  it("freezes the solved layout without freezing caller-owned view or geometry objects", () => {
+    const request = fixture()
+    const markAnchor = {
+      markId: "m",
+      anchorName: "out",
+      point: { x: 50, y: 50 },
+      normal: { x: 1, y: 0 }
+    }
+    const parts = ["a", "b", "c"].map((partId, i) => ({
+      partId,
+      rect: { x: 0, y: 10 + i * 30, width: 100, height: 20 }
+    }))
+    // Node A supplies its own owner-local geometry; B keeps the row layout.
+    request.view = {
+      ...request.view,
+      nodes: request.view.nodes.map((node) =>
+        node.nodeId === "A"
+          ? { nodeId: "A", mode: "composite", footprint: "stable" }
+          : node
+      ),
+      anchors: [
+        {
+          ref: ref("A", "a"),
+          use: "source",
+          binding: { kind: "point", point: { x: 100, y: 20 }, normal: { x: 1, y: 0 } },
+          constraint: "fixed-position"
+        }
+      ]
+    }
+    request.geometry = {
+      ...request.geometry,
+      nodes: request.geometry.nodes.map((node) =>
+        node.nodeId === "A"
+          ? {
+              ...node,
+              parts,
+              actualPartOrder: ["a", "b", "c"],
+              markAnchors: [markAnchor]
+            }
+          : node
+      )
+    }
+    const solved = solve(request)
+    expect(frozenPaths(solved)).toContain("$")
+    expect(frozenPaths(request.view)).toEqual([])
+    expect(frozenPaths(request.geometry)).toEqual([])
+    // The caller can keep editing its own objects for the next revision.
+    markAnchor.point.x = 60
+    parts[0].rect.height = 24
+    expect(solved.nodes.find((n) => n.id === "A")?.parts?.[0].rect.height).toBe(20)
+  })
+})
+
+describe("compositional acceptance and scale", () => {
+  it("rejects an unknown status and a terminal attached to another node", async () => {
+    const { validateCompositionalSolution } = await import("./acceptance")
+    const request = fixture()
+    const solved = structuredClone(solve(request)) as SolvedCompositionalLayout
+    expect(() => validateCompositionalSolution(request, solved)).not.toThrow()
+    expect(() =>
+      validateCompositionalSolution(request, { ...solved, status: "done" as never })
+    ).toThrow("REVISION_STATUS")
+    const [edge, ...rest] = solved.edges
+    const misattached = {
+      ...solved,
+      edges: [{ ...edge, source: { ...edge.source, displayNodeId: edge.target.displayNodeId } }, ...rest]
+    }
+    expect(() => validateCompositionalSolution(request, misattached)).toThrow(
+      "GEOMETRY_TERMINAL_OWNER"
+    )
+  })
+
+  it("bounds very large rectangle sets without exceeding the argument limit", async () => {
+    const { boundRects } = await import("./geometry")
+    const rects = Array.from({ length: 200_000 }, (_, i) => ({
+      x: i,
+      y: -i,
+      width: 1,
+      height: 2
+    }))
+    expect(boundRects(rects)).toEqual({ x: 0, y: -199_999, width: 200_000, height: 200_001 })
+  })
+})
+

@@ -91,9 +91,15 @@ export function useWasHydratingFromSSR(): boolean {
  * actually drawn. Synchronous paint inside the layout effect makes
  * frame N's paint already include the canvas content; no flash.
  *
- * Fresh client mounts leave painting to their normal scheduler, after data
- * and config effects have run. Painting them from this layout effect would
- * project an empty store before ingestion and responsive measurement settle.
+ * A fresh client mount commits before its passive data and config effects
+ * run, so painting from its first layout effect would project an empty store,
+ * and leaving the queued paint to the scheduler shows a blank canvas and
+ * overlay for a frame. Instead the hook requests one follow-up commit. React
+ * flushes the first commit's passive effects (ingestion, config sync) before
+ * rendering it and applies the initial responsive measurement in it, so its
+ * layout effect can run the queued paint through `flushRender` with the
+ * ingested store, and overlay state set by that paint commits before the
+ * browser displays the frame.
  *
  * Each frame supplies its own `cleanup` for unmount work that's
  * frame-specific (XY/Ordinal clear the streaming adapter; Geo clears
@@ -131,6 +137,12 @@ export interface HydrationLifecycleOptions {
    */
   cancelRender?: () => void
   /**
+   * Optional synchronous run of a queued render. Fresh client mounts call it
+   * from the follow-up commit's layout effect; without it they paint on the
+   * next animation frame.
+   */
+  flushRender?: () => void
+  /**
    * Optional unmount cleanup. Frame-specific work the hook can't
    * generalize — e.g. clearing the streaming `DataSourceAdapter`
    * (XY/Ordinal) or the geo tile cache.
@@ -146,6 +158,7 @@ export function useHydrationLifecycle(opts: HydrationLifecycleOptions): void {
     dirtyRef,
     renderFnRef,
     cancelRender,
+    flushRender,
     cleanup
   } = opts
   useIsomorphicLayoutEffect(() => {
@@ -167,6 +180,16 @@ export function useHydrationLifecycle(opts: HydrationLifecycleOptions): void {
     // Stable refs expose the latest store and render closure; the hydration
     // signals determine when this handoff runs.
   }, [hydrated, wasHydratingFromSSR])
+
+  const flushRenderRef = useRef(flushRender)
+  flushRenderRef.current = flushRender
+  const [freshMountCommitted, setFreshMountCommitted] = useState(false)
+  useIsomorphicLayoutEffect(() => {
+    if (!wasHydratingFromSSR && flushRenderRef.current) setFreshMountCommitted(true)
+  }, [wasHydratingFromSSR])
+  useIsomorphicLayoutEffect(() => {
+    if (freshMountCommitted) flushRenderRef.current?.()
+  }, [freshMountCommitted])
 
   // Keep resource cleanup separate from hydration-signal changes so the
   // first canvas handoff preserves rows pushed through a callback ref.

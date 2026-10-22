@@ -42,7 +42,7 @@ export async function layoutCompositionalGraph(
   const capabilities = engine.capabilities
   const requirements: Array<[boolean, boolean, string]> = [
     [
-      request.options.mode === "route-only" ||
+      normalized.options.mode === "route-only" ||
         !!request.view.constraints?.some((c) => !!c.pin),
       capabilities.fixedPositions,
       "fixed positions"
@@ -68,7 +68,7 @@ export async function layoutCompositionalGraph(
       "multiedges"
     ],
     [
-      request.options.routing === "orthogonal",
+      normalized.options.routing === "orthogonal",
       capabilities.orthogonalRouting,
       "orthogonal routing"
     ]

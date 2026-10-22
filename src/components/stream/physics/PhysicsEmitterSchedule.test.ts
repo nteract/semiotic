@@ -3,6 +3,10 @@ import { PhysicsPipelineStore } from "./PhysicsPipelineStore"
 import { createPhysicsWorkerRuntime } from "./PhysicsWorkerRuntime"
 import { isPhysicsWorkerConfigSupported } from "./PhysicsWorkerProtocol"
 import type { PhysicsEmitterOptions } from "./PhysicsEmitterSchedule"
+import { registerPhysicsLivePrograms } from "../../charts/physics/registerPhysicsLivePrograms"
+
+// Direct store construction with `emitters` opts into the program runtimes.
+registerPhysicsLivePrograms()
 
 const emitters: PhysicsEmitterOptions = {
   seed: 42,
@@ -145,4 +149,25 @@ describe("pipeline emitter scheduling", () => {
     ).toThrow()
     expect(store.snapshot()).toEqual(before)
   })
+
+  it("requires a new run for changed sources instead of reporting a missing template", () => {
+    const store = new PhysicsPipelineStore(config)
+    expect(() =>
+      store.updateConfig({
+        ...config,
+        emitters: {
+          ...emitters,
+          sources: emitters.sources.slice(1),
+          templates: Object.fromEntries(
+            Object.entries(emitters.templates).slice(1)
+          )
+        }
+      })
+    ).toThrow("Changing emitter sources requires a new run")
+    // Live controls still update in place.
+    expect(() =>
+      store.updateConfig({ ...config, emitters: { ...emitters, rate: 2 } })
+    ).not.toThrow()
+  })
 })
+

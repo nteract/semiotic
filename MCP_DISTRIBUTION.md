@@ -8,8 +8,12 @@ from third-party directory cards that may cache or rewrite project metadata.
 | Path | Status | Source of truth | Freshness mechanism |
 | --- | --- | --- | --- |
 | npm stdio | `npx -y -p semiotic semiotic-mcp` from the `semiotic` package | `package.json` and the published npm artifact | The release workflow publishes and smoke-tests the exact immutable tarball. |
-| Stable Streamable HTTP | `https://semiotic-mcp-server-481507046413.us-west1.run.app/mcp` serves verified `3.8.7` | `server.json` and `deploy/cloud-run` | Hosted smoke tests cover initialize, tools, resources, prompts, limits, and response headers. |
+| Stable Streamable HTTP | `https://semiotic-mcp-server-481507046413.us-west1.run.app/mcp` serves the latest published release | `server.json` and the release workflow's generated `deploy/cloud-run` source | The release workflow redeploys it for each published version and requires the exact version in its hosted smoke, which covers health, initialize, tools, resources, render evidence and schema retrieval. From 3.13.0 the smoke also requires a 403, without a CORS grant, for an unlisted browser Origin. |
 | Official MCP Registry | `io.github.nteract/semiotic` | `server.json` | After npm publication, the release workflow validates and publishes the exact `package.json` / `server.json` version, then verifies the active Registry entry. Manual dispatch remains available for backfill. |
+
+The 3.8.7 notes below record the 2026-07-28 audit. Later releases replaced that
+revision; a 2026-10-22 review observed the stable endpoint reporting 3.12.1,
+whose CORS behavior predates the 3.13.0 Origin enforcement.
 
 The Registry metadata backfill is complete. At
 `2026-07-28T15:42:43.14232Z`, the Official Registry published the active

@@ -37,7 +37,7 @@ import {
   type RenderEvidence
 } from "./renderEvidence"
 import {
-  chartUID,
+  renderWithSvgIdPrefix,
   type ThemeAwareProps,
   type StaticFrameProps,
   type FrameType
@@ -71,8 +71,16 @@ export function renderToStaticSVG(
   frameType: FrameType,
   props: StaticFrameProps
 ): string {
-  const prefix = chartUID(props)
-  props = { ...props, _idPrefix: prefix }
+  return renderWithSvgIdPrefix(props, (prefix) =>
+    renderFrameToStaticSVG(frameType, { ...props, _idPrefix: prefix }, prefix)
+  )
+}
+
+function renderFrameToStaticSVG(
+  frameType: FrameType,
+  props: StaticFrameProps,
+  prefix: string
+): string {
   let svg: string
   switch (frameType) {
     case "xy":
@@ -435,8 +443,28 @@ function renderChartInternal(
   options?: RenderChartOptions,
   sink?: EvidenceSink
 ): { svg: string; frameType: RenderEvidence["frameType"] } {
-  const prefix = chartUID(props)
-  props = { ...props, _idPrefix: prefix }
+  let frameType: RenderEvidence["frameType"] = "xy"
+  const svg = renderWithSvgIdPrefix(props, (prefix) => {
+    const rendered = renderChartScoped(
+      component,
+      { ...props, _idPrefix: prefix },
+      prefix,
+      options,
+      sink
+    )
+    frameType = rendered.frameType
+    return rendered.svg
+  })
+  return { svg, frameType }
+}
+
+function renderChartScoped(
+  component: string,
+  props: Datum,
+  prefix: string,
+  options?: RenderChartOptions,
+  sink?: EvidenceSink
+): { svg: string; frameType: RenderEvidence["frameType"] } {
   if (Object.prototype.hasOwnProperty.call(VALUE_RENDERERS, component)) {
     return {
       svg: serializeSvgPrecision(

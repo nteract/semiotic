@@ -607,6 +607,7 @@ export {
 export type { HatchFill } from "./charts/shared/hatchFill"
 
 export { EventDropLedger } from "./charts/physics/eventDropLedger"
+export { registerPhysicsLivePrograms } from "./charts/physics/registerPhysicsLivePrograms"
 export type {
   EventDropLedgerRow,
   EventDropWatermark,

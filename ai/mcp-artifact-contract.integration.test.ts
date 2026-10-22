@@ -1134,7 +1134,7 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP artifact contract integration", () => {
       const second = await render(font, "second-scene")
       const changed = await render('"Other Font", serif', "changed-scene")
       expect(first.svg).toContain(`--semiotic-font-family: ${font}`)
-      expect(first.svg).not.toBe(second.svg)
+      expect(second.svg).toBe(first.svg)
       expect(first.evidence.sceneHashVersion).toBe(2)
       expect(first.evidence.sceneHash).toBe(second.evidence.sceneHash)
       expect(first.evidence.sceneHash).not.toBe(changed.evidence.sceneHash)

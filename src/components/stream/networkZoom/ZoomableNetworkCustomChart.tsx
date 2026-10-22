@@ -13,7 +13,9 @@ import type {
   NetworkViewportRect
 } from "../networkViewportTypes"
 import type {
+  NetworkZoomCenterOptions,
   NetworkZoomChange,
+  NetworkZoomFitOptions,
   NetworkZoomOptions,
   ZoomableNetworkCustomChartHandle
 } from "./types"
@@ -22,16 +24,25 @@ import { createNetworkZoomStore } from "./NetworkZoomStore"
 import { NetworkZoomControls } from "./NetworkZoomControls"
 import { bindNetworkZoom } from "./gestures"
 import {
+  anchorZoom,
+  centerZoom,
   constrainZoom,
   DEFAULT_ZOOM,
   EMPTY_PLOT,
   fitZoom,
-  getNetworkContentBounds
+  getNetworkContentBounds,
+  getNetworkMarkBounds,
+  getNetworkMarksBounds,
+  sameZoom,
+  usableViewport
 } from "./geometry"
 
 const CameraChart = /* @__PURE__ */ React.memo(
   NetworkCustomChart
 ) as typeof NetworkCustomChart
+
+const layoutOf = (frame: React.RefObject<RealtimeFrameHandle | null>) =>
+  frame.current?.getCustomLayout?.() as NetworkLayoutResult | null
 
 /** An opt-in camera around NetworkCustomChart. Layout remains in authored
  * coordinates; only presentation, hit testing and the visible window change. */
@@ -45,6 +56,15 @@ export interface ZoomableNetworkCustomChartProps<
   /** Initial uncontrolled camera. @default { x: 0, y: 0, k: 1 } */
   defaultZoom?: NetworkViewTransform
   onZoomChange?: (zoom: NetworkViewTransform, event: NetworkZoomChange) => void
+  /**
+   * Called from the commit that renders each new custom layout run's HTML marks
+   * and overlays, before that frame paints, with the run it replaces. A
+   * zero-duration camera move made here paints with those marks.
+   */
+  onLayoutCommit?: (
+    result: NetworkLayoutResult | null,
+    previous: NetworkLayoutResult | null
+  ) => void
   zoomOptions?: NetworkZoomOptions
   /** Accessible zoom, fit and reset buttons. @default true */
   zoomControls?: boolean
@@ -65,6 +85,7 @@ export const ZoomableNetworkCustomChart = /* @__PURE__ */ React.forwardRef(
       zoom: controlled,
       defaultZoom = DEFAULT_ZOOM,
       onZoomChange,
+      onLayoutCommit,
       zoomOptions = {},
       zoomControls = true,
       frameProps,
@@ -99,6 +120,7 @@ export const ZoomableNetworkCustomChart = /* @__PURE__ */ React.forwardRef(
       plot,
       controlled,
       onZoomChange,
+      onLayoutCommit,
       defaultZoom
     })
     live.current = {
@@ -107,6 +129,7 @@ export const ZoomableNetworkCustomChart = /* @__PURE__ */ React.forwardRef(
       plot,
       controlled,
       onZoomChange,
+      onLayoutCommit,
       defaultZoom
     }
     // Controlled props/resizes commit the accepted camera before browser paint.
@@ -139,9 +162,10 @@ export const ZoomableNetworkCustomChart = /* @__PURE__ */ React.forwardRef(
             })
             current.onZoomChange?.(next, event)
           }
-          // Moving updates run once per rAF, outside React's lifecycle. Commit
-          // all layers and any controlled acceptance before this frame paints;
-          // deferring the commit can also lose input against an older camera.
+          // Moving updates run in an animation frame or microtask, outside
+          // React's lifecycle. Commit all layers and any controlled acceptance
+          // before the next paint; deferring the commit can also lose input
+          // against an older camera.
           if (event.phase === "moving") flushSync(update)
           else update()
         }
@@ -165,15 +189,13 @@ export const ZoomableNetworkCustomChart = /* @__PURE__ */ React.forwardRef(
       zoomOptions.panBounds?.width,
       zoomOptions.panBounds?.height
     ])
+    const getMarkBounds = React.useCallback(
+      (id: string) => getNetworkMarkBounds(layoutOf(frame), id),
+      []
+    )
     const fitToContent = React.useCallback(
-      (
-        bounds?: Parameters<ZoomableNetworkCustomChartHandle["fitToContent"]>[0]
-      ) => {
-        const content =
-          bounds ??
-          getNetworkContentBounds(
-            frame.current?.getCustomLayout?.() as NetworkLayoutResult | null
-          )
+      (bounds?: NetworkViewportRect, fit?: NetworkZoomFitOptions) => {
+        const content = bounds ?? getNetworkContentBounds(layoutOf(frame))
         if (!content) return
         const { plot, zoomOptions: options, zoom } = live.current
         const next = fitZoom(
@@ -181,9 +203,21 @@ export const ZoomableNetworkCustomChart = /* @__PURE__ */ React.forwardRef(
           plot,
           options.zoomEnabled === false
             ? { ...options, minZoom: zoom.k, maxZoom: zoom.k }
-            : options
+            : options,
+          fit
         )
-        if (next) driver.current?.moveTo(next, "fit")
+        if (next) driver.current?.moveTo(next, "fit", fit?.duration)
+      },
+      []
+    )
+    const centerOn = React.useCallback(
+      (
+        target: NetworkViewportRect | { x: number; y: number },
+        center?: NetworkZoomCenterOptions
+      ) => {
+        const { plot, zoomOptions: options, zoom } = live.current
+        const next = centerZoom(target, zoom, plot, options, center)
+        if (next) driver.current?.moveTo(next, "center", center?.duration)
       },
       []
     )
@@ -193,46 +227,82 @@ export const ZoomableNetworkCustomChart = /* @__PURE__ */ React.forwardRef(
     )
     const reveal = React.useCallback(
       (
-        bounds: Parameters<ZoomableNetworkCustomChartHandle["fitToContent"]>[0]
+        bounds: NetworkViewportRect | null | undefined,
+        source: "keyboard" | "control" = "keyboard"
       ) => {
         if (!bounds) return
-        const { zoom: view, plot } = live.current
-        const shift = (start: number, length: number, available: number) =>
+        const { zoom: view, plot, zoomOptions: options } = live.current
+        const usable = usableViewport(plot, options.insets)
+        const shift = (
+          start: number,
+          length: number,
+          offset: number,
+          available: number
+        ) =>
           length > available - 24
-            ? available / 2 - start - length / 2
-            : start < 12
-              ? 12 - start
-              : start + length > available - 12
-                ? available - 12 - start - length
+            ? offset + available / 2 - start - length / 2
+            : start < offset + 12
+              ? offset + 12 - start
+              : start + length > offset + available - 12
+                ? offset + available - 12 - start - length
                 : 0
         const dx = shift(
           bounds.x * view.k + view.x,
           bounds.width * view.k,
-          plot.width
+          usable.x,
+          usable.width
         )
         const dy = shift(
           bounds.y * view.k + view.y,
           bounds.height * view.k,
-          plot.height
+          usable.y,
+          usable.height
         )
-        if (dx || dy) driver.current?.panBy(dx, dy, "keyboard")
+        if (dx || dy) driver.current?.panBy(dx, dy, source)
       },
       []
+    )
+    // Re-solve the camera once per committed layout so the anchored mark's
+    // center keeps its screen position; the frame commits HTML marks first.
+    // Bounds are snapshotted per commit because layouts may reuse and update
+    // mark objects, which would rewrite the previous result's geometry. The
+    // host's `onLayoutCommit` follows, so its own move supersedes the anchor's.
+    const anchored = React.useRef<{
+      id: string
+      bounds: NetworkViewportRect | null
+    } | null>(null)
+    React.useLayoutEffect(
+      () =>
+        store.onLayoutCommit((result, previous) => {
+          const id = live.current.zoomOptions.anchor?.markId
+          const last = anchored.current
+          anchored.current = null
+          if (id != null) {
+            const after = getNetworkMarkBounds(result, id)
+            anchored.current = { id, bounds: after }
+            const before =
+              last?.id === id ? last.bounds : getNetworkMarkBounds(previous, id)
+            // A run that left the mark in place (a restyle, a hover) must not
+            // move the camera: any move cancels the tween in flight.
+            const next = before && after && anchorZoom(live.current.zoom, before, after)
+            if (next && !sameZoom(next, live.current.zoom))
+              driver.current?.moveTo(next, "anchor", 0)
+          }
+          live.current.onLayoutCommit?.(result, previous)
+        }),
+      [store]
     )
     const onObservation = props.onObservation
     const observe = React.useCallback(
       (event: ChartObservation) => {
         if (event.type === "focus") {
-          const result =
-            frame.current?.getCustomLayout?.() as NetworkLayoutResult | null
-          const mark = result?.sceneNodes?.find(
+          const mark = layoutOf(frame)?.sceneNodes?.find(
             (node) =>
               node.datum === event.datum ||
               node.datum?.data === event.datum ||
               (event.datum.id != null && node.id === String(event.datum.id))
           )
-          if (mark)
-            reveal(getNetworkContentBounds({ sceneNodes: [mark] }) ?? undefined)
+          if (mark) reveal(getNetworkContentBounds({ sceneNodes: [mark] }))
         }
         onObservation?.(event)
       },
@@ -257,9 +327,20 @@ export const ZoomableNetworkCustomChart = /* @__PURE__ */ React.forwardRef(
         zoomOut: () => driver.current?.zoomBy(0.5),
         panBy: (x, y) => driver.current?.panBy(x, y),
         fitToContent,
-        resetZoom
+        resetZoom,
+        centerOn,
+        getMarkBounds,
+        fitToMarks: (ids, fit) => {
+          const bounds = getNetworkMarksBounds(layoutOf(frame), ids)
+          if (bounds) fitToContent(bounds, fit)
+        },
+        revealMark: (id) => reveal(getMarkBounds(id), "control"),
+        centerOnMark: (id, center) => {
+          const bounds = getMarkBounds(id)
+          if (bounds) centerOn(bounds, center)
+        }
       }),
-      [fitToContent, resetZoom]
+      [fitToContent, resetZoom, centerOn, getMarkBounds, reveal]
     )
     const onViewportChange = frameProps?.onViewportChange
     const report = React.useCallback(
@@ -307,9 +388,7 @@ export const ZoomableNetworkCustomChart = /* @__PURE__ */ React.forwardRef(
               event.target.closest<HTMLElement>("[data-mark-id]")?.dataset
                 .markId
             if (!id) return
-            const result =
-              frame.current?.getCustomLayout?.() as NetworkLayoutResult | null
-            reveal(result?.htmlMarks?.find((mark) => mark.id === id))
+            reveal(layoutOf(frame)?.htmlMarks?.find((mark) => mark.id === id))
           }}
           style={{
             position: "relative",

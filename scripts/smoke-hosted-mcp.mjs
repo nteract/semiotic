@@ -472,12 +472,35 @@ function assertInitialize(
   return protocolVersion
 }
 
+/** Releases from 3.13.0 reject unlisted browser origins and never grant `*`. */
+export function enforcesBrowserOrigins(packageVersion) {
+  const match = /^(\d+)\.(\d+)\.(\d+)/.exec(packageVersion ?? "")
+  if (!match) return true
+  const [major, minor] = [Number(match[1]), Number(match[2])]
+  return major > 3 || (major === 3 && minor >= 13)
+}
+
 export async function runHostedMcpSmoke(options) {
   const deadline = Date.now() + options.timeoutMs
   const checks = []
 
   const health = await waitForReadyHealth(options, deadline)
   checks.push("health")
+
+  if (enforcesBrowserOrigins(health.identity.packageVersion)) {
+    const probe = await request(
+      options,
+      "origin",
+      "/health",
+      { headers: { Origin: "https://semiotic-smoke-forbidden.invalid" } },
+      deadline,
+    )
+    requireStatus("origin", probe.response, 403)
+    if (probe.response.headers.get("access-control-allow-origin")) {
+      throw new SmokeFailure("origin", "origin probe received a CORS grant for an unlisted origin")
+    }
+    checks.push("origin")
+  }
 
   const mcpGet = await request(options, "mcp GET", "/mcp", {}, deadline)
   requireStatus("mcp GET", mcpGet.response, 405)

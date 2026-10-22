@@ -9,8 +9,18 @@ export {
 } from "./stream/networkZoom/NetworkZoomContext"
 export type { NetworkLODOptions } from "./stream/networkZoom/NetworkZoomContext"
 export { getNetworkContentBounds } from "./stream/networkZoom/geometry"
+// The pure camera math behind the handle's fit and center, for a host that plans
+// a move before it makes one (both honor insets, zoom limits and pan bounds).
+export {
+  fitZoom as fitNetworkZoom,
+  centerZoom as centerNetworkZoom,
+  usableViewport as usableNetworkViewport
+} from "./stream/networkZoom/geometry"
 export type {
   NetworkZoomOptions,
+  NetworkZoomInsets,
+  NetworkZoomFitOptions,
+  NetworkZoomCenterOptions,
   NetworkZoomState,
   NetworkZoomSource,
   NetworkZoomChange,

@@ -217,6 +217,7 @@ function processStageRegions(layout: ProcessVolumeLayout, options?: ProcessStage
 function processVolumePolygons(layout: ProcessVolumeLayout): ProcessVolumePolygon[]
 function readEventDropOccupancy(metadata: EventDropProjectionMetadata, bodies: readonly {x: number; y: number; travel?: unknown;}[]): {accepted: number[]; late: number; inFlight: number; total: number;}
 function regionCountsToProjectionRows(counts: RegionCountMap, order?: readonly string[] | undefined): {label: string; value: number;}[]
+function registerPhysicsLivePrograms(): void
 function replaceGauntletNegative<TDatum extends Datum>(project: GauntletProjectState<TDatum>, options: GauntletNegativeReplacementOptions): GauntletEffect
 function replayCruciblePlan<TDatum extends Datum>(plan: Pick<CrucibleCompiledPlan<TDatum>, "duration" | "events" | "initialState" | "outlets" | "phases" | "products">, throughTime?: number | undefined): CrucibleReplayResult<TDatum>
 function replayStateTransitions(events: readonly DependencyReplayEvent[], clock: DependencyReplayClock): DependencyReplayState
@@ -2581,6 +2582,7 @@ interface-member StreamPhysicsFrameProps::property::responsiveWidth = optional r
 interface-member StreamPhysicsFrameProps::property::seed = optional seed: number | undefined
 interface-member StreamPhysicsFrameProps::property::selectedBodyStyle = optional selectedBodyStyle: ((body: PhysicsBodyState, context: PhysicsBodyStyleContext) => Style) | Style | undefined
 interface-member StreamPhysicsFrameProps::property::selection = optional selection: PhysicsBodySelection | null | undefined
+interface-member StreamPhysicsFrameProps::property::semanticItemTooltipContent = optional semanticItemTooltipContent: ((item: PhysicsSemanticItem) => React.ReactNode) | undefined
 interface-member StreamPhysicsFrameProps::property::semanticItems = optional semanticItems: PhysicsSemanticItem[] | undefined
 interface-member StreamPhysicsFrameProps::property::simulationExecution = optional simulationExecution: PhysicsExecution | undefined
 interface-member StreamPhysicsFrameProps::property::size = optional size: [number, number] | undefined

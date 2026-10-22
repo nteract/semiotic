@@ -337,6 +337,22 @@ function buildCircuit(ctx: CircuitContext, network: boolean): NetworkLayoutResul
       ),
       ...particles,
       circuitHistoryChrome(geometry, edition, reading, color, text, selected),
+      // Flat-view pipe hit strokes above the canvas carry each pipe's semantic
+      // id, so the physics frame shows pipe tooltips. The projected view hit
+      // tests its own network edges.
+      ...(network
+        ? []
+        : geometry.routes.map((route) =>
+            h("path", {
+              key: `hit:${route.edgeId}`,
+              d: route.pathD,
+              fill: "none",
+              stroke: "transparent",
+              strokeWidth: 12,
+              pointerEvents: "stroke",
+              "data-semiotic-semantic-id": `pipe:${route.edgeId}`
+            })
+          )),
       h(
         "text",
         {

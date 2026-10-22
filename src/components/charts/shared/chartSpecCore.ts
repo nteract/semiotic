@@ -515,7 +515,7 @@ const physicsProps: Record<string, ChartPropSpec> = {
   ballRadius: { type: "number", description: "Radius of each simulated circular body in pixels." },
   hoverRadius: { type: "number", description: "Pixel hit radius for body hover tooltips." },
   paused: { type: "boolean", description: "Pause the simulation at mount or on prop update." },
-  tooltip: { type: ["boolean", "string", "function", "object"], description: 'Tooltip content function/config ({ content, chrome: "none" } for consumer chrome), true for the default body tooltip, or false to disable hover tooltips. "multi" falls back to the single-datum tooltip.' },
+  tooltip: { type: ["boolean", "string", "function", "object"], description: 'Tooltip content function/config ({ content, chrome: "none" } for consumer chrome), true for the default body tooltip, or false to hide tooltips while hover observations and selection continue. "multi" falls back to the single-datum tooltip.' },
   annotations: { type: "array" },
   autoPlaceAnnotations: { type: ["boolean", "object"] },
   background: { type: "string" },

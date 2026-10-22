@@ -7,14 +7,31 @@ import type {
   NetworkZoomOptions,
   NetworkZoomSource
 } from "./types"
-import { canPan, constrainZoom, panZoom, sameZoom, zoomAt } from "./geometry"
+import {
+  canPan,
+  constrainZoom,
+  panZoom,
+  sameZoom,
+  usableCenter,
+  zoomAt
+} from "./geometry"
 
 interface Host {
   getZoom(): NetworkViewTransform
   getPlot(): NetworkViewportRect
   getOptions(): NetworkZoomOptions
+  /** Moving changes arrive from an animation frame or a microtask, never from
+   * inside a caller's React commit. */
   change(zoom: NetworkViewTransform, event: NetworkZoomChange): void
 }
+
+// User input can arrive several times per frame, so it applies on the next
+// animation frame. Zero-duration programmatic moves apply in a microtask.
+const frameCoalesced = (source: NetworkZoomSource) =>
+  source === "wheel" ||
+  source === "drag" ||
+  source === "pinch" ||
+  source === "keyboard"
 
 const interactive =
   "input,textarea,select,button,a,[contenteditable]:not([contenteditable=false]),[data-network-zoom-ignore]"
@@ -27,6 +44,7 @@ function ignores(target: EventTarget | null): boolean {
 export function bindNetworkZoom(element: HTMLElement, host: Host) {
   const win = element.ownerDocument.defaultView!
   let animation: number | null = null
+  let immediate: object | null = null
   let idle: number | null = null
   let target: NetworkViewTransform | null = null
   let source: NetworkZoomSource = "control"
@@ -41,6 +59,7 @@ export function bindNetworkZoom(element: HTMLElement, host: Host) {
   const cancelAnimation = () => {
     if (animation !== null) win.cancelAnimationFrame(animation)
     animation = null
+    immediate = null
     target = null
   }
   const finish = () => {
@@ -90,16 +109,17 @@ export function bindNetworkZoom(element: HTMLElement, host: Host) {
     if (options.locked) return
     const from = host.getZoom()
     const plot = host.getPlot()
+    const pivot = usableCenter(plot, options)
     const k = options.zoomEnabled === false ? from.k : requested.k
     const to = constrainZoom(
       {
         k,
         x: canPan(options, "x")
           ? requested.x
-          : plot.width / 2 - ((plot.width / 2 - from.x) * k) / from.k,
+          : pivot.x - ((pivot.x - from.x) * k) / from.k,
         y: canPan(options, "y")
           ? requested.y
-          : plot.height / 2 - ((plot.height / 2 - from.y) * k) / from.k
+          : pivot.y - ((pivot.y - from.y) * k) / from.k
       },
       plot,
       options
@@ -119,6 +139,21 @@ export function bindNetworkZoom(element: HTMLElement, host: Host) {
       : Number.isFinite(requestedDuration)
         ? Math.max(0, requestedDuration)
         : 180
+    if (milliseconds === 0 && !frameCoalesced(nextSource)) {
+      // Apply before the next paint without waiting for a frame. The
+      // microtask runs after the caller, including a React effect, returns,
+      // so the host can commit every layer synchronously. Moves chained in
+      // this task build on `target`; a newer move or cancel supersedes this.
+      const pending = (immediate = {})
+      win.queueMicrotask(() => {
+        if (immediate !== pending) return
+        immediate = null
+        emit(to)
+        if (target === to) target = null
+        settle()
+      })
+      return
+    }
     const start = win.performance.now()
     const tick = () => {
       const pending = animation
@@ -158,7 +193,7 @@ export function bindNetworkZoom(element: HTMLElement, host: Host) {
       zoomAt(
         from,
         from.k * factor,
-        point ?? { x: plot.width / 2, y: plot.height / 2 },
+        point ?? usableCenter(plot, host.getOptions()),
         plot,
         host.getOptions()
       ),

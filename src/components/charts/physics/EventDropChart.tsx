@@ -2,7 +2,7 @@
 import { EVENT_DROP_CHART_SIZE } from "../shared/chartSizeDefaultsPhysics"
 
 import * as React from "react"
-import { forwardRef, useCallback, useMemo, useRef } from "react"
+import { forwardRef, useCallback, useEffect, useMemo, useRef } from "react"
 import { useStableShallow } from "../../stream/useStableShallow"
 import StreamPhysicsFrame, {
   type StreamPhysicsFrameHandle
@@ -363,6 +363,29 @@ export const EventDropChart = /* @__PURE__ */ forwardRef(
       idPrefix: "event",
       buildLayout
     })
+    // Window size, units, origin and emitter schedules define a live run. A
+    // change starts a new run (fresh store and ledger) instead of failing an
+    // in-place update; rate, activity, speed and watermark update live, and
+    // removing emitters stops production on the retained board.
+    const emitterSchedule =
+      props.emitters &&
+      JSON.stringify({
+        sources: props.emitters.sources,
+        seed: props.emitters.seed,
+        durationMs: props.emitters.durationMs,
+        maxEvents: props.emitters.maxEvents
+      })
+    const committedSchedule = useRef(emitterSchedule)
+    const runSchedule = emitterSchedule ?? committedSchedule.current
+    useEffect(() => {
+      committedSchedule.current = runSchedule
+    })
+    const liveRunKey = JSON.stringify([
+      windows.size,
+      timeUnit ?? "s",
+      timeExtent?.[0] ?? 0,
+      runSchedule
+    ])
     const rerun = usePhysicsRerun(
       layout.config,
       rerunMS,
@@ -481,7 +504,7 @@ export const EventDropChart = /* @__PURE__ */ forwardRef(
           liveReadout.onFrame(store)
           readouts.onFrame?.(store)
         }}
-        key={`${rerun.rerunKey}:${live ? "live" : "replay"}`}
+        key={`${rerun.rerunKey}:${live ? liveRunKey : "replay"}`}
         config={rerun.config}
         backgroundGraphics={composePhysicsFrameGraphics(
           frameProps?.backgroundGraphics,

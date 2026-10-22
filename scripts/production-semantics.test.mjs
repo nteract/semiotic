@@ -448,7 +448,7 @@ for (const entry of ["./server", "./server/node", "./server/edge"]) {
         }
       `)
     })
-    test(`${entry} ${target.conditions} keeps default scene hashes independent of SVG instance IDs`, () => {
+    test(`${entry} ${target.conditions} renders identical input to identical SVG across interleaved renders`, () => {
       exercise(target, `
         const props = {
           data: [{ x: 0, y: 1 }, { x: 1, y: 2 }],
@@ -459,7 +459,7 @@ for (const entry of ["./server", "./server/node", "./server/edge"]) {
           data: [{ category: "A", value: 4 }]
         })
         const second = api.renderChartWithEvidence("AreaChart", props)
-        assert.notEqual(second.svg, first.svg)
+        assert.equal(second.svg, first.svg)
         assert.equal(second.evidence.sceneHash, first.evidence.sceneHash)
         assert.equal(second.evidence.inputHash, first.evidence.inputHash)
       `)

@@ -150,9 +150,10 @@ export function renderedRootOwnsChrome(slot: Element): boolean {
 /**
  * `renderedRootOwnsChrome` for the element behind `ref`. It is read after
  * every commit and before paint, so a slot that paints fallback chrome drops
- * it in the same frame its content renders a marked root, and again whenever
- * the content's DOM changes without the slot re-rendering (a nested
- * component's own state update). Always `false` while `enabled` is false;
+ * it in the same frame its content renders a marked root. A MutationObserver
+ * re-reads it when the content's DOM changes without the slot re-rendering (a
+ * nested component's own state update); that update commits on React's normal
+ * schedule, so it can land one frame later. Always `false` while `enabled` is false;
  * the caller keeps `ref` attached to a mounted element whenever `enabled` is
  * true.
  */

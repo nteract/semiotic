@@ -3,14 +3,18 @@ import { compositionalEndpointKey, endpoint, fail } from "./identity"
 import { contains, validateRect } from "./geometry"
 import { distance } from "./routing"
 import { validateSolvedNodes } from "./acceptedNodes"
+import { projectionOwners } from "./projection"
 
 /** Validate portable engine output before it becomes the shared scene authority. */
 export function validateCompositionalSolution(
   request: LayoutRequest,
   solved: SolvedCompositionalLayout
 ): void {
+  if (!["complete", "degraded", "infeasible"].includes(solved.status))
+    fail("REVISION_STATUS", "Unknown layout status.")
   if (solved.status === "infeasible") return
   const nodes = new Map(solved.nodes.map((n) => [n.id, n]))
+  const { hidden } = projectionOwners(request)
   if (nodes.size !== solved.nodes.length)
     fail("IDENTITY_SOLVED_NODE", "Duplicate display node ID.")
   validateSolvedNodes(request, solved)
@@ -47,6 +51,22 @@ export function validateCompositionalSolution(
         "GEOMETRY_SOLVED_ROUTE",
         "A route needs display owners and path sections."
       )
+    // Each terminal attaches to the display node of its semantic owner (or of
+    // the collapsed container that exposes it), at a point on that node.
+    for (const terminal of [e.source, e.target]) {
+      const display = nodes.get(terminal.displayNodeId)!
+      const owner =
+        hidden.get(terminal.semantic.nodeId) ?? terminal.semantic.nodeId
+      if (
+        display.semantic.nodeId !== owner ||
+        !contains(display.rect, terminal.anchor)
+      )
+        fail(
+          "GEOMETRY_TERMINAL_OWNER",
+          "A terminal must attach to its own display node.",
+          { edgeIds: [e.edgeId] }
+        )
+    }
     let previous = e.source.anchor
     for (const section of e.sections) {
       validateRect(section.bounds)

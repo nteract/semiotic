@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, vi } from "vitest"
-import { act, cleanup, render } from "@testing-library/react"
+import { cleanup, render } from "@testing-library/react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { QuadrantChart } from "./QuadrantChart"
 import type { QuadrantChartProps } from "./QuadrantChart"
@@ -138,19 +138,8 @@ describe("QuadrantChart", () => {
         { x: 0.2, y: 0.3 },
         { x: 0.8, y: 0.3 }
       ]
-      const { container } = render(
-        <QuadrantChart
-          data={data}
-          xCenter={0.5}
-          yCenter={0.5}
-          quadrants={quadrants}
-          width={600}
-          height={400}
-          animate={false}
-          frameProps={{ frameScheduler: scheduler.scheduler }}
-        />
-      )
-      const ctx = container.querySelector("canvas")!.getContext("2d")!
+      // Every canvas shares the mock context, so record before the mount paints.
+      const ctx = document.createElement("canvas").getContext("2d")!
       const pointOps = recordCanvasOps(ctx as unknown as CanvasContextMock)
       const paintedLabels: Array<{ label: string; color: string }> = []
       const paintedFills: Array<{
@@ -171,9 +160,21 @@ describe("QuadrantChart", () => {
         })
       })
 
-      // A fresh client mount paints through the frame scheduler after data
-      // ingestion. Flush that paint before inspecting axes or canvas output.
-      act(() => scheduler.flush())
+      // A fresh client mount paints after data ingestion and before its first
+      // displayed frame, without waiting for the frame scheduler.
+      const { container } = render(
+        <QuadrantChart
+          data={data}
+          xCenter={0.5}
+          yCenter={0.5}
+          quadrants={quadrants}
+          width={600}
+          height={400}
+          animate={false}
+          frameProps={{ frameScheduler: scheduler.scheduler }}
+        />
+      )
+      expect(scheduler.pendingCount).toBe(0)
 
       expect(container.querySelector(".semiotic-chart-error")).toBeFalsy()
       expect(

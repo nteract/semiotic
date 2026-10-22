@@ -35,13 +35,22 @@ export function createNetworkZoomStore(initial = DEFAULT_ZOOM_STATE) {
     sizeChanged = false
   const equalView = (a: typeof state.zoom, b: typeof state.zoom) =>
     a.x === b.x && a.y === b.y && a.k === b.k
+  let layoutCommit: NetworkCameraSource["layoutCommitted"]
   const camera: NetworkCameraSource = {
     getSnapshot: () => state.zoom,
     subscribe: (listener, afterPaint = false) =>
       subscribe(afterPaint ? viewportListeners : cameraListeners)(listener),
-    transformRef: (css) => cameraTransformRef(camera, css)
+    transformRef: (css) => cameraTransformRef(camera, css),
+    layoutCommitted: (result, previous) => layoutCommit?.(result, previous)
   }
   const store = {
+    /** Receive each committed custom layout result; returns the unsubscribe. */
+    onLayoutCommit(handler: NonNullable<NetworkCameraSource["layoutCommitted"]>) {
+      layoutCommit = handler
+      return () => {
+        if (layoutCommit === handler) layoutCommit = undefined
+      }
+    },
     getSnapshot: () => state,
     getSize: () => size,
     subscribe: subscribe(liveListeners),

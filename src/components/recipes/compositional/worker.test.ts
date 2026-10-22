@@ -151,4 +151,49 @@ describe("compositional worker transaction boundaries", () => {
     uninstall()
     expect(host.listeners.size + worker.listeners.size).toBe(0)
   })
+
+  it("rejects pending requests when the worker reports an error or a message cannot be read", async () => {
+    for (const type of ["error", "messageerror"] as const) {
+      const target = new EventTarget()
+      const sent: CompositionalWorkerMessage[] = []
+      const host = Object.assign(target, {
+        postMessage: (message: CompositionalWorkerMessage) => {
+          sent.push(message)
+        }
+      }) as unknown as CompositionalWorkerPort
+      const engine = createCompositionalWorkerEngine(host)
+      const controller = new CompositionalLayoutController()
+      expect(await controller.solve(request("accepted"))).toBe(true)
+      const accepted = controller.solution
+      const solving = controller.solve(request(`crashed-${type}`), engine)
+      expect(controller.updating).toBe(true)
+      target.dispatchEvent(
+        type === "error"
+          ? new ErrorEvent("error", { message: "worker script failed" })
+          : new Event("messageerror")
+      )
+      expect(await solving).toBe(false)
+      expect(controller.updating).toBe(false)
+      expect(controller.solution).toBe(accepted)
+      expect(controller.diagnostics[0].message).toContain("REVISION_WORKER_FAILED")
+      engine.dispose()
+    }
+  })
+
+  it("reports a result the worker cannot post instead of leaving the request open", async () => {
+    const host = port(),
+      worker = port()
+    host.postMessage = (message) => {
+      queueMicrotask(() => worker.receive(message))
+    }
+    worker.postMessage = (message) => {
+      if (message.type === "result") throw new Error("DataCloneError: function could not be cloned")
+      queueMicrotask(() => host.receive(message))
+    }
+    const uninstall = installCompositionalWorker(worker)
+    const engine = createCompositionalWorkerEngine(host)
+    await expect(engine.layout(request("unclonable"))).rejects.toThrow("DataCloneError")
+    engine.dispose()
+    uninstall()
+  })
 })

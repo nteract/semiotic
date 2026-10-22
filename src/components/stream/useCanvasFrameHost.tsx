@@ -42,6 +42,8 @@ export interface UseCanvasFrameHostInput<TStore extends object> {
   renderFnRef: MutableRefObject<() => void>
   scheduleRender: () => void
   cancelRender: () => void
+  /** Runs a queued render synchronously; see `useHydrationLifecycle`. */
+  flushRender?: () => void
   /** Logical pause/visibility runtime supplied by `useFrame`. */
   frameRuntime: CanvasFrameHostRuntime
   /**
@@ -94,12 +96,12 @@ export interface CanvasFrameHostResult {
 
 type FrameCanvasHost = Pick<
   UseFrameResult,
-  "renderFnRef" | "scheduleRender" | "cancelRender" | "frameRuntime" | "size"
+  "renderFnRef" | "scheduleRender" | "cancelRender" | "flushRender" | "frameRuntime" | "size"
 >
 
 type FrameCanvasHostInput<TStore extends object> = Omit<
   UseCanvasFrameHostInput<TStore>,
-  "renderFnRef" | "scheduleRender" | "cancelRender" | "frameRuntime"
+  "renderFnRef" | "scheduleRender" | "cancelRender" | "flushRender" | "frameRuntime"
 >
 
 /**
@@ -158,6 +160,7 @@ export function useCanvasFrameHost<TStore extends object>(
     dirtyRef: input.dirtyRef,
     renderFnRef: input.renderFnRef,
     cancelRender: input.cancelRender,
+    flushRender: input.flushRender,
     cleanup: input.cleanup,
   })
 
@@ -217,6 +220,7 @@ export function useFrameCanvasHost<TStore extends object>(
     renderFnRef: frame.renderFnRef,
     scheduleRender: frame.scheduleRender,
     cancelRender: frame.cancelRender,
+    flushRender: frame.flushRender,
     frameRuntime: frame.frameRuntime,
   })
 }

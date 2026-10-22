@@ -42,14 +42,43 @@ export function NetworkZoomProvider({
 }
 
 /** Read live camera facts inside a zoomable chart. Outside a chart the identity
- * camera keeps reusable content usable. Changes include pan and visibleRect. */
-export function useNetworkZoom(): NetworkZoomState {
+ * camera keeps reusable content usable. Changes include pan and visibleRect.
+ * A selector limits re-renders to changes in its result, compared with
+ * `isEqual` (default `Object.is`), such as `(state) => state.settledZoom.k`. */
+export function useNetworkZoom(): NetworkZoomState
+export function useNetworkZoom<T>(
+  selector: (state: NetworkZoomState) => T,
+  isEqual?: (previous: T, next: T) => boolean
+): T
+export function useNetworkZoom<T>(
+  selector?: (state: NetworkZoomState) => T,
+  isEqual: (previous: T, next: T) => boolean = Object.is
+): T | NetworkZoomState {
   const store = useContext(NetworkZoomContext)
-  return useSyncExternalStore(
-    store.subscribe,
-    store.getSnapshot,
-    store.getSnapshot
-  )
+  // The last rendered selection survives new inline selectors, so an equal
+  // result keeps its identity and does not re-render.
+  const rendered = useRef<{ value: T } | null>(null)
+  const read = useMemo<() => T | NetworkZoomState>(() => {
+    if (!selector) return store.getSnapshot
+    let state: NetworkZoomState | undefined
+    let value: T
+    return () => {
+      const next = store.getSnapshot()
+      if (next === state) return value
+      const selected = selector(next)
+      state = next
+      value =
+        rendered.current && isEqual(rendered.current.value, selected)
+          ? rendered.current.value
+          : selected
+      return value
+    }
+  }, [store, selector, isEqual])
+  const value = useSyncExternalStore(store.subscribe, read, read)
+  useLayoutEffect(() => {
+    rendered.current = selector ? { value: value as T } : null
+  })
+  return value
 }
 
 /** Displayed CSS-pixel size, with the last settled size for deferred work. */

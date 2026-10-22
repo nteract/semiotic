@@ -15,28 +15,86 @@ export function validBounds(bounds: NetworkViewportRect): boolean {
   )
 }
 
-/** Pure fit shared by static export and the optional interactive camera. */
+/** Screen-pixel space at each side of a rectangle. */
+export interface NetworkViewSides {
+  top?: number
+  right?: number
+  bottom?: number
+  left?: number
+}
+
+/**
+ * Non-negative sides. A number applies to all four; an unspecified or
+ * non-finite value, on any side, uses `fallback`; a negative value is 0.
+ */
+export function networkViewSides(
+  sides: number | NetworkViewSides | null | undefined,
+  fallback = 0
+): Required<NetworkViewSides> {
+  const side = (value: number | undefined) =>
+    Number.isFinite(value) ? Math.max(0, value!) : fallback
+  if (typeof sides !== "object" || sides === null) {
+    const all = side(sides ?? undefined)
+    return { top: all, right: all, bottom: all, left: all }
+  }
+  return {
+    top: side(sides.top),
+    right: side(sides.right),
+    bottom: side(sides.bottom),
+    left: side(sides.left)
+  }
+}
+
+/**
+ * Pure fit shared by static export and the optional interactive camera. The
+ * content is centered in `area`, whose x/y offset the result in plot
+ * coordinates, with `fitPadding` (24 by default) kept free at each side.
+ */
 export function fitNetworkView(
   bounds: NetworkViewportRect,
-  plot: NetworkViewportRect,
-  fitPadding?: number,
+  area: NetworkViewportRect,
+  fitPadding?: number | NetworkViewSides | null,
   limits: readonly [number, number] = [Number.MIN_VALUE, Number.MAX_VALUE]
 ): NetworkViewTransform | null {
-  if (!validBounds(bounds) || plot.width <= 0 || plot.height <= 0) return null
-  const padding = Number.isFinite(fitPadding) ? Math.max(0, fitPadding!) : 24
+  if (!validBounds(bounds) || area.width <= 0 || area.height <= 0) return null
+  const { top, right, bottom, left } = networkViewSides(fitPadding, 24)
   const k = Math.max(
     limits[0],
     Math.min(
       limits[1],
-      Math.max(1, plot.width - padding * 2) / bounds.width,
-      Math.max(1, plot.height - padding * 2) / bounds.height
+      Math.max(1, area.width - (left + right)) / bounds.width,
+      Math.max(1, area.height - (top + bottom)) / bounds.height
     )
   )
   return {
     k,
-    x: plot.width / 2 - (bounds.x + bounds.width / 2) * k,
-    y: plot.height / 2 - (bounds.y + bounds.height / 2) * k
+    x:
+      area.x +
+      (area.width + (left - right)) / 2 -
+      (bounds.x + bounds.width / 2) * k,
+    y:
+      area.y +
+      (area.height + (top - bottom)) / 2 -
+      (bounds.y + bounds.height / 2) * k
   }
+}
+
+/** Union of finite, non-empty boxes; null when there are none. */
+export function unionNetworkBounds(
+  boxes: Iterable<NetworkViewportRect | null>
+): NetworkViewportRect | null {
+  let x = Infinity,
+    y = Infinity,
+    right = -Infinity,
+    bottom = -Infinity
+  for (const box of boxes) {
+    if (!box || !validBounds(box)) continue
+    x = Math.min(x, box.x)
+    y = Math.min(y, box.y)
+    right = Math.max(right, box.x + box.width)
+    bottom = Math.max(bottom, box.y + box.height)
+  }
+  return x < Infinity ? { x, y, width: right - x, height: bottom - y } : null
 }
 
 /** Fit helper for retained nodes and HTML card boxes. Arbitrary SVG decorations
@@ -76,17 +134,5 @@ export function getNetworkContentBounds(
       height: radius * 2
     })
   }
-  const finite = boxes.filter(validBounds)
-  if (!finite.length) return null
-  let x = Infinity,
-    y = Infinity,
-    right = -Infinity,
-    bottom = -Infinity
-  for (const box of finite) {
-    x = Math.min(x, box.x)
-    y = Math.min(y, box.y)
-    right = Math.max(right, box.x + box.width)
-    bottom = Math.max(bottom, box.y + box.height)
-  }
-  return { x, y, width: right - x, height: bottom - y }
+  return unionNetworkBounds(boxes)
 }

@@ -473,11 +473,8 @@ export function usePhysicsChartMode(
   const showProjection = props.showProjection ?? !resolved.compactMode
   const showChrome = props.showChrome ?? !resolved.compactMode
 
-  const tooltipProps = resolvePhysicsTooltipProps(props.tooltip, undefined)
-  const enableHover =
-    tooltipProps.enableHover !== undefined
-      ? tooltipProps.enableHover
-      : resolved.enableHover
+  // Hover follows `enableHover` and the chart mode, never `tooltip`.
+  const enableHover = resolved.enableHover
 
   const title = resolved.compactMode
     ? resolved.title
@@ -613,13 +610,24 @@ export function composePhysicsFrameGraphics(
   )
 }
 
+/** Renders no tooltip; hover, observations and selection keep working. */
+const suppressedPhysicsTooltip = () => null
+
 export function resolvePhysicsTooltipProps(
   tooltip: TooltipProp | undefined,
   frameProps?: Partial<StreamPhysicsFrameProps>,
   options: { unwrapSourceDatum?: boolean } = {}
-): Pick<StreamPhysicsFrameProps, "enableHover" | "tooltipContent"> {
+): Pick<
+  StreamPhysicsFrameProps,
+  "enableHover" | "tooltipContent" | "semanticItemTooltipContent"
+> {
+  // `false` suppresses the content only, as in every other chart family.
   if (tooltip === false) {
-    return { enableHover: false }
+    return {
+      enableHover: frameProps?.enableHover,
+      tooltipContent: suppressedPhysicsTooltip,
+      semanticItemTooltipContent: suppressedPhysicsTooltip
+    }
   }
   // Physics marks have no shared-axis series lookup, so a bare multi request
   // degrades to the normalized single-datum fallback. A custom multi content
@@ -647,11 +655,27 @@ export function resolvePhysicsTooltipProps(
           }) satisfies NonNullable<StreamPhysicsFrameProps["tooltipContent"]>)
         : (normalized as StreamPhysicsFrameProps["tooltipContent"])
       : frameProps?.tooltipContent
+  const itemContent =
+    typeof normalized === "function"
+      ? (item: PhysicsSemanticItem) =>
+          normalized({
+            __semioticHoverData: true,
+            type: "item",
+            id: item.id ?? item.label,
+            data: item.datum ?? { label: item.label, description: item.description },
+            x: item.x,
+            y: item.y
+          })
+      : frameProps?.semanticItemTooltipContent
+  const ownsChrome = typeof normalized === "function" && hasOwnTooltipChrome(normalized)
   return {
     enableHover: frameProps?.enableHover,
-    tooltipContent: tooltipContent && hasOwnTooltipChrome(normalized)
+    tooltipContent: tooltipContent && ownsChrome
       ? markTooltipChrome(tooltipContent)
-      : tooltipContent
+      : tooltipContent,
+    semanticItemTooltipContent: itemContent && ownsChrome
+      ? markTooltipChrome(itemContent)
+      : itemContent
   }
 }
 

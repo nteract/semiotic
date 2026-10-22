@@ -125,6 +125,65 @@ describe("lineageDagLayout", () => {
     expect(wide.find((e) => (e.datum as { isBackEdge?: boolean }).isBackEdge)!.style.strokeWidth).toBe(3)
   })
 
+  it("strengthens edges left undimmed by a reach, and only those", () => {
+    const config = {
+      ...baseConfig,
+      edgeOpacity: 0.5,
+      edgeWidth: 1.25,
+      highlightEdgeOpacity: 1,
+      highlightEdgeWidth: 3,
+    }
+    const edgeTo = (result: ReturnType<typeof lineageDagLayout>, tid: string) =>
+      (result.sceneEdges as NetworkCurvedEdge[]).find(
+        (e) => (e.datum as { target?: string; isBackEdge?: boolean }).target === tid
+      )!
+    const rest = lineageDagLayout(makeCtx(config, nodes, edges))
+    expect(edgeTo(rest, "snk").style).toMatchObject({ opacity: 0.5, strokeWidth: 1.25 })
+
+    const reach = lineageDagLayout(
+      makeCtx({ ...config, reachableIds: ["src", "agg", "snk"], dimOpacity: 0.1 }, nodes, edges)
+    )
+    expect(edgeTo(reach, "snk").style).toMatchObject({ opacity: 1, strokeWidth: 3 })
+    // src→flt: flt is dimmed, so the edge keeps its dimmed opacity and width
+    expect(edgeTo(reach, "flt").style.opacity).toBeLessThan(0.5)
+    expect(edgeTo(reach, "flt").style.strokeWidth).toBe(1.25)
+  })
+
+  it("rims dots with their partition outline; the selection ring still wins", () => {
+    const r = lineageDagLayout(
+      makeCtx(
+        {
+          ...baseConfig,
+          lod: "dot",
+          selectedId: "agg",
+          accentColor: "#ff0",
+          partitionStrokeColors: { processor: "#123456" },
+          dotStrokeWidth: 1.5,
+        },
+        nodes,
+        edges
+      )
+    )
+    const byId = Object.fromEntries(r.sceneNodes!.map((n) => [n.id!, n as NetworkCircleNode]))
+    expect(byId.flt.style).toMatchObject({ stroke: "#123456", strokeWidth: 1.5 })
+    expect(byId.agg.style).toMatchObject({ stroke: "#ff0", strokeWidth: 2 })
+    // no outline for a partition the map leaves out
+    expect(byId.src.style).toMatchObject({ stroke: "transparent", strokeWidth: 0 })
+  })
+
+  it("outlines containers with their partition outline in place of the border", () => {
+    const r = lineageDagLayout(
+      makeCtx(
+        { ...baseConfig, borderColor: "#555", partitionStrokeColors: { processor: "#123456" } },
+        nodes,
+        edges
+      )
+    )
+    const byId = Object.fromEntries(r.sceneNodes!.map((n) => [n.id!, n as NetworkRectNode]))
+    expect(byId.flt.style.stroke).toBe("#123456")
+    expect(byId.src.style.stroke).toBe("#555")
+  })
+
   it("collapses to dot circles with no glyph overlay in dot LOD", () => {
     const r = lineageDagLayout(makeCtx({ ...baseConfig, lod: "dot" }, nodes, edges))
     for (const n of r.sceneNodes!) expect(n.type).toBe("circle")

@@ -122,6 +122,10 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
   readonly perspective = new NetworkPerspectiveState()
   /** Unprojected custom-layout output, re-projected during perspective tweens. */
   private _rawCustomResult: NetworkLayoutResult | null = null
+  /** Unprojected result of the latest custom layout run; a new object exactly when the layout runs. */
+  get customLayoutRun(): NetworkLayoutResult | null {
+    return this._rawCustomResult
+  }
   /** Per-frame restyle callbacks from the custom layout result. When set, the
    *  frame routes selection changes through `restyleScene()` (style-only repaint)
    *  instead of a full `buildScene()`. */

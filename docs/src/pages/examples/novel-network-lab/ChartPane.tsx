@@ -1,5 +1,4 @@
 import * as React from "react"
-import { useCallback, useLayoutEffect, useRef, useState } from "react"
 import { Link } from "react-router-dom"
 import { ForceDirectedGraph, SankeyDiagram, ChordDiagram } from "semiotic/network"
 import { MotifBraidChart, DependencyForestChart, FlowCircuitChart } from "semiotic/atlas"
@@ -135,29 +134,6 @@ export default function ChartPane({
     minWidth: minimum,
     maxWidth: 1600,
   })
-  const [circuitHover, setCircuitHover] = useState<unknown>(null)
-  const circuitHoverDismissed = useRef(false)
-  const [pointer, setPointer] = useState({ x: 0, y: 0 })
-  const dismissCircuitHover = useCallback(() => {
-    circuitHoverDismissed.current = true
-    setCircuitHover(null)
-  }, [])
-  const hasCircuitTooltip = viewId === "circuit" && circuitHover != null
-  // Install dismissal before the tooltip is painted, so immediate Escape works.
-  useLayoutEffect(() => {
-    if (!hasCircuitTooltip) return
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") dismissCircuitHover()
-    }
-    window.addEventListener("scroll", dismissCircuitHover, true)
-    window.addEventListener("resize", dismissCircuitHover)
-    window.addEventListener("keydown", onKey, true)
-    return () => {
-      window.removeEventListener("scroll", dismissCircuitHover, true)
-      window.removeEventListener("resize", dismissCircuitHover)
-      window.removeEventListener("keydown", onKey, true)
-    }
-  }, [hasCircuitTooltip, dismissCircuitHover])
   const height = viewId === "circuit" ? 660 : 500
   const selectDatum = (value: unknown) => {
     const d = raw(value)
@@ -234,10 +210,7 @@ export default function ChartPane({
           <select
             aria-label={`View ${side}`}
             value={viewId}
-            onChange={(event) => {
-              dismissCircuitHover()
-              onView(event.target.value as ViewId)
-            }}
+            onChange={(event) => onView(event.target.value as ViewId)}
           >
             {views.map((item) => (
               <option key={item.id} value={item.id}>
@@ -260,35 +233,6 @@ export default function ChartPane({
         tabIndex={0}
         role="region"
         aria-label={`${view.name} chart. Scroll horizontally for the full diagram.`}
-        // Rearm before the child publishes hover observations. Repaints alone
-        // must not reopen a tooltip dismissed by Escape, scroll, or resize.
-        onPointerMoveCapture={() => {
-          circuitHoverDismissed.current = false
-        }}
-        onKeyDownCapture={(event) => {
-          if (event.key !== "Escape") circuitHoverDismissed.current = false
-        }}
-        onPointerMove={
-          viewId === "circuit"
-            ? (event) => {
-                setPointer({ x: event.clientX, y: event.clientY })
-                // Circuit modules publish observations; pipes expose their
-                // original edge IDs on SVG chrome. Use that painted geometry
-                // for pipe inspection, with the same canonical ledger lookup.
-                const pipe = (event.target as Element).closest("[data-circuit-edge]")
-                const edge = ledger.edges.find(
-                  (edge) => edge.id === pipe?.getAttribute("data-circuit-edge"),
-                )
-                if (edge) setCircuitHover({ ...edge, kind: "circuit-pipe" })
-                else
-                    setCircuitHover((current: unknown) =>
-                    record(current).kind === "circuit-pipe" ? null : current,
-                  )
-              }
-            : undefined
-        }
-        onPointerLeave={dismissCircuitHover}
-        onBlur={dismissCircuitHover}
       >
         {viewId === "force" && (
           <ForceDirectedGraph
@@ -319,7 +263,7 @@ export default function ChartPane({
             atlas={atlas}
             selection={selection}
             onClick={selectDatum}
-            frameProps={{ tooltipContent: (datum) => <LabTooltip datum={datum} /> }}
+            tooltip={(datum) => <LabTooltip datum={datum} />}
           />
         )}
         {viewId === "forest" && (
@@ -329,7 +273,7 @@ export default function ChartPane({
             reading="required-paths"
             selection={canonical}
             onSelectNode={onSelect}
-            frameProps={{ tooltipContent: (datum) => <LabTooltip datum={datum} /> }}
+            tooltip={(datum) => <LabTooltip datum={datum} />}
           />
         )}
         {viewId === "circuit" && (
@@ -343,28 +287,13 @@ export default function ChartPane({
             onSelectNode={onSelect}
             particleBudget={0}
             reducedMotion
-            onObservation={(event) => {
-              if (event.type === "hover" && !circuitHoverDismissed.current)
-                setCircuitHover(event.datum)
-              if (event.type === "hover-end") setCircuitHover(null)
-            }}
+            // Modules and pipes share the library tooltip, chrome and dismissal.
+            tooltip={(datum) => <LabTooltip datum={datum} />}
           />
         )}
         {viewId === "atlas" && <ResolutionAtlasChart {...resolutionProps} />}
         {viewId === "loom" && <BoundaryLoomChart {...resolutionProps} />}
       </div>
-      {viewId === "circuit" && circuitHover != null && (
-        <div
-          className="novel-circuit-tooltip"
-          role="tooltip"
-          style={{
-            left: Math.max(8, Math.min(pointer.x + 14, window.innerWidth - 292)),
-            top: Math.max(8, Math.min(pointer.y + 14, window.innerHeight - 165)),
-          }}
-        >
-          <LabTooltip datum={circuitHover} />
-        </div>
-      )}
       <div className="novel-pane-notes">
         <p>
           <strong>Encoding</strong> {view.encoding}

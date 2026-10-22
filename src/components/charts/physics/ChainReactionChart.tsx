@@ -746,7 +746,7 @@ export const ChainReactionChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
           onTick={handleTick as never}
           tooltipContent={
             props.tooltip === false
-              ? undefined
+              ? tooltipProps.tooltipContent
               : (tooltipProps.tooltipContent ?? defaultTooltipContent)
           }
           config={{

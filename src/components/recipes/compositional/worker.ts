@@ -23,7 +23,17 @@ export interface CompositionalWorkerPort {
   ): void
 }
 
-/** Application-owned worker. Request IDs must be unique for this engine's lifetime. */
+type FailureEvents = {
+  addEventListener?(type: string, listener: (event: Event) => void): void
+  removeEventListener?(type: string, listener: (event: Event) => void): void
+}
+
+/**
+ * Application-owned worker. Request IDs must be unique for this engine's
+ * lifetime. A Worker's `error` or a port's `messageerror` rejects every
+ * pending request with `REVISION_WORKER_FAILED`, so a controller keeps its
+ * accepted layout instead of waiting for a response that cannot arrive.
+ */
 export function createCompositionalWorkerEngine(
   port: CompositionalWorkerPort,
   engine: Pick<
@@ -57,7 +67,25 @@ export function createCompositionalWorkerEngine(
     if (data.type === "result") entry.resolve(data.solved)
     else entry.reject(new Error(data.message))
   }
+  const failAll = (message: string) => {
+    for (const entry of pending.values()) {
+      entry.clean()
+      entry.reject(new Error(`REVISION_WORKER_FAILED: ${message}`))
+    }
+    pending.clear()
+  }
+  // Ports without these events never deliver them; a port that ignores the
+  // event type delivers messages here, which carry no failure type.
+  const onFailure = (event: Event) => {
+    if (event?.type === "messageerror")
+      failAll("A worker message could not be deserialized.")
+    else if (event?.type === "error")
+      failAll((event as ErrorEvent).message || "The worker reported an error.")
+  }
+  const failures = port as unknown as FailureEvents
   port.addEventListener("message", onMessage)
+  failures.addEventListener?.("error", onFailure)
+  failures.addEventListener?.("messageerror", onFailure)
   return {
     ...engine,
     layout(request, signal) {
@@ -99,6 +127,8 @@ export function createCompositionalWorkerEngine(
     dispose() {
       disposed = true
       port.removeEventListener("message", onMessage)
+      failures.removeEventListener?.("error", onFailure)
+      failures.removeEventListener?.("messageerror", onFailure)
       for (const [requestId, entry] of pending) {
         entry.clean()
         entry.reject(new Error("REVISION_CANCELLED"))
@@ -128,25 +158,28 @@ export function installCompositionalWorker(
     active.set(request.requestId, controller)
     void Promise.resolve()
       .then(() => engine.layout(request, controller.signal))
-      .then(
-        (solved) => {
-          if (!controller.signal.aborted)
-            port.postMessage({
-              type: "result",
-              requestId: request.requestId,
-              solved
-            })
-        },
-        (error) => {
-          if (!controller.signal.aborted)
-            port.postMessage({
-              type: "error",
-              requestId: request.requestId,
-              message:
-                error instanceof Error ? error.message : "Worker layout failed."
-            })
+      .then((solved) => {
+        if (!controller.signal.aborted)
+          port.postMessage({
+            type: "result",
+            requestId: request.requestId,
+            solved
+          })
+      })
+      // Covers a failed solve and a result that cannot be posted.
+      .catch((error) => {
+        if (controller.signal.aborted) return
+        try {
+          port.postMessage({
+            type: "error",
+            requestId: request.requestId,
+            message:
+              error instanceof Error ? error.message : "Worker layout failed."
+          })
+        } catch {
+          // The port is gone; the host's own failure handling applies.
         }
-      )
+      })
       .finally(() => {
         if (active.get(request.requestId) === controller)
           active.delete(request.requestId)

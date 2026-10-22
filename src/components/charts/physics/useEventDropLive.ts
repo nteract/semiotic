@@ -9,6 +9,7 @@ import type { RefObject } from "react"
 import type { Datum } from "../shared/datumTypes"
 import type { EventDropChartProps } from "./EventDropChart"
 import { readAccessor, type PhysicsChartLayout } from "./physicsChartShared"
+import { registerPhysicsLivePrograms } from "./registerPhysicsLivePrograms"
 import {
   EventDropLiveRuntime,
   type EventDropLiveConfig
@@ -39,12 +40,35 @@ export function eventDropLiveSpawn(
   }
 }
 
+/**
+ * Live spawns for rows with a finite event time. Other rows are skipped, as
+ * replay skips them; materializing one would throw inside the frame loop.
+ */
+export function eventDropLiveSpawns(
+  rows: readonly Datum[],
+  firstIndex: number,
+  props: EventDropChartProps
+) {
+  const spawns: ReturnType<typeof eventDropLiveSpawn>[] = []
+  rows.forEach((row, offset) => {
+    const spawn = eventDropLiveSpawn(row, firstIndex + offset, props)
+    if (Number.isFinite(spawn.datum.eventTime)) spawns.push(spawn)
+    else if (process.env.NODE_ENV !== "production")
+      console.warn(
+        `[semiotic/physics] EventDropChart live row "${spawn.id}" has no finite event time and was skipped.`
+      )
+  })
+  return spawns
+}
+
 export function buildLiveEventDropLayout(
   config: EventDropLiveConfig,
   props: EventDropChartProps
 ): PhysicsChartLayout {
   if (props.emitters && props.data !== undefined)
     throw new Error("EventDrop emitters require push mode: omit data")
+  // The store resolves these programs when the frame creates or restores it.
+  registerPhysicsLivePrograms()
   const runtime = new EventDropLiveRuntime(config)
   const metadata = runtime.metadata()
   return {
@@ -84,9 +108,7 @@ export function buildLiveEventDropLayout(
       }),
       eventDrop: config
     },
-    initialSpawns: (props.data ?? []).map((row, i) =>
-      eventDropLiveSpawn(row, i, props)
-    ),
+    initialSpawns: eventDropLiveSpawns(props.data ?? [], 0, props),
     projectionRows: [],
     metadata: { ...metadata }
   }
@@ -130,12 +152,9 @@ export function useEventDropLive(
             frame.getStore().enqueueSequence(),
             nextId.current
           )
-          frame.pushMany(
-            rows.map((row, index) =>
-              eventDropLiveSpawn(row, firstId + index, latest.current)
-            )
-          )
+          const spawns = eventDropLiveSpawns(rows, firstId, latest.current)
           nextId.current = firstId + rows.length
+          if (spawns.length) frame.pushMany(spawns)
         },
         remove: (ids) => {
           const wanted = new Set(Array.isArray(ids) ? ids : [ids])

@@ -97,6 +97,11 @@ const props = [
     type: "function",
     description: "Pointer and keyboard activation return the canonical vertex ID.",
   },
+  {
+    name: "tooltip",
+    type: "boolean | function | object",
+    description: 'Module and pipe tooltips in both views; a renderer receives the module or pipe datum (kind "circuit-module" or "circuit-pipe"). Defaults to module completions and queue, or pipe volume. false hides tooltips while hover observations continue.',
+  },
 ]
 
 export default function FlowCircuitChartPage() {
