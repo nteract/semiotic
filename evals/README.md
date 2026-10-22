@@ -93,6 +93,36 @@ API Route. See the [API documentation](https://github.com/DennyHo0917/api-route/
 for authentication and model discovery. This registers an evaluation provider;
 it does not claim results for any chart-generation or grounding benchmark.
 
+The `litellm` provider points the same queue at a self-hosted
+[LiteLLM](https://github.com/BerriAI/litellm) proxy (`LITELLM_API_KEY`, a
+virtual key or the master key). The proxy URL comes from `--base-url` or
+`LITELLM_BASE_URL` (default `http://localhost:4000`, with or without `/v1`),
+and `--models` takes the model names configured on the proxy. At startup the
+runner reads the proxy's `/model/info` and builds the price table from its
+per-token rates (the highest rate when a model has several deployments), so
+LiteLLM runs record estimated USD and require a positive `--max-usd` like the
+`openai` provider. `--validate-only` makes the same `/model/info` call before
+its one request. A model served only through a wildcard route such as
+`openai/*` is priced from that route's rates, which LiteLLM often leaves
+empty. A model priced at `0` on the proxy counts as priced and adds $0 to the
+estimate, so the ceiling never trips for it. Reasoning tokens use
+`output_cost_per_reasoning_token` when supplied, otherwise the ordinary output
+rate. The request budget reserves the higher output/reasoning rate. Every
+matching deployment must be priced, including deployments on wildcard routes.
+If any matching deployment lacks input or output prices, a run that passes
+`--max-usd` fails before any request and names the unpriced models; without
+`--max-usd` the run proceeds with cost recorded as `null` and no ceiling:
+
+```sh
+npm run eval:ai:litellm -- \
+  --base-url=http://localhost:4000 \
+  --models=gpt-4.1-mini,gemini-2.5-flash \
+  --suites=first-try \
+  --output-dir=evals/reports/litellm/trial-a \
+  --max-usd=2 \
+  --confirm-spend
+```
+
 Use `--validate-only` first for one minimal request. The live runner always
 requires `--confirm-spend`. Providers with a locked price table also require a
 positive `--max-usd`; the `orcarouter`, `cheaperinference`, and `apiroute` gateways have no

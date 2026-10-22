@@ -12,8 +12,11 @@
  * `--max-usd` spend ceiling and record estimated USD cost; providers without
  * one (the `orcarouter` gateway) treat cost as unknown (`null`), record no
  * USD estimates, and require only `--confirm-spend` because no spend ceiling
- * can be enforced. Reports contain scored content, hashes, and token usage,
- * but never credentials, project IDs, prompts, or raw response bodies.
+ * can be enforced. The self-hosted `litellm` gateway takes its URL from
+ * `--base-url` or LITELLM_BASE_URL and builds its price table from the proxy's
+ * `/model/info`, so its runs get estimated USD and a `--max-usd` ceiling too.
+ * Reports contain scored content, hashes, and token usage, but never
+ * credentials, project IDs, prompts, or raw response bodies.
  */
 import { execFileSync } from "node:child_process"
 import { createHash } from "node:crypto"
@@ -28,6 +31,13 @@ import process from "node:process"
 import { setTimeout as delay } from "node:timers/promises"
 import { fileURLToPath } from "node:url"
 import { AI_EVAL_PROVIDERS } from "./lib/ai-eval-providers.mjs"
+import { sanitizedApiError } from "./lib/api-key-redaction.mjs"
+import {
+  describeUnpricedModels,
+  fetchLiteLLMModelInfo,
+  liteLLMPriceTable,
+  liteLLMProxyRoot
+} from "./lib/litellm-model-prices.mjs"
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const defaultOpenAIPrices = AI_EVAL_PROVIDERS.openai.pricesPerMillion
@@ -49,8 +59,6 @@ const argSet = (argv, name) => {
 const readJson = async (path) => JSON.parse(await readFile(path, "utf8"))
 const safeModelName = (model) => model.replace(/[^a-zA-Z0-9._-]/g, "-")
 const roundCost = (value) => Number(value.toFixed(8))
-const sanitizedApiError = (value) =>
-  value.replace(/sk-[A-Za-z0-9_*.-]+/g, "[REDACTED_API_KEY]")
 
 export function validateFilterValues(name, values, knownValues) {
   if (!values) return
@@ -67,40 +75,47 @@ export function validateFilterValues(name, values, knownValues) {
 export function calculateResponseCost(
   model,
   usage = {},
-  prices = defaultOpenAIPrices,
+  prices = defaultOpenAIPrices
 ) {
   if (!prices) return null
   const rates = prices[model]
   if (!rates) throw new Error(`No price table for ${model}`)
   const cached = usage.input_tokens_details?.cached_tokens ?? 0
   const cacheWrite = usage.input_tokens_details?.cache_write_tokens ?? 0
-  const input = Math.max(
-    0,
-    (usage.input_tokens ?? 0) - cached - cacheWrite
-  )
+  const input = Math.max(0, (usage.input_tokens ?? 0) - cached - cacheWrite)
   const output = usage.output_tokens ?? 0
+  // Responses usage includes reasoning tokens in the output total.
+  const reasoning = Math.max(
+    0,
+    Math.min(output, usage.output_tokens_details?.reasoning_tokens ?? 0)
+  )
   return roundCost(
     (input * rates.input +
       cached * rates.cachedInput +
       cacheWrite * rates.cacheWriteInput +
-      output * rates.output) /
+      (output - reasoning) * rates.output +
+      reasoning * (rates.reasoningOutput ?? rates.output)) /
       1_000_000
   )
 }
 
-export function requestUpperBoundCost(model, request, prices = defaultOpenAIPrices) {
+export function requestUpperBoundCost(
+  model,
+  request,
+  prices = defaultOpenAIPrices
+) {
   if (!prices) return null
   const rates = prices[model]
   if (!rates) throw new Error(`No price table for ${model}`)
   const serialized = JSON.stringify(request)
-  const imageCount = (
-    serialized.match(/"type":"input_image"/g) ?? []
-  ).length
+  const imageCount = (serialized.match(/"type":"input_image"/g) ?? []).length
   const estimatedInputTokens =
     Math.ceil(serialized.length / 3) + imageCount * 2_000
   return roundCost(
-    (estimatedInputTokens * Math.max(rates.input, rates.cacheWriteInput) +
-      (request.max_output_tokens ?? 0) * rates.output) /
+    (estimatedInputTokens *
+      Math.max(rates.input, rates.cachedInput, rates.cacheWriteInput) +
+      (request.max_output_tokens ?? 0) *
+        Math.max(rates.output, rates.reasoningOutput ?? rates.output)) /
       1_000_000
   )
 }
@@ -195,7 +210,7 @@ function keychainApiKey(service, account, apiKeyEnv = "OPENAI_API_KEY", env = pr
     }).trim()
   } catch {
     throw new Error(
-      `No readable generic-password item found for Keychain service ${service}`
+      `No readable generic-password item found for Keychain service ${service}; set ${apiKeyEnv} to supply the provider key`
     )
   }
 }
@@ -257,7 +272,8 @@ async function apiRequest({
     if (!retryable || attempt === retries) {
       throw new Error(
         `${apiErrorPrefix} ${response.status}: ${sanitizedApiError(
-          errorText
+          errorText,
+          apiKey
         ).slice(0, 1_000)}`
       )
     }
@@ -468,7 +484,6 @@ export async function runEvalRun({ argv, env, fetchImpl, stdout, stderr = proces
       `Unknown --provider; expected one of: ${Object.keys(AI_EVAL_PROVIDERS).join(", ")}`
     )
   }
-  const prices = provider.pricesPerMillion
   const project =
     argValue(argv, "project") ?? env[provider.projectEnv ?? ""] ?? null
   const keychainService = argValue(argv, "keychain-service") ?? provider.keychainService
@@ -477,7 +492,8 @@ export async function runEvalRun({ argv, env, fetchImpl, stdout, stderr = proces
     .split(",")
     .map((model) => model.trim())
     .filter(Boolean)
-  const maxUsd = Number(argValue(argv, "max-usd") ?? 0)
+  const maxUsdArg = argValue(argv, "max-usd")
+  const maxUsd = Number(maxUsdArg ?? 0)
   const suites = argSet(argv, "suites")
   const firstTryFixtureIds = argSet(argv, "first-try-fixtures")
   const firstTryContext = argValue(argv, "first-try-context") ?? "llms"
@@ -497,7 +513,58 @@ export async function runEvalRun({ argv, env, fetchImpl, stdout, stderr = proces
       )
   )
   const validate = hasArg(argv, "validate-only")
-  const hasPriceTable = provider.hasPriceTable === true
+  if (models.length === 0) {
+    throw new Error(`${provider.label} has no default models; pass --models`)
+  }
+  let apiUrl = provider.apiUrl
+  let prices = provider.pricesPerMillion
+  let priceRevision = provider.priceRevision
+  let hasPriceTable = provider.hasPriceTable === true
+  let apiKey = null
+  if (provider.priceSource === "litellm-model-info") {
+    const proxyRoot = liteLLMProxyRoot(
+      argValue(argv, "base-url") ??
+        env[provider.baseUrlEnv] ??
+        provider.defaultBaseUrl
+    )
+    apiUrl = `${proxyRoot}/v1/responses`
+    apiKey = keychainApiKey(
+      keychainService,
+      keychainAccount,
+      provider.apiKeyEnv,
+      env
+    )
+    if (!apiKey) throw new Error(`${provider.apiKeyEnv} was empty`)
+    const modelInfo = await fetchLiteLLMModelInfo({
+      proxyRoot,
+      apiKey,
+      fetchImpl
+    })
+    const discovered = liteLLMPriceTable(modelInfo, models)
+    const unpriced = describeUnpricedModels(discovered)
+    if (discovered.unpriced.length === 0) {
+      prices = discovered.prices
+      priceRevision = `litellm-model-info-${digest(
+        JSON.stringify(discovered.prices)
+      ).slice(0, 12)}`
+      hasPriceTable = true
+    } else if (maxUsdArg !== undefined) {
+      // A ceiling the runner cannot enforce for every model is worse than no
+      // ceiling, so refuse instead of silently dropping it.
+      throw new Error(
+        `--max-usd cannot be enforced: ${provider.label} /model/info has no ` +
+          `input and output prices for ${unpriced}. Set input_cost_per_token ` +
+          "and output_cost_per_token in the proxy's model_info, or omit " +
+          "--max-usd to record cost as unknown (null)"
+      )
+    } else {
+      stderr.write(
+        `${provider.label} /model/info has no input and output prices for ` +
+          `${unpriced}; cost is recorded as unknown (null) and no spend ` +
+          "ceiling is enforced\n"
+      )
+    }
+  }
   if (provider.projectEnv && !project) {
     throw new Error("--project or OPENAI_PROJECT_ID is required")
   }
@@ -514,7 +581,11 @@ export async function runEvalRun({ argv, env, fetchImpl, stdout, stderr = proces
     }
     if (hasPriceTable && maxUsd <= 0) {
       throw new Error(
-        `${provider.label} uses a locked price table, so a positive --max-usd is required`
+        `${provider.label} ${
+          provider.hasPriceTable
+            ? "uses a locked price table"
+            : "/model/info prices every requested model"
+        }, so a positive --max-usd is required`
       )
     }
     if (hasPriceTable && Number.isNaN(maxUsd)) {
@@ -522,7 +593,7 @@ export async function runEvalRun({ argv, env, fetchImpl, stdout, stderr = proces
     }
   }
 
-  const apiKey = keychainApiKey(
+  apiKey ??= keychainApiKey(
     keychainService,
     keychainAccount,
     provider.apiKeyEnv,
@@ -532,7 +603,7 @@ export async function runEvalRun({ argv, env, fetchImpl, stdout, stderr = proces
   if (validate) {
     await validateOnly({
       apiKey,
-      apiUrl: provider.apiUrl,
+      apiUrl,
       apiErrorPrefix: `${provider.label} API`,
       project,
       model: models[0],
@@ -584,7 +655,7 @@ export async function runEvalRun({ argv, env, fetchImpl, stdout, stderr = proces
     version: 1,
     provider: provider.id,
     clientVersion: provider.clientVersion,
-    priceRevision: provider.priceRevision,
+    priceRevision,
     models,
     trialId,
     firstTryContext,
@@ -602,7 +673,7 @@ export async function runEvalRun({ argv, env, fetchImpl, stdout, stderr = proces
   })
   if (
     manifest.projectFingerprint !== digest(project ?? provider.id).slice(0, 12) ||
-    manifest.priceRevision !== provider.priceRevision ||
+    manifest.priceRevision !== priceRevision ||
     manifest.trialId !== trialId
     || manifest.firstTryContext !== firstTryContext
     || (manifest.provider ?? "openai") !== provider.id
@@ -727,7 +798,7 @@ export async function runEvalRun({ argv, env, fetchImpl, stdout, stderr = proces
         )
         const { response, latencyMs } = await apiRequest({
           apiKey,
-          apiUrl: provider.apiUrl,
+          apiUrl,
           apiErrorPrefix: `${provider.label} API`,
           body: candidate.body,
           idempotencyKey,
