@@ -8,6 +8,24 @@ import { BaseSequencer, createVitest } from "vitest/node"
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const config = resolve(root, "vitest.config.mts")
 
+test("Vitest coverage and UI packages match the locked test runner", () => {
+  const manifest = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8"))
+  const { packages } = JSON.parse(
+    readFileSync(resolve(root, "package-lock.json"), "utf8")
+  )
+  const version = packages["node_modules/vitest"].version
+  for (const name of ["@vitest/coverage-v8", "@vitest/ui"]) {
+    assert.equal(manifest.devDependencies[name], version, `${name} manifest pin`)
+    assert.equal(packages[""].devDependencies[name], version, `${name} lock pin`)
+    assert.equal(packages[`node_modules/${name}`].version, version, `${name} version`)
+    assert.equal(
+      packages[`node_modules/${name}`].peerDependencies.vitest,
+      version,
+      `${name} runner peer`
+    )
+  }
+})
+
 test("Vitest discovery excludes Node test suites while retaining script unit tests", async () => {
   const ctx = await createVitest("test", { root, config, watch: false })
   try {

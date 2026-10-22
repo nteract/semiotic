@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update the MCP SDK's transitive `ip-address` dependency to `10.7.4`, fixing
   CVE-2026-111997 and clearing the release security audit.
+- Align Vitest's coverage and UI packages with the test runner so release
+  validation uses a supported dependency combination.
 
 ## [3.13.0]
 
