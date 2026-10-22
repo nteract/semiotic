@@ -49,6 +49,69 @@ test("requestUpperBoundCost reserves image and output capacity", () => {
   assert.ok(withImage > textOnly)
 })
 
+test("response costs separate reasoning tokens without double-counting output", () => {
+  const rates = { input: 2, cachedInput: 0.5, cacheWriteInput: 3, output: 4 }
+  const usage = {
+    input_tokens: 1_000_000,
+    input_tokens_details: {
+      cached_tokens: 200_000,
+      cache_write_tokens: 100_000
+    },
+    output_tokens: 100_000,
+    output_tokens_details: { reasoning_tokens: 40_000 }
+  }
+  assert.equal(
+    calculateResponseCost("model", usage, {
+      model: { ...rates, reasoningOutput: 20 }
+    }),
+    2.84
+  )
+  // Existing providers keep ordinary output pricing when no rate is supplied.
+  assert.equal(calculateResponseCost("model", usage, { model: rates }), 2.2)
+  assert.equal(
+    calculateResponseCost("model", usage, {
+      model: { ...rates, reasoningOutput: 0 }
+    }),
+    2.04
+  )
+  assert.equal(
+    calculateResponseCost(
+      "model",
+      {
+        output_tokens: 10,
+        output_tokens_details: { reasoning_tokens: 10 }
+      },
+      { model: { ...rates, reasoningOutput: 20 } }
+    ),
+    0.0002
+  )
+})
+
+test("request budgets reserve the highest output, reasoning and input cache rates", () => {
+  const request = { input: "hello", max_output_tokens: 100_000 }
+  const rates = { input: 0, cachedInput: 0, cacheWriteInput: 0, output: 4 }
+  assert.equal(
+    requestUpperBoundCost("model", request, {
+      model: { ...rates, reasoningOutput: 20 }
+    }),
+    2
+  )
+  assert.equal(
+    requestUpperBoundCost("model", request, {
+      model: { ...rates, reasoningOutput: 1 }
+    }),
+    0.4
+  )
+  const inputOnly = { input: "hello", max_output_tokens: 0 }
+  const tokens = Math.ceil(JSON.stringify(inputOnly).length / 3)
+  assert.equal(
+    requestUpperBoundCost("model", inputOnly, {
+      model: { ...rates, cachedInput: 10 }
+    }),
+    (tokens * 10) / 1_000_000
+  )
+})
+
 test("extractOutputText returns output text and rejects refusals", () => {
   assert.equal(
     extractOutputText({
@@ -643,7 +706,8 @@ test("liteLLMPriceTable resolves wildcard routes and treats a $0 price as priced
     input: 0,
     cachedInput: 0,
     cacheWriteInput: 0,
-    output: 0
+    output: 0,
+    reasoningOutput: 0
   })
   assert.ok(Math.abs(discovered.prices["priced/some-model"].input - 1) < 1e-9)
   assert.ok(Math.abs(discovered.prices["priced/some-model"].output - 2) < 1e-9)
@@ -677,6 +741,208 @@ test("sanitizedApiError redacts the configured key in any format", () => {
     sanitizedApiError("Received API Key = sk-...-dev"),
     "Received API Key = [REDACTED_API_KEY]"
   )
+})
+
+test("configured keys are redacted from literal and JSON-escaped error bodies", async () => {
+  for (const key of [
+    'custom"key',
+    "custom\\key",
+    "custom\nkey",
+    "custom\tkey"
+  ]) {
+    const encoded = JSON.stringify(key).slice(1, -1)
+    const message = `literal ${key}; JSON ${JSON.stringify({ key })}`
+    const sanitized = sanitizedApiError(message, key)
+    assert.ok(!sanitized.includes(key))
+    assert.ok(!sanitized.includes(encoded))
+    assert.ok(sanitized.includes("[REDACTED_API_KEY]"))
+    for (const failingPath of ["/model/info", "/v1/responses"]) {
+      await assert.rejects(
+        runEvalRun({
+          argv: [
+            "node",
+            "runner",
+            "--provider=litellm",
+            "--models=gpt-4.1-mini",
+            "--validate-only"
+          ],
+          env: { LITELLM_API_KEY: key },
+          fetchImpl: async (url) =>
+            url.endsWith(failingPath)
+              ? {
+                  ok: false,
+                  status: 401,
+                  text: async () => JSON.stringify({ error: { message: key } })
+                }
+              : { ok: true, json: async () => liteLLMModelInfo },
+          stdout: { write: () => {} },
+          stderr: { write: () => {} }
+        }),
+        (error) =>
+          error.message.includes("401") &&
+          error.message.includes("[REDACTED_API_KEY]") &&
+          !error.message.includes(key) &&
+          !error.message.includes(encoded)
+      )
+    }
+  }
+})
+
+test("pricing discovery preserves reasoning rates, zero rates and deployment maxima", () => {
+  const info = {
+    data: [
+      {
+        model_name: "reasoner",
+        model_info: {
+          input_cost_per_token: 1e-6,
+          output_cost_per_token: 2e-6,
+          output_cost_per_reasoning_token: 20e-6
+        }
+      },
+      {
+        model_name: "reasoner",
+        model_info: { input_cost_per_token: 2e-6, output_cost_per_token: 4e-6 }
+      },
+      {
+        model_name: "free",
+        model_info: {
+          input_cost_per_token: 0,
+          output_cost_per_token: 0,
+          output_cost_per_reasoning_token: 0
+        }
+      }
+    ]
+  }
+  const { prices, unpriced } = liteLLMPriceTable(info, ["reasoner", "free"])
+  assert.deepEqual(unpriced, [])
+  assert.equal(prices.reasoner.reasoningOutput, 20)
+  assert.equal(prices.reasoner.output, 4)
+  assert.equal(prices.free.reasoningOutput, 0)
+})
+
+test("any matching deployment with incomplete or invalid rates makes the model unpriced", () => {
+  const valid = { input_cost_per_token: 1e-6, output_cost_per_token: 2e-6 }
+  for (const model_name of ["model", "models/*"]) {
+    const model = model_name === "model" ? "model" : "models/a"
+    for (const invalid of [
+      {},
+      { input_cost_per_token: 1e-6 },
+      { ...valid, output_cost_per_token: -1 },
+      { ...valid, output_cost_per_reasoning_token: "unknown" }
+    ]) {
+      for (const specs of [
+        [valid, invalid],
+        [invalid, valid]
+      ]) {
+        const result = liteLLMPriceTable(
+          { data: specs.map((model_info) => ({ model_name, model_info })) },
+          [model]
+        )
+        assert.deepEqual(result.unpriced, [model])
+        assert.deepEqual(result.prices, {})
+      }
+    }
+  }
+})
+
+test("mixed priced and unpriced deployments refuse a ceiling before any response request", async () => {
+  for (const model_name of ["model", "models/*"]) {
+    const model = model_name === "model" ? "model" : "models/a"
+    const calls = []
+    await assert.rejects(
+      runEvalRun({
+        argv: [
+          "node",
+          "runner",
+          "--provider=litellm",
+          `--models=${model}`,
+          "--validate-only",
+          "--max-usd=1"
+        ],
+        env: { LITELLM_API_KEY: "test-key" },
+        fetchImpl: async (url) => {
+          calls.push(url)
+          return {
+            ok: true,
+            json: async () => ({
+              data: [
+                {
+                  model_name,
+                  model_info: {
+                    input_cost_per_token: 1e-6,
+                    output_cost_per_token: 2e-6
+                  }
+                },
+                { model_name, model_info: {} }
+              ]
+            })
+          }
+        },
+        stdout: { write: () => {} },
+        stderr: { write: () => {} }
+      }),
+      /--max-usd cannot be enforced/
+    )
+    assert.deepEqual(calls, ["http://localhost:4000/model/info"])
+  }
+})
+
+test("LiteLLM reasoning prices reach validate-only cost and paid request budgets", async () => {
+  const info = {
+    data: [
+      {
+        model_name: "reasoner",
+        model_info: {
+          input_cost_per_token: 1e-6,
+          output_cost_per_token: 2e-6,
+          output_cost_per_reasoning_token: 20e-6
+        }
+      }
+    ]
+  }
+  const calls = []
+  const chunks = []
+  const fetchImpl = async (url) => {
+    calls.push(url)
+    if (url.endsWith("/model/info")) return { ok: true, json: async () => info }
+    const response = await jsonResponse("reasoner", '{"ok":true}').json()
+    response.usage.output_tokens_details = { reasoning_tokens: 4 }
+    return { ok: true, json: async () => response }
+  }
+  const base = ["node", "runner", "--provider=litellm", "--models=reasoner"]
+  await runEvalRun({
+    argv: [...base, "--validate-only"],
+    env: { LITELLM_API_KEY: "test-key" },
+    fetchImpl,
+    stdout: { write: (chunk) => chunks.push(chunk) },
+    stderr: { write: () => {} }
+  })
+  assert.equal(JSON.parse(chunks.join("")).estimatedUsd, 0.000092)
+  calls.length = 0
+  // With zero input/output prices, the reasoning rate alone must stop this run.
+  info.data[0].model_info.input_cost_per_token = 0
+  info.data[0].model_info.output_cost_per_token = 0
+  const jobs = JSON.parse(
+    await readFile(join(root, "evals/first-try/jobs.json"), "utf8")
+  )
+  await assert.rejects(
+    runEvalRun({
+      argv: [
+        ...base,
+        "--suites=first-try",
+        `--first-try-fixtures=${jobs.jobs[0].fixtureId}`,
+        `--output-dir=${await mkdtemp(join(tmpdir(), "litellm-reasoning-budget-"))}`,
+        "--confirm-spend",
+        "--max-usd=0.000001"
+      ],
+      env: { LITELLM_API_KEY: "test-key" },
+      fetchImpl,
+      stdout: { write: () => {} },
+      stderr: { write: () => {} }
+    }),
+    /Spend ceiling would be exceeded/
+  )
+  assert.deepEqual(calls, ["http://localhost:4000/model/info"])
 })
 
 test("liteLLMPriceTable keeps the highest deployment rate and falls back to the input rate", () => {

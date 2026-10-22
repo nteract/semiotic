@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- LiteLLM evaluation provider with configurable proxy URLs, model pricing
+  discovery, reasoning-token cost estimates, and spend checks that reject
+  partially priced model deployments. Run it with `npm run eval:ai:litellm`.
+
 ## [3.13.0]
 
 ### Network camera and semantic zoom

@@ -105,10 +105,13 @@ LiteLLM runs record estimated USD and require a positive `--max-usd` like the
 its one request. A model served only through a wildcard route such as
 `openai/*` is priced from that route's rates, which LiteLLM often leaves
 empty. A model priced at `0` on the proxy counts as priced and adds $0 to the
-estimate, so the ceiling never trips for it. If the proxy reports no input or
-output price for any requested model, a run that passes `--max-usd` fails
-before any request and names the unpriced models; without `--max-usd` the run
-proceeds with cost recorded as `null` and no ceiling:
+estimate, so the ceiling never trips for it. Reasoning tokens use
+`output_cost_per_reasoning_token` when supplied, otherwise the ordinary output
+rate. The request budget reserves the higher output/reasoning rate. Every
+matching deployment must be priced, including deployments on wildcard routes.
+If any matching deployment lacks input or output prices, a run that passes
+`--max-usd` fails before any request and names the unpriced models; without
+`--max-usd` the run proceeds with cost recorded as `null` and no ceiling:
 
 ```sh
 npm run eval:ai:litellm -- \

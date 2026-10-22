@@ -75,40 +75,47 @@ export function validateFilterValues(name, values, knownValues) {
 export function calculateResponseCost(
   model,
   usage = {},
-  prices = defaultOpenAIPrices,
+  prices = defaultOpenAIPrices
 ) {
   if (!prices) return null
   const rates = prices[model]
   if (!rates) throw new Error(`No price table for ${model}`)
   const cached = usage.input_tokens_details?.cached_tokens ?? 0
   const cacheWrite = usage.input_tokens_details?.cache_write_tokens ?? 0
-  const input = Math.max(
-    0,
-    (usage.input_tokens ?? 0) - cached - cacheWrite
-  )
+  const input = Math.max(0, (usage.input_tokens ?? 0) - cached - cacheWrite)
   const output = usage.output_tokens ?? 0
+  // Responses usage includes reasoning tokens in the output total.
+  const reasoning = Math.max(
+    0,
+    Math.min(output, usage.output_tokens_details?.reasoning_tokens ?? 0)
+  )
   return roundCost(
     (input * rates.input +
       cached * rates.cachedInput +
       cacheWrite * rates.cacheWriteInput +
-      output * rates.output) /
+      (output - reasoning) * rates.output +
+      reasoning * (rates.reasoningOutput ?? rates.output)) /
       1_000_000
   )
 }
 
-export function requestUpperBoundCost(model, request, prices = defaultOpenAIPrices) {
+export function requestUpperBoundCost(
+  model,
+  request,
+  prices = defaultOpenAIPrices
+) {
   if (!prices) return null
   const rates = prices[model]
   if (!rates) throw new Error(`No price table for ${model}`)
   const serialized = JSON.stringify(request)
-  const imageCount = (
-    serialized.match(/"type":"input_image"/g) ?? []
-  ).length
+  const imageCount = (serialized.match(/"type":"input_image"/g) ?? []).length
   const estimatedInputTokens =
     Math.ceil(serialized.length / 3) + imageCount * 2_000
   return roundCost(
-    (estimatedInputTokens * Math.max(rates.input, rates.cacheWriteInput) +
-      (request.max_output_tokens ?? 0) * rates.output) /
+    (estimatedInputTokens *
+      Math.max(rates.input, rates.cachedInput, rates.cacheWriteInput) +
+      (request.max_output_tokens ?? 0) *
+        Math.max(rates.output, rates.reasoningOutput ?? rates.output)) /
       1_000_000
   )
 }
@@ -203,7 +210,7 @@ function keychainApiKey(service, account, apiKeyEnv = "OPENAI_API_KEY", env = pr
     }).trim()
   } catch {
     throw new Error(
-      `No readable generic-password item found for Keychain service ${service}`
+      `No readable generic-password item found for Keychain service ${service}; set ${apiKeyEnv} to supply the provider key`
     )
   }
 }

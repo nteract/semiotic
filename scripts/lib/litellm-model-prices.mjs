@@ -30,14 +30,16 @@ const deploymentRates = (deployment) => {
   const info = deployment?.model_info ?? {}
   const input = rate(info.input_cost_per_token)
   const output = rate(info.output_cost_per_token)
-  if (input === null || output === null) return null
+  const reasoningOutput = rate(info.output_cost_per_reasoning_token ?? output)
+  if (input === null || output === null || reasoningOutput === null) return null
   return {
     input: usdPerMillion(input),
     cachedInput: usdPerMillion(rate(info.cache_read_input_token_cost) ?? input),
     cacheWriteInput: usdPerMillion(
       rate(info.cache_creation_input_token_cost) ?? input
     ),
-    output: usdPerMillion(output)
+    output: usdPerMillion(output),
+    reasoningOutput: usdPerMillion(reasoningOutput)
   }
 }
 
@@ -61,8 +63,10 @@ const wildcardPattern = (modelName) =>
  * Build a per-million price table for `models` from a `/model/info` payload.
  * A model name can map to several deployments with different prices, so each
  * rate takes the highest deployment price to keep the spend ceiling
- * conservative. Missing cache rates fall back to the input rate, and a
- * deployment priced at 0 counts as priced (its cost estimate is $0).
+ * conservative. Every matching deployment must have complete rates; an
+ * unpriced deployment makes the model unpriced. Missing reasoning rates fall
+ * back to the output rate. Missing cache rates fall back to the input rate.
+ * A deployment priced at 0 counts as priced (its cost estimate is $0).
  *
  * Exact `model_name` matches win. A model with no exact match is resolved
  * against wildcard routes such as `openai/*`, the way the proxy routes it;
@@ -94,7 +98,10 @@ export function liteLLMPriceTable(modelInfo, models) {
     let rates = null
     for (const deployment of matches) {
       const candidate = deploymentRates(deployment)
-      if (!candidate) continue
+      if (!candidate) {
+        rates = null
+        break
+      }
       rates = rates ? highestRates(rates, candidate) : candidate
     }
     if (rates) prices[model] = rates
