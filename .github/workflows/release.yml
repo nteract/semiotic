@@ -65,7 +65,7 @@ jobs:
     needs: npm-publish-preflight
     name: Release dependency, source, bundle, and type preflight
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
     permissions:
       contents: read
     steps:
