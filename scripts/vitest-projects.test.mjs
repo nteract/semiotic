@@ -32,20 +32,48 @@ test("Vitest discovery excludes Node test suites while retaining script unit tes
   }
 })
 
-test("confinement runs in its own worker group without losing or duplicating shard coverage", async () => {
+test("heavy physics simulations run serially without losing or duplicating shard coverage", async () => {
   const ctx = await createVitest("test", { root, config, watch: false })
   try {
     const specs = await ctx.globTestSpecifications()
     const paths = specs.map((spec) => spec.moduleId).sort()
     assert.equal(new Set(paths).size, paths.length)
 
-    const confinement = specs.filter((spec) =>
-      spec.moduleId.endsWith("/PhysicsConfinement.test.ts")
+    const simulationPaths = [
+      resolve(root, "src/components/stream/physics/PhysicsConfinement.test.ts"),
+      resolve(
+        root,
+        "src/components/stream/physics/PhysicsReducedMotionSettle.test.ts"
+      ),
+      resolve(root, "src/components/charts/physics/EventDropLiveRuntime.test.ts"),
+      resolve(root, "src/components/charts/physics/PhysicsReducedMotion.test.tsx"),
+      resolve(root, "src/components/charts/physics/PhysicsCharts.server.test.tsx"),
+      resolve(root, "docs/src/pages/examples/emitterPlaygroundModel.test.ts")
+    ].sort()
+    const simulations = specs.filter((spec) =>
+      simulationPaths.includes(spec.moduleId)
     )
-    assert.equal(confinement.length, 1)
-    const project = confinement[0].project
+    assert.deepEqual(
+      simulations.map((spec) => spec.moduleId).sort(),
+      simulationPaths
+    )
+    const project = simulations[0].project
+    assert(simulations.every((spec) => spec.project === project))
+    assert.equal(project.name, "physics-simulations")
+    assert.deepEqual(
+      specs
+        .filter((spec) => spec.project === project)
+        .map((spec) => spec.moduleId)
+        .sort(),
+      simulationPaths
+    )
     assert.equal(project.config.maxWorkers, 1)
     assert.equal(project.config.fileParallelism, false)
+    assert.equal(project.config.testTimeout, 60_000)
+    assert.equal(
+      ctx.projects.find((p) => p.name === "unit").config.testTimeout,
+      5_000
+    )
     assert(specs.some((spec) => spec.project !== project))
     assert(
       specs.every(

@@ -43,14 +43,37 @@ export interface SyntheticArrival {
   arrivalTime: number
 }
 
+export interface SyntheticEmitterLimits {
+  /** Stop at this simulated millisecond, including arrivals at the boundary. */
+  durationMs?: number
+  /** Maximum number of arrivals across all sources, including tied arrivals. */
+  maxEvents?: number
+}
+
 interface SourceCursor {
   spec: SyntheticSourceSpec
-  random: () => number
+  random: ReturnType<typeof mulberry32>
   remaining: number
   remainingError: number
   burstRemaining: number
   sequence: number
   interval: number
+}
+
+/** Portable progress; restore against the same source specs, seed and limits. */
+export interface SyntheticEmitterSnapshot {
+  version: 1
+  time: number
+  timeError: number
+  emitted: number
+  sources: Array<{
+    id: string
+    randomState: number
+    remaining: number
+    remainingError: number
+    burstRemaining: number
+    sequence: number
+  }>
 }
 
 function positive(value: number, name: string): number {
@@ -182,13 +205,84 @@ function elapse(source: SourceCursor, elapsed: number): void {
  */
 export function createSyntheticEmitter(
   spec: readonly SyntheticSourceSpec[],
-  seed = 1
+  seed = 1,
+  limits: SyntheticEmitterLimits = {}
 ) {
   const sources = makeSources(spec, seed)
+  for (const [name, value] of Object.entries(limits)) {
+    if (value !== undefined && (!Number.isFinite(value) || value < 0))
+      throw new RangeError(`${name} must be finite and nonnegative`)
+  }
+  if (limits.maxEvents !== undefined && !Number.isSafeInteger(limits.maxEvents))
+    throw new RangeError("maxEvents must be a safe integer")
+  const duration = limits.durationMs ?? Infinity
+  const maximum = limits.maxEvents ?? Infinity
+  let emitted = 0
   let time = 0
   let timeError = 0
+  const isComplete = () =>
+    sources.length === 0 || time >= duration || emitted >= maximum
   return {
     getTime: () => time,
+    getEmittedCount: () => emitted,
+    isComplete,
+    snapshot: (): SyntheticEmitterSnapshot => ({
+      version: 1,
+      time,
+      timeError,
+      emitted,
+      sources: sources.map((source) => ({
+        id: source.spec.id,
+        randomState: source.random.getState(),
+        remaining: source.remaining,
+        remainingError: source.remainingError,
+        burstRemaining: source.burstRemaining,
+        sequence: source.sequence
+      }))
+    }),
+    restore(snapshot: SyntheticEmitterSnapshot): void {
+      // Validate the entire snapshot before changing any cursor.
+      if (
+        snapshot.version !== 1 ||
+        !Number.isFinite(snapshot.time) ||
+        snapshot.time < 0 ||
+        snapshot.time > duration ||
+        !Number.isFinite(snapshot.timeError) ||
+        !Number.isSafeInteger(snapshot.emitted) ||
+        snapshot.emitted < 0 ||
+        snapshot.emitted > maximum ||
+        snapshot.sources.length !== sources.length ||
+        snapshot.sources.some(
+          (saved, index) =>
+            saved.id !== sources[index].spec.id ||
+            !Number.isInteger(saved.randomState) ||
+            saved.randomState < 0 ||
+            saved.randomState > 0xffffffff ||
+            !Number.isFinite(saved.remaining) ||
+            saved.remaining < 0 ||
+            !Number.isFinite(saved.remainingError) ||
+            !Number.isSafeInteger(saved.sequence) ||
+            saved.sequence < 0 ||
+            !Number.isSafeInteger(saved.burstRemaining) ||
+            saved.burstRemaining < 0 ||
+            saved.burstRemaining >= (sources[index].spec.burst?.max ?? 1)
+        ) ||
+        snapshot.sources.reduce((sum, source) => sum + source.sequence, 0) !==
+          snapshot.emitted
+      )
+        throw new RangeError(
+          "Invalid or incompatible synthetic emitter snapshot"
+        )
+      time = snapshot.time
+      timeError = snapshot.timeError
+      emitted = snapshot.emitted
+      snapshot.sources.forEach((saved, index) => {
+        const { id: _id, randomState, ...progress } = saved
+        Object.assign(sources[index], progress, {
+          random: mulberry32(randomState)
+        })
+      })
+    },
     advance(
       deltaMs: number,
       options: {
@@ -200,7 +294,8 @@ export function createSyntheticEmitter(
       if (!Number.isFinite(deltaMs) || deltaMs < 0)
         throw new RangeError("deltaMs must be finite and nonnegative")
       const rate = positive(options.rate ?? 1, "rate")
-      if (options.paused || deltaMs === 0) return []
+      if (options.paused || deltaMs === 0 || isComplete()) return []
+      deltaMs = Math.min(deltaMs, duration - time)
       const events: SyntheticArrival[] = []
       const active = sources.filter(
         (source) => options.active?.[source.spec.id] !== false
@@ -231,9 +326,17 @@ export function createSyntheticEmitter(
         remainingMs = Math.max(0, deltaMs - elapsed)
         const arrivalTime = time + Math.min(deltaMs, elapsed)
         // Drain tied arrivals at the end of a step in source declaration order.
-        for (const source of active)
-          if (source === next || source.remaining / rate <= tolerance)
+        for (const source of active) {
+          if (source === next || source.remaining / rate <= tolerance) {
             events.push(emit(source, arrivalTime))
+            emitted++
+            if (emitted >= maximum) break
+          }
+        }
+        if (emitted >= maximum) {
+          deltaMs = elapsed
+          break
+        }
       }
       const adjusted = deltaMs - timeError
       const total = time + adjusted

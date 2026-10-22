@@ -1,0 +1,156 @@
+import * as React from "react"
+import { act, cleanup, render } from "@testing-library/react"
+import { afterEach, beforeEach, expect, it } from "vitest"
+import { renderToStaticMarkup } from "react-dom/server"
+import { setupCanvasMock } from "../../../test-utils/canvasMock"
+import { EventDropChart } from "./EventDropChart"
+import type { EventDropChartHandle } from "./useEventDropHandle"
+
+let restoreCanvas: () => void
+beforeEach(() => {
+  restoreCanvas = setupCanvasMock({ stubRaf: "noop" })
+})
+afterEach(() => {
+  cleanup()
+  restoreCanvas()
+})
+
+it("admits push rows incrementally and restores the same store and history", () => {
+  const ref = React.createRef<EventDropChartHandle>()
+  render(<EventDropChart ref={ref} live arrival="drop" timeUnit="s" paused />)
+  const handle = ref.current!
+  const store = handle.getStore()!
+  act(() => handle.push({ id: "a", time: 2 }))
+  expect(handle.getLedger()).toEqual([])
+  const admit = () =>
+    act(() => {
+      store.setPaused(false)
+      store.tick(1 / 120)
+      store.setPaused(true)
+    })
+  admit()
+  expect(handle.getLedger()).toMatchObject([{ accepted: 1, late: 0 }])
+  const saved = handle.snapshot()!
+  act(() => handle.push({ id: "b", time: 20 }))
+  admit()
+  expect(handle.getLedger()).toHaveLength(2)
+  act(() => handle.restore(saved))
+  expect(handle.getStore()).toBe(store)
+  expect(handle.getLedger()).toMatchObject([{ accepted: 1, late: 0 }])
+  expect(handle.getData().map((d) => d.id)).toEqual(["a"])
+  expect(() => handle.update("a", (d) => ({ ...d, time: 4 }))).toThrow(
+    /immutable/
+  )
+  act(() => handle.clear())
+  expect(handle.getLedger()).toEqual([])
+  expect(handle.getData()).toEqual([])
+})
+
+it("keeps supplied data authoritative and replaces it without preserving old admissions", () => {
+  const ref = React.createRef<EventDropChartHandle>()
+  const { rerender } = render(
+    <EventDropChart ref={ref} live data={[{ id: "seed", time: 1 }]} paused />
+  )
+  act(() => ref.current!.push({ id: "ignored", time: 1 }))
+  expect(ref.current!.getData().map((d) => d.id)).toEqual(["seed"])
+  rerender(
+    <EventDropChart
+      ref={ref}
+      live
+      data={[{ id: "replacement", time: 21 }]}
+      paused
+    />
+  )
+  expect(ref.current!.getData().map((d) => d.id)).toEqual(["replacement"])
+  expect(ref.current!.getLedger()).toMatchObject([{ start: 20, accepted: 1 }])
+})
+
+it("reports the effective live speed once and preserves bodies when speed changes", () => {
+  const ref = React.createRef<EventDropChartHandle>()
+  render(
+    <EventDropChart
+      ref={ref}
+      live
+      timeScale={2}
+      frameProps={{ config: { timeScale: 3 } }}
+      paused
+    />
+  )
+  expect(ref.current!.getClock().timeScale).toBe(6)
+  act(() => ref.current!.setTimeScale(4))
+  expect(ref.current!.getClock().timeScale).toBe(4)
+})
+
+it("counts queued and evicted travellers as emitted until their handoff", () => {
+  const ref = React.createRef<EventDropChartHandle>()
+  render(
+    <EventDropChart
+      ref={ref}
+      live
+      paused
+      timeUnit="s"
+      sources={[{ id: "a", label: "A" }]}
+      arrival={{ mode: "travel", durationMs: 1000 }}
+      frameProps={{ config: { bodyLimit: 0 } }}
+    />
+  )
+  act(() => ref.current!.push({ id: "traveller", time: 2, source: "a" }))
+  expect(ref.current!.getSourceStats("a")).toEqual({
+    emitted: 1,
+    accepted: 0,
+    late: 0,
+    inFlight: 1
+  })
+  const store = ref.current!.getStore()!
+  act(() => {
+    store.setPaused(false)
+    store.tick(1 / 60)
+  })
+  expect(store.liveBodyCount()).toBe(0)
+  expect(ref.current!.getSourceStats("a")).toEqual({
+    emitted: 1,
+    accepted: 0,
+    late: 0,
+    inFlight: 1
+  })
+  act(() => {
+    for (let i = 0; i < 60; i++) store.tick(1 / 60)
+  })
+  expect(ref.current!.getSourceStats("a")).toEqual({
+    emitted: 1,
+    accepted: 1,
+    late: 0,
+    inFlight: 0
+  })
+})
+
+it("server-renders an empty live board without running unbounded sources", () => {
+  const html = renderToStaticMarkup(
+    <EventDropChart
+      live
+      emitters={{ sources: [{ id: "p", ratePerSec: 10 }] }}
+      sources={[{ id: "p", label: "Producer" }]}
+      title="Live stream"
+    />
+  )
+  expect(html).toContain("Live stream")
+  expect(html).toContain("Producer")
+  expect(html).toContain('data-testid="event-drop-window-overlay"')
+  const document = new DOMParser().parseFromString(html, "text/html")
+  expect(
+    document
+      .querySelector('[id$="-data-area"]')!
+      .querySelectorAll("circle,rect,path")
+  ).toHaveLength(0)
+})
+
+it("requires live push mode for built-in emitters", () => {
+  expect(() =>
+    renderToStaticMarkup(<EventDropChart emitters={{ sources: [] }} />)
+  ).toThrow(/live mode/)
+  expect(() =>
+    renderToStaticMarkup(
+      <EventDropChart live data={[]} emitters={{ sources: [] }} />
+    )
+  ).toThrow(/omit data/)
+})

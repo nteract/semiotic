@@ -66,6 +66,7 @@ interface PhysicsSemanticNavigationOptions {
 }
 
 export interface PhysicsSemanticNavigationResult {
+  keyboardOwnsFocus: MutableRefObject<boolean>
   clearSemanticFocus: () => void
   resolveSemanticBody: (body: PhysicsBodyState) => PhysicsBodyState
   clearHover: () => void
@@ -104,6 +105,7 @@ export function usePhysicsSemanticNavigation({
   storeRef
 }: PhysicsSemanticNavigationOptions): PhysicsSemanticNavigationResult {
   const semanticFocusIndexRef = useRef(-1)
+  const keyboardOwnsFocus = useRef(false)
   const [focusedSemanticItem, setFocusedSemanticItem] =
     useState<PhysicsSemanticItem | null>(null)
   const [hoverData, setHoverData] = useState<PhysicsHoverData | null>(null)
@@ -158,7 +160,10 @@ export function usePhysicsSemanticNavigation({
         simulationState,
         bodySemanticItems,
         bodySemanticItemLimit
-      )
+      ).map((item) => {
+        const camera = storeRef.current?.viewTransform() ?? { x: 0, y: 0 }
+        return { ...item, x: item.x + camera.x, y: item.y + camera.y }
+      })
       setBodySemanticItemsSnapshot((current) =>
         semanticItemsChanged(current, next) ? next : current
       )
@@ -168,13 +173,15 @@ export function usePhysicsSemanticNavigation({
       bodySemanticItems,
       bodySemanticUpdateMs,
       logicalClockRef,
-      setBodySemanticItemsSnapshot
+      setBodySemanticItemsSnapshot,
+      storeRef
     ]
   )
 
   const focusSemanticItem = useCallback(
     (index: number) => {
       if (!allSemanticItems.length) return
+      keyboardOwnsFocus.current = true
       const nextIndex = Math.max(
         0,
         Math.min(index, allSemanticItems.length - 1)
@@ -190,7 +197,10 @@ export function usePhysicsSemanticNavigation({
           .find((candidate) => candidate.id === item.bodyId)
         if (body) {
           const currentBody = resolveSemanticBody(body)
-          const hover = physicsHoverData(currentBody)
+          const hover = physicsHoverData(
+            currentBody,
+            storeRef.current.viewTransform()
+          )
           hoverDataRef.current = hover
           setHoverData(hover)
           onBodyHover?.(currentBody, hover)
@@ -211,7 +221,9 @@ export function usePhysicsSemanticNavigation({
   )
 
   const clearSemanticFocus = useCallback(() => {
-    if (semanticFocusIndexRef.current < 0 && focusedBodyIdRef.current === null) return
+    keyboardOwnsFocus.current = false
+    if (semanticFocusIndexRef.current < 0 && focusedBodyIdRef.current === null)
+      return
     semanticFocusIndexRef.current = -1
     focusedBodyIdRef.current = null
     setFocusedSemanticItem(null)
@@ -234,21 +246,32 @@ export function usePhysicsSemanticNavigation({
         event.currentTarget,
         event.clientX,
         event.clientY,
-        margin
+        margin,
+        store?.viewTransform()
       )
       const hit = store ? store.hitTest(x, y, Math.max(16, hoverRadius)) : null
       const body = hit ? resolveSemanticBody(hit) : null
       onBodyPointerDown?.(body, event)
       if (body) {
-        emitObservation("click", { datum: body.datum, x: body.x, y: body.y })
+        const camera = store!.viewTransform()
+        emitObservation("click", {
+          datum: body.datum,
+          x: body.x + camera.x,
+          y: body.y + camera.y
+        })
         emitObservation("activate", {
           datum: body.datum,
           inputType: event.pointerType === "touch" ? "touch" : "pointer"
         })
-        onClick?.(body.datum ?? null, { x: body.x, y: body.y, body })
+        onClick?.(body.datum ?? null, {
+          x: body.x + camera.x,
+          y: body.y + camera.y,
+          body
+        })
       } else {
         emitObservation("click-end")
-        onClick?.(null, { x, y, body: null })
+        const camera = store?.viewTransform() ?? { x: 0, y: 0 }
+        onClick?.(null, { x: x + camera.x, y: y + camera.y, body: null })
         clearHover()
       }
     },
@@ -295,7 +318,10 @@ export function usePhysicsSemanticNavigation({
           .readBodies()
           .find((candidate) => candidate.id === item.bodyId)
         if (body) {
-          const hover = physicsHoverData(resolveSemanticBody(body))
+          const hover = physicsHoverData(
+            resolveSemanticBody(body),
+            storeRef.current.viewTransform()
+          )
           setHoverData((previous) =>
             previous?.id === hover.id &&
             previous.data === hover.data &&
@@ -325,8 +351,10 @@ export function usePhysicsSemanticNavigation({
       if (event.key === "Escape") {
         event.preventDefault()
         if (hoverDataRef.current) clearHover()
-        else if (semanticFocusIndexRef.current >= 0) emitObservation("hover-end")
+        else if (semanticFocusIndexRef.current >= 0)
+          emitObservation("hover-end")
         clearSemanticFocus()
+        keyboardOwnsFocus.current = true
         return
       }
       if (
@@ -400,6 +428,7 @@ export function usePhysicsSemanticNavigation({
   )
 
   return {
+    keyboardOwnsFocus,
     clearSemanticFocus,
     resolveSemanticBody,
     clearHover,

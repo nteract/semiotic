@@ -9,9 +9,7 @@ import type {
   PhysicsSensorObservationConfig,
   PhysicsSpawnPacingOptions
 } from "./PhysicsPipelineStore"
-import type {
-  PhysicsSedimentBinSnapshot,
-} from "./PhysicsSediment"
+import type { PhysicsSedimentBinSnapshot } from "./PhysicsSediment"
 
 export type PhysicsExecution = "auto" | "worker" | "sync"
 
@@ -40,6 +38,8 @@ export type PhysicsWorkerPipelineConfig = Omit<
 }
 
 export interface PhysicsWorkerState {
+  nextSequence?: number
+  emitterProgress?: import("../../recipes/syntheticArrivals").SyntheticEmitterSnapshot
   accumulator: number
   activeSensorPairs: string[]
   elapsedSeconds: number
@@ -49,7 +49,14 @@ export interface PhysicsWorkerState {
   visible: boolean
 }
 
+export type PhysicsWorkerStructure = Pick<
+  PhysicsPipelineSnapshot,
+  "world" | "queue" | "liveBodyOrder" | "sediment"
+>
+
 export interface PhysicsWorkerFrame {
+  live?: import("../../charts/physics/EventDropLiveRuntime").EventDropLiveDelta
+  structure?: PhysicsWorkerStructure
   bodies: PhysicsBodyState[]
   ids: string[]
   positions: Float32Array
@@ -60,6 +67,8 @@ export interface PhysicsWorkerFrame {
   velocities: Float32Array
   sleepTimes?: Float32Array
   previousPositions?: Float32Array
+  /** Travel progress stays exact when a worker hands simulation back to sync. */
+  travelElapsed?: Float64Array
   state?: PhysicsWorkerState
 }
 
@@ -170,8 +179,7 @@ function workerObservationConfig(
     chartId: observation.chartId,
     chartType: observation.chartType,
     sensors: observation.sensors as
-      Record<string, PhysicsSensorObservationConfig>
-      | undefined
+      Record<string, PhysicsSensorObservationConfig> | undefined
   }
 }
 
@@ -191,6 +199,15 @@ export function isPhysicsWorkerConfigSupported(
   if (!config) return true
   return (
     !config.engine &&
+    (!config.emitters ||
+      config.emitters.sources.every(
+        (source) => typeof source.jitter !== "function"
+      )) &&
+    (!config.eventDrop ||
+      (typeof config.eventDrop.watermark !== "function" &&
+        !config.eventDrop.watermark?.external &&
+        (config.eventDrop.arrival === "drop" ||
+          typeof config.eventDrop.arrival?.path !== "function"))) &&
     isSerializableSedimentConfig(config.sediment) &&
     isSerializableColliderConfig(config.colliders)
   )
@@ -272,6 +289,7 @@ export function physicsWorkerFrameTransferables(
     frame.velocities.buffer,
     frame.sleeping.buffer,
     ...(frame.sleepTimes ? [frame.sleepTimes.buffer] : []),
+    ...(frame.travelElapsed ? [frame.travelElapsed.buffer] : []),
     ...(frame.previousPositions ? [frame.previousPositions.buffer] : [])
   ] as Transferable[]
 }

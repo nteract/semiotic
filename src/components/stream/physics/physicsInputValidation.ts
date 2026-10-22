@@ -5,6 +5,7 @@ import type {
   PhysicsKernelSnapshot,
   PhysicsSpringSpec
 } from "./PhysicsKernel"
+import { validatePhysicsTravel } from "./physicsBodyTravel"
 import type {
   PhysicsPipelineConfig,
   PhysicsPipelineSnapshot,
@@ -27,12 +28,17 @@ function array(value: unknown, field: string): asserts value is unknown[] {
 function stringArray(value: unknown, field: string): void {
   array(value, field)
   for (const item of value) {
-    if (typeof item !== "string") throw new RangeError(`${field} must contain strings`)
+    if (typeof item !== "string")
+      throw new RangeError(`${field} must contain strings`)
   }
 }
 
 export function validatePhysicsBody(spec: PhysicsBodySpec): void {
-  if (!spec || !spec.shape || (spec.shape.type !== "circle" && spec.shape.type !== "aabb"))
+  if (
+    !spec ||
+    !spec.shape ||
+    (spec.shape.type !== "circle" && spec.shape.type !== "aabb")
+  )
     throw new RangeError("Physics bodies require a circle or aabb shape")
   const label = `Physics body ${spec.id}`
   finite(spec.x, `${label}.x`)
@@ -41,6 +47,11 @@ export function validatePhysicsBody(spec: PhysicsBodySpec): void {
     if (spec[key] != null) finite(spec[key], `${label}.${key}`)
   }
   if (spec.mass != null) positive(spec.mass, `${label}.mass`)
+  if (spec.travel) {
+    validatePhysicsTravel(spec.travel)
+    if (spec.fixedPosition)
+      throw new RangeError("Physics travel cannot use fixedPosition")
+  }
   if (spec.shape.type === "circle")
     positive(spec.shape.radius, `${label}.radius`)
   else {
@@ -71,7 +82,10 @@ export function validatePhysicsColliders(
   colliders: PhysicsColliderSpec[]
 ): void {
   for (const collider of colliders) {
-    if (!collider?.shape || (collider.shape.type !== "segment" && collider.shape.type !== "aabb"))
+    if (
+      !collider?.shape ||
+      (collider.shape.type !== "segment" && collider.shape.type !== "aabb")
+    )
       throw new RangeError("Physics colliders require a segment or aabb shape")
     const shape = collider.shape
     if (shape.type === "segment") {
@@ -129,6 +143,10 @@ export function validatePhysicsPipelineConfig(
   config: PhysicsPipelineConfig
 ): void {
   if (config.kernel) validatePhysicsOptions(config.kernel)
+  if (config.viewTransform) {
+    finite(config.viewTransform.x, "Physics viewTransform.x")
+    finite(config.viewTransform.y, "Physics viewTransform.y")
+  }
   if (config.colliders) validatePhysicsColliders(config.colliders)
   if (config.fixedDt != null) positive(config.fixedDt, "Physics fixedDt")
   for (const key of [
@@ -160,7 +178,14 @@ export function validatePhysicsPipelineSnapshot(
       for (const name of ["x", "y", "value"] as const) {
         const stats = bin[name]
         if (!stats) throw new RangeError("Physics sediment requires statistics")
-        for (const key of ["count", "total", "mean", "min", "max", "variance"] as const)
+        for (const key of [
+          "count",
+          "total",
+          "mean",
+          "min",
+          "max",
+          "variance"
+        ] as const)
           finite(stats[key], `Physics sediment.${name}.${key}`)
       }
     }
@@ -173,4 +198,13 @@ export function validatePhysicsPipelineSnapshot(
   }
   finite(snapshot.elapsedSeconds, "Physics elapsedSeconds")
   finite(snapshot.accumulator, "Physics accumulator")
+  if (
+    snapshot.nextSequence != null &&
+    (!Number.isSafeInteger(snapshot.nextSequence) ||
+      snapshot.nextSequence < 0 ||
+      snapshot.queue.some((spawn) => spawn.sequence >= snapshot.nextSequence!))
+  )
+    throw new RangeError(
+      "Physics nextSequence must exceed queued sequence numbers"
+    )
 }

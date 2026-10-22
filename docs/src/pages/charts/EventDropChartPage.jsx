@@ -1,4 +1,5 @@
 import React from "react"
+import { Link } from "react-router-dom"
 import { EventDropChart } from "semiotic/physics"
 
 import ComponentMeta from "../../components/ComponentMeta"
@@ -18,6 +19,9 @@ const eventDropData = [
 ]
 
 const eventDropChartProps = [
+  { name: "live", type: "boolean | object", default: "false", description: 'React continuous mode: true or { follow: "watermark" | "now", horizon, retain }. Times use timeUnit, which defaults to seconds in live mode. Retires old bodies while preserving historical counts.' },
+  { name: "emitters", type: "object", description: "Fixed-step producers in live push mode: { sources, seed?, rate?, active?, paused?, durationMs?, maxEvents? }. Omit data. Supports sync and worker execution and frame snapshots." },
+  { name: "arrival", type: "string | object", default: '"drop"', description: 'Source choreography: "drop" or { mode: "travel", durationMs?: 800, speedPxPerSec?, path?: "straight" | "connector" | callback, history?: "present" | "travel" }. History defaults to present; travel animates every row. Choose duration or speed. Requires a visible source and the built-in engine.' },
   { name: "sources", type: "array", description: "Source identities with id, label, color, mark, glyph, active and visible. Historical counts remain when a tile is hidden." },
   { name: "sourceAccessor", type: "string | function", default: '"source"', description: "Field identifying an event's source." },
   { name: "sourceRail", type: "object", description: "{ side: left | top | none, tileSize? }. Use top for a narrow board." },
@@ -25,7 +29,7 @@ const eventDropChartProps = [
   { name: "timeUnit", type: '"ms" | "s"', description: "Explicit arrival-time units. Omitted infers ms above an absolute timestamp of 100000; use explicit units for stable streaming behavior." },
   { name: "onLedgerChange", type: "function", description: "Receives admission ledger rows, on lifecycle transitions or at most every 500ms during accumulation." },
   { name: "onWatermarkChange", type: "function", description: "Receives (value, previous) on watermark advances." },
-  { name: "onClockTick", type: "function", description: "Simulation clock HUD callback, at most 10Hz. Uses synchronous execution." },
+  { name: "onClockTick", type: "function", description: "Simulation clock HUD callback, at most 10Hz, in sync and worker execution." },
   { name: "clockTickMs", type: "number", default: "100", description: "Minimum milliseconds between clock HUD callbacks; minimum 100." },
   { name: "windowChrome", type: "object", description: "{ show?, fill? }. Hide window paint without removing colliders, or supply a color / ledger-row fill callback." },
   { name: "data", type: "array", required: true, default: null, description: "Event rows with event and arrival times." },
@@ -157,7 +161,51 @@ const counts = readEventDropOccupancy(metadata, controls.readBodies())
 // sum(accepted) + late + inFlight === total
 // total covers materialized bodies; queued arrivals are not included.`} />
 
-      <h2 id="props">Props</h2>
+      <h2 id="arrival-travel">Travel from source to board</h2>
+      <p>
+        <Link to="/examples/emitter-playground">Try the single-emitter playground</Link>
+        {" "}to pause a journey, turn the source on and off, and send an older event
+        toward a closed window.
+      </p>
+      <p>
+        Set <code>arrival={"{ mode: \"travel\", durationMs: 800, path: \"connector\" }"}</code>
+        {" "}to move events from their source tiles before releasing them to gravity.
+        Arrival times still mean board entry. Finite replay starts early enough to
+        show the first journey; timeScale speeds up both travel and arrival pacing.
+        Choose durationMs (milliseconds in either timeUnit) or speedPxPerSec,
+        a speed ceiling that derives one shared duration from the longest path.
+        A constant duration preserves arrival ties across sources.
+      </p>
+      <CodeBlock language="tsx" code={`<EventDropChart
+  data={[
+    { id: "newer", source: "p1", time: 35, arrivalTime: 0 },
+    { id: "older", source: "p2", time: 5, arrivalTime: 0.25 }
+  ]}
+  sources={[{ id: "p1", label: "P1" }, { id: "p2", label: "P2" }]}
+  sourceRail={{ side: "top" }}
+  arrival={{ mode: "travel", durationMs: 2000, path: "straight" }}
+  timeUnit="s"
+  windows={{ size: 10 }}
+  watermark={{ delay: 100 }}
+  title="Out-of-order events"
+  description="P2 emits later and travels toward an older event-time window."
+/>`} />
+      <p>
+        React paths may be callbacks returning finite points, including the supplied
+        source and destination endpoints. The compiled path runs in the built-in
+        kernel on both sync and worker execution. Travelling bodies ignore contacts
+        and sensors and count as inFlight. Their tooltip/style datum carries
+        __phase: travel, board, late, or settled. Reduced motion and server rendering
+        show the same settled board as drop mode. Replay projection totals still
+        describe all supplied rows, regardless of animation progress.
+      </p>
+      <p>
+        Historical admissions already beneath closed lids, or recorded rejections
+        whose lids have reopened, appear directly in their containers. Rows without
+        a visible source tile use ordinary drops. A resize preserves elapsed travel;
+        admitted bodies stay on the board. Imperative pushes begin their journey
+        immediately; scheduling an unbounded stream remains application-owned.
+      </p>
       <h2 id="sources-and-accounting">Sources and admission accounting</h2>
       <p>
         Source tiles are keyboard accessible and can use circle, square, triangle,
@@ -207,11 +255,133 @@ const events = Array.from({ length: 60 }, () => stream.next().value!)
         watermark policy also supports perSource, idleTimeout and allowedLateness.
         Replay charts evaluate those policies at arrival checkpoints.
       </p>
+      <h2 id="continuous-streams">Continuous streams</h2>
       <p>
-        These APIs provide deterministic replay and accounting. The following-camera
-        live board, window retirement, travel choreography, and parameter reflow
-        remain work in the transition plan. Keep application-driven demonstrations
-        bounded until that runtime is available.
+        Enable <code>live</code> for incremental admission and a moving board.
+        Events enter the ledger when their source-to-board journey finishes.
+        Old bodies and window colliders retire as the camera advances; historical
+        counts stay in <code>getLedger()</code> and the accessible table.
+        Omit <code>data</code> to accept ref pushes or built-in emitters.
+      </p>
+      <CodeBlock language="tsx" code={`import { useRef } from "react"
+import { EventDropChart } from "semiotic/physics"
+import type { EventDropChartHandle } from "semiotic/physics"
+
+function LiveStream() {
+  const chart = useRef<EventDropChartHandle>(null)
+  return <EventDropChart
+    ref={chart}
+    live={{ follow: "now", horizon: 5, retain: 15 }}
+    emitters={{ sources: [{ id: "p1", ratePerSec: 3 }], seed: 42 }}
+    sources={[{ id: "p1", label: "Producer", color: "#2563eb" }]}
+    arrival={{ mode: "travel", path: "connector", durationMs: 700 }}
+    windows={{ size: 2.5 }}
+    watermark={{ delay: 1 }}
+    timeUnit="s"
+    frameProps={{ simulationExecution: "worker", config: { bodyLimit: 160 } }}
+    title="A continuous event stream"
+    description="Events travel into time windows; old bodies retire and counts remain."
+    accessibleTable
+  />
+}`} />
+      <p>
+        <code>live=true</code> follows the watermark with a one-window horizon
+        and eight windows of retained history. Explicit <code>timeExtent[0]</code>
+        supplies a timestamp origin. Live mode defaults to seconds; emitter
+        intervals, jitter and duration limits always use milliseconds.
+        <code>timeScale</code> scales the shared live clock. Pause freezes travel,
+        sources, watermark polling and the camera together.
+      </p>
+      <p>
+        Source <code>active</code> flags gate built-in emitters; an explicit
+        <code>emitters.active</code> entry takes precedence. Rate, source activity,
+        speed, watermark policy and size can update during a run. Source schedules,
+        seed and limits belong to the run. Changing window size, units or timestamp
+        origin requires a new React <code>key</code>; reflow is not implemented.
+        Supplied data arrays remain authoritative, and imperative corrections to
+        live admissions require clearing and replaying the run.
+      </p>
+      <p>
+        <code>chart.current.snapshot()</code> captures bodies, pending travel,
+        historical counts, clock and built-in emitter progress.
+        <code>chart.current.restore(saved)</code> restores that state, including
+        random generators and pause state. Structured-cloneable configurations
+        work in workers; callback jitter, watermark or travel paths select sync.
+        The <Link to="/examples/emitter-playground">playground</Link> includes
+        snapshot controls, a three-source comparison and reduced-motion batches.
+      </p>
+      <p>
+        Live mode bounds bodies and colliders, not the historical ledger, which
+        keeps one row per observed window. Serialized server/MCP rendering requires
+        finite replay data and rejects live programs. React SSR draws the initial
+        live board without advancing its producers. Export a saved store through
+        <code>unstable_renderPhysicsSettledSVG(store, {"{ maxSteps: 0 }"})</code>
+        from <code>semiotic/experimental</code> to preserve the current camera
+        and body positions.
+      </p>
+      <h2 id="clock-driven-emitters">Clock-driven emitters</h2>
+      <p>
+        <code>useEmitters(ref, specs, options)</code> connects a synthetic source to a
+        push-mode chart. Spread its <code>frameProps</code> onto the chart and omit
+        <code> data</code>. It uses simulated time, keeps an empty frame running, and
+        stops emission while the chart is paused or hidden. See the{" "}
+        <Link to="/examples/emitter-playground">interactive emitter playground</Link>{" "}
+        for regular, jittered and bursty producers with live rate and speed controls.
+      </p>
+      <CodeBlock language="tsx" code={`import { useRef } from "react"
+import { EventDropChart, useEmitters } from "semiotic/physics"
+import type { EventDropChartHandle } from "semiotic/physics"
+
+function Producer({ active = true, rate = 1, paused = false }) {
+  const ref = useRef<EventDropChartHandle>(null)
+  const emitters = useEmitters(ref, [{ id: "p1", ratePerSec: 2 }], {
+    seed: 42,
+    durationMs: 24000,
+    maxEvents: 96,
+    rate,
+    active: { p1: active },
+    mapArrival: (event) => ({ ...event, time: event.eventTime })
+  })
+  return <EventDropChart
+    ref={ref}
+    timeUnit="ms"
+    timeExtent={[0, 24000]}
+    windows={{ size: 5000 }}
+    watermark={{ delay: 3000 }}
+    sources={[{ id: "p1", label: "Producer", active }]}
+    paused={paused}
+    frameProps={emitters.frameProps}
+    title="A bounded event stream"
+  />
+}`} />
+      <p>
+        Specs, seed, duration and maximum event count are captured on mount; remount
+        the producer for a new run. Rate and active flags update without restarting
+        ids or the remaining interval. A source switched off does not catch up when
+        enabled again. Limits bound total generated events, not retained chart memory.
+        The pure <code>createSyntheticEmitter</code> accepts the same limits as its
+        third argument.
+      </p>
+      <p>
+        The hook uses synchronous <code>onTick</code>. Pass an observer through its
+        <code> options.onTick</code> to run after emission. For reduced-motion controls,
+        set <code>manual: true</code> and call <code>advance(deltaMs)</code> explicitly.
+        Use the chart handle&apos;s <code>setTimeScale</code> to change simulation speed;
+        EventDrop&apos;s <code>timeScale</code> prop controls recorded replay pacing.
+        This hook keeps its emitter outside the frame. Save and restore its
+        <code>snapshot()</code> alongside the frame snapshot to rewind both;
+        restoring only the frame rebases the hook clock and keeps its sequence.
+        The pure emitter exposes the same snapshot/restore methods.
+      </p>
+      <p>
+        With arrival choreography, <code>history: "present"</code> is the default:
+        accepted history beneath closed lids and recorded rejections belonging to
+        currently open windows appear directly in their containers. The playground
+        uses <code>arrival={"{ mode: 'travel', history: 'travel', durationMs: 1200 }"}</code>{" "}
+        so every emitted row makes the full journey. Its admission reservations
+        assume equal travel durations and an unchanged watermark policy. Use
+        <code>live</code> with built-in <code>emitters</code> for admission at the
+        actual handoff, including worker execution.
       </p>
       <h2 id="physics-theme">Physics theme tokens</h2>
       <p>
@@ -230,6 +400,7 @@ const events = Array.from({ length: 60 }, () => stream.next().value!)
         Both settled SVG and animated exports preserve the built-in marks.
         diagnoseConfig warns when a declarative glyph's aspect ratio exceeds 1.5.
       </p>
+      <h2 id="props">Props</h2>
       <PropTable componentName="EventDropChart" props={eventDropChartProps} />
     </PageLayout>
   )

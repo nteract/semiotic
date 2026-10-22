@@ -39,6 +39,7 @@ const PREVIEW_COMPONENTS = {
   "rhetorical-crucible": MiniRhetoricalCruciblePreview,
   "latent-crucible": MiniLatentCruciblePreview,
   watermarks: MiniWatermarksPreview,
+  "emitter-playground": MiniWatermarksPreview,
   "chain-reaction": MiniChainReactionPreview,
   "stakeholder-journey": MiniStakeholderJourneyPreview,
   "merge-pressure": MiniMergePressurePreview,

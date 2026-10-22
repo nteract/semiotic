@@ -8,8 +8,49 @@ import { renderChartWithEvidence } from "./renderToStaticSVG"
 import { PhysicsPipelineStore } from "../stream/physics/PhysicsPipelineStore"
 import { buildPhysicsSettledScene } from "../stream/physics/PhysicsSettledScene"
 import { renderPhysicsFrame } from "./staticPhysics"
+import { auditAccessibility } from "../charts/shared/auditAccessibility"
+import { diagnoseConfig } from "../charts/shared/diagnoseConfig"
 
 describe("physics server configuration parity", () => {
+  it.each([{ live: true }, { emitters: { sources: [] } }])(
+    "rejects unbounded live programs in serialized static configs: %j",
+    (options) => {
+      expect(() => eventDropChart.buildProps(
+        [{ time: 1 }], undefined, undefined, { size: [400, 260] }, options
+      )).toThrow(/Live EventDrop requires React/)
+    }
+  )
+  it.each(["present", "travel"])("serializes travel with history=%s while preserving settled marks and evidence", (history) => {
+    const config = {
+      data: [
+        { id: "a", time: 25, arrivalTime: 0, source: "p1" },
+        { id: "b", time: 5, arrivalTime: 0.5, source: "p2" }
+      ],
+      sources: [{ id: "p1", label: "P1" }, { id: "p2", label: "P2" }],
+      sourceRail: { side: "top" },
+      timeUnit: "s", windows: { size: 10 }, watermark: { delay: 100 },
+      width: 600, height: 400, title: "Travel parity",
+      description: "Two sources send events to their event-time windows.",
+      summary: "Both events are accepted. The second event has the earlier event time."
+    }
+    const drop = renderChartWithEvidence("EventDropChart", config)
+    const travel = renderChartWithEvidence("EventDropChart", {
+      ...config, arrival: { mode: "travel", durationMs: 1000, history }
+    })
+    const travelConfig = { ...config, arrival: { mode: "travel", durationMs: 1000, history } }
+    expect(diagnoseConfig("EventDropChart", travelConfig).ok).toBe(true)
+    const audit = auditAccessibility("EventDropChart", travelConfig)
+    expect(audit.ok).toBe(true)
+    expect(audit.findings.find((finding) => finding.id === "flexible.sim-pause-control")?.status).toBe("warn")
+    expect(travel.evidence.markCount).toBeGreaterThanOrEqual(2)
+    expect(travel.evidence.empty).toBe(false)
+    const marks = (svg: string) => Array.from(svg.matchAll(/<circle[^>]+>/g), (match) => match[0])
+    expect(marks(travel.svg)).toEqual(marks(drop.svg))
+    const props = eventDropChart.buildProps(config.data, undefined, undefined, { size: [600, 400] }, {
+      ...config, arrival: { mode: "travel", durationMs: 1000, history }
+    })
+    expect(props.initialSpawns.every((spawn: { travel?: unknown }) => spawn.travel)).toBe(true)
+  })
   it.each([
     { chart: galtonBoardChart, pacing: { pacing: { ratePerSec: 55 } }, data: [{ value: 1 }, { value: 2 }] },
     { chart: unitPileChart, pacing: { pacing: { ratePerSec: 20 } }, data: [{ category: "A" }, { category: "B" }] },

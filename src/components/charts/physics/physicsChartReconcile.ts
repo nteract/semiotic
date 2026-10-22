@@ -4,10 +4,18 @@ import type {
   PhysicsQueuedSpawn
 } from "../../stream/physics/PhysicsPipelineStore"
 import type { PhysicsChartLayout } from "./physicsChartShared"
+import { physicsPhaseDatum, physicsBoardPhase } from "../../stream/physics/physicsBodyTravel"
+import type { EventDropSpawn } from "./eventDropArrival"
 
 function placementKey(spawn: PhysicsQueuedSpawn): string {
-  const { datum: _datum, spawnAt: _spawnAt, ...placement } = spawn
+  const { datum: _datum, spawnAt: _spawnAt, __eventDropSpawnTime: _pacingTime, ...placement } = spawn as EventDropSpawn
   return JSON.stringify(placement)
+}
+
+function boardPlacement(spawn: PhysicsQueuedSpawn): PhysicsQueuedSpawn {
+  if (!spawn.travel) return spawn
+  const { travel, ...rest } = spawn
+  return { ...rest, ...travel.points[travel.points.length - 1] }
 }
 
 /** Recompile geometry without replaying bodies whose placement is unchanged. */
@@ -25,6 +33,9 @@ export function reconcilePhysicsChart(
   const bodies = new Map(snapshot.world.bodies.map((body) => [body.id, body]))
   for (const [id, old] of before) {
     const candidate = after.get(id)
+    const admitted = bodies.has(id) && !bodies.get(id)?.travel
+    const oldPlacement = admitted ? boardPlacement(old) : old
+    const nextPlacement = candidate && admitted ? boardPlacement(candidate) : candidate
     const admissionChanged =
       candidate &&
       next.metadata?.kind === "event-drop" &&
@@ -40,12 +51,12 @@ export function reconcilePhysicsChart(
         JSON.stringify(next.metadata.windowPlot) &&
       (old.datum as { late?: boolean })?.late === false &&
       (candidate.datum as { late?: boolean })?.late === false &&
-      (bodies.get(id)?.y ?? -Infinity) >= candidate.y &&
-      placementKey({ ...old, y: candidate.y }) === placementKey(candidate)
+      (bodies.get(id)?.y ?? -Infinity) >= nextPlacement!.y &&
+      placementKey({ ...oldPlacement, y: nextPlacement!.y }) === placementKey(nextPlacement!)
     if (
       !candidate ||
       admissionChanged ||
-      (!retainUnderLid && placementKey(old) !== placementKey(candidate))
+      (!retainUnderLid && placementKey(oldPlacement) !== placementKey(nextPlacement!))
     )
       replaced.add(id)
   }
@@ -59,7 +70,10 @@ export function reconcilePhysicsChart(
       ...snapshot.world,
       bodies: snapshot.world.bodies.map((body) => ({
         ...body,
-        datum: after.get(body.id)?.datum ?? body.datum
+        datum: physicsPhaseDatum(
+          after.get(body.id)?.datum ?? body.datum,
+          body.travel ? "travel" : body.sleeping ? "settled" : physicsBoardPhase(body.datum)
+        )
       }))
     },
     queue: snapshot.queue.map((spawn) => ({
@@ -89,8 +103,29 @@ export function reconcilePhysicsChart(
   // until their source-time gap elapses again. Intentionally removed bodies
   // have neither a live body nor a queued arrival and remain absent.
   for (const spawn of next.initialSpawns) {
-    if (replaced.has(spawn.id) && bodies.has(spawn.id))
-      store.enqueue({ ...spawn, spawnAt: undefined })
+    if (replaced.has(spawn.id) && bodies.has(spawn.id)) {
+      const body = bodies.get(spawn.id)!
+      const replacement = { ...spawn, spawnAt: undefined }
+      if (spawn.travel) {
+        if (body.travel) {
+          replacement.travel = {
+            ...spawn.travel,
+            elapsedSeconds: Math.min(
+              spawn.travel.durationSeconds,
+              body.travel.elapsedSeconds ?? 0
+            )
+          }
+        } else {
+          // A relayout must not send an admitted body back to its producer.
+          const end = spawn.travel.points.at(-1)!
+          replacement.x = end.x
+          replacement.y = end.y
+          delete replacement.travel
+          replacement.datum = physicsPhaseDatum(spawn.datum, physicsBoardPhase(spawn.datum))
+        }
+      }
+      store.enqueue(replacement)
+    }
   }
   const spawns = next.initialSpawns
     .filter((spawn) => !before.has(spawn.id))

@@ -1,6 +1,7 @@
 import type {
   PhysicsWorkerFrame,
-  PhysicsWorkerState
+  PhysicsWorkerState,
+  PhysicsWorkerStructure
 } from "./PhysicsWorkerProtocol"
 import { validatePhysicsSpawn, validatePhysicsPipelineConfig, validatePhysicsPipelineSnapshot } from "./physicsInputValidation"
 import {
@@ -26,6 +27,7 @@ import type {
   PhysicsLifecycleObservationEvent,
   PhysicsLifecycleObservationRecord,
   PhysicsPipelineConfig,
+  PhysicsPipelineRuntimeConfig,
   PhysicsPipelineExecution,
   PhysicsPipelineControlSurface,
   PhysicsPipelineSnapshot,
@@ -61,43 +63,22 @@ import {
 import {
   emitPhysicsSimulationStateTransition,
   emitPhysicsSpawnObservation,
-  emitPhysicsBodyBudgetObservation,
+  observePhysicsBudgetDecision,
   observePhysicsKernelEvents,
   observePhysicsSensorTransitions,
   removePhysicsSensorPairsForBodies,
   resolvePhysicsSimulationState
 } from "./physicsPipelineObservations"
 import { PhysicsSpawnQueue, enqueuePhysicsSpawns } from "./PhysicsSpawnQueue"
+import { physicsTravelHorizon } from "./physicsBodyTravel"
+import { restoredPhysicsPipelineFields } from "./physicsPipelineSnapshot"
+import { PhysicsPipelinePrograms } from "./PhysicsPipelinePrograms"
 import { evictPhysicsOverflow } from "./physicsPipelineEviction"
 import { PhysicsQuiescenceTracker } from "./physicsPipelineQuiescence"
 import { createPhysicsStepObserver, runPhysicsSettleSteps, type PhysicsSettleHost, type PhysicsSettleRun, type PhysicsSettleSink } from "./physicsPipelineSettle"
 
-// Re-export public API for stable import paths
-export type {
-  PhysicsPlotBounds,
-  PhysicsBoundsColliderOptions,
-  PhysicsXBinColliderOptions,
-  PhysicsSpawnSpringSpec,
-  PhysicsQueuedSpawn,
-  PhysicsSpawnPacing,
-  PhysicsSpawnTimeAccessor,
-  PhysicsSpawnPacingOptions,
-  PhysicsPipelineQueuedSpawnSnapshot,
-  PhysicsObservationEventType,
-  PhysicsLifecycleObservationEventType,
-  PhysicsLifecycleObservationEvent,
-  PhysicsLifecycleObservationRecord,
-  PhysicsSimulationState,
-  PhysicsObservationEvent,
-  PhysicsObservationRecord,
-  PhysicsSensorObservationConfig,
-  PhysicsPipelineObservationOptions,
-  PhysicsPipelineConfig,
-  PhysicsPipelineExecution,
-  PhysicsPipelineTickResult,
-  PhysicsPipelineSnapshot,
-  PhysicsPipelineControlSurface
-} from "./PhysicsPipelineTypes"
+// Public pipeline types live together; preserve their historical store import path.
+export type * from "./PhysicsPipelineTypes"
 
 export {
   schedulePhysicsSpawns,
@@ -117,17 +98,7 @@ export class PhysicsPipelineStore {
   private accumulator = 0
   private bodyBudget: false | PhysicsBodyBudgetOptions
   private bodyBudgetObservationKey = "ok"
-  private config: Required<
-    Omit<
-      PhysicsPipelineConfig,
-      | "bodyBudget"
-      | "colliders"
-      | "engine"
-      | "kernel"
-      | "observation"
-      | "sediment"
-    >
-  >
+  private config: PhysicsPipelineRuntimeConfig
   /** Raw public config references, used only for no-op classification. */
   private configInput: PhysicsPipelineConfig
   private engineInput?: PhysicsEngineAdapterInput
@@ -146,6 +117,7 @@ export class PhysicsPipelineStore {
   private visible = true
   private world: PhysicsEngineAdapter
   private quiescence = new PhysicsQuiescenceTracker()
+  private programs = new PhysicsPipelinePrograms()
 
   constructor(config: PhysicsPipelineConfig = {}) {
     validatePhysicsPipelineConfig(config)
@@ -156,9 +128,12 @@ export class PhysicsPipelineStore {
       kernel,
       observation,
       sediment,
+      emitters,
+      eventDrop,
       ...storeConfig
     } = config
-    this.config = { ...DEFAULT_PHYSICS_PIPELINE_CONFIG, ...storeConfig }
+    this.config = { ...DEFAULT_PHYSICS_PIPELINE_CONFIG, ...storeConfig,
+      viewTransform: { ...(storeConfig.viewTransform ?? DEFAULT_PHYSICS_PIPELINE_CONFIG.viewTransform) } }
     this.configInput = clonePhysicsConfigInput(config)
     this.bodyBudget = bodyBudget ?? {}
     this.engineInput = engine
@@ -170,6 +145,7 @@ export class PhysicsPipelineStore {
     })
     this.quiescence.setKernelOptions(kernel)
     if (colliders) this.world.setColliders(cloneColliders(colliders))
+    this.programs.configure({ emitters, eventDrop }, this.world)
   }
 
   updateConfig(config: PhysicsPipelineConfig): void {
@@ -182,9 +158,14 @@ export class PhysicsPipelineStore {
       kernel,
       observation,
       sediment,
+      emitters,
+      eventDrop,
       ...storeConfig
     } = config
-    this.config = { ...this.config, ...storeConfig }
+    this.programs.configure({ emitters, eventDrop }, this.world)
+    this.config = { ...this.config, ...storeConfig,
+      viewTransform: { ...(storeConfig.viewTransform ?? this.config.viewTransform) } }
+    if (changedConfigKeys.includes("eventDrop")) this.revision += 1
     if (bodyBudget !== undefined) {
       this.bodyBudget = bodyBudget
       if (bodyBudget === false) this.bodyBudgetObservationKey = "ok"
@@ -321,6 +302,8 @@ export class PhysicsPipelineStore {
     this.queue.clear()
     this.accumulator = 0
     this.elapsedSeconds = 0
+    this.programs = new PhysicsPipelinePrograms()
+    this.programs.configure(this.configInput, this.world)
     this.nextSequence = 0
     this.quiescence.reset()
     this.sediment.clear()
@@ -443,18 +426,22 @@ export class PhysicsPipelineStore {
   private settleHost(): PhysicsSettleHost {
     return {
       fixedDt: this.config.fixedDt,
-      queueSize: () => this.queue.length,
+      queueSize: () => this.queue.length + Number(this.programs.pending()),
       atRest: () => this.atRest(),
       elapsed: () => this.elapsedSeconds,
       nextArrival: () => this.queue.firstArrival(),
-      lastArrival: () => this.queue.lastArrival(),
-      advanceTime: (s) => { this.elapsedSeconds += s },
+      lastArrival: () => physicsTravelHorizon(this.elapsedSeconds, this.readBodies(), this.queue.sorted()),
+      advanceTime: (s) => {
+        this.elapsedSeconds += s
+        const spawns = this.programs.emitters?.advance(s)
+        if (spawns?.length) this.enqueue(spawns)
+      },
       spawnDue: (spawned, obs) => this.spawnDue(spawned, obs),
       observeBodyBudget: (obs) => this.observeBodyBudget(obs),
       evictOverflow: (obs) => this.evictOverflow(obs),
       step: (dt) => this.world.step(dt),
       drainEvents: () => this.world.events(),
-      observeKernelEvents: (evts, obs) => this.observeKernelEvents(evts, obs),
+      observeKernelEvents: (evts, obs) => observePhysicsKernelEvents(this.world, evts, this.observationContext(obs)),
       observeSensorTransitions: (obs) => this.observeSensorTransitions(obs),
       refreshQuiescence: (dt, n) => this.quiescence.refresh(this.world, dt, n)
     }
@@ -497,7 +484,7 @@ export class PhysicsPipelineStore {
         continueWhile: execution?.continueWhile,
         shouldStop: observe ? () => this.paused || !this.visible : undefined,
         drainArrivals: maxSteps === undefined,
-        skipIdle: maxSteps === undefined && !execution
+        skipIdle: maxSteps === undefined && !execution && !this.programs.pending()
       })
 
     const bodiesChanged = spawned.length + evicted.length + sedimented.length > 0
@@ -577,7 +564,7 @@ export class PhysicsPipelineStore {
   }
 
   hasPendingWork(): boolean {
-    return this.queue.length > 0 || !this.atRest()
+    return this.queue.length > 0 || !this.atRest() || this.programs.pending()
   }
 
   queueSize(): number {
@@ -644,7 +631,7 @@ export class PhysicsPipelineStore {
     const queuedBefore = this.queue.remove(idSet)
     for (const id of ids) this.liveBodyOrder.delete(id)
     this.world.remove(ids)
-    this.removeActiveSensorPairsForBodies(idSet)
+    removePhysicsSensorPairsForBodies(this.activeSensorPairs, idSet)
 
     const removed = ids.filter(
       (id) => liveBefore.has(id) || queuedBefore.has(id)
@@ -708,9 +695,36 @@ export class PhysicsPipelineStore {
     }
   }
 
+  /** Live readouts use the historical ledger; the retained body set is bounded. */
+  eventDropState() {
+    return this.programs.eventDrop ? {
+      metadata: this.programs.eventDrop.metadata(),
+      viewTransform: this.programs.eventDrop.viewTransform(),
+      lifecycleEvents: []
+    } : undefined
+  }
+
+  viewTransform(): { x: number; y: number } {
+    return this.programs.eventDrop?.viewTransform() ?? { ...this.config.viewTransform }
+  }
+  isEventDropLive(): boolean { return Boolean(this.programs.eventDrop) }
+
+  /** Next generated input ID, preserved through snapshots without copying history. */
+  enqueueSequence(): number { return this.nextSequence }
+
+  workerLiveDelta() { return this.programs.eventDrop?.drainWorkerDelta() }
+
+  /** Bounded structural state; historical ledger rows use their own delta. */
+  workerStructure(): PhysicsWorkerStructure {
+    return { world: this.world.snapshot(), queue: this.queue.sorted().map(cloneQueuedSpawn),
+      liveBodyOrder: Array.from(this.liveBodyOrder), sediment: this.readSediment() }
+  }
+
   /** Scalar scheduling state, without cloning the world or queued datums. */
   workerState(): PhysicsWorkerState {
     return {
+      ...(this.programs.emitters && { emitterProgress: this.programs.emitters.progress() }),
+      nextSequence: this.nextSequence,
       accumulator: this.accumulator,
       activeSensorPairs: Array.from(this.activeSensorPairs),
       elapsedSeconds: this.elapsedSeconds,
@@ -737,9 +751,20 @@ export class PhysicsPipelineStore {
     if (!frame.state || !this.world.applyWorkerMotion) {
       throw new Error("Physics worker motion frame requires a built-in mirror")
     }
-    this.world.applyWorkerMotion(frame)
+    if (frame.structure) {
+      this.world.restore(frame.structure.world)
+      this.queue.restore(frame.structure.queue.map(cloneQueuedSpawn))
+      this.liveBodyOrder = new Set(frame.structure.liveBodyOrder)
+      this.sediment.restore(frame.structure.sediment)
+      this.bodySpatialIndex = new PhysicsBodySpatialIndex()
+    } else if (frame.state.revision !== this.revision || frame.state.elapsedSeconds !== this.elapsedSeconds) {
+      this.world.applyWorkerMotion(frame)
+    }
+    if (frame.live) this.programs.eventDrop?.applyWorkerDelta(frame.live, this.world)
     const previousState = this.simulationState
-    Object.assign(this, frame.state, {
+    const { emitterProgress, ...state } = frame.state
+    if (emitterProgress) this.programs.emitters?.restoreProgress(emitterProgress)
+    Object.assign(this, state, {
       activeSensorPairs: new Set(frame.state.activeSensorPairs)
     })
     this.updateResults.record({ kind: "tick" }, PHYSICS_MOTION_INVALIDATIONS)
@@ -755,59 +780,35 @@ export class PhysicsPipelineStore {
     const world = this.world.snapshot()
     return {
       ...this.workerState(),
+      nextSequence: this.nextSequence,
       activeSensorPairs: Array.from(this.activeSensorPairs).sort(),
       bodyBudget: cloneBodyBudgetOptions(this.bodyBudget),
       config: {
         ...this.config,
+        viewTransform: { ...this.config.viewTransform },
         kernel: requiredKernelOptions(world.options)
       },
       queue: this.queue.sorted().map(cloneQueuedSpawn),
       sediment: this.readSediment(),
       liveBodyOrder: Array.from(this.liveBodyOrder),
-      world
+      world,
+      ...this.programs.snapshot()
     }
   }
 
   restore(snapshot: PhysicsPipelineSnapshot): void {
     validatePhysicsPipelineSnapshot(snapshot)
+    const programs = PhysicsPipelinePrograms.restore(snapshot)
     this.bodySpatialIndex = new PhysicsBodySpatialIndex()
+    this.programs = programs
     this.observedInitialBoundary = false
     const previousState = this.simulationState
-    this.config = {
-      bodyLimit: snapshot.config.bodyLimit,
-      eviction: snapshot.config.eviction,
-      fixedDt: snapshot.config.fixedDt,
-      maxDeltaSeconds: snapshot.config.maxDeltaSeconds,
-      maxSubsteps: snapshot.config.maxSubsteps,
-      settleStepLimit: snapshot.config.settleStepLimit,
-      timeScale: snapshot.config.timeScale
-    }
-    this.configInput = {
-      ...snapshot.config,
-      bodyBudget: cloneBodyBudgetOptions(snapshot.bodyBudget ?? {}),
-      kernel: requiredKernelOptions(snapshot.world.options)
-    }
-    this.bodyBudget = cloneBodyBudgetOptions(snapshot.bodyBudget ?? {})
+    Object.assign(this, restoredPhysicsPipelineFields(snapshot))
     this.bodyBudgetObservationKey = "ok"
     this.quiescence.setKernelOptions(snapshot.world.options)
     this.quiescence.reset()
-    this.activeSensorPairs = new Set(snapshot.activeSensorPairs)
-    this.accumulator = snapshot.accumulator
-    this.elapsedSeconds = snapshot.elapsedSeconds
-    this.paused = snapshot.paused
     this.queue.restore(snapshot.queue.map(cloneQueuedSpawn))
-    this.revision = snapshot.revision
     this.sediment.restore(snapshot.sediment ?? [])
-    this.simulationState = snapshot.simulationState ?? resolvePhysicsSimulationState(
-      snapshot.paused,
-      snapshot.visible,
-      snapshot.queue.length > 0,
-      snapshot.world.bodies.every((body) => body.sleeping)
-    )
-    this.liveBodyOrder = new Set(snapshot.liveBodyOrder)
-    this.visible = snapshot.visible
-    this.nextSequence =
-      snapshot.queue.reduce((max, spawn) => Math.max(max, spawn.sequence), -1) + 1
     this.world.restore(snapshot.world)
     this.updateResults.record({ kind: "restore" }, PHYSICS_BODY_INVALIDATIONS)
     if (this.simulationState !== previousState) {
@@ -828,15 +829,22 @@ export class PhysicsPipelineStore {
       this.spawnOne(next, observations)
       spawned.push(next.id)
     }
+    if (this.programs.eventDrop) {
+      const retired = this.programs.eventDrop.advance(this.world, this.elapsedSeconds)
+      if (retired.length) this.remove(retired)
+      for (const event of this.programs.eventDrop.ledger.drainEvents())
+        this.emitObservation(stampPhysicsObservation(event, this.elapsedSeconds, this.observation), observations)
+    }
   }
 
   private spawnOne(
     spawn: PhysicsQueuedSpawn,
     observations?: PhysicsObservationEvent[]
   ): void {
+    if (this.programs.eventDrop) spawn = this.programs.eventDrop.prepare(spawn, this.elapsedSeconds)
     validatePhysicsSpawn(spawn)
     if (this.liveBodyOrder.delete(spawn.id)) {
-      this.removeActiveSensorPairsForBodies(new Set([spawn.id]))
+      removePhysicsSensorPairsForBodies(this.activeSensorPairs, new Set([spawn.id]))
     }
     this.world.spawn(spawn)
     this.liveBodyOrder.add(spawn.id)
@@ -872,19 +880,12 @@ export class PhysicsPipelineStore {
       queueSize: this.queue.length,
       revision: this.revision,
       shouldContinue:
-        shouldContinueOverride ?? (!this.paused && this.visible && (this.queue.length > 0 || !this.atRest())),
+        shouldContinueOverride ?? (!this.paused && this.visible && this.hasPendingWork()),
       sleeping,
       sedimented,
       spawned,
       steps
     }
-  }
-
-  private observeKernelEvents(
-    events: PhysicsKernelEvent[],
-    observations?: PhysicsObservationEvent[]
-  ): void {
-    observePhysicsKernelEvents(this.world, events, this.observationContext(observations))
   }
 
   private observeSensorTransitions(
@@ -895,10 +896,6 @@ export class PhysicsPipelineStore {
       this.activeSensorPairs,
       this.observationContext(observations)
     )
-  }
-
-  private removeActiveSensorPairsForBodies(bodyIds: Set<string>): void {
-    removePhysicsSensorPairsForBodies(this.activeSensorPairs, bodyIds)
   }
 
   private observationContext(observations?: PhysicsObservationEvent[]) {
@@ -933,15 +930,10 @@ export class PhysicsPipelineStore {
     observations?: PhysicsObservationEvent[]
   ): PhysicsBodyBudgetDecision {
     const decision = this.evaluateBodyBudget()
-    if (decision.state === "ok" || this.bodyBudget === false) {
-      this.bodyBudgetObservationKey = "ok"
-      return decision
-    }
-
-    const key = `${decision.state}:${decision.action}`
-    if (key === this.bodyBudgetObservationKey) return decision
-    this.bodyBudgetObservationKey = key
-    emitPhysicsBodyBudgetObservation(decision, this.observationContext(observations))
+    this.bodyBudgetObservationKey = observePhysicsBudgetDecision(
+      decision, this.bodyBudget !== false, this.bodyBudgetObservationKey,
+      this.observationContext(observations)
+    )
     return decision
   }
 
@@ -951,7 +943,7 @@ export class PhysicsPipelineStore {
     const next = resolvePhysicsSimulationState(
       this.paused,
       this.visible,
-      this.queue.length > 0,
+      this.queue.length > 0 || this.programs.pending(),
       this.atRest()
     )
     if (next === this.simulationState) return
@@ -977,7 +969,7 @@ export class PhysicsPipelineStore {
     )
     if (evicted.length > 0) {
       this.liveBodyOrder = liveBodyOrder
-      this.removeActiveSensorPairsForBodies(new Set(evicted))
+      removePhysicsSensorPairsForBodies(this.activeSensorPairs, new Set(evicted))
     }
     return { evicted, sedimented }
   }

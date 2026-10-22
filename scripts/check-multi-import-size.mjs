@@ -77,7 +77,10 @@ const analyze = process.argv.includes("--analyze")
 // measured on the same union).
 // Physics transition evidence and schema growth measure 309.6 KiB on this
 // unchanged consumer union; keep 0.4 KiB headroom with isolation still enforced.
-const MULTI_IMPORT_GZIP_BUDGET = 310 * 1024
+// User-approved live physics/schema cost (2026-10-21): the unchanged named-import
+// union measures 317,480 bytes (310.039 KiB). Keep under 0.5 KiB headroom;
+// tree-shaking and cross-entry identity checks remain required.
+const MULTI_IMPORT_GZIP_BUDGET = 310.5 * 1024
 
 const MULTI_IMPORT_SOURCE = `
 export { LineChart } from "semiotic/xy"

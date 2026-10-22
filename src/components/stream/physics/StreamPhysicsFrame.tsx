@@ -245,6 +245,8 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
       onRegionEventRef.current = onRegionEvent
       const onTickRef = useRef(onTick)
       onTickRef.current = onTick
+      const onFrameRef = useRef(props.onFrame)
+      onFrameRef.current = props.onFrame
       const steppingRef = useRef(false)
       const readyToStepRef = useRef(false)
       const reducedRunRef = useRef<{
@@ -541,6 +543,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
         wallClockRef
       })
       const {
+        keyboardOwnsFocus,
         clearSemanticFocus,
         resolveSemanticBody,
         clearHover,
@@ -600,6 +603,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
         ]
       })
       const physicsCanvasPointer = usePhysicsCanvasPointer({
+        keyboardOwnsFocus,
         margin,
         clearKeyboardFocus: clearSemanticFocus,
         hoverDataRef,
@@ -662,6 +666,8 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
 
         const snapshot = store.runtimeState()
         const bodies = store.readBodies()
+        const camera = store.viewTransform()
+        ctx.translate(camera.x, camera.y)
         const bodyCursors = physicsCanvasPointer.begin()
         // Throttle moving frames, but always publish the final navigation
         // geometry when motion stops or a caller advances the model manually.
@@ -673,7 +679,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
           const now = logicalClockRef.current()
           if (now - lastAnnotationAnchorUpdateRef.current >= 100) {
             lastAnnotationAnchorUpdateRef.current = now
-            const next = bodiesToAnnotationAnchors(bodies)
+            const next = bodiesToAnnotationAnchors(bodies).map((point) => ({ ...point, x: point.x + camera.x, y: point.y + camera.y }))
             setAnnotationAnchors((prev) => {
               if (
                 prev.length === next.length &&
@@ -751,11 +757,13 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
         ctx.restore()
         sceneRevisionDiagnosticsRef.current.afterCompute(
           sceneRevisionCheck,
-          true,
+          // Painting an unchanged retained world is not another scene rebuild.
+          sceneRevisionCheck.wasUnconsumed,
           // Theme/style invalidation requests a repaint of retained geometry.
           dirtyRef.current
         )
         dirtyRef.current = false
+        onFrameRef.current?.(store)
       }, [
         canvasRef,
         resolutionDirtyRef,
@@ -936,11 +944,12 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
         workerGenerationRef.current = generation
 
         import("./PhysicsWorkerClient")
-          .then(({ PhysicsWorkerSession }) => {
+          .then(({ PhysicsWorkerSession, initializeCurrentPhysicsWorker }) => {
             if (workerGenerationRef.current !== generation) return null
             const session = workerSessionRef.current ?? new PhysicsWorkerSession()
             workerSessionRef.current = session
-            return session.initFromSnapshot(augmentedConfig ?? {}, store.snapshot())
+            return initializeCurrentPhysicsWorker(session, store, augmentedConfig ?? {},
+              () => workerGenerationRef.current === generation)
           })
           .then((frame) => {
             if (!frame || workerGenerationRef.current !== generation) return
@@ -1485,6 +1494,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
           )
         }
         const { element } = createPhysicsSettledSVG(store, {
+          maxSteps: store.isEventDropLive() ? 0 : undefined,
           decorative: true,
           width: size[0],
           height: size[1],

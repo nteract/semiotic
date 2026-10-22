@@ -4,6 +4,19 @@ import { resolveEventDropAdmissions } from "./eventDropAdmission"
 import { syntheticArrivals } from "../../recipes/syntheticArrivals"
 
 describe("incremental EventDrop accounting", () => {
+  it("restores safe source dictionaries before admitting new source IDs", () => {
+    const ledger = new EventDropLedger(10)
+    ledger.append({ eventTime: 1, arrivalTime: 1, source: "a" })
+    ledger.restore(structuredClone(ledger.snapshot()))
+    ledger.append({ eventTime: 2, arrivalTime: 2, source: "__proto__" })
+    ledger.append({ eventTime: 3, arrivalTime: 3, source: "constructor" })
+    const [row] = ledger.getLedger()
+    expect(row.accepted).toBe(3)
+    expect(Object.keys(row.bySource).sort()).toEqual(["__proto__", "a", "constructor"])
+    expect(row.bySource["__proto__"]).toEqual({ accepted: 1, late: 0 })
+    expect(row.bySource.constructor).toEqual({ accepted: 1, late: 0 })
+    expect(Object.prototype).not.toHaveProperty("accepted")
+  })
   it("starts missing-source idle deadlines at the stream origin for epoch times", () => {
     const ledger = new EventDropLedger(
       2500,

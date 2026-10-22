@@ -5,7 +5,11 @@
  */
 
 import type * as React from "react"
-import type { FrameGraphicsProp, FrameMargin, FrameScheduler } from "../useFrame"
+import type {
+  FrameGraphicsProp,
+  FrameMargin,
+  FrameScheduler
+} from "../useFrame"
 import type { Style } from "../types"
 import type { Datum } from "../../charts/shared/datumTypes"
 import type { OnObservationCallback } from "../../store/ObservationStore"
@@ -40,12 +44,7 @@ export interface PhysicsBodySelection {
 }
 
 export type StreamPhysicsRegionKind =
-  "region"
-  | "membrane"
-  | "charge-gate"
-  | "force-field"
-  | "sink"
-  | "source"
+  "region" | "membrane" | "charge-gate" | "force-field" | "sink" | "source"
 
 export interface StreamPhysicsRegionVector {
   x?: number
@@ -379,6 +378,8 @@ export interface StreamPhysicsFrameProps {
     result: PhysicsPipelineTickResult,
     controls: PhysicsPipelineControlSurface
   ) => void
+  /** Once per painted frame, including worker frames. Read-only HUD notifications. */
+  onFrame?: (store: PhysicsPipelineStore) => void
   /** Uniform opacity for bodies when `bodyStyle` does not set `opacity`. */
   opacity?: number
   paused?: boolean
@@ -424,8 +425,7 @@ export interface StreamPhysicsFrameProps {
   ) => void
 }
 
-export interface StreamPhysicsFrameHandle
-  extends PhysicsPipelineControlSurface {
+export interface StreamPhysicsFrameHandle extends PhysicsPipelineControlSurface {
   getData: () => PhysicsBodyState[]
   getRegionState: (
     bodyId?: string

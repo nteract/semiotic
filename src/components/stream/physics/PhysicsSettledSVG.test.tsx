@@ -32,6 +32,23 @@ function windowContainerId(body: PhysicsBodyState): string | undefined {
 }
 
 describe("physics settled SVG renderer", () => {
+  it("exports the same camera translation without modifying world coordinates", () => {
+    const store = new PhysicsPipelineStore({
+      viewTransform: { x: -100, y: 20 },
+      kernel: { gravity: { x: 0, y: 0 } }
+    })
+    store.spawnNow(circle("camera-event", 124, 32))
+    const before = store.snapshot()
+    const { svg } = renderPhysicsSettledSVG(store, {
+      maxSteps: 0,
+      width: 160,
+      height: 120
+    })
+    expect(svg).toContain('transform="translate(-100,20)"')
+    expect(svg).toContain('cx="124"')
+    expect(store.snapshot().world).toEqual(before.world)
+    expect(store.elapsed()).toBe(before.elapsedSeconds)
+  })
   it("renders a settled physics scene to standalone SVG with evidence", () => {
     const store = new PhysicsPipelineStore({
       fixedDt: 1 / 60,

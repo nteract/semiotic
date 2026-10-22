@@ -15,6 +15,23 @@ const sources: SyntheticSourceSpec[] = [
 ]
 
 describe("synthetic arrivals", () => {
+  it("restores fractional deadlines and RNG state without aliases or partial invalid restores", () => {
+    const emitter = createSyntheticEmitter(sources, 42, { maxEvents: 1000 })
+    emitter.advance(3210.123)
+    const saved = structuredClone(emitter.snapshot())
+    const expected = emitter.advance(10234.567, { rate: 1.5 })
+    emitter.restore(saved)
+    expect(emitter.advance(10234.567, { rate: 1.5 })).toEqual(expected)
+    const before = emitter.snapshot()
+    const invalid = {
+      ...saved,
+      sources: saved.sources.map((row) => ({ ...row, sequence: -1 }))
+    }
+    expect(() => emitter.restore(invalid)).toThrow(/snapshot/)
+    expect(emitter.snapshot()).toEqual(before)
+    saved.sources[0].randomState = 0
+    expect(emitter.snapshot()).toEqual(before)
+  })
   it("matches the versioned 10,000-arrival seed-42 fixture", () => {
     const stream = syntheticArrivals(sources, 42)
     const rows = Array.from({ length: 10000 }, () => stream.next().value)
@@ -151,5 +168,41 @@ describe("synthetic arrivals", () => {
     ).toThrow()
     expect(() => createSyntheticEmitter([{ id: "a" }, { id: "a" }])).toThrow()
     expect(() => createSyntheticEmitter(sources).advance(Infinity)).toThrow()
+  })
+
+  it("bounds both long bursts and tied arrivals without generating discarded events", () => {
+    const spec = [
+      { id: "a", interval: 10 },
+      { id: "b", interval: 10 }
+    ]
+    const emitter = createSyntheticEmitter(spec, 42, { maxEvents: 3 })
+    expect(emitter.advance(1e9).map((row) => row.id)).toEqual([
+      "a-0",
+      "b-0",
+      "a-1"
+    ])
+    expect(emitter.getTime()).toBe(20)
+    expect(emitter.getEmittedCount()).toBe(3)
+    expect(emitter.isComplete()).toBe(true)
+    expect(emitter.advance(1000)).toEqual([])
+    const timed = createSyntheticEmitter(spec, 42, { durationMs: 20 })
+    expect(timed.advance(1e9)).toHaveLength(4)
+    expect(timed.getTime()).toBe(20)
+    expect(timed.isComplete()).toBe(true)
+    expect(timed.advance(1000)).toEqual([])
+    expect(createSyntheticEmitter([], 1).isComplete()).toBe(true)
+    expect(
+      createSyntheticEmitter(spec, 1, { maxEvents: 0 }).advance(1000)
+    ).toEqual([])
+  })
+
+  it.each([
+    { durationMs: -1 },
+    { durationMs: Infinity },
+    { durationMs: NaN },
+    { maxEvents: 1.5 },
+    { maxEvents: Number.MAX_SAFE_INTEGER + 1 }
+  ])("rejects invalid run limits: %j", (limits) => {
+    expect(() => createSyntheticEmitter(sources, 1, limits)).toThrow(RangeError)
   })
 })

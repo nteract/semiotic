@@ -284,7 +284,10 @@ export function eventDropOverlay(
                 fill={themeColor("textSecondary")}
                 fontSize={10}
               >
-                {row?.label ?? ""}
+                {laneWidth < 45 ? <title>{row?.label ?? ""}</title> : null}
+                {laneWidth < 45
+                  ? metadata.windowStart + index * metadata.windowSize
+                  : (row?.label ?? "")}
               </text>
             </g>
           )

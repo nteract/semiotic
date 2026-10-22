@@ -45,8 +45,15 @@ import {
 } from "./eventDropSources"
 import { eventDropBodyStyle, type EventDropColorBy } from "./eventDropStyle"
 import type { EventDropWatermark } from "./eventDropLedger"
+import type { EventDropArrival } from "./eventDropArrival"
 import { eventDropWindowBackground } from "./eventDropWindowBackground"
 import { physicsCanvasThemeCSSValue } from "../../stream/physics/PhysicsCanvasTheme"
+import type {
+  EventDropLiveOptions,
+  EventDropLiveConfig
+} from "./EventDropLiveRuntime"
+import type { PhysicsEmitterOptions } from "../../stream/physics/PhysicsEmitterSchedule"
+import { buildLiveEventDropLayout, useEventDropLive } from "./useEventDropLive"
 import {
   eventDropOverlay,
   type EventDropWindowChrome
@@ -67,9 +74,18 @@ export interface EventDropChartProps<TDatum extends Datum = Datum>
   onClockTick?: EventDropReadoutProps["onClockTick"]
   clockTickMs?: EventDropReadoutProps["clockTickMs"]
   data?: TDatum[]
+  /** Follow the simulation indefinitely while retiring old bodies and retaining counts. */
+  live?: boolean | EventDropLiveOptions
+  /** Built-in fixed-step sources, shared by sync and worker execution. Requires live. */
+  emitters?: Omit<
+    PhysicsEmitterOptions,
+    "templates" | "timeUnit" | "originTime"
+  >
   size?: [number, number]
   timeAccessor?: ChartAccessor<TDatum, number>
   arrivalAccessor?: ChartAccessor<TDatum, number>
+  /** Source-to-board choreography; requires a visible source rail. */
+  arrival?: EventDropArrival
   windows?: EventDropWindowOptions
   watermark?: EventDropWatermark
   /** Explicit time units avoid magnitude-based inference (above 1e5 uses ms). */
@@ -100,7 +116,7 @@ export interface EventDropChartProps<TDatum extends Datum = Datum>
    */
   rerunMS?: PhysicsRerunMS
   paused?: boolean
-  frameProps?: PhysicsHocFrameProps<"config">
+  frameProps?: PhysicsHocFrameProps
 }
 
 function eventDropSemanticItems(
@@ -110,7 +126,8 @@ function eventDropSemanticItems(
   sources: readonly EventDropSource[] = []
 ) {
   if (!metadata) return projectionRowsToSemanticItems(rows, chartSize, "window")
-  const laneWidth = metadata.windowPlot.width / Math.max(1, rows.length)
+  const laneWidth =
+    metadata.windowPlot.width / Math.max(1, metadata.windowCount)
   const maxValue = rows.reduce((max, row) => Math.max(max, row.value), 1)
   const maxHeight = metadata.windowPlot.height * 0.62
   const yBottom = metadata.windowPlot.y + metadata.windowPlot.height
@@ -118,13 +135,16 @@ function eventDropSemanticItems(
   const ledgerById = new Map(metadata.ledger?.map((row) => [row.windowId, row]))
   const items = rows.map((row, index) => {
     const barHeight = Math.max(8, (row.value / maxValue) * maxHeight)
-    const x = metadata.windowPlot.x + (index + 0.5) * laneWidth
+    const ledger = ledgerById.get(row.label)
+    const position = ledger
+      ? (ledger.start - metadata.windowStart) / metadata.windowSize
+      : index
+    const x = metadata.windowPlot.x + (position + 0.5) * laneWidth
     const y = yBottom - barHeight / 2
     const late = row.secondary
       ? `, ${row.secondary} late sent to the far-left bin`
       : ""
-    const ledger = ledgerById.get(row.label)
-    const label = `window ${row.label}: ${row.value} on time${late}, ${index < metadata.closedWindowCount ? "closed" : "open"}`
+    const label = `window ${row.label}: ${row.value} on time${late}, ${ledger ? (ledger.open ? "open" : "closed") : index < metadata.closedWindowCount ? "closed" : "open"}`
     return {
       id: `window-${row.label}`,
       label,
@@ -201,7 +221,7 @@ export const EventDropChart = /* @__PURE__ */ forwardRef(
       styleRules,
       sources,
       sourceAccessor,
-      sourceRail,
+      sourceRail: sourceRailProp,
       timeUnit,
       data,
       emptyContent,
@@ -221,6 +241,8 @@ export const EventDropChart = /* @__PURE__ */ forwardRef(
     // Inline option objects are ordinary JSX. Preserve the compiler identity
     // across observer-driven rerenders when their values have not changed.
     const windows = useStableShallow(windowsProp ?? { size: 10 })
+    const sourceRail = useStableShallow(sourceRailProp)
+    const arrival = useStableShallow(props.arrival)
     const watermark = useStableShallow(watermarkProp)
     const timeExtent = useStableShallow(timeExtentProp)
     const layoutMode = usePhysicsChartMode(props, EVENT_DROP_CHART_SIZE)
@@ -238,27 +260,87 @@ export const EventDropChart = /* @__PURE__ */ forwardRef(
     } = layoutMode
     const frameRef = useRef<StreamPhysicsFrameHandle>(null)
     const dataRef = useRef<PhysicsFrameHandle>(null)
+    const live = useStableShallow(
+      props.live === true
+        ? {
+            follow: "watermark" as const,
+            horizon: windows.size,
+            retain: windows.size * 8
+          }
+        : props.live || undefined
+    )
+    const liveConfig = useMemo<EventDropLiveConfig | undefined>(
+      () =>
+        live
+          ? {
+              live,
+              windowSize: windows.size,
+              size: chartSize,
+              ballRadius,
+              seed,
+              sources,
+              sourceRail,
+              watermark,
+              arrival,
+              timeUnit: timeUnit ?? "s",
+              originTime: timeExtent?.[0] ?? 0
+            }
+          : undefined,
+      [
+        live,
+        windows.size,
+        chartSize,
+        ballRadius,
+        seed,
+        sources,
+        sourceRail,
+        watermark,
+        arrival,
+        timeUnit,
+        timeExtent
+      ]
+    )
+    const liveInputs = useRef(props)
+    liveInputs.current = props
+    const liveReadout = useEventDropLive(
+      dataRef,
+      frameRef,
+      props as EventDropChartProps
+    )
     const buildLayout = useCallback(
       (rows: TDatum[]) =>
-        buildEventDropPhysics({
-          data: rows,
-          timeAccessor,
-          arrivalAccessor,
-          sources,
-          sourceAccessor,
-          sourceRail,
-          timeUnit,
-          windows,
-          watermark,
-          watermarkAtArrivalAccessor,
-          ballRadius,
-          seed,
-          size: chartSize,
-          timeExtent,
-          timeScale
-        }),
+        liveConfig
+          ? buildLiveEventDropLayout(liveConfig, {
+              ...liveInputs.current,
+              data: liveInputs.current.data === undefined ? undefined : rows,
+              emitters: props.emitters,
+              frameProps: { config: frameProps?.config },
+              timeScale
+            })
+          : buildEventDropPhysics({
+              data: rows,
+              timeAccessor,
+              arrivalAccessor,
+              arrival,
+              sources,
+              sourceAccessor,
+              sourceRail,
+              timeUnit,
+              windows,
+              watermark,
+              watermarkAtArrivalAccessor,
+              ballRadius,
+              seed,
+              size: chartSize,
+              timeExtent,
+              timeScale
+            }),
       [
+        liveConfig,
+        props.emitters,
+        frameProps?.config,
         arrivalAccessor,
+        arrival,
         sources,
         sourceAccessor,
         sourceRail,
@@ -275,7 +357,7 @@ export const EventDropChart = /* @__PURE__ */ forwardRef(
       ]
     )
     const { layout, resetSeed } = usePhysicsChartData({
-      ref: dataRef,
+      ref: live ? undefined : dataRef,
       frameRef,
       data,
       idPrefix: "event",
@@ -289,8 +371,10 @@ export const EventDropChart = /* @__PURE__ */ forwardRef(
       props.onSimulationStateChange
     )
 
-    const metadata = layout.metadata as EventDropProjectionMetadata | undefined
-    const onTick = useEventDropHandle(ref, dataRef, frameRef, metadata, props)
+    const metadata =
+      (live ? liveReadout.metadata : undefined) ??
+      (layout.metadata as EventDropProjectionMetadata | undefined)
+    const readouts = useEventDropHandle(ref, dataRef, frameRef, metadata, props)
     const generatedBodyStyle = useMemo(
       () =>
         eventDropBodyStyle(sources, colorBy as EventDropColorBy | undefined, {
@@ -306,12 +390,18 @@ export const EventDropChart = /* @__PURE__ */ forwardRef(
     const semanticItems = useMemo(
       () =>
         eventDropSemanticItems(
-          layout.projectionRows,
+          live
+            ? (metadata?.ledger ?? []).map((row) => ({
+                label: row.windowId,
+                value: row.accepted,
+                secondary: row.late
+              }))
+            : layout.projectionRows,
           metadata,
           chartSize,
           sources
         ),
-      [chartSize, layout.projectionRows, metadata, sources]
+      [chartSize, layout.projectionRows, metadata, sources, live]
     )
 
     const { selection: bodySelection, onBodyHover } = usePhysicsSelection({
@@ -335,6 +425,8 @@ export const EventDropChart = /* @__PURE__ */ forwardRef(
       loadingContent,
       size: chartSize
     })
+    if (props.emitters && !live)
+      throw new Error("EventDrop emitters require live mode")
     if (stateEl) return stateEl
     const windowBackground = eventDropWindowBackground(
       metadata,
@@ -342,8 +434,18 @@ export const EventDropChart = /* @__PURE__ */ forwardRef(
       props.windowChrome
     )
     const projectionOverlay = eventDropOverlay(
-      layout.projectionRows,
-      layout.metadata as EventDropProjectionMetadata | undefined,
+      live && metadata
+        ? Array.from({ length: metadata.windowCount }, (_, i) => {
+            const start = metadata.windowStart + i * metadata.windowSize
+            const row = metadata.ledger?.find((entry) => entry.start === start)
+            return {
+              label: `${start}-${start + metadata.windowSize}`,
+              value: row?.accepted ?? 0,
+              secondary: row?.late ?? 0
+            }
+          })
+        : layout.projectionRows,
+      metadata,
       showProjection,
       props.windowChrome
     )
@@ -374,8 +476,12 @@ export const EventDropChart = /* @__PURE__ */ forwardRef(
         {...sharedFrameProps}
         ref={frameRef}
         onBodyHover={onBodyHover}
-        onTick={onTick}
-        key={rerun.rerunKey}
+        onTick={readouts.onTick}
+        onFrame={(store) => {
+          liveReadout.onFrame(store)
+          readouts.onFrame?.(store)
+        }}
+        key={`${rerun.rerunKey}:${live ? "live" : "replay"}`}
         config={rerun.config}
         backgroundGraphics={composePhysicsFrameGraphics(
           frameProps?.backgroundGraphics,

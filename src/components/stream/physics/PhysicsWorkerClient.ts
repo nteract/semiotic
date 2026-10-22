@@ -14,6 +14,7 @@ import {
 } from "./PhysicsWorkerProtocol"
 import { PhysicsWorkerDatums } from "./physicsWorkerDatums"
 import { commonJsWorkerModuleUrl } from "../workerModuleUrl"
+export { initializeCurrentPhysicsWorker } from "./physicsWorkerStartup"
 
 import {
   ModuleWorkerSession,
@@ -165,10 +166,7 @@ export class PhysicsWorkerSession extends ModuleWorkerSession<
     deltaSeconds: number,
     signal?: AbortSignal
   ): Promise<PhysicsWorkerFrame> {
-    const payload = await this.request(
-      { type: "tick", deltaSeconds },
-      signal
-    )
+    const payload = await this.request({ type: "tick", deltaSeconds }, signal)
     if (payload.type !== "frame") {
       throw new Error("Physics worker returned a non-frame tick response")
     }

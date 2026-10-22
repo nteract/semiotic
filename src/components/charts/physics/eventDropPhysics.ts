@@ -1,5 +1,9 @@
 import { scaleLinear } from "d3-scale"
 import { resolveEventDropAdmissions } from "./eventDropAdmission"
+import {
+  choreographEventDropArrival,
+  type EventDropArrival
+} from "./eventDropArrival"
 import type {
   EventDropLedgerRow,
   EventDropLedgerEvent,
@@ -67,6 +71,7 @@ export interface EventDropPhysicsOptions<TDatum extends Datum = Datum> {
   data: readonly TDatum[]
   timeAccessor: ChartAccessor<TDatum, number>
   arrivalAccessor: ChartAccessor<TDatum, number>
+  arrival?: EventDropArrival
   windows: EventDropWindowOptions
   watermark?: EventDropWatermark
   sourceAccessor?: ChartAccessor<TDatum, string>
@@ -209,6 +214,15 @@ function eventDropWindowWallColliders(options: {
 export function buildEventDropPhysics<TDatum extends Datum>(
   options: EventDropPhysicsOptions<TDatum>
 ): PhysicsChartLayout {
+  return compileEventDropPhysics(options)
+}
+
+/** Shared geometry compiler; live boards supply their incremental admission state. */
+export function compileEventDropPhysics<TDatum extends Datum>(
+  options: EventDropPhysicsOptions<TDatum>,
+  admissions?: ReturnType<typeof resolveEventDropAdmissions<TDatum>>,
+  exactExtent = false
+): PhysicsChartLayout {
   const {
     data,
     timeAccessor,
@@ -223,6 +237,7 @@ export function buildEventDropPhysics<TDatum extends Datum>(
     timeScale = 1
   } = options
   const { events, watermarkValue, ledger, lifecycleEvents } =
+    admissions ??
     resolveEventDropAdmissions({
       data,
       timeAccessor,
@@ -267,8 +282,12 @@ export function buildEventDropPhysics<TDatum extends Datum>(
   const secondsPerUnit = timeUnit === "ms" ? 0.001 : 1
   const extentStart = finiteNumber(timeExtent?.[0])
   const extentEnd = finiteNumber(timeExtent?.[1])
-  const minTime = Math.min(extentStart ?? dataMinTime, dataMinTime)
-  const maxTime = Math.max(extentEnd ?? dataMaxTime, dataMaxTime)
+  const minTime = exactExtent
+    ? (extentStart ?? dataMinTime)
+    : Math.min(extentStart ?? dataMinTime, dataMinTime)
+  const maxTime = exactExtent
+    ? (extentEnd ?? dataMaxTime)
+    : Math.max(extentEnd ?? dataMaxTime, dataMaxTime)
   const windowStart = Math.floor(minTime / windows.size) * windows.size
   const windowCount = Math.max(
     1,
@@ -411,6 +430,13 @@ export function buildEventDropPhysics<TDatum extends Datum>(
     }))
   ]
 
+  choreographEventDropArrival(spawns, {
+    ...options,
+    secondsPerUnit,
+    timeScale,
+    firstArrival,
+    closedWindowCount
+  })
   return {
     config: baseConfig(seed, colliders, "EventDropChart", {
       friction: 0.08
@@ -418,17 +444,7 @@ export function buildEventDropPhysics<TDatum extends Datum>(
     initialSpawns: spawns,
     initialSpawnPacing: {
       pacing: "arrival",
-      timeAccessor: (spawn) => {
-        const datum = spawn.datum as {
-          arrivalTime: number
-          windowIndex: number
-          late: boolean
-        }
-        // History that the current apparatus cannot admit is already present.
-        const closed = datum.windowIndex < closedWindowCount
-        const history = (closed && !datum.late) || (!closed && datum.late)
-        return (history ? firstArrival : datum.arrivalTime) * secondsPerUnit
-      },
+      timeAccessor: "__eventDropSpawnTime",
       timeScale
     },
     projectionRows: rows.map((row, index) => ({
@@ -498,7 +514,7 @@ function eventDropSpawnY(
  */
 export function readEventDropOccupancy(
   metadata: EventDropProjectionMetadata,
-  bodies: readonly { x: number; y: number }[]
+  bodies: readonly { x: number; y: number; travel?: unknown }[]
 ): { accepted: number[]; late: number; inFlight: number; total: number } {
   const { windowPlot, gutter, windowCount, lidSegments } = metadata
   const accepted = Array<number>(windowCount).fill(0)
@@ -507,6 +523,10 @@ export function readEventDropOccupancy(
   let late = 0
   let inFlight = 0
   for (const body of bodies) {
+    if (body.travel) {
+      inFlight++
+      continue
+    }
     if (
       body.x >= gutter.x &&
       body.x < windowPlot.x &&
