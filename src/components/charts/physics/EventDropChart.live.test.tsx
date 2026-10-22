@@ -90,6 +90,46 @@ it("keeps supplied data authoritative and replaces it without preserving old adm
   expect(ref.current!.getLedger()).toMatchObject([{ start: 20, accepted: 1 }])
 })
 
+it("filters malformed replacement rows while preserving input indices and paused admission", () => {
+  const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+  try {
+    const ref = React.createRef<EventDropChartHandle>()
+    const timeAccessor = vi.fn((row: { time?: number }) => row.time!)
+    const chart = (data: { id?: string; time?: number }[]) => (
+      <EventDropChart
+        ref={ref}
+        live
+        data={data}
+        timeAccessor={timeAccessor}
+        paused
+      />
+    )
+    const { rerender } = render(chart([{ id: "seed", time: 1 }]))
+    const store = ref.current!.getStore()
+    expect(() =>
+      rerender(
+        chart([
+          { id: "missing" },
+          { time: 21 },
+          { time: Infinity },
+          { time: 22 }
+        ])
+      )
+    ).not.toThrow()
+    expect(ref.current!.getStore()).toBe(store)
+    expect(ref.current!.getClock().paused).toBe(true)
+    expect(ref.current!.getData().map((row) => row.id)).toEqual([
+      "event-live-1",
+      "event-live-3"
+    ])
+    expect(ref.current!.getLedger()).toMatchObject([{ start: 20, accepted: 2 }])
+    expect(timeAccessor).toHaveBeenCalledWith({ time: 22 }, 3)
+    expect(warn).toHaveBeenCalled()
+  } finally {
+    warn.mockRestore()
+  }
+})
+
 it("reports the effective live speed once and preserves bodies when speed changes", () => {
   const ref = React.createRef<EventDropChartHandle>()
   render(
@@ -203,3 +243,33 @@ it("starts a new run instead of failing when window size or source schedules cha
   expect(ref.current!.getLedger()).toEqual([])
 })
 
+it("starts a new emitter run for a new jitter callback but retains identical callbacks and live controls", () => {
+  const ref = React.createRef<EventDropChartHandle>()
+  const immediate = vi.fn(() => 0)
+  const delayed = vi.fn(() => 1000)
+  const chart = (jitter: () => number, rate = 1) => (
+    <EventDropChart
+      ref={ref}
+      live
+      emitters={{ sources: [{ id: "a", interval: 100, jitter }], rate }}
+      paused
+    />
+  )
+  const { rerender } = render(chart(immediate))
+  const first = ref.current!.getStore()!
+  rerender(chart(immediate, 2))
+  expect(ref.current!.getStore()).toBe(first)
+  rerender(chart(delayed))
+  const second = ref.current!.getStore()!
+  expect(second).not.toBe(first)
+  act(() => {
+    second.setPaused(false)
+    for (let i = 0; i < 20; i++) second.tick(0.01)
+  })
+  expect(delayed).toHaveBeenCalled()
+  expect(second.snapshot().emitters!.options.sources[0].jitter).toBe(delayed)
+  const rows = ref.current!.getData()
+  expect(rows.length).toBeGreaterThan(0)
+  for (const row of rows)
+    expect(Number(row.arrivalTime) - Number(row.eventTime)).toBeCloseTo(1)
+})

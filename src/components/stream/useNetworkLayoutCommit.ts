@@ -5,8 +5,19 @@ import type { NetworkViewTransform } from "./networkViewportTypes"
 import { networkCameraSource } from "./networkCameraCommit"
 
 interface LayoutOutputStore {
-  customLayoutRun: NetworkLayoutResult | null
+  customLayoutRevision: number
   lastCustomLayoutResult: NetworkLayoutResult | null
+}
+
+/** Retain mark geometry even when a layout mutates and returns the same output. */
+function snapshotGeometry(result: NetworkLayoutResult | null) {
+  return (
+    result && {
+      ...result,
+      sceneNodes: result.sceneNodes?.map((node) => ({ ...node })),
+      htmlMarks: result.htmlMarks?.map((mark) => ({ ...mark }))
+    }
+  )
 }
 
 /**
@@ -17,15 +28,39 @@ interface LayoutOutputStore {
 export function useNetworkLayoutCommit(
   view: NetworkViewTransform | undefined,
   store: LayoutOutputStore | null
-): (run: NetworkLayoutResult | null) => boolean {
-  const run = store?.customLayoutRun ?? null
+): (store: LayoutOutputStore) => boolean {
+  const run = store?.lastCustomLayoutResult ? store.customLayoutRevision : null
   const result = store?.lastCustomLayoutResult ?? null
-  const committed = useRef({ run, result })
+  const committed = useRef<{
+    store: LayoutOutputStore | null
+    run: number | null
+    result: NetworkLayoutResult | null
+    output: NetworkLayoutResult | null
+  } | null>(null)
+  committed.current ??= {
+    store,
+    run,
+    result: snapshotGeometry(result),
+    output: result
+  }
   useLayoutEffect(() => {
-    const previous = committed.current
-    committed.current = { run, result }
-    if (previous.run !== run)
+    const previous = committed.current!
+    const changed = previous.store !== store || previous.run !== run
+    if (changed || previous.output !== result)
+      committed.current = {
+        store,
+        run,
+        result: snapshotGeometry(result),
+        output: result
+      }
+    if (changed)
       networkCameraSource(view)?.layoutCommitted?.(result, previous.result)
   })
-  return useCallback((latest) => latest !== committed.current.run, [])
+  return useCallback(
+    (latest) =>
+      latest !== committed.current!.store ||
+      (latest.lastCustomLayoutResult ? latest.customLayoutRevision : null) !==
+        committed.current!.run,
+    []
+  )
 }

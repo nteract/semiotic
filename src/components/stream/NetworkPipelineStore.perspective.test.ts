@@ -52,6 +52,7 @@ describe("cached custom perspective scenes", () => {
     expect(store.perspective.projectParticle === undefined).toBe(type === "flat")
     expect(store.lastCustomLayoutResult?.sceneNodes).toBe(store.sceneNodes)
     expect(layout).toHaveBeenCalledTimes(2)
+    expect(store.customLayoutRevision).toBe(2)
     const settled = store.sceneNodes
     store.buildScene(size)
     expect(store.sceneNodes).toBe(settled)

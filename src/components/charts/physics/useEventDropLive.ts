@@ -2,6 +2,7 @@ import {
   useCallback,
   useImperativeHandle,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState
 } from "react"
@@ -118,22 +119,37 @@ export function buildLiveEventDropLayout(
 export function useEventDropLive(
   dataRef: RefObject<PhysicsFrameHandle | null>,
   frameRef: RefObject<StreamPhysicsFrameHandle | null>,
-  props: EventDropChartProps
+  props: EventDropChartProps,
+  runKey: string
 ) {
   const latest = useRef(props)
   latest.current = props
   const nextId = useRef(props.data?.length ?? 0)
   const seed = useRef(props.data)
-  const [metadata, setMetadata] = useState<EventDropProjectionMetadata>()
-  const lastVersion = useRef("")
-  const onFrame = useCallback((store: PhysicsPipelineStore) => {
-    latest.current.frameProps?.onFrame?.(store)
-    if (!latest.current.live) return
-    const key = `${store.getUpdateSnapshot().revisions.sceneGeometry}:${store.runtimeState().elapsedSeconds}`
-    if (key === lastVersion.current) return
-    lastVersion.current = key
-    setMetadata(store.eventDropState()?.metadata)
-  }, [])
+  const run = useMemo(() => ({ runKey }), [runKey])
+  const [readout, setReadout] = useState<{
+    run: object
+    metadata: EventDropProjectionMetadata | undefined
+  }>()
+  const lastFrame = useRef<{
+    store: PhysicsPipelineStore
+    version: string
+  } | null>(null)
+  const onFrame = useCallback(
+    (store: PhysicsPipelineStore) => {
+      latest.current.frameProps?.onFrame?.(store)
+      if (!latest.current.live) return
+      const key = `${store.getUpdateSnapshot().revisions.sceneGeometry}:${store.runtimeState().elapsedSeconds}`
+      if (
+        store === lastFrame.current?.store &&
+        key === lastFrame.current.version
+      )
+        return
+      lastFrame.current = { store, version: key }
+      setReadout({ run, metadata: store.eventDropState()?.metadata })
+    },
+    [run]
+  )
   useImperativeHandle(
     props.live ? dataRef : undefined,
     (): PhysicsFrameHandle => {
@@ -184,18 +200,17 @@ export function useEventDropLive(
     seed.current = props.data
     const frame = frameRef.current
     if (!frame) return
-    nextId.current = 0
+    nextId.current = props.data?.length ?? 0
     const store = frame.getStore()
     store.clear()
-    store.enqueue(
-      (props.data ?? []).map((row) =>
-        eventDropLiveSpawn(row, nextId.current++, props)
-      )
-    )
+    store.enqueue(eventDropLiveSpawns(props.data ?? [], 0, props))
     // Replacement data has the same seed-body semantics as first mount,
     // including paused charts. Restore once to transfer this state to a worker.
     store.materializeDueSpawns()
     frame.restore(store.snapshot())
   }, [props.data, props.live, frameRef, props])
-  return { metadata, onFrame }
+  return {
+    metadata: readout?.run === run ? readout.metadata : undefined,
+    onFrame
+  }
 }

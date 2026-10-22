@@ -342,6 +342,41 @@ describe("FlippingTooltip — non-finite position guard", () => {
 })
 
 describe("FlippingTooltip — stable measurement", () => {
+  it.each([0.5, 1.5])(
+    "flips using logical border-box dimensions at CSS scale %s",
+    (scale) => {
+      const getStyle = window.getComputedStyle.bind(window)
+      const style = vi
+        .spyOn(window, "getComputedStyle")
+        .mockImplementation((element) => {
+          const computed = getStyle(element)
+          if (element.classList.contains("stream-frame-tooltip")) {
+            Object.defineProperties(computed, {
+              width: { value: "120.5px" },
+              height: { value: "40.5px" }
+            })
+          }
+          return computed
+        })
+      const rect = vi
+        .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+        .mockReturnValue(new DOMRect(0, 0, 120.5 * scale, 40.5 * scale))
+      try {
+        const { container } = render(
+          <FlippingTooltip {...baseProps} x={380} y={280}>
+            <span>Scaled tooltip</span>
+          </FlippingTooltip>
+        )
+        const tooltip = container.firstChild as HTMLElement
+        expect(tooltip.style.left).toBe(`${20 + 380 - 120.5 - 12}px`)
+        expect(tooltip.style.top).toBe(`${10 + 280 - 40.5 - 4}px`)
+      } finally {
+        style.mockRestore()
+        rect.mockRestore()
+      }
+    }
+  )
+
   it("does not synchronously remeasure when a hover parent recreates equivalent children", () => {
     const rect = vi
       .spyOn(HTMLElement.prototype, "getBoundingClientRect")

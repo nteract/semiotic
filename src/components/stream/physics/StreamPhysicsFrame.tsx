@@ -607,7 +607,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
           scheduleRender
         ]
       })
-      const itemHover = usePhysicsItemHover(allSemanticItems, margin, enableHover, emitObservation)
+      const itemHover = usePhysicsItemHover(allSemanticItems, margin, enableHover, emitObservation, clearSemanticFocus, clearHover)
       const physicsCanvasPointer = usePhysicsCanvasPointer({
         keyboardOwnsFocus,
         margin,

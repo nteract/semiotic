@@ -122,7 +122,9 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
   readonly perspective = new NetworkPerspectiveState()
   /** Unprojected custom-layout output, re-projected during perspective tweens. */
   private _rawCustomResult: NetworkLayoutResult | null = null
-  /** Unprojected result of the latest custom layout run; a new object exactly when the layout runs. */
+  /** Monotonic count of successful custom layout runs, including reused results. */
+  customLayoutRevision = 0
+  /** Unprojected result of the latest custom layout run; layouts may reuse it. */
   get customLayoutRun(): NetworkLayoutResult | null {
     return this._rawCustomResult
   }
@@ -885,6 +887,7 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
       this._customLayoutCache.commit()
       this._rawCustomResult = result
       this.commitCustomScene(result, size)
+      this.customLayoutRevision++
       this.lastCustomLayoutFailure = null
       // Any successful sceneNodes rebuild invalidates the lazily-built node
       // quadtree. A recovered failure preserves the current quadtree.

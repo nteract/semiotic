@@ -1361,7 +1361,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       renderMode,
       viewTransform: props.viewTransform,
       cameraOnly: cameraPaint.current,
-      layoutCommitPending: layoutCommitPending(store.customLayoutRun),
+      layoutCommitPending: layoutCommitPending(store),
       hasBackgroundGraphics: Boolean(backgroundGraphics || store.customLayoutBackgrounds),
       dirtyRef,
       resolutionDirtyRef,

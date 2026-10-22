@@ -54,6 +54,7 @@ import type {
 } from "./EventDropLiveRuntime"
 import type { PhysicsEmitterOptions } from "../../stream/physics/PhysicsEmitterSchedule"
 import { buildLiveEventDropLayout, useEventDropLive } from "./useEventDropLive"
+import { eventDropEmitterKey } from "./eventDropEmitterKey"
 import {
   eventDropOverlay,
   type EventDropWindowChrome
@@ -302,11 +303,6 @@ export const EventDropChart = /* @__PURE__ */ forwardRef(
     )
     const liveInputs = useRef(props)
     liveInputs.current = props
-    const liveReadout = useEventDropLive(
-      dataRef,
-      frameRef,
-      props as EventDropChartProps
-    )
     const buildLayout = useCallback(
       (rows: TDatum[]) =>
         liveConfig
@@ -367,14 +363,7 @@ export const EventDropChart = /* @__PURE__ */ forwardRef(
     // change starts a new run (fresh store and ledger) instead of failing an
     // in-place update; rate, activity, speed and watermark update live, and
     // removing emitters stops production on the retained board.
-    const emitterSchedule =
-      props.emitters &&
-      JSON.stringify({
-        sources: props.emitters.sources,
-        seed: props.emitters.seed,
-        durationMs: props.emitters.durationMs,
-        maxEvents: props.emitters.maxEvents
-      })
+    const emitterSchedule = eventDropEmitterKey(props.emitters)
     const committedSchedule = useRef(emitterSchedule)
     const runSchedule = emitterSchedule ?? committedSchedule.current
     useEffect(() => {
@@ -392,6 +381,13 @@ export const EventDropChart = /* @__PURE__ */ forwardRef(
       paused,
       resetSeed,
       props.onSimulationStateChange
+    )
+    const frameKey = `${rerun.rerunKey}:${live ? liveRunKey : "replay"}`
+    const liveReadout = useEventDropLive(
+      dataRef,
+      frameRef,
+      props as EventDropChartProps,
+      frameKey
     )
 
     const metadata =
@@ -504,7 +500,7 @@ export const EventDropChart = /* @__PURE__ */ forwardRef(
           liveReadout.onFrame(store)
           readouts.onFrame?.(store)
         }}
-        key={`${rerun.rerunKey}:${live ? liveRunKey : "replay"}`}
+        key={frameKey}
         config={rerun.config}
         backgroundGraphics={composePhysicsFrameGraphics(
           frameProps?.backgroundGraphics,

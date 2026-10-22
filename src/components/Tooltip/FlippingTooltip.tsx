@@ -131,7 +131,13 @@ export function FlippingTooltip({
     if (!el) return
     const measure = () => {
       const rect = el.getBoundingClientRect()
-      if (!Number.isFinite(rect.width) || !Number.isFinite(rect.height)) return
+      // Placement uses untransformed chart pixels. This wrapper is border-box,
+      // so its computed dimensions preserve fractional sizes without inheriting
+      // an ancestor's CSS scale from the viewport bounding rectangle.
+      const style = getComputedStyle(el)
+      const width = parseFloat(style.width) || rect.width
+      const height = parseFloat(style.height) || rect.height
+      if (!Number.isFinite(width) || !Number.isFinite(height)) return
       setMeasured((prev) => {
         // Sub-pixel text/layout jitter does not affect flip placement. Treat
         // differences below half a CSS pixel as the same size so an observer
@@ -139,12 +145,12 @@ export function FlippingTooltip({
         if (
           prev &&
           prev.ownsChrome === ownsChrome &&
-          Math.abs(prev.width - rect.width) < 0.5 &&
-          Math.abs(prev.height - rect.height) < 0.5
+          Math.abs(prev.width - width) < 0.5 &&
+          Math.abs(prev.height - height) < 0.5
         ) {
           return prev
         }
-        return { width: rect.width, height: rect.height, ownsChrome }
+        return { width, height, ownsChrome }
       })
     }
 

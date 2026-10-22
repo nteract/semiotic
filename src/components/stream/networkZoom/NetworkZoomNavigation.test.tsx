@@ -2,7 +2,7 @@ import * as React from "react"
 import { act, cleanup, render } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
-import type { NetworkCustomLayout } from "../networkCustomLayout"
+import type { NetworkCustomLayout, NetworkLayoutResult } from "../networkCustomLayout"
 import type { NetworkViewTransform, NetworkViewportRect } from "../networkViewportTypes"
 import { ZoomableNetworkCustomChart } from "./ZoomableNetworkCustomChart"
 import { useNetworkZoom } from "./NetworkZoomContext"
@@ -221,35 +221,76 @@ describe("zoomable network navigation", () => {
     expect(ref.current!.getZoom()).toEqual(target)
   })
 
-  it("anchors layouts that reuse and update their mark objects", async () => {
-    const reused = { id: "a", x: 100, y: 100, width: 100, height: 40, content: null }
-    const reusingLayout: NetworkCustomLayout = (ctx) => {
-      reused.x = Number(ctx.nodes[0]?.data?.x)
-      return { sceneNodes: [], sceneEdges: [], htmlMarks: [reused] }
+  it.each([false, true])(
+    "anchors retained marks and reports prior geometry when retaining result=%s",
+    async (retainResult) => {
+      const reused = {
+        id: "a",
+        x: 100,
+        y: 100,
+        width: 100,
+        height: 40,
+        content: null
+      }
+      const circle = {
+        type: "circle" as const,
+        id: "dot-a",
+        cx: 100,
+        cy: 100,
+        r: 10,
+        style: {},
+        datum: { id: "a" }
+      }
+      const retained: NetworkLayoutResult = {
+        sceneNodes: [circle],
+        sceneEdges: [],
+        htmlMarks: [reused]
+      }
+      const reusingLayout: NetworkCustomLayout = (ctx) => {
+        reused.x = Number(ctx.nodes[0]?.data?.x)
+        circle.cx = reused.x
+        return retainResult ? retained : { ...retained }
+      }
+      const commits: Array<[number | undefined, number | undefined]> = []
+      const ref = React.createRef<ZoomableNetworkCustomChartHandle>()
+      const chart = (x: number) => (
+        <ZoomableNetworkCustomChart
+          ref={ref}
+          nodes={[{ id: "a", x, y: 100 }]}
+          layout={reusingLayout}
+          width={800}
+          height={600}
+          margin={margin}
+          animate={false}
+          zoomControls={false}
+          zoomOptions={{ duration: 0, anchor: { markId: "a" } }}
+          onLayoutCommit={(result, previous) => {
+            commits.push([result?.htmlMarks?.[0].x, previous?.htmlMarks?.[0].x])
+            if (previous)
+              expect(previous.sceneNodes?.[0]).toMatchObject({ cx: 100 })
+          }}
+        />
+      )
+      const view = render(chart(100))
+      act(() => vi.advanceTimersByTime(32))
+      const before = screenRect(
+        ref.current!.getMarkBounds("a")!,
+        ref.current!.getZoom()
+      )
+      view.rerender(chart(420))
+      await act(async () => vi.advanceTimersByTime(32))
+      const after = screenRect(
+        ref.current!.getMarkBounds("a")!,
+        ref.current!.getZoom()
+      )
+      expect(ref.current!.getMarkBounds("a")!.x).toBe(420)
+      expect(Math.abs(after.x - before.x)).toBeLessThanOrEqual(0.5)
+      expect(commits).toEqual([
+        [100, undefined],
+        [420, 100]
+      ])
     }
-    const ref = React.createRef<ZoomableNetworkCustomChartHandle>()
-    const chart = (x: number) => (
-      <ZoomableNetworkCustomChart
-        ref={ref}
-        nodes={[{ id: "a", x, y: 100 }]}
-        layout={reusingLayout}
-        width={800}
-        height={600}
-        margin={margin}
-        animate={false}
-        zoomControls={false}
-        zoomOptions={{ duration: 0, anchor: { markId: "a" } }}
-      />
-    )
-    const view = render(chart(100))
-    act(() => vi.advanceTimersByTime(32))
-    const before = screenRect(ref.current!.getMarkBounds("a")!, ref.current!.getZoom())
-    view.rerender(chart(420))
-    await act(async () => vi.advanceTimersByTime(32))
-    const after = screenRect(ref.current!.getMarkBounds("a")!, ref.current!.getZoom())
-    expect(ref.current!.getMarkBounds("a")!.x).toBe(420)
-    expect(Math.abs(after.x - before.x)).toBeLessThanOrEqual(0.5)
-  })
+  )
 
   it("re-renders selector consumers only when the selection changes", async () => {
     const ref = React.createRef<ZoomableNetworkCustomChartHandle>()

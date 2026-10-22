@@ -117,4 +117,68 @@ describe("physics pointer tooltips", () => {
     expect(container.querySelectorAll(".stream-physics-tooltip")).toHaveLength(1)
     expect(tooltip(container)).toHaveTextContent("units: 12")
   })
+
+  it("hands keyboard body focus to a pointer item and keeps it through repaint", () => {
+    const ref = React.createRef<StreamPhysicsFrameHandle>()
+    const onBodyHover = vi.fn()
+    const onSemanticItemFocus = vi.fn()
+    const { container, getByTestId } = render(
+      frame({
+        ref,
+        bodySemanticItems: true,
+        onBodyHover,
+        onSemanticItemFocus
+      })
+    )
+    act(() => ref.current!.step(0))
+    const host = container.querySelector('[role="img"]')!
+    fireEvent.keyDown(host, { key: "End" })
+    fireEvent.keyDown(host, { key: "End" })
+    expect(tooltip(container)).toHaveTextContent("units: 12")
+    fireEvent.pointerLeave(container.querySelector("canvas")!)
+    fireEvent.pointerMove(getByTestId("pipe-hit"), { clientX: 120, clientY: 40 })
+    expect(onSemanticItemFocus).toHaveBeenLastCalledWith(null)
+    expect(onBodyHover).toHaveBeenLastCalledWith(null, null)
+    expect(tooltip(container)).toHaveTextContent("A → B: 4 rec/s")
+    act(() => ref.current!.step(0))
+    expect(tooltip(container)).toHaveTextContent("A → B: 4 rec/s")
+    fireEvent.pointerLeave(host)
+    expect(tooltip(container)).toBeNull()
+  })
+
+  it("reports item hover in logical plot coordinates under a scaled ancestor", () => {
+    const onObservation = vi.fn()
+    const { container, getByTestId } = render(
+      frame({
+        onObservation,
+        margin: { left: 10, top: 20, right: 0, bottom: 0 }
+      })
+    )
+    const host = container.querySelector<HTMLElement>('[role="img"]')!
+    Object.defineProperties(host, {
+      clientWidth: { value: 200 },
+      clientHeight: { value: 120 }
+    })
+    vi.spyOn(host, "getBoundingClientRect").mockReturnValue({
+      left: 30,
+      top: 40,
+      width: 100,
+      height: 60,
+      right: 130,
+      bottom: 100,
+      x: 30,
+      y: 40,
+      toJSON: () => ({})
+    })
+    fireEvent.pointerMove(getByTestId("pipe-hit"), { clientX: 95, clientY: 70 })
+    expect(onObservation).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        type: "hover",
+        x: 120,
+        y: 40,
+        datum: pipe.datum
+      })
+    )
+  })
+
 })

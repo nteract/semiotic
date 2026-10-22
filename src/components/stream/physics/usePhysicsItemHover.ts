@@ -1,6 +1,7 @@
 import * as React from "react"
 import type { PhysicsSemanticItem } from "./StreamPhysicsTypes"
 import type { PhysicsFrameObservationPayload } from "./physicsFrameObservations"
+import { physicsCanvasCoordinates } from "./physicsCanvasCoordinates"
 
 /** A semantic item under the pointer, in plot coordinates. */
 export interface PhysicsItemHover {
@@ -28,7 +29,9 @@ export function usePhysicsItemHover(
   items: readonly PhysicsSemanticItem[],
   margin: { left: number; top: number },
   enabled: boolean,
-  emitObservation: ItemHoverObservation
+  emitObservation: ItemHoverObservation,
+  clearKeyboardFocus: () => void,
+  clearBodyHover: () => void
 ) {
   const [hover, setHover] = React.useState<PhysicsItemHover | null>(null)
   const hoverRef = React.useRef<PhysicsItemHover | null>(null)
@@ -60,11 +63,17 @@ export function usePhysicsItemHover(
         clear()
         return
       }
-      const rect = event.currentTarget.getBoundingClientRect()
+      // Pointer items take ownership before publishing their own hover.
+      clearKeyboardFocus()
+      clearBodyHover()
       const next = {
         item,
-        x: event.clientX - rect.left - margin.left,
-        y: event.clientY - rect.top - margin.top
+        ...physicsCanvasCoordinates(
+          event.currentTarget,
+          event.clientX,
+          event.clientY,
+          margin
+        )
       }
       const previous = hoverRef.current
       hoverRef.current = next
@@ -77,7 +86,15 @@ export function usePhysicsItemHover(
           inputType: "pointer"
         })
     },
-    [byId, clear, emitObservation, enabled, margin.left, margin.top]
+    [
+      byId,
+      clear,
+      emitObservation,
+      enabled,
+      margin,
+      clearKeyboardFocus,
+      clearBodyHover
+    ]
   )
 
   React.useEffect(() => {
