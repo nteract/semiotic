@@ -393,7 +393,7 @@ describe("public API compatibility comparison", () => {
     }
   })
 
-  it("preserves released EventDrop ref and frame-prop patterns through public imports", () => {
+  it("preserves released chart props and handles through public imports", () => {
     const compiled = spawnSync(process.execPath, [
       "node_modules/typescript/bin/tsc",
       "--project", "scripts/fixtures/packed-typescript-consumer/tsconfig.json",

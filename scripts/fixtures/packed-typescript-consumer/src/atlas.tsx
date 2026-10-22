@@ -52,17 +52,29 @@ export function publicAtlasReaders(
     reading: "required-paths",
     onSelectNode: (id) => console.log(id)
   }
-  const circuitProps: FlowCircuitChartProps = {
+  const circuitProps: Omit<FlowCircuitChartProps, "tooltip"> = {
     circuit,
     edition,
     reading,
     linkedSelection: { name: "vertices" },
     reducedMotion: true
   }
+  const tooltip: FlowCircuitChartProps["tooltip"] = (datum) => String(datum.kind)
+  // @ts-expect-error Tooltip controls retain their boolean/callback/config type.
+  const invalidTooltip: FlowCircuitChartProps["tooltip"] = 123
+  void invalidTooltip
   return {
     braid: createElement(MotifBraidChart, braidProps),
     forest: createElement(DependencyForestChart, forestProps),
     circuit: createElement(FlowCircuitChart, circuitProps),
+    circuitWithoutTooltips: createElement(FlowCircuitChart, {
+      ...circuitProps,
+      tooltip: false
+    }),
+    circuitWithTooltip: createElement(FlowCircuitChart, {
+      ...circuitProps,
+      tooltip
+    }),
     matrix: createElement(DependencyMatrix, { forest, nodeIds: forest.order }),
     svg: renderChartWithEvidence("FlowCircuitChart", circuitProps)
   }
