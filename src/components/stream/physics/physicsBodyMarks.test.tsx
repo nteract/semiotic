@@ -51,6 +51,22 @@ describe("physics mark parity", () => {
     }
   )
 
+  it("skips a halo when fill and stroke are none", () => {
+    const fixture = body()
+    const ctx = document.createElement("canvas").getContext("2d")!
+    const stroke = vi.spyOn(ctx, "stroke")
+    const fill = vi.spyOn(ctx, "fill")
+    drawBody(ctx, fixture.body, {
+      mark: "halo",
+      r: 10,
+      fill: "none",
+      stroke: "none"
+    })
+    expect(fill).not.toHaveBeenCalled()
+    expect(stroke).not.toHaveBeenCalled()
+    expect(ctx.strokeStyle).not.toBe("none")
+  })
+
   it("renders glyph callbacks with the original datum and diagnoses visual/collider mismatch", () => {
     const fixture = body()
     const glyph = {

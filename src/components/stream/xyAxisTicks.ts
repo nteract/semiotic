@@ -163,9 +163,9 @@ function heatmapBandTickFormatter(ticks: HeatmapBandTick[]): AxisTickFormatter {
   if (labels.length > 0 && labels.every((label) => label instanceof Date)) {
     const times = labels.map((label) => (label as Date).getTime())
     const format = makeDateTickFormatter([Math.min(...times), Math.max(...times)])
-    return (value, index, all) => {
+    return (value) => {
       const label = labelAt(value)
-      return label instanceof Date ? format(label, index, all) : String(label)
+      return label instanceof Date ? format(label) : String(label)
     }
   }
   if (labels.every((label) => typeof label === "number" && Number.isFinite(label))) {

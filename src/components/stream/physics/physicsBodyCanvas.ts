@@ -164,10 +164,11 @@ export function drawBody(
     ctx.fill()
     ctx.restore()
   }
-  if (mark === "halo" && (strokeWidth ?? 1.5) > 0) {
+  const haloPaint = stroke ?? fill
+  if (mark === "halo" && haloPaint && (strokeWidth ?? 1.5) > 0) {
     ctx.beginPath()
     ctx.arc(body.x, body.y, radius * 1.35, 0, Math.PI * 2)
-    ctx.strokeStyle = stroke ?? fill
+    ctx.strokeStyle = haloPaint
     ctx.lineWidth = Math.max(1.5, strokeWidth ?? 1.5)
     ctx.globalAlpha *= 0.55
     ctx.stroke()
