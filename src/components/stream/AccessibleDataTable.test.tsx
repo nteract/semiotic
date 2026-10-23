@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest"
+import React from "react"
 import { renderToString } from "react-dom/server"
 import { fireEvent, render, screen, within } from "@testing-library/react"
 import {
@@ -9,6 +10,7 @@ import {
   extractAllRows,
 } from "./AccessibleDataTable"
 import NetworkAccessibleDataTable from "./NetworkAccessibleDataTable"
+import { useUniqueRegionLabel } from "./uniqueRegionLabel"
 import type { Datum } from "../charts/shared/datumTypes"
 
 // ── Test helpers ────────────────────────────────────────────────────────
@@ -190,6 +192,65 @@ describe("AccessibleDataTable styling hooks", () => {
     )
     expect(again).toContain('aria-label="Data summary for line chart"')
     expect(again).not.toContain("(2)")
+  })
+
+  it("keeps nested and base32 summary ids in encounter order", () => {
+    function Named() {
+      return <span data-label={useUniqueRegionLabel("Data summary for line chart")} />
+    }
+    function Nested() {
+      return (
+        <div>
+          <Named />
+          <section>
+            <Named />
+            <Named />
+          </section>
+          <Named />
+        </div>
+      )
+    }
+    const nested = renderToString(<Nested />)
+    const labels = [...nested.matchAll(/data-label="([^"]+)"/g)].map((match) => match[1])
+    expect(labels).toEqual([
+      "Data summary for line chart",
+      "Data summary for line chart (2)",
+      "Data summary for line chart (3)",
+      "Data summary for line chart (4)",
+    ])
+  })
+
+  it("keeps a base32 summary id on the same render count", () => {
+    function Named() {
+      return <span data-label={useUniqueRegionLabel("Data summary for line chart")} />
+    }
+    const many = renderToString(
+      <>
+        {Array.from({ length: 12 }, (_, index) => <Named key={index} />)}
+      </>
+    )
+    const labels = [...many.matchAll(/data-label="([^"]+)"/g)].map((match) => match[1])
+    expect(labels[0]).toBe("Data summary for line chart")
+    expect(labels[9]).toBe("Data summary for line chart (10)")
+    expect(labels[11]).toBe("Data summary for line chart (12)")
+    expect(labels.filter((label) => label === "Data summary for line chart")).toHaveLength(1)
+  })
+
+  it("starts each prefixed server render at the base summary name", () => {
+    const scene = [{ type: "point" as const, x: 1, y: 2 }]
+    const tables = (
+      <>
+        <AccessibleDataTable tableId="alpha-one" chartType="line chart" scene={scene} />
+        <AccessibleDataTable tableId="alpha-two" chartType="line chart" scene={scene} />
+      </>
+    )
+    const alpha = renderToString(tables, { identifierPrefix: "alpha" })
+    const beta = renderToString(tables, { identifierPrefix: "beta" })
+    for (const html of [alpha, beta]) {
+      expect(html).toContain('aria-label="Data summary for line chart"')
+      expect(html).toContain('aria-label="Data summary for line chart (2)"')
+      expect(html).not.toContain("(3)")
+    }
   })
 
   it("constrains the collapsed trigger to the visually hidden region", () => {

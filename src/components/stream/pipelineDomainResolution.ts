@@ -72,8 +72,11 @@ export function resolveStackedAreaYDomain(options: {
 
   // Normalized stacks still need their cumulative shares. The unit domain is
   // fixed, but log sampling has to see 0→1/3→1 rather than the raw rows.
+  // Stack order changes the cumulative shares even when the unit domain
+  // stays [0, 1]. A config-only order update does not bump the ingest
+  // version, so the order has to be part of the key.
   const stackCacheKey = config.normalize
-    ? `${options.bufferSize}:${options.ingestVersion}:norm`
+    ? `${options.bufferSize}:${options.ingestVersion}:norm:${config.stackOrder ?? "key"}`
     : `${options.bufferSize}:${options.ingestVersion}:${config.baseline ?? "zero"}:${config.stackOrder ?? "key"}`
   if (
     options.stackExtentCache &&

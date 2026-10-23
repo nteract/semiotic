@@ -78,7 +78,10 @@ export function drawBody(
   // `"none"` is truthy. Canvas rejects it and strokes the default black.
   // Resolve it before coerceCanvasFill, which maps "none" to transparent
   // and would still stroke.
-  const stroke = isNoneCanvasPaint(style.stroke)
+  // An omitted stroke falls back to the fill for a halo. An explicit
+  // "none" is disabled and must not select that fill.
+  const strokeDisabled = isNoneCanvasPaint(style.stroke)
+  const stroke = strokeDisabled
     ? undefined
     : coerceCanvasFill(ctx, style.stroke)
   const strokeWidth = style.strokeWidth ?? 0
@@ -164,7 +167,7 @@ export function drawBody(
     ctx.fill()
     ctx.restore()
   }
-  const haloPaint = stroke ?? fill
+  const haloPaint = strokeDisabled ? undefined : (stroke ?? fill)
   if (mark === "halo" && haloPaint && (strokeWidth ?? 1.5) > 0) {
     ctx.beginPath()
     ctx.arc(body.x, body.y, radius * 1.35, 0, Math.PI * 2)

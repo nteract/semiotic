@@ -10,49 +10,55 @@ const groups = new Map<string, Set<symbol>>()
 const listeners = new Map<symbol, (ordinal: number) => void>()
 
 type SummaryScope = {
-  firstId: string | null
   counts: Map<string, number>
   ordinals: Map<string, number>
 }
 
-// One scope per React render. Layout effects do not run on the server, so the
-// ordinal has to be assigned while the tree renders. Seeing the first id again
-// starts a new render; a microtask drops the scope so the next request does
-// not continue the count. The id itself never appears in the accessible name.
-let summaryScope: SummaryScope | null = null
-let summaryScopeClear = false
-
-function reactIdIndex(id: string): number {
-  const matches = id.match(/\d+/g)
-  return matches ? Number(matches[matches.length - 1]) : 0
-}
+// One scope per server render. React's useId is `_` + identifierPrefix +
+// `R_`/`r_` + an opaque tree token. The prefix owns the render: two
+// identifierPrefix values never share a count. The token is not a decimal
+// counter (`_R_a_` follows `_R_9_`, and a nested tree can step backwards),
+// so ordinals follow encounter order. Token `0` is the render root; seeing
+// it after another chart starts the next same-prefix render. A microtask
+// retires the map so a later request cannot continue an unseen id.
+const scopesByOwner = new Map<string, SummaryScope>()
+let scopeRetirement = false
 
 function freshSummaryScope(): SummaryScope {
-  const scope: SummaryScope = { firstId: null, counts: new Map(), ordinals: new Map() }
-  summaryScope = scope
-  if (!summaryScopeClear) {
-    summaryScopeClear = true
-    queueMicrotask(() => {
-      summaryScope = null
-      summaryScopeClear = false
-    })
+  return { counts: new Map(), ordinals: new Map() }
+}
+
+function renderOwner(id: string): { owner: string; token: string } {
+  const match = /^_(.*?)[Rr]_([^H_]+)/.exec(id)
+  return match ? { owner: match[1], token: match[2] } : { owner: id, token: "" }
+}
+
+function automaticScope(id: string): SummaryScope {
+  const { owner, token } = renderOwner(id)
+  let scope = scopesByOwner.get(owner)
+  if (scope && token === "0" && !scope.ordinals.has(id) && scope.ordinals.size > 0) {
+    scope = undefined
+  }
+  if (!scope) {
+    scope = freshSummaryScope()
+    scopesByOwner.set(owner, scope)
+    if (!scopeRetirement) {
+      scopeRetirement = true
+      queueMicrotask(() => {
+        scopesByOwner.clear()
+        scopeRetirement = false
+      })
+    }
   }
   return scope
 }
 
-function takeRenderOrdinal(base: string, reactId: string): number {
-  const current = summaryScope
-  const nextIndex = reactIdIndex(reactId)
-  const newRender = current == null
-    || (current.firstId === reactId && current.ordinals.has(reactId))
-    || (current.firstId != null && nextIndex < reactIdIndex(current.firstId))
-  const scope = newRender || current == null ? freshSummaryScope() : current
+function takeRenderOrdinal(scope: SummaryScope, base: string, reactId: string): number {
   const existing = scope.ordinals.get(reactId)
   if (existing != null) return existing
   const ordinal = (scope.counts.get(base) ?? 0) + 1
   scope.counts.set(base, ordinal)
   scope.ordinals.set(reactId, ordinal)
-  if (scope.firstId == null) scope.firstId = reactId
   return ordinal
 }
 
@@ -70,7 +76,9 @@ export function useUniqueRegionLabel(base: string): string {
   if (tokenRef.current == null) tokenRef.current = Symbol("summary-region")
   const token = tokenRef.current
   const initialOrdinal = React.useRef<number | null>(null)
-  if (initialOrdinal.current == null) initialOrdinal.current = takeRenderOrdinal(base, reactId)
+  if (initialOrdinal.current == null) {
+    initialOrdinal.current = takeRenderOrdinal(automaticScope(reactId), base, reactId)
+  }
   const [ordinal, setOrdinal] = React.useState(initialOrdinal.current)
 
   React.useLayoutEffect(() => {

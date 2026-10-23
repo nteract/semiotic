@@ -14,7 +14,9 @@ function bandScales(columns: number[]) {
 function renderBrush(
   columns: number[],
   onBrush = vi.fn(),
-  streaming = false
+  streaming = false,
+  dimension: "x" | "y" = "x",
+  rows?: number[]
 ) {
   const result = render(
     <XYBrushOverlay
@@ -23,8 +25,13 @@ function renderBrush(
       totalWidth={300}
       totalHeight={200}
       margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-      dimension="x"
-      scales={bandScales(columns)}
+      dimension={dimension}
+      scales={{
+        x: heatmapBandScale(columns, [0, 300]),
+        y: rows
+          ? heatmapBandScale(rows, [200, 0])
+          : scaleLinear().domain([0, 1]).range([200, 0]),
+      }}
       onBrush={onBrush}
       streaming={streaming}
     />
@@ -74,6 +81,20 @@ describe("heatmap band brush coordinates", () => {
     const nudged = onBrush.mock.lastCall?.[0]
     expect(nudged.x[0]).toBeCloseTo(16.5)
     expect(nudged.x[1]).toBeCloseTo(26.5)
+  })
+
+  it("keeps a visible keyboard brush on a single column and a single row", () => {
+    const column = renderBrush([10])
+    fireEvent.keyDown(column.region, { key: "ArrowRight" })
+    const xExtent = column.onBrush.mock.lastCall?.[0]
+    expect(xExtent.x[1] - xExtent.x[0]).toBeGreaterThan(0)
+    expect(Number(column.container.querySelector(".selection")?.getAttribute("width"))).toBeGreaterThan(1)
+
+    const row = renderBrush([0], vi.fn(), false, "y", [10])
+    fireEvent.keyDown(row.region, { key: "ArrowUp" })
+    const yExtent = row.onBrush.mock.lastCall?.[0]
+    expect(yExtent.y[1] - yExtent.y[0]).toBeGreaterThan(0)
+    expect(Number(row.container.querySelector(".selection")?.getAttribute("height"))).toBeGreaterThan(1)
   })
 
   it("keeps a negative data-space brush when the scale updates", () => {

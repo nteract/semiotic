@@ -339,6 +339,31 @@ describe("PipelineStore domain integrity", () => {
     expect(Math.abs(lower.topPath[0][1] - lower.bottomPath[0][1])).toBeLessThan(1)
   })
 
+  it("recomputes a normalized log domain when only the stack order changes", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {})
+    const store = new PipelineStore(config({
+      chartType: "stackedarea",
+      yScaleType: "log",
+      normalize: true,
+      stackOrder: "desc",
+      groupAccessor: "g",
+    }))
+    store.ingest({
+      inserts: [0, 1].flatMap((x) => [
+        { x, g: "a", y: 1 },
+        { x, g: "b", y: 9 },
+        { x, g: "c", y: 90 },
+      ]),
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)[0]).toBeCloseTo(0.9)
+    store.updateConfig({ stackOrder: "asc" })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)[0]).toBeCloseTo(0.01)
+    expect(yDomain(store)[1]).toBeCloseTo(1)
+  })
+
   it("keeps a positive silhouette layer on a log domain", () => {
     vi.spyOn(console, "warn").mockImplementation(() => {})
     const store = new PipelineStore(config({

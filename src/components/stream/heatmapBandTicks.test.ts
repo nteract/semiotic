@@ -38,6 +38,19 @@ describe("heatmap band coordinates", () => {
     )
   })
 
+  it("keeps a single key wider than a point", () => {
+    const column = heatmapBandScale([10], [0, 300])
+    expect(invertHeatmapBandValue(column, 0)).toBeCloseTo(9.5)
+    expect(invertHeatmapBandValue(column, 300)).toBeCloseTo(10.5)
+    expect(invertHeatmapBandValue(column, 150)).toBeCloseTo(10)
+    expect(projectHeatmapBandDataValue(column, 9.5)).toBeCloseTo(0)
+    expect(projectHeatmapBandDataValue(column, 10.5)).toBeCloseTo(300)
+    const day = new Date(Date.UTC(2024, 0, 1))
+    const dateColumn = heatmapBandScale([day], [0, 300])
+    expect(invertHeatmapBandValue(dateColumn, 0)).toBeCloseTo(day.getTime() - 0.5)
+    expect(invertHeatmapBandValue(dateColumn, 300)).toBeCloseTo(day.getTime() + 0.5)
+  })
+
   it("returns the cell index for categorical bands", () => {
     const rows = heatmapBandScale(["low", "high"], [200, 0])
     expect(invertHeatmapBandValue(rows, 50)).toBeCloseTo(rows.invert(50))

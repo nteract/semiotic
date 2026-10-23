@@ -191,7 +191,9 @@ function heatmapBandNumericKeys(ticks: HeatmapBandTick[]): number[] | null {
 function heatmapBandValueAtIndex(ticks: HeatmapBandTick[], index: number): number {
   const keys = heatmapBandNumericKeys(ticks)
   if (!keys) return index
-  if (keys.length === 1) return keys[0]
+  // One cell still spans the plot. A gap of one index keeps the domain
+  // edges on opposite sides of the key so a brush has a nonzero width.
+  if (keys.length === 1) return keys[0] + index
   if (index <= 0) return keys[0] + index * (keys[1] - keys[0])
   const last = keys.length - 1
   if (index >= last) return keys[last] + (index - last) * (keys[last] - keys[last - 1])
@@ -200,7 +202,7 @@ function heatmapBandValueAtIndex(ticks: HeatmapBandTick[], index: number): numbe
 }
 
 function heatmapBandIndexForValue(keys: number[], value: number): number | null {
-  if (keys.length < 2) return keys.length === 1 ? 0 : null
+  if (keys.length < 2) return keys.length === 1 ? value - keys[0] : null
   for (let i = 0; i < keys.length - 1; i++) {
     const start = keys[i]
     const end = keys[i + 1]
