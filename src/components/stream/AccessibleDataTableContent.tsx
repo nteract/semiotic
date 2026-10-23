@@ -12,6 +12,7 @@ import {
 } from "./accessibleTableStyles"
 import { extractAllRows } from "./accessibleDataRows"
 import { computeFieldStats, formatSummary } from "./accessibleDataTableModel"
+import { countNoun } from "./countNoun"
 
 /** Loaded only on expansion; unmounting on collapse resets pagination. */
 export default function AccessibleDataTableContent({
@@ -58,8 +59,8 @@ export default function AccessibleDataTableContent({
         typeLabel="type"
         caption={
           remaining > 0
-            ? `First ${shownCount} of ${allRows.length} data points`
-            : `All ${allRows.length} data points`
+            ? `First ${shownCount} of ${countNoun(allRows.length, "data point", "data points")}`
+            : `All ${countNoun(allRows.length, "data point", "data points")}`
         }
       />
       <AccessibleTableMoreRows

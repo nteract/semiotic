@@ -80,7 +80,10 @@ const analyze = process.argv.includes("--analyze")
 // User-approved live physics/schema cost (2026-10-21): the unchanged named-import
 // union measures 317,480 bytes (310.039 KiB). Keep under 0.5 KiB headroom;
 // tree-shaking and cross-entry identity checks remain required.
-const MULTI_IMPORT_GZIP_BUDGET = 310.5 * 1024
+// Canvas none-paint, plotted log domains, heatmap band ticks, and accessible
+// count nouns (2026-10-22, #1641) land in this shared union. Local production
+// measures 319,921 bytes (312.4 KiB). Keep about 0.8 KiB for Linux variance.
+const MULTI_IMPORT_GZIP_BUDGET = 313.2 * 1024
 
 const MULTI_IMPORT_SOURCE = `
 export { LineChart } from "semiotic/xy"

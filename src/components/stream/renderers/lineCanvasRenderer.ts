@@ -83,7 +83,7 @@ export function renderCanvasLines(
   for (const node of lineNodes) {
     if (node.path.length < 2) continue
     // `"none"` is truthy. Canvas rejects it and strokes the default black.
-    if (isNoneCanvasPaint(node.style.stroke)) continue
+    // A none stroke still has an independent area fill, same as width 0.
 
     // Intro clip: reveal line from left to right
     const clipFrac = node._introClipFraction
@@ -97,9 +97,10 @@ export function renderCanvasLines(
     // Resolve CSS variable-valued strokes (e.g. `stroke="var(--semiotic-primary)"`)
     // via getComputedStyle on the canvas element. Without this, canvas silently
     // rejects `var(...)` strings and falls back to #000000.
-    const rawStroke = node.style.stroke || "#007bff"
+    const strokeIsNone = isNoneCanvasPaint(node.style.stroke)
+    const rawStroke = strokeIsNone ? "#007bff" : (node.style.stroke || "#007bff")
     const baseColor = resolveCSSColor(ctx, rawStroke) || rawStroke
-    const lineWidth = node.style.strokeWidth ?? 2
+    const lineWidth = strokeIsNone ? 0 : (node.style.strokeWidth ?? 2)
     const thresholds = node.colorThresholds
     const rawValues = node.rawValues
 

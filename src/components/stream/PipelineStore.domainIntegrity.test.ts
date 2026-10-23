@@ -202,6 +202,88 @@ describe("PipelineStore domain integrity", () => {
     expect(yDomain(store)).toEqual([1, 10])
   })
 
+  it("uses one decade when padding leaves a positive end and no positive sample", () => {
+    const store = new PipelineStore(config({
+      yScaleType: "log",
+      extentPadding: 0.1,
+    }))
+    store.ingest({
+      inserts: [
+        { x: 0, y: -1000 },
+        { x: 1, y: 0 },
+      ],
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([1, 10])
+  })
+
+  it("keeps a non-positive point and clamps it to the positive edge", () => {
+    const store = new PipelineStore(config({ yScaleType: "log" }))
+    store.ingest({
+      inserts: [
+        { x: 0, y: 0 },
+        { x: 1, y: 100 },
+        { x: 2, y: 1000 },
+      ],
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    const points = store.scene.flatMap((node) => node.type === "point" ? [node] : [])
+    const zero = points.find((node) => (node.datum as { y: number }).y === 0)
+    const hundred = points.find((node) => (node.datum as { y: number }).y === 100)
+    expect(zero).toBeTruthy()
+    expect(hundred).toBeTruthy()
+    expect(zero!.y).toBeCloseTo(hundred!.y)
+    expect(yDomain(store)).toEqual([100, 1000])
+  })
+
+  it("derives a log bar domain from bin totals", () => {
+    const store = new PipelineStore(config({
+      chartType: "bar",
+      binSize: 10,
+      yScaleType: "log",
+    }))
+    store.ingest({
+      inserts: [
+        { x: 0, y: -9 },
+        { x: 1, y: 10 },
+        { x: 10, y: 10 },
+        { x: 20, y: 100 },
+        { x: 29, y: 0 },
+      ],
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([1, 100])
+    const bars = store.scene.flatMap((node) => node.type === "rect" ? [node] : [])
+    const bar = (total: number) => bars.find((node) =>
+      (node.datum as { total: number }).total === total
+    )
+    expect(bar(1)!.h).toBeCloseTo(0)
+    expect(bar(10)!.h).toBeCloseTo(100)
+    expect(bar(100)!.h).toBeCloseTo(200)
+  })
+
+  it("derives a log stacked-area domain from stack boundaries", () => {
+    const store = new PipelineStore(config({
+      chartType: "stackedarea",
+      yScaleType: "log",
+      baseline: "zero",
+      stackOrder: "key",
+      groupAccessor: "g",
+    }))
+    store.ingest({
+      inserts: [
+        { x: 0, g: "a", y: 20 },
+        { x: 0, g: "b", y: -15 },
+      ],
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([5, 20])
+  })
+
   it("recalculates extents after eviction without waiting for computeScene", () => {
     const store = new PipelineStore(config({ pointIdAccessor: "id" }))
     store.ingest({

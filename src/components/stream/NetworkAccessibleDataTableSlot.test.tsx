@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react"
 import { expect, it, vi } from "vitest"
 import { NetworkAccessibleDataTableSlot } from "./NetworkAccessibleDataTableSlot"
 import { AccessibleDataTableSlot } from "./AccessibleDataTable"
+import { countNoun } from "./countNoun"
 import { renderToString } from "react-dom/server"
 
 const loading = vi.hoisted(() => {
@@ -30,7 +31,7 @@ it.each([
   {
     name: "network",
     loading: loading.network,
-    count: "1 nodes, 0 edges",
+    count: `${countNoun(1, "node")}, ${countNoun(0, "edge")}`,
     table: (
       <NetworkAccessibleDataTableSlot
         tableId="lazy-summary"
@@ -43,7 +44,7 @@ it.each([
   {
     name: "scene",
     loading: loading.scene,
-    count: "1 elements",
+    count: countNoun(1, "element"),
     table: (
       <AccessibleDataTableSlot
         accessibleTable

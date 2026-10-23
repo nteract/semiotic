@@ -14,10 +14,7 @@ import type { Datum } from "../charts/shared/datumTypes"
 import { computeBinExtent, histogramBinStart } from "../realtime/BinAccumulator"
 import type { BinAlign } from "../realtime/BinAccumulator"
 import { computeWaterfallExtent } from "../realtime/renderers/waterfallRenderer"
-import {
-  computeDivergingStackExtent,
-  computeStackOffsets
-} from "./SceneGraph"
+import { computeStackOffsets } from "./SceneGraph"
 import type { PipelineConfig } from "./pipelineConfig"
 import type { ArrowOfTime, StreamScales } from "./types"
 import type { ResolvedRibbon } from "./xySceneBuilders/ribbonScene"
@@ -26,6 +23,8 @@ import type { RingBuffer } from "../realtime/RingBuffer"
 export type StackExtentCache = {
   key: string
   yDomain: [number, number]
+  /** Stack boundaries the scene passes to the y scale. */
+  plottedY?: number[]
 }
 
 export function getTimeAxis(_arrowOfTime: ArrowOfTime): "x" {
@@ -166,11 +165,13 @@ export function resolveStackedAreaYDomain(options: {
       (k, x) => valueMaps.get(k)?.get(x) || 0,
       config.baseline
     )
+    const plottedY: number[] = []
     let lo = Infinity
     let hi = -Infinity
     for (const x of xValues) {
       const off = offsets.get(x) ?? 0
       const total = xTotals.get(x) ?? 0
+      plottedY.push(off, off + total)
       if (off < lo) lo = off
       if (off + total > hi) hi = off + total
     }
@@ -181,27 +182,43 @@ export function resolveStackedAreaYDomain(options: {
     const range = hi - lo
     const pad = exactMode ? 0 : range > 0 ? range * config.extentPadding : 1
     yDomain = [lo - pad, hi + pad]
+    const stackExtentCache = { key: stackCacheKey, yDomain, plottedY }
+    return { yDomain, stackExtentCache }
   } else if (config.baseline === "diverging") {
     const xValues = Array.from(xSet).sort((a, b) => a - b)
-    const [lo, hi] = computeDivergingStackExtent(
-      xValues,
-      groupKeys,
-      (k, x) => valueMaps.get(k)?.get(x) || 0
-    )
+    const plottedY: number[] = []
+    let lo = 0
+    let hi = 0
+    for (const x of xValues) {
+      let pos = 0
+      let neg = 0
+      for (const key of groupKeys) {
+        const value = valueMaps.get(key)?.get(x) || 0
+        if (value >= 0) pos += value
+        else neg += value
+      }
+      plottedY.push(pos, neg)
+      if (neg < lo) lo = neg
+      if (pos > hi) hi = pos
+    }
     const range = hi - lo
     const pad = exactMode ? 0 : range > 0 ? range * config.extentPadding : 1
     yDomain = [lo - pad, hi + pad]
+    const stackExtentCache = { key: stackCacheKey, yDomain, plottedY }
+    return { yDomain, stackExtentCache }
   } else {
     // Walk the same stack order as the scene. A commutative total hides
     // negative layers and order-dependent peaks, so the domain follows the
     // running cursor and keeps a zero baseline when the stack never goes below it.
     const xValues = Array.from(xSet).sort((a, b) => a - b)
+    const plottedY: number[] = []
     let lo = 0
     let hi = 0
     for (const x of xValues) {
       let cursor = 0
       for (const key of groupKeys) {
         cursor += valueMaps.get(key)?.get(x) || 0
+        plottedY.push(cursor)
         if (cursor < lo) lo = cursor
         if (cursor > hi) hi = cursor
       }
@@ -209,10 +226,9 @@ export function resolveStackedAreaYDomain(options: {
     const range = hi - lo
     const pad = exactMode ? 0 : range > 0 ? range * config.extentPadding : 1
     yDomain = [lo < 0 ? lo - pad : 0, hi + pad]
+    const stackExtentCache = { key: stackCacheKey, yDomain, plottedY }
+    return { yDomain, stackExtentCache }
   }
-
-  const stackExtentCache = { key: stackCacheKey, yDomain }
-  return { yDomain, stackExtentCache }
 }
 
 export function resolveBarBinYDomain(
@@ -397,9 +413,9 @@ export function rescueDegenerateDomains(
 
 /**
  * Log scales cannot plot non-positive bounds. Keep an already-positive
- * domain, including a flipped one. Otherwise replace each non-positive end
- * with the smallest or largest positive sample. With no positive sample,
- * fall back to one decade starting at 1.
+ * domain, including a flipped one. With no positive sample, use one decade
+ * starting at 1 even when padding left a positive end. Otherwise replace
+ * each non-positive end with the smallest or largest positive sample.
  */
 export function clampLogDomain(
   domain: [number, number],
@@ -411,8 +427,9 @@ export function clampLogDomain(
   const lowOk = low > 0 && Number.isFinite(low)
   const highOk = high > 0 && Number.isFinite(high)
   if (lowOk && highOk) return domain
-  const nextLow = lowOk ? low : positive?.min ?? 1
-  let nextHigh = highOk ? high : positive?.max ?? nextLow * 10
+  if (!positive) return ascending ? [1, 10] : [10, 1]
+  const nextLow = lowOk ? low : positive.min
+  let nextHigh = highOk ? high : positive.max
   if (!(nextHigh > nextLow)) nextHigh = nextLow * 10
   return ascending ? [nextLow, nextHigh] : [nextHigh, nextLow]
 }

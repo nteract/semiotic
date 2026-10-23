@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest"
 import { scaleLinear, scaleUtc } from "d3-scale"
 import { generateXYTicks } from "./xyAxisTicks"
-import { heatmapBandScale } from "./heatmapBandTicks"
+import { heatmapBandScale, heatmapBandTicks } from "./heatmapBandTicks"
 import { adaptiveTimeTicks } from "../charts/shared/formatUtils"
 
 const HOUR = 3_600_000
@@ -125,5 +125,49 @@ describe("generateXYTicks with heatmap band scales", () => {
     const ticks = generateXYTicks({ scale, size: 200, horizontal: true })
     expect(labelsOf(ticks).join(" ")).not.toContain("1970")
     expect(labelsOf(ticks)).toEqual(["Jan 1", "Jan 2"])
+  })
+
+  it("formats numeric keys once, without looking the label up as an index", () => {
+    const scale = heatmapBandScale([1, 2, 10], [0, 300])
+    const ticks = generateXYTicks({ scale, size: 300, horizontal: true })
+    expect(labelsOf(ticks)).toEqual(["1", "2", "10"])
+    expect(ticks.map((tick) => tick.pixel)).toEqual([scale(0), scale(1), scale(2)])
+  })
+
+  it("places explicit numeric and date tick values on cell centers", () => {
+    const numeric = heatmapBandScale([0, 1, 10], [0, 300])
+    const numericTicks = generateXYTicks({
+      scale: numeric,
+      size: 300,
+      horizontal: true,
+      axis: { orient: "bottom", tickValues: [0, 1, 10] },
+    })
+    expect(labelsOf(numericTicks)).toEqual(["0", "1", "10"])
+    expect(numericTicks.map((tick) => tick.pixel)).toEqual([
+      numeric(0),
+      numeric(1),
+      numeric(2),
+    ])
+
+    const first = new Date(Date.UTC(2024, 0, 1))
+    const second = new Date(Date.UTC(2024, 0, 2))
+    const dates = heatmapBandScale([first, second], [0, 200])
+    const dateTicks = generateXYTicks({
+      scale: dates,
+      size: 200,
+      horizontal: true,
+      axis: { orient: "bottom", tickValues: [new Date(first), new Date(second)] },
+    })
+    expect(labelsOf(dateTicks)).toEqual(["Jan 1", "Jan 2"])
+    expect(dateTicks.map((tick) => tick.pixel)).toEqual([dates(0), dates(1)])
+  })
+
+  it("keeps band labels on copies of copies", () => {
+    const scale = heatmapBandScale(["b", "a"], [0, 100])
+    const once = scale.copy().range([0, 200])
+    const twice = once.copy().range([0, 50])
+    expect(heatmapBandTicks(twice)?.map((tick) => tick.label)).toEqual(["b", "a"])
+    expect(twice.range()).toEqual([0, 50])
+    expect(labelsOf(generateXYTicks({ scale: twice, size: 50, horizontal: true }))).toEqual(["b", "a"])
   })
 })

@@ -8,7 +8,11 @@ import {
 } from "./axisTickUtils"
 import { makeDateTickFormatter } from "./xyDateTicks"
 import { numericTickFormatter } from "../charts/shared/numericTickFormatter"
-import { heatmapBandTicks, type HeatmapBandTick } from "./heatmapBandTicks"
+import {
+  heatmapBandIndex,
+  heatmapBandTicks,
+  type HeatmapBandTick
+} from "./heatmapBandTicks"
 
 export interface AxisTick {
   value: number | Date
@@ -60,11 +64,21 @@ export function generateXYTicks(options: {
     extentMode === "exact"
       ? Math.max(2, requested)
       : Math.min(requested, maxFit)
-  const bandTicks = axis?.tickValues ? null : heatmapBandTicks(scale)
-  const values = bandTicks
-    ? bandTicks.map((tick) => tick.value)
-    : (axis?.tickValues ?? ticksForMode(scale, count, extentMode))
-  const labelByValue = bandTicks
+  const bandTicks = heatmapBandTicks(scale)
+  // Explicit ticks are data keys. Band scales position cell indices, so map
+  // each requested key to its column or row and keep the key for the label.
+  const explicitBand = bandTicks && axis?.tickValues
+    ? axis.tickValues.flatMap((requested) => {
+        const index = heatmapBandIndex(bandTicks, requested)
+        return index == null ? [] : [{ requested, index }]
+      })
+    : null
+  const values = explicitBand
+    ? explicitBand.map((tick) => tick.requested)
+    : bandTicks
+      ? bandTicks.map((tick) => tick.value)
+      : (axis?.tickValues ?? ticksForMode(scale, count, extentMode))
+  const labelByValue = !explicitBand && bandTicks
     ? new Map(bandTicks.map((tick) => [tick.value, tick.label]))
     : null
   const displayValue = (value: number | Date): string | number | Date =>
@@ -96,7 +110,7 @@ export function generateXYTicks(options: {
   }
   const candidates = values.map((value, index) => ({
     value,
-    pixel: scale(value),
+    pixel: explicitBand ? scale(explicitBand[index].index) : scale(value),
     label: format(value, index)
   }))
   let minPx = 22
@@ -157,23 +171,16 @@ export function generateXYTicks(options: {
 }
 
 function heatmapBandTickFormatter(ticks: HeatmapBandTick[]): AxisTickFormatter {
+  // generateXYTicks already passes the key, not the cell index.
   const labels = ticks.map((tick) => tick.label)
-  const labelAt = (value: string | number | Date) =>
-    ticks.find((tick) => tick.value === Number(value))?.label ?? value
   if (labels.length > 0 && labels.every((label) => label instanceof Date)) {
     const times = labels.map((label) => (label as Date).getTime())
     const format = makeDateTickFormatter([Math.min(...times), Math.max(...times)])
-    return (value) => {
-      const label = labelAt(value)
-      return label instanceof Date ? format(label) : String(label)
-    }
+    return (value) => value instanceof Date ? format(value) : String(value)
   }
   if (labels.every((label) => typeof label === "number" && Number.isFinite(label))) {
     const format = numericTickFormatter(labels as number[])
-    return (value) => {
-      const label = labelAt(value)
-      return format(typeof label === "number" ? label : Number(value))
-    }
+    return (value) => format(typeof value === "number" ? value : Number(value))
   }
-  return (value) => String(labelAt(value))
+  return (value) => String(value)
 }

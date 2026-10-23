@@ -1,4 +1,5 @@
 import type { Datum } from "./datumTypes"
+import { projectHeatmapBandValue } from "../../stream/heatmapBandTicks"
 /**
  * Coordinate resolution helpers for annotations.
  *
@@ -18,9 +19,9 @@ export function resolveX(
   const scaleX = context.scales?.x ?? context.scales?.time
   if (!scaleX) return null
 
-  if (ann.x != null) return scaleX(ann.x)
+  if (ann.x != null) return projectHeatmapBandValue(scaleX, ann.x)
   if (context.xAccessor && ann[context.xAccessor] != null) {
-    return scaleX(ann[context.xAccessor])
+    return projectHeatmapBandValue(scaleX, ann[context.xAccessor])
   }
   return null
 }
@@ -32,9 +33,9 @@ export function resolveY(
   const scaleY = context.scales?.y ?? context.scales?.value
   if (!scaleY) return null
 
-  if (ann.y != null) return scaleY(ann.y)
+  if (ann.y != null) return projectHeatmapBandValue(scaleY, ann.y)
   if (context.yAccessor && ann[context.yAccessor] != null) {
-    return scaleY(ann[context.yAccessor])
+    return projectHeatmapBandValue(scaleY, ann[context.yAccessor])
   }
   return null
 }
@@ -61,7 +62,10 @@ function resolveLatest(
   const yVal = latestDatum[yAcc]
   if (xVal == null || yVal == null) return null
 
-  return { x: scaleX(xVal), y: scaleY(yVal) }
+  const x = projectHeatmapBandValue(scaleX, xVal)
+  const y = projectHeatmapBandValue(scaleY, yVal)
+  if (x == null || y == null) return null
+  return { x, y }
 }
 
 function stableId(value: unknown): string | null {

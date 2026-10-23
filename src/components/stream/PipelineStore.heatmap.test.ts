@@ -1,5 +1,7 @@
 import "../../test-utils/registerBuiltInXYPlugins"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
+import { heatmapBandTicks } from "./heatmapBandTicks"
+import { generateXYTicks } from "./xyAxisTicks"
 
 function makeConfig(overrides: Partial<PipelineConfig> = {}): PipelineConfig {
   return {
@@ -122,6 +124,59 @@ describe("PipelineStore — Streaming Heatmap", () => {
 
     store.computeScene({ width: 100, height: 100 })
     expect(store.scene.length).toBe(0)
+  })
+
+  it("keeps categorical and date band ticks across consecutive resizes", () => {
+    const categorical = new PipelineStore(makeConfig({
+      runtimeMode: "bounded",
+      extentPadding: 0,
+      xAccessor: "x",
+      yAccessor: "y",
+      valueAccessor: "value",
+    }))
+    categorical.ingest({
+      inserts: [
+        { x: "b", y: "q", value: 1 },
+        { x: "a", y: "p", value: 2 },
+      ],
+      bounded: true,
+    })
+    categorical.computeScene({ width: 200, height: 100 })
+    expect(heatmapBandTicks(categorical.scales!.x)?.map((tick) => tick.label)).toEqual(["b", "a"])
+    categorical.computeScene({ width: 400, height: 120 })
+    expect(heatmapBandTicks(categorical.scales!.x)?.map((tick) => tick.label)).toEqual(["b", "a"])
+    expect(generateXYTicks({
+      scale: categorical.scales!.x,
+      size: 400,
+      horizontal: true,
+    }).map((tick) => tick.label)).toEqual(["b", "a"])
+    categorical.computeScene({ width: 80, height: 40 })
+    expect(heatmapBandTicks(categorical.scales!.y)?.map((tick) => tick.label)).toEqual(["q", "p"])
+
+    const first = new Date(Date.UTC(2024, 0, 1))
+    const second = new Date(Date.UTC(2024, 0, 2))
+    const dated = new PipelineStore(makeConfig({
+      runtimeMode: "bounded",
+      extentPadding: 0,
+      xAccessor: "x",
+      yAccessor: "y",
+      valueAccessor: "value",
+    }))
+    dated.ingest({
+      inserts: [
+        { x: first, y: "q", value: 1 },
+        { x: second, y: "q", value: 2 },
+      ],
+      bounded: true,
+    })
+    dated.computeScene({ width: 200, height: 80 })
+    dated.computeScene({ width: 320, height: 80 })
+    expect(heatmapBandTicks(dated.scales!.x)?.map((tick) => tick.label)).toEqual([first, second])
+    expect(generateXYTicks({
+      scale: dated.scales!.x,
+      size: 320,
+      horizontal: true,
+    }).map((tick) => String(tick.label)).join(" ")).not.toContain("1970")
   })
 
   it("falls back to bounded heatmap when no aggregation specified", () => {

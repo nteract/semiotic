@@ -18,6 +18,7 @@ import type { Datum } from "../charts/shared/datumTypes"
  *
  * Consumed by: StreamXYFrame (sole consumer).
  */
+import { barPlottedYValues } from "../realtime/BinAccumulator"
 import { RingBuffer } from "../realtime/RingBuffer"
 import { IncrementalExtent } from "../realtime/IncrementalExtent"
 import type {
@@ -627,7 +628,12 @@ export class PipelineStore extends UpdateResultStoreBase {
       this.warnDroppedLogSamples("x", samples.droppedNonPositive)
     }
     if (config.yScaleType === "log") {
-      const samples = this.positiveAxisSamples(this.getY)
+      // Bars, stacks, and waterfalls plot aggregates. A raw row can be larger
+      // than the mark, and using it pulls the positive bound off the bar.
+      const aggregateY = this.plottedAggregateY(buffer, bufferArray)
+      const samples = aggregateY
+        ? collectPositiveSamples(aggregateY)
+        : this.positiveAxisSamples(this.getY)
       yDomain = clampLogDomain(yDomain, samples.positive)
       this.warnDroppedLogSamples("y", samples.droppedNonPositive)
     }
@@ -1223,6 +1229,50 @@ export class PipelineStore extends UpdateResultStoreBase {
     return collectPositiveSamples(values)
   }
 
+  /** Y values the scene actually passes to the scale, when those are not raw rows. */
+  private plottedAggregateY(
+    buffer: RingBuffer<Datum>,
+    bufferArray: Datum[]
+  ): number[] | null {
+    const config = this.config
+    if (config.chartType === "bar" && config.binSize) {
+      return barPlottedYValues(
+        buffer,
+        this.getX,
+        this.getY,
+        config.binSize,
+        this.getCategory,
+        config.binAlign,
+        config.barColors ? Object.keys(config.barColors) : []
+      )
+    }
+    if (config.chartType === "stackedarea" && buffer.size > 0) {
+      const stacked = resolveStackedAreaYDomain({
+        config,
+        groups: this.groupData(bufferArray),
+        getX: this.getX,
+        getY: this.getY,
+        bufferSize: buffer.size,
+        ingestVersion: this._ingestVersion,
+        stackExtentCache: this._stackExtentCache
+      })
+      this._stackExtentCache = stacked.stackExtentCache
+      return stacked.stackExtentCache.plottedY ?? null
+    }
+    if (config.chartType === "waterfall" && buffer.size > 0) {
+      const values: number[] = []
+      let cumulative = 0
+      for (const datum of buffer) {
+        const value = this.getY(datum)
+        if (!Number.isFinite(value)) continue
+        cumulative += value
+        values.push(cumulative)
+      }
+      return values
+    }
+    return null
+  }
+
   private warnDroppedLogSamples(axis: "x" | "y", droppedNonPositive: boolean): void {
     if (!droppedNonPositive) return
     if (axis === "x") {
@@ -1233,7 +1283,7 @@ export class PipelineStore extends UpdateResultStoreBase {
       this._warnedNonPositiveLogY = true
     }
     console.warn(
-      `Semiotic log ${axis} scale omitted non-positive values and starts at the smallest positive value.`
+      `Semiotic log ${axis} scale clamped non-positive values to the positive domain edge.`
     )
   }
 
