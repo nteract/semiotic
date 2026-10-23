@@ -1,6 +1,6 @@
 import { isTimeLandmark } from "../stream/hitTestUtils"
 import type { XYFrameAxisConfig } from "../stream/xyFrameAxisTypes"
-import type { AxisTick } from "../stream/xyAxisTicks"
+import { axisTickDataValue, type AxisTick } from "../stream/xyAxisTicks"
 
 export function isStaticAxisLandmark(
   landmarkTicks: XYFrameAxisConfig["landmarkTicks"],
@@ -9,8 +9,10 @@ export function isStaticAxisLandmark(
   ticks: AxisTick[],
 ): boolean {
   if (!landmarkTicks) return false
+  const value = axisTickDataValue(tick)
   if (typeof landmarkTicks === "function") {
-    return landmarkTicks(tick.value, index)
+    return landmarkTicks(value, index)
   }
-  return isTimeLandmark(tick.value, index > 0 ? ticks[index - 1].value : undefined)
+  const previous = index > 0 ? axisTickDataValue(ticks[index - 1]) : undefined
+  return isTimeLandmark(value, previous)
 }

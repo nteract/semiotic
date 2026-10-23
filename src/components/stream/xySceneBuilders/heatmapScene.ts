@@ -59,17 +59,18 @@ function heatmapAxisKey(value: CoercibleNumber): {
   key: string | number
   label: string | number | Date
   numeric: boolean
+  temporal: boolean
 } {
   if (value instanceof Date) {
     const time = value.getTime()
     return Number.isFinite(time)
-      ? { key: time, label: value, numeric: true }
-      : { key: "Invalid Date", label: "Invalid Date", numeric: false }
+      ? { key: time, label: value, numeric: true, temporal: true }
+      : { key: "Invalid Date", label: "Invalid Date", numeric: false, temporal: false }
   }
   if (typeof value === "number" && Number.isFinite(value)) {
-    return { key: value, label: value, numeric: true }
+    return { key: value, label: value, numeric: true, temporal: false }
   }
-  return { key: String(value), label: String(value), numeric: false }
+  return { key: String(value), label: String(value), numeric: false, temporal: false }
 }
 
 function sortHeatmapAxis(
@@ -126,16 +127,30 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: St
   const yLabels: Array<string | number | Date> = []
   const rawXKeys: Array<string | number> = new Array(data.length)
   const rawYKeys: Array<string | number> = new Array(data.length)
-  let xAllNumeric = true
-  let yAllNumeric = true
+  // Dates sort with numbers, but the dense fallback only accepts plain
+  // numbers. A date domain endpoint is not a timestamp the bin math can add to.
+  let xAllNumbers = true
+  let yAllNumbers = true
+  let xSortable = true
+  let ySortable = true
   for (let i = 0; i < data.length; i++) {
     const d = data[i]
     const xEntry = heatmapAxisKey(getRawX(d))
     const yEntry = heatmapAxisKey(getRawY(d))
     rawXKeys[i] = xEntry.key
     rawYKeys[i] = yEntry.key
-    if (!xEntry.numeric) xAllNumeric = false
-    if (!yEntry.numeric) yAllNumeric = false
+    if (!xEntry.numeric) {
+      xAllNumbers = false
+      xSortable = false
+    } else if (xEntry.temporal) {
+      xAllNumbers = false
+    }
+    if (!yEntry.numeric) {
+      yAllNumbers = false
+      ySortable = false
+    } else if (yEntry.temporal) {
+      yAllNumbers = false
+    }
     if (!xIndex.has(xEntry.key)) {
       xIndex.set(xEntry.key, xIndex.size)
       xLabels.push(xEntry.label)
@@ -150,16 +165,13 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: St
   const yCount = yIndex.size
   if (xCount === 0 || yCount === 0) return []
 
-  const xNumeric = xAllNumeric
-  const yNumeric = yAllNumeric
-
   // Dense numeric grids miss frame budget on the per-cell static path.
   // Gate on occupied cells, not the cartesian product: a 65-point diagonal
-  // has 65×65 > 4096 but only 65 marks to paint.
+  // has 65×65 > 4096 but only 65 marks to paint. Dates stay on this path.
   const DENSE_HEATMAP_CELL_THRESHOLD = 4096
   if (
-    xNumeric &&
-    yNumeric &&
+    xAllNumbers &&
+    yAllNumbers &&
     xCount * yCount > DENSE_HEATMAP_CELL_THRESHOLD &&
     data.length > DENSE_HEATMAP_CELL_THRESHOLD
   ) {
@@ -181,8 +193,8 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: St
     }
   }
 
-  if (xNumeric) sortHeatmapAxis(xIndex, xLabels)
-  if (yNumeric) sortHeatmapAxis(yIndex, yLabels)
+  if (xSortable) sortHeatmapAxis(xIndex, xLabels)
+  if (ySortable) sortHeatmapAxis(yIndex, yLabels)
 
   // Parallel arrays: numeric keys, values, datums — avoids per-cell object allocation
   // Float64Array for keys: safe for sparse grids where yi * xCount + xi > 2^32

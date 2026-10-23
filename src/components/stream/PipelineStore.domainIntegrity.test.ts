@@ -310,6 +310,32 @@ describe("PipelineStore domain integrity", () => {
     expect(lowFive!.lowY).not.toBeCloseTo(highHundred!.highY)
   })
 
+  it("keeps a zero-total signed stack layer on a log domain", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {})
+    const store = new PipelineStore(config({
+      chartType: "stackedarea",
+      yScaleType: "log",
+      normalize: true,
+      extentPadding: 0,
+      stackOrder: "key",
+      groupAccessor: "g",
+    }))
+    store.ingest({
+      inserts: [0, 1].flatMap((x) => [
+        { x, g: "a", y: 10 },
+        { x, g: "b", y: 10 },
+        { x, g: "c", y: -20 },
+      ]),
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([10, 100])
+    const layer = store.scene.find((node) => node.type === "area" && node.group === "b")
+    expect(layer?.type).toBe("area")
+    if (layer?.type !== "area") return
+    expect(Math.abs(layer.topPath[0][1] - layer.bottomPath[0][1])).toBeGreaterThan(1)
+  })
+
   it("keeps a normalized stack layer on a log domain", () => {
     vi.spyOn(console, "warn").mockImplementation(() => {})
     const store = new PipelineStore(config({

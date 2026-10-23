@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest"
 import { scaleLinear, scaleUtc } from "d3-scale"
 import { generateXYTicks } from "./xyAxisTicks"
+import { isStaticAxisLandmark } from "../server/staticXYAxisTicks"
 import { heatmapBandScale, heatmapBandTicks } from "./heatmapBandTicks"
 import { adaptiveTimeTicks } from "../charts/shared/formatUtils"
 
@@ -113,8 +114,39 @@ describe("generateXYTicks with heatmap band scales", () => {
       axis: { orient: "left", includeMax: true },
     })
     expect(ticks.map((tick) => tick.value)).toEqual([0, 1])
+    expect(ticks.map((tick) => tick.dataValue)).toEqual(["low", "high"])
     expect(labelsOf(ticks)).toEqual(["fmt:low", "fmt:high"])
     expect(format.mock.calls.map((call) => call[0])).toEqual(["low", "high"])
+  })
+
+  it("passes date keys, not cell indexes, to landmark detection", () => {
+    const jan31 = new Date(Date.UTC(2024, 0, 31, 12))
+    const feb1 = new Date(Date.UTC(2024, 1, 1, 12))
+    const feb2 = new Date(Date.UTC(2024, 1, 2, 12))
+    const scale = heatmapBandScale([jan31, feb1, feb2], [0, 300])
+    const automatic = generateXYTicks({ scale, size: 300, horizontal: true })
+    expect(automatic.map((tick) => tick.value)).toEqual([0, 1, 2])
+    expect(automatic.map((tick) => tick.pixel)).toEqual([scale(0), scale(1), scale(2)])
+    expect(automatic.map((tick) => tick.dataValue)).toEqual([jan31, feb1, feb2])
+    expect(isStaticAxisLandmark(true, automatic[1], 1, automatic)).toBe(true)
+    expect(isStaticAxisLandmark(true, automatic[2], 2, automatic)).toBe(false)
+    const seen: unknown[] = []
+    isStaticAxisLandmark((value) => {
+      seen.push(value)
+      return false
+    }, automatic[1], 1, automatic)
+    expect(seen).toEqual([feb1])
+
+    const explicit = generateXYTicks({
+      scale,
+      size: 300,
+      horizontal: true,
+      axis: { orient: "bottom", tickValues: [jan31, feb1, feb2] },
+    })
+    expect(explicit.map((tick) => tick.dataValue)).toEqual([jan31, feb1, feb2])
+    expect(explicit.map((tick) => tick.pixel)).toEqual([scale(0), scale(1), scale(2)])
+    expect(isStaticAxisLandmark(true, explicit[1], 1, explicit)).toBe(true)
+    expect(isStaticAxisLandmark(true, explicit[2], 2, explicit)).toBe(false)
   })
 
   it("formats date keys from the dates rather than the index domain", () => {

@@ -153,8 +153,9 @@ export function resolveStackedAreaYDomain(options: {
   if (config.normalize) {
     for (const map of valueMaps.values()) {
       for (const [x, y] of map) {
-        const total = xTotals.get(x) || 0
-        map.set(x, total !== 0 ? y / total : 0)
+        // The scene divides by `sum || 1`. A zero total still draws the raw
+        // signed layers; recording zeros here drops them from the log sample.
+        map.set(x, y / (xTotals.get(x) || 1))
       }
     }
   }

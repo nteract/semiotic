@@ -18,6 +18,16 @@ export interface AxisTick {
   value: number | Date
   pixel: number
   label: ReactNode
+  /**
+   * Original data key when `value` is only a band-scale cell index.
+   * Landmark detection reads this so a date column is not passed as 0, 1, 2.
+   */
+  dataValue?: string | number | Date
+}
+
+/** Key passed to landmark detection. Non-band ticks only have `value`. */
+export function axisTickDataValue(tick: AxisTick): string | number | Date {
+  return tick.dataValue ?? tick.value
 }
 
 type AxisScale = {
@@ -112,11 +122,20 @@ export function generateXYTicks(options: {
     const shown = displayValue(value)
     return horizontal ? formatter(shown, index, rawValues) : formatter(shown)
   }
-  const candidates = values.map((value, index) => ({
-    value,
-    pixel: explicitBand ? scale(explicitBand[index].index) : scale(value),
-    label: format(value, index)
-  }))
+  const candidates = values.map((value, index) => {
+    const tick: AxisTick = {
+      value,
+      pixel: explicitBand ? scale(explicitBand[index].index) : scale(value),
+      label: format(value, index)
+    }
+    if (bandTicks) {
+      // Positioning stays on the cell index. Landmarks need the data key.
+      tick.dataValue = explicitBand
+        ? explicitBand[index].requested
+        : bandTicks[index].label
+    }
+    return tick
+  })
   let minPx = 22
   if (horizontal) {
     const width = candidates.reduce(

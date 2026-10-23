@@ -33,7 +33,7 @@ import {
   resolveVerticalTickBaseline,
   tickPixelExtent
 } from "./svgOverlayUtils"
-import { generateXYTicks, axisTicksNeedRotation } from "./xyAxisTicks"
+import { generateXYTicks, axisTickDataValue, axisTicksNeedRotation } from "./xyAxisTicks"
 import { projectHeatmapBandComputedValue } from "./heatmapBandTicks"
 import { SVGChartTitle } from "./SVGChartTitle"
 import {
@@ -475,8 +475,11 @@ export function SVGOverlay(props: SVGOverlayProps) {
             {xTicks.map((tick, i) => {
               const isLandmark = xLandmark
                 ? typeof xLandmark === "function"
-                  ? xLandmark(tick.value, i)
-                  : isTimeLandmark(tick.value, i > 0 ? xTicks[i - 1].value : undefined)
+                  ? xLandmark(axisTickDataValue(tick), i)
+                  : isTimeLandmark(
+                      axisTickDataValue(tick),
+                      i > 0 ? axisTickDataValue(xTicks[i - 1]) : undefined
+                    )
                 : false
               return (
               <g key={`xtick-${i}`} transform={`translate(${tick.pixel},${xBaselineY})`}>
@@ -534,8 +537,11 @@ export function SVGOverlay(props: SVGOverlayProps) {
             {yTicks.map((tick, i) => {
               const isLandmark = yLandmark
                 ? typeof yLandmark === "function"
-                  ? yLandmark(tick.value, i)
-                  : isTimeLandmark(tick.value, i > 0 ? yTicks[i - 1].value : undefined)
+                  ? yLandmark(axisTickDataValue(tick), i)
+                  : isTimeLandmark(
+                      axisTickDataValue(tick),
+                      i > 0 ? axisTickDataValue(yTicks[i - 1]) : undefined
+                    )
                 : false
               return (
               <g key={`ytick-${i}`} transform={`translate(${yBaselineX},${tick.pixel})`}>
@@ -607,8 +613,11 @@ export function SVGOverlay(props: SVGOverlayProps) {
                   {yTicksRight.map((tick, i) => {
                     const isLandmark = rightLandmark
                       ? typeof rightLandmark === "function"
-                        ? rightLandmark(tick.value, i)
-                        : isTimeLandmark(tick.value, i > 0 ? yTicksRight[i - 1].value : undefined)
+                        ? rightLandmark(axisTickDataValue(tick), i)
+                        : isTimeLandmark(
+                            axisTickDataValue(tick),
+                            i > 0 ? axisTickDataValue(yTicksRight[i - 1]) : undefined
+                          )
                       : false
                     return (
                     <g key={`ytick-r-${i}`} transform={`translate(${width},${tick.pixel})`}>

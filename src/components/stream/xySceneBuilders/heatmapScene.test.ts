@@ -210,6 +210,37 @@ describe("buildHeatmapScene (static mode)", () => {
     expect(fills.size).toBeGreaterThan(1)
   })
 
+  it("does not auto-bin a dense date grid above the numeric threshold", () => {
+    const start = Date.UTC(2024, 0, 1, 12)
+    const data = []
+    for (let x = 0; x < 65; x++) {
+      for (let y = 0; y < 65; y++) {
+        data.push({
+          x: new Date(start + (64 - x) * 86400000),
+          y,
+          value: x + y,
+          marker: "row",
+        })
+      }
+    }
+    const ctx = makeCtx({
+      config: { xAccessor: "x", yAccessor: "y", valueAccessor: "value" },
+      getX: (d) => d.x,
+      getY: (d) => d.y,
+    })
+    const nodes = buildHeatmapScene(ctx, data, defaultLayout)
+    expect(nodes).toHaveLength(65 * 65)
+    expect(nodes.every((node) => node.type === "heatcell")).toBe(true)
+    expect(nodes.some((node) => (node.datum as { agg?: string }).agg === "mean")).toBe(false)
+    expect(nodes.every((node) => (node.datum as { marker?: string }).marker === "row")).toBe(true)
+    const earliest = nodes.find((node) => (node.datum as { x: Date }).x.getTime() === start)
+    const latest = nodes.find((node) =>
+      (node.datum as { x: Date }).x.getTime() === start + 64 * 86400000
+    )
+    expect(earliest?.x).toBe(0)
+    expect(latest?.x).toBeCloseTo(400 - 400 / 65)
+  })
+
   it("does not auto-bin a sparse diagonal whose cartesian product exceeds the threshold", () => {
     const data = []
     for (let i = 0; i < 65; i++) data.push({ x: i, y: i, value: i })
