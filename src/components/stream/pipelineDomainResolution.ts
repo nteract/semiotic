@@ -13,7 +13,6 @@ import {
 import type { Datum } from "../charts/shared/datumTypes"
 import { computeBinExtent, histogramBinStart } from "../realtime/BinAccumulator"
 import type { BinAlign } from "../realtime/BinAccumulator"
-import { computeWaterfallExtent } from "../realtime/renderers/waterfallRenderer"
 import { computeStackOffsets } from "./SceneGraph"
 import type { PipelineConfig } from "./pipelineConfig"
 import type { ArrowOfTime, StreamScales } from "./types"
@@ -292,13 +291,40 @@ export function resolveCenteredBinXDomain(
   ], userExtent)
 }
 
+/**
+ * Cumulative ends of the bars `buildWaterfallScene` draws. A missing or
+ * non-finite x is not a bar, so that row must not move the cursor.
+ */
+export function waterfallCumulativeEnds(
+  data: Iterable<Datum>,
+  getX: (d: Datum) => number,
+  getY: (d: Datum) => number
+): number[] {
+  const values: number[] = []
+  let cumulative = 0
+  for (const datum of data) {
+    const value = getY(datum)
+    const x = getX(datum)
+    if (value == null || Number.isNaN(value) || x == null || !isFinite(x as number)) continue
+    cumulative += value
+    values.push(cumulative)
+  }
+  return values
+}
+
 export function resolveWaterfallYDomain(
   buffer: RingBuffer<Datum>,
+  getX: (d: Datum) => number,
   getY: (d: Datum) => number,
   extentPadding: number,
   exactMode: boolean
 ): [number, number] {
-  const [minCum, maxCum] = computeWaterfallExtent(buffer, getY)
+  let minCum = 0
+  let maxCum = 0
+  for (const cumulative of waterfallCumulativeEnds(buffer, getX, getY)) {
+    if (cumulative < minCum) minCum = cumulative
+    if (cumulative > maxCum) maxCum = cumulative
+  }
   const range = maxCum - minCum
   const pad = exactMode ? 0 : range > 0 ? range * extentPadding : 1
   return [

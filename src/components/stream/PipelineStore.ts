@@ -68,6 +68,7 @@ import {
   resolveStackedAreaYDomain,
   resolveWaterfallXDomain,
   resolveWaterfallYDomain,
+  waterfallCumulativeEnds,
   type StackExtentCache
 } from "./pipelineDomainResolution"
 import {
@@ -595,6 +596,7 @@ export class PipelineStore extends UpdateResultStoreBase {
     } else if (config.chartType === "waterfall" && !yFullySpecified && buffer.size > 0) {
       yDomain = resolveWaterfallYDomain(
         buffer,
+        this.getX,
         this.getY,
         config.extentPadding,
         exactMode
@@ -1269,15 +1271,7 @@ export class PipelineStore extends UpdateResultStoreBase {
       return stacked.stackExtentCache.plottedY ?? null
     }
     if (config.chartType === "waterfall" && buffer.size > 0) {
-      const values: number[] = []
-      let cumulative = 0
-      for (const datum of buffer) {
-        const value = this.getY(datum)
-        if (!Number.isFinite(value)) continue
-        cumulative += value
-        values.push(cumulative)
-      }
-      return values
+      return waterfallCumulativeEnds(buffer, this.getX, this.getY)
     }
     return null
   }

@@ -323,6 +323,29 @@ describe("PipelineStore domain integrity", () => {
     expect(bar(100)!.h).toBeCloseTo(200)
   })
 
+  it("skips a non-finite waterfall x before the cumulative cursor", () => {
+    const rows = [{ y: 100 }, { x: 1, y: 1 }, { x: 2, y: 10 }]
+    const linear = new PipelineStore(config({ chartType: "waterfall" }))
+    linear.ingest({ inserts: rows, bounded: true })
+    linear.computeScene({ width: 400, height: 200 })
+    expect(yDomain(linear)).toEqual([0, 11])
+
+    const store = new PipelineStore(config({
+      chartType: "waterfall",
+      yScaleType: "log",
+    }))
+    store.ingest({ inserts: rows, bounded: true })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([1, 11])
+    const bars = store.scene.flatMap((node) => node.type === "rect" ? [node] : [])
+    const bar = (delta: number) => bars.find((node) =>
+      (node.datum as { delta: number }).delta === delta
+    )
+    expect(bars).toHaveLength(2)
+    expect(bar(1)!.h).toBeCloseTo(0)
+    expect(bar(10)!.h).toBeCloseTo(200)
+  })
+
   it("derives a log stacked-area domain from stack boundaries", () => {
     const store = new PipelineStore(config({
       chartType: "stackedarea",
