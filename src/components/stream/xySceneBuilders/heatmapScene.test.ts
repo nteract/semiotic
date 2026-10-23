@@ -313,6 +313,31 @@ describe("buildHeatmapScene (static mode)", () => {
     expect(fills.size).toBeGreaterThan(1)
   })
 
+  it("sorts a long date axis without spreading the keys", () => {
+    const count = 200_000
+    const start = Date.UTC(2020, 0, 1)
+    const data = new Array<Datum>(count)
+    for (let i = 0; i < count; i++) {
+      data[i] = {
+        x: new Date(start + (count - 1 - i) * 86_400_000),
+        y: "row",
+        value: 1,
+      }
+    }
+    const ctx = makeCtx({
+      config: { xAccessor: "x", yAccessor: "y", valueAccessor: "value" },
+      getX: (d) => d.x,
+      getY: (d) => d.y,
+    })
+    const nodes = buildHeatmapScene(ctx, data, defaultLayout)
+    expect(nodes).toHaveLength(count)
+    const earliest = nodes.find((node) => (node.datum as { x: Date }).x.getTime() === start)
+    const latestTime = start + (count - 1) * 86_400_000
+    const latest = nodes.find((node) => (node.datum as { x: Date }).x.getTime() === latestTime)
+    expect(earliest?.x).toBe(0)
+    expect(latest?.x).toBeCloseTo(400 - 400 / count)
+  })
+
   it("does not auto-bin a dense date grid above the numeric threshold", () => {
     const start = Date.UTC(2024, 0, 1, 12)
     const data = []

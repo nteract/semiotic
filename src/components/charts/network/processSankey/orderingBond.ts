@@ -29,7 +29,9 @@ export function applyOrder(
   slotByNode: SlotByNode,
   order: readonly ProcessSankeySlot[]
 ): void {
-  slots.splice(0, slots.length, ...order)
+  // A loop, not splice(...order): a long lane exceeds the argument limit.
+  slots.length = order.length
+  for (let i = 0; i < order.length; i++) slots[i] = order[i]
   const next = mapForOrder(order)
   for (const id of Object.keys(slotByNode)) delete slotByNode[id]
   Object.assign(slotByNode, next)

@@ -209,8 +209,15 @@ function heatmapBandTickFormatter(ticks: HeatmapBandTick[]): AxisTickFormatter {
   // generateXYTicks already passes the key, not the cell index.
   const labels = ticks.map((tick) => tick.label)
   if (labels.length > 0 && labels.every((label) => label instanceof Date)) {
-    const times = labels.map((label) => (label as Date).getTime())
-    const format = makeDateTickFormatter([Math.min(...times), Math.max(...times)])
+    // A loop, not Math.min(...times): a long date axis exceeds the argument limit.
+    let min = Infinity
+    let max = -Infinity
+    for (let i = 0; i < labels.length; i++) {
+      const time = (labels[i] as Date).getTime()
+      if (time < min) min = time
+      if (time > max) max = time
+    }
+    const format = makeDateTickFormatter([min, max])
     return (value) =>
       value instanceof Date || (typeof value === "number" && Number.isFinite(value))
         ? format(value)

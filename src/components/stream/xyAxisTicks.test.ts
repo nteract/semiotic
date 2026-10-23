@@ -159,6 +159,18 @@ describe("generateXYTicks with heatmap band scales", () => {
     expect(isStaticAxisLandmark(true, explicit[2], 2, explicit)).toBe(false)
   })
 
+  it("formats a long date axis without spreading every key", () => {
+    const count = 200_000
+    const start = Date.UTC(2020, 0, 1)
+    const dates = new Array<Date>(count)
+    for (let i = 0; i < count; i++) dates[i] = new Date(start + i * 86_400_000)
+    const scale = heatmapBandScale(dates, [0, 1000])
+    const ticks = generateXYTicks({ scale, size: 1000, horizontal: true })
+    expect(ticks.length).toBeGreaterThan(0)
+    expect(ticks.every((tick) => /^\d{4}$/.test(String(tick.label)))).toBe(true)
+    expect(String(ticks[0].label)).toBe("2020")
+  })
+
   it("formats date keys from the dates rather than the index domain", () => {
     const scale = heatmapBandScale(
       [new Date(Date.UTC(2024, 0, 1)), new Date(Date.UTC(2024, 0, 2))],

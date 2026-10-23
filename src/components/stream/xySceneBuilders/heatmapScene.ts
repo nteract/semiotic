@@ -87,7 +87,9 @@ function sortHeatmapAxis(
   for (let i = 0; i < keys.length; i++) {
     index.set(keys[i], remap.get(i)!)
   }
-  labels.splice(0, labels.length, ...order.map((item) => item.label))
+  // A loop, not splice(...labels): a long axis exceeds the argument limit.
+  labels.length = order.length
+  for (let i = 0; i < order.length; i++) labels[i] = order[i].label
 }
 
 function heatmapLabelValue(label: string | number | Date): number {
