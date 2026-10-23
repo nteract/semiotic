@@ -262,6 +262,78 @@ describe("PipelineStore domain integrity", () => {
     expect(xDomain(reversedX)).toEqual([10, 1])
   })
 
+  it("keeps an explicit log end when no positive sample remains", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {})
+    const yStore = new PipelineStore(config({
+      yScaleType: "log",
+      yExtent: [undefined, 100],
+      pointIdAccessor: "id",
+    }))
+    yStore.ingest({
+      inserts: [
+        { id: "pos", x: 0, y: 4 },
+        { id: "neg", x: 1, y: -2 },
+      ],
+      bounded: true,
+    })
+    yStore.computeScene({ width: 400, height: 200 })
+    expect(yDomain(yStore)).toEqual([4, 100])
+    yStore.remove("pos")
+    yStore.computeScene({ width: 400, height: 200 })
+    expect(yDomain(yStore)).toEqual([10, 100])
+
+    const xStore = new PipelineStore(config({
+      xScaleType: "log",
+      xExtent: [undefined, 100],
+      pointIdAccessor: "id",
+    }))
+    xStore.ingest({
+      inserts: [
+        { id: "pos", x: 4, y: 1 },
+        { id: "neg", x: -2, y: 2 },
+      ],
+      bounded: true,
+    })
+    xStore.computeScene({ width: 400, height: 200 })
+    expect(xDomain(xStore)).toEqual([4, 100])
+    xStore.remove("pos")
+    xStore.computeScene({ width: 400, height: 200 })
+    expect(xDomain(xStore)).toEqual([10, 100])
+
+    const openMin = new PipelineStore(config({
+      yScaleType: "log",
+      yExtent: [100, undefined],
+    }))
+    openMin.ingest({
+      inserts: [{ x: 0, y: -5 }, { x: 1, y: -1 }],
+      bounded: true,
+    })
+    openMin.computeScene({ width: 400, height: 200 })
+    expect(yDomain(openMin)).toEqual([100, 10])
+
+    const reversedY = new PipelineStore(config({
+      yScaleType: "log",
+      yExtent: [100, 0],
+    }))
+    reversedY.ingest({
+      inserts: [{ x: 0, y: 0 }, { x: 1, y: -5 }],
+      bounded: true,
+    })
+    reversedY.computeScene({ width: 400, height: 200 })
+    expect(yDomain(reversedY)).toEqual([100, 10])
+
+    const reversedX = new PipelineStore(config({
+      xScaleType: "log",
+      xExtent: [100, 0],
+    }))
+    reversedX.ingest({
+      inserts: [{ x: 0, y: 1 }, { x: -5, y: 2 }],
+      bounded: true,
+    })
+    reversedX.computeScene({ width: 400, height: 200 })
+    expect(xDomain(reversedX)).toEqual([100, 10])
+  })
+
   it("uses one decade when padding leaves a positive end and no positive sample", () => {
     const store = new PipelineStore(config({
       yScaleType: "log",

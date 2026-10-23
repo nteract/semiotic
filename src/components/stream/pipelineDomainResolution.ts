@@ -482,12 +482,13 @@ export function rescueDegenerateDomains(
 
 /**
  * Log scales cannot plot non-positive bounds. Keep an already-positive
- * domain, including a flipped one. With no positive sample, use one decade
- * starting at 1 even when padding left a positive end. Otherwise replace
- * each non-positive end with the smallest or largest positive sample. A
- * sample past an explicit positive end must not replace that end; open one
- * decade from it instead. Computed ends, such as a normalized unit domain,
- * still expand.
+ * domain, including a flipped one. With no positive sample, keep an explicit
+ * positive end and open one decade from it. Use [1, 10] only when neither
+ * end is an explicit positive bound, even if padding left a positive end.
+ * Otherwise replace each non-positive end with the smallest or largest
+ * positive sample. A sample past an explicit positive end must not replace
+ * that end; open one decade from it instead. Computed ends, such as a
+ * normalized unit domain, still expand.
  */
 export function clampLogDomain(
   domain: [number, number],
@@ -500,12 +501,18 @@ export function clampLogDomain(
   const lowOk = low > 0 && Number.isFinite(low)
   const highOk = high > 0 && Number.isFinite(high)
   if (lowOk && highOk) return domain
-  if (!positive) return ascending ? [1, 10] : [10, 1]
   const locked = new Set<number>()
   if (explicit) {
     for (const value of explicit) {
       if (value != null && value > 0 && Number.isFinite(value)) locked.add(value)
     }
+  }
+  if (!positive) {
+    if (highOk && locked.has(high)) {
+      const nextLow = high / 10
+      return ascending ? [nextLow, high] : [high, nextLow]
+    }
+    return ascending ? [1, 10] : [10, 1]
   }
   let nextLow = lowOk ? low : positive.min
   let nextHigh = highOk ? high : positive.max
