@@ -53,7 +53,7 @@ import { useLegendCategoryEmission } from "./useLegendCategoryEmission"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 import { resolveAnnotationAccessor, buildEnrichAnnotationData } from "./annotationAccessorResolver"
 import { makeDateTickFormatter } from "./xyDateTicks"
-import { heatmapBandTicks } from "./heatmapBandTicks"
+import { heatmapBandTicks, invertHeatmapBandValue } from "./heatmapBandTicks"
 import { collectAnnotationAnchors } from "./xyAnnotationAnchors"
 import { getXYCanvasRenderers } from "./xyPlugins/registry"
 import { useEnsureXYPlugins } from "./useEnsureCustomXYRenderers"
@@ -681,8 +681,10 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       const hitDatum = hit?.datum
         ? enrichDatumWithBand(hit.datum, store.resolvedRibbons)
         : {}
-      const xInvert = store.scales?.x?.invert
-      const invertedX = typeof xInvert === "function" ? xInvert(posX) : undefined
+      const xScale = store.scales?.x
+      const invertedX = xScale && typeof xScale.invert === "function"
+        ? invertHeatmapBandValue(xScale, posX)
+        : undefined
       const xValue = chartType === "bar"
         ? resolveHistogramHoverXValue(hitDatum, invertedX)
         : invertedX
@@ -761,8 +763,10 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       const hit = findNearestNode(store.scene, chartX, chartY, hitRadius, store.quadtree, store.maxPointRadius)
       if (!hit) { customClickBehavior(null); return }
       const rawDatum = hit.datum || {}
-      const xInvert = store.scales?.x?.invert
-      const invertedX = typeof xInvert === "function" ? xInvert(hit.x) : undefined
+      const xScale = store.scales?.x
+      const invertedX = xScale && typeof xScale.invert === "function"
+        ? invertHeatmapBandValue(xScale, hit.x)
+        : undefined
       const xValue = chartType === "bar"
         ? resolveHistogramHoverXValue(rawDatum, invertedX)
         : invertedX

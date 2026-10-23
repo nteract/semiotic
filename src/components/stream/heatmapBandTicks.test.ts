@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   heatmapBandScale,
   invertHeatmapBandValue,
+  projectHeatmapBandComputedValue,
   projectHeatmapBandDataValue,
   projectHeatmapBandValue
 } from "./heatmapBandTicks"
@@ -12,6 +13,8 @@ describe("heatmap band coordinates", () => {
   it("projects a data key onto the cell center", () => {
     expect(projectHeatmapBandValue(columns, 20)).toBeCloseTo(150)
     expect(projectHeatmapBandValue(columns, 15)).toBeNull()
+    expect(projectHeatmapBandComputedValue(columns, 15)).toBeCloseTo(100)
+    expect(projectHeatmapBandComputedValue(columns, "low")).toBeNull()
   })
 
   it("inverts a brushed cell to the data keys on either side of its center", () => {

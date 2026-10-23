@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest"
+import { renderToString } from "react-dom/server"
 import { fireEvent, render, screen, within } from "@testing-library/react"
 import {
   AccessibleDataTable,
@@ -168,6 +169,27 @@ describe("AccessibleDataTable styling hooks", () => {
     expect(getByTestId("chart-root")).toContainElement(
       screen.getByRole("button", { name: /view data summary/i })
     )
+  })
+
+  it("disambiguates duplicate summary names in server output", () => {
+    const scene = [{ type: "point" as const, x: 1, y: 2 }]
+    const html = renderToString(
+      <>
+        <AccessibleDataTable tableId="first-table" chartType="line chart" scene={scene} />
+        <AccessibleDataTable tableId="second-table" chartType="line chart" scene={scene} />
+      </>
+    )
+    expect(html).toContain('aria-label="Data summary for line chart"')
+    expect(html).toContain('aria-label="Data summary for line chart (2)"')
+    expect(html).not.toContain('aria-label="Data summary for line chart (3)"')
+    expect(html).not.toMatch(/aria-label="[^"]*first-table/)
+    expect(html).not.toMatch(/aria-label="[^"]*second-table/)
+
+    const again = renderToString(
+      <AccessibleDataTable tableId="third-table" chartType="line chart" scene={scene} />
+    )
+    expect(again).toContain('aria-label="Data summary for line chart"')
+    expect(again).not.toContain("(2)")
   })
 
   it("constrains the collapsed trigger to the visually hidden region", () => {

@@ -310,6 +310,35 @@ describe("PipelineStore domain integrity", () => {
     expect(lowFive!.lowY).not.toBeCloseTo(highHundred!.highY)
   })
 
+  it("keeps a normalized stack layer on a log domain", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {})
+    const store = new PipelineStore(config({
+      chartType: "stackedarea",
+      yScaleType: "log",
+      normalize: true,
+      stackOrder: "key",
+      groupAccessor: "g",
+    }))
+    store.ingest({
+      inserts: [0, 1].flatMap((x) => [
+        { x, g: "a", y: 10 },
+        { x, g: "b", y: 20 },
+      ]),
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    const domain = yDomain(store)
+    expect(domain[0]).toBeCloseTo(1 / 3)
+    expect(domain[1]).toBeCloseTo(1)
+    const upper = store.scene.find((node) => node.type === "area" && node.group === "b")
+    const lower = store.scene.find((node) => node.type === "area" && node.group === "a")
+    expect(upper?.type).toBe("area")
+    expect(lower?.type).toBe("area")
+    if (upper?.type !== "area" || lower?.type !== "area") return
+    expect(Math.abs(upper.topPath[0][1] - upper.bottomPath[0][1])).toBeGreaterThan(1)
+    expect(Math.abs(lower.topPath[0][1] - lower.bottomPath[0][1])).toBeLessThan(1)
+  })
+
   it("keeps a positive silhouette layer on a log domain", () => {
     vi.spyOn(console, "warn").mockImplementation(() => {})
     const store = new PipelineStore(config({

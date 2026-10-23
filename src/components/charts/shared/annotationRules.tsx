@@ -14,7 +14,7 @@ import {
   regressionNumber,
 } from "./leastSquaresRegression"
 import { resolveX, resolveY, resolveAnchoredPosition, isInBounds } from "./annotationResolvers"
-import { projectHeatmapBandBound, projectHeatmapBandValue } from "../../stream/heatmapBandTicks"
+import { projectHeatmapBandBound, projectHeatmapBandComputedValue } from "../../stream/heatmapBandTicks"
 import type { Datum } from "./datumTypes"
 import { getMinMax } from "./minMax"
 import { annotationActivationProps, type AnnotationActivationOptions } from "./annotationActivation"
@@ -34,7 +34,7 @@ export {
 // keeps that an intentional omission rather than a required-but-missing key,
 // while still catching a typo'd key against the real CurveType union.
 function dataScale(scale: (value: number) => number, value: unknown): number {
-  const px = projectHeatmapBandValue(scale, value)
+  const px = projectHeatmapBandComputedValue(scale, value)
   return px == null || !Number.isFinite(px) ? Number.NaN : px
 }
 

@@ -36,10 +36,10 @@ import {
   resolveX,
   resolveY,
 } from "../charts/shared/annotationResolvers"
-import { projectHeatmapBandValue } from "../stream/heatmapBandTicks"
+import { projectHeatmapBandComputedValue } from "../stream/heatmapBandTicks"
 
 function dataScale(scale: (value: number) => number, value: unknown): number {
-  const px = projectHeatmapBandValue(scale, value)
+  const px = projectHeatmapBandComputedValue(scale, value)
   return px == null || !Number.isFinite(px) ? Number.NaN : px
 }
 

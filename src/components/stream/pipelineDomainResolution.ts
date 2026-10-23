@@ -70,21 +70,11 @@ export function resolveStackedAreaYDomain(options: {
   const { config, groups, getX, getY } = options
   const exactMode = (config.yAxisExtent ?? config.axisExtent) === "exact"
 
-  if (config.normalize) {
-    const yDomain: [number, number] = [
-      0,
-      exactMode ? 1 : 1 + config.extentPadding
-    ]
-    return {
-      yDomain,
-      stackExtentCache: {
-        key: `${options.bufferSize}:${options.ingestVersion}:norm`,
-        yDomain
-      }
-    }
-  }
-
-  const stackCacheKey = `${options.bufferSize}:${options.ingestVersion}:${config.baseline ?? "zero"}:${config.stackOrder ?? "key"}`
+  // Normalized stacks still need their cumulative shares. The unit domain is
+  // fixed, but log sampling has to see 0→1/3→1 rather than the raw rows.
+  const stackCacheKey = config.normalize
+    ? `${options.bufferSize}:${options.ingestVersion}:norm`
+    : `${options.bufferSize}:${options.ingestVersion}:${config.baseline ?? "zero"}:${config.stackOrder ?? "key"}`
   if (
     options.stackExtentCache &&
     options.stackExtentCache.key === stackCacheKey
@@ -156,14 +146,25 @@ export function resolveStackedAreaYDomain(options: {
     groupKeys = groups.map((g) => g.key).sort(keyCmp)
   }
 
+  if (config.normalize) {
+    for (const map of valueMaps.values()) {
+      for (const [x, y] of map) {
+        const total = xTotals.get(x) || 0
+        map.set(x, total !== 0 ? y / total : 0)
+      }
+    }
+  }
+
+  // The scene forces a zero baseline whenever normalize is set.
+  const baseline = config.normalize ? "zero" : config.baseline
   let yDomain: [number, number]
-  if (config.baseline === "wiggle" || config.baseline === "silhouette") {
+  if (baseline === "wiggle" || baseline === "silhouette") {
     const xValues = Array.from(xSet).sort((a, b) => a - b)
     const offsets = computeStackOffsets(
       xValues,
       groupKeys,
       (k, x) => valueMaps.get(k)?.get(x) || 0,
-      config.baseline
+      baseline
     )
     const plottedY: number[] = []
     let lo = Infinity
@@ -193,7 +194,7 @@ export function resolveStackedAreaYDomain(options: {
     yDomain = [lo - pad, hi + pad]
     const stackExtentCache = { key: stackCacheKey, yDomain, plottedY }
     return { yDomain, stackExtentCache }
-  } else if (config.baseline === "diverging") {
+  } else if (baseline === "diverging") {
     const xValues = Array.from(xSet).sort((a, b) => a - b)
     const plottedY: number[] = []
     let lo = 0
@@ -241,7 +242,9 @@ export function resolveStackedAreaYDomain(options: {
     }
     const range = hi - lo
     const pad = exactMode ? 0 : range > 0 ? range * config.extentPadding : 1
-    yDomain = [lo < 0 ? lo - pad : 0, hi + pad]
+    yDomain = config.normalize
+      ? [0, exactMode ? 1 : 1 + config.extentPadding]
+      : [lo < 0 ? lo - pad : 0, hi + pad]
     const stackExtentCache = { key: stackCacheKey, yDomain, plottedY }
     return { yDomain, stackExtentCache }
   }

@@ -133,17 +133,32 @@ export function projectHeatmapBandBound(
 /** Map a data value, including one that falls between keys, back to a pixel. */
 export function projectHeatmapBandDataValue(
   scale: ((value: number) => number) | null | undefined,
-  value: number
+  value: number | Date
 ): number | null {
-  if (!scale || !Number.isFinite(value)) return null
+  const numeric = value instanceof Date ? value.getTime() : value
+  if (!scale || !Number.isFinite(numeric)) return null
   const ticks = heatmapBandTicks(scale)
-  if (!ticks) return scale(value)
+  if (!ticks) return scale(numeric)
   const keys = heatmapBandNumericKeys(ticks)
-  if (!keys) return scale(value)
-  const exact = keys.findIndex((key) => key === value)
+  if (!keys) return scale(numeric)
+  const exact = keys.findIndex((key) => key === numeric)
   if (exact >= 0) return scale(exact)
-  const index = heatmapBandIndexForValue(keys, value)
+  const index = heatmapBandIndexForValue(keys, numeric)
   return index == null ? null : scale(index)
+}
+
+/**
+ * Project a fitted coordinate. Numeric and date bands interpolate between
+ * keys. A categorical anchor stays an exact lookup.
+ */
+export function projectHeatmapBandComputedValue(
+  scale: ((value: number) => number) | null | undefined,
+  value: unknown
+): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return projectHeatmapBandDataValue(scale, value)
+  }
+  return projectHeatmapBandValue(scale, value)
 }
 
 type InvertibleScale = {

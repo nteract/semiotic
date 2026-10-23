@@ -1,6 +1,7 @@
 import React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { scaleBand, scaleLinear } from "d3-scale"
+import { heatmapBandScale } from "../../stream/heatmapBandTicks"
 import { describe, expect, it } from "vitest"
 import type { AnnotationContext } from "../../realtime/types"
 import { createDefaultAnnotationRules } from "./annotationRules"
@@ -75,6 +76,50 @@ for (const [name, render] of [
         })
       }
     )
+
+    it("interpolates a fitted heatmap trend between band keys", () => {
+      const x = heatmapBandScale([0, 1, 2], [0, 300])
+      const y = heatmapBandScale([0, 1, 2], [200, 0])
+      const points = pointsOf(render(
+        { type: "trend", method: "linear" },
+        0,
+        {
+          ...context,
+          data: [
+            { x: 0, y: 0 },
+            { x: 1, y: 1 },
+            { x: 2, y: 0 },
+          ],
+          scales: { x, y },
+        }
+      ))
+      expect(points).toHaveLength(3)
+      points.forEach(([px, py], i) => {
+        expect(px).toBeCloseTo([50, 150, 250][i])
+        expect(py).toBeCloseTo(y(1 / 3))
+      })
+    })
+
+    it("interpolates an envelope between heatmap band keys", () => {
+      const x = heatmapBandScale([0, 1, 2], [0, 300])
+      const y = heatmapBandScale([0, 1, 2], [200, 0])
+      const node = render(
+        { type: "envelope", upperAccessor: "upper", lowerAccessor: "lower" },
+        0,
+        {
+          ...context,
+          data: [
+            { x: 0, y: 0, upper: 0.5, lower: 0.25 },
+            { x: 1, y: 1, upper: 1.5, lower: 0.5 },
+            { x: 2, y: 0, upper: 0.5, lower: 0.25 },
+          ],
+          scales: { x, y },
+        }
+      )
+      const svg = renderToStaticMarkup(<svg>{node}</svg>)
+      expect(svg).toContain("<path")
+      expect(svg).not.toMatch(/NaN|Infinity/)
+    })
 
     it("extrapolates a timestamp quadratic in fitted coordinates", () => {
       const data = Array.from({ length: 5 }, (_, i) => ({

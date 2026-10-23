@@ -44,6 +44,16 @@ export interface XYBrushOverlayProps {
   streaming?: boolean
 }
 
+function dataEndpoint(
+  scale: { (value: number): number; invert: (pixel: number) => number; domain: () => unknown[] },
+  endpoint: 0 | 1
+): number {
+  const edge = scale.domain()[endpoint]
+  const pixel = scale(edge instanceof Date ? edge.getTime() : Number(edge))
+  const value = invertHeatmapBandValue(scale, pixel) as number | Date
+  return value instanceof Date ? value.getTime() : value
+}
+
 function boundedRange(
   range: [number, number],
   domain: [number, number],
@@ -146,8 +156,8 @@ export function XYBrushOverlay({
       return
     }
 
-    const xDomain = s.x.domain() as [number, number]
-    const yDomain = s.y.domain() as [number, number]
+    const xDomain: [number, number] = [dataEndpoint(s.x, 0), dataEndpoint(s.x, 1)]
+    const yDomain: [number, number] = [dataEndpoint(s.y, 0), dataEndpoint(s.y, 1)]
     const existing = activeBrushExtentRef.current
     let xRange: [number, number] = existing?.x ?? [
       xDomain[0] + (xDomain[1] - xDomain[0]) * 0.4,
@@ -164,13 +174,18 @@ export function XYBrushOverlay({
     if ((horizontal && dimension === "y") || (!horizontal && dimension === "x")) return
 
     const extent = { x: xRange, y: yRange }
+    const x0 = projectHeatmapBandDataValue(s.x, xRange[0])
+    const x1 = projectHeatmapBandDataValue(s.x, xRange[1])
+    const y0 = projectHeatmapBandDataValue(s.y, yRange[0])
+    const y1 = projectHeatmapBandDataValue(s.y, yRange[1])
+    if (x0 == null || x1 == null || y0 == null || y1 == null) return
     isProgrammaticMoveRef.current = true
     if (dimension === "x") {
-      g.call(brush.move, [s.x(xRange[0]), s.x(xRange[1])])
+      g.call(brush.move, [x0, x1])
     } else if (dimension === "y") {
-      g.call(brush.move, [s.y(yRange[1]), s.y(yRange[0])])
+      g.call(brush.move, [y1, y0])
     } else {
-      g.call(brush.move, [[s.x(xRange[0]), s.y(yRange[1])], [s.x(xRange[1]), s.y(yRange[0])]])
+      g.call(brush.move, [[x0, y1], [x1, y0]])
     }
     isProgrammaticMoveRef.current = false
     activeBrushExtentRef.current = extent
@@ -279,8 +294,7 @@ export function XYBrushOverlay({
     if (dimension === "y") return
 
     const ext = activeBrushExtentRef.current
-    const domain = scales.x.domain() as [number, number]
-    const visibleMin = domain[0]
+    const visibleMin = dataEndpoint(scales.x, 0)
 
     const g = d3Select(svgRef.current).select<SVGGElement>(".brush-g")
 
