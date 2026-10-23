@@ -238,6 +238,52 @@ describe("PipelineStore domain integrity", () => {
     expect(xDomain(removedX)).toEqual([10, 100])
   })
 
+  it("opens an empty log axis upward from an explicit lower bound", () => {
+    const emptyY = new PipelineStore(config({
+      yScaleType: "log",
+      yExtent: [100, undefined],
+    }))
+    emptyY.computeScene({ width: 400, height: 200 })
+    expect(yDomain(emptyY)).toEqual([100, 1000])
+
+    const emptyX = new PipelineStore(config({
+      xScaleType: "log",
+      xExtent: [100, undefined],
+    }))
+    emptyX.computeScene({ width: 400, height: 200 })
+    expect(xDomain(emptyX)).toEqual([100, 1000])
+
+    const removedY = new PipelineStore(config({
+      yScaleType: "log",
+      yExtent: [100, undefined],
+      pointIdAccessor: "id",
+    }))
+    removedY.ingest({ inserts: [{ id: "a", x: 0, y: 400 }], bounded: true })
+    removedY.computeScene({ width: 400, height: 200 })
+    expect(yDomain(removedY)).toEqual([100, 400])
+    removedY.remove("a")
+    removedY.computeScene({ width: 400, height: 200 })
+    expect(yDomain(removedY)).toEqual([100, 1000])
+
+    const removedX = new PipelineStore(config({
+      xScaleType: "log",
+      xExtent: [100, undefined],
+      pointIdAccessor: "id",
+    }))
+    removedX.ingest({ inserts: [{ id: "a", x: 400, y: 1 }], bounded: true })
+    removedX.computeScene({ width: 400, height: 200 })
+    expect(xDomain(removedX)).toEqual([100, 400])
+    removedX.remove("a")
+    removedX.computeScene({ width: 400, height: 200 })
+    expect(xDomain(removedX)).toEqual([100, 1000])
+
+    const linear = new PipelineStore(config({
+      yExtent: [100, undefined],
+    }))
+    linear.computeScene({ width: 400, height: 200 })
+    expect(yDomain(linear)).toEqual([100, 0])
+  })
+
   it("uses one positive decade when a log scale has no positive data", () => {
     const store = new PipelineStore(config({ yScaleType: "log" }))
     store.computeScene({ width: 400, height: 200 })

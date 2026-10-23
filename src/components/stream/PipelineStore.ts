@@ -622,7 +622,7 @@ export class PipelineStore extends UpdateResultStoreBase {
       xDomain,
       yDomain,
       config.xScaleType,
-      { x: config.xExtent, y: config.yExtent }
+      { x: config.xExtent, y: config.yExtent, yScaleType: config.yScaleType }
     ))
 
     const xScaleType = config.xScaleType ?? (this.xIsDate ? "utc" : undefined)

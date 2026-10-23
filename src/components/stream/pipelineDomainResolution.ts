@@ -463,7 +463,8 @@ export function reapplyPartialYExtent(
 function rescueAxis(
   domain: [number, number],
   fallback: [number, number],
-  explicit?: readonly (number | undefined)[]
+  explicit?: readonly (number | undefined)[],
+  scaleType?: PipelineConfig["xScaleType"] | PipelineConfig["yScaleType"]
 ): [number, number] {
   if (domain[0] !== Infinity && domain[1] !== -Infinity) return domain
   const min = explicit?.[0]
@@ -471,6 +472,9 @@ function rescueAxis(
   const minOk = typeof min === "number" && Number.isFinite(min)
   const maxOk = typeof max === "number" && Number.isFinite(max)
   if (!minOk && !maxOk) return fallback
+  // An omitted maximum stays above an explicit positive floor. A non-positive
+  // placeholder would reverse the axis, and a log clamp would open downward.
+  if (scaleType === "log" && minOk && !maxOk && min > 0) return [min, min * 10]
   // The open side stays non-positive when the fixed end is positive, so a
   // log clamp can open one decade instead of adopting the placeholder.
   return [
@@ -486,6 +490,7 @@ export function rescueDegenerateDomains(
   extents?: {
     x?: readonly (number | undefined)[]
     y?: readonly (number | undefined)[]
+    yScaleType?: PipelineConfig["yScaleType"]
   }
 ): { xDomain: [number, number]; yDomain: [number, number] } {
   const xFallback: [number, number] =
@@ -495,8 +500,8 @@ export function rescueDegenerateDomains(
         [0, 86400000]
       : [0, 1]
   return {
-    xDomain: rescueAxis(xDomain, xFallback, extents?.x),
-    yDomain: rescueAxis(yDomain, [0, 1], extents?.y)
+    xDomain: rescueAxis(xDomain, xFallback, extents?.x, xScaleType),
+    yDomain: rescueAxis(yDomain, [0, 1], extents?.y, extents?.yScaleType)
   }
 }
 
