@@ -1,5 +1,6 @@
 import "../../test-utils/registerBuiltInXYPlugins"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import type { Datum } from "../charts/shared/datumTypes"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
 import { resolveStackedAreaYDomain } from "./pipelineDomainResolution"
 
@@ -348,15 +349,16 @@ describe("PipelineStore domain integrity", () => {
   })
 
   it("retains stack boundaries only while the y scale is logarithmic", () => {
+    const point = (x: number, y: number): Datum => ({ x, y })
     const groups = [
-      { key: "a", data: [{ x: 0, y: 10 }, { x: 1, y: 0 }] },
-      { key: "b", data: [{ x: 0, y: 0 }, { x: 1, y: 4 }] },
-      { key: "c", data: [{ x: 0, y: 0 }, { x: 1, y: 0 }] },
+      { key: "a", data: [point(0, 10), point(1, 0)] },
+      { key: "b", data: [point(0, 0), point(1, 4)] },
+      { key: "c", data: [point(0, 0), point(1, 0)] },
     ]
     const shared = {
       groups,
-      getX: (d: { x: number }) => d.x,
-      getY: (d: { y: number }) => d.y,
+      getX: (d: Datum) => d.x as number,
+      getY: (d: Datum) => d.y as number,
       bufferSize: 6,
       ingestVersion: 1,
     }
