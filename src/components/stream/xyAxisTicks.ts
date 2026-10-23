@@ -76,7 +76,11 @@ export function generateXYTicks(options: {
   const values = explicitBand
     ? explicitBand.map((tick) => tick.requested)
     : bandTicks
-      ? bandTicks.map((tick) => tick.value)
+      // A zero count is an explicit request for no labels. Every other count
+      // still shows the category keys; pixel thinning applies afterwards.
+      ? count === 0
+        ? []
+        : bandTicks.map((tick) => tick.value)
       : (axis?.tickValues ?? ticksForMode(scale, count, extentMode))
   const labelByValue = !explicitBand && bandTicks
     ? new Map(bandTicks.map((tick) => [tick.value, tick.label]))

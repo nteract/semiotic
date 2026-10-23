@@ -171,6 +171,28 @@ describe("generateXYTicks with heatmap band scales", () => {
     expect(timestampTicks.map((tick) => tick.pixel)).toEqual([dates(0), dates(1)])
   })
 
+  it("drops band labels when ticks or tickCount is zero", () => {
+    const scale = heatmapBandScale([10, 20, 30], [0, 300])
+    expect(generateXYTicks({
+      scale,
+      size: 300,
+      horizontal: true,
+      axis: { orient: "bottom", ticks: 0 },
+    })).toEqual([])
+    expect(generateXYTicks({
+      scale,
+      size: 300,
+      horizontal: true,
+      axis: { orient: "bottom", tickCount: 0 },
+    })).toEqual([])
+    expect(labelsOf(generateXYTicks({
+      scale,
+      size: 300,
+      horizontal: true,
+      axis: { orient: "bottom", ticks: 0, tickValues: [10, 30] },
+    }))).toEqual(["10", "30"])
+  })
+
   it("keeps band labels on copies of copies", () => {
     const scale = heatmapBandScale(["b", "a"], [0, 100])
     const once = scale.copy().range([0, 200])
