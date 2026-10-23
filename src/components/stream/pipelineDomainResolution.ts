@@ -460,24 +460,44 @@ export function reapplyPartialYExtent(
   ]
 }
 
+function rescueAxis(
+  domain: [number, number],
+  fallback: [number, number],
+  explicit?: readonly (number | undefined)[]
+): [number, number] {
+  if (domain[0] !== Infinity && domain[1] !== -Infinity) return domain
+  const min = explicit?.[0]
+  const max = explicit?.[1]
+  const minOk = typeof min === "number" && Number.isFinite(min)
+  const maxOk = typeof max === "number" && Number.isFinite(max)
+  if (!minOk && !maxOk) return fallback
+  // The open side stays non-positive when the fixed end is positive, so a
+  // log clamp can open one decade instead of adopting the placeholder.
+  return [
+    minOk ? min : maxOk && max > 0 ? 0 : fallback[0],
+    maxOk ? max : minOk && min > 0 ? 0 : fallback[1]
+  ]
+}
+
 export function rescueDegenerateDomains(
   xDomain: [number, number],
   yDomain: [number, number],
-  xScaleType?: PipelineConfig["xScaleType"]
-): { xDomain: [number, number]; yDomain: [number, number] } {
-  let x = xDomain
-  let y = yDomain
-  if (x[0] === Infinity || x[1] === -Infinity) {
-    if (xScaleType === "time") {
-      // Empty charts have no observation time. A fixed epoch keeps static
-      // exports and the first hydration render on the same scale.
-      x = [0, 86400000]
-    } else {
-      x = [0, 1]
-    }
+  xScaleType?: PipelineConfig["xScaleType"],
+  extents?: {
+    x?: readonly (number | undefined)[]
+    y?: readonly (number | undefined)[]
   }
-  if (y[0] === Infinity || y[1] === -Infinity) y = [0, 1]
-  return { xDomain: x, yDomain: y }
+): { xDomain: [number, number]; yDomain: [number, number] } {
+  const xFallback: [number, number] =
+    xScaleType === "time"
+      ? // Empty charts have no observation time. A fixed epoch keeps static
+        // exports and the first hydration render on the same scale.
+        [0, 86400000]
+      : [0, 1]
+  return {
+    xDomain: rescueAxis(xDomain, xFallback, extents?.x),
+    yDomain: rescueAxis(yDomain, [0, 1], extents?.y)
+  }
 }
 
 /**

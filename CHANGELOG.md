@@ -17,9 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Categorical heatmap axes accept string `tickValues`. Each string is the
   column or row key and is drawn at that cell's center.
-- A log axis keeps an explicit positive end when no positive sample remains.
-  The open end stays one decade away. `[1, 10]` is used only when neither end
-  is fixed.
+- A log axis keeps an explicit positive end when no positive sample remains,
+  including an empty axis. The open end stays one decade away. `[1, 10]` is
+  used only when neither end is fixed.
 - Update the MCP SDK's transitive `ip-address` dependency to `10.7.4`, fixing
   CVE-2026-111997 and clearing the release security audit.
 - Align Vitest's coverage and UI packages with the test runner so release

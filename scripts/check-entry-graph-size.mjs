@@ -147,7 +147,9 @@ const ENTRY_GRAPHS = [
   // control layer, and diagnoseConfig gains the annotation field-typo check;
   // measures 385.5 KiB gzip.
   // Feature graph: 387.3 KiB (previous built HEAD: 385.9 KiB).
-  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 393.8 },
+  // Bumped 393.8→395: shared log-domain repair and heatmap band projection
+  // (explicit empty ends, cached numeric keys) measure 394.2 KiB gzip.
+  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 395 },
   // Bumped 150→154: custom-layout painter registration now loads on demand
   // rather than retaining every painter in every chart HOC. The lightweight
   // readiness bridge and fallback paint selection live in the shared XY
@@ -297,7 +299,9 @@ const ENTRY_GRAPHS = [
   // Lowered 170→168.5 (2026-09-30): on-demand XY transitions measure
   // 167.4 KiB gzip.
   // Feature graph: 170.5 KiB (previous built HEAD: 168.5 KiB).
-  { entry: "realtime.module.min.js", label: "realtime", limitKb: 174.1 },
+  // Bumped 174.1→175: the same shared XY domain and heatmap projection
+  // measure 174.4 KiB gzip.
+  { entry: "realtime.module.min.js", label: "realtime", limitKb: 175 },
   // Bumped 160→161 (3.8.6): PacketFlow and Crucible now join the shared
   // physics selection contract. The chart-local split keeps source modules
   // bounded, while the reachable graph gains less than one KiB gzip.
@@ -423,7 +427,9 @@ const ENTRY_GRAPHS = [
   // Bumped 612→614: axis-config key validation, value-banded histogram
   // fills, and the shared hatch tile measure 613.5 KiB gzip.
   // Feature graph: 614.7 KiB (previous built HEAD: 613.3 KiB).
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 636 },
+  // Bumped 636→637: the same shared XY domain and heatmap projection
+  // measure 636.4 KiB gzip.
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 637 },
   // Bumped 100→101: transitDiagramLayout's public detail modes, source-rooted
   // line derivation, and station-rendering contract extend the curated recipes
   // entry. Linux CI measures 100.3 KiB gzip; retain a reviewable 0.7 KiB

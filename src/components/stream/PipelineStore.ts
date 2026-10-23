@@ -621,7 +621,8 @@ export class PipelineStore extends UpdateResultStoreBase {
     ;({ xDomain, yDomain } = rescueDegenerateDomains(
       xDomain,
       yDomain,
-      config.xScaleType
+      config.xScaleType,
+      { x: config.xExtent, y: config.yExtent }
     ))
 
     const xScaleType = config.xScaleType ?? (this.xIsDate ? "utc" : undefined)

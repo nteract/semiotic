@@ -51,6 +51,14 @@ describe("heatmap band coordinates", () => {
     expect(invertHeatmapBandValue(dateColumn, 300)).toBeCloseTo(day.getTime() + 0.5)
   })
 
+  it("interpolates descending numeric keys", () => {
+    const columns = heatmapBandScale([30, 20, 10], [0, 300])
+    expect(projectHeatmapBandDataValue(columns, 25)).toBeCloseTo(columns(0.5))
+    expect(projectHeatmapBandDataValue(columns, 25)).toBeCloseTo(columns(0.5))
+    expect(projectHeatmapBandDataValue(columns, 5)).toBeCloseTo(columns(2.5))
+    expect(projectHeatmapBandDataValue(columns, 35)).toBeCloseTo(columns(-0.5))
+  })
+
   it("returns the cell index for categorical bands", () => {
     const rows = heatmapBandScale(["low", "high"], [200, 0])
     expect(invertHeatmapBandValue(rows, 50)).toBeCloseTo(rows.invert(50))

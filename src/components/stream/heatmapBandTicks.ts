@@ -2,6 +2,9 @@ import { scaleLinear, type ScaleLinear } from "d3-scale"
 
 export const HEATMAP_BAND_TICKS = Symbol.for("semiotic.heatmapBandTicks")
 const HEATMAP_BAND_COPY = Symbol.for("semiotic.heatmapBandCopy")
+const HEATMAP_BAND_KEYS = Symbol.for("semiotic.heatmapBandKeys")
+const HEATMAP_BAND_KEY_INDEX = Symbol.for("semiotic.heatmapBandKeyIndex")
+const HEATMAP_BAND_DIRECTION = Symbol.for("semiotic.heatmapBandDirection")
 
 export type HeatmapBandTick = {
   value: number
@@ -164,8 +167,8 @@ export function projectHeatmapBandDataValue(
   if (!ticks) return scale(numeric)
   const keys = heatmapBandNumericKeys(ticks)
   if (!keys) return scale(numeric)
-  const exact = keys.findIndex((key) => key === numeric)
-  if (exact >= 0) return scale(exact)
+  const exact = heatmapBandKeyIndex(ticks, keys).get(numeric)
+  if (exact != null) return scale(exact)
   const index = heatmapBandIndexForValue(keys, numeric)
   return index == null ? null : scale(index)
 }
@@ -246,12 +249,76 @@ function heatmapLabelKeys(
   return null
 }
 
+type CachedBandTicks = HeatmapBandTick[] & {
+  [HEATMAP_BAND_KEYS]?: number[] | null
+  [HEATMAP_BAND_KEY_INDEX]?: Map<number, number>
+}
+
+type DirectedKeys = number[] & { [HEATMAP_BAND_DIRECTION]?: -1 | 0 | 1 }
+
 function heatmapBandNumericKeys(ticks: HeatmapBandTick[]): number[] | null {
-  const numeric = ticks.every((tick) => typeof tick.label === "number" && Number.isFinite(tick.label))
-  if (numeric) return ticks.map((tick) => tick.label as number)
-  const dates = ticks.every((tick) => tick.label instanceof Date && Number.isFinite((tick.label as Date).getTime()))
-  if (dates) return ticks.map((tick) => (tick.label as Date).getTime())
-  return null
+  const cached = ticks as CachedBandTicks
+  if (HEATMAP_BAND_KEYS in cached) return cached[HEATMAP_BAND_KEYS] ?? null
+  let keys: number[] | null = null
+  if (ticks.every((tick) => typeof tick.label === "number" && Number.isFinite(tick.label))) {
+    keys = ticks.map((tick) => tick.label as number)
+  } else if (
+    ticks.every((tick) => tick.label instanceof Date && Number.isFinite((tick.label as Date).getTime()))
+  ) {
+    keys = ticks.map((tick) => (tick.label as Date).getTime())
+  }
+  Object.defineProperty(cached, HEATMAP_BAND_KEYS, { value: keys })
+  return keys
+}
+
+function heatmapBandKeyIndex(ticks: HeatmapBandTick[], keys: number[]): Map<number, number> {
+  const cached = ticks as CachedBandTicks
+  const existing = cached[HEATMAP_BAND_KEY_INDEX]
+  if (existing) return existing
+  const index = new Map<number, number>()
+  for (let i = 0; i < keys.length; i++) index.set(keys[i], i)
+  Object.defineProperty(cached, HEATMAP_BAND_KEY_INDEX, { value: index })
+  return index
+}
+
+function heatmapBandDirection(keys: number[]): -1 | 0 | 1 {
+  const cached = keys as DirectedKeys
+  const existing = cached[HEATMAP_BAND_DIRECTION]
+  if (existing != null) return existing
+  let direction: -1 | 0 | 1 = 0
+  for (let i = 1; i < keys.length; i++) {
+    const gap = keys[i] - keys[i - 1]
+    if (gap === 0) {
+      direction = 0
+      break
+    }
+    const sign: -1 | 1 = gap > 0 ? 1 : -1
+    if (direction === 0) direction = sign
+    else if (direction !== sign) {
+      direction = 0
+      break
+    }
+  }
+  Object.defineProperty(cached, HEATMAP_BAND_DIRECTION, { value: direction })
+  return direction
+}
+
+function heatmapBandIndexMonotonic(
+  keys: number[],
+  value: number,
+  direction: -1 | 1
+): number {
+  let lo = 0
+  let hi = keys.length
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1
+    if (direction === 1 ? keys[mid] < value : keys[mid] > value) lo = mid + 1
+    else hi = mid
+  }
+  if (lo === 0) return (value - keys[0]) / (keys[1] - keys[0])
+  const last = keys.length - 1
+  if (lo >= keys.length) return last + (value - keys[last]) / (keys[last] - keys[last - 1])
+  return (lo - 1) + (value - keys[lo - 1]) / (keys[lo] - keys[lo - 1])
 }
 
 function heatmapBandValueAtIndex(ticks: HeatmapBandTick[], index: number): number {
@@ -269,6 +336,8 @@ function heatmapBandValueAtIndex(ticks: HeatmapBandTick[], index: number): numbe
 
 function heatmapBandIndexForValue(keys: number[], value: number): number | null {
   if (keys.length < 2) return keys.length === 1 ? value - keys[0] : null
+  const direction = heatmapBandDirection(keys)
+  if (direction === 1 || direction === -1) return heatmapBandIndexMonotonic(keys, value, direction)
   for (let i = 0; i < keys.length - 1; i++) {
     const start = keys[i]
     const end = keys[i + 1]
