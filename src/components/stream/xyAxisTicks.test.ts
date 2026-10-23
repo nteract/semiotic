@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest"
 import { scaleLinear, scaleUtc } from "d3-scale"
 import { generateXYTicks } from "./xyAxisTicks"
 import { isStaticAxisLandmark } from "../server/staticXYAxisTicks"
-import { heatmapBandScale, heatmapBandTicks } from "./heatmapBandTicks"
+import { heatmapBandDomain, heatmapBandScale, heatmapBandTicks } from "./heatmapBandTicks"
 import { adaptiveTimeTicks } from "../charts/shared/formatUtils"
 
 const HOUR = 3_600_000
@@ -201,6 +201,28 @@ describe("generateXYTicks with heatmap band scales", () => {
     })
     expect(labelsOf(timestampTicks)).toEqual(["Jan 1", "Jan 2"])
     expect(timestampTicks.map((tick) => tick.pixel)).toEqual([dates(0), dates(1)])
+  })
+
+  it("drops automatic band ticks that sit outside a cropped extent", () => {
+    const labels = [10, 20, 30]
+    const scale = heatmapBandScale(
+      labels,
+      [0, 300],
+      heatmapBandDomain(labels, [20, 30])
+    )
+    expect(scale.domain()).toEqual([1, 2])
+    const ticks = generateXYTicks({ scale, size: 300, horizontal: true })
+    expect(ticks.map((tick) => tick.dataValue)).toEqual([20, 30])
+    expect(ticks.every((tick) => tick.pixel >= 0 && tick.pixel <= 300)).toBe(true)
+
+    const explicit = generateXYTicks({
+      scale,
+      size: 300,
+      horizontal: true,
+      axis: { orient: "bottom", tickValues: [10, 20, 30] },
+    })
+    expect(explicit.map((tick) => tick.dataValue)).toEqual([10, 20, 30])
+    expect(explicit[0].pixel).toBeCloseTo(-300)
   })
 
   it("drops band labels when ticks or tickCount is zero", () => {

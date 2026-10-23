@@ -256,10 +256,11 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: St
     [0, layout.width],
     heatmapBandDomain(xLabels, ctx.config.xExtent)
   )
+  const yDomain = heatmapBandDomain(yLabels, ctx.config.yExtent)
   const yScale = heatmapBandScale(
     yLabels,
     [layout.height, 0],
-    heatmapBandDomain(yLabels, ctx.config.yExtent)
+    ctx.config.invertY ? [yDomain[1], yDomain[0]] : yDomain
   )
   const bandSpan = (scale: (index: number) => number, index: number) => {
     const start = scale(index - 0.5)

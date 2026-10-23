@@ -233,6 +233,44 @@ describe("buildHeatmapScene (static mode)", () => {
     expect(categories.scales!.x.domain()).toEqual([-0.5, 1.5])
   })
 
+  it("reverses the y band when invertY is set", () => {
+    const data = [
+      { x: 10, y: 1, value: 1 },
+      { x: 10, y: 2, value: 2 },
+    ]
+    const layout = { width: 300, height: 200 }
+    const base = { xAccessor: "x", yAccessor: "y", valueAccessor: "value" }
+    const upright = makeCtx({ config: base })
+    const uprightNodes = buildHeatmapScene(upright, data, layout)
+    const flipped = makeCtx({ config: { ...base, invertY: true } })
+    const flippedNodes = buildHeatmapScene(flipped, data, layout)
+    expect(upright.scales!.y.domain()).toEqual([-0.5, 1.5])
+    expect(flipped.scales!.y.domain()).toEqual([1.5, -0.5])
+    const center = (nodes: typeof uprightNodes, y: number) => {
+      const cell = nodes.find((node) => node.datum?.y === y)
+      expect(cell).toBeTruthy()
+      return cell!.y + cell!.h / 2
+    }
+    expect(center(uprightNodes, 1)).toBeGreaterThan(center(uprightNodes, 2))
+    expect(center(flippedNodes, 1)).toBeLessThan(center(flippedNodes, 2))
+    expect(center(flippedNodes, 1)).toBeCloseTo(flipped.scales!.y(0))
+    expect(center(flippedNodes, 2)).toBeCloseTo(flipped.scales!.y(1))
+
+    const explicit = makeCtx({ config: { ...base, yExtent: [0, 5], invertY: true } })
+    buildHeatmapScene(explicit, data, layout)
+    expect(explicit.scales!.y.domain()).toEqual([4, -1])
+
+    const reversed = makeCtx({ config: { ...base, yExtent: [5, 0] } })
+    buildHeatmapScene(reversed, data, layout)
+    expect(reversed.scales!.y.domain()).toEqual([4, -1])
+
+    const reversedAgain = makeCtx({
+      config: { ...base, yExtent: [5, 0], invertY: true },
+    })
+    buildHeatmapScene(reversedAgain, data, layout)
+    expect(reversedAgain.scales!.y.domain()).toEqual([-1, 4])
+  })
+
   it("missing values in grid are skipped — no cell for (a, p) combo", () => {
     const data = [
       { x: 0, y: 0, value: 10 },

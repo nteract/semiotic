@@ -136,9 +136,14 @@ export function generateXYTicks(options: {
     }
     return tick
   })
+  // A cropped band domain can place a key outside the plot. Automatic ticks
+  // stay inside it. An explicit tickValues list is left where it was requested.
+  const visible = !explicitBand && bandTicks
+    ? candidates.filter((tick) => tick.pixel >= 0 && tick.pixel <= size)
+    : candidates
   let minPx = 22
   if (horizontal) {
-    const width = candidates.reduce(
+    const width = visible.reduce(
       (max, tick) => Math.max(max, labelWidth(tick.label)),
       0
     )
@@ -163,7 +168,7 @@ export function generateXYTicks(options: {
           }))
         }
       : undefined
-  let ticks = filterTicksByPixelDistance(candidates, minPx)
+  let ticks = filterTicksByPixelDistance(visible, minPx)
   if (relabel) ticks = relabel(ticks)
   if (ticks.length > 1) {
     ticks = ticks.filter(
