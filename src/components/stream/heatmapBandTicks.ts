@@ -187,7 +187,8 @@ export function projectHeatmapBandComputedValue(
 /**
  * Scale adapter for marginal binning. A band scale's domain is cell indexes,
  * so a histogram of the raw keys would see an empty domain. This adapter's
- * domain is the key extent, and calls project through those keys.
+ * domain is the data extent of that index domain, including a cropped
+ * heatmap extent, and calls project through the keys.
  */
 export function heatmapDataScale<Scale extends (value: number) => number>(
   scale: Scale
@@ -196,9 +197,14 @@ export function heatmapDataScale<Scale extends (value: number) => number>(
   if (!ticks) return scale
   const keys = heatmapBandNumericKeys(ticks)
   if (!keys) return scale
-  const start = Math.min(keys[0], keys[keys.length - 1])
-  const end = Math.max(keys[0], keys[keys.length - 1])
-  const domain: [number, number] = start === end ? [start - 0.5, end + 0.5] : [start, end]
+  const indexDomain = (scale as { domain?: () => Array<number | Date> }).domain?.()
+  const low = Number(indexDomain?.[0])
+  const high = Number(indexDomain?.[1])
+  if (!Number.isFinite(low) || !Number.isFinite(high)) return scale
+  const domain: [number, number] = [
+    heatmapBandValueAtIndex(ticks, low),
+    heatmapBandValueAtIndex(ticks, high),
+  ]
   const project = (value: number) => {
     const px = projectHeatmapBandDataValue(scale, value)
     return px == null ? Number.NaN : px

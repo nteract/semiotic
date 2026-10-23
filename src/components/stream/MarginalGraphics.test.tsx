@@ -3,7 +3,7 @@ import { render } from "@testing-library/react"
 import { scaleLinear } from "d3-scale"
 import { MarginalGraphics, normalizeMarginalConfig } from "./MarginalGraphics"
 import { provideMarginalGraphics } from "./MarginalGraphicsLazy"
-import { heatmapBandScale } from "./heatmapBandTicks"
+import { heatmapBandDomain, heatmapBandScale, heatmapDataScale } from "./heatmapBandTicks"
 import { SVGOverlay } from "./SVGOverlay"
 import type { StreamScales } from "./types"
 import type { MarginalConfig } from "./types"
@@ -307,7 +307,11 @@ describe("MarginalGraphics", () => {
 
   describe("heatmap band scales", () => {
     const columns = heatmapBandScale([10, 20, 30], [0, 300])
-    const overlay = (kind: "histogram" | "boxplot") => render(
+    const overlay = (
+      kind: "histogram" | "boxplot",
+      xScale: typeof columns = columns,
+      xValues: number[] = [10, 20, 30, 10, 20, 30],
+    ) => render(
       <SVGOverlay
         width={300}
         height={200}
@@ -315,12 +319,12 @@ describe("MarginalGraphics", () => {
         totalHeight={240}
         margin={{ top: 40, right: 0, bottom: 0, left: 0 }}
         scales={{
-          x: columns,
+          x: xScale,
           y: scaleLinear().domain([0, 1]).range([200, 0]),
         } as unknown as StreamScales}
         showAxes={false}
         marginalGraphics={{ top: kind }}
-        xValues={[10, 20, 30, 10, 20, 30]}
+        xValues={xValues}
         yValues={[1]}
       />,
     )
@@ -342,6 +346,40 @@ describe("MarginalGraphics", () => {
       const median = container.querySelector("[data-testid='marginal-boxplot-top'] line[stroke-width='2']")
       expect(median).toBeTruthy()
       expect(Number(median!.getAttribute("x1"))).toBeCloseTo(150)
+    })
+
+    function expectBinsInsidePlot(container: HTMLElement) {
+      const rects = Array.from(container.querySelectorAll("[data-testid='marginal-histogram-top'] rect"))
+      expect(rects.length).toBeGreaterThan(0)
+      for (const rect of rects) {
+        const x = Number(rect.getAttribute("x"))
+        const width = Number(rect.getAttribute("width"))
+        expect(x).toBeGreaterThanOrEqual(0)
+        expect(x + width).toBeLessThanOrEqual(300)
+      }
+    }
+
+    it("bins a cropped numeric extent inside the plot", () => {
+      const labels = [10, 20, 30]
+      const cropped = heatmapBandScale(labels, [0, 300], heatmapBandDomain(labels, [20, 30]))
+      expect(heatmapDataScale(cropped).domain()).toEqual([20, 30])
+      const { container } = overlay("histogram", cropped, [10, 20, 30, 10, 20, 30])
+      expectBinsInsidePlot(container)
+    })
+
+    it("bins a cropped date extent inside the plot", () => {
+      const first = new Date(Date.UTC(2024, 0, 1))
+      const second = new Date(Date.UTC(2024, 0, 2))
+      const third = new Date(Date.UTC(2024, 0, 3))
+      const labels = [first, second, third]
+      const cropped = heatmapBandScale(
+        labels,
+        [0, 300],
+        heatmapBandDomain(labels, [second.getTime(), third.getTime()])
+      )
+      expect(heatmapDataScale(cropped).domain()).toEqual([second.getTime(), third.getTime()])
+      const { container } = overlay("histogram", cropped, labels.map((day) => day.getTime()))
+      expectBinsInsidePlot(container)
     })
   })
 })
