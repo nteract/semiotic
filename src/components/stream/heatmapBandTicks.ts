@@ -106,3 +106,102 @@ export function projectHeatmapBandValue(
   const index = heatmapBandIndex(ticks, value)
   return index == null ? null : scale(index)
 }
+
+type BandScale = ((value: number) => number) & { domain?: () => unknown[] }
+
+/**
+ * Project one band edge. An omitted bound is the plot edge (`scale` of the
+ * domain endpoint). An explicit key goes through the cell index. A missing
+ * key is null — it is not a pixel.
+ */
+export function projectHeatmapBandBound(
+  scale: BandScale | null | undefined,
+  explicit: unknown,
+  endpoint: 0 | 1
+): number | null {
+  if (typeof scale !== "function") return null
+  if (explicit == null) {
+    const edge = scale.domain?.()?.[endpoint]
+    if (edge == null) return null
+    const px = scale(edge instanceof Date ? edge.getTime() : Number(edge))
+    return Number.isFinite(px) ? px : null
+  }
+  const px = projectHeatmapBandValue(scale, explicit)
+  return px != null && Number.isFinite(px) ? px : null
+}
+
+/** Map a data value, including one that falls between keys, back to a pixel. */
+export function projectHeatmapBandDataValue(
+  scale: ((value: number) => number) | null | undefined,
+  value: number
+): number | null {
+  if (!scale || !Number.isFinite(value)) return null
+  const ticks = heatmapBandTicks(scale)
+  if (!ticks) return scale(value)
+  const keys = heatmapBandNumericKeys(ticks)
+  if (!keys) return scale(value)
+  const exact = keys.findIndex((key) => key === value)
+  if (exact >= 0) return scale(exact)
+  const index = heatmapBandIndexForValue(keys, value)
+  return index == null ? null : scale(index)
+}
+
+type InvertibleScale = {
+  (value: number): number
+  invert: (pixel: number) => number
+}
+
+/**
+ * Invert a pixel to the brush's data coordinate.
+ * Numeric and date bands interpolate between adjacent keys.
+ * A categorical band has no numeric range, so the cell index is returned.
+ */
+export function invertHeatmapBandValue(
+  scale: InvertibleScale,
+  pixel: number
+): number {
+  const ticks = heatmapBandTicks(scale)
+  if (!ticks) return scale.invert(pixel)
+  return heatmapBandValueAtIndex(ticks, scale.invert(pixel))
+}
+
+function heatmapBandNumericKeys(ticks: HeatmapBandTick[]): number[] | null {
+  const numeric = ticks.every((tick) => typeof tick.label === "number" && Number.isFinite(tick.label))
+  if (numeric) return ticks.map((tick) => tick.label as number)
+  const dates = ticks.every((tick) => tick.label instanceof Date && Number.isFinite((tick.label as Date).getTime()))
+  if (dates) return ticks.map((tick) => (tick.label as Date).getTime())
+  return null
+}
+
+function heatmapBandValueAtIndex(ticks: HeatmapBandTick[], index: number): number {
+  const keys = heatmapBandNumericKeys(ticks)
+  if (!keys) return index
+  if (keys.length === 1) return keys[0]
+  if (index <= 0) return keys[0] + index * (keys[1] - keys[0])
+  const last = keys.length - 1
+  if (index >= last) return keys[last] + (index - last) * (keys[last] - keys[last - 1])
+  const i = Math.floor(index)
+  return keys[i] + (index - i) * (keys[i + 1] - keys[i])
+}
+
+function heatmapBandIndexForValue(keys: number[], value: number): number | null {
+  if (keys.length < 2) return keys.length === 1 ? 0 : null
+  for (let i = 0; i < keys.length - 1; i++) {
+    const start = keys[i]
+    const end = keys[i + 1]
+    if (start === end) continue
+    const lo = Math.min(start, end)
+    const hi = Math.max(start, end)
+    if (value >= lo && value <= hi) return i + (value - start) / (end - start)
+  }
+  const firstGap = keys[1] - keys[0]
+  if (firstGap !== 0 && (value - keys[0]) / firstGap < 0) {
+    return (value - keys[0]) / firstGap
+  }
+  const last = keys.length - 1
+  const lastGap = keys[last] - keys[last - 1]
+  if (lastGap !== 0 && (value - keys[last]) / lastGap > 0) {
+    return last + (value - keys[last]) / lastGap
+  }
+  return null
+}

@@ -31,6 +31,10 @@ const printOnly = process.argv.includes("--print")
  * `scripts/treeshake-isolation.test.mjs`.
  */
 const ENTRY_GRAPHS = [
+  // Log-sample channels and heatmap key projection (2026-10-23, #1641).
+  // Local production gzip KiB: semiotic 393.0, realtime 173.3, physics 182.9,
+  // ai 635.2, atlas 309.6, network 169.6. Those limits keep about 0.8 KiB
+  // for Linux variance. Graphs still inside their previous slack stay put.
   // Canvas none-paint, plotted log domains, heatmap band ticks, and
   // accessible count nouns (2026-10-22, #1641). Local production gzip KiB:
   // semiotic 392.3, realtime 172.6, physics 182.4, ai 634.5, atlas 309.0,
@@ -143,7 +147,7 @@ const ENTRY_GRAPHS = [
   // control layer, and diagnoseConfig gains the annotation field-typo check;
   // measures 385.5 KiB gzip.
   // Feature graph: 387.3 KiB (previous built HEAD: 385.9 KiB).
-  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 393.1 },
+  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 393.8 },
   // Bumped 150→154: custom-layout painter registration now loads on demand
   // rather than retaining every painter in every chart HOC. The lightweight
   // readiness bridge and fallback paint selection live in the shared XY
@@ -269,7 +273,7 @@ const ENTRY_GRAPHS = [
   // tooltip flip state measure 165.8 KiB gzip.
   // Shared lazy-module loading changes measure 166.7 KiB; retain narrow headroom.
   // Feature graph: 167.9 KiB (previous built HEAD: 166.8 KiB).
-  { entry: "network.module.min.js", label: "network", limitKb: 169.8 },
+  { entry: "network.module.min.js", label: "network", limitKb: 170.4 },
   { entry: "geo.module.min.js", label: "geo", limitKb: 113 },
   // Bumped 160→161 (3.9.0): compact-frame legend reservation now carries the
   // resolved plot height through every realtime chart so legends cannot erase
@@ -293,7 +297,7 @@ const ENTRY_GRAPHS = [
   // Lowered 170→168.5 (2026-09-30): on-demand XY transitions measure
   // 167.4 KiB gzip.
   // Feature graph: 170.5 KiB (previous built HEAD: 168.5 KiB).
-  { entry: "realtime.module.min.js", label: "realtime", limitKb: 173.3 },
+  { entry: "realtime.module.min.js", label: "realtime", limitKb: 174.1 },
   // Bumped 160→161 (3.8.6): PacketFlow and Crucible now join the shared
   // physics selection contract. The chart-local split keeps source modules
   // bounded, while the reachable graph gains less than one KiB gzip.
@@ -309,7 +313,7 @@ const ENTRY_GRAPHS = [
   // Bumped 168→169: the shared hatch tile and tooltip flip state measure
   // 167.9 KiB gzip.
   // Feature graph: 169.4 KiB (previous built HEAD: 168.3 KiB).
-  { entry: "physics.module.min.js", label: "physics", limitKb: 183.1 },
+  { entry: "physics.module.min.js", label: "physics", limitKb: 183.7 },
   // Bumped 240→242 (3.9.0): static Gauge SVG content and opt-in geometry
   // precision add serializer/runtime code to the server entry.
   // Bumped 242→244: the published Atlas readers and renderer-aware server
@@ -419,7 +423,7 @@ const ENTRY_GRAPHS = [
   // Bumped 612→614: axis-config key validation, value-banded histogram
   // fills, and the shared hatch tile measure 613.5 KiB gzip.
   // Feature graph: 614.7 KiB (previous built HEAD: 613.3 KiB).
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 635.3 },
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 636 },
   // Bumped 100→101: transitDiagramLayout's public detail modes, source-rooted
   // line derivation, and station-rendering contract extend the curated recipes
   // entry. Linux CI measures 100.3 KiB gzip; retain a reviewable 0.7 KiB
@@ -451,7 +455,7 @@ const ENTRY_GRAPHS = [
   // tooltip flip state measure 289.8 KiB gzip.
   // Shared lazy-module loading changes measure 290.5 KiB; allow 0.5 KiB headroom.
   // Feature graph: 291.8 KiB (previous built HEAD: 290.6 KiB).
-  { entry: "semiotic-atlas.module.min.js", label: "atlas", limitKb: 309.8 },
+  { entry: "semiotic-atlas.module.min.js", label: "atlas", limitKb: 310.4 },
   { entry: "semiotic-atlas-core.module.min.js", label: "atlas/core", limitKb: 15 },
   // Config serialization preserves and validates the optional interpretation
   // sidecar. Isolating the neutral utility graph removes unrelated shared

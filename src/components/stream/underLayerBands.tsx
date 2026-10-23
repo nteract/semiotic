@@ -14,6 +14,7 @@ import { normalizeAnnotationGradient } from "../charts/shared/hatchFill"
 import { buildLinearFillGradient, resolveCanvasPaint } from "./renderers/canvasRenderHelpers"
 import type { CanvasRendererFn, SceneNode, StreamLayout, StreamScales, SVGPreRendererFn } from "./types"
 import { useStableShallow } from "./useStableShallow"
+import { projectHeatmapBandBound } from "./heatmapBandTicks"
 
 const DEFAULT_BAND_FILL = "var(--semiotic-primary, #6366f1)"
 
@@ -38,10 +39,9 @@ export function underBandRect(
   const horizontal = annotation.type === "band"
   const scale = (horizontal ? scales.y : scales.x) as BandScale | undefined
   if (typeof scale !== "function") return null
-  const domain = scale.domain?.()
-  const from = scale((horizontal ? annotation.y0 : annotation.x0) ?? domain?.[0])
-  const to = scale((horizontal ? annotation.y1 : annotation.x1) ?? domain?.[1])
-  if (!Number.isFinite(from) || !Number.isFinite(to)) return null
+  const from = projectHeatmapBandBound(scale, horizontal ? annotation.y0 : annotation.x0, 0)
+  const to = projectHeatmapBandBound(scale, horizontal ? annotation.y1 : annotation.x1, 1)
+  if (from == null || to == null || !Number.isFinite(from) || !Number.isFinite(to)) return null
   // Clamp to the plot: the canvas clips, but the component-SSR branch draws
   // pre-renderers unclipped, and a bound past the domain would spill over.
   const extent = horizontal ? height : width

@@ -176,7 +176,10 @@ function heatmapBandTickFormatter(ticks: HeatmapBandTick[]): AxisTickFormatter {
   if (labels.length > 0 && labels.every((label) => label instanceof Date)) {
     const times = labels.map((label) => (label as Date).getTime())
     const format = makeDateTickFormatter([Math.min(...times), Math.max(...times)])
-    return (value) => value instanceof Date ? format(value) : String(value)
+    return (value) =>
+      value instanceof Date || (typeof value === "number" && Number.isFinite(value))
+        ? format(value)
+        : String(value)
   }
   if (labels.every((label) => typeof label === "number" && Number.isFinite(label))) {
     const format = numericTickFormatter(labels as number[])

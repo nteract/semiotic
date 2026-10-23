@@ -3,6 +3,7 @@ import React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { renderHook } from "@testing-library/react"
 import { scaleLinear } from "d3-scale"
+import { heatmapBandScale } from "./heatmapBandTicks"
 import {
   isUnderLayerBand,
   paintCanvasPreRenderers,
@@ -51,6 +52,20 @@ describe("underBandRect", () => {
     expect(underBandRect({ type: "x-band", x0: 70, x1: 30 }, scales, 400, 200)).toEqual({ x: 120, y: 0, width: 160, height: 200 })
     expect(underBandRect({ type: "x-band", x0: 20, x1: null }, scales, 400, 200)).toEqual({ x: 80, y: 0, width: 320, height: 200 })
     expect(underBandRect({ type: "band", y0: 20 }, {}, 400, 200)).toBeNull()
+  })
+
+  it("projects heatmap keys and keeps an omitted bound on the plot edge", () => {
+    const bandScales = {
+      x: heatmapBandScale([10, 20, 30], [0, 300]),
+      y: scaleLinear().domain([0, 100]).range([200, 0]),
+    } as unknown as StreamScales
+    expect(underBandRect({ type: "x-band", x0: 10, x1: 20 }, bandScales, 300, 200)).toEqual({
+      x: 50, y: 0, width: 100, height: 200,
+    })
+    expect(underBandRect({ type: "x-band", x1: 20 }, bandScales, 300, 200)).toEqual({
+      x: 0, y: 0, width: 150, height: 200,
+    })
+    expect(underBandRect({ type: "x-band", x0: 15, x1: 20 }, bandScales, 300, 200)).toBeNull()
   })
 
   it("clamps bounds past the domain to the plot", () => {

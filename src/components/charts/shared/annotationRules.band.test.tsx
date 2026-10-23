@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { scaleLinear } from "d3-scale"
+import { heatmapBandScale } from "../../stream/heatmapBandTicks"
 import { createDefaultAnnotationRules } from "./annotationRules"
 import type { AnnotationContext } from "../../realtime/types"
 
@@ -60,6 +61,24 @@ describe("band annotations", () => {
       rules({ type: "x-band", x0: 20, x1: null }, 0, context) as React.ReactElement,
     )
     expect(svg).toContain('<rect x="80" y="0" width="320" height="200"')
+  })
+
+  it("projects heatmap x-band keys onto cell centers and keeps an omitted bound on the plot edge", () => {
+    const band = heatmapBandScale([10, 20, 30], [0, 300])
+    const heatmap: AnnotationContext = {
+      ...context,
+      width: 300,
+      scales: { x: band, y: context.scales?.y },
+    }
+    const spanned = renderToStaticMarkup(
+      rules({ type: "x-band", x0: 10, x1: 20 }, 0, heatmap) as React.ReactElement,
+    )
+    expect(spanned).toContain('<rect x="50" y="0" width="100" height="200"')
+    const open = renderToStaticMarkup(
+      rules({ type: "x-band", x1: 20 }, 0, heatmap) as React.ReactElement,
+    )
+    expect(open).toContain('<rect x="0" y="0" width="150" height="200"')
+    expect(rules({ type: "x-band", x0: 15, x1: 20 }, 0, heatmap)).toBeNull()
   })
 
   it("skips x-band when no x scale is available", () => {

@@ -25,6 +25,7 @@ import { filterAnnotationsByStatus } from "../charts/shared/annotationStatusFilt
 import { FrameTextAnnotationSVG } from "../charts/shared/FrameTextAnnotationSVG"
 import { renderStaticAnnotationFallback } from "./staticAnnotationFallbacks"
 import { ssrLabelBackground } from "./ssrLabelBackground"
+import { projectHeatmapBandBound, projectHeatmapBandValue } from "../stream/heatmapBandTicks"
 
 const TOP_LABEL_BASELINE = 16
 
@@ -150,10 +151,14 @@ function resolveXPixel(
   scales: AnnotationScales,
   xAccessor?: string
 ): number | null {
-  if (ann.x != null && scales.x) return scales.x(ann.x)
-  if (xAccessor && ann[xAccessor] != null && scales.x) return scales.x(ann[xAccessor])
-  // Pixel passthrough for frames without a continuous x scale (e.g. network)
-  // or annotations that have already been projected by the caller.
+  if (scales.x) {
+    if (ann.x != null) return projectHeatmapBandValue(scales.x, ann.x)
+    if (xAccessor && ann[xAccessor] != null) {
+      return projectHeatmapBandValue(scales.x, ann[xAccessor])
+    }
+    return null
+  }
+  // Pixel passthrough for frames without a continuous x scale (e.g. network).
   if (typeof ann.x === "number") return ann.x
   return null
 }
@@ -163,8 +168,13 @@ function resolveYPixel(
   scales: AnnotationScales,
   yAccessor?: string
 ): number | null {
-  if (ann.y != null && scales.y) return scales.y(ann.y)
-  if (yAccessor && ann[yAccessor] != null && scales.y) return scales.y(ann[yAccessor])
+  if (scales.y) {
+    if (ann.y != null) return projectHeatmapBandValue(scales.y, ann.y)
+    if (yAccessor && ann[yAccessor] != null) {
+      return projectHeatmapBandValue(scales.y, ann[yAccessor])
+    }
+    return null
+  }
   if (typeof ann.y === "number") return ann.y
   return null
 }
@@ -380,7 +390,9 @@ function renderAnnotation(
       }
 
       // Default: horizontal line (vertical ordinal or XY)
-      const py = scales.y ? scales.y(value) : scales.r ? scales.r(value) : null
+      const py = scales.y
+        ? projectHeatmapBandValue(scales.y, value)
+        : scales.r ? scales.r(value) : null
       if (py == null) return null
       return <ThresholdAnnotation key={`ann-ythresh-${index}`} ann={ann} position={py}
         vertical={false} width={layout.width} height={layout.height} color={color}
@@ -401,7 +413,7 @@ function renderAnnotation(
       // and the equivalent horizontal branch on `y-threshold` above.
       const px = config.projection === "horizontal" && scales.r
         ? scales.r(value)
-        : scales.x ? scales.x(value) : null
+        : scales.x ? projectHeatmapBandValue(scales.x, value) : null
       if (px == null) return null
       const color = resolveAnnotationColor(ann, theme)
       return <ThresholdAnnotation key={`ann-xthresh-${index}`} ann={ann} position={px}
@@ -411,13 +423,10 @@ function renderAnnotation(
     }
 
     case "band": {
-      const yDomain = scales.y?.domain?.()
       // A null/omitted bound extends to the axis extent on that side
       // (y0 → domain min, y1 → domain max) rather than skipping the band.
-      const y0Value = ann.y0 ?? yDomain?.[0]
-      const y1Value = ann.y1 ?? yDomain?.[1]
-      const y0 = y0Value != null && scales.y ? scales.y(y0Value) : null
-      const y1 = y1Value != null && scales.y ? scales.y(y1Value) : null
+      const y0 = projectHeatmapBandBound(scales.y, ann.y0, 0)
+      const y1 = projectHeatmapBandBound(scales.y, ann.y1, 1)
       if (y0 == null || y1 == null) return null
       const top = Math.min(y0, y1)
       const height = Math.abs(y1 - y0)
@@ -458,13 +467,10 @@ function renderAnnotation(
     }
 
     case "x-band": {
-      const xDomain = scales.x?.domain?.()
       // A null/omitted bound extends to the axis extent on that side
       // (x0 → domain min, x1 → domain max) rather than skipping the band.
-      const x0Value = ann.x0 ?? xDomain?.[0]
-      const x1Value = ann.x1 ?? xDomain?.[1]
-      const x0 = x0Value != null && scales.x ? scales.x(x0Value) : null
-      const x1 = x1Value != null && scales.x ? scales.x(x1Value) : null
+      const x0 = projectHeatmapBandBound(scales.x, ann.x0, 0)
+      const x1 = projectHeatmapBandBound(scales.x, ann.x1, 1)
       if (x0 == null || x1 == null) return null
       const left = Math.min(x0, x1)
       const width = Math.abs(x1 - x0)

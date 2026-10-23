@@ -34,6 +34,7 @@ import {
   tickPixelExtent
 } from "./svgOverlayUtils"
 import { generateXYTicks, axisTicksNeedRotation } from "./xyAxisTicks"
+import { projectHeatmapBandValue } from "./heatmapBandTicks"
 import { SVGChartTitle } from "./SVGChartTitle"
 import {
   overlayAccessibleDescription,
@@ -721,7 +722,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
 
         {/* Linked crosshair line (coordinate-based hover sync) */}
         {crosshairPos && (crosshairPos.locked || crosshairPos.sourceId !== linkedCrosshairSourceId) && scales?.x && (() => {
-          const px = scales.x(crosshairPos.xValue)
+          const px = projectHeatmapBandValue(scales.x, crosshairPos.xValue)
           if (px == null || px < 0 || px > width) return null
           const isLocked = crosshairPos.locked
           const lineProps = {

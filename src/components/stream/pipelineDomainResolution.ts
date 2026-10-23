@@ -168,12 +168,21 @@ export function resolveStackedAreaYDomain(options: {
     const plottedY: number[] = []
     let lo = Infinity
     let hi = -Infinity
+    const record = (cursor: number) => {
+      plottedY.push(cursor)
+      if (cursor < lo) lo = cursor
+      if (cursor > hi) hi = cursor
+    }
+    // Every cumulative boundary, not only the envelope. A silhouette of
+    // three 10s has edges -15, -5, 5, and 15; the positive 5-to-15 layer
+    // has to be in the log sample or it collapses onto the domain edge.
     for (const x of xValues) {
-      const off = offsets.get(x) ?? 0
-      const total = xTotals.get(x) ?? 0
-      plottedY.push(off, off + total)
-      if (off < lo) lo = off
-      if (off + total > hi) hi = off + total
+      let cursor = offsets.get(x) ?? 0
+      record(cursor)
+      for (const key of groupKeys) {
+        cursor += valueMaps.get(key)?.get(x) || 0
+        record(cursor)
+      }
     }
     if (!Number.isFinite(lo) || !Number.isFinite(hi)) {
       lo = 0
@@ -189,17 +198,24 @@ export function resolveStackedAreaYDomain(options: {
     const plottedY: number[] = []
     let lo = 0
     let hi = 0
+    const record = (cursor: number) => {
+      plottedY.push(cursor)
+      if (cursor < lo) lo = cursor
+      if (cursor > hi) hi = cursor
+    }
     for (const x of xValues) {
       let pos = 0
       let neg = 0
       for (const key of groupKeys) {
         const value = valueMaps.get(key)?.get(x) || 0
-        if (value >= 0) pos += value
-        else neg += value
+        if (value >= 0) {
+          pos += value
+          record(pos)
+        } else {
+          neg += value
+          record(neg)
+        }
       }
-      plottedY.push(pos, neg)
-      if (neg < lo) lo = neg
-      if (pos > hi) hi = pos
     }
     const range = hi - lo
     const pad = exactMode ? 0 : range > 0 ? range * config.extentPadding : 1
@@ -432,6 +448,40 @@ export function clampLogDomain(
   let nextHigh = highOk ? high : positive.max
   if (!(nextHigh > nextLow)) nextHigh = nextLow * 10
   return ascending ? [nextLow, nextHigh] : [nextHigh, nextLow]
+}
+
+/**
+ * Y channels a non-aggregate scene paints. Mirrors PipelineStore's y-extent
+ * walk: candle high/low, an explicit area baseline, and ribbon endpoints.
+ * Sampling only `getY` drops a valid low onto the same pixel as a larger high.
+ */
+export function collectPlottedYChannels(input: {
+  chartType: string
+  data: Iterable<Datum>
+  getY: (datum: Datum) => number
+  getY0?: (datum: Datum) => number
+  getHigh?: (datum: Datum) => number
+  getLow?: (datum: Datum) => number
+  ribbons: readonly ResolvedRibbon[]
+}): number[] {
+  const values: number[] = []
+  if (input.chartType === "candlestick" && input.getHigh && input.getLow) {
+    const getHigh = input.getHigh
+    const getLow = input.getLow
+    for (const datum of input.data) values.push(getHigh(datum), getLow(datum))
+    return values
+  }
+  for (const datum of input.data) {
+    values.push(input.getY(datum))
+    if (input.getY0) values.push(input.getY0(datum))
+    for (const ribbon of input.ribbons) {
+      const top = ribbon.getTop(datum)
+      const bottom = ribbon.getBottom(datum)
+      if (Number.isFinite(top)) values.push(top)
+      if (Number.isFinite(bottom)) values.push(bottom)
+    }
+  }
+  return values
 }
 
 export function collectPositiveSamples(values: Iterable<number>): {

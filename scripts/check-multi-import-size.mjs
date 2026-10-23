@@ -83,7 +83,9 @@ const analyze = process.argv.includes("--analyze")
 // Canvas none-paint, plotted log domains, heatmap band ticks, and accessible
 // count nouns (2026-10-22, #1641) land in this shared union. Local production
 // measures 319,921 bytes (312.4 KiB). Keep about 0.8 KiB for Linux variance.
-const MULTI_IMPORT_GZIP_BUDGET = 313.2 * 1024
+// Log-sample channels and heatmap key projection (2026-10-23, #1641) measure
+// 320,804 bytes (313.3 KiB) on the same union.
+const MULTI_IMPORT_GZIP_BUDGET = 314.1 * 1024
 
 const MULTI_IMPORT_SOURCE = `
 export { LineChart } from "semiotic/xy"

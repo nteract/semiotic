@@ -7,6 +7,7 @@ import * as ReactDOMServer from "react-dom/server"
 import { renderStaticAnnotations, type StaticAnnotationConfig } from "./staticAnnotations"
 import { LIGHT_THEME, DARK_THEME } from "../store/ThemeStore"
 import { scaleBand, scaleLinear } from "d3-scale"
+import { heatmapBandScale } from "../stream/heatmapBandTicks"
 
 function renderAnnotationsString(config: Parameters<typeof renderStaticAnnotations>[0]): string {
   const node = renderStaticAnnotations(config)
@@ -319,6 +320,22 @@ describe("renderStaticAnnotations", () => {
         annotations: [{ type: "x-threshold", value: 50 }],
       })
       expect(svg).toBe("")
+    })
+
+    it("projects a heatmap key onto the cell center", () => {
+      const svg = renderAnnotationsString({
+        ...baseConfig,
+        layout: { width: 300, height: 200 },
+        scales: { x: heatmapBandScale([10, 20, 30], [0, 300]), y: yScale },
+        annotations: [
+          { type: "x-threshold", value: 20 },
+          { type: "x-band", x0: 10, x1: 20 },
+          { type: "x-band", x1: 20 },
+        ],
+      })
+      expect(svg).toContain('x1="150"')
+      expect(svg).toContain('<rect x="50" y="0" width="100" height="200"')
+      expect(svg).toContain('<rect x="0" y="0" width="150" height="200"')
     })
 
     it("keeps the default top label clear of the plot edge", () => {

@@ -55,6 +55,7 @@ import { resolveRibbons } from "./pipelineRibbons"
 import {
   buildPipelineScales,
   clampLogDomain,
+  collectPlottedYChannels,
   collectPositiveSamples,
   expandYDomainWithRibbons,
   isFullySpecifiedExtent,
@@ -633,7 +634,15 @@ export class PipelineStore extends UpdateResultStoreBase {
       const aggregateY = this.plottedAggregateY(buffer, bufferArray)
       const samples = aggregateY
         ? collectPositiveSamples(aggregateY)
-        : this.positiveAxisSamples(this.getY)
+        : collectPositiveSamples(collectPlottedYChannels({
+            chartType: config.chartType,
+            data: buffer,
+            getY: this.getY,
+            getY0: this.getY0,
+            getHigh: this.getHigh,
+            getLow: this.getLow,
+            ribbons: this.resolvedRibbons,
+          }))
       yDomain = clampLogDomain(yDomain, samples.positive)
       this.warnDroppedLogSamples("y", samples.droppedNonPositive)
     }

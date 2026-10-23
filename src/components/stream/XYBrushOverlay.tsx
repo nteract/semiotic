@@ -24,6 +24,7 @@ import { brush as d3Brush, brushX as d3BrushX, brushY as d3BrushY, type BrushBeh
 import type { StreamScales } from "./types"
 import { useBrushAccessibility, type BrushKeyboardAction } from "./brushAccessibility"
 import { applyBrushSelectionStyle } from "./brushTheme"
+import { invertHeatmapBandValue, projectHeatmapBandDataValue } from "./heatmapBandTicks"
 
 export interface XYBrushOverlayProps {
   width: number
@@ -213,16 +214,16 @@ export function XYBrushOverlay({
 
       if (dimension === "x") {
         const [px0, px1] = event.selection as [number, number]
-        xRange = [s.x.invert(px0), s.x.invert(px1)]
-        yRange = [s.y.invert(height), s.y.invert(0)]
+        xRange = [invertHeatmapBandValue(s.x, px0), invertHeatmapBandValue(s.x, px1)]
+        yRange = [invertHeatmapBandValue(s.y, height), invertHeatmapBandValue(s.y, 0)]
       } else if (dimension === "y") {
         const [py0, py1] = event.selection as [number, number]
-        xRange = [s.x.invert(0), s.x.invert(width)]
-        yRange = [s.y.invert(py1), s.y.invert(py0)]
+        xRange = [invertHeatmapBandValue(s.x, 0), invertHeatmapBandValue(s.x, width)]
+        yRange = [invertHeatmapBandValue(s.y, py1), invertHeatmapBandValue(s.y, py0)]
       } else {
         const [[px0, py0], [px1, py1]] = event.selection as [[number, number], [number, number]]
-        xRange = [s.x.invert(px0), s.x.invert(px1)]
-        yRange = [s.y.invert(py1), s.y.invert(py0)]
+        xRange = [invertHeatmapBandValue(s.x, px0), invertHeatmapBandValue(s.x, px1)]
+        yRange = [invertHeatmapBandValue(s.y, py1), invertHeatmapBandValue(s.y, py0)]
       }
 
       // Snap to bin boundaries: on "end" always, on "brush" only when snapDuring is true
@@ -240,16 +241,18 @@ export function XYBrushOverlay({
             Math.ceil(xRange[1] / binSize) * binSize
           ]
         }
-        const snappedPx0 = s.x(xRange[0])
-        const snappedPx1 = s.x(xRange[1])
-        isProgrammaticMoveRef.current = true
-        if (dimension === "x") {
-          g.call(brushFn.move, [snappedPx0, snappedPx1])
-        } else if (dimension === "xy") {
-          const sel = event.selection as [[number, number], [number, number]]
-          g.call(brushFn.move, [[snappedPx0, sel[0][1]], [snappedPx1, sel[1][1]]])
+        const snappedPx0 = projectHeatmapBandDataValue(s.x, xRange[0])
+        const snappedPx1 = projectHeatmapBandDataValue(s.x, xRange[1])
+        if (snappedPx0 != null && snappedPx1 != null) {
+          isProgrammaticMoveRef.current = true
+          if (dimension === "x") {
+            g.call(brushFn.move, [snappedPx0, snappedPx1])
+          } else if (dimension === "xy") {
+            const sel = event.selection as [[number, number], [number, number]]
+            g.call(brushFn.move, [[snappedPx0, sel[0][1]], [snappedPx1, sel[1][1]]])
+          }
+          isProgrammaticMoveRef.current = false
         }
-        isProgrammaticMoveRef.current = false
       }
 
       const extent = { x: xRange, y: yRange }
@@ -317,15 +320,20 @@ export function XYBrushOverlay({
       extentChanged = true
     }
 
-    const px0 = scales.x(effectiveMin)
-    const px1 = scales.x(ext.x[1])
+    const px0 = projectHeatmapBandDataValue(scales.x, effectiveMin)
+    const px1 = projectHeatmapBandDataValue(scales.x, ext.x[1])
+    if (px0 == null || px1 == null) return
 
     isProgrammaticMoveRef.current = true
     if (dimension === "x") {
       g.call(brushRef.current.move, [px0, px1])
     } else {
-      const py0 = scales.y(ext.y[1])
-      const py1 = scales.y(ext.y[0])
+      const py0 = projectHeatmapBandDataValue(scales.y, ext.y[1])
+      const py1 = projectHeatmapBandDataValue(scales.y, ext.y[0])
+      if (py0 == null || py1 == null) {
+        isProgrammaticMoveRef.current = false
+        return
+      }
       g.call(brushRef.current.move, [[px0, py0], [px1, py1]])
     }
     isProgrammaticMoveRef.current = false

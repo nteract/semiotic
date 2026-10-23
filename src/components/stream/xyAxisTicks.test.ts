@@ -160,6 +160,15 @@ describe("generateXYTicks with heatmap band scales", () => {
     })
     expect(labelsOf(dateTicks)).toEqual(["Jan 1", "Jan 2"])
     expect(dateTicks.map((tick) => tick.pixel)).toEqual([dates(0), dates(1)])
+
+    const timestampTicks = generateXYTicks({
+      scale: dates,
+      size: 200,
+      horizontal: true,
+      axis: { orient: "bottom", tickValues: [first.getTime(), second.getTime()] },
+    })
+    expect(labelsOf(timestampTicks)).toEqual(["Jan 1", "Jan 2"])
+    expect(timestampTicks.map((tick) => tick.pixel)).toEqual([dates(0), dates(1)])
   })
 
   it("keeps band labels on copies of copies", () => {

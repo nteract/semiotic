@@ -284,6 +284,97 @@ describe("PipelineStore domain integrity", () => {
     expect(yDomain(store)).toEqual([5, 20])
   })
 
+  it("keeps a range candle low on a log domain", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {})
+    const store = new PipelineStore(config({
+      chartType: "candlestick",
+      yScaleType: "log",
+      yAccessor: "high",
+      highAccessor: "high",
+      lowAccessor: "low",
+    }))
+    store.ingest({
+      inserts: [
+        { x: 0, high: 100, low: 0 },
+        { x: 1, high: 200, low: 5 },
+      ],
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([5, 200])
+    const candles = store.scene.flatMap((node) => node.type === "candlestick" ? [node] : [])
+    const lowFive = candles.find((node) => (node.datum as { low: number }).low === 5)
+    const highHundred = candles.find((node) => (node.datum as { high: number }).high === 100)
+    expect(lowFive).toBeTruthy()
+    expect(highHundred).toBeTruthy()
+    expect(lowFive!.lowY).not.toBeCloseTo(highHundred!.highY)
+  })
+
+  it("keeps a positive silhouette layer on a log domain", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {})
+    const store = new PipelineStore(config({
+      chartType: "stackedarea",
+      yScaleType: "log",
+      baseline: "silhouette",
+      stackOrder: "key",
+      groupAccessor: "g",
+    }))
+    store.ingest({
+      inserts: [0, 1].flatMap((x) => ["a", "b", "c"].map((g) => ({ x, g, y: 10 }))),
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([5, 15])
+    const top = store.scene.find((node) => node.type === "area" && node.group === "c")
+    expect(top?.type).toBe("area")
+    if (top?.type !== "area") return
+    expect(Math.abs(top.topPath[0][1] - top.bottomPath[0][1])).toBeGreaterThan(1)
+  })
+
+  it("keeps an upper diverging layer on a log domain", () => {
+    const store = new PipelineStore(config({
+      chartType: "stackedarea",
+      yScaleType: "log",
+      baseline: "diverging",
+      stackOrder: "key",
+      groupAccessor: "g",
+    }))
+    store.ingest({
+      inserts: [0, 1].flatMap((x) => [
+        { x, g: "a", y: 10 },
+        { x, g: "b", y: 20 },
+      ]),
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([10, 30])
+    const upper = store.scene.find((node) => node.type === "area" && node.group === "b")
+    const lower = store.scene.find((node) => node.type === "area" && node.group === "a")
+    expect(upper?.type).toBe("area")
+    expect(lower?.type).toBe("area")
+    if (upper?.type !== "area" || lower?.type !== "area") return
+    expect(Math.abs(upper.topPath[0][1] - upper.bottomPath[0][1])).toBeGreaterThan(1)
+    expect(Math.abs(lower.topPath[0][1] - lower.bottomPath[0][1])).toBeLessThan(1)
+  })
+
+  it("includes a ribbon endpoint below the point in the log y samples", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {})
+    const store = new PipelineStore(config({
+      chartType: "line",
+      yScaleType: "log",
+      boundsAccessor: "bounds",
+    }))
+    store.ingest({
+      inserts: [
+        { x: 0, y: 100, bounds: 95 },
+        { x: 1, y: -10, bounds: 1 },
+      ],
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([5, 195])
+  })
+
   it("recalculates extents after eviction without waiting for computeScene", () => {
     const store = new PipelineStore(config({ pointIdAccessor: "id" }))
     store.ingest({

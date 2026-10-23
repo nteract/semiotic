@@ -133,6 +133,35 @@ describe("Heatmap", () => {
     expect(Number(horizontal!.getAttribute("y1"))).toBeCloseTo(50)
   })
 
+  it("projects an x-band between heatmap columns", () => {
+    const { container } = render(
+      <TooltipProvider>
+        <Heatmap
+          data={[
+            { x: 10, y: "low", value: 1 },
+            { x: 20, y: "low", value: 2 },
+            { x: 30, y: "low", value: 3 },
+            { x: 10, y: "high", value: 4 },
+            { x: 20, y: "high", value: 5 },
+            { x: 30, y: "high", value: 6 },
+          ]}
+          width={300}
+          height={200}
+          margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+          showAxes={false}
+          showLegend={false}
+          annotations={[{ type: "x-band", x0: 10, x1: 20 }]}
+        />
+      </TooltipProvider>
+    )
+    const band = [...container.querySelectorAll("rect")].find((rect) =>
+      Math.abs(Number(rect.getAttribute("width")) - 100) < 1
+    )
+    expect(band).toBeTruthy()
+    expect(Number(band!.getAttribute("x"))).toBeCloseTo(50)
+    expect(Number(band!.getAttribute("width"))).toBeCloseTo(100)
+  })
+
   it("uses customColorScale for canvas cell fills", () => {
     const ctx = document.createElement("canvas").getContext("2d")!
     const fillStyles: string[] = []
