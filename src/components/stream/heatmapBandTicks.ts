@@ -52,15 +52,38 @@ export function attachHeatmapBandTicks<Scale extends object>(
  */
 export function heatmapBandScale(
   labels: Array<string | number | Date>,
-  range: [number, number]
+  range: [number, number],
+  domain?: [number, number]
 ): ScaleLinear<number, number> {
   const scale = scaleLinear()
-    .domain([-0.5, Math.max(labels.length - 0.5, 0.5)])
+    .domain(domain ?? [-0.5, Math.max(labels.length - 0.5, 0.5)])
     .range(range)
   return attachHeatmapBandTicks(
     scale,
     labels.map((label, value) => ({ value, label }))
   )
+}
+
+/**
+ * Index-space domain for a static heatmap. Explicit data bounds become band
+ * coordinates so the cells and the axis share them. An omitted side stays on
+ * the automatic cell edge. Categorical keys have no numeric position, so the
+ * extent is left alone.
+ */
+export function heatmapBandDomain(
+  labels: ReadonlyArray<string | number | Date>,
+  extent?: readonly (number | undefined)[]
+): [number, number] {
+  const automatic: [number, number] = [-0.5, Math.max(labels.length - 0.5, 0.5)]
+  const keys = heatmapLabelKeys(labels)
+  if (!extent || !keys) return automatic
+  const project = (value: number | undefined, fallback: number) => {
+    if (value == null || !Number.isFinite(value)) return fallback
+    return heatmapBandIndexForValue(keys, value) ?? fallback
+  }
+  const start = project(extent[0], automatic[0])
+  const end = project(extent[1], automatic[1])
+  return start === end ? automatic : [start, end]
 }
 
 /** Cell index for a data key, or null when the key is not a column or row. */
@@ -202,6 +225,19 @@ export function invertHeatmapBandValue(
   const ticks = heatmapBandTicks(scale)
   if (!ticks) return scale.invert(pixel)
   return heatmapBandValueAtIndex(ticks, scale.invert(pixel))
+}
+
+function heatmapLabelKeys(
+  labels: ReadonlyArray<string | number | Date>
+): number[] | null {
+  if (labels.length === 0) return null
+  if (labels.every((label) => typeof label === "number" && Number.isFinite(label))) {
+    return labels.slice() as number[]
+  }
+  if (labels.every((label) => label instanceof Date && Number.isFinite(label.getTime()))) {
+    return labels.map((label) => (label as Date).getTime())
+  }
+  return null
 }
 
 function heatmapBandNumericKeys(ticks: HeatmapBandTick[]): number[] | null {

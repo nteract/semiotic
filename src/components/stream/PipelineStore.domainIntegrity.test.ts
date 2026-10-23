@@ -1,6 +1,7 @@
 import "../../test-utils/registerBuiltInXYPlugins"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
+import { resolveStackedAreaYDomain } from "./pipelineDomainResolution"
 
 function config(overrides: Partial<PipelineConfig> = {}): PipelineConfig {
   return {
@@ -344,6 +345,41 @@ describe("PipelineStore domain integrity", () => {
     expect(bars).toHaveLength(2)
     expect(bar(1)!.h).toBeCloseTo(0)
     expect(bar(10)!.h).toBeCloseTo(200)
+  })
+
+  it("retains stack boundaries only while the y scale is logarithmic", () => {
+    const groups = [
+      { key: "a", data: [{ x: 0, y: 10 }, { x: 1, y: 0 }] },
+      { key: "b", data: [{ x: 0, y: 0 }, { x: 1, y: 4 }] },
+      { key: "c", data: [{ x: 0, y: 0 }, { x: 1, y: 0 }] },
+    ]
+    const shared = {
+      groups,
+      getX: (d: { x: number }) => d.x,
+      getY: (d: { y: number }) => d.y,
+      bufferSize: 6,
+      ingestVersion: 1,
+    }
+    const linear = resolveStackedAreaYDomain({
+      ...shared,
+      config: { extentPadding: 0, baseline: "zero", stackOrder: "key" },
+      stackExtentCache: null,
+    })
+    expect(linear.yDomain).toEqual([0, 10])
+    expect(linear.stackExtentCache.plottedY).toBeUndefined()
+
+    const log = resolveStackedAreaYDomain({
+      ...shared,
+      config: {
+        extentPadding: 0,
+        baseline: "zero",
+        stackOrder: "key",
+        yScaleType: "log",
+      },
+      stackExtentCache: linear.stackExtentCache,
+    })
+    expect(log.stackExtentCache).not.toBe(linear.stackExtentCache)
+    expect(log.stackExtentCache.plottedY).toEqual([10, 4])
   })
 
   it("derives a log stacked-area domain from stack boundaries", () => {

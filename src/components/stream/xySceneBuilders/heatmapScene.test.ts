@@ -168,6 +168,71 @@ describe("buildHeatmapScene (static mode)", () => {
     }
   })
 
+  it("places cells inside an explicit heatmap extent", () => {
+    const data = [
+      { x: 10, y: 1, value: 1 },
+      { x: 20, y: 1, value: 2 },
+      { x: 30, y: 1, value: 3 },
+    ]
+    const layout = { width: 300, height: 200 }
+    const full = makeCtx({
+      config: {
+        xAccessor: "x",
+        yAccessor: "y",
+        valueAccessor: "value",
+        xExtent: [0, 40],
+        yExtent: [0, 5],
+      },
+    })
+    const nodes = buildHeatmapScene(full, data, layout)
+    expect(full.scales!.x.domain()).toEqual([-1, 3])
+    expect(full.scales!.y.domain()).toEqual([-1, 4])
+    const cell = nodes.find((node) => node.datum?.x === 10)
+    expect(cell).toBeTruthy()
+    expect(cell!.x).toBeCloseTo(37.5)
+    expect(cell!.w).toBeCloseTo(75)
+    expect(cell!.x + cell!.w / 2).toBeCloseTo(full.scales!.x(0))
+    expect(cell!.y + cell!.h / 2).toBeCloseTo(full.scales!.y(0))
+
+    const partial = makeCtx({
+      config: {
+        xAccessor: "x",
+        yAccessor: "y",
+        valueAccessor: "value",
+        xExtent: [0, undefined],
+        yExtent: [undefined, 5],
+      },
+    })
+    buildHeatmapScene(partial, data, layout)
+    expect(partial.scales!.x.domain()).toEqual([-1, 2.5])
+    expect(partial.scales!.y.domain()).toEqual([-0.5, 4])
+
+    const flipped = makeCtx({
+      config: {
+        xAccessor: "x",
+        yAccessor: "y",
+        valueAccessor: "value",
+        xExtent: [40, 0],
+      },
+    })
+    buildHeatmapScene(flipped, data, layout)
+    expect(flipped.scales!.x.domain()).toEqual([3, -1])
+
+    const categories = makeCtx({
+      config: {
+        xAccessor: "x",
+        yAccessor: "y",
+        valueAccessor: "value",
+        xExtent: [0, 40],
+      },
+    })
+    buildHeatmapScene(categories, [
+      { x: "a", y: 1, value: 1 },
+      { x: "b", y: 1, value: 2 },
+    ], layout)
+    expect(categories.scales!.x.domain()).toEqual([-0.5, 1.5])
+  })
+
   it("missing values in grid are skipped — no cell for (a, p) combo", () => {
     const data = [
       { x: 0, y: 0, value: 10 },

@@ -54,7 +54,13 @@ export function isFullySpecifiedExtent(
 export function resolveStackedAreaYDomain(options: {
   config: Pick<
     PipelineConfig,
-    "normalize" | "baseline" | "stackOrder" | "extentPadding" | "axisExtent" | "yAxisExtent"
+    | "normalize"
+    | "baseline"
+    | "stackOrder"
+    | "extentPadding"
+    | "axisExtent"
+    | "yAxisExtent"
+    | "yScaleType"
   >
   groups: { key: string; data: Datum[] }[]
   getX: (d: Datum) => number
@@ -75,9 +81,12 @@ export function resolveStackedAreaYDomain(options: {
   // stays [0, 1]. Exact mode drops the padding on that unit domain.
   // updateConfig does not bump the ingest version for either change.
   const extentKey = exactMode ? "exact" : "pad"
+  // Log sampling is the only reader of the boundary list. A linear chart must
+  // not retain it, and a later scale-type change has to miss this cache.
+  const sampleKey = config.yScaleType === "log" ? "log" : "lin"
   const stackCacheKey = config.normalize
-    ? `${options.bufferSize}:${options.ingestVersion}:norm:${config.stackOrder ?? "key"}:${extentKey}`
-    : `${options.bufferSize}:${options.ingestVersion}:${config.baseline ?? "zero"}:${config.stackOrder ?? "key"}:${extentKey}`
+    ? `${options.bufferSize}:${options.ingestVersion}:norm:${config.stackOrder ?? "key"}:${extentKey}:${sampleKey}`
+    : `${options.bufferSize}:${options.ingestVersion}:${config.baseline ?? "zero"}:${config.stackOrder ?? "key"}:${extentKey}:${sampleKey}`
   if (
     options.stackExtentCache &&
     options.stackExtentCache.key === stackCacheKey
@@ -161,6 +170,18 @@ export function resolveStackedAreaYDomain(options: {
 
   // The scene forces a zero baseline whenever normalize is set.
   const baseline = config.normalize ? "zero" : config.baseline
+  const collectSamples = config.yScaleType === "log"
+  const plottedY = collectSamples ? [] as number[] : null
+  const remember = (cursor: number) => {
+    if (!plottedY) return
+    if (plottedY.length > 0 && plottedY[plottedY.length - 1] === cursor) return
+    plottedY.push(cursor)
+  }
+  const finish = (yDomain: [number, number]) => {
+    const stackExtentCache: StackExtentCache = { key: stackCacheKey, yDomain }
+    if (plottedY) stackExtentCache.plottedY = plottedY
+    return { yDomain, stackExtentCache }
+  }
   let yDomain: [number, number]
   if (baseline === "wiggle" || baseline === "silhouette") {
     const xValues = Array.from(xSet).sort((a, b) => a - b)
@@ -170,22 +191,24 @@ export function resolveStackedAreaYDomain(options: {
       (k, x) => valueMaps.get(k)?.get(x) || 0,
       baseline
     )
-    const plottedY: number[] = []
     let lo = Infinity
     let hi = -Infinity
     const record = (cursor: number) => {
-      plottedY.push(cursor)
+      remember(cursor)
       if (cursor < lo) lo = cursor
       if (cursor > hi) hi = cursor
     }
     // Every cumulative boundary, not only the envelope. A silhouette of
     // three 10s has edges -15, -5, 5, and 15; the positive 5-to-15 layer
     // has to be in the log sample or it collapses onto the domain edge.
+    // A missing group adds nothing, so it must not be stored again.
     for (const x of xValues) {
       let cursor = offsets.get(x) ?? 0
       record(cursor)
       for (const key of groupKeys) {
-        cursor += valueMaps.get(key)?.get(x) || 0
+        const value = valueMaps.get(key)?.get(x) || 0
+        if (value === 0) continue
+        cursor += value
         record(cursor)
       }
     }
@@ -195,16 +218,13 @@ export function resolveStackedAreaYDomain(options: {
     }
     const range = hi - lo
     const pad = exactMode ? 0 : range > 0 ? range * config.extentPadding : 1
-    yDomain = [lo - pad, hi + pad]
-    const stackExtentCache = { key: stackCacheKey, yDomain, plottedY }
-    return { yDomain, stackExtentCache }
+    return finish([lo - pad, hi + pad])
   } else if (baseline === "diverging") {
     const xValues = Array.from(xSet).sort((a, b) => a - b)
-    const plottedY: number[] = []
     let lo = 0
     let hi = 0
     const record = (cursor: number) => {
-      plottedY.push(cursor)
+      remember(cursor)
       if (cursor < lo) lo = cursor
       if (cursor > hi) hi = cursor
     }
@@ -213,7 +233,8 @@ export function resolveStackedAreaYDomain(options: {
       let neg = 0
       for (const key of groupKeys) {
         const value = valueMaps.get(key)?.get(x) || 0
-        if (value >= 0) {
+        if (value === 0) continue
+        if (value > 0) {
           pos += value
           record(pos)
         } else {
@@ -224,22 +245,21 @@ export function resolveStackedAreaYDomain(options: {
     }
     const range = hi - lo
     const pad = exactMode ? 0 : range > 0 ? range * config.extentPadding : 1
-    yDomain = [lo - pad, hi + pad]
-    const stackExtentCache = { key: stackCacheKey, yDomain, plottedY }
-    return { yDomain, stackExtentCache }
+    return finish([lo - pad, hi + pad])
   } else {
     // Walk the same stack order as the scene. A commutative total hides
     // negative layers and order-dependent peaks, so the domain follows the
     // running cursor and keeps a zero baseline when the stack never goes below it.
     const xValues = Array.from(xSet).sort((a, b) => a - b)
-    const plottedY: number[] = []
     let lo = 0
     let hi = 0
     for (const x of xValues) {
       let cursor = 0
       for (const key of groupKeys) {
-        cursor += valueMaps.get(key)?.get(x) || 0
-        plottedY.push(cursor)
+        const value = valueMaps.get(key)?.get(x) || 0
+        if (value === 0) continue
+        cursor += value
+        remember(cursor)
         if (cursor < lo) lo = cursor
         if (cursor > hi) hi = cursor
       }
@@ -249,8 +269,7 @@ export function resolveStackedAreaYDomain(options: {
     yDomain = config.normalize
       ? [0, exactMode ? 1 : 1 + config.extentPadding]
       : [lo < 0 ? lo - pad : 0, hi + pad]
-    const stackExtentCache = { key: stackCacheKey, yDomain, plottedY }
-    return { yDomain, stackExtentCache }
+    return finish(yDomain)
   }
 }
 

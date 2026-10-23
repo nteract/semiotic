@@ -13,7 +13,7 @@ import { getSequentialInterpolator, SEQUENTIAL_INTERPOLATORS } from "../../chart
 import type { HeatcellSceneNode, StreamLayout } from "../types"
 import { buildHeatcellNode } from "../SceneGraph"
 import { resolveAccessor, resolveRawAccessor, type CoercibleNumber } from "../accessorUtils"
-import { heatmapBandScale } from "../heatmapBandTicks"
+import { heatmapBandDomain, heatmapBandScale } from "../heatmapBandTicks"
 import type { XYSceneContext } from "./types"
 import {
   attachSelectionProvenance,
@@ -248,9 +248,24 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: St
   const customColorScale = ctx.config.heatmapColorScale
   const lut = customColorScale ? undefined : getColorLut(schemeName)
 
-  const cellW = layout.width / xCount
-  const cellH = layout.height / yCount
   const showValues = ctx.config.showValues
+  // Explicit extents are data values. Map them into the same index space the
+  // cells use, and leave an omitted side on the automatic cell edge.
+  const xScale = heatmapBandScale(
+    xLabels,
+    [0, layout.width],
+    heatmapBandDomain(xLabels, ctx.config.xExtent)
+  )
+  const yScale = heatmapBandScale(
+    yLabels,
+    [layout.height, 0],
+    heatmapBandDomain(yLabels, ctx.config.yExtent)
+  )
+  const bandSpan = (scale: (index: number) => number, index: number) => {
+    const start = scale(index - 0.5)
+    const end = scale(index + 0.5)
+    return [Math.min(start, end), Math.abs(end - start)] as const
+  }
   const valueFormat = ctx.config.heatmapValueFormat
   const nodes: HeatcellSceneNode[] = []
 
@@ -267,18 +282,17 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: St
       ? { value: val, showValues: true as const, valueFormat }
       : { value: val }
     const datum = cellDatums[i]
+    const [x, w] = bandSpan(xScale, xi)
+    const [y, h] = bandSpan(yScale, yi)
     nodes.push(applyHeatcellStyle(buildHeatcellNode(
-      xi * cellW,
-      (yCount - 1 - yi) * cellH,
-      cellW, cellH, fill, datum, labelOpts
+      x, y, w, h, fill, datum, labelOpts
     ), datum, ctx))
   }
 
-  // Cells are laid out by index. Publish a matching band scale so axes
-  // tick the keys at cell centers. Streaming bins keep their linear scales.
+  // Cells and axes share this band scale. Streaming bins keep their linear scales.
   if (ctx.scales && xCount > 0 && yCount > 0) {
-    ctx.scales.x = heatmapBandScale(xLabels, [0, layout.width])
-    ctx.scales.y = heatmapBandScale(yLabels, [layout.height, 0])
+    ctx.scales.x = xScale
+    ctx.scales.y = yScale
   }
 
   return nodes
