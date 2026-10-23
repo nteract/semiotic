@@ -25,6 +25,16 @@ describe("generateXYTicks with built-in formatters", () => {
     expect(labelsOf(withMax)).toEqual(["0", "20", "40", "60", "80", "97"])
   })
 
+  it("skips string keys on a linear scale", () => {
+    const mixed = generateXYTicks({
+      scale: numeric,
+      size: 400,
+      horizontal: true,
+      axis: { orient: "bottom", tickValues: ["low", 40] },
+    })
+    expect(mixed.map((tick) => [tick.value, tick.pixel, tick.label])).toEqual([[40, numeric(40), "40"]])
+  })
+
   it("keeps date labels for explicit UTC ticks", () => {
     const ticks = generateXYTicks({
       scale: day,
@@ -164,6 +174,29 @@ describe("generateXYTicks with heatmap band scales", () => {
     const ticks = generateXYTicks({ scale, size: 300, horizontal: true })
     expect(labelsOf(ticks)).toEqual(["1", "2", "10"])
     expect(ticks.map((tick) => tick.pixel)).toEqual([scale(0), scale(1), scale(2)])
+  })
+
+  it("places explicit categorical tick values on cell centers", () => {
+    const scale = heatmapBandScale(["low", "high"], [0, 100])
+    const format = vi.fn((value: number | Date | string) => `fmt:${value}`)
+    const ticks = generateXYTicks({
+      scale,
+      size: 100,
+      horizontal: true,
+      format,
+      axis: { orient: "bottom", tickValues: ["low", "high"] },
+    })
+    expect(ticks.map((tick) => tick.value)).toEqual(["low", "high"])
+    expect(ticks.map((tick) => tick.dataValue)).toEqual(["low", "high"])
+    expect(labelsOf(ticks)).toEqual(["fmt:low", "fmt:high"])
+    expect(ticks.map((tick) => tick.pixel)).toEqual([scale(0), scale(1)])
+    expect(format.mock.calls.every((call) => call[0] === "low" || call[0] === "high")).toBe(true)
+    expect(generateXYTicks({
+      scale,
+      size: 100,
+      horizontal: true,
+      axis: { orient: "bottom", tickValues: [0, 1] },
+    })).toEqual([])
   })
 
   it("places explicit numeric and date tick values on cell centers", () => {

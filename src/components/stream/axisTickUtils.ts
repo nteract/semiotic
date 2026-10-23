@@ -21,7 +21,7 @@ export function hasSameTickLabel(a: string | ReactNode, b: string | ReactNode): 
 
 /** Greedily filter ticks so consecutive labels are at least `minPx` apart. */
 export function filterTicksByPixelDistance<T extends {
-  value: number | Date
+  value: number | Date | string
   pixel: number
   label: string | ReactNode
 }>(ticks: T[], minPx: number): T[] {

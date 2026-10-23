@@ -15,7 +15,7 @@ import {
 } from "./heatmapBandTicks"
 
 export interface AxisTick {
-  value: number | Date
+  value: number | Date | string
   pixel: number
   label: ReactNode
   /**
@@ -91,11 +91,13 @@ export function generateXYTicks(options: {
       ? count === 0
         ? []
         : bandTicks.map((tick) => tick.value)
-      : (axis?.tickValues ?? ticksForMode(scale, count, extentMode))
+      : (axis?.tickValues ?? ticksForMode(scale, count, extentMode)).filter(
+          (value): value is number | Date => typeof value !== "string"
+        )
   const labelByValue = !explicitBand && bandTicks
     ? new Map(bandTicks.map((tick) => [tick.value, tick.label]))
     : null
-  const displayValue = (value: number | Date): string | number | Date =>
+  const displayValue = (value: number | Date | string): string | number | Date =>
     labelByValue?.get(Number(value)) ?? value
   const rawValues = values.map((value) => {
     const shown = displayValue(value)
@@ -118,14 +120,19 @@ export function generateXYTicks(options: {
         : numericTickFormatter(rawValues))
   // Preserve the existing value-only vertical formatter contract.
   // Band ticks format the category or date label, not the cell index.
-  const format = (value: number | Date, index: number) => {
+  const format = (value: number | Date | string, index: number) => {
     const shown = displayValue(value)
     return horizontal ? formatter(shown, index, rawValues) : formatter(shown)
   }
-  const candidates = values.map((value, index) => {
+  const candidates = values.flatMap((value, index) => {
+    // A linear scale has no category key. Band scales position the cell index.
+    let pixel: number
+    if (explicitBand) pixel = scale(explicitBand[index].index)
+    else if (typeof value === "string") return []
+    else pixel = scale(value)
     const tick: AxisTick = {
       value,
-      pixel: explicitBand ? scale(explicitBand[index].index) : scale(value),
+      pixel,
       label: format(value, index)
     }
     if (bandTicks) {
@@ -134,7 +141,7 @@ export function generateXYTicks(options: {
         ? explicitBand[index].requested
         : bandTicks[index].label
     }
-    return tick
+    return [tick]
   })
   // A cropped band domain can place a key outside the plot. Automatic ticks
   // stay inside it. An explicit tickValues list is left where it was requested.
