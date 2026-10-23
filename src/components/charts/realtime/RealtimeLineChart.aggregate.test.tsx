@@ -384,7 +384,7 @@ describe("RealtimeLineChart — aggregate mode", () => {
           .querySelector("canvas[aria-label]")
           ?.getAttribute("aria-label") ?? ""
       expect(label).toContain("line chart")
-      expect(label).toContain("1 lines")
+      expect(label).toContain("1 line")
     })
   })
 })

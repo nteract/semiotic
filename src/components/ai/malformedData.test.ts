@@ -197,7 +197,7 @@ describe("public AI data boundaries", () => {
     expect(() => suggestCharts(data)).not.toThrow()
     expect(repairChartConfig("BarChart", data).profile.rowCount).toBe(4)
     const description = describeChart("BarChart", props(data))
-    expect(description.levels.l2).toContain("mean of 7 across 1 points")
+    expect(description.levels.l2).toContain("mean of 7 across 1 point")
     const tree = buildNavigationTree("BarChart", props(data))
     expect(
       tree.children

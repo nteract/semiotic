@@ -81,10 +81,25 @@ export function computeBinExtent(
 
   if (bins.size === 0) return [0, 0]
 
+  let minTotal = 0
   let maxTotal = 0
   for (const bin of bins.values()) {
-    if (bin.total > maxTotal) maxTotal = bin.total
+    let lo = 0
+    let hi = 0
+    if (getCategory && bin.categories.size > 0) {
+      // Any category order can draw a negative layer below zero and a
+      // positive layer above it. The safe extent is the two sums, not the net.
+      for (const value of bin.categories.values()) {
+        if (value < 0) lo += value
+        else if (value > 0) hi += value
+      }
+    } else {
+      lo = Math.min(0, bin.total)
+      hi = Math.max(0, bin.total)
+    }
+    if (lo < minTotal) minTotal = lo
+    if (hi > maxTotal) maxTotal = hi
   }
 
-  return [0, maxTotal]
+  return [minTotal, maxTotal]
 }

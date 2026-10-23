@@ -24,8 +24,12 @@ describe("PhysicsSemanticDataTable", () => {
         .getAllByRole("region")
         .map((region) => region.getAttribute("aria-label"))
     ).toEqual([
-      "Data summary for physics chart first-physics-table",
-      "Data summary for physics chart second-physics-table"
+      "Data summary for physics chart",
+      "Data summary for physics chart"
+    ])
+    expect(screen.getAllByRole("region").map((region) => region.id)).toEqual([
+      "first-physics-table",
+      "second-physics-table"
     ])
   })
 })

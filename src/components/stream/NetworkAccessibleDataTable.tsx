@@ -6,6 +6,7 @@ import { DATA_TABLE_NETWORK_CLASS } from "./accessibleTableStyles"
 import { SR_ONLY_STYLE } from "./AriaLiveTooltip"
 import { useAccessibleTableInteraction } from "./useAccessibleTableInteraction"
 import { countNetworkTableRows } from "./networkTableCounts"
+import { countNoun } from "./countNoun"
 import type { NetworkTableElement } from "./networkAccessibleDataTableModel"
 
 const Content = /* @__PURE__ */ React.lazy(() => import("./NetworkAccessibleDataTableContent"))
@@ -35,8 +36,8 @@ export default function NetworkAccessibleDataTable(
     <AccessibleTableShell
       interaction={interaction}
       tableId={tableId}
-      regionLabel={`Data summary for ${chartTitle || (tableId ? `${chartType} ${tableId}` : chartType)}`}
-      countLabel={`${nodeCount} nodes, ${edgeCount} edges`}
+      regionLabel={`Data summary for ${chartTitle || chartType}`}
+      countLabel={`${countNoun(nodeCount, "node")}, ${countNoun(edgeCount, "edge")}`}
       className={DATA_TABLE_NETWORK_CLASS}
     >
       {interaction.isExpanded && (

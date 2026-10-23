@@ -53,6 +53,8 @@ import type { MarginType } from "../types/marginType"
 import { resolveRibbons } from "./pipelineRibbons"
 import {
   buildPipelineScales,
+  clampLogDomain,
+  collectPositiveSamples,
   expandYDomainWithRibbons,
   isFullySpecifiedExtent,
   mergePartialDomain,
@@ -229,6 +231,8 @@ export class PipelineStore extends UpdateResultStoreBase {
   /** True when the effective x accessor returns Date objects or date strings. */
   xIsDate = false
   private xTypeDetected = false
+  private _warnedNonPositiveLogX = false
+  private _warnedNonPositiveLogY = false
 
   // ── Quadtree spatial index for O(log n) point hit testing ──────────
   private spatialIndex = new PipelineSpatialIndex()
@@ -615,6 +619,18 @@ export class PipelineStore extends UpdateResultStoreBase {
       yDomain,
       config.xScaleType
     ))
+
+    const xScaleType = config.xScaleType ?? (this.xIsDate ? "utc" : undefined)
+    if (xScaleType === "log") {
+      const samples = this.positiveAxisSamples(this.getX)
+      xDomain = clampLogDomain(xDomain, samples.positive)
+      this.warnDroppedLogSamples("x", samples.droppedNonPositive)
+    }
+    if (config.yScaleType === "log") {
+      const samples = this.positiveAxisSamples(this.getY)
+      yDomain = clampLogDomain(yDomain, samples.positive)
+      this.warnDroppedLogSamples("y", samples.droppedNonPositive)
+    }
 
     this.scales = buildPipelineScales({
       config,
@@ -1186,11 +1202,39 @@ export class PipelineStore extends UpdateResultStoreBase {
   }
 
   getExtents(): { x: [number, number]; y: [number, number] } | null {
+    // Evicting a min or max only marks the extent dirty. Readers that never
+    // call computeScene still need the extent of the points that remain.
+    if (this.xExtent.dirty) {
+      this.xExtent.recalculate(this.buffer, this.getX)
+    }
+    if (this.yExtent.dirty) {
+      this.rebuildYExtent()
+    }
     if (this.xExtent.min === Infinity) return null
     return {
       x: this.xExtent.extent,
       y: this.yExtent.extent
     }
+  }
+
+  private positiveAxisSamples(read: (d: Datum) => number) {
+    const values: number[] = []
+    for (const datum of this.buffer) values.push(read(datum))
+    return collectPositiveSamples(values)
+  }
+
+  private warnDroppedLogSamples(axis: "x" | "y", droppedNonPositive: boolean): void {
+    if (!droppedNonPositive) return
+    if (axis === "x") {
+      if (this._warnedNonPositiveLogX) return
+      this._warnedNonPositiveLogX = true
+    } else {
+      if (this._warnedNonPositiveLogY) return
+      this._warnedNonPositiveLogY = true
+    }
+    console.warn(
+      `Semiotic log ${axis} scale omitted non-positive values and starts at the smallest positive value.`
+    )
   }
 
   clear(): void {

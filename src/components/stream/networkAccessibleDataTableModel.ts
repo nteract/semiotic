@@ -5,6 +5,7 @@ import {
   type DataRow
 } from "./accessibleDataRows"
 import { fmt } from "./accessibleDataTableModel"
+import { countNoun } from "./countNoun"
 
 export type NetworkTableElement = AccessibleSceneNode & {
   id?: string | number
@@ -124,7 +125,7 @@ export function buildNetworkTableModel(
   }
   nodeRows.sort((a, b) => b.degree - a.degree)
 
-  const summaryParts = [`${nodeRows.length} nodes, ${edgeRows.length} edges.`]
+  const summaryParts = [`${countNoun(nodeRows.length, "node")}, ${countNoun(edgeRows.length, "edge")}.`]
   if (nodeRows.length > 0) {
     summaryParts.push(
       `Mean degree: ${fmt(degreeSum / nodeRows.length)}, max degree: ${maxDegree}.`

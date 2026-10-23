@@ -17,6 +17,7 @@ import {
   CAPTION_STYLE as TABLE_CAPTION_STYLE
 } from "../accessibleTableStyles"
 import { useAccessibleTableInteraction } from "../useAccessibleTableInteraction"
+import { countNoun } from "../countNoun"
 import { FlippingTooltip } from "../../Tooltip/FlippingTooltip"
 import {
   hasOwnTooltipChrome,
@@ -345,9 +346,7 @@ function PhysicsSemanticDataTable(props: {
     () => (isExpanded ? semanticItemsSummary(items) : ""),
     [isExpanded, items]
   )
-  const regionLabel = chartTitle
-    ? `Data summary for ${chartTitle}`
-    : `Data summary for physics chart ${tableId}`
+  const regionLabel = `Data summary for ${chartTitle || "physics chart"}`
 
   React.useEffect(() => {
     if (!isExpanded) setVisibleCount(PHYSICS_TABLE_SAMPLE_SIZE)
@@ -361,7 +360,7 @@ function PhysicsSemanticDataTable(props: {
     interaction,
     tableId,
     regionLabel,
-    countLabel: `${items.length} semantic items`
+    countLabel: countNoun(items.length, "semantic item", "semantic items")
   }
   if (!isExpanded) return <AccessibleTableShell {...shell} />
 
@@ -394,8 +393,8 @@ function PhysicsSemanticDataTable(props: {
           style={TABLE_CAPTION_STYLE}
         >
           {remaining > 0
-            ? `First ${shownCount} of ${items.length} semantic items`
-            : `All ${items.length} semantic items`}
+            ? `First ${shownCount} of ${countNoun(items.length, "semantic item", "semantic items")}`
+            : `All ${countNoun(items.length, "semantic item", "semantic items")}`}
         </caption>
         <thead>
           <tr>

@@ -59,6 +59,16 @@ describe("lineCanvasRenderer", () => {
     expect(ctx.lineWidth).toBe(2)
   })
 
+  it("does not stroke a line when stroke is none", () => {
+    const ctx = createMockCanvasContext()
+    const node = makeLineNode({ style: { stroke: "none", strokeWidth: 3 } })
+
+    lineCanvasRenderer(ctx, [node], makeScales(), makeLayout())
+
+    expect(ctx.stroke).not.toHaveBeenCalled()
+    expect(ctx.strokeStyle).not.toBe("none")
+  })
+
   it("does not stroke a line when strokeWidth is zero", () => {
     const ctx = createMockCanvasContext()
     const node = makeLineNode({

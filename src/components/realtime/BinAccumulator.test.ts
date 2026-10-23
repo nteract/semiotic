@@ -107,4 +107,21 @@ describe("computeBinExtent", () => {
     // bin 0 total = 15, bin 10 total = 20
     expect(extent).toEqual([0, 20])
   })
+
+  it("includes a negative unstacked bin and keeps zero in the extent", () => {
+    const data = [
+      { time: 1, value: -4 },
+      { time: 15, value: 10 }
+    ]
+    expect(computeBinExtent(data, getTime, getValue, 10)).toEqual([-4, 10])
+  })
+
+  it("covers the negative and positive category sums, not the net", () => {
+    const data = [
+      { time: 1, value: -5, cat: "a" },
+      { time: 2, value: 10, cat: "b" }
+    ]
+    const getCat = (d: Datum) => d.cat
+    expect(computeBinExtent(data, getTime, getValue, 10, getCat)).toEqual([-5, 10])
+  })
 })

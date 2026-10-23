@@ -2,7 +2,7 @@ import type { LineSceneNode, StreamLayout } from "../types"
 import { resolveCSSColor } from "./resolveCSSColor"
 import type { StreamRendererFn } from "./types"
 import { line as d3Line } from "d3-shape"
-import { buildLinearFillGradient, resolveCanvasFill, resolveCurveFactory } from "./canvasRenderHelpers"
+import { buildLinearFillGradient, isNoneCanvasPaint, resolveCanvasFill, resolveCurveFactory } from "./canvasRenderHelpers"
 import { buildThresholdLineSegments } from "./thresholdLineSegments"
 
 /**
@@ -82,6 +82,8 @@ export function renderCanvasLines(
 ): void {
   for (const node of lineNodes) {
     if (node.path.length < 2) continue
+    // `"none"` is truthy. Canvas rejects it and strokes the default black.
+    if (isNoneCanvasPaint(node.style.stroke)) continue
 
     // Intro clip: reveal line from left to right
     const clipFrac = node._introClipFraction

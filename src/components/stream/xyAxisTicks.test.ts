@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest"
 import { scaleLinear, scaleUtc } from "d3-scale"
 import { generateXYTicks } from "./xyAxisTicks"
+import { heatmapBandScale } from "./heatmapBandTicks"
 import { adaptiveTimeTicks } from "../charts/shared/formatUtils"
 
 const HOUR = 3_600_000
@@ -98,5 +99,31 @@ describe("generateXYTicks with index-aware formatters", () => {
     const format = vi.fn((value: number | Date | string) => String(value))
     generateXYTicks({ scale: scaleLinear().domain([0, 10]).range([100, 0]), size: 100, format })
     expect(format.mock.calls.every((call) => call.length === 1)).toBe(true)
+  })
+})
+
+describe("generateXYTicks with heatmap band scales", () => {
+  it("labels categorical ticks with the keys and does not add the domain end", () => {
+    const scale = heatmapBandScale(["low", "high"], [0, 100])
+    const format = vi.fn((value: number | Date | string) => `fmt:${value}`)
+    const ticks = generateXYTicks({
+      scale,
+      size: 100,
+      format,
+      axis: { orient: "left", includeMax: true },
+    })
+    expect(ticks.map((tick) => tick.value)).toEqual([0, 1])
+    expect(labelsOf(ticks)).toEqual(["fmt:low", "fmt:high"])
+    expect(format.mock.calls.map((call) => call[0])).toEqual(["low", "high"])
+  })
+
+  it("formats date keys from the dates rather than the index domain", () => {
+    const scale = heatmapBandScale(
+      [new Date(Date.UTC(2024, 0, 1)), new Date(Date.UTC(2024, 0, 2))],
+      [0, 200]
+    )
+    const ticks = generateXYTicks({ scale, size: 200, horizontal: true })
+    expect(labelsOf(ticks).join(" ")).not.toContain("1970")
+    expect(labelsOf(ticks)).toEqual(["Jan 1", "Jan 2"])
   })
 })

@@ -123,7 +123,7 @@ describe("XY HOC rendering integration", () => {
         height={300}
       />
     )
-    await expectCanvasSummary(container, ["line chart", "1 lines"])
+    await expectCanvasSummary(container, ["line chart", "1 line"])
     await waitFor(() => {
       const svgText = Array.from(container.querySelectorAll("svg"))
         .map(svg => svg.textContent ?? "")
@@ -341,7 +341,7 @@ describe("HOC edge cases", () => {
         height={300}
       />
     )
-    await expectCanvasSummary(container, ["line chart", "1 lines"])
+    await expectCanvasSummary(container, ["line chart", "1 line"])
   })
 
   it("loading state renders skeleton", () => {
@@ -375,7 +375,7 @@ describe("HOC edge cases", () => {
         height={300}
       />
     )
-    await expectCanvasSummary(container, ["line chart", "1 lines"])
+    await expectCanvasSummary(container, ["line chart", "1 line"])
   })
 
   it("responsive width renders semantic chart shell", () => {

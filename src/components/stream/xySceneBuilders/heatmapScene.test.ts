@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { buildHeatmapScene } from "./heatmapScene"
+import { heatmapBandTicks } from "../heatmapBandTicks"
 import type { XYSceneContext } from "./types"
 import type { StreamLayout } from "../types"
 import type { Datum } from "../../charts/shared/datumTypes"
@@ -131,6 +132,40 @@ describe("buildHeatmapScene (static mode)", () => {
     // With 2 x-values and 2 y-values: cellW = 400/2 = 200, cellH = 400/2 = 200
     const widths = nodes.map((n) => n.w)
     expect(widths.every((w: number) => w === 200)).toBe(true)
+    expect(heatmapBandTicks(ctx.scales!.x)?.map((tick) => tick.label)).toEqual(["b", "a"])
+    expect(heatmapBandTicks(ctx.scales!.y)?.map((tick) => tick.label)).toEqual(["q", "p"])
+  })
+
+  it("collapses Date keys that share a timestamp into one column", () => {
+    const first = new Date("2020-01-01T00:00:00Z")
+    const sameDay = new Date("2020-01-01T00:00:00Z")
+    const data = [
+      { x: first, y: "a", value: 1 },
+      { x: sameDay, y: "b", value: 2 },
+    ]
+    const ctx = makeCtx({ config: { xAccessor: "x", yAccessor: "y", valueAccessor: "value" } })
+    const nodes = buildHeatmapScene(ctx, data, defaultLayout)
+    expect(nodes).toHaveLength(2)
+    expect(nodes.every((node) => node.x === 0 && node.w === 400)).toBe(true)
+    expect(heatmapBandTicks(ctx.scales!.x)).toEqual([
+      { value: 0, label: first },
+    ])
+  })
+
+  it("centers uneven numeric columns on the band scale", () => {
+    const data = [
+      { x: 10, y: "a", value: 1 },
+      { x: 0, y: "a", value: 2 },
+      { x: 1, y: "a", value: 3 },
+    ]
+    const ctx = makeCtx({ config: { xAccessor: "x", yAccessor: "y", valueAccessor: "value" } })
+    const nodes = buildHeatmapScene(ctx, data, defaultLayout)
+    const scale = ctx.scales!.x
+    for (const [key, index] of [["0", 0], ["1", 1], ["10", 2]] as const) {
+      const node = nodes.find((candidate) => String(candidate.datum?.x) === key)
+      expect(node).toBeTruthy()
+      expect(node!.x + node!.w / 2).toBeCloseTo(scale(index))
+    }
   })
 
   it("missing values in grid are skipped — no cell for (a, p) combo", () => {

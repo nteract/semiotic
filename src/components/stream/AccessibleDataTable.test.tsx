@@ -46,7 +46,7 @@ describe("computeCanvasAriaLabel", () => {
       { type: "wedge", datum: null },
       { type: "wedge", datum: { category: "A", value: 10 } },
     ]
-    expect(computeCanvasAriaLabel(scene, "gauge")).toBe("gauge, 1 wedges")
+    expect(computeCanvasAriaLabel(scene, "gauge")).toBe("gauge, 1 wedge")
   })
 
   it("reports empty when only non-interactive null-datum nodes are present", () => {
@@ -61,12 +61,12 @@ describe("computeCanvasAriaLabel", () => {
       { type: "rect", x: 10, y: 0, w: 10, h: 10 },
     ]
     // Order: point, line, then rect (per typeOrder)
-    expect(computeCanvasAriaLabel(scene, "XY")).toBe("XY, 1 points, 1 lines, 2 bars")
+    expect(computeCanvasAriaLabel(scene, "XY")).toBe("XY, 1 point, 1 line, 2 bars")
   })
 
   it("handles unknown node types gracefully", () => {
     const scene = [{ type: "sparkline" }, { type: "sparkline" }]
-    expect(computeCanvasAriaLabel(scene, "custom")).toBe("custom, 2 sparkline")
+    expect(computeCanvasAriaLabel(scene, "custom")).toBe("custom, 2 sparklines")
   })
 
   it("handles nodes with missing type", () => {
@@ -81,16 +81,16 @@ describe("computeCanvasAriaLabel", () => {
     const allTypes = ["point", "line", "area", "rect", "heatcell", "circle", "candlestick", "wedge", "arc", "geoarea"]
     const scene = allTypes.map(type => ({ type }))
     const result = computeCanvasAriaLabel(scene, "all")
-    expect(result).toContain("1 points")
-    expect(result).toContain("1 lines")
-    expect(result).toContain("1 areas")
-    expect(result).toContain("1 bars")
-    expect(result).toContain("1 cells")
-    expect(result).toContain("1 nodes")
-    expect(result).toContain("1 candlesticks")
-    expect(result).toContain("1 wedges")
-    expect(result).toContain("1 arcs")
-    expect(result).toContain("1 regions")
+    expect(result).toContain("1 point")
+    expect(result).toContain("1 line")
+    expect(result).toContain("1 area")
+    expect(result).toContain("1 bar")
+    expect(result).toContain("1 cell")
+    expect(result).toContain("1 node")
+    expect(result).toContain("1 candlestick")
+    expect(result).toContain("1 wedge")
+    expect(result).toContain("1 arc")
+    expect(result).toContain("1 region")
   })
 
   it("handles massive scene arrays without crashing", () => {
@@ -200,7 +200,9 @@ describe("AccessibleDataTable styling hooks", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /view data summary/i }))
 
-    const region = screen.getByRole("region", { name: /data summary for line chart/i })
+    const region = screen.getByRole("region", { name: "Data summary for line chart" })
+    expect(region.id).toBe("semiotic-table-test")
+    expect(region.getAttribute("aria-label")).not.toContain("semiotic-table-test")
     expect(region).toHaveClass("semiotic-accessible-data-table")
     expect(region).toHaveClass("semiotic-accessible-data-table-visible")
     expect(region.getAttribute("style")).toContain("--semiotic-data-table-bg")
@@ -305,7 +307,7 @@ describe("NetworkAccessibleDataTable semantic rows", () => {
     ).toBeInTheDocument()
 
     expect(screen.getByRole("note")).toHaveTextContent(
-      "2 nodes, 1 edges. Mean degree: 1, max degree: 1."
+      "2 nodes, 1 edge. Mean degree: 1, max degree: 1."
     )
     expect(screen.queryByText(/must stay hidden/)).toBeNull()
     expect(screen.queryByText("Ignored because tableFields wins")).toBeNull()
@@ -332,7 +334,7 @@ describe("NetworkAccessibleDataTable semantic rows", () => {
     const edgeTable = await screen.findByRole("table", { name: /edge data/i })
     expect(within(edgeTable).getByText("archive → court")).toBeInTheDocument()
     expect(within(edgeTable).getByText("informs")).toBeInTheDocument()
-    expect(screen.getByRole("note")).toHaveTextContent("0 nodes, 1 edges.")
+    expect(screen.getByRole("note")).toHaveTextContent("0 nodes, 1 edge.")
   })
 
   it("omits decorative null-datum network nodes from counts and rows", async () => {
@@ -358,14 +360,14 @@ describe("NetworkAccessibleDataTable semantic rows", () => {
     )
 
     const trigger = screen.getByRole("button", {
-      name: "View data summary (1 nodes, 0 edges)",
+      name: "View data summary (1 node, 0 edges)",
     })
     fireEvent.click(trigger)
 
     const table = await screen.findByRole("table", { name: /node data/i })
     expect(within(table).getAllByRole("row")).toHaveLength(2)
     expect(within(table).getByText("Station")).toBeInTheDocument()
-    expect(screen.getByRole("note")).toHaveTextContent("1 nodes, 0 edges.")
+    expect(screen.getByRole("note")).toHaveTextContent("1 node, 0 edges.")
     expect(screen.queryByText("decorative-wedge")).toBeNull()
   })
 })
@@ -390,7 +392,9 @@ describe("AccessibleDataTable — focus & pagination", () => {
 
   it("auto-expands when the region container itself receives focus (skip-link path)", () => {
     render(<AccessibleDataTable tableId="t2" chartType="line chart" scene={lineScene(3)} />)
-    const region = screen.getByRole("region", { name: /data summary for line chart/i })
+    const region = screen.getByRole("region", { name: "Data summary for line chart" })
+    expect(region.id).toBe("t2")
+    expect(region.getAttribute("aria-label")).not.toContain("t2")
     fireEvent.focus(region) // target === currentTarget
     expect(screen.getByRole("table")).toBeInTheDocument()
   })

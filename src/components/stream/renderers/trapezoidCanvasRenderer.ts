@@ -1,6 +1,6 @@
 import type { TrapezoidSceneNode, RectSceneNode, OrdinalLayout, OrdinalScales, OrdinalSceneNode } from "../ordinalTypes"
 import { resolveCSSColor } from "./resolveCSSColor"
-import { coerceCanvasFill } from "./canvasRenderHelpers"
+import { coerceCanvasFill, isNoneCanvasPaint } from "./canvasRenderHelpers"
 
 /**
  * Canvas renderer for trapezoid (funnel connector) nodes.
@@ -27,8 +27,13 @@ export const trapezoidCanvasRenderer = (
     }
     ctx.closePath()
 
-    ctx.fillStyle = coerceCanvasFill(ctx, node.style?.fill) || "#999"
-    ctx.fill()
+    const fill = isNoneCanvasPaint(node.style?.fill)
+      ? undefined
+      : (coerceCanvasFill(ctx, node.style?.fill) || "#999")
+    if (fill && !isNoneCanvasPaint(fill)) {
+      ctx.fillStyle = fill
+      ctx.fill()
+    }
 
     // `"none"` is truthy: without this guard canvas rejects `strokeStyle =
     // "none"`, silently keeps the default black, and still strokes — drawing a

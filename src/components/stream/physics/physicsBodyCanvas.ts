@@ -5,7 +5,7 @@
 
 import type { Style } from "../types"
 import type { PhysicsBodyState } from "./PhysicsKernel"
-import { coerceCanvasFill } from "../renderers/canvasRenderHelpers"
+import { coerceCanvasFill, isNoneCanvasPaint } from "../renderers/canvasRenderHelpers"
 import { drawGlyphParts, glyphPlacement } from "../glyphDef"
 import { resolveBodyGlyph, physicsPolygonVertices } from "./physicsBodyGeometry"
 
@@ -72,12 +72,15 @@ export function drawBody(
   body: PhysicsBodyState,
   style: Style
 ): void {
-  const fill = coerceCanvasFill(ctx, style.fill) ?? "#4e79a7"
-  const resolvedStroke = coerceCanvasFill(ctx, style.stroke)
-  // `"none"` is truthy: without this guard canvas rejects `strokeStyle =
-  // "none"`, silently keeps the default black, and still strokes — drawing a
-  // black ring where SVG (stroke="none") paints nothing.
-  const stroke = resolvedStroke !== "none" ? resolvedStroke : undefined
+  const fill = isNoneCanvasPaint(style.fill)
+    ? undefined
+    : (coerceCanvasFill(ctx, style.fill) ?? "#4e79a7")
+  // `"none"` is truthy. Canvas rejects it and strokes the default black.
+  // Resolve it before coerceCanvasFill, which maps "none" to transparent
+  // and would still stroke.
+  const stroke = isNoneCanvasPaint(style.stroke)
+    ? undefined
+    : coerceCanvasFill(ctx, style.stroke)
   const strokeWidth = style.strokeWidth ?? 0
   const opacity = style.opacity ?? 1
   const fillOpacity = style.fillOpacity ?? 1
@@ -198,7 +201,7 @@ function bodyDrawRadius(body: PhysicsBodyState, style: Style): number {
 }
 
 function bodyStrokePadding(style: Style): number {
-  return style.stroke && style.stroke !== "none" && (style.strokeWidth ?? 0) > 0
+  return style.stroke && !isNoneCanvasPaint(style.stroke) && (style.strokeWidth ?? 0) > 0
     ? (style.strokeWidth ?? 0) / 2
     : 0
 }

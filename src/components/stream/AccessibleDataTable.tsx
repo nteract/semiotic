@@ -10,6 +10,7 @@ import {
   countDataRows,
   type AccessibleSceneNode as AnySceneNode,
 } from "./accessibleDataRows"
+import { countNoun } from "./countNoun"
 export type { AccessibleTableOptions, AccessibleTablePortalTarget, AccessibleTableProp } from "./accessibleTableTypes"
 export { extractAllRows } from "./accessibleDataRows"
 export type { DataRow } from "./accessibleDataRows"
@@ -58,17 +59,17 @@ export function computeCanvasAriaLabel(
   if (Object.keys(typeCounts).length === 0) return `${chartType}, empty`
 
   const parts: string[] = []
-  const typeLabels: Record<string, string> = {
-    point: "points",
-    line: "lines",
-    area: "areas",
-    rect: "bars",
-    heatcell: "cells",
-    circle: "nodes",
-    candlestick: "candlesticks",
-    wedge: "wedges",
-    arc: "arcs",
-    geoarea: "regions"
+  const typeLabels: Record<string, readonly [string, string]> = {
+    point: ["point", "points"],
+    line: ["line", "lines"],
+    area: ["area", "areas"],
+    rect: ["bar", "bars"],
+    heatcell: ["cell", "cells"],
+    circle: ["node", "nodes"],
+    candlestick: ["candlestick", "candlesticks"],
+    wedge: ["wedge", "wedges"],
+    arc: ["arc", "arcs"],
+    geoarea: ["region", "regions"]
   }
 
   // Sort by a fixed type order for stable aria-label output
@@ -80,8 +81,12 @@ export function computeCanvasAriaLabel(
   })
 
   for (const type of sortedTypes) {
-    const label = typeLabels[type] || type
-    parts.push(`${typeCounts[type]} ${label}`)
+    const label = typeLabels[type]
+    parts.push(
+      label
+        ? countNoun(typeCounts[type], label[0], label[1])
+        : countNoun(typeCounts[type], type)
+    )
   }
 
   return `${chartType}, ${parts.join(", ")}`
@@ -96,8 +101,8 @@ export function computeNetworkAriaLabel(
   chartType: string
 ): string {
   const parts: string[] = []
-  if (nodeCount > 0) parts.push(`${nodeCount} nodes`)
-  if (edgeCount > 0) parts.push(`${edgeCount} edges`)
+  if (nodeCount > 0) parts.push(countNoun(nodeCount, "node"))
+  if (edgeCount > 0) parts.push(countNoun(edgeCount, "edge"))
   if (parts.length === 0) return `${chartType}, empty`
   return `${chartType}, ${parts.join(", ")}`
 }
@@ -141,11 +146,7 @@ export function AccessibleDataTableSlot({
 export function AccessibleDataTable(props: AccessibleDataTableProps) {
   const { scene, chartType, tableId, chartTitle } = props
   const interaction = useAccessibleTableInteraction()
-  const regionLabel = chartTitle
-    ? `Data summary for ${chartTitle}`
-    : tableId
-      ? `Data summary for ${chartType} ${tableId}`
-      : `Data summary for ${chartType}`
+  const regionLabel = `Data summary for ${chartTitle || chartType}`
 
   if (!scene || scene.length === 0) {
     return tableId ? (
@@ -158,7 +159,7 @@ export function AccessibleDataTable(props: AccessibleDataTableProps) {
       interaction={interaction}
       tableId={tableId}
       regionLabel={regionLabel}
-      countLabel={`${countDataRows(scene)} elements`}
+      countLabel={countNoun(countDataRows(scene), "element")}
     >
       {interaction.isExpanded && (
         <React.Suspense fallback={<div role="status">Loading data summary…</div>}>

@@ -98,7 +98,6 @@ export function resolveStackedAreaYDomain(options: {
 
   const valueMaps = new Map<string, Map<number, number>>()
   const xSet = new Set<number>()
-  let maxStacked = 0
   const xTotals = new Map<number, number>()
   const groupTotals = new Map<string, number>()
   for (const g of groups) {
@@ -113,7 +112,6 @@ export function resolveStackedAreaYDomain(options: {
       groupTotal += y
       const total = (xTotals.get(x) || 0) + y
       xTotals.set(x, total)
-      if (total > maxStacked) maxStacked = total
     }
     valueMaps.set(g.key, m)
     groupTotals.set(g.key, groupTotal)
@@ -194,9 +192,23 @@ export function resolveStackedAreaYDomain(options: {
     const pad = exactMode ? 0 : range > 0 ? range * config.extentPadding : 1
     yDomain = [lo - pad, hi + pad]
   } else {
-    const pad =
-      exactMode ? 0 : maxStacked > 0 ? maxStacked * config.extentPadding : 1
-    yDomain = [0, maxStacked + pad]
+    // Walk the same stack order as the scene. A commutative total hides
+    // negative layers and order-dependent peaks, so the domain follows the
+    // running cursor and keeps a zero baseline when the stack never goes below it.
+    const xValues = Array.from(xSet).sort((a, b) => a - b)
+    let lo = 0
+    let hi = 0
+    for (const x of xValues) {
+      let cursor = 0
+      for (const key of groupKeys) {
+        cursor += valueMaps.get(key)?.get(x) || 0
+        if (cursor < lo) lo = cursor
+        if (cursor > hi) hi = cursor
+      }
+    }
+    const range = hi - lo
+    const pad = exactMode ? 0 : range > 0 ? range * config.extentPadding : 1
+    yDomain = [lo < 0 ? lo - pad : 0, hi + pad]
   }
 
   const stackExtentCache = { key: stackCacheKey, yDomain }
@@ -213,7 +225,7 @@ export function resolveBarBinYDomain(
   exactMode: boolean,
   binAlign: BinAlign = "start"
 ): [number, number] {
-  const [, maxTotal] = computeBinExtent(
+  const [minTotal, maxTotal] = computeBinExtent(
     buffer,
     getX,
     getY,
@@ -221,7 +233,10 @@ export function resolveBarBinYDomain(
     getCategory,
     binAlign
   )
-  return [0, exactMode ? maxTotal : maxTotal + maxTotal * extentPadding]
+  if (minTotal === 0 && maxTotal === 0) return [0, 0]
+  const span = maxTotal - minTotal
+  const pad = exactMode ? 0 : span * extentPadding
+  return [minTotal < 0 ? minTotal - pad : 0, maxTotal + pad]
 }
 
 /** Cover whole centered edge bins automatically, preserving explicit bounds. */
@@ -380,16 +395,64 @@ export function rescueDegenerateDomains(
   return { xDomain: x, yDomain: y }
 }
 
+/**
+ * Log scales cannot plot non-positive bounds. Keep an already-positive
+ * domain, including a flipped one. Otherwise replace each non-positive end
+ * with the smallest or largest positive sample. With no positive sample,
+ * fall back to one decade starting at 1.
+ */
+export function clampLogDomain(
+  domain: [number, number],
+  positive: { min: number; max: number } | null
+): [number, number] {
+  const ascending = domain[0] <= domain[1]
+  const low = ascending ? domain[0] : domain[1]
+  const high = ascending ? domain[1] : domain[0]
+  const lowOk = low > 0 && Number.isFinite(low)
+  const highOk = high > 0 && Number.isFinite(high)
+  if (lowOk && highOk) return domain
+  const nextLow = lowOk ? low : positive?.min ?? 1
+  let nextHigh = highOk ? high : positive?.max ?? nextLow * 10
+  if (!(nextHigh > nextLow)) nextHigh = nextLow * 10
+  return ascending ? [nextLow, nextHigh] : [nextHigh, nextLow]
+}
+
+export function collectPositiveSamples(values: Iterable<number>): {
+  positive: { min: number; max: number } | null
+  droppedNonPositive: boolean
+} {
+  let min = Infinity
+  let max = -Infinity
+  let droppedNonPositive = false
+  for (const value of values) {
+    if (!Number.isFinite(value)) continue
+    if (!(value > 0)) {
+      droppedNonPositive = true
+      continue
+    }
+    if (value < min) min = value
+    if (value > max) max = value
+  }
+  return {
+    positive: Number.isFinite(min) ? { min, max } : null,
+    droppedNonPositive
+  }
+}
+
 export function makePipelineScale(
   type: "linear" | "log" | "symlog" | "time" | "utc" | undefined,
   domain: [number, number],
   range: [number, number]
 ): ScaleLinear<number, number> {
   if (type === "log") {
-    const safeDomain: [number, number] = [
-      Math.max(domain[0], 1e-6),
-      Math.max(domain[1], 1e-6)
-    ]
+    let safeDomain = clampLogDomain(domain, null)
+    if (
+      safeDomain[0] === safeDomain[1] &&
+      safeDomain[0] > 0 &&
+      Number.isFinite(safeDomain[0])
+    ) {
+      safeDomain = [safeDomain[0], safeDomain[0] * 10]
+    }
     return scaleLog()
       .domain(safeDomain)
       .range(range)
