@@ -85,7 +85,9 @@ const analyze = process.argv.includes("--analyze")
 // measures 319,921 bytes (312.4 KiB). Keep about 0.8 KiB for Linux variance.
 // Log-sample channels and heatmap key projection (2026-10-23, #1641) measure
 // 320,804 bytes (313.3 KiB) on the same union.
-const MULTI_IMPORT_GZIP_BUDGET = 314.1 * 1024
+// Empty-axis log rescue and cached heatmap keys (2026-10-23, #1641) measure
+// 321,995 bytes on Linux CI and 322,001 bytes locally (314.5 KiB).
+const MULTI_IMPORT_GZIP_BUDGET = 315 * 1024
 
 const MULTI_IMPORT_SOURCE = `
 export { LineChart } from "semiotic/xy"
