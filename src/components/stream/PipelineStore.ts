@@ -644,6 +644,8 @@ export class PipelineStore extends UpdateResultStoreBase {
             getY0: this.getY0,
             getHigh: this.getHigh,
             getLow: this.getLow,
+            getOpen: this.getOpen,
+            getClose: this.getClose,
             ribbons: this.resolvedRibbons,
           }))
       yDomain = clampLogDomain(yDomain, samples.positive, config.yExtent)

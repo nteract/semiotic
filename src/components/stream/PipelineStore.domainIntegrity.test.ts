@@ -541,6 +541,34 @@ describe("PipelineStore domain integrity", () => {
     expect(lowFive!.lowY).not.toBeCloseTo(highHundred!.highY)
   })
 
+  it("keeps an OHLC candle body on a log domain", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {})
+    const store = new PipelineStore(config({
+      chartType: "candlestick",
+      yScaleType: "log",
+      yAccessor: "high",
+      highAccessor: "high",
+      lowAccessor: "low",
+      openAccessor: "open",
+      closeAccessor: "close",
+    }))
+    store.ingest({
+      inserts: [
+        { x: 0, low: 0, high: 100, open: 5, close: 20 },
+        { x: 1, low: 0, high: 1000, open: 10, close: 100 },
+      ],
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([5, 1000])
+    const body = store.scene.find((node) =>
+      node.type === "candlestick" && (node.datum as { open?: number }).open === 5
+    )
+    expect(body?.type).toBe("candlestick")
+    if (body?.type !== "candlestick") return
+    expect(body.openY).not.toBeCloseTo(body.closeY)
+  })
+
   it("keeps a zero-total signed stack layer on a log domain", () => {
     vi.spyOn(console, "warn").mockImplementation(() => {})
     const store = new PipelineStore(config({

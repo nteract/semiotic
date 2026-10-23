@@ -545,8 +545,9 @@ export function clampLogDomain(
 
 /**
  * Y channels a non-aggregate scene paints. Mirrors PipelineStore's y-extent
- * walk: candle high/low, an explicit area baseline, and ribbon endpoints.
- * Sampling only `getY` drops a valid low onto the same pixel as a larger high.
+ * walk: candle high/low, open/close when the body is drawn, an explicit area
+ * baseline, and ribbon endpoints. Sampling only `getY` drops a valid low onto
+ * the same pixel as a larger high. Range candles have no separate body.
  */
 export function collectPlottedYChannels(input: {
   chartType: string
@@ -555,13 +556,21 @@ export function collectPlottedYChannels(input: {
   getY0?: (datum: Datum) => number
   getHigh?: (datum: Datum) => number
   getLow?: (datum: Datum) => number
+  getOpen?: (datum: Datum) => number
+  getClose?: (datum: Datum) => number
   ribbons: readonly ResolvedRibbon[]
 }): number[] {
   const values: number[] = []
   if (input.chartType === "candlestick" && input.getHigh && input.getLow) {
     const getHigh = input.getHigh
     const getLow = input.getLow
-    for (const datum of input.data) values.push(getHigh(datum), getLow(datum))
+    const getOpen = input.getOpen
+    const getClose = input.getClose
+    const sampleBody = getOpen != null && getClose != null
+    for (const datum of input.data) {
+      values.push(getHigh(datum), getLow(datum))
+      if (sampleBody) values.push(getOpen(datum), getClose(datum))
+    }
     return values
   }
   for (const datum of input.data) {
