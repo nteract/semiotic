@@ -26,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   visible when the wick low is not positive.
 - An empty log axis with only a lower bound opens one decade above that bound.
   An explicit upper bound still opens one decade below it.
+- A line with stroke `none` stays unstroked in SVG when a stroke gradient is
+  set, matching canvas. The fill under that line still paints.
 - Update the MCP SDK's transitive `ip-address` dependency to `10.7.4`, fixing
   CVE-2026-111997 and clearing the release security audit.
 - Align Vitest's coverage and UI packages with the test runner so release

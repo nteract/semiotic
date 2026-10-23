@@ -6,7 +6,7 @@
 
 import * as React from "react"
 import { area as d3Area, line as d3Line } from "d3-shape"
-import { resolveCurveFactory } from "./renderers/canvasRenderHelpers"
+import { isNoneCanvasPaint, resolveCurveFactory } from "./renderers/canvasRenderHelpers"
 import { buildThresholdLineSegments } from "./renderers/thresholdLineSegments"
 
 import type {
@@ -156,12 +156,17 @@ function xySceneNodeToSVGMark(
       const gradientId = safeSvgId(
         `${idPrefix ? `${idPrefix}-` : ""}line-${i}-stroke-gradient`
       )
-      const strokeGradient = buildStrokeSVGGradient(
-        n.strokeGradient,
-        n.path,
-        gradientId,
-        n.style.stroke || "#4e79a7"
-      )
+      // `"none"` wins over a stroke gradient, matching the canvas line renderer.
+      // The gradient URL would otherwise paint a visible stroke in SVG and SSR.
+      const strokeIsNone = isNoneCanvasPaint(n.style.stroke)
+      const strokeGradient = strokeIsNone
+        ? null
+        : buildStrokeSVGGradient(
+            n.strokeGradient,
+            n.path,
+            gradientId,
+            n.style.stroke || "#4e79a7"
+          )
       return (
         <React.Fragment key={`line-${i}`}>
           {strokeGradient && <defs>{strokeGradient}</defs>}
@@ -171,9 +176,11 @@ function xySceneNodeToSVGMark(
             stroke={
               strokeGradient
                 ? `url(#${gradientId})`
-                : n.style.stroke || "#4e79a7"
+                : strokeIsNone
+                  ? "none"
+                  : n.style.stroke || "#4e79a7"
             }
-            strokeWidth={n.style.strokeWidth ?? 2}
+            strokeWidth={strokeIsNone ? 0 : (n.style.strokeWidth ?? 2)}
             strokeDasharray={n.style.strokeDasharray}
             opacity={n.style.opacity}
           />

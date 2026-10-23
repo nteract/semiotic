@@ -83,6 +83,25 @@ describe("lineCanvasRenderer", () => {
     expect(ctx.strokeStyle).not.toBe("none")
   })
 
+  it("does not stroke a gradient when stroke is none", () => {
+    const ctx = createMockCanvasContext()
+    const node = makeLineNode({
+      style: { stroke: "none", strokeWidth: 3, fill: "red", fillOpacity: 0.4 },
+      strokeGradient: {
+        stops: [
+          { offset: 0, color: "#ff0000" },
+          { offset: 1, color: "#0000ff" },
+        ],
+      },
+    })
+
+    lineCanvasRenderer(ctx, [node], makeScales(), makeLayout())
+
+    expect(ctx.stroke).not.toHaveBeenCalled()
+    expect(ctx.createLinearGradient).not.toHaveBeenCalled()
+    expect(ctx.fill).toHaveBeenCalledTimes(1)
+  })
+
   it("does not stroke a line when strokeWidth is zero", () => {
     const ctx = createMockCanvasContext()
     const node = makeLineNode({
