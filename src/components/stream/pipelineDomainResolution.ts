@@ -73,11 +73,12 @@ export function resolveStackedAreaYDomain(options: {
   // Normalized stacks still need their cumulative shares. The unit domain is
   // fixed, but log sampling has to see 0→1/3→1 rather than the raw rows.
   // Stack order changes the cumulative shares even when the unit domain
-  // stays [0, 1]. A config-only order update does not bump the ingest
-  // version, so the order has to be part of the key.
+  // stays [0, 1]. Exact mode drops the padding on that unit domain.
+  // updateConfig does not bump the ingest version for either change.
+  const extentKey = exactMode ? "exact" : "pad"
   const stackCacheKey = config.normalize
-    ? `${options.bufferSize}:${options.ingestVersion}:norm:${config.stackOrder ?? "key"}`
-    : `${options.bufferSize}:${options.ingestVersion}:${config.baseline ?? "zero"}:${config.stackOrder ?? "key"}`
+    ? `${options.bufferSize}:${options.ingestVersion}:norm:${config.stackOrder ?? "key"}:${extentKey}`
+    : `${options.bufferSize}:${options.ingestVersion}:${config.baseline ?? "zero"}:${config.stackOrder ?? "key"}:${extentKey}`
   if (
     options.stackExtentCache &&
     options.stackExtentCache.key === stackCacheKey

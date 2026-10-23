@@ -364,6 +364,57 @@ describe("PipelineStore domain integrity", () => {
     expect(yDomain(store)[1]).toBeCloseTo(1)
   })
 
+  it("recomputes a normalized domain when only the extent mode changes", () => {
+    const store = new PipelineStore(config({
+      chartType: "stackedarea",
+      normalize: true,
+      extentPadding: 0.1,
+      groupAccessor: "g",
+    }))
+    store.ingest({
+      inserts: [0, 1].flatMap((x) => [
+        { x, g: "a", y: 1 },
+        { x, g: "b", y: 1 },
+      ]),
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([0, 1.1])
+    store.updateConfig({ axisExtent: "exact" })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([0, 1])
+    store.updateConfig({ axisExtent: "nice" })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([0, 1.1])
+    store.updateConfig({ yAxisExtent: "exact" })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([0, 1])
+    store.updateConfig({ yAxisExtent: "nice" })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([0, 1.1])
+  })
+
+  it("recomputes a stacked domain when only the extent mode changes", () => {
+    const store = new PipelineStore(config({
+      chartType: "stackedarea",
+      extentPadding: 0.1,
+      baseline: "zero",
+      groupAccessor: "g",
+    }))
+    store.ingest({
+      inserts: [
+        { x: 0, g: "a", y: 4 },
+        { x: 0, g: "b", y: 6 },
+      ],
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([0, 11])
+    store.updateConfig({ yAxisExtent: "exact" })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([0, 10])
+  })
+
   it("keeps a positive silhouette layer on a log domain", () => {
     vi.spyOn(console, "warn").mockImplementation(() => {})
     const store = new PipelineStore(config({

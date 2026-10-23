@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import React from "react"
 import { renderToString } from "react-dom/server"
 import { fireEvent, render, screen, within } from "@testing-library/react"
@@ -10,7 +10,7 @@ import {
   extractAllRows,
 } from "./AccessibleDataTable"
 import NetworkAccessibleDataTable from "./NetworkAccessibleDataTable"
-import { useUniqueRegionLabel } from "./uniqueRegionLabel"
+import { SummaryRegionRoot, useUniqueRegionLabel } from "./uniqueRegionLabel"
 import type { Datum } from "../charts/shared/datumTypes"
 
 // ── Test helpers ────────────────────────────────────────────────────────
@@ -188,10 +188,82 @@ describe("AccessibleDataTable styling hooks", () => {
     expect(html).not.toMatch(/aria-label="[^"]*second-table/)
 
     const again = renderToString(
-      <AccessibleDataTable tableId="third-table" chartType="line chart" scene={scene} />
+      <SummaryRegionRoot>
+        <AccessibleDataTable tableId="third-table" chartType="line chart" scene={scene} />
+      </SummaryRegionRoot>
     )
     expect(again).toContain('aria-label="Data summary for line chart"')
     expect(again).not.toContain("(2)")
+  })
+
+  it("restarts summary names when the next server render reuses the same ids", () => {
+    const scene = [{ type: "point" as const, x: 1, y: 2 }]
+    const pair = (first: string, second: string) => renderToString(
+      <>
+        <AccessibleDataTable tableId="left-table" chartType={first} scene={scene} />
+        <AccessibleDataTable tableId="right-table" chartType={second} scene={scene} />
+      </>
+    )
+    const mixed = pair("bar chart", "line chart")
+    expect(mixed).toContain('aria-label="Data summary for bar chart"')
+    expect(mixed).toContain('aria-label="Data summary for line chart"')
+    expect(mixed).not.toContain("(2)")
+
+    const lines = pair("line chart", "line chart")
+    const lineLabels = [...lines.matchAll(/aria-label="([^"]+)"/g)].map((match) => match[1])
+    expect(lineLabels.filter((label) => label === "Data summary for line chart")).toHaveLength(1)
+    expect(lineLabels).toContain("Data summary for line chart (2)")
+    expect(lineLabels).not.toContain("Data summary for line chart (3)")
+  })
+
+  it("does not keep a suffix when a reused id changes chart type", () => {
+    const scene = [{ type: "point" as const, x: 1, y: 2 }]
+    const pair = (first: string, second: string) => renderToString(
+      <>
+        <AccessibleDataTable tableId="left-table" chartType={first} scene={scene} />
+        <AccessibleDataTable tableId="right-table" chartType={second} scene={scene} />
+      </>
+    )
+    pair("line chart", "line chart")
+    const mixed = pair("bar chart", "line chart")
+    expect(mixed).toContain('aria-label="Data summary for bar chart"')
+    expect(mixed).toContain('aria-label="Data summary for line chart"')
+    expect(mixed).not.toContain("(2)")
+  })
+
+  it("numbers React 18 summary ids together and restarts the next render", () => {
+    let n = 0
+    const spy = vi.spyOn(React, "useId").mockImplementation(() => {
+      n += 1
+      return `:R${n}:`
+    })
+    function Named({ kind }: { kind: string }) {
+      return <span data-label={useUniqueRegionLabel(`Data summary for ${kind}`)} />
+    }
+    const labels = (html: string) =>
+      [...html.matchAll(/data-label="([^"]+)"/g)].map((match) => match[1])
+    const same = renderToString(
+      <>
+        <Named kind="line chart" />
+        <Named kind="line chart" />
+      </>
+    )
+    n = 0
+    const again = renderToString(
+      <>
+        <Named kind="line chart" />
+        <Named kind="line chart" />
+      </>
+    )
+    spy.mockRestore()
+    expect(labels(same)).toEqual([
+      "Data summary for line chart",
+      "Data summary for line chart (2)"
+    ])
+    expect(labels(again)).toEqual([
+      "Data summary for line chart",
+      "Data summary for line chart (2)"
+    ])
   })
 
   it("keeps nested and base32 summary ids in encounter order", () => {
@@ -244,8 +316,14 @@ describe("AccessibleDataTable styling hooks", () => {
         <AccessibleDataTable tableId="alpha-two" chartType="line chart" scene={scene} />
       </>
     )
-    const alpha = renderToString(tables, { identifierPrefix: "alpha" })
-    const beta = renderToString(tables, { identifierPrefix: "beta" })
+    const alpha = renderToString(
+      <SummaryRegionRoot>{tables}</SummaryRegionRoot>,
+      { identifierPrefix: "alpha" }
+    )
+    const beta = renderToString(
+      <SummaryRegionRoot>{tables}</SummaryRegionRoot>,
+      { identifierPrefix: "beta" }
+    )
     for (const html of [alpha, beta]) {
       expect(html).toContain('aria-label="Data summary for line chart"')
       expect(html).toContain('aria-label="Data summary for line chart (2)"')

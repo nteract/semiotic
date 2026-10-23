@@ -14,43 +14,50 @@ type SummaryScope = {
   ordinals: Map<string, number>
 }
 
-// One scope per server render. React's useId is `_` + identifierPrefix +
-// `R_`/`r_` + an opaque tree token. The prefix owns the render: two
-// identifierPrefix values never share a count. The token is not a decimal
-// counter (`_R_a_` follows `_R_9_`, and a nested tree can step backwards),
-// so ordinals follow encounter order. Token `0` is the render root; seeing
-// it after another chart starts the next same-prefix render. A microtask
-// retires the map so a later request cannot continue an unseen id.
-const scopesByOwner = new Map<string, SummaryScope>()
+// One allocator per server document. `SummaryRegionRoot` owns that document.
+// Charts rendered without it share a single fallback scope: `useId` is unique
+// inside one render, so seeing an id again means the next render reused the
+// tree and the old counts must not leak. The id text is not interpreted.
+// A microtask drops the fallback so a later turn cannot continue unseen ids.
+const SummaryScopeContext = React.createContext<SummaryScope | null>(null)
+let automaticScopeState: SummaryScope | null = null
 let scopeRetirement = false
 
 function freshSummaryScope(): SummaryScope {
   return { counts: new Map(), ordinals: new Map() }
 }
 
-function renderOwner(id: string): { owner: string; token: string } {
-  const match = /^_(.*?)[Rr]_([^H_]+)/.exec(id)
-  return match ? { owner: match[1], token: match[2] } : { owner: id, token: "" }
+function retireAutomaticScope(): void {
+  if (scopeRetirement) return
+  scopeRetirement = true
+  queueMicrotask(() => {
+    automaticScopeState = null
+    scopeRetirement = false
+  })
 }
 
-function automaticScope(id: string): SummaryScope {
-  const { owner, token } = renderOwner(id)
-  let scope = scopesByOwner.get(owner)
-  if (scope && token === "0" && !scope.ordinals.has(id) && scope.ordinals.size > 0) {
-    scope = undefined
+function automaticScope(reactId: string): SummaryScope {
+  if (automaticScopeState?.ordinals.has(reactId)) automaticScopeState = null
+  if (!automaticScopeState) {
+    automaticScopeState = freshSummaryScope()
+    retireAutomaticScope()
   }
-  if (!scope) {
-    scope = freshSummaryScope()
-    scopesByOwner.set(owner, scope)
-    if (!scopeRetirement) {
-      scopeRetirement = true
-      queueMicrotask(() => {
-        scopesByOwner.clear()
-        scopeRetirement = false
-      })
-    }
-  }
-  return scope
+  return automaticScopeState
+}
+
+/** One summary counter for every chart in a server document. */
+export function SummaryRegionRoot({
+  children
+}: {
+  children: React.ReactNode
+}): React.ReactElement {
+  const scope = React.useRef<SummaryScope | null>(null)
+  if (scope.current == null) scope.current = freshSummaryScope()
+  return React.createElement(
+    SummaryScopeContext.Provider,
+    { value: scope.current },
+    children
+  )
 }
 
 function takeRenderOrdinal(scope: SummaryScope, base: string, reactId: string): number {
@@ -75,9 +82,14 @@ export function useUniqueRegionLabel(base: string): string {
   const tokenRef = React.useRef<symbol | null>(null)
   if (tokenRef.current == null) tokenRef.current = Symbol("summary-region")
   const token = tokenRef.current
+  const providedScope = React.useContext(SummaryScopeContext)
   const initialOrdinal = React.useRef<number | null>(null)
   if (initialOrdinal.current == null) {
-    initialOrdinal.current = takeRenderOrdinal(automaticScope(reactId), base, reactId)
+    initialOrdinal.current = takeRenderOrdinal(
+      providedScope ?? automaticScope(reactId),
+      base,
+      reactId
+    )
   }
   const [ordinal, setOrdinal] = React.useState(initialOrdinal.current)
 
