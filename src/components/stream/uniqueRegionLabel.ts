@@ -19,7 +19,7 @@ type SummaryScope = {
 // inside one render, so seeing an id again means the next render reused the
 // tree and the old counts must not leak. The id text is not interpreted.
 // A microtask drops the fallback so a later turn cannot continue unseen ids.
-const SummaryScopeContext = React.createContext<SummaryScope | null>(null)
+const SummaryScopeContext = /* @__PURE__ */ React.createContext<SummaryScope | null>(null)
 let automaticScopeState: SummaryScope | null = null
 let scopeRetirement = false
 
