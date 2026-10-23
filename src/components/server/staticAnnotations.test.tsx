@@ -403,6 +403,23 @@ describe("renderStaticAnnotations", () => {
       expect(svg).toContain('opacity="0.1"')
     })
 
+    it("extends an open ordinal band to the plot edge", () => {
+      const y = (value: string) => value === "A" ? 40 : Number.NaN
+      const svg = renderAnnotationsString({
+        ...baseConfig,
+        scales: { y },
+        layout: { width: 400, height: 200 },
+        annotations: [{ type: "band", y0: "A" }],
+      })
+      expect(svg).toContain('<rect x="0" y="40" width="400" height="160"')
+      const missing = renderAnnotationsString({
+        ...baseConfig,
+        scales: { y },
+        annotations: [{ type: "band", y0: "Z", y1: "A" }],
+      })
+      expect(missing).toBe("")
+    })
+
     it("extends to the domain max when y1 is missing", () => {
       const svg = renderAnnotationsString({
         ...baseConfig,

@@ -52,6 +52,10 @@ describe("underBandRect", () => {
     expect(underBandRect({ type: "x-band", x0: 70, x1: 30 }, scales, 400, 200)).toEqual({ x: 120, y: 0, width: 160, height: 200 })
     expect(underBandRect({ type: "x-band", x0: 20, x1: null }, scales, 400, 200)).toEqual({ x: 80, y: 0, width: 320, height: 200 })
     expect(underBandRect({ type: "band", y0: 20 }, {}, 400, 200)).toBeNull()
+    const ordinalY = (value: string) => value === "A" ? 40 : Number.NaN
+    expect(underBandRect({ type: "band", y0: "A" }, { y: ordinalY }, 400, 200)).toEqual({
+      x: 0, y: 40, width: 400, height: 160,
+    })
   })
 
   it("projects heatmap keys and keeps an omitted bound on the plot edge", () => {

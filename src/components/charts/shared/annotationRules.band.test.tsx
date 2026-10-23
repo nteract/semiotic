@@ -90,6 +90,31 @@ describe("band annotations", () => {
     expect(node).toBeNull()
   })
 
+  it("extends an ordinal band from a category to the plot edge", () => {
+    const o = Object.assign(
+      (value: string) => value === "A" ? 20 : value === "B" ? 100 : undefined,
+      { bandwidth: () => 40 },
+    )
+    const oCentered = (value: string) => (o(value) ?? 0) + o.bandwidth() / 2
+    const ordinal: AnnotationContext = {
+      ...context,
+      frameType: "ordinal",
+      projection: "horizontal",
+      scales: { y: oCentered as unknown as NonNullable<AnnotationContext["scales"]>["y"] },
+    }
+    const svg = renderToStaticMarkup(
+      rules({ type: "band", y0: "A" }, 0, ordinal) as React.ReactElement,
+    )
+    expect(svg).toContain('<rect x="0" y="40" width="400" height="160"')
+    const openX = renderToStaticMarkup(
+      rules({ type: "x-band", x0: 25 }, 0, {
+        ...context,
+        scales: { x: ((value: number) => value * 2) as unknown as NonNullable<AnnotationContext["scales"]>["x"] },
+      }) as React.ReactElement,
+    )
+    expect(openX).toContain('<rect x="50" y="0" width="350" height="200"')
+  })
+
   it("extends band to the domain min/max when y0/y1 is missing", () => {
     // y1 omitted → domain max (100 → px 0, the top of the plot)
     const openTop = renderToStaticMarkup(

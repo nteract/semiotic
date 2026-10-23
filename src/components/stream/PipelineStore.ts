@@ -625,7 +625,7 @@ export class PipelineStore extends UpdateResultStoreBase {
     const xScaleType = config.xScaleType ?? (this.xIsDate ? "utc" : undefined)
     if (xScaleType === "log") {
       const samples = this.positiveAxisSamples(this.getX)
-      xDomain = clampLogDomain(xDomain, samples.positive)
+      xDomain = clampLogDomain(xDomain, samples.positive, config.xExtent)
       this.warnDroppedLogSamples("x", samples.droppedNonPositive)
     }
     if (config.yScaleType === "log") {
@@ -643,7 +643,7 @@ export class PipelineStore extends UpdateResultStoreBase {
             getLow: this.getLow,
             ribbons: this.resolvedRibbons,
           }))
-      yDomain = clampLogDomain(yDomain, samples.positive)
+      yDomain = clampLogDomain(yDomain, samples.positive, config.yExtent)
       this.warnDroppedLogSamples("y", samples.droppedNonPositive)
     }
 

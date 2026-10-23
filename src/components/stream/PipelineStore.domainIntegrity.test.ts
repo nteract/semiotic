@@ -202,6 +202,64 @@ describe("PipelineStore domain integrity", () => {
     expect(yDomain(store)).toEqual([1, 10])
   })
 
+  it("keeps a valid explicit log endpoint when samples fall outside it", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {})
+    const yStore = new PipelineStore(config({
+      yScaleType: "log",
+      yExtent: [0, 10],
+    }))
+    yStore.ingest({
+      inserts: [{ x: 0, y: 0 }, { x: 1, y: 100 }],
+      bounded: true,
+    })
+    yStore.computeScene({ width: 400, height: 200 })
+    expect(yDomain(yStore)).toEqual([1, 10])
+
+    const inside = new PipelineStore(config({
+      yScaleType: "log",
+      yExtent: [0, 10],
+    }))
+    inside.ingest({
+      inserts: [{ x: 0, y: 0 }, { x: 1, y: 4 }],
+      bounded: true,
+    })
+    inside.computeScene({ width: 400, height: 200 })
+    expect(yDomain(inside)).toEqual([4, 10])
+
+    const xStore = new PipelineStore(config({
+      xScaleType: "log",
+      xExtent: [0, 10],
+    }))
+    xStore.ingest({
+      inserts: [{ x: 0, y: 1 }, { x: 100, y: 2 }],
+      bounded: true,
+    })
+    xStore.computeScene({ width: 400, height: 200 })
+    expect(xDomain(xStore)).toEqual([1, 10])
+
+    const reversed = new PipelineStore(config({
+      yScaleType: "log",
+      yExtent: [10, 0],
+    }))
+    reversed.ingest({
+      inserts: [{ x: 0, y: 0 }, { x: 1, y: 100 }],
+      bounded: true,
+    })
+    reversed.computeScene({ width: 400, height: 200 })
+    expect(yDomain(reversed)).toEqual([10, 1])
+
+    const reversedX = new PipelineStore(config({
+      xScaleType: "log",
+      xExtent: [10, 0],
+    }))
+    reversedX.ingest({
+      inserts: [{ x: 0, y: 1 }, { x: 100, y: 2 }],
+      bounded: true,
+    })
+    reversedX.computeScene({ width: 400, height: 200 })
+    expect(xDomain(reversedX)).toEqual([10, 1])
+  })
+
   it("uses one decade when padding leaves a positive end and no positive sample", () => {
     const store = new PipelineStore(config({
       yScaleType: "log",

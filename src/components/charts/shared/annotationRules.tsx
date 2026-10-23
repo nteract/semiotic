@@ -317,7 +317,12 @@ export function createDefaultAnnotationRules(
         // (y0 → domain min, y1 → domain max) instead of being treated as 0.
         const y0px = projectHeatmapBandBound(scaleY, ann.y0, 0)
         const y1px = projectHeatmapBandBound(scaleY, ann.y1, 1)
-        if (scaleY && (y0px == null || y1px == null)) return null
+        // Ordinal category scales have no domain(). An omitted bound still
+        // extends to the plot edge; only a failed explicit key is dropped.
+        if (
+          scaleY &&
+          ((ann.y0 != null && y0px == null) || (ann.y1 != null && y1px == null))
+        ) return null
         const y0 = y0px ?? 0
         const y1 = y1px ?? (context.height || 0)
         // Region fill may be a declarative HatchFill → inline <pattern>. A
@@ -358,23 +363,25 @@ export function createDefaultAnnotationRules(
         // (x0 → domain min, x1 → domain max) rather than skipping the band.
         const x0px = projectHeatmapBandBound(scaleX, ann.x0, 0)
         const x1px = projectHeatmapBandBound(scaleX, ann.x1, 1)
-        if (x0px == null || x1px == null) return null
+        if ((ann.x0 != null && x0px == null) || (ann.x1 != null && x1px == null)) return null
+        const x0 = x0px ?? 0
+        const x1 = x1px ?? (context.width || 0)
         const xBandFill = resolveAnnotationBandFill(ann, `ann-${index}`, "horizontal", "var(--semiotic-primary, #6366f1)")
         const fillUnderMarks = underLayerBands && ann.layer === "under"
         return (
           <g key={`ann-${index}`} opacity={ann.opacity}>
             {!fillUnderMarks && xBandFill.def && <defs>{xBandFill.def}</defs>}
             {!fillUnderMarks && <rect
-              x={Math.min(x0px, x1px)}
+              x={Math.min(x0, x1)}
               y={0}
-              width={Math.abs(x1px - x0px)}
+              width={Math.abs(x1 - x0)}
               height={context.height || 0}
               fill={xBandFill.fill}
               fillOpacity={ann.fillOpacity ?? 0.1}
             />}
             {ann.label && (
               <AnnotationLabel
-                x={Math.min(x0px, x1px) + 4}
+                x={Math.min(x0, x1) + 4}
                 y={TOP_LABEL_BASELINE}
                 textAnchor="start"
                 fill={ann.labelColor ?? (ann.color || "var(--semiotic-primary, #6366f1)")}

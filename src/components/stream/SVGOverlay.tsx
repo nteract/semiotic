@@ -34,7 +34,7 @@ import {
   tickPixelExtent
 } from "./svgOverlayUtils"
 import { generateXYTicks, axisTickDataValue, axisTicksNeedRotation } from "./xyAxisTicks"
-import { projectHeatmapBandComputedValue } from "./heatmapBandTicks"
+import { heatmapDataScale, projectHeatmapBandComputedValue } from "./heatmapBandTicks"
 import { SVGChartTitle } from "./SVGChartTitle"
 import {
   overlayAccessibleDescription,
@@ -681,7 +681,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
                   orient="top"
                   config={normalizeMarginalConfig(marginalGraphics.top)}
                   values={xValues}
-                  scale={scales.x}
+                  scale={heatmapDataScale(scales.x)}
                   size={margin.top}
                   length={width}
                 />
@@ -693,7 +693,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
                   orient="bottom"
                   config={normalizeMarginalConfig(marginalGraphics.bottom)}
                   values={xValues}
-                  scale={scales.x}
+                  scale={heatmapDataScale(scales.x)}
                   size={margin.bottom}
                   length={width}
                 />
@@ -705,7 +705,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
                   orient="left"
                   config={normalizeMarginalConfig(marginalGraphics.left)}
                   values={yValues}
-                  scale={scales.y}
+                  scale={heatmapDataScale(scales.y)}
                   size={margin.left}
                   length={height}
                 />
@@ -717,7 +717,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
                   orient="right"
                   config={normalizeMarginalConfig(marginalGraphics.right)}
                   values={yValues}
-                  scale={scales.y}
+                  scale={heatmapDataScale(scales.y)}
                   size={margin.right}
                   length={height}
                 />

@@ -2,7 +2,7 @@
 import * as React from "react"
 import { useMemo } from "react"
 import { bin as d3Bin } from "d3-array"
-import type { ScaleLinear } from "d3-scale"
+
 import type { MarginalConfig } from "./types"
 import { getMax } from "../charts/shared/minMax"
 import { normalizeMarginalConfig } from "./marginalConfig"
@@ -17,7 +17,10 @@ export interface MarginalGraphicsProps {
   /** Raw numeric values along the relevant axis */
   values: number[]
   /** The chart's scale for the axis this marginal summarizes */
-  scale: ScaleLinear<number, number>
+  scale: {
+    (value: number): number
+    domain(): Array<number | Date>
+  }
   /** Available pixel space in the margin (perpendicular to axis) */
   size: number
   /** Chart width (top/bottom) or height (left/right) */

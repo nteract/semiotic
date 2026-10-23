@@ -425,9 +425,12 @@ function renderAnnotation(
     case "band": {
       // A null/omitted bound extends to the axis extent on that side
       // (y0 → domain min, y1 → domain max) rather than skipping the band.
-      const y0 = projectHeatmapBandBound(scales.y, ann.y0, 0)
-      const y1 = projectHeatmapBandBound(scales.y, ann.y1, 1)
-      if (y0 == null || y1 == null) return null
+      if (typeof scales.y !== "function") return null
+      const projectedY0 = projectHeatmapBandBound(scales.y, ann.y0, 0)
+      const projectedY1 = projectHeatmapBandBound(scales.y, ann.y1, 1)
+      if ((ann.y0 != null && projectedY0 == null) || (ann.y1 != null && projectedY1 == null)) return null
+      const y0 = projectedY0 ?? 0
+      const y1 = projectedY1 ?? layout.height
       const top = Math.min(y0, y1)
       const height = Math.abs(y1 - y0)
       // Region fill may be a declarative HatchFill → inline <pattern>.
@@ -469,9 +472,12 @@ function renderAnnotation(
     case "x-band": {
       // A null/omitted bound extends to the axis extent on that side
       // (x0 → domain min, x1 → domain max) rather than skipping the band.
-      const x0 = projectHeatmapBandBound(scales.x, ann.x0, 0)
-      const x1 = projectHeatmapBandBound(scales.x, ann.x1, 1)
-      if (x0 == null || x1 == null) return null
+      if (typeof scales.x !== "function") return null
+      const projectedX0 = projectHeatmapBandBound(scales.x, ann.x0, 0)
+      const projectedX1 = projectHeatmapBandBound(scales.x, ann.x1, 1)
+      if ((ann.x0 != null && projectedX0 == null) || (ann.x1 != null && projectedX1 == null)) return null
+      const x0 = projectedX0 ?? 0
+      const x1 = projectedX1 ?? layout.width
       const left = Math.min(x0, x1)
       const width = Math.abs(x1 - x0)
       const xBandFill = resolveAnnotationBandFill(
