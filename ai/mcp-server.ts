@@ -51,7 +51,7 @@ import {
   ResourceTemplate
 } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
-import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js"
+import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js"
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js"
 import { withMcpOperationLimits } from "./mcp-operation-transport"
 import { boundedMcpStdin } from "./mcp-stdio-input"
@@ -70,6 +70,7 @@ import * as path from "path"
 import * as http from "http"
 import { McpStartupOptionsError, resolveMcpServerOptions } from "./mcp-server-options"
 import { capMcpToolResult } from "./mcp-tool-output-limits"
+import { handleMcpHttpRequest } from "./mcp-http-response"
 import { createMcpHttpAccessPolicy } from "./mcp-http-access"
 import { isAuthorizedRequest } from "./mcp-http-auth"
 import { mcpClientKey, resolveMcpTrustedProxyHops } from "./mcp-client-key"
@@ -5507,7 +5508,7 @@ async function main() {
           signal: requestAbortSignal,
           limits: renderExecutionLimits
         })
-        const transport = new StreamableHTTPServerTransport({
+        const transport = new WebStandardStreamableHTTPServerTransport({
           sessionIdGenerator: undefined,
           enableJsonResponse: true
         })
@@ -5528,7 +5529,7 @@ async function main() {
         res.on("close", teardown)
         try {
           await srv.connect(withMcpOperationLimits(transport, operationLimits))
-          await transport.handleRequest(req, res, bodyResult.body)
+          await handleMcpHttpRequest(transport, req, res, bodyResult.body, requestAbortSignal)
           // Completion metrics are deliberately content-free. They make the
           // hosted policy measurable without recording a tool name, headers,
           // JSON-RPC id, arguments, chart output, or any raw error text.

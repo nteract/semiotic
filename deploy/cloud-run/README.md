@@ -248,7 +248,10 @@ process failures use `MCP_OPERATION_FAILED`. No partial rendering is reported
 as successful. Size limits still cap render and widget responses before IPC.
 
 The complete-result ceiling also covers recommendations, diagnoses, audits,
-and SDK dispatch/validation errors. Oversized tool results become
+and SDK dispatch/validation errors. Direct SDK HTTP rejections share this
+ceiling, including errors raised before tool dispatch; their HTTP status is
+preserved and oversized bodies are replaced before response headers are sent.
+Oversized tool results become
 `OUTPUT_LIMIT_EXCEEDED` errors; successful recommendations retain their full
 configuration and data. Reduce input or requested results, or raise
 `MCP_MAX_TOOL_OUTPUT_BYTES` deliberately. Render and widget limits remain

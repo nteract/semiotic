@@ -25,6 +25,65 @@ describe("shipped MCP complete response limits", () => {
     directory = undefined
   })
 
+  it.each(["developer", "public"])(
+    "bounds direct HTTP transport errors for the %s profile",
+    async (profile) => {
+      const started = await spawnReadyHTTPServer(
+        {
+          MCP_MAX_TOOL_OUTPUT_BYTES: "1024",
+          MCP_SUPPORTED_PROTOCOL_VERSIONS: ""
+        },
+        [`--profile=${profile}`]
+      )
+      proc = started.proc
+      const post = (version?: string) =>
+        fetch(`http://127.0.0.1:${started.port}/mcp`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json, text/event-stream",
+            ...(version === undefined
+              ? {}
+              : { "MCP-Protocol-Version": version })
+          },
+          body: JSON.stringify({ jsonrpc: "2.0", id: 0, method: "tools/list" })
+        })
+      const rejected = await post("private-value".repeat(300))
+      expect(rejected.status).toBe(400)
+      const text = await rejected.text()
+      expect(Buffer.byteLength(text)).toBeLessThanOrEqual(1024)
+      expect(text).not.toContain("private-value")
+      expect(JSON.parse(text)).toMatchObject({
+        jsonrpc: "2.0",
+        id: null,
+        error: { data: { code: "OUTPUT_LIMIT_EXCEEDED", maximumBytes: 1024 } }
+      })
+      const smallError = await post("unsupported")
+      expect(smallError.status).toBe(400)
+      expect((await smallError.json()).error.message).toContain(
+        "Unsupported protocol version: unsupported"
+      )
+      const recovered = await post()
+      expect(recovered.status).toBe(200)
+      const listed = await recovered.json()
+      expect(listed.id).toBe(0)
+      expect(listed.result.tools.length).toBe(profile === "public" ? 5 : 24)
+      const accepted = await fetch(`http://127.0.0.1:${started.port}/mcp`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json, text/event-stream"
+        },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          method: "notifications/initialized"
+        })
+      })
+      expect(accepted.status).toBe(202)
+      expect(await accepted.text()).toBe("")
+    }
+  )
+
   for (const mode of ["stdio", "http"] as const) {
     it.each(["developer", "public"])(
       `bounds a non-render %s tool on ${mode} and retains protocol access`,
