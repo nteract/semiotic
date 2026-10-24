@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="400" height="240" viewBox="0 0 400 240" class="stream-ordinal-frame" data-semiotic-auto="chart" role="img" aria-labelledby="chart-title">
+  <title id="chart-title">Revenue</title>
+  <style>
+    @import url(https://evil.test/import);
+    @\69mport "https://evil.test/escaped-import";
+    @font-face {font-family:evil;src:url(https://evil.test/font)}
+    body {display:none;background:url(https://evil.test/background)}
+    :root {--semiotic-primary:oklch(50% 0.1 30);--semiotic-font-family:"ACME; Sans } /* Text */", serif;--semiotic-bg:\75 rl(https://evil.test/theme)}
+    @media (prefers-color-scheme:dark) { [data-semiotic-auto="chart"] {--semiotic-primary:rgb(20 30 40)} }
+    .annotation-deferred {opacity:0;pointer-events:none;transition:opacity .12s ease}
+    .stream-ordinal-frame:hover .annotation-deferred {opacity:1}
+    @media (prefers-reduced-motion:reduce) {.annotation-deferred {transition:none}}
+    rect {cursor:url(https://evil.test/cursor),auto;stroke:u\72l(https://evil.test/stroke)}
+    @import "https://evil.test/unterminated"
+  </style>
+  <defs>
+    <linearGradient id="paint"><stop offset="0" stop-color="#286090"/><stop offset="1" stop-color="#4890b0"/></linearGradient>
+    <clipPath id="clip"><rect width="400" height="240"/></clipPath>
+    <path id="local-path" d="M10 10L20 20"/>
+  </defs>
+  <g clip-path="url(#clip)">
+    <rect id="revenue" x="40" y="30" width="100" height="160" fill="url(#paint)" aria-label="North revenue: 10" formaction="x" foo="y" attributeName="href" to="https://evil.test/to" xlink:actuate="onLoad" onclick="window.__widgetExecuted=true"/>
+    <rect id="remote-paint" x="160" y="30" width="100" height="160" fill="url(https://evil.test/paint.svg#x)" style="fill:url(https://evil.test/inline.svg#x);opacity:0.5" aria-label="South revenue: 18"/>
+    <text id="theme-text" x="40" y="220" fill="var(--semiotic-primary,red)" style="font-family:var(--semiotic-font-family)">Revenue</text>
+    <text class="annotation-deferred" x="40" y="20">Deferred annotation</text>
+    <use href="https://evil.test/use.svg#x"/>
+    <use href="data:image/svg+xml;base64,PHN2Zy8+"/>
+    <use xlink:href="#local-path"/>
+    <image href="https://evil.test/image.png"/>
+  </g>
+  <foreignObject><img xmlns="http://www.w3.org/1999/xhtml" src="https://evil.test/html.png" onerror="window.__widgetExecuted=true"/></foreignObject>
+  <script>window.__widgetExecuted=true</script>
+  <animate attributeName="href" to="https://evil.test/animate"/>
+  <rect xmlns="https://evil.test/namespace" width="400" height="240"/>
+</svg>
