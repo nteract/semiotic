@@ -628,6 +628,11 @@ host-header allowlisting. For ChatGPT Apps domain verification, set
 `OPENAI_APPS_CHALLENGE_TOKEN` so HTTP mode serves the raw token from
 `/.well-known/openai-apps-challenge`.
 
+Use `--profile=public` for the five-tool public surface; separated option values
+also work. Explicit invalid profiles or malformed options stop startup. Both
+profiles and transports cap complete tool responses at 2 MiB by default through
+`MCP_MAX_TOOL_OUTPUT_BYTES`, returning an explicit error for oversized results.
+
 ### Tools
 
 | Tool | Description |

@@ -1,8 +1,11 @@
+// @vitest-environment node
+
 import { existsSync, mkdtempSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import * as childProcess from "node:child_process"
 import { EventEmitter } from "node:events"
+import { buildSync } from "esbuild"
 import {
   createMcpOperationRunner,
   resolveMcpExecutionLimits
@@ -109,6 +112,44 @@ describe("isolated MCP execution", () => {
       value.run(job("success"), [controller.signal])
     ).rejects.toMatchObject({ code: "MCP_RENDER_CANCELLED" })
     expect(value.active()).toBe(0)
+  })
+
+  it("continues handling SIGTERM after the last operation exits", async () => {
+    const directory = mkdtempSync(path.join(tmpdir(), "mcp-idle-signal-"))
+    directories.push(directory)
+    const compiledRunner = path.join(directory, "runner.cjs")
+    buildSync({
+      entryPoints: [path.resolve(__dirname, "mcp-operation-runner.ts")],
+      outfile: compiledRunner,
+      bundle: true,
+      platform: "node",
+      format: "cjs"
+    })
+    const parent = childProcess.fork(
+      path.resolve(__dirname, "__fixtures__/mcp-operation-owner.cjs"),
+      [compiledRunner, fixture],
+      { stdio: ["ignore", "ignore", "ignore", "ipc"], execArgv: [] }
+    )
+    try {
+      await new Promise<void>((resolve, reject) => {
+        parent.once("message", () => resolve())
+        parent.once("error", reject)
+        parent.once("exit", () =>
+          reject(new Error("Runner owner exited before becoming idle"))
+        )
+      })
+      const stopped = new Promise<{
+        code: number | null
+        signal: string | null
+      }>((resolve) => {
+        parent.once("exit", (code, signal) => resolve({ code, signal }))
+      })
+      parent.kill("SIGTERM")
+      await expect(stopped).resolves.toEqual({ code: 0, signal: null })
+    } finally {
+      if (parent.exitCode === null && parent.signalCode === null)
+        parent.kill("SIGKILL")
+    }
   })
 
   it("settles a child crash and releases capacity", async () => {

@@ -66,12 +66,21 @@ export function createMcpOperationRunner(
   launch: typeof fork = fork
 ) {
   const children = new Set<ChildProcess>()
+  let listening = false
   const killAll = () => {
     for (const child of children) child.kill("SIGKILL")
   }
   const stop = () => {
     killAll()
     process.exit(0)
+  }
+  const close = () => {
+    killAll()
+    if (!listening) return
+    listening = false
+    process.removeListener("exit", killAll)
+    process.removeListener("SIGTERM", stop)
+    process.removeListener("SIGINT", stop)
   }
 
   function run<T>(
@@ -106,7 +115,8 @@ export function createMcpOperationRunner(
         execArgv: [`--max-old-space-size=${limits.maxHeapMb}`],
         serialization: "advanced"
       })
-      if (!children.size) {
+      if (!listening) {
+        listening = true
         process.once("exit", killAll)
         process.once("SIGTERM", stop)
         process.once("SIGINT", stop)
@@ -219,11 +229,8 @@ export function createMcpOperationRunner(
       )
       const reap = () => {
         if (!children.delete(child)) return
-        if (!children.size) {
-          process.removeListener("exit", killAll)
-          process.removeListener("SIGTERM", stop)
-          process.removeListener("SIGINT", stop)
-        }
+        // Keep signal handling stable while the runner is idle. Removing it
+        // here can swallow a SIGTERM already queued during child teardown.
         finish(
           new McpExecutionError(
             "MCP_OPERATION_FAILED",
@@ -249,5 +256,5 @@ export function createMcpOperationRunner(
     })
   }
 
-  return { run, close: killAll, active: () => children.size }
+  return { run, close, active: () => children.size }
 }

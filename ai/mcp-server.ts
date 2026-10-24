@@ -51,7 +51,7 @@ import {
   ResourceTemplate
 } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
-import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js"
+import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js"
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js"
 import { withMcpOperationLimits } from "./mcp-operation-transport"
 import { boundedMcpStdin } from "./mcp-stdio-input"
@@ -68,7 +68,9 @@ import { ownRecordSchema } from "./ownRecordSchema"
 import * as fs from "fs"
 import * as path from "path"
 import * as http from "http"
-import { resolveHTTPListenHost } from "./mcp-server-options"
+import { McpStartupOptionsError, resolveMcpServerOptions } from "./mcp-server-options"
+import { capMcpToolResult } from "./mcp-tool-output-limits"
+import { handleMcpHttpRequest } from "./mcp-http-response"
 import { createMcpHttpAccessPolicy } from "./mcp-http-access"
 import { isAuthorizedRequest } from "./mcp-http-auth"
 import { mcpClientKey, resolveMcpTrustedProxyHops } from "./mcp-client-key"
@@ -5152,23 +5154,6 @@ function createServer(
 }
 
 // ── Startup ──────────────────────────────────────────────────────────────
-const cliArgs = process.argv.slice(2)
-const httpMode = cliArgs.includes("--http")
-const profileFlagIndex = cliArgs.indexOf("--profile")
-const requestedProfile =
-  profileFlagIndex !== -1
-    ? cliArgs[profileFlagIndex + 1]
-    : process.env.MCP_TOOL_PROFILE
-const toolProfile: ToolProfile =
-  requestedProfile === "public" ? "public" : "developer"
-const portFlagIndex = cliArgs.indexOf("--port")
-const parsedPort =
-  portFlagIndex !== -1 && cliArgs[portFlagIndex + 1] != null
-    ? parseInt(cliArgs[portFlagIndex + 1], 10)
-    : NaN
-const port = Number.isFinite(parsedPort) ? parsedPort : 3001
-const host = resolveHTTPListenHost(cliArgs)
-
 function operationLimitForMcpRequest(
   body: unknown,
   limits: ReturnType<typeof resolveMcpOperationLimits>
@@ -5196,6 +5181,9 @@ function operationLimitForMcpRequest(
 }
 
 async function main() {
+  const { httpMode, profile: toolProfile, port, host } = resolveMcpServerOptions(
+    process.argv.slice(2)
+  )
   if (httpMode) {
     // HTTP mode — STATELESS Streamable HTTP: a fresh McpServer + transport per
     // request, no session map. Every Semiotic tool is an independent read-only
@@ -5520,7 +5508,7 @@ async function main() {
           signal: requestAbortSignal,
           limits: renderExecutionLimits
         })
-        const transport = new StreamableHTTPServerTransport({
+        const transport = new WebStandardStreamableHTTPServerTransport({
           sessionIdGenerator: undefined,
           enableJsonResponse: true
         })
@@ -5541,7 +5529,7 @@ async function main() {
         res.on("close", teardown)
         try {
           await srv.connect(withMcpOperationLimits(transport, operationLimits))
-          await transport.handleRequest(req, res, bodyResult.body)
+          await handleMcpHttpRequest(transport, req, res, bodyResult.body, requestAbortSignal)
           // Completion metrics are deliberately content-free. They make the
           // hosted policy measurable without recording a tool name, headers,
           // JSON-RPC id, arguments, chart output, or any raw error text.
@@ -5606,7 +5594,7 @@ async function runOperationChild(job: McpOperationJob) {
   const [client, server] = InMemoryTransport.createLinkedPair()
   client.onmessage = (message) => {
     if (!("id" in message) || message.id !== 1) return
-    if ("result" in message) process.send?.({ type: "result", result: message.result })
+    if ("result" in message) process.send?.({ type: "result", result: capMcpToolResult(message.result) })
     else process.send?.({ type: "failure" })
   }
   await srv.connect(server)
@@ -5621,9 +5609,11 @@ if (isMcpOperationChild()) {
     void runOperationChild(job).catch(() => process.send?.({ type: "failure" }))
   })
   process.once("disconnect", () => process.exit(0))
-} else main().catch(() => {
+} else main().catch((error) => {
   // Startup errors can include environment- or dependency-provided text. Keep
   // process output metadata-only for the same reason as request failures.
-  mcpLogger.error("service_fatal", { reason: "service_startup_failure" })
+  mcpLogger.error("service_fatal", {
+    reason: error instanceof McpStartupOptionsError ? error.code : "service_startup_failure"
+  })
   process.exit(1)
 })

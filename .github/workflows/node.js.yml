@@ -123,6 +123,19 @@ jobs:
           npm run test:coverage:shard -- --shard=${{ matrix.shard }}/2
           --outputFile.blob=vitest-reports/blob-${{ matrix.shard }}-2.json
 
+      - name: Check deterministic AI reference fixtures
+        if: matrix.shard == 1
+        run: npm run --silent eval:ai > ai-reference-eval.json
+
+      - name: Upload AI reference evaluation
+        if: always() && matrix.shard == 1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: ai-reference-eval
+          path: ai-reference-eval.json
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Upload coverage shard
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7

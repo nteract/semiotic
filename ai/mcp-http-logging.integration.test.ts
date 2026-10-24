@@ -1,18 +1,8 @@
 import { spawn, type ChildProcess } from "child_process"
-import { existsSync } from "fs"
 import * as http from "http"
 import * as net from "net"
-import * as path from "path"
 import { describe, expect, it } from "vitest"
-
-const SERVER_PATH = path.resolve(__dirname, "dist/mcp-server.js")
-const REQUIRED_BUNDLES = [
-  SERVER_PATH,
-  path.resolve(__dirname, "../dist/semiotic-ai.min.js"),
-  path.resolve(__dirname, "../dist/geo.min.js"),
-  path.resolve(__dirname, "../dist/server.min.js"),
-]
-const SERVER_DEPS_READY = REQUIRED_BUNDLES.every(existsSync)
+import { SERVER_PATH } from "../src/__tests__/scenarios/mcpStdioHarness"
 
 function getOpenPort(): Promise<number> {
   return new Promise((resolve, reject) => {
@@ -139,7 +129,7 @@ function stop(proc: ChildProcess): Promise<void> {
   })
 }
 
-describe.skipIf(!SERVER_DEPS_READY)("MCP HTTP metadata-only logging", () => {
+describe("MCP HTTP metadata-only logging", () => {
   it("renders a completed stateless tools/call request without cancelling it", async () => {
     const port = await getOpenPort()
     const proc = spawnHTTPServer(port)

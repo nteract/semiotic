@@ -173,6 +173,14 @@ Run stable endpoint, the surface manifest, and GitHub Releases.
 
 ## Environment variables
 
+The executable accepts both `--profile public` and `--profile=public`, and
+the same separated or equals forms for `--port` and `--host`. An explicit
+profile must be exactly `public` or `developer`; unknown options, duplicate
+options, missing values, and invalid profiles stop startup with a nonzero
+exit code. Ports must be decimal integers from 0 through 65535. The default
+profile is `developer` only when neither the CLI nor `MCP_TOOL_PROFILE` supplies
+one; a valid CLI profile takes precedence over the environment.
+
 | Var | Default | Purpose |
 |---|---|---|
 | `PORT` | `8080` (Cloud Run sets this) | Listen port. |
@@ -184,6 +192,7 @@ Run stable endpoint, the surface manifest, and GitHub Releases.
 | `MCP_AUTH_SCHEME` | `Bearer` | Optional auth scheme matcher. Keep as `Bearer` unless your front proxy rewrites credentials. |
 | `MCP_SUPPORTED_PROTOCOL_VERSIONS` | unset (disabled) | Optional comma-separated allowlist for inbound `MCP-Protocol-Version`. If unset, the server accepts any protocol value and still returns `MCP-Protocol-Version: 2024-11-05`. |
 | `MCP_MAX_BODY_BYTES` | `4194304` (4 MB) | HTTP request-body ceiling; larger bodies get 413 and the connection closes before any tool runs. Also bounds each stdio JSON line (including its newline) before parsing; an oversized line receives an error with `id: null`, is drained, and subsequent lines remain usable. |
+| `MCP_MAX_TOOL_OUTPUT_BYTES` | `2097152` (2 MiB) | Maximum UTF-8 JSON bytes in a complete tool result, including content, structured data, and hidden metadata. Applies to both profiles and transports, before child IPC and response serialization. Protocol errors share this ceiling; metadata/resource discovery is separate. |
 | `MCP_BODY_TIMEOUT_MS` | `10000` | Total time to receive a JSON body; stalled uploads get 408 and the connection closes. Uploads do not occupy tool execution slots. HTTP headers also have a 10-second timeout. |
 | `MCP_MAX_CONCURRENT_UPLOADS` | `16` | Maximum bodies being received or parsed at once, independent of execution capacity. Excess uploads get 429 and the connection closes; they are not queued. Slots release after parsing or any failure, before execution admission. At the default body ceiling, active readers retain at most 64 MB of raw body chunks, plus transient parsing overhead. |
 | `MCP_MAX_CONCURRENT_REQUESTS` | `16` | Maximum HTTP requests executing after body parsing and operation-limit validation. Tool execution also uses the process cap below. |
@@ -237,6 +246,19 @@ across repeated uses of that stage within the operation. Timeout and
 cancellation responses use `MCP_RENDER_TIMEOUT` and `MCP_RENDER_CANCELLED`;
 process failures use `MCP_OPERATION_FAILED`. No partial rendering is reported
 as successful. Size limits still cap render and widget responses before IPC.
+
+The complete-result ceiling also covers recommendations, diagnoses, audits,
+and SDK dispatch/validation errors. Direct SDK HTTP rejections share this
+ceiling, including errors raised before tool dispatch; their HTTP status is
+preserved and oversized bodies are replaced before response headers are sent.
+Oversized tool results become
+`OUTPUT_LIMIT_EXCEEDED` errors; successful recommendations retain their full
+configuration and data. Reduce input or requested results, or raise
+`MCP_MAX_TOOL_OUTPUT_BYTES` deliberately. Render and widget limits remain
+additional ceilings, so raising one does not raise the other. Fixed-size
+limit errors remain deliverable even when a configured cap is smaller than
+the error itself; partial JSON, SVG, and silently truncated configurations
+are never returned.
 
 The stdio byte limit applies before JSON parsing. The row/cell/depth limits
 apply before tool dispatch on both transports, and count collection entries,
