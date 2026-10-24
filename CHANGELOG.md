@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `EventDropChart` `sourceRail.side: "right"` places producer tiles on the
+  right edge. The plot insets from the right, travel starts at those tiles,
+  and the late gutter stays on the left.
 - LiteLLM evaluation provider with configurable proxy URLs, model pricing
   discovery, reasoning-token cost estimates, and spend checks that reject
   partially priced model deployments. Run it with `npm run eval:ai:litellm`.

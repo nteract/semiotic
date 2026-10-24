@@ -24,7 +24,7 @@ const eventDropChartProps = [
   { name: "arrival", type: "string | object", default: '"drop"', description: 'Source choreography: "drop" or { mode: "travel", durationMs?: 800, speedPxPerSec?, path?: "straight" | "connector" | callback, history?: "present" | "travel" }. History defaults to present; travel animates every row. Choose duration or speed. Requires a visible source and the built-in engine.' },
   { name: "sources", type: "array", description: "Source identities with id, label, color, mark, glyph, active and visible. Historical counts remain when a tile is hidden." },
   { name: "sourceAccessor", type: "string | function", default: '"source"', description: "Field identifying an event's source." },
-  { name: "sourceRail", type: "object", description: "{ side: left | top | none, tileSize? }. Use top for a narrow board." },
+  { name: "sourceRail", type: "object", description: "{ side: left | right | top | none, tileSize? }. Use top for a narrow board. right keeps the late gutter on the left." },
   { name: "onSourceClick", type: "function", description: "Called with the source on click, Enter or Space; the host updates active state." },
   { name: "timeUnit", type: '"ms" | "s"', description: "Explicit arrival-time units. Omitted infers ms above an absolute timestamp of 100000; use explicit units for stable streaming behavior." },
   { name: "onLedgerChange", type: "function", description: "Receives admission ledger rows, on lifecycle transitions or at most every 500ms during accumulation." },

@@ -116,7 +116,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       styleRules: STYLE_RULES_PROP_SPEC,
       sources: { type: "array", description: "Source definitions: id, label, color, mark, glyph, active, visible, description. Source identity sets body defaults and accessible rail tiles." },
       sourceAccessor: { type: ["string", "function"], default: "source", description: "Source identity field for per-source ledger totals and marks." },
-      sourceRail: { type: "object", description: "Source rail placement: { side: left | top | none, tileSize? }." },
+      sourceRail: { type: "object", description: "Source rail placement: { side: left | right | top | none, tileSize? }. right mirrors left and keeps the late gutter on the left.", schema: { properties: { side: { type: "string", enum: ["left", "right", "top", "none"] }, tileSize: { type: "number" } } } },
       onSourceClick: { type: "function", description: "Called with the source definition when its tile is clicked or keyboard-activated; update source.active in the host." },
       timeUnit: { type: "string", enum: ["ms", "s"] as const, description: "Time units for arrival pacing. Explicit units are recommended; omitted infers ms when an absolute event or arrival time exceeds 100000, otherwise seconds." },
       onLedgerChange: { type: "function", description: "Receives source admission ledger rows on lifecycle changes or at most every 500ms during accumulation. Counts describe the source snapshot." },

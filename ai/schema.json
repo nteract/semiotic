@@ -32675,7 +32675,21 @@
             },
             "sourceRail": {
               "type": "object",
-              "description": "Source rail placement: { side: left | top | none, tileSize? }."
+              "description": "Source rail placement: { side: left | right | top | none, tileSize? }. right mirrors left and keeps the late gutter on the left.",
+              "properties": {
+                "side": {
+                  "type": "string",
+                  "enum": [
+                    "left",
+                    "right",
+                    "top",
+                    "none"
+                  ]
+                },
+                "tileSize": {
+                  "type": "number"
+                }
+              }
             },
             "onSourceClick": {
               "description": "Called with the source definition when its tile is clicked or keyboard-activated; update source.active in the host.",
