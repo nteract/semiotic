@@ -34,7 +34,7 @@ export function spawnHTTPServer(
 }
 
 /** Reserve an open port long enough to avoid hard-coding one in tests. */
-function getOpenPort(): Promise<number> {
+export function getOpenPort(): Promise<number> {
   return new Promise((resolve, reject) => {
     const server = net.createServer()
     server.once("error", reject)
@@ -54,7 +54,7 @@ function getOpenPort(): Promise<number> {
  * The server intentionally no longer writes a human-readable host/port line:
  * all hosted-service logs use the bounded MCP metadata schema.
  */
-function waitForHTTPServer(proc: ChildProcess): Promise<void> {
+export function waitForHTTPServer(proc: ChildProcess): Promise<void> {
   return new Promise((resolve, reject) => {
     let stderr = ""
 

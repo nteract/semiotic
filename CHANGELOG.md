@@ -18,6 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- MCP startup validates profiles and options, supports equals-form arguments,
+  and rejects configuration typos that previously exposed developer tools.
+  All tool responses now share a configurable size ceiling before child IPC
+  and transport serialization, including SDK-generated errors.
+  Shutdown signal handling remains active between tool calls so idle child
+  cleanup cannot swallow a concurrent termination signal.
 - MCP tool execution runs in bounded child processes, so deadlines and
   cancellation stop synchronous rendering and native PNG work while the
   server remains responsive. HTTP and stdio share argument limits; stdio

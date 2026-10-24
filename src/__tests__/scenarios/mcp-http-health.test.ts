@@ -1,19 +1,9 @@
 /** Focused HTTP health-route coverage, separate from the broad MCP protocol suite. */
 import { spawn, type ChildProcess } from "child_process"
-import { existsSync } from "fs"
 import * as http from "http"
 import * as net from "net"
-import * as path from "path"
 import { afterEach, describe, expect, it } from "vitest"
-
-const SERVER_PATH = path.resolve(__dirname, "../../../ai/dist/mcp-server.js")
-const REQUIRED_BUNDLES = [
-  SERVER_PATH,
-  path.resolve(__dirname, "../../../dist/semiotic-ai.min.js"),
-  path.resolve(__dirname, "../../../dist/geo.min.js"),
-  path.resolve(__dirname, "../../../dist/server.min.js"),
-]
-const SERVER_DEPS_READY = REQUIRED_BUNDLES.every(existsSync)
+import { SERVER_PATH } from "./mcpStdioHarness"
 
 function openPort(): Promise<number> {
   return new Promise((resolve, reject) => {
@@ -106,7 +96,7 @@ function request(port: number, pathname: string, headers: Record<string, string>
   })
 }
 
-describe.skipIf(!SERVER_DEPS_READY)("MCP HTTP health route", () => {
+describe("MCP HTTP health route", () => {
   let proc: ChildProcess | undefined
 
   afterEach(async () => {

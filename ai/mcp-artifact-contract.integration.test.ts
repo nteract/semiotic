@@ -12,8 +12,8 @@ import type {
 } from "../src/components/artifact/types"
 import type { Datum } from "../src/components/charts/shared/datumTypes"
 import type { JsonRpcResponse } from "../src/__tests__/scenarios/mcpProtocolTypes"
+import { SERVER_PATH } from "../src/__tests__/scenarios/mcpStdioHarness"
 
-const SERVER_PATH = path.resolve(__dirname, "dist/mcp-server.js")
 const CLI_PATH = path.resolve(__dirname, "cli.js")
 const REQUIRED_FILES = [
   SERVER_PATH,
@@ -23,7 +23,9 @@ const REQUIRED_FILES = [
   path.resolve(__dirname, "../dist/server.min.js"),
   path.resolve(__dirname, "../spec/v0.1/artifact-contract.schema.json")
 ]
-const SERVER_DEPS_READY = REQUIRED_FILES.every(existsSync)
+for (const file of REQUIRED_FILES) {
+  if (!existsSync(file)) throw new Error(`MCP artifact tests require ${file}`)
+}
 const MCP_PROCESS_TEST_TIMEOUT_MS = 20_000
 const ARTIFACT_SCHEMA_URI = "semiotic://artifact-contract-schema"
 
@@ -279,7 +281,7 @@ function transportParity(value: Datum) {
   }
 }
 
-describe.skipIf(!SERVER_DEPS_READY)("MCP artifact contract integration", () => {
+describe("MCP artifact contract integration", () => {
   it(
     "keeps library, CLI, and MCP evaluation decisions in parity",
     async () => {
