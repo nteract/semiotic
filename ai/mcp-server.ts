@@ -59,6 +59,8 @@ import * as path from "path"
 import * as http from "http"
 import { resolveHTTPListenHost } from "./mcp-server-options"
 import { createMcpHttpAccessPolicy } from "./mcp-http-access"
+import { isAuthorizedRequest } from "./mcp-http-auth"
+import { mcpClientKey, resolveMcpTrustedProxyHops } from "./mcp-client-key"
 import { DEFAULT_MCP_BODY_TIMEOUT_MS } from "./mcp-http-body"
 import { closeMcpRequestAfterResponse, createMcpUploadAdmission, resolveMcpUploadLimit } from "./mcp-upload-admission"
 import { diagnoseChart } from "./operations/diagnose"
@@ -347,22 +349,6 @@ function writeJsonRpcError(
       error: { code, message },
       id: null
     })
-  )
-}
-
-function isAuthorizedRequest(
-  req: import("http").IncomingMessage,
-  token: string,
-  scheme: string
-): boolean {
-  if (!token) return true
-  const authorization = req.headers.authorization
-  if (typeof authorization !== "string") return false
-  const [providedScheme, providedToken] = authorization.split(/\s+/, 2)
-  return (
-    providedScheme?.toLowerCase() === scheme.toLowerCase() &&
-    Boolean(providedToken) &&
-    providedToken === token
   )
 }
 
@@ -5239,6 +5225,7 @@ async function main() {
     const renderExecutionLimits = resolveMcpRenderExecutionLimits()
     const requestLimits = resolveMcpRequestLimits()
     const requestLimiter = createMcpRequestLimiter(requestLimits)
+    const trustedProxyHops = resolveMcpTrustedProxyHops(process.env.MCP_TRUSTED_PROXY_HOPS)
     const uploadAdmission = createMcpUploadAdmission(resolveMcpUploadLimit())
     const protocolVersions = (process.env.MCP_SUPPORTED_PROTOCOL_VERSIONS || "")
       .split(",")
@@ -5458,7 +5445,7 @@ async function main() {
         return
       }
 
-      if (authToken && !isAuthorizedRequest(req, authToken, authScheme)) {
+      if (authToken && !isAuthorizedRequest(req.headers.authorization, authToken, authScheme)) {
         closeMcpRequestAfterResponse(req, res)
         mcpLogger.warn("request_rejected", {
           reason: "unauthorized",
@@ -5499,7 +5486,10 @@ async function main() {
         return
       }
 
-      const requestSlot = requestLimiter.tryAcquire()
+      const requestSlot = requestLimiter.tryAcquire(
+        Date.now(),
+        mcpClientKey(req.socket.remoteAddress, req.headers["x-forwarded-for"], trustedProxyHops)
+      )
       if (!requestSlot.ok) {
         res.setHeader(
           "Retry-After",

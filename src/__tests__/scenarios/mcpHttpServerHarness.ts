@@ -22,6 +22,7 @@ export function spawnHTTPServer(
         MCP_ALLOWED_HOSTS: "",
         MCP_ALLOWED_ORIGINS: "",
         MCP_AUTH_TOKEN: "",
+        MCP_TRUSTED_PROXY_HOPS: "",
         SEMIOTIC_DEPLOYMENT_CHANNEL: "",
         SEMIOTIC_GIT_SHA: "",
         SEMIOTIC_BUILD_ID: "",

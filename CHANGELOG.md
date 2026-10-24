@@ -18,6 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- MCP HTTP request quotas are isolated by client, refill continuously, and
+  keep bounded accounting alongside the shared concurrency cap. Forwarded
+  client addresses require explicit trusted-proxy configuration. Authorization
+  rejects trailing credentials and uses constant-time token comparison.
+- Unknown chart names matching JavaScript prototype properties no longer
+  claim built-in accessibility capabilities.
 - Categorical heatmap axes accept string `tickValues`. Each string is the
   column or row key and is drawn at that cell's center.
 - A log axis keeps an explicit positive end when no positive sample remains,

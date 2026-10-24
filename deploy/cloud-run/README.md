@@ -187,8 +187,10 @@ Run stable endpoint, the surface manifest, and GitHub Releases.
 | `MCP_BODY_TIMEOUT_MS` | `10000` | Total time to receive a JSON body; stalled uploads get 408 and the connection closes. Uploads do not occupy tool execution slots. HTTP headers also have a 10-second timeout. |
 | `MCP_MAX_CONCURRENT_UPLOADS` | `16` | Maximum bodies being received or parsed at once, independent of execution capacity. Excess uploads get 429 and the connection closes; they are not queued. Slots release after parsing or any failure, before execution admission. At the default body ceiling, active readers retain at most 64 MB of raw body chunks, plus transient parsing overhead. |
 | `MCP_MAX_CONCURRENT_REQUESTS` | `16` | Maximum requests executing after body parsing and operation-limit validation. |
-| `MCP_MAX_REQUESTS_PER_WINDOW` | `240` | Maximum validated requests admitted to execution per rate window. Invalid, oversized, and timed-out bodies do not consume this budget. |
-| `MCP_REQUEST_WINDOW_MS` | `60000` | Duration of the execution-admission rate window. |
+| `MCP_MAX_REQUESTS_PER_WINDOW` | `240` | Per-client token-bucket capacity. Tokens refill continuously over `MCP_REQUEST_WINDOW_MS`. Invalid, oversized, and timed-out bodies do not consume this budget. |
+| `MCP_REQUEST_WINDOW_MS` | `60000` | Time to replenish a full per-client execution budget. |
+| `MCP_MAX_RATE_LIMIT_CLIENTS` | `4096` | Maximum tracked client budgets. At capacity, new clients receive 429 until an inactive budget can be retired without resetting an exhausted quota. |
+| `MCP_TRUSTED_PROXY_HOPS` | `0` | Number of trusted reverse-proxy hops, from 0 to 32. By default, clients are keyed by socket IP and `X-Forwarded-For` is ignored. With a positive value, the client is selected that many addresses from the right of `X-Forwarded-For`; missing or malformed trusted hops fall back to the socket. |
 | `MCP_MAX_ROWS` | `10000` | Maximum combined entries across all nested array-valued tool arguments. Requests over the ceiling get 413 before MCP dispatch. |
 | `MCP_MAX_CELLS` | `100000` | Maximum combined object fields across nested tool arguments. Requests over the ceiling get 413 before MCP dispatch. |
 | `MCP_MAX_NESTING_DEPTH` | `64` | Maximum nested argument depth. Requests over the ceiling get 413 before MCP dispatch. |
@@ -200,6 +202,16 @@ Run stable endpoint, the surface manifest, and GitHub Releases.
 | `SEMIOTIC_GIT_SHA` | unset | Optional full release commit SHA for `/health` and `semiotic://build-info`. |
 | `SEMIOTIC_BUILD_ID` | unset | Optional release/build identifier for build identity. |
 | `SEMIOTIC_BUILD_TIME` | unset | Optional UTC ISO build timestamp for build identity. |
+
+### Client identity behind a proxy
+
+Set `MCP_TRUSTED_PROXY_HOPS` only when every ingress route passes through that
+number of trusted proxies and those proxies append the actual connecting
+address to `X-Forwarded-For`. An incorrect hop count or a direct route to the
+server can let callers choose their own quota key. Keep the default of `0`
+unless the deployment guarantees that topology; clients sharing a socket IP
+then share a rate budget. Do not select the first forwarded address blindly.
+The global execution concurrency cap applies regardless of client identity.
 
 ### Logging, redaction, and retention
 
