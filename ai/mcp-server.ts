@@ -52,6 +52,17 @@ import {
 } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js"
+import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js"
+import { withMcpOperationLimits } from "./mcp-operation-transport"
+import { boundedMcpStdin } from "./mcp-stdio-input"
+import {
+  createMcpOperationRunner,
+  isMcpOperationChild,
+  reportMcpOperationStage,
+  finishMcpOperationStage,
+  McpExecutionError,
+  type McpOperationJob
+} from "./mcp-operation-runner"
 import { z } from "zod"
 import { ownRecordSchema } from "./ownRecordSchema"
 import * as fs from "fs"
@@ -89,7 +100,7 @@ import {
   resolveMcpRenderOutputLimits,
   truncateUtf8
 } from "./mcp-render-output-limits"
-import { renderHOCToSVG } from "./renderHOCToSVG"
+import { renderMcpChartOnce } from "./mcp-render-chart"
 import { applySvgTheme } from "./svg-theme"
 import { renderedSceneHash } from "../src/components/evidence/renderedSceneHash"
 import { COMPONENT_REGISTRY } from "./componentRegistry"
@@ -322,6 +333,7 @@ const DEFAULT_MCP_MAX_INTERACTIVE_SVG_SANITIZE_MS = 3000
 // This boundary serializes only fixed, bounded operational metadata.
 const mcpLoggingPolicy = resolveMcpLoggingPolicy()
 const mcpLogger = createMcpMetadataLogger(mcpLoggingPolicy)
+const operationRunner = createMcpOperationRunner(__filename)
 
 type McpRenderExecutionLimits = {
   maxRenderWorkMs: number
@@ -428,20 +440,12 @@ async function runRenderStep<T>(
   work: () => Promise<T> | T
 ): Promise<T> {
   throwIfRequestCanceled(signal, label)
-  const started = Date.now()
-  const result = await Promise.resolve(work())
-  if (signal?.aborted)
-    throw makeRenderExecutionError("MCP_RENDER_CANCELLED", label, 0)
-  const elapsed = Date.now() - started
-  if (limitMs > 0 && elapsed > limitMs) {
-    throw makeRenderExecutionError(
-      "MCP_RENDER_TIMEOUT",
-      label,
-      limitMs,
-      elapsed
-    )
+  reportMcpOperationStage(label, limitMs)
+  try {
+    return await work()
+  } finally {
+    finishMcpOperationStage()
   }
-  return result
 }
 
 function isRenderExecutionError(
@@ -1826,13 +1830,13 @@ async function renderChartHandler(
     })
   }
 
-  let result: ReturnType<typeof renderHOCToSVG>
+  let result: ReturnType<typeof renderMcpChartOnce>
   try {
     result = await runRenderStep(
       "render work",
       limits.maxRenderWorkMs,
       signal,
-      () => renderHOCToSVG(component, props)
+      () => renderMcpChartOnce(component, props, args.contract)
     )
   } catch (err) {
     if (isRenderExecutionError(err)) {
@@ -1851,50 +1855,10 @@ async function renderChartHandler(
 
   let svg = result.svg!
 
-  // Render evidence — ground truth about what the chart actually contains
-  // (mark counts by type, resolved domains, emptiness, annotation count),
-  // computed from the rendered scene graph. When the component has a server
-  // render config, the returned SVG is taken from the SAME
-  // renderChartWithEvidence call, so the evidence and the SVG are guaranteed
-  // to describe one render. Components without a server render config (a
-  // handful of MCP-renderable charts) keep the React-SSR SVG from
-  // renderHOCToSVG above — which also already ran prop validation — and
-  // simply omit the evidence block.
-  let evidenceBlock: ToolTextContent | null = null
-  let renderedEvidence: ReturnType<typeof renderChartWithEvidence>["evidence"] | undefined
-  try {
-    const renderWithContractEvidence = renderChartWithEvidence as unknown as (
-      component: never,
-      props: Record<string, any>,
-      options?: { artifactContract?: Record<string, unknown> }
-    ) => ReturnType<typeof renderChartWithEvidence>
-    const { svg: evidenceSvg, evidence } = await runRenderStep(
-      "layout/render evidence",
-      limits.maxRenderWorkMs,
-      signal,
-      () =>
-        renderWithContractEvidence(
-          component as never,
-          props,
-          args.contract ? { artifactContract: args.contract } : undefined
-        )
-    )
-    svg = evidenceSvg
-    renderedEvidence = evidence
-  } catch (err) {
-    if (isRenderExecutionError(err)) {
-      return capRenderChartResult(
-        renderExecutionErrorResult(err.message, (err as any).code)
-      )
-    }
-    // No server render config for this component — say so explicitly rather
-    // than silently omitting the block, so an agent can distinguish "no
-    // evidence is produced for this component" from "evidence was forgotten".
-    // The SVG above is still the validated React-SSR render.
-    evidenceBlock = {
-      type: "text" as const,
-      text: `Render evidence: unavailable for ${component} (no server render config). The SVG above is the validated React render; mark-count / domain evidence is only produced for components with a server render path.`
-    }
+  const renderedEvidence = result.evidence
+  let evidenceBlock: ToolTextContent | null = renderedEvidence ? null : {
+    type: "text",
+    text: `Render evidence: unavailable for ${component} (no server render config). The SVG above is the validated React render; mark-count / domain evidence is only produced for components with a server render path.`
   }
 
   // Inject theme CSS custom properties into the SVG root element.
@@ -1941,7 +1905,9 @@ async function renderChartHandler(
             'return import("sharp")'
           )() as Promise<any>)
           const sharpFn = sharpMod.default || sharpMod
-          return sharpFn(Buffer.from(svg)).png().toBuffer()
+          return sharpFn(Buffer.from(svg), {
+            limitInputPixels: parsePositiveInteger(process.env.MCP_MAX_RASTER_PIXELS, 16_777_216)
+          }).png().toBuffer()
         }
       )
       const base64 = pngBuffer.toString("base64")
@@ -1997,13 +1963,14 @@ async function renderInteractiveChartHandler(
     props?: Record<string, any>
     theme?: Record<string, string>
   },
-  context: RenderContext = {}
+  context: RenderContext = {},
+  existingRender?: ToolResult
 ): Promise<ToolResult> {
   const limits = context.limits ?? resolveMcpRenderExecutionLimits()
   const signal = context.signal
   const component = args.component
   const props: Record<string, any> = args.props ?? {}
-  const rendered = await renderChartHandler(
+  const rendered = existingRender ?? await renderChartHandler(
     {
       component,
       props,
@@ -3151,7 +3118,8 @@ async function createChartHandler(
     {
       component: selected.component,
       props,
-      format: "svg"
+      format: "svg",
+      theme: args.theme
     },
     context
   )
@@ -3172,7 +3140,8 @@ async function createChartHandler(
   const completeRenderEvidence = parseRenderEvidence(renderedStatic)
   const rendered = await renderInteractiveChartHandler(
     { component: selected.component, props, theme: args.theme },
-    context
+    context,
+    renderedStatic
   )
   if (rendered.isError) {
     return {
@@ -3407,10 +3376,14 @@ function boundedArtifactRepairProposal(proposal: any) {
   }
 }
 
-const artifactEvidenceRenderer = renderChartWithEvidence as unknown as (
-  component: string,
-  props: Record<string, any>
-) => ReturnType<typeof renderChartWithEvidence>
+const artifactEvidenceRenderer = (component: string, props: Record<string, any>) => {
+  reportMcpOperationStage("render work", resolveMcpRenderExecutionLimits().maxRenderWorkMs)
+  try {
+    return renderChartWithEvidence(component, props)
+  } finally {
+    finishMcpOperationStage()
+  }
+}
 
 async function auditArtifactHandler(args: {
   component: string
@@ -3747,6 +3720,41 @@ function createServer(
     description:
       "Deterministic Semiotic chart selection, validation, rendering, and non-visual chart grounding. Use suggestCharts, getSchema, diagnoseConfig, and renderChart in that order for static chart generation."
   })
+  const inputLimits = resolveMcpOperationLimits()
+  function isolateTool<Args extends Record<string, unknown>>(
+    name: string,
+    handler: (args: Args) => ToolResult | Promise<ToolResult>
+  ) {
+    return async (
+      args: Args,
+      extra: { signal: AbortSignal }
+    ): Promise<ToolResult> => {
+      const admission = inspectMcpOperationInput(args, inputLimits)
+      if (!admission.ok) {
+        return {
+          content: [{ type: "text", text: formatMcpOperationLimitError(admission) }],
+          isError: true,
+          structuredContent: { code: "MCP_INPUT_LIMIT" }
+        }
+      }
+      if (isMcpOperationChild()) return handler(args)
+      try {
+        return await operationRunner.run<ToolResult>(
+          { name, arguments: args, profile },
+          [extra.signal, options.signal]
+        )
+      } catch (error) {
+        return {
+          content: [{
+            type: "text",
+            text: error instanceof McpExecutionError ? error.message : "Tool execution failed."
+          }],
+          isError: true,
+          structuredContent: { code: error instanceof McpExecutionError ? error.code : "MCP_OPERATION_FAILED" }
+        }
+      }
+    }
+  }
   const taskResources = createTaskResourceReader({
     directory: aiFilePath("task-packets"),
     packageVersion: PACKAGE_VERSION
@@ -4112,7 +4120,7 @@ function createServer(
           "openai/outputTemplate": SEMIOTIC_CHART_WIDGET_URI
         }
       },
-      (args) => createChartHandler(args, serverRenderContext)
+      isolateTool("createChart", (args) => createChartHandler(args, serverRenderContext))
     )
     srv.registerTool(
       "improveChart",
@@ -4145,7 +4153,7 @@ function createServer(
         },
         annotations: READ_ONLY_TOOL_ANNOTATIONS
       },
-      improveChartHandler
+      isolateTool("improveChart", improveChartHandler)
     )
     srv.registerTool(
       "explainChart",
@@ -4165,7 +4173,7 @@ function createServer(
         },
         annotations: READ_ONLY_TOOL_ANNOTATIONS
       },
-      explainChartHandler
+      isolateTool("explainChart", explainChartHandler)
     )
     srv.registerTool(
       "auditChart",
@@ -4187,7 +4195,7 @@ function createServer(
         },
         annotations: READ_ONLY_TOOL_ANNOTATIONS
       },
-      auditChartHandler
+      isolateTool("auditChart", auditChartHandler)
     )
     srv.registerTool(
       "getChartSchema",
@@ -4226,7 +4234,7 @@ function createServer(
         },
         annotations: READ_ONLY_TOOL_ANNOTATIONS
       },
-      getSchemaHandler
+      isolateTool("getChartSchema", getSchemaHandler)
     )
     return srv
   }
@@ -4283,7 +4291,7 @@ function createServer(
       },
       annotations: READ_ONLY_TOOL_ANNOTATIONS
     },
-    auditArtifactHandler
+    isolateTool("auditArtifact", auditArtifactHandler)
   )
 
   srv.registerTool(
@@ -4344,7 +4352,7 @@ function createServer(
       },
       annotations: READ_ONLY_TOOL_ANNOTATIONS
     },
-    recommendRepresentationHandler
+    isolateTool("recommendRepresentation", recommendRepresentationHandler)
   )
 
   srv.registerTool(
@@ -4395,7 +4403,7 @@ function createServer(
       },
       annotations: READ_ONLY_TOOL_ANNOTATIONS
     },
-    repairArtifactHandler
+    isolateTool("repairArtifact", repairArtifactHandler)
   )
 
   srv.registerTool(
@@ -4434,7 +4442,7 @@ function createServer(
       },
       annotations: READ_ONLY_TOOL_ANNOTATIONS
     },
-    explainRefusalHandler
+    isolateTool("explainRefusal", explainRefusalHandler)
   )
 
   srv.tool(
@@ -4447,7 +4455,7 @@ function createServer(
         .describe("Component name, e.g. 'LineChart'. Omit to list all.")
     },
     READ_ONLY_TOOL_ANNOTATIONS,
-    getSchemaHandler
+    isolateTool("getSchema", getSchemaHandler)
   )
 
   srv.tool(
@@ -4498,7 +4506,7 @@ function createServer(
         )
     },
     READ_ONLY_TOOL_ANNOTATIONS,
-    suggestChartHandler
+    isolateTool("suggestChart", suggestChartHandler)
   )
 
   srv.tool(
@@ -4530,7 +4538,7 @@ function createServer(
         )
     },
     READ_ONLY_TOOL_ANNOTATIONS,
-    (args) => renderChartHandler(args, serverRenderContext)
+    isolateTool("renderChart", (args) => renderChartHandler(args, serverRenderContext))
   )
 
   srv.registerTool(
@@ -4576,7 +4584,7 @@ function createServer(
         "openai/toolInvocation/invoked": "Rendered Semiotic chart."
       }
     },
-    (args) => renderInteractiveChartHandler(args, serverRenderContext)
+    isolateTool("renderInteractiveChart", (args) => renderInteractiveChartHandler(args, serverRenderContext))
   )
 
   srv.tool(
@@ -4595,7 +4603,7 @@ function createServer(
         )
     },
     READ_ONLY_TOOL_ANNOTATIONS,
-    diagnoseConfigHandler
+    isolateTool("diagnoseConfig", diagnoseConfigHandler)
   )
 
   srv.tool(
@@ -4628,7 +4636,7 @@ function createServer(
         )
     },
     READ_ONLY_TOOL_ANNOTATIONS,
-    auditAccessibilityHandler
+    isolateTool("auditAccessibility", auditAccessibilityHandler)
   )
 
   srv.tool(
@@ -4663,7 +4671,7 @@ function createServer(
         )
     },
     READ_ONLY_TOOL_ANNOTATIONS,
-    evaluateChartHandler
+    isolateTool("evaluateChart", evaluateChartHandler)
   )
 
   srv.tool(
@@ -4702,7 +4710,7 @@ function createServer(
         )
     },
     READ_ONLY_TOOL_ANNOTATIONS,
-    auditMobileVisualizationHandler
+    isolateTool("auditMobileVisualization", auditMobileVisualizationHandler)
   )
 
   srv.tool(
@@ -4724,7 +4732,7 @@ function createServer(
         .describe("GitHub labels, e.g. ['bug'] or 'bug'")
     },
     READ_ONLY_TOOL_ANNOTATIONS,
-    reportIssueHandler
+    isolateTool("reportIssue", reportIssueHandler)
   )
 
   srv.tool(
@@ -4739,7 +4747,7 @@ function createServer(
         )
     },
     READ_ONLY_TOOL_ANNOTATIONS,
-    applyThemeHandler
+    isolateTool("applyTheme", applyThemeHandler)
   )
 
   srv.tool(
@@ -4755,7 +4763,7 @@ function createServer(
         .describe("A natural language question about the chart data")
     },
     READ_ONLY_TOOL_ANNOTATIONS,
-    interrogateChartHandler
+    isolateTool("interrogateChart", interrogateChartHandler)
   )
 
   srv.registerTool(
@@ -4781,7 +4789,7 @@ function createServer(
       },
       annotations: READ_ONLY_TOOL_ANNOTATIONS
     },
-    groundChartHandler
+    isolateTool("groundChart", groundChartHandler)
   )
 
   const streamSchemaInput = z.object({
@@ -4815,7 +4823,7 @@ function createServer(
       audience: unknownRecordInput.optional()
     },
     READ_ONLY_TOOL_ANNOTATIONS,
-    suggestStreamChartsHandler
+    isolateTool("suggestStreamCharts", suggestStreamChartsHandler)
   )
 
   srv.tool(
@@ -4831,7 +4839,7 @@ function createServer(
       audience: unknownRecordInput.optional()
     },
     READ_ONLY_TOOL_ANNOTATIONS,
-    suggestStreamDashboardHandler
+    isolateTool("suggestStreamDashboard", suggestStreamDashboardHandler)
   )
 
   srv.tool(
@@ -4888,7 +4896,7 @@ function createServer(
         )
     },
     READ_ONLY_TOOL_ANNOTATIONS,
-    suggestDashboardHandler
+    isolateTool("suggestDashboard", suggestDashboardHandler)
   )
 
   srv.tool(
@@ -4931,7 +4939,7 @@ function createServer(
         )
     },
     READ_ONLY_TOOL_ANNOTATIONS,
-    suggestTokenEncodingHandler
+    isolateTool("suggestTokenEncoding", suggestTokenEncodingHandler)
   )
 
   srv.tool(
@@ -4969,7 +4977,7 @@ function createServer(
       ...MCP_PROFILE_HINT_INPUT
     },
     READ_ONLY_TOOL_ANNOTATIONS,
-    suggestStretchChartsHandler
+    isolateTool("suggestStretchCharts", suggestStretchChartsHandler)
   )
 
   srv.registerTool(
@@ -5010,7 +5018,7 @@ function createServer(
       },
       annotations: READ_ONLY_TOOL_ANNOTATIONS
     },
-    repairChartConfigHandler
+    isolateTool("repairChartConfig", repairChartConfigHandler)
   )
 
   srv.tool(
@@ -5073,7 +5081,7 @@ function createServer(
       ...MCP_PROFILE_HINT_INPUT
     },
     READ_ONLY_TOOL_ANNOTATIONS,
-    proposeChartVariantsHandler
+    isolateTool("proposeChartVariants", proposeChartVariantsHandler)
   )
 
   srv.registerTool(
@@ -5140,7 +5148,7 @@ function createServer(
       outputSchema: { suggestions: z.array(z.unknown()) },
       annotations: READ_ONLY_TOOL_ANNOTATIONS
     },
-    suggestChartsHandler
+    isolateTool("suggestCharts", suggestChartsHandler)
   )
 
   return srv
@@ -5535,7 +5543,7 @@ async function main() {
         }
         res.on("close", teardown)
         try {
-          await srv.connect(transport)
+          await srv.connect(withMcpOperationLimits(transport, operationLimits))
           await transport.handleRequest(req, res, bodyResult.body)
           // Completion metrics are deliberately content-free. They make the
           // hosted policy measurable without recording a tool name, headers,
@@ -5588,12 +5596,35 @@ async function main() {
   } else {
     // Default: stdio mode for Claude Desktop, Claude Code, Cursor, etc.
     const srv = createServer(toolProfile)
-    const transport = new StdioServerTransport()
-    await srv.connect(transport)
+    const transport = new StdioServerTransport(boundedMcpStdin(
+      process.stdin, process.stdout,
+      parsePositiveInteger(process.env.MCP_MAX_BODY_BYTES, 4 * 1024 * 1024)
+    ))
+    await srv.connect(withMcpOperationLimits(transport, resolveMcpOperationLimits()))
   }
 }
 
-main().catch(() => {
+async function runOperationChild(job: McpOperationJob) {
+  const srv = createServer(job.profile)
+  const [client, server] = InMemoryTransport.createLinkedPair()
+  client.onmessage = (message) => {
+    if (!("id" in message) || message.id !== 1) return
+    if ("result" in message) process.send?.({ type: "result", result: message.result })
+    else process.send?.({ type: "failure" })
+  }
+  await srv.connect(server)
+  await client.start()
+  await client.send({ jsonrpc: "2.0", id: 1, method: "tools/call", params: {
+    name: job.name, arguments: job.arguments
+  } })
+}
+
+if (isMcpOperationChild()) {
+  process.once("message", (job: McpOperationJob) => {
+    void runOperationChild(job).catch(() => process.send?.({ type: "failure" }))
+  })
+  process.once("disconnect", () => process.exit(0))
+} else main().catch(() => {
   // Startup errors can include environment- or dependency-provided text. Keep
   // process output metadata-only for the same reason as request failures.
   mcpLogger.error("service_fatal", { reason: "service_startup_failure" })

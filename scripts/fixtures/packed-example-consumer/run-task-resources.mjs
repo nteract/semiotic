@@ -223,11 +223,36 @@ for (const profile of ["public", "developer"]) {
       !tools.tools.some(({ name }) => /task/i.test(name)),
       "Task discovery must not introduce another tool"
     )
+    // Exercise the child executable from the installed package, not only
+    // discovery in its parent process. Evidence must prove actual data marks.
+    const data = [
+      { category: "A", value: 10 },
+      { category: "B", value: 20 },
+      { category: "C", value: 5 }
+    ]
+    const rendered = await server.request("tools/call", {
+      name: profile === "public" ? "createChart" : "renderChart",
+      arguments: profile === "public"
+        ? { component: "BarChart", data }
+        : { component: "BarChart", props: { data } }
+    })
+    assert.notEqual(rendered.isError, true, JSON.stringify(rendered.content))
+    if (profile === "public") {
+      assert.equal(rendered.structuredContent.status, "render-proven")
+      assert.equal(rendered.structuredContent.render.evidence.empty, false)
+      assert.equal(rendered.structuredContent.render.evidence.markCount, 3)
+    } else {
+      const evidenceBlock = rendered.content.find(({ text }) => text?.startsWith("Render evidence:\n"))
+      assert.ok(evidenceBlock, "Packed render must include scene evidence")
+      const evidence = JSON.parse(evidenceBlock.text.slice("Render evidence:\n".length))
+      assert.equal(evidence.empty, false)
+      assert.equal(evidence.markCount, 3)
+    }
   } finally {
     await server.close()
   }
 }
 
 console.log(
-  "packed task delivery: 3 JSON/Markdown packets with matching example hashes; public/developer MCP resources preserve source identities, reject unknown/traversal reads, and keep existing tool counts"
+  "packed task delivery: matching task identities and resources; public/developer MCP tools render three data marks through the installed executable"
 )

@@ -18,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- MCP tool execution runs in bounded child processes, so deadlines and
+  cancellation stop synchronous rendering and native PNG work while the
+  server remains responsive. HTTP and stdio share argument limits; stdio
+  also caps each input line before JSON parsing. Chart creation reuses one
+  render for its SVG, evidence, and widget instead of rendering repeatedly.
 - MCP HTTP request quotas are isolated by client, refill continuously, and
   keep bounded accounting alongside the shared concurrency cap. Forwarded
   client addresses require explicit trusted-proxy configuration. Authorization
