@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- MCP cancellation now handles zero and empty-string request IDs without
+  changing caller-visible IDs or confusing numeric and string identities.
+  Every MCP scenario suite now rejects missing or stale executable artifacts.
 - MCP startup validates profiles and options, supports equals-form arguments,
   and rejects configuration typos that previously exposed developer tools.
   All tool responses now share a configurable size ceiling before child IPC

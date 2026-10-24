@@ -1,17 +1,7 @@
 import type { Datum } from "../../components/charts/shared/datumTypes"
 import type { JsonRpcResponse } from "./mcpProtocolTypes"
 import { spawn, type ChildProcess } from "child_process"
-import { existsSync } from "fs"
-import * as path from "path"
-
-const SERVER_PATH = path.resolve(__dirname, "../../../ai/dist/mcp-server.js")
-const REQUIRED_BUNDLES = [
-  SERVER_PATH,
-  path.resolve(__dirname, "../../../dist/semiotic-ai.min.js"),
-  path.resolve(__dirname, "../../../dist/geo.min.js"),
-  path.resolve(__dirname, "../../../dist/server.min.js"),
-]
-const SERVER_DEPS_READY = REQUIRED_BUNDLES.every(existsSync)
+import { SERVER_PATH } from "./mcpStdioHarness"
 const MCP_PROCESS_TEST_TIMEOUT_MS = 15_000
 
 // The default profile would choose recordIndex as x because it is a monotonic
@@ -118,7 +108,7 @@ function expectHintedLineProps(entries: Datum[]) {
   ]))
 }
 
-describe.skipIf(!SERVER_DEPS_READY)("MCP profile hint forwarding", () => {
+describe("MCP profile hint forwarding", () => {
   it("preserves profile hints through recommendation, repair, and variant tools", async () => {
     const proc = spawnServer()
     try {
