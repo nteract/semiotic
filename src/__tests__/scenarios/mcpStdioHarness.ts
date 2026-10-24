@@ -15,7 +15,6 @@ const { assertFreshMcpBundles } = createRequire(import.meta.url)(
   "../../../scripts/lib/mcp-bundle-freshness.cjs"
 ) as { assertFreshMcpBundles: (root: string) => void }
 assertFreshMcpBundles(path.resolve(__dirname, "../../.."))
-export const SERVER_DEPS_READY = true
 
 // ── Helpers ──────────────────────────────────────────────────────────
 

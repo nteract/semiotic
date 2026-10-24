@@ -247,6 +247,11 @@ cancellation responses use `MCP_RENDER_TIMEOUT` and `MCP_RENDER_CANCELLED`;
 process failures use `MCP_OPERATION_FAILED`. No partial rendering is reported
 as successful. Size limits still cap render and widget responses before IPC.
 
+Stdio cancellation accepts every valid numeric or string request ID, including
+`0` and `""`. Numeric and string IDs remain distinct, and responses preserve
+the caller's original ID. Cancellation releases the operation slot; the
+server can accept another tool call without waiting for the canceled deadline.
+
 The complete-result ceiling also covers recommendations, diagnoses, audits,
 and SDK dispatch/validation errors. Direct SDK HTTP rejections share this
 ceiling, including errors raised before tool dispatch; their HTTP status is

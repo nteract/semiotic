@@ -54,6 +54,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js"
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js"
 import { withMcpOperationLimits } from "./mcp-operation-transport"
+import { withMcpRequestIds } from "./mcp-request-ids"
 import { boundedMcpStdin } from "./mcp-stdio-input"
 import {
   createMcpOperationRunner,
@@ -5528,7 +5529,7 @@ async function main() {
         }
         res.on("close", teardown)
         try {
-          await srv.connect(withMcpOperationLimits(transport, operationLimits))
+          await srv.connect(withMcpRequestIds(withMcpOperationLimits(transport, operationLimits)))
           await handleMcpHttpRequest(transport, req, res, bodyResult.body, requestAbortSignal)
           // Completion metrics are deliberately content-free. They make the
           // hosted policy measurable without recording a tool name, headers,
@@ -5585,7 +5586,7 @@ async function main() {
       process.stdin, process.stdout,
       parsePositiveInteger(process.env.MCP_MAX_BODY_BYTES, 4 * 1024 * 1024)
     ))
-    await srv.connect(withMcpOperationLimits(transport, resolveMcpOperationLimits()))
+    await srv.connect(withMcpRequestIds(withMcpOperationLimits(transport, resolveMcpOperationLimits())))
   }
 }
 

@@ -1,12 +1,11 @@
 import type { ChildProcess } from "child_process"
 import {
-  SERVER_DEPS_READY,
   spawnServer,
   sendRequest,
   initializeServer
 } from "./mcpStdioHarness"
 
-describe.skipIf(!SERVER_DEPS_READY)(
+describe(
   "MCP stream recommendation round-trip",
   () => {
     let proc: ChildProcess

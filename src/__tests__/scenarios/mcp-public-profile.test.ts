@@ -1,17 +1,7 @@
 import type { Datum } from "../../components/charts/shared/datumTypes"
 import type { JsonRpcResponse } from "./mcpProtocolTypes"
 import { spawn, type ChildProcess } from "child_process"
-import { existsSync } from "fs"
-import * as path from "path"
-
-const SERVER_PATH = path.resolve(__dirname, "../../../ai/dist/mcp-server.js")
-const REQUIRED_BUNDLES = [
-  SERVER_PATH,
-  path.resolve(__dirname, "../../../dist/semiotic-ai.min.js"),
-  path.resolve(__dirname, "../../../dist/geo.min.js"),
-  path.resolve(__dirname, "../../../dist/server.min.js"),
-]
-const SERVER_DEPS_READY = REQUIRED_BUNDLES.every(existsSync)
+import { SERVER_PATH } from "./mcpStdioHarness"
 // The JSON-RPC helper intentionally allows a cold child process up to ten
 // seconds to load the bundled MCP server. Keep Vitest's outer deadline above
 // that budget so a busy CI worker cannot fail a valid startup halfway through
@@ -85,7 +75,7 @@ async function initializePublicServer(proc: ChildProcess, name: string, id: stri
   }, id)
 }
 
-describe.skipIf(!SERVER_DEPS_READY)("MCP public tool profile", () => {
+describe("MCP public tool profile", () => {
   it("exposes the five task-oriented public tools", async () => {
     const publicProc = spawnPublicServer()
     try {

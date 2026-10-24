@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
-import { initializeServer, sendRequest, SERVER_DEPS_READY, spawnServer } from "./mcpStdioHarness"
+import { initializeServer, sendRequest, spawnServer } from "./mcpStdioHarness"
 
-describe.skipIf(!SERVER_DEPS_READY)("MCP dataset summary semantics", () => {
+describe("MCP dataset summary semantics", () => {
   it("discloses exclusions and preserves categories and UTC dates in structured and text responses", async () => {
     const server = spawnServer(["--profile", "developer"], { TZ: "America/Los_Angeles" })
     try {
