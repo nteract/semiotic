@@ -23,6 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   server remains responsive. HTTP and stdio share argument limits; stdio
   also caps each input line before JSON parsing. Chart creation reuses one
   render for its SVG, evidence, and widget instead of rendering repeatedly.
+- MCP processes load the optional DOM runtime only for interactive widgets,
+  avoiding repeated startup work on schema lookups, diagnostics, artifact
+  audits, and static renders.
 - MCP HTTP request quotas are isolated by client, refill continuously, and
   keep bounded accounting alongside the shared concurrency cap. Forwarded
   client addresses require explicit trusted-proxy configuration. Authorization

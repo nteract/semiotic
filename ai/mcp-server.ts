@@ -762,17 +762,14 @@ function sanitizeSvgNode(node: ChildNode, doc: Document): Node | null {
   return safe
 }
 
-// jsdom is an optional dependency loaded lazily so servers that never render
-// interactive widgets don't pay its load cost. Kick the import off eagerly
-// (module load, not the first request) and memoize it, so the one-time
-// cost of loading it is amortized in the background instead of being
-// charged against the first widget render's sanitize-step timeout budget.
+// Only widget operations need a DOM. Importing jsdom at startup also charges
+// every disposable schema, diagnosis, and static-render child for that work.
+// Keep its load inside the widget child's enforced sanitization budget.
 let jsdomModulePromise: Promise<typeof import("jsdom")> | null = null
 function loadJsdomModule(): Promise<typeof import("jsdom")> {
   if (!jsdomModulePromise) jsdomModulePromise = import("jsdom")
   return jsdomModulePromise
 }
-void loadJsdomModule().catch(() => {})
 
 async function sanitizeSvgForWidget(svg: string): Promise<string> {
   const trimmed = svg.trim()

@@ -9,10 +9,10 @@
     "packageName": "semiotic",
     "packageVersion": "3.13.0",
     "channel": "source",
-    "sourceRevision": "sha256:238630076c78c6765344832fcbb45417871efc94104bb3a5e47fa122083e2a1f",
+    "sourceRevision": "sha256:7e956b77c6719ccfed99e48879ebeea774a9d571e0d21061affe96537561e7f3",
     "revisionKind": "content-digest",
     "runtime": {
-      "digest": "sha256:c65b01d65c91d59d1b082180f706d2b972b117c5c0defbaa4fbbc789aaf450fd",
+      "digest": "sha256:ba785c684545f9789011cb340a9a5a676ceb137b4457c26b2e7475424cb0bcf3",
       "fileCount": 1467
     },
     "taskSources": {

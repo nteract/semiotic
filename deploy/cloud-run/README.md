@@ -227,6 +227,9 @@ handles protocol messages, metadata logging, and health checks. The parent
 kills a child on timeout, cancellation, or completion, and releases capacity
 when that child exits. HTTP disconnects and MCP cancellation notifications
 both cancel active work. No chart state is reused between callers.
+The optional DOM runtime loads only when a widget operation sanitizes its SVG,
+inside that child's sanitization budget. Protocol processes, schema lookups,
+diagnostics, artifact audits, and static renders do not preload it.
 
 A single whole-operation deadline includes child startup and all tool work.
 Render, PNG, and sanitization stage budgets are additional ceilings, shared
