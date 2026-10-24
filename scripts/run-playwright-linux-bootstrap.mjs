@@ -102,6 +102,7 @@ const visualCommand = missingOnly
 const command = [
   "npm ci",
   "npm run dist:prod",
+  "npm run build:mcp",
   visualCommand,
 ].join(" && ")
 

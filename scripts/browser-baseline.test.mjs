@@ -252,7 +252,7 @@ if (process.argv[2] !== "version") {
   assert.equal(args[args.indexOf("--platform") + 1], "linux/amd64")
   assert.ok(args.includes("mcr.microsoft.com/playwright:v1.61.1-noble"))
   const command = args.at(-1)
-  assert.match(command, /^npm ci && npm run dist:prod && npx playwright test /)
+  assert.match(command, /^npm ci && npm run dist:prod && npm run build:mcp && npx playwright test /)
   assert.ok(command.includes("'--update-snapshots=none'"))
   assert.ok(command.includes("'--grep=threshold end caps|renders xy-minimap$'"))
 })

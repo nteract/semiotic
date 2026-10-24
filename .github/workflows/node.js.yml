@@ -603,6 +603,9 @@ jobs:
       - name: Build production library for behavioral tests
         run: npm run dist:prod
 
+      - name: Build MCP artifacts for widget tests
+        run: npm run build:mcp
+
       - name: Check browser baseline
         run: npm run check:browser-baseline
 

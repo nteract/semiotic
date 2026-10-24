@@ -11,7 +11,7 @@ export const SERVER_PATH = path.resolve(
 
 // Check source content as well as artifact content. A local run must not
 // silently skip protocol coverage or validate a previously built revision.
-const { assertFreshMcpBundles } = createRequire(import.meta.url)(
+const { assertFreshMcpBundles } = createRequire(path.join(__dirname, "mcpStdioHarness.ts"))(
   "../../../scripts/lib/mcp-bundle-freshness.cjs"
 ) as { assertFreshMcpBundles: (root: string) => void }
 assertFreshMcpBundles(path.resolve(__dirname, "../../.."))

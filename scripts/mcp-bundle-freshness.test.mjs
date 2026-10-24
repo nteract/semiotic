@@ -53,19 +53,21 @@ test("rejects stale library and MCP source even with unchanged timestamps", () =
     })
 })
 
-test("rejects missing artifacts and missing provenance in local runs", () =>
-  fixture((root) => {
-    rmSync(path.join(root, "dist/.source-fingerprint.json"))
-    assert.throws(
-      () => freshness.assertFreshMcpBundles(root),
-      /missing or invalid library source fingerprint/
-    )
-    rmSync(path.join(root, "ai/dist/mcp-server.js"))
-    assert.throws(
-      () => freshness.assertFreshMcpBundles(root),
-      /missing ai\/dist\/mcp-server.js/
-    )
-  }))
+test("rejects missing artifacts and missing provenance in local runs", () => {
+  for (const [kind, directory] of [["library", "dist"], ["mcp", "ai/dist"]])
+    fixture((root) => {
+      rmSync(path.join(root, directory, ".source-fingerprint.json"))
+      assert.throws(
+        () => freshness.assertFreshMcpBundles(root),
+        new RegExp(`missing or invalid ${kind} source fingerprint`)
+      )
+      rmSync(path.join(root, "ai/dist/mcp-server.js"))
+      assert.throws(
+        () => freshness.assertFreshMcpBundles(root),
+        /missing ai\/dist\/mcp-server.js/
+      )
+    })
+})
 
 test("rejects changed artifacts even when source is unchanged", () =>
   fixture((root) => {

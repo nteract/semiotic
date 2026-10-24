@@ -746,6 +746,15 @@ Args: {
 → Returns: structured chart summary for the model + hidden SVG/widget metadata for ChatGPT.
 ```
 
+Widget SVG is rebuilt from an element, attribute, CSS, and URL allowlist before
+embedding. Local fragment references and inline base64 PNG/JPEG/GIF/WebP images
+are supported; external resources, SVG data URLs, scripts, foreign HTML,
+animation, CSS imports, and font-face rules are removed. Allowed styles are
+scoped to the chart, preserving automatic dark palettes and annotation
+disclosure. Theme variables use color, length, font, and other supported token
+grammars. Malformed SVG returns an explicit tool error instead of an empty
+successful preview. The widget's host CSP provides an additional boundary.
+
 ### Example: diagnose a broken config
 
 ```
