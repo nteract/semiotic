@@ -198,7 +198,12 @@ export function createChartAccessContract({
   props,
   options = {}
 }: ChartAccessContractInput): ChartAccessContract {
-  const capabilities = CHART_ACCESS_CAPABILITIES[component]
+  const capabilities = Object.prototype.hasOwnProperty.call(
+    CHART_ACCESS_CAPABILITIES,
+    component
+  )
+    ? CHART_ACCESS_CAPABILITIES[component]
+    : undefined
   const realtime = capabilities
     ? capabilities.realtime
     : options.realtime === true

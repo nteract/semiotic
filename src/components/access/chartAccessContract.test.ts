@@ -16,6 +16,18 @@ const lineData = [
 ]
 
 describe("ChartAccessContract@1", () => {
+  it.each(Object.getOwnPropertyNames(Object.prototype))(
+    "does not invent capabilities for the undeclared component %s",
+    (component) => {
+      const contract = createChartAccessContract({ component, props: {} })
+      expect(contract.mediaPreferences.reducedMotion).toBe("unknown")
+      expect(contract.ssr.supported).toBe(false)
+      expect(contract.navigation.supported).toBe(false)
+      expect(contract.table.enabled).toBe(false)
+      expect(contract.keyboard.markNavigation).toBe("unsupported")
+    }
+  )
+
   it("reports authored and generated access surfaces for LineChart", () => {
     expect(LINE_CHART_ACCESS_CONTRACT.schemaVersion).toBe(
       CHART_ACCESS_CONTRACT_VERSION

@@ -183,15 +183,24 @@ Run stable endpoint, the surface manifest, and GitHub Releases.
 | `MCP_AUTH_TOKEN` | unset (disabled) | Optional bearer token required in `Authorization: Bearer <token>` for transport requests. Unset disables auth and preserves public health/challenge behavior. |
 | `MCP_AUTH_SCHEME` | `Bearer` | Optional auth scheme matcher. Keep as `Bearer` unless your front proxy rewrites credentials. |
 | `MCP_SUPPORTED_PROTOCOL_VERSIONS` | unset (disabled) | Optional comma-separated allowlist for inbound `MCP-Protocol-Version`. If unset, the server accepts any protocol value and still returns `MCP-Protocol-Version: 2024-11-05`. |
-| `MCP_MAX_BODY_BYTES` | `4194304` (4 MB) | Hard request-body ceiling; larger bodies get 413 and the connection closes before any tool runs. |
+| `MCP_MAX_BODY_BYTES` | `4194304` (4 MB) | HTTP request-body ceiling; larger bodies get 413 and the connection closes before any tool runs. Also bounds each stdio JSON line (including its newline) before parsing; an oversized line receives an error with `id: null`, is drained, and subsequent lines remain usable. |
 | `MCP_BODY_TIMEOUT_MS` | `10000` | Total time to receive a JSON body; stalled uploads get 408 and the connection closes. Uploads do not occupy tool execution slots. HTTP headers also have a 10-second timeout. |
 | `MCP_MAX_CONCURRENT_UPLOADS` | `16` | Maximum bodies being received or parsed at once, independent of execution capacity. Excess uploads get 429 and the connection closes; they are not queued. Slots release after parsing or any failure, before execution admission. At the default body ceiling, active readers retain at most 64 MB of raw body chunks, plus transient parsing overhead. |
-| `MCP_MAX_CONCURRENT_REQUESTS` | `16` | Maximum requests executing after body parsing and operation-limit validation. |
-| `MCP_MAX_REQUESTS_PER_WINDOW` | `240` | Maximum validated requests admitted to execution per rate window. Invalid, oversized, and timed-out bodies do not consume this budget. |
-| `MCP_REQUEST_WINDOW_MS` | `60000` | Duration of the execution-admission rate window. |
-| `MCP_MAX_ROWS` | `10000` | Maximum combined entries across all nested array-valued tool arguments. Requests over the ceiling get 413 before MCP dispatch. |
-| `MCP_MAX_CELLS` | `100000` | Maximum combined object fields across nested tool arguments. Requests over the ceiling get 413 before MCP dispatch. |
-| `MCP_MAX_NESTING_DEPTH` | `64` | Maximum nested argument depth. Requests over the ceiling get 413 before MCP dispatch. |
+| `MCP_MAX_CONCURRENT_REQUESTS` | `16` | Maximum HTTP requests executing after body parsing and operation-limit validation. Tool execution also uses the process cap below. |
+| `MCP_MAX_REQUESTS_PER_WINDOW` | `240` | Per-client token-bucket capacity. Tokens refill continuously over `MCP_REQUEST_WINDOW_MS`. Invalid, oversized, and timed-out bodies do not consume this budget. |
+| `MCP_REQUEST_WINDOW_MS` | `60000` | Time to replenish a full per-client execution budget. |
+| `MCP_MAX_RATE_LIMIT_CLIENTS` | `4096` | Maximum tracked client budgets. At capacity, new clients receive 429 until an inactive budget can be retired without resetting an exhausted quota. |
+| `MCP_TRUSTED_PROXY_HOPS` | `0` | Number of trusted reverse-proxy hops, from 0 to 32. By default, clients are keyed by socket IP and `X-Forwarded-For` is ignored. With a positive value, the client is selected that many addresses from the right of `X-Forwarded-For`; missing or malformed trusted hops fall back to the socket. |
+| `MCP_MAX_OPERATION_MS` | `10000` | One deadline for a complete tool call, including process startup, profiling, rendering, sanitization, and response preparation. A timeout kills the operation process. Applies to HTTP and stdio, both profiles, and artifact tools. |
+| `MCP_MAX_CONCURRENT_OPERATIONS` | `2` | Maximum isolated tool processes per server. Excess calls receive `MCP_OPERATION_BUSY`; there is no waiting queue. Slots release only when the process exits. |
+| `MCP_OPERATION_HEAP_MB` | `256` | V8 old-generation heap limit for each tool process. This is not a total RSS or native-memory limit; retain deployment/container memory limits too. |
+| `MCP_MAX_RENDER_WORK_MS` | `2500` | Cumulative rendering-stage budget within one operation. The whole-operation deadline also applies. |
+| `MCP_MAX_PNG_CONVERSION_MS` | `4000` | Cumulative PNG conversion budget, enforced by terminating the isolated process. |
+| `MCP_MAX_INTERACTIVE_SVG_SANITIZE_MS` | `3000` | Cumulative widget SVG sanitization budget, within the whole-operation deadline. |
+| `MCP_MAX_RASTER_PIXELS` | `16777216` | Maximum SVG input pixel area accepted by the PNG rasterizer, before allocating its output image. |
+| `MCP_MAX_ROWS` | `10000` | Maximum combined entries across all nested array-valued tool arguments. HTTP requests over the ceiling get 413; stdio calls receive a JSON-RPC invalid-parameters error before tool schema parsing. |
+| `MCP_MAX_CELLS` | `100000` | Maximum combined object fields across nested tool arguments. HTTP requests over the ceiling get 413; stdio calls receive a JSON-RPC invalid-parameters error before tool schema parsing. |
+| `MCP_MAX_NESTING_DEPTH` | `64` | Maximum nested argument depth. HTTP requests over the ceiling get 413; stdio calls receive a JSON-RPC invalid-parameters error before tool schema parsing. |
 | `MCP_LOG_LEVEL` | `info` | Process log threshold: `info` records bounded completion metadata; `warn` records rejections/failures; `error` records failures; `silent` is an explicit process-level opt-out. |
 | `MCP_LOG_MAX_EVENT_BYTES` | `1024` | Maximum UTF-8 bytes in one process log record. Values are clamped to 256–4096 bytes. |
 | `MCP_LOG_RETENTION_DAYS` | `30` | Declared maximum retention policy, clamped to 1–90 days. This value is not self-enforcing; configure the Cloud Logging bucket/sink to match or shorten it. |
@@ -200,6 +209,45 @@ Run stable endpoint, the surface manifest, and GitHub Releases.
 | `SEMIOTIC_GIT_SHA` | unset | Optional full release commit SHA for `/health` and `semiotic://build-info`. |
 | `SEMIOTIC_BUILD_ID` | unset | Optional release/build identifier for build identity. |
 | `SEMIOTIC_BUILD_TIME` | unset | Optional UTC ISO build timestamp for build identity. |
+
+### Client identity behind a proxy
+
+Set `MCP_TRUSTED_PROXY_HOPS` only when every ingress route passes through that
+number of trusted proxies and those proxies append the actual connecting
+address to `X-Forwarded-For`. An incorrect hop count or a direct route to the
+server can let callers choose their own quota key. Keep the default of `0`
+unless the deployment guarantees that topology; clients sharing a socket IP
+then share a rate budget. Do not select the first forwarded address blindly.
+The global execution concurrency cap applies regardless of client identity.
+
+### Interruptible tool execution
+
+Every tool callback runs in a disposable Node child process. The main process
+handles protocol messages, metadata logging, and health checks. The parent
+kills a child on timeout, cancellation, or completion, and releases capacity
+when that child exits. HTTP disconnects and MCP cancellation notifications
+both cancel active work. No chart state is reused between callers.
+The optional DOM runtime loads only when a widget operation sanitizes its SVG,
+inside that child's sanitization budget. Protocol processes, schema lookups,
+diagnostics, artifact audits, and static renders do not preload it.
+
+A single whole-operation deadline includes child startup and all tool work.
+Render, PNG, and sanitization stage budgets are additional ceilings, shared
+across repeated uses of that stage within the operation. Timeout and
+cancellation responses use `MCP_RENDER_TIMEOUT` and `MCP_RENDER_CANCELLED`;
+process failures use `MCP_OPERATION_FAILED`. No partial rendering is reported
+as successful. Size limits still cap render and widget responses before IPC.
+
+The stdio byte limit applies before JSON parsing. The row/cell/depth limits
+apply before tool dispatch on both transports, and count collection entries,
+object fields, and nesting respectively; they are not byte limits. These
+limits also apply to public `createChart` and artifact audit tools.
+
+These service limits do not change the synchronous `semiotic/server`
+JavaScript API or silently decimate its output. Applications calling that API
+for untrusted workloads must supply their own process isolation and resource
+policy. Keep container memory limits in place: a V8 heap cap alone does not
+bound native image buffers or total process RSS.
 
 ### Logging, redaction, and retention
 
