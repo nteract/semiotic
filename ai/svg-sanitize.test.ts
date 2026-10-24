@@ -99,6 +99,60 @@ describe("widget SVG allowlist", () => {
     )
   })
 
+  it.each(["image-set", "-webkit-image-set"])(
+    "rejects quoted %s mask sources on every CSS delivery surface",
+    async (imageFunction) => {
+      const value = `${imageFunction}('https://evil.test/mask.png' 1x)`
+      const doc = await sanitize(`<rect id="attribute" mask="${value}"/>
+        <rect id="inline" style="mask:${value};opacity:0.5"/>
+        <rect id="sheet"/><style>#sheet {mask:${value};opacity:0.75}</style>`)
+      expect(doc.querySelector("#attribute")?.hasAttribute("mask")).toBe(false)
+      expect(doc.querySelector("#inline")?.getAttribute("style")).toBe(
+        "opacity: 0.5"
+      )
+      expect(doc.querySelector("style")?.textContent).toContain("opacity: 0.75")
+      expect(doc.querySelector("style")?.textContent).not.toContain("mask:")
+      expect(doc.documentElement.outerHTML).not.toContain("evil.test")
+    }
+  )
+
+  it.each([
+    "url(#local-mask)",
+    "none",
+    "inherit",
+    "initial",
+    "unset",
+    "revert",
+    "revert-layer"
+  ])(
+    "preserves safe mask value %s in attributes, inline CSS and stylesheets",
+    async (value) => {
+      const doc =
+        await sanitize(`<defs><mask id="local-mask"><rect width="10" height="10" fill="white"/></mask></defs>
+        <rect id="attribute" mask="${value}"/>
+        <rect id="inline" style="mask:${value}"/>
+        <rect id="sheet"/><style>#sheet {mask:${value}}</style>`)
+      expect(doc.querySelector("#attribute")?.getAttribute("mask")).toBe(value)
+      expect(doc.querySelector("#inline")?.getAttribute("style")).toContain(
+        "mask:"
+      )
+      expect(doc.querySelector("style")?.textContent).toContain("mask:")
+      if (value.startsWith("url")) {
+        expect(doc.querySelector("#inline")?.getAttribute("style")).toContain(
+          "#local-mask"
+        )
+        expect(doc.querySelector("style")?.textContent).toContain("#local-mask")
+      } else {
+        expect(doc.querySelector("#inline")?.getAttribute("style")).toBe(
+          `mask: ${value}`
+        )
+        expect(doc.querySelector("style")?.textContent).toContain(
+          `mask: ${value}`
+        )
+      }
+    }
+  )
+
   it("preserves safe quoted fonts, modern colors and theme media rules", async () => {
     const font = '"ACME; Sans } /* Text */ ]]>", serif'
     const input = applySvgTheme(

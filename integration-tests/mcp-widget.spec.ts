@@ -65,6 +65,24 @@ test("shipped widget keeps SVG resources inert and chart styles and hover usable
   await expect(bar).toBeVisible()
   await expect(page.locator("body")).toBeVisible()
   await expect(bar).toHaveAttribute("fill", "url(#paint)")
+  for (const id of [
+    "mask-attribute",
+    "mask-webkit-attribute",
+    "mask-inline",
+    "mask-webkit-inline",
+    "mask-sheet",
+    "mask-webkit-sheet"
+  ]) {
+    await expect(chart.locator(`#${id}`)).toHaveCSS("mask-image", "none")
+  }
+  await expect(chart.locator("#mask-local")).toHaveAttribute(
+    "mask",
+    "url(#local-mask)"
+  )
+  await expect(chart.locator("#mask-local")).toHaveCSS(
+    "mask-image",
+    /url\(.*#local-mask.*\)/
+  )
   expect(
     await chart.evaluate((svg) => {
       const xml = new XMLSerializer().serializeToString(svg)

@@ -19,6 +19,13 @@ suites spawn the bundled server, which resolves `semiotic/*` entry points from
 `dist/`. Source and artifact fingerprints reject missing or stale builds in
 local runs and CI. Rebuild after changing library or MCP runtime source.
 
+The package browser suite also requires both builds: its widget regression
+loads the shipped MCP executable during test collection. Local
+`npm run test:dist` starts `serve-examples`, which builds the library and MCP
+artifacts before serving. If reusing an existing server, rebuild with
+`npm run dist && npm run build:mcp` before running Playwright. CI and the Linux
+snapshot bootstrap build production library and MCP artifacts explicitly.
+
 The repo pins Node with Volta in `package.json`. Use that version when possible.
 
 ## Project Structure

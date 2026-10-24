@@ -225,6 +225,14 @@ function safePresentationValue(name: string, value: string): boolean {
     /^url\(\s*(["']?)(#[\w:.-]+)\1\s*\)$/i.test(value.trim())
   )
     return true
+  // Masks accept CSS <image> values, including image-set("remote" 1x),
+  // which can fetch resources without a url() token. Keep their grammar
+  // closed on attributes as well as parsed declarations.
+  if (name === "mask") {
+    return /^(?:none|inherit|initial|unset|revert|revert-layer)$/i.test(
+      value.trim()
+    )
+  }
   try {
     assertSafeThemeCSS(value, name)
     return true

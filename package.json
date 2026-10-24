@@ -367,7 +367,7 @@
     "baseline:stream-file-sizes": "node scripts/stream-file-size-ratchet.mjs --write",
     "report:stream-file-sizes": "node scripts/stream-file-size-ratchet.mjs",
     "test:stream-file-size-ratchet": "node --test scripts/stream-file-size-ratchet.test.mjs",
-    "serve-examples": "npm run dist && vite --config vite.integration.config.mjs --host 127.0.0.1 --port 1234",
+    "serve-examples": "npm run dist && npm run build:mcp && vite --config vite.integration.config.mjs --host 127.0.0.1 --port 1234",
     "serve-examples:ci": "vite --config vite.integration.config.mjs --host 127.0.0.1 --port 1234",
     "dist": "node scripts/build.mjs",
     "dist:prod": "node scripts/build.mjs --production",

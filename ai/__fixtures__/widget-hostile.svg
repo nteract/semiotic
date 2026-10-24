@@ -11,12 +11,15 @@
     .stream-ordinal-frame:hover .annotation-deferred {opacity:1}
     @media (prefers-reduced-motion:reduce) {.annotation-deferred {transition:none}}
     rect {cursor:url(https://evil.test/cursor),auto;stroke:u\72l(https://evil.test/stroke)}
+    #mask-sheet {mask:image-set("https://evil.test/mask-sheet.png" 1x)}
+    #mask-webkit-sheet {mask:-webkit-image-set("https://evil.test/mask-webkit-sheet.png" 1x)}
     @import "https://evil.test/unterminated"
   </style>
   <defs>
     <linearGradient id="paint"><stop offset="0" stop-color="#286090"/><stop offset="1" stop-color="#4890b0"/></linearGradient>
     <clipPath id="clip"><rect width="400" height="240"/></clipPath>
     <path id="local-path" d="M10 10L20 20"/>
+    <mask id="local-mask"><rect width="400" height="240" fill="white"/></mask>
   </defs>
   <g clip-path="url(#clip)">
     <rect id="revenue" x="40" y="30" width="100" height="160" fill="url(#paint)" aria-label="North revenue: 10" formaction="x" foo="y" attributeName="href" to="https://evil.test/to" xlink:actuate="onLoad" onclick="window.__widgetExecuted=true"/>
@@ -27,6 +30,13 @@
     <use href="data:image/svg+xml;base64,PHN2Zy8+"/>
     <use xlink:href="#local-path"/>
     <image href="https://evil.test/image.png"/>
+    <rect id="mask-attribute" x="300" y="20" width="20" height="20" mask="image-set('https://evil.test/mask-attribute.png' 1x)"/>
+    <rect id="mask-webkit-attribute" x="300" y="50" width="20" height="20" mask="-webkit-image-set('https://evil.test/mask-webkit-attribute.png' 1x)"/>
+    <rect id="mask-inline" x="300" y="80" width="20" height="20" style="mask:image-set('https://evil.test/mask-inline.png' 1x)"/>
+    <rect id="mask-webkit-inline" x="300" y="110" width="20" height="20" style="mask:-webkit-image-set('https://evil.test/mask-webkit-inline.png' 1x)"/>
+    <rect id="mask-sheet" x="300" y="140" width="20" height="20"/>
+    <rect id="mask-webkit-sheet" x="300" y="170" width="20" height="20"/>
+    <rect id="mask-local" x="330" y="20" width="20" height="20" mask="url(#local-mask)"/>
   </g>
   <foreignObject><img xmlns="http://www.w3.org/1999/xhtml" src="https://evil.test/html.png" onerror="window.__widgetExecuted=true"/></foreignObject>
   <script>window.__widgetExecuted=true</script>
