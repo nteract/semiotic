@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Unknown component names inherited from `Object.prototype` no longer claim
+  built-in access capabilities and now honor the explicit realtime fallback.
 - Categorical heatmap axes accept string `tickValues`. Each string is the
   column or row key and is drawn at that cell's center.
 - A log axis keeps an explicit positive end when no positive sample remains,

@@ -231,20 +231,39 @@ describe("ChartAccessContract@1", () => {
     expect(interactive.keyboard.legendInteraction).toBe("built-in")
   })
 
-  it("fails closed for components absent from the generated capability map", () => {
-    const contract = createChartAccessContract({
-      component: "ThirdPartyChart",
-      props: { accessibleTable: true, showLegend: true },
-      options: { navigable: true }
-    })
+  it.each(["ThirdPartyChart", ...Object.getOwnPropertyNames(Object.prototype)])(
+    "fails closed for unregistered component %s, including in realtime mode",
+    (component) => {
+      for (const realtime of [undefined, true]) {
+        const contract = createChartAccessContract({
+          component,
+          props: { accessibleTable: true, showLegend: true },
+          options: realtime === undefined ? undefined : { realtime }
+        })
 
-    expect(contract.table.enabled).toBe(false)
-    expect(contract.keyboard.markNavigation).toBe("unsupported")
-    expect(contract.keyboard.legendInteraction).toBe("unsupported")
-    expect(contract.mediaPreferences.reducedMotion).toBe("unknown")
-    expect(contract.navigation.supported).toBe(false)
-    expect(contract.ssr.supported).toBe(false)
-  })
+        expect(contract.text.accessibleTable).toBe(false)
+        expect(contract.table.enabled).toBe(false)
+        expect(contract.keyboard.markNavigation).toBe("unsupported")
+        expect(contract.keyboard.focusRing).toBe("unsupported")
+        expect(contract.keyboard.legendInteraction).toBe("unsupported")
+        expect(contract.mediaPreferences.reducedMotion).toBe("unknown")
+        expect(contract.mediaPreferences.forcedColors).toBe("unknown")
+        expect(contract.mediaPreferences.note).toContain(
+          "No generated runtime capability record"
+        )
+        expect(contract.navigation.supported).toBe(false)
+        expect(contract.ssr.supported).toBe(false)
+        expect(contract.streamStatus.supported).toBe(realtime === true)
+        expect(contract.streamStatus).toEqual(
+          createChartAccessContract({
+            component: "ThirdPartyChart",
+            props: {},
+            options: realtime === undefined ? undefined : { realtime }
+          }).streamStatus
+        )
+      }
+    }
+  )
 
   it("attaches non-empty SSR evidence when supplied", () => {
     const { evidence } = renderChartWithEvidence("LineChart", {
