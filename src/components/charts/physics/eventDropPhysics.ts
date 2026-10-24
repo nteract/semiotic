@@ -258,6 +258,9 @@ export function compileEventDropPhysics<TDatum extends Datum>(
     if (options.sourceRail?.side === "top") {
       area.plot.y += tileSize
       area.plot.height = Math.max(1, area.plot.height - tileSize)
+    } else if (options.sourceRail?.side === "right") {
+      // The late gutter stays on the left. Only the right edge moves in.
+      area.plot.width = Math.max(1, area.plot.width - tileSize)
     } else {
       area.plot.x += tileSize
       area.plot.width = Math.max(1, area.plot.width - tileSize)

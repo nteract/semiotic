@@ -147,6 +147,23 @@ describe("EventDrop sources, ledger and clock", () => {
     expect(closes()).toHaveLength(2)
   })
 
+  it("places a right-rail hit target on the right edge", () => {
+    const { container, getByRole } = render(
+      <EventDropChart
+        size={[600, 400]}
+        sourceRail={{ side: "right", tileSize: 80 }}
+        sources={[{ id: "a", label: "Producer A" }]}
+        onSourceClick={() => undefined}
+        paused
+      />
+    )
+    expect(getByRole("button", { name: "Producer A on" })).toBeTruthy()
+    const rect = container.querySelector(
+      '[data-testid="event-drop-source-rail"] rect'
+    )
+    expect(Number(rect?.getAttribute("x"))).toBeCloseTo(600 - 40 - 24)
+  })
+
   it("keeps empty-data authority and source rail buttons keyboard reachable", () => {
     const ref = React.createRef<EventDropChartHandle>()
     const click = vi.fn()

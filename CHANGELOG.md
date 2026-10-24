@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `EventDropChart` `sourceRail.side: "right"` places producer tiles on the
+  right edge. The plot insets from the right, travel starts at those tiles,
+  and the late gutter stays on the left.
 - LiteLLM evaluation provider with configurable proxy URLs, model pricing
   discovery, reasoning-token cost estimates, and spend checks that reject
   partially priced model deployments. Run it with `npm run eval:ai:litellm`.
@@ -30,6 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   set, matching canvas. The fill under that line still paints.
 - Update the MCP SDK's transitive `ip-address` dependency to `10.7.4`, fixing
   CVE-2026-111997 and clearing the release security audit.
+- Update transitive `body-parser`, `fast-uri`, `undici`, and `zod` so the
+  preflight `npm audit` gate is clean.
 - Align Vitest's coverage and UI packages with the test runner so release
   validation uses a supported dependency combination.
 

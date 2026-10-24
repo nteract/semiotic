@@ -19,7 +19,7 @@ export interface EventDropSource {
 }
 
 export interface EventDropSourceRail {
-  side?: "left" | "top" | "none"
+  side?: "left" | "right" | "top" | "none"
   tileSize?: number
 }
 
@@ -44,16 +44,19 @@ export function eventDropSourcePositions(
   if (rail.side === "none") return []
   const visible = sources.filter((source) => source.visible !== false)
   const tileSize = Math.max(48, rail.tileSize ?? 80)
+  const count = Math.max(1, visible.length)
   return visible.map((source, index) => ({
     source,
     x:
       rail.side === "top"
-        ? ((index + 0.5) * size[0]) / Math.max(1, visible.length)
-        : tileSize / 2,
+        ? ((index + 0.5) * size[0]) / count
+        : rail.side === "right"
+          ? size[0] - tileSize / 2
+          : tileSize / 2,
     y:
       rail.side === "top"
         ? tileSize / 2 + 24
-        : ((index + 0.5) * size[1]) / Math.max(1, visible.length)
+        : ((index + 0.5) * size[1]) / count
   }))
 }
 
