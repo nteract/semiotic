@@ -5,25 +5,14 @@
  * fixture tests remain within the repository's test-file size policy.
  */
 import { spawn, type ChildProcess } from "child_process"
-import { existsSync, readFileSync } from "fs"
+import { readFileSync } from "fs"
 import * as net from "net"
 import * as path from "path"
 import { afterEach, describe, expect, it } from "vitest"
+import { SERVER_PATH } from "./mcpStdioHarness"
 
 const ROOT = path.resolve(__dirname, "../../..")
-const SERVER_PATH = path.join(ROOT, "ai/dist/mcp-server.js")
 const PACKAGE_VERSION = JSON.parse(readFileSync(path.join(ROOT, "package.json"), "utf8")).version
-const REQUIRED_BUNDLES = [
-  SERVER_PATH,
-  path.join(ROOT, "dist/semiotic-ai.min.js"),
-  path.join(ROOT, "dist/geo.min.js"),
-  path.join(ROOT, "dist/server.min.js"),
-]
-const SERVER_DEPS_READY = REQUIRED_BUNDLES.every(existsSync)
-
-if (!SERVER_DEPS_READY && process.env.CI) {
-  throw new Error(`MCP hosted identity tests require built artifacts: ${REQUIRED_BUNDLES.filter((file) => !existsSync(file)).join(", ")}`)
-}
 
 function getOpenPort(): Promise<number> {
   return new Promise((resolve, reject) => {
@@ -135,7 +124,7 @@ async function rpc(port: number, id: string, method: string, params: Record<stri
   return { response, body: JSON.parse(await response.text()) }
 }
 
-describe.skipIf(!SERVER_DEPS_READY)("hosted MCP build identity", () => {
+describe("hosted MCP build identity", () => {
   let proc: ChildProcess | undefined
 
   afterEach(async () => {

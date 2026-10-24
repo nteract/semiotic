@@ -19,7 +19,7 @@ import type { JsonRpcResponse, ListedMcpTool } from "./mcpProtocolTypes"
 import type { ChildProcess } from "child_process"
 import { readFileSync } from "fs"
 import * as path from "path"
-import { SERVER_DEPS_READY, spawnServer, sendRequest, initializeServer } from "./mcpStdioHarness"
+import { spawnServer, sendRequest, initializeServer } from "./mcpStdioHarness"
 
 import { openPartialMcpUpload, requestHTTP } from "./mcpHttpUploadHarness"
 import { spawnHTTPServer, spawnReadyHTTPServer, waitForProcessExit } from "./mcpHttpServerHarness"
@@ -79,7 +79,7 @@ async function sendHTTPRPC(
 /** Send a JSON-RPC request and wait for the response. */
 // ── Tests ────────────────────────────────────────────────────────────
 
-describe.skipIf(!SERVER_DEPS_READY)("MCP protocol round-trip", () => {
+describe("MCP protocol round-trip", () => {
   let proc: ChildProcess
 
   beforeEach(async () => {
@@ -918,7 +918,7 @@ describe.skipIf(!SERVER_DEPS_READY)("MCP protocol round-trip", () => {
   })
 })
 
-describe.skipIf(!SERVER_DEPS_READY)("MCP HTTP transport smoke", () => {
+describe("MCP HTTP transport smoke", () => {
   let proc: ChildProcess | undefined
   let port: number
 

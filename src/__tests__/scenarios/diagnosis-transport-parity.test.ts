@@ -6,7 +6,6 @@ import {
 } from "../../../ai/operations/diagnose"
 import { diagnoseConfig } from "../../components/charts/shared/diagnoseConfig"
 import {
-  SERVER_DEPS_READY,
   initializeServer,
   sendRequest,
   spawnServer
@@ -58,7 +57,7 @@ const cases: DiagnosisRequest[] = [
   }
 ]
 
-describe.skipIf(!SERVER_DEPS_READY)("CLI/MCP diagnosis parity", () => {
+describe("CLI/MCP diagnosis parity", () => {
   let proc: ChildProcess
   beforeAll(async () => {
     proc = spawnServer()
