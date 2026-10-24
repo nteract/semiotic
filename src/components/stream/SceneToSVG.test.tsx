@@ -91,6 +91,25 @@ describe("xySceneNodeToSVG — line", () => {
     expect(html).toContain('stop-color="#0000ff"')
     expect(html).toContain('stroke="url(#chart-line-0-stroke-gradient)"')
   })
+
+  it("does not paint a stroke gradient when stroke is none", () => {
+    const node = {
+      type: "line",
+      path: [[0, 0], [50, 25], [100, 10]],
+      style: { stroke: "none", strokeWidth: 3, fill: "red", fillOpacity: 0.4 },
+      strokeGradient: {
+        stops: [
+          { offset: 0, color: "#ff0000" },
+          { offset: 1, color: "#0000ff" },
+        ],
+      },
+    }
+    const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0, "chart"))
+    expect(html).not.toContain("linearGradient")
+    expect(html).not.toContain("url(#")
+    expect(html).toContain('stroke="none"')
+    expect(html).toContain('stroke-width="0"')
+  })
 })
 
 describe("xySceneNodeToSVG — point", () => {

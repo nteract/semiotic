@@ -374,12 +374,12 @@ describe("terminal transition paint", () => {
       )
       paint(110)
       expect(canvas.getAttribute("aria-label")).toBe(
-        `${label}, 2 nodes, 1 edges`
+        `${label}, 2 nodes, 1 edge`
       )
 
       store.ingestBounded([{ id: "a" }], [], [200, 100])
       paint(120)
-      expect(canvas.getAttribute("aria-label")).toBe(`${label}, 1 nodes`)
+      expect(canvas.getAttribute("aria-label")).toBe(`${label}, 1 node`)
 
       store.ingestBounded([], [], [200, 100])
       paint(130)

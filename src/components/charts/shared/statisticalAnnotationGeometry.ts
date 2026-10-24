@@ -7,6 +7,7 @@ import {
   type RegressionPoint
 } from "./leastSquaresRegression"
 import { loess } from "./loess"
+import { projectHeatmapBandComputedValue } from "../../stream/heatmapBandTicks"
 
 /** Shared browser/server trend fitting and projection. */
 export function trendGeometry(
@@ -23,8 +24,14 @@ export function trendGeometry(
   const ordinal = context.frameType === "ordinal"
   // Fit ordinal (category, value) pairs; context keys describe screen axes.
   if (ordinal && horizontal) [xKey, yKey] = [yKey, xKey]
-  const sx = scaleX as (key: string | number | Date) => number
-  const sy = scaleY as (key: string | number | Date) => number
+  const sx = (value: unknown) => {
+    const px = projectHeatmapBandComputedValue(scaleX, value)
+    return px == null ? Number.NaN : px
+  }
+  const sy = (value: unknown) => {
+    const px = projectHeatmapBandComputedValue(scaleY, value)
+    return px == null ? Number.NaN : px
+  }
   const band = horizontal ? sy : sx
   const categories = ordinal
     ? (context.scales?.o?.domain().map(String) ??

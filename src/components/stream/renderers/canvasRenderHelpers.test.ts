@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest"
 import {
+  CANVAS_NONE_PAINT,
   resolveCurveFactory,
   resolveCanvasFill,
   resolveCanvasPaint,
@@ -36,6 +37,12 @@ describe("canvasRenderHelpers", () => {
     it("returns the fallback when fill is null or undefined", () => {
       expect(resolveCanvasFill(ctx, null, "#fallback")).toBe("#fallback")
       expect(resolveCanvasFill(ctx, undefined, "#fallback")).toBe("#fallback")
+    })
+
+    it("maps SVG none to transparent instead of the fallback or a raw none string", () => {
+      expect(resolveCanvasFill(ctx, "none", "#fallback")).toBe(CANVAS_NONE_PAINT)
+      expect(resolveCanvasFill(ctx, " None ", "#fallback")).toBe(CANVAS_NONE_PAINT)
+      expect(resolveCanvasPaint(ctx, "none", "#fallback")).toBe(CANVAS_NONE_PAINT)
     })
 
     it("passes CanvasPattern values through untouched", () => {
@@ -147,6 +154,13 @@ describe("canvasRenderHelpers", () => {
       expect(paint).not.toHaveBeenCalled()
     })
 
+    it("does not invoke paint when style.fill is none", () => {
+      const paint = vi.fn()
+      paintNetworkFill(ctx, { fill: "none" } as Style, "#007bff", paint)
+      paintNetworkFill(ctx, { fill: " None " } as Style, "#007bff", paint)
+      expect(paint).not.toHaveBeenCalled()
+    })
+
     it("resolves fillStyle from the fallback and invokes paint", () => {
       const paint = vi.fn()
       paintNetworkFill(ctx, { fill: "#ff0000" } as Style, "#007bff", paint)
@@ -183,6 +197,7 @@ describe("canvasRenderHelpers", () => {
       // coverage for that trap: "none" must short-circuit before paint().
       const paint = vi.fn()
       paintNetworkStroke(ctx, { stroke: "none" } as Style, paint)
+      paintNetworkStroke(ctx, { stroke: " None " } as Style, paint)
       expect(paint).not.toHaveBeenCalled()
     })
 

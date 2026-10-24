@@ -3,6 +3,7 @@ import {
   AccessibleDataTable,
   extractAllRows
 } from "./AccessibleDataTable"
+import { countNoun } from "./countNoun"
 import NetworkAccessibleDataTable from "./NetworkAccessibleDataTable"
 import type { AccessibleSceneNode } from "./accessibleDataRows"
 
@@ -43,12 +44,12 @@ it.each(["line", "area", "boxplot", "violin"])(
     expect(fieldReads).toBe(0)
     expect(observationReads).toBe(0)
     const trigger = screen.getByRole("button", {
-      name: `View data summary (${count} elements)`
+      name: `View data summary (${countNoun(count, "element")})`
     })
     fireEvent.click(trigger)
     await screen.findByRole("note")
     expect(fieldReads).toBeGreaterThanOrEqual(10_000)
-    expect(screen.getByRole("note")).toHaveTextContent(`${count} data points.`)
+    expect(screen.getByRole("note")).toHaveTextContent(`${countNoun(count, "data point", "data points")}.`)
     expect(screen.getByRole("note")).toHaveTextContent(
       "value: 0 to 10000, mean 5000."
     )
@@ -74,7 +75,7 @@ it.each(["line", "area", "boxplot", "violin"])(
     expect(observationReads).toBe(0)
     fireEvent.click(
       screen.getByRole("button", {
-        name: `View data summary (${count} elements)`
+        name: `View data summary (${countNoun(count, "element")})`
       })
     )
     expect(within(screen.getByRole("table")).getAllByRole("row")).toHaveLength(
@@ -170,10 +171,10 @@ it.each(rowCases)(
     render(<AccessibleDataTable scene={scene} chartType="test" />)
     fireEvent.click(
       screen.getByRole("button", {
-        name: `View data summary (${count} elements)`
+        name: `View data summary (${countNoun(count, "element")})`
       })
     )
-    expect(await screen.findByRole("note")).toHaveTextContent(`${count} data points.`)
+    expect(await screen.findByRole("note")).toHaveTextContent(`${countNoun(count, "data point", "data points")}.`)
     expect(within(screen.getByRole("table")).getAllByRole("row")).toHaveLength(
       count + 1
     )

@@ -1,6 +1,7 @@
 import {
   type DataRow,
 } from "./accessibleDataRows"
+import { countNoun } from "./countNoun"
 
 export const fmt = (value: number | undefined | null): string => {
   if (value == null) return ""
@@ -92,7 +93,7 @@ export function formatSummary(
   totalRows: number,
   fieldStats: FieldStats[],
 ): string {
-  const parts: string[] = [`${totalRows} data points.`]
+  const parts: string[] = [`${countNoun(totalRows, "data point", "data points")}.`]
 
   for (const field of fieldStats) {
     if (field.numeric) {

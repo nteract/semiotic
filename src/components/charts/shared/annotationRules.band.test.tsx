@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { scaleLinear } from "d3-scale"
+import { heatmapBandScale } from "../../stream/heatmapBandTicks"
 import { createDefaultAnnotationRules } from "./annotationRules"
 import type { AnnotationContext } from "../../realtime/types"
 
@@ -62,6 +63,24 @@ describe("band annotations", () => {
     expect(svg).toContain('<rect x="80" y="0" width="320" height="200"')
   })
 
+  it("projects heatmap x-band keys onto cell centers and keeps an omitted bound on the plot edge", () => {
+    const band = heatmapBandScale([10, 20, 30], [0, 300])
+    const heatmap: AnnotationContext = {
+      ...context,
+      width: 300,
+      scales: { x: band, y: context.scales?.y },
+    }
+    const spanned = renderToStaticMarkup(
+      rules({ type: "x-band", x0: 10, x1: 20 }, 0, heatmap) as React.ReactElement,
+    )
+    expect(spanned).toContain('<rect x="50" y="0" width="100" height="200"')
+    const open = renderToStaticMarkup(
+      rules({ type: "x-band", x1: 20 }, 0, heatmap) as React.ReactElement,
+    )
+    expect(open).toContain('<rect x="0" y="0" width="150" height="200"')
+    expect(rules({ type: "x-band", x0: 15, x1: 20 }, 0, heatmap)).toBeNull()
+  })
+
   it("skips x-band when no x scale is available", () => {
     const node = rules(
       { type: "x-band", x0: 20, x1: 60 },
@@ -69,6 +88,31 @@ describe("band annotations", () => {
       { ...context, scales: {} },
     )
     expect(node).toBeNull()
+  })
+
+  it("extends an ordinal band from a category to the plot edge", () => {
+    const o = Object.assign(
+      (value: string) => value === "A" ? 20 : value === "B" ? 100 : undefined,
+      { bandwidth: () => 40 },
+    )
+    const oCentered = (value: string) => (o(value) ?? 0) + o.bandwidth() / 2
+    const ordinal: AnnotationContext = {
+      ...context,
+      frameType: "ordinal",
+      projection: "horizontal",
+      scales: { y: oCentered as unknown as NonNullable<AnnotationContext["scales"]>["y"] },
+    }
+    const svg = renderToStaticMarkup(
+      rules({ type: "band", y0: "A" }, 0, ordinal) as React.ReactElement,
+    )
+    expect(svg).toContain('<rect x="0" y="40" width="400" height="160"')
+    const openX = renderToStaticMarkup(
+      rules({ type: "x-band", x0: 25 }, 0, {
+        ...context,
+        scales: { x: ((value: number) => value * 2) as unknown as NonNullable<AnnotationContext["scales"]>["x"] },
+      }) as React.ReactElement,
+    )
+    expect(openX).toContain('<rect x="50" y="0" width="350" height="200"')
   })
 
   it("extends band to the domain min/max when y0/y1 is missing", () => {

@@ -36,6 +36,7 @@ import {
 } from "./staticSVGChrome"
 import { renderGridSVG } from "./staticXYGrid"
 import { makeDateTickFormatter } from "../stream/xyDateTicks"
+import { heatmapBandTicks } from "../stream/heatmapBandTicks"
 import { isUnderLayerBand, underBandSVGRenderer } from "../stream/underLayerBands"
 import { normalizeColorGradient, normalizeGradient } from "../charts/shared/gradient"
 import { normalizeXYData } from "../stream/normalizeXYData"
@@ -253,7 +254,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
       xySceneNodeToSVG(node, index, idPfx, props.hoverRadius ?? 30),
   })
 
-  const axisProps = store.xIsDate && !props.xFormat && !props.tickFormatTime
+  const axisProps = store.xIsDate && !props.xFormat && !props.tickFormatTime && !heatmapBandTicks(store.scales.x)
     ? { ...props, xFormat: makeDateTickFormatter(store.scales.x.domain().map(value => value.valueOf()) as [number, number]) }
     : props
   const grid = props.showGrid

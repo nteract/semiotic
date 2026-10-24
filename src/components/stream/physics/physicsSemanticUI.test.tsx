@@ -6,10 +6,10 @@ import { StreamPhysicsFrame } from "./StreamPhysicsFrame"
 import { PhysicsSemanticDataTable } from "./physicsSemanticUI"
 
 describe("PhysicsSemanticDataTable", () => {
-  it("gives unnamed landmarks instance-local names", () => {
+  it("disambiguates duplicate summary names without using table ids", () => {
     const items = [{ id: "route", label: "Route", x: 40, y: 60 }]
 
-    render(
+    const view = render(
       <>
         <PhysicsSemanticDataTable items={items} tableId="first-physics-table" />
         <PhysicsSemanticDataTable
@@ -19,14 +19,26 @@ describe("PhysicsSemanticDataTable", () => {
       </>
     )
 
-    expect(
-      screen
-        .getAllByRole("region")
-        .map((region) => region.getAttribute("aria-label"))
-    ).toEqual([
-      "Data summary for physics chart first-physics-table",
-      "Data summary for physics chart second-physics-table"
+    const labels = screen
+      .getAllByRole("region")
+      .map((region) => region.getAttribute("aria-label"))
+    expect(labels).toEqual([
+      "Data summary for physics chart",
+      "Data summary for physics chart (2)"
     ])
+    expect(labels.join(" ")).not.toContain("first-physics-table")
+    expect(labels.join(" ")).not.toContain("second-physics-table")
+    expect(screen.getAllByRole("region").map((region) => region.id)).toEqual([
+      "first-physics-table",
+      "second-physics-table"
+    ])
+
+    view.rerender(
+      <PhysicsSemanticDataTable items={items} tableId="second-physics-table" />
+    )
+    expect(screen.getByRole("region").getAttribute("aria-label")).toBe(
+      "Data summary for physics chart"
+    )
   })
 })
 

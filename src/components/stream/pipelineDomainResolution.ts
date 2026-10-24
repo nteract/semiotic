@@ -13,11 +13,7 @@ import {
 import type { Datum } from "../charts/shared/datumTypes"
 import { computeBinExtent, histogramBinStart } from "../realtime/BinAccumulator"
 import type { BinAlign } from "../realtime/BinAccumulator"
-import { computeWaterfallExtent } from "../realtime/renderers/waterfallRenderer"
-import {
-  computeDivergingStackExtent,
-  computeStackOffsets
-} from "./SceneGraph"
+import { computeStackOffsets } from "./SceneGraph"
 import type { PipelineConfig } from "./pipelineConfig"
 import type { ArrowOfTime, StreamScales } from "./types"
 import type { ResolvedRibbon } from "./xySceneBuilders/ribbonScene"
@@ -26,6 +22,8 @@ import type { RingBuffer } from "../realtime/RingBuffer"
 export type StackExtentCache = {
   key: string
   yDomain: [number, number]
+  /** Stack boundaries the scene passes to the y scale. */
+  plottedY?: number[]
 }
 
 export function getTimeAxis(_arrowOfTime: ArrowOfTime): "x" {
@@ -56,7 +54,13 @@ export function isFullySpecifiedExtent(
 export function resolveStackedAreaYDomain(options: {
   config: Pick<
     PipelineConfig,
-    "normalize" | "baseline" | "stackOrder" | "extentPadding" | "axisExtent" | "yAxisExtent"
+    | "normalize"
+    | "baseline"
+    | "stackOrder"
+    | "extentPadding"
+    | "axisExtent"
+    | "yAxisExtent"
+    | "yScaleType"
   >
   groups: { key: string; data: Datum[] }[]
   getX: (d: Datum) => number
@@ -71,21 +75,18 @@ export function resolveStackedAreaYDomain(options: {
   const { config, groups, getX, getY } = options
   const exactMode = (config.yAxisExtent ?? config.axisExtent) === "exact"
 
-  if (config.normalize) {
-    const yDomain: [number, number] = [
-      0,
-      exactMode ? 1 : 1 + config.extentPadding
-    ]
-    return {
-      yDomain,
-      stackExtentCache: {
-        key: `${options.bufferSize}:${options.ingestVersion}:norm`,
-        yDomain
-      }
-    }
-  }
-
-  const stackCacheKey = `${options.bufferSize}:${options.ingestVersion}:${config.baseline ?? "zero"}:${config.stackOrder ?? "key"}`
+  // Normalized stacks still need their cumulative shares. The unit domain is
+  // fixed, but log sampling has to see 0→1/3→1 rather than the raw rows.
+  // Stack order changes the cumulative shares even when the unit domain
+  // stays [0, 1]. Exact mode drops the padding on that unit domain.
+  // updateConfig does not bump the ingest version for either change.
+  const extentKey = exactMode ? "exact" : "pad"
+  // Log sampling is the only reader of the boundary list. A linear chart must
+  // not retain it, and a later scale-type change has to miss this cache.
+  const sampleKey = config.yScaleType === "log" ? "log" : "lin"
+  const stackCacheKey = config.normalize
+    ? `${options.bufferSize}:${options.ingestVersion}:norm:${config.stackOrder ?? "key"}:${extentKey}:${sampleKey}`
+    : `${options.bufferSize}:${options.ingestVersion}:${config.baseline ?? "zero"}:${config.stackOrder ?? "key"}:${extentKey}:${sampleKey}`
   if (
     options.stackExtentCache &&
     options.stackExtentCache.key === stackCacheKey
@@ -98,7 +99,6 @@ export function resolveStackedAreaYDomain(options: {
 
   const valueMaps = new Map<string, Map<number, number>>()
   const xSet = new Set<number>()
-  let maxStacked = 0
   const xTotals = new Map<number, number>()
   const groupTotals = new Map<string, number>()
   for (const g of groups) {
@@ -113,7 +113,6 @@ export function resolveStackedAreaYDomain(options: {
       groupTotal += y
       const total = (xTotals.get(x) || 0) + y
       xTotals.set(x, total)
-      if (total > maxStacked) maxStacked = total
     }
     valueMaps.set(g.key, m)
     groupTotals.set(g.key, groupTotal)
@@ -159,22 +158,59 @@ export function resolveStackedAreaYDomain(options: {
     groupKeys = groups.map((g) => g.key).sort(keyCmp)
   }
 
+  if (config.normalize) {
+    for (const map of valueMaps.values()) {
+      for (const [x, y] of map) {
+        // The scene divides by `sum || 1`. A zero total still draws the raw
+        // signed layers; recording zeros here drops them from the log sample.
+        map.set(x, y / (xTotals.get(x) || 1))
+      }
+    }
+  }
+
+  // The scene forces a zero baseline whenever normalize is set.
+  const baseline = config.normalize ? "zero" : config.baseline
+  const collectSamples = config.yScaleType === "log"
+  const plottedY = collectSamples ? [] as number[] : null
+  const remember = (cursor: number) => {
+    if (!plottedY) return
+    if (plottedY.length > 0 && plottedY[plottedY.length - 1] === cursor) return
+    plottedY.push(cursor)
+  }
+  const finish = (yDomain: [number, number]) => {
+    const stackExtentCache: StackExtentCache = { key: stackCacheKey, yDomain }
+    if (plottedY) stackExtentCache.plottedY = plottedY
+    return { yDomain, stackExtentCache }
+  }
   let yDomain: [number, number]
-  if (config.baseline === "wiggle" || config.baseline === "silhouette") {
+  if (baseline === "wiggle" || baseline === "silhouette") {
     const xValues = Array.from(xSet).sort((a, b) => a - b)
     const offsets = computeStackOffsets(
       xValues,
       groupKeys,
       (k, x) => valueMaps.get(k)?.get(x) || 0,
-      config.baseline
+      baseline
     )
     let lo = Infinity
     let hi = -Infinity
+    const record = (cursor: number) => {
+      remember(cursor)
+      if (cursor < lo) lo = cursor
+      if (cursor > hi) hi = cursor
+    }
+    // Every cumulative boundary, not only the envelope. A silhouette of
+    // three 10s has edges -15, -5, 5, and 15; the positive 5-to-15 layer
+    // has to be in the log sample or it collapses onto the domain edge.
+    // A missing group adds nothing, so it must not be stored again.
     for (const x of xValues) {
-      const off = offsets.get(x) ?? 0
-      const total = xTotals.get(x) ?? 0
-      if (off < lo) lo = off
-      if (off + total > hi) hi = off + total
+      let cursor = offsets.get(x) ?? 0
+      record(cursor)
+      for (const key of groupKeys) {
+        const value = valueMaps.get(key)?.get(x) || 0
+        if (value === 0) continue
+        cursor += value
+        record(cursor)
+      }
     }
     if (!Number.isFinite(lo) || !Number.isFinite(hi)) {
       lo = 0
@@ -182,25 +218,59 @@ export function resolveStackedAreaYDomain(options: {
     }
     const range = hi - lo
     const pad = exactMode ? 0 : range > 0 ? range * config.extentPadding : 1
-    yDomain = [lo - pad, hi + pad]
-  } else if (config.baseline === "diverging") {
+    return finish([lo - pad, hi + pad])
+  } else if (baseline === "diverging") {
     const xValues = Array.from(xSet).sort((a, b) => a - b)
-    const [lo, hi] = computeDivergingStackExtent(
-      xValues,
-      groupKeys,
-      (k, x) => valueMaps.get(k)?.get(x) || 0
-    )
+    let lo = 0
+    let hi = 0
+    const record = (cursor: number) => {
+      remember(cursor)
+      if (cursor < lo) lo = cursor
+      if (cursor > hi) hi = cursor
+    }
+    for (const x of xValues) {
+      let pos = 0
+      let neg = 0
+      for (const key of groupKeys) {
+        const value = valueMaps.get(key)?.get(x) || 0
+        if (value === 0) continue
+        if (value > 0) {
+          pos += value
+          record(pos)
+        } else {
+          neg += value
+          record(neg)
+        }
+      }
+    }
     const range = hi - lo
     const pad = exactMode ? 0 : range > 0 ? range * config.extentPadding : 1
-    yDomain = [lo - pad, hi + pad]
+    return finish([lo - pad, hi + pad])
   } else {
-    const pad =
-      exactMode ? 0 : maxStacked > 0 ? maxStacked * config.extentPadding : 1
-    yDomain = [0, maxStacked + pad]
+    // Walk the same stack order as the scene. A commutative total hides
+    // negative layers and order-dependent peaks, so the domain follows the
+    // running cursor and keeps a zero baseline when the stack never goes below it.
+    const xValues = Array.from(xSet).sort((a, b) => a - b)
+    let lo = 0
+    let hi = 0
+    for (const x of xValues) {
+      let cursor = 0
+      for (const key of groupKeys) {
+        const value = valueMaps.get(key)?.get(x) || 0
+        if (value === 0) continue
+        cursor += value
+        remember(cursor)
+        if (cursor < lo) lo = cursor
+        if (cursor > hi) hi = cursor
+      }
+    }
+    const range = hi - lo
+    const pad = exactMode ? 0 : range > 0 ? range * config.extentPadding : 1
+    yDomain = config.normalize
+      ? [0, exactMode ? 1 : 1 + config.extentPadding]
+      : [lo < 0 ? lo - pad : 0, hi + pad]
+    return finish(yDomain)
   }
-
-  const stackExtentCache = { key: stackCacheKey, yDomain }
-  return { yDomain, stackExtentCache }
 }
 
 export function resolveBarBinYDomain(
@@ -213,7 +283,7 @@ export function resolveBarBinYDomain(
   exactMode: boolean,
   binAlign: BinAlign = "start"
 ): [number, number] {
-  const [, maxTotal] = computeBinExtent(
+  const [minTotal, maxTotal] = computeBinExtent(
     buffer,
     getX,
     getY,
@@ -221,7 +291,10 @@ export function resolveBarBinYDomain(
     getCategory,
     binAlign
   )
-  return [0, exactMode ? maxTotal : maxTotal + maxTotal * extentPadding]
+  if (minTotal === 0 && maxTotal === 0) return [0, 0]
+  const span = maxTotal - minTotal
+  const pad = exactMode ? 0 : span * extentPadding
+  return [minTotal < 0 ? minTotal - pad : 0, maxTotal + pad]
 }
 
 /** Cover whole centered edge bins automatically, preserving explicit bounds. */
@@ -237,13 +310,40 @@ export function resolveCenteredBinXDomain(
   ], userExtent)
 }
 
+/**
+ * Cumulative ends of the bars `buildWaterfallScene` draws. A missing or
+ * non-finite x is not a bar, so that row must not move the cursor.
+ */
+export function waterfallCumulativeEnds(
+  data: Iterable<Datum>,
+  getX: (d: Datum) => number,
+  getY: (d: Datum) => number
+): number[] {
+  const values: number[] = []
+  let cumulative = 0
+  for (const datum of data) {
+    const value = getY(datum)
+    const x = getX(datum)
+    if (value == null || Number.isNaN(value) || x == null || !isFinite(x as number)) continue
+    cumulative += value
+    values.push(cumulative)
+  }
+  return values
+}
+
 export function resolveWaterfallYDomain(
   buffer: RingBuffer<Datum>,
+  getX: (d: Datum) => number,
   getY: (d: Datum) => number,
   extentPadding: number,
   exactMode: boolean
 ): [number, number] {
-  const [minCum, maxCum] = computeWaterfallExtent(buffer, getY)
+  let minCum = 0
+  let maxCum = 0
+  for (const cumulative of waterfallCumulativeEnds(buffer, getX, getY)) {
+    if (cumulative < minCum) minCum = cumulative
+    if (cumulative > maxCum) maxCum = cumulative
+  }
   const range = maxCum - minCum
   const pad = exactMode ? 0 : range > 0 ? range * extentPadding : 1
   return [
@@ -360,24 +460,157 @@ export function reapplyPartialYExtent(
   ]
 }
 
+function rescueAxis(
+  domain: [number, number],
+  fallback: [number, number],
+  explicit?: readonly (number | undefined)[],
+  scaleType?: PipelineConfig["xScaleType"] | PipelineConfig["yScaleType"]
+): [number, number] {
+  if (domain[0] !== Infinity && domain[1] !== -Infinity) return domain
+  const min = explicit?.[0]
+  const max = explicit?.[1]
+  const minOk = typeof min === "number" && Number.isFinite(min)
+  const maxOk = typeof max === "number" && Number.isFinite(max)
+  if (!minOk && !maxOk) return fallback
+  // An omitted maximum stays above an explicit positive floor. A non-positive
+  // placeholder would reverse the axis, and a log clamp would open downward.
+  if (scaleType === "log" && minOk && !maxOk && min > 0) return [min, min * 10]
+  // The open side stays non-positive when the fixed end is positive, so a
+  // log clamp can open one decade instead of adopting the placeholder.
+  return [
+    minOk ? min : maxOk && max > 0 ? 0 : fallback[0],
+    maxOk ? max : minOk && min > 0 ? 0 : fallback[1]
+  ]
+}
+
 export function rescueDegenerateDomains(
   xDomain: [number, number],
   yDomain: [number, number],
-  xScaleType?: PipelineConfig["xScaleType"]
+  xScaleType?: PipelineConfig["xScaleType"],
+  extents?: {
+    x?: readonly (number | undefined)[]
+    y?: readonly (number | undefined)[]
+    yScaleType?: PipelineConfig["yScaleType"]
+  }
 ): { xDomain: [number, number]; yDomain: [number, number] } {
-  let x = xDomain
-  let y = yDomain
-  if (x[0] === Infinity || x[1] === -Infinity) {
-    if (xScaleType === "time") {
-      // Empty charts have no observation time. A fixed epoch keeps static
-      // exports and the first hydration render on the same scale.
-      x = [0, 86400000]
-    } else {
-      x = [0, 1]
+  const xFallback: [number, number] =
+    xScaleType === "time"
+      ? // Empty charts have no observation time. A fixed epoch keeps static
+        // exports and the first hydration render on the same scale.
+        [0, 86400000]
+      : [0, 1]
+  return {
+    xDomain: rescueAxis(xDomain, xFallback, extents?.x, xScaleType),
+    yDomain: rescueAxis(yDomain, [0, 1], extents?.y, extents?.yScaleType)
+  }
+}
+
+/**
+ * Log scales cannot plot non-positive bounds. Keep an already-positive
+ * domain, including a flipped one. With no positive sample, keep an explicit
+ * positive end and open one decade from it. Use [1, 10] only when neither
+ * end is an explicit positive bound, even if padding left a positive end.
+ * Otherwise replace each non-positive end with the smallest or largest
+ * positive sample. A sample past an explicit positive end must not replace
+ * that end; open one decade from it instead. Computed ends, such as a
+ * normalized unit domain, still expand.
+ */
+export function clampLogDomain(
+  domain: [number, number],
+  positive: { min: number; max: number } | null,
+  explicit?: readonly (number | undefined)[]
+): [number, number] {
+  const ascending = domain[0] <= domain[1]
+  const low = ascending ? domain[0] : domain[1]
+  const high = ascending ? domain[1] : domain[0]
+  const lowOk = low > 0 && Number.isFinite(low)
+  const highOk = high > 0 && Number.isFinite(high)
+  if (lowOk && highOk) return domain
+  const locked = new Set<number>()
+  if (explicit) {
+    for (const value of explicit) {
+      if (value != null && value > 0 && Number.isFinite(value)) locked.add(value)
     }
   }
-  if (y[0] === Infinity || y[1] === -Infinity) y = [0, 1]
-  return { xDomain: x, yDomain: y }
+  if (!positive) {
+    if (highOk && locked.has(high)) {
+      const nextLow = high / 10
+      return ascending ? [nextLow, high] : [high, nextLow]
+    }
+    return ascending ? [1, 10] : [10, 1]
+  }
+  let nextLow = lowOk ? low : positive.min
+  let nextHigh = highOk ? high : positive.max
+  if (!(nextHigh > nextLow)) {
+    if (highOk && locked.has(high)) nextLow = nextHigh / 10
+    else nextHigh = nextLow * 10
+  }
+  return ascending ? [nextLow, nextHigh] : [nextHigh, nextLow]
+}
+
+/**
+ * Y channels a non-aggregate scene paints. Mirrors PipelineStore's y-extent
+ * walk: candle high/low, open/close when the body is drawn, an explicit area
+ * baseline, and ribbon endpoints. Sampling only `getY` drops a valid low onto
+ * the same pixel as a larger high. Range candles have no separate body.
+ */
+export function collectPlottedYChannels(input: {
+  chartType: string
+  data: Iterable<Datum>
+  getY: (datum: Datum) => number
+  getY0?: (datum: Datum) => number
+  getHigh?: (datum: Datum) => number
+  getLow?: (datum: Datum) => number
+  getOpen?: (datum: Datum) => number
+  getClose?: (datum: Datum) => number
+  ribbons: readonly ResolvedRibbon[]
+}): number[] {
+  const values: number[] = []
+  if (input.chartType === "candlestick" && input.getHigh && input.getLow) {
+    const getHigh = input.getHigh
+    const getLow = input.getLow
+    const getOpen = input.getOpen
+    const getClose = input.getClose
+    const sampleBody = getOpen != null && getClose != null
+    for (const datum of input.data) {
+      values.push(getHigh(datum), getLow(datum))
+      if (sampleBody) values.push(getOpen(datum), getClose(datum))
+    }
+    return values
+  }
+  for (const datum of input.data) {
+    values.push(input.getY(datum))
+    if (input.getY0) values.push(input.getY0(datum))
+    for (const ribbon of input.ribbons) {
+      const top = ribbon.getTop(datum)
+      const bottom = ribbon.getBottom(datum)
+      if (Number.isFinite(top)) values.push(top)
+      if (Number.isFinite(bottom)) values.push(bottom)
+    }
+  }
+  return values
+}
+
+export function collectPositiveSamples(values: Iterable<number>): {
+  positive: { min: number; max: number } | null
+  droppedNonPositive: boolean
+} {
+  let min = Infinity
+  let max = -Infinity
+  let droppedNonPositive = false
+  for (const value of values) {
+    if (!Number.isFinite(value)) continue
+    if (!(value > 0)) {
+      droppedNonPositive = true
+      continue
+    }
+    if (value < min) min = value
+    if (value > max) max = value
+  }
+  return {
+    positive: Number.isFinite(min) ? { min, max } : null,
+    droppedNonPositive
+  }
 }
 
 export function makePipelineScale(
@@ -386,10 +619,14 @@ export function makePipelineScale(
   range: [number, number]
 ): ScaleLinear<number, number> {
   if (type === "log") {
-    const safeDomain: [number, number] = [
-      Math.max(domain[0], 1e-6),
-      Math.max(domain[1], 1e-6)
-    ]
+    let safeDomain = clampLogDomain(domain, null)
+    if (
+      safeDomain[0] === safeDomain[1] &&
+      safeDomain[0] > 0 &&
+      Number.isFinite(safeDomain[0])
+    ) {
+      safeDomain = [safeDomain[0], safeDomain[0] * 10]
+    }
     return scaleLog()
       .domain(safeDomain)
       .range(range)

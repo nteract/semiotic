@@ -15,6 +15,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Categorical heatmap axes accept string `tickValues`. Each string is the
+  column or row key and is drawn at that cell's center.
+- A log axis keeps an explicit positive end when no positive sample remains,
+  including an empty axis. The open end stays one decade away. `[1, 10]` is
+  used only when neither end is fixed.
+- A long heatmap axis no longer throws when it sorts its keys or formats a
+  date axis. Extents and the sorted key list are copied in a loop.
+- A candlestick log domain includes open and close, so a positive body stays
+  visible when the wick low is not positive.
+- An empty log axis with only a lower bound opens one decade above that bound.
+  An explicit upper bound still opens one decade below it.
+- A line with stroke `none` stays unstroked in SVG when a stroke gradient is
+  set, matching canvas. The fill under that line still paints.
 - Update the MCP SDK's transitive `ip-address` dependency to `10.7.4`, fixing
   CVE-2026-111997 and clearing the release security audit.
 - Align Vitest's coverage and UI packages with the test runner so release
@@ -2666,7 +2679,7 @@ default arrow-key node navigation retain their behavior.
 - **`axisExtent` prop on all XY and ordinal HOCs** — `"nice"` (default, current behavior) uses d3-scale's rounded tick generator; `"exact"` pins the first and last tick to the literal data min/max with equidistant intermediate ticks. Applies to XY x/y axes and the ordinal value (r) axis only; no-op on network/geo/hierarchy. In exact mode the pipeline ALSO skips `extentPadding` so the domain reflects the literal data bounds, not a padded version — explicit `tickValues`, `xExtent`/`yExtent`/`rExtent` still win over both modes. Three demos at `/features/axes#axis-extent` (temporal LineChart, Scatterplot, SwarmPlot). Centralized `equidistantTicks` + `ticksForMode` helpers in `src/components/charts/shared/axisExtent.ts`.
 - **`roundedTop` on SwimlaneChart** — pixel radius rounds the outermost ends of each lane (left+right for horizontal, top+bottom for vertical). Middle segments stay square so adjacent pieces butt against each other; single-segment lanes round all four corners. Implemented via a new `cornerRadii?: { tl, tr, br, bl }` field on `RectSceneNode` and shared shape utilities in `src/components/stream/renderers/cornerRadii.ts` (canvas and SVG renderers share the geometry; each owns its drawing language). Live demo at `/charts/swimlane-chart#rounded-corners`.
 - **`buildHistogramTooltip` helper** — histogram-specific default tooltip for `RealtimeHistogram`, sibling to `buildWaterfallTooltip` / `buildHeatmapTooltip`. Surfaces `range: <binStart>–<binEnd>`, `count: <total>`, and `category: <category>` instead of the canonical `x:`/`y:` shape, which produced empty strings on aggregated bin datums. Falls back to the canonical shape when a non-binned datum sneaks through.
-- **`tickValues` on XY axes (`frameProps.axes[i].tickValues`)** — explicit per-axis tick positions, mirroring the ordinal frame's `rTickValues`. Previously the field appeared in the docs and the docs LiveExample but was silently ignored by `SVGOverlay`'s tick computation; now it bypasses both d3's "nice" generator and `axisExtent: "exact"` and wins over `includeMax`. Pixel-distance filtering still drops overlapping labels. Accepts `Array<number | Date>`. Pinning regression test in `SVGOverlay.tickValues.test.tsx`.
+- **`tickValues` on XY axes (`frameProps.axes[i].tickValues`)** — explicit per-axis tick positions, mirroring the ordinal frame's `rTickValues`. Previously the field appeared in the docs and the docs LiveExample but was silently ignored by `SVGOverlay`'s tick computation; now it bypasses both d3's "nice" generator and `axisExtent: "exact"` and wins over `includeMax`. Pixel-distance filtering still drops overlapping labels. Accepts `Array<number | Date | string>`. String entries select categorical heatmap columns or rows. Pinning regression test in `SVGOverlay.tickValues.test.tsx`.
 - **ProcessSankey `systemInTimeAccessor` / `systemOutTimeAccessor` and `showLabels`** — optional per-edge lifecycle timestamps let a source band show mass waiting before the edge departs and a target band show mass retained after the edge arrives. The band outline now extends to those lifecycle bounds and paints per-edge gradient stubs; `showLabels={false}` suppresses dense band labels without dropping the legend. The docs page adds a helpdesk-ticket example plus the Process Sankey vs. classic Sankey recipe.
 - **Docs blog** — `/blog` now has article and index routes, a distinct no-sidebar shell, Atom feed generation, social-card generation, route prerender metadata, and seven launch entries covering release notes, chart explainers, and case studies.
 

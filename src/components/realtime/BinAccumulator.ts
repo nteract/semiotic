@@ -81,10 +81,69 @@ export function computeBinExtent(
 
   if (bins.size === 0) return [0, 0]
 
+  let minTotal = 0
   let maxTotal = 0
   for (const bin of bins.values()) {
-    if (bin.total > maxTotal) maxTotal = bin.total
+    let lo = 0
+    let hi = 0
+    if (getCategory && bin.categories.size > 0) {
+      // Any category order can draw a negative layer below zero and a
+      // positive layer above it. The safe extent is the two sums, not the net.
+      for (const value of bin.categories.values()) {
+        if (value < 0) lo += value
+        else if (value > 0) hi += value
+      }
+    } else {
+      lo = Math.min(0, bin.total)
+      hi = Math.max(0, bin.total)
+    }
+    if (lo < minTotal) minTotal = lo
+    if (hi > maxTotal) maxTotal = hi
   }
 
-  return [0, maxTotal]
+  return [minTotal, maxTotal]
+}
+
+/**
+ * Y coordinates a bar scene passes to the scale: unstacked bin totals, or
+ * category stack boundaries in the same order as the scene.
+ */
+export function barPlottedYValues(
+  data: Iterable<Datum>,
+  getTime: (d: Datum) => number,
+  getValue: (d: Datum) => number,
+  binSize: number,
+  getCategory?: (d: Datum) => string,
+  binAlign: BinAlign = "start",
+  colorKeys: string[] = []
+): number[] {
+  const bins = computeBins(data, getTime, getValue, binSize, getCategory, false, binAlign)
+  const values: number[] = []
+  if (!getCategory) {
+    for (const bin of bins.values()) values.push(bin.total)
+    return values
+  }
+  const allCategories = new Set<string>()
+  for (const bin of bins.values()) {
+    for (const category of bin.categories.keys()) allCategories.add(category)
+  }
+  const listed = new Set(colorKeys)
+  const order = [
+    ...colorKeys.filter((key) => allCategories.has(key)),
+    ...Array.from(allCategories).filter((key) => !listed.has(key)).sort()
+  ]
+  for (const bin of bins.values()) {
+    if (bin.categories.size === 0) {
+      values.push(bin.total)
+      continue
+    }
+    let cumulative = 0
+    for (const category of order) {
+      const value = bin.categories.get(category)
+      if (value == null || value === 0) continue
+      cumulative += value
+      values.push(cumulative)
+    }
+  }
+  return values
 }

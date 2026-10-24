@@ -83,6 +83,12 @@ export interface XYSceneConfig {
   // Heatmap
   xAccessor?: string | ((d: Datum) => CoercibleNumber)
   yAccessor?: string | ((d: Datum) => CoercibleNumber)
+  /** Fixed x domain. Either side may be omitted so the cells keep that edge. */
+  xExtent?: [number | undefined, number | undefined] | [number]
+  /** Fixed y domain. Either side may be omitted so the cells keep that edge. */
+  yExtent?: [number | undefined, number | undefined] | [number]
+  /** Draw the smallest y key at the top of the plot. */
+  invertY?: boolean
   valueAccessor?: string | ((d: Datum) => CoercibleNumber)
   heatmapAggregation?: "count" | "sum" | "mean"
   heatmapXBins?: number

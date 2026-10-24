@@ -18,6 +18,7 @@ import * as React from "react"
 import { render } from "@testing-library/react"
 import { describe, it, expect } from "vitest"
 import { SVGOverlay, SVGUnderlay } from "./SVGOverlay"
+import { heatmapBandScale } from "./heatmapBandTicks"
 import type { StreamScales } from "./types"
 
 function makeStubScales(): StreamScales {
@@ -505,6 +506,48 @@ describe("font-size CSS variables", () => {
     const landmark = tickTexts.find(t => (t.getAttribute("style") || "").includes("calc("))
     expect(landmark).toBeTruthy()
     expect(landmark!.getAttribute("style")).toContain("calc(var(--semiotic-tick-font-size, 12px) + 1px)")
+  })
+
+  it("marks a heatmap month boundary from the date key, not the cell index", () => {
+    const jan31 = new Date(Date.UTC(2024, 0, 31, 12))
+    const feb1 = new Date(Date.UTC(2024, 1, 1, 12))
+    const feb2 = new Date(Date.UTC(2024, 1, 2, 12))
+    const dates = [jan31, feb1, feb2]
+    const renderAxis = (
+      landmarkTicks: boolean | ((value: string | number | Date, index: number) => boolean),
+      tickValues?: Date[],
+    ) => render(
+      <SVGOverlay
+        {...baseProps}
+        width={400}
+        scales={{
+          ...makeStubScales(),
+          x: heatmapBandScale(dates, [0, 400]),
+        } as unknown as StreamScales}
+        showAxes={true}
+        axes={[{ orient: "bottom", landmarkTicks, tickValues }]}
+      />,
+    )
+    const weights = (container: HTMLElement) =>
+      Array.from(container.querySelectorAll(".semiotic-axis-bottom text.semiotic-axis-tick")).map((tick) => [
+        tick.textContent,
+        tick.getAttribute("font-weight"),
+      ])
+    const automatic = renderAxis(true)
+    expect(weights(automatic.container)).toEqual([
+      ["Jan 31", "600"],
+      ["Feb 1", "600"],
+      ["Feb 2", "400"],
+    ])
+    const explicit = renderAxis(
+      (value) => value instanceof Date && value.getTime() === feb1.getTime(),
+      dates,
+    )
+    expect(weights(explicit.container)).toEqual([
+      ["Jan 31", "400"],
+      ["Feb 1", "600"],
+      ["Feb 2", "400"],
+    ])
   })
 
   it("moves the x-axis label below rotated tick labels", () => {

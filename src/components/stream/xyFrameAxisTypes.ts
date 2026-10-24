@@ -58,8 +58,10 @@ export interface XYFrameAxisConfig {
   /** Explicit tick values. When provided, bypasses both d3's "nice"
    *  generator and `axisExtent: "exact"` — the caller has hand-picked
    *  the positions. Pixel-distance filtering downstream still drops
-   *  overlapping labels. Mirrors the ordinal frame's `rTickValues`. */
-  tickValues?: Array<number | Date>
+   *  overlapping labels. Mirrors the ordinal frame's `rTickValues`.
+   *  A heatmap band axis matches each entry to a column or row key,
+   *  including a string category, and draws that cell's center. */
+  tickValues?: Array<number | Date | string>
   /** Grid line stroke style. A string is a dash preset (`"dashed"`,
    * `"dotted"`) or custom strokeDasharray; an object controls each grid
    * line's SVG stroke attributes. */

@@ -2,7 +2,7 @@ import type { HeatcellSceneNode } from "../types"
 import type { StreamRendererFn } from "./types"
 import { renderRectPulse } from "./renderPulse"
 import { resolveCSSColor } from "./resolveCSSColor"
-import { resolveCanvasPaint } from "./canvasRenderHelpers"
+import { isNoneCanvasPaint, resolveCanvasPaint } from "./canvasRenderHelpers"
 import { parseCanvasColor } from "./colorUtils"
 
 /**
@@ -51,7 +51,7 @@ export const heatmapCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _la
     // The fallback stays theme-aware so direct StreamXYFrame heatmaps retain
     // their existing light/dark surface separator.
     const borderWidth = Math.max(0, nodeStyle?.strokeWidth ?? 1)
-    if (borderWidth > 0) {
+    if (borderWidth > 0 && !isNoneCanvasPaint(nodeStyle?.stroke)) {
       ctx.strokeStyle = resolveCSSColor(
         ctx,
         nodeStyle?.stroke ?? "var(--semiotic-surface, #fff)"

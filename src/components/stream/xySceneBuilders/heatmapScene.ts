@@ -13,6 +13,7 @@ import { getSequentialInterpolator, SEQUENTIAL_INTERPOLATORS } from "../../chart
 import type { HeatcellSceneNode, StreamLayout } from "../types"
 import { buildHeatcellNode } from "../SceneGraph"
 import { resolveAccessor, resolveRawAccessor, type CoercibleNumber } from "../accessorUtils"
+import { heatmapBandDomain, heatmapBandScale } from "../heatmapBandTicks"
 import type { XYSceneContext } from "./types"
 import {
   attachSelectionProvenance,
@@ -54,6 +55,47 @@ function getColorLut(schemeName: string): string[] {
   return lut
 }
 
+function heatmapAxisKey(value: CoercibleNumber): {
+  key: string | number
+  label: string | number | Date
+  numeric: boolean
+  temporal: boolean
+} {
+  if (value instanceof Date) {
+    const time = value.getTime()
+    return Number.isFinite(time)
+      ? { key: time, label: value, numeric: true, temporal: true }
+      : { key: "Invalid Date", label: "Invalid Date", numeric: false, temporal: false }
+  }
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return { key: value, label: value, numeric: true, temporal: false }
+  }
+  return { key: String(value), label: String(value), numeric: false, temporal: false }
+}
+
+function sortHeatmapAxis(
+  index: Map<string | number, number>,
+  labels: Array<string | number | Date>
+): void {
+  const order = labels
+    .map((label, previous) => ({ label, previous }))
+    .sort((a, b) => heatmapLabelValue(a.label) - heatmapLabelValue(b.label))
+  const remap = new Map<number, number>()
+  order.forEach((item, next) => remap.set(item.previous, next))
+  const keys = Array.from(index.keys())
+  index.clear()
+  for (let i = 0; i < keys.length; i++) {
+    index.set(keys[i], remap.get(i)!)
+  }
+  // A loop, not splice(...labels): a long axis exceeds the argument limit.
+  labels.length = order.length
+  for (let i = 0; i < order.length; i++) labels[i] = order[i].label
+}
+
+function heatmapLabelValue(label: string | number | Date): number {
+  return label instanceof Date ? label.getTime() : Number(label)
+}
+
 function applyHeatcellStyle(
   node: HeatcellSceneNode,
   datum: Datum,
@@ -79,46 +121,66 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: St
   const getRawX = resolveRawAccessor<Datum, CoercibleNumber>(ctx.config.xAccessor, "x")
   const getRawY = resolveRawAccessor<Datum, CoercibleNumber>(ctx.config.yAccessor, "y")
 
-  // Build index maps: raw value → integer index (avoids string key allocation)
-  // Cache raw values so non-stable accessors (e.g. returning new Date) work correctly
-  const xIndex = new Map<CoercibleNumber, number>()
-  const yIndex = new Map<CoercibleNumber, number>()
-  const rawXs: CoercibleNumber[] = new Array(data.length)
-  const rawYs: CoercibleNumber[] = new Array(data.length)
+  // Canonical keys collapse Date objects that share a timestamp. The first
+  // label is kept for the tick. Strings stay in insertion order.
+  const xIndex = new Map<string | number, number>()
+  const yIndex = new Map<string | number, number>()
+  const xLabels: Array<string | number | Date> = []
+  const yLabels: Array<string | number | Date> = []
+  const rawXKeys: Array<string | number> = new Array(data.length)
+  const rawYKeys: Array<string | number> = new Array(data.length)
+  // Dates sort with numbers, but the dense fallback only accepts plain
+  // numbers. A date domain endpoint is not a timestamp the bin math can add to.
+  let xAllNumbers = true
+  let yAllNumbers = true
+  let xSortable = true
+  let ySortable = true
   for (let i = 0; i < data.length; i++) {
     const d = data[i]
-    const rx = getRawX(d)
-    const ry = getRawY(d)
-    rawXs[i] = rx
-    rawYs[i] = ry
-    if (!xIndex.has(rx)) xIndex.set(rx, xIndex.size)
-    if (!yIndex.has(ry)) yIndex.set(ry, yIndex.size)
+    const xEntry = heatmapAxisKey(getRawX(d))
+    const yEntry = heatmapAxisKey(getRawY(d))
+    rawXKeys[i] = xEntry.key
+    rawYKeys[i] = yEntry.key
+    if (!xEntry.numeric) {
+      xAllNumbers = false
+      xSortable = false
+    } else if (xEntry.temporal) {
+      xAllNumbers = false
+    }
+    if (!yEntry.numeric) {
+      yAllNumbers = false
+      ySortable = false
+    } else if (yEntry.temporal) {
+      yAllNumbers = false
+    }
+    if (!xIndex.has(xEntry.key)) {
+      xIndex.set(xEntry.key, xIndex.size)
+      xLabels.push(xEntry.label)
+    }
+    if (!yIndex.has(yEntry.key)) {
+      yIndex.set(yEntry.key, yIndex.size)
+      yLabels.push(yEntry.label)
+    }
   }
 
   const xCount = xIndex.size
   const yCount = yIndex.size
   if (xCount === 0 || yCount === 0) return []
 
-  // For numeric axes, sort and rebuild indices
-  const xKeys = Array.from(xIndex.keys())
-  const yKeys = Array.from(yIndex.keys())
-  const xNumeric = xKeys.every(v => typeof v === "number" && !isNaN(v))
-  const yNumeric = yKeys.every(v => typeof v === "number" && !isNaN(v))
-
   // Dense numeric grids miss frame budget on the per-cell static path.
   // Gate on occupied cells, not the cartesian product: a 65-point diagonal
-  // has 65×65 > 4096 but only 65 marks to paint.
+  // has 65×65 > 4096 but only 65 marks to paint. Dates stay on this path.
   const DENSE_HEATMAP_CELL_THRESHOLD = 4096
   if (
-    xNumeric &&
-    yNumeric &&
+    xAllNumbers &&
+    yAllNumbers &&
     xCount * yCount > DENSE_HEATMAP_CELL_THRESHOLD &&
     data.length > DENSE_HEATMAP_CELL_THRESHOLD
   ) {
     const occupied = new Set<number>()
     for (let i = 0; i < data.length; i++) {
-      const xi = xIndex.get(rawXs[i])
-      const yi = yIndex.get(rawYs[i])
+      const xi = xIndex.get(rawXKeys[i])
+      const yi = yIndex.get(rawYKeys[i])
       if (xi === undefined || yi === undefined) continue
       occupied.add(yi * xCount + xi)
       if (occupied.size > DENSE_HEATMAP_CELL_THRESHOLD) {
@@ -133,16 +195,8 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: St
     }
   }
 
-  if (xNumeric) {
-    xKeys.sort((a, b) => Number(a) - Number(b))
-    xIndex.clear()
-    for (let i = 0; i < xKeys.length; i++) xIndex.set(xKeys[i], i)
-  }
-  if (yNumeric) {
-    yKeys.sort((a, b) => Number(a) - Number(b))
-    yIndex.clear()
-    for (let i = 0; i < yKeys.length; i++) yIndex.set(yKeys[i], i)
-  }
+  if (xSortable) sortHeatmapAxis(xIndex, xLabels)
+  if (ySortable) sortHeatmapAxis(yIndex, yLabels)
 
   // Parallel arrays: numeric keys, values, datums — avoids per-cell object allocation
   // Float64Array for keys: safe for sparse grids where yi * xCount + xi > 2^32
@@ -155,8 +209,8 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: St
 
   for (let i = 0; i < data.length; i++) {
     const d = data[i]
-    const xi = xIndex.get(rawXs[i])
-    const yi = yIndex.get(rawYs[i])
+    const xi = xIndex.get(rawXKeys[i])
+    const yi = yIndex.get(rawYKeys[i])
     if (xi === undefined || yi === undefined) continue
     const val = getVal(d)
     const key = yi * xCount + xi
@@ -196,9 +250,25 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: St
   const customColorScale = ctx.config.heatmapColorScale
   const lut = customColorScale ? undefined : getColorLut(schemeName)
 
-  const cellW = layout.width / xCount
-  const cellH = layout.height / yCount
   const showValues = ctx.config.showValues
+  // Explicit extents are data values. Map them into the same index space the
+  // cells use, and leave an omitted side on the automatic cell edge.
+  const xScale = heatmapBandScale(
+    xLabels,
+    [0, layout.width],
+    heatmapBandDomain(xLabels, ctx.config.xExtent)
+  )
+  const yDomain = heatmapBandDomain(yLabels, ctx.config.yExtent)
+  const yScale = heatmapBandScale(
+    yLabels,
+    [layout.height, 0],
+    ctx.config.invertY ? [yDomain[1], yDomain[0]] : yDomain
+  )
+  const bandSpan = (scale: (index: number) => number, index: number) => {
+    const start = scale(index - 0.5)
+    const end = scale(index + 0.5)
+    return [Math.min(start, end), Math.abs(end - start)] as const
+  }
   const valueFormat = ctx.config.heatmapValueFormat
   const nodes: HeatcellSceneNode[] = []
 
@@ -215,11 +285,17 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: St
       ? { value: val, showValues: true as const, valueFormat }
       : { value: val }
     const datum = cellDatums[i]
+    const [x, w] = bandSpan(xScale, xi)
+    const [y, h] = bandSpan(yScale, yi)
     nodes.push(applyHeatcellStyle(buildHeatcellNode(
-      xi * cellW,
-      (yCount - 1 - yi) * cellH,
-      cellW, cellH, fill, datum, labelOpts
+      x, y, w, h, fill, datum, labelOpts
     ), datum, ctx))
+  }
+
+  // Cells and axes share this band scale. Streaming bins keep their linear scales.
+  if (ctx.scales && xCount > 0 && yCount > 0) {
+    ctx.scales.x = xScale
+    ctx.scales.y = yScale
   }
 
   return nodes

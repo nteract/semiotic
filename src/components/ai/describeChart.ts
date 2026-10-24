@@ -820,7 +820,7 @@ export function describeChart(
       if (PART_TO_WHOLE.has(component)) {
         levels.l2 = `${stats.count} segments totaling ${fmtNum(sumOf(stats))}. Largest is ${stats.maxLabel} at ${fmtNum(stats.max)}; smallest is ${stats.minLabel} at ${fmtNum(stats.min)}.`
       } else {
-        levels.l2 = `${measureName} ranges from ${fmtNum(stats.min)} (${stats.minLabel}) to ${fmtNum(stats.max)} (${stats.maxLabel}), with a mean of ${fmtNum(stats.mean)} across ${stats.count} points.`
+        levels.l2 = `${measureName} ranges from ${fmtNum(stats.min)} (${stats.minLabel}) to ${fmtNum(stats.max)} (${stats.maxLabel}), with a mean of ${fmtNum(stats.mean)} across ${stats.count} ${plural(stats.count, "point")}.`
       }
     }
   }

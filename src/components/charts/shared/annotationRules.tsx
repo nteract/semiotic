@@ -14,6 +14,7 @@ import {
   regressionNumber,
 } from "./leastSquaresRegression"
 import { resolveX, resolveY, resolveAnchoredPosition, isInBounds } from "./annotationResolvers"
+import { projectHeatmapBandBound, projectHeatmapBandComputedValue } from "../../stream/heatmapBandTicks"
 import type { Datum } from "./datumTypes"
 import { getMinMax } from "./minMax"
 import { annotationActivationProps, type AnnotationActivationOptions } from "./annotationActivation"
@@ -32,6 +33,11 @@ export {
 // `"natural"` is a valid CurveType but unsupported here — Partial<Record<...>>
 // keeps that an intentional omission rather than a required-but-missing key,
 // while still catching a typo'd key against the real CurveType union.
+function dataScale(scale: (value: number) => number, value: unknown): number {
+  const px = projectHeatmapBandComputedValue(scale, value)
+  return px == null || !Number.isFinite(px) ? Number.NaN : px
+}
+
 const CURVE_FACTORIES: Partial<Record<CurveType, CurveFactory>> = {
   linear: curveLinear,
   monotoneX: curveMonotoneX,
@@ -307,13 +313,18 @@ export function createDefaultAnnotationRules(
       // ── Band (shaded region between y0 and y1) ────────────────────────
       case "band": {
         const scaleY = context.scales?.y ?? context.scales?.value
-        const yDomain = scaleY?.domain?.()
         // A null/omitted bound extends to the axis extent on that side
         // (y0 → domain min, y1 → domain max) instead of being treated as 0.
-        const y0Value = ann.y0 ?? yDomain?.[0]
-        const y1Value = ann.y1 ?? yDomain?.[1]
-        const y0px = y0Value != null && scaleY ? scaleY(y0Value) : 0
-        const y1px = y1Value != null && scaleY ? scaleY(y1Value) : (context.height || 0)
+        const y0px = projectHeatmapBandBound(scaleY, ann.y0, 0)
+        const y1px = projectHeatmapBandBound(scaleY, ann.y1, 1)
+        // Ordinal category scales have no domain(). An omitted bound still
+        // extends to the plot edge; only a failed explicit key is dropped.
+        if (
+          scaleY &&
+          ((ann.y0 != null && y0px == null) || (ann.y1 != null && y1px == null))
+        ) return null
+        const y0 = y0px ?? 0
+        const y1 = y1px ?? (context.height || 0)
         // Region fill may be a declarative HatchFill → inline <pattern>. A
         // `layer: "under"` band paints its fill beneath the marks instead.
         const bandFill = resolveAnnotationBandFill(ann, `ann-${index}`, "vertical", "var(--semiotic-primary, #6366f1)")
@@ -323,16 +334,16 @@ export function createDefaultAnnotationRules(
             {!fillUnderMarks && bandFill.def && <defs>{bandFill.def}</defs>}
             {!fillUnderMarks && <rect
               x={0}
-              y={Math.min(y0px, y1px)}
+              y={Math.min(y0, y1)}
               width={context.width || 0}
-              height={Math.abs(y1px - y0px)}
+              height={Math.abs(y1 - y0)}
               fill={bandFill.fill}
               fillOpacity={ann.fillOpacity ?? 0.1}
             />}
             {ann.label && (
               <AnnotationLabel
                 x={(context.width || 0) - 4}
-                y={bandLabelY(y0px, y1px)}
+                y={bandLabelY(y0, y1)}
                 textAnchor="end"
                 fill={ann.labelColor ?? (ann.color || "var(--semiotic-primary, #6366f1)")}
                 fontSize={11}
@@ -348,30 +359,29 @@ export function createDefaultAnnotationRules(
       // ── Vertical band (shaded region between x0 and x1) ─────────────
       case "x-band": {
         const scaleX = context.scales?.x ?? context.scales?.time
-        const xDomain = scaleX?.domain?.()
         // A null/omitted bound extends to the axis extent on that side
         // (x0 → domain min, x1 → domain max) rather than skipping the band.
-        const x0Value = ann.x0 ?? xDomain?.[0]
-        const x1Value = ann.x1 ?? xDomain?.[1]
-        const x0px = x0Value != null && scaleX ? scaleX(x0Value) : null
-        const x1px = x1Value != null && scaleX ? scaleX(x1Value) : null
-        if (x0px == null || x1px == null) return null
+        const x0px = projectHeatmapBandBound(scaleX, ann.x0, 0)
+        const x1px = projectHeatmapBandBound(scaleX, ann.x1, 1)
+        if ((ann.x0 != null && x0px == null) || (ann.x1 != null && x1px == null)) return null
+        const x0 = x0px ?? 0
+        const x1 = x1px ?? (context.width || 0)
         const xBandFill = resolveAnnotationBandFill(ann, `ann-${index}`, "horizontal", "var(--semiotic-primary, #6366f1)")
         const fillUnderMarks = underLayerBands && ann.layer === "under"
         return (
           <g key={`ann-${index}`} opacity={ann.opacity}>
             {!fillUnderMarks && xBandFill.def && <defs>{xBandFill.def}</defs>}
             {!fillUnderMarks && <rect
-              x={Math.min(x0px, x1px)}
+              x={Math.min(x0, x1)}
               y={0}
-              width={Math.abs(x1px - x0px)}
+              width={Math.abs(x1 - x0)}
               height={context.height || 0}
               fill={xBandFill.fill}
               fillOpacity={ann.fillOpacity ?? 0.1}
             />}
             {ann.label && (
               <AnnotationLabel
-                x={Math.min(x0px, x1px) + 4}
+                x={Math.min(x0, x1) + 4}
                 y={TOP_LABEL_BASELINE}
                 textAnchor="start"
                 fill={ann.labelColor ?? (ann.color || "var(--semiotic-primary, #6366f1)")}
@@ -390,9 +400,11 @@ export function createDefaultAnnotationRules(
         const data = context.data || []
         if (data.length < 2) return null
         const xAcc = context.xAccessor || "x"
-        const scaleX = context.scales?.x ?? context.scales?.time
-        const scaleY = context.scales?.y ?? context.scales?.value
-        if (!scaleX || !scaleY) return null
+        const rawX = context.scales?.x ?? context.scales?.time
+        const rawY = context.scales?.y ?? context.scales?.value
+        if (!rawX || !rawY) return null
+        const scaleX = (value: unknown) => dataScale(rawX, value)
+        const scaleY = (value: unknown) => dataScale(rawY, value)
 
         const upperAcc = ann.upperAccessor || "upperBounds"
         const lowerAcc = ann.lowerAccessor || "lowerBounds"
@@ -446,9 +458,10 @@ export function createDefaultAnnotationRules(
         const data = (context.data || []).filter((d) => !ann.filter || ann.filter(d))
         if (data.length < 2) return null
         const yAcc = context.yAccessor || "y"
-        const scaleX = context.scales?.x ?? context.scales?.time
-        const scaleY = context.scales?.y ?? context.scales?.value
-        if (!scaleX || !scaleY) return null
+        const rawX = context.scales?.x ?? context.scales?.time
+        const rawY = context.scales?.y ?? context.scales?.value
+        if (!rawX || !rawY) return null
+        const scaleY = (value: unknown) => dataScale(rawY, value)
 
         const yValues = data
           .map((d) => regressionNumber(d[yAcc]))
@@ -528,9 +541,11 @@ export function createDefaultAnnotationRules(
         const data = context.data || []
         const xAcc = context.xAccessor || "x"
         const yAcc = context.yAccessor || "y"
-        const scaleX = context.scales?.x ?? context.scales?.time
-        const scaleY = context.scales?.y ?? context.scales?.value
-        if (!scaleX || !scaleY) return null
+        const rawX = context.scales?.x ?? context.scales?.time
+        const rawY = context.scales?.y ?? context.scales?.value
+        if (!rawX || !rawY) return null
+        const scaleX = (value: unknown) => dataScale(rawX, value)
+        const scaleY = (value: unknown) => dataScale(rawY, value)
 
         const points = regressionPoints(data.map((d) => [d[xAcc], d[yAcc]]))
         const model = forecastModel(points, ann)

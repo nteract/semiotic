@@ -1,0 +1,830 @@
+import "../../test-utils/registerBuiltInXYPlugins"
+import { afterEach, describe, expect, it, vi } from "vitest"
+import type { Datum } from "../charts/shared/datumTypes"
+import { PipelineStore, type PipelineConfig } from "./PipelineStore"
+import { resolveStackedAreaYDomain } from "./pipelineDomainResolution"
+
+function config(overrides: Partial<PipelineConfig> = {}): PipelineConfig {
+  return {
+    chartType: "scatter",
+    runtimeMode: "bounded",
+    windowSize: 200,
+    windowMode: "sliding",
+    arrowOfTime: "right",
+    extentPadding: 0,
+    xAccessor: "x",
+    yAccessor: "y",
+    ...overrides,
+  }
+}
+
+function yDomain(store: PipelineStore): [number, number] {
+  return store.scales!.y.domain() as [number, number]
+}
+
+function xDomain(store: PipelineStore): [number, number] {
+  return (store.scales!.x.domain() as Array<number | Date>).map(Number) as [number, number]
+}
+
+describe("PipelineStore domain integrity", () => {
+  afterEach(() => vi.restoreAllMocks())
+
+  it("includes a negative stacked-area cursor and keeps an all-positive stack on zero", () => {
+    const negative = new PipelineStore(config({
+      chartType: "stackedarea",
+      extentPadding: 0.1,
+      baseline: "zero",
+      stackOrder: "key",
+      groupAccessor: "g",
+    }))
+    negative.ingest({
+      inserts: [
+        { x: 0, g: "a", y: -5 },
+        { x: 0, g: "b", y: 10 },
+      ],
+      bounded: true,
+    })
+    negative.computeScene({ width: 400, height: 200 })
+    expect(yDomain(negative)).toEqual([-6, 6])
+
+    const positive = new PipelineStore(config({
+      chartType: "stackedarea",
+      extentPadding: 0.1,
+      baseline: "zero",
+      stackOrder: "key",
+      groupAccessor: "g",
+    }))
+    positive.ingest({
+      inserts: [
+        { x: 0, g: "a", y: 4 },
+        { x: 0, g: "b", y: 6 },
+      ],
+      bounded: true,
+    })
+    positive.computeScene({ width: 400, height: 200 })
+    expect(yDomain(positive)).toEqual([0, 11])
+  })
+
+  it("follows stack input order when a later negative layer never crosses zero", () => {
+    const store = new PipelineStore(config({
+      chartType: "stackedarea",
+      extentPadding: 0.1,
+      baseline: "zero",
+      stackOrder: "input",
+      groupAccessor: "g",
+    }))
+    store.ingest({
+      inserts: [
+        { x: 0, g: "b", y: 10 },
+        { x: 0, g: "a", y: -5 },
+      ],
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([0, 11])
+  })
+
+  it("pads an all-zero stack to [0, 1]", () => {
+    const store = new PipelineStore(config({
+      chartType: "stackedarea",
+      baseline: "zero",
+      groupAccessor: "g",
+    }))
+    store.ingest({
+      inserts: [
+        { x: 0, g: "a", y: 0 },
+        { x: 0, g: "b", y: 0 },
+      ],
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([0, 1])
+  })
+
+  it("includes a negative bar bin and the separate category sums", () => {
+    const unstacked = new PipelineStore(config({
+      chartType: "bar",
+      binSize: 10,
+    }))
+    unstacked.ingest({
+      inserts: [{ x: 1, y: -4 }],
+      bounded: true,
+    })
+    unstacked.computeScene({ width: 400, height: 200 })
+    expect(yDomain(unstacked)).toEqual([-4, 0])
+
+    const stacked = new PipelineStore(config({
+      chartType: "bar",
+      binSize: 10,
+      categoryAccessor: "cat",
+    }))
+    stacked.ingest({
+      inserts: [
+        { x: 1, y: -5, cat: "a" },
+        { x: 2, y: 10, cat: "b" },
+      ],
+      bounded: true,
+    })
+    stacked.computeScene({ width: 400, height: 200 })
+    expect(yDomain(stacked)).toEqual([-5, 10])
+  })
+
+  it("starts a log scale at the smallest positive value", () => {
+    const store = new PipelineStore(config({
+      yScaleType: "log",
+    }))
+    store.ingest({
+      inserts: [
+        { x: 1, y: 0 },
+        { x: 2, y: 100 },
+        { x: 3, y: 1000 },
+      ],
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([100, 1000])
+  })
+
+  it("keeps a positive log domain below 1e-6", () => {
+    const store = new PipelineStore(config({ yScaleType: "log" }))
+    store.ingest({
+      inserts: [
+        { x: 1, y: 1e-8 },
+        { x: 2, y: 1e-4 },
+      ],
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([1e-8, 1e-4])
+  })
+
+  it("keeps an inverted log domain inverted around the smallest positive value", () => {
+    const store = new PipelineStore(config({
+      yScaleType: "log",
+      invertY: true,
+    }))
+    store.ingest({
+      inserts: [
+        { x: 1, y: 0 },
+        { x: 2, y: 2 },
+        { x: 3, y: 11 },
+      ],
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([11, 2])
+  })
+
+  it("clamps a log x scale the same way and warns once per axis", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    const store = new PipelineStore(config({
+      xScaleType: "log",
+      yScaleType: "log",
+    }))
+    store.ingest({
+      inserts: [
+        { x: 0, y: -2 },
+        { x: 4, y: 8 },
+        { x: 16, y: 32 },
+      ],
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    store.computeScene({ width: 400, height: 200 })
+    expect(xDomain(store)).toEqual([4, 16])
+    expect(yDomain(store)).toEqual([8, 32])
+    const messages = warn.mock.calls.map((call) => String(call[0]))
+    expect(messages.filter((message) => message.includes("log x scale"))).toHaveLength(1)
+    expect(messages.filter((message) => message.includes("log y scale"))).toHaveLength(1)
+  })
+
+  it("keeps an explicit log end when the axis is empty", () => {
+    const emptyY = new PipelineStore(config({
+      yScaleType: "log",
+      yExtent: [undefined, 100],
+    }))
+    emptyY.computeScene({ width: 400, height: 200 })
+    expect(yDomain(emptyY)).toEqual([10, 100])
+
+    const emptyX = new PipelineStore(config({
+      xScaleType: "log",
+      xExtent: [undefined, 100],
+    }))
+    emptyX.computeScene({ width: 400, height: 200 })
+    expect(xDomain(emptyX)).toEqual([10, 100])
+
+    const removedY = new PipelineStore(config({
+      yScaleType: "log",
+      yExtent: [undefined, 100],
+      pointIdAccessor: "id",
+    }))
+    removedY.ingest({ inserts: [{ id: "a", x: 0, y: 4 }], bounded: true })
+    removedY.computeScene({ width: 400, height: 200 })
+    expect(yDomain(removedY)).toEqual([4, 100])
+    removedY.remove("a")
+    removedY.computeScene({ width: 400, height: 200 })
+    expect(yDomain(removedY)).toEqual([10, 100])
+
+    const removedX = new PipelineStore(config({
+      xScaleType: "log",
+      xExtent: [undefined, 100],
+      pointIdAccessor: "id",
+    }))
+    removedX.ingest({ inserts: [{ id: "a", x: 4, y: 1 }], bounded: true })
+    removedX.computeScene({ width: 400, height: 200 })
+    expect(xDomain(removedX)).toEqual([4, 100])
+    removedX.remove("a")
+    removedX.computeScene({ width: 400, height: 200 })
+    expect(xDomain(removedX)).toEqual([10, 100])
+  })
+
+  it("opens an empty log axis upward from an explicit lower bound", () => {
+    const emptyY = new PipelineStore(config({
+      yScaleType: "log",
+      yExtent: [100, undefined],
+    }))
+    emptyY.computeScene({ width: 400, height: 200 })
+    expect(yDomain(emptyY)).toEqual([100, 1000])
+
+    const emptyX = new PipelineStore(config({
+      xScaleType: "log",
+      xExtent: [100, undefined],
+    }))
+    emptyX.computeScene({ width: 400, height: 200 })
+    expect(xDomain(emptyX)).toEqual([100, 1000])
+
+    const removedY = new PipelineStore(config({
+      yScaleType: "log",
+      yExtent: [100, undefined],
+      pointIdAccessor: "id",
+    }))
+    removedY.ingest({ inserts: [{ id: "a", x: 0, y: 400 }], bounded: true })
+    removedY.computeScene({ width: 400, height: 200 })
+    expect(yDomain(removedY)).toEqual([100, 400])
+    removedY.remove("a")
+    removedY.computeScene({ width: 400, height: 200 })
+    expect(yDomain(removedY)).toEqual([100, 1000])
+
+    const removedX = new PipelineStore(config({
+      xScaleType: "log",
+      xExtent: [100, undefined],
+      pointIdAccessor: "id",
+    }))
+    removedX.ingest({ inserts: [{ id: "a", x: 400, y: 1 }], bounded: true })
+    removedX.computeScene({ width: 400, height: 200 })
+    expect(xDomain(removedX)).toEqual([100, 400])
+    removedX.remove("a")
+    removedX.computeScene({ width: 400, height: 200 })
+    expect(xDomain(removedX)).toEqual([100, 1000])
+
+    const linear = new PipelineStore(config({
+      yExtent: [100, undefined],
+    }))
+    linear.computeScene({ width: 400, height: 200 })
+    expect(yDomain(linear)).toEqual([100, 0])
+  })
+
+  it("uses one positive decade when a log scale has no positive data", () => {
+    const store = new PipelineStore(config({ yScaleType: "log" }))
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([1, 10])
+  })
+
+  it("keeps a valid explicit log endpoint when samples fall outside it", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {})
+    const yStore = new PipelineStore(config({
+      yScaleType: "log",
+      yExtent: [0, 10],
+    }))
+    yStore.ingest({
+      inserts: [{ x: 0, y: 0 }, { x: 1, y: 100 }],
+      bounded: true,
+    })
+    yStore.computeScene({ width: 400, height: 200 })
+    expect(yDomain(yStore)).toEqual([1, 10])
+
+    const inside = new PipelineStore(config({
+      yScaleType: "log",
+      yExtent: [0, 10],
+    }))
+    inside.ingest({
+      inserts: [{ x: 0, y: 0 }, { x: 1, y: 4 }],
+      bounded: true,
+    })
+    inside.computeScene({ width: 400, height: 200 })
+    expect(yDomain(inside)).toEqual([4, 10])
+
+    const xStore = new PipelineStore(config({
+      xScaleType: "log",
+      xExtent: [0, 10],
+    }))
+    xStore.ingest({
+      inserts: [{ x: 0, y: 1 }, { x: 100, y: 2 }],
+      bounded: true,
+    })
+    xStore.computeScene({ width: 400, height: 200 })
+    expect(xDomain(xStore)).toEqual([1, 10])
+
+    const reversed = new PipelineStore(config({
+      yScaleType: "log",
+      yExtent: [10, 0],
+    }))
+    reversed.ingest({
+      inserts: [{ x: 0, y: 0 }, { x: 1, y: 100 }],
+      bounded: true,
+    })
+    reversed.computeScene({ width: 400, height: 200 })
+    expect(yDomain(reversed)).toEqual([10, 1])
+
+    const reversedX = new PipelineStore(config({
+      xScaleType: "log",
+      xExtent: [10, 0],
+    }))
+    reversedX.ingest({
+      inserts: [{ x: 0, y: 1 }, { x: 100, y: 2 }],
+      bounded: true,
+    })
+    reversedX.computeScene({ width: 400, height: 200 })
+    expect(xDomain(reversedX)).toEqual([10, 1])
+  })
+
+  it("keeps an explicit log end when no positive sample remains", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {})
+    const yStore = new PipelineStore(config({
+      yScaleType: "log",
+      yExtent: [undefined, 100],
+      pointIdAccessor: "id",
+    }))
+    yStore.ingest({
+      inserts: [
+        { id: "pos", x: 0, y: 4 },
+        { id: "neg", x: 1, y: -2 },
+      ],
+      bounded: true,
+    })
+    yStore.computeScene({ width: 400, height: 200 })
+    expect(yDomain(yStore)).toEqual([4, 100])
+    yStore.remove("pos")
+    yStore.computeScene({ width: 400, height: 200 })
+    expect(yDomain(yStore)).toEqual([10, 100])
+
+    const xStore = new PipelineStore(config({
+      xScaleType: "log",
+      xExtent: [undefined, 100],
+      pointIdAccessor: "id",
+    }))
+    xStore.ingest({
+      inserts: [
+        { id: "pos", x: 4, y: 1 },
+        { id: "neg", x: -2, y: 2 },
+      ],
+      bounded: true,
+    })
+    xStore.computeScene({ width: 400, height: 200 })
+    expect(xDomain(xStore)).toEqual([4, 100])
+    xStore.remove("pos")
+    xStore.computeScene({ width: 400, height: 200 })
+    expect(xDomain(xStore)).toEqual([10, 100])
+
+    const openMin = new PipelineStore(config({
+      yScaleType: "log",
+      yExtent: [100, undefined],
+    }))
+    openMin.ingest({
+      inserts: [{ x: 0, y: -5 }, { x: 1, y: -1 }],
+      bounded: true,
+    })
+    openMin.computeScene({ width: 400, height: 200 })
+    expect(yDomain(openMin)).toEqual([100, 10])
+
+    const reversedY = new PipelineStore(config({
+      yScaleType: "log",
+      yExtent: [100, 0],
+    }))
+    reversedY.ingest({
+      inserts: [{ x: 0, y: 0 }, { x: 1, y: -5 }],
+      bounded: true,
+    })
+    reversedY.computeScene({ width: 400, height: 200 })
+    expect(yDomain(reversedY)).toEqual([100, 10])
+
+    const reversedX = new PipelineStore(config({
+      xScaleType: "log",
+      xExtent: [100, 0],
+    }))
+    reversedX.ingest({
+      inserts: [{ x: 0, y: 1 }, { x: -5, y: 2 }],
+      bounded: true,
+    })
+    reversedX.computeScene({ width: 400, height: 200 })
+    expect(xDomain(reversedX)).toEqual([100, 10])
+  })
+
+  it("uses one decade when padding leaves a positive end and no positive sample", () => {
+    const store = new PipelineStore(config({
+      yScaleType: "log",
+      extentPadding: 0.1,
+    }))
+    store.ingest({
+      inserts: [
+        { x: 0, y: -1000 },
+        { x: 1, y: 0 },
+      ],
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([1, 10])
+  })
+
+  it("keeps a non-positive point and clamps it to the positive edge", () => {
+    const store = new PipelineStore(config({ yScaleType: "log" }))
+    store.ingest({
+      inserts: [
+        { x: 0, y: 0 },
+        { x: 1, y: 100 },
+        { x: 2, y: 1000 },
+      ],
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    const points = store.scene.flatMap((node) => node.type === "point" ? [node] : [])
+    const zero = points.find((node) => (node.datum as { y: number }).y === 0)
+    const hundred = points.find((node) => (node.datum as { y: number }).y === 100)
+    expect(zero).toBeTruthy()
+    expect(hundred).toBeTruthy()
+    expect(zero!.y).toBeCloseTo(hundred!.y)
+    expect(yDomain(store)).toEqual([100, 1000])
+  })
+
+  it("derives a log bar domain from bin totals", () => {
+    const store = new PipelineStore(config({
+      chartType: "bar",
+      binSize: 10,
+      yScaleType: "log",
+    }))
+    store.ingest({
+      inserts: [
+        { x: 0, y: -9 },
+        { x: 1, y: 10 },
+        { x: 10, y: 10 },
+        { x: 20, y: 100 },
+        { x: 29, y: 0 },
+      ],
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([1, 100])
+    const bars = store.scene.flatMap((node) => node.type === "rect" ? [node] : [])
+    const bar = (total: number) => bars.find((node) =>
+      (node.datum as { total: number }).total === total
+    )
+    expect(bar(1)!.h).toBeCloseTo(0)
+    expect(bar(10)!.h).toBeCloseTo(100)
+    expect(bar(100)!.h).toBeCloseTo(200)
+  })
+
+  it("skips a non-finite waterfall x before the cumulative cursor", () => {
+    const rows = [{ y: 100 }, { x: 1, y: 1 }, { x: 2, y: 10 }]
+    const linear = new PipelineStore(config({ chartType: "waterfall" }))
+    linear.ingest({ inserts: rows, bounded: true })
+    linear.computeScene({ width: 400, height: 200 })
+    expect(yDomain(linear)).toEqual([0, 11])
+
+    const store = new PipelineStore(config({
+      chartType: "waterfall",
+      yScaleType: "log",
+    }))
+    store.ingest({ inserts: rows, bounded: true })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([1, 11])
+    const bars = store.scene.flatMap((node) => node.type === "rect" ? [node] : [])
+    const bar = (delta: number) => bars.find((node) =>
+      (node.datum as { delta: number }).delta === delta
+    )
+    expect(bars).toHaveLength(2)
+    expect(bar(1)!.h).toBeCloseTo(0)
+    expect(bar(10)!.h).toBeCloseTo(200)
+  })
+
+  it("retains stack boundaries only while the y scale is logarithmic", () => {
+    const point = (x: number, y: number): Datum => ({ x, y })
+    const groups = [
+      { key: "a", data: [point(0, 10), point(1, 0)] },
+      { key: "b", data: [point(0, 0), point(1, 4)] },
+      { key: "c", data: [point(0, 0), point(1, 0)] },
+    ]
+    const shared = {
+      groups,
+      getX: (d: Datum) => d.x as number,
+      getY: (d: Datum) => d.y as number,
+      bufferSize: 6,
+      ingestVersion: 1,
+    }
+    const linear = resolveStackedAreaYDomain({
+      ...shared,
+      config: { extentPadding: 0, baseline: "zero", stackOrder: "key" },
+      stackExtentCache: null,
+    })
+    expect(linear.yDomain).toEqual([0, 10])
+    expect(linear.stackExtentCache.plottedY).toBeUndefined()
+
+    const log = resolveStackedAreaYDomain({
+      ...shared,
+      config: {
+        extentPadding: 0,
+        baseline: "zero",
+        stackOrder: "key",
+        yScaleType: "log",
+      },
+      stackExtentCache: linear.stackExtentCache,
+    })
+    expect(log.stackExtentCache).not.toBe(linear.stackExtentCache)
+    expect(log.stackExtentCache.plottedY).toEqual([10, 4])
+  })
+
+  it("derives a log stacked-area domain from stack boundaries", () => {
+    const store = new PipelineStore(config({
+      chartType: "stackedarea",
+      yScaleType: "log",
+      baseline: "zero",
+      stackOrder: "key",
+      groupAccessor: "g",
+    }))
+    store.ingest({
+      inserts: [
+        { x: 0, g: "a", y: 20 },
+        { x: 0, g: "b", y: -15 },
+      ],
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([5, 20])
+  })
+
+  it("keeps a range candle low on a log domain", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {})
+    const store = new PipelineStore(config({
+      chartType: "candlestick",
+      yScaleType: "log",
+      yAccessor: "high",
+      highAccessor: "high",
+      lowAccessor: "low",
+    }))
+    store.ingest({
+      inserts: [
+        { x: 0, high: 100, low: 0 },
+        { x: 1, high: 200, low: 5 },
+      ],
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([5, 200])
+    const candles = store.scene.flatMap((node) => node.type === "candlestick" ? [node] : [])
+    const lowFive = candles.find((node) => (node.datum as { low: number }).low === 5)
+    const highHundred = candles.find((node) => (node.datum as { high: number }).high === 100)
+    expect(lowFive).toBeTruthy()
+    expect(highHundred).toBeTruthy()
+    expect(lowFive!.lowY).not.toBeCloseTo(highHundred!.highY)
+  })
+
+  it("keeps an OHLC candle body on a log domain", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {})
+    const store = new PipelineStore(config({
+      chartType: "candlestick",
+      yScaleType: "log",
+      yAccessor: "high",
+      highAccessor: "high",
+      lowAccessor: "low",
+      openAccessor: "open",
+      closeAccessor: "close",
+    }))
+    store.ingest({
+      inserts: [
+        { x: 0, low: 0, high: 100, open: 5, close: 20 },
+        { x: 1, low: 0, high: 1000, open: 10, close: 100 },
+      ],
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([5, 1000])
+    const body = store.scene.find((node) =>
+      node.type === "candlestick" && (node.datum as { open?: number }).open === 5
+    )
+    expect(body?.type).toBe("candlestick")
+    if (body?.type !== "candlestick") return
+    expect(body.openY).not.toBeCloseTo(body.closeY)
+  })
+
+  it("keeps a zero-total signed stack layer on a log domain", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {})
+    const store = new PipelineStore(config({
+      chartType: "stackedarea",
+      yScaleType: "log",
+      normalize: true,
+      extentPadding: 0,
+      stackOrder: "key",
+      groupAccessor: "g",
+    }))
+    store.ingest({
+      inserts: [0, 1].flatMap((x) => [
+        { x, g: "a", y: 10 },
+        { x, g: "b", y: 10 },
+        { x, g: "c", y: -20 },
+      ]),
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([10, 100])
+    const layer = store.scene.find((node) => node.type === "area" && node.group === "b")
+    expect(layer?.type).toBe("area")
+    if (layer?.type !== "area") return
+    expect(Math.abs(layer.topPath[0][1] - layer.bottomPath[0][1])).toBeGreaterThan(1)
+  })
+
+  it("keeps a normalized stack layer on a log domain", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {})
+    const store = new PipelineStore(config({
+      chartType: "stackedarea",
+      yScaleType: "log",
+      normalize: true,
+      stackOrder: "key",
+      groupAccessor: "g",
+    }))
+    store.ingest({
+      inserts: [0, 1].flatMap((x) => [
+        { x, g: "a", y: 10 },
+        { x, g: "b", y: 20 },
+      ]),
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    const domain = yDomain(store)
+    expect(domain[0]).toBeCloseTo(1 / 3)
+    expect(domain[1]).toBeCloseTo(1)
+    const upper = store.scene.find((node) => node.type === "area" && node.group === "b")
+    const lower = store.scene.find((node) => node.type === "area" && node.group === "a")
+    expect(upper?.type).toBe("area")
+    expect(lower?.type).toBe("area")
+    if (upper?.type !== "area" || lower?.type !== "area") return
+    expect(Math.abs(upper.topPath[0][1] - upper.bottomPath[0][1])).toBeGreaterThan(1)
+    expect(Math.abs(lower.topPath[0][1] - lower.bottomPath[0][1])).toBeLessThan(1)
+  })
+
+  it("recomputes a normalized log domain when only the stack order changes", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {})
+    const store = new PipelineStore(config({
+      chartType: "stackedarea",
+      yScaleType: "log",
+      normalize: true,
+      stackOrder: "desc",
+      groupAccessor: "g",
+    }))
+    store.ingest({
+      inserts: [0, 1].flatMap((x) => [
+        { x, g: "a", y: 1 },
+        { x, g: "b", y: 9 },
+        { x, g: "c", y: 90 },
+      ]),
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)[0]).toBeCloseTo(0.9)
+    store.updateConfig({ stackOrder: "asc" })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)[0]).toBeCloseTo(0.01)
+    expect(yDomain(store)[1]).toBeCloseTo(1)
+  })
+
+  it("recomputes a normalized domain when only the extent mode changes", () => {
+    const store = new PipelineStore(config({
+      chartType: "stackedarea",
+      normalize: true,
+      extentPadding: 0.1,
+      groupAccessor: "g",
+    }))
+    store.ingest({
+      inserts: [0, 1].flatMap((x) => [
+        { x, g: "a", y: 1 },
+        { x, g: "b", y: 1 },
+      ]),
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([0, 1.1])
+    store.updateConfig({ axisExtent: "exact" })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([0, 1])
+    store.updateConfig({ axisExtent: "nice" })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([0, 1.1])
+    store.updateConfig({ yAxisExtent: "exact" })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([0, 1])
+    store.updateConfig({ yAxisExtent: "nice" })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([0, 1.1])
+  })
+
+  it("recomputes a stacked domain when only the extent mode changes", () => {
+    const store = new PipelineStore(config({
+      chartType: "stackedarea",
+      extentPadding: 0.1,
+      baseline: "zero",
+      groupAccessor: "g",
+    }))
+    store.ingest({
+      inserts: [
+        { x: 0, g: "a", y: 4 },
+        { x: 0, g: "b", y: 6 },
+      ],
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([0, 11])
+    store.updateConfig({ yAxisExtent: "exact" })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([0, 10])
+  })
+
+  it("keeps a positive silhouette layer on a log domain", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {})
+    const store = new PipelineStore(config({
+      chartType: "stackedarea",
+      yScaleType: "log",
+      baseline: "silhouette",
+      stackOrder: "key",
+      groupAccessor: "g",
+    }))
+    store.ingest({
+      inserts: [0, 1].flatMap((x) => ["a", "b", "c"].map((g) => ({ x, g, y: 10 }))),
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([5, 15])
+    const top = store.scene.find((node) => node.type === "area" && node.group === "c")
+    expect(top?.type).toBe("area")
+    if (top?.type !== "area") return
+    expect(Math.abs(top.topPath[0][1] - top.bottomPath[0][1])).toBeGreaterThan(1)
+  })
+
+  it("keeps an upper diverging layer on a log domain", () => {
+    const store = new PipelineStore(config({
+      chartType: "stackedarea",
+      yScaleType: "log",
+      baseline: "diverging",
+      stackOrder: "key",
+      groupAccessor: "g",
+    }))
+    store.ingest({
+      inserts: [0, 1].flatMap((x) => [
+        { x, g: "a", y: 10 },
+        { x, g: "b", y: 20 },
+      ]),
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([10, 30])
+    const upper = store.scene.find((node) => node.type === "area" && node.group === "b")
+    const lower = store.scene.find((node) => node.type === "area" && node.group === "a")
+    expect(upper?.type).toBe("area")
+    expect(lower?.type).toBe("area")
+    if (upper?.type !== "area" || lower?.type !== "area") return
+    expect(Math.abs(upper.topPath[0][1] - upper.bottomPath[0][1])).toBeGreaterThan(1)
+    expect(Math.abs(lower.topPath[0][1] - lower.bottomPath[0][1])).toBeLessThan(1)
+  })
+
+  it("includes a ribbon endpoint below the point in the log y samples", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {})
+    const store = new PipelineStore(config({
+      chartType: "line",
+      yScaleType: "log",
+      boundsAccessor: "bounds",
+    }))
+    store.ingest({
+      inserts: [
+        { x: 0, y: 100, bounds: 95 },
+        { x: 1, y: -10, bounds: 1 },
+      ],
+      bounded: true,
+    })
+    store.computeScene({ width: 400, height: 200 })
+    expect(yDomain(store)).toEqual([5, 195])
+  })
+
+  it("recalculates extents after eviction without waiting for computeScene", () => {
+    const store = new PipelineStore(config({ pointIdAccessor: "id" }))
+    store.ingest({
+      inserts: [
+        { id: "a", x: 1, y: 10 },
+        { id: "b", x: 5, y: 50 },
+        { id: "c", x: 3, y: 30 },
+      ],
+      bounded: true,
+    })
+    store.computeScene({ width: 200, height: 100 })
+    store.remove("b")
+    expect(store.getExtents()).toEqual({ x: [1, 3], y: [10, 30] })
+    store.remove("a")
+    expect(store.getExtents()).toEqual({ x: [3, 3], y: [30, 30] })
+  })
+})

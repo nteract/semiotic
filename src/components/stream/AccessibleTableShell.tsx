@@ -12,6 +12,7 @@ import {
   CLOSE_BUTTON_STYLE,
   SUMMARY_NOTE_STYLE
 } from "./accessibleTableStyles"
+import { useUniqueRegionLabel } from "./uniqueRegionLabel"
 
 /** One focusable shell for all accessible summary families and portal targets. */
 export function AccessibleTableShell({
@@ -44,6 +45,7 @@ export function AccessibleTableShell({
   // The collapsed trigger is visually hidden until it has focus; revealing it
   // then keeps the keyboard focus indicator visible (WCAG 2.4.7).
   const [triggerFocused, setTriggerFocused] = React.useState(false)
+  const uniqueRegionLabel = useUniqueRegionLabel(regionLabel)
   return (
     <div
       ref={containerRef}
@@ -54,7 +56,7 @@ export function AccessibleTableShell({
       onBlur={isExpanded ? handleBlur : undefined}
       style={isExpanded ? VISIBLE_PANEL_STYLE : triggerFocused ? FOCUS_REVEAL_STYLE : SR_ONLY_STYLE}
       role="region"
-      aria-label={regionLabel}
+      aria-label={uniqueRegionLabel}
     >
       {isExpanded ? (
         <>

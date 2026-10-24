@@ -109,5 +109,9 @@ test("glyph scene nodes paint, hit-test, and hold a visual baseline", async ({ p
     maxDiffPixels: 300,
   })
 
-  expect(pageErrors).toEqual([])
+  // WebKit reports this benign resize-loop notice as a page error while the
+  // screenshot scrolls the fixture. It is not an application exception.
+  expect(
+    pageErrors.filter((message) => !message.includes("ResizeObserver loop"))
+  ).toEqual([])
 })

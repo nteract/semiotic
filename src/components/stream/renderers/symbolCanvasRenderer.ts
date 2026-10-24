@@ -2,7 +2,7 @@ import type { SymbolSceneNode } from "../types"
 import type { NetworkSceneNode, NetworkSymbolNode } from "../networkTypes"
 import type { StreamRendererFn } from "./types"
 import { resolveCSSColor } from "./resolveCSSColor"
-import { invisibleNetworkNode, resolveCanvasFill } from "./canvasRenderHelpers"
+import { invisibleNetworkNode, isNoneCanvasPaint, resolveCanvasFill } from "./canvasRenderHelpers"
 import { symbolPathString } from "../symbolPath"
 import { getGlyphPath2D } from "../glyphDef"
 
@@ -61,7 +61,7 @@ function paintSymbol(
   const decay = (node as SymbolSceneNode)._decayOpacity ?? 1
   const nodeAlpha = (node.style.opacity ?? 1) * decay
 
-  if (node.style.fill) {
+  if (node.style.fill && !isNoneCanvasPaint(node.style.fill)) {
     ctx.globalAlpha = baseAlpha * nodeAlpha * (node.style.fillOpacity ?? 1)
     ctx.fillStyle = resolveCanvasFill(ctx, node.style.fill, defaultFill)
     ctx.fill(path)

@@ -36,6 +36,12 @@ import {
   resolveX,
   resolveY,
 } from "../charts/shared/annotationResolvers"
+import { projectHeatmapBandComputedValue } from "../stream/heatmapBandTicks"
+
+function dataScale(scale: (value: number) => number, value: unknown): number {
+  const px = projectHeatmapBandComputedValue(scale, value)
+  return px == null || !Number.isFinite(px) ? Number.NaN : px
+}
 
 // These are the default rule cases that have no server-specific style or
 // layout concerns. Keeping them separate from the full client dispatcher
@@ -238,9 +244,11 @@ export function renderStaticAnnotationFallback(
       const data = context.data || []
       if (data.length < 2) return null
       const xAccessor = context.xAccessor || "x"
-      const scaleX = context.scales?.x ?? context.scales?.time
-      const scaleY = context.scales?.y ?? context.scales?.value
-      if (!scaleX || !scaleY) return null
+      const rawX = context.scales?.x ?? context.scales?.time
+      const rawY = context.scales?.y ?? context.scales?.value
+      if (!rawX || !rawY) return null
+      const scaleX = (value: unknown) => dataScale(rawX, value)
+      const scaleY = (value: unknown) => dataScale(rawY, value)
       const upperAccessor = ann.upperAccessor || "upperBounds"
       const lowerAccessor = ann.lowerAccessor || "lowerBounds"
       const filter = ann.filter as ((datum: Datum) => boolean) | undefined
@@ -281,9 +289,10 @@ export function renderStaticAnnotationFallback(
       const data = (context.data || []).filter((d) => !ann.filter || ann.filter(d))
       if (data.length < 2) return null
       const yAccessor = context.yAccessor || "y"
-      const scaleX = context.scales?.x ?? context.scales?.time
-      const scaleY = context.scales?.y ?? context.scales?.value
-      if (!scaleX || !scaleY) return null
+      const rawX = context.scales?.x ?? context.scales?.time
+      const rawY = context.scales?.y ?? context.scales?.value
+      if (!rawX || !rawY) return null
+      const scaleY = (value: unknown) => dataScale(rawY, value)
       const values = data
         .map((datum) => regressionNumber(datum[yAccessor]))
         .filter((value): value is number => value !== null)
@@ -351,9 +360,11 @@ export function renderStaticAnnotationFallback(
       const data = context.data || []
       const xAccessor = context.xAccessor || "x"
       const yAccessor = context.yAccessor || "y"
-      const scaleX = context.scales?.x ?? context.scales?.time
-      const scaleY = context.scales?.y ?? context.scales?.value
-      if (!scaleX || !scaleY) return null
+      const rawX = context.scales?.x ?? context.scales?.time
+      const rawY = context.scales?.y ?? context.scales?.value
+      if (!rawX || !rawY) return null
+      const scaleX = (value: unknown) => dataScale(rawX, value)
+      const scaleY = (value: unknown) => dataScale(rawY, value)
       const points = regressionPoints(data.map((d) => [d[xAccessor], d[yAccessor]]))
       const model = forecastModel(points, ann)
       if (!model) return null

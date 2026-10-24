@@ -42,9 +42,21 @@ export function resolveCurveFactory(curve: CurveType | undefined): CurveFactory 
 }
 
 /**
+ * SVG's `none` is not a canvas color. Assigning it is ignored, so the
+ * context keeps the default black and the following fill or stroke paints
+ * a black mark. Transparent is the canvas paint that matches SVG.
+ */
+export const CANVAS_NONE_PAINT = "rgba(0,0,0,0)"
+
+export function isNoneCanvasPaint(paint: unknown): boolean {
+  return typeof paint === "string" && paint.trim().toLowerCase() === "none"
+}
+
+/**
  * Resolve a node's `style.fill` (or `style.stroke`) to something the
  * canvas can accept as `fillStyle` / `strokeStyle`:
  *
+ *   - `"none"` becomes transparent so it cannot fall through to black.
  *   - Strings go through `resolveCSSColor` so `var(...)` references
  *     resolve via the canvas DOM ancestor's computed style.
  *   - `CanvasPattern` values pass through untouched.
@@ -56,6 +68,7 @@ export function resolveCanvasFill(
   fill: string | HatchFill | CanvasPattern | null | undefined,
   fallback: string,
 ): string | CanvasPattern {
+  if (isNoneCanvasPaint(fill)) return CANVAS_NONE_PAINT
   if (fill == null) return fallback
   // Declarative hatch descriptor → CanvasPattern (cached). Fall back to the
   // descriptor's background color if the environment can't build a pattern.
@@ -189,7 +202,7 @@ export function paintNetworkFill(
   fallback: string,
   paint: () => void,
 ): void {
-  if (!style.fill) return
+  if (!style.fill || isNoneCanvasPaint(style.fill)) return
   const priorAlpha = ctx.globalAlpha
   ctx.fillStyle = resolveCanvasFill(ctx, style.fill, fallback)
   if (style.fillOpacity !== undefined) {
@@ -209,7 +222,7 @@ export function paintNetworkStroke(
   style: Style,
   paint: () => void,
 ): void {
-  if (!style.stroke || style.stroke === "none") return
+  if (!style.stroke || isNoneCanvasPaint(style.stroke)) return
   const priorAlpha = ctx.globalAlpha
   ctx.strokeStyle = resolveCSSColor(ctx, style.stroke) || style.stroke
   ctx.lineWidth = style.strokeWidth ?? 1

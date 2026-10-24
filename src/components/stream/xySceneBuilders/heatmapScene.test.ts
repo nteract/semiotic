@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { buildHeatmapScene } from "./heatmapScene"
+import { heatmapBandTicks } from "../heatmapBandTicks"
 import type { XYSceneContext } from "./types"
 import type { StreamLayout } from "../types"
 import type { Datum } from "../../charts/shared/datumTypes"
@@ -131,6 +132,143 @@ describe("buildHeatmapScene (static mode)", () => {
     // With 2 x-values and 2 y-values: cellW = 400/2 = 200, cellH = 400/2 = 200
     const widths = nodes.map((n) => n.w)
     expect(widths.every((w: number) => w === 200)).toBe(true)
+    expect(heatmapBandTicks(ctx.scales!.x)?.map((tick) => tick.label)).toEqual(["b", "a"])
+    expect(heatmapBandTicks(ctx.scales!.y)?.map((tick) => tick.label)).toEqual(["q", "p"])
+  })
+
+  it("collapses Date keys that share a timestamp into one column", () => {
+    const first = new Date("2020-01-01T00:00:00Z")
+    const sameDay = new Date("2020-01-01T00:00:00Z")
+    const data = [
+      { x: first, y: "a", value: 1 },
+      { x: sameDay, y: "b", value: 2 },
+    ]
+    const ctx = makeCtx({ config: { xAccessor: "x", yAccessor: "y", valueAccessor: "value" } })
+    const nodes = buildHeatmapScene(ctx, data, defaultLayout)
+    expect(nodes).toHaveLength(2)
+    expect(nodes.every((node) => node.x === 0 && node.w === 400)).toBe(true)
+    expect(heatmapBandTicks(ctx.scales!.x)).toEqual([
+      { value: 0, label: first },
+    ])
+  })
+
+  it("centers uneven numeric columns on the band scale", () => {
+    const data = [
+      { x: 10, y: "a", value: 1 },
+      { x: 0, y: "a", value: 2 },
+      { x: 1, y: "a", value: 3 },
+    ]
+    const ctx = makeCtx({ config: { xAccessor: "x", yAccessor: "y", valueAccessor: "value" } })
+    const nodes = buildHeatmapScene(ctx, data, defaultLayout)
+    const scale = ctx.scales!.x
+    for (const [key, index] of [["0", 0], ["1", 1], ["10", 2]] as const) {
+      const node = nodes.find((candidate) => String(candidate.datum?.x) === key)
+      expect(node).toBeTruthy()
+      expect(node!.x + node!.w / 2).toBeCloseTo(scale(index))
+    }
+  })
+
+  it("places cells inside an explicit heatmap extent", () => {
+    const data = [
+      { x: 10, y: 1, value: 1 },
+      { x: 20, y: 1, value: 2 },
+      { x: 30, y: 1, value: 3 },
+    ]
+    const layout = { width: 300, height: 200 }
+    const full = makeCtx({
+      config: {
+        xAccessor: "x",
+        yAccessor: "y",
+        valueAccessor: "value",
+        xExtent: [0, 40],
+        yExtent: [0, 5],
+      },
+    })
+    const nodes = buildHeatmapScene(full, data, layout)
+    expect(full.scales!.x.domain()).toEqual([-1, 3])
+    expect(full.scales!.y.domain()).toEqual([-1, 4])
+    const cell = nodes.find((node) => node.datum?.x === 10)
+    expect(cell).toBeTruthy()
+    expect(cell!.x).toBeCloseTo(37.5)
+    expect(cell!.w).toBeCloseTo(75)
+    expect(cell!.x + cell!.w / 2).toBeCloseTo(full.scales!.x(0))
+    expect(cell!.y + cell!.h / 2).toBeCloseTo(full.scales!.y(0))
+
+    const partial = makeCtx({
+      config: {
+        xAccessor: "x",
+        yAccessor: "y",
+        valueAccessor: "value",
+        xExtent: [0, undefined],
+        yExtent: [undefined, 5],
+      },
+    })
+    buildHeatmapScene(partial, data, layout)
+    expect(partial.scales!.x.domain()).toEqual([-1, 2.5])
+    expect(partial.scales!.y.domain()).toEqual([-0.5, 4])
+
+    const flipped = makeCtx({
+      config: {
+        xAccessor: "x",
+        yAccessor: "y",
+        valueAccessor: "value",
+        xExtent: [40, 0],
+      },
+    })
+    buildHeatmapScene(flipped, data, layout)
+    expect(flipped.scales!.x.domain()).toEqual([3, -1])
+
+    const categories = makeCtx({
+      config: {
+        xAccessor: "x",
+        yAccessor: "y",
+        valueAccessor: "value",
+        xExtent: [0, 40],
+      },
+    })
+    buildHeatmapScene(categories, [
+      { x: "a", y: 1, value: 1 },
+      { x: "b", y: 1, value: 2 },
+    ], layout)
+    expect(categories.scales!.x.domain()).toEqual([-0.5, 1.5])
+  })
+
+  it("reverses the y band when invertY is set", () => {
+    const data = [
+      { x: 10, y: 1, value: 1 },
+      { x: 10, y: 2, value: 2 },
+    ]
+    const layout = { width: 300, height: 200 }
+    const base = { xAccessor: "x", yAccessor: "y", valueAccessor: "value" }
+    const upright = makeCtx({ config: base })
+    const uprightNodes = buildHeatmapScene(upright, data, layout)
+    const flipped = makeCtx({ config: { ...base, invertY: true } })
+    const flippedNodes = buildHeatmapScene(flipped, data, layout)
+    expect(upright.scales!.y.domain()).toEqual([-0.5, 1.5])
+    expect(flipped.scales!.y.domain()).toEqual([1.5, -0.5])
+    const center = (nodes: typeof uprightNodes, y: number) => {
+      const cell = nodes.find((node) => node.datum?.y === y)
+      expect(cell).toBeTruthy()
+      return cell!.y + cell!.h / 2
+    }
+    expect(center(uprightNodes, 1)).toBeGreaterThan(center(uprightNodes, 2))
+    expect(center(flippedNodes, 1)).toBeLessThan(center(flippedNodes, 2))
+    expect(center(flippedNodes, 1)).toBeCloseTo(flipped.scales!.y(0))
+    expect(center(flippedNodes, 2)).toBeCloseTo(flipped.scales!.y(1))
+
+    const explicit = makeCtx({ config: { ...base, yExtent: [0, 5], invertY: true } })
+    buildHeatmapScene(explicit, data, layout)
+    expect(explicit.scales!.y.domain()).toEqual([4, -1])
+
+    const reversed = makeCtx({ config: { ...base, yExtent: [5, 0] } })
+    buildHeatmapScene(reversed, data, layout)
+    expect(reversed.scales!.y.domain()).toEqual([4, -1])
+
+    const reversedAgain = makeCtx({
+      config: { ...base, yExtent: [5, 0], invertY: true },
+    })
+    buildHeatmapScene(reversedAgain, data, layout)
+    expect(reversedAgain.scales!.y.domain()).toEqual([-1, 4])
   })
 
   it("missing values in grid are skipped — no cell for (a, p) combo", () => {
@@ -173,6 +311,62 @@ describe("buildHeatmapScene (static mode)", () => {
     expect(Math.min(...values)).toBeLessThan(50)
     const fills = new Set(nodes.map((n) => n.fill))
     expect(fills.size).toBeGreaterThan(1)
+  })
+
+  it("sorts a long date axis without spreading the keys", () => {
+    const count = 200_000
+    const start = Date.UTC(2020, 0, 1)
+    const data = new Array<Datum>(count)
+    for (let i = 0; i < count; i++) {
+      data[i] = {
+        x: new Date(start + (count - 1 - i) * 86_400_000),
+        y: "row",
+        value: 1,
+      }
+    }
+    const ctx = makeCtx({
+      config: { xAccessor: "x", yAccessor: "y", valueAccessor: "value" },
+      getX: (d) => d.x,
+      getY: (d) => d.y,
+    })
+    const nodes = buildHeatmapScene(ctx, data, defaultLayout)
+    expect(nodes).toHaveLength(count)
+    const earliest = nodes.find((node) => (node.datum as { x: Date }).x.getTime() === start)
+    const latestTime = start + (count - 1) * 86_400_000
+    const latest = nodes.find((node) => (node.datum as { x: Date }).x.getTime() === latestTime)
+    expect(earliest?.x).toBe(0)
+    expect(latest?.x).toBeCloseTo(400 - 400 / count)
+  })
+
+  it("does not auto-bin a dense date grid above the numeric threshold", () => {
+    const start = Date.UTC(2024, 0, 1, 12)
+    const data = []
+    for (let x = 0; x < 65; x++) {
+      for (let y = 0; y < 65; y++) {
+        data.push({
+          x: new Date(start + (64 - x) * 86400000),
+          y,
+          value: x + y,
+          marker: "row",
+        })
+      }
+    }
+    const ctx = makeCtx({
+      config: { xAccessor: "x", yAccessor: "y", valueAccessor: "value" },
+      getX: (d) => d.x,
+      getY: (d) => d.y,
+    })
+    const nodes = buildHeatmapScene(ctx, data, defaultLayout)
+    expect(nodes).toHaveLength(65 * 65)
+    expect(nodes.every((node) => node.type === "heatcell")).toBe(true)
+    expect(nodes.some((node) => (node.datum as { agg?: string }).agg === "mean")).toBe(false)
+    expect(nodes.every((node) => (node.datum as { marker?: string }).marker === "row")).toBe(true)
+    const earliest = nodes.find((node) => (node.datum as { x: Date }).x.getTime() === start)
+    const latest = nodes.find((node) =>
+      (node.datum as { x: Date }).x.getTime() === start + 64 * 86400000
+    )
+    expect(earliest?.x).toBe(0)
+    expect(latest?.x).toBeCloseTo(400 - 400 / 65)
   })
 
   it("does not auto-bin a sparse diagonal whose cartesian product exceeds the threshold", () => {

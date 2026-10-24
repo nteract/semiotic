@@ -18,6 +18,7 @@ import type { Datum } from "../charts/shared/datumTypes"
  *
  * Consumed by: StreamXYFrame (sole consumer).
  */
+import { barPlottedYValues } from "../realtime/BinAccumulator"
 import { RingBuffer } from "../realtime/RingBuffer"
 import { IncrementalExtent } from "../realtime/IncrementalExtent"
 import type {
@@ -53,6 +54,9 @@ import type { MarginType } from "../types/marginType"
 import { resolveRibbons } from "./pipelineRibbons"
 import {
   buildPipelineScales,
+  clampLogDomain,
+  collectPlottedYChannels,
+  collectPositiveSamples,
   expandYDomainWithRibbons,
   isFullySpecifiedExtent,
   mergePartialDomain,
@@ -64,6 +68,7 @@ import {
   resolveStackedAreaYDomain,
   resolveWaterfallXDomain,
   resolveWaterfallYDomain,
+  waterfallCumulativeEnds,
   type StackExtentCache
 } from "./pipelineDomainResolution"
 import {
@@ -229,6 +234,8 @@ export class PipelineStore extends UpdateResultStoreBase {
   /** True when the effective x accessor returns Date objects or date strings. */
   xIsDate = false
   private xTypeDetected = false
+  private _warnedNonPositiveLogX = false
+  private _warnedNonPositiveLogY = false
 
   // ── Quadtree spatial index for O(log n) point hit testing ──────────
   private spatialIndex = new PipelineSpatialIndex()
@@ -589,6 +596,7 @@ export class PipelineStore extends UpdateResultStoreBase {
     } else if (config.chartType === "waterfall" && !yFullySpecified && buffer.size > 0) {
       yDomain = resolveWaterfallYDomain(
         buffer,
+        this.getX,
         this.getY,
         config.extentPadding,
         exactMode
@@ -613,8 +621,36 @@ export class PipelineStore extends UpdateResultStoreBase {
     ;({ xDomain, yDomain } = rescueDegenerateDomains(
       xDomain,
       yDomain,
-      config.xScaleType
+      config.xScaleType,
+      { x: config.xExtent, y: config.yExtent, yScaleType: config.yScaleType }
     ))
+
+    const xScaleType = config.xScaleType ?? (this.xIsDate ? "utc" : undefined)
+    if (xScaleType === "log") {
+      const samples = this.positiveAxisSamples(this.getX)
+      xDomain = clampLogDomain(xDomain, samples.positive, config.xExtent)
+      this.warnDroppedLogSamples("x", samples.droppedNonPositive)
+    }
+    if (config.yScaleType === "log") {
+      // Bars, stacks, and waterfalls plot aggregates. A raw row can be larger
+      // than the mark, and using it pulls the positive bound off the bar.
+      const aggregateY = this.plottedAggregateY(buffer, bufferArray)
+      const samples = aggregateY
+        ? collectPositiveSamples(aggregateY)
+        : collectPositiveSamples(collectPlottedYChannels({
+            chartType: config.chartType,
+            data: buffer,
+            getY: this.getY,
+            getY0: this.getY0,
+            getHigh: this.getHigh,
+            getLow: this.getLow,
+            getOpen: this.getOpen,
+            getClose: this.getClose,
+            ribbons: this.resolvedRibbons,
+          }))
+      yDomain = clampLogDomain(yDomain, samples.positive, config.yExtent)
+      this.warnDroppedLogSamples("y", samples.droppedNonPositive)
+    }
 
     this.scales = buildPipelineScales({
       config,
@@ -1186,11 +1222,75 @@ export class PipelineStore extends UpdateResultStoreBase {
   }
 
   getExtents(): { x: [number, number]; y: [number, number] } | null {
+    // Evicting a min or max only marks the extent dirty. Readers that never
+    // call computeScene still need the extent of the points that remain.
+    if (this.xExtent.dirty) {
+      this.xExtent.recalculate(this.buffer, this.getX)
+    }
+    if (this.yExtent.dirty) {
+      this.rebuildYExtent()
+    }
     if (this.xExtent.min === Infinity) return null
     return {
       x: this.xExtent.extent,
       y: this.yExtent.extent
     }
+  }
+
+  private positiveAxisSamples(read: (d: Datum) => number) {
+    const values: number[] = []
+    for (const datum of this.buffer) values.push(read(datum))
+    return collectPositiveSamples(values)
+  }
+
+  /** Y values the scene actually passes to the scale, when those are not raw rows. */
+  private plottedAggregateY(
+    buffer: RingBuffer<Datum>,
+    bufferArray: Datum[]
+  ): number[] | null {
+    const config = this.config
+    if (config.chartType === "bar" && config.binSize) {
+      return barPlottedYValues(
+        buffer,
+        this.getX,
+        this.getY,
+        config.binSize,
+        this.getCategory,
+        config.binAlign,
+        config.barColors ? Object.keys(config.barColors) : []
+      )
+    }
+    if (config.chartType === "stackedarea" && buffer.size > 0) {
+      const stacked = resolveStackedAreaYDomain({
+        config,
+        groups: this.groupData(bufferArray),
+        getX: this.getX,
+        getY: this.getY,
+        bufferSize: buffer.size,
+        ingestVersion: this._ingestVersion,
+        stackExtentCache: this._stackExtentCache
+      })
+      this._stackExtentCache = stacked.stackExtentCache
+      return stacked.stackExtentCache.plottedY ?? null
+    }
+    if (config.chartType === "waterfall" && buffer.size > 0) {
+      return waterfallCumulativeEnds(buffer, this.getX, this.getY)
+    }
+    return null
+  }
+
+  private warnDroppedLogSamples(axis: "x" | "y", droppedNonPositive: boolean): void {
+    if (!droppedNonPositive) return
+    if (axis === "x") {
+      if (this._warnedNonPositiveLogX) return
+      this._warnedNonPositiveLogX = true
+    } else {
+      if (this._warnedNonPositiveLogY) return
+      this._warnedNonPositiveLogY = true
+    }
+    console.warn(
+      `Semiotic log ${axis} scale clamped non-positive values to the positive domain edge.`
+    )
   }
 
   clear(): void {

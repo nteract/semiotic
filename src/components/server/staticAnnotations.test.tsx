@@ -7,6 +7,7 @@ import * as ReactDOMServer from "react-dom/server"
 import { renderStaticAnnotations, type StaticAnnotationConfig } from "./staticAnnotations"
 import { LIGHT_THEME, DARK_THEME } from "../store/ThemeStore"
 import { scaleBand, scaleLinear } from "d3-scale"
+import { heatmapBandScale } from "../stream/heatmapBandTicks"
 
 function renderAnnotationsString(config: Parameters<typeof renderStaticAnnotations>[0]): string {
   const node = renderStaticAnnotations(config)
@@ -321,6 +322,22 @@ describe("renderStaticAnnotations", () => {
       expect(svg).toBe("")
     })
 
+    it("projects a heatmap key onto the cell center", () => {
+      const svg = renderAnnotationsString({
+        ...baseConfig,
+        layout: { width: 300, height: 200 },
+        scales: { x: heatmapBandScale([10, 20, 30], [0, 300]), y: yScale },
+        annotations: [
+          { type: "x-threshold", value: 20 },
+          { type: "x-band", x0: 10, x1: 20 },
+          { type: "x-band", x1: 20 },
+        ],
+      })
+      expect(svg).toContain('x1="150"')
+      expect(svg).toContain('<rect x="50" y="0" width="100" height="200"')
+      expect(svg).toContain('<rect x="0" y="0" width="150" height="200"')
+    })
+
     it("keeps the default top label clear of the plot edge", () => {
       const svg = renderAnnotationsString({
         ...baseConfig,
@@ -384,6 +401,23 @@ describe("renderStaticAnnotations", () => {
         annotations: [{ type: "band", y0: 30, y1: 70 }],
       })
       expect(svg).toContain('opacity="0.1"')
+    })
+
+    it("extends an open ordinal band to the plot edge", () => {
+      const y = (value: string) => value === "A" ? 40 : Number.NaN
+      const svg = renderAnnotationsString({
+        ...baseConfig,
+        scales: { y },
+        layout: { width: 400, height: 200 },
+        annotations: [{ type: "band", y0: "A" }],
+      })
+      expect(svg).toContain('<rect x="0" y="40" width="400" height="160"')
+      const missing = renderAnnotationsString({
+        ...baseConfig,
+        scales: { y },
+        annotations: [{ type: "band", y0: "Z", y1: "A" }],
+      })
+      expect(missing).toBe("")
     })
 
     it("extends to the domain max when y1 is missing", () => {

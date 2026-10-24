@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest"
 import { scaleLinear, scaleUtc } from "d3-scale"
 import { generateXYTicks } from "./xyAxisTicks"
+import { isStaticAxisLandmark } from "../server/staticXYAxisTicks"
+import { heatmapBandDomain, heatmapBandScale, heatmapBandTicks } from "./heatmapBandTicks"
 import { adaptiveTimeTicks } from "../charts/shared/formatUtils"
 
 const HOUR = 3_600_000
@@ -21,6 +23,16 @@ describe("generateXYTicks with built-in formatters", () => {
     expect(labelsOf(generateXYTicks({ scale: numeric, size: 400 }))).toEqual(["0", "20", "40", "60", "80"])
     const withMax = generateXYTicks({ scale: numeric, size: 400, horizontal: true, axis: { orient: "bottom", includeMax: true } })
     expect(labelsOf(withMax)).toEqual(["0", "20", "40", "60", "80", "97"])
+  })
+
+  it("skips string keys on a linear scale", () => {
+    const mixed = generateXYTicks({
+      scale: numeric,
+      size: 400,
+      horizontal: true,
+      axis: { orient: "bottom", tickValues: ["low", 40] },
+    })
+    expect(mixed.map((tick) => [tick.value, tick.pixel, tick.label])).toEqual([[40, numeric(40), "40"]])
   })
 
   it("keeps date labels for explicit UTC ticks", () => {
@@ -98,5 +110,194 @@ describe("generateXYTicks with index-aware formatters", () => {
     const format = vi.fn((value: number | Date | string) => String(value))
     generateXYTicks({ scale: scaleLinear().domain([0, 10]).range([100, 0]), size: 100, format })
     expect(format.mock.calls.every((call) => call.length === 1)).toBe(true)
+  })
+})
+
+describe("generateXYTicks with heatmap band scales", () => {
+  it("labels categorical ticks with the keys and does not add the domain end", () => {
+    const scale = heatmapBandScale(["low", "high"], [0, 100])
+    const format = vi.fn((value: number | Date | string) => `fmt:${value}`)
+    const ticks = generateXYTicks({
+      scale,
+      size: 100,
+      format,
+      axis: { orient: "left", includeMax: true },
+    })
+    expect(ticks.map((tick) => tick.value)).toEqual([0, 1])
+    expect(ticks.map((tick) => tick.dataValue)).toEqual(["low", "high"])
+    expect(labelsOf(ticks)).toEqual(["fmt:low", "fmt:high"])
+    expect(format.mock.calls.map((call) => call[0])).toEqual(["low", "high"])
+  })
+
+  it("passes date keys, not cell indexes, to landmark detection", () => {
+    const jan31 = new Date(Date.UTC(2024, 0, 31, 12))
+    const feb1 = new Date(Date.UTC(2024, 1, 1, 12))
+    const feb2 = new Date(Date.UTC(2024, 1, 2, 12))
+    const scale = heatmapBandScale([jan31, feb1, feb2], [0, 300])
+    const automatic = generateXYTicks({ scale, size: 300, horizontal: true })
+    expect(automatic.map((tick) => tick.value)).toEqual([0, 1, 2])
+    expect(automatic.map((tick) => tick.pixel)).toEqual([scale(0), scale(1), scale(2)])
+    expect(automatic.map((tick) => tick.dataValue)).toEqual([jan31, feb1, feb2])
+    expect(isStaticAxisLandmark(true, automatic[1], 1, automatic)).toBe(true)
+    expect(isStaticAxisLandmark(true, automatic[2], 2, automatic)).toBe(false)
+    const seen: unknown[] = []
+    isStaticAxisLandmark((value) => {
+      seen.push(value)
+      return false
+    }, automatic[1], 1, automatic)
+    expect(seen).toEqual([feb1])
+
+    const explicit = generateXYTicks({
+      scale,
+      size: 300,
+      horizontal: true,
+      axis: { orient: "bottom", tickValues: [jan31, feb1, feb2] },
+    })
+    expect(explicit.map((tick) => tick.dataValue)).toEqual([jan31, feb1, feb2])
+    expect(explicit.map((tick) => tick.pixel)).toEqual([scale(0), scale(1), scale(2)])
+    expect(isStaticAxisLandmark(true, explicit[1], 1, explicit)).toBe(true)
+    expect(isStaticAxisLandmark(true, explicit[2], 2, explicit)).toBe(false)
+  })
+
+  it("formats a long date axis without spreading every key", () => {
+    const count = 200_000
+    const start = Date.UTC(2020, 0, 1)
+    const dates = new Array<Date>(count)
+    for (let i = 0; i < count; i++) dates[i] = new Date(start + i * 86_400_000)
+    const scale = heatmapBandScale(dates, [0, 1000])
+    const ticks = generateXYTicks({ scale, size: 1000, horizontal: true })
+    expect(ticks.length).toBeGreaterThan(0)
+    expect(ticks.every((tick) => /^\d{4}$/.test(String(tick.label)))).toBe(true)
+    expect(String(ticks[0].label)).toBe("2020")
+  })
+
+  it("formats date keys from the dates rather than the index domain", () => {
+    const scale = heatmapBandScale(
+      [new Date(Date.UTC(2024, 0, 1)), new Date(Date.UTC(2024, 0, 2))],
+      [0, 200]
+    )
+    const ticks = generateXYTicks({ scale, size: 200, horizontal: true })
+    expect(labelsOf(ticks).join(" ")).not.toContain("1970")
+    expect(labelsOf(ticks)).toEqual(["Jan 1", "Jan 2"])
+  })
+
+  it("formats numeric keys once, without looking the label up as an index", () => {
+    const scale = heatmapBandScale([1, 2, 10], [0, 300])
+    const ticks = generateXYTicks({ scale, size: 300, horizontal: true })
+    expect(labelsOf(ticks)).toEqual(["1", "2", "10"])
+    expect(ticks.map((tick) => tick.pixel)).toEqual([scale(0), scale(1), scale(2)])
+  })
+
+  it("places explicit categorical tick values on cell centers", () => {
+    const scale = heatmapBandScale(["low", "high"], [0, 100])
+    const format = vi.fn((value: number | Date | string) => `fmt:${value}`)
+    const ticks = generateXYTicks({
+      scale,
+      size: 100,
+      horizontal: true,
+      format,
+      axis: { orient: "bottom", tickValues: ["low", "high"] },
+    })
+    expect(ticks.map((tick) => tick.value)).toEqual(["low", "high"])
+    expect(ticks.map((tick) => tick.dataValue)).toEqual(["low", "high"])
+    expect(labelsOf(ticks)).toEqual(["fmt:low", "fmt:high"])
+    expect(ticks.map((tick) => tick.pixel)).toEqual([scale(0), scale(1)])
+    expect(format.mock.calls.every((call) => call[0] === "low" || call[0] === "high")).toBe(true)
+    expect(generateXYTicks({
+      scale,
+      size: 100,
+      horizontal: true,
+      axis: { orient: "bottom", tickValues: [0, 1] },
+    })).toEqual([])
+  })
+
+  it("places explicit numeric and date tick values on cell centers", () => {
+    const numeric = heatmapBandScale([0, 1, 10], [0, 300])
+    const numericTicks = generateXYTicks({
+      scale: numeric,
+      size: 300,
+      horizontal: true,
+      axis: { orient: "bottom", tickValues: [0, 1, 10] },
+    })
+    expect(labelsOf(numericTicks)).toEqual(["0", "1", "10"])
+    expect(numericTicks.map((tick) => tick.pixel)).toEqual([
+      numeric(0),
+      numeric(1),
+      numeric(2),
+    ])
+
+    const first = new Date(Date.UTC(2024, 0, 1))
+    const second = new Date(Date.UTC(2024, 0, 2))
+    const dates = heatmapBandScale([first, second], [0, 200])
+    const dateTicks = generateXYTicks({
+      scale: dates,
+      size: 200,
+      horizontal: true,
+      axis: { orient: "bottom", tickValues: [new Date(first), new Date(second)] },
+    })
+    expect(labelsOf(dateTicks)).toEqual(["Jan 1", "Jan 2"])
+    expect(dateTicks.map((tick) => tick.pixel)).toEqual([dates(0), dates(1)])
+
+    const timestampTicks = generateXYTicks({
+      scale: dates,
+      size: 200,
+      horizontal: true,
+      axis: { orient: "bottom", tickValues: [first.getTime(), second.getTime()] },
+    })
+    expect(labelsOf(timestampTicks)).toEqual(["Jan 1", "Jan 2"])
+    expect(timestampTicks.map((tick) => tick.pixel)).toEqual([dates(0), dates(1)])
+  })
+
+  it("drops automatic band ticks that sit outside a cropped extent", () => {
+    const labels = [10, 20, 30]
+    const scale = heatmapBandScale(
+      labels,
+      [0, 300],
+      heatmapBandDomain(labels, [20, 30])
+    )
+    expect(scale.domain()).toEqual([1, 2])
+    const ticks = generateXYTicks({ scale, size: 300, horizontal: true })
+    expect(ticks.map((tick) => tick.dataValue)).toEqual([20, 30])
+    expect(ticks.every((tick) => tick.pixel >= 0 && tick.pixel <= 300)).toBe(true)
+
+    const explicit = generateXYTicks({
+      scale,
+      size: 300,
+      horizontal: true,
+      axis: { orient: "bottom", tickValues: [10, 20, 30] },
+    })
+    expect(explicit.map((tick) => tick.dataValue)).toEqual([10, 20, 30])
+    expect(explicit[0].pixel).toBeCloseTo(-300)
+  })
+
+  it("drops band labels when ticks or tickCount is zero", () => {
+    const scale = heatmapBandScale([10, 20, 30], [0, 300])
+    expect(generateXYTicks({
+      scale,
+      size: 300,
+      horizontal: true,
+      axis: { orient: "bottom", ticks: 0 },
+    })).toEqual([])
+    expect(generateXYTicks({
+      scale,
+      size: 300,
+      horizontal: true,
+      axis: { orient: "bottom", tickCount: 0 },
+    })).toEqual([])
+    expect(labelsOf(generateXYTicks({
+      scale,
+      size: 300,
+      horizontal: true,
+      axis: { orient: "bottom", ticks: 0, tickValues: [10, 30] },
+    }))).toEqual(["10", "30"])
+  })
+
+  it("keeps band labels on copies of copies", () => {
+    const scale = heatmapBandScale(["b", "a"], [0, 100])
+    const once = scale.copy().range([0, 200])
+    const twice = once.copy().range([0, 50])
+    expect(heatmapBandTicks(twice)?.map((tick) => tick.label)).toEqual(["b", "a"])
+    expect(twice.range()).toEqual([0, 50])
+    expect(labelsOf(generateXYTicks({ scale: twice, size: 50, horizontal: true }))).toEqual(["b", "a"])
   })
 })

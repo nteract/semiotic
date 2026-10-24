@@ -9,7 +9,7 @@ const pixels = (page: Page) => renderedCanvas(page).evaluate((canvas: HTMLCanvas
 test("live corrections paint, retention stays bounded and reconnect recovers the current source window", async ({ page }) => {
   await page.goto("/tasks/update-live-chart")
   await expect(retainedTable(page).locator("tbody tr")).toHaveText(["obs-0109:0012", "obs-0209:0118", "obs-0309:0215"])
-  await expect(renderedCanvas(page)).toHaveAttribute("aria-label", /3 points, 1 lines/)
+  await expect(renderedCanvas(page)).toHaveAttribute("aria-label", /3 points, 1 line/)
   const initialPixels = await pixels(page)
   await page.getByRole("button", { name: "Advance source" }).click()
   await expect(retainedTable(page).locator("tbody tr")).toHaveText(["obs-0109:0012", "obs-0209:0114", "obs-0309:0215"])
@@ -18,7 +18,7 @@ test("live corrections paint, retention stays bounded and reconnect recovers the
   await page.getByRole("button", { name: "Advance source" }).click()
   await page.getByRole("button", { name: "Advance source" }).click()
   await expect(retainedTable(page).locator("tbody tr")).toHaveText(["obs-0209:0114", "obs-0309:0215", "obs-0409:0320", "obs-0509:0416"])
-  await expect(renderedCanvas(page)).toHaveAttribute("aria-label", /4 points, 1 lines/)
+  await expect(renderedCanvas(page)).toHaveAttribute("aria-label", /4 points, 1 line/)
   await expect.poll(() => pixels(page)).not.toBe(correctedPixels)
   const connectedPixels = await pixels(page)
   await page.getByRole("button", { name: "Disconnect" }).click()
@@ -30,10 +30,10 @@ test("live corrections paint, retention stays bounded and reconnect recovers the
   await page.getByRole("button", { name: "Reconnect" }).click()
   await expect(retainedTable(page).locator("tbody tr")).toHaveText(["obs-0309:0217", "obs-0409:0320", "obs-0509:0416", "obs-0609:0519"])
   await expect.poll(() => pixels(page)).not.toBe(connectedPixels)
-  await expect(renderedCanvas(page)).toHaveAttribute("aria-label", /4 points, 1 lines/)
+  await expect(renderedCanvas(page)).toHaveAttribute("aria-label", /4 points, 1 line/)
   await page.getByRole("button", { name: "Restart fixture" }).click()
   await expect(retainedTable(page).locator("tbody tr")).toHaveText(["obs-0109:0012", "obs-0209:0118", "obs-0309:0215"])
-  await expect(renderedCanvas(page)).toHaveAttribute("aria-label", /3 points, 1 lines/)
+  await expect(renderedCanvas(page)).toHaveAttribute("aria-label", /3 points, 1 line/)
 })
 
 test("replay pauses without losing records and restart cancels the previous session's timer", async ({ page }) => {

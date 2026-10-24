@@ -53,6 +53,7 @@ import { useLegendCategoryEmission } from "./useLegendCategoryEmission"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 import { resolveAnnotationAccessor, buildEnrichAnnotationData } from "./annotationAccessorResolver"
 import { makeDateTickFormatter } from "./xyDateTicks"
+import { heatmapBandTicks, invertHeatmapBandValue } from "./heatmapBandTicks"
 import { collectAnnotationAnchors } from "./xyAnnotationAnchors"
 import { getXYCanvasRenderers } from "./xyPlugins/registry"
 import { useEnsureXYPlugins } from "./useEnsureCustomXYRenderers"
@@ -680,8 +681,10 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       const hitDatum = hit?.datum
         ? enrichDatumWithBand(hit.datum, store.resolvedRibbons)
         : {}
-      const xInvert = store.scales?.x?.invert
-      const invertedX = typeof xInvert === "function" ? xInvert(posX) : undefined
+      const xScale = store.scales?.x
+      const invertedX = xScale && typeof xScale.invert === "function"
+        ? invertHeatmapBandValue(xScale, posX)
+        : undefined
       const xValue = chartType === "bar"
         ? resolveHistogramHoverXValue(hitDatum, invertedX)
         : invertedX
@@ -760,8 +763,10 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       const hit = findNearestNode(store.scene, chartX, chartY, hitRadius, store.quadtree, store.maxPointRadius)
       if (!hit) { customClickBehavior(null); return }
       const rawDatum = hit.datum || {}
-      const xInvert = store.scales?.x?.invert
-      const invertedX = typeof xInvert === "function" ? xInvert(hit.x) : undefined
+      const xScale = store.scales?.x
+      const invertedX = xScale && typeof xScale.invert === "function"
+        ? invertHeatmapBandValue(xScale, hit.x)
+        : undefined
       const xValue = chartType === "bar"
         ? resolveHistogramHoverXValue(rawDatum, invertedX)
         : invertedX
@@ -1111,6 +1116,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       if (xFormat || tickFormatTime) return undefined
       const store = storeRef.current
       if (!store?.xIsDate || !currentScales) return undefined
+      if (heatmapBandTicks(currentScales.x)) return undefined
       const domain = currentScales.x.domain() as [number, number]
       return makeDateTickFormatter(domain)
     }, [xFormat, tickFormatTime, currentScales])
@@ -1196,7 +1202,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
 
       // SSR: compute date format from SSR-computed scales (currentScales is null in SSR)
       const ssrXFormat: StreamXYFrameProps["xFormat"] = effectiveXFormat || ((): StreamXYFrameProps["xFormat"] => {
-        if (store?.xIsDate && scales) {
+        if (store?.xIsDate && scales && !heatmapBandTicks(scales.x)) {
           const domain = scales.x.domain() as [number, number]
           return makeDateTickFormatter(domain) as StreamXYFrameProps["xFormat"]
         }

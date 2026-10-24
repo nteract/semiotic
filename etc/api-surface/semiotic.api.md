@@ -3262,7 +3262,7 @@ interface-member XYFrameAxisConfig::property::orient = required orient: "bottom"
 interface-member XYFrameAxisConfig::property::tickAnchor = optional tickAnchor: "edges" | "middle" | undefined
 interface-member XYFrameAxisConfig::property::tickCount = optional tickCount: number | undefined
 interface-member XYFrameAxisConfig::property::tickFormat = optional tickFormat: ((Date | d: string | number, index?: number, allTicks?: number[]) => string | ReactNode) | undefined
-interface-member XYFrameAxisConfig::property::tickValues = optional tickValues: (Date | number)[] | undefined
+interface-member XYFrameAxisConfig::property::tickValues = optional tickValues: (Date | number | string)[] | undefined
 interface-member XYFrameAxisConfig::property::ticks = optional ticks: number | undefined
 interface-member XYFrameAxisConfig::property::visible = optional visible: boolean | undefined
 type Accessor<T = DatumValue> = ((d: Datum, i?: number) => T) | string

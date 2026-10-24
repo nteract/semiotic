@@ -8,11 +8,26 @@ import {
 } from "./axisTickUtils"
 import { makeDateTickFormatter } from "./xyDateTicks"
 import { numericTickFormatter } from "../charts/shared/numericTickFormatter"
+import {
+  heatmapBandIndex,
+  heatmapBandTicks,
+  type HeatmapBandTick
+} from "./heatmapBandTicks"
 
 export interface AxisTick {
-  value: number | Date
+  value: number | Date | string
   pixel: number
   label: ReactNode
+  /**
+   * Original data key when `value` is only a band-scale cell index.
+   * Landmark detection reads this so a date column is not passed as 0, 1, 2.
+   */
+  dataValue?: string | number | Date
+}
+
+/** Key passed to landmark detection. Non-band ticks only have `value`. */
+export function axisTickDataValue(tick: AxisTick): string | number | Date {
+  return tick.dataValue ?? tick.value
 }
 
 type AxisScale = {
@@ -59,28 +74,83 @@ export function generateXYTicks(options: {
     extentMode === "exact"
       ? Math.max(2, requested)
       : Math.min(requested, maxFit)
-  const values = axis?.tickValues ?? ticksForMode(scale, count, extentMode)
-  const rawValues = values.map((value) => value.valueOf())
+  const bandTicks = heatmapBandTicks(scale)
+  // Explicit ticks are data keys. Band scales position cell indices, so map
+  // each requested key to its column or row and keep the key for the label.
+  const explicitBand = bandTicks && axis?.tickValues
+    ? axis.tickValues.flatMap((requested) => {
+        const index = heatmapBandIndex(bandTicks, requested)
+        return index == null ? [] : [{ requested, index }]
+      })
+    : null
+  const values = explicitBand
+    ? explicitBand.map((tick) => tick.requested)
+    : bandTicks
+      // A zero count is an explicit request for no labels. Every other count
+      // still shows the category keys; pixel thinning applies afterwards.
+      ? count === 0
+        ? []
+        : bandTicks.map((tick) => tick.value)
+      : (axis?.tickValues ?? ticksForMode(scale, count, extentMode)).filter(
+          (value): value is number | Date => typeof value !== "string"
+        )
+  const labelByValue = !explicitBand && bandTicks
+    ? new Map(bandTicks.map((tick) => [tick.value, tick.label]))
+    : null
+  const displayValue = (value: number | Date | string): string | number | Date =>
+    labelByValue?.get(Number(value)) ?? value
+  const rawValues = values.map((value) => {
+    const shown = displayValue(value)
+    return shown instanceof Date
+      ? shown.valueOf()
+      : typeof shown === "number"
+        ? shown
+        : Number(shown)
+  })
   const formatter: AxisTickFormatter =
     axis?.tickFormat ||
     options.format ||
-    (domain[0] instanceof Date || values[0] instanceof Date
-      ? makeDateTickFormatter([
-          domain[0].valueOf(),
-          domain[domain.length - 1].valueOf()
-        ])
-      : numericTickFormatter(rawValues))
+    (bandTicks
+      ? heatmapBandTickFormatter(bandTicks)
+      : domain[0] instanceof Date || values[0] instanceof Date
+        ? makeDateTickFormatter([
+            domain[0].valueOf(),
+            domain[domain.length - 1].valueOf()
+          ])
+        : numericTickFormatter(rawValues))
   // Preserve the existing value-only vertical formatter contract.
-  const format = (value: number | Date, index: number) =>
-    horizontal ? formatter(value, index, rawValues) : formatter(value)
-  const candidates = values.map((value, index) => ({
-    value,
-    pixel: scale(value),
-    label: format(value, index)
-  }))
+  // Band ticks format the category or date label, not the cell index.
+  const format = (value: number | Date | string, index: number) => {
+    const shown = displayValue(value)
+    return horizontal ? formatter(shown, index, rawValues) : formatter(shown)
+  }
+  const candidates = values.flatMap((value, index) => {
+    // A linear scale has no category key. Band scales position the cell index.
+    let pixel: number
+    if (explicitBand) pixel = scale(explicitBand[index].index)
+    else if (typeof value === "string") return []
+    else pixel = scale(value)
+    const tick: AxisTick = {
+      value,
+      pixel,
+      label: format(value, index)
+    }
+    if (bandTicks) {
+      // Positioning stays on the cell index. Landmarks need the data key.
+      tick.dataValue = explicitBand
+        ? explicitBand[index].requested
+        : bandTicks[index].label
+    }
+    return [tick]
+  })
+  // A cropped band domain can place a key outside the plot. Automatic ticks
+  // stay inside it. An explicit tickValues list is left where it was requested.
+  const visible = !explicitBand && bandTicks
+    ? candidates.filter((tick) => tick.pixel >= 0 && tick.pixel <= size)
+    : candidates
   let minPx = 22
   if (horizontal) {
-    const width = candidates.reduce(
+    const width = visible.reduce(
       (max, tick) => Math.max(max, labelWidth(tick.label)),
       0
     )
@@ -95,14 +165,17 @@ export function generateXYTicks(options: {
   const relabel =
     horizontal && (axis?.tickFormat || options.format)
       ? (list: AxisTick[]) => {
-          const rendered = list.map((tick) => tick.value.valueOf())
+          const rendered = list.map((tick) => {
+            const shown = displayValue(tick.value)
+            return shown instanceof Date ? shown.valueOf() : Number(shown)
+          })
           return list.map((tick, index) => ({
             ...tick,
-            label: formatter(tick.value, index, rendered)
+            label: formatter(displayValue(tick.value), index, rendered)
           }))
         }
       : undefined
-  let ticks = filterTicksByPixelDistance(candidates, minPx)
+  let ticks = filterTicksByPixelDistance(visible, minPx)
   if (relabel) ticks = relabel(ticks)
   if (ticks.length > 1) {
     ticks = ticks.filter(
@@ -113,6 +186,7 @@ export function generateXYTicks(options: {
   // Explicit values already lock the endpoints; exact ticks include them.
   if (
     axis?.includeMax &&
+    !bandTicks &&
     ticks.length > 0 &&
     extentMode !== "exact" &&
     !axis.tickValues
@@ -129,4 +203,29 @@ export function generateXYTicks(options: {
     }
   }
   return relabel ? relabel(ticks) : ticks
+}
+
+function heatmapBandTickFormatter(ticks: HeatmapBandTick[]): AxisTickFormatter {
+  // generateXYTicks already passes the key, not the cell index.
+  const labels = ticks.map((tick) => tick.label)
+  if (labels.length > 0 && labels.every((label) => label instanceof Date)) {
+    // A loop, not Math.min(...times): a long date axis exceeds the argument limit.
+    let min = Infinity
+    let max = -Infinity
+    for (let i = 0; i < labels.length; i++) {
+      const time = (labels[i] as Date).getTime()
+      if (time < min) min = time
+      if (time > max) max = time
+    }
+    const format = makeDateTickFormatter([min, max])
+    return (value) =>
+      value instanceof Date || (typeof value === "number" && Number.isFinite(value))
+        ? format(value)
+        : String(value)
+  }
+  if (labels.every((label) => typeof label === "number" && Number.isFinite(label))) {
+    const format = numericTickFormatter(labels as number[])
+    return (value) => format(typeof value === "number" ? value : Number(value))
+  }
+  return (value) => String(value)
 }

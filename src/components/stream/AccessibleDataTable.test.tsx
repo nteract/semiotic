@@ -1,4 +1,6 @@
-import { describe, it, expect } from "vitest"
+import { describe, expect, it, vi } from "vitest"
+import React from "react"
+import { renderToString } from "react-dom/server"
 import { fireEvent, render, screen, within } from "@testing-library/react"
 import {
   AccessibleDataTable,
@@ -8,6 +10,7 @@ import {
   extractAllRows,
 } from "./AccessibleDataTable"
 import NetworkAccessibleDataTable from "./NetworkAccessibleDataTable"
+import { SummaryRegionRoot, useUniqueRegionLabel } from "./uniqueRegionLabel"
 import type { Datum } from "../charts/shared/datumTypes"
 
 // ── Test helpers ────────────────────────────────────────────────────────
@@ -46,7 +49,7 @@ describe("computeCanvasAriaLabel", () => {
       { type: "wedge", datum: null },
       { type: "wedge", datum: { category: "A", value: 10 } },
     ]
-    expect(computeCanvasAriaLabel(scene, "gauge")).toBe("gauge, 1 wedges")
+    expect(computeCanvasAriaLabel(scene, "gauge")).toBe("gauge, 1 wedge")
   })
 
   it("reports empty when only non-interactive null-datum nodes are present", () => {
@@ -61,12 +64,12 @@ describe("computeCanvasAriaLabel", () => {
       { type: "rect", x: 10, y: 0, w: 10, h: 10 },
     ]
     // Order: point, line, then rect (per typeOrder)
-    expect(computeCanvasAriaLabel(scene, "XY")).toBe("XY, 1 points, 1 lines, 2 bars")
+    expect(computeCanvasAriaLabel(scene, "XY")).toBe("XY, 1 point, 1 line, 2 bars")
   })
 
   it("handles unknown node types gracefully", () => {
     const scene = [{ type: "sparkline" }, { type: "sparkline" }]
-    expect(computeCanvasAriaLabel(scene, "custom")).toBe("custom, 2 sparkline")
+    expect(computeCanvasAriaLabel(scene, "custom")).toBe("custom, 2 sparklines")
   })
 
   it("handles nodes with missing type", () => {
@@ -81,16 +84,16 @@ describe("computeCanvasAriaLabel", () => {
     const allTypes = ["point", "line", "area", "rect", "heatcell", "circle", "candlestick", "wedge", "arc", "geoarea"]
     const scene = allTypes.map(type => ({ type }))
     const result = computeCanvasAriaLabel(scene, "all")
-    expect(result).toContain("1 points")
-    expect(result).toContain("1 lines")
-    expect(result).toContain("1 areas")
-    expect(result).toContain("1 bars")
-    expect(result).toContain("1 cells")
-    expect(result).toContain("1 nodes")
-    expect(result).toContain("1 candlesticks")
-    expect(result).toContain("1 wedges")
-    expect(result).toContain("1 arcs")
-    expect(result).toContain("1 regions")
+    expect(result).toContain("1 point")
+    expect(result).toContain("1 line")
+    expect(result).toContain("1 area")
+    expect(result).toContain("1 bar")
+    expect(result).toContain("1 cell")
+    expect(result).toContain("1 node")
+    expect(result).toContain("1 candlestick")
+    expect(result).toContain("1 wedge")
+    expect(result).toContain("1 arc")
+    expect(result).toContain("1 region")
   })
 
   it("handles massive scene arrays without crashing", () => {
@@ -170,6 +173,164 @@ describe("AccessibleDataTable styling hooks", () => {
     )
   })
 
+  it("disambiguates duplicate summary names in server output", () => {
+    const scene = [{ type: "point" as const, x: 1, y: 2 }]
+    const html = renderToString(
+      <>
+        <AccessibleDataTable tableId="first-table" chartType="line chart" scene={scene} />
+        <AccessibleDataTable tableId="second-table" chartType="line chart" scene={scene} />
+      </>
+    )
+    expect(html).toContain('aria-label="Data summary for line chart"')
+    expect(html).toContain('aria-label="Data summary for line chart (2)"')
+    expect(html).not.toContain('aria-label="Data summary for line chart (3)"')
+    expect(html).not.toMatch(/aria-label="[^"]*first-table/)
+    expect(html).not.toMatch(/aria-label="[^"]*second-table/)
+
+    const again = renderToString(
+      <SummaryRegionRoot>
+        <AccessibleDataTable tableId="third-table" chartType="line chart" scene={scene} />
+      </SummaryRegionRoot>
+    )
+    expect(again).toContain('aria-label="Data summary for line chart"')
+    expect(again).not.toContain("(2)")
+  })
+
+  it("restarts summary names when the next server render reuses the same ids", () => {
+    const scene = [{ type: "point" as const, x: 1, y: 2 }]
+    const pair = (first: string, second: string) => renderToString(
+      <>
+        <AccessibleDataTable tableId="left-table" chartType={first} scene={scene} />
+        <AccessibleDataTable tableId="right-table" chartType={second} scene={scene} />
+      </>
+    )
+    const mixed = pair("bar chart", "line chart")
+    expect(mixed).toContain('aria-label="Data summary for bar chart"')
+    expect(mixed).toContain('aria-label="Data summary for line chart"')
+    expect(mixed).not.toContain("(2)")
+
+    const lines = pair("line chart", "line chart")
+    const lineLabels = [...lines.matchAll(/aria-label="([^"]+)"/g)].map((match) => match[1])
+    expect(lineLabels.filter((label) => label === "Data summary for line chart")).toHaveLength(1)
+    expect(lineLabels).toContain("Data summary for line chart (2)")
+    expect(lineLabels).not.toContain("Data summary for line chart (3)")
+  })
+
+  it("does not keep a suffix when a reused id changes chart type", () => {
+    const scene = [{ type: "point" as const, x: 1, y: 2 }]
+    const pair = (first: string, second: string) => renderToString(
+      <>
+        <AccessibleDataTable tableId="left-table" chartType={first} scene={scene} />
+        <AccessibleDataTable tableId="right-table" chartType={second} scene={scene} />
+      </>
+    )
+    pair("line chart", "line chart")
+    const mixed = pair("bar chart", "line chart")
+    expect(mixed).toContain('aria-label="Data summary for bar chart"')
+    expect(mixed).toContain('aria-label="Data summary for line chart"')
+    expect(mixed).not.toContain("(2)")
+  })
+
+  it("numbers React 18 summary ids together and restarts the next render", () => {
+    let n = 0
+    const spy = vi.spyOn(React, "useId").mockImplementation(() => {
+      n += 1
+      return `:R${n}:`
+    })
+    function Named({ kind }: { kind: string }) {
+      return <span data-label={useUniqueRegionLabel(`Data summary for ${kind}`)} />
+    }
+    const labels = (html: string) =>
+      [...html.matchAll(/data-label="([^"]+)"/g)].map((match) => match[1])
+    const same = renderToString(
+      <>
+        <Named kind="line chart" />
+        <Named kind="line chart" />
+      </>
+    )
+    n = 0
+    const again = renderToString(
+      <>
+        <Named kind="line chart" />
+        <Named kind="line chart" />
+      </>
+    )
+    spy.mockRestore()
+    expect(labels(same)).toEqual([
+      "Data summary for line chart",
+      "Data summary for line chart (2)"
+    ])
+    expect(labels(again)).toEqual([
+      "Data summary for line chart",
+      "Data summary for line chart (2)"
+    ])
+  })
+
+  it("keeps nested and base32 summary ids in encounter order", () => {
+    function Named() {
+      return <span data-label={useUniqueRegionLabel("Data summary for line chart")} />
+    }
+    function Nested() {
+      return (
+        <div>
+          <Named />
+          <section>
+            <Named />
+            <Named />
+          </section>
+          <Named />
+        </div>
+      )
+    }
+    const nested = renderToString(<Nested />)
+    const labels = [...nested.matchAll(/data-label="([^"]+)"/g)].map((match) => match[1])
+    expect(labels).toEqual([
+      "Data summary for line chart",
+      "Data summary for line chart (2)",
+      "Data summary for line chart (3)",
+      "Data summary for line chart (4)",
+    ])
+  })
+
+  it("keeps a base32 summary id on the same render count", () => {
+    function Named() {
+      return <span data-label={useUniqueRegionLabel("Data summary for line chart")} />
+    }
+    const many = renderToString(
+      <>
+        {Array.from({ length: 12 }, (_, index) => <Named key={index} />)}
+      </>
+    )
+    const labels = [...many.matchAll(/data-label="([^"]+)"/g)].map((match) => match[1])
+    expect(labels[0]).toBe("Data summary for line chart")
+    expect(labels[9]).toBe("Data summary for line chart (10)")
+    expect(labels[11]).toBe("Data summary for line chart (12)")
+    expect(labels.filter((label) => label === "Data summary for line chart")).toHaveLength(1)
+  })
+
+  it("starts each prefixed server render at the base summary name", () => {
+    const scene = [{ type: "point" as const, x: 1, y: 2 }]
+    const tables = (
+      <>
+        <AccessibleDataTable tableId="alpha-one" chartType="line chart" scene={scene} />
+        <AccessibleDataTable tableId="alpha-two" chartType="line chart" scene={scene} />
+      </>
+    )
+    const alpha = renderToString(
+      <SummaryRegionRoot>{tables}</SummaryRegionRoot>,
+      { identifierPrefix: "alpha" }
+    )
+    const beta = renderToString(
+      <SummaryRegionRoot>{tables}</SummaryRegionRoot>,
+      { identifierPrefix: "beta" }
+    )
+    for (const html of [alpha, beta]) {
+      expect(html).toContain('aria-label="Data summary for line chart"')
+      expect(html).toContain('aria-label="Data summary for line chart (2)"')
+      expect(html).not.toContain("(3)")
+    }
+  })
+
   it("constrains the collapsed trigger to the visually hidden region", () => {
     render(
       <AccessibleDataTable
@@ -200,7 +361,9 @@ describe("AccessibleDataTable styling hooks", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /view data summary/i }))
 
-    const region = screen.getByRole("region", { name: /data summary for line chart/i })
+    const region = screen.getByRole("region", { name: "Data summary for line chart" })
+    expect(region.id).toBe("semiotic-table-test")
+    expect(region.getAttribute("aria-label")).not.toContain("semiotic-table-test")
     expect(region).toHaveClass("semiotic-accessible-data-table")
     expect(region).toHaveClass("semiotic-accessible-data-table-visible")
     expect(region.getAttribute("style")).toContain("--semiotic-data-table-bg")
@@ -305,7 +468,7 @@ describe("NetworkAccessibleDataTable semantic rows", () => {
     ).toBeInTheDocument()
 
     expect(screen.getByRole("note")).toHaveTextContent(
-      "2 nodes, 1 edges. Mean degree: 1, max degree: 1."
+      "2 nodes, 1 edge. Mean degree: 1, max degree: 1."
     )
     expect(screen.queryByText(/must stay hidden/)).toBeNull()
     expect(screen.queryByText("Ignored because tableFields wins")).toBeNull()
@@ -332,7 +495,7 @@ describe("NetworkAccessibleDataTable semantic rows", () => {
     const edgeTable = await screen.findByRole("table", { name: /edge data/i })
     expect(within(edgeTable).getByText("archive → court")).toBeInTheDocument()
     expect(within(edgeTable).getByText("informs")).toBeInTheDocument()
-    expect(screen.getByRole("note")).toHaveTextContent("0 nodes, 1 edges.")
+    expect(screen.getByRole("note")).toHaveTextContent("0 nodes, 1 edge.")
   })
 
   it("omits decorative null-datum network nodes from counts and rows", async () => {
@@ -358,14 +521,14 @@ describe("NetworkAccessibleDataTable semantic rows", () => {
     )
 
     const trigger = screen.getByRole("button", {
-      name: "View data summary (1 nodes, 0 edges)",
+      name: "View data summary (1 node, 0 edges)",
     })
     fireEvent.click(trigger)
 
     const table = await screen.findByRole("table", { name: /node data/i })
     expect(within(table).getAllByRole("row")).toHaveLength(2)
     expect(within(table).getByText("Station")).toBeInTheDocument()
-    expect(screen.getByRole("note")).toHaveTextContent("1 nodes, 0 edges.")
+    expect(screen.getByRole("note")).toHaveTextContent("1 node, 0 edges.")
     expect(screen.queryByText("decorative-wedge")).toBeNull()
   })
 })
@@ -390,7 +553,9 @@ describe("AccessibleDataTable — focus & pagination", () => {
 
   it("auto-expands when the region container itself receives focus (skip-link path)", () => {
     render(<AccessibleDataTable tableId="t2" chartType="line chart" scene={lineScene(3)} />)
-    const region = screen.getByRole("region", { name: /data summary for line chart/i })
+    const region = screen.getByRole("region", { name: "Data summary for line chart" })
+    expect(region.id).toBe("t2")
+    expect(region.getAttribute("aria-label")).not.toContain("t2")
     fireEvent.focus(region) // target === currentTarget
     expect(screen.getByRole("table")).toBeInTheDocument()
   })

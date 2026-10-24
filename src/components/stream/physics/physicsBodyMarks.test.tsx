@@ -51,6 +51,62 @@ describe("physics mark parity", () => {
     }
   )
 
+  it("skips a halo when fill and stroke are none", () => {
+    const fixture = body()
+    const ctx = document.createElement("canvas").getContext("2d")!
+    const stroke = vi.spyOn(ctx, "stroke")
+    const fill = vi.spyOn(ctx, "fill")
+    drawBody(ctx, fixture.body, {
+      mark: "halo",
+      r: 10,
+      fill: "none",
+      stroke: "none"
+    })
+    expect(fill).not.toHaveBeenCalled()
+    expect(stroke).not.toHaveBeenCalled()
+    expect(ctx.strokeStyle).not.toBe("none")
+  })
+
+  it("does not paint a halo whose stroke is none", () => {
+    const fixture = body()
+    const ctx = document.createElement("canvas").getContext("2d")!
+    const stroke = vi.spyOn(ctx, "stroke")
+    const fill = vi.spyOn(ctx, "fill")
+    drawBody(ctx, fixture.body, {
+      mark: "halo",
+      r: 10,
+      fill: "red",
+      stroke: "none",
+      strokeWidth: 2
+    })
+    expect(fill).toHaveBeenCalled()
+    expect(stroke).not.toHaveBeenCalled()
+  })
+
+  it("paints an omitted halo stroke with the fill", () => {
+    const fixture = body()
+    const ctx = document.createElement("canvas").getContext("2d")!
+    const stroke = vi.spyOn(ctx, "stroke")
+    drawBody(ctx, fixture.body, {
+      mark: "halo",
+      r: 10,
+      fill: "red",
+      strokeWidth: 2
+    })
+    expect(stroke).toHaveBeenCalled()
+    const svg = renderToStaticMarkup(
+      <>
+        {physicsBodySVG(fixture.body, {
+          mark: "halo",
+          r: 10,
+          fill: "red",
+          strokeWidth: 2
+        }, 0)}
+      </>
+    )
+    expect(svg).toContain('stroke="red"')
+  })
+
   it("renders glyph callbacks with the original datum and diagnoses visual/collider mismatch", () => {
     const fixture = body()
     const glyph = {

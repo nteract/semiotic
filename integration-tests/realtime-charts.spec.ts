@@ -26,7 +26,7 @@ test("large event-time batches preserve immediate aggregate reads and render", a
   await waitForChartReady(page, "realtime-aggregate")
   await expect(
     page.getByTestId("realtime-aggregate").locator("canvas[aria-label]")
-  ).toHaveAttribute("aria-label", /1 lines/)
+  ).toHaveAttribute("aria-label", /1 line/)
   expect(errors).toEqual([])
 })
 
