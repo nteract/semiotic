@@ -163,6 +163,8 @@ export default function ChartClinicPage() {
                 <ResultList values={report.diagnostics} empty="No chart diagnostics." />
                 <h3 style={{ marginTop: 20 }}>Reasons</h3>
                 <ResultList values={report.reasons} empty="No blocking reasons." />
+                <h3 style={{ marginTop: 20 }}>Renderer warnings</h3>
+                <ResultList values={report.warnings} empty="No renderer warnings." />
               </div>
             </div>
           </section>

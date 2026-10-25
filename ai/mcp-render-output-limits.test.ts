@@ -108,6 +108,8 @@ describe("MCP render output limits", () => {
         },
       ],
       internalInputEcho: "must not be forwarded",
+      sceneHash: "a".repeat(64),
+      sceneHashVersion: 2,
     }, smallLimits)
 
     expect(evidence).toMatchObject({
@@ -127,6 +129,12 @@ describe("MCP render output limits", () => {
     expect((evidence?.semanticDiagnostics as Array<{ fix: string }>)[0].fix).toContain("…")
     expect(JSON.stringify(evidence)).not.toContain("echoedInput")
     expect(evidence).not.toHaveProperty("internalInputEcho")
+    expect(evidence).toMatchObject({ sceneHash: "a".repeat(64), sceneHashVersion: 2 })
+    for (const sceneHash of ["untrusted".repeat(1000), "bad-hash", null]) {
+      expect(
+        createWidgetEvidencePreview({ sceneHash, sceneHashVersion: 2 })
+      ).not.toHaveProperty("sceneHash")
+    }
   })
 
   it("uses a deterministic error instead of returning an oversized payload", () => {

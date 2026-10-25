@@ -27,9 +27,10 @@ import type { RenderEvidence } from "../server/renderEvidence"
 import type { RenderFn } from "./generativeChart"
 import { semanticEvidenceDiagnostics } from "./semanticEvidence"
 import { artifactAttachmentIssues } from "../artifact/attachmentAudit"
+import { reportRenderError } from "./reportRenderError"
 
 export type EvaluateChartStage =
-  "data" | "deception" | "accessibility" | "render"
+  "validation" | "data" | "deception" | "accessibility" | "render"
 export type EvaluateChartSeverity = "error" | "warning" | "manual"
 
 export interface EvaluateChartFinding {
@@ -65,6 +66,8 @@ export interface EvaluateChartOptions extends AuditAccessibilityOptions {
   readonly dataAudit?: AuditDataOptions
   /** Optionally prove the configuration against a server or custom renderer. */
   readonly render?: RenderFn
+  /** Observe the original renderer error locally without including it in findings. */
+  readonly onRenderError?: (error: unknown) => void
   /** Maximum number of findings shown in the notification feed. */
   readonly notificationMax?: number
 }
@@ -102,6 +105,7 @@ const severityWeight: Record<EvaluateChartSeverity, number> = {
 }
 
 const stageWeight: Record<EvaluateChartStage, number> = {
+  validation: -1,
   data: 0,
   deception: 1,
   accessibility: 2,
@@ -327,7 +331,7 @@ export function evaluateChart(
   for (const [index, error] of validation.errors.entries()) {
     rawFindings.push({
       id: `validation.${index + 1}`,
-      stage: "deception",
+      stage: "validation",
       severity: "error",
       code: "VALIDATION",
       message: error,
@@ -359,7 +363,9 @@ export function evaluateChart(
     try {
       evidence = options.render(component, effectiveProps).evidence
       rawFindings.push(...renderFindings(evidence, component))
-    } catch {
+    } catch (error) {
+      evidence = undefined
+      reportRenderError(error, options.onRenderError)
       rawFindings.push({
         id: "render.failed",
         stage: "render",
@@ -385,7 +391,7 @@ export function evaluateChart(
   ).length
   const notifications = toNotifications(
     findings,
-    Math.max(0, Math.floor(options.notificationMax ?? 8))
+    notificationLimit(options.notificationMax)
   )
 
   return {
@@ -412,5 +418,11 @@ export function toEvaluateChartNotifications(
   findings: ReadonlyArray<EvaluateChartFinding>,
   max = 8
 ): EvaluateChartNotification[] {
-  return toNotifications(findings, Math.max(0, Math.floor(max)))
+  return toNotifications(findings, notificationLimit(max))
+}
+
+function notificationLimit(max: number | undefined): number {
+  return max !== undefined && Number.isFinite(max)
+    ? Math.max(0, Math.floor(max))
+    : 8
 }

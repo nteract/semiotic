@@ -1712,6 +1712,7 @@ interface-member EvaluateChartNotification::property::source = required readonly
 interface-member EvaluateChartNotification::property::title = required readonly title: string
 interface-member EvaluateChartOptions::property::dataAudit = optional readonly dataAudit: AuditDataOptions | undefined
 interface-member EvaluateChartOptions::property::notificationMax = optional readonly notificationMax: number | undefined
+interface-member EvaluateChartOptions::property::onRenderError = optional readonly onRenderError: ((error: unknown) => void) | undefined
 interface-member EvaluateChartOptions::property::render = optional readonly render: RenderFn | undefined
 interface-member EvaluateChartResult::property::accessibility = required readonly accessibility: AccessibilityAuditResult
 interface-member EvaluateChartResult::property::component = required readonly component: string
@@ -2213,6 +2214,7 @@ interface-member PrepareChartOptions::property::data = optional data: readonly D
 interface-member PrepareChartOptions::property::diagnose = optional diagnose: boolean | undefined
 interface-member PrepareChartOptions::property::intent = optional intent: IntentId | IntentId[] | undefined
 interface-member PrepareChartOptions::property::narration = optional narration: Partial<Pick<Datum, "description" | "summary" | "title">> | undefined
+interface-member PrepareChartOptions::property::onRenderError = optional onRenderError: ((error: unknown) => void) | undefined
 interface-member PrepareChartOptions::property::render = optional render: RenderFn | undefined
 interface-member PrepareChartOptions::property::repair = optional repair: boolean | undefined
 interface-member PrepareChartOptions::property::treatErrorsAsBlocking = optional treatErrorsAsBlocking: boolean | undefined
@@ -2227,6 +2229,7 @@ interface-member PrepareChartResult::property::reasons = required reasons: strin
 interface-member PrepareChartResult::property::repair = optional repair: RepairResult | undefined
 interface-member PrepareChartResult::property::svg = optional svg: string | undefined
 interface-member PrepareChartResult::property::validation = required validation: ValidationResult
+interface-member PrepareChartResult::property::warnings = optional warnings: readonly string[] | undefined
 interface-member PreparedArtifactRevision::property::changedClaimIds = required changedClaimIds: string[]
 interface-member PreparedArtifactRevision::property::component = required component: string
 interface-member PreparedArtifactRevision::property::contract = required contract: ArtifactContract
@@ -3023,7 +3026,7 @@ type DescribeLevel = "l1" | "l2" | "l3" | "l4"
 type DescriptionStrategy<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>> = (context: RecipeStrategyContext<TDatum, TConfig>) => RecipeDescription
 type EncodingChannel = "angle" | "area" | "color" | "connection" | "count" | "label" | "length" | "motion" | "order" | "position" | "shape" | "size" | "texture" | string
 type EvaluateChartSeverity = "error" | "manual" | "warning"
-type EvaluateChartStage = "accessibility" | "data" | "deception" | "render"
+type EvaluateChartStage = "accessibility" | "data" | "deception" | "render" | "validation"
 type EvaluateVariantProposalFn = (proposal: VariantProposal, profile: ChartDataProfile, audience?: AudienceProfile, options?: EvaluateVariantProposalOptions) => VariantScore
 type EvidenceRole = "external-source" | "human-observation" | "model-output" | "policy-rule" | "quality-check" | "source-data" | "statistical-test" | "transformation"
 type FieldBand = "narrow" | "typical" | "wide"

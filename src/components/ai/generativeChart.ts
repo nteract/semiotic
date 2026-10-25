@@ -32,6 +32,8 @@ import type { IntentId } from "./intents"
 import type { RenderEvidence } from "../server/renderEvidence"
 import { semanticFailureReasons } from "./semanticEvidence"
 import { artifactAttachmentIssues } from "../artifact/attachmentAudit"
+import { renderEvidenceMemoKey } from "./renderEvidenceMemoKey"
+import { reportRenderError } from "./reportRenderError"
 
 /**
  * A renderer that turns a validated config into SVG + render evidence. Inject
@@ -51,129 +53,61 @@ export interface RenderEvidenceMemo {
   clear: () => void
 }
 
-function memoToken(
-  value: unknown,
-  objectIds: WeakMap<object, number>,
-  nextObjectId: { value: number },
-): string {
-  if (value === null) return "null"
-  switch (typeof value) {
-    case "undefined": return "undefined"
-    case "string": return `string:${value}`
-    case "number": return Number.isNaN(value) ? "number:NaN" : `number:${Object.is(value, -0) ? "-0" : value}`
-    case "boolean": return `boolean:${value}`
-    case "bigint": return `bigint:${value}`
-    case "symbol": return `symbol:${String(value)}`
-    case "function":
-    case "object": {
-      const object = value as object
-      let id = objectIds.get(object)
-      if (id === undefined) {
-        id = nextObjectId.value++
-        objectIds.set(object, id)
-      }
-      return `object:${id}`
-    }
-    default: return "unknown"
-  }
-}
-
-/**
- * Memoize an injected `(component, props) → SVG + evidence` oracle safely.
- *
- * Results are scoped to the identity of the chart's primary input (`data`,
- * `nodes`, or `edges`) and to every other prop's primitive value or
- * object/function identity. Value-backed components (for example BigNumber)
- * use a small bounded configuration cache because their input is commonly a
- * scalar rather than an array. This avoids serializing user callbacks or
- * accidentally sharing a result across distinct inputs. Treat inputs as
- * immutable; call `clear()` after an in-place mutation or whenever an external
- * renderer dependency changes.
- */
 const MEMO_INPUT_PROPS = ["data", "nodes", "edges"] as const
-const VALUE_CONFIG_CACHE_LIMIT = 64
+const CONFIG_CACHE_LIMIT = 64
 
-interface MemoInput {
-  prop: string
-  value: object
-}
-
-function primaryMemoInput(props: Datum): MemoInput | undefined {
+function primaryMemoInput(props: Datum): object | undefined {
   for (const prop of MEMO_INPUT_PROPS) {
     const value = props[prop]
-    if (value !== null && (typeof value === "object" || typeof value === "function")) {
-      return { prop, value: value as object }
-    }
+    if (
+      value !== null &&
+      (typeof value === "object" || typeof value === "function")
+    ) return value
   }
   return undefined
 }
 
-function memoCacheKey(
-  component: string,
-  props: Datum,
-  objectIds: WeakMap<object, number>,
-  nextObjectId: { value: number },
-  excludedProp?: string,
-): string {
-  const key = Object.keys(props)
-    .filter((name) => name !== excludedProp)
-    .sort()
-    .map((name) => [name, memoToken(props[name], objectIds, nextObjectId)])
-  // Keep the component and sorted prop pairs as a structured value. Raw
-  // delimiter joining let string-valued props manufacture a second pair and
-  // collide with a distinct configuration.
-  return JSON.stringify([component, key])
-}
-
+/**
+ * Memoize SVG and evidence within each primary input identity (`data`, `nodes`,
+ * or `edges`). Plain data and configuration values are compared structurally,
+ * including in-place edits, key order and enumerability; callbacks use identity.
+ * Each input and the scalar value cache retain at most 64 configurations in
+ * least-recently-used order.
+ * Oversized, cyclic or unsupported values render without caching. Call
+ * `clear()` when callback closures or other external renderer state changes.
+ */
 export function createRenderEvidenceMemo(render: RenderFn): RenderEvidenceMemo {
   let byInput = new WeakMap<object, Map<string, ReturnType<RenderFn>>>()
   let valueConfigurations = new Map<string, ReturnType<RenderFn>>()
-  const objectIds = new WeakMap<object, number>()
-  const nextObjectId = { value: 1 }
+  const functionIds = new WeakMap<object, number>()
+  const nextFunctionId = { value: 1 }
 
   return {
     render(component, props) {
-      const input = primaryMemoInput(props)
-      if (!input) {
-        // Value components usually receive a primitive `value`, so they cannot
-        // use a WeakMap identity key. Keep their fully-keyed configurations
-        // bounded rather than making every BigNumber render miss the cache.
-        if (!Object.prototype.hasOwnProperty.call(props, "value")) {
-          return render(component, props)
-        }
-        const cacheKey = memoCacheKey(component, props, objectIds, nextObjectId)
-        const cached = valueConfigurations.get(cacheKey)
-        if (cached !== undefined) {
-          // Refresh insertion order so this behaves as a compact LRU cache.
-          valueConfigurations.delete(cacheKey)
-          valueConfigurations.set(cacheKey, cached)
-          return cached
-        }
-        const result = render(component, props)
-        if (valueConfigurations.size >= VALUE_CONFIG_CACHE_LIMIT) {
-          const oldest = valueConfigurations.keys().next().value as string | undefined
-          if (oldest !== undefined) valueConfigurations.delete(oldest)
-        }
-        valueConfigurations.set(cacheKey, result)
-        return result
-      }
-
-      const cacheKey = memoCacheKey(
-        component,
-        props,
-        objectIds,
-        nextObjectId,
-        input.prop,
+      const key = renderEvidenceMemoKey(
+        component, props, functionIds, nextFunctionId
       )
-      let entries = byInput.get(input.value)
+      if (key === undefined) return render(component, props)
+      const input = primaryMemoInput(props)
+      if (!input && !Object.prototype.hasOwnProperty.call(props, "value"))
+        return render(component, props)
+      let entries = input ? byInput.get(input) : valueConfigurations
       if (!entries) {
         entries = new Map()
-        byInput.set(input.value, entries)
+        byInput.set(input!, entries)
       }
-      const cached = entries.get(cacheKey)
-      if (cached !== undefined) return cached
+      const cached = entries.get(key)
+      if (cached !== undefined) {
+        entries.delete(key)
+        entries.set(key, cached)
+        return cached
+      }
       const result = render(component, props)
-      entries.set(cacheKey, result)
+      if (entries.size >= CONFIG_CACHE_LIMIT) {
+        const oldest = entries.keys().next().value
+        if (oldest !== undefined) entries.delete(oldest)
+      }
+      entries.set(key, result)
       return result
     },
     clear() {
@@ -217,6 +151,8 @@ export interface PrepareChartOptions {
    * and `ok` is decided on validation + diagnostics alone.
    */
   render?: RenderFn
+  /** Observe the original renderer error locally; it is never copied into the report. */
+  onRenderError?: (error: unknown) => void
   /**
    * Treat error-severity diagnostics as blocking `ok` (default true). Set false
    * to let a caller surface warnings without failing the gate.
@@ -250,6 +186,8 @@ export interface PrepareChartResult {
   svg?: string
   /** Human-readable reasons the proposal is not `ok` (empty when `ok`). */
   reasons: string[]
+  /** Nonblocking renderer warning codes, retained even when `ok` is true. */
+  warnings?: readonly string[]
 }
 
 const NO_VALIDATION: ValidationResult = { valid: false, errors: [] }
@@ -327,30 +265,41 @@ export function prepareChart(
   let evidence: RenderEvidence | undefined
   let svg: string | undefined
   let identityFailure = false
+  let renderFailed = false
   if (
     options.render &&
     known &&
     validation.valid &&
     (!treatErrorsAsBlocking || errorDiagnostics.length === 0)
   ) {
-    const rendered = options.render(component, props)
-    svg = rendered.svg
-    evidence = rendered.evidence
-    const attachmentFailures = artifactAttachmentIssues({
-      contract: evidence.artifactContract,
-      transfer: evidence.artifactTransfer,
-      binding: evidence.artifactBinding
-    }).filter((issue) => issue.status === "fail")
-    identityFailure = evidence.component !== component || attachmentFailures.length > 0
-    if (evidence.component !== component) {
-      reasons.push("The render evidence names a different chart component.")
+    try {
+      const rendered = options.render(component, props)
+      svg = rendered.svg
+      evidence = rendered.evidence
+      const attachmentFailures = artifactAttachmentIssues({
+        contract: evidence.artifactContract,
+        transfer: evidence.artifactTransfer,
+        binding: evidence.artifactBinding
+      }).filter((issue) => issue.status === "fail")
+      identityFailure =
+        evidence.component !== component || attachmentFailures.length > 0
+      if (evidence.component !== component) {
+        reasons.push("The render evidence names a different chart component.")
+      }
+      reasons.push(...attachmentFailures.map(({ message }) => message))
+      if (evidence.empty) {
+        reasons.push("EMPTY_SCENE: the renderer produced no data marks.")
+      }
+      reasons.push(...semanticFailureReasons(evidence))
+    } catch (error) {
+      renderFailed = true
+      svg = undefined
+      evidence = undefined
+      reasons.push(
+        "RENDER_FAILED: static evidence could not be produced for this configuration."
+      )
+      reportRenderError(error, options.onRenderError)
     }
-    reasons.push(...attachmentFailures.map(({ message }) => message))
-    if (evidence.empty) {
-      reasons.push("Rendered to an empty scene (no marks) — the data or accessors produce nothing to draw.")
-    }
-    reasons.push(...semanticFailureReasons(evidence))
-    for (const w of evidence.warnings) reasons.push(w)
   }
 
   const ok =
@@ -358,8 +307,10 @@ export function prepareChart(
     validation.valid &&
     (!treatErrorsAsBlocking || errorDiagnostics.length === 0) &&
     (!repair || repair.status === "ok") &&
-    (!evidence || (!evidence.empty && evidence.semanticStatus !== "degenerate")) &&
-    !identityFailure
+    (!evidence ||
+      (!evidence.empty && evidence.semanticStatus !== "degenerate")) &&
+    !identityFailure &&
+    !renderFailed
 
   return {
     ok,
@@ -373,6 +324,7 @@ export function prepareChart(
     evidence,
     svg,
     reasons: ok ? [] : reasons,
+    ...(evidence?.warnings.length ? { warnings: [...evidence.warnings] } : {}),
   }
 }
 

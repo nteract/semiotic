@@ -16,7 +16,6 @@ import type { RenderEvidence } from "../server/renderEvidence"
 import type { RevisionSet } from "../stream/pipelineUpdateContract"
 import { CHART_CLINIC_METADATA } from "./chartClinicMetadata.generated"
 import { prepareChart, type RenderFn } from "./generativeChart"
-import { semanticFailureReasons } from "./semanticEvidence"
 
 /**
  * Inspection is a reproducible projection, not an authored export. The
@@ -46,6 +45,8 @@ export interface ChartClinicOptions {
    * as a stable code rather than rethrowing arbitrary error text.
    */
   readonly render?: RenderFn
+  /** Observe the original renderer error locally without including it in this report. */
+  readonly onRenderError?: (error: unknown) => void
 }
 
 export interface ChartClinicSceneSummary {
@@ -92,6 +93,8 @@ export interface ChartClinicReport {
   readonly bundle: ChartClinicBundleGuidance
   /** Stable reasons; arbitrary renderer exception messages are never copied here. */
   readonly reasons: readonly string[]
+  /** Nonblocking renderer warning codes, retained on successful inspections. */
+  readonly warnings?: readonly string[]
   readonly ok: boolean
 }
 
@@ -163,34 +166,9 @@ export function inspectChart(
 ): ChartClinicReport {
   const prepared = prepareChart(
     { component: input.component, props: input.props ?? {} },
-    { repair: false },
+    { repair: false, render: options.render, onRenderError: options.onRenderError },
   )
-  const reasons = [...prepared.reasons]
-  let evidence: RenderEvidence | undefined
-
-  // Never render structurally invalid/error-diagnostic configurations. The
-  // report remains useful and a browser UI cannot be crashed by malformed JSON.
-  if (options.render && prepared.ok) {
-    try {
-      const output = options.render(input.component, input.props ?? {})
-      evidence = output.evidence
-      if (evidence.empty) {
-        reasons.push("EMPTY_SCENE: the renderer produced no data marks.")
-      }
-      reasons.push(...semanticFailureReasons(evidence))
-      for (const warning of evidence.warnings) {
-        if (!reasons.includes(warning)) reasons.push(warning)
-      }
-    } catch {
-      reasons.push("RENDER_FAILED: static evidence could not be produced for this configuration.")
-    }
-  }
-
-  const ok =
-    prepared.ok &&
-    !evidence?.empty &&
-    evidence?.semanticStatus !== "degenerate" &&
-    !reasons.some((reason) => reason.startsWith("RENDER_FAILED"))
+  const evidence = prepared.evidence
   return {
     mode: "read-only",
     component: input.component,
@@ -200,7 +178,8 @@ export function inspectChart(
     ...(evidence ? { evidence, scene: sceneSummary(evidence) } : {}),
     revisions: revisionStatus(input.revision),
     bundle: bundleGuidance(input.component),
-    reasons: ok ? [] : reasons,
-    ok,
+    reasons: prepared.reasons,
+    ...(prepared.warnings ? { warnings: prepared.warnings } : {}),
+    ok: prepared.ok,
   }
 }

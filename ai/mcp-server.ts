@@ -108,7 +108,7 @@ import { renderMcpChartOnce } from "./mcp-render-chart"
 import { applySvgTheme } from "./svg-theme"
 import { renderedSceneHash } from "../src/components/evidence/renderedSceneHash"
 import { COMPONENT_REGISTRY } from "./componentRegistry"
-import { renderChartWithEvidence } from "semiotic/server"
+import { renderChartWithEvidence, type RenderEvidence } from "semiotic/server"
 import { toEvidenceEnvelope, evaluateEvidenceGate } from "semiotic/evidence"
 import {
   diagnoseConfig,
@@ -576,7 +576,7 @@ function promptMessage(text: string) {
 
 function parseRenderEvidence(
   result: ToolResult
-): Record<string, unknown> | null {
+): RenderEvidence | null {
   const evidenceText = result.content.find(
     (block): block is ToolTextContent =>
       block.type === "text" && block.text.startsWith("Render evidence:\n")
@@ -1727,7 +1727,7 @@ async function renderChartHandler(
   })
 }
 
-async function renderInteractiveChartHandler(
+async function renderInteractiveChart(
   args: {
     component?: string
     props?: Record<string, any>
@@ -1735,22 +1735,24 @@ async function renderInteractiveChartHandler(
   },
   context: RenderContext = {},
   existingRender?: ToolResult
-): Promise<ToolResult> {
+): Promise<{ result: ToolResult; evidence: RenderEvidence | null }> {
   const limits = context.limits ?? resolveMcpRenderExecutionLimits()
   const signal = context.signal
   const component = args.component
   const props: Record<string, any> = args.props ?? {}
-  const rendered = existingRender ?? await renderChartHandler(
-    {
-      component,
-      props,
-      theme: args.theme,
-      format: "svg"
-    },
-    context
-  )
+  const rendered =
+    existingRender ??
+    (await renderChartHandler(
+      {
+        component,
+        props,
+        theme: args.theme,
+        format: "svg"
+      },
+      context
+    ))
 
-  if (rendered.isError) return rendered
+  if (rendered.isError) return { result: rendered, evidence: null }
 
   const svgBlock = rendered.content.find(
     (block): block is ToolTextContent =>
@@ -1766,20 +1768,36 @@ async function renderInteractiveChartHandler(
     )
   } catch (err) {
     if (isRenderExecutionError(err)) {
-      return capInteractiveWidgetResult(
-        renderExecutionErrorResult(err.message, (err as any).code)
-      )
+      return {
+        result: capInteractiveWidgetResult(
+          renderExecutionErrorResult(err.message, (err as any).code)
+        ),
+        evidence: null
+      }
     }
-    return capInteractiveWidgetResult({
-      content: [
-        { type: "text" as const, text: "Interactive SVG sanitization failed." }
-      ],
-      isError: true
-    })
+    return {
+      result: capInteractiveWidgetResult({
+        content: [
+          {
+            type: "text" as const,
+            text: "Interactive SVG sanitization failed."
+          }
+        ],
+        isError: true
+      }),
+      evidence: null
+    }
   }
   const outputLimits = resolveMcpRenderOutputLimits()
+  // Keep the complete evidence for the public envelope, and hash the final
+  // themed, sanitized artifact before reducing it to a bounded widget preview.
+  const completeEvidence = parseRenderEvidence(rendered)
+  if (completeEvidence) {
+    completeEvidence.sceneHashVersion = 2
+    completeEvidence.sceneHash = renderedSceneHash(svg, completeEvidence)
+  }
   const evidence = createWidgetEvidencePreview(
-    parseRenderEvidence(rendered),
+    completeEvidence as unknown as Record<string, unknown> | null,
     outputLimits
   )
   const dataPreview = createWidgetDataPreview(props, outputLimits)
@@ -1793,29 +1811,32 @@ async function renderInteractiveChartHandler(
     "Use the widget controls to zoom, fit width, inspect data, and inspect render evidence."
   ].join(" ")
 
-  return capInteractiveWidgetResult({
-    content: [
-      {
-        type: "text" as const,
-        text: `Rendered ${title} (${component}) as an interactive ChatGPT Apps widget.`
+  return {
+    evidence: completeEvidence,
+    result: capInteractiveWidgetResult({
+      content: [
+        {
+          type: "text" as const,
+          text: `Rendered ${title} (${component}) as an interactive ChatGPT Apps widget.`
+        }
+      ],
+      structuredContent: {
+        component: component ?? "SemioticChart",
+        title,
+        summary,
+        datumCount,
+        evidence
+      },
+      _meta: {
+        component: component ?? "SemioticChart",
+        title,
+        dataPreview,
+        svg,
+        evidence,
+        generatedAt: new Date().toISOString()
       }
-    ],
-    structuredContent: {
-      component: component ?? "SemioticChart",
-      title,
-      summary,
-      datumCount,
-      evidence
-    },
-    _meta: {
-      component: component ?? "SemioticChart",
-      title,
-      dataPreview,
-      svg,
-      evidence,
-      generatedAt: new Date().toISOString()
-    }
-  })
+    })
+  }
 }
 
 async function diagnoseConfigHandler(args: {
@@ -2907,12 +2928,12 @@ async function createChartHandler(
       })
     }
   }
-  const completeRenderEvidence = parseRenderEvidence(renderedStatic)
-  const rendered = await renderInteractiveChartHandler(
-    { component: selected.component, props, theme: args.theme },
-    context,
-    renderedStatic
-  )
+  const { result: rendered, evidence: completeRenderEvidence } =
+    await renderInteractiveChart(
+      { component: selected.component, props, theme: args.theme },
+      context,
+      renderedStatic
+    )
   if (rendered.isError) {
     return {
       ...rendered,
@@ -2932,7 +2953,7 @@ async function createChartHandler(
   const evidenceEnvelope = toEvidenceEnvelope(selected.component, props, {
     chartId: typeof chartId === "string" ? chartId : undefined,
     sourceId: "mcp-create-chart",
-    ssrEvidence: completeRenderEvidence as never,
+    ssrEvidence: completeRenderEvidence ?? undefined,
     privacyScope: {
       mcpResponse: [
         "public chart config without source rows",
@@ -4354,7 +4375,9 @@ function createServer(
         "openai/toolInvocation/invoked": "Rendered Semiotic chart."
       }
     },
-    isolateTool("renderInteractiveChart", (args) => renderInteractiveChartHandler(args, serverRenderContext))
+    isolateTool("renderInteractiveChart", async (args) =>
+      (await renderInteractiveChart(args, serverRenderContext)).result
+    )
   )
 
   srv.tool(
