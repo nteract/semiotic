@@ -467,23 +467,23 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { semioticVite } from "semiotic/vite"` | node | **0.6 KiB** | — |
 | `import { getNetworkPerspectiveSize } from "semiotic/network/perspective/core"` | browser | **1.1 KiB** | — |
 | `import { MotifBraidChart } from "semiotic/atlas"` | browser | **109.4 KiB** | 29.3 KiB |
-| `import { prepareNetworkAtlas } from "semiotic/atlas/core"` | browser | **7.0 KiB** | — |
-| `import { LineChart } from "semiotic"` | browser | **122.3 KiB** | 44.2 KiB |
-| `import { LineChart } from "semiotic/xy"` | browser | **122.0 KiB** | 32.2 KiB |
-| `import { LineChart } from "semiotic/line"` | browser | **122.1 KiB** | 32.2 KiB |
+| `import { prepareNetworkAtlas } from "semiotic/atlas/core"` | browser | **7.1 KiB** | — |
+| `import { LineChart } from "semiotic"` | browser | **122.4 KiB** | 44.2 KiB |
+| `import { LineChart } from "semiotic/xy"` | browser | **122.1 KiB** | 32.2 KiB |
+| `import { LineChart } from "semiotic/line"` | browser | **122.2 KiB** | 32.2 KiB |
 | `import { BarChart } from "semiotic/ordinal"` | browser | **103.4 KiB** | 14.7 KiB |
 | `import { SankeyDiagram } from "semiotic/network"` | browser | **133.0 KiB** | 6.6 KiB |
 | `import { ZoomableNetworkCustomChart } from "semiotic/network/zoom"` | browser | **112.4 KiB** | 29.3 KiB |
 | `import { isometricGlyphs } from "semiotic/network/perspective"` | browser | **1.4 KiB** | — |
-| `import { RealtimeLineChart } from "semiotic/realtime"` | browser | **119.3 KiB** | 41.9 KiB |
+| `import { RealtimeLineChart } from "semiotic/realtime"` | browser | **119.4 KiB** | 41.9 KiB |
 | `import { RingBuffer } from "semiotic/realtime/core"` | browser | **0.7 KiB** | 13.6 KiB |
 | `import { useStreamStatus } from "semiotic/realtime/react"` | browser | **0.6 KiB** | — |
 | `import { GaltonBoardChart } from "semiotic/physics"` | browser | **94.4 KiB** | 2.7 KiB |
 | `import { MATTER_PHYSICS_CAPABILITIES } from "semiotic/physics/matter"` | browser | **0.1 KiB** | — |
 | `import { RAPIER_PHYSICS_CAPABILITIES } from "semiotic/physics/rapier"` | browser | **0.2 KiB** | — |
-| `import { renderChart } from "semiotic/server"` | node | **298.1 KiB** | — |
-| `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **127.3 KiB** | — |
-| `import { renderToImage } from "semiotic/server/node"` | node | **298.5 KiB** | 0.6 KiB |
+| `import { renderChart } from "semiotic/server"` | node | **298.2 KiB** | — |
+| `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **127.4 KiB** | — |
+| `import { renderToImage } from "semiotic/server/node"` | node | **298.7 KiB** | 0.6 KiB |
 | `import { suggestCharts } from "semiotic/ai"` | browser | **37.9 KiB** | 13.6 KiB |
 | `import { suggestCharts } from "semiotic/ai/core"` | browser | **32.0 KiB** | — |
 | `import { buildArtifactContract } from "semiotic/artifact"` | browser | **4.5 KiB** | — |
@@ -506,7 +506,7 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { BigNumber } from "semiotic/value"` | browser | **5.8 KiB** | — |
 | `import { DirectManipulationControl } from "semiotic/controls"` | browser | **1.5 KiB** | — |
 
-**Line-boundary interpretation:** the retained named import from `semiotic/line` emits 364.4 KiB raw versus 364.4 KiB from `semiotic/xy`; gzip differs by 0.1 KiB (0.1%). Tree-shaking converges both paths on the same LineChart implementation graph. Treat `semiotic/line` as a narrower API/direct-ESM artifact boundary, not an application-bundle saving. Do not add another per-chart entry until its packed named import beats the family path by both 10 KiB gzip and 7%.
+**Line-boundary interpretation:** the retained named import from `semiotic/line` emits 364.6 KiB raw versus 364.6 KiB from `semiotic/xy`; gzip differs by 0.1 KiB (0.1%). Tree-shaking converges both paths on the same LineChart implementation graph. Treat `semiotic/line` as a narrower API/direct-ESM artifact boundary, not an application-bundle saving. Do not add another per-chart entry until its packed named import beats the family path by both 10 KiB gzip and 7%.
 
 <!-- semiotic-cold-consumer:end -->
 

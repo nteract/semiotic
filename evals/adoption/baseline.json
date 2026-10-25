@@ -6,7 +6,7 @@
     "packageVersion": "3.13.0",
     "releaseChannel": "development",
     "revisionKind": "sha256-of-inventoried-source-content",
-    "revision": "1b03dd768f447c001e32f92d36d5277c29abcccaa34e8d7eb0f316ad849366bf",
+    "revision": "b6ca3c16d7ac9b3d61187120b6d7d451d5b1bf3b5451095481b77c34a73b1fa8",
     "packedPackage": "not-assessed",
     "deployedDocumentation": "not-assessed",
     "deployedMCP": "not-assessed"
@@ -165,7 +165,7 @@
     {
       "path": "README.md",
       "bytes": 47319,
-      "sha256": "c2b3e9fe44e7dd94e80d80e04125823c85b7bbc2700004a435e0746b1195cf57"
+      "sha256": "3b76f19a4f62a70caf788f243bb171f2aa01e0af0c3b429582af17d8e4697f96"
     },
     {
       "path": "agent-skill/semiotic-charts/SKILL.md",
