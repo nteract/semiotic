@@ -4,7 +4,9 @@ export function reportRenderError(
   observer?: (error: unknown) => void
 ): void {
   try {
-    observer?.(error)
+    void Promise.resolve(observer?.(error)).catch(() => {
+      // A void-returning callback may still be async; consume its rejection.
+    })
   } catch {
     // A logging failure cannot turn a blocked chart into a thrown agent loop.
   }

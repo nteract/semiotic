@@ -70,8 +70,9 @@ function primaryMemoInput(props: Datum): object | undefined {
 /**
  * Memoize SVG and evidence within each primary input identity (`data`, `nodes`,
  * or `edges`). Plain data and configuration values are compared structurally,
- * including in-place edits; callbacks use identity. Each input and the scalar
- * value cache retain at most 64 configurations in least-recently-used order.
+ * including in-place edits, key order and enumerability; callbacks use identity.
+ * Each input and the scalar value cache retain at most 64 configurations in
+ * least-recently-used order.
  * Oversized, cyclic or unsupported values render without caching. Call
  * `clear()` when callback closures or other external renderer state changes.
  */

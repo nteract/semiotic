@@ -6,7 +6,8 @@ const MAX_KEY_DEPTH = 24
 /**
  * Structural keys for ordinary chart data and props. Unsupported values,
  * accessors, cycles and oversized inputs bypass memoization rather than risk
- * stale evidence or unbounded serialization work. Functions retain identity.
+ * stale evidence or unbounded serialization work. Enumeration order and
+ * enumerability are significant; functions retain identity.
  */
 export function renderEvidenceMemoKey(
   component: string,
@@ -60,10 +61,16 @@ export function renderEvidenceMemoKey(
         if (!array && prototype !== Object.prototype && prototype !== null)
           throw new Error("unsupported key")
         ancestors.add(value)
-        const entries = names.sort().map((name) => {
+        // Palette selection, inferred fields and custom renderers can observe
+        // Object.keys/values order, including changes made to existing inputs.
+        const entries = names.map((name) => {
           const descriptor = Object.getOwnPropertyDescriptor(value, name)!
           if (!("value" in descriptor)) throw new Error("accessor key")
-          return [spend(name), visit(descriptor.value, depth + 1)]
+          return [
+            spend(name),
+            descriptor.enumerable,
+            visit(descriptor.value, depth + 1)
+          ]
         })
         ancestors.delete(value)
         return [

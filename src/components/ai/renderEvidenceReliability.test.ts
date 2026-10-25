@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest"
+import { setImmediate as nextTurn } from "node:timers/promises"
 import {
   createRenderEvidenceMemo,
   evaluateChart,
@@ -7,6 +8,7 @@ import {
   toEvaluateChartNotifications
 } from "../semiotic-ai-core"
 import type { RenderEvidence } from "../server/renderEvidence"
+import { renderChartWithEvidence } from "../server/renderToStaticSVG"
 
 const props = {
   data: [{ category: "A", value: 3 }],
@@ -76,6 +78,56 @@ describe("render evidence reliability through public AI exports", () => {
       false
     )
   })
+
+  it.each(["async rejection", "throwing thenable"])(
+    "consumes observer failures without an unhandled rejection (%s)",
+    async (kind) => {
+      const renderError = new Error("private renderer detail")
+      const observed: unknown[] = []
+      // Keep the observer unmocked: mock promise tracking would itself attach
+      // a rejection handler and hide the production unhandled-rejection bug.
+      const onRenderError = (error: unknown) => {
+        observed.push(error)
+        if (kind === "async rejection")
+          return (async () => {
+            await Promise.resolve()
+            throw new Error("private observer detail")
+          })()
+        return {
+          get then() {
+            throw new Error("private observer detail")
+          }
+        }
+      }
+      const options = {
+        render: () => {
+          throw renderError
+        },
+        onRenderError
+      }
+      const unhandled = vi.fn()
+      process.on("unhandledRejection", unhandled)
+      try {
+        const reports = [
+          prepareChart({ component: "BarChart", props }, options),
+          evaluateChart("BarChart", props, undefined, options),
+          inspectChart({ component: "BarChart", props }, options)
+        ]
+        // Let rejected observers reach Node's unhandled-rejection checkpoint.
+        await nextTurn()
+        expect(unhandled).not.toHaveBeenCalled()
+        expect(observed).toEqual([renderError, renderError, renderError])
+        for (const report of reports) {
+          expect(report.ok).toBe(false)
+          expect(report.evidence).toBeUndefined()
+          expect(JSON.stringify(report)).toContain("RENDER_FAILED")
+          expect(JSON.stringify(report)).not.toContain("private")
+        }
+      } finally {
+        process.off("unhandledRejection", unhandled)
+      }
+    }
+  )
 
   it("retains nonblocking renderer warnings separately from failure reasons", () => {
     const render = () => ({
@@ -163,11 +215,73 @@ describe("bounded content-aware render evidence memoization", () => {
     expect(render).toHaveBeenCalledTimes(1)
     memo.render("BarChart", {
       ...props,
-      margin: { top: 10, left: 20 },
-      colorScheme: ["red", "blue"],
-      annotations: [{ label: "A", type: "label" }]
+      margin: { left: 20, top: 10 },
+      annotations: [{ type: "label", label: "A" }],
+      colorScheme: ["red", "blue"]
     })
     expect(render).toHaveBeenCalledTimes(1)
+  })
+
+  it.each(["replacement", "in-place reorder", "enumerability"])(
+    "invalidates OrbitDiagram SVG and hash when palette enumeration changes (%s)",
+    (change) => {
+      const configuration = {
+        data: { name: "root", children: [{ name: "a" }, { name: "b" }] },
+        animated: false,
+        colorScheme: { primary: "red", secondary: "blue" } as Record<
+          string,
+          string
+        >,
+        width: 320,
+        height: 320
+      }
+      const render = vi.fn(renderChartWithEvidence)
+      const memo = createRenderEvidenceMemo(render)
+      const first = memo.render("OrbitDiagram", configuration)
+      expect(first.svg.match(/<circle\b[^>]*fill="red"/g)).toHaveLength(3)
+      if (change === "replacement") {
+        configuration.colorScheme = { secondary: "blue", primary: "red" }
+      } else if (change === "in-place reorder") {
+        delete configuration.colorScheme.primary
+        configuration.colorScheme.primary = "red"
+      } else {
+        Object.defineProperty(configuration.colorScheme, "primary", {
+          enumerable: false
+        })
+      }
+      const second = memo.render("OrbitDiagram", configuration)
+      expect(second.svg.match(/<circle\b[^>]*fill="blue"/g)).toHaveLength(3)
+      expect(second.evidence.sceneHash).not.toBe(first.evidence.sceneHash)
+      expect(second.evidence.sceneHash).toBe(
+        renderChartWithEvidence("OrbitDiagram", configuration).evidence
+          .sceneHash
+      )
+      expect(render).toHaveBeenCalledTimes(2)
+      expect(memo.render("OrbitDiagram", { ...configuration })).toBe(second)
+      expect(render).toHaveBeenCalledTimes(2)
+    }
+  )
+
+  it("preserves data-record and arbitrary nested-map order for custom renderers", () => {
+    const data: Record<string, string>[] = [
+      { primary: "red", secondary: "blue" }
+    ]
+    const render = vi.fn((_component, input) => ({
+      svg: `${Object.values(input.data[0])[0]}:${Object.keys(input.mapping)[0]}`,
+      evidence
+    }))
+    const memo = createRenderEvidenceMemo(render)
+    expect(memo.render("Custom", { data, mapping: { x: 1, y: 2 } }).svg).toBe(
+      "red:x"
+    )
+    data[0] = { secondary: "blue", primary: "red" }
+    expect(memo.render("Custom", { data, mapping: { x: 1, y: 2 } }).svg).toBe(
+      "blue:x"
+    )
+    expect(memo.render("Custom", { data, mapping: { y: 2, x: 1 } }).svg).toBe(
+      "blue:y"
+    )
+    expect(render).toHaveBeenCalledTimes(3)
   })
 
   it("invalidates mutated data, nested props, dates and callback identities", () => {
