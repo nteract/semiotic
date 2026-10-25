@@ -150,7 +150,22 @@ export function validateAtlas(
     }
   }
 
+  const measureSubjects = new Map<string, Set<string>>()
   for (const row of source.measureValues) {
+    let subjects = measureSubjects.get(row.measureId)
+    if (!subjects) {
+      subjects = new Set()
+      measureSubjects.set(row.measureId, subjects)
+    }
+    if (subjects.has(row.subjectId)) {
+      fatal(
+        issues,
+        "duplicate-measure-value",
+        "measureValue must be unique per measureId and subjectId",
+        row.subjectId
+      )
+    }
+    subjects.add(row.subjectId)
     const measure = ownValue(spec.measures, row.measureId)
     if (!measure) {
       fatal(
@@ -166,11 +181,21 @@ export function validateAtlas(
     }
   }
 
+  const occurrenceIds = new Set<string>()
   for (const occurrence of source.occurrences ?? []) {
     if (!occurrence.id || !occurrence.entityId) {
       fatal(issues, "occurrence", "occurrence needs id and entityId")
       continue
     }
+    if (occurrenceIds.has(occurrence.id)) {
+      fatal(
+        issues,
+        "duplicate-occurrence",
+        "occurrence id must be unique",
+        occurrence.id
+      )
+    }
+    occurrenceIds.add(occurrence.id)
     if (
       occurrence.stepEntityCounts !== undefined &&
       (!Array.isArray(occurrence.stepEntityCounts) ||

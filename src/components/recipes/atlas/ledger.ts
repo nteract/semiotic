@@ -7,6 +7,13 @@ import type {
   SectionIndex
 } from "./types"
 
+const uncertainty: Record<LedgerEntry["status"], number> = {
+  exact: 0,
+  estimated: 1,
+  incomplete: 2,
+  unknown: 3
+}
+
 function nodeKind(
   subjectId: string,
   nodeIds: ReadonlySet<string>,
@@ -45,43 +52,34 @@ export function buildLedger(
       timeDenominator: measure.timeDenominator
     })
     if (subjectKind === "section") {
-      authoredSectionKeys.add(`${row.measureId}\0${row.subjectId}`)
+      authoredSectionKeys.add(JSON.stringify([row.measureId, row.subjectId]))
     }
   }
 
   const nodeById = idDictionary<(typeof source.nodes)[number]>()
   for (const node of source.nodes) setOwnValue(nodeById, node.id, node)
 
-  const derived = idDictionary<number>()
-  const derivedStatus = idDictionary<LedgerEntry["status"]>()
+  const derived = new Map<string, LedgerEntry>()
   for (const entry of entries) {
     if (entry.subjectKind !== "node") continue
     const node = nodeById[entry.subjectId]
     if (!node?.sectionId) continue
-    const key = `${entry.measureId}\0${node.sectionId}`
+    const key = JSON.stringify([entry.measureId, node.sectionId])
     if (authoredSectionKeys.has(key)) continue
-    derived[key] = (derived[key] ?? 0) + entry.value
-    if (entry.status !== "exact") derivedStatus[key] = entry.status
-    else if (!derivedStatus[key]) derivedStatus[key] = "exact"
+    const previous = derived.get(key)
+    if (previous) {
+      previous.value += entry.value
+      if (uncertainty[entry.status] > uncertainty[previous.status])
+        previous.status = entry.status
+    } else {
+      derived.set(key, {
+        ...entry,
+        subjectId: node.sectionId,
+        subjectKind: "section"
+      })
+    }
   }
-
-  for (const [key, value] of Object.entries(derived)) {
-    const split = key.split("\0")
-    const measureId = split[0]
-    const subjectId = split[1]
-    const measure = ownValue(spec.measures, measureId)
-    if (!measure) continue
-    entries.push({
-      measureId,
-      subjectId,
-      subjectKind: "section",
-      value,
-      status: derivedStatus[key] ?? "exact",
-      unitKind: measure.unitKind,
-      countUnit: measure.countUnit,
-      timeDenominator: measure.timeDenominator
-    })
-  }
+  for (const entry of derived.values()) entries.push(entry)
 
   return { entries }
 }

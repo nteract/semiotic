@@ -10,6 +10,7 @@ import {
   type EnvelopeLimitsSection
 } from "./chartEvidenceEnvelope"
 import { artifactAttachmentIssues } from "../artifact/attachmentAudit"
+import { claimReferenceIssues } from "./claimReferences"
 
 export type EvidenceGateStatus = "pass" | "fail"
 
@@ -235,6 +236,12 @@ export function evaluateEvidenceGate(
         )
       )
     }
+  }
+
+  for (const issue of claimReferenceIssues(envelope)) {
+    if (!limits.unsupportedClaims.includes(issue.claim))
+      limits.unsupportedClaims.push(issue.claim)
+    findings.push(finding(issue.id, "error", issue.message))
   }
 
   return {

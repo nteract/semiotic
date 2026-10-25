@@ -60,11 +60,37 @@ export function isSupportedRoute(
   source: NetworkAtlasSource,
   route: readonly string[]
 ): boolean {
-  if (route.length < 2) return false
-  return (source.occurrences ?? []).some(
-    (occurrence) =>
-      !occurrence.missingPrehistory && containsRoute(occurrence.nodePath, route)
-  )
+  return !supportedRouteOccurrences(source, route).next().done
+}
+
+export function* supportedRouteOccurrences(
+  source: NetworkAtlasSource,
+  route: readonly string[]
+) {
+  if (route.length < 2) return
+  for (const occurrence of source.occurrences ?? []) {
+    if (
+      !occurrence.missingPrehistory &&
+      containsRoute(occurrence.nodePath, route)
+    )
+      yield occurrence
+  }
+}
+
+export function* supportedNextHops(
+  source: NetworkAtlasSource,
+  fromNode: string,
+  viaNode?: string
+) {
+  for (const occurrence of source.occurrences ?? []) {
+    if (occurrence.missingPrehistory) continue
+    const path = occurrence.nodePath
+    for (let i = 0; i < path.length - 1; i++) {
+      if (path[i] !== fromNode) continue
+      if (viaNode != null && (i === 0 || path[i - 1] !== viaNode)) continue
+      yield { nodeId: path[i + 1], occurrenceId: occurrence.id }
+    }
+  }
 }
 
 export function nextSupportedNodes(
@@ -73,14 +99,7 @@ export function nextSupportedNodes(
   viaNode?: string
 ): string[] {
   const next = new Set<string>()
-  for (const occurrence of source.occurrences ?? []) {
-    if (occurrence.missingPrehistory) continue
-    const path = occurrence.nodePath
-    for (let i = 0; i < path.length - 1; i++) {
-      if (path[i] !== fromNode) continue
-      if (viaNode != null && (i === 0 || path[i - 1] !== viaNode)) continue
-      next.add(path[i + 1])
-    }
-  }
+  for (const hop of supportedNextHops(source, fromNode, viaNode))
+    next.add(hop.nodeId)
   return [...next]
 }

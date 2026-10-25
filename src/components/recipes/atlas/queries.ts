@@ -2,8 +2,8 @@ import { countMotifEntities } from "./entityCounts"
 import { ledgerValue } from "./ledger"
 import {
   graphWalkExists,
-  isSupportedRoute,
-  nextSupportedNodes
+  supportedRouteOccurrences,
+  supportedNextHops
 } from "./support"
 import type {
   MotifMatch,
@@ -164,13 +164,21 @@ export function followSupportedRoute(
     }
   }
   if (selection.route) {
-    const supported = isSupportedRoute(atlas.source, selection.route)
+    const evidenceRefs = [
+      ...new Set(
+        Array.from(
+          supportedRouteOccurrences(atlas.source, selection.route),
+          (occurrence) => occurrence.id
+        )
+      )
+    ]
+    const supported = evidenceRefs.length > 0
     const walk = graphWalkExists(atlas.source, selection.route)
     return {
       ...baseResult(
         atlas,
         selection.route.join(">"),
-        [],
+        evidenceRefs,
         supported ? [] : ["unsupported-composite"]
       ),
       status: "exact",
@@ -189,17 +197,19 @@ export function followSupportedRoute(
       status: "unknown"
     }
   }
-  const nextNodes = nextSupportedNodes(
+  const next = new Set<string>()
+  const evidenceRefs = new Set<string>()
+  for (const hop of supportedNextHops(
     atlas.source,
     selection.fromNode,
     selection.viaNode
-  )
+  )) {
+    next.add(hop.nodeId)
+    evidenceRefs.add(hop.occurrenceId)
+  }
+  const nextNodes = [...next]
   return {
-    ...baseResult(
-      atlas,
-      selection.fromNode,
-      atlas.ports.hops.map((hop) => hop.from)
-    ),
+    ...baseResult(atlas, selection.fromNode, [...evidenceRefs]),
     status: "exact",
     value: {
       nextNodes,

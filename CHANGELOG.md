@@ -18,6 +18,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Atlas queries now scope evidence references to relevant graph relations and
+  matching traces. Preparation rejects duplicate trace IDs and measure rows;
+  derived section totals retain the most uncertain status regardless of row
+  order and distinguish IDs containing delimiters.
+- Evidence publication checks resolve claim references, including upstream
+  observations and artifact transformations, and reject missing, ambiguous, or
+  cyclic references. Model-authored support requires explicit human review.
 - MCP cancellation now handles zero and empty-string request IDs without
   changing caller-visible IDs or confusing numeric and string identities.
   Every MCP scenario suite now rejects missing or stale executable artifacts.

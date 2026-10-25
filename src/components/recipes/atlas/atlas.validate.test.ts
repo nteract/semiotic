@@ -86,10 +86,11 @@ describe("validateAtlas", () => {
     const { spec, source } = loadJson("etl-snapshot-v1.json")
     const expanded: NetworkAtlasSource = {
       ...source,
-      measureValues: [
-        ...source.measureValues,
-        { measureId: "work-items", subjectId: "enrich", value: 120, status: "exact" }
-      ]
+      measureValues: source.measureValues.map((row) =>
+        row.measureId === "work-items" && row.subjectId === "enrich"
+          ? { ...row, value: 120 }
+          : row
+      )
     }
     expect(validateAtlas(spec, expanded).ok).toBe(true)
   })

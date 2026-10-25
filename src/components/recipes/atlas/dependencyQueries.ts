@@ -2,6 +2,7 @@ import { graphAdjacency } from "./directedGraph"
 import type { StructuralPath } from "./dependencyTypes"
 import type { PreparedNetworkAtlas, QueryResult } from "./types"
 import { ownValue } from "./ids"
+import { targetRelations, removalReferences } from "./dependencyEvidence"
 
 const limitations = [
   "Structural paths in the admitted directed graph; not capacity, AND prerequisites, or failure probability.",
@@ -77,7 +78,7 @@ export function getRequiredPaths(atlas: PreparedNetworkAtlas, target: string) {
     reachable,
     dominatorIds: dominatorIds.reverse()
   }
-  answer.evidenceRefs = atlas.source.edges.map((edge) => edge.id)
+  answer.evidenceRefs = targetRelations(atlas, target).map((edge) => edge.id)
   return answer
 }
 
@@ -127,7 +128,11 @@ export function getBypassWitness(
     }
   }
   answer.value = { exists: false }
-  answer.evidenceRefs = atlas.source.edges.map((edge) => edge.id)
+  answer.evidenceRefs = removalReferences(
+    atlas,
+    avoided,
+    targetRelations(atlas, query.target)
+  )
   return answer
 }
 
@@ -160,6 +165,6 @@ export function getDependencyExclusion(
       (id) => !reachable.has(id)
     )
   }
-  answer.evidenceRefs = atlas.source.edges.map((edge) => edge.id)
+  answer.evidenceRefs = removalReferences(atlas, excluded)
   return answer
 }
