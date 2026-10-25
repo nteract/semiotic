@@ -107,7 +107,7 @@ describe("prepareChart", () => {
       .some((diagnostic) => diagnostic.code === "MISSING_DESCRIPTION")).toBe(false)
   })
 
-  it("memoizes render evidence by immutable data identity and relevant props", () => {
+  it("memoizes render evidence within data identity by configuration content", () => {
     const render = vi.fn((_component: string, _props: Record<string, unknown>) => ({
       svg: "<svg />",
       evidence: evidence({}),
@@ -138,15 +138,16 @@ describe("prepareChart", () => {
     expect(render).toHaveBeenCalledTimes(1)
 
     memo.render("ForceDirectedGraph", { nodes, edges: [...edges] })
+    expect(render).toHaveBeenCalledTimes(1)
     memo.render("ForceDirectedGraph", { nodes: [...nodes], edges })
-    expect(render).toHaveBeenCalledTimes(3)
+    expect(render).toHaveBeenCalledTimes(2)
 
     // BigNumber has no `data`/`nodes`/`edges` identity. Equivalent primitive
     // configurations still share the small bounded value-config cache.
     memo.render("BigNumber", { value: 42, label: "Revenue", format: "currency" })
     memo.render("BigNumber", { value: 42, label: "Revenue", format: "currency" })
     memo.render("BigNumber", { value: 43, label: "Revenue", format: "currency" })
-    expect(render).toHaveBeenCalledTimes(5)
+    expect(render).toHaveBeenCalledTimes(4)
   })
 
   it("does not collide prop bags containing the legacy cache delimiters", () => {
@@ -225,7 +226,7 @@ describe("prepareChart", () => {
     })
     expect(result.ok).toBe(false)
     expect(result.evidence?.empty).toBe(true)
-    expect(result.reasons.join(" ")).toMatch(/empty scene/)
+    expect(result.reasons.join(" ")).toContain("EMPTY_SCENE")
   })
 
   it("passes and attaches svg + evidence when the renderer proves a non-empty scene", () => {

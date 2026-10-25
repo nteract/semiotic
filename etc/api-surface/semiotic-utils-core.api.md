@@ -400,6 +400,7 @@ interface-member EvaluateChartNotification::property::source = required readonly
 interface-member EvaluateChartNotification::property::title = required readonly title: string
 interface-member EvaluateChartOptions::property::dataAudit = optional readonly dataAudit: AuditDataOptions | undefined
 interface-member EvaluateChartOptions::property::notificationMax = optional readonly notificationMax: number | undefined
+interface-member EvaluateChartOptions::property::onRenderError = optional readonly onRenderError: ((error: unknown) => void) | undefined
 interface-member EvaluateChartOptions::property::render = optional readonly render: RenderFn | undefined
 interface-member EvaluateChartResult::property::accessibility = required readonly accessibility: AccessibilityAuditResult
 interface-member EvaluateChartResult::property::component = required readonly component: string
@@ -705,7 +706,7 @@ type CommunicativeAct = "alerting" | "apportioning" | "characterizing" | "compar
 type CopyFormat = "json" | "jsx"
 type DescribeLevel = "l1" | "l2" | "l3" | "l4"
 type EvaluateChartSeverity = "error" | "manual" | "warning"
-type EvaluateChartStage = "accessibility" | "data" | "deception" | "render"
+type EvaluateChartStage = "accessibility" | "data" | "deception" | "render" | "validation"
 type KnownThemePresetName = keyof typeof THEME_PRESET_DEFINITIONS
 type MobileAuditCategory = "annotation" | "density" | "interaction" | "layout" | "semantics"
 type MobileAuditImpact = "high" | "low" | "medium"

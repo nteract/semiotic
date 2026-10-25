@@ -333,6 +333,14 @@ export function createWidgetEvidencePreview(
   if (!evidence) return null
 
   const preview: Record<string, unknown> = {}
+  if (
+    evidence.sceneHashVersion === 2 &&
+    typeof evidence.sceneHash === "string" &&
+    /^[a-f0-9]{64}$/.test(evidence.sceneHash)
+  ) {
+    preview.sceneHashVersion = 2
+    preview.sceneHash = evidence.sceneHash
+  }
   for (const key of ["component", "frameType", "status", "semanticStatus", "ariaLabel"] as const) {
     if (typeof evidence[key] === "string") {
       preview[key] = truncateUtf8(evidence[key] as string, limits.maxWidgetValueBytes)

@@ -1,3 +1,5 @@
+import type { ChartEvidenceEnvelope } from "../../components/evidence/chartEvidenceEnvelope"
+import { renderedSceneHash } from "../../components/evidence/renderedSceneHash"
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
@@ -57,6 +59,16 @@ describe("shipped widget SVG boundary", () => {
         }
         expect(result.isError).not.toBe(true)
         const svg = result._meta?.svg as string
+        if (profile === "public") {
+          const envelope = result.structuredContent?.evidenceEnvelope as ChartEvidenceEnvelope
+          expect(envelope.render.sceneHash).toBe(
+            renderedSceneHash(svg, envelope.render.evidence!)
+          )
+          expect(result._meta?.evidence).toMatchObject({
+            sceneHash: envelope.render.sceneHash,
+            sceneHashVersion: 2
+          })
+        }
         const doc = new DOMParser().parseFromString(svg, "image/svg+xml")
         expect(doc.querySelector("parsererror")).toBeNull()
         expect(doc.querySelector("#revenue")?.getAttribute("aria-label")).toBe(
