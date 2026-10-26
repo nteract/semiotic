@@ -130,13 +130,18 @@ export function FlippingTooltip({
     const el = ref.current
     if (!el) return
     const measure = () => {
-      const rect = el.getBoundingClientRect()
       // Placement uses untransformed chart pixels. This wrapper is border-box,
       // so its computed dimensions preserve fractional sizes without inheriting
       // an ancestor's CSS scale from the viewport bounding rectangle.
       const style = getComputedStyle(el)
-      const width = parseFloat(style.width) || rect.width
-      const height = parseFloat(style.height) || rect.height
+      let width = parseFloat(style.width)
+      let height = parseFloat(style.height)
+      // Avoid a second layout read when computed dimensions already suffice.
+      if (!width || !height) {
+        const rect = el.getBoundingClientRect()
+        width = width || rect.width
+        height = height || rect.height
+      }
       if (!Number.isFinite(width) || !Number.isFinite(height)) return
       setMeasured((prev) => {
         // Sub-pixel text/layout jitter does not affect flip placement. Treat

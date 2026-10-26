@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   transitions and geographic decay retain the same opacity after settling.
   Removed XY and ordinal marks preserve both paint channels throughout their
   exit fade, including lines and areas that previously vanished on the first tick.
+- Tooltips reuse computed dimensions for placement, avoiding redundant viewport
+  measurements during pointer updates while preserving resize and CSS-scale handling.
 
 ## [3.13.1]
 

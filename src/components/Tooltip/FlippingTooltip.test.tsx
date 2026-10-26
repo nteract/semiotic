@@ -370,6 +370,9 @@ describe("FlippingTooltip — stable measurement", () => {
         const tooltip = container.firstChild as HTMLElement
         expect(tooltip.style.left).toBe(`${20 + 380 - 120.5 - 12}px`)
         expect(tooltip.style.top).toBe(`${10 + 280 - 40.5 - 4}px`)
+        // Computed border-box dimensions are already logical chart pixels;
+        // reading the viewport rectangle adds work and cannot improve them.
+        expect(rect).not.toHaveBeenCalled()
       } finally {
         style.mockRestore()
         rect.mockRestore()
@@ -644,6 +647,36 @@ describe("FlippingTooltip — resize observer", () => {
       view.unmount()
       expect(notifications.size).toBe(0)
     } finally {
+      rect.mockRestore()
+    }
+  })
+
+  it("uses computed dimensions for observer placement without reading a viewport rectangle", () => {
+    let width = 100
+    const getStyle = window.getComputedStyle.bind(window)
+    const style = vi.spyOn(window, "getComputedStyle").mockImplementation((element) => {
+      const computed = getStyle(element)
+      Object.defineProperties(computed, {
+        width: { value: `${width}px` },
+        height: { value: "40px" }
+      })
+      return computed
+    })
+    const rect = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect")
+    try {
+      const { container } = render(
+        <FlippingTooltip {...baseProps} x={350}><div>Value</div></FlippingTooltip>
+      )
+      const wrapper = container.firstChild as HTMLElement
+      expect(wrapper.style.left).toBe(`${baseProps.margin.left + 350 - 100 - 12}px`)
+      width = 180
+      act(() => {
+        for (const notify of notifications) notify()
+        expect(wrapper.style.left).toBe(`${baseProps.margin.left + 350 - 180 - 12}px`)
+      })
+      expect(rect).not.toHaveBeenCalled()
+    } finally {
+      style.mockRestore()
       rect.mockRestore()
     }
   })
