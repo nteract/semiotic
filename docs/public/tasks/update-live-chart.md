@@ -5,7 +5,7 @@
 Maintain a bounded window of incoming records, apply corrections, and reconcile the display after reconnecting.
 
 Source package: semiotic@3.13.0. Channel: source.
-Source revision: sha256:5bfdd6a2ead145843450b9a52564cddc2c184f2743f5fdc7c34834d359142e85. Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks.
+Source revision: sha256:264d38a77f7763f02b3e05bbbb9041398411e62b3a698b3bba5245f8e1e792f9. Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks.
 
 ## The job
 

@@ -35,6 +35,7 @@ import {
 } from "../artifact/types"
 import type { RenderEvidence } from "../server/renderEvidence"
 import { stableEvidenceHash } from "./stableJsonHash"
+import { validateClaimReferences } from "./claimReferences"
 import {
   normalizeSourceRecords,
   redactNavigationTree,
@@ -641,27 +642,7 @@ export function fromEvidenceEnvelope(value: unknown): ChartEvidenceEnvelope {
       "Evidence envelope marksObserved must be a non-negative safe integer"
     )
   }
-  if (meaning.claims !== undefined) {
-    if (!Array.isArray(meaning.claims)) {
-      throw new TypeError("Evidence envelope claims must be an array")
-    }
-    for (const claim of meaning.claims) {
-      if (
-        !claim ||
-        typeof claim !== "object" ||
-        typeof claim.claim !== "string"
-      ) {
-        throw new TypeError("Evidence envelope claims require a claim string")
-      }
-      if (
-        claim.confidence !== undefined &&
-        (typeof claim.confidence !== "number" ||
-          !Number.isFinite(claim.confidence))
-      ) {
-        throw new TypeError("Evidence envelope claim confidence must be finite")
-      }
-    }
-  }
+  validateClaimReferences(value as ChartEvidenceEnvelope)
   if (
     transform.operations.some(
       (operation) => !operation || typeof operation.operation !== "string"
