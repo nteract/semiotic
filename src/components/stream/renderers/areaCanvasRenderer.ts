@@ -1,7 +1,7 @@
 import type { AreaSceneNode } from "../types"
 import { resolveCSSColor } from "./resolveCSSColor"
 import type { StreamRendererFn } from "./types"
-import { renderPathPulse } from "./renderPulse"
+import { hasPulse, renderFillPulse } from "./renderPulse"
 import { area as d3Area, line as d3Line } from "d3-shape"
 import {
   buildLinearFillGradient,
@@ -69,6 +69,7 @@ function traceAreaTopPath(ctx: CanvasRenderingContext2D, node: AreaSceneNode): v
 export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout) => {
   const areaNodes = nodes.filter((n): n is AreaSceneNode => n.type === "area")
 
+  const baseAlpha = ctx.globalAlpha
   for (const node of areaNodes) {
     if (node.topPath.length < 2) continue
 
@@ -96,6 +97,8 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
 
     // Resolve CSS variables and declarative hatch fills before painting.
     const fillColor = resolveCanvasFill(ctx, node.style.fill, "#4e79a7")
+    const nodeOpacity = baseAlpha * (node.style.opacity ?? 1)
+    const strokeOpacity = nodeOpacity * (node.style.strokeOpacity ?? 1)
     const decayOpacities = node._decayOpacities
     const hasThresholds = Boolean(
       node.colorThresholds?.length
@@ -106,7 +109,7 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
 
     // Decay path: render area as vertical strips with per-strip opacity
     if (decayOpacities && decayOpacities.length === node.topPath.length && !hasThresholds && !hasStrokeColorBands) {
-      const baseFillOpacity = node.style.fillOpacity ?? 0.7
+      const baseFillOpacity = nodeOpacity * (node.style.fillOpacity ?? 0.7)
       ctx.fillStyle = fillColor
 
       for (let i = 0; i < node.topPath.length - 1; i++) {
@@ -129,7 +132,7 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
         ctx.setLineDash([])
         for (let i = 0; i < node.topPath.length - 1; i++) {
           const segAlpha = (decayOpacities[i] + decayOpacities[i + 1]) * 0.5
-          ctx.globalAlpha = segAlpha
+          ctx.globalAlpha = segAlpha * strokeOpacity
           ctx.beginPath()
           ctx.moveTo(node.topPath[i][0], node.topPath[i][1])
           ctx.lineTo(node.topPath[i + 1][0], node.topPath[i + 1][1])
@@ -137,12 +140,13 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
         }
       }
 
-      ctx.globalAlpha = 1
+      if (clipFrac !== undefined && clipFrac < 1) ctx.restore()
+      if (savedForClip) ctx.restore()
+      ctx.globalAlpha = baseAlpha
       continue
     }
 
     // Standard path (no decay): single filled area
-    const nodeOpacity = node.style.opacity ?? 1
 
     traceAreaPath(ctx, node)
 
@@ -171,15 +175,15 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
     ctx.fill()
 
     // Pulse overlay — brightened fill flash when aggregated value changes
-    if (node._pulseIntensity && node._pulseIntensity > 0) {
+    if (hasPulse(node)) {
       traceAreaPath(ctx, node)
-      renderPathPulse(ctx, node)
+      renderFillPulse(ctx, node, baseAlpha)
     }
 
     // Stroke on top
     const strokeWidth = node.style.strokeWidth ?? 2
     if (node.style.stroke && node.style.stroke !== "none" && strokeWidth > 0) {
-      ctx.globalAlpha = nodeOpacity
+      ctx.globalAlpha = strokeOpacity
       const baseStroke = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
       const strokeGrad = !hasThresholds && !hasStrokeColorBands && node.strokeGradient && node.topPath.length >= 2
         ? buildLinearFillGradient(
@@ -213,7 +217,7 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
           ctx.clip()
           const bandColor = band.color ?? baseStroke
           ctx.strokeStyle = resolveCSSColor(ctx, bandColor) || bandColor
-          ctx.globalAlpha = nodeOpacity * (band.opacity ?? 1)
+          ctx.globalAlpha = strokeOpacity * (band.opacity ?? 1)
           traceAreaTopPath(ctx, node)
           ctx.stroke()
           ctx.restore()
@@ -250,6 +254,6 @@ export const areaCanvasRenderer: StreamRendererFn = (ctx, nodes, scales, layout)
       ctx.restore()
     }
 
-    ctx.globalAlpha = 1
+    ctx.globalAlpha = baseAlpha
   }
 }

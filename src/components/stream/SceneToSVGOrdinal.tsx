@@ -34,6 +34,8 @@ import type {
 import {
   ARC_NOOP,
   svgFill,
+  svgPaintStyle,
+  pointSceneNodeToSVG,
   safeSvgId,
   glyphNodeToSVG,
   buildRectSVGGradient,
@@ -152,9 +154,7 @@ function ordinalSceneNodeToSVGMark(node: OrdinalSceneNode, i: number, idPrefix?:
             <path
               d={d}
               fill={fillValue}
-              opacity={n.style.opacity}
-              stroke={n.style.stroke}
-              strokeWidth={n.style.strokeWidth}
+              {...svgPaintStyle(n.style)}
             />
           </React.Fragment>
         )
@@ -182,9 +182,7 @@ function ordinalSceneNodeToSVGMark(node: OrdinalSceneNode, i: number, idPrefix?:
             <path
               d={d}
               fill={fillValue}
-              opacity={n.style.opacity}
-              stroke={n.style.stroke}
-              strokeWidth={n.style.strokeWidth}
+              {...svgPaintStyle(n.style)}
             />
           </React.Fragment>
         )
@@ -195,27 +193,14 @@ function ordinalSceneNodeToSVGMark(node: OrdinalSceneNode, i: number, idPrefix?:
           <rect
             x={n.x} y={n.y} width={n.w} height={n.h}
             fill={fillValue}
-            opacity={n.style.opacity}
-            stroke={n.style.stroke}
-            strokeWidth={n.style.strokeWidth}
+            {...svgPaintStyle(n.style)}
           />
           {funnelRectLabels(n, baseKey)}
         </React.Fragment>
       )
     }
-    case "point": {
-      const n = node as PointSceneNode
-      return (
-        <circle
-          key={baseKey}
-          cx={n.x} cy={n.y} r={n.r}
-          fill={svgFill(n.style.fill)}
-          opacity={n.style.opacity ?? n.style.fillOpacity ?? 0.8}
-          stroke={n.style.stroke}
-          strokeWidth={n.style.strokeWidth}
-        />
-      )
-    }
+    case "point":
+      return pointSceneNodeToSVG(node as PointSceneNode, i, idPrefix)
     case "symbol":
       return symbolSceneNodeToSVG(node as SymbolSceneNode, i, idPrefix)
     case "glyph": {
@@ -253,6 +238,7 @@ function ordinalSceneNodeToSVGMark(node: OrdinalSceneNode, i: number, idPrefix?:
             transform={`translate(${n.cx},${n.cy})`}
             opacity={n.style.opacity}
             fillOpacity={n.style.fillOpacity}
+            strokeOpacity={n.style.strokeOpacity}
           >
             <defs>
               <clipPath id={clipId}>
@@ -313,9 +299,7 @@ function ordinalSceneNodeToSVGMark(node: OrdinalSceneNode, i: number, idPrefix?:
           d={arcPath}
           transform={`translate(${n.cx},${n.cy})`}
           fill={svgFill(n.style.fill)}
-          stroke={n.style.stroke}
-          strokeWidth={n.style.strokeWidth}
-          opacity={n.style.opacity}
+          {...svgPaintStyle(n.style)}
         />
       )
     }
@@ -325,7 +309,7 @@ function ordinalSceneNodeToSVGMark(node: OrdinalSceneNode, i: number, idPrefix?:
       const strokeWidth = n.style.strokeWidth ?? 1
       if (n.projection === "vertical") {
         return (
-          <g key={baseKey}>
+          <g key={baseKey} opacity={n.style.opacity} strokeOpacity={n.style.strokeOpacity}>
             <line x1={n.x} y1={n.minPos} x2={n.x} y2={n.maxPos} stroke={n.style.stroke || "#333"} strokeWidth={strokeWidth} />
             <rect
               x={n.x - halfW} y={Math.min(n.q1Pos, n.q3Pos)}
@@ -340,7 +324,7 @@ function ordinalSceneNodeToSVGMark(node: OrdinalSceneNode, i: number, idPrefix?:
         )
       } else {
         return (
-          <g key={baseKey}>
+          <g key={baseKey} opacity={n.style.opacity} strokeOpacity={n.style.strokeOpacity}>
             <line x1={n.minPos} y1={n.y} x2={n.maxPos} y2={n.y} stroke={n.style.stroke || "#333"} strokeWidth={strokeWidth} />
             <rect
               x={Math.min(n.q1Pos, n.q3Pos)} y={n.y - halfW}
@@ -363,7 +347,7 @@ function ordinalSceneNodeToSVGMark(node: OrdinalSceneNode, i: number, idPrefix?:
           d={n.pathString}
           transform={n.translateX || n.translateY ? `translate(${n.translateX},${n.translateY})` : undefined}
           fill={svgFill(n.style.fill)}
-          fillOpacity={n.style.fillOpacity ?? n.style.opacity ?? 0.6}
+          fillOpacity={n.style.fillOpacity ?? 0.6}
           stroke={n.style.stroke || "#333"}
           strokeWidth={n.style.strokeWidth ?? 1}
         />
@@ -379,29 +363,29 @@ function ordinalSceneNodeToSVGMark(node: OrdinalSceneNode, i: number, idPrefix?:
         const isVertical = n.iqrLine.isVertical
         if (isVertical) {
           elements.push(
-            <line key={nodeKey("iqr")}
+            <line key={nodeKey("iqr")} opacity={0.8}
               x1={midX} y1={n.iqrLine.q1Pos} x2={midX} y2={n.iqrLine.q3Pos}
               stroke={n.style.stroke || "#333"} strokeWidth={2}
             />,
-            <circle key={nodeKey("med")}
+            <circle key={nodeKey("med")} opacity={0.8}
               cx={midX} cy={n.iqrLine.medianPos} r={3}
               fill="white" stroke={n.style.stroke || "#333"} strokeWidth={1}
             />
           )
         } else {
           elements.push(
-            <line key={nodeKey("iqr")}
+            <line key={nodeKey("iqr")} opacity={0.8}
               x1={n.iqrLine.q1Pos} y1={midY} x2={n.iqrLine.q3Pos} y2={midY}
               stroke={n.style.stroke || "#333"} strokeWidth={2}
             />,
-            <circle key={nodeKey("med")}
+            <circle key={nodeKey("med")} opacity={0.8}
               cx={n.iqrLine.medianPos} cy={midY} r={3}
               fill="white" stroke={n.style.stroke || "#333"} strokeWidth={1}
             />
           )
         }
       }
-      return <g key={baseKey}>{elements}</g>
+      return <g key={baseKey} opacity={n.style.opacity} strokeOpacity={n.style.strokeOpacity}>{elements}</g>
     }
     case "connector": {
       const n = node as ConnectorSceneNode
@@ -415,6 +399,7 @@ function ordinalSceneNodeToSVGMark(node: OrdinalSceneNode, i: number, idPrefix?:
           stroke={n.style.stroke || fallbackStroke}
           strokeWidth={n.style.strokeWidth ?? 1}
           opacity={n.style.opacity ?? 0.5}
+          strokeOpacity={n.style.strokeOpacity}
         />
       )
     }
@@ -426,9 +411,7 @@ function ordinalSceneNodeToSVGMark(node: OrdinalSceneNode, i: number, idPrefix?:
           key={baseKey}
           points={pts}
           fill={svgFill(n.style.fill, "#999")}
-          opacity={n.style.opacity}
-          stroke={n.style.stroke}
-          strokeWidth={n.style.strokeWidth}
+          {...svgPaintStyle(n.style)}
         />
       )
     }

@@ -482,7 +482,8 @@ describe("GeoPipelineStore", () => {
 
     it("applies decay to streaming points", () => {
       const store = new GeoPipelineStore(makeConfig({
-        decay: { type: "linear", minOpacity: 0.1 }
+        decay: { type: "linear", minOpacity: 0.1 },
+        pointStyle: () => ({ opacity: 0.4, fillOpacity: 0.5 })
       }))
       store.initStreaming(10)
       for (let i = 0; i < 5; i++) {
@@ -493,6 +494,7 @@ describe("GeoPipelineStore", () => {
       const points = store.scene.filter(isPoint)
       expect(points.length).toBe(5)
 
+      expect(points.every(point => point.style.opacity === 0.4 && point.style.fillOpacity === 0.5)).toBe(true)
       // Oldest point should have lowest opacity
       expect(points[0]._decayOpacity).toBeLessThan(points[4]._decayOpacity!)
       // Newest should be ~1

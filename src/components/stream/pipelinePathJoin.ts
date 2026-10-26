@@ -5,7 +5,7 @@
  * window slides retained points instead of interpolating by array index.
  */
 import type { AreaSceneNode, LineSceneNode, SceneNode } from "./types"
-import { lerp } from "./pipelineTransitionUtils"
+import { lerp, snapshotOpacity } from "./pipelineTransitionUtils"
 import type { PrevPath, TransitionContext } from "./pipelineTransitionTypes"
 
 export function copyPathPoint(point: [number, number]): [number, number] {
@@ -103,7 +103,7 @@ export function snapshotPathNode(
     prevPathMap.set(key, {
       path: node.path.map(copyPathPoint),
       pathIds: resolvePathIds(ctx, node, node.path.length),
-      opacity: node.style?.opacity
+      ...snapshotOpacity(node.style)
     })
     return
   }
@@ -111,7 +111,7 @@ export function snapshotPathNode(
     topPath: node.topPath.map(copyPathPoint),
     bottomPath: node.bottomPath.map(copyPathPoint),
     pathIds: resolvePathIds(ctx, node, node.topPath.length),
-    opacity: node.style?.opacity
+    ...snapshotOpacity(node.style)
   })
 }
 
@@ -250,27 +250,28 @@ export function collectExitPathNodes(
   const exits: SceneNode[] = []
   for (const [key, prevPath] of prevPathMap) {
     if (matchedPrevPathKeys.has(key)) continue
+    const exit = {
+      group: key.slice(2),
+      _startOpacity: prevPath.opacity ?? 1,
+      _targetOpacity: 0,
+      _transitionKey: key,
+      datum: null
+    }
     if (key.startsWith("l:") && prevPath.path) {
       const exitNode: LineSceneNode = {
+        ...exit,
         type: "line",
         path: prevPath.path.map(copyPathPoint),
-        group: key.slice(2),
-        style: { stroke: "#999", strokeWidth: 1, opacity: prevPath.opacity ?? 1 },
-        _targetOpacity: 0,
-        _transitionKey: key,
-        datum: null
+        style: { ...snapshotOpacity(prevPath), stroke: "#999", strokeWidth: 1 }
       }
       exits.push(exitNode)
     } else if (key.startsWith("a:") && prevPath.topPath && prevPath.bottomPath) {
       const exitNode: AreaSceneNode = {
+        ...exit,
         type: "area",
         topPath: prevPath.topPath.map(copyPathPoint),
         bottomPath: prevPath.bottomPath.map(copyPathPoint),
-        group: key.slice(2),
-        style: { fill: "#999", opacity: prevPath.opacity ?? 1 },
-        _targetOpacity: 0,
-        _transitionKey: key,
-        datum: null
+        style: { ...snapshotOpacity(prevPath), fill: "#999" }
       }
       exits.push(exitNode)
     }

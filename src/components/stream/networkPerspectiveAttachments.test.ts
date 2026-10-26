@@ -68,7 +68,12 @@ describe("perspective particles", () => {
     const pool = new ParticlePool(1)
     Object.assign(pool.spawn(0)!, { x: 150, y: 100 })
     const ctx = createMockCanvasContext() as unknown as CanvasRenderingContext2D
-    renderNetworkParticles(ctx, pool, [datum], {}, () => "#369")
+    ctx.globalAlpha = 0.3
+    const paintAlphas: number[] = []
+    vi.mocked(ctx.fill).mockImplementation(() => { paintAlphas.push(ctx.globalAlpha) })
+    renderNetworkParticles(ctx, pool, [datum], { opacity: 0.5 }, () => "#369")
+    expect(paintAlphas).toEqual([0.15])
+    expect(ctx.globalAlpha).toBe(0.3)
     expect(ctx.arc).toHaveBeenCalledWith(150, 100, expect.any(Number), 0, Math.PI * 2)
   })
 })

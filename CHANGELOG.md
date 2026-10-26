@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Selection dimming multiplies authored mark opacity once, preserving separate
+  fill and stroke opacity across canvas and SVG. Chart-wide staleness dimming
+  also applies to every mark, pulse overlay, and network particle. Animation
+  transitions and geographic decay retain the same opacity after settling.
+  Removed XY and ordinal marks preserve both paint channels throughout their
+  exit fade, including lines and areas that previously vanished on the first tick.
+- Tooltips reuse computed dimensions for placement, avoiding redundant viewport
+  measurements during pointer updates while preserving resize and CSS-scale handling.
+
 ## [3.13.1]
 
 ### Added

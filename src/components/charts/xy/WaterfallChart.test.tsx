@@ -177,8 +177,7 @@ describe("WaterfallChart", () => {
     })
     expect(lastXYFrameProps.areaStyle({ step: "Costs" })).toMatchObject({
       stroke: "purple",
-      opacity: expect.any(Number),
-      fillOpacity: expect.any(Number),
+      opacity: 0.15,
     })
     expect(lastXYFrameProps.areaStyle({ step: "Costs" }).opacity).toBeLessThan(1)
   })

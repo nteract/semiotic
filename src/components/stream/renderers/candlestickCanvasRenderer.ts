@@ -22,7 +22,7 @@ export const candlestickCanvasRenderer: StreamRendererFn = (
     const decayOpacity = n._decayOpacity ?? 1
     const styleOpacity = n.style?.opacity ?? 1
     const alpha = decayOpacity * styleOpacity
-    if (alpha !== 1) ctx.globalAlpha = alpha
+    const nodeAlpha = ctx.globalAlpha * alpha
 
     const wickColor = resolveCSSColor(ctx, n.wickColor) || n.wickColor
 
@@ -37,6 +37,7 @@ export const candlestickCanvasRenderer: StreamRendererFn = (
     const effectiveWickWidth = compact ? Math.max(n.wickWidth, 2) : n.wickWidth
 
     const drawWick = () => {
+      ctx.globalAlpha = nodeAlpha * (n.style?.strokeOpacity ?? 1)
       ctx.beginPath()
       ctx.moveTo(n.x, n.highY)
       ctx.lineTo(n.x, n.lowY)
@@ -47,6 +48,7 @@ export const candlestickCanvasRenderer: StreamRendererFn = (
 
     if (!compact) drawWick()
 
+    ctx.globalAlpha = nodeAlpha * (n.style?.fillOpacity ?? 1)
     if (n.isRange) {
       // Range/dumbbell mode: endpoint bulbs. The radius is computed in the
       // scene builder (so canvas + SVG match); fall back to the same formula
@@ -80,6 +82,7 @@ export const candlestickCanvasRenderer: StreamRendererFn = (
       ctx.fillRect(n.x - n.bodyWidth / 2, bodyTop, n.bodyWidth, Math.max(bodyHeight, 1))
       ctx.strokeStyle = bodyStroke
       ctx.lineWidth = 1
+      ctx.globalAlpha = nodeAlpha * (n.style?.strokeOpacity ?? 1)
       ctx.strokeRect(n.x - n.bodyWidth / 2, bodyTop, n.bodyWidth, Math.max(bodyHeight, 1))
     }
     // When bodyWidth === 0 and not range mode, skip body entirely (user explicitly set width to 0)

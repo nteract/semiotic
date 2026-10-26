@@ -14,11 +14,13 @@ export const trapezoidCanvasRenderer = (
 ): void => {
   const trapNodes = nodes.filter((n): n is TrapezoidSceneNode => n.type === "trapezoid")
 
+  const baseAlpha = ctx.globalAlpha
   for (const node of trapNodes) {
     const pts = node.points
     if (pts.length < 4) continue
 
-    ctx.globalAlpha = node.style?.opacity ?? 1
+    const nodeAlpha = baseAlpha * (node.style.opacity ?? 1)
+    ctx.globalAlpha = nodeAlpha * (node.style.fillOpacity ?? 1)
 
     ctx.beginPath()
     ctx.moveTo(pts[0][0], pts[0][1])
@@ -40,12 +42,13 @@ export const trapezoidCanvasRenderer = (
     // black outline where SVG (stroke="none") paints nothing.
     const strokeWidth = node.style?.strokeWidth ?? 1
     if (node.style?.stroke && node.style.stroke !== "none" && strokeWidth > 0) {
+      ctx.globalAlpha = nodeAlpha * (node.style.strokeOpacity ?? 1)
       ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
       ctx.lineWidth = strokeWidth
       ctx.stroke()
     }
 
-    ctx.globalAlpha = 1
+    ctx.globalAlpha = baseAlpha
   }
 }
 

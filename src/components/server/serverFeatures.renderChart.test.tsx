@@ -613,7 +613,11 @@ describe("renderChart", () => {
     })
     expect(svg).toContain('fill="#1f77b4"')
     // The IQR follows the vertical violin's value axis: a constant x.
-    expect(svg).toMatch(/<line x1="([^"]+)" y1="[^"]+" x2="\1" y2="[^"]+" stroke="#1f77b4"/)
+    const doc = new DOMParser().parseFromString(svg, "image/svg+xml")
+    const iqr = doc.querySelector('line[stroke="#1f77b4"][stroke-width="2"]')!
+    expect(iqr).not.toBeNull()
+    expect(iqr.getAttribute("x1")).toBe(iqr.getAttribute("x2"))
+    expect(iqr.getAttribute("opacity")).toBe("0.8")
   })
 
   // ── Network Charts ─────────────────────────────────────────────────

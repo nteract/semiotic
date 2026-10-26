@@ -1,6 +1,6 @@
 import type { RectSceneNode } from "../types"
 import type { StreamRendererFn } from "./types"
-import { renderRectPulse } from "./renderPulse"
+import { renderFillPulse } from "./renderPulse"
 import { resolveCSSColor } from "./resolveCSSColor"
 import { buildLinearFillGradient, resolveCanvasFill } from "./canvasRenderHelpers"
 import { hasAnyCornerRadius, clampCornerRadii } from "./cornerRadii"
@@ -70,10 +70,11 @@ function resolveBarFill(
  * is a stroke to draw, so callers pick `stroke()` (traced path) or
  * `strokeRect()` (no active path) without repeating the guard.
  */
-function prepareBarStroke(ctx: CanvasRenderingContext2D, node: RectSceneNode): boolean {
+function prepareBarStroke(ctx: CanvasRenderingContext2D, node: RectSceneNode, nodeAlpha: number): boolean {
   if (!node.style.stroke || node.style.stroke === "none") return false
   const strokeWidth = node.style.strokeWidth ?? 1
   if (strokeWidth <= 0) return false
+  ctx.globalAlpha = nodeAlpha * (node.style.strokeOpacity ?? 1)
   ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
   ctx.lineWidth = strokeWidth
   return true
@@ -87,10 +88,10 @@ function prepareBarStroke(ctx: CanvasRenderingContext2D, node: RectSceneNode): b
 export const barCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _layout) => {
   const rectNodes = nodes.filter((n): n is RectSceneNode => n.type === "rect")
 
+  const baseAlpha = ctx.globalAlpha
   for (const node of rectNodes) {
-    if (node.style.opacity != null) {
-      ctx.globalAlpha = node.style.opacity
-    }
+    const nodeAlpha = baseAlpha * (node.style.opacity ?? 1)
+    ctx.globalAlpha = nodeAlpha * (node.style.fillOpacity ?? 1)
 
     if (node.style.icon) {
       // Icon/isotype mode: stamp the image to fill the bar
@@ -102,7 +103,7 @@ export const barCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _layout
       ctx.fillStyle = resolveBarFill(ctx, node)
       tracePerCornerPath(ctx, node)
       ctx.fill()
-      if (prepareBarStroke(ctx, node)) ctx.stroke()
+      if (prepareBarStroke(ctx, node, nodeAlpha)) ctx.stroke()
     } else if (node.roundedTop && node.roundedTop > 0) {
       // Rounded corners on the end away from the baseline
       ctx.fillStyle = resolveBarFill(ctx, node)
@@ -146,22 +147,22 @@ export const barCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _layout
       ctx.closePath()
       ctx.fill()
 
-      if (prepareBarStroke(ctx, node)) ctx.stroke()
+      if (prepareBarStroke(ctx, node, nodeAlpha)) ctx.stroke()
     } else if (node.fillBands && node.fillBands.length > 0) {
       fillValueBands(ctx, node, node.fillBands)
-      if (prepareBarStroke(ctx, node)) ctx.strokeRect(node.x, node.y, node.w, node.h)
+      if (prepareBarStroke(ctx, node, nodeAlpha)) ctx.strokeRect(node.x, node.y, node.w, node.h)
     } else {
       // Standard solid fill — or gradient when fillGradient is set.
       ctx.fillStyle = resolveBarFill(ctx, node)
       ctx.fillRect(node.x, node.y, node.w, node.h)
 
-      if (prepareBarStroke(ctx, node)) ctx.strokeRect(node.x, node.y, node.w, node.h)
+      if (prepareBarStroke(ctx, node, nodeAlpha)) ctx.strokeRect(node.x, node.y, node.w, node.h)
     }
 
     // Pulse overlay
-    renderRectPulse(ctx, node)
+    renderFillPulse(ctx, node, baseAlpha)
 
-    ctx.globalAlpha = 1
+    ctx.globalAlpha = baseAlpha
   }
 }
 

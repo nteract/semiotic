@@ -167,7 +167,7 @@ describe("PipelineStore.cancelIntroAnimation", () => {
       expect(node.r).toBe(8)
       expect(node._targetR).toBeUndefined()
       expect(node._targetOpacity).toBeUndefined()
-      expect(node.style.opacity ?? node.style.fillOpacity).toBeCloseTo(0.7, 5)
+      expect((node.style.opacity ?? 1) * (node.style.fillOpacity ?? 1)).toBeCloseTo(0.7, 5)
     }
   })
 })

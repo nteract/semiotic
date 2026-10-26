@@ -1,7 +1,5 @@
 import type { NetworkSceneNode } from "../networkTypes"
-import { networkRectRenderer } from "./networkRectRenderer"
-import { networkCircleRenderer } from "./networkCircleRenderer"
-import { networkArcRenderer } from "./networkArcRenderer"
+import { paintNetworkPrimitives } from "./networkPrimitiveRenderer"
 import { networkSymbolRenderer } from "./symbolCanvasRenderer"
 import { networkGlyphRenderer } from "./glyphCanvasRenderer"
 import { paintPerspectiveFaces } from "./networkPerspectivePaint"
@@ -20,26 +18,11 @@ function networkSymbolTokenRenderer(ctx: CanvasRenderingContext2D, nodes: Networ
   for (const node of nodes) {
     if (node.type !== "symbol") continue
     if (node.faces) {
-      // Symbols multiply mark opacity by the frame alpha, including walls.
-      paintPerspectiveFaces(ctx, {
-        ...node.style,
-        opacity: alpha * (node.style.opacity ?? 1)
-      }, node.faces, "#007bff")
+      paintPerspectiveFaces(ctx, node.style, node.faces, "#007bff")
       ctx.globalAlpha = alpha
     }
     networkSymbolRenderer(ctx, [node])
   }
-}
-
-const RENDERERS: Record<
-  NetworkSceneNode["type"],
-  (ctx: CanvasRenderingContext2D, nodes: NetworkSceneNode[]) => void
-> = {
-  rect: networkRectRenderer,
-  circle: networkCircleRenderer,
-  arc: networkArcRenderer,
-  symbol: networkSymbolTokenRenderer,
-  glyph: networkGlyphRenderer
 }
 
 /**
@@ -54,8 +37,12 @@ export function paintNetworkNodesInOrder(
   let start = 0
   for (let i = 1; i <= nodes.length; i++) {
     if (i < nodes.length && nodes[i].type === nodes[start].type) continue
-    const render = RENDERERS[nodes[start]?.type]
-    if (render) render(ctx, start === 0 && i === nodes.length ? nodes : nodes.slice(start, i))
+    const type = nodes[start].type
+    const batch = start === 0 && i === nodes.length ? nodes : nodes.slice(start, i)
+    if (type === "symbol") networkSymbolTokenRenderer(ctx, batch)
+    else if (type === "glyph") networkGlyphRenderer(ctx, batch)
+    else if (type === "circle" || type === "rect" || type === "arc")
+      paintNetworkPrimitives(ctx, batch, type)
     start = i
   }
 }

@@ -20,7 +20,7 @@ import type {
   TransitionConfig,
   Style,
 } from "./types"
-import { computeEasing, computeRawProgress, lerp, now as getTimestamp } from "./pipelineTransitionUtils"
+import { computeEasing, computeRawProgress, lerp, now as getTimestamp, snapshotOpacity } from "./pipelineTransitionUtils"
 import {
   advancePathNode,
   collectExitPathNodes,
@@ -88,26 +88,9 @@ export function getNodeIdentity(ctx: TransitionContext, node: SceneNode, index: 
 
 // ── Opacity helpers ────────────────────────────────────────────────────
 
-/**
- * Effective paint alpha for fill-based marks.
- *
- * Matches the canvas renderer convention (`style.opacity ?? style.fillOpacity ?? 1`)
- * used by points, glyphs, rects, heatcells, and candlesticks. Intro/update
- * transitions must target this same value — otherwise a mark authored with
- * only `fillOpacity: 0.7` animates toward 1, bakes `style.opacity = 1` on
- * completion, and then "fades" back to 0.7 on the next dirty rebuild
- * (e.g. tab-away → tab-back via FrameRuntime visibility resume).
- *
- * Line/area marks keep stroke alpha on `style.opacity` alone; their under-
- * path fill uses `fillOpacity` independently and is not covered here.
- */
-export function resolveMarkOpacity(
-  style?: Style | null
-): number {
-  if (!style) return 1
-  if (style.opacity != null) return style.opacity
-  if (style.fillOpacity != null) return style.fillOpacity
-  return 1
+/** Transition opacity is independent of the authored fill/stroke channels. */
+export function resolveMarkOpacity(style?: Style | null): number {
+  return style?.opacity ?? 1
 }
 
 // ── Snapshot ────────────────────────────────────────────────────────────
@@ -132,7 +115,7 @@ export function snapshotPositions(
         x: node.x,
         y: node.y,
         r: node.r,
-        opacity: resolveMarkOpacity(node.style),
+        ...snapshotOpacity(node.style),
       })
     } else if (node.type === "glyph") {
       // `r` carries the glyph's size so position AND scale interpolate.
@@ -140,24 +123,16 @@ export function snapshotPositions(
         x: node.x,
         y: node.y,
         r: node.size,
-        opacity: resolveMarkOpacity(node.style),
+        ...snapshotOpacity(node.style),
         glyph: node.glyph,
       })
-    } else if (node.type === "rect") {
+    } else if (node.type === "rect" || node.type === "heatcell") {
       prevPositionMap.set(key, {
         x: node.x,
         y: node.y,
         w: node.w,
         h: node.h,
-        opacity: resolveMarkOpacity(node.style),
-      })
-    } else if (node.type === "heatcell") {
-      prevPositionMap.set(key, {
-        x: node.x,
-        y: node.y,
-        w: node.w,
-        h: node.h,
-        opacity: resolveMarkOpacity(node.style),
+        ...snapshotOpacity(node.style),
       })
     } else if (node.type === "candlestick") {
       // `w` carries bodyWidth so the exit stub can render at the same width
@@ -171,7 +146,7 @@ export function snapshotPositions(
         closeY: node.closeY,
         highY: node.highY,
         lowY: node.lowY,
-        opacity: resolveMarkOpacity(node.style),
+        ...snapshotOpacity(node.style),
       })
     } else if (node.type === "line" || node.type === "area") {
       snapshotPathNode(ctx, node, key, prevPathMap)
@@ -348,43 +323,46 @@ export function startTransition(
   // Detect exit discrete nodes: keys in prevPositionMap not matched in new scene
   for (const [key, prev] of prevPositionMap) {
     if (matchedPrevKeys.has(key)) continue
+    const exit = {
+      style: snapshotOpacity(prev), datum: null,
+      _targetOpacity: 0, _transitionKey: key
+    }
     if (key.startsWith("p:")) {
       const exitNode: PointSceneNode = {
+        ...exit,
         type: "point", x: prev.x, y: prev.y, r: prev.r ?? 3,
-        style: { opacity: prev.opacity ?? 1 }, datum: null,
-        _targetOpacity: 0, _transitionKey: key
       }
       state.exitNodes.push(exitNode)
     } else if (key.startsWith("g:") && prev.glyph) {
       // Exiting glyph fades out as itself, in the neutral exit ink the
       // other mark types use.
       const exitNode: GlyphSceneNode = {
+        ...exit,
         type: "glyph", x: prev.x, y: prev.y, size: prev.r ?? 12,
         // Neutral ink for both role paints so accent parts fade out too rather
         // than vanishing (an undefined accent resolves to transparent).
         glyph: prev.glyph, color: "#999", accent: "#999",
-        style: { opacity: prev.opacity ?? 1 }, datum: null,
-        _targetOpacity: 0, _transitionKey: key
       }
       state.exitNodes.push(exitNode)
     } else if (key.startsWith("r:")) {
       const exitNode: RectSceneNode = {
+        ...exit,
         type: "rect", x: prev.x, y: prev.y, w: prev.w ?? 0, h: prev.h ?? 0,
-        style: { opacity: prev.opacity ?? 1, fill: "#999" }, datum: null,
-        _targetOpacity: 0, _transitionKey: key
+        style: { ...exit.style, fill: "#999" }
       }
       state.exitNodes.push(exitNode)
     } else if (key.startsWith("h:")) {
       const exitNode: HeatcellSceneNode = {
+        ...exit,
         type: "heatcell", x: prev.x, y: prev.y, w: prev.w ?? 0, h: prev.h ?? 0,
-        fill: "#999", datum: null, style: { opacity: prev.opacity ?? 1 },
-        _targetOpacity: 0, _transitionKey: key
+        fill: "#999"
       }
       state.exitNodes.push(exitNode)
     } else if (key.startsWith("c:")) {
       // Candlestick exit: hold prev geometry and fade to zero.
       const openY = prev.openY ?? prev.y
       const exitNode: CandlestickSceneNode = {
+        ...exit,
         type: "candlestick",
         x: prev.x,
         openY,
@@ -393,9 +371,7 @@ export function startTransition(
         lowY: prev.lowY ?? openY,
         bodyWidth: prev.w ?? 6,
         upColor: "#999", downColor: "#999", wickColor: "#999",
-        wickWidth: 1, isUp: true, datum: null,
-        style: { opacity: prev.opacity ?? 1 },
-        _targetOpacity: 0, _transitionKey: key,
+        wickWidth: 1, isUp: true,
       }
       state.exitNodes.push(exitNode)
     }

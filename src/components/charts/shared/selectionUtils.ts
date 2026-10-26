@@ -142,9 +142,7 @@ export function wrapStyleWithSelection<TArgs extends unknown[]>(
         // Unselected: dim the element
         const dimOpacity =
           config?.unselectedOpacity ?? DEFAULT_SELECTION_OPACITY
-        style.opacity = dimOpacity
-        style.fillOpacity = dimOpacity
-        style.strokeOpacity = dimOpacity
+        style.opacity = (style.opacity ?? 1) * dimOpacity
         if (config?.unselectedStyle) {
           Object.assign(style, config.unselectedStyle)
         }

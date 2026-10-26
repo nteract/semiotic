@@ -129,8 +129,8 @@ describe("wrapStyleWithSelection", () => {
     const wrapped = wrapStyleWithSelection(baseStyleFn, hook)
     const style = wrapped({ color: "red", category: "B" })
     expect(style.opacity).toBe(DEFAULT_SELECTION_OPACITY)
-    expect(style.fillOpacity).toBe(DEFAULT_SELECTION_OPACITY)
-    expect(style.strokeOpacity).toBe(DEFAULT_SELECTION_OPACITY)
+    expect(style.fillOpacity).toBeUndefined()
+    expect(style.strokeOpacity).toBeUndefined()
   })
 
   it("uses custom unselectedOpacity", () => {
@@ -143,8 +143,8 @@ describe("wrapStyleWithSelection", () => {
     })
     const style = wrapped({ category: "B" })
     expect(style.opacity).toBe(0.3)
-    expect(style.fillOpacity).toBe(0.3)
-    expect(style.strokeOpacity).toBe(0.3)
+    expect(style.fillOpacity).toBeUndefined()
+    expect(style.strokeOpacity).toBeUndefined()
   })
 
   it("applies selectedStyle overrides for matching datums", () => {

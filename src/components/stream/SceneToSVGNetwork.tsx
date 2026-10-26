@@ -13,9 +13,6 @@ import type {
   NetworkSceneNode,
   NetworkSceneEdge,
   NetworkLabel,
-  NetworkCircleNode,
-  NetworkRectNode,
-  NetworkArcNode,
   NetworkSymbolNode,
   NetworkGlyphNode,
   NetworkLineEdge,
@@ -25,7 +22,7 @@ import type {
 } from "./networkTypes"
 import { symbolPathString } from "./symbolPath"
 import { isHatchFill, hatchPatternDef } from "../charts/shared/hatchFill"
-import { ARC_NOOP, svgFill, glyphNodeToSVG } from "./sceneToSVGShared"
+import { ARC_NOOP, svgFill, svgPaintStyle, glyphNodeToSVG } from "./sceneToSVGShared"
 import { withSceneMarkCursor } from "./sceneCursor"
 import { shadeColor } from "./colorShade"
 
@@ -67,76 +64,39 @@ export function networkSceneNodeToSVG(node: NetworkSceneNode, i: number): React.
 
 function networkSceneNodeToSVGMark(node: NetworkSceneNode, i: number): React.ReactNode {
   switch (node.type) {
-    case "circle": {
-      const n = node as NetworkCircleNode
-      // HatchFill (e.g. from node styleRules) → inline <pattern> (SSR parity).
-      const hatch = isHatchFill(n.style.fill) ? hatchPatternDef(n.style.fill, `net-circle-${i}-hatch`) : undefined
-      const paint = {
-        fill: hatch ? `url(#net-circle-${i}-hatch)` : svgFill(n.style.fill),
-        stroke: n.style.stroke,
-        strokeWidth: n.style.strokeWidth,
-        fillOpacity: n.style.fillOpacity,
-        strokeOpacity: n.style.strokeOpacity,
-        opacity: n.style.opacity
-      }
-      return (
-        <React.Fragment key={`net-circle-${i}`}>
-          {hatch && <defs>{hatch}</defs>}
-          {/* Perspective circles carry a projected ellipse outline and a rim. */}
-          {n.pathD && perspectiveFacesToSVG(n, paint.fill, n._perspectiveToken ? "token-rim" : "slab-face")}
-          {n.pathD
-            ? <path data-perspective-part={n._perspectiveToken ? "token-top" : "slab-top"} d={n.pathD} {...paint} />
-            : <circle cx={n.cx} cy={n.cy} r={n.r} {...paint} />}
-        </React.Fragment>
-      )
-    }
-    case "rect": {
-      const n = node as NetworkRectNode
-      const hatch = isHatchFill(n.style.fill) ? hatchPatternDef(n.style.fill, `net-rect-${i}-hatch`) : undefined
-      const paint = {
-        fill: hatch ? `url(#net-rect-${i}-hatch)` : svgFill(n.style.fill),
-        stroke: n.style.stroke,
-        strokeWidth: n.style.strokeWidth,
-        fillOpacity: n.style.fillOpacity,
-        strokeOpacity: n.style.strokeOpacity,
-        opacity: n.style.opacity
-      }
-      return (
-        <React.Fragment key={`net-rect-${i}`}>
-          {hatch && <defs>{hatch}</defs>}
-          {/* Perspective marks: extruded faces first, then the projected outline. */}
-          {n.pathD && perspectiveFacesToSVG(n, paint.fill)}
-          {n.pathD
-            ? <path data-perspective-part="slab-top" d={n.pathD} {...paint} />
-            : <rect x={n.x} y={n.y} width={n.w} height={n.h} {...paint} />}
-        </React.Fragment>
-      )
-    }
+    case "circle":
+    case "rect":
     case "arc": {
-      const n = node as NetworkArcNode
-      // Scene stores angles in canvas convention (0 = 3 o'clock).
-      // d3-shape arc expects 0 = 12 o'clock. Add π/2 to compensate.
-      const arcPath = n.pathD ? "" : d3Arc()
-        .innerRadius(n.innerR)
-        .outerRadius(n.outerR)
-        .startAngle(n.startAngle + Math.PI / 2)
-        .endAngle(n.endAngle + Math.PI / 2)(ARC_NOOP) || ""
-      const hatch = isHatchFill(n.style.fill) ? hatchPatternDef(n.style.fill, `net-arc-${i}-hatch`) : undefined
+      const n = node
+      const key = `net-${n.type}-${i}`
+      const hatchId = `${key}-hatch`
+      const hatch = isHatchFill(n.style.fill) ? hatchPatternDef(n.style.fill, hatchId) : undefined
+      const paint = {
+        fill: hatch ? `url(#${hatchId})` : svgFill(n.style.fill),
+        ...svgPaintStyle(n.style)
+      }
+      const token = n.type === "circle" && n._perspectiveToken
+      let mark: React.ReactNode
+      if (n.pathD) {
+        mark = <path data-perspective-part={token ? "token-top" : "slab-top"} d={n.pathD} {...paint} />
+      } else if (n.type === "circle") {
+        mark = <circle cx={n.cx} cy={n.cy} r={n.r} {...paint} />
+      } else if (n.type === "rect") {
+        mark = <rect x={n.x} y={n.y} width={n.w} height={n.h} {...paint} />
+      } else {
+        // Canvas angles start at 3 o'clock; d3-shape starts at 12 o'clock.
+        const d = d3Arc()
+          .innerRadius(n.innerR)
+          .outerRadius(n.outerR)
+          .startAngle(n.startAngle + Math.PI / 2)
+          .endAngle(n.endAngle + Math.PI / 2)(ARC_NOOP) || ""
+        mark = <path d={d} transform={`translate(${n.cx},${n.cy})`} {...paint} />
+      }
       return (
-        <React.Fragment key={`net-arc-${i}`}>
+        <React.Fragment key={key}>
           {hatch && <defs>{hatch}</defs>}
-          {n.pathD && perspectiveFacesToSVG(n, hatch ? `url(#net-arc-${i}-hatch)` : svgFill(n.style.fill))}
-          <path
-            d={n.pathD ?? arcPath}
-            data-perspective-part={n.pathD ? "slab-top" : undefined}
-            transform={n.pathD ? undefined : `translate(${n.cx},${n.cy})`}
-            fill={hatch ? `url(#net-arc-${i}-hatch)` : svgFill(n.style.fill)}
-            stroke={n.style.stroke}
-            strokeWidth={n.style.strokeWidth}
-            fillOpacity={n.style.fillOpacity}
-            strokeOpacity={n.style.strokeOpacity}
-            opacity={n.style.opacity}
-          />
+          {n.pathD && perspectiveFacesToSVG(n, paint.fill, token ? "token-rim" : "slab-face")}
+          {mark}
         </React.Fragment>
       )
     }
@@ -153,11 +113,7 @@ function networkSceneNodeToSVGMark(node: NetworkSceneNode, i: number): React.Rea
           d={d}
           transform={transform}
           fill={n.style.fill ? svgFill(n.style.fill) : "none"}
-          stroke={n.style.stroke}
-          strokeWidth={n.style.strokeWidth}
-          fillOpacity={n.style.fillOpacity}
-          strokeOpacity={n.style.strokeOpacity}
-          opacity={n.style.opacity}
+          {...svgPaintStyle(n.style)}
         />
       )
       // Perspective tokens carry screen-space side walls under the symbol.
@@ -216,9 +172,9 @@ function networkSceneEdgeToSVGMark(edge: NetworkSceneEdge, i: number): React.Rea
             d={e.pathD}
             data-perspective-part={e._perspectivePart}
             fill={hatch ? `url(#${hatchId})` : svgFill(e.style.fill, "#999")}
-            fillOpacity={e.style.fillOpacity}
+            fillOpacity={e.style.fillOpacity ?? 0.5}
             stroke={e.style.stroke || "none"}
-            strokeOpacity={e.style.strokeOpacity}
+            strokeOpacity={(e.style.strokeOpacity ?? 1) * 0.5}
             strokeWidth={e.style.strokeWidth}
             strokeDasharray={e.style.strokeDasharray}
             strokeLinecap={e.style.strokeLinecap}
@@ -238,9 +194,9 @@ function networkSceneEdgeToSVGMark(edge: NetworkSceneEdge, i: number): React.Rea
             d={e.pathD}
             data-perspective-part={e._perspectivePart}
             fill={hatch ? `url(#${hatchId})` : svgFill(e.style.fill, "#999")}
-            fillOpacity={e.style.fillOpacity}
+            fillOpacity={e.style.fillOpacity ?? 0.5}
             stroke={e.style.stroke || "none"}
-            strokeOpacity={e.style.strokeOpacity}
+            strokeOpacity={(e.style.strokeOpacity ?? 1) * 0.3}
             strokeWidth={e.style.strokeWidth}
             strokeDasharray={e.style.strokeDasharray}
             strokeLinecap={e.style.strokeLinecap}

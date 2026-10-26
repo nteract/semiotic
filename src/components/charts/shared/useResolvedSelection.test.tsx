@@ -71,8 +71,8 @@ describe("useResolvedSelection", () => {
       result.current,
     )({ category: "B" })
     expect(styled.opacity).toBe(0.1)
-    expect(styled.fillOpacity).toBe(0.1)
-    expect(styled.strokeOpacity).toBe(0.1)
+    expect(styled.fillOpacity).toBeUndefined()
+    expect(styled.strokeOpacity).toBeUndefined()
   })
 
   it("preserves unselectedStyle and selectedStyle from the selection config", () => {

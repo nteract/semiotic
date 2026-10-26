@@ -45,7 +45,8 @@ function connectorFill(
       <polygon
         points={points}
         fill={pattern ? `url(#${patternId})` : svgFill(fill, "#999")}
-        opacity={first.style.fillOpacity ?? first.style.opacity ?? 0.3}
+        opacity={first.style.opacity}
+        fillOpacity={first.style.fillOpacity ?? 0.3}
         data-semiotic-connector-fill={first.group || "_default"}
       />
     </React.Fragment>

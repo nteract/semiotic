@@ -11,6 +11,8 @@ export const connectorCanvasRenderer = (
   const connectorNodes = nodes.filter((n): n is ConnectorSceneNode => n.type === "connector")
   if (connectorNodes.length === 0) return
 
+  const baseAlpha = ctx.globalAlpha
+
   // Group connectors by their group key so we can draw filled polygons
   const groups = new Map<string, ConnectorSceneNode[]>()
   for (const node of connectorNodes) {
@@ -34,10 +36,10 @@ export const connectorCanvasRenderer = (
       }
       ctx.closePath()
 
-      ctx.globalAlpha = firstStyle.fillOpacity ?? firstStyle.opacity ?? 0.3
+      ctx.globalAlpha = baseAlpha * (firstStyle.opacity ?? 1) * (firstStyle.fillOpacity ?? 0.3)
       ctx.fillStyle = coerceCanvasFill(ctx, firstStyle.fill) ?? "#999"
       ctx.fill()
-      ctx.globalAlpha = 1
+      ctx.globalAlpha = baseAlpha
     }
 
     // Draw stroke lines
@@ -55,9 +57,9 @@ export const connectorCanvasRenderer = (
         || resolveCanvasFill(ctx, node.style.fill, "")
         || resolveCSSColor(ctx, "var(--semiotic-border, #999)")!
       ctx.lineWidth = strokeWidth
-      ctx.globalAlpha = node.style.opacity ?? 0.5
+      ctx.globalAlpha = baseAlpha * (node.style.opacity ?? 0.5) * (node.style.strokeOpacity ?? 1)
       ctx.stroke()
-      ctx.globalAlpha = 1
+      ctx.globalAlpha = baseAlpha
     }
   }
 }

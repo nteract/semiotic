@@ -1,6 +1,6 @@
 import { arc as d3Arc, type DefaultArcObject } from "d3-shape"
 import type { OrdinalSceneNode, OrdinalScales, OrdinalLayout, WedgeSceneNode } from "../ordinalTypes"
-import { renderPathPulse } from "./renderPulse"
+import { hasPulse, renderFillPulse } from "./renderPulse"
 import { resolveCSSColor } from "./resolveCSSColor"
 import { resolveCanvasFill } from "./canvasRenderHelpers"
 import { annularSectorPath, buildGaugeGradientGeometry } from "./wedgePathBuilder"
@@ -10,7 +10,7 @@ import { annularSectorPath, buildGaugeGradientGeometry } from "./wedgePathBuilde
  * N unrounded slice sectors painted inside in `colors` order. Shared
  * geometry with the SVG renderer via `buildGaugeGradientGeometry`.
  */
-function renderGradientBand(ctx: CanvasRenderingContext2D, node: WedgeSceneNode): void {
+function renderGradientBand(ctx: CanvasRenderingContext2D, node: WedgeSceneNode, strokeAlpha: number): void {
   // Callers gate on `colors.length > 0`; defensive guard here keeps the
   // function callable on its own without producing a degenerate clip.
   const colors = node._gradientBand!.colors
@@ -47,6 +47,7 @@ function renderGradientBand(ctx: CanvasRenderingContext2D, node: WedgeSceneNode)
     ctx.translate(node.cx, node.cy)
     ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
     ctx.lineWidth = strokeWidth
+    ctx.globalAlpha = strokeAlpha
     ctx.stroke(outline)
     ctx.restore()
   }
@@ -66,7 +67,7 @@ function drawWedgeManual(ctx: CanvasRenderingContext2D, node: WedgeSceneNode): v
 }
 
 /** Draw a wedge using d3-shape arc (for cornerRadius) with canvas context rotation. */
-function drawWedgeRounded(ctx: CanvasRenderingContext2D, node: WedgeSceneNode): void {
+function drawWedgeRounded(ctx: CanvasRenderingContext2D, node: WedgeSceneNode, strokeAlpha: number): void {
   // d3-shape: 0 = 12 o'clock. Scene stores canvas convention (0 = 3 o'clock).
   // Add π/2 to convert scene → d3-shape, same as SVG renderer.
   const arcDatum: DefaultArcObject = {
@@ -87,6 +88,7 @@ function drawWedgeRounded(ctx: CanvasRenderingContext2D, node: WedgeSceneNode): 
   const strokeWidth = node.style.strokeWidth ?? 1
   if (node.style.stroke && node.style.stroke !== "none" && strokeWidth > 0) {
     ctx.lineWidth = strokeWidth
+    ctx.globalAlpha = strokeAlpha
     ctx.stroke(path)
   }
   ctx.restore()
@@ -100,6 +102,7 @@ export const wedgeCanvasRenderer = (
 ): void => {
   const wedgeNodes = nodes.filter((n): n is WedgeSceneNode => n.type === "wedge")
 
+  const baseAlpha = ctx.globalAlpha
   for (const node of wedgeNodes) {
     // Combine fillOpacity and opacity so transition fade-in/fade-out works
     // even when fillOpacity is set (e.g., 0.6 × 0.5 during enter transition)
@@ -110,7 +113,8 @@ export const wedgeCanvasRenderer = (
     const shouldStroke = Boolean(
       strokeColor && strokeColor !== "none" && strokeWidth > 0
     )
-    ctx.globalAlpha = fillOpacity * transitionOpacity
+    const strokeAlpha = baseAlpha * transitionOpacity * (node.style.strokeOpacity ?? 1)
+    ctx.globalAlpha = baseAlpha * fillOpacity * transitionOpacity
 
     if (node._gradientBand && node._gradientBand.colors.length > 0) {
       // Gradient band: outer shape is the wedge's rounded annular sector,
@@ -121,15 +125,15 @@ export const wedgeCanvasRenderer = (
       // `node.endAngle` not just at its own boundary) so subpixel AA
       // never produces a gap between adjacent colors — each slice is
       // overpainted by the next except the last one.
-      renderGradientBand(ctx, node)
+      renderGradientBand(ctx, node, strokeAlpha)
       // Pulse overlay still needs to run for gradient bands — even if
       // gauges don't currently use pulses, the wedge contract supports
       // them and shouldn't silently drop a node's `_pulseIntensity`.
-      if (node._pulseIntensity && node._pulseIntensity > 0) {
+      if (hasPulse(node)) {
         drawWedgeManual(ctx, node)
-        renderPathPulse(ctx, node)
+        renderFillPulse(ctx, node, baseAlpha)
       }
-      ctx.globalAlpha = 1
+      ctx.globalAlpha = baseAlpha
       continue
     }
     // _gradientBand with an empty colors array falls through to the normal
@@ -162,7 +166,10 @@ export const wedgeCanvasRenderer = (
       ctx.translate(node.cx, node.cy)
       const path = new Path2D(d)
       ctx.fill(path)
-      if (shouldStroke) ctx.stroke(path)
+      if (shouldStroke) {
+        ctx.globalAlpha = strokeAlpha
+        ctx.stroke(path)
+      }
       ctx.restore()
     } else if (node.cornerRadius) {
       // Uniform all-corner rounding (regular donut chart). `roundedEnds`
@@ -172,7 +179,7 @@ export const wedgeCanvasRenderer = (
         ctx.strokeStyle = resolveCSSColor(ctx, strokeColor) || strokeColor!
         ctx.lineWidth = strokeWidth
       }
-      drawWedgeRounded(ctx, node)
+      drawWedgeRounded(ctx, node, strokeAlpha)
     } else {
       // Standard path — fast manual approach
       drawWedgeManual(ctx, node)
@@ -181,18 +188,19 @@ export const wedgeCanvasRenderer = (
       if (shouldStroke) {
         ctx.strokeStyle = resolveCSSColor(ctx, strokeColor) || strokeColor!
         ctx.lineWidth = strokeWidth
+        ctx.globalAlpha = strokeAlpha
         ctx.stroke()
       }
     }
 
-    // Pulse overlay — renderPathPulse needs the current context path (not Path2D),
+    // Pulse overlay — renderFillPulse needs the current context path (not Path2D),
     // so always use drawWedgeManual. The slight shape difference from cornerRadius
     // is invisible at pulse opacity levels.
-    if (node._pulseIntensity && node._pulseIntensity > 0) {
+    if (hasPulse(node)) {
       drawWedgeManual(ctx, node)
-      renderPathPulse(ctx, node)
+      renderFillPulse(ctx, node, baseAlpha)
     }
 
-    ctx.globalAlpha = 1
+    ctx.globalAlpha = baseAlpha
   }
 }

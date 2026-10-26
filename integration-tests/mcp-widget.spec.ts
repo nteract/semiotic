@@ -40,7 +40,7 @@ test("shipped widget keeps SVG resources inert and chart styles and hover usable
         }
       })
     ).result
-    expect(result.isError).not.toBe(true)
+    expect(result.isError, JSON.stringify(result)).not.toBe(true)
   } finally {
     proc.kill("SIGTERM")
     await waitForProcessExit(proc)

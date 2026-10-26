@@ -31,8 +31,8 @@ import type { Changeset, PointSceneNode, Style } from "./types"
 import { buildDatumIndexMap, computeDecayOpacity } from "./pipelineDecay"
 import { hasActivePulses as hasActivePulsesShared } from "./pipelinePulse"
 import { applyOrdinalPulse } from "./ordinalPulse"
-import { computeEasing, computeRawProgress, lerp, now as getTimestamp } from "./pipelineTransitionUtils"
-import type { ActiveTransition } from "./pipelineTransitionUtils"
+import { computeEasing, computeRawProgress, lerp, now as getTimestamp, snapshotOpacity } from "./pipelineTransitionUtils"
+import type { ActiveTransition, TransitionOpacity } from "./pipelineTransitionUtils"
 import { resolveAccessor, resolveStringAccessor, accessorsEquivalent } from "./accessorUtils"
 import { toIdSet } from "./pipelineIdentityOps"
 import { STREAMING_PALETTE } from "../charts/shared/colorUtils"
@@ -95,7 +95,7 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
 
   // ── Transition animation ────────────────────────────────────────────
   activeTransition: ActiveTransition | null = null
-  private prevPositionMap = new Map<string, { x: number; y: number; w?: number; h?: number; r?: number; startAngle?: number; endAngle?: number; innerRadius?: number; outerRadius?: number; opacity?: number }>()
+  private prevPositionMap = new Map<string, TransitionOpacity & { x: number; y: number; w?: number; h?: number; r?: number; startAngle?: number; endAngle?: number; innerRadius?: number; outerRadius?: number }>()
   /** Exit nodes awaiting fade-out removal */
   exitNodes: import("./ordinalTypes").OrdinalSceneNode[] = []
 
@@ -956,12 +956,11 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
       const key = this.getNodeKey(node, keyCounts)
       if (!key) continue
       if (node.type === "point") {
-        // Effective paint alpha (opacity ?? fillOpacity) — matches pointCanvasRenderer.
         this.prevPositionMap.set(key, {
           x: node.x,
           y: node.y,
           r: node.r,
-          opacity: node.style.opacity ?? node.style.fillOpacity,
+          ...snapshotOpacity(node.style),
         })
       } else if (node.type === "rect") {
         this.prevPositionMap.set(key, {
@@ -969,17 +968,14 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
           y: node.y,
           w: node.w,
           h: node.h,
-          opacity: node.style.opacity ?? node.style.fillOpacity,
+          ...snapshotOpacity(node.style),
         })
       } else if (node.type === "wedge") {
-        // Store transition opacity (style.opacity), NOT fillOpacity.
-        // The renderer multiplies fillOpacity * opacity, so storing
-        // fillOpacity here would cause double-multiplication.
         this.prevPositionMap.set(key, {
           x: node.cx, y: node.cy,
           startAngle: node.startAngle, endAngle: node.endAngle,
           innerRadius: node.innerRadius, outerRadius: node.outerRadius,
-          opacity: node.style.opacity ?? 1
+          ...snapshotOpacity(node.style)
         })
       }
     }
@@ -1013,9 +1009,8 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
       if (node.type === "point") {
         if (prev) {
           matchedPrevKeys.add(key)
-          // Prefer style.opacity, then fillOpacity — same convention as
-          // pointCanvasRenderer / resolveMarkOpacity (XY pipelineTransitions).
-          node._targetOpacity = node.style.opacity ?? node.style.fillOpacity ?? 1
+          // Animate the mark-wide multiplier, independently of fillOpacity.
+          node._targetOpacity = node.style.opacity ?? 1
           if (prev.x !== node.x || prev.y !== node.y || (prev.r !== undefined && prev.r !== node.r)) {
             node._targetX = node.x
             node._targetY = node.y
@@ -1027,7 +1022,7 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
           }
         } else {
           // Entering node — scale from r=0
-          node._targetOpacity = node.style.opacity ?? node.style.fillOpacity ?? 1
+          node._targetOpacity = node.style.opacity ?? 1
           node._targetR = node.r
           node.r = 0
           node.style = { ...node.style, opacity: 0 }
@@ -1036,7 +1031,7 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
       } else if (node.type === "rect") {
         if (prev) {
           matchedPrevKeys.add(key)
-          node._targetOpacity = node.style.opacity ?? node.style.fillOpacity ?? 1
+          node._targetOpacity = node.style.opacity ?? 1
           if (prev.x !== node.x || prev.y !== node.y || prev.w !== node.w || prev.h !== node.h) {
             node._targetX = node.x
             node._targetY = node.y
@@ -1050,14 +1045,14 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
           }
         } else {
           // Entering node
-          node._targetOpacity = node.style.opacity ?? node.style.fillOpacity ?? 1
+          node._targetOpacity = node.style.opacity ?? 1
           node.style = { ...node.style, opacity: 0 }
           hasChanges = true
         }
       } else if (node.type === "wedge") {
         if (prev) {
           matchedPrevKeys.add(key)
-          node._targetOpacity = node.style.opacity ?? node.style.fillOpacity ?? 1
+          node._targetOpacity = node.style.opacity ?? 1
           if (prev.startAngle !== node.startAngle || prev.endAngle !== node.endAngle) {
             node._targetStartAngle = node.startAngle
             node._targetEndAngle = node.endAngle
@@ -1067,7 +1062,7 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
           }
         } else {
           // Entering wedge: collapse to zero arc at start angle, then sweep open
-          node._targetOpacity = node.style.opacity ?? node.style.fillOpacity ?? 1
+          node._targetOpacity = node.style.opacity ?? 1
           node._targetStartAngle = node.startAngle
           node._targetEndAngle = node.endAngle
           const collapsed = node.startAngle
@@ -1090,35 +1085,35 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
     this.exitNodes = []
     for (const [key, prev] of this.prevPositionMap) {
       if (matchedPrevKeys.has(key)) continue
+      const exit = {
+        style: snapshotOpacity(prev), datum: null,
+        _targetOpacity: 0, _transitionKey: key
+      }
       if (key.startsWith("p:")) {
         this.exitNodes.push({
+          ...exit,
           type: "point", x: prev.x, y: prev.y, r: prev.r ?? 3,
-          style: { opacity: prev.opacity ?? 1 }, datum: null,
-          _targetOpacity: 0, _transitionKey: key
         })
       } else if (key.startsWith("r:")) {
         this.exitNodes.push({
+          ...exit,
           type: "rect", x: prev.x, y: prev.y, w: prev.w ?? 0, h: prev.h ?? 0,
-          style: { opacity: prev.opacity ?? 1, fill: "#999" }, datum: null,
-          _targetOpacity: 0, _transitionKey: key
+          style: { ...exit.style, fill: "#999" }
         })
       } else if (key.startsWith("w:")) {
         // Exiting wedge: collapse arc to midpoint and fade out
         const midAngle = ((prev.startAngle ?? 0) + (prev.endAngle ?? 0)) / 2
         const exitNode: WedgeSceneNode = {
+          ...exit,
           type: "wedge",
           cx: prev.x, cy: prev.y,
           innerRadius: prev.innerRadius ?? 0,
           outerRadius: prev.outerRadius ?? 100,
           startAngle: prev.startAngle ?? 0,
           endAngle: prev.endAngle ?? 0,
-          style: { opacity: prev.opacity ?? 1 },
-          datum: null,
           category: key.slice(2),
           _targetStartAngle: midAngle,
           _targetEndAngle: midAngle,
-          _targetOpacity: 0,
-          _transitionKey: key
         }
         this.exitNodes.push(exitNode)
       }
