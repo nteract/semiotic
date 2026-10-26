@@ -7,15 +7,14 @@
 import type { GlyphDef } from "./glyphDef"
 import type { SceneNode } from "./types"
 import type { Datum } from "../charts/shared/datumTypes"
-import type { ActiveTransition } from "./pipelineTransitionUtils"
+import type { ActiveTransition, TransitionOpacity } from "./pipelineTransitionUtils"
 
-export type PrevPosition = {
+export type PrevPosition = TransitionOpacity & {
   x: number
   y: number
   w?: number
   h?: number
   r?: number
-  opacity?: number
   // Candlestick-only: the four y-coords of an OHLC bar. Stored separately
   // so geometry interpolates (body top/bottom, wick top/bottom) during a
   // transition instead of snapping.
@@ -28,12 +27,11 @@ export type PrevPosition = {
   glyph?: GlyphDef
 }
 
-export type PrevPath = {
+export type PrevPath = TransitionOpacity & {
   topPath?: [number, number][]
   bottomPath?: [number, number][]
   path?: [number, number][]
   pathIds?: string[]
-  opacity?: number
 }
 
 /** Context needed from PipelineStore for identity resolution */

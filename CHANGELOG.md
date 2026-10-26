@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fill and stroke opacity across canvas and SVG. Chart-wide staleness dimming
   also applies to every mark, pulse overlay, and network particle. Animation
   transitions and geographic decay retain the same opacity after settling.
+  Removed XY and ordinal marks preserve both paint channels throughout their
+  exit fade, including lines and areas that previously vanished on the first tick.
 
 ## [3.13.1]
 
