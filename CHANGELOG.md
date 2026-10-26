@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.13.1]
+
 ### Added
 
 - `EventDropChart` `sourceRail.side: "right"` places producer tiles on the
@@ -18,6 +20,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Keyboard focus on a `TemporalHistogram` or `RealtimeHistogram` bin stays on
+  that bin when the scene rebuilds, as it does on a data push or when a linked
+  selection restyles the bars. A histogram that publishes `linkedHover` and
+  consumes a `selection` lost focus on each arrow press, so its tooltip showed
+  on every other press and focus never moved past the first bin.
+- Render preparation and inspection return blocked reports for renderer errors.
+  Render memoization preserves color-map insertion order, and error observers
+  cannot leak synchronous exceptions or rejected promises into agent workflows.
+- MCP widgets enforce SVG and CSS allowlists, including local-only mask
+  references. Widget evidence identifies the final themed, sanitized SVG.
+- Canvas `none` paint and accessible mark counts agree with the rendered marks.
+  Stacked domains retain zero-sum samples, while heatmap ticks, brushes,
+  crosshairs, and marginal bins follow the visible data extent.
 - Atlas queries now scope evidence references to relevant graph relations and
   matching traces. Preparation rejects duplicate trace IDs and measure rows;
   derived section totals retain the most uncertain status regardless of row

@@ -2,7 +2,7 @@
   "schemaVersion": 2,
   "package": {
     "name": "semiotic",
-    "version": "3.13.0"
+    "version": "3.13.1"
   },
   "method": {
     "artifact": "npm pack --ignore-scripts tarball",
@@ -92,8 +92,8 @@
       "importPath": "semiotic",
       "symbol": "LineChart",
       "platform": "browser",
-      "rawBytes": 373403,
-      "gzipBytes": 125321,
+      "rawBytes": 373526,
+      "gzipBytes": 125367,
       "lazyRawBytes": 122175,
       "lazyGzipBytes": 45238,
       "packedPackageInputFiles": 68
@@ -103,8 +103,8 @@
       "importPath": "semiotic/xy",
       "symbol": "LineChart",
       "platform": "browser",
-      "rawBytes": 373383,
-      "gzipBytes": 124989,
+      "rawBytes": 373506,
+      "gzipBytes": 125036,
       "lazyRawBytes": 94310,
       "lazyGzipBytes": 32982,
       "packedPackageInputFiles": 61
@@ -114,8 +114,8 @@
       "importPath": "semiotic/line",
       "symbol": "LineChart",
       "platform": "browser",
-      "rawBytes": 373322,
-      "gzipBytes": 125137,
+      "rawBytes": 373445,
+      "gzipBytes": 125184,
       "lazyRawBytes": 94325,
       "lazyGzipBytes": 33022,
       "packedPackageInputFiles": 61
@@ -169,8 +169,8 @@
       "importPath": "semiotic/realtime",
       "symbol": "RealtimeLineChart",
       "platform": "browser",
-      "rawBytes": 365671,
-      "gzipBytes": 122263,
+      "rawBytes": 365794,
+      "gzipBytes": 122308,
       "lazyRawBytes": 116240,
       "lazyGzipBytes": 42950,
       "packedPackageInputFiles": 64
