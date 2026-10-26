@@ -19,7 +19,8 @@ export function renderNetworkParticles(
   const radius = style.radius ?? DEFAULT_PARTICLE_STYLE.radius
   const opacity = style.opacity ?? DEFAULT_PARTICLE_STYLE.opacity
 
-  ctx.globalAlpha = opacity
+  const baseAlpha = ctx.globalAlpha
+  ctx.globalAlpha = baseAlpha * opacity
 
   for (let i = 0; i < pool.particles.length; i++) {
     const p = pool.particles[i]
@@ -60,7 +61,7 @@ export function renderNetworkParticles(
     ctx.fill()
   }
 
-  ctx.globalAlpha = 1
+  ctx.globalAlpha = baseAlpha
 }
 
 /**

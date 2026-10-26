@@ -1,6 +1,6 @@
 import type { HeatcellSceneNode } from "../types"
 import type { StreamRendererFn } from "./types"
-import { renderRectPulse } from "./renderPulse"
+import { renderFillPulse } from "./renderPulse"
 import { resolveCSSColor } from "./resolveCSSColor"
 import { isNoneCanvasPaint, resolveCanvasPaint } from "./canvasRenderHelpers"
 import { parseCanvasColor } from "./colorUtils"
@@ -33,15 +33,15 @@ function defaultFormat(v: number): string {
 export const heatmapCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _layout) => {
   const heatNodes = nodes.filter((n): n is HeatcellSceneNode => n.type === "heatcell")
 
+  const baseAlpha = ctx.globalAlpha
   ctx.save()
   try {
     const fontFamily = resolveCSSColor(ctx, "var(--semiotic-font-family, sans-serif)") || "sans-serif"
     for (const node of heatNodes) {
     // Apply decay opacity if present (stored as style.opacity by applyDecay)
     const nodeStyle = node.style
-    if (nodeStyle?.opacity != null) {
-      ctx.globalAlpha = nodeStyle.opacity
-    }
+    const nodeAlpha = baseAlpha * (nodeStyle?.opacity ?? 1)
+    ctx.globalAlpha = nodeAlpha * (nodeStyle?.fillOpacity ?? 1)
 
     const resolvedFill = resolveCanvasPaint(ctx, node.fill, "#4e79a7")
     ctx.fillStyle = resolvedFill
@@ -57,13 +57,14 @@ export const heatmapCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _la
         nodeStyle?.stroke ?? "var(--semiotic-surface, #fff)"
       )!
       ctx.lineWidth = borderWidth
+      ctx.globalAlpha = nodeAlpha * (nodeStyle?.strokeOpacity ?? 1)
       ctx.strokeRect(node.x, node.y, node.w, node.h)
     }
 
     // Pulse overlay
-    renderRectPulse(ctx, node)
+    renderFillPulse(ctx, node, baseAlpha)
 
-    ctx.globalAlpha = 1
+    ctx.globalAlpha = baseAlpha
 
     // ── Cell value text ──────────────────────────────────────────────
     if (node.showValues && node.value != null) {
@@ -92,5 +93,6 @@ export const heatmapCanvasRenderer: StreamRendererFn = (ctx, nodes, _scales, _la
     }
   } finally {
     ctx.restore()
+    ctx.globalAlpha = baseAlpha
   }
 }

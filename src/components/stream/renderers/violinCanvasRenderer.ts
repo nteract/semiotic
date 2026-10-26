@@ -12,8 +12,11 @@ export const violinCanvasRenderer = (
   _scales: OrdinalScales,
   _layout: OrdinalLayout
 ): void => {
+  const baseAlpha = ctx.globalAlpha
   for (const node of nodes) {
     if (node.type !== "violin") continue
+    const nodeAlpha = baseAlpha * (node.style.opacity ?? 1)
+    const strokeAlpha = nodeAlpha * (node.style.strokeOpacity ?? 1)
     ctx.save()
 
     if (node.translateX || node.translateY) {
@@ -28,11 +31,11 @@ export const violinCanvasRenderer = (
     }
     const path = cached.path
 
-    ctx.globalAlpha = node.style.fillOpacity ?? node.style.opacity ?? 0.6
+    ctx.globalAlpha = nodeAlpha * (node.style.fillOpacity ?? 0.6)
     ctx.fillStyle = resolveCanvasFill(ctx, node.style.fill, "#007bff")
     ctx.fill(path)
 
-    ctx.globalAlpha = 1
+    ctx.globalAlpha = strokeAlpha
     const strokeWidth = node.style.strokeWidth ?? 1
     if (node.style.stroke && node.style.stroke !== "none" && strokeWidth > 0) {
       ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
@@ -44,7 +47,7 @@ export const violinCanvasRenderer = (
     if (node.iqrLine) {
       ctx.strokeStyle = "#333"
       ctx.lineWidth = 2
-      ctx.globalAlpha = 0.8
+      ctx.globalAlpha = strokeAlpha * 0.8
 
       const center = node.iqrLine.centerPos
       const isVert = node.iqrLine.isVertical !== false
@@ -70,12 +73,14 @@ export const violinCanvasRenderer = (
         ctx.arc(node.iqrLine.medianPos, center, 3, 0, Math.PI * 2)
       }
       ctx.fillStyle = "#fff"
+      ctx.globalAlpha = nodeAlpha * 0.8
       ctx.fill()
       ctx.strokeStyle = "#333"
       ctx.lineWidth = 1
+      ctx.globalAlpha = strokeAlpha * 0.8
       ctx.stroke()
 
-      ctx.globalAlpha = 1
+      ctx.globalAlpha = strokeAlpha
     }
 
     ctx.restore()

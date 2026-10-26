@@ -68,7 +68,7 @@ function paintSymbol(
   }
 
   if (node.style.stroke && node.style.stroke !== "none") {
-    ctx.globalAlpha = baseAlpha * nodeAlpha
+    ctx.globalAlpha = baseAlpha * nodeAlpha * (node.style.strokeOpacity ?? 1)
     ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
     ctx.lineWidth = node.style.strokeWidth ?? 1
     ctx.stroke(path)

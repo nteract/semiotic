@@ -11,7 +11,7 @@ import * as React from "react"
 import type { PointSceneNode, GlyphSceneNode } from "./types"
 import type { GeoSceneNode, GeoAreaSceneNode } from "./geoTypes"
 import { isHatchFill, hatchPatternDef } from "../charts/shared/hatchFill"
-import { svgFill, glyphNodeToSVG } from "./sceneToSVGShared"
+import { svgFill, svgPaintStyle, glyphNodeToSVG, pointSceneNodeToSVG } from "./sceneToSVGShared"
 import { withSceneMarkCursor } from "./sceneCursor"
 
 export function geoSceneNodeToSVG(node: GeoSceneNode, i: number): React.ReactNode {
@@ -36,7 +36,7 @@ function geoSceneNodeToSVGMark(node: GeoSceneNode, i: number): React.ReactNode {
           <path
             d={n.pathData}
             fill={hatch ? `url(#geoarea-${i}-hatch)` : svgFill(n.style.fill, "#e0e0e0")}
-            fillOpacity={n.style.fillOpacity ?? 1}
+            {...svgPaintStyle(n.style)}
             stroke={n.style.stroke || "none"}
             strokeWidth={n.style.strokeWidth ?? 0.5}
             strokeDasharray={n.style.strokeDasharray}
@@ -45,25 +45,8 @@ function geoSceneNodeToSVGMark(node: GeoSceneNode, i: number): React.ReactNode {
         </React.Fragment>
       )
     }
-    case "point": {
-      const n = node as PointSceneNode
-      const hatch = isHatchFill(n.style.fill) ? hatchPatternDef(n.style.fill, `geopoint-${i}-hatch`) : undefined
-      return (
-        <React.Fragment key={`point-${i}`}>
-          {hatch && <defs>{hatch}</defs>}
-          <circle
-            cx={n.x}
-            cy={n.y}
-            r={n.r}
-            fill={hatch ? `url(#geopoint-${i}-hatch)` : svgFill(n.style.fill)}
-            fillOpacity={n.style.fillOpacity ?? 0.8}
-            stroke={n.style.stroke}
-            strokeWidth={n.style.strokeWidth}
-            opacity={n._decayOpacity ?? (n.style.opacity ?? 1)}
-          />
-        </React.Fragment>
-      )
-    }
+    case "point":
+      return pointSceneNodeToSVG(node as PointSceneNode, i, "", "geopoint")
     case "line": {
       const n = node
       if (n.path.length < 2) return null
@@ -74,6 +57,7 @@ function geoSceneNodeToSVGMark(node: GeoSceneNode, i: number): React.ReactNode {
           d={d}
           fill="none"
           stroke={n.style.stroke || "#4e79a7"}
+          strokeOpacity={n.style.strokeOpacity}
           strokeWidth={n.style.strokeWidth ?? 1.5}
           strokeDasharray={n.style.strokeDasharray}
           opacity={n.style.opacity ?? 1}

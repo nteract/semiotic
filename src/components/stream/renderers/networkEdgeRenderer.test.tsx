@@ -78,7 +78,7 @@ describe.each(["curved", "line", "bezier", "ribbon"] as const)(
       const factor = type === "bezier" ? 0.5 : type === "ribbon" ? 0.3 : 1
       expect(alphas).toEqual([0.5 * strokeOpacity * factor])
       expect(renderToStaticMarkup(<svg>{networkSceneEdgeToSVG(mark, 0)}</svg>))
-        .toContain(`stroke-opacity="${strokeOpacity}"`)
+        .toContain(`stroke-opacity="${strokeOpacity * factor}"`)
     })
 
     it.each(["none", "zero"])(
@@ -109,7 +109,7 @@ describe.each(["curved", "line", "bezier", "ribbon"] as const)(
 )
 
 it.each(["bezier", "ribbon", "curved"] as const)(
-  "retains a %s fill that overrides zero stroke opacity",
+  "keeps a %s fill invisible when mark opacity is zero",
   (type) => {
     const mark = edge(type)
     mark.style.opacity = 0
@@ -117,11 +117,11 @@ it.each(["bezier", "ribbon", "curved"] as const)(
     const alphas: number[] = []
     vi.mocked(ctx.fill).mockImplementation(() => { alphas.push(ctx.globalAlpha) })
     networkEdgeRenderer(ctx, [mark])
-    expect(alphas).toEqual([1])
+    expect(alphas).toEqual([0])
     if (type === "curved") {
       delete mark.style.fillOpacity
       networkEdgeRenderer(ctx, [mark])
-      expect(alphas).toEqual([1, 0.1])
+      expect(alphas).toEqual([0, 0])
     }
   }
 )

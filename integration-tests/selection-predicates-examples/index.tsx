@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react"
 import { createRoot } from "react-dom/client"
 import {
   LinkedCharts,
+  ThemeProvider,
   useBrushSelection,
   useFilteredData,
   useSelection
@@ -118,6 +119,43 @@ function DateCharts() {
   )
 }
 
+function OpacityCharts() {
+  const theme =
+    new URLSearchParams(window.location.search).get("theme") === "dark"
+      ? "dark"
+      : "light"
+  const [width, setWidth] = useState(280)
+  const selection = useSelection({
+    name: "opacity",
+    clientId: "opacity-controls"
+  })
+  return (
+    <>
+      <button onClick={() => selection.selectPoints({ category: ["A"] })}>
+        Dim category B
+      </button>
+      <button onClick={() => selection.clear()}>Clear opacity selection</button>
+      <button onClick={() => setWidth(220)}>Resize opacity chart</button>
+      <div data-testid="opacity-target">
+        <ThemeProvider theme={theme}>
+          <Scatterplot
+            {...pointProps}
+            width={width}
+            data={rows.slice(0, 2)}
+            pointOpacity={0.4}
+            selection={{ name: "opacity", unselectedOpacity: 0.25 }}
+            tooltip={(datum) => (
+              <span>
+                {datum.id}: {datum.category}
+              </span>
+            )}
+          />
+        </ThemeProvider>
+      </div>
+    </>
+  )
+}
+
 createRoot(document.getElementById("root")!).render(
   <>
     <LinkedCharts
@@ -125,6 +163,9 @@ createRoot(document.getElementById("root")!).render(
       selections={{ dash: { resolution: "crossfilter" } }}
     >
       <CrossfilterControls />
+    </LinkedCharts>
+    <LinkedCharts showLegend={false}>
+      <OpacityCharts />
     </LinkedCharts>
     <LinkedCharts showLegend={false}>
       <DateCharts />

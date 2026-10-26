@@ -88,26 +88,9 @@ export function getNodeIdentity(ctx: TransitionContext, node: SceneNode, index: 
 
 // ── Opacity helpers ────────────────────────────────────────────────────
 
-/**
- * Effective paint alpha for fill-based marks.
- *
- * Matches the canvas renderer convention (`style.opacity ?? style.fillOpacity ?? 1`)
- * used by points, glyphs, rects, heatcells, and candlesticks. Intro/update
- * transitions must target this same value — otherwise a mark authored with
- * only `fillOpacity: 0.7` animates toward 1, bakes `style.opacity = 1` on
- * completion, and then "fades" back to 0.7 on the next dirty rebuild
- * (e.g. tab-away → tab-back via FrameRuntime visibility resume).
- *
- * Line/area marks keep stroke alpha on `style.opacity` alone; their under-
- * path fill uses `fillOpacity` independently and is not covered here.
- */
-export function resolveMarkOpacity(
-  style?: Style | null
-): number {
-  if (!style) return 1
-  if (style.opacity != null) return style.opacity
-  if (style.fillOpacity != null) return style.fillOpacity
-  return 1
+/** Transition opacity is independent of the authored fill/stroke channels. */
+export function resolveMarkOpacity(style?: Style | null): number {
+  return style?.opacity ?? 1
 }
 
 // ── Snapshot ────────────────────────────────────────────────────────────

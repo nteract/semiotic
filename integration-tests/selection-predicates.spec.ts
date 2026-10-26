@@ -99,7 +99,9 @@ test("Date hover selects bounded and pushed marks through resize and dismisses",
     )
     await expectTooltipWithinPlot(source, margin)
     for (const target of targets) {
-      await expect.poll(() => pointAlphas(target, [1, 4])).toEqual([255, dimmed])
+      await expect
+        .poll(() => pointAlphas(target, [1, 4]))
+        .toEqual([255, dimmed])
     }
     await page.mouse.move(1, 1)
     await expect(source.locator(".stream-frame-tooltip")).toBeHidden()
@@ -108,3 +110,55 @@ test("Date hover selects bounded and pushed marks through resize and dismisses",
     }
   }
 })
+
+for (const theme of ["light", "dark"]) {
+  test(`selection multiplies authored point opacity once through resize and hover (${theme})`, async ({
+    page
+  }) => {
+    await page.goto(`/selection-predicates-examples/?theme=${theme}`)
+    const chart = page.getByTestId("opacity-target")
+    await waitForChartReady(page, "opacity-target")
+    const [normal, dimmed] = await page.evaluate(() =>
+      [0.4, 0.4 * 0.25].map((alpha) => {
+        const canvas = document.createElement("canvas")
+        canvas.width = canvas.height = 1
+        const ctx = canvas.getContext("2d")!
+        ctx.globalAlpha = alpha
+        ctx.fillRect(0, 0, 1, 1)
+        return ctx.getImageData(0, 0, 1, 1).data[3]
+      })
+    )
+    await expect
+      .poll(() => pointAlphas(chart, [1, 2]))
+      .toEqual([normal, normal])
+    await page
+      .getByRole("button", { name: "Dim category B", exact: true })
+      .click()
+    for (const resized of [false, true]) {
+      if (resized)
+        await page.getByRole("button", { name: "Resize opacity chart" }).click()
+      const canvas = chart.locator("canvas").first()
+      await expect(canvas).toHaveCSS("width", resized ? "220px" : "280px")
+      await expect
+        .poll(() => pointAlphas(chart, [1, 2]))
+        .toEqual([normal, dimmed])
+      const box = (await canvas.boundingBox())!
+      await page.mouse.move(
+        box.x + 20 + (2 / 5) * (box.width - 40),
+        box.y + box.height / 2
+      )
+      await expect(chart.locator(".stream-frame-tooltip")).toContainText(
+        "range-only: B"
+      )
+      await expectTooltipWithinPlot(chart, margin)
+      await page.mouse.move(0, 0)
+      await expect(chart.locator(".stream-frame-tooltip")).toBeHidden()
+    }
+    await page
+      .getByRole("button", { name: "Clear opacity selection", exact: true })
+      .click()
+    await expect
+      .poll(() => pointAlphas(chart, [1, 2]))
+      .toEqual([normal, normal])
+  })
+}

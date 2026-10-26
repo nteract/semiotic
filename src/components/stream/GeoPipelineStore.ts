@@ -999,7 +999,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
       if (indices[i] < 0) continue
       const opacity = computeDecayOpacity(decay, indices[i], bufferSize)
       pointNodes[i]._decayOpacity = opacity
-      pointNodes[i].style = { ...pointNodes[i].style, opacity }
+      // Keep authored/selection opacity separate; the point painter composes decay.
     }
   }
 
@@ -1082,8 +1082,8 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
     // Newly inserted points fade from zero opacity; removed points leave immediately.
     for (const node of pointNodes) {
       if (node.pointId && !prevPos.has(node.pointId)) {
-        // Match pointCanvasRenderer: opacity ?? fillOpacity ?? 1
-        node._targetOpacity = node.style?.opacity ?? node.style?.fillOpacity ?? 1
+        // Animate the mark-wide multiplier, independently of fillOpacity.
+        node._targetOpacity = node.style?.opacity ?? 1
         node.style = { ...node.style, opacity: 0 }
         hasMovement = true
       }

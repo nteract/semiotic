@@ -14,7 +14,7 @@ import type { AccessibleTableProp } from "../../stream/accessibleTableTypes"
 export interface SelectionConfig {
   /** Name of the selection to consume */
   name: string
-  /** Opacity for unselected elements (default 0.2) */
+  /** Opacity multiplier for unselected elements. Defaults to the theme's selectionOpacity, then 0.5. */
   unselectedOpacity?: number
   /** Style overrides for unselected elements */
   unselectedStyle?: Datum

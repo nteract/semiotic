@@ -227,27 +227,21 @@ describe("heatmapCanvasRenderer", () => {
     expect(ctx.strokeRect).toHaveBeenCalledTimes(3)
   })
 
-  it("resets globalAlpha to 1 after each node", () => {
+  it("paints each cell with its own opacity and restores the incoming alpha", () => {
     const ctx = createMockCanvasContext()
-    const alphaValues: number[] = []
-    let _alpha = 1
-    Object.defineProperty(ctx, "globalAlpha", {
-      get: () => _alpha,
-      set: (v: number) => {
-        _alpha = v
-        alphaValues.push(v)
-      }
-    })
-
+    ctx.globalAlpha = 0.5
+    const fillAlphas: number[] = []
+    const strokeAlphas: number[] = []
+    vi.mocked(ctx.fillRect).mockImplementation(() => { fillAlphas.push(ctx.globalAlpha) })
+    vi.mocked(ctx.strokeRect).mockImplementation(() => { strokeAlphas.push(ctx.globalAlpha) })
     const node1 = makeHeatcellNode()
     node1.style = { opacity: 0.3 }
     const node2 = makeHeatcellNode()
     node2.style = { opacity: 0.8 }
-
     heatmapCanvasRenderer(ctx, [node1, node2], makeScales(), makeLayout())
-
-    // Each node: set opacity, then reset to 1
-    expect(alphaValues).toEqual([0.3, 1, 0.8, 1])
+    expect(fillAlphas).toEqual([0.15, 0.4])
+    expect(strokeAlphas).toEqual([0.15, 0.4])
+    expect(ctx.globalAlpha).toBe(0.5)
   })
 
   it("does not set globalAlpha when style has no opacity", () => {

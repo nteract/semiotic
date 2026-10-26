@@ -80,6 +80,7 @@ export function renderCanvasLines(
   lineNodes: Array<Omit<LineSceneNode, "datum">>,
   layout: StreamLayout
 ): void {
+  const baseAlpha = ctx.globalAlpha
   for (const node of lineNodes) {
     if (node.path.length < 2) continue
     // `"none"` is truthy. Canvas rejects it and strokes the default black.
@@ -110,16 +111,16 @@ export function renderCanvasLines(
       ctx.setLineDash([])
     }
 
-    if (node.style.opacity != null) {
-      ctx.globalAlpha = node.style.opacity
-    }
+    const nodeAlpha = baseAlpha * (node.style.opacity ?? 1)
+    const strokeAlpha = nodeAlpha * (node.style.strokeOpacity ?? 1)
+    ctx.globalAlpha = strokeAlpha
 
     if (lineWidth > 0) ctx.lineWidth = lineWidth
     ctx.lineCap = (node.style.strokeLinecap as CanvasLineCap) || "butt"
 
     // Edge-fade for anti-meridian split segments
     if (node.style._edgeFade && lineWidth > 0) {
-      const baseOpacity = node.style.opacity ?? 1
+      const baseOpacity = strokeAlpha
       renderEdgeFadeLine(
         ctx,
         node.path,
@@ -128,7 +129,8 @@ export function renderCanvasLines(
         baseOpacity,
         (node.style.strokeLinecap as CanvasLineCap) || "butt"
       )
-      ctx.globalAlpha = 1
+      if (clipFrac !== undefined && clipFrac < 1) ctx.restore()
+      ctx.globalAlpha = baseAlpha
       ctx.setLineDash([])
       ctx.lineCap = "butt"
       continue
@@ -143,7 +145,7 @@ export function renderCanvasLines(
     // calls while still allowing a configured area-under-line fill.
     if (lineWidth > 0 && decayOpacities && decayOpacities.length === node.path.length && !hasThresholds) {
       ctx.strokeStyle = baseColor
-      const baseOpacity = node.style.opacity ?? 1
+      const baseOpacity = strokeAlpha
       for (let i = 0; i < node.path.length - 1; i++) {
         const segAlpha = (decayOpacities[i] + decayOpacities[i + 1]) * 0.5 * baseOpacity
         ctx.globalAlpha = segAlpha
@@ -201,7 +203,7 @@ export function renderCanvasLines(
     // Fill area under line if fillOpacity is set
     if (node.style.fill && node.style.fillOpacity && node.style.fillOpacity > 0) {
       ctx.beginPath()
-      ctx.globalAlpha = node.style.fillOpacity
+      ctx.globalAlpha = nodeAlpha * node.style.fillOpacity
       // `LineSceneNode.style.fill` is `string | CanvasPattern`, so the
       // string-typed fallback can't accept it without a narrowing
       // assertion. Falsy patterns can't reach this branch (the
@@ -239,7 +241,7 @@ export function renderCanvasLines(
       ctx.restore()
     }
 
-    ctx.globalAlpha = 1
+    ctx.globalAlpha = baseAlpha
     ctx.setLineDash([])
     ctx.lineCap = "butt"
   }

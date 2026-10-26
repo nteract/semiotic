@@ -40,7 +40,7 @@ describe.each(["circle", "rect", "arc", "symbol"] as const)("%s perspective alph
       mark(type, { fill: "#336699", opacity: 0.8, fillOpacity: 0.5 })
     ])
     expect(ops.fillAlphas).toHaveLength(2)
-    for (const alpha of ops.fillAlphas) expect(alpha).toBeCloseTo(type === "symbol" ? 0.12 : 0.4)
+    for (const alpha of ops.fillAlphas) expect(alpha).toBeCloseTo(0.12)
   })
 })
 

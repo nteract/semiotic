@@ -235,8 +235,10 @@ describe("Component SSR — Network Charts", () => {
       margin: 0,
     }
     const ribbonStart = (svg: string): number => {
-      const match = svg.match(/<path d="M[^,]+,([^ ]+) C[^"]+" fill="[^"]+" stroke="none"/)
-      return Number(match?.[1])
+      const ribbon = (svg.match(/<path\b[^>]*>/g) ?? [])
+        .find(tag => /\bstroke="none"/.test(tag) && /\bd="M[^,]+,[^ ]+ C/.test(tag))
+      expect(ribbon).toBeDefined()
+      return Number(ribbon?.match(/\bd="M[^,]+,([^ ]+) C/)?.[1])
     }
 
     const exact = renderChart("ProcessSankey", props)

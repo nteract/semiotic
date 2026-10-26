@@ -29,6 +29,17 @@ export const ARC_NOOP: DefaultArcObject = {
   endAngle: 0,
 }
 
+/** Independent SVG paint channels; opacity applies once to both. */
+export function svgPaintStyle(style: Style) {
+  return {
+    opacity: style.opacity,
+    fillOpacity: style.fillOpacity,
+    strokeOpacity: style.strokeOpacity,
+    stroke: style.stroke,
+    strokeWidth: style.strokeWidth
+  }
+}
+
 // ── Fill helper (CanvasPattern → fallback for SVG) ─────────────────────
 
 export function svgFill(fill: string | HatchFill | CanvasPattern | undefined, fallback = "#4e79a7"): string {
@@ -244,10 +255,8 @@ export function symbolSceneNodeToSVG(n: SymbolSceneNode, i: number, idPrefix?: s
       d={d}
       transform={transform}
       fill={n.style.fill ? svgFill(n.style.fill) : "none"}
-      fillOpacity={n.style.fillOpacity}
-      opacity={n.style.opacity}
-      stroke={n.style.stroke}
-      strokeWidth={n.style.strokeWidth}
+      {...svgPaintStyle(n.style)}
+      opacity={(n.style.opacity ?? 1) * (n._decayOpacity ?? 1)}
     />
   )
 }
@@ -273,7 +282,7 @@ function rectValueBandsToSVG(n: RectSceneNode, i: number, hatchIdBase: string): 
     } else {
       fill = svgFill(band.fill)
     }
-    rects.push(<rect key={bandIndex} x={n.x} y={y0} width={n.w} height={y1 - y0} fill={fill} />)
+    rects.push(<rect key={bandIndex} x={n.x} y={y0} width={n.w} height={y1 - y0} fill={fill} fillOpacity={n.style.fillOpacity} />)
   })
   const stroked = n.style.stroke && n.style.stroke !== "none"
   return (
@@ -281,7 +290,7 @@ function rectValueBandsToSVG(n: RectSceneNode, i: number, hatchIdBase: string): 
       {defs.length > 0 && <defs>{defs}</defs>}
       {rects}
       {stroked && (
-        <rect x={n.x} y={n.y} width={n.w} height={n.h} fill="none" stroke={n.style.stroke} strokeWidth={n.style.strokeWidth} />
+        <rect x={n.x} y={n.y} width={n.w} height={n.h} fill="none" stroke={n.style.stroke} strokeWidth={n.style.strokeWidth} strokeOpacity={n.style.strokeOpacity} />
       )}
     </g>
   )
@@ -289,19 +298,31 @@ function rectValueBandsToSVG(n: RectSceneNode, i: number, hatchIdBase: string): 
 
 // Circle and rectangle marks shared with the physics SVG fallback.
 
+export function pointSceneNodeToSVG(n: PointSceneNode, i: number, idPrefix = "", hatchPrefix = "point"): React.ReactNode {
+  const hatchId = `${idPrefix ? `${idPrefix}-` : ""}${hatchPrefix}-${i}-hatch`
+  const hatch = isHatchFill(n.style.fill) ? hatchPatternDef(n.style.fill, hatchId) : undefined
+  return (
+    <React.Fragment key={`${idPrefix}${hatchPrefix}-${i}`}>
+      {hatch && <defs>{hatch}</defs>}
+      <circle
+        cx={n.x} cy={n.y} r={n.r}
+        fill={hatch ? `url(#${hatchId})` : svgFill(n.style.fill)}
+        {...svgPaintStyle(n.style)}
+        opacity={(n.style.opacity ?? 1) * (n._decayOpacity ?? 1)}
+      />
+    </React.Fragment>
+  )
+}
+
 export function pointOrRectSceneNodeToSVG(
   n: PointSceneNode | RectSceneNode,
   i: number,
   idPrefix?: string
 ): React.ReactNode {
-  const point = n.type === "point"
-  const tag = point ? "circle" : "rect"
-  const geometry = point
-    ? { cx: n.x, cy: n.y, r: n.r }
-    : { x: n.x, y: n.y, width: n.w, height: n.h }
-  // Keep the established XY/physics pattern IDs and opacity defaults.
-  const hatchId = `${idPrefix ? `${idPrefix}-` : ""}${point ? "point" : "xyrect"}-${i}-hatch`
-  if (!point && n.fillBands && n.fillBands.length > 0) {
+  if (n.type === "point") return pointSceneNodeToSVG(n, i, idPrefix)
+  // Keep the established XY/physics pattern IDs.
+  const hatchId = `${idPrefix ? `${idPrefix}-` : ""}xyrect-${i}-hatch`
+  if (n.fillBands && n.fillBands.length > 0) {
     return rectValueBandsToSVG(n, i, hatchId)
   }
   const hatch = isHatchFill(n.style.fill)
@@ -310,13 +331,11 @@ export function pointOrRectSceneNodeToSVG(
   return (
     <React.Fragment key={`${n.type}-${i}`}>
       {hatch && <defs>{hatch}</defs>}
-      {React.createElement(tag, {
-        ...geometry,
-        fill: hatch ? `url(#${hatchId})` : svgFill(n.style.fill),
-        opacity: point ? n.style.opacity ?? n.style.fillOpacity ?? 0.8 : n.style.opacity,
-        stroke: n.style.stroke,
-        strokeWidth: n.style.strokeWidth
-      })}
+      <rect
+        x={n.x} y={n.y} width={n.w} height={n.h}
+        fill={hatch ? `url(#${hatchId})` : svgFill(n.style.fill)}
+        {...svgPaintStyle(n.style)}
+      />
     </React.Fragment>
   )
 }

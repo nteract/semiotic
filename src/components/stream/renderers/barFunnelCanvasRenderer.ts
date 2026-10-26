@@ -45,13 +45,15 @@ export const barFunnelHatchRenderer = (
       n.type === "rect" && n.datum?.__barFunnelIsDropoff === true
   )
 
+  const baseAlpha = ctx.globalAlpha
   for (const node of dropoffRects) {
     const baseColor =
       (typeof node.style.fill === "string" ? node.style.fill : null)
       || resolveCSSColor(ctx, "var(--semiotic-border, #999)")!
     const hatch = getHatchForColor(baseColor, ctx)
 
-    ctx.globalAlpha = node.style.opacity ?? 1
+    const fillAlpha = baseAlpha * (node.style.opacity ?? 1) * (node.style.fillOpacity ?? 1)
+    ctx.globalAlpha = fillAlpha
     ctx.beginPath()
     ctx.rect(node.x, node.y, node.w, node.h)
 
@@ -60,11 +62,11 @@ export const barFunnelHatchRenderer = (
     } else {
       // Fallback: lighter version of the base color
       ctx.fillStyle = baseColor
-      ctx.globalAlpha = (node.style.opacity ?? 1) * 0.4
+      ctx.globalAlpha = fillAlpha * 0.4
     }
     ctx.fill()
 
-    ctx.globalAlpha = 1
+    ctx.globalAlpha = baseAlpha
   }
 }
 

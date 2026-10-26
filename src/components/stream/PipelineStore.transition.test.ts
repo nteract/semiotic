@@ -54,7 +54,7 @@ describe("PipelineStore — Transitions", () => {
     for (const node of store.scene) {
       if (node.type !== "point") continue
       // Settled alpha matches fillOpacity — not full 1.0
-      expect(node.style.opacity ?? node.style.fillOpacity).toBeCloseTo(0.7, 5)
+      expect((node.style.opacity ?? 1) * (node.style.fillOpacity ?? 1)).toBeCloseTo(0.7, 5)
     }
 
     // Dirty rebuild (visibility resume path): same data/layout, no live transition
@@ -62,7 +62,7 @@ describe("PipelineStore — Transitions", () => {
     expect(store.activeTransition).toBeNull()
     for (const node of store.scene) {
       if (node.type !== "point") continue
-      const alpha = node.style.opacity ?? node.style.fillOpacity ?? 1
+      const alpha = (node.style.opacity ?? 1) * (node.style.fillOpacity ?? 1)
       expect(alpha).toBeCloseTo(0.7, 5)
     }
   })

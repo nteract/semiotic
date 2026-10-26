@@ -42,11 +42,18 @@ export function renderCanvasPoints(
     let batch: PointSceneNode[] = []
     let batchKey = ""
 
-    const paintOne = (node: PointSceneNode) => {
+    const paintPath = (node: PointSceneNode, points?: PointSceneNode[]) => {
       ctx.beginPath()
-      ctx.arc(node.x, node.y, node.r, 0, Math.PI * 2)
-      const alpha = node.style.opacity ?? node.style.fillOpacity ?? 1
-      ctx.globalAlpha = baseAlpha * alpha
+      if (points) {
+        for (const point of points) {
+          ctx.moveTo(point.x + point.r, point.y)
+          ctx.arc(point.x, point.y, point.r, 0, Math.PI * 2)
+        }
+      } else {
+        ctx.arc(node.x, node.y, node.r, 0, Math.PI * 2)
+      }
+      const alpha = baseAlpha * (node.style.opacity ?? 1) * (node._decayOpacity ?? 1)
+      ctx.globalAlpha = alpha * (node.style.fillOpacity ?? 1)
       ctx.fillStyle = resolveCanvasFill(ctx, node.style.fill, "#4e79a7")
       ctx.fill()
       const strokeWidth = node.style.strokeWidth ?? 1
@@ -61,57 +68,30 @@ export function renderCanvasPoints(
           node.style.stroke
         )
         ctx.lineWidth = strokeWidth
+        ctx.globalAlpha = alpha * (node.style.strokeOpacity ?? 1)
         ctx.stroke()
       }
-      renderCirclePulse(ctx, node)
+      renderCirclePulse(ctx, node, baseAlpha)
     }
 
     const flushBatch = () => {
       if (batch.length === 0) return
-      if (batch.length === 1) {
-        paintOne(batch[0])
-        batch = []
-        batchKey = ""
-        return
-      }
-      const sample = batch[0]
-      const alpha = sample.style.opacity ?? sample.style.fillOpacity ?? 1
-      ctx.globalAlpha = baseAlpha * alpha
-      ctx.beginPath()
-      for (const node of batch) {
-        ctx.moveTo(node.x + node.r, node.y)
-        ctx.arc(node.x, node.y, node.r, 0, Math.PI * 2)
-      }
-      ctx.fillStyle = resolveCanvasFill(ctx, sample.style.fill, "#4e79a7")
-      ctx.fill()
-      const strokeWidth = sample.style.strokeWidth ?? 1
-      if (
-        sample.style.stroke &&
-        sample.style.stroke !== "none" &&
-        strokeWidth > 0
-      ) {
-        ctx.strokeStyle = resolveCanvasFill(
-          ctx,
-          sample.style.stroke,
-          sample.style.stroke
-        )
-        ctx.lineWidth = strokeWidth
-        ctx.stroke()
-      }
+      paintPath(batch[0], batch.length > 1 ? batch : undefined)
       batch = []
       batchKey = ""
     }
 
     for (const node of pointNodes) {
-      const alpha = node.style.opacity ?? node.style.fillOpacity ?? 1
+      const alpha = baseAlpha * (node.style.opacity ?? 1) * (node._decayOpacity ?? 1)
       const rawFill = node.style.fill
       const cannotBatch =
         hasPulse(node) ||
         (rawFill != null && typeof rawFill !== "string") ||
-        alpha < 1
+        alpha * (node.style.fillOpacity ?? 1) < 1 ||
+        alpha * (node.style.strokeOpacity ?? 1) < 1
       if (cannotBatch) {
         flushBatch()
-        paintOne(node)
+        paintPath(node)
         continue
       }
       const strokeWidth = node.style.strokeWidth ?? 1

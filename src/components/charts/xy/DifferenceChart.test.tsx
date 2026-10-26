@@ -517,17 +517,21 @@ describe("DifferenceChart", () => {
       expect(lastXYFrameProps.areaStyle({
         __diffSegment: "seg-0-B",
         __diffWinner: "B"
-      }).fillOpacity).toBe(0.17)
+      }).opacity).toBe(0.17)
       expect(lastXYFrameProps.lineStyle({
         __diffSegment: "line-B",
         __diffWinner: "B"
-      }).strokeOpacity).toBe(0.17)
+      }).opacity).toBe(0.17)
       expect(lastXYFrameProps.pointStyle({
         __diffSegment: "line-B",
         __diffWinner: "B"
-      }).fillOpacity).toBe(0.17)
+      }).opacity).toBe(0.17)
     })
 
+    expect(lastXYFrameProps.areaStyle({
+      __diffSegment: "seg-0-B",
+      __diffWinner: "B"
+    }).fillOpacity).toBe(0.6)
     expect(lastXYFrameProps.areaStyle({
       __diffSegment: "seg-0-A",
       __diffWinner: "A"

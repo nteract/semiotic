@@ -27,6 +27,7 @@ import type { GradientConfig } from "../charts/shared/gradient"
 import {
   pointOrRectSceneNodeToSVG,
   svgFill,
+  svgPaintStyle,
   safeSvgId,
   glyphNodeToSVG,
   colorStopElements,
@@ -183,6 +184,7 @@ function xySceneNodeToSVGMark(
             strokeWidth={strokeIsNone ? 0 : (n.style.strokeWidth ?? 2)}
             strokeDasharray={n.style.strokeDasharray}
             opacity={n.style.opacity}
+            strokeOpacity={n.style.strokeOpacity}
           />
         </React.Fragment>
       )
@@ -319,6 +321,7 @@ function xySceneNodeToSVGMark(
                 stroke={band.color ?? svgFill(n.style.stroke)}
                 strokeWidth={strokeWidth}
                 opacity={(n.style.opacity ?? 1) * (band.opacity ?? 1)}
+                strokeOpacity={n.style.strokeOpacity}
                 clipPath={`url(#${thresholdClipIds[bandIndex]})`}
               />
             ))
@@ -336,6 +339,7 @@ function xySceneNodeToSVGMark(
                 stroke={segment.color}
                 strokeWidth={strokeWidth}
                 opacity={n.style.opacity}
+                strokeOpacity={n.style.strokeOpacity}
               />
             ))
           ) : (
@@ -349,6 +353,7 @@ function xySceneNodeToSVGMark(
               }
               strokeWidth={strokeWidth}
               opacity={n.style.opacity}
+              strokeOpacity={n.style.strokeOpacity}
             />
           )
         ) : null
@@ -441,9 +446,7 @@ function xySceneNodeToSVGMark(
         width: n.w,
         height: n.h,
         fill: n.fill,
-        stroke: n.style?.stroke,
-        strokeWidth: n.style?.strokeWidth,
-        ...(n.style?.opacity != null && { opacity: n.style.opacity })
+        ...svgPaintStyle(n.style ?? {})
       }
       if (n.showValues && n.value != null && n.w >= 20 && n.h >= 20) {
         const formatted = n.valueFormat
@@ -485,6 +488,7 @@ function xySceneNodeToSVGMark(
       const hatch = isHatchFill(n.style?.fill) ? hatchPatternDef(n.style.fill, hatchId) : undefined
       const hatchFill = hatch ? `url(#${hatchId})` : undefined
       const { fill: _overlayFill, ...groupStyle } = (n.style ?? {}) as Record<string, unknown>
+      groupStyle.opacity = (n.style?.opacity ?? 1) * (n._decayOpacity ?? 1)
       void _overlayFill
       if (n.isRange) {
         // Range/dumbbell mode: high→low line + endpoint bulbs.
@@ -501,10 +505,9 @@ function xySceneNodeToSVGMark(
                 y2={n.lowY}
                 stroke={n.wickColor}
                 strokeWidth={n.wickWidth}
-                opacity={n.style?.opacity}
               />
-              <circle cx={n.x} cy={n.highY} r={dotRadius} fill={rangeFill} opacity={n.style?.opacity} />
-              <circle cx={n.x} cy={n.lowY} r={dotRadius} fill={rangeFill} opacity={n.style?.opacity} />
+              <circle cx={n.x} cy={n.highY} r={dotRadius} fill={rangeFill} />
+              <circle cx={n.x} cy={n.lowY} r={dotRadius} fill={rangeFill} />
             </g>
           </React.Fragment>
         )
@@ -524,7 +527,6 @@ function xySceneNodeToSVGMark(
               y2={n.lowY}
               stroke={n.wickColor}
               strokeWidth={n.wickWidth}
-              opacity={n.style?.opacity}
             />
             <rect
               x={n.x - n.bodyWidth / 2}
@@ -534,7 +536,6 @@ function xySceneNodeToSVGMark(
               fill={bodyFill}
               stroke={hatchFill ? n.wickColor : bodyColor}
               strokeWidth={1}
-              opacity={n.style?.opacity}
             />
           </g>
         </React.Fragment>

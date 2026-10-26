@@ -48,7 +48,7 @@ describe("ordinal grouped connector SVG parity", () => {
     }))
 
     expect(html).toContain('points="10,10 90,10 50,80"')
-    expect(html).toContain('fill="#c44" opacity="0.4"')
+    expect(html).toContain('fill="#c44" opacity="0.8" fill-opacity="0.4"')
     expect(html).toContain('data-semiotic-connector-fill="flow"')
     expect(html.match(/<line /g)).toHaveLength(2)
     expect(html.match(/stroke="#c44"/g)).toHaveLength(2)

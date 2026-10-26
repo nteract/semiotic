@@ -2,7 +2,7 @@ import type { GeoAreaSceneNode, GeoScales, GeoSceneNode } from "../geoTypes"
 import type { StreamLayout } from "../types"
 import { resolveCSSColor } from "./resolveCSSColor"
 import { coerceCanvasFill, isNoneCanvasPaint } from "./canvasRenderHelpers"
-import { renderPathPulse } from "./renderPulse"
+import { renderFillPulse } from "./renderPulse"
 
 /**
  * Canvas renderer for GeoAreaSceneNode — projected geographic polygons.
@@ -21,6 +21,7 @@ export function geoCanvasRenderer(
     (n): n is GeoAreaSceneNode => n.type === "geoarea"
   )
 
+  const baseAlpha = ctx.globalAlpha
   for (const node of geoAreas) {
     if (!node.pathData) continue
 
@@ -33,13 +34,14 @@ export function geoCanvasRenderer(
     if (!node._cachedPath2D) node._cachedPath2D = new Path2D(node.pathData)
     const path = node._cachedPath2D
 
+    const nodeAlpha = baseAlpha * (node._decayOpacity ?? 1) * (node.style.opacity ?? 1)
     // Fill
     const fillColor = isNoneCanvasPaint(node.style.fill)
       ? undefined
       : (coerceCanvasFill(ctx, node.style.fill) || "#e0e0e0")
     if (fillColor && !isNoneCanvasPaint(fillColor)) {
       ctx.fillStyle = fillColor
-      ctx.globalAlpha = (node._decayOpacity ?? 1) * (node.style.fillOpacity ?? 1)
+      ctx.globalAlpha = nodeAlpha * (node.style.fillOpacity ?? 1)
       ctx.fill(path)
     }
 
@@ -48,7 +50,7 @@ export function geoCanvasRenderer(
     if (node.style.stroke && node.style.stroke !== "none" && strokeWidth > 0) {
       ctx.strokeStyle = resolveCSSColor(ctx, node.style.stroke) || node.style.stroke
       ctx.lineWidth = strokeWidth
-      ctx.globalAlpha = node._decayOpacity ?? 1
+      ctx.globalAlpha = nodeAlpha * (node.style.strokeOpacity ?? 1)
       if (node.style.strokeDasharray) {
         const dashes = node.style.strokeDasharray.split(",").map(Number)
         ctx.setLineDash(dashes)
@@ -59,9 +61,9 @@ export function geoCanvasRenderer(
     }
 
     // Pulse overlay
-    renderPathPulse(ctx, node, path)
+    renderFillPulse(ctx, node, baseAlpha, path)
 
-    ctx.globalAlpha = 1
+    ctx.globalAlpha = baseAlpha
     ctx.setLineDash([])
   }
 }

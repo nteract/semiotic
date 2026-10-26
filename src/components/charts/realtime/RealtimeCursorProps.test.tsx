@@ -103,16 +103,16 @@ describe("realtime cursor props", () => {
       expect(swarm?.swarmStyle?.cursor).toBe("grab")
       expect(swarm?.pointStyle?.(datum)).toMatchObject({
         cursor: "zoom-in",
-        opacity: 0.24,
-        fillOpacity: 0.24,
-        strokeOpacity: 0.24
+        opacity: 0.24
       })
       expect(heatmap?.areaStyle?.(datum)).toMatchObject({
         cursor: "cell",
-        opacity: 0.24,
-        fillOpacity: 0.24,
-        strokeOpacity: 0.24
+        opacity: 0.24
       })
+      for (const style of [swarm?.pointStyle?.(datum), heatmap?.areaStyle?.(datum)]) {
+        expect(style?.fillOpacity).toBeUndefined()
+        expect(style?.strokeOpacity).toBeUndefined()
+      }
     })
   })
 })

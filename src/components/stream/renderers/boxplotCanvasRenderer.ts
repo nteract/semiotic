@@ -10,6 +10,7 @@ export const boxplotCanvasRenderer = (
 ): void => {
   const boxNodes = nodes.filter((n): n is BoxplotSceneNode => n.type === "boxplot")
 
+  const baseAlpha = ctx.globalAlpha
   for (const node of boxNodes) {
     const halfWidth = node.columnWidth / 2
     const isVert = node.projection === "vertical"
@@ -29,9 +30,12 @@ export const boxplotCanvasRenderer = (
     const hasStroke = lineWidth > 0 && !(
       typeof userStroke === "string" && userStroke.trim().toLowerCase() === "none"
     )
-    const opacity = node.style.fillOpacity ?? node.style.opacity ?? 0.6
+    const nodeAlpha = baseAlpha * (node.style.opacity ?? 1)
+    const opacity = nodeAlpha * (node.style.fillOpacity ?? 0.6)
+    const strokeAlpha = nodeAlpha * (node.style.strokeOpacity ?? 1)
 
     ctx.save()
+    ctx.globalAlpha = strokeAlpha
 
     if (hasStroke) {
       // Whisker line (min to max)
@@ -70,13 +74,13 @@ export const boxplotCanvasRenderer = (
       const boxTop = Math.min(node.q1Pos, node.q3Pos)
       const boxH = Math.abs(node.q3Pos - node.q1Pos)
       ctx.fillRect(node.x - halfWidth, boxTop, node.columnWidth, boxH)
-      ctx.globalAlpha = 1
+      ctx.globalAlpha = strokeAlpha
       if (hasStroke) ctx.strokeRect(node.x - halfWidth, boxTop, node.columnWidth, boxH)
     } else {
       const boxLeft = Math.min(node.q1Pos, node.q3Pos)
       const boxW = Math.abs(node.q3Pos - node.q1Pos)
       ctx.fillRect(boxLeft, node.y - halfWidth, boxW, node.columnWidth)
-      ctx.globalAlpha = 1
+      ctx.globalAlpha = strokeAlpha
       if (hasStroke) ctx.strokeRect(boxLeft, node.y - halfWidth, boxW, node.columnWidth)
     }
 

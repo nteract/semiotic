@@ -205,9 +205,7 @@ export function paintNetworkFill(
   if (!style.fill || isNoneCanvasPaint(style.fill)) return
   const priorAlpha = ctx.globalAlpha
   ctx.fillStyle = resolveCanvasFill(ctx, style.fill, fallback)
-  if (style.fillOpacity !== undefined) {
-    ctx.globalAlpha = (style.opacity ?? priorAlpha) * style.fillOpacity
-  }
+  ctx.globalAlpha = priorAlpha * (style.opacity ?? 1) * (style.fillOpacity ?? 1)
   paint()
   ctx.globalAlpha = priorAlpha
 }
@@ -226,7 +224,7 @@ export function paintNetworkStroke(
   const priorAlpha = ctx.globalAlpha
   ctx.strokeStyle = resolveCSSColor(ctx, style.stroke) || style.stroke
   ctx.lineWidth = style.strokeWidth ?? 1
-  ctx.globalAlpha = (style.opacity ?? priorAlpha) * (style.strokeOpacity ?? 1)
+  ctx.globalAlpha = priorAlpha * (style.opacity ?? 1) * (style.strokeOpacity ?? 1)
   paint()
   ctx.globalAlpha = priorAlpha
 }
