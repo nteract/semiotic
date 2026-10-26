@@ -98,6 +98,7 @@ export default defineConfig(({ mode }) => ({
         statisticalRegressions: resolve(integrationRoot, "statistical-regressions/index.html"),
         streamingRegression: resolve(integrationRoot, "streaming-regression-examples/index.html"),
         themed: resolve(integrationRoot, "themed-examples/index.html"),
+        themeUpdates: resolve(integrationRoot, "theme-updates/index.html"),
         xy: resolve(integrationRoot, "xy-examples/index.html"),
       },
     },

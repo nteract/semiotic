@@ -6,9 +6,28 @@ import { test } from "node:test"
 import { fileURLToPath } from "node:url"
 import { build } from "esbuild"
 import { EXTERNAL_RUNTIME_PACKAGES } from "./lib/cold-consumer-measurement.mjs"
+import { verifyNestedTheme } from "./theme-artifacts.test-helper.mjs"
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const pkg = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8"))
+
+for (const entry of [".", "./themes/react"]) {
+  for (const target of publicTargets(entry)) {
+    test(`${entry} (${target.conditions}) inherits nested themes across the public XY entry`, () => {
+      const esm = target.file.endsWith(".module.min.js")
+      const chartFile = resolve(root, pkg.exports["./xy"][esm ? "import" : "require"])
+      exercise(target, `
+        const { default: React } = await import("react")
+        const { renderToStaticMarkup } = await import("react-dom/server")
+        const charts = filename.endsWith(".module.min.js")
+          ? await import(pathToFileURL(${JSON.stringify(chartFile)}).href)
+          : createRequire(import.meta.url)(${JSON.stringify(chartFile)})
+        const verify = ${verifyNestedTheme.toString()}
+        verify(api, charts, React, renderToStaticMarkup, assert)
+      `)
+    })
+  }
+}
 
 function targets(value, conditions = []) {
   if (typeof value === "string") {

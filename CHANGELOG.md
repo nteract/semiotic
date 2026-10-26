@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Theme providers inherit nested overrides, discard overrides removed from the
+  current prop, and avoid notifying chart consumers for equivalent inline
+  themes. Partial tooltip and accessibility updates preserve their other fields,
+  and nested automatic palettes follow system preferences before hydration.
 - Release artifact preparation works from renamed checkouts, preserves scoped
   package identities and lockfile dependency graphs, and cleans up failed
   attempts so the output directory can be retried without overwriting evidence.

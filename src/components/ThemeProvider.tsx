@@ -14,7 +14,8 @@ import {
   LIGHT_THEME,
   DARK_THEME,
   HIGH_CONTRAST_THEME,
-  resolveThemeUpdate
+  resolveThemeUpdate,
+  mergeThemeOverrides
 } from "./store/themeCore"
 import type {
   SemioticTheme,
@@ -26,7 +27,7 @@ import { useTheme } from "./store/useTheme"
 import { resolveThemePreset } from "./store/themePresets"
 import type { ThemePresetName } from "./store/themePresets"
 import { themeToCSSVariables } from "./store/themeCSSVariables"
-import { addMqlListener } from "./stream/useMediaPreferences"
+import { addMqlListener, getMediaQuery } from "./stream/mediaQuery"
 import { TooltipChromeScope } from "./Tooltip/tooltipChrome"
 
 // ── Props ───────────────────────────────────────────────────────────────────
@@ -37,28 +38,21 @@ interface ThemeProviderProps {
   children: React.ReactNode
 }
 
-// Track the active preset name for the data-semiotic-theme attribute.
-const ThemeNameContext = /* @__PURE__ */ React.createContext<
-  string | undefined
+// Preserve authored auto-mode overrides through nested providers so their CSS
+// can follow the OS palette even before hydration.
+const ThemeScopeContext = /* @__PURE__ */ React.createContext<
+  SemioticThemeUpdate | null | undefined
 >(undefined)
+// undefined means no provider; null means a provider with a concrete palette.
 
 const useIsomorphicLayoutEffect =
   typeof window === "undefined" ? React.useEffect : React.useLayoutEffect
-
-function isForcedColorsActive(): boolean {
-  if (typeof window === "undefined" || !window.matchMedia) return false
-  return window.matchMedia("(forced-colors: active)").matches
-}
 
 function themeToStoreUpdate(
   theme: ThemePresetName | SemioticThemeUpdate
 ): ThemeStoreUpdate {
   if (typeof theme !== "string") return theme
-  if (theme === "light") return "light"
-  if (theme === "dark") return "dark"
-  if (theme === "high-contrast") return "high-contrast"
-
-  // Try named presets next (covers "tufte", "pastels-dark", etc.).
+  // All named presets, including light/dark/high-contrast, resolve here.
   const preset = resolveThemePreset(theme)
   if (preset) return preset
 
@@ -72,12 +66,50 @@ function themeToStoreUpdate(
 }
 
 function resolveInitialTheme(
-  theme: ThemePresetName | SemioticThemeUpdate | undefined
+  theme: ThemePresetName | SemioticThemeUpdate | undefined,
+  parent?: SemioticTheme
 ): SemioticTheme {
   if (theme !== undefined) {
-    return resolveThemeUpdate(LIGHT_THEME, themeToStoreUpdate(theme))
+    return resolveThemeUpdate(parent ?? LIGHT_THEME, themeToStoreUpdate(theme))
   }
-  return cloneTheme(isForcedColorsActive() ? HIGH_CONTRAST_THEME : LIGHT_THEME)
+  return cloneTheme(
+    parent ??
+      (getMediaQuery("(forced-colors: active)")?.matches
+        ? HIGH_CONTRAST_THEME
+        : LIGHT_THEME)
+  )
+}
+
+// Keep prop comparison in the provider graph, rather than chart-only imports.
+function themeValuesEqual(a: unknown, b: unknown): boolean {
+  if (Object.is(a, b)) return true
+  if (
+    !a ||
+    !b ||
+    typeof a !== "object" ||
+    typeof b !== "object" ||
+    Array.isArray(a) !== Array.isArray(b)
+  )
+    return false
+  // Own names include array length and distinguish removed undefined fields.
+  const keys = Object.getOwnPropertyNames(a)
+  return (
+    keys.length === Object.getOwnPropertyNames(b).length &&
+    keys.every(
+      (key) =>
+        Object.prototype.hasOwnProperty.call(b, key) &&
+        themeValuesEqual(
+          (a as Record<string, unknown>)[key],
+          (b as Record<string, unknown>)[key]
+        )
+    )
+  )
+}
+
+function useStableThemeValue<T>(value: T): T {
+  const stable = React.useRef(value)
+  if (!themeValuesEqual(stable.current, value)) stable.current = value
+  return stable.current
 }
 
 // ── ThemeInitializer ────────────────────────────────────────────────────────
@@ -86,9 +118,13 @@ function resolveInitialTheme(
 // mode is active, automatically applies HIGH_CONTRAST_THEME.
 
 function ThemeInitializer({
-  theme
+  resolved,
+  auto,
+  query
 }: {
-  theme?: ThemePresetName | SemioticThemeUpdate
+  resolved: SemioticTheme
+  auto?: SemioticThemeUpdate
+  query?: string
 }) {
   const setTheme = useThemeSelector((state: ThemeStoreState) => state.setTheme)
   const currentTheme = useThemeSelector((state: ThemeStoreState) => state.theme)
@@ -97,60 +133,25 @@ function ThemeInitializer({
   const currentThemeRef = React.useRef(currentTheme)
   currentThemeRef.current = currentTheme
 
-  // Remember the theme before forced-colors override so we can restore it
-  const themeBeforeForcedColorsRef = React.useRef<SemioticThemeUpdate | null>(
-    null
-  )
-
-  // Auto-detect forced-colors / high-contrast mode
-  React.useEffect(() => {
-    if (theme !== undefined) return // explicit theme takes priority
-    if (typeof window === "undefined" || !window.matchMedia) return
-
-    const mql = window.matchMedia("(forced-colors: active)")
-    if (mql.matches) {
-      themeBeforeForcedColorsRef.current = LIGHT_THEME
-      setTheme("high-contrast")
-    }
-
-    const handler = (e: MediaQueryListEvent) => {
-      if (e.matches) {
-        // Store current theme before overriding
-        themeBeforeForcedColorsRef.current ??= currentThemeRef.current
-        setTheme("high-contrast")
+  useIsomorphicLayoutEffect(() => {
+    const mql = query ? getMediaQuery(query) : undefined
+    // An initially forced root has no preceding authored theme to restore.
+    let beforeForced = !auto && mql?.matches ? LIGHT_THEME : undefined
+    const sync = (event?: MediaQueryListEvent) => {
+      const matches = event?.matches ?? mql?.matches
+      if (auto && mql) {
+        setTheme(resolveAutoPalette(auto, matches ? "dark" : "light"), true)
+      } else if (matches) {
+        beforeForced ??= currentThemeRef.current
+        setTheme(HIGH_CONTRAST_THEME, true)
       } else {
-        // Restore previous theme, falling back to LIGHT_THEME
-        setTheme(themeBeforeForcedColorsRef.current ?? "light")
-        themeBeforeForcedColorsRef.current = null
+        setTheme(beforeForced ?? resolved, true)
+        beforeForced = undefined
       }
     }
-    return addMqlListener(mql, handler)
-  }, [theme, setTheme])
-
-  React.useEffect(() => {
-    if (
-      typeof theme !== "object" ||
-      theme.mode !== "auto" ||
-      !window.matchMedia
-    )
-      return
-    const mql = window.matchMedia("(prefers-color-scheme: dark)")
-    const sync = () =>
-      setTheme(resolveAutoPalette(theme, mql.matches ? "dark" : "light"))
     sync()
-    return addMqlListener(mql, sync)
-  }, [theme, setTheme])
-
-  const didMountRef = React.useRef(false)
-  useIsomorphicLayoutEffect(() => {
-    if (!didMountRef.current) {
-      didMountRef.current = true
-      return
-    }
-    if (theme === undefined) return
-
-    setTheme(themeToStoreUpdate(theme))
-  }, [theme, setTheme])
+    return mql && addMqlListener(mql, sync)
+  }, [resolved, auto, query, setTheme])
 
   return null
 }
@@ -159,23 +160,21 @@ function ThemeInitializer({
 
 function ThemeCSSWrapper({
   children,
-  input
+  themeName
 }: {
   children: React.ReactNode
-  input?: ThemePresetName | SemioticThemeUpdate
+  themeName?: string
 }) {
   const theme = useThemeSelector((state: ThemeStoreState) => state.theme)
 
   const autoId = React.useId()
-  const autoInput =
-    typeof input === "object" && input.mode === "auto" ? input : undefined
+  const autoInput = React.useContext(ThemeScopeContext)
   const style: React.CSSProperties & Record<string, string> = {
     position: "relative",
     colorScheme: theme.mode === "auto" ? "light dark" : theme.mode,
     ...(autoInput ? {} : themeToCSSVariables(theme))
   }
 
-  const themeName = React.useContext(ThemeNameContext)
   return (
     <TooltipChromeScope chrome={theme.tooltip?.chrome}>
       <div
@@ -203,14 +202,39 @@ function ThemeProviderWrapper({ theme, children }: ThemeProviderProps) {
   // Otherwise leave undefined (custom object themes or unknown strings don't get a data attribute).
   const themeName =
     typeof theme === "string" && resolveThemePreset(theme) ? theme : undefined
-  const initialTheme = React.useMemo(() => resolveInitialTheme(theme), [theme])
-
+  const parent = useTheme()
+  const parentScope = React.useContext(ThemeScopeContext)
+  const input = useStableThemeValue(theme)
+  const auto = useStableThemeValue(
+    typeof input === "object" && input.mode === "auto"
+      ? input
+      : parentScope && typeof input !== "string" && !input?.mode
+        ? mergeThemeOverrides(parentScope, input ?? {})
+        : undefined
+  )
+  const inherited = parentScope === undefined ? undefined : parent
+  const resolved = useStableThemeValue(
+    React.useMemo(
+      () => resolveInitialTheme(input, inherited),
+      [input, inherited]
+    )
+  )
   return (
-    <StoreProvider initialState={{ theme: initialTheme }}>
-      <ThemeNameContext.Provider value={themeName}>
-        <ThemeInitializer theme={theme} />
-        <ThemeCSSWrapper input={theme}>{children}</ThemeCSSWrapper>
-      </ThemeNameContext.Provider>
+    <StoreProvider initialState={{ theme: resolved, equals: themeValuesEqual }}>
+      <ThemeScopeContext.Provider value={auto ?? null}>
+        <ThemeInitializer
+          resolved={resolved}
+          auto={auto}
+          query={
+            auto
+              ? "(prefers-color-scheme: dark)"
+              : input === undefined && parentScope === undefined
+                ? "(forced-colors: active)"
+                : undefined
+          }
+        />
+        <ThemeCSSWrapper themeName={themeName}>{children}</ThemeCSSWrapper>
+      </ThemeScopeContext.Provider>
     </StoreProvider>
   )
 }

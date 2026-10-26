@@ -11,17 +11,22 @@ export * from "./themeCore"
 
 export interface ThemeStoreState {
   theme: SemioticTheme
-  setTheme: (theme: ThemeStoreUpdate) => void
+  /** The public provider installs value equality for its prop/imperative updates. */
+  equals?: (a: SemioticTheme, b: SemioticTheme) => boolean
+  /** Provider prop synchronization replaces a resolved theme; imperative updates merge. */
+  setTheme: (theme: ThemeStoreUpdate, replace?: boolean) => void
 }
 
-export const [ThemeProvider, useThemeSelector] = /* @__PURE__ */ createStore<ThemeStoreState>(
-  (set) => ({
+export const [ThemeProvider, useThemeSelector] =
+  /* @__PURE__ */ createStore<ThemeStoreState>((set) => ({
     theme: cloneTheme(LIGHT_THEME),
 
-    setTheme(theme: ThemeStoreUpdate) {
-      set((current: ThemeStoreState) => ({
-        theme: resolveThemeUpdate(current.theme, theme)
-      }))
+    setTheme(theme: ThemeStoreUpdate, replace = false) {
+      set((current: ThemeStoreState) => {
+        const next = replace
+          ? cloneTheme(theme as SemioticTheme)
+          : resolveThemeUpdate(current.theme, theme)
+        return current.equals?.(current.theme, next) ? {} : { theme: next }
+      })
     }
-  })
-)
+  }))

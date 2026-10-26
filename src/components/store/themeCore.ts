@@ -97,10 +97,7 @@ export type SemioticThemeUpdate = Omit<
 }
 
 export type ThemeStoreUpdate =
-  | SemioticThemeUpdate
-  | "light"
-  | "dark"
-  | "high-contrast"
+  SemioticThemeUpdate | "light" | "dark" | "high-contrast"
 
 /** Color-blind safe categorical palette (8 colors).
  * Derived from Wong (2011) "Points of view: Color blindness". */
@@ -260,9 +257,28 @@ export function resolveThemeSemanticColors(
 
 /** Apply accessibility flags to a resolved theme. */
 export function applyThemeAccessibility(theme: SemioticTheme): SemioticTheme {
-  const isDark = theme.mode === "dark" || (theme.mode === "auto" &&
+  const isDark =
+    theme.mode === "dark" ||
+    (theme.mode === "auto" &&
       (contrastRatio(theme.colors.background, "#ffffff") ?? 1) > Math.sqrt(21))
   return applyConcreteThemeAccessibility(theme, isDark)
+}
+
+/** Merge theme records recursively; palettes replace arrays rather than append. */
+export function mergeThemeOverrides<T extends object>(
+  base: T,
+  update: object
+): T {
+  const result = { ...base, ...update } as Record<string, unknown>
+  for (const [key, value] of Object.entries(base)) {
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      result[key] = mergeThemeOverrides(
+        value,
+        (update as Record<string, object>)[key] ?? {}
+      )
+    }
+  }
+  return result as T
 }
 
 export function resolveThemeUpdate(
@@ -282,27 +298,11 @@ export function resolveThemeUpdate(
     return current
   }
 
-  const mergeAesthetics = (
-    base: SemioticTheme["aesthetics"]
-  ): SemioticTheme["aesthetics"] =>
-    theme.aesthetics
-      ? {
-          ...base,
-          ...theme.aesthetics,
-          weights: { ...base?.weights, ...theme.aesthetics.weights },
-          thresholds: { ...base?.thresholds, ...theme.aesthetics.thresholds },
-          rationales: { ...base?.rationales, ...theme.aesthetics.rationales }
-        }
-      : base
-
-  const base = theme.mode && theme.mode !== "auto"
-    ? theme.mode === "dark" ? DARK_THEME : LIGHT_THEME
-    : current
-  return cloneTheme(applyThemeAccessibility({
-    ...base,
-    ...theme,
-    colors: { ...base.colors, ...(theme.colors || {}) },
-    typography: { ...base.typography, ...(theme.typography || {}) },
-    aesthetics: mergeAesthetics(base.aesthetics)
-  } as SemioticTheme))
+  const base =
+    theme.mode && theme.mode !== "auto"
+      ? theme.mode === "dark"
+        ? DARK_THEME
+        : LIGHT_THEME
+      : current
+  return cloneTheme(applyThemeAccessibility(mergeThemeOverrides(base, theme)))
 }
