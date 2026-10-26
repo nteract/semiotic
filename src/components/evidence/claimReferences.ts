@@ -90,6 +90,7 @@ function validateAttribution(
 interface Reference {
   model: boolean
   inputs: readonly string[]
+  inputsScope: Map<string, Reference[]>
 }
 
 /** Resolve declared references only; arbitrary object paths are not evidence ids. */
@@ -97,10 +98,21 @@ export function claimReferenceIssues(
   envelope: ChartEvidenceEnvelope
 ): Array<{ id: string; claim: string; message: string }> {
   const declarations = new Map<string, Reference[]>()
-  function add(id: string, model = false, inputs: readonly string[] = []) {
+  function add(
+    id: string,
+    model = false,
+    inputs: readonly string[] = [],
+    inputsScope = declarations
+  ) {
+    const reference = { model, inputs, inputsScope }
     const records = declarations.get(id) ?? []
-    records.push({ model, inputs })
+    records.push(reference)
     declarations.set(id, records)
+    if (inputsScope !== declarations) {
+      const localRecords = inputsScope.get(id) ?? []
+      localRecords.push(reference)
+      inputsScope.set(id, localRecords)
+    }
   }
   const paths: Array<[string, unknown]> = [
     ["input.hash", envelope.input.hash],
@@ -142,11 +154,15 @@ export function claimReferenceIssues(
     contract?.contractVersion === ARTIFACT_CONTRACT_VERSION &&
     validateArtifactContract(contract).valid
   ) {
+    // Transformation inputs belong to this artifact, even when an envelope
+    // record or observation uses the same spelling. Keep duplicates visible.
+    const artifactScope = new Map<string, Reference[]>()
     for (const evidence of (contract as ArtifactContract).evidence)
       add(
         evidence.id,
         evidence.role === "model-output",
-        evidence.transformation?.inputEvidenceIds
+        evidence.transformation?.inputEvidenceIds,
+        artifactScope
       )
   }
 
@@ -155,38 +171,41 @@ export function claimReferenceIssues(
     const unknown = new Set<string>()
     const ambiguous = new Set<string>()
     const cyclic = new Set<string>()
-    const visited = new Set<string>()
-    const active = new Set<string>()
+    const visited = new Set<Reference>()
+    const active = new Set<Reference>()
     let model = !!claim.model
-    const stack = (claim.evidenceIds ?? []).map((id) => ({ id, exit: false }))
+    const stack = (claim.evidenceIds ?? []).map((id) => ({
+      id,
+      scope: declarations,
+      exit: false
+    }))
     while (stack.length) {
       const step = stack.pop()!
-      if (step.exit) {
-        active.delete(step.id)
-        visited.add(step.id)
-        continue
-      }
-      if (active.has(step.id)) {
-        cyclic.add(step.id)
-        continue
-      }
-      if (visited.has(step.id)) continue
-      const records = declarations.get(step.id)
+      const records = step.scope.get(step.id)
       if (!records) {
         unknown.add(step.id)
-        visited.add(step.id)
         continue
       }
       if (records.length !== 1) {
         ambiguous.add(step.id)
-        visited.add(step.id)
         continue
       }
       const reference = records[0]
+      if (step.exit) {
+        active.delete(reference)
+        visited.add(reference)
+        continue
+      }
+      if (active.has(reference)) {
+        cyclic.add(step.id)
+        continue
+      }
+      if (visited.has(reference)) continue
       model ||= reference.model
-      active.add(step.id)
-      stack.push({ id: step.id, exit: true })
-      for (const id of reference.inputs) stack.push({ id, exit: false })
+      active.add(reference)
+      stack.push({ ...step, exit: true })
+      for (const id of reference.inputs)
+        stack.push({ id, scope: reference.inputsScope, exit: false })
     }
     for (const [id, refs, description] of [
       ["claim.unknown-evidence", unknown, "missing"],
