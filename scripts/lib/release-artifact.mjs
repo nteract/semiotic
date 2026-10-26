@@ -10,7 +10,7 @@
  */
 import { execFileSync } from "node:child_process"
 import { createHash } from "node:crypto"
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs"
+import { constants, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { basename, isAbsolute, join, relative, resolve } from "node:path"
 import { npmPackArtifactArgs } from "./npm-pack.mjs"
@@ -168,6 +168,33 @@ function writeJson(path, value) {
   writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`)
 }
 
+function stageSbomProject(root, stagingDirectory, packageJson) {
+  // npm 10/11's virtual dependency tree takes the root component name from
+  // its directory, even when package.json and the lockfile agree. Preserve
+  // scoped names too, without rewriting or relaxing SBOM identity checks.
+  const project = assertArtifactPathInside(stagingDirectory, packageJson.name)
+  mkdirSync(project, { recursive: true })
+  for (const file of ["package.json", "package-lock.json", "npm-shrinkwrap.json", ".npmrc"]) {
+    if (existsSync(join(root, file))) copyFileSync(join(root, file), join(project, file))
+  }
+  return project
+}
+
+function installArtifacts(stagedPaths, paths) {
+  const installed = []
+  try {
+    // The manifest is last. Exclusive copies also protect against an output
+    // appearing after the initial overwrite check. Roll back only our files.
+    for (const [kind, path] of Object.entries(paths)) {
+      copyFileSync(stagedPaths[kind], path, constants.COPYFILE_EXCL)
+      installed.push(path)
+    }
+  } catch (error) {
+    for (const path of installed) rmSync(path, { force: true })
+    throw error
+  }
+}
+
 export function buildReleaseArtifact({ repoRoot, outDir, env = process.env }) {
   const root = resolve(repoRoot)
   const directory = assertOutputDirectory(outDir)
@@ -181,22 +208,33 @@ export function buildReleaseArtifact({ repoRoot, outDir, env = process.env }) {
   }
   mkdirSync(directory, { recursive: true })
 
-  const npmCache = mkdtempSync(join(tmpdir(), "semiotic-release-artifact-cache-"))
+  const stagingDirectory = mkdtempSync(join(tmpdir(), "semiotic-release-artifact-"))
+  const npmCache = join(stagingDirectory, "cache")
   // `env` is injectable for source provenance and command-level tests. Keep
   // the host environment as a base so a partial override cannot drop PATH,
   // then make the isolated cache authoritative for artifact construction.
   const npmEnvironment = { ...process.env, ...env, npm_config_cache: npmCache }
-  let packed
-  let sbomText
-  let npmVersion
   try {
-    packed = parseNpmPackJson(command(root, "npm", npmPackArtifactArgs([
+    const artifactDirectory = join(stagingDirectory, "artifacts")
+    mkdirSync(artifactDirectory)
+    const stagedPaths = releaseArtifactPaths(artifactDirectory, packageJson)
+    const packed = parseNpmPackJson(command(root, "npm", npmPackArtifactArgs([
       "--ignore-scripts",
       "--json",
       "--pack-destination",
-      directory,
+      artifactDirectory,
     ]), npmEnvironment))
-    sbomText = command(root, "npm", [
+    if (packed.name !== packageJson.name || packed.version !== packageJson.version) {
+      throw new Error("npm pack returned a package identity that does not match package.json")
+    }
+    const tarballPath = assertArtifactPathInside(artifactDirectory, packed.filename)
+    if (!existsSync(tarballPath)) throw new Error(`npm pack did not create ${tarballPath}`)
+    if (tarballPath !== stagedPaths.tarball) {
+      throw new Error(`npm pack returned unexpected tarball name ${basename(tarballPath)}`)
+    }
+
+    const sbomProject = stageSbomProject(root, join(stagingDirectory, "sbom"), packageJson)
+    const sbomText = command(sbomProject, "npm", [
       "sbom",
       "--omit=dev",
       "--package-lock-only",
@@ -205,49 +243,36 @@ export function buildReleaseArtifact({ repoRoot, outDir, env = process.env }) {
       "--sbom-type",
       "library",
     ], npmEnvironment)
-    npmVersion = command(root, "npm", ["--version"], npmEnvironment)
+    const sbom = JSON.parse(sbomText)
+    if (
+      sbom?.bomFormat !== "CycloneDX" ||
+      sbom?.metadata?.component?.name !== packageJson.name ||
+      sbom?.metadata?.component?.version !== packageJson.version
+    ) {
+      throw new Error("npm sbom produced an unexpected package document")
+    }
+    writeJson(stagedPaths.sbom, sbom)
+    const npmVersion = command(root, "npm", ["--version"], npmEnvironment)
+    const sha512 = sha512File(tarballPath)
+    const integrity = sha512IntegrityFile(tarballPath)
+    writeFileSync(stagedPaths.checksum, `${sha512}  ${basename(tarballPath)}\n`)
+
+    const manifest = createReleaseArtifactManifest({
+      packageJson,
+      tarballPath,
+      sha512,
+      integrity,
+      sbomPath: stagedPaths.sbom,
+      source: sourceProvenance(root, env),
+      npmVersion,
+    })
+    writeJson(stagedPaths.manifest, manifest)
+    verifyReleaseArtifact({ repoRoot: root, outDir: artifactDirectory })
+    installArtifacts(stagedPaths, paths)
+
+    return { directory, packageJson, manifest, paths }
   } finally {
-    rmSync(npmCache, { recursive: true, force: true })
-  }
-  if (packed.name !== packageJson.name || packed.version !== packageJson.version) {
-    throw new Error("npm pack returned a package identity that does not match package.json")
-  }
-  const tarballPath = assertArtifactPathInside(directory, packed.filename)
-  if (!existsSync(tarballPath)) throw new Error(`npm pack did not create ${tarballPath}`)
-  if (basename(tarballPath) !== basename(paths.tarball)) {
-    throw new Error(`npm pack returned unexpected tarball name ${basename(tarballPath)}`)
-  }
-
-  const sha512 = sha512File(tarballPath)
-  const integrity = sha512IntegrityFile(tarballPath)
-  writeFileSync(paths.checksum, `${sha512}  ${basename(tarballPath)}\n`)
-
-  const sbom = JSON.parse(sbomText)
-  if (
-    sbom?.bomFormat !== "CycloneDX" ||
-    sbom?.metadata?.component?.name !== packageJson.name ||
-    sbom?.metadata?.component?.version !== packageJson.version
-  ) {
-    throw new Error("npm sbom produced an unexpected package document")
-  }
-  writeJson(paths.sbom, sbom)
-
-  const manifest = createReleaseArtifactManifest({
-    packageJson,
-    tarballPath,
-    sha512,
-    integrity,
-    sbomPath: paths.sbom,
-    source: sourceProvenance(root, env),
-    npmVersion,
-  })
-  writeJson(paths.manifest, manifest)
-
-  return {
-    directory,
-    packageJson,
-    manifest,
-    paths: { ...paths, tarball: tarballPath },
+    rmSync(stagingDirectory, { recursive: true, force: true })
   }
 }
 
