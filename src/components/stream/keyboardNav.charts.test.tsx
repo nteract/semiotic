@@ -9,6 +9,8 @@ import { RidgelinePlot } from "../charts/ordinal/RidgelinePlot"
 import { CandlestickChart } from "../charts/xy/CandlestickChart"
 import { FunnelChart } from "../charts/ordinal/FunnelChart"
 import { FlowMap } from "../charts/geo/FlowMap"
+import { TemporalHistogram } from "../charts/realtime/RealtimeHistogram"
+import { LinkedCharts } from "../LinkedCharts"
 
 const data = [10, 20, 30, 40, 50].map(value => ({ category: "Alpha", value }))
 
@@ -101,6 +103,54 @@ describe("public chart keyboard mark access", () => {
       expect(frame.querySelector('[aria-live="polite"]')?.textContent).toBe(announcement)
     })
   }
+
+  // Publishing its own hover updates the linked selection, which restyles the
+  // histogram and rebuilds every bin datum. Focus has to follow the bin, not
+  // the replaced object, or each press lands back on the first bin.
+  it("keeps a histogram bin focused while its linked hover restyles the bars", async () => {
+    const rows = [0, 1, 2, 3].map((index) => ({ time: index * 10, value: 5 + index }))
+    const { container } = render(
+      <LinkedCharts showLegend={false}>
+        <TemporalHistogram
+          data={rows}
+          binSize={10}
+          timeAccessor="time"
+          valueAccessor="value"
+          width={400}
+          height={300}
+          linkedHover={{ name: "histogram-hover", fields: ["binStart"] }}
+          selection={{ name: "line-hover" }}
+        />
+      </LinkedCharts>
+    )
+    const frame = container.querySelector<HTMLElement>(".stream-xy-frame")!
+    for (const [binStart, total] of [[0, 5], [10, 6], [20, 7]]) {
+      fireEvent.keyDown(frame, { key: "ArrowRight" })
+      // Let the selection update and the rebuilt scene settle before reading.
+      await new Promise((resolve) => setTimeout(resolve, 50))
+      expect(frame.querySelector('[aria-live="polite"]')?.textContent)
+        .toContain(`binStart: ${binStart}, binEnd: ${binStart + 10}, total: ${total}`)
+      expect(frame.querySelector(".stream-frame-tooltip")?.textContent).toContain(`count:${total}`)
+    }
+  })
+
+  it("keeps a histogram bin focused when new data rebuilds the bins", async () => {
+    const rows = [0, 1, 2].map((index) => ({ time: index * 10, value: 5 + index }))
+    const chart = (data: typeof rows) => (
+      <TemporalHistogram data={data} binSize={10} timeAccessor="time" valueAccessor="value"
+        width={400} height={300} />
+    )
+    const { container, rerender } = render(chart(rows))
+    const frame = container.querySelector<HTMLElement>(".stream-xy-frame")!
+    fireEvent.keyDown(frame, { key: "ArrowRight" })
+    fireEvent.keyDown(frame, { key: "ArrowRight" })
+    await waitFor(() => expect(frame.querySelector('[aria-live="polite"]')?.textContent).toContain("binStart: 10"))
+    rerender(chart([...rows, { time: 30, value: 9 }]))
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(frame.querySelector('[aria-live="polite"]')?.textContent).toContain("binStart: 10")
+    fireEvent.keyDown(frame, { key: "ArrowRight" })
+    await waitFor(() => expect(frame.querySelector('[aria-live="polite"]')?.textContent).toContain("binStart: 20"))
+  })
 
   it("reaches funnel trapezoids as outlined targets", async () => {
     const { container } = render(<FunnelChart data={[{ step: "Awareness", value: 100 }, { step: "Purchase", value: 50 }]}

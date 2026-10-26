@@ -81,7 +81,10 @@ export function extractXYNavPoints(scene: SceneNode[]): NavPoint[] {
         break
       }
 
-      case "rect":
+      case "rect": {
+        // A restyle or a data push rebuilds every histogram bin datum, so
+        // focus finds its bin again by stack segment and bin start.
+        const binStart = node.datum?.binStart
         points.push({
           x: node.x + node.w / 2,
           y: node.y + node.h / 2,
@@ -89,9 +92,13 @@ export function extractXYNavPoints(scene: SceneNode[]): NavPoint[] {
           shape: "rect",
           w: node.w,
           h: node.h,
+          semanticKey: typeof binStart === "number" && Number.isFinite(binStart)
+            ? JSON.stringify(["bin", node.group ?? null, binStart])
+            : undefined,
           group: node.group ?? "_default"
         })
         break
+      }
 
       case "candlestick": {
         if (node.datum == null) break

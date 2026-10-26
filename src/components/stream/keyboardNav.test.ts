@@ -108,6 +108,28 @@ describe("extractXYNavPoints", () => {
     expect(result[0]).toMatchObject({ x: 40, y: 40, datum: { cat: "A" }, shape: "rect", w: 40, h: 60 })
   })
 
+  // A restyle rebuilds every bin datum, so focus matches bins by key instead.
+  it("keys histogram bins by stack segment and bin start", () => {
+    const scene = [
+      { type: "rect", x: 0, y: 10, w: 20, h: 50, datum: { binStart: 0, binEnd: 10, total: 5 } },
+      {
+        type: "rect", x: 20, y: 0, w: 20, h: 30, group: "reads",
+        datum: { binStart: 10, binEnd: 20, total: 9, category: "reads" }
+      },
+      {
+        type: "rect", x: 20, y: 30, w: 20, h: 30, group: "writes",
+        datum: { binStart: 10, binEnd: 20, total: 9, category: "writes" }
+      },
+      { type: "rect", x: 40, y: 0, w: 20, h: 60, datum: { cat: "A" } }
+    ]
+    expect(extractXYNavPoints(asXY(scene)).map(point => point.semanticKey)).toEqual([
+      JSON.stringify(["bin", null, 0]),
+      JSON.stringify(["bin", "reads", 10]),
+      JSON.stringify(["bin", "writes", 10]),
+      undefined
+    ])
+  })
+
   it("extracts center of heatcell nodes", () => {
     const scene = [
       { type: "heatcell", x: 0, y: 0, w: 20, h: 20, datum: { val: 5 } }
