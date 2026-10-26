@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Release artifact preparation works from renamed checkouts, preserves scoped
+  package identities and lockfile dependency graphs, and cleans up failed
+  attempts so the output directory can be retried without overwriting evidence.
 - Selection dimming multiplies authored mark opacity once, preserving separate
   fill and stroke opacity across canvas and SVG. Chart-wide staleness dimming
   also applies to every mark, pulse overlay, and network particle. Animation

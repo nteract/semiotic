@@ -488,6 +488,16 @@ the uploaded evidence files together cover the complete tagged manifest.
 The publish job still checks out the untouched tag separately.
 The immutable-artifact and already-published checks keep reruns idempotent.
 
+To prepare the immutable artifact locally after building, run
+`npm run release:artifact -- --out-dir /tmp/semiotic-release-artifact`, then
+`node scripts/create-release-artifact.mjs --out-dir /tmp/semiotic-release-artifact --verify`.
+The checkout directory may have any name. SBOM generation uses a temporary,
+package-named copy of the package metadata and lockfiles; the tarball is packed
+from the original checkout with `npm pack --ignore-scripts`. All four files are
+validated before installation, and a failed attempt removes its partial outputs
+so the same output directory can be retried. Existing artifacts are never
+overwritten; retain completed evidence and use a new directory for another build.
+
 ## Community
 
 This project follows the nteract [Code of Conduct](https://github.com/nteract/nteract/blob/main/CODE_OF_CONDUCT.md).
