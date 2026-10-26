@@ -252,12 +252,12 @@ export function FlippingTooltip({
       data-flip-x={flipX ? "true" : "false"}
       data-flip-y={flipY ? "true" : "false"}
       style={{
-        ...(chromeStyle || {}),
+        ...chromeStyle,
         position: "absolute",
         left: margin.left + left,
         top: margin.top + top,
         transform,
-        ...(instantMove && { transition: "none" }),
+        transition: instantMove ? "none" : undefined,
         pointerEvents: "none",
         zIndex,
         width: "max-content",
