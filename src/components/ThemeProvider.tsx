@@ -103,26 +103,26 @@ function useStableThemeValue<T>(value: T): T {
   return stable.current
 }
 
-// ── ThemeInitializer ────────────────────────────────────────────────────────
-// Syncs prop changes after the provider-scoped store is initialized.
-// When no explicit theme is provided and forced-colors (high contrast)
-// mode is active, automatically applies HIGH_CONTRAST_THEME.
+// Synchronize the scoped store and publish its CSS from one subscriber.
 
-function ThemeInitializer({
+function ThemeCSSWrapper({
+  children,
+  themeName,
   resolved,
-  auto,
   query
 }: {
+  children: React.ReactNode
+  themeName?: string
   resolved: SemioticTheme
-  auto?: SemioticThemeUpdate
   query?: string
 }) {
-  const setTheme = useThemeSelector((state: ThemeStoreState) => state.setTheme)
-  const currentTheme = useThemeSelector((state: ThemeStoreState) => state.theme)
+  const { theme, setTheme } = useThemeSelector((state: ThemeStoreState) => state)
+  const autoId = React.useId()
+  const auto = React.useContext(ThemeScopeContext)
   // Keep a ref to the latest theme so the forced-colors handler can read it
   // without re-registering the listener on every theme change.
-  const currentThemeRef = React.useRef(currentTheme)
-  currentThemeRef.current = currentTheme
+  const currentThemeRef = React.useRef(theme)
+  currentThemeRef.current = theme
 
   useIsomorphicLayoutEffect(() => {
     const mql = query ? getMediaQuery(query) : undefined
@@ -144,26 +144,10 @@ function ThemeInitializer({
     return mql && addMqlListener(mql, sync)
   }, [resolved, auto, query, setTheme])
 
-  return null
-}
-
-// ── CSS Custom Properties wrapper ───────────────────────────────────────────
-
-function ThemeCSSWrapper({
-  children,
-  themeName
-}: {
-  children: React.ReactNode
-  themeName?: string
-}) {
-  const theme = useThemeSelector((state: ThemeStoreState) => state.theme)
-
-  const autoId = React.useId()
-  const autoInput = React.useContext(ThemeScopeContext)
   const style: React.CSSProperties & Record<string, string> = {
     position: "relative",
     colorScheme: theme.mode === "auto" ? "light dark" : theme.mode,
-    ...(autoInput ? {} : themeToCSSVariables(theme))
+    ...(auto ? {} : themeToCSSVariables(theme))
   }
 
   return (
@@ -172,11 +156,11 @@ function ThemeCSSWrapper({
         style={style}
         data-semiotic-theme={themeName}
         data-semiotic-theme-mode={theme.mode}
-        data-semiotic-auto={autoInput ? autoId : undefined}
+        data-semiotic-auto={auto ? autoId : undefined}
       >
-        {autoInput && (
+        {auto && (
           <style>
-            {autoPaletteCSS(autoInput, `[data-semiotic-auto="${autoId}"]`)}
+            {autoPaletteCSS(auto, `[data-semiotic-auto="${autoId}"]`)}
           </style>
         )}
         {children}
@@ -207,9 +191,9 @@ function ThemeProviderWrapper({ theme, children }: ThemeProviderProps) {
   return (
     <StoreProvider initialState={{ theme: resolved, equals: themeValuesEqual }}>
       <ThemeScopeContext.Provider value={auto ?? null}>
-        <ThemeInitializer
+        <ThemeCSSWrapper
+          themeName={initial.name}
           resolved={resolved}
-          auto={auto}
           query={
             auto
               ? "(prefers-color-scheme: dark)"
@@ -217,8 +201,9 @@ function ThemeProviderWrapper({ theme, children }: ThemeProviderProps) {
                 ? "(forced-colors: active)"
                 : undefined
           }
-        />
-        <ThemeCSSWrapper themeName={initial.name}>{children}</ThemeCSSWrapper>
+        >
+          {children}
+        </ThemeCSSWrapper>
       </ThemeScopeContext.Provider>
     </StoreProvider>
   )
