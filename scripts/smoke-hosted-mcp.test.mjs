@@ -171,6 +171,12 @@ async function createFixture(options = {}) {
       return
     }
 
+    const toolError = options.toolErrors?.[message.params?.name]
+    if (message.method === "tools/call" && toolError) {
+      json(res, 200, rpcResult(message.id, { isError: true, ...toolError }))
+      return
+    }
+
     if (message.method === "tools/call" && message.params?.name === "createChart") {
       if (options.cancelledRender) {
         json(res, 200, rpcResult(message.id, {
@@ -321,6 +327,67 @@ describe("smoke-hosted-mcp", () => {
       assert.match(result.stdout, /<svg/i)
     })
   })
+
+  for (const [label, structuredContent, expected] of [
+    ["operation timeout", { code: "MCP_RENDER_TIMEOUT" }, /code=MCP_RENDER_TIMEOUT/],
+    ["nested render timeout", { status: "blocked", render: { code: "MCP_RENDER_TIMEOUT" } }, /code=MCP_RENDER_TIMEOUT, status=blocked/],
+    ["busy operation", { code: "MCP_OPERATION_BUSY" }, /code=MCP_OPERATION_BUSY/],
+    ["failed child", { code: "MCP_OPERATION_FAILED" }, /code=MCP_OPERATION_FAILED/],
+    ["output limit", { code: "OUTPUT_LIMIT_EXCEEDED" }, /code=OUTPUT_LIMIT_EXCEEDED/],
+    ["input limit", { code: "MCP_INPUT_LIMIT" }, /code=MCP_INPUT_LIMIT/],
+    ["no suggestion", { status: "no-suggestion" }, /status=no-suggestion/],
+    ["evidence gate", { status: "blocked", evidenceGate: { ok: false } }, /evidence gate=failed/],
+    ["diagnostics", { diagnostics: [{ severity: "error" }, { severity: "warning" }, null] }, /blocking diagnostics=1/],
+  ]) {
+    it(`reports ${label} without exposing chart payloads`, async () => {
+      await withFixture({ toolErrors: { createChart: {
+        content: [{ type: "text", text: "private-response-payload <svg/>" }],
+        structuredContent,
+      } } }, async (fixture) => {
+        const result = await runSmoke(fixture.endpoint)
+        assert.notEqual(result.code, 0)
+        assert.match(result.stderr, expected)
+        assert.match(result.stderr, /rerun with --verbose/)
+        assert.doesNotMatch(`${result.stdout}${result.stderr}`, /private-response-payload|<svg/)
+      })
+    })
+  }
+
+  it("reports the known timeout stage without copying its error message", async () => {
+    await withFixture({ toolErrors: { createChart: {
+      content: [{ type: "text", text: "interactive SVG sanitization exceeded its execution deadline; private-response-payload" }],
+      structuredContent: { code: "MCP_RENDER_TIMEOUT" },
+    } } }, async (fixture) => {
+      const result = await runSmoke(fixture.endpoint)
+      assert.notEqual(result.code, 0)
+      assert.match(result.stderr, /code=MCP_RENDER_TIMEOUT, stage=interactive SVG sanitization/)
+      assert.doesNotMatch(`${result.stdout}${result.stderr}`, /private-response-payload/)
+    })
+  })
+
+  it("keeps unknown error fields private and provides a verbose debugging hint", async () => {
+    await withFixture({ toolErrors: { createChart: {
+      content: [{ type: "text", text: "private-response-payload <svg/>" }],
+      structuredContent: {
+        code: "private-response-payload", status: "private-response-payload",
+        component: "private-response-payload", render: { code: "private-response-payload" },
+        diagnostics: [{ severity: "error", message: "private-response-payload" }],
+      },
+    } } }, async (fixture) => {
+      const result = await runSmoke(fixture.endpoint)
+      assert.notEqual(result.code, 0)
+      assert.match(result.stderr, /isError: true.*rerun with --verbose/)
+      assert.doesNotMatch(`${result.stdout}${result.stderr}`, /private-response-payload|<svg/)
+      const verbose = await runSmoke(fixture.endpoint, ["--verbose"])
+      assert.notEqual(verbose.code, 0)
+      assert.match(verbose.stdout, /private-response-payload/)
+    })
+  })
+
+  it("reports the same operational failure details for getChartSchema", () =>
+    expectFailure({ toolErrors: { getChartSchema: {
+      structuredContent: { code: "MCP_OPERATION_BUSY" },
+    } } }, /getChartSchema returned isError: true \(code=MCP_OPERATION_BUSY\)/))
 
   it("fails for a wrong Git SHA", () => expectFailure({ wrongSha: true }, /commitSha did not match/))
   it("fails for a wrong deployment channel", () => expectFailure({ wrongChannel: true }, /channel did not match/))

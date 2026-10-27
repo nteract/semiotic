@@ -337,6 +337,39 @@ function hasString(value, needle) {
   return false
 }
 
+function requireToolSuccess(step, result) {
+  if (result.isError !== true) return
+
+  // Only report known operational values. Error prose, chart props, and
+  // diagnostic messages can contain source data; raw bodies remain opt-in.
+  const details = []
+  const structured = isRecord(result.structuredContent) ? result.structuredContent : {}
+  const codes = new Set([
+    "MCP_RENDER_TIMEOUT", "MCP_RENDER_CANCELLED", "MCP_OPERATION_BUSY",
+    "MCP_OPERATION_FAILED", "MCP_INPUT_LIMIT", "OUTPUT_LIMIT_EXCEEDED",
+  ])
+  const code = [structured.code, structured.render?.code].find((value) => codes.has(value))
+  if (code) details.push(`code=${code}`)
+  if (["blocked", "no-suggestion", "unknown-component"].includes(structured.status)) {
+    details.push(`status=${structured.status}`)
+  }
+  if (code === "MCP_RENDER_TIMEOUT" && Array.isArray(result.content)) {
+    const stages = ["Tool operation", "render work", "PNG conversion", "interactive SVG sanitization", "theme application"]
+    const stage = stages.find((label) => result.content.some((block) =>
+      block?.type === "text" && typeof block.text === "string" && block.text.startsWith(`${label} exceeded `),
+    ))
+    if (stage) details.push(`stage=${stage}`)
+  }
+  if (Array.isArray(structured.diagnostics)) {
+    details.push(`blocking diagnostics=${structured.diagnostics.filter((item) => item?.severity === "error").length}`)
+  }
+  if (structured.evidenceGate?.ok === false) {
+    details.push("evidence gate=failed")
+  }
+  const summary = details.length ? ` (${details.join(", ")})` : ""
+  throw new SmokeFailure(step, `${step} returned isError: true${summary}; rerun with --verbose for response details`)
+}
+
 function hasSvg(value) {
   if (typeof value === "string") return /<svg(?:\s|>)/i.test(value)
   if (Array.isArray(value)) return value.some(hasSvg)
@@ -588,9 +621,7 @@ export async function runHostedMcpSmoke(options) {
   if (hasString(createChart.result, "MCP_RENDER_CANCELLED")) {
     throw new SmokeFailure("createChart", "createChart returned MCP_RENDER_CANCELLED")
   }
-  if (createChart.result.isError === true) {
-    throw new SmokeFailure("createChart", "createChart returned isError: true")
-  }
+  requireToolSuccess("createChart", createChart.result)
   const structuredContent = requireRecord("createChart", createChart.result.structuredContent, "structuredContent")
   requireExactString("createChart", structuredContent.status, "render-proven", "status")
   if (!hasEvidence(createChart.result)) {
@@ -610,9 +641,7 @@ export async function runHostedMcpSmoke(options) {
     protocolVersion,
     deadline,
   )
-  if (schema.result.isError === true) {
-    throw new SmokeFailure("getChartSchema", "getChartSchema returned isError: true")
-  }
+  requireToolSuccess("getChartSchema", schema.result)
   checks.push("getChartSchema")
 
   return { checks, healthAttempts: health.attempts, identity: health.identity }

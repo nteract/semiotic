@@ -134,6 +134,14 @@ tag, substitute that full commit SHA for `vX.Y.Z` only after the same checks.
 The Node one-liner normalizes the tag timestamp to the ISO UTC form required by
 the hosted smoke.
 
+If a smoke tool call returns `isError: true`, the failure summary includes known
+operational codes (such as `MCP_RENDER_TIMEOUT` or `MCP_OPERATION_BUSY`), a known
+timeout stage when available, and diagnostic or evidence-gate failure indicators.
+Rerun the same command with `--verbose` to inspect truncated raw responses;
+verbose output can include chart data and SVG. A successful `/health` check
+proves deployment identity, but chart creation must also pass. Tool errors fail
+the smoke immediately and are not retried or treated as successful renders.
+
 ### Why these flags
 
 | Flag | Reason |
