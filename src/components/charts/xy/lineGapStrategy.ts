@@ -4,7 +4,9 @@
  * - "break" splits a line at each gap into separate segment lines.
  * - "interpolate" drops gap points so the line connects across them.
  *   This must happen before the frame, whose accessors coerce null to 0.
- * - "zero" sets a gap point's y to 0 so the line drops to the baseline.
+ * - "zero" drops a gap point to the baseline. A string y field is written on a
+ *   copy. A function y accessor cannot be written through, so those points stay
+ *   the caller's objects and are listed in `zeroedPoints` for a wrapped accessor.
  *
  * Segment lines are keyed by index and held off the data (no marker field),
  * so frame grouping never merges two series and datums reach tooltips,
@@ -29,6 +31,79 @@ export interface LineGapResult {
   hasGaps: boolean
   /** Present when "break" split the data at one or more gaps. */
   segments?: LineGapSegments
+  /**
+   * Gap points whose plotted y is 0 when the y accessor is a function.
+   * Absent for string accessors, which write the field onto a copy instead.
+   */
+  zeroedPoints?: WeakSet<Datum>
+}
+
+/**
+ * Group flat rows into line objects.
+ *
+ * A `Map` keeps first-seen series order (numeric keys are not re-sorted) and
+ * treats names such as "constructor" or "toString" as ordinary series. A plain
+ * object would read those names from `Object.prototype` and throw on `.push`.
+ */
+export function groupRowsIntoLines(
+  rows: readonly Datum[],
+  lineDataAccessor: string,
+  keyOf: (row: Datum) => unknown,
+  annotate?: (line: Datum, key: unknown, row: Datum) => void,
+): Datum[] {
+  const grouped = new Map<string, Datum>()
+  for (const row of rows) {
+    const rawKey = keyOf(row)
+    // Match ordinary property-key coercion (`null` → "null", `undefined` →
+    // "undefined") without ever consulting Object.prototype.
+    const key = String(rawKey)
+    let line = grouped.get(key)
+    if (!line) {
+      line = { [lineDataAccessor]: [] }
+      annotate?.(line, rawKey, row)
+      grouped.set(key, line)
+    }
+    ;(line[lineDataAccessor] as Datum[]).push(row)
+  }
+  return [...grouped.values()]
+}
+
+/** LineChart's flat-row grouping, including forecast compound keys. */
+export function groupLineChartRows(
+  rows: readonly Datum[],
+  {
+    lineDataAccessor,
+    groupAccessor,
+    lineBy,
+    segmentField,
+  }: {
+    lineDataAccessor: string
+    groupAccessor: string | ((row: Datum) => unknown)
+    lineBy?: string | ((row: Datum) => unknown)
+    /** Set when forecast segments must stay on the line object. */
+    segmentField?: string
+  },
+): Datum[] {
+  return groupRowsIntoLines(
+    rows,
+    lineDataAccessor,
+    (row) => typeof groupAccessor === "function" ? groupAccessor(row) : row[groupAccessor],
+    (line, key, row) => {
+      if (typeof groupAccessor === "string") line[groupAccessor] = key
+      if (!segmentField) return
+      line[segmentField] = row[segmentField]
+      if (typeof lineBy === "string") line[lineBy] = row[lineBy]
+    },
+  )
+}
+
+/** Plot listed gap points at y = 0 without copying them onto a synthetic field. */
+export function yAccessorForZeroedGaps<TDatum extends Datum>(
+  yAccessor: string | ((datum: TDatum) => number),
+  zeroedPoints: WeakSet<Datum> | undefined,
+): string | ((datum: TDatum) => number) {
+  if (!zeroedPoints || typeof yAccessor !== "function") return yAccessor
+  return (datum) => (zeroedPoints.has(datum) ? 0 : yAccessor(datum))
 }
 
 export function applyLineGapStrategy({
@@ -43,8 +118,11 @@ export function applyLineGapStrategy({
   strategy: LineGapStrategy
   lineDataAccessor: string
   isGap: (d: Datum) => boolean
-  /** Field "zero" writes 0 into. */
-  yField: string
+  /**
+   * Field "zero" writes 0 into. Omit it when y is read by a function;
+   * those gap points are returned in `zeroedPoints` instead of copied.
+   */
+  yField?: string
   /** Authored series label of a line object before it is split. */
   seriesOfLine: (line: Datum) => string
 }): LineGapResult {
@@ -64,6 +142,20 @@ export function applyLineGapStrategy({
   }
 
   if (strategy === "zero") {
+    if (!yField) {
+      const zeroedPoints = new WeakSet<Datum>()
+      let found = false
+      for (const line of lineData) {
+        for (const d of coordsOf(line)) {
+          if (!isGap(d)) continue
+          found = true
+          zeroedPoints.add(d)
+        }
+      }
+      return found
+        ? { lines: lineData, hasGaps: true, zeroedPoints }
+        : { lines: lineData, hasGaps: false }
+    }
     let found = false
     const lines = lineData.map(line => ({
       ...line,

@@ -32,9 +32,11 @@ import { forecastYExtent } from "../shared/forecastExtent"
 import { useXYBrush } from "../shared/useXYBrush"
 import {
   applyLineGapStrategy,
+  groupLineChartRows,
   segmentAreaGroups,
   withSegmentSeriesStyle,
   withSegmentSeriesTooltip,
+  yAccessorForZeroedGaps,
 } from "./lineGapStrategy"
 import type { LegendValue } from "../../types/legendTypes"
 import { composeLegendConfigs } from "../../types/legendTypes"
@@ -610,28 +612,12 @@ export const LineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forward
     }
 
     if (effectiveGroupAccessor) {
-      // Group data by lineBy field (or segment field for forecast)
-      const grouped = (chartData as Datum[]).reduce((acc, d) => {
-        const key = typeof effectiveGroupAccessor === "function" ? effectiveGroupAccessor(d) : d[effectiveGroupAccessor]
-        if (!acc[key]) {
-          const lineObj: Datum = { [lineDataAccessor]: [] }
-          // Add the grouping field
-          if (typeof effectiveGroupAccessor === "string") {
-            lineObj[effectiveGroupAccessor] = key
-          }
-          // When using compound grouping, also copy the segment and lineBy fields
-          // onto the line object so createSegmentLineStyle and color resolution work
-          if (needsCompoundGroup) {
-            lineObj[SEGMENT_FIELD] = d[SEGMENT_FIELD]
-            if (typeof lineBy === "string") lineObj[lineBy] = d[lineBy]
-          }
-          acc[key] = lineObj
-        }
-        acc[key][lineDataAccessor].push(d)
-        return acc
-      }, {} as Record<string, Datum>)
-
-      return Object.values(grouped)
+      return groupLineChartRows(chartData as Datum[], {
+        lineDataAccessor,
+        groupAccessor: effectiveGroupAccessor,
+        lineBy,
+        segmentField: needsCompoundGroup ? SEGMENT_FIELD : undefined,
+      })
     }
 
     // Single line - wrap in line object
@@ -641,7 +627,7 @@ export const LineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forward
   // Apply gap strategy to line data. "break" segments carry index-based
   // frame group keys (no marker field on the data); `seriesOfLine` records
   // the authored series each segment belongs to.
-  const { lines: gapProcessedLineData, hasGaps, segments } = useMemo(() => {
+  const { lines: gapProcessedLineData, hasGaps, segments, zeroedPoints } = useMemo(() => {
     const seriesOfLine = (line: Datum): string => {
       if (!frameGroupAccessor) return ""
       if (typeof frameGroupAccessor === "string") {
@@ -657,10 +643,15 @@ export const LineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forward
       strategy: gapStrategy,
       lineDataAccessor,
       isGap,
-      yField: typeof yAccessor === "string" ? yAccessor : "y",
+      yField: typeof yAccessor === "string" ? yAccessor : undefined,
       seriesOfLine,
     })
   }, [lineData, gapStrategy, lineDataAccessor, isGap, frameGroupAccessor, yAccessor])
+
+  const frameYAccessor = useMemo(
+    () => yAccessorForZeroedGaps(yAccessor as string | ((d: Datum) => number), zeroedPoints),
+    [yAccessor, zeroedPoints],
+  )
 
   const directLabelConfig = typeof directLabel === "object" ? directLabel : {}
   const directLabelPosition = directLabelConfig.position || "end"
@@ -746,9 +737,9 @@ export const LineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forward
   const lineRuleContext = useMemo(
     () => makeXYRuleContext(
       xAccessor as string | ((d: Datum) => unknown),
-      yAccessor as string | ((d: Datum) => unknown),
+      frameYAccessor as string | ((d: Datum) => unknown),
     ),
-    [xAccessor, yAccessor],
+    [xAccessor, frameYAccessor],
   )
   const baseLineStyle = useXYLineStyle({
     lineWidth,
@@ -816,9 +807,9 @@ export const LineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forward
     if (data === undefined) return [{ type: "text", _directLabelRequest: request }]
     return buildDirectLabels(
       gapProcessedLineData.flatMap(line => (line[lineDataAccessor] || []).map((d: Datum) => ({ ...d, parentLine: d.parentLine || line }))),
-      request, xAccessor, yAccessor
+      request, xAccessor, frameYAccessor
     )
-  }, [data, directLabel, effectiveColorBy, colorScale, gapProcessedLineData, lineDataAccessor, xAccessor, yAccessor, directLabelPosition, directLabelFontSize])
+  }, [data, directLabel, effectiveColorBy, colorScale, gapProcessedLineData, lineDataAccessor, xAccessor, frameYAccessor, directLabelPosition, directLabelFontSize])
 
   // `useChartSetup` now synthesizes the push-mode legend (using the
   // same provider → scheme → theme → STREAMING_PALETTE precedence the
@@ -844,7 +835,7 @@ export const LineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forward
   const groupField = lineBy || colorBy
   const defaultTooltipContent = useMemo(() => buildDefaultTooltip([
     { label: xLabel || accessorName(inputXAccessor), accessor: xAccessor, role: "x", format: xFormat },
-    { label: yLabel || accessorName(inputYAccessor), accessor: yAccessor, role: "y", format: yFormat },
+    { label: yLabel || accessorName(inputYAccessor), accessor: frameYAccessor, role: "y", format: yFormat },
     ...(groupField ? [{ label: accessorName(groupField), accessor: groupField, role: "group" as const }] : []),
     // Band rows — surfaced automatically when `band` is configured so a
     // consumer that hasn't supplied a custom tooltip still sees the
@@ -853,7 +844,7 @@ export const LineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forward
     // them via function accessors here. Multi-band shows one row pair
     // per configured band, labeled with the accessor name when string.
     ...bandTooltipFields(band, yFormat),
-  ]), [xAccessor, yAccessor, inputXAccessor, inputYAccessor, xLabel, yLabel, groupField, xFormat, yFormat, band])
+  ]), [xAccessor, frameYAccessor, inputXAccessor, inputYAccessor, xLabel, yLabel, groupField, xFormat, yFormat, band])
 
   // Validate data (computed here, guard deferred to after all hooks)
   // When data is in line objects format, validate against the coordinates
@@ -878,7 +869,7 @@ export const LineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forward
     onBrush,
     linkedBrush,
     xAccessor,
-    yAccessor,
+    yAccessor: frameYAccessor,
     defaultDimension: "x",
   })
 
@@ -919,7 +910,7 @@ export const LineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forward
     ...(normalizedLineGradient && { lineGradient: normalizedLineGradient }),
     ...(data != null && { data: flattenedData }),
     xAccessor,
-    yAccessor,
+    yAccessor: frameYAccessor,
     xScaleType,
     yScaleType,
     // Explicit user yExtent wins over the auto-computed envelope; the
