@@ -17,6 +17,7 @@ export {
   usableViewport as usableNetworkViewport
 } from "./stream/networkZoom/geometry"
 export type {
+  NetworkLayoutCommitCamera,
   NetworkZoomOptions,
   NetworkZoomInsets,
   NetworkZoomFitOptions,

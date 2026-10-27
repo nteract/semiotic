@@ -23,6 +23,9 @@ interface Host {
   /** Moving changes arrive from an animation frame or a microtask, never from
    * inside a caller's React commit. */
   change(zoom: NetworkViewTransform, event: NetworkZoomChange): void
+  /** A move made from inside the host's own commit (`jumpTo`): the host
+   * applies it in place, with no flush of its own. */
+  commit(zoom: NetworkViewTransform, event: NetworkZoomChange): void
 }
 
 // User input can arrive several times per frame, so it applies on the next
@@ -47,6 +50,8 @@ export function bindNetworkZoom(element: HTMLElement, host: Host) {
   let immediate: object | null = null
   let idle: number | null = null
   let target: NetworkViewTransform | null = null
+  let tweenView: NetworkViewTransform | null = null
+  let tweenEnd = 0
   let source: NetworkZoomSource = "control"
   let moving = false
   let suppressClickUntil = 0
@@ -61,6 +66,7 @@ export function bindNetworkZoom(element: HTMLElement, host: Host) {
     animation = null
     immediate = null
     target = null
+    tweenView = null
   }
   const finish = () => {
     if (idle !== null) win.clearTimeout(idle)
@@ -100,18 +106,15 @@ export function bindNetworkZoom(element: HTMLElement, host: Host) {
     return p.x >= 0 && p.y >= 0 && p.x <= plot.width && p.y <= plot.height
   }
 
-  const moveTo = (
-    requested: NetworkViewTransform,
-    nextSource: NetworkZoomSource,
-    duration?: number
-  ) => {
+  /** The camera `requested` resolves to under the current options: the scale
+   * and each axis held where the options lock them, then clamped to the bounds. */
+  const resolve = (requested: NetworkViewTransform) => {
     const options = host.getOptions()
-    if (options.locked) return
     const from = host.getZoom()
     const plot = host.getPlot()
     const pivot = usableCenter(plot, options)
     const k = options.zoomEnabled === false ? from.k : requested.k
-    const to = constrainZoom(
+    return constrainZoom(
       {
         k,
         x: canPan(options, "x")
@@ -124,49 +127,62 @@ export function bindNetworkZoom(element: HTMLElement, host: Host) {
       plot,
       options
     )
+  }
+  const milliseconds = (requested: number | undefined) => {
+    const reduced = win.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    const duration = requested ?? host.getOptions().duration ?? 180
+    return reduced ? 0 : Number.isFinite(duration) ? Math.max(0, duration) : 180
+  }
+  /** Begin a move: ends any move in flight, records `source`, and reports
+   * whether `target` is reached already. */
+  const begin = (to: NetworkViewTransform, nextSource: NetworkZoomSource) => {
     cancelAnimation()
     if (idle !== null) win.clearTimeout(idle)
     source = nextSource
-    if (sameZoom(from, to)) {
+    if (sameZoom(host.getZoom(), to)) {
       settle()
-      return
+      return false
     }
     target = to
-    const reduced = win.matchMedia?.("(prefers-reduced-motion: reduce)").matches
-    const requestedDuration = duration ?? options.duration ?? 180
-    const milliseconds = reduced
-      ? 0
-      : Number.isFinite(requestedDuration)
-        ? Math.max(0, requestedDuration)
-        : 180
-    if (milliseconds === 0 && !frameCoalesced(nextSource)) {
+    return true
+  }
+  /** Run the move to `target` over `duration` from the visible camera. */
+  const run = (duration: number) => {
+    if (duration === 0 && !frameCoalesced(source)) {
       // Apply before the next paint without waiting for a frame. The
       // microtask runs after the caller, including a React effect, returns,
       // so the host can commit every layer synchronously. Moves chained in
-      // this task build on `target`; a newer move or cancel supersedes this.
+      // this task build on `target`; a newer move or cancel supersedes this,
+      // and a bounds change re-clamps `target` before it applies.
       const pending = (immediate = {})
       win.queueMicrotask(() => {
         if (immediate !== pending) return
         immediate = null
+        const to = target!
         emit(to)
         if (target === to) target = null
         settle()
       })
       return
     }
+    const from = host.getZoom()
+    const to = target!
+    tweenView = from
     const start = win.performance.now()
+    tweenEnd = start + duration
     const tick = () => {
       const pending = animation
       // The shared rAF timestamp can predate input delivered late in a frame.
       // Use the start clock at execution time so tweens cannot run backward.
       const elapsed = Math.max(0, win.performance.now() - start)
-      const t = milliseconds > 0 ? Math.min(1, elapsed / milliseconds) : 1
+      const t = duration > 0 ? Math.min(1, elapsed / duration) : 1
       const eased = 1 - (1 - t) ** 3
-      emit({
+      tweenView = {
         k: from.k + (to.k - from.k) * eased,
         x: from.x + (to.x - from.x) * eased,
         y: from.y + (to.y - from.y) * eased
-      })
+      }
+      emit(tweenView)
       // A synchronous host commit can lock, unmount or redirect this camera.
       if (animation !== pending) return
       if (t < 1) animation = win.requestAnimationFrame(tick)
@@ -177,6 +193,46 @@ export function bindNetworkZoom(element: HTMLElement, host: Host) {
       }
     }
     animation = win.requestAnimationFrame(tick)
+  }
+  const moveTo = (
+    requested: NetworkViewTransform,
+    nextSource: NetworkZoomSource,
+    duration?: number
+  ) => {
+    if (host.getOptions().locked) return
+    if (begin(resolve(requested), nextSource)) run(milliseconds(duration))
+  }
+  /** Apply `requested` now, from inside the host's own commit: no frame and no
+   * microtask, so what that commit renders paints under this camera. */
+  const jumpTo = (
+    requested: NetworkViewTransform,
+    nextSource: NetworkZoomSource
+  ) => {
+    if (host.getOptions().locked) return
+    const to = resolve(requested)
+    if (!begin(to, nextSource)) return
+    moving = true
+    host.commit(to, { source, phase: "moving" })
+    if (target === to) target = null
+    settle()
+  }
+  /** Keep a move in flight inside bounds that changed under it: its
+   * destination is clamped again, and a running tween continues to it from the
+   * visible camera over its remaining time. Nothing in flight, nothing moves. */
+  const rebound = () => {
+    if (target === null) return
+    const to = constrainZoom(target, host.getPlot(), host.getOptions())
+    if (immediate !== null) {
+      target = to
+      return
+    }
+    // The host may already have clamped the visible camera while the target
+    // remains valid. Restart from that camera instead of the old interpolant.
+    if (sameZoom(to, target) && (!tweenView || sameZoom(tweenView, host.getZoom()))) return
+    const remaining = Math.max(0, tweenEnd - win.performance.now())
+    cancelAnimation()
+    target = to
+    run(remaining)
   }
   const zoomBy = (
     factor: number,
@@ -438,6 +494,8 @@ export function bindNetworkZoom(element: HTMLElement, host: Host) {
   win.addEventListener("blur", cancel)
   return {
     moveTo,
+    jumpTo,
+    rebound,
     zoomBy,
     panBy,
     cancel,

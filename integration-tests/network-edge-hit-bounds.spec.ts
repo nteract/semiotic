@@ -45,25 +45,31 @@ test("conservative edge bounds match unfiltered Canvas paths across geometry, st
     const compare = (scene: PathEdge[], k: number, wide = false) => {
       const parsed = scene.map((edge) => new Path2D(edge.pathD))
       const index = window.cameraScale.prepareEdges(scene)
-      // Independent exhaustive Canvas oracle: no bounds/candidate filter.
+      // Exhaustive Canvas oracle: search every painted surface before padded
+      // strokes, in increasing distance bands (quarter-slop resolution), with
+      // last-painted ties. No production bounds, index or hit helper is used.
+      const probes = scene.flatMap((edge, order) => {
+        if (edge.interactive === false || edge.datum == null) return []
+        const { fill, stroke, strokeWidth = 1 } = edge.style
+        const bands: { order: number; distance: number; width: number | null }[] = []
+        if (fill && fill !== "none") bands.push({ order, distance: 0, width: null })
+        if (stroke !== "none" && strokeWidth > 0) {
+          const padding = Math.max(0, 5 / k - strokeWidth / 2)
+          for (const fraction of [0, 0.25, 0.5, 0.75, 1]) {
+            const distance = padding * fraction
+            bands.push({ order, distance, width: strokeWidth + distance * 2 })
+          }
+        }
+        return bands
+      }).sort((a, b) => a.distance - b.distance || b.order - a.order)
       for (let x = wide ? -600 : -190; x <= (wide ? 600 : 190); x += wide ? 19 : 13) {
         for (let y = wide ? -550 : -140; y <= (wide ? 550 : 140); y += wide ? 23 : 11) {
-          let expected: PathEdge | undefined
-          for (let i = scene.length - 1; i >= 0; i--) {
-            const edge = scene[i]
-            if (edge.interactive === false || edge.datum == null) continue
-            const { fill, stroke, strokeWidth = 1 } = edge.style
-            ctx.lineWidth = Math.max(10 / k, strokeWidth)
-            if (
-              (fill && fill !== "none" && ctx.isPointInPath(parsed[i], x, y)) ||
-              (stroke !== "none" &&
-                strokeWidth > 0 &&
-                ctx.isPointInStroke(parsed[i], x, y))
-            ) {
-              expected = edge
-              break
-            }
-          }
+          const probe = probes.find(({ order, width }) => {
+            if (width === null) return ctx.isPointInPath(parsed[order], x, y)
+            ctx.lineWidth = width
+            return ctx.isPointInStroke(parsed[order], x, y)
+          })
+          const expected = probe ? scene[probe.order] : undefined
           const actual = hitTest([], scene, x, y, 12, null, 0, true, k)?.mark
           const indexed = hitTest([], scene, x, y, 12, null, 0, true, k, index)?.mark
           if ((actual !== expected || indexed !== expected) && mismatches.length < 10)

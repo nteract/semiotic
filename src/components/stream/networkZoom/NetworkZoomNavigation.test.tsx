@@ -209,6 +209,64 @@ describe("zoomable network navigation", () => {
     expect(ref.current!.getZoom()).toEqual(moved)
   })
 
+  it("applies a commit-camera move with the marks it commits, across a bounds change", async () => {
+    const ref = React.createRef<ZoomableNetworkCustomChartHandle>()
+    const seen: NetworkViewTransform[] = []
+    const moved = { x: -30, y: 10, k: 2 }
+    const chart = (x: number, options: NetworkZoomOptions) => (
+      <ZoomableNetworkCustomChart
+        ref={ref}
+        nodes={[{ id: "a", x, y: 100 }]}
+        layout={cardLayout}
+        width={800}
+        height={600}
+        margin={margin}
+        animate={false}
+        zoomControls={false}
+        defaultZoom={initial}
+        zoomOptions={options}
+        onLayoutCommit={(result, previous, camera) => {
+          if (!previous) return
+          expect(result?.htmlMarks?.[0]?.x).toBe(x)
+          camera.zoomTo(moved)
+          seen.push(camera.getZoom(), ref.current!.getZoom())
+          const mark = document.querySelector<HTMLElement>('[data-mark-id="a"]')
+          expect(mark?.style.transform).toBe("translate(420px, 100px)")
+        }}
+      />
+    )
+    const view = render(chart(100, { duration: 0 }))
+    act(() => vi.advanceTimersByTime(32))
+    // The bounds change in the render that moves the mark; the move still lands.
+    view.rerender(chart(420, { duration: 0, minZoom: 0.5, maxZoom: 4 }))
+    await act(async () => vi.advanceTimersByTime(32))
+    expect(seen).toEqual([moved, moved])
+    expect(ref.current!.getZoom()).toEqual(moved)
+  })
+
+  it("keeps a tween running toward changed bounds instead of stopping it", async () => {
+    const { ref, rerender } = renderChart(cards, { duration: 300 })
+    act(() => ref.current!.zoomTo({ x: -200, y: 0, k: 4 }, 300))
+    await act(async () => vi.advanceTimersByTime(16))
+    expect(ref.current!.getZoom().k).toBeLessThan(2)
+    await rerender(cards, { duration: 300, maxZoom: 2 })
+    await act(async () => vi.advanceTimersByTime(400))
+    expect(ref.current!.getZoom()).toEqual({ x: -200, y: 0, k: 2 })
+  })
+
+  it("continues zooming out immediately after maxZoom clamps the visible camera", async () => {
+    const { ref, rerender } = renderChart(cards, { duration: 300 })
+    await act(async () => ref.current!.zoomTo({ x: 0, y: 0, k: 4 }, 0))
+    act(() => ref.current!.zoomTo({ x: 0, y: 0, k: 1 }, 300))
+    await act(async () => vi.advanceTimersByTime(16))
+    expect(ref.current!.getZoom().k).toBeGreaterThan(3)
+    await rerender(cards, { duration: 300, maxZoom: 2 })
+    expect(ref.current!.getZoom().k).toBeLessThan(2)
+    expect(ref.current!.getZoom().k).toBeGreaterThan(1)
+    await act(async () => vi.advanceTimersByTime(300))
+    expect(ref.current!.getZoom()).toEqual({ x: 0, y: 0, k: 1 })
+  })
+
   it("leaves a tween running across a layout run that keeps the anchored mark in place", async () => {
     const options = { anchor: { markId: "a" }, duration: 300 }
     const { ref, rerender } = renderChart(cards, options)

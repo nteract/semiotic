@@ -44,12 +44,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/xy",
-    "kb": 182,
+    "kb": 183,
     "blurb": "LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts"
   },
   {
     "importPath": "semiotic/ordinal",
-    "kb": 133,
+    "kb": 134,
     "blurb": "BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts"
   },
   {
@@ -104,7 +104,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/server/node",
-    "kb": 279,
+    "kb": 278,
     "blurb": "renderChart, renderDashboard, renderToImage, renderToAnimatedGif"
   },
   {

@@ -135,21 +135,36 @@ export function findNearestNetworkNode(
   if (bestNode) return bestNode
   if (!includeEdges) return null
 
-  if (edgeIndex?.edges === sceneEdges)
-    return queryNetworkEdgeHitIndex(edgeIndex, px, py, 5 / viewScale, (edge) => hitTestEdge(edge, px, py, 5 / viewScale))
-
-  // Edges paint in array order; the last-painted semantic edge owns overlap.
+  // Among the edges whose hit band holds the pointer, the nearest stroke owns
+  // the hit, so a pointer between two close strands picks the one it is on; a
+  // filled band counts as on its paint, and a tie goes to the last painted, as
+  // edges paint in array order. An on-paint hit lets the index prune earlier
+  // paint orders, so a stack of coincident paths costs one exact test.
   // Decorative geometry must never produce an empty tooltip or observation.
-  for (let index = sceneEdges.length - 1; index >= 0; index--) {
-    const edge = sceneEdges[index]
-    if (edge.datum == null || edge.interactive === false) continue
-    const result = hitTestEdge(edge, px, py, 5 / viewScale)
-    if (result) {
-      return result
+  const tolerance = 5 / viewScale
+  let bestEdge: NetworkHitResult | null = null
+  let bestOrder = -1
+  const visit = (order: number): NetworkHitResult | null => {
+    const edge = sceneEdges[order]
+    if (edge.datum != null && edge.interactive !== false) {
+      const result = hitTestEdge(edge, px, py, tolerance)
+      if (result && (!bestEdge || result.distance < bestEdge.distance ||
+        (result.distance === bestEdge.distance && order > bestOrder))) {
+        bestEdge = result
+        bestOrder = order
+      }
+      // Positive distances still compete with earlier paint orders. Only an
+      // on-paint hit permits the tree's last-painted-hit pruning.
+      if (result?.distance === 0) return result
     }
+    return null
   }
-
-  return null
+  if (edgeIndex?.edges === sceneEdges) {
+    queryNetworkEdgeHitIndex(edgeIndex, px, py, tolerance, (_edge, order) => visit(order))
+  } else {
+    for (let index = sceneEdges.length - 1; index >= 0 && !visit(index); index--);
+  }
+  return bestEdge
 }
 
 function preferRectHit(candidate: NetworkRectNode, current: NetworkRectNode): boolean {
@@ -337,6 +352,9 @@ function getEdgePath2D(
 
 // ── Edge hit testing ────────────────────────────────────────────────────
 
+/** How finely a path stroke's hit reports its distance: in steps of a quarter of the slop. */
+const STROKE_DISTANCE_STEPS = 4
+
 function hitTestEdge(
   edge: NetworkSceneEdge,
   px: number,
@@ -378,7 +396,7 @@ function hitTestLineEdge(
   const dist = Math.sqrt((px - nearX) ** 2 + (py - nearY) ** 2)
 
   if (dist <= tolerance) {
-    return hitResult("edge", edge, nearX, nearY, dist)
+    return hitResult("edge", edge, nearX, nearY, Math.max(0, dist - (edge.style.strokeWidth ?? 1) / 2))
   }
 
   return null
@@ -417,16 +435,25 @@ function hitTestPathEdge(
 
     if (edge.style.stroke === "none" || (edge.style.strokeWidth ?? 1) <= 0) return null
     // Retain pointer slop for thin edges and include the full painted stroke.
+    // A hit reports how far outside the painted stroke the pointer is, to a
+    // quarter of the slop: the narrowest band, from the stroke itself out, that
+    // holds the point.
+    const stroke = edge.style.strokeWidth ?? 1
+    const band = Math.max(tolerance * 2, stroke)
     const prevLineWidth = ctx.lineWidth
-    let inStroke: boolean
     try {
-      ctx.lineWidth = Math.max(tolerance * 2, edge.style.strokeWidth ?? 1)
-      inStroke = ctx.isPointInStroke(path, px, py)
+      ctx.lineWidth = band
+      if (!ctx.isPointInStroke(path, px, py)) return null
+      for (let step = 0; step < STROKE_DISTANCE_STEPS; step++) {
+        const width = stroke + ((band - stroke) * step) / STROKE_DISTANCE_STEPS
+        ctx.lineWidth = width
+        if (ctx.isPointInStroke(path, px, py)) {
+          return hitResult("edge", edge, px, py, (width - stroke) / 2)
+        }
+      }
+      return hitResult("edge", edge, px, py, (band - stroke) / 2)
     } finally {
       ctx.lineWidth = prevLineWidth
-    }
-    if (inStroke) {
-      return hitResult("edge", edge, px, py, 4)
     }
   } catch {
     // Fallback — no hit

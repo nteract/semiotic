@@ -13,6 +13,7 @@ import type {
   NetworkViewportRect
 } from "../networkViewportTypes"
 import type {
+  NetworkLayoutCommitCamera,
   NetworkZoomCenterOptions,
   NetworkZoomChange,
   NetworkZoomFitOptions,
@@ -58,12 +59,15 @@ export interface ZoomableNetworkCustomChartProps<
   onZoomChange?: (zoom: NetworkViewTransform, event: NetworkZoomChange) => void
   /**
    * Called from the commit that renders each new custom layout run's HTML marks
-   * and overlays, before that frame paints, with the run it replaces. A
-   * zero-duration camera move made here paints with those marks.
+   * and overlays, before that frame paints, with the run it replaces and the
+   * commit's camera. A move made through that camera applies in this commit,
+   * so the run's marks paint under it, and its `getZoom` reads it back at
+   * once. A zero-duration move through the handle lands with those marks too.
    */
   onLayoutCommit?: (
     result: NetworkLayoutResult | null,
-    previous: NetworkLayoutResult | null
+    previous: NetworkLayoutResult | null,
+    camera: NetworkLayoutCommitCamera
   ) => void
   zoomOptions?: NetworkZoomOptions
   /** Accessible zoom, fit and reset buttons. @default true */
@@ -141,34 +145,33 @@ export const ZoomableNetworkCustomChart = /* @__PURE__ */ React.forwardRef(
     }, [store, zoom])
     React.useEffect(() => {
       if (!container.current) return
+      const apply = (next: NetworkViewTransform, event: NetworkZoomChange) => {
+        const current = live.current
+        if (current.controlled === undefined && event.phase === "moving") {
+          current.zoom = constrainZoom(next, current.plot, current.zoomOptions)
+        }
+        store.update({
+          zoom: current.zoom,
+          isInteracting: event.phase === "moving",
+          ...(event.phase === "idle" ? { settledZoom: current.zoom } : {})
+        })
+        current.onZoomChange?.(next, event)
+      }
       const bound = bindNetworkZoom(container.current, {
         getZoom: () => live.current.zoom,
         getPlot: () => live.current.plot,
         getOptions: () => live.current.zoomOptions,
         change: (next, event) => {
-          const update = () => {
-            const current = live.current
-            if (current.controlled === undefined && event.phase === "moving") {
-              current.zoom = constrainZoom(
-                next,
-                current.plot,
-                current.zoomOptions
-              )
-            }
-            store.update({
-              zoom: current.zoom,
-              isInteracting: event.phase === "moving",
-              ...(event.phase === "idle" ? { settledZoom: current.zoom } : {})
-            })
-            current.onZoomChange?.(next, event)
-          }
           // Moving updates run in an animation frame or microtask, outside
           // React's lifecycle. Commit all layers and any controlled acceptance
           // before the next paint; deferring the commit can also lose input
           // against an older camera.
-          if (event.phase === "moving") flushSync(update)
-          else update()
-        }
+          if (event.phase === "moving") flushSync(() => apply(next, event))
+          else apply(next, event)
+        },
+        // A commit move runs inside this chart's own layout effect, where
+        // React flushes the updates it causes before paint by itself.
+        commit: apply
       })
       driver.current = bound
       return () => {
@@ -176,12 +179,14 @@ export const ZoomableNetworkCustomChart = /* @__PURE__ */ React.forwardRef(
         driver.current = null
       }
     }, [store])
+    // A policy change ends the move in flight; a bounds change keeps it and
+    // re-clamps its destination.
     React.useEffect(() => {
       driver.current?.cancel()
+    }, [zoomOptions.locked, zoomOptions.zoomEnabled, zoomOptions.pan])
+    React.useEffect(() => {
+      driver.current?.rebound()
     }, [
-      zoomOptions.locked,
-      zoomOptions.zoomEnabled,
-      zoomOptions.pan,
       zoomOptions.minZoom,
       zoomOptions.maxZoom,
       zoomOptions.panBounds?.x,
@@ -189,6 +194,13 @@ export const ZoomableNetworkCustomChart = /* @__PURE__ */ React.forwardRef(
       zoomOptions.panBounds?.width,
       zoomOptions.panBounds?.height
     ])
+    const commitCamera = React.useMemo<NetworkLayoutCommitCamera>(
+      () => ({
+        getZoom: () => live.current.zoom,
+        zoomTo: (next) => driver.current?.jumpTo(next, "control")
+      }),
+      []
+    )
     const getMarkBounds = React.useCallback(
       (id: string) => getNetworkMarkBounds(layoutOf(frame), id),
       []
@@ -266,7 +278,8 @@ export const ZoomableNetworkCustomChart = /* @__PURE__ */ React.forwardRef(
     // center keeps its screen position; the frame commits HTML marks first.
     // Bounds are snapshotted per commit because layouts may reuse and update
     // mark objects, which would rewrite the previous result's geometry. The
-    // host's `onLayoutCommit` follows, so its own move supersedes the anchor's.
+    // host's `onLayoutCommit` follows with the anchor applied, so its own move
+    // supersedes the anchor's.
     const anchored = React.useRef<{
       id: string
       bounds: NetworkViewportRect | null
@@ -286,11 +299,11 @@ export const ZoomableNetworkCustomChart = /* @__PURE__ */ React.forwardRef(
             // move the camera: any move cancels the tween in flight.
             const next = before && after && anchorZoom(live.current.zoom, before, after)
             if (next && !sameZoom(next, live.current.zoom))
-              driver.current?.moveTo(next, "anchor", 0)
+              driver.current?.jumpTo(next, "anchor")
           }
-          live.current.onLayoutCommit?.(result, previous)
+          live.current.onLayoutCommit?.(result, previous, commitCamera)
         }),
-      [store]
+      [store, commitCamera]
     )
     const onObservation = props.onObservation
     const observe = React.useCallback(
