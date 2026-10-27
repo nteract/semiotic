@@ -410,7 +410,7 @@ function renderSubject(
     case "bracket": {
       const bracketType = subject?.type || "curly"
       const span = subject?.width ?? subject?.height
-      const depth = subject?.depth || 30
+      const depth = subject?.depth ?? 30
       const isVertical = subject?.width === undefined
 
       if (span !== undefined) {
@@ -472,7 +472,7 @@ function renderConnector(
   } else if (type === "bracket" && subject) {
     const width = subject.width
     const height = subject.height
-    const depth = subject.depth || 30
+    const depth = subject.depth ?? 30
     if (width !== undefined) {
       startX = width / 2
       startY = depth
@@ -596,10 +596,10 @@ function AnnotationRenderer(props: AnnotationRendererProps) {
   if (resolvedType === "bracket" && subject && dx === 0 && dy === 0) {
     if (subject.width !== undefined) {
       dx = subject.width / 2
-      const depthVal = subject.depth || 30
+      const depthVal = subject.depth ?? 30
       dy = depthVal + (depthVal >= 0 ? 5 : -5)
     } else if (subject.height !== undefined) {
-      const depthVal = subject.depth || 30
+      const depthVal = subject.depth ?? 30
       dx = depthVal + (depthVal >= 0 ? 5 : -5)
       dy = subject.height / 2
     }
@@ -638,8 +638,8 @@ export default function SemioticAnnotation(props: AnnotationProps) {
   const eventListeners = noteData.eventListeners || noteData.events || {}
 
   if (noteData.coordinates && screenCoordinates) {
-    const setNX = noteData.nx || screenCoordinates[0][0] + (noteData.dx ?? 0)
-    const setNY = noteData.ny || screenCoordinates[0][1] + (noteData.dy ?? 0)
+    const setNX = noteData.nx ?? screenCoordinates[0][0] + (noteData.dx ?? 0)
+    const setNY = noteData.ny ?? screenCoordinates[0][1] + (noteData.dy ?? 0)
     const notes = screenCoordinates.map((d, i) => {
       const subjectNote = Object.assign({}, noteData, {
         note: i === 0 ? noteData.note : { label: "" },
@@ -653,6 +653,7 @@ export default function SemioticAnnotation(props: AnnotationProps) {
           data-testid="semiotic-annotation"
           key={`multi-annotation-${i}`}
           {...subjectNote}
+          events={eventListeners}
           type={annotationType}
         />
       )
