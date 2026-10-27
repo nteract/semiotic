@@ -323,6 +323,8 @@ export interface LayoutMetrics {
 }
 export interface SolvedCompositionalLayout {
   readonly schemaVersion: "semiotic.compositional-layout.v0.1"
+  /** Routing and metric axis for local projections; absent on legacy engine results. */
+  readonly direction?: CompositionalView["direction"]
   readonly requestId: ID
   readonly semanticHash: string
   readonly graphRevision: ID

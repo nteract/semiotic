@@ -31,6 +31,60 @@ describe("network keyboard focus follows layout", () => {
   beforeEach(() => setupCanvasMock())
   afterEach(() => vi.restoreAllMocks())
 
+  it.each([
+    "ArrowRight",
+    "ArrowLeft",
+    "ArrowDown",
+    "ArrowUp",
+    "Home",
+    "End",
+    "PageDown",
+    "PageUp",
+    "Enter"
+  ])("starts ungrouped navigation with %s, including after Escape", (key) => {
+    const onObservation = vi.fn()
+    const { container } = render(
+      <StreamNetworkFrame
+        size={[700, 300]}
+        nodes={nodes}
+        edges={edges}
+        chartType="force"
+        animate={false}
+        onObservation={onObservation}
+        customNetworkLayout={() => ({
+          sceneNodes: nodes.map((datum, i) => ({
+            type: "rect" as const,
+            id: datum.id,
+            x: i * 200,
+            y: 0,
+            w: 100,
+            h: 100,
+            datum,
+            style: {}
+          }))
+        })}
+        tooltipContent={(hover) => hover.data?.name}
+      />
+    )
+    const frame = container.querySelector<HTMLElement>(".stream-network-frame")!
+    for (let attempt = 0; attempt < 2; attempt++) {
+      fireEvent.keyDown(frame, { key })
+      expect(onObservation.mock.calls.at(-1)![0]).toMatchObject({
+        type: "focus",
+        datum: { id: "A" }
+      })
+      expect(
+        container.querySelector(".stream-network-tooltip")
+      ).toHaveTextContent("Alpha")
+      fireEvent.keyDown(frame, { key: "ArrowRight" })
+      expect(
+        container.querySelector(".stream-network-tooltip")
+      ).toHaveTextContent("Beta")
+      fireEvent.keyDown(frame, { key: "Escape" })
+      expect(container.querySelector(".stream-network-tooltip")).toBeNull()
+    }
+  })
+
   it.each(["sankey", "force"] as const)(
     "preserves %s node identity and tooltip through resize and removal",
     (chartType) => {

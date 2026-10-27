@@ -85,7 +85,10 @@ export function extractNetworkDataRow(
 
   return {
     label: authoredLabel,
-    values: { ...datumToValues(accessibleDatumFor(element)), ...(element.navParentId ? { group: element.navParentId } : {}) },
+    values: {
+      ...(element.navParentId ? { group: element.navParentId } : {}),
+      ...datumToValues(accessibleDatumFor(element)),
+    },
   }
 }
 

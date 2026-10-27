@@ -150,6 +150,20 @@ test("compositional docs demonstrate geometry, optimization, trace and exact dup
   await expect(page.getByTestId("dag-trace")).toHaveText(trace!)
   await page.getByLabel("DAG representation").selectOption("exploded")
   await expect(lab.locator("[data-part]")).toHaveCount(9)
+  const firstExplodedRow = await lab.locator('[data-part^="orders:"]').evaluateAll((rows) =>
+    rows.sort((a, b) => a.getBoundingClientRect().y - b.getBoundingClientRect().y)[0]
+      .querySelector("text")!.textContent
+  )
+  await keyboardFrame.focus()
+  await keyboardFrame.press("Home")
+  await expect(page.getByRole("tooltip")).toContainText("Order input")
+  await expect(page.getByRole("tooltip")).not.toContainText("Order input /")
+  await keyboardFrame.press("Enter")
+  await expect(page.getByRole("tooltip")).toContainText(`Order input / ${firstExplodedRow}`)
+  await keyboardFrame.press("Escape")
+  await expect(page.getByRole("tooltip")).not.toContainText("Order input /")
+  await keyboardFrame.press("Escape")
+  await expect(page.getByRole("tooltip")).toHaveCount(0)
   await expect(page.getByTestId("dag-trace")).toHaveText(trace!)
   await expect(lab.locator('[data-wire="output-quantity"]')).toHaveAttribute(
     "data-active",

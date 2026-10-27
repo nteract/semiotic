@@ -233,7 +233,10 @@ export function useGraphKeyboardNavigation<
         )
           return
         neighborIndexRef.current = -1
-        next = nextConnected?.(event.key, graph, -1, neighborIndexRef) ?? 0
+        next =
+          nextConnected && graph.flat.some((point) => point.navParentId != null)
+            ? nextConnected(event.key, graph, -1, neighborIndexRef) ?? 0
+            : 0
       } else {
         next = nextConnected
           ? nextConnected(event.key, graph, current, neighborIndexRef)

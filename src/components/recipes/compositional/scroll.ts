@@ -14,6 +14,7 @@ export function projectCompositionalScroll(
     viewRevision: string
   }
 ): SolvedCompositionalLayout {
+  const horizontal = solved.direction !== "TB" && solved.direction !== "BT"
   const node = solved.nodes.find((n) => n.id === options.nodeId)
   if (!node || solved.status === "infeasible")
     fail(
@@ -126,7 +127,7 @@ export function projectCompositionalScroll(
             ? shift(old.points[old.points.length - 3], edge.target, target)
             : target.escape,
           edge.routing === "bump",
-          true
+          horizontal
         )
       : routeSection(old.id, points, false, [])
     return {
@@ -140,7 +141,7 @@ export function projectCompositionalScroll(
   const routing = edges.find((e) => e.routing !== "none")?.routing
   const measured = measureRoutes(
     edges,
-    true,
+    horizontal,
     new Set(edges.map((e) => e.edgeId)),
     routing === "none" ? "orthogonal" : routing,
     new Set(edges.filter((e) => e.routing === "none").map((e) => e.edgeId))

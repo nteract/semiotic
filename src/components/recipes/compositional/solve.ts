@@ -141,6 +141,7 @@ function validateOptions(request: LayoutRequest): void {
 function baseResult(request: LayoutRequest): SolvedCompositionalLayout {
   return {
     schemaVersion: "semiotic.compositional-layout.v0.1",
+    direction: request.view.direction,
     requestId: request.requestId,
     semanticHash: request.prepared.semanticHash,
     graphRevision: request.prepared.graph.revision,

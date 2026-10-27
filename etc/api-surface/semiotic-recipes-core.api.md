@@ -2137,6 +2137,7 @@ interface-member SnapshotResidual::property::value = required value: number
 interface-member SolvedCompositionalLayout::property::bounds = required readonly bounds: Readonly<{x: number; y: number; width: number; height: number;}>
 interface-member SolvedCompositionalLayout::property::bundles = required readonly bundles: readonly BundleGeometry[]
 interface-member SolvedCompositionalLayout::property::diagnostics = required readonly diagnostics: readonly Diagnostic[]
+interface-member SolvedCompositionalLayout::property::direction = optional readonly direction: FlowDirection | undefined
 interface-member SolvedCompositionalLayout::property::edges = required readonly edges: readonly RoutedConnection[]
 interface-member SolvedCompositionalLayout::property::engineId = required readonly engineId: string
 interface-member SolvedCompositionalLayout::property::engineVersion = required readonly engineVersion: string

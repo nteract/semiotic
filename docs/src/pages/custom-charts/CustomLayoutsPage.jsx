@@ -846,7 +846,7 @@ import { lineageDagLayout } from "semiotic/recipes"
           deeper node. Nodes take priority over edges. Set a row's <code>navParentId</code> to
           its owner's scene ID: arrows move between owners, Enter descends into rows, and Escape
           ascends. Arrows and Home/End stay among siblings. Accessible tables include a group
-          column for child rows. Scene IDs must be unique even when local row IDs repeat.
+          column for child rows when the authored accessible data does not already provide one. Scene IDs must be unique even when local row IDs repeat.
         </p>
         <CodeBlock language="jsx">{`import { NetworkCustomChart } from "semiotic/network"
 import {

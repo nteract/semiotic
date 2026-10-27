@@ -63,16 +63,37 @@ describe("authored network navigation groups", () => {
       "owner-2"
     ])
   })
+  it.each(["datum", "accessibleDatum", "tableFields"] as const)(
+    "preserves an authored group from %s in accessible node and edge rows",
+    (source) => {
+      const fields = { group: "Finance", value: 7 }
+      const metadata =
+        source === "tableFields"
+          ? { accessibility: { tableFields: fields } }
+          : { [source]: fields }
+      const model = buildNetworkTableModel(
+        [{ ...scene[1], ...metadata }],
+        [
+          {
+            type: "line",
+            datum: { source: "a", target: "b" },
+            navParentId: "owner-0",
+            ...metadata
+          }
+        ]
+      )
+      expect(model.nodeRows[0].semantic.values.group).toBe("Finance")
+      expect(model.edgeRows[0].values.group).toBe("Finance")
+    }
+  )
   it("keeps orphan and cyclic nodes reachable", () => {
     const graph = buildNavGraph(
       extractNetworkNavPoints(
-        scene
-          .slice(0, 3)
-          .map((n, i) => ({
-            ...n,
-            navParentId:
-              i === 0 ? "missing" : i === 1 ? "owner-0-row-1" : "owner-0-row-0"
-          }))
+        scene.slice(0, 3).map((n, i) => ({
+          ...n,
+          navParentId:
+            i === 0 ? "missing" : i === 1 ? "owner-0-row-1" : "owner-0-row-0"
+        }))
       )
     )
     const ids = new Set([

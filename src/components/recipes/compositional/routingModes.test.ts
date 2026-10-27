@@ -352,3 +352,63 @@ it.each(["terminals", "bump"] as const)(
     }
   }
 )
+
+it.each(["TB", "BT"] as const)(
+  "preserves the %s bump axis through scrolling with east/west row anchors",
+  async (direction) => {
+    const { projectCompositionalScroll } = await import("./scroll")
+    const r = fixture()
+    r.options = { ...r.options, routing: "bump" }
+    r.view = {
+      ...r.view,
+      direction,
+      anchors: r.prepared.graph.edges.flatMap((edge, i) => [
+        {
+          ref: { nodeId: edge.source, endpoint: edge.sourceEndpoint! },
+          use: "source" as const,
+          constraint: "fixed-side" as const,
+          binding: {
+            kind: "node-side" as const,
+            side: "east" as const,
+            fraction: 0.2 + i * 0.25
+          }
+        },
+        {
+          ref: { nodeId: edge.target, endpoint: edge.targetEndpoint! },
+          use: "target" as const,
+          constraint: "fixed-side" as const,
+          binding: {
+            kind: "node-side" as const,
+            side: "west" as const,
+            fraction: 0.7 - i * 0.25
+          }
+        }
+      ])
+    }
+    const initial = solved(r)
+    const scroll = (offsetY: number) =>
+      projectCompositionalScroll(JSON.parse(JSON.stringify(initial)), {
+        nodeId: "A",
+        viewport: { x: 0, y: 0, width: 100, height: 100 },
+        offsetY,
+        viewRevision: "scroll"
+      })
+    expect(scroll(0).edges).toEqual(initial.edges)
+    const moved = scroll(10)
+    expect(moved.metrics.alignmentError).toBe(initial.metrics.alignmentError)
+    for (const edge of moved.edges) {
+      expect(edge.sections[0].commands?.find((c) => c.kind === "C")).toEqual({
+        kind: "C",
+        control1: {
+          x: edge.source.escape.x,
+          y: (edge.source.escape.y + edge.target.escape.y) / 2
+        },
+        control2: {
+          x: edge.target.escape.x,
+          y: (edge.source.escape.y + edge.target.escape.y) / 2
+        },
+        point: edge.target.escape
+      })
+    }
+  }
+)

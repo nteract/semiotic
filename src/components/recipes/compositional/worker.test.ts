@@ -204,9 +204,13 @@ describe("compositional worker transaction boundaries", () => {
   })
 })
 
-it.each(["terminals", "bump"] as const)(
-  "round-trips %s geometry through the worker controller",
-  async (routing) => {
+it.each(
+  (["LR", "RL", "TB", "BT"] as const).flatMap((direction) =>
+    (["terminals", "bump"] as const).map((routing) => ({ direction, routing }))
+  )
+)(
+  "round-trips $direction $routing geometry through the worker controller",
+  async ({ direction, routing }) => {
     const host = port(),
       worker = port()
     host.postMessage = (message) =>
@@ -218,9 +222,11 @@ it.each(["terminals", "bump"] as const)(
     const controller = new CompositionalLayoutController()
     const r = fixture()
     r.options = { ...r.options, routing }
+    r.view = { ...r.view, direction }
     try {
       expect(await controller.solve(r, engine)).toBe(true)
       expect(controller.solution).toEqual(routeCompositionalGraph(r))
+      expect(controller.solution!.direction).toBe(direction)
       expect(controller.solution!.edges).toHaveLength(3)
     } finally {
       controller.dispose()

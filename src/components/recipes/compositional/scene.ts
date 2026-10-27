@@ -6,7 +6,7 @@ import type {
   PreparedCompositionalGraph,
   SolvedCompositionalLayout
 } from "./types"
-import { fail } from "./identity"
+import { compositionalEndpointKey, fail } from "./identity"
 import { compositionalPath } from "./routing"
 
 export interface CompositionalSceneConfig {
@@ -34,19 +34,37 @@ export function emitCompositionalScene(
     )
   const nodeById = new Map(prepared.graph.nodes.map((n) => [n.id, n])),
     edgeById = new Map(prepared.graph.edges.map((e) => [e.id, e]))
+  const ownerIds = new Map(
+    solved.nodes
+      .filter((n) => n.semantic.endpoint.kind === "node")
+      .map((n) => [n.semantic.nodeId, n.id])
+  )
+  const displayedParts = new Set(
+    solved.nodes
+      .filter((n) => n.semantic.endpoint.kind === "part")
+      .map((n) => compositionalEndpointKey(n.semantic))
+  )
   return {
     sceneNodes: solved.nodes.flatMap((n) => {
       const owner = nodeById.get(n.semantic.nodeId)!
       const whole = n.semantic.endpoint.kind === "node"
+      const partId =
+        n.semantic.endpoint.kind === "part"
+          ? n.semantic.endpoint.partId
+          : undefined
+      const part = owner.parts?.find((p) => p.id === partId)
       const main = {
         type: "rect" as const,
         id: n.id,
+        navParentId: whole ? undefined : ownerIds.get(owner.id),
         x: n.rect.x,
         y: n.rect.y,
         w: n.rect.width,
         h: n.rect.height,
-        label: owner.label ?? owner.id,
-        datum: { ...owner, semantic: n.semantic },
+        label: whole ? (owner.label ?? owner.id) : (part?.label ?? partId),
+        datum: whole
+          ? { ...owner, semantic: n.semantic }
+          : { id: partId, ownerId: owner.id, semantic: n.semantic },
         style: {
           fill: whole
             ? (config.nodeFill ?? "#edf2f7")
@@ -59,7 +77,11 @@ export function emitCompositionalScene(
       return [
         main,
         ...(n.parts ?? [])
-          .filter((p) => !p.clipped)
+          .filter(
+            (p) =>
+              !p.clipped &&
+              !displayedParts.has(compositionalEndpointKey(p.semantic))
+          )
           .map((p) => ({
             type: "rect" as const,
             id: JSON.stringify(["part-hit", n.id, p.partId]),

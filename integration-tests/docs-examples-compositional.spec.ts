@@ -148,5 +148,13 @@ test("parallel wiring retains identity, geometry and trace through presentation 
   await expect(page.getByRole("tooltip")).toContainText("orders:row:42")
   await page.mouse.move(0, 0)
   await expect(page.getByRole("tooltip")).toHaveCount(0)
+  // Ungrouped row nodes still initialize at the first node, including after Escape.
+  await rowFrame.focus()
+  for (let attempt = 0; attempt < 2; attempt++) {
+    await rowFrame.press("ArrowRight")
+    await expect(page.getByRole("tooltip")).toContainText("orders:row:42")
+    await rowFrame.press("Escape")
+    await expect(page.getByRole("tooltip")).toHaveCount(0)
+  }
   expect(errors).toEqual([])
 })

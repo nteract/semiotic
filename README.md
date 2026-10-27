@@ -465,7 +465,7 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { getNetworkPerspectiveSize } from "semiotic/network/perspective/core"` | browser | **1.1 KiB** | — |
 | `import { MotifBraidChart } from "semiotic/atlas"` | browser | **109.8 KiB** | 29.3 KiB |
 | `import { prepareNetworkAtlas } from "semiotic/atlas/core"` | browser | **7.1 KiB** | — |
-| `import { LineChart } from "semiotic"` | browser | **122.4 KiB** | 44.2 KiB |
+| `import { LineChart } from "semiotic"` | browser | **122.5 KiB** | 44.2 KiB |
 | `import { LineChart } from "semiotic/xy"` | browser | **122.1 KiB** | 32.2 KiB |
 | `import { LineChart } from "semiotic/line"` | browser | **122.3 KiB** | 32.2 KiB |
 | `import { BarChart } from "semiotic/ordinal"` | browser | **103.6 KiB** | 14.7 KiB |
@@ -503,7 +503,7 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { BigNumber } from "semiotic/value"` | browser | **5.8 KiB** | — |
 | `import { DirectManipulationControl } from "semiotic/controls"` | browser | **1.5 KiB** | — |
 
-**Line-boundary interpretation:** the retained named import from `semiotic/line` emits 364.7 KiB raw versus 364.8 KiB from `semiotic/xy`; gzip differs by 0.2 KiB (0.1%). Tree-shaking converges both paths on the same LineChart implementation graph. Treat `semiotic/line` as a narrower API/direct-ESM artifact boundary, not an application-bundle saving. Do not add another per-chart entry until its packed named import beats the family path by both 10 KiB gzip and 7%.
+**Line-boundary interpretation:** the retained named import from `semiotic/line` emits 364.8 KiB raw versus 364.8 KiB from `semiotic/xy`; gzip differs by 0.1 KiB (0.1%). Tree-shaking converges both paths on the same LineChart implementation graph. Treat `semiotic/line` as a narrower API/direct-ESM artifact boundary, not an application-bundle saving. Do not add another per-chart entry until its packed named import beats the family path by both 10 KiB gzip and 7%.
 
 <!-- semiotic-cold-consumer:end -->
 
