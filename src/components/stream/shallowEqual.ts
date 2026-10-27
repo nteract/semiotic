@@ -3,7 +3,8 @@ export function shallowEqualTwoLevel(a: unknown, b: unknown): boolean {
   return equalConfig(a, b, 2)
 }
 
-function equalConfig(a: unknown, b: unknown, depth: number): boolean {
+/** Compare plain records to the requested depth; arrays retain per-index Object.is. */
+export function equalConfig(a: unknown, b: unknown, depth: number): boolean {
   if (Object.is(a, b)) return true
   if (depth === 0) return false
   if (Array.isArray(a) && Array.isArray(b)) return shallowEqualArray(a, b)

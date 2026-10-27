@@ -69,3 +69,37 @@ test("nested automatic themes follow OS colors before hydration", async ({
   await expect(colors).toHaveCSS("background-color", "rgb(255, 255, 255)")
   await expect(colors).toHaveCSS("color", "rgb(51, 51, 51)")
 })
+
+test("automatic children repaint and retain tooltips after imperative parent updates", async ({
+  page
+}) => {
+  await page.emulateMedia({ colorScheme: "light" })
+  await page.goto("/theme-updates/")
+  const chart = page.getByTestId("automatic-chart")
+  const values = page.getByTestId("automatic-live-values")
+  for (const [updated, color, label] of [
+    [false, "rgb(255, 0, 0)", "red"],
+    [true, "rgb(0, 0, 255)", "blue"]
+  ] as const) {
+    if (updated)
+      await page
+        .getByRole("button", { name: "Update automatic parent" })
+        .click()
+    await expect.poll(() => pointColor(chart, 260)).toBe(color)
+    await expect(values).toHaveCSS("color", color)
+    await expect(values).toHaveText(`${label}:22`)
+    if (updated) await expect(values).toHaveCSS("font-family", "serif")
+    await chart.hover({ position: { x: 260, y: 140 } })
+    const tooltip = chart.locator(".stream-frame-tooltip")
+    await expect(tooltip).toHaveText("Point Alpha: 5, 5")
+    const bounds = (await chart.boundingBox())!
+    const tip = (await tooltip.boundingBox())!
+    expect(tip.x).toBeGreaterThanOrEqual(bounds.x)
+    expect(tip.x + tip.width).toBeLessThanOrEqual(bounds.x + bounds.width)
+    await page.mouse.move(0, 0)
+    await expect(tooltip).toBeHidden()
+  }
+  await page.emulateMedia({ colorScheme: "dark" })
+  await expect.poll(() => pointColor(chart, 260)).toBe("rgb(255, 0, 0)")
+  await expect(values).toHaveCSS("color", "rgb(255, 0, 0)")
+})

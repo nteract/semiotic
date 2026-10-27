@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client"
 import { renderToString } from "react-dom/server"
 import { ThemeProvider, useTheme } from "semiotic/themes/react"
 import { Scatterplot } from "semiotic/xy"
+import { AutomaticThemeFixture } from "./automatic"
 
 const data = [{ x: 5, y: 5, name: "Alpha", group: "A" }]
 const initialOverride = {
@@ -99,6 +100,7 @@ function Fixture() {
         aria-label="Server-rendered automatic theme"
         dangerouslySetInnerHTML={{ __html: automaticMarkup }}
       />
+      <AutomaticThemeFixture />
     </>
   )
 }

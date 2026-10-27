@@ -17,16 +17,14 @@ import {
   resolveThemeUpdate,
   mergeThemeOverrides
 } from "./store/themeCore"
-import type {
-  SemioticTheme,
-  SemioticThemeUpdate
-} from "./store/themeCore"
+import type { SemioticTheme, SemioticThemeUpdate } from "./store/themeCore"
 import type { ThemeStoreState } from "./store/ThemeStore"
 import { useTheme } from "./store/useTheme"
 import { resolveThemePreset } from "./store/themePresets"
 import type { ThemePresetName } from "./store/themePresets"
 import { themeToCSSVariables } from "./store/themeCSSVariables"
 import { addMqlListener, getMediaQuery } from "./stream/mediaQuery"
+import { equalConfig } from "./stream/shallowEqual"
 import { TooltipChromeScope } from "./Tooltip/tooltipChrome"
 
 // ── Props ───────────────────────────────────────────────────────────────────
@@ -60,41 +58,23 @@ function resolveInitialTheme(
   }
   return {
     name,
-    theme: theme !== undefined
-      ? resolveThemeUpdate(parent ?? LIGHT_THEME, theme)
-      : cloneTheme(
-          parent ??
-            (getMediaQuery("(forced-colors: active)")?.matches
-              ? HIGH_CONTRAST_THEME
-              : LIGHT_THEME)
-        )
+    theme:
+      theme?.mode === "auto"
+        ? resolveAutoPalette(theme, "light")
+        : theme !== undefined
+          ? resolveThemeUpdate(parent ?? LIGHT_THEME, theme)
+          : cloneTheme(
+              parent ??
+                (getMediaQuery("(forced-colors: active)")?.matches
+                  ? HIGH_CONTRAST_THEME
+                  : LIGHT_THEME)
+            )
   }
 }
 
-// Keep prop comparison in the provider graph, rather than chart-only imports.
+// Theme records can nest through aesthetics; palette arrays contain primitives.
 function themeValuesEqual(a: unknown, b: unknown): boolean {
-  if (Object.is(a, b)) return true
-  if (
-    !a ||
-    !b ||
-    typeof a !== "object" ||
-    typeof b !== "object" ||
-    Array.isArray(a) !== Array.isArray(b)
-  )
-    return false
-  // Own names include array length and distinguish removed undefined fields.
-  const keys = Object.getOwnPropertyNames(a)
-  return (
-    keys.length === Object.getOwnPropertyNames(b).length &&
-    keys.every(
-      (key) =>
-        Object.prototype.hasOwnProperty.call(b, key) &&
-        themeValuesEqual(
-          (a as Record<string, unknown>)[key],
-          (b as Record<string, unknown>)[key]
-        )
-    )
-  )
+  return equalConfig(a, b, Infinity)
 }
 
 function useStableThemeValue<T>(value: T): T {
@@ -116,15 +96,19 @@ function ThemeCSSWrapper({
   resolved: SemioticTheme
   query?: string
 }) {
-  const { theme, setTheme } = useThemeSelector((state: ThemeStoreState) => state)
+  const { theme, setTheme } = useThemeSelector(
+    (state: ThemeStoreState) => state
+  )
   const autoId = React.useId()
   const auto = React.useContext(ThemeScopeContext)
+  const [hydrated, setHydrated] = React.useState(false)
   // Keep a ref to the latest theme so the forced-colors handler can read it
   // without re-registering the listener on every theme change.
   const currentThemeRef = React.useRef(theme)
   currentThemeRef.current = theme
 
   useIsomorphicLayoutEffect(() => {
+    setHydrated(true)
     const mql = query ? getMediaQuery(query) : undefined
     // An initially forced root has no preceding authored theme to restore.
     let beforeForced = !auto && mql?.matches ? LIGHT_THEME : undefined
@@ -144,10 +128,12 @@ function ThemeCSSWrapper({
     return mql && addMqlListener(mql, sync)
   }, [resolved, auto, query, setTheme])
 
+  // Media rules own unhydrated auto themes. After the first client commit,
+  // publish the live store values, including inherited imperative overrides.
   const style: React.CSSProperties & Record<string, string> = {
     position: "relative",
     colorScheme: theme.mode === "auto" ? "light dark" : theme.mode,
-    ...(auto ? {} : themeToCSSVariables(theme))
+    ...(auto && !hydrated ? {} : themeToCSSVariables(theme))
   }
 
   return (
@@ -175,19 +161,21 @@ function ThemeProviderWrapper({ theme, children }: ThemeProviderProps) {
   const parent = useTheme()
   const parentScope = React.useContext(ThemeScopeContext)
   const input = useStableThemeValue(theme)
+  const ownAuto = typeof input === "object" && input.mode === "auto"
+  const inherits = typeof input !== "string" && !input?.mode
   const auto = useStableThemeValue(
-    typeof input === "object" && input.mode === "auto"
+    ownAuto
       ? input
-      : parentScope && typeof input !== "string" && !input?.mode
+      : parentScope && inherits
         ? mergeThemeOverrides(parentScope, input ?? {})
         : undefined
   )
-  const inherited = parentScope === undefined ? undefined : parent
+  const inherited = inherits && parentScope !== undefined ? parent : undefined
   const initial = React.useMemo(
     () => resolveInitialTheme(input, inherited),
     [input, inherited]
   )
-  const resolved = useStableThemeValue(initial.theme)
+  const resolved = initial.theme
   return (
     <StoreProvider initialState={{ theme: resolved, equals: themeValuesEqual }}>
       <ThemeScopeContext.Provider value={auto ?? null}>
@@ -195,7 +183,7 @@ function ThemeProviderWrapper({ theme, children }: ThemeProviderProps) {
           themeName={initial.name}
           resolved={resolved}
           query={
-            auto
+            ownAuto
               ? "(prefers-color-scheme: dark)"
               : input === undefined && parentScope === undefined
                 ? "(forced-colors: active)"

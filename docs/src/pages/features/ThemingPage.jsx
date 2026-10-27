@@ -492,6 +492,9 @@ import { TUFTE_LIGHT, TUFTE_DARK, PASTELS_LIGHT } from "semiotic/themes"
         <code>ThemeProvider</code> is reactive — changing the <code>theme</code>{" "}
         prop updates the existing store without remounting charts, so you can
         wire it to your app's dark mode toggle, a media query, or a context value.
+        Inherited automatic themes follow live parent changes in both chart
+        colors and CSS variables. An explicit preset or mode starts an
+        independent theme scope.
       </p>
 
       <h3 id="reactive-switching">Reactive mode switching</h3>
