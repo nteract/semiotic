@@ -9,7 +9,7 @@ import PageLayout from "../components/PageLayout"
 const bundleSizeRows = Object.freeze([
   {
     "importPath": "semiotic/atlas",
-    "kb": 321,
+    "kb": 322,
     "blurb": "Motif Braid, Dependency Forest, and Flow Circuit readers"
   },
   {
@@ -59,7 +59,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/network/zoom",
-    "kb": 189,
+    "kb": 190,
     "blurb": "Optional virtual network viewport, camera controls and consumer-owned LOD"
   },
   {
@@ -84,12 +84,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/realtime",
-    "kb": 215,
+    "kb": 216,
     "blurb": "RealtimeLineChart, RealtimeHistogram, + 4 streaming charts"
   },
   {
     "importPath": "semiotic/realtime/core",
-    "kb": 213,
+    "kb": 214,
     "blurb": "Streaming chart types, HOCs, and buffer helpers"
   },
   {
@@ -129,12 +129,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/recipes",
-    "kb": 117,
+    "kb": 118,
     "blurb": "Pure layout functions (waffle, marimekko, flextree, dagre, …)"
   },
   {
     "importPath": "semiotic/recipes/core",
-    "kb": 114,
+    "kb": 115,
     "blurb": "Pure layout functions (waffle, marimekko, flextree, dagre, …)"
   },
   {
@@ -184,7 +184,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/ai",
-    "kb": 667,
+    "kb": 668,
     "blurb": "All schema-backed charts + validation — optimized for LLM code generation"
   },
   {

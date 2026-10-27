@@ -656,6 +656,21 @@ export async function createStaticRouteRenderer() {
       alias: {
         "react-dom/server.browser": "react-dom/server",
       },
+      // Match Vite's raw-source imports so executable documentation recipes
+      // appear verbatim in both the browser and prerendered code examples.
+      plugins: [{
+        name: "raw-source",
+        setup(build) {
+          build.onResolve({ filter: /\?raw$/ }, (args) => ({
+            path: resolve(args.resolveDir, args.path.slice(0, -4)),
+            namespace: "raw-source",
+          }))
+          build.onLoad({ filter: /.*/, namespace: "raw-source" }, (args) => ({
+            contents: readFileSync(args.path, "utf8"),
+            loader: "text",
+          }))
+        },
+      }],
       loader: {
         ".js": "jsx",
         ".css": "empty",

@@ -316,6 +316,7 @@ interface-member NetworkGlyphNode::property::ghostColor = optional ghostColor: s
 interface-member NetworkGlyphNode::property::glyph = required glyph: GlyphDef
 interface-member NetworkGlyphNode::property::id = optional id: string | undefined
 interface-member NetworkGlyphNode::property::label = optional label: string | undefined
+interface-member NetworkGlyphNode::property::navParentId = optional navParentId: string | undefined
 interface-member NetworkGlyphNode::property::rotation = optional rotation: number | undefined
 interface-member NetworkGlyphNode::property::size = required size: number
 interface-member NetworkGlyphNode::property::style = required style: Style

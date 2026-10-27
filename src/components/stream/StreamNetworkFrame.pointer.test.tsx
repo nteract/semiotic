@@ -113,3 +113,54 @@ it("coalesces native moves while preserving bubbling, current callbacks and clea
   expect(next).toHaveBeenCalledTimes(1)
   expect(scheduler.pendingCount).toBe(0)
 })
+
+it("sends nested row hover and clicks before its owner, and the header to its owner", async () => {
+  const scheduler = createFrameScheduler(0)
+  const click = vi.fn()
+  const owner = { id: "owner" },
+    row = { id: "row" }
+  const view = render(
+    <StreamNetworkFrame
+      chartType="force"
+      size={[240, 180]}
+      nodes={[owner]}
+      edges={[]}
+      margin={{ left: 0, top: 0, right: 0, bottom: 0 }}
+      animate={false}
+      frameScheduler={scheduler.scheduler}
+      customClickBehavior={click}
+      tooltipContent={(hover) => hover.data?.id}
+      customNetworkLayout={() => ({
+        sceneNodes: [
+          {
+            type: "rect",
+            x: 20,
+            y: 20,
+            w: 100,
+            h: 100,
+            datum: owner,
+            style: {}
+          },
+          { type: "rect", x: 20, y: 60, w: 100, h: 20, datum: row, style: {} }
+        ]
+      })}
+    />
+  )
+  await act(async () => scheduler.flush())
+  const canvas = view.container.querySelector("canvas")!
+  for (const [clientY, datum] of [
+    [70, row],
+    [30, owner]
+  ] as const) {
+    fireEvent.mouseMove(canvas, { clientX: 50, clientY })
+    await act(async () => scheduler.flush())
+    expect(
+      view.container.querySelector(".stream-network-tooltip")
+    ).toHaveTextContent(datum.id)
+    fireEvent.click(canvas, { clientX: 50, clientY })
+    expect(click.mock.calls.at(-1)![0].data).toBe(datum)
+  }
+  fireEvent.mouseLeave(canvas)
+  await act(async () => scheduler.flush())
+  expect(view.container.querySelector(".stream-network-tooltip")).toBeNull()
+})

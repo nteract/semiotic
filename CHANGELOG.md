@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Compositional `routing: "terminals"` for applications drawing their own curves, and `routing: "bump"` with shared paint/metric geometry. Same-owner connections default to routing opt-out; per-edge `route` hints preserve trace identities without routing costs.
+- Headless `useCompositionalInterfaces` navigation and opt-in `navParentId` owner/row keyboard groups with accessible table grouping.
+- Fully pinned row optimization supports cyclic owner projections and compound graphs, with request-local geometry/route reuse. Semantic cycle validation remains enforced.
+- Documented and tested nested rectangle hit priority, module-worker integration, and a 3.13.2 consumer fallback that computes fresh row anchors after routing failure.
+
+### Fixed
+
+- Ungrouped network keyboard navigation starts on the first node, including after Escape. Exploded compositional parts appear once as children of their owners, and authored accessible `group` values take precedence over navigation metadata.
+- Compositional scroll projection preserves the solve direction for bump curves and alignment metrics, including TB/BT layouts with explicit east/west anchors.
+
 ## [3.13.2]
 
 ### Added

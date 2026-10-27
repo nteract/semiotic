@@ -28,6 +28,7 @@ describe("documentation prerender determinism", () => {
       "charts/force-directed-graph",
       "charts/tree-diagram",
       "recipes/network-explorer",
+      "custom-charts/custom-layouts",
       "examples/network-visualization",
       "blog/orbit-diagram",
     ]
@@ -38,6 +39,9 @@ describe("documentation prerender determinism", () => {
         first?.text && first.headings.length > 0,
         `Route ${route || "/"} has no readable content`,
       )
+      if (route === "custom-charts/custom-layouts") {
+        assert.match(first.text, /export function authoredRowAnchors/)
+      }
       await delay(5)
       const second = sanitizeRouteHtml(await renderRoute(route), route)
 
