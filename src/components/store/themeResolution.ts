@@ -1,5 +1,5 @@
 import { applyConcreteThemeAccessibility } from "./concreteThemeAccessibility"
-import { LIGHT_THEME, DARK_THEME } from "./themeCore"
+import { LIGHT_THEME, DARK_THEME, mergeThemeOverrides } from "./themeCore"
 import type { SemioticTheme, SemioticThemeUpdate } from "./themeCore"
 import { themeToCSSVariables } from "./themeCSSVariables"
 
@@ -11,21 +11,16 @@ export function resolveAutoPalette(
   mode: "light" | "dark"
 ): SemioticTheme {
   const base = mode === "dark" ? DARK_THEME : LIGHT_THEME
-  const theme = applyConcreteThemeAccessibility({
-    ...cloneTheme(base),
-    ...update,
-    mode,
-    colors: {
-      ...base.colors,
-      ...update.colors,
-      categorical: [...(update.colors?.categorical ?? base.colors.categorical)]
-    },
-    typography: { ...base.typography, ...update.typography },
-    ...(update.tooltip
-      ? { tooltip: { ...base.tooltip, ...update.tooltip } }
-      : {})
-  })
-  return { ...theme, mode: "auto" }
+  const merged = mergeThemeOverrides(base, update)
+  merged.colors.categorical ??= base.colors.categorical
+  const theme = cloneTheme(
+    applyConcreteThemeAccessibility({
+      ...merged,
+      mode
+    })
+  )
+  theme.mode = "auto"
+  return theme
 }
 
 /** Scoped variables work before hydration and respond to OS preference changes. */
@@ -70,11 +65,10 @@ export function autoSVGTheme(update: SemioticThemeUpdate): SemioticTheme {
       (colors as Record<string, unknown>)[key] =
         `var(--semiotic-${token}, ${value})`
   }
-  const categoricalVariables = Object.keys(themeToCSSVariables(theme)).filter(
-    (name) => name.startsWith("--semiotic-category-")
-  )
+  // Validate all tokens before embedding values as SVG fallbacks.
+  themeToCSSVariables(theme)
   colors.categorical = theme.colors.categorical.map(
-    (value, i) => `var(${categoricalVariables[i]}, ${value})`
+    (value, i) => `var(--semiotic-category-${i + 1}, ${value})`
   )
   return { ...theme, colors }
 }

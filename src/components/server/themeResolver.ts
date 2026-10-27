@@ -16,11 +16,15 @@ import {
 import type { SemioticTheme } from "../store/themeCore"
 import {
   LIGHT_THEME,
-  DARK_THEME
+  DARK_THEME,
+  mergeThemeOverrides
 } from "../store/themeCore"
 import { resolveThemePreset } from "../store/themePresets"
 
-type PartialThemeObject = Omit<Partial<SemioticTheme>, "colors" | "typography" | "tooltip"> & {
+type PartialThemeObject = Omit<
+  Partial<SemioticTheme>,
+  "colors" | "typography" | "tooltip"
+> & {
   colors?: Partial<SemioticTheme["colors"]>
   typography?: Partial<SemioticTheme["typography"]>
   tooltip?: Partial<NonNullable<SemioticTheme["tooltip"]>>
@@ -63,18 +67,10 @@ export function resolveTheme(theme: ThemeInput): SemioticTheme {
     return resolved
   }
 
-  // Object theme — merge onto base
   const base = theme.mode === "dark" ? DARK_THEME : LIGHT_THEME
-
-  const resolved = {
-    ...base,
-    ...theme,
-    colors: { ...base.colors, ...(theme.colors || {}) },
-    typography: { ...base.typography, ...(theme.typography || {}) },
-    tooltip: { ...base.tooltip, ...(theme.tooltip || {}) },
-  } as SemioticTheme
-
-  return cloneTheme(applyConcreteThemeAccessibility(resolved))
+  return cloneTheme(
+    applyConcreteThemeAccessibility(mergeThemeOverrides(base, theme))
+  )
 }
 
 /**
@@ -96,11 +92,14 @@ export function themeStyles(theme: SemioticTheme) {
     categorical: theme.colors.categorical,
     annotation: theme.colors.annotation ?? theme.colors.text,
     legendSize: theme.typography.legendSize ?? theme.typography.labelSize,
-    legendFontFamily: theme.typography.legendFontFamily ?? theme.typography.fontFamily,
+    legendFontFamily:
+      theme.typography.legendFontFamily ?? theme.typography.fontFamily,
     legendFontWeight: theme.typography.legendFontWeight,
     titleFontSize: theme.typography.titleFontSize ?? theme.typography.titleSize,
-    titleFontFamily: theme.typography.titleFontFamily ?? theme.typography.fontFamily,
+    titleFontFamily:
+      theme.typography.titleFontFamily ?? theme.typography.fontFamily,
     titleFontWeight: theme.typography.titleFontWeight ?? "bold",
-    tickFontFamily: theme.typography.tickFontFamily ?? theme.typography.fontFamily,
+    tickFontFamily:
+      theme.typography.tickFontFamily ?? theme.typography.fontFamily
   }
 }

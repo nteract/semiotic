@@ -1,3 +1,8 @@
+/** Read a media query without requiring a browser or matchMedia polyfill. */
+export function getMediaQuery(query: string): MediaQueryList | undefined {
+  return typeof window === "undefined" ? undefined : window.matchMedia?.(query)
+}
+
 /** Subscribe with the legacy Safari fallback; tolerate unavailable media queries. */
 export function addMqlListener(
   mql: MediaQueryList | undefined,

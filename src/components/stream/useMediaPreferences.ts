@@ -1,52 +1,30 @@
 "use client"
 import { useState, useEffect } from "react"
 
-import { addMqlListener } from "./mediaQuery"
+import { addMqlListener, getMediaQuery } from "./mediaQuery"
 export { addMqlListener } from "./mediaQuery"
 
-/** SSR-safe matchMedia check */
-function queryMatches(query: string): boolean {
-  if (typeof window === "undefined" || !window.matchMedia) return false
-  return window.matchMedia(query).matches
+function useMediaPreference(query: string): boolean {
+  const [matches, setMatches] = useState(
+    () => getMediaQuery(query)?.matches ?? false
+  )
+  useEffect(() => {
+    const mql = getMediaQuery(query)
+    setMatches(mql?.matches ?? false)
+    const handler = (e: MediaQueryListEvent) => setMatches(e.matches)
+    return addMqlListener(mql, handler)
+  }, [query])
+  return matches
 }
 
-/**
- * SSR-safe hook that returns true when the user prefers reduced motion.
- * Initializes from matchMedia synchronously to avoid a flash of animation.
- */
+/** SSR-safe reduced-motion preference, initialized before the first paint. */
 export function useReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(() => queryMatches("(prefers-reduced-motion: reduce)"))
-
-  useEffect(() => {
-    if (typeof window === "undefined" || !window.matchMedia) return
-
-    const mql = window.matchMedia("(prefers-reduced-motion: reduce)")
-    setReduced(mql.matches)
-
-    const handler = (e: MediaQueryListEvent) => setReduced(e.matches)
-    return addMqlListener(mql, handler)
-  }, [])
-
-  return reduced
+  return useMediaPreference("(prefers-reduced-motion: reduce)")
 }
 
 /**
  * SSR-safe hook that returns true when forced-colors or high-contrast mode is active.
  */
 export function useHighContrast(): boolean {
-  const [highContrast, setHighContrast] = useState(() =>
-    queryMatches("(forced-colors: active)")
-  )
-
-  useEffect(() => {
-    if (typeof window === "undefined" || !window.matchMedia) return
-
-    const mql = window.matchMedia("(forced-colors: active)")
-    setHighContrast(mql.matches)
-
-    const handler = (e: MediaQueryListEvent) => setHighContrast(e.matches)
-    return addMqlListener(mql, handler)
-  }, [])
-
-  return highContrast
+  return useMediaPreference("(forced-colors: active)")
 }

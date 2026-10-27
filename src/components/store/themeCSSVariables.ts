@@ -22,90 +22,58 @@ export function themeToCSSVariables(
     "--semiotic-primary": theme.colors.primary,
     "--semiotic-font-family": theme.typography.fontFamily,
     "--semiotic-secondary": theme.colors.secondary || theme.colors.primary,
-    "--semiotic-surface": theme.colors.surface || theme.colors.background,
+    "--semiotic-surface": theme.colors.surface || theme.colors.background
   }
 
   theme.colors.categorical.forEach((color, index) => {
     variables[`--semiotic-category-${index + 1}`] = color
   })
 
-  if (theme.colors.focus) variables["--semiotic-focus"] = theme.colors.focus
-  if (theme.colors.selection) {
-    variables["--semiotic-selection-color"] = theme.colors.selection
+  for (const [token, value] of [
+    ["focus", theme.colors.focus],
+    ["selection-color", theme.colors.selection],
+    [
+      "selection-opacity",
+      theme.colors.selectionOpacity == null
+        ? undefined
+        : String(theme.colors.selectionOpacity)
+    ],
+    ["diverging", theme.colors.diverging],
+    ["annotation-color", theme.colors.annotation],
+    ["success", theme.colors.success],
+    ["danger", theme.colors.danger],
+    ["warning", theme.colors.warning],
+    ["error", theme.colors.error],
+    ["info", theme.colors.info],
+    ["tooltip-bg", theme.tooltip?.background],
+    ["tooltip-text", theme.tooltip?.text],
+    ["tooltip-radius", theme.tooltip?.borderRadius],
+    ["tooltip-font-size", theme.tooltip?.fontSize],
+    ["tooltip-shadow", theme.tooltip?.shadow],
+    ["border-radius", theme.borderRadius]
+  ] as const) {
+    if (value) variables[`--semiotic-${token}`] = value
   }
-  if (theme.colors.selectionOpacity != null) {
-    variables["--semiotic-selection-opacity"] = String(
-      theme.colors.selectionOpacity
-    )
-  }
-  if (theme.colors.diverging) {
-    variables["--semiotic-diverging"] = theme.colors.diverging
-  }
-  if (theme.colors.annotation) {
-    variables["--semiotic-annotation-color"] = theme.colors.annotation
-  }
-  if (theme.colors.success) {
-    variables["--semiotic-success"] = theme.colors.success
-  }
-  if (theme.colors.danger) {
-    variables["--semiotic-danger"] = theme.colors.danger
-  }
-  if (theme.colors.warning) {
-    variables["--semiotic-warning"] = theme.colors.warning
-  }
-  if (theme.colors.error) variables["--semiotic-error"] = theme.colors.error
-  if (theme.colors.info) variables["--semiotic-info"] = theme.colors.info
-
-  if (theme.tooltip?.background) {
-    variables["--semiotic-tooltip-bg"] = theme.tooltip.background
-  }
-  if (theme.tooltip?.text) {
-    variables["--semiotic-tooltip-text"] = theme.tooltip.text
-  }
-  if (theme.tooltip?.borderRadius) {
-    variables["--semiotic-tooltip-radius"] = theme.tooltip.borderRadius
-  }
-  if (theme.tooltip?.fontSize) {
-    variables["--semiotic-tooltip-font-size"] = theme.tooltip.fontSize
-  }
-  if (theme.tooltip?.shadow) {
-    variables["--semiotic-tooltip-shadow"] = theme.tooltip.shadow
-  }
-  if (theme.borderRadius) {
-    variables["--semiotic-border-radius"] = theme.borderRadius
-  }
-  const legendFontSize = theme.typography.legendSize ?? theme.typography.labelSize
-  if (legendFontSize != null) {
-    variables["--semiotic-legend-font-size"] =
-      `${legendFontSize}px`
-  }
-  if (theme.typography.legendFontFamily != null) {
-    variables["--semiotic-legend-font-family"] = theme.typography.legendFontFamily
-  }
-  if (theme.typography.legendFontWeight != null) {
-    variables["--semiotic-legend-font-weight"] = String(theme.typography.legendFontWeight)
-  }
-  const titleFontSize = theme.typography.titleFontSize ?? theme.typography.titleSize
-  if (titleFontSize != null) {
-    variables["--semiotic-title-font-size"] =
-      `${titleFontSize}px`
-  }
-  if (theme.typography.titleFontFamily != null) {
-    variables["--semiotic-title-font-family"] = theme.typography.titleFontFamily
-  }
-  if (theme.typography.titleFontWeight != null) {
-    variables["--semiotic-title-font-weight"] = String(theme.typography.titleFontWeight)
-  }
-  if (theme.typography.tickFontFamily != null) {
-    variables["--semiotic-tick-font-family"] =
-      theme.typography.tickFontFamily
-  }
-  if (theme.typography.tickSize != null) {
-    variables["--semiotic-tick-font-size"] = `${theme.typography.tickSize}px`
-  }
-  if (theme.typography.labelSize != null) {
-    variables["--semiotic-axis-label-font-size"] =
-      `${theme.typography.labelSize}px`
+  for (const [token, value, unit = ""] of [
+    [
+      "legend-font-size",
+      theme.typography.legendSize ?? theme.typography.labelSize,
+      "px"
+    ],
+    ["legend-font-family", theme.typography.legendFontFamily],
+    ["legend-font-weight", theme.typography.legendFontWeight],
+    [
+      "title-font-size",
+      theme.typography.titleFontSize ?? theme.typography.titleSize,
+      "px"
+    ],
+    ["title-font-family", theme.typography.titleFontFamily],
+    ["title-font-weight", theme.typography.titleFontWeight],
+    ["tick-font-family", theme.typography.tickFontFamily],
+    ["tick-font-size", theme.typography.tickSize, "px"],
+    ["axis-label-font-size", theme.typography.labelSize, "px"]
+  ] as const) {
+    if (value != null) variables[`--semiotic-${token}`] = `${value}${unit}`
   }
 
   for (const [name, value] of Object.entries(variables)) {

@@ -93,7 +93,7 @@ const themeProviderProps = [
     required: false,
     default: '"light"',
     description:
-      'A named preset string or a partial theme object. Named presets: "light", "dark", "high-contrast", "tufte", "tufte-dark", "pastels", "pastels-dark", "bi-tool", "bi-tool-dark", "italian", "italian-dark", "journalist", "journalist-dark", "playful", "playful-dark", "carbon", "carbon-dark". Partial objects are deep-merged with the active theme.',
+      'A named preset string or a partial theme object. Named presets: "light", "dark", "high-contrast", "tufte", "tufte-dark", "pastels", "pastels-dark", "bi-tool", "bi-tool-dark", "italian", "italian-dark", "journalist", "journalist-dark", "playful", "playful-dark", "carbon", "carbon-dark". Partial objects inherit the enclosing provider, or the light theme at the root. Removed overrides return to that base.',
   },
   {
     name: "children",
@@ -490,15 +490,19 @@ import { TUFTE_LIGHT, TUFTE_DARK, PASTELS_LIGHT } from "semiotic/themes"
 
       <p>
         <code>ThemeProvider</code> is reactive — changing the <code>theme</code>{" "}
-        prop re-initializes the store, so you can wire it to your app's dark mode
-        toggle, a media query, or a context value.
+        prop updates the existing store without remounting charts, so you can
+        wire it to your app's dark mode toggle, a media query, or a context value.
+        Inherited automatic themes follow live parent changes in both chart
+        colors and CSS variables. An explicit preset or mode starts an
+        independent theme scope.
       </p>
 
       <h3 id="reactive-switching">Reactive mode switching</h3>
 
       <p>
-        Pass a string preset or object — ThemeProvider re-applies whenever the
-        prop changes:
+        Pass a string preset or object. Removed overrides return to the enclosing
+        provider's theme, or the light theme at the root. Equivalent inline
+        objects keep the same resolved theme and do not notify chart consumers:
       </p>
 
       <CodeBlock
@@ -562,7 +566,9 @@ const darkTheme  = { ...DARK_THEME,  colors: { ...DARK_THEME.colors,  categorica
         <strong>Merge rules:</strong> String preset (e.g. <code>"dark"</code>)
         → full replacement. Object with <code>mode</code> → merge onto the
         matching base theme. Object without <code>mode</code> → merge onto the
-        current theme (partial override, keeps existing mode/colors).
+        enclosing provider's theme, or light at the root. Nested tooltip,
+        accessibility, typography, and color overrides preserve the other fields
+        in their section. Omitting the prop restores that inherited/default theme.
       </p>
 
       <h3 id="css-interop">CSS custom properties interop</h3>
@@ -595,15 +601,13 @@ const darkTheme  = { ...DARK_THEME,  colors: { ...DARK_THEME.colors,  categorica
   /* ... Semiotic vars follow because they reference --app-* */
 }
 
-/* Or combine: use ThemeProvider for categorical/sequential colors,
-   and let CSS vars handle the rest */`}
+/* Place CSS overrides on the element that owns the decorated chrome. */`}
         language="css"
       />
 
       <CodeBlock
-        code={`// Hybrid approach: ThemeProvider for palette only, CSS vars for decoration
-// Since this object has no \`mode\`, it merges onto the current theme
-// without overriding background/text/grid (which come from your CSS vars)
+        code={`// Override the palette while inheriting the enclosing provider's theme.
+// At the root, omitted background/text/grid values come from the light theme.
 <ThemeProvider theme={{
   colors: {
     categorical: BRAND_COLORS,
