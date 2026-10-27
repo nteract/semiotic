@@ -206,9 +206,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -870,9 +871,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -1583,9 +1585,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -2274,9 +2277,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -2964,9 +2968,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -3632,9 +3637,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -4241,9 +4247,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -4882,9 +4889,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -5565,9 +5573,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -6220,9 +6229,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -6881,9 +6891,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -7537,9 +7548,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -8183,9 +8195,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -8821,9 +8834,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -9462,9 +9476,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -10106,9 +10121,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -10724,9 +10740,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -11346,9 +11363,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -11970,9 +11988,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -12584,9 +12603,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -13218,9 +13238,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -13805,9 +13826,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -14405,9 +14427,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -15029,9 +15052,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -15937,9 +15961,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -16826,9 +16851,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -17693,9 +17719,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -18564,9 +18591,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -19416,9 +19444,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -20260,9 +20289,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -21109,6 +21139,16 @@
             "extentPadding": {
               "type": "number"
             },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact",
+                "rounded"
+              ],
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
+              "default": "nice"
+            },
             "showAxes": {
               "type": "boolean"
             },
@@ -21667,6 +21707,16 @@
             },
             "extentPadding": {
               "type": "number"
+            },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact",
+                "rounded"
+              ],
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
+              "default": "nice"
             },
             "showAxes": {
               "type": "boolean"
@@ -22298,6 +22348,16 @@
             "extentPadding": {
               "type": "number"
             },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact",
+                "rounded"
+              ],
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
+              "default": "nice"
+            },
             "showAxes": {
               "type": "boolean"
             },
@@ -22865,6 +22925,16 @@
             "extentPadding": {
               "type": "number"
             },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact",
+                "rounded"
+              ],
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
+              "default": "nice"
+            },
             "showAxes": {
               "type": "boolean"
             },
@@ -23419,6 +23489,16 @@
             },
             "extentPadding": {
               "type": "number"
+            },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact",
+                "rounded"
+              ],
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
+              "default": "nice"
             },
             "showAxes": {
               "type": "boolean"
@@ -24019,9 +24099,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -24639,9 +24720,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -25300,9 +25382,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -25863,9 +25946,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -26583,9 +26667,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -27208,9 +27293,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -27871,9 +27957,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -28580,9 +28667,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -29272,9 +29360,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -30327,9 +30416,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -30960,6 +31050,16 @@
             },
             "extentPadding": {
               "type": "number"
+            },
+            "axisExtent": {
+              "type": "string",
+              "enum": [
+                "nice",
+                "exact",
+                "rounded"
+              ],
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
+              "default": "nice"
             },
             "showAxes": {
               "type": "boolean"
@@ -34055,9 +34155,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -36888,9 +36989,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -37946,9 +38048,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {
@@ -38557,9 +38660,10 @@
               "type": "string",
               "enum": [
                 "nice",
-                "exact"
+                "exact",
+                "rounded"
               ],
-              "description": "Tick endpoint mode. \"nice\" rounds endpoints to readable values; \"exact\" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.",
+              "description": "Axis extent mode. \"nice\" draws round ticks inside the padded domain; \"exact\" skips padding and includes both ends. \"rounded\" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.",
               "default": "nice"
             },
             "animate": {

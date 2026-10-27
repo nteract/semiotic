@@ -16,7 +16,8 @@ import {
 } from "../charts/shared/annotationActivation"
 import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import { filterAnnotationsByStatus } from "../charts/shared/annotationStatusFilter"
-import { ticksForMode, type AxisExtentMode } from "../charts/shared/axisExtent"
+import type { AxisExtentMode } from "../charts/shared/axisExtent"
+import { ordinalAxisTicks } from "./ordinalAxisTicks"
 import { SVGChartTitle } from "./SVGChartTitle"
 import {
   overlayAccessibleDescription,
@@ -139,17 +140,13 @@ export function OrdinalSVGUnderlay(props: OrdinalSVGUnderlayProps) {
 
   const valueTicks = useMemo(() => {
     if (!scales || isRadial || !showGrid) return []
-    // Explicit `rTickValues` wins over both modes — caller has hand-
-    // picked the positions. Otherwise `ticksForMode` resolves
-    // axisExtent: "nice" → d3-scale rounded; "exact" → equidistant
-    // from data min to data max inclusive. The r-scale is always
-    // linear in ordinal frames; the type narrows naturally.
-    const rawTicks: number[] = rTickValues || (ticksForMode(scales.r, 5, axisExtent) as number[])
+    // Share value ticks with the overlay and static renderer.
+    const rawTicks: number[] = ordinalAxisTicks(scales, { width, height }, axisExtent, rTickValues)
     return rawTicks.map((v) => ({
       value: v,
       pixel: scales.r(v)
     }))
-  }, [scales, isRadial, rTickValues, axisExtent, showGrid])
+  }, [scales, isRadial, rTickValues, axisExtent, showGrid, width, height])
 
   const hasGrid = showGrid && scales && !isRadial
   const hasBaselines = showAxes && scales && !isRadial
@@ -333,17 +330,15 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
   const axisExtent = props.axisExtent
   const valueTicks = useMemo(() => {
     if ((!showAxes && !showGrid) || !scales || isRadial) return []
-    // Explicit `rTickValues` wins; otherwise resolve via `axisExtent`
-    // ("nice" → d3-scale rounded | "exact" → equidistant from data
-    // min to data max inclusive). The r-scale is always linear.
-    const rawTicks: number[] = rTickValues || (ticksForMode(scales.r, 5, axisExtent) as number[])
+    // Rounded mode shares its size-dependent count with domain construction.
+    const rawTicks: number[] = ordinalAxisTicks(scales, { width, height }, axisExtent, rTickValues)
     const format = rFormat || numericTickFormatter(rawTicks)
     return rawTicks.map((v) => ({
       value: v,
       pixel: scales.r(v),
       label: format(v)
     }))
-  }, [showAxes, showGrid, scales, rFormat, isRadial, rTickValues, axisExtent])
+  }, [showAxes, showGrid, scales, rFormat, isRadial, rTickValues, axisExtent, width, height])
 
   // Persistent cache for sticky annotation positions
   const stickyPositionCacheRef = useRef<Map<number, { x: number; y: number }>>(new Map())

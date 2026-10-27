@@ -286,9 +286,9 @@ const commonProps: Record<string, ChartPropSpec> = {
   maxDevicePixelRatio: { type: "number", description: "Maximum canvas backing-store DPR. Defaults to 3 on desktop and 2 on coarse-pointer/small-screen devices; large canvases are further capped to an 8-megapixel, 16K-side backing-store budget; canvases repaint when browser zoom or display density changes." },
   axisExtent: {
     type: "string",
-    enum: ["nice", "exact"] as const,
+    enum: ["nice", "exact", "rounded"] as const,
     default: "nice",
-    description: 'Tick endpoint mode. "nice" rounds endpoints to readable values; "exact" pins the first and last tick to the actual data min and max with equidistant intermediates. Affects XY x/y axes and ordinal value axis only.',
+    description: 'Axis extent mode. "nice" draws round ticks inside the padded domain; "exact" skips padding and includes both ends. "rounded" widens open value-axis ends to round ticks after padding and final layout. Pinned ends and explicit tick values stay unchanged. Rounding applies to XY y and ordinal value axes.',
   },
   animate: {
     type: ["boolean", "object"],
@@ -418,6 +418,7 @@ const realtimeProps: Record<string, ChartPropSpec> = {
   timeExtent: { type: "array" },
   valueExtent: { type: "array" },
   extentPadding: { type: "number" },
+  axisExtent: commonProps.axisExtent,
   showAxes: { type: "boolean" },
   background: { type: "string" },
   cursor: {

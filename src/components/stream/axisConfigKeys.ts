@@ -16,6 +16,7 @@ const AXIS_CONFIG_KEYS = [
   "axisStyle",
   "grid",
   "includeMax",
+  "includeMin",
   "autoRotate",
   "landmarkTicks",
   "tickAnchor",

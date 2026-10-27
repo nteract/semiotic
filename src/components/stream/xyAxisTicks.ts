@@ -2,7 +2,7 @@ import type { ReactNode } from "react"
 import { ticksForMode, type AxisExtentMode } from "../charts/shared/axisExtent"
 import type { AxisTickFormatter, XYFrameAxisConfig } from "./xyFrameAxisTypes"
 import {
-  axisTickCount,
+  resolveAxisTickCount,
   filterTicksByPixelDistance,
   hasSameTickLabel
 } from "./axisTickUtils"
@@ -68,12 +68,7 @@ export function generateXYTicks(options: {
   const { scale, axis, size, horizontal = false, axisExtent } = options
   const extentMode = axis?.extent ?? axisExtent
   const domain = scale.domain()
-  const requested = axisTickCount(axis, 5)
-  const maxFit = Math.max(2, Math.floor(size / (horizontal ? 70 : 30)))
-  const count =
-    extentMode === "exact"
-      ? Math.max(2, requested)
-      : Math.min(requested, maxFit)
+  const count = resolveAxisTickCount({ axis, size, orientation: horizontal ? "horizontal" : "vertical", axisExtent })
   const bandTicks = heatmapBandTicks(scale)
   // Explicit ticks are data keys. Band scales position cell indices, so map
   // each requested key to its column or row and keep the key for the label.
@@ -99,14 +94,7 @@ export function generateXYTicks(options: {
     : null
   const displayValue = (value: number | Date | string): string | number | Date =>
     labelByValue?.get(Number(value)) ?? value
-  const rawValues = values.map((value) => {
-    const shown = displayValue(value)
-    return shown instanceof Date
-      ? shown.valueOf()
-      : typeof shown === "number"
-        ? shown
-        : Number(shown)
-  })
+  const rawValues = values.map((value) => Number(displayValue(value)))
   const formatter: AxisTickFormatter =
     axis?.tickFormat ||
     options.format ||
@@ -114,8 +102,8 @@ export function generateXYTicks(options: {
       ? heatmapBandTickFormatter(bandTicks)
       : domain[0] instanceof Date || values[0] instanceof Date
         ? makeDateTickFormatter([
-            domain[0].valueOf(),
-            domain[domain.length - 1].valueOf()
+            +domain[0],
+            +domain[domain.length - 1]
           ])
         : numericTickFormatter(rawValues))
   // Preserve the existing value-only vertical formatter contract.
@@ -124,12 +112,9 @@ export function generateXYTicks(options: {
     const shown = displayValue(value)
     return horizontal ? formatter(shown, index, rawValues) : formatter(shown)
   }
-  const candidates = values.flatMap((value, index) => {
-    // A linear scale has no category key. Band scales position the cell index.
-    let pixel: number
-    if (explicitBand) pixel = scale(explicitBand[index].index)
-    else if (typeof value === "string") return []
-    else pixel = scale(value)
+  const candidates = values.map((value, index) => {
+    // Non-band strings were filtered above. Explicit band keys map to indexes.
+    const pixel = scale(explicitBand ? explicitBand[index].index : value as number | Date)
     const tick: AxisTick = {
       value,
       pixel,
@@ -141,7 +126,7 @@ export function generateXYTicks(options: {
         ? explicitBand[index].requested
         : bandTicks[index].label
     }
-    return [tick]
+    return tick
   })
   // A cropped band domain can place a key outside the plot. Automatic ticks
   // stay inside it. An explicit tickValues list is left where it was requested.
@@ -165,10 +150,7 @@ export function generateXYTicks(options: {
   const relabel =
     horizontal && (axis?.tickFormat || options.format)
       ? (list: AxisTick[]) => {
-          const rendered = list.map((tick) => {
-            const shown = displayValue(tick.value)
-            return shown instanceof Date ? shown.valueOf() : Number(shown)
-          })
+          const rendered = list.map((tick) => Number(displayValue(tick.value)))
           return list.map((tick, index) => ({
             ...tick,
             label: formatter(displayValue(tick.value), index, rendered)
@@ -177,28 +159,28 @@ export function generateXYTicks(options: {
       : undefined
   let ticks = filterTicksByPixelDistance(visible, minPx)
   if (relabel) ticks = relabel(ticks)
-  if (ticks.length > 1) {
-    ticks = ticks.filter(
-      (tick, index) =>
-        index === 0 || !hasSameTickLabel(tick.label, ticks[index - 1].label)
-    )
-  }
+  ticks = ticks.filter(
+    (tick, index) =>
+      index === 0 || !hasSameTickLabel(tick.label, ticks[index - 1].label)
+  )
   // Explicit values already lock the endpoints; exact ticks include them.
   if (
-    axis?.includeMax &&
+    (axis?.includeMin || axis?.includeMax) &&
     !bandTicks &&
     ticks.length > 0 &&
     extentMode !== "exact" &&
     !axis.tickValues
   ) {
-    const value = domain[domain.length - 1]
-    if (value != null) {
+    for (const atStart of [true, false]) {
+      if (!(atStart ? axis.includeMin : axis.includeMax)) continue
+      const value = atStart ? domain[0] : domain[domain.length - 1]
+      if (value == null) continue
       const pixel = scale(value)
-      const distance = Math.abs(pixel - ticks[ticks.length - 1].pixel)
+      const distance = Math.abs(pixel - ticks[atStart ? 0 : ticks.length - 1].pixel)
       if (distance > 1) {
-        const label = format(value, ticks.length)
-        if (distance < minPx && ticks.length > 1) ticks = ticks.slice(0, -1)
-        ticks = [...ticks, { value, pixel, label }]
+        const label = format(value, atStart ? 0 : ticks.length)
+        const remove = distance < minPx && ticks.length > 1 ? 1 : 0
+        ticks.splice(atStart ? 0 : ticks.length - remove, remove, { value, pixel, label })
       }
     }
   }
@@ -213,19 +195,19 @@ function heatmapBandTickFormatter(ticks: HeatmapBandTick[]): AxisTickFormatter {
     let min = Infinity
     let max = -Infinity
     for (let i = 0; i < labels.length; i++) {
-      const time = (labels[i] as Date).getTime()
+      const time = +labels[i]
       if (time < min) min = time
       if (time > max) max = time
     }
     const format = makeDateTickFormatter([min, max])
     return (value) =>
-      value instanceof Date || (typeof value === "number" && Number.isFinite(value))
+      value instanceof Date || Number.isFinite(value)
         ? format(value)
         : String(value)
   }
-  if (labels.every((label) => typeof label === "number" && Number.isFinite(label))) {
+  if (labels.every(Number.isFinite)) {
     const format = numericTickFormatter(labels as number[])
-    return (value) => format(typeof value === "number" ? value : Number(value))
+    return (value) => format(Number(value))
   }
   return (value) => String(value)
 }

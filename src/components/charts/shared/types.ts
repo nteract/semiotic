@@ -236,6 +236,9 @@ export interface BaseChartProps {
    *  tick generator — labels stay round but ticks may sit inside the
    *  data domain. `"exact"` pins the first and last tick to the
    *  actual data min and max with equidistant intermediate ticks.
+   *  `"rounded"` widens open value-axis ends to round ticks after padding
+   *  and final plot layout; pinned bounds and explicit tick values stay fixed.
+   *  Rounding applies to XY y and ordinal value axes; x retains nice ticks.
    *  Useful when a fixed scale (gauge, score band, KPI dial) needs
    *  endpoints to read as the actual boundaries.
    *

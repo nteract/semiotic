@@ -16,6 +16,8 @@ import type { Datum } from "../charts/shared/datumTypes"
  * Consumed by: StreamOrdinalFrame (sole consumer).
  */
 import { scaleBand, scaleLinear, type ScaleBand, type ScaleLinear } from "d3-scale"
+import { ordinalAxisTickCount } from "./ordinalAxisTicks"
+import { roundScaleDomain } from "./roundScaleDomain"
 import type { Quadtree } from "d3-quadtree"
 import { RingBuffer } from "../realtime/RingBuffer"
 import { IncrementalExtent } from "../realtime/IncrementalExtent"
@@ -387,6 +389,14 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
       rScale = scaleLinear().domain(rDomain).range([layout.height, 0])
     }
 
+    const roundValueScale = (scale: ScaleLinear<number, number>) => {
+      if (!isRadial && config.axisExtent === "rounded" && !config.rTickValues) {
+        roundScaleDomain(scale, ordinalAxisTickCount(layout, projection, config.axisExtent),
+          [config.rExtent?.[0] != null, config.rExtent?.[1] != null])
+      }
+      return scale
+    }
+    roundValueScale(rScale)
     this.scales = { o: oScale, r: rScale, projection }
 
     // 3b. Build per-accessor scales for multiAxis mode
@@ -403,8 +413,9 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
         max += padAmt
         if (min > 0) min = 0
 
-        if (isHorizontal) return scaleLinear().domain([min, max]).range([0, layout.width])
-        return scaleLinear().domain([min, max]).range([layout.height, 0])
+        return roundValueScale(scaleLinear().domain([min, max]).range(
+          isHorizontal ? [0, layout.width] : [layout.height, 0]
+        ))
       })
     } else {
       this.multiScales = []

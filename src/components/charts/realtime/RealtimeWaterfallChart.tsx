@@ -120,7 +120,9 @@ export interface RealtimeWaterfallChartProps<
   /** Fixed time domain */
   timeExtent?: [number, number]
   /** Fixed value domain */
-  valueExtent?: [number, number]
+  valueExtent?: [number | undefined, number | undefined] | [number]
+  /** Round open value-domain ends after padding and final plot layout. */
+  axisExtent?: import("../shared/axisExtent").AxisExtentMode
   /** Extent padding factor */
   extentPadding?: number
   /** Age-based opacity decay for streaming bars. */
@@ -478,6 +480,7 @@ export const RealtimeWaterfallChart = /* @__PURE__ */ withDisplayName(/* @__PURE
         valueAccessor={valueAccessor}
         xExtent={timeExtent}
         yExtent={valueExtent}
+        axisExtent={props.axisExtent}
         extentPadding={extentPadding}
         decay={decay}
         pulse={pulse}

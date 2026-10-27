@@ -39,7 +39,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/line",
-    "kb": 145,
+    "kb": 146,
     "blurb": "LineChart only — one-chart micro boundary"
   },
   {
@@ -104,7 +104,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/server/node",
-    "kb": 278,
+    "kb": 279,
     "blurb": "renderChart, renderDashboard, renderToImage, renderToAnimatedGif"
   },
   {
@@ -114,7 +114,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/utils",
-    "kb": 112,
+    "kb": 113,
     "blurb": "ThemeProvider, numeric/accessibility audits, serialization — no chart components"
   },
   {
@@ -209,7 +209,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic",
-    "kb": 429,
+    "kb": 430,
     "blurb": "Full chart API and shared utilities"
   }
 ])
