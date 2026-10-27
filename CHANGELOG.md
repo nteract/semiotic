@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Ordinal keyboard order follows the scene. Horizontal bars, stacked segments,
+  and radar points move in category order, pie and donut wedges move by start
+  angle, and funnel steps share one group so ArrowRight crosses them. Series
+  groups follow first appearance rather than bar height.
+- A single-category pie, donut, gauge, or chord arc is hoverable and clickable
+  on canvas in every direction. A zero-length wedge still matches only its ray.
+
 ## [3.13.2]
 
 ### Added
