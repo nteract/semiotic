@@ -264,6 +264,7 @@ function unitize(value: number, options: UnitizeOptions): UnitizeResult
 function unitizeRange(value: number, rangeValue: number, options: UnitizeOptions): UnitizeRangeResult
 function unwrapDatum<T = Datum>(value: unknown): T | null
 function updateProcessJourney(previous: ProcessJourneyLedger, event: Pick<StreamPhysicsRegionEvent, "bodyId" | "datum" | "observation" | "region" | "type">, options?: ProcessJourneyUpdateOptions | undefined): ProcessJourneyLedger
+function useCompositionalInterfaces(prepared: PreparedCompositionalGraph, ownerId?: string | undefined): {items: CompositionalInterfaceItem[]; isRemoved(selected?: EndpointRef): boolean; onOwnerKeyDown(event: KeyboardEvent, focus: CompositionalInterfaceFocus): void; onItemKeyDown(event: KeyboardEvent, index: number, focus: CompositionalInterfaceFocus): void;}
 function useCustomLayoutSelection(): CustomLayoutSelection
 function waffleLayout(ctx: LayoutContext<import("../semiotic-recipes-core").WaffleConfig>): import("../semiotic-recipes-core").LayoutResult
 function withAlpha(color: string, alpha: number): string
@@ -330,6 +331,8 @@ interface CompositionalEvidence
 interface CompositionalGeometrySnapshot
 interface CompositionalGraph
 interface CompositionalGraphPatch
+interface CompositionalInterfaceFocus
+interface CompositionalInterfaceItem
 interface CompositionalLayoutEngine
 interface CompositionalLayoutOptions
 interface CompositionalLayoutRequest
@@ -882,12 +885,14 @@ interface-member CompositionalEdgeLayoutHint::property::bundleGroup = optional r
 interface-member CompositionalEdgeLayoutHint::property::edgeId = required readonly edgeId: string
 interface-member CompositionalEdgeLayoutHint::property::laneId = optional readonly laneId: string | undefined
 interface-member CompositionalEdgeLayoutHint::property::priority = optional readonly priority: number | undefined
+interface-member CompositionalEdgeLayoutHint::property::route = optional readonly route: "auto" | "none" | undefined
 interface-member CompositionalEndpointAnchorSpec::property::binding = required readonly binding: AnchorBinding
 interface-member CompositionalEndpointAnchorSpec::property::constraint = required readonly constraint: "fixed-order" | "fixed-position" | "fixed-side" | "free"
 interface-member CompositionalEndpointAnchorSpec::property::ref = required readonly ref: EndpointRef
 interface-member CompositionalEndpointAnchorSpec::property::use = required readonly use: "source" | "target"
 interface-member CompositionalEndpointRef::property::endpoint = required readonly endpoint: LocalEndpointRef
 interface-member CompositionalEndpointRef::property::nodeId = required readonly nodeId: string
+interface-member CompositionalEngineCapabilities::property::bumpRouting = optional readonly bumpRouting: boolean | undefined
 interface-member CompositionalEngineCapabilities::property::compoundCrossHierarchy = required readonly compoundCrossHierarchy: boolean
 interface-member CompositionalEngineCapabilities::property::constrainedPartOrder = required readonly constrainedPartOrder: boolean
 interface-member CompositionalEngineCapabilities::property::deterministicSeed = required readonly deterministicSeed: boolean
@@ -895,6 +900,7 @@ interface-member CompositionalEngineCapabilities::property::fixedPortPositions =
 interface-member CompositionalEngineCapabilities::property::fixedPositions = required readonly fixedPositions: boolean
 interface-member CompositionalEngineCapabilities::property::multiedges = required readonly multiedges: boolean
 interface-member CompositionalEngineCapabilities::property::orthogonalRouting = required readonly orthogonalRouting: boolean
+interface-member CompositionalEngineCapabilities::property::terminalRouting = optional readonly terminalRouting: boolean | undefined
 interface-member CompositionalEvidence::property::basis = required readonly basis: "declared" | "illustrative" | "inferred" | "observed" | "unknown"
 interface-member CompositionalEvidence::property::precision = required readonly precision: "conservative" | "exact" | "unknown"
 interface-member CompositionalEvidence::property::referenceIds = optional readonly referenceIds: readonly string[] | undefined
@@ -917,6 +923,11 @@ interface-member CompositionalGraphPatch::property::revision = required readonly
 interface-member CompositionalGraphPatch::property::upsertEdges = optional readonly upsertEdges: readonly Connection[] | undefined
 interface-member CompositionalGraphPatch::property::upsertNodes = optional readonly upsertNodes: readonly CompositionalNode[] | undefined
 interface-member CompositionalGraphPatch::property::upsertTransfers = optional readonly upsertTransfers: readonly Transfer[] | undefined
+interface-member CompositionalInterfaceFocus::property::focusItem = required focusItem: (index: number) => void
+interface-member CompositionalInterfaceFocus::property::focusOwner = required focusOwner: () => void
+interface-member CompositionalInterfaceItem::property::kind = required kind: "part" | "port"
+interface-member CompositionalInterfaceItem::property::label = required label: string
+interface-member CompositionalInterfaceItem::property::ref = required ref: EndpointRef
 interface-member CompositionalLayoutEngine::method::layout = required layout(request: LayoutRequest, signal?: AbortSignal | undefined): Promise<SolvedCompositionalLayout>
 interface-member CompositionalLayoutEngine::property::capabilities = required readonly capabilities: EngineCapabilities
 interface-member CompositionalLayoutEngine::property::id = required readonly id: string
@@ -928,7 +939,7 @@ interface-member CompositionalLayoutOptions::property::mode = required readonly 
 interface-member CompositionalLayoutOptions::property::nodeGap = required readonly nodeGap: number
 interface-member CompositionalLayoutOptions::property::obstaclePadding = required readonly obstaclePadding: number
 interface-member CompositionalLayoutOptions::property::rankGap = required readonly rankGap: number
-interface-member CompositionalLayoutOptions::property::routing = required readonly routing: "orthogonal" | "polyline" | "smooth"
+interface-member CompositionalLayoutOptions::property::routing = required readonly routing: "bump" | "orthogonal" | "polyline" | "smooth" | "terminals"
 interface-member CompositionalLayoutOptions::property::seed = required readonly seed: number
 interface-member CompositionalLayoutOptions::property::terminalStub = required readonly terminalStub: number
 interface-member CompositionalLayoutOptions::property::topology = required readonly topology: "feedback" | "strict-dag"
@@ -1000,6 +1011,7 @@ interface-member CompositionalPortOrderConstraint::property::use = required read
 interface-member CompositionalRoutedConnection::property::bounds = required readonly bounds: Readonly<{x: number; y: number; width: number; height: number;}>
 interface-member CompositionalRoutedConnection::property::edgeId = required readonly edgeId: string
 interface-member CompositionalRoutedConnection::property::feedback = required readonly feedback: boolean
+interface-member CompositionalRoutedConnection::property::routing = optional readonly routing: "bump" | "none" | "orthogonal" | "polyline" | "smooth" | "terminals" | undefined
 interface-member CompositionalRoutedConnection::property::sections = required readonly sections: readonly PathSection[]
 interface-member CompositionalRoutedConnection::property::source = required readonly source: TerminalGeometry
 interface-member CompositionalRoutedConnection::property::target = required readonly target: TerminalGeometry

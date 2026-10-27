@@ -1,5 +1,6 @@
 /** Structural scene node accepted from any frame family. */
 export type AccessibleSceneNode = {
+  navParentId?: string
   type?: unknown
   datum?: unknown
   accessibleDatum?: unknown
@@ -84,7 +85,7 @@ export function extractNetworkDataRow(
 
   return {
     label: authoredLabel,
-    values: datumToValues(accessibleDatumFor(element)),
+    values: { ...datumToValues(accessibleDatumFor(element)), ...(element.navParentId ? { group: element.navParentId } : {}) },
   }
 }
 

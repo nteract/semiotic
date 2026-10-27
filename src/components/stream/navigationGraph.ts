@@ -7,6 +7,9 @@ export interface NavPoint {
   datum: Datum | null
   /** Logical identity for aggregates whose datum is rebuilt during layout. */
   semanticKey?: string
+  /** Network scene identity and optional authored navigation parent. */
+  navId?: string
+  navParentId?: string
   /** Shape hint for focus ring rendering */
   shape?: "circle" | "rect" | "wedge" | "geoarea" | "path"
   /** Width of rect-shaped elements (bars, sankey nodes) */
@@ -99,8 +102,11 @@ export function buildNavGraph(points: NavPoint[]): NavGraph {
   const idToIdx = new Map<string, number>()
   for (let i = 0; i < flat.length; i++) {
     flat[i]._flatIndex = i
-    const id = flat[i].datum?.id
+    const id = flat[i].navId ?? flat[i].datum?.id
     if (id != null) idToIdx.set(String(id), i)
+    const datumId = flat[i].datum?.id
+    if (datumId != null && !idToIdx.has(String(datumId)))
+      idToIdx.set(String(datumId), i)
   }
 
   return { flat, groups, byGroup, idToIdx }

@@ -1,5 +1,6 @@
 import * as React from "react"
 import type { EndpointRef, PreparedCompositionalGraph } from "./types"
+import { useCompositionalInterfaces } from "./useCompositionalInterfaces"
 import { compositionalEndpointKey, endpoint } from "./identity"
 
 export interface CompositionalNavigatorProps {
@@ -22,38 +23,18 @@ export function CompositionalNavigator({
     prepared.graph.nodes[0]
   const ownerSelect = React.useRef<HTMLSelectElement>(null)
   const buttons = React.useRef<Array<HTMLButtonElement | null>>([])
-  const interfaces: Array<{ ref: EndpointRef; label: string }> = owner
-    ? [
-        ...(owner.ports ?? []).map((p) => ({
-          ref: endpoint(owner.id, { kind: "node", portId: p.id }),
-          label: `${p.label ?? p.id} (${p.direction})`
-        })),
-        ...(owner.parts ?? []).flatMap((p) => [
-          {
-            ref: endpoint(owner.id, { kind: "part", partId: p.id }),
-            label: p.label ?? p.id
-          },
-          ...(p.ports ?? []).map((port) => ({
-            ref: endpoint(owner.id, {
-              kind: "part",
-              partId: p.id,
-              portId: port.id
-            }),
-            label: `${p.label ?? p.id} / ${port.label ?? port.id} (${port.direction})`
-          }))
-        ])
-      ]
-    : []
+  const {
+    items: interfaces,
+    isRemoved,
+    onOwnerKeyDown,
+    onItemKeyDown
+  } = useCompositionalInterfaces(prepared, owner?.id)
   const selectedKey = selected ? compositionalEndpointKey(selected) : undefined
-  const removed =
-    !!selected &&
-    (!prepared.graph.nodes.some((n) => n.id === selected.nodeId) ||
-      (selected.endpoint.kind === "part" &&
-        !prepared.graph.nodes
-          .find((n) => n.id === selected.nodeId)
-          ?.parts?.some(
-            (p) => p.id === (selected.endpoint as { partId: string }).partId
-          )))
+  const removed = isRemoved(selected)
+  const focus = {
+    focusOwner: () => ownerSelect.current?.focus(),
+    focusItem: (index: number) => buttons.current[index]?.focus()
+  }
   return (
     <div
       className="compositional-navigator"
@@ -65,12 +46,7 @@ export function CompositionalNavigator({
           ref={ownerSelect}
           value={owner?.id ?? ""}
           onChange={(event) => onSelect(endpoint(event.target.value))}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" && interfaces.length) {
-              event.preventDefault()
-              buttons.current[0]?.focus()
-            }
-          }}
+          onKeyDown={(event) => onOwnerKeyDown(event, focus)}
         >
           {prepared.graph.nodes.map((n) => (
             <option key={n.id} value={n.id}>
@@ -89,21 +65,7 @@ export function CompositionalNavigator({
             }}
             aria-pressed={selectedKey === compositionalEndpointKey(item.ref)}
             onClick={() => onSelect(item.ref)}
-            onKeyDown={(event) => {
-              if (event.key === "Escape") {
-                event.preventDefault()
-                ownerSelect.current?.focus()
-              }
-              if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-                event.preventDefault()
-                buttons.current[
-                  (i +
-                    interfaces.length +
-                    (event.key === "ArrowDown" ? 1 : -1)) %
-                    interfaces.length
-                ]?.focus()
-              }
-            }}
+            onKeyDown={(event) => onItemKeyDown(event, i, focus)}
           >
             {item.label}
           </button>

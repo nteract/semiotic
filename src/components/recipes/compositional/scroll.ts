@@ -1,7 +1,7 @@
 import type { Rect, SolvedCompositionalLayout, TerminalGeometry } from "./types"
 import { compositionalEndpointKey, fail, freeze } from "./identity"
 import { boundRects, finite, validateRect } from "./geometry"
-import { compact, routeSection } from "./routing"
+import { compact, routeSection, terminalSection } from "./routing"
 import { measureRoutes } from "./metrics"
 
 /** Local vertical row scrolling with disclosed continuation anchors; never changes semantic identity. */
@@ -101,7 +101,34 @@ export function projectCompositionalScroll(
     ])
     // Repaired terminal legs are orthogonal. Existing commands are regenerated
     // together with hit/export bounds, so no stale smoothed picking geometry remains.
-    const section = routeSection(old.id, points, false, [])
+    const direct =
+      edge.routing === "none" ||
+      edge.routing === "terminals" ||
+      edge.routing === "bump"
+    // Duplicate lanes keep their offsets from the two escape points.
+    const shift = (
+      point: typeof source.escape,
+      before: TerminalGeometry,
+      after: TerminalGeometry
+    ) => ({
+      x: point.x + after.escape.x - before.escape.x,
+      y: point.y + after.escape.y - before.escape.y
+    })
+    const section = direct
+      ? terminalSection(
+          old.id,
+          source,
+          target,
+          old.points.length > 4
+            ? shift(old.points[2], edge.source, source)
+            : source.escape,
+          old.points.length > 4
+            ? shift(old.points[old.points.length - 3], edge.target, target)
+            : target.escape,
+          edge.routing === "bump",
+          true
+        )
+      : routeSection(old.id, points, false, [])
     return {
       ...edge,
       source,
@@ -110,10 +137,13 @@ export function projectCompositionalScroll(
       bounds: section.bounds
     }
   })
+  const routing = edges.find((e) => e.routing !== "none")?.routing
   const measured = measureRoutes(
     edges,
     true,
-    new Set(edges.map((e) => e.edgeId))
+    new Set(edges.map((e) => e.edgeId)),
+    routing === "none" ? "orthogonal" : routing,
+    new Set(edges.filter((e) => e.routing === "none").map((e) => e.edgeId))
   )
   return freeze({
     ...solved,

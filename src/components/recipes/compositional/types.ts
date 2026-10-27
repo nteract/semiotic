@@ -138,6 +138,8 @@ export interface NodeConstraint {
 }
 export interface EdgeLayoutHint {
   readonly edgeId: ID
+  /** Same-owner connections default to none; auto explicitly routes them. */
+  readonly route?: "auto" | "none"
   readonly priority?: number // Nonnegative, finite; not data magnitude.
   readonly laneId?: ID // Authored continuity preference, not inferred lineage.
   readonly alignment?: "auto" | "prefer" | "none" // Soft perpendicular-axis alignment.
@@ -220,7 +222,7 @@ export interface PreparedCompositionalGraph {
 export interface LayoutOptions {
   readonly mode: "route-only" | "optimize"
   readonly topology: "strict-dag" | "feedback"
-  readonly routing: "orthogonal" | "polyline" | "smooth"
+  readonly routing: "orthogonal" | "polyline" | "smooth" | "terminals" | "bump"
   readonly bundles: "none" | "parallel" | "overview"
   readonly rankGap: number
   readonly nodeGap: number
@@ -286,6 +288,8 @@ export interface PathSection {
   readonly bounds: Rect // Includes actual final geometry, including cubic control envelopes.
 }
 export interface RoutedConnection {
+  /** Preserved by local scroll projection; absent on legacy engine results. */
+  readonly routing?: LayoutOptions["routing"] | "none"
   readonly edgeId: ID
   readonly source: TerminalGeometry
   readonly target: TerminalGeometry
@@ -342,6 +346,9 @@ export interface EngineCapabilities {
   readonly multiedges: boolean
   readonly compoundCrossHierarchy: boolean
   readonly orthogonalRouting: boolean
+  /** Optional for compatibility with engines authored before terminal routing. */
+  readonly terminalRouting?: boolean
+  readonly bumpRouting?: boolean
   readonly deterministicSeed: boolean
 }
 export interface AsyncLayoutEngine {

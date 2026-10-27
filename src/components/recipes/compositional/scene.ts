@@ -63,6 +63,7 @@ export function emitCompositionalScene(
           .map((p) => ({
             type: "rect" as const,
             id: JSON.stringify(["part-hit", n.id, p.partId]),
+            navParentId: n.id,
             x: n.rect.x + p.rect.x,
             y: n.rect.y + p.rect.y,
             w: p.rect.width,

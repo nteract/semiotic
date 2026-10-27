@@ -104,3 +104,60 @@ describe("network keyboard focus follows layout", () => {
     }
   )
 })
+
+it("navigates nested card rows through the frame and dismisses after ascending", () => {
+  setupCanvasMock()
+  const onObservation = vi.fn()
+  const { container } = render(
+    <StreamNetworkFrame
+      size={[700, 300]}
+      nodes={nodes}
+      edges={[]}
+      chartType="force"
+      animate={false}
+      onObservation={onObservation}
+      customNetworkLayout={() => ({
+        sceneNodes: nodes.flatMap((n, i) => [
+          {
+            type: "rect" as const,
+            id: n.id,
+            x: 200 * i,
+            y: 0,
+            w: 100,
+            h: 100,
+            datum: n,
+            style: {}
+          },
+          ...[0, 1].map((row) => ({
+            type: "rect" as const,
+            id: `${n.id}-${row}`,
+            navParentId: n.id,
+            x: i * 200,
+            y: 40 + row * 20,
+            w: 100,
+            h: 20,
+            datum: { id: `${n.id}-${row}` },
+            style: {}
+          }))
+        ])
+      })}
+      tooltipContent={(hover) => hover.data?.id}
+    />
+  )
+  const frame = container.querySelector<HTMLElement>(".stream-network-frame")!
+  const step = (key: string, id: string) => {
+    fireEvent.keyDown(frame, { key })
+    expect(onObservation.mock.calls.at(-1)![0].datum.id).toBe(id)
+    expect(
+      container.querySelector(".stream-network-tooltip")
+    ).toHaveTextContent(id)
+  }
+  step("ArrowRight", "B")
+  step("ArrowRight", "C")
+  step("Enter", "C-0")
+  step("ArrowDown", "C-1")
+  step("Escape", "C")
+  fireEvent.keyDown(frame, { key: "Escape" })
+  expect(container.querySelector(".stream-network-tooltip")).toBeNull()
+  vi.restoreAllMocks()
+})
