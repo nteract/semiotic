@@ -306,6 +306,116 @@ describe("extractOrdinalNavPoints", () => {
     ).toEqual(["active"])
   })
 
+  it("walks horizontal bars in scene order when length would reorder them", () => {
+    // Centers land at x 5, 45, 20, so a geometric sort visits a, c, b.
+    const scene = [
+      { type: "rect", x: 0, y: 0, w: 10, h: 20, datum: { id: "a" }, group: "series" },
+      { type: "rect", x: 0, y: 30, w: 90, h: 20, datum: { id: "b" }, group: "series" },
+      { type: "rect", x: 0, y: 60, w: 40, h: 20, datum: { id: "c" }, group: "series" }
+    ]
+    const points = extractOrdinalNavPoints(asOrd(scene))
+    expect(points.map(point => idOf(point.datum))).toEqual(["a", "b", "c"])
+    const graph = buildNavGraph(points)
+    const start = resolvePosition(graph, graph.flat.findIndex(point => idOf(point.datum) === "a"))
+    const next = nextGraphIndex("ArrowRight", start, graph)!
+    expect(idOf(graph.flat[next].datum)).toBe("b")
+  })
+
+  it("walks pie wedges by start angle, including a zero start", () => {
+    const wedge = (id: string, startAngle: number) => ({
+      type: "wedge",
+      cx: 100,
+      cy: 100,
+      innerRadius: 0,
+      outerRadius: 80,
+      startAngle,
+      endAngle: startAngle + 0.4,
+      datum: { id }
+    })
+    // Screen x puts the left wedge (b) first. Angular order is a, east, b.
+    const scene = [wedge("a", -Math.PI / 2), wedge("b", Math.PI), wedge("east", 0)]
+    const points = extractOrdinalNavPoints(asOrd(scene))
+    expect(points.map(point => idOf(point.datum))).toEqual(["a", "east", "b"])
+    const graph = buildNavGraph(points)
+    const start = resolvePosition(graph, 0)
+    const next = nextGraphIndex("ArrowRight", start, graph)!
+    expect(idOf(graph.flat[next].datum)).toBe("east")
+  })
+
+  it("walks radar points in scene order instead of screen x", () => {
+    const scene = [
+      { type: "point", x: 0, y: 10, datum: { id: "a" } },
+      { type: "point", x: 50, y: 0, datum: { id: "b" } },
+      { type: "point", x: -20, y: 5, datum: { id: "c" } }
+    ]
+    const points = extractOrdinalNavPoints(asOrd(scene))
+    expect(points.map(point => idOf(point.datum))).toEqual(["a", "b", "c"])
+    const graph = buildNavGraph(points)
+    const start = resolvePosition(graph, 0)
+    const next = nextGraphIndex("ArrowRight", start, graph)!
+    expect(idOf(graph.flat[next].datum)).toBe("b")
+  })
+
+  it("lets ArrowRight cross funnel steps that were split into their own groups", () => {
+    // Centers are x 80, 20, 50, so a geometric sort would visit interest first.
+    const scene = [
+      { type: "rect", x: 30, y: 0, w: 100, h: 20, datum: { id: "awareness", __funnelStep: "Awareness" }, group: "Awareness" },
+      { type: "rect", x: 10, y: 40, w: 20, h: 20, datum: { id: "interest", __funnelStep: "Interest" }, group: "Interest" },
+      { type: "rect", x: 40, y: 80, w: 20, h: 20, datum: { id: "purchase", __funnelStep: "Purchase" }, group: "Purchase" }
+    ]
+    const points = extractOrdinalNavPoints(asOrd(scene))
+    expect(points.every(point => point.group === "_funnel")).toBe(true)
+    expect(points.map(point => idOf(point.datum))).toEqual(["awareness", "interest", "purchase"])
+    const graph = buildNavGraph(points)
+    const start = resolvePosition(graph, 0)
+    const next = nextGraphIndex("ArrowRight", start, graph)!
+    expect(idOf(graph.flat[next].datum)).toBe("interest")
+    expect(nextGraphIndex("ArrowDown", start, graph)).toBe(start.flatIndex)
+  })
+
+  it("keeps multi-category funnel groups and walks steps inside a category", () => {
+    const scene = [
+      { type: "rect", x: 100, y: 0, w: 80, h: 20, datum: { id: "a-east", category: "East", __funnelStep: "Awareness" }, group: "East" },
+      { type: "rect", x: 0, y: 0, w: 40, h: 20, datum: { id: "a-west", category: "West", __funnelStep: "Awareness" }, group: "West" },
+      { type: "rect", x: 20, y: 40, w: 20, h: 20, datum: { id: "i-east", category: "East", __funnelStep: "Interest" }, group: "East" },
+      { type: "rect", x: 10, y: 40, w: 10, h: 20, datum: { id: "i-west", category: "West", __funnelStep: "Interest" }, group: "West" }
+    ]
+    const points = extractOrdinalNavPoints(asOrd(scene))
+    const graph = buildNavGraph(points)
+    expect(graph.groups).toEqual(["East", "West"])
+    expect(graph.byGroup.get("East")!.map(point => idOf(point.datum))).toEqual(["a-east", "i-east"])
+    const start = resolvePosition(graph, graph.flat.findIndex(point => idOf(point.datum) === "a-east"))
+    const next = nextGraphIndex("ArrowRight", start, graph)!
+    expect(idOf(graph.flat[next].datum)).toBe("i-east")
+  })
+
+  it("walks a category-less bar funnel by step instead of bar width", () => {
+    const scene = [
+      { type: "rect", x: 0, y: 80, w: 90, h: 20, datum: { id: "s1", __barFunnelStep: "S1" }, group: "S1" },
+      { type: "rect", x: 0, y: 40, w: 20, h: 20, datum: { id: "s2", __barFunnelStep: "S2" }, group: "S2" }
+    ]
+    const points = extractOrdinalNavPoints(asOrd(scene))
+    expect(points.map(point => idOf(point.datum))).toEqual(["s1", "s2"])
+    expect(points[0].group).toBe("_funnel")
+    const graph = buildNavGraph(points)
+    const next = nextGraphIndex("ArrowRight", resolvePosition(graph, 0), graph)!
+    expect(idOf(graph.flat[next].datum)).toBe("s2")
+  })
+
+  it("orders series by first appearance when the later series is taller", () => {
+    const scene = [
+      { type: "rect", x: 0, y: 100, w: 20, h: 20, datum: { id: "q1-x" }, group: "x" },
+      { type: "rect", x: 40, y: 100, w: 20, h: 20, datum: { id: "q2-x" }, group: "x" },
+      { type: "rect", x: 0, y: 10, w: 20, h: 80, datum: { id: "q1-y" }, group: "y" },
+      { type: "rect", x: 40, y: 10, w: 20, h: 80, datum: { id: "q2-y" }, group: "y" }
+    ]
+    const graph = buildNavGraph(extractOrdinalNavPoints(asOrd(scene)))
+    expect(graph.groups).toEqual(["x", "y"])
+    const start = resolvePosition(graph, graph.flat.findIndex(point => idOf(point.datum) === "q1-x"))
+    const down = nextGraphIndex("ArrowDown", start, graph)!
+    expect(idOf(graph.flat[down].datum)).toBe("q1-y")
+  })
+
 })
 
 describe("extractNetworkNavPoints", () => {
@@ -646,6 +756,18 @@ describe("buildNavGraph", () => {
     expect(graph.flat[0].x).toBe(10)
     expect(graph.flat[1].x).toBe(30)
     expect(graph.flat[2].x).toBe(50)
+  })
+
+  it("prefers readingOrder over x and over first-point y", () => {
+    const points: NavPoint[] = [
+      { x: 10, y: 10, datum: d("top-late"), group: "late", readingOrder: 2 },
+      { x: 50, y: 100, datum: d("bottom-early"), group: "early", readingOrder: 0 },
+      { x: 0, y: 100, datum: d("bottom-next"), group: "early", readingOrder: 1 }
+    ]
+    const graph = buildNavGraph(points)
+    expect(graph.groups).toEqual(["early", "late"])
+    expect(graph.byGroup.get("early")!.map(point => idOf(point.datum))).toEqual(["bottom-early", "bottom-next"])
+    expect(graph.flat.map(point => idOf(point.datum))).toEqual(["bottom-early", "bottom-next", "top-late"])
   })
 })
 

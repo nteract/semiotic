@@ -223,6 +223,57 @@ describe("OrdinalCanvasHitTester — findNearestOrdinalNode", () => {
       expect(result2!.category).toBe("donut")
     })
 
+    it("hits every direction of a full-circle pie and donut", () => {
+      const full: WedgeSceneNode = {
+        ...wedge,
+        startAngle: -Math.PI / 2,
+        endAngle: (3 * Math.PI) / 2,
+        datum: { category: "only" },
+        category: "only"
+      }
+      for (const angle of [0, Math.PI / 2, Math.PI, -Math.PI / 2]) {
+        const result = findNearestOrdinalNode(
+          [full],
+          200 + 50 * Math.cos(angle),
+          200 + 50 * Math.sin(angle)
+        )
+        expect(result?.category).toBe("only")
+      }
+      expect(findNearestOrdinalNode([full], 200 + 150, 200)).toBeNull()
+
+      const donut: WedgeSceneNode = { ...full, innerRadius: 40 }
+      expect(findNearestOrdinalNode([donut], 200, 200)).toBeNull()
+      const west = findNearestOrdinalNode(
+        [donut],
+        200 + 70 * Math.cos(Math.PI),
+        200 + 70 * Math.sin(Math.PI)
+      )
+      expect(west?.category).toBe("only")
+    })
+
+    it("does not treat a zero-sweep wedge as a full circle", () => {
+      const ray: WedgeSceneNode = { ...wedge, startAngle: 0, endAngle: 0 }
+      expect(findNearestOrdinalNode([ray], 250, 200)?.category).toBe("slice1")
+      expect(findNearestOrdinalNode([ray], 200, 250)).toBeNull()
+    })
+
+    it("hits a wedge that wraps across the east ray", () => {
+      const wrapped: WedgeSceneNode = {
+        ...wedge,
+        startAngle: Math.PI * 1.5,
+        endAngle: Math.PI * 2 + Math.PI / 4
+      }
+      const at = (angle: number) => findNearestOrdinalNode(
+        [wrapped],
+        200 + 50 * Math.cos(angle),
+        200 + 50 * Math.sin(angle)
+      )
+      expect(at(0)?.category).toBe("slice1")
+      expect(at(-Math.PI / 2)?.category).toBe("slice1")
+      expect(at(Math.PI / 2)).toBeNull()
+      expect(at(Math.PI)).toBeNull()
+    })
+
     it("returns centroid position for tooltip", () => {
       const result = findNearestOrdinalNode([wedge], 200 + 50, 200 + 10)
       if (result) {

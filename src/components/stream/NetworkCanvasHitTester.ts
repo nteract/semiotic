@@ -5,7 +5,7 @@ import type {
   NetworkRectNode,
   NetworkArcNode
 } from "./networkTypes"
-import { hitTestRect as sharedHitTestRect, normalizeAngle, getHitRadius } from "./hitTestUtils"
+import { hitTestRect as sharedHitTestRect, angleWithinArc, getHitRadius } from "./hitTestUtils"
 import { symbolRadius } from "./symbolPath"
 import { glyphHitGeometry } from "./glyphDef"
 import { findHitPointInQuadtree } from "./quadtreeHitTest"
@@ -298,17 +298,8 @@ function hitTestArc(
   const padding = 2 / viewScale
   if (radius < node.innerR - padding || radius > node.outerR + padding) return null
 
-  // Check angle bounds
-  const angle = normalizeAngle(Math.atan2(dy, dx))
-
-  const start = normalizeAngle(node.startAngle)
-  const end = normalizeAngle(node.endAngle)
-
-  const inArc = start <= end
-    ? angle >= start && angle <= end
-    : angle >= start || angle <= end
-
-  if (inArc) {
+  // Full-turn arcs normalize onto one ray; accept every direction inside the ring.
+  if (angleWithinArc(Math.atan2(dy, dx), node.startAngle, node.endAngle)) {
     const midAngle = (node.startAngle + node.endAngle) / 2
     const midR = (node.innerR + node.outerR) / 2
     return hitResult("node", node, node.cx + midR * Math.cos(midAngle), node.cy + midR * Math.sin(midAngle))
