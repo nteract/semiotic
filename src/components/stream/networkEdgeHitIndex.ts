@@ -148,15 +148,18 @@ export function buildNetworkEdgeHitIndex(
   return index
 }
 
-/** Prune by bounds and paint order; Canvas remains the final authority. */
+/**
+ * Prune by bounds; Canvas remains the final authority. `hit` sees each candidate
+ * with its paint order and may return null to see them all, ranking them itself.
+ */
 export function queryNetworkEdgeHitIndex<T>(
   index: NetworkEdgeHitIndex,
   x: number,
   y: number,
   tolerance: number,
-  hit: (edge: NetworkSceneEdge) => T | null
+  hit: (edge: NetworkSceneEdge, order: number) => T | null
 ): T | null {
   return queryNetworkHitTree(index.root, x, y, tolerance, (order) =>
-    hit(index.edges[order])
+    hit(index.edges[order], order)
   )
 }

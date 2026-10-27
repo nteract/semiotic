@@ -9,6 +9,7 @@ describe("network pointer driver", () => {
   let options: NetworkZoomOptions
   let driver: ReturnType<typeof bindNetworkZoom>
   const change = vi.fn()
+  const commit = vi.fn()
   beforeEach(() => {
     vi.useFakeTimers()
     element = document.createElement("div")
@@ -25,6 +26,7 @@ describe("network pointer driver", () => {
     view = { x: 0, y: 0, k: 1 }
     options = { wheelZoom: true, duration: 0, settleDelay: 80 }
     change.mockReset()
+    commit.mockReset()
     driver = bindNetworkZoom(element, {
       getZoom: () => view,
       getPlot: () => ({ x: 0, y: 0, width: 400, height: 300 }),
@@ -32,6 +34,10 @@ describe("network pointer driver", () => {
       change: (next, event) => {
         view = next
         change(next, event)
+      },
+      commit: (next, event) => {
+        view = next
+        commit(next, event)
       }
     })
   })
@@ -336,6 +342,58 @@ describe("network pointer driver", () => {
     expect(change).not.toHaveBeenCalled()
     vi.advanceTimersByTime(16)
     expect(view).toEqual({ x: 40, y: 5, k: 2 })
+  })
+  it("applies a commit move at once through the host's commit path, then settles", () => {
+    driver.jumpTo({ x: -40, y: -30, k: 2 }, "control")
+    expect(view).toEqual({ x: -40, y: -30, k: 2 })
+    expect(commit).toHaveBeenCalledOnce()
+    expect(commit).toHaveBeenLastCalledWith(view, { source: "control", phase: "moving" })
+    expect(change).not.toHaveBeenCalled()
+    vi.advanceTimersByTime(100)
+    expect(change).toHaveBeenLastCalledWith(view, { source: "control", phase: "idle" })
+    // Bounds, locks and a move already in flight apply as for any move.
+    options.maxZoom = 1.5
+    driver.jumpTo({ x: 0, y: 0, k: 4 }, "anchor")
+    expect(view).toEqual({ x: 0, y: 0, k: 1.5 })
+    expect(commit).toHaveBeenLastCalledWith(view, { source: "anchor", phase: "moving" })
+    driver.jumpTo({ x: 0, y: 0, k: 1.5 }, "anchor")
+    expect(commit).toHaveBeenCalledTimes(2)
+    options.duration = 180
+    driver.moveTo({ x: -100, y: 0, k: 1 }, "fit")
+    driver.jumpTo({ x: 10, y: 20, k: 1 }, "control")
+    vi.advanceTimersByTime(300)
+    expect(view).toEqual({ x: 10, y: 20, k: 1 })
+    options.locked = true
+    driver.jumpTo({ x: 0, y: 0, k: 1 }, "control")
+    expect(view).toEqual({ x: 10, y: 20, k: 1 })
+  })
+  it("re-clamps a move in flight to changed bounds instead of cancelling it", async () => {
+    driver.moveTo({ x: -20, y: -10, k: 4 }, "control", 0)
+    options.maxZoom = 2
+    driver.rebound()
+    await Promise.resolve()
+    expect(view).toEqual({ x: -20, y: -10, k: 2 })
+    options.duration = 180
+    options.maxZoom = 8
+    driver.moveTo({ x: -300, y: -10, k: 4 }, "fit")
+    vi.advanceTimersByTime(16)
+    const visible = { ...view }
+    expect(visible.k).toBeGreaterThan(2)
+    expect(visible.k).toBeLessThan(3)
+    options.maxZoom = 3
+    driver.rebound()
+    vi.advanceTimersByTime(16)
+    // The tween carries on from the visible camera toward the clamped destination.
+    expect(view.k).toBeGreaterThan(visible.k)
+    expect(view.k).toBeLessThan(3)
+    expect(view.x).toBeLessThan(visible.x)
+    vi.advanceTimersByTime(500)
+    expect(view).toEqual({ x: -300, y: -10, k: 3 })
+    expect(change.mock.lastCall?.[1]).toEqual({ source: "fit", phase: "idle" })
+    change.mockClear()
+    driver.rebound()
+    vi.advanceTimersByTime(200)
+    expect(change).not.toHaveBeenCalled()
   })
   it.each(["cancel", "destroy"] as const)(
     "does not resume a tween when its host calls %s during a camera update",

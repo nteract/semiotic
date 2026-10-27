@@ -271,13 +271,15 @@ describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
       expect(findNearestNetworkNode([], [{ ...ring, datum: { id: "decoration" }, interactive: false }], 50, 0)).toBeNull()
     })
 
-    it("returns the last-painted overlapping line", () => {
+    it("returns the nearest overlapping line, the last painted on a tie", () => {
       const bottom: NetworkLineEdge = {
         type: "line", x1: 0, y1: 0, x2: 100, y2: 0,
         style: { stroke: "gray" }, datum: { id: "bottom" }
       }
       const top = { ...bottom, y1: 2, y2: 2, datum: { id: "top" } }
-      expect(findNearestNetworkNode([], [bottom, top], 50, 0)?.datum?.id).toBe("top")
+      expect(findNearestNetworkNode([], [bottom, top], 50, 0)?.datum?.id).toBe("bottom")
+      expect(findNearestNetworkNode([], [bottom, top], 50, 1)?.datum?.id).toBe("top")
+      expect(findNearestNetworkNode([], [bottom, top], 50, 2)?.datum?.id).toBe("top")
     })
 
     it("hits the full painted width of a thick line after zoom", () => {
@@ -453,6 +455,31 @@ describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
       } finally { restore() }
     })
 
+    it("prefers the nearest stroke among overlapping hit bands, and paint order on the stroke itself", async () => {
+      const restore = installGeometryFakes()
+      try {
+        vi.resetModules()
+        const { findNearestNetworkNode: hitTest } = await import("./NetworkCanvasHitTester")
+        const { buildNetworkEdgeHitIndex } = await import("./networkEdgeHitIndex")
+        const strand = (id: string, y: number): NetworkSceneEdge => ({
+          type: "curved", pathD: `M0,${y} L100,${y}`, style: { fill: "none", stroke: "navy", strokeWidth: 1 }, datum: { id }
+        })
+        // Two strands six units apart under a five-unit slop: their bands overlap.
+        const strands = [strand("upper", 0), strand("lower", 6)]
+        for (const index of [undefined, buildNetworkEdgeHitIndex(strands)]) {
+          const hit = (x: number, y: number) => hitTest([], strands, x, y, 12, null, 0, true, 1, index)?.datum?.id
+          expect(hit(50, 1)).toBe("upper")
+          expect(hit(50, 5)).toBe("lower")
+          expect(hit(50, 0)).toBe("upper")
+          expect(hit(50, 6)).toBe("lower")
+        }
+        // On two coincident strokes the last painted wins.
+        const stacked = [strand("under", 0), strand("over", 0)]
+        expect(hitTest([], stacked, 50, 0)?.datum?.id).toBe("over")
+        expect(hitTest([], stacked, 50, 0, 12, null, 0, true, 1, buildNetworkEdgeHitIndex(stacked))?.datum?.id).toBe("over")
+      } finally { restore() }
+    })
+
     it("hits the full painted width of a thick path stroke", async () => {
       const restore = installGeometryFakes()
       try {
@@ -529,7 +556,7 @@ describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
         }
         // (150, 100) is in the centre of the band, far from any edge — the
         // user's "body of the node" case. Must register as a body hit
-        // (distance 0), not the stroke fallback (distance 4).
+        // (distance 0), not a stroke hit at some distance.
         const hit = hitTest([], [band], 150, 100)
         expect(hit).not.toBeNull()
         expect(hit!.type).toBe("edge")
@@ -553,11 +580,13 @@ describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
           datum: { __kind: "band", data: { id: "A" }, id: "A" } as unknown as Record<string, unknown>,
         }
         // 3px above the top edge — outside the polygon, within stroke
-        // tolerance (lineWidth 10 → 5px on each side).
+        // tolerance (lineWidth 10 → 5px on each side), reported as a distance
+        // past the stroke, to a quarter of the slop.
         const hit = hitTest([], [band], 150, 72)
         expect(hit).not.toBeNull()
         expect(hit!.type).toBe("edge")
-        expect(hit!.distance).toBe(4)
+        expect(hit!.distance).toBeGreaterThan(2.5)
+        expect(hit!.distance).toBeLessThanOrEqual(5)
         expect(hit!.x).toBe(150)
         expect(hit!.y).toBe(72)
       } finally {

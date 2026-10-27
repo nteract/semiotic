@@ -112,7 +112,8 @@ describe("network edge bounds before exact Canvas hits", () => {
   it("falls back to exact Canvas queries when complete path bounds are unavailable", () => {
     const mark = { ...edge(), pathD: "M0 0 L100 0 L" }
     expect(hitTest([], [mark], 50, 0)?.mark).toBe(mark)
-    expect(inStroke).toHaveBeenCalledTimes(1)
+    // The hit band, then the stroke itself to place the pointer on it.
+    expect(inStroke).toHaveBeenCalledTimes(2)
   })
 
   it("reuses geometry-only bounds across style changes, including failed parses", async () => {

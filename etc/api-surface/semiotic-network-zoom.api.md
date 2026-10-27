@@ -17,6 +17,7 @@ function useNetworkProjectedSize(width: number, height: number): {width: number;
 function useNetworkZoom(): NetworkZoomState
 function useNetworkZoom<T>(selector: (state: NetworkZoomState) => T, isEqual?: ((previous: T, next: T) => boolean) | undefined): T
 interface NetworkLODOptions
+interface NetworkLayoutCommitCamera
 interface NetworkViewTransform
 interface NetworkViewportRect
 interface NetworkZoomCenterOptions
@@ -30,6 +31,8 @@ interface ZoomableNetworkCustomChartProps<TNode extends Datum = Datum, TEdge ext
 interface-member NetworkLODOptions::property::breakpoints = required breakpoints: readonly number[]
 interface-member NetworkLODOptions::property::hysteresis = optional hysteresis: number | undefined
 interface-member NetworkLODOptions::property::keepDetail = optional keepDetail: boolean | undefined
+interface-member NetworkLayoutCommitCamera::method::getZoom = required getZoom(): NetworkViewTransform
+interface-member NetworkLayoutCommitCamera::method::zoomTo = required zoomTo(zoom: NetworkViewTransform): void
 interface-member NetworkViewTransform::property::k = required k: number
 interface-member NetworkViewTransform::property::x = required x: number
 interface-member NetworkViewTransform::property::y = required y: number
@@ -83,7 +86,7 @@ interface-member ZoomableNetworkCustomChartHandle::method::zoomIn = required zoo
 interface-member ZoomableNetworkCustomChartHandle::method::zoomOut = required zoomOut(): void
 interface-member ZoomableNetworkCustomChartHandle::method::zoomTo = required zoomTo(zoom: NetworkViewTransform, duration?: number | undefined): void
 interface-member ZoomableNetworkCustomChartProps::property::defaultZoom = optional defaultZoom: NetworkViewTransform | undefined
-interface-member ZoomableNetworkCustomChartProps::property::onLayoutCommit = optional onLayoutCommit: ((null | result: NetworkLayoutResult, null | previous: NetworkLayoutResult) => void) | undefined
+interface-member ZoomableNetworkCustomChartProps::property::onLayoutCommit = optional onLayoutCommit: ((null | result: NetworkLayoutResult, null | previous: NetworkLayoutResult, camera: NetworkLayoutCommitCamera) => void) | undefined
 interface-member ZoomableNetworkCustomChartProps::property::onZoomChange = optional onZoomChange: ((zoom: NetworkViewTransform, event: NetworkZoomChange) => void) | undefined
 interface-member ZoomableNetworkCustomChartProps::property::zoom = optional zoom: NetworkViewTransform | undefined
 interface-member ZoomableNetworkCustomChartProps::property::zoomControls = optional zoomControls: boolean | undefined

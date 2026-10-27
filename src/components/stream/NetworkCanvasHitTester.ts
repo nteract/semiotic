@@ -135,19 +135,35 @@ export function findNearestNetworkNode(
   if (bestNode) return bestNode
   if (!includeEdges) return null
 
-  if (edgeIndex?.edges === sceneEdges)
-    return queryNetworkEdgeHitIndex(edgeIndex, px, py, 5 / viewScale, (edge) => hitTestEdge(edge, px, py, 5 / viewScale))
-
-  // Edges paint in array order; the last-painted semantic edge owns overlap.
-  // Decorative geometry must never produce an empty tooltip or observation.
-  for (let index = sceneEdges.length - 1; index >= 0; index--) {
-    const edge = sceneEdges[index]
-    if (edge.datum == null || edge.interactive === false) continue
-    const result = hitTestEdge(edge, px, py, 5 / viewScale)
-    if (result) {
-      return result
+  // Among the edges whose hit band holds the pointer, the nearest stroke owns
+  // the hit, so a pointer between two close strands picks the one it is on; a
+  // filled band counts as on its paint, and a tie goes to the last painted, as
+  // edges paint in array order. Candidates are tried from the last painted
+  // back, and an edge the pointer is on ends the search, so a stack of
+  // coincident paths costs one exact test. Decorative geometry must never
+  // produce an empty tooltip or observation.
+  const tolerance = 5 / viewScale
+  let bestEdge: NetworkHitResult | null = null
+  const visit = (order: number): boolean => {
+    const edge = sceneEdges[order]
+    if (edge.datum != null && edge.interactive !== false) {
+      const result = hitTestEdge(edge, px, py, tolerance)
+      if (result && (!bestEdge || result.distance < bestEdge.distance)) bestEdge = result
     }
+    return bestEdge?.distance === 0
   }
+  if (edgeIndex?.edges === sceneEdges) {
+    const orders: number[] = []
+    queryNetworkEdgeHitIndex(edgeIndex, px, py, tolerance, (_edge, order) => {
+      orders.push(order)
+      return null
+    })
+    orders.sort((first, second) => second - first)
+    for (const order of orders) if (visit(order)) break
+  } else {
+    for (let index = sceneEdges.length - 1; index >= 0 && !visit(index); index--);
+  }
+  return bestEdge
 
   return null
 }
@@ -337,6 +353,9 @@ function getEdgePath2D(
 
 // ── Edge hit testing ────────────────────────────────────────────────────
 
+/** How finely a path stroke's hit reports its distance: in steps of a quarter of the slop. */
+const STROKE_DISTANCE_STEPS = 4
+
 function hitTestEdge(
   edge: NetworkSceneEdge,
   px: number,
@@ -417,16 +436,25 @@ function hitTestPathEdge(
 
     if (edge.style.stroke === "none" || (edge.style.strokeWidth ?? 1) <= 0) return null
     // Retain pointer slop for thin edges and include the full painted stroke.
+    // A hit reports how far outside the painted stroke the pointer is, to a
+    // quarter of the slop: the narrowest band, from the stroke itself out, that
+    // holds the point.
+    const stroke = edge.style.strokeWidth ?? 1
+    const band = Math.max(tolerance * 2, stroke)
     const prevLineWidth = ctx.lineWidth
-    let inStroke: boolean
     try {
-      ctx.lineWidth = Math.max(tolerance * 2, edge.style.strokeWidth ?? 1)
-      inStroke = ctx.isPointInStroke(path, px, py)
+      ctx.lineWidth = band
+      if (!ctx.isPointInStroke(path, px, py)) return null
+      for (let step = 0; step < STROKE_DISTANCE_STEPS; step++) {
+        const width = stroke + ((band - stroke) * step) / STROKE_DISTANCE_STEPS
+        ctx.lineWidth = width
+        if (ctx.isPointInStroke(path, px, py)) {
+          return hitResult("edge", edge, px, py, (width - stroke) / 2)
+        }
+      }
+      return hitResult("edge", edge, px, py, (band - stroke) / 2)
     } finally {
       ctx.lineWidth = prevLineWidth
-    }
-    if (inStroke) {
-      return hitResult("edge", edge, px, py, 4)
     }
   } catch {
     // Fallback — no hit

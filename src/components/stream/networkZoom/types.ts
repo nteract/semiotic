@@ -94,6 +94,17 @@ export interface NetworkZoomCenterOptions {
   insets?: NetworkZoomInsets
 }
 
+/**
+ * The camera during a layout commit (`onLayoutCommit`). A move made through it
+ * applies inside that commit, before the committed marks paint, within the
+ * bounds as any move is; with a controlled `zoom` it is proposed through
+ * `onZoomChange` as any move is. `getZoom` reads the camera as applied.
+ */
+export interface NetworkLayoutCommitCamera {
+  getZoom(): NetworkViewTransform
+  zoomTo(zoom: NetworkViewTransform): void
+}
+
 /** Change notification. An idle event also fires when a gesture settles. */
 export interface NetworkZoomChange {
   source: NetworkZoomSource
