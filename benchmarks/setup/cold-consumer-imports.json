@@ -2,7 +2,7 @@
   "schemaVersion": 2,
   "package": {
     "name": "semiotic",
-    "version": "3.13.1"
+    "version": "3.13.2"
   },
   "method": {
     "artifact": "npm pack --ignore-scripts tarball",
@@ -70,8 +70,8 @@
       "importPath": "semiotic/atlas",
       "symbol": "MotifBraidChart",
       "platform": "browser",
-      "rawBytes": 329057,
-      "gzipBytes": 112004,
+      "rawBytes": 325829,
+      "gzipBytes": 111992,
       "lazyRawBytes": 91307,
       "lazyGzipBytes": 29993,
       "packedPackageInputFiles": 48
@@ -92,10 +92,10 @@
       "importPath": "semiotic",
       "symbol": "LineChart",
       "platform": "browser",
-      "rawBytes": 373526,
-      "gzipBytes": 125367,
-      "lazyRawBytes": 122175,
-      "lazyGzipBytes": 45238,
+      "rawBytes": 373329,
+      "gzipBytes": 125326,
+      "lazyRawBytes": 122112,
+      "lazyGzipBytes": 45232,
       "packedPackageInputFiles": 68
     },
     {
@@ -103,10 +103,10 @@
       "importPath": "semiotic/xy",
       "symbol": "LineChart",
       "platform": "browser",
-      "rawBytes": 373506,
-      "gzipBytes": 125036,
-      "lazyRawBytes": 94310,
-      "lazyGzipBytes": 32982,
+      "rawBytes": 373307,
+      "gzipBytes": 124969,
+      "lazyRawBytes": 94247,
+      "lazyGzipBytes": 32984,
       "packedPackageInputFiles": 61
     },
     {
@@ -114,10 +114,10 @@
       "importPath": "semiotic/line",
       "symbol": "LineChart",
       "platform": "browser",
-      "rawBytes": 373445,
-      "gzipBytes": 125184,
-      "lazyRawBytes": 94325,
-      "lazyGzipBytes": 33022,
+      "rawBytes": 373248,
+      "gzipBytes": 125125,
+      "lazyRawBytes": 94262,
+      "lazyGzipBytes": 33013,
       "packedPackageInputFiles": 61
     },
     {
@@ -125,8 +125,8 @@
       "importPath": "semiotic/ordinal",
       "symbol": "BarChart",
       "platform": "browser",
-      "rawBytes": 326364,
-      "gzipBytes": 105888,
+      "rawBytes": 326232,
+      "gzipBytes": 106026,
       "lazyRawBytes": 44296,
       "lazyGzipBytes": 15042,
       "packedPackageInputFiles": 38
@@ -136,8 +136,8 @@
       "importPath": "semiotic/network",
       "symbol": "SankeyDiagram",
       "platform": "browser",
-      "rawBytes": 410483,
-      "gzipBytes": 136179,
+      "rawBytes": 407242,
+      "gzipBytes": 136144,
       "lazyRawBytes": 15251,
       "lazyGzipBytes": 6799,
       "packedPackageInputFiles": 47
@@ -147,8 +147,8 @@
       "importPath": "semiotic/network/zoom",
       "symbol": "ZoomableNetworkCustomChart",
       "platform": "browser",
-      "rawBytes": 337591,
-      "gzipBytes": 115094,
+      "rawBytes": 335016,
+      "gzipBytes": 115292,
       "lazyRawBytes": 91330,
       "lazyGzipBytes": 29986,
       "packedPackageInputFiles": 50
@@ -169,10 +169,10 @@
       "importPath": "semiotic/realtime",
       "symbol": "RealtimeLineChart",
       "platform": "browser",
-      "rawBytes": 365794,
-      "gzipBytes": 122308,
-      "lazyRawBytes": 116240,
-      "lazyGzipBytes": 42950,
+      "rawBytes": 365614,
+      "gzipBytes": 122294,
+      "lazyRawBytes": 116145,
+      "lazyGzipBytes": 42960,
       "packedPackageInputFiles": 64
     },
     {
@@ -202,8 +202,8 @@
       "importPath": "semiotic/physics",
       "symbol": "GaltonBoardChart",
       "platform": "browser",
-      "rawBytes": 291561,
-      "gzipBytes": 96697,
+      "rawBytes": 291560,
+      "gzipBytes": 96654,
       "lazyRawBytes": 8001,
       "lazyGzipBytes": 2739,
       "packedPackageInputFiles": 21
@@ -235,8 +235,8 @@
       "importPath": "semiotic/server",
       "symbol": "renderChart",
       "platform": "node",
-      "rawBytes": 988044,
-      "gzipBytes": 305393,
+      "rawBytes": 985012,
+      "gzipBytes": 305182,
       "lazyRawBytes": 0,
       "lazyGzipBytes": 0,
       "packedPackageInputFiles": 2
@@ -246,8 +246,8 @@
       "importPath": "semiotic/server/edge",
       "symbol": "generateFrameSVGs",
       "platform": "node",
-      "rawBytes": 432061,
-      "gzipBytes": 130415,
+      "rawBytes": 430520,
+      "gzipBytes": 130332,
       "lazyRawBytes": 0,
       "lazyGzipBytes": 0,
       "packedPackageInputFiles": 2
@@ -257,8 +257,8 @@
       "importPath": "semiotic/server/node",
       "symbol": "renderToImage",
       "platform": "node",
-      "rawBytes": 989047,
-      "gzipBytes": 305823,
+      "rawBytes": 986015,
+      "gzipBytes": 305599,
       "lazyRawBytes": 971,
       "lazyGzipBytes": 613,
       "packedPackageInputFiles": 3
@@ -345,8 +345,8 @@
       "importPath": "semiotic/geo",
       "symbol": "ChoroplethMap",
       "platform": "browser",
-      "rawBytes": 325940,
-      "gzipBytes": 109449,
+      "rawBytes": 325577,
+      "gzipBytes": 109454,
       "lazyRawBytes": 3529,
       "lazyGzipBytes": 1739,
       "packedPackageInputFiles": 31
@@ -378,8 +378,8 @@
       "importPath": "semiotic/themes",
       "symbol": "resolveThemePreset",
       "platform": "browser",
-      "rawBytes": 10730,
-      "gzipBytes": 2635,
+      "rawBytes": 10705,
+      "gzipBytes": 2627,
       "lazyRawBytes": 0,
       "lazyGzipBytes": 0,
       "packedPackageInputFiles": 1
@@ -389,8 +389,8 @@
       "importPath": "semiotic/themes/core",
       "symbol": "resolveThemePreset",
       "platform": "browser",
-      "rawBytes": 10730,
-      "gzipBytes": 2635,
+      "rawBytes": 10705,
+      "gzipBytes": 2627,
       "lazyRawBytes": 0,
       "lazyGzipBytes": 0,
       "packedPackageInputFiles": 1
@@ -400,8 +400,8 @@
       "importPath": "semiotic/themes/react",
       "symbol": "ThemeProvider",
       "platform": "browser",
-      "rawBytes": 20979,
-      "gzipBytes": 6189,
+      "rawBytes": 20292,
+      "gzipBytes": 6324,
       "lazyRawBytes": 0,
       "lazyGzipBytes": 0,
       "packedPackageInputFiles": 2
@@ -433,8 +433,8 @@
       "importPath": "semiotic/utils/react",
       "symbol": "useReducedMotion",
       "platform": "browser",
-      "rawBytes": 621,
-      "gzipBytes": 317,
+      "rawBytes": 547,
+      "gzipBytes": 316,
       "lazyRawBytes": 0,
       "lazyGzipBytes": 0,
       "packedPackageInputFiles": 1
@@ -477,8 +477,8 @@
       "importPath": "semiotic/value",
       "symbol": "BigNumber",
       "platform": "browser",
-      "rawBytes": 16838,
-      "gzipBytes": 5948,
+      "rawBytes": 16768,
+      "gzipBytes": 5950,
       "lazyRawBytes": 0,
       "lazyGzipBytes": 0,
       "packedPackageInputFiles": 1

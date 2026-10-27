@@ -78,7 +78,9 @@ const layout: NetworkCustomLayout = () => {
         { type: "ribbon" as const, pathD: "M150,195 L300,195 L300,225 L150,225 Z", datum: { id: "top-band" }, style: { fill: "orange", stroke: "none" } },
         { type: "curved" as const, pathD: "M100,260 L350,260", datum: null, style: { stroke: "gray" } },
         { type: "curved" as const, pathD: "M100,285 L350,285", datum: { id: "wide-path" }, style: { fill: "none", stroke: "navy", strokeWidth: 20 } },
-        { type: "line" as const, x1: 100, y1: 315, x2: 350, y2: 315, datum: { id: "wide-line" }, style: { stroke: "green", strokeWidth: 20 } }
+        { type: "line" as const, x1: 100, y1: 315, x2: 350, y2: 315, datum: { id: "wide-line" }, style: { stroke: "green", strokeWidth: 20 } },
+        { type: "line" as const, x1: 100, y1: 291, x2: 350, y2: 291, datum: { id: "thin-line" }, style: { stroke: "orange", strokeWidth: 1 } },
+        { type: "curved" as const, pathD: "M100,321 L350,321", datum: { id: "thin-path" }, style: { fill: "none", stroke: "orange", strokeWidth: 1 } }
       ] : [])
     ],
     htmlMarks: [

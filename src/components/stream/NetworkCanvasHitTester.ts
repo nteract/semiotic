@@ -138,34 +138,33 @@ export function findNearestNetworkNode(
   // Among the edges whose hit band holds the pointer, the nearest stroke owns
   // the hit, so a pointer between two close strands picks the one it is on; a
   // filled band counts as on its paint, and a tie goes to the last painted, as
-  // edges paint in array order. Candidates are tried from the last painted
-  // back, and an edge the pointer is on ends the search, so a stack of
-  // coincident paths costs one exact test. Decorative geometry must never
-  // produce an empty tooltip or observation.
+  // edges paint in array order. An on-paint hit lets the index prune earlier
+  // paint orders, so a stack of coincident paths costs one exact test.
+  // Decorative geometry must never produce an empty tooltip or observation.
   const tolerance = 5 / viewScale
   let bestEdge: NetworkHitResult | null = null
-  const visit = (order: number): boolean => {
+  let bestOrder = -1
+  const visit = (order: number): NetworkHitResult | null => {
     const edge = sceneEdges[order]
     if (edge.datum != null && edge.interactive !== false) {
       const result = hitTestEdge(edge, px, py, tolerance)
-      if (result && (!bestEdge || result.distance < bestEdge.distance)) bestEdge = result
+      if (result && (!bestEdge || result.distance < bestEdge.distance ||
+        (result.distance === bestEdge.distance && order > bestOrder))) {
+        bestEdge = result
+        bestOrder = order
+      }
+      // Positive distances still compete with earlier paint orders. Only an
+      // on-paint hit permits the tree's last-painted-hit pruning.
+      if (result?.distance === 0) return result
     }
-    return bestEdge?.distance === 0
+    return null
   }
   if (edgeIndex?.edges === sceneEdges) {
-    const orders: number[] = []
-    queryNetworkEdgeHitIndex(edgeIndex, px, py, tolerance, (_edge, order) => {
-      orders.push(order)
-      return null
-    })
-    orders.sort((first, second) => second - first)
-    for (const order of orders) if (visit(order)) break
+    queryNetworkEdgeHitIndex(edgeIndex, px, py, tolerance, (_edge, order) => visit(order))
   } else {
     for (let index = sceneEdges.length - 1; index >= 0 && !visit(index); index--);
   }
   return bestEdge
-
-  return null
 }
 
 function preferRectHit(candidate: NetworkRectNode, current: NetworkRectNode): boolean {
@@ -397,7 +396,7 @@ function hitTestLineEdge(
   const dist = Math.sqrt((px - nearX) ** 2 + (py - nearY) ** 2)
 
   if (dist <= tolerance) {
-    return hitResult("edge", edge, nearX, nearY, dist)
+    return hitResult("edge", edge, nearX, nearY, Math.max(0, dist - (edge.style.strokeWidth ?? 1) / 2))
   }
 
   return null

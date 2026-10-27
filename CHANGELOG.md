@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.13.2]
+
 ### Added
 
 - `ZoomableNetworkCustomChart` passes the commit's camera to `onLayoutCommit`
@@ -20,10 +22,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Among the network edges whose hit band holds the pointer, the nearest stroke
   takes the hover and click, with a tie going to the last painted, so a pointer
   between two close strands picks the one it is on; a filled band still owns its
-  interior.
+  interior. Lines and paths rank distance outside their painted stroke;
+  indexed picking skips duplicate curve candidates and prunes earlier paint
+  orders after an on-stroke hit.
 - A change to `minZoom`, `maxZoom` or `panBounds` re-clamps a camera move in
   flight to the new bounds, continuing a tween from its visible camera over its
-  remaining time, instead of cancelling it; `locked`, `zoomEnabled` and `pan`
+  remaining time, including when only the visible camera is clamped, instead
+  of cancelling it; `locked`, `zoomEnabled` and `pan`
   changes still cancel. Layout anchoring applies its move in the commit.
 
 ### Fixed

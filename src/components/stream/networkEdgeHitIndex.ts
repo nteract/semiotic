@@ -150,7 +150,8 @@ export function buildNetworkEdgeHitIndex(
 
 /**
  * Prune by bounds; Canvas remains the final authority. `hit` sees each candidate
- * with its paint order and may return null to see them all, ranking them itself.
+ * once with its paint order. Returning a hit prunes earlier paint orders;
+ * return null for candidates that still need to compete on distance.
  */
 export function queryNetworkEdgeHitIndex<T>(
   index: NetworkEdgeHitIndex,
@@ -159,7 +160,10 @@ export function queryNetworkEdgeHitIndex<T>(
   tolerance: number,
   hit: (edge: NetworkSceneEdge, order: number) => T | null
 ): T | null {
-  return queryNetworkHitTree(index.root, x, y, tolerance, (order) =>
-    hit(index.edges[order], order)
-  )
+  const visited = new Set<number>()
+  return queryNetworkHitTree(index.root, x, y, tolerance, (order) => {
+    if (visited.has(order)) return null
+    visited.add(order)
+    return hit(index.edges[order], order)
+  })
 }

@@ -1,5 +1,6 @@
 import { quadtree as d3Quadtree } from "d3-quadtree"
 import { findNearestNetworkNode } from "./NetworkCanvasHitTester"
+import { buildNetworkEdgeHitIndex } from "./networkEdgeHitIndex"
 import type {
   NetworkCircleNode,
   NetworkRectNode,
@@ -294,6 +295,22 @@ describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
       expect(findNearestNetworkNode([], [{ ...thick, style: { stroke: "none" } }], 50, 0)).toBeNull()
     })
 
+    it("ranks lines by distance outside their paint, including last-painted ties", () => {
+      const thick: NetworkLineEdge = {
+        type: "line", x1: 0, y1: 0, x2: 100, y2: 0,
+        style: { stroke: "navy", strokeWidth: 20 }, datum: { id: "thick" }
+      }
+      const thin = { ...thick, y1: 6, y2: 6, style: { stroke: "red", strokeWidth: 1 }, datum: { id: "thin" } }
+      for (const edges of [[thick, thin], [thin, thick]]) {
+        for (const index of [undefined, buildNetworkEdgeHitIndex(edges)]) {
+          const hit = (y: number) => findNearestNetworkNode([], edges, 50, y, 12, null, 0, true, 1, index)
+          expect(hit(5)?.mark).toBe(thick)
+          expect(hit(5)?.distance).toBe(0)
+          expect(hit(6)?.mark).toBe(edges.at(-1))
+        }
+      }
+    })
+
     const lineEdge: NetworkLineEdge = {
       type: "line",
       x1: 100,
@@ -317,7 +334,7 @@ describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
       const result = findNearestNetworkNode([], [lineEdge], 200, 97)
       expect(result).not.toBeNull()
       expect(result!.type).toBe("edge")
-      expect(result!.distance).toBeCloseTo(3, 0)
+      expect(result!.distance).toBe(2.5)
     })
 
     it("misses a line edge beyond tolerance", () => {
@@ -477,6 +494,32 @@ describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
         const stacked = [strand("under", 0), strand("over", 0)]
         expect(hitTest([], stacked, 50, 0)?.datum?.id).toBe("over")
         expect(hitTest([], stacked, 50, 0, 12, null, 0, true, 1, buildNetworkEdgeHitIndex(stacked))?.datum?.id).toBe("over")
+      } finally { restore() }
+    })
+
+    it.each(["bezier", "ribbon", "curved"] as const)("ranks mixed line/%s hits by painted distance", async (type) => {
+      const restore = installGeometryFakes()
+      try {
+        vi.resetModules()
+        const { findNearestNetworkNode: hitTest } = await import("./NetworkCanvasHitTester")
+        for (const thickType of ["line", type] as const) {
+          const edge = (kind: "line" | typeof type, y: number, width: number): NetworkSceneEdge => ({
+            ...(kind === "line"
+              ? { type: "line", x1: 0, x2: 100, y1: y, y2: y }
+              : { type: kind, pathD: `M0,${y} L100,${y}` }),
+            style: { fill: "none", stroke: "navy", strokeWidth: width }, datum: { id: `${kind}-${width}` }
+          })
+          const thick = edge(thickType, 0, 20)
+          const thin = edge(thickType === "line" ? type : "line", 6, 1)
+          for (const edges of [[thick, thin], [thin, thick]]) {
+            for (const index of [undefined, buildNetworkEdgeHitIndex(edges)]) {
+              const hit = (y: number) => hitTest([], edges, 50, y, 12, null, 0, true, 1, index)
+              expect(hit(5)?.mark).toBe(thick)
+              expect(hit(5)?.distance).toBe(0)
+              expect(hit(6)?.mark).toBe(edges.at(-1))
+            }
+          }
+        }
       } finally { restore() }
     })
 

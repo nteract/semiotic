@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { bindNetworkZoom } from "./gestures"
+import { constrainZoom } from "./geometry"
 import type { NetworkViewTransform } from "../networkViewportTypes"
 import type { NetworkZoomOptions } from "./types"
 
@@ -395,6 +396,35 @@ describe("network pointer driver", () => {
     vi.advanceTimersByTime(200)
     expect(change).not.toHaveBeenCalled()
   })
+  it.each(["maxZoom", "minZoom", "panBounds"] as const)(
+    "rebases from the clamped visible camera when %s leaves the destination unchanged",
+    (bound) => {
+      view = bound === "minZoom" ? { x: 0, y: 0, k: 1 } : { x: 600, y: 0, k: 4 }
+      const destination = bound === "minZoom" ? { x: 0, y: 0, k: 4 } : { x: 0, y: 0, k: 1 }
+      driver.moveTo(destination, "fit", 180)
+      vi.advanceTimersByTime(16)
+      if (bound === "maxZoom") options.maxZoom = 2
+      else if (bound === "minZoom") options.minZoom = 3
+      else options.panBounds = { x: 0, y: 0, width: 400, height: 300 }
+      // The React host clamps the accepted camera before calling rebound.
+      const plot = { x: 0, y: 0, width: 400, height: 300 }
+      expect(constrainZoom(destination, plot, options)).toEqual(destination)
+      const previous = view
+      view = constrainZoom(view, plot, options)
+      expect(view).not.toEqual(previous)
+      const clamped = { ...view }
+      driver.rebound()
+      vi.advanceTimersByTime(16)
+      const progress = 1 - (1 - 16 / 164) ** 3
+      for (const key of ["x", "y", "k"] as const) {
+        expect(view[key]).toBeCloseTo(clamped[key] + (destination[key] - clamped[key]) * progress, 8)
+      }
+      vi.advanceTimersByTime(160)
+      expect(view).toEqual(destination)
+      vi.advanceTimersByTime(80)
+      expect(change.mock.lastCall?.[1]).toEqual({ source: "fit", phase: "idle" })
+    }
+  )
   it.each(["cancel", "destroy"] as const)(
     "does not resume a tween when its host calls %s during a camera update",
     (action) => {

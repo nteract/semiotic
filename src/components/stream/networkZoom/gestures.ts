@@ -50,6 +50,7 @@ export function bindNetworkZoom(element: HTMLElement, host: Host) {
   let immediate: object | null = null
   let idle: number | null = null
   let target: NetworkViewTransform | null = null
+  let tweenView: NetworkViewTransform | null = null
   let tweenEnd = 0
   let source: NetworkZoomSource = "control"
   let moving = false
@@ -65,6 +66,7 @@ export function bindNetworkZoom(element: HTMLElement, host: Host) {
     animation = null
     immediate = null
     target = null
+    tweenView = null
   }
   const finish = () => {
     if (idle !== null) win.clearTimeout(idle)
@@ -165,6 +167,7 @@ export function bindNetworkZoom(element: HTMLElement, host: Host) {
     }
     const from = host.getZoom()
     const to = target!
+    tweenView = from
     const start = win.performance.now()
     tweenEnd = start + duration
     const tick = () => {
@@ -174,11 +177,12 @@ export function bindNetworkZoom(element: HTMLElement, host: Host) {
       const elapsed = Math.max(0, win.performance.now() - start)
       const t = duration > 0 ? Math.min(1, elapsed / duration) : 1
       const eased = 1 - (1 - t) ** 3
-      emit({
+      tweenView = {
         k: from.k + (to.k - from.k) * eased,
         x: from.x + (to.x - from.x) * eased,
         y: from.y + (to.y - from.y) * eased
-      })
+      }
+      emit(tweenView)
       // A synchronous host commit can lock, unmount or redirect this camera.
       if (animation !== pending) return
       if (t < 1) animation = win.requestAnimationFrame(tick)
@@ -218,11 +222,13 @@ export function bindNetworkZoom(element: HTMLElement, host: Host) {
   const rebound = () => {
     if (target === null) return
     const to = constrainZoom(target, host.getPlot(), host.getOptions())
-    if (sameZoom(to, target)) return
     if (immediate !== null) {
       target = to
       return
     }
+    // The host may already have clamped the visible camera while the target
+    // remains valid. Restart from that camera instead of the old interpolant.
+    if (sameZoom(to, target) && (!tweenView || sameZoom(tweenView, host.getZoom()))) return
     const remaining = Math.max(0, tweenEnd - win.performance.now())
     cancelAnimation()
     target = to

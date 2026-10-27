@@ -71,6 +71,10 @@ test("network hover follows band paint order and thick strokes through zoom, pan
     await hover(120, 210, "bottom-band")
     await hover(200, 294, "wide-path")
     await hover(200, 324, "wide-line")
+    await hover(200, 290, "wide-path")
+    await hover(200, 291, "thin-line")
+    await hover(200, 320, "wide-line")
+    await hover(200, 321, "thin-path")
     await hover(200, 260, "none")
   }
   await checkGeometry()

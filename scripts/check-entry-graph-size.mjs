@@ -429,7 +429,10 @@ const ENTRY_GRAPHS = [
   // Feature graph: 614.7 KiB (previous built HEAD: 613.3 KiB).
   // Bumped 636→637: the same shared XY domain and heatmap projection
   // measure 636.4 KiB gzip.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 637 },
+  // User-approved 3.13.2 refresh (2026-10-27): the production AI graph
+  // measures 652,373 bytes (637.083 KiB) gzip across 78 files. Allow 637.5 KiB,
+  // retaining about 0.4 KiB headroom for the patch's correctness fixes.
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 637.5 },
   // Bumped 100→101: transitDiagramLayout's public detail modes, source-rooted
   // line derivation, and station-rendering contract extend the curated recipes
   // entry. Linux CI measures 100.3 KiB gzip; retain a reviewable 0.7 KiB

@@ -4,6 +4,7 @@ import {
   queryNetworkEdgeHitIndex
 } from "./networkEdgeHitIndex"
 import { findNearestNetworkNode } from "./NetworkCanvasHitTester"
+import * as edgeIndexModule from "./networkEdgeHitIndex"
 import {
   prepareNetworkCustomHits,
   preparedNetworkCustomHits
@@ -69,6 +70,48 @@ describe("committed network edge index", () => {
     exact.mockClear()
     expect(queryNetworkEdgeHitIndex(index, -1000, 0, 5, exact)).toBeNull()
     expect(exact).not.toHaveBeenCalled()
+  })
+
+  it("prunes coincident index leaves as soon as the last-painted stroke is hit", () => {
+    const edges = Array.from({ length: 512 }, () => line(0))
+    const index = buildNetworkEdgeHitIndex(edges)
+    const query = edgeIndexModule.queryNetworkEdgeHitIndex
+    const candidates: number[] = []
+    const spy = vi.spyOn(edgeIndexModule, "queryNetworkEdgeHitIndex").mockImplementation(
+      (tree, x, y, tolerance, hit) => query(tree, x, y, tolerance, (edge, order) => {
+        candidates.push(order)
+        return hit(edge, order)
+      })
+    )
+    try {
+      expect(findNearestNetworkNode([], edges, 5, 0, 12, null, 0, true, 1, index)?.mark).toBe(edges.at(-1))
+      expect(candidates).toEqual([511])
+    } finally { spy.mockRestore() }
+  })
+
+  it("tests a subdivided cubic only once when overlapping leaves do not produce an on-paint hit", () => {
+    const edge: NetworkSceneEdge = {
+      type: "curved", pathD: "M-500,0 C-500,500 500,500 500,0",
+      style: { stroke: "navy", fill: "none" }, datum: { id: "curve" }
+    }
+    const index = buildNetworkEdgeHitIndex([edge])
+    const exact = vi.fn(() => null)
+    // Both center subdivision hulls contain this point just above the curve.
+    expect(queryNetworkEdgeHitIndex(index, 0, 379, 5, exact)).toBeNull()
+    expect(exact).toHaveBeenCalledExactlyOnceWith(edge, 0)
+  })
+
+  it("ranks distance and paint-order ties even when spatial traversal visits earlier edges first", () => {
+    const edges = Array.from({ length: 24 }, (_, i) => ({
+      ...line((i % 2) * -100), x2: 100, y1: i % 3, y2: i % 3
+    }))
+    const index = buildNetworkEdgeHitIndex(edges)
+    for (const y of [-2, 0, 1.5, 4]) {
+      const direct = findNearestNetworkNode([], edges, 5, y)
+      const indexed = findNearestNetworkNode([], edges, 5, y, 12, null, 0, true, 1, index)
+      expect(indexed?.mark).toBe(direct?.mark)
+      expect(indexed?.distance).toBe(direct?.distance)
+    }
   })
 
   it("retains node priority, empty/decorative scenes, camera tolerance and thick strokes", () => {
