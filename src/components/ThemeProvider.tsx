@@ -19,8 +19,7 @@ import {
 } from "./store/themeCore"
 import type {
   SemioticTheme,
-  SemioticThemeUpdate,
-  ThemeStoreUpdate
+  SemioticThemeUpdate
 } from "./store/themeCore"
 import type { ThemeStoreState } from "./store/ThemeStore"
 import { useTheme } from "./store/useTheme"
@@ -48,36 +47,28 @@ const ThemeScopeContext = /* @__PURE__ */ React.createContext<
 const useIsomorphicLayoutEffect =
   typeof window === "undefined" ? React.useEffect : React.useLayoutEffect
 
-function themeToStoreUpdate(
-  theme: ThemePresetName | SemioticThemeUpdate
-): ThemeStoreUpdate {
-  if (typeof theme !== "string") return theme
-  // All named presets, including light/dark/high-contrast, resolve here.
-  const preset = resolveThemePreset(theme)
-  if (preset) return preset
-
-  // Plain JS consumers can still pass an unknown preset string despite the TS
-  // typing. Warn and fall back to "light" instead of forwarding the invalid
-  // preset so the provider always initializes with a known theme.
-  if (typeof console !== "undefined") {
-    warnUnknownTheme(theme)
-  }
-  return "light"
-}
-
 function resolveInitialTheme(
   theme: ThemePresetName | SemioticThemeUpdate | undefined,
   parent?: SemioticTheme
-): SemioticTheme {
-  if (theme !== undefined) {
-    return resolveThemeUpdate(parent ?? LIGHT_THEME, themeToStoreUpdate(theme))
+): { theme: SemioticTheme; name?: string } {
+  let name: string | undefined
+  if (typeof theme === "string") {
+    const preset = resolveThemePreset(theme)
+    if (preset) name = theme
+    else if (typeof console !== "undefined") warnUnknownTheme(theme)
+    theme = preset ?? LIGHT_THEME
   }
-  return cloneTheme(
-    parent ??
-      (getMediaQuery("(forced-colors: active)")?.matches
-        ? HIGH_CONTRAST_THEME
-        : LIGHT_THEME)
-  )
+  return {
+    name,
+    theme: theme !== undefined
+      ? resolveThemeUpdate(parent ?? LIGHT_THEME, theme)
+      : cloneTheme(
+          parent ??
+            (getMediaQuery("(forced-colors: active)")?.matches
+              ? HIGH_CONTRAST_THEME
+              : LIGHT_THEME)
+        )
+  }
 }
 
 // Keep prop comparison in the provider graph, rather than chart-only imports.
@@ -197,11 +188,6 @@ function ThemeCSSWrapper({
 // ── ThemeProvider (public) ──────────────────────────────────────────────────
 
 function ThemeProviderWrapper({ theme, children }: ThemeProviderProps) {
-  // Resolve the preset name for the data-semiotic-theme attribute.
-  // If `theme` is a string that maps to a known preset, use it directly.
-  // Otherwise leave undefined (custom object themes or unknown strings don't get a data attribute).
-  const themeName =
-    typeof theme === "string" && resolveThemePreset(theme) ? theme : undefined
   const parent = useTheme()
   const parentScope = React.useContext(ThemeScopeContext)
   const input = useStableThemeValue(theme)
@@ -213,12 +199,11 @@ function ThemeProviderWrapper({ theme, children }: ThemeProviderProps) {
         : undefined
   )
   const inherited = parentScope === undefined ? undefined : parent
-  const resolved = useStableThemeValue(
-    React.useMemo(
-      () => resolveInitialTheme(input, inherited),
-      [input, inherited]
-    )
+  const initial = React.useMemo(
+    () => resolveInitialTheme(input, inherited),
+    [input, inherited]
   )
+  const resolved = useStableThemeValue(initial.theme)
   return (
     <StoreProvider initialState={{ theme: resolved, equals: themeValuesEqual }}>
       <ThemeScopeContext.Provider value={auto ?? null}>
@@ -233,7 +218,7 @@ function ThemeProviderWrapper({ theme, children }: ThemeProviderProps) {
                 : undefined
           }
         />
-        <ThemeCSSWrapper themeName={themeName}>{children}</ThemeCSSWrapper>
+        <ThemeCSSWrapper themeName={initial.name}>{children}</ThemeCSSWrapper>
       </ThemeScopeContext.Provider>
     </StoreProvider>
   )
