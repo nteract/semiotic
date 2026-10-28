@@ -20,7 +20,7 @@ import { validateArrayData } from "../shared/validateChartData"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import type { MinimapChartProps } from "./minimapChartTypes"
 import { minimapChromeMargins, minimapOverviewHeight, MINIMAP_DEFAULT_HEIGHT } from "./minimapLayout"
-import { groupRowsIntoLines } from "./lineGapStrategy"
+import { groupLineChartRows } from "./lineGapStrategy"
 import { resolveChartMode } from "../shared/chartMode"
 import { withDisplayName } from "../shared/withDisplayName"
 
@@ -164,14 +164,7 @@ export const MinimapChart = /* @__PURE__ */ withDisplayName(function MinimapChar
     if (isLineObjectFormat) return safeData
 
     if (lineBy) {
-      return groupRowsIntoLines(
-        safeData,
-        lineDataAccessor,
-        (row) => typeof lineBy === "function" ? lineBy(row) : row[lineBy as string],
-        (line, key) => {
-          if (typeof lineBy === "string") line[lineBy] = key
-        },
-      )
+      return groupLineChartRows(safeData, { lineDataAccessor, groupAccessor: lineBy })
     }
 
     return [{ [lineDataAccessor]: safeData }]

@@ -34,65 +34,35 @@ export interface LineGapResult {
 
 }
 
-/**
- * Group flat rows into line objects.
- *
- * A `Map` keeps first-seen series order (numeric keys are not re-sorted) and
- * treats names such as "constructor" or "toString" as ordinary series. A plain
- * object would read those names from `Object.prototype` and throw on `.push`.
- */
-export function groupRowsIntoLines(
+/** Group rows safely in first-seen order, retaining authored series metadata. */
+export function groupLineChartRows(
   rows: readonly Datum[],
-  lineDataAccessor: string,
-  keyOf: (row: Datum) => unknown,
-  annotate?: (line: Datum, key: unknown, row: Datum) => void,
+  { lineDataAccessor, groupAccessor, lineBy, segmentField }: {
+    lineDataAccessor: string
+    groupAccessor: string | ((row: Datum) => unknown)
+    lineBy?: string | ((row: Datum) => unknown)
+    segmentField?: string
+  },
 ): Datum[] {
   const grouped: Record<string, Datum> = Object.create(null)
   const lines: Datum[] = []
   for (const row of rows) {
-    const rawKey = keyOf(row)
-    // Match ordinary property-key coercion (`null` → "null", `undefined` →
-    // "undefined") without ever consulting Object.prototype.
+    const rawKey = typeof groupAccessor === "function" ? groupAccessor(row) : row[groupAccessor]
     const key = String(rawKey)
     let line = grouped[key]
     if (!line) {
       line = { [lineDataAccessor]: [] }
-      annotate?.(line, rawKey, row)
+      if (typeof groupAccessor === "string") line[groupAccessor] = rawKey
+      if (segmentField) {
+        line[segmentField] = row[segmentField]
+        if (typeof lineBy === "string") line[lineBy] = row[lineBy]
+      }
       grouped[key] = line
       lines.push(line)
     }
     ;(line[lineDataAccessor] as Datum[]).push(row)
   }
   return lines
-}
-
-/** LineChart's flat-row grouping, including forecast compound keys. */
-export function groupLineChartRows(
-  rows: readonly Datum[],
-  {
-    lineDataAccessor,
-    groupAccessor,
-    lineBy,
-    segmentField,
-  }: {
-    lineDataAccessor: string
-    groupAccessor: string | ((row: Datum) => unknown)
-    lineBy?: string | ((row: Datum) => unknown)
-    /** Set when forecast segments must stay on the line object. */
-    segmentField?: string
-  },
-): Datum[] {
-  return groupRowsIntoLines(
-    rows,
-    lineDataAccessor,
-    (row) => typeof groupAccessor === "function" ? groupAccessor(row) : row[groupAccessor],
-    (line, key, row) => {
-      if (typeof groupAccessor === "string") line[groupAccessor] = key
-      if (!segmentField) return
-      line[segmentField] = row[segmentField]
-      if (typeof lineBy === "string") line[lineBy] = row[lineBy]
-    },
-  )
 }
 
 export function applyLineGapStrategy({

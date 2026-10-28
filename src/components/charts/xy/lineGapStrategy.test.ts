@@ -3,10 +3,9 @@ import type { Datum } from "../shared/datumTypes"
 import {
   applyLineGapStrategy,
   groupLineChartRows,
-  groupRowsIntoLines,
 } from "./lineGapStrategy"
 
-describe("groupRowsIntoLines", () => {
+describe("prototype-safe line grouping", () => {
   it("keeps prototype-key series and first-seen order", () => {
     const rows = [
       { x: 1, role: "constructor" },
@@ -16,9 +15,7 @@ describe("groupRowsIntoLines", () => {
       { x: 5, role: "2" },
       { x: 6, role: "__proto__" },
     ]
-    const lines = groupRowsIntoLines(rows, "coordinates", (row) => row.role, (line, key) => {
-      line.role = key
-    })
+    const lines = groupLineChartRows(rows, { lineDataAccessor: "coordinates", groupAccessor: "role" })
     expect(lines.map((line) => line.role)).toEqual(["constructor", "toString", "10", "2", "__proto__"])
     expect(lines[0].coordinates).toHaveLength(2)
     expect(lines[0].coordinates[1].x).toBe(2)
