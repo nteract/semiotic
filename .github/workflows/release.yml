@@ -136,7 +136,7 @@ jobs:
     # Authored example routes use their own Vite/source-alias server and test
     # executable behavior rather than comparing baselines. Visual, browser,
     # machine, and performance baselines remain PR gates only.
-    container: mcr.microsoft.com/playwright:v1.61.1-noble
+    container: mcr.microsoft.com/playwright:v1.64.1-noble
     env:
       HOME: /root
       DOCKER_CONFIG: /tmp/semiotic-docker-config
