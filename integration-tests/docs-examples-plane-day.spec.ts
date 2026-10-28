@@ -15,7 +15,7 @@ test("plane story preserves a flight through layouts, clocks, URL and an indepen
   ).toBeVisible()
   await expect(page.getByTestId("flight-charts")).toBeVisible()
   await page.screenshot({ path: testInfo.outputPath("e02-desktop.png") })
-  await page.getByRole("button", { name: "Pin HA 466 · PPG → HNL" }).click()
+  await page.getByRole("button", { name: /PPG.*HNL.*HA 466/ }).click()
   const selected = await page
     .getByTestId("pinned-flight")
     .getAttribute("data-event-id")
@@ -100,7 +100,7 @@ for (const width of [320, 390, 768, 1280]) {
     await page.setViewportSize({ width, height: 900 })
     await page.emulateMedia({ reducedMotion: "reduce" })
     await page.goto("/examples/plane-day")
-    const button = page.getByRole("button", { name: "Pin HA 11 · SFO → HNL" })
+    const button = page.getByRole("button", { name: /SFO.*HNL.*HA 11/ })
     await button.focus()
     await page.keyboard.press("Enter")
     await expect(button).toHaveAttribute("aria-pressed", "true")

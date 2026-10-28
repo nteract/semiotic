@@ -212,7 +212,7 @@ describe("Dependency X-Ray scenes", () => {
       <DependencyMatrix forest={forest} nodeIds={forest.order} />
     )
     expect(markup).toContain("Local directed adjacency matrix")
-    expect(markup).toContain('aria-label="Y to A: YA"')
+    expect(markup).toContain('aria-label="Y to A: YA (1)"')
     expect(markup).toContain('scope="row"')
     expect(markup).toContain('scope="col"')
   })
