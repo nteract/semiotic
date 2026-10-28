@@ -641,13 +641,14 @@ export default function SemioticAnnotation(props: AnnotationProps) {
     const setNX = noteData.nx ?? screenCoordinates[0][0] + (noteData.dx ?? 0)
     const setNY = noteData.ny ?? screenCoordinates[0][1] + (noteData.dy ?? 0)
     const notes = screenCoordinates.map((d, i) => {
-      const subjectNote = Object.assign({}, noteData, {
+      const subjectNote = {
+        ...noteData,
         note: i === 0 ? noteData.note : { label: "" },
         x: d[0],
         y: d[1],
         nx: setNX,
         ny: setNY
-      })
+      }
       return (
         <AnnotationRenderer
           data-testid="semiotic-annotation"
