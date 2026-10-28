@@ -1,3 +1,4 @@
+import { enrichDatumWithBand } from "../../stream/xySceneBuilders/ribbonScene"
 import type { CapturedXYFrameProps } from "../../../test-utils/capturedFrameProps"
 import type { StreamXYFrameHandle } from "../../stream/types"
 import { vi } from "vitest"
@@ -674,16 +675,17 @@ describe("LineChart", () => {
       expect(readY(data[2])).toBe(3)
     })
 
-    it.each([false, true])("keeps copied grouped zero gaps and label endpoints at zero (line objects: %s)", (objects) => {
+    it.each([[false, "start"], [false, "end"], [true, "start"], [true, "end"]] as const)("keeps copied grouped zero gaps and %s/%s label endpoints at zero", (objects, position) => {
       const coordinates = [{ x: 1, value: NaN, series: "A" }, { x: 2, value: 4, series: "A" }, { x: 3, value: NaN, series: "A" }]
       render(<LineChart data={objects ? [{ series: "A", coordinates }] : coordinates}
         xAccessor="x" yAccessor={(d: Datum) => d.value} lineBy="series" colorBy="series"
-        gapStrategy="zero" directLabel={{ position: "end" }} />)
+        gapStrategy="zero" directLabel={{ position }} />)
       const readY = lastXYFrameProps.yAccessor as (d: Datum) => number
       const rows = lastXYFrameProps.data as Datum[]
       expect(rows.map(readY)).toEqual([0, 4, 0])
-      // Band hover enrichment spreads the forwarded row and adds its bounds.
-      expect(readY({ ...rows[0], band: { lower: -1, upper: 1 } })).toBe(0)
+      const enriched = enrichDatumWithBand(rows[0], [{ kind: "band", getTop: () => 1, getBottom: () => -1, perSeries: true, interactive: false }])
+      expect(enriched).not.toBe(rows[0])
+      expect(readY(enriched)).toBe(0)
       expect(lastXYFrameProps.annotations).toEqual(expect.arrayContaining([expect.objectContaining({ y: 0 })]))
     })
 
