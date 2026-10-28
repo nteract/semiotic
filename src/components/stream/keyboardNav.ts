@@ -154,11 +154,8 @@ export function extractOrdinalNavPoints(scene: OrdinalSceneNode[]): NavPoint[] {
           : undefined,
         group
       })
-    } else if (node.type === "point") {
-      if (node.interactive === false) continue
-      push({ x: node.x, y: node.y, datum: node.datum, shape: "circle", group: "_default" })
-    } else if (node.type === "symbol") {
-      if (node.size <= 0) continue
+    } else if (node.type === "point" || node.type === "symbol") {
+      if (node.type === "point" ? node.interactive === false : node.size <= 0) continue
       push({ x: node.x, y: node.y, datum: node.datum, shape: "circle", group: "_default" })
     } else if (node.type === "glyph") {
       if (node.size <= 0 || node.datum == null) continue
@@ -227,8 +224,8 @@ export function extractOrdinalNavPoints(scene: OrdinalSceneNode[]): NavPoint[] {
     }
   }
 
-  points.sort((a, b) => (a.readingOrder ?? 0) - (b.readingOrder ?? 0) || a.x - b.x || a.y - b.y)
-  return points
+  // Every point passes through push, which assigns its reading order.
+  return points.sort((a, b) => a.readingOrder! - b.readingOrder! || a.x - b.x || a.y - b.y)
 }
 
 // ── Geo Extraction ───────────────────────────────────────────────────────
