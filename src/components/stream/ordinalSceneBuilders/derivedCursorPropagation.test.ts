@@ -42,6 +42,7 @@ function context(options: {
   return {
     scales: options.scales,
     columns: options.columns,
+    orderedColumns: Object.values(options.columns),
     config: options.config,
     getR: (datum) => Number(datum.value),
     getO: (datum) => String(datum.category ?? datum.step),

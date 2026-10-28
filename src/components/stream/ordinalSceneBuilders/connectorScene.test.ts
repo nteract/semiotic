@@ -37,6 +37,7 @@ function makeCtx(overrides: Partial<OrdinalSceneContext> = {}): OrdinalSceneCont
   return {
     scales,
     columns: overrides.columns || {},
+    orderedColumns: Object.values(overrides.columns || {}),
     config: overrides.config || makeConfig(),
     getR: overrides.getR || ((d: Datum) => d.value),
     getO: overrides.getO || ((d: Datum) => d.category),

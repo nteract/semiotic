@@ -20,6 +20,7 @@ function makeContext(categories: string[]): OrdinalSceneContext {
       projection: "vertical"
     },
     columns: {},
+    orderedColumns: [],
     config: {
       chartType: "boxplot",
       windowSize: 100_000,
@@ -55,6 +56,7 @@ describe("Ordinal distribution scenes", () => {
         value: (i * 7919) % 1000
       }))
     }
+    ctx.orderedColumns = [ctx.columns.A]
     for (const [name, build] of [
       ["boxplot", buildBoxplotScene],
       ["violin", buildViolinScene],

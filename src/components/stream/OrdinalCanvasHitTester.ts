@@ -8,7 +8,7 @@ import type {
 } from "./ordinalTypes"
 import type { SceneDatum, PointSceneNode, RectSceneNode, SymbolSceneNode, GlyphSceneNode } from "./types"
 import type { Quadtree } from "d3-quadtree"
-import { hitTestRect as sharedHitTestRect, normalizeAngle, getHitRadius } from "./hitTestUtils"
+import { hitTestRect as sharedHitTestRect, angleWithinArc, getHitRadius } from "./hitTestUtils"
 import { symbolRadius } from "./symbolPath"
 import { glyphHitGeometry } from "./glyphDef"
 import { findHitPointInQuadtree } from "./quadtreeHitTest"
@@ -183,20 +183,9 @@ function hitTestWedge(node: WedgeSceneNode, px: number, py: number): OrdinalHitR
   // Check radius bounds
   if (dist < node.innerRadius || dist > node.outerRadius) return null
 
-  // Check angle bounds
-  // atan2 returns [-π, π], normalize to [0, 2π]
-  const angle = normalizeAngle(Math.atan2(dy, dx))
-
-  // Normalize start/end angles to [0, 2π]
-  const start = normalizeAngle(node.startAngle)
-  const end = normalizeAngle(node.endAngle)
-
-  // Check if angle is within the arc
-  const inArc = start <= end
-    ? angle >= start && angle <= end
-    : angle >= start || angle <= end
-
-  if (!inArc) return null
+  // A full turn normalizes start and end onto the same ray, so compare the
+  // raw sweep before wrapping. Partial arcs still use normalized bounds.
+  if (!angleWithinArc(Math.atan2(dy, dx), node.startAngle, node.endAngle)) return null
 
   // Return centroid position for tooltip
   const midAngle = (node.startAngle + node.endAngle) / 2

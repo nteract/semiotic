@@ -101,3 +101,18 @@ export function normalizeAngle(angle: number): number {
   if (a < 0) a += Math.PI * 2
   return a
 }
+
+/**
+ * True when `angle` lies on the arc from `startAngle` to `endAngle`.
+ * Canvas convention: 0 is east, positive is clockwise. A sweep of a full
+ * turn or more matches every direction, including a pie or donut whose
+ * single category runs from -π/2 to 3π/2 (both normalize to the same ray).
+ */
+export function angleWithinArc(angle: number, startAngle: number, endAngle: number): boolean {
+  if (Math.abs(endAngle - startAngle) >= Math.PI * 2 - 1e-6) return true
+  const start = normalizeAngle(startAngle)
+  const end = normalizeAngle(endAngle)
+  const norm = normalizeAngle(angle)
+  if (start <= end) return norm >= start && norm <= end
+  return norm >= start || norm <= end
+}
