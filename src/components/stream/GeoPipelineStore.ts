@@ -1,3 +1,4 @@
+import { IngestActivity } from "./IngestActivity"
 import { repairDegenerateGeoFit } from "./geoProjectionFit"
 import { geoPointIndices } from "./geoPointSourceIndex"
 import { buildGeoScales } from "./geoScales"
@@ -129,6 +130,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
 
   // Timestamps for pulse
   lastIngestTime = 0
+  readonly activity = new IngestActivity(() => this.config.activityClock?.() ?? this.currentTime())
   private timestampBuffer: RingBuffer<number> | null = null
 
   // Transition state
@@ -225,6 +227,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
 
   setAreas(features: GeoJSON.Feature[]): void {
     this.areas = features
+    this.activity.touch()
     this.updateResults.recordData("replace", features.length)
   }
 
@@ -243,6 +246,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
     this.pointBuffer = null
     this.timestampBuffer = null
     this.streaming = false
+    this.activity.touch()
     this.updateResults.recordData("replace", data.length)
   }
 
@@ -259,6 +263,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
     // into the React-owned array passed via the `lines` prop.
     this.lineData = data.slice()
     if (this.streaming) this.retainNewestLines()
+    this.activity.touch()
     this.updateResults.recordData("replace", data.length)
   }
 
@@ -300,6 +305,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
     if (!this.pointBuffer) this.initStreaming()
     const now = this.currentTime()
     pushWithTimestamp(this.pointBuffer!, datum, this.timestampBuffer, now)
+    this.activity.touch()
     this.lastIngestTime = now
     this.updateResults.recordData("ingest", 1)
   }
@@ -317,6 +323,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
     for (const d of data) {
       pushWithTimestamp(this.pointBuffer!, d, this.timestampBuffer, now)
     }
+    this.activity.touch()
     this.lastIngestTime = now
     this.updateResults.recordData("ingest", data.length)
   }
@@ -342,6 +349,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
     this.lineData.push(line)
     this.retainNewestLines()
     this.version++
+    this.activity.touch()
     this.updateResults.recordData("ingest", 1)
   }
 
@@ -364,6 +372,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
     for (const line of safe) this.lineData.push(line)
     this.retainNewestLines()
     this.version++
+    this.activity.touch()
     this.updateResults.recordData("ingest", safe.length)
   }
 
@@ -387,6 +396,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
     })
     if (removed.length > 0) {
       this.version++
+      this.activity.touch()
       this.updateResults.recordData("remove", removed.length)
     } else {
       this.updateResults.recordNoop("remove")
@@ -423,6 +433,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
       const removed = this.pointBuffer.remove(predicate)
       if (removed.length > 0) {
         this.version++
+        this.activity.touch()
         this.updateResults.recordData("remove", removed.length)
       } else {
         this.updateResults.recordNoop("remove")
@@ -439,6 +450,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
       })
       if (removed.length > 0) {
         this.version++
+        this.activity.touch()
         this.updateResults.recordData("remove", removed.length)
       } else {
         this.updateResults.recordNoop("remove")
@@ -448,6 +460,8 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
   }
 
   clear(): void {
+    this.activity.clear()
+    this.lastIngestTime = 0
     this.areas = []
     this.pointData = []
     this.lineData = []

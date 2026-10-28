@@ -23,6 +23,8 @@ import type { ResolvedRibbon } from "./ribbonScene"
 import type { GradientConfig } from "../../charts/shared/gradient"
 
 export interface XYSceneContext {
+  /** Resolved initial balance plus evicted deltas. */
+  waterfallBaseline?: number
   scales: StreamScales
   config: XYSceneConfig
   getX: (d: Datum) => number
@@ -119,6 +121,8 @@ export interface XYSceneConfig {
   swarmStyle?: SwarmStyle
 
   // Waterfall
+  /** Starting cumulative balance for waterfall charts. @default 0 */
+  initialValue?: number
   waterfallStyle?: WaterfallStyle
 
   // Candlestick

@@ -1,4 +1,5 @@
 "use client"
+import { WaterfallIndex } from "./WaterfallIndex"
 import type { Datum } from "../shared/datumTypes"
 import { filterSparseArray } from "../shared/sparseArray"
 import { buildBaseMetadataProps, buildCustomBehaviorProps, buildTooltipProps } from "../shared/streamPropsHelpers"
@@ -36,6 +37,8 @@ export interface WaterfallChartProps<TDatum extends Datum = Datum> extends BaseC
   /** Stable ID for push-mode remove() and update(). */
   pointIdAccessor?: ChartAccessor<TDatum, string>
   xScaleType?: "linear" | "log" | "time"
+  /** Initial cumulative balance. Evicted deltas carry forward until clear or data replacement. */
+  initialValue?: number
   positiveColor?: string
   negativeColor?: string
   connectorStroke?: string
@@ -100,7 +103,6 @@ export const WaterfallChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ fo
 ) {
   ensureWaterfallChartRegistrations()
   const frameRef = useRef<StreamXYFrameHandle>(null)
-  useFrameImperativeHandle(ref, { variant: "xy", frameRef })
 
   const resolved = useChartMode(props.mode, {
     width: props.width,
@@ -157,12 +159,21 @@ export const WaterfallChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ fo
 
   const { width, height, enableHover, showGrid, showLegend, title, description, summary, accessibleTable, xLabel, yLabel } = resolved
   const safeData = useMemo(() => filterSparseArray(data), [data])
-  const pushXRef = useRef({
-    next: 0,
-    indexOf: new WeakMap<object, number>(),
-    idOf: new Map<string, number>(),
-    labels: new Map<number, unknown>(),
-  })
+  const pushXRef = useRef(new WaterfallIndex())
+  useFrameImperativeHandle(ref, { variant: "xy", frameRef, overrides: {
+    clear: () => {
+      frameRef.current?.clear()
+      pushXRef.current = new WaterfallIndex()
+    },
+    remove: (id) => {
+      const removed = frameRef.current?.remove(id) ?? []
+      for (const row of removed) pushXRef.current.forget(row)
+      return removed
+    }
+  } })
+  const indexCapacity = (frameProps.windowMode ?? frameProps.capacityMode) === "growing"
+    ? frameProps.maxCapacity ?? 100_000
+    : frameProps.windowSize ?? frameProps.capacity ?? 200
   const { plotData, plotXAccessor, plotXFormat, usesIndex } = useMemo(() => {
     const readX = typeof xAccessor === "function"
       ? xAccessor
@@ -191,43 +202,18 @@ export const WaterfallChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ fo
         usesIndex: true,
       }
     }
-    const state = pushXRef.current
-    const remember = (d: Datum, idx: number, id: string, raw: unknown) => {
-      if (d && typeof d === "object") {
-        state.indexOf.set(d, idx)
-        if (!Object.isFrozen(d) && !Object.isSealed(d)) {
-          (d as Datum & { __waterfallX?: number }).__waterfallX = idx
-        }
-      }
-      if (id) state.idOf.set(id, idx)
-      state.labels.set(idx, raw)
-    }
     return {
       plotData: safeData,
       plotXAccessor: (d: Datum, i?: number) => {
         const raw = readX(d, i)
         if (isNumericOrDate(raw)) return raw
         const id = readId ? String(readId(d, i) ?? "") : ""
-        const stamped = d && typeof d === "object"
-          ? (d as Datum & { __waterfallX?: number }).__waterfallX
-          : undefined
-        const existing = (typeof stamped === "number" && Number.isFinite(stamped))
-          ? stamped
-          : (d && typeof d === "object" ? state.indexOf.get(d) : undefined)
-            ?? (id ? state.idOf.get(id) : undefined)
-        if (typeof existing === "number") {
-          remember(d, existing, id, raw)
-          return existing
-        }
-        const idx = typeof i === "number" ? i : state.next
-        state.next = Math.max(state.next, idx + 1)
-        remember(d, idx, id, raw)
-        return idx
+        return pushXRef.current.index(d, id, raw, indexCapacity)
       },
-      plotXFormat: (v: number | Date | string) => formatTick(state.labels.get(Number(v)), v),
+      plotXFormat: (v: number | Date | string) => formatTick(pushXRef.current.label(Number(v)), v),
       usesIndex: true,
     }
-  }, [data, safeData, xAccessor, xFormat, pointIdAccessor])
+  }, [data, safeData, xAccessor, xFormat, pointIdAccessor, indexCapacity])
 
   const categoricalAxes = useMemo<StreamXYFrameProps["axes"]>(() => {
     if (!usesIndex || data == null) return undefined
@@ -330,6 +316,7 @@ export const WaterfallChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ fo
 
   const streamProps: StreamXYFrameProps = {
     chartType: "waterfall",
+    initialValue: props.initialValue,
     ...(data != null && { data: plotData }),
     xAccessor: plotXAccessor,
     yAccessor,
@@ -349,6 +336,7 @@ export const WaterfallChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ fo
     showGrid,
     ...(categoricalAxes && { axes: categoricalAxes }),
     ...setup.legendBehaviorProps,
+    ...setup.crosshairProps,
     ...buildBaseMetadataProps({
       title,
       description,

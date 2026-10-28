@@ -275,6 +275,7 @@ const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
         projectionTransform,
         windowSize,
         clock: frameRuntime.now,
+      activityClock: frameRuntime.wallNow,
         decay,
         pulse,
         transition,
@@ -305,6 +306,7 @@ const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
         projectionTransform,
         windowSize,
         frameRuntime.now,
+        frameRuntime.wallNow,
         decay,
         pulse,
         transition,
@@ -912,7 +914,7 @@ const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       }
 
       // Staleness badge state is owned by the shared useStalenessCheck hook
-      // (1s poll, with the `lastIngestTime === 0` guard). No per-render update
+      // (1s wall-clock poll). No per-render update
       // here: that path lacked the guard and flipped a never-ingested chart to
       // "STALE", diverging from the XY/ordinal/network frames. The hook fires on
       // a timer, which is the correct cadence for "no new data" anyway.
@@ -932,7 +934,7 @@ const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       }
     }
 
-    useStalenessCheck(staleness, storeRef, dirtyRef, scheduleRender, frameRuntime.now, isStale, setIsStale)
+    useStalenessCheck(staleness, storeRef, dirtyRef, scheduleRender, isStale, setIsStale)
 
     // Dev warning: tiles only work with Mercator projection
     useEffect(() => {
@@ -1414,14 +1416,7 @@ const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
             )}
             geoProjection={store.scales?.projectedPoint}
           />
-          {staleness?.showBadge && (
-            <StalenessBadge
-              isStale={isStale}
-              position={staleness.badgePosition}
-              state={staleness.state}
-              settling={staleness.settling}
-            />
-          )}
+
           <FocusRing
             active={kbFocusIndexRef.current >= 0}
             hoverPoint={hoverPoint}
@@ -1435,6 +1430,14 @@ const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
           {tooltipElement}
         </div>
         {/* end role="img" */}
+        {staleness?.showBadge && (
+          <StalenessBadge
+            isStale={isStale}
+            position={staleness.badgePosition}
+            state={staleness.state}
+            settling={staleness.settling}
+          />
+        )}
         {zoomable && (
           <div
             className="stream-geo-zoom-controls"

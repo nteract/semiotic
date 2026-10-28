@@ -1,3 +1,4 @@
+import { IngestActivity } from "./IngestActivity"
 import {
   explicitNetworkEdgeKey,
   validateNetworkEdgeUpdate,
@@ -206,7 +207,7 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
   private tensionConfig: TensionConfig
   protected updateResults = new NetworkPipelineUpdateResults()
 
-  /** Keep ingest, live encodings, staleness, and transitions on one clock. */
+  /** Keep ingest, live encodings, and transitions on the logical animation clock. */
   private currentTime(): number {
     return this.config.clock?.() ?? getTimestamp()
   }
@@ -226,6 +227,7 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
   // ── Realtime encoding timestamps ──────────────────────────────────────
 
   lastIngestTime = 0
+  readonly activity = new IngestActivity(() => this.config.activityClock?.() ?? this.currentTime())
   private nodeTimestamps: Map<string, number> = new Map()
   private edgeTimestamps: Map<string, number> = new Map()
 
@@ -399,6 +401,7 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
     this.runLayout(size)
 
     this._boundedPrevSnapshot = null
+    this.activity.touch()
     this.updateResults.recordData("replace", 1)
   }
 
@@ -483,6 +486,7 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
 
     // Run layout unless a worker will provide the force positions.
     if (!options?.deferLayout) this.runLayout(size)
+    this.activity.touch()
     this.updateResults.recordData("replace", rawNodes.length + rawEdges.length)
   }
 
@@ -548,6 +552,7 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
     const isFirst = this.nodes.size === 0
     let topologyChanged = false
     const now = this.currentTime()
+    this.activity.touch()
     this.lastIngestTime = now
     this._decaySortedNodes = null; this._networkDecayCache = null
 
@@ -1404,6 +1409,7 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
     const previous = node.data ? { ...node.data } : {}
     node.data = updater(node.data ?? {})
     this.layoutVersion++
+    this.activity.touch()
     this.lastIngestTime = this.currentTime()
     this.updateResults.recordData("update", 1)
     return previous
@@ -1443,6 +1449,7 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
     }
     if (results.length > 0) {
       this.layoutVersion++
+      this.activity.touch()
       this.lastIngestTime = this.currentTime()
       this.updateResults.recordData("update", results.length)
     } else {
@@ -1469,6 +1476,7 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
     for (const key of this.edgeIncidence().get(id) ?? []) this.deleteIndexedEdge(key)
     this.incidentEdges?.delete(id)
     this.layoutVersion++
+    this.activity.touch()
     this.lastIngestTime = this.currentTime()
     this.updateResults.recordData("remove", 1)
     return true
@@ -1521,6 +1529,7 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
     }
     if (toDelete.length > 0) {
       this.layoutVersion++
+      this.activity.touch()
       this.lastIngestTime = this.currentTime()
       this.updateResults.recordData("remove", toDelete.length)
     } else {
@@ -1562,6 +1571,7 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
     this._baseStyles = new WeakMap()
     this.transition = null
     this._hasRenderedOnce = false
+    this.activity.clear()
     this.lastIngestTime = 0
     this._lastPositionSnapshot = null
     this.nodeTimestamps.clear()

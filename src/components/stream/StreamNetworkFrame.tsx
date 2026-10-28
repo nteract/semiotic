@@ -305,6 +305,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       buildNetworkPipelineConfig({
         chartType,
         clock: frameRuntime.now,
+      activityClock: frameRuntime.wallNow,
         // Omit an implicit FrameRuntime random source here so force layouts
         // retain d3-force's deterministic default LCG. `frameRuntime.random`
         // remains the source for particles; force layout changes it only when
@@ -367,7 +368,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
         perspective,
         currentTheme
       }),
-    [perspective, chartType, frameRuntime.now, randomProp, seed, nodeIDAccessor, sourceAccessor, targetAccessor, valueAccessor, edgeIdAccessor, edgeIdentity, childrenAccessor, hierarchySum, orientation, nodeAlign, nodePaddingRatio, nodeWidth, iterations, forceStrength, padAngle, groupWidth, sortGroups, edgeSort, treeOrientation, edgeType, padding, paddingTop, tensionConfig, showParticles, particleStyle, nodeStyle, edgeStyle, nodeLabel, showLabels, labelMode, colorBy, colorScheme, edgeColorBy, edgeOpacity, colorByDepth, nodeSize, nodeSizeRange, decay, pulse, transition, introEnabled, staleness, thresholds, orbitMode, orbitSize, orbitSpeed, orbitRevolution, orbitRevolutionStyle, orbitEccentricity, orbitShowRings, orbitAnimated, customNetworkLayout, onLayoutError, layoutConfig, currentTheme]
+    [perspective, chartType, frameRuntime.now, frameRuntime.wallNow, randomProp, seed, nodeIDAccessor, sourceAccessor, targetAccessor, valueAccessor, edgeIdAccessor, edgeIdentity, childrenAccessor, hierarchySum, orientation, nodeAlign, nodePaddingRatio, nodeWidth, iterations, forceStrength, padAngle, groupWidth, sortGroups, edgeSort, treeOrientation, edgeType, padding, paddingTop, tensionConfig, showParticles, particleStyle, nodeStyle, edgeStyle, nodeLabel, showLabels, labelMode, colorBy, colorScheme, edgeColorBy, edgeOpacity, colorByDepth, nodeSize, nodeSizeRange, decay, pulse, transition, introEnabled, staleness, thresholds, orbitMode, orbitSize, orbitSpeed, orbitRevolution, orbitRevolutionStyle, orbitEccentricity, orbitShowRings, orbitAnimated, customNetworkLayout, onLayoutError, layoutConfig, currentTheme]
   )
 
   // Stabilize the config reference so inline-object / inline-array
@@ -1422,7 +1423,6 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     storeRef,
     dirtyRef,
     scheduleRender,
-    frameRuntime.now,
     isStale,
     setIsStale
   )
@@ -1589,17 +1589,16 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
             margin={margin}
             size={size}
           />
-
-          {staleness?.showBadge && (
-            <StalenessBadge
-              isStale={isStale}
-              position={staleness.badgePosition}
-              state={staleness.state}
-              settling={staleness.settling}
-            />
-          )}
         </div>
       </div>
+      {staleness?.showBadge && (
+        <StalenessBadge
+          isStale={isStale}
+          position={staleness.badgePosition}
+          state={staleness.state}
+          settling={staleness.settling}
+        />
+      )}
       {/* end visual content */}
     </div>
   )

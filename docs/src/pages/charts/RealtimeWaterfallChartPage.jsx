@@ -211,6 +211,11 @@ export default function RealtimeWaterfallChartPage() {
       />
 
       <p>
+        Set <code>initialValue</code> to start from an existing balance (default 0).
+        In push mode, evicted deltas carry forward so the visible total remains cumulative.
+        <code>clear()</code> and a new controlled data snapshot restart from that initial balance.
+      </p>
+      <p>
         RealtimeWaterfallChart visualizes cumulative deltas as connected bars
         that rise and fall from a running baseline. Positive values appear as
         gain bars and negative values as loss bars, with optional connector

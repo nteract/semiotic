@@ -179,6 +179,8 @@ export interface GeoPipelineConfig {
   windowSize?: number
   /** Logical clock used for Geo pulse and transition work. */
   clock?: import("./FrameRuntime").FrameClock
+  /** Wall clock for data freshness; animation continues to use `clock`. */
+  activityClock?: () => number
   decay?: DecayConfig
   pulse?: PulseConfig
   transition?: TransitionConfig

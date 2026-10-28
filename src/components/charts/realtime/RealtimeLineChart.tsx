@@ -1,11 +1,8 @@
 import * as React from "react"
 import {
   useRef,
-  useImperativeHandle,
   forwardRef,
   useCallback,
-  useState,
-  useEffect,
   useMemo
 } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
@@ -30,8 +27,7 @@ import {
 } from "../shared/withChartWrapper"
 import { resolveRealtimeWindowSize } from "./resolveWindowSize"
 import type { Datum } from "../shared/datumTypes"
-import { RealtimeAccumulator, AGG_SERIES } from "./RealtimeAccumulator"
-import type { ReorderBuffer } from "../../realtime/ReorderBuffer"
+import { AGG_SERIES } from "./RealtimeAccumulator"
 import {
   type AggregateConfig,
   type AggregatedRealtimeDatum,
@@ -41,7 +37,7 @@ import {
   AGG_LOWER,
   AGG_UPPER
 } from "./aggregate"
-import { type EventTimeConfig, createReorderBuffer } from "./eventTime"
+import { useRealtimeLineIngestion } from "./useRealtimeLineIngestion"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import {
   MultiPointTooltip,
@@ -55,7 +51,6 @@ import {
 
 import {
   buildRealtimeFrameChromeProps,
-  readRealtimeTime,
   useRealtimeChartMode,
   useRealtimeSelectionStyle
 } from "./realtimeChartRuntime"
@@ -272,217 +267,11 @@ export const RealtimeLineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */
   // frame a controlled, bounded array of per-window rows instead of the raw
   // stream. Refs keep the imperative handle referentially stable while still
   // reaching live config/accessors.
-  const aggEnabled = aggregate != null
-  const [aggRows, setAggRows] = useState<AggregatedRealtimeDatum[]>([])
-  const accRef = useRef<RealtimeAccumulator | null>(null)
-  const aggConfigRef = useRef<AggregateConfig | undefined>(aggregate)
-  aggConfigRef.current = aggregate
-  const aggEnabledRef = useRef(aggEnabled)
-  aggEnabledRef.current = aggEnabled
-  const aggRowsRef = useRef<AggregatedRealtimeDatum[]>(aggRows)
-  const publishAggRows = useCallback((rows: AggregatedRealtimeDatum[]) => {
-    // Imperative readers observe ingestion immediately, even while React
-    // batches the corresponding render with other updates.
-    aggRowsRef.current = rows
-    setAggRows(rows)
-  }, [])
-  const accessorsRef = useRef({ timeAccessor, valueAccessor })
-  accessorsRef.current = { timeAccessor, valueAccessor }
-
-  // Identity key for the structural config — rebuilding the accumulator is
-  // only required when the windowing itself changes (not stat/band/sigma,
-  // which are re-derived on emit). Percentiles and distinct own extra
-  // per-bucket state, so they are structural too.
-  const aggKey = aggEnabled
-    ? [
-        aggregate!.window ?? "tumbling",
-        aggregate!.size,
-        aggregate!.hop ?? "",
-        aggregate!.gap ?? "",
-        aggregate!.retain ?? "",
-        (aggregate!.percentiles ?? []).join(","),
-        aggregate!.distinct === true ? "1" : "0"
-      ].join("|")
-    : ""
-
-  // (Re)build the accumulator and seed it from any initial `data` array.
-  useEffect(() => {
-    if (!aggEnabled) {
-      accRef.current = null
-      return
-    }
-    const cfg = aggConfigRef.current!
-    // `retain` is the sole retention control for aggregate mode — leaving it
-    // unset means unbounded windows, matching AggregateConfig's documented
-    // default. (not coupled to `windowSize`, which is the
-    // ring-buffer eviction policy and does not apply to aggregated output.)
-    const acc = new RealtimeAccumulator(cfg, seriesAccessor)
-    accRef.current = acc
-    if (data) {
-      const { timeAccessor: ta, valueAccessor: va } = accessorsRef.current
-      for (const d of data) {
-        acc.push(d, ta, va)
-      }
-    }
-    publishAggRows(acc.emit(cfg))
-  }, [
-    aggKey,
-    aggEnabled,
-    data,
-    timeAccessor,
-    valueAccessor,
-    seriesAccessor,
-    publishAggRows
-  ])
-
-  // Re-emit (without rebuilding) when only the readout config changes.
-  useEffect(() => {
-    if (aggEnabled && accRef.current) {
-      publishAggRows(accRef.current.emit(aggConfigRef.current!))
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [aggregate?.stat, aggregate?.band, aggregate?.sigma])
-
-  const ingestAgg = useCallback(
-    (points: Datum[]) => {
-      const acc = accRef.current
-      const cfg = aggConfigRef.current
-      if (!acc || !cfg) return
-      const { timeAccessor: ta, valueAccessor: va } = accessorsRef.current
-      for (const p of points) {
-        acc.push(p, ta, va)
-      }
-      publishAggRows(acc.emit(cfg))
-    },
-    [publishAggRows]
-  )
-
-  // ── Event-time ingestion (opt-in) ──────────────────────────────────────
-  const eventTimeEnabled = eventTime != null
-  const reorderRef = useRef<ReorderBuffer<Datum> | null>(null)
-  const eventTimeRef = useRef<EventTimeConfig | undefined>(eventTime)
-  eventTimeRef.current = eventTime
-  const eventTimeEnabledRef = useRef(eventTimeEnabled)
-  eventTimeEnabledRef.current = eventTimeEnabled
-  const onObservationRef = useRef(onObservation)
-  onObservationRef.current = onObservation
-  const chartIdRef = useRef(chartId)
-  chartIdRef.current = chartId
-
-  const etKey = eventTimeEnabled
-    ? `${eventTime!.lateness}|${eventTime!.latePolicy ?? "drop"}`
-    : ""
-
-  // Route released (in-order) events to the aggregator or the frame.
-  const routeReleased = useCallback(
-    (points: Datum[]) => {
-      if (points.length === 0) return
-      if (aggEnabledRef.current) ingestAgg(points)
-      else frameRef.current?.pushMany(points)
-    },
-    [ingestAgg]
-  )
-
-  useEffect(() => {
-    // A live config/accessor transition is an asserted ordering boundary:
-    // release the old grace-window tail before installing the new policy.
-    // This runs only in the effect body, not cleanup, so unmount never queues
-    // a frame push or aggregate state update.
-    const previous = reorderRef.current
-    if (previous) routeReleased(previous.flush())
-
-    if (!eventTimeEnabled) {
-      reorderRef.current = null
-      return
-    }
-    // Capture the accessor used for this buffer. If it changes, the effect
-    // above flushes held rows using their original event-time interpretation
-    // before the replacement starts accepting rows under the new accessor.
-    const eventAccessor = timeAccessor
-    reorderRef.current = createReorderBuffer(
-      eventTimeRef.current!,
-      (d) => Number(readRealtimeTime(d, eventAccessor, "time") ?? NaN)
-    )
-  }, [etKey, eventTimeEnabled, routeReleased, timeAccessor])
-
-  // Unified ingest: reorder through the grace window (if enabled), emit
-  // late-data observations, then route the released events.
-  const ingestPoints = useCallback(
-    (points: Datum[]) => {
-      const rb = reorderRef.current
-      if (!eventTimeEnabledRef.current || !rb) {
-        routeReleased(points)
-        return
-      }
-      const released: Datum[] = []
-      for (const p of points) {
-        const res = rb.push(p)
-        for (const point of res.released) released.push(point)
-        if (res.late.length) {
-          const cb = onObservationRef.current
-          if (cb) {
-            const { timeAccessor: ta } = accessorsRef.current
-            const policy = eventTimeRef.current?.latePolicy ?? "drop"
-            for (const lp of res.late) {
-              cb({
-                type: "late-data",
-                datum: lp,
-                eventTime: Number(readRealtimeTime(lp, ta, "time") ?? NaN),
-                watermark: rb.watermark,
-                policy,
-                lateCount: rb.lateCount,
-                timestamp: Date.now(),
-                chartType: "RealtimeLineChart",
-                chartId: chartIdRef.current
-              })
-            }
-          }
-        }
-      }
-      routeReleased(released)
-    },
-    [routeReleased]
-  )
-
-  const flushEventTime = useCallback(() => {
-    const rb = reorderRef.current
-    if (!eventTimeEnabledRef.current || !rb) return
-    routeReleased(rb.flush())
-  }, [routeReleased])
-
-  // Keep the public handle stable while tracking both live ingest paths.
-  useImperativeHandle<
-    RealtimeFrameHandle<TDatum, Datum>,
-    RealtimeLineChartHandle<TDatum, Datum>
-  >(
-    ref,
-    () => ({
-      push: (point) => ingestPoints([point]),
-      pushMany: (points) => ingestPoints(points),
-      flush: flushEventTime,
-      remove: (id) =>
-        aggEnabledRef.current ? [] : (frameRef.current?.remove(id) ?? []),
-      update: (id, updater) =>
-        aggEnabledRef.current
-          ? []
-          : (frameRef.current?.update(id, updater) ?? []),
-      clear: () => {
-        reorderRef.current?.clear()
-        if (aggEnabledRef.current) {
-          accRef.current?.clear()
-          publishAggRows([])
-        } else {
-          frameRef.current?.clear()
-        }
-      },
-      getData: () =>
-        aggEnabledRef.current
-          ? aggRowsRef.current
-          : (frameRef.current?.getData() ?? []),
-      getScales: () => frameRef.current?.getScales() ?? null
-    }),
-    [flushEventTime, ingestPoints, publishAggRows]
-  )
+  const windowMode = windowModeProp ?? capacityMode ?? "sliding"
+  const windowSize = resolveRealtimeWindowSize(windowSizeProp, data, capacity)
+  const { aggEnabled, aggRows } = useRealtimeLineIngestion(ref, frameRef, windowSize, {
+    aggregate, eventTime, data, timeAccessor, valueAccessor, seriesAccessor, onObservation, chartId
+  })
 
   // ── Loading / empty states (computed early, returned after all hooks) ───
   const loadingEl = renderLoadingState(
@@ -545,9 +334,6 @@ export const RealtimeLineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */
     selection
   )
 
-  const windowMode = windowModeProp ?? capacityMode ?? "sliding"
-  const windowSize = resolveRealtimeWindowSize(windowSizeProp, data, capacity)
-
   const resolvedClassName = emphasis
     ? `${className || ""} semiotic-emphasis-${emphasis}`.trim()
     : className
@@ -560,7 +346,7 @@ export const RealtimeLineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */
   const frameWindowMode = aggEnabled ? "growing" : windowMode
   // Display capacity for the controlled aggregated rows — large enough to
   // hold every retained window (or the current row count when unbounded).
-  const aggCapacity = aggregate?.retain ?? Math.max(aggRows.length, 600)
+  const aggCapacity = Math.max(aggRows.length, windowSize)
   const frameWindowSize = aggEnabled ? Math.max(1, aggCapacity) : windowSize
   const frameBand =
     aggEnabled && aggregate && hasBand(aggregate)

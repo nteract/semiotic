@@ -138,6 +138,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       areaStyle,
       barStyle,
       waterfallStyle,
+      initialValue,
       swarmStyle,
       barColors,
       colorScheme,
@@ -456,6 +457,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       areaStyle,
       swarmStyle,
       waterfallStyle,
+      initialValue,
       colorScheme,
       barColors,
       barStyle,
@@ -466,6 +468,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       introAnimation: introEnabled,
       staleness,
       clock: frameRuntime.now,
+      activityClock: frameRuntime.wallNow,
       heatmapAggregation,
       heatmapXBins,
       heatmapYBins,
@@ -482,7 +485,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       onLayoutError,
       layoutConfig,
       layoutMargin: margin,
-    }), [chartType, isStreaming, windowSize, maxCapacity, windowMode, arrowOfTime, extentPadding, scalePadding, axisExtent, yAxisExtent, yAxisTicks, yAxisTickValues, xAccessor, yAccessor, accessorRevision, timeAccessor, valueAccessor, colorAccessor, sizeAccessor, symbolAccessor, symbolMap, groupAccessor, lineDataAccessor, categoryAccessor, xScaleType, yScaleType, xExtent, yExtent, invertY, sizeRange, binSize, binAlign, normalize, baseline, stackOrder, boundsAccessor, boundsStyle, y0Accessor, band, gradientFill, areaGroups, lineGradient, semanticLineStops, openAccessor, highAccessor, lowAccessor, closeAccessor, candlestickStyle, lineStyle, trackHoverRows, pointStyle, areaStyle, swarmStyle, waterfallStyle, colorScheme, barColors, barStyle, annotations, decay, pulse, transition, introEnabled, staleness, frameRuntime.now, heatmapAggregation, heatmapXBins, heatmapYBins, showValues, heatmapValueFormat, heatmapColorScale, pointIdAccessor, curve, currentTheme, customLayout, onLayoutError, layoutConfig, margin])
+    }), [chartType, isStreaming, windowSize, maxCapacity, windowMode, arrowOfTime, extentPadding, scalePadding, axisExtent, yAxisExtent, yAxisTicks, yAxisTickValues, xAccessor, yAccessor, accessorRevision, timeAccessor, valueAccessor, colorAccessor, sizeAccessor, symbolAccessor, symbolMap, groupAccessor, lineDataAccessor, categoryAccessor, xScaleType, yScaleType, xExtent, yExtent, invertY, sizeRange, binSize, binAlign, normalize, baseline, stackOrder, boundsAccessor, boundsStyle, y0Accessor, band, gradientFill, areaGroups, lineGradient, semanticLineStops, openAccessor, highAccessor, lowAccessor, closeAccessor, candlestickStyle, lineStyle, trackHoverRows, pointStyle, areaStyle, swarmStyle, waterfallStyle, initialValue, colorScheme, barColors, barStyle, annotations, decay, pulse, transition, introEnabled, staleness, frameRuntime.now, frameRuntime.wallNow, heatmapAggregation, heatmapXBins, heatmapYBins, showValues, heatmapValueFormat, heatmapColorScale, pointIdAccessor, curve, currentTheme, customLayout, onLayoutError, layoutConfig, margin])
 
     // Stabilize the config reference so inline-object / inline-array
     // props don't shed identity on every parent render. Without this
@@ -957,7 +960,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
 
       // Staleness check (used by both canvases). `resolveStaleness`
       // handles both the binary flip and the graded (banded) ramp.
-      const idleMs = store.lastIngestTime > 0 ? now - store.lastIngestTime : 0
+      const idleMs = store.activity.elapsed()
       const resolvedStaleness = resolveStaleness(staleness, idleMs)
       const currentlyStale = staleness && resolvedStaleness.isStale
 
@@ -1129,7 +1132,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
     }
 
     // Staleness check timer
-    useStalenessCheck(staleness, storeRef, dirtyRef, scheduleRender, frameRuntime.now, isStale, setIsStale)
+    useStalenessCheck(staleness, storeRef, dirtyRef, scheduleRender, isStale, setIsStale)
 
     // ── Auto-detect date x-axis formatting ──────────────────────────────
     const autoDateXFormat = useMemo(() => {
@@ -1482,14 +1485,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
             streaming={runtimeMode === "streaming"}
           />
         )}
-        {staleness?.showBadge && (
-          <StalenessBadge
-            isStale={isStale}
-            position={staleness.badgePosition}
-            state={staleness.state}
-            settling={staleness.settling}
-          />
-        )}
+
         {focusRing}
         <XYFrameTooltip
           enabled={Boolean(effectiveHoverAnnotation)}
@@ -1500,6 +1496,14 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
           margin={margin}
         />
         </div>{/* end role="img" */}
+        {staleness?.showBadge && (
+          <StalenessBadge
+            isStale={isStale}
+            position={staleness.badgePosition}
+            state={staleness.state}
+            settling={staleness.settling}
+          />
+        )}
         {/* Controls stay outside role="img" so assistive technology reaches them. */}
         <FrameInteractiveLayer
           graphics={interactiveGraphics}

@@ -6,15 +6,16 @@ const DEFAULT_NEGATIVE_COLOR = "#dc3545"
 
 export function computeWaterfallExtent(
   data: Iterable<Datum>,
-  getValue: (d: Datum) => number
+  getValue: (d: Datum) => number,
+  initialValue = 0
 ): [number, number] {
-  let min = 0
-  let max = 0
-  let cumulative = 0
+  let min = initialValue
+  let max = initialValue
+  let cumulative = initialValue
 
   for (const d of data) {
     const v = getValue(d)
-    if (v == null || Number.isNaN(v)) continue
+    if (v == null || !Number.isFinite(v)) continue
     cumulative += v
     if (cumulative < min) min = cumulative
     if (cumulative > max) max = cumulative
@@ -44,13 +45,13 @@ export const waterfallRenderer: RendererFn = (ctx, data, scales, layout, style, 
   const arr: Datum[] = []
   for (const d of data) {
     const v = getValue(d)
-    if (v == null || Number.isNaN(v)) continue
+    if (v == null || !Number.isFinite(v)) continue
     arr.push(d)
   }
 
   if (arr.length === 0) return
 
-  let baseline = 0
+  let baseline = options?.initialValue ?? 0
   // Track the end edge of the previous bar and its cumulative value for connectors
   let prevEdge: number | null = null
   let prevCumulative: number | null = null

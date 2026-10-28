@@ -43,6 +43,10 @@ export interface ReorderBufferConfig<T> {
    * - `"keep"`: release it immediately, out of order (still counted).
    */
   latePolicy?: LatePolicy
+  /** Reject timestamps beyond the wall clock plus this many ms. Opt-in. */
+  maxFutureSkew?: number
+  /** Epoch-millisecond clock for future-skew checks. @default Date.now */
+  now?: () => number
 }
 
 export interface ReorderResult<T> {
@@ -53,6 +57,8 @@ export interface ReorderResult<T> {
   released: T[]
   /** The events that were late this push (informational; for diagnostics). */
   late: T[]
+  /** Future-dated events rejected without advancing the watermark. */
+  future?: T[]
 }
 
 /**
@@ -63,6 +69,9 @@ export class ReorderBuffer<T> {
   private readonly lateness: number
   private readonly getTime: (item: T) => number
   private readonly latePolicy: LatePolicy
+  private readonly maxFutureSkew: number
+  private readonly now: () => number
+  private _futureCount = 0
 
   // Stable event-time ordering without rescanning the grace window on push.
   private held: HeldEvent<T>[] = []
@@ -75,7 +84,11 @@ export class ReorderBuffer<T> {
   private _lateCount: number = 0
 
   constructor(config: ReorderBufferConfig<T>) {
-    this.lateness = config.lateness > 0 ? config.lateness : 0
+    if (!Number.isFinite(config.lateness) || config.lateness < 0) throw new RangeError("ReorderBuffer lateness must be finite and non-negative")
+    if (config.maxFutureSkew != null && (!Number.isFinite(config.maxFutureSkew) || config.maxFutureSkew < 0)) throw new RangeError("ReorderBuffer maxFutureSkew must be finite and non-negative")
+    this.lateness = config.lateness
+    this.maxFutureSkew = config.maxFutureSkew ?? Infinity
+    this.now = config.now ?? Date.now
     this.getTime = config.getTime
     this.latePolicy = config.latePolicy ?? "drop"
   }
@@ -91,6 +104,10 @@ export class ReorderBuffer<T> {
       return { released: [item], late: [] }
     }
 
+    if (this.maxFutureSkew !== Infinity && t > this.now() + this.maxFutureSkew) {
+      this._futureCount++
+      return { released: [], late: [], future: [item] }
+    }
     const late: T[] = []
     // Late if it missed either the moving grace window or a tail the caller
     // explicitly committed with flush().
@@ -139,7 +156,18 @@ export class ReorderBuffer<T> {
     return this.drain(Infinity)
   }
 
+  /** Opt-in idle progression, using elapsed wall time rather than assuming an event epoch. */
+  advanceIdle(elapsed: number): T[] {
+    if (Number.isFinite(elapsed) && elapsed > 0 && this._watermark !== -Infinity) this._watermark += elapsed
+    return this.drain(this.releaseWatermark)
+  }
+
+  /** Event-time frontier behind the configured grace window. */
+  get releaseWatermark(): number { return this._watermark - this.lateness }
+  get futureCount(): number { return this._futureCount }
+
   clear(): void {
+    this._futureCount = 0
     this.held = []
     this.nextOrder = 0
     this._watermark = -Infinity

@@ -235,8 +235,7 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
   const staleThreshold = staleness?.threshold ?? 5000
   const currentlyStale =
     !!staleness &&
-    store.lastIngestTime > 0 &&
-    now - store.lastIngestTime > staleThreshold
+    store.activity.elapsed() > staleThreshold
 
   if (needsDataRepaint) {
     const dpr = getDevicePixelRatio(maxDevicePixelRatio, size)

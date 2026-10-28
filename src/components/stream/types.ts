@@ -828,6 +828,8 @@ export interface StreamXYFrameProps<T = Datum>
   pointStyle?: (d: T) => Style & { r?: number }
   areaStyle?: (d: T) => Style
   barStyle?: BarStyle
+  /** Starting cumulative balance for waterfall charts. @default 0 */
+  initialValue?: number
   waterfallStyle?: WaterfallStyle
   swarmStyle?: SwarmStyle
   barColors?: Record<string, string>

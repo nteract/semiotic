@@ -20,7 +20,7 @@ export function buildWaterfallScene(ctx: XYSceneContext, data: Datum[], layout: 
   const arr = data.filter(d => {
     const v = ctx.getY(d)
     const t = ctx.getX(d)
-    return v != null && !Number.isNaN(v) && t != null && isFinite(t as number)
+    return v != null && Number.isFinite(v) && t != null && isFinite(t as number)
   })
   if (arr.length === 0) return nodes
 
@@ -32,7 +32,7 @@ export function buildWaterfallScene(ctx: XYSceneContext, data: Datum[], layout: 
   const barStroke = ws?.stroke
   const barStrokeWidth = ws?.strokeWidth
   const barOpacity = ws?.opacity
-  let baseline = 0
+  let baseline = ctx.waterfallBaseline ?? ctx.config.initialValue ?? 0
 
   for (let i = 0; i < arr.length; i++) {
     const d = arr[i]

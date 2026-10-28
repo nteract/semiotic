@@ -106,11 +106,8 @@ describe("WindowAccumulator — hopping", () => {
     expect(acc.emit()[0].sum).toBe(3)
   })
 
-  it("clamps an invalid hop to the window size", () => {
-    const acc = new WindowAccumulator({ window: "hopping", size: 10, hop: 0 })
-    acc.push(3, 1)
-    acc.push(13, 2)
-    expect(acc.windowCount).toBe(2) // behaves as tumbling
+  it.each([0, -1, NaN, Infinity, 11])("rejects invalid hop %s instead of silently changing the window", hop => {
+    expect(() => new WindowAccumulator({ window: "hopping", size: 10, hop })).toThrow(/hop/)
   })
 })
 
@@ -419,5 +416,40 @@ describe("WindowAccumulator — percentiles and distinct", () => {
     expect(row.distinct).toBe(5)
     expect(statValue(row, "p95")).toBe(row.percentiles?.p95)
     expect(statValue(row, "distinct")).toBe(5)
+  })
+})
+
+
+describe("WindowAccumulator configuration and snapshots", () => {
+  it.each([0, -1, NaN, Infinity])("rejects unusable size %s", size => {
+    expect(() => new WindowAccumulator({ size })).toThrow(/size/)
+  })
+  it("rejects excessive hopping fanout before allocating buckets", () => {
+    expect(() => new WindowAccumulator({ window: "hopping", size: 60_000, hop: 1 })).toThrow(/fanout/)
+    const acc = new WindowAccumulator({ window: "hopping", size: 1000, hop: 1 })
+    acc.push(1000, 2)
+    expect(acc.windowCount).toBe(1000)
+  })
+  it("reuses unchanged window summaries and closes the idle tail without adding samples", () => {
+    const acc = new WindowAccumulator({ size: 10, percentiles: [0.95] })
+    acc.push(1, 10)
+    acc.push(11, 20)
+    const before = acc.emit()
+    acc.push(12, 30)
+    const after = acc.emit()
+    expect(after[0]).toBe(before[0])
+    expect(before[1]).toMatchObject({ count: 1, partial: true, sum: 20 })
+    expect(after[1]).toMatchObject({ count: 2, partial: true, sum: 50 })
+    acc.advanceWatermark(20)
+    expect(acc.emit()[1]).toMatchObject({ count: 2, partial: false, sum: 50 })
+    expect(after[1].partial).toBe(true)
+  })
+  it("bounds existing unbounded history when entering live retention", () => {
+    const acc = new WindowAccumulator({ size: 10 })
+    for (let time = 0; time < 100; time += 10) acc.push(time, time)
+    acc.setRetention(3)
+    expect(acc.emit().map(row => row.start)).toEqual([70, 80, 90])
+    acc.push(100, 1)
+    expect(acc.emit().map(row => row.start)).toEqual([80, 90, 100])
   })
 })

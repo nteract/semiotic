@@ -225,6 +225,7 @@ describe("terminal transition paint", () => {
       hasActivePulses: false,
       hasActiveThresholds: false,
       lastIngestTime: 0,
+      activity: { elapsed: () => 0 },
       perspective: new NetworkPerspectiveState(),
       advancePerspectiveTransition: () => false
     } as unknown as NetworkPipelineStore
