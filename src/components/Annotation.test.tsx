@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest"
-import { render } from "@testing-library/react"
+import { describe, expect, it, vi } from "vitest"
+import { fireEvent, render } from "@testing-library/react"
 import * as React from "react"
 import Annotation, { type AnnotationProps } from "./Annotation"
 
@@ -324,5 +324,49 @@ describe("Annotation disable controls", () => {
     expect(container.querySelector(".annotation-subject")).toBeNull()
     expect(container.querySelector(".annotation-connector")).not.toBeNull()
     expect(container.querySelector(".annotation-note")).not.toBeNull()
+  })
+})
+
+describe("zero annotation coordinates", () => {
+  it("keeps nx and ny of 0 on multi-coordinate notes", () => {
+    const { container } = renderAnnotation({
+      coordinates: true,
+      screenCoordinates: [[100, 50], [140, 80]],
+      nx: 0,
+      ny: 0,
+      note: { label: "edge" }
+    })
+    const notes = container.querySelectorAll(".annotation-note")
+    expect(notes[0]?.getAttribute("transform")).toBe("translate(-100,-50)")
+    expect(container.querySelectorAll(".annotation")).toHaveLength(2)
+  })
+
+  it("forwards eventListeners on every multi-coordinate anchor", () => {
+    const onClick = vi.fn()
+    const { container } = renderAnnotation({
+      coordinates: true,
+      screenCoordinates: [[100, 50], [140, 80]],
+      nx: 0,
+      ny: 0,
+      note: { label: "edge" },
+      eventListeners: { onClick }
+    })
+    for (const mark of container.querySelectorAll(".annotation")) {
+      fireEvent.click(mark)
+    }
+    expect(onClick).toHaveBeenCalledTimes(2)
+  })
+
+  it("draws a bracket with depth 0 instead of the default 30", () => {
+    const { container } = renderAnnotation({
+      type: "bracket",
+      x: 10,
+      y: 20,
+      note: { label: "flat" },
+      subject: { type: "square", width: 40, depth: 0 }
+    })
+    expect(
+      required<SVGPathElement>(container, ".annotation-subject path").getAttribute("d")
+    ).toBe("M0,0 L0,0 L40,0 L40,0")
   })
 })
