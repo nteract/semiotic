@@ -40,7 +40,7 @@ if (probe.error || probe.status !== 0) {
 // (.github/workflows/node.js.yml). Baselines and CI must render in the SAME
 // image, CPU architecture, and production build or sub-pixel rasterization
 // can drift even when the Playwright version matches.
-const image = process.env.PW_DOCKER_IMAGE || "mcr.microsoft.com/playwright:v1.61.1-noble"
+const image = process.env.PW_DOCKER_IMAGE || "mcr.microsoft.com/playwright:v1.64.1-noble"
 const platform = process.env.PW_DOCKER_PLATFORM || "linux/amd64"
 const defaultSpecs = [
   "integration-tests/mobile-visualization-harness.spec.ts",

@@ -752,7 +752,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
     clickHandlerRef.current = (e: React.MouseEvent) => {
       if (isAnnotationActivationTarget(e.target)) return
       if (!customClickBehavior) return
-      flushPointerMove()
+      flushPointerMove(e)
       const canvas = canvasRef.current
       if (!canvas) return
       const rect = canvas.getBoundingClientRect()

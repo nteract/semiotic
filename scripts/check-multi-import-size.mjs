@@ -92,7 +92,7 @@ const analyze = process.argv.includes("--analyze")
 // Both builds reach 28 files; no family coupling or dependency was added.
 // This requested navigation behavior retains less than 0.3 KiB of headroom.
 // Composed line-gap, ordinal-navigation, and touch fixes measure at most
-// 315.52 KiB gzip. Keep a narrow 0.08 KiB margin for this correctness payload.
+// 315.56 KiB gzip. Keep a narrow 0.04 KiB margin for this correctness payload.
 const MULTI_IMPORT_GZIP_BUDGET = 315.6 * 1024
 
 const MULTI_IMPORT_SOURCE = `

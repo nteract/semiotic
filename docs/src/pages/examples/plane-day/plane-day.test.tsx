@@ -304,7 +304,7 @@ describe("E02 ordinary reading experience", () => {
         <PlaneDayExamplePage />
       </MemoryRouter>,
     )
-    fireEvent.click(screen.getByRole("button", { name: "Pin HA 466 · PPG → HNL" }))
+    fireEvent.click(screen.getByRole("button", { name: /PPG.*HNL.*HA 466/ }))
     fireEvent.change(screen.getByLabelText("View", { exact: true }), {
       target: { value: "network" },
     })

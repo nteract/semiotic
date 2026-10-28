@@ -548,7 +548,7 @@ const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       (e: React.MouseEvent) => {
         if (isAnnotationActivationTarget(e.target)) return
         if (!customClickBehavior) return
-        flushPointerMove()
+        flushPointerMove(e)
         const store = storeRef.current
         if (!store || !store.scene.length) {
           customClickBehavior(null)

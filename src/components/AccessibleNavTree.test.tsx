@@ -8,6 +8,17 @@ import {
   getConversationArcStore
 } from "./ai/conversationArc"
 
+// jsdom includes nested group text in a treeitem name; browser tests verify
+// native names. Unit interactions target the item's own visible label.
+function getTreeItemByLabel(name: string | RegExp) {
+  const items = screen.getAllByRole("treeitem").filter(item => {
+    const label = item.querySelector(":scope > .semiotic-nav-tree-label")?.lastChild?.textContent ?? ""
+    return typeof name === "string" ? label === name : name.test(label)
+  })
+  expect(items).toHaveLength(1)
+  return items[0]
+}
+
 const singleSeries = buildNavigationTree("LineChart", {
   data: [
     { month: "Jan", sales: 100 },
@@ -38,13 +49,10 @@ describe("AccessibleNavTree — ARIA structure", () => {
     expect(items).toHaveLength(6)
     expect(items[0]).toHaveAttribute("aria-level", "1")
     expect(items[0]).toHaveAttribute("aria-expanded", "true")
-    expect(items[0]).toHaveAttribute(
-      "aria-label",
-      expect.stringContaining("A line chart of sales by month")
-    )
+    expect(items[0].querySelector(":scope > .semiotic-nav-tree-label")).toHaveTextContent("A line chart of sales by month")
     // leaves carry posinset/setsize for "n of m"
     const leaf = items.find(
-      (el) => el.getAttribute("aria-label") === "Feb: 250"
+      (el) => el.querySelector(":scope > .semiotic-nav-tree-label")?.lastChild?.textContent === "Feb: 250"
     )!
     expect(leaf).toHaveAttribute("aria-level", "2")
     expect(leaf).toHaveAttribute("aria-setsize", "5")
@@ -64,11 +72,11 @@ describe("AccessibleNavTree — ARIA structure", () => {
     render(<AccessibleNavTree tree={multiSeries} />)
     // The West series' second point is hidden while the branch is collapsed.
     expect(screen.queryByLabelText("Feb: 200")).toBeNull()
-    const west = screen.getByLabelText(/Series West:/)
+    const west = getTreeItemByLabel(/Series West:/)
     expect(west).toHaveAttribute("aria-expanded", "false")
     fireEvent.click(west)
-    expect(screen.getByLabelText("Feb: 200")).toBeInTheDocument()
-    expect(screen.getByLabelText(/Series West:/)).toHaveAttribute(
+    expect(getTreeItemByLabel("Feb: 200")).toBeInTheDocument()
+    expect(getTreeItemByLabel(/Series West:/)).toHaveAttribute(
       "aria-expanded",
       "true"
     )
@@ -94,23 +102,23 @@ describe("AccessibleNavTree — keyboard", () => {
 
   it("ArrowRight expands a collapsed branch, ArrowLeft collapses it", () => {
     render(<AccessibleNavTree tree={multiSeries} />)
-    const west = screen.getByLabelText(/Series West:/)
+    const west = getTreeItemByLabel(/Series West:/)
     fireEvent.keyDown(west, { key: "ArrowDown" }) // doesn't matter which item receives the event
     // Drive selection to the West series, then expand it.
     fireEvent.click(west) // expands + selects
-    expect(screen.getByLabelText(/Series West:/)).toHaveAttribute(
+    expect(getTreeItemByLabel(/Series West:/)).toHaveAttribute(
       "aria-expanded",
       "true"
     )
     fireEvent.keyDown(west, { key: "ArrowLeft" })
-    expect(screen.getByLabelText(/Series West:/)).toHaveAttribute(
+    expect(getTreeItemByLabel(/Series West:/)).toHaveAttribute(
       "aria-expanded",
       "false"
     )
-    fireEvent.keyDown(screen.getByLabelText(/Series West:/), {
+    fireEvent.keyDown(getTreeItemByLabel(/Series West:/), {
       key: "ArrowRight"
     })
-    expect(screen.getByLabelText(/Series West:/)).toHaveAttribute(
+    expect(getTreeItemByLabel(/Series West:/)).toHaveAttribute(
       "aria-expanded",
       "true"
     )
@@ -142,10 +150,10 @@ describe("AccessibleNavTree — keyboard", () => {
     const west = multiSeries.children!.find((c) => c.role === "series")!
     const deepLeaf = west.children![1] // "Feb: 200", initially hidden
     render(<AccessibleNavTree tree={multiSeries} activeId={deepLeaf.id} />)
-    const item = screen.getByLabelText("Feb: 200")
+    const item = getTreeItemByLabel("Feb: 200")
     expect(item).toBeInTheDocument() // ancestors auto-expanded
     expect(item).toHaveAttribute("aria-selected", "true")
-    expect(screen.getByLabelText(/Series West:/)).toHaveAttribute(
+    expect(getTreeItemByLabel(/Series West:/)).toHaveAttribute(
       "aria-expanded",
       "true"
     )
@@ -232,7 +240,7 @@ describe("AccessibleNavTree — keyboard", () => {
     root.focus()
     fireEvent.keyDown(root, { key: "ArrowDown" })
     fireEvent.keyDown(
-      screen.getByRole("treeitem", { name: /Highest values:/ }),
+      getTreeItemByLabel(/Highest values:/),
       {
         key: "ArrowDown"
       }
@@ -274,7 +282,7 @@ describe("AccessibleNavTree — semantic observations", () => {
       />
     )
 
-    fireEvent.click(screen.getByLabelText("Feb: 250"))
+    fireEvent.click(getTreeItemByLabel("Feb: 250"))
 
     expect(onObservation.mock.calls.map(([event]) => event.type)).toEqual([
       "focus",
@@ -311,8 +319,8 @@ describe("AccessibleNavTree — semantic observations", () => {
         onAnnotationActivate={onAnnotationActivate}
       />
     )
-    fireEvent.click(screen.getByLabelText(/Annotations: one marked feature/))
-    const annotation = screen.getByLabelText(
+    fireEvent.click(getTreeItemByLabel(/Annotations: one marked feature/))
+    const annotation = getTreeItemByLabel(
       /^A widget labeled "Secret console"\.$/
     )
     fireEvent.click(annotation)
@@ -356,9 +364,9 @@ describe("AccessibleNavTree — reception telemetry", () => {
   it("records nav-branch-expanded on expand (and the expanded flag on collapse)", () => {
     enableConversationArc()
     render(<AccessibleNavTree tree={multiSeries} chartId="sales" />)
-    const west = screen.getByLabelText(/Series West:/)
+    const west = getTreeItemByLabel(/Series West:/)
     fireEvent.click(west) // focus + expand
-    fireEvent.keyDown(screen.getByLabelText(/Series West:/), {
+    fireEvent.keyDown(getTreeItemByLabel(/Series West:/), {
       key: "ArrowLeft"
     }) // collapse
     const toggles = getConversationArcStore()

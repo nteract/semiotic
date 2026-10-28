@@ -235,7 +235,6 @@ export function AccessibleNavTree({ tree, label, visible = false, className, onA
       <li
         key={node.id}
         role="treeitem"
-        aria-label={node.label}
         aria-level={node.level}
         aria-posinset={posinset}
         aria-setsize={setsize}
@@ -261,7 +260,7 @@ export function AccessibleNavTree({ tree, label, visible = false, className, onA
         } : undefined}
       >
         <span className={`semiotic-nav-tree-label semiotic-nav-tree-${node.role}`}>
-          {visible && hasChildren ? (isOpen ? "▾ " : "▸ ") : ""}{node.label}
+          {visible && hasChildren && <span aria-hidden="true">{isOpen ? "▾ " : "▸ "}</span>}{node.label}
         </span>
         {hasChildren && isOpen && (
           <ul role="group" style={visible ? { margin: 0, padding: 0 } : undefined}>

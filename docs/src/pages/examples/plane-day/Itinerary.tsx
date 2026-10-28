@@ -55,7 +55,6 @@ export default function Itinerary({
                   className="plane-pin"
                   aria-pressed={selected}
                   onClick={() => onSelect(flight.id)}
-                  aria-label={`Pin ${flightName(flight)}`}
                 >
                   <span className="plane-leg-number">{String(index + 1).padStart(2, "0")}</span>
                   <span>
