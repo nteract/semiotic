@@ -138,7 +138,7 @@ export function createDefaultAnnotationRules(
           ) as { x: number; y: number; r: number }[]
         if (coords.length < 2) return null
         const enclosure = packEnclose(coords)
-        const padding = ann.padding || 10
+        const padding = ann.padding ?? 10
         return (
           <g key={`ann-${index}`}>
             <circle
@@ -178,7 +178,7 @@ export function createDefaultAnnotationRules(
               c.x != null && c.y != null
           ) as { x: number; y: number }[]
         if (coords.length < 2) return null
-        const padding = ann.padding || 10
+        const padding = ann.padding ?? 10
         const xs = coords.map((c) => c.x)
         const ys = coords.map((c) => c.y)
         const [rawMinX, rawMaxX] = getMinMax(xs)
@@ -235,7 +235,7 @@ export function createDefaultAnnotationRules(
               const px = resolveX(d, context)
               const py = resolveY(d, context)
               if (px == null || py == null) return null
-              const r = typeof ann.r === "function" ? ann.r(d) : (ann.r || 6)
+              const r = typeof ann.r === "function" ? ann.r(d) : (ann.r ?? 6)
               const style = typeof ann.style === "function"
                 ? ann.style(d)
                 : (ann.style || defaultStyle)
@@ -251,12 +251,13 @@ export function createDefaultAnnotationRules(
       case "bracket": {
         const px = resolveX(ann, context)
         const py = resolveY(ann, context)
+        if (px == null || py == null) return null
         return (
           <Annotation
             key={`ann-${index}`}
             noteData={{
-              x: px ?? 0,
-              y: py ?? 0,
+              x: px,
+              y: py,
               dx: ann.dx || 0,
               dy: ann.dy || 0,
               note: annotationNote(ann),
@@ -265,7 +266,7 @@ export function createDefaultAnnotationRules(
                 type: ann.bracketType || "curly",
                 width: ann.width,
                 height: ann.height,
-                depth: ann.depth || 30
+                depth: ann.depth ?? 30
               },
               color: ann.color
             }}

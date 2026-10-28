@@ -186,7 +186,7 @@ describe("optional Pretext note layout", () => {
       const annotation = { ...raw[0], type, width: 40, height: 20, _noteLayout }
       const output = renderStaticAnnotations({
         annotations: [annotation],
-        scales: {},
+        scales: { x: scaleLinear(), y: scaleLinear() },
         layout: { width: 320, height: 240 },
         theme: LIGHT_THEME
       })
