@@ -198,7 +198,8 @@ const ENTRY_GRAPHS = [
   // 123.2 KiB gzip.
   // Lowered 124→122 (2026-09-30): on-demand transitions measure 121.0 KiB gzip.
   // Feature graph: 123.3 KiB (previous built HEAD: 121.9 KiB).
-  { entry: "semiotic-line.module.min.js", label: "line", limitKb: 124.2 },
+  // Combined line-gap, navigation, and touch fixes measure 124.23 KiB.
+  { entry: "semiotic-line.module.min.js", label: "line", limitKb: 124.3 },
   // The opt-in text adapter stays isolated. This budgets Semiotic's code;
   // @chenglou/pretext remains an external optional peer, like React.
   { entry: "semiotic-text.module.min.js", label: "text (adapter)", limitKb: 2 },
