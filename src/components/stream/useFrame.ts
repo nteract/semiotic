@@ -464,11 +464,7 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
   // unmount cleanup for things the hook doesn't own (pointermove
   // coalescing, DataSourceAdapter teardown), but the rafRef cleanup is
   // now centralized.
-  useEffect(() => {
-    return () => {
-      cancelRender()
-    }
-  }, [cancelRender])
+  useEffect(() => cancelRender, [cancelRender])
 
   // ── Pointer event coalescing (hover handler) ──────────────────────────
   const hoverHandlerRef = useRef<(coords: HoverPointerCoords) => void>(() => {})

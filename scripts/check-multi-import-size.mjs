@@ -91,7 +91,9 @@ const analyze = process.argv.includes("--analyze")
 // 9f54b35b0 with identical dependencies: 322,286 -> 322,790 bytes (315.2 KiB).
 // Both builds reach 28 files; no family coupling or dependency was added.
 // This requested navigation behavior retains less than 0.3 KiB of headroom.
-const MULTI_IMPORT_GZIP_BUDGET = 315.5 * 1024
+// Composed line-gap, ordinal-navigation, and touch fixes measure at most
+// 315.52 KiB gzip. Keep a narrow 0.08 KiB margin for this correctness payload.
+const MULTI_IMPORT_GZIP_BUDGET = 315.6 * 1024
 
 const MULTI_IMPORT_SOURCE = `
 export { LineChart } from "semiotic/xy"
