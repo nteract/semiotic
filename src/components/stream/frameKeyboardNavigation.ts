@@ -1,5 +1,6 @@
 "use client"
 
+import { navPointToHover } from "./navPointToHover"
 import type { HoverData } from "../realtime/types"
 import type { PipelineStore } from "./PipelineStore"
 import type { GeoPipelineStore } from "./GeoPipelineStore"
@@ -10,7 +11,6 @@ import { enrichDatumWithBand } from "./xySceneBuilders/ribbonScene"
 import {
   extractGeoNavPoints,
   extractXYNavPoints,
-  navPointToHover,
   type NavPoint
 } from "./keyboardNav"
 import {

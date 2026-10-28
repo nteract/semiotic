@@ -3,7 +3,7 @@
 import type { OrdinalPipelineStore } from "./OrdinalPipelineStore"
 import type { OrdinalSceneNode } from "./ordinalTypes"
 import { extractOrdinalNavPoints } from "./ordinalKeyboardNav"
-import { navPointToHover } from "./keyboardNav"
+import { navPointToHover } from "./navPointToHover"
 import { useGraphKeyboardNavigation, type KeyboardInteractionParams } from "./graphKeyboardNavigation"
 
 interface OrdinalKeyboardParams extends KeyboardInteractionParams<

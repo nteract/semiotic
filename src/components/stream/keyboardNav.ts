@@ -10,7 +10,6 @@
  * HoverData state that mouse hover does.
  */
 
-import type { HoverData } from "../realtime/types"
 import type { SceneNode } from "./types"
 import type { GeoSceneNode } from "./geoTypes"
 import { glyphHitGeometry } from "./glyphDef"
@@ -34,12 +33,8 @@ export function extractXYNavPoints(scene: SceneNode[]): NavPoint[] {
   for (const node of scene) {
     switch (node.type) {
       case "point":
-        if (node.interactive === false) break
-        points.push({ x: node.x, y: node.y, datum: node.datum, shape: "circle", group: "_default" })
-        break
-
       case "symbol":
-        if (node.size <= 0) break
+        if (node.type === "point" ? node.interactive === false : node.size <= 0) break
         points.push({ x: node.x, y: node.y, datum: node.datum, shape: "circle", group: "_default" })
         break
 
@@ -59,23 +54,14 @@ export function extractXYNavPoints(scene: SceneNode[]): NavPoint[] {
         break
       }
 
-      case "line": {
-        const line = node
-        const data = Array.isArray(line.datum) ? line.datum : []
-        const group = line.group ?? "_default"
-        for (let i = 0; i < line.path.length && i < data.length; i++) {
-          points.push({ x: line.path[i][0], y: line.path[i][1], datum: data[i], shape: "circle", group })
-        }
-        break
-      }
-
+      case "line":
       case "area": {
-        if (node.interactive === false) break
-        const area = node
-        const data = Array.isArray(area.datum) ? area.datum : []
-        const group = area.group ?? "_default"
-        for (let i = 0; i < area.topPath.length && i < data.length; i++) {
-          points.push({ x: area.topPath[i][0], y: area.topPath[i][1], datum: data[i], shape: "circle", group })
+        if (node.type === "area" && node.interactive === false) break
+        const path = node.type === "line" ? node.path : node.topPath
+        const data = Array.isArray(node.datum) ? node.datum : []
+        const group = node.group ?? "_default"
+        for (let i = 0; i < path.length && i < data.length; i++) {
+          points.push({ x: path[i][0], y: path[i][1], datum: data[i], shape: "circle", group })
         }
         break
       }
@@ -201,17 +187,4 @@ export function extractGeoNavPoints(scene: GeoSceneNode[]): NavPoint[] {
   return points
 }
 
-/**
- * Convert a NavPoint to HoverData for the tooltip system.
- */
-export function navPointToHover(point: NavPoint): HoverData {
-  const rawDatum = point.datum || {}
-  return {
-    data: rawDatum,
-    ...(point.stats && { stats: point.stats }),
-    ...(point.category != null && { category: point.category }),
-    x: point.x,
-    y: point.y,
-    __semioticHoverData: true,
-  }
-}
+export { navPointToHover } from "./navPointToHover"
