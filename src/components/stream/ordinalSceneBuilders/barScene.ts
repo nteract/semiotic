@@ -1,4 +1,3 @@
-import { orderedColumns } from "./orderedColumns"
 import { buildRectNode } from "../SceneGraph"
 import { aggregateOrdinalColumns } from "../ordinalAggregation"
 import type { OrdinalSceneNode, OrdinalLayout } from "../ordinalTypes"
@@ -27,7 +26,7 @@ export function buildBarScene(ctx: OrdinalSceneContext, _layout: OrdinalLayout):
   const normalize = config.normalize
 
   const { steps, keys: stackKeys } = aggregateOrdinalColumns(
-    orderedColumns(ctx), getR, getStack, normalize
+    ctx.orderedColumns, getR, getStack, normalize
   )
   for (const { col, groups: stacks } of steps) {
     let posOffset = 0
@@ -145,7 +144,7 @@ export function buildClusterBarScene(ctx: OrdinalSceneContext, _layout: OrdinalL
   const nodes: OrdinalSceneNode[] = []
   const isVertical = projection === "vertical"
 
-  const { steps, keys: groupKeys } = aggregateOrdinalColumns(orderedColumns(ctx), getR, getGroup)
+  const { steps, keys: groupKeys } = aggregateOrdinalColumns(ctx.orderedColumns, getR, getGroup)
   const groupCount = groupKeys.length || 1
 
   // Inner padding between bars within a group (fraction of sub-bar width)

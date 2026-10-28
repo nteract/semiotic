@@ -1,4 +1,3 @@
-import { orderedColumns } from "./orderedColumns"
 import { buildRectNode } from "../SceneGraph"
 import type { OrdinalColumn, OrdinalSceneNode, OrdinalLayout, RectSceneNode } from "../ordinalTypes"
 import type { OrdinalSceneContext } from "./types"
@@ -50,7 +49,7 @@ export function buildSwimlaneScene(ctx: OrdinalSceneContext, _layout: OrdinalLay
     const [r0, r1] = rScale.range()
     const trackStart = Math.min(r0, r1)
     const trackLen = Math.abs(r1 - r0)
-    for (const col of orderedColumns(ctx)) {
+    for (const col of ctx.orderedColumns) {
       const trackStyle = { fill: trackColor, opacity: trackOpacity }
       // datum: null so hit-testing returns no payload — track is purely visual.
       const node = isHorizontal
@@ -67,7 +66,7 @@ export function buildSwimlaneScene(ctx: OrdinalSceneContext, _layout: OrdinalLay
     }
   }
 
-  for (const col of orderedColumns(ctx)) {
+  for (const col of ctx.orderedColumns) {
     // Each piece becomes its own rect, stacked sequentially within the lane.
     // No aggregation — duplicates of the same subcategory are expected.
     let offset = 0

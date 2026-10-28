@@ -315,7 +315,7 @@ describe("extractOrdinalNavPoints", () => {
     ]
     const points = extractOrdinalNavPoints(asOrd(scene))
     expect(points.map(point => idOf(point.datum))).toEqual(["a", "b", "c"])
-    const graph = buildNavGraph(points)
+    const graph = buildNavGraph(points, true)
     const start = resolvePosition(graph, graph.flat.findIndex(point => idOf(point.datum) === "a"))
     const next = nextGraphIndex("ArrowRight", start, graph)!
     expect(idOf(graph.flat[next].datum)).toBe("b")
@@ -336,7 +336,7 @@ describe("extractOrdinalNavPoints", () => {
     const scene = [wedge("a", -Math.PI / 2), wedge("b", Math.PI), wedge("east", 0)]
     const points = extractOrdinalNavPoints(asOrd(scene))
     expect(points.map(point => idOf(point.datum))).toEqual(["a", "east", "b"])
-    const graph = buildNavGraph(points)
+    const graph = buildNavGraph(points, true)
     const start = resolvePosition(graph, 0)
     const next = nextGraphIndex("ArrowRight", start, graph)!
     expect(idOf(graph.flat[next].datum)).toBe("east")
@@ -350,7 +350,7 @@ describe("extractOrdinalNavPoints", () => {
     ]
     const points = extractOrdinalNavPoints(asOrd(scene))
     expect(points.map(point => idOf(point.datum))).toEqual(["a", "b", "c"])
-    const graph = buildNavGraph(points)
+    const graph = buildNavGraph(points, true)
     const start = resolvePosition(graph, 0)
     const next = nextGraphIndex("ArrowRight", start, graph)!
     expect(idOf(graph.flat[next].datum)).toBe("b")
@@ -366,7 +366,7 @@ describe("extractOrdinalNavPoints", () => {
     const points = extractOrdinalNavPoints(asOrd(scene))
     expect(points.every(point => point.group === "_funnel")).toBe(true)
     expect(points.map(point => idOf(point.datum))).toEqual(["awareness", "interest", "purchase"])
-    const graph = buildNavGraph(points)
+    const graph = buildNavGraph(points, true)
     const start = resolvePosition(graph, 0)
     const next = nextGraphIndex("ArrowRight", start, graph)!
     expect(idOf(graph.flat[next].datum)).toBe("interest")
@@ -381,7 +381,7 @@ describe("extractOrdinalNavPoints", () => {
       { type: "rect", x: 10, y: 40, w: 10, h: 20, datum: { id: "i-west", category: "West", __funnelStep: "Purchase", __funnelNavGroup: "West" }, group: "West" }
     ]
     const points = extractOrdinalNavPoints(asOrd(scene))
-    const graph = buildNavGraph(points)
+    const graph = buildNavGraph(points, true)
     expect(graph.groups).toEqual(["East", "West"])
     expect(graph.byGroup.get("East")!.map(point => idOf(point.datum))).toEqual(["a-east", "i-east"])
     const start = resolvePosition(graph, graph.flat.findIndex(point => idOf(point.datum) === "a-east"))
@@ -397,7 +397,7 @@ describe("extractOrdinalNavPoints", () => {
     const points = extractOrdinalNavPoints(asOrd(scene))
     expect(points.map(point => idOf(point.datum))).toEqual(["s1", "s2"])
     expect(points[0].group).toBe("_funnel")
-    const graph = buildNavGraph(points)
+    const graph = buildNavGraph(points, true)
     const next = nextGraphIndex("ArrowRight", resolvePosition(graph, 0), graph)!
     expect(idOf(graph.flat[next].datum)).toBe("s2")
   })
@@ -409,7 +409,7 @@ describe("extractOrdinalNavPoints", () => {
       { type: "rect", x: 0, y: 10, w: 20, h: 80, datum: { id: "q1-y" }, group: "y" },
       { type: "rect", x: 40, y: 10, w: 20, h: 80, datum: { id: "q2-y" }, group: "y" }
     ]
-    const graph = buildNavGraph(extractOrdinalNavPoints(asOrd(scene)))
+    const graph = buildNavGraph(extractOrdinalNavPoints(asOrd(scene)), true)
     expect(graph.groups).toEqual(["x", "y"])
     const start = resolvePosition(graph, graph.flat.findIndex(point => idOf(point.datum) === "q1-x"))
     const down = nextGraphIndex("ArrowDown", start, graph)!
@@ -758,13 +758,13 @@ describe("buildNavGraph", () => {
     expect(graph.flat[2].x).toBe(50)
   })
 
-  it("prefers readingOrder over x and over first-point y", () => {
+  it("preserves explicit authored order over x and first-point y", () => {
     const points: NavPoint[] = [
       { x: 10, y: 10, datum: d("top-late"), group: "late", readingOrder: 2 },
       { x: 50, y: 100, datum: d("bottom-early"), group: "early", readingOrder: 0 },
       { x: 0, y: 100, datum: d("bottom-next"), group: "early", readingOrder: 1 }
     ]
-    const graph = buildNavGraph(points)
+    const graph = buildNavGraph([points[1], points[2], points[0]], true)
     expect(graph.groups).toEqual(["early", "late"])
     expect(graph.byGroup.get("early")!.map(point => idOf(point.datum))).toEqual(["bottom-early", "bottom-next"])
     expect(graph.flat.map(point => idOf(point.datum))).toEqual(["bottom-early", "bottom-next", "top-late"])

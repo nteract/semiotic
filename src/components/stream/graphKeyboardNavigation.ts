@@ -85,7 +85,7 @@ interface GraphKeyboardParams<
 > extends KeyboardInteractionParams<Store, Node> {
   extractPoints: (scene: Node[]) => NavPoint[]
   toHover: (point: NavPoint, store: Store) => HoverData
-  navigation?: "graph" | "linear"
+  navigation?: "graph" | "linear" | "ordered"
   nextConnected?: (
     key: string,
     graph: NavGraph,
@@ -124,7 +124,7 @@ export function useGraphKeyboardNavigation<
       navGraphCacheRef.current = null
       return
     }
-    const graph = buildNavGraph(extractPoints(store.scene))
+    const graph = buildNavGraph(extractPoints(store.scene), navigation === "ordered")
     navGraphCacheRef.current = { version: store.version, graph }
     refreshFocusedPoint(
       graph.flat,
@@ -137,6 +137,7 @@ export function useGraphKeyboardNavigation<
     if (kbFocusIndexRef.current < 0 && hoveredNodeRef)
       hoveredNodeRef.current = null
   }, [
+    navigation,
     extractPoints,
     hoverRef,
     hoveredNodeRef,
@@ -176,7 +177,7 @@ export function useGraphKeyboardNavigation<
             clearFocus()
           return
         }
-        graph = buildNavGraph(navPoints)
+        graph = buildNavGraph(navPoints, navigation === "ordered")
         navGraphCacheRef.current = { version: store.version, graph }
       }
 

@@ -12,7 +12,7 @@ import type { Datum } from "../../charts/shared/datumTypes"
 export interface OrdinalSceneContext {
   scales: OrdinalScales
   /** Columns in resolved scale-domain order, including integer-like names. */
-  orderedColumns?: OrdinalColumn[]
+  orderedColumns: OrdinalColumn[]
   columns: Record<string, OrdinalColumn>
   config: OrdinalPipelineConfig
   getR: (d: Datum) => number

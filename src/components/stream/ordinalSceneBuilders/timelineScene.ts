@@ -1,4 +1,3 @@
-import { orderedColumns } from "./orderedColumns"
 import { buildRectNode } from "../SceneGraph"
 import type { OrdinalSceneNode, OrdinalLayout } from "../ordinalTypes"
 import type { OrdinalSceneContext } from "./types"
@@ -9,7 +8,7 @@ export function buildTimelineScene(ctx: OrdinalSceneContext, _layout: OrdinalLay
   const nodes: OrdinalSceneNode[] = []
   const isHorizontal = projection === "horizontal"
 
-  for (const col of orderedColumns(ctx)) {
+  for (const col of ctx.orderedColumns) {
     for (const d of col.pieceData) {
       const range = getRawRange(d)
       if (!range) continue

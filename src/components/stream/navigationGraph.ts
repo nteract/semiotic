@@ -67,15 +67,11 @@ export interface NavPosition {
 
 /**
  * Build a navigation graph from grouped NavPoints.
- * Points within each group follow `readingOrder` when every point sets it, and
- * otherwise x then y. Groups with a reading order follow first appearance.
- * Groups without one stay in top-to-bottom order.
+ * With ordered input, points and groups retain their supplied reading order.
+ * Otherwise points sort by x then y and groups stay in top-to-bottom order.
  */
-export function buildNavGraph(points: NavPoint[]): NavGraph {
-  const ordered = points.every(point => point.readingOrder != null)
+export function buildNavGraph(points: NavPoint[], ordered = false): NavGraph {
   const spatial = (a: NavPoint, b: NavPoint) => a.x - b.x || a.y - b.y
-  if (ordered) points = points.slice().sort((a, b) => a.readingOrder! - b.readingOrder! || spatial(a, b))
-
   const byGroup = new Map<string, NavPoint[]>()
 
   for (const p of points) {
@@ -96,7 +92,7 @@ export function buildNavGraph(points: NavPoint[]): NavGraph {
     }
   }
 
-  // Ordered input is globally sorted once; each group retains that order.
+  // Ordinal extraction supplies reading order; avoid sorting it again.
   const groups = Array.from(byGroup.keys())
   if (!ordered) groups.sort((a, b) => byGroup.get(a)![0].y - byGroup.get(b)![0].y)
   const flat = ordered ? points : Array.from(byGroup.values()).flat().sort(spatial)

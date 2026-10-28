@@ -1,4 +1,3 @@
-import { orderedColumns } from "./orderedColumns"
 import { quantileSorted } from "d3-array"
 import { buildRectNode } from "../SceneGraph"
 import { getMax, getMinMax } from "../../charts/shared/minMax"
@@ -32,7 +31,7 @@ export function buildBoxplotScene(ctx: OrdinalSceneContext, _layout: OrdinalLayo
   const isVertical = projection === "vertical"
   const showOutliers = config.showOutliers !== false
 
-  for (const col of orderedColumns(ctx)) {
+  for (const col of ctx.orderedColumns) {
     const values = col.pieceData
       .map(d => getR(d))
       .filter(v => v != null && !isNaN(v))
@@ -151,7 +150,7 @@ export function buildViolinScene(ctx: OrdinalSceneContext, _layout: OrdinalLayou
   const bins = config.bins || 20
   const showIQR = config.showIQR !== false
 
-  for (const col of orderedColumns(ctx)) {
+  for (const col of ctx.orderedColumns) {
     const values = col.pieceData
       .map(d => getR(d))
       .filter(v => v != null && !isNaN(v))
@@ -255,7 +254,7 @@ export function buildHistogramScene(ctx: OrdinalSceneContext, _layout: OrdinalLa
   const globalMax = domain ? +domain[1] : undefined
 
   // Histograms always render horizontally: categories on y-axis, value bins on x-axis
-  for (const col of orderedColumns(ctx)) {
+  for (const col of ctx.orderedColumns) {
     const values = col.pieceData
       .map(d => getR(d))
       .filter(v => v != null && !isNaN(v))
@@ -318,7 +317,7 @@ export function buildRidgelineScene(ctx: OrdinalSceneContext, _layout: OrdinalLa
   // Amplitude controls how far the density extends (can overlap neighbors)
   const amplitude = config.amplitude || 1.5
 
-  for (const col of orderedColumns(ctx)) {
+  for (const col of ctx.orderedColumns) {
     const values = col.pieceData
       .map(d => getR(d))
       .filter(v => v != null && !isNaN(v))
