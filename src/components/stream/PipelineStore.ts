@@ -1178,10 +1178,6 @@ export class PipelineStore extends UpdateResultStoreBase {
     }
     const ids = toIdSet(id)
     const getPointId = this.getPointId
-    // Capture matched indices before mutation (updater may change the ID field)
-    const matchedIndices = new Set<number>()
-    this.buffer.forEach((d, i) => { if (ids.has(getPointId(d))) matchedIndices.add(i) })
-
     const previous = this.buffer.update(
       item => ids.has(getPointId(item)),
       updater
@@ -1191,18 +1187,9 @@ export class PipelineStore extends UpdateResultStoreBase {
       return previous
     }
 
-    // Evict old values — mirror ingest() logic for candlestick/y0
-    for (const old of previous) {
-      this.xExtent.evict(this.getX(old))
-      this.evictDatumYExtent(old)
-    }
-    // Push new extents using pre-captured indices (safe if ID changed)
-    this.buffer.forEach((d, i) => {
-      if (matchedIndices.has(i)) {
-        this.xExtent.push(this.getX(d))
-        this.pushDatumYExtent(d)
-      }
-    })
+    // Edits can insert a previously invalid value at any retained position.
+    // Rebuild in buffer order before resuming FIFO extent tracking.
+    this.rebuildExtents()
 
     this.needsFullRebuild = true
     this._bufferDirty = true

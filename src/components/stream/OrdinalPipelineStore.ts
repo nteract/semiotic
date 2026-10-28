@@ -1348,10 +1348,6 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
     }
     const ids = toIdSet(id)
     const getDataId = this.getDataId
-    // Capture matched indices before mutation (updater may change the ID field)
-    const matchedIndices = new Set<number>()
-    this.buffer.forEach((d, i) => { if (ids.has(getDataId(d))) matchedIndices.add(i) })
-
     const previous = this.buffer.update(
       item => ids.has(getDataId(item)),
       updater
@@ -1361,18 +1357,9 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
       return previous
     }
 
-    // Evict old values using the existing extent helper (handles timeline/multiAxis)
-    for (const old of previous) {
-      this.evictValueExtent(old)
-    }
-    // Rebuild categories and push new extents using pre-captured indices
-    this.categories.clear()
-    this.buffer.forEach((d, i) => {
-      this.categories.add(this.getO(d))
-      if (matchedIndices.has(i)) {
-        this.pushValueExtent(d)
-      }
-    })
+    // Edits can insert a previously invalid value at any retained position.
+    // Rebuild in buffer order before resuming FIFO extent tracking.
+    this.rebuildAccessorDerivedState()
 
     this._dataVersion++
     this.version++

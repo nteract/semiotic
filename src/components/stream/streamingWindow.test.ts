@@ -84,6 +84,24 @@ for (const [family, create] of Object.entries(families))
       expect(store.getData()).toHaveLength(5)
     })
 
+    it("keeps FIFO extents ordered after repairing an invalid older row", () => {
+      const store = create({ windowSize: 3, pointIdAccessor: "id", dataIdAccessor: "id" })
+      store.ingest({ inserts: [
+        { id: "a", category: "A", x: NaN, y: NaN, value: NaN },
+        { id: "b", category: "B", x: 2, y: 2, value: 2 },
+        { id: "c", category: "C", x: 3, y: 3, value: 3 }
+      ], bounded: false })
+      store.update("a", (d) => ({ ...d, x: 1, y: 1, value: 1 }))
+      store.computeScene({ width: 400, height: 300 })
+      store.ingest({ inserts: [{ id: "d", category: "D", x: 4, y: 4, value: 4 }], bounded: false })
+      store.computeScene({ width: 400, height: 300 })
+      if (store instanceof PipelineStore) {
+        expect(store.getExtents()).toEqual({ x: [2, 4], y: [2, 4] })
+      } else {
+        expect(store.scales!.r.domain()).toEqual([2, 4])
+      }
+    })
+
     it("returns independent arrays retaining original datum identity", () => {
       const store = create()
       const data = rows(3)
@@ -230,6 +248,34 @@ describe("streaming derived state", () => {
     expect(
       store.multiScales.every((scale) => Math.max(...scale.domain()) < 100)
     ).toBe(true)
+  })
+
+  it("repairs an absent timeline range without losing later FIFO extrema", () => {
+    const store = families.ordinal({ windowSize: 3, chartType: "timeline", dataIdAccessor: "id", valueAccessor: "span" })
+    store.ingest({ inserts: [
+      { id: "a", category: "A", span: null },
+      { id: "b", category: "B", span: [2, 2.5] },
+      { id: "c", category: "C", span: [3, 3.5] }
+    ], bounded: false })
+    store.update("a", (d) => ({ ...d, span: [1, 1.5] }))
+    store.computeScene({ width: 400, height: 300 })
+    store.ingest({ inserts: [{ id: "d", category: "D", span: [4, 4.5] }], bounded: false })
+    store.computeScene({ width: 400, height: 300 })
+    expect(store.scales!.r.domain()).toEqual([2, 4.5])
+  })
+
+  it("repairs an invalid secondary axis without losing later FIFO extrema", () => {
+    const store = families.ordinal({ windowSize: 3, dataIdAccessor: "id", valueAccessor: ["value", "other"], multiAxis: true })
+    store.ingest({ inserts: [
+      { id: "a", category: "A", value: 1, other: NaN },
+      { id: "b", category: "B", value: 2, other: 20 },
+      { id: "c", category: "C", value: 3, other: 30 }
+    ], bounded: false })
+    store.update("a", (d) => ({ ...d, other: 10 }))
+    store.computeScene({ width: 400, height: 300 })
+    store.ingest({ inserts: [{ id: "d", category: "D", value: 4, other: 40 }], bounded: false })
+    store.computeScene({ width: 400, height: 300 })
+    expect(store.multiScales.map((scale) => scale.domain())).toEqual([[0, 4], [0, 40]])
   })
 
   it("uses a changed ordinal ID accessor for remove and update", () => {
