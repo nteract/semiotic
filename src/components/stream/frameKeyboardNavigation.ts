@@ -1,16 +1,19 @@
 "use client"
 
-import { navPointToHover } from "./navPointToHover"
 import type { HoverData } from "../realtime/types"
 import type { PipelineStore } from "./PipelineStore"
+import type { OrdinalPipelineStore } from "./OrdinalPipelineStore"
 import type { GeoPipelineStore } from "./GeoPipelineStore"
 import type { SceneNode } from "./types"
+import type { OrdinalSceneNode } from "./ordinalTypes"
 import type { GeoSceneNode } from "./geoTypes"
 import type { GeoFeatureLike } from "./geoFrameHelpers"
 import { enrichDatumWithBand } from "./xySceneBuilders/ribbonScene"
 import {
   extractGeoNavPoints,
+  extractOrdinalNavPoints,
   extractXYNavPoints,
+  navPointToHover,
   type NavPoint
 } from "./keyboardNav"
 import {
@@ -43,7 +46,32 @@ export function useXYKeyboardNavigation({
   })
 }
 
-export { useOrdinalKeyboardNavigation } from "./ordinalFrameKeyboardNavigation"
+interface OrdinalKeyboardParams extends KeyboardInteractionParams<
+  OrdinalPipelineStore,
+  OrdinalSceneNode
+> {
+  chartType: string
+  oAccessor: unknown
+  rAccessor: unknown
+}
+
+export function useOrdinalKeyboardNavigation({
+  chartType,
+  oAccessor,
+  rAccessor,
+  ...params
+}: OrdinalKeyboardParams) {
+  return useGraphKeyboardNavigation({
+    ...params,
+    extractPoints: extractOrdinalNavPoints,
+    toHover: (point) => ({
+      ...navPointToHover(point),
+      __oAccessor: typeof oAccessor === "string" ? oAccessor : undefined,
+      __rAccessor: typeof rAccessor === "string" ? rAccessor : undefined,
+      __chartType: chartType
+    })
+  })
+}
 
 function geoPointToHover(point: NavPoint): HoverData {
   const rawDatum = point.datum as GeoFeatureLike | null
