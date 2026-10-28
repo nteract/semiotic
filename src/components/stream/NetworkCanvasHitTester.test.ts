@@ -245,6 +245,29 @@ describe("NetworkCanvasHitTester — findNearestNetworkNode", () => {
       expect(result).toBeNull()
     })
 
+    it("hits every direction of a full-circle arc and misses a zero sweep", () => {
+      const full: NetworkArcNode = {
+        ...arc,
+        startAngle: -Math.PI / 2,
+        endAngle: (3 * Math.PI) / 2,
+        datum: { id: "ring" }
+      }
+      for (const angle of [0, Math.PI / 2, Math.PI, -Math.PI / 2]) {
+        const result = findNearestNetworkNode(
+          [full],
+          [],
+          300 + 90 * Math.cos(angle),
+          300 + 90 * Math.sin(angle)
+        )
+        expect(result?.datum?.id).toBe("ring")
+      }
+      expect(findNearestNetworkNode([full], [], 300, 300)).toBeNull()
+
+      const ray: NetworkArcNode = { ...arc, startAngle: 0, endAngle: 0 }
+      expect(findNearestNetworkNode([ray], [], 390, 300)?.datum?.id).toBe("chordGroup")
+      expect(findNearestNetworkNode([ray], [], 300, 390)).toBeNull()
+    })
+
     it("returns midpoint of arc as hit position", () => {
       const r = 90
       const angle = Math.PI / 4

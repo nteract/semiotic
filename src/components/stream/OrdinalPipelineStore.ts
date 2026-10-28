@@ -616,6 +616,7 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
     return {
       scales: this.scales!,
       columns: this.columns,
+      orderedColumns: this.scales!.o.domain().map(name => this.columns[name]),
       config: this.config,
       getR: this.getR,
       getStack: this.getStack,

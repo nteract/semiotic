@@ -9,8 +9,9 @@ for (const chart of ["PieChart", "DonutChart", "GaugeChart"]) {
     const live = frame.locator('[aria-live="polite"]')
     const tooltip = frame.locator(".stream-ordinal-tooltip")
     const value = chart === "GaugeChart" ? "65" : "30"
-    // Keyboard targets are ordered spatially; B is the left-hand slice.
-    const firstValue = chart === "GaugeChart" ? "65" : "70"
+    // Home/End follow authored angular order: A, then B.
+    const firstValue = value
+    const lastValue = chart === "GaugeChart" ? "65" : "70"
 
     const checkHover = async () => {
       const bounds = (await frame.boundingBox())!
@@ -32,7 +33,7 @@ for (const chart of ["PieChart", "DonutChart", "GaugeChart"]) {
       await page.keyboard.press("Home")
       await expect(live).toContainText(`value: ${firstValue}`)
       await page.keyboard.press("End")
-      await expect(live).toContainText(`value: ${value}`)
+      await expect(live).toContainText(`value: ${lastValue}`)
       // Returning to pointer input must silence the keyboard announcement.
       await frame.hover({
         position: {

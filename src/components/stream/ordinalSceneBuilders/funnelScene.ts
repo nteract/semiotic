@@ -112,6 +112,7 @@ export function buildFunnelScene(ctx: OrdinalSceneContext, layout: OrdinalLayout
         __funnelValue: val,
         __funnelPercent: pct,
         __funnelStep: col.name,
+        __funnelNavGroup: isRealCategory ? catKey : "_funnel",
         __funnelIsFirstStep: isFirstStep,
         category: isRealCategory ? catKey : col.name,
       }
@@ -161,6 +162,7 @@ export function buildFunnelScene(ctx: OrdinalSceneContext, layout: OrdinalLayout
           __funnelValue: group.total,
           __funnelPercent: pct,
           __funnelStep: col.name,
+          __funnelNavGroup: catKey,
           __funnelIsFirstStep: isFirstStep,
           __aggregateValue: group.total,
           __pieceCount: group.pieces.length,

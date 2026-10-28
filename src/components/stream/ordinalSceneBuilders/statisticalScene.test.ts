@@ -14,6 +14,7 @@ function makeContext(
   projection: "vertical" | "horizontal" = "vertical"
 ): OrdinalSceneContext {
   return {
+    get orderedColumns() { return Object.values(this.columns) },
     scales: {
       o: scaleBand<string>().domain(["A"]).range([0, 400]),
       r: scaleLinear().domain([0, 4]).range([300, 0]),

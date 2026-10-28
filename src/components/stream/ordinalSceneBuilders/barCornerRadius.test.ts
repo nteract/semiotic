@@ -39,6 +39,7 @@ function makeContext(overrides: ContextOverrides): OrdinalSceneContext {
     ...overrides,
     scales,
     columns: overrides.columns ?? {},
+    orderedColumns: Object.values(overrides.columns ?? {}),
     config,
     getR: overrides.getR ?? ((d) => d.value),
     getO: overrides.getO ?? ((d) => d.category),
