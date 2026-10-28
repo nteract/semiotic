@@ -88,6 +88,43 @@ describe("network keyboard focus follows layout", () => {
     }
   })
 
+  it("notifies the current hover listener when focused data disappears", () => {
+    const previousListener = vi.fn()
+    const currentListener = vi.fn()
+    const props = {
+      nodes,
+      edges,
+      size: [600, 400] as [number, number],
+      chartType: "sankey" as const,
+      animate: false as const
+    }
+    const { container, rerender } = render(
+      <StreamNetworkFrame {...props} customHoverBehavior={previousListener} />
+    )
+    const frame = container.querySelector<HTMLElement>(".stream-network-frame")!
+    fireEvent.keyDown(frame, { key: "End" })
+    expect(
+      container.querySelector(".stream-network-tooltip")
+    ).toHaveTextContent("Gamma")
+    previousListener.mockClear()
+    rerender(
+      <StreamNetworkFrame {...props} customHoverBehavior={currentListener} />
+    )
+    expect(currentListener).not.toHaveBeenCalled()
+    rerender(
+      <StreamNetworkFrame
+        {...props}
+        nodes={nodes.slice(0, 2)}
+        edges={edges.slice(0, 1)}
+        customHoverBehavior={currentListener}
+      />
+    )
+    expect(container.querySelector(".stream-network-tooltip")).toBeNull()
+    expect(currentListener).toHaveBeenCalledTimes(1)
+    expect(currentListener.mock.lastCall?.[0]).toBeNull()
+    expect(previousListener).not.toHaveBeenCalled()
+  })
+
   it.each(["sankey", "force"] as const)(
     "preserves %s node identity and tooltip through resize and removal",
     (chartType) => {

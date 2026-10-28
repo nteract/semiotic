@@ -143,6 +143,10 @@ export function useGraphKeyboardNavigation<
     [clearFocus]
   )
 
+  // Hover listeners can change with selection styling. Keep refresh stable so
+  // network ingestion effects do not interpret a listener change as new geometry.
+  const hoverBehaviorRef = useRef(customHoverBehavior)
+  hoverBehaviorRef.current = customHoverBehavior
   const refreshKeyboardFocus = useCallback(() => {
     const store = storeRef.current
     if (!store) return
@@ -164,11 +168,10 @@ export function useGraphKeyboardNavigation<
       setHoverPoint,
       (point) => toHover(point, store)
     )
-    if (previousHover && !hoverRef.current) customHoverBehavior?.(null)
+    if (previousHover && !hoverRef.current) hoverBehaviorRef.current?.(null)
     if (kbFocusIndexRef.current < 0 && hoveredNodeRef)
       hoveredNodeRef.current = null
   }, [
-    customHoverBehavior,
     navigation,
     extractPoints,
     hoverRef,
