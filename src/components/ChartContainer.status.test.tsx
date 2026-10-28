@@ -17,7 +17,7 @@ describe("ChartContainer status", () => {
 
     expect(getByText("Dependency chart")).toBeVisible()
     expect(container.querySelector(".semiotic-chart-status")).toHaveStyle({
-      background: "#6b7280",
+      backgroundColor: "#6b7280",
       color: "#fff"
     })
     expect(getByText("preview")).toBeVisible()
