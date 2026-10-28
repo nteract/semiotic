@@ -62,6 +62,27 @@ describe("MinimapChart", () => {
     { x: 4, y: 18 }
   ]
 
+  it("groups prototype-key series in first-seen order", () => {
+    render(
+      <TooltipProvider>
+        <MinimapChart
+          data={[
+            { x: 0, y: 10, role: "constructor" },
+            { x: 1, y: 12, role: "constructor" },
+            { x: 2, y: 8, role: "toString" },
+            { x: 3, y: 9, role: "10" },
+            { x: 4, y: 11, role: "2" },
+          ]}
+          lineBy="role"
+        />
+      </TooltipProvider>
+    )
+    const detail = xyFrameRenders.find((props) => Array.isArray(props.data) && props.data.some((d) => d.role != null))
+    expect(detail?.data?.map((d) => d.role)).toEqual([
+      "constructor", "constructor", "toString", "10", "2",
+    ])
+  })
+
   it("renders without crashing", () => {
     const { container } = render(
       <TooltipProvider>

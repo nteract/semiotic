@@ -4,7 +4,9 @@
  * - "break" splits a line at each gap into separate segment lines.
  * - "interpolate" drops gap points so the line connects across them.
  *   This must happen before the frame, whose accessors coerce null to 0.
- * - "zero" sets a gap point's y to 0 so the line drops to the baseline.
+ * - "zero" drops a gap point to the baseline. A string y field is written on a
+ *   copy. A function y accessor cannot be written through, so those points stay
+ *   the caller's objects; a wrapped accessor re-evaluates gaps on copied rows.
  *
  * Segment lines are keyed by index and held off the data (no marker field),
  * so frame grouping never merges two series and datums reach tooltips,
@@ -29,6 +31,36 @@ export interface LineGapResult {
   hasGaps: boolean
   /** Present when "break" split the data at one or more gaps. */
   segments?: LineGapSegments
+
+}
+
+/** Group rows safely in first-seen order, retaining authored series metadata. */
+export function groupLineChartRows(
+  rows: readonly Datum[],
+  { lineDataAccessor, groupAccessor, lineBy, segmentField }: {
+    lineDataAccessor: string
+    groupAccessor: string | ((row: Datum) => unknown)
+    lineBy?: string | ((row: Datum) => unknown)
+    segmentField?: string
+  },
+): Datum[] {
+  const grouped = new Map<string, Datum>()
+  for (const row of rows) {
+    const rawKey = typeof groupAccessor === "function" ? groupAccessor(row) : row[groupAccessor]
+    const key = String(rawKey)
+    let line = grouped.get(key)
+    if (!line) {
+      line = { [lineDataAccessor]: [] }
+      if (typeof groupAccessor === "string") line[groupAccessor] = rawKey
+      if (segmentField) {
+        line[segmentField] = row[segmentField]
+        if (typeof lineBy === "string") line[lineBy] = row[lineBy]
+      }
+      grouped.set(key, line)
+    }
+    ;(line[lineDataAccessor] as Datum[]).push(row)
+  }
+  return [...grouped.values()]
 }
 
 export function applyLineGapStrategy({
@@ -43,8 +75,11 @@ export function applyLineGapStrategy({
   strategy: LineGapStrategy
   lineDataAccessor: string
   isGap: (d: Datum) => boolean
-  /** Field "zero" writes 0 into. */
-  yField: string
+  /**
+   * Field "zero" writes 0 into. Omit it when y is read by a function;
+   * the wrapped accessor resolves gaps instead of writing a synthetic field.
+   */
+  yField?: string
   /** Authored series label of a line object before it is split. */
   seriesOfLine: (line: Datum) => string
 }): LineGapResult {
@@ -64,6 +99,9 @@ export function applyLineGapStrategy({
   }
 
   if (strategy === "zero") {
+    if (!yField) {
+      return { lines: lineData, hasGaps: lineData.some(line => coordsOf(line).some(isGap)) }
+    }
     let found = false
     const lines = lineData.map(line => ({
       ...line,
@@ -139,14 +177,13 @@ export function withSegmentSeriesTooltip<
   const content = tooltipProps.tooltipContent
   const relabeled = (hover: Datum) => {
     const allSeries = hover?.allSeries
-    if (!Array.isArray(allSeries)) return content(hover)
-    return content({
+    return content(Array.isArray(allSeries) ? {
       ...hover,
       allSeries: allSeries.map((row: Datum) => ({
         ...row,
         group: segments.seriesOf.get(row.group) ?? row.group,
       })),
-    })
+    } : hover)
   }
   return {
     ...tooltipProps,
