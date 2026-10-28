@@ -2,31 +2,14 @@ import type { Changeset } from "./types"
 import type { Datum } from "../charts/shared/datumTypes"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 
-/**
- * DataSourceAdapter normalizes all data ingestion paths into uniform changesets:
- *
- * 1. Bounded (props): `data` array → changeset(s) with `bounded: true`
- * 2. Streaming (push): `ref.push()` → micro-changeset with `bounded: false`
- * 3. Hybrid: `data` prop first, then `push()` — seamless transition
- *
- * For large bounded datasets (above CHUNK_THRESHOLD), data is automatically
- * chunked and ingested progressively across multiple animation frames. This
- * keeps the UI responsive while the chart draws incrementally. The first chunk
- * renders immediately so the user sees data right away.
- *
- * Streaming pushes are batched via microtask: rapid push()/pushMany() calls
- * within the same task are coalesced into a single changeset, preventing
- * main-thread saturation under high-frequency push rates (thousands/sec).
- */
-
-/** Datasets larger than this are chunked for progressive rendering */
 const CHUNK_THRESHOLD = 5000
-/** Number of items per progressive chunk */
 const CHUNK_SIZE = 5000
 
 function normalizeChunkThreshold(value: number | undefined): number {
   if (value === Infinity) return Infinity
-  return Number.isFinite(value) ? Math.max(0, Math.floor(value!)) : CHUNK_THRESHOLD
+  return Number.isFinite(value)
+    ? Math.max(0, Math.floor(value!))
+    : CHUNK_THRESHOLD
 }
 
 function normalizeChunkSize(value: number | undefined): number {
@@ -36,271 +19,149 @@ function normalizeChunkSize(value: number | undefined): number {
 
 export type ChangesetCallback<T> = (changeset: Changeset<T>) => void
 
+/**
+ * Normalize bounded snapshots, progressive history, and live pushes into changesets.
+ * Replacement is atomic: queued work from the previous dataset is discarded.
+ * Live pushes are microtask-batched and follow all chunks of the current history.
+ */
 export class DataSourceAdapter<T extends object = Datum> {
-  private callback: ChangesetCallback<T>
   private lastBoundedData: T[] | null = null
   private chunkTimer: number | null = null
   private chunkThreshold: number
   private chunkSize: number
-
-  /** Buffer for batching high-frequency push() calls */
+  private pendingSnapshot: { data: T[]; offset: number } | null = null
   private pushBuffer: T[] = []
-  /** Whether a microtask flush is already scheduled */
   private flushScheduled = false
+  private generation = 0
 
-  constructor(callback: ChangesetCallback<T>, options?: { chunkThreshold?: number; chunkSize?: number }) {
-    this.callback = callback
+  constructor(
+    private callback: ChangesetCallback<T>,
+    options?: { chunkThreshold?: number; chunkSize?: number }
+  ) {
     this.chunkThreshold = normalizeChunkThreshold(options?.chunkThreshold)
     this.chunkSize = normalizeChunkSize(options?.chunkSize)
   }
 
-  /** Update chunking options without recreating the adapter. */
-  updateChunkOptions(options: { chunkThreshold?: number; chunkSize?: number }): void {
-    // Undefined means the corresponding prop was removed: restore the public
-    // default instead of retaining a stale value from a previous render.
+  updateChunkOptions(options: {
+    chunkThreshold?: number
+    chunkSize?: number
+  }): void {
     this.chunkThreshold = normalizeChunkThreshold(options.chunkThreshold)
     this.chunkSize = normalizeChunkSize(options.chunkSize)
   }
 
-  /** Clear the dedup cache so the next setBoundedData call re-ingests even the same reference.
-   *  Also cancels any in-flight progressive chunking and discards buffered pushes. */
+  /** Forget the snapshot and cancel its pending chunks and queued pushes. */
   clearLastData(): void {
-    this.lastBoundedData = null
-    this.pushBuffer = []
-    this.flushScheduled = false
-    if (this.chunkTimer !== null) {
-      cancelAnimationFrame(this.chunkTimer)
-      this.chunkTimer = null
-    }
+    this.clear()
   }
 
-  /**
-   * Ingest a bounded data array (from props).
-   *
-   * Small datasets emit a single changeset synchronously.
-   * Large datasets (> CHUNK_THRESHOLD) are split into chunks that render
-   * progressively: the first chunk fires immediately (bounded: true to
-   * reset + seed the buffer), subsequent chunks arrive on successive
-   * animation frames (bounded: false so they append without clearing).
-   */
   setBoundedData(data: T[]): void {
-    // Drop sparse interlopers (`null`/non-object entries) before
-    // ingestion. Public chart props are forwarded straight from CSV
-    // parsers, lookup-failed pipelines, or filter-early-returns and
-    // commonly carry `null` rows. Every downstream consumer (extents,
-    // scale building, scene composition, hit-testing) dereferences
-    // accessors without null-checking, so unfiltered sparse input
-    // crashes the frame on first paint. `filterSparseArray` is
-    // identity-preserving in the clean case so the dedup cache
-    // (`lastBoundedData === data`) on the next render still hits.
     data = filterSparseArray(data) as T[]
     if (this.lastBoundedData === data) return
-    this.lastBoundedData = data
-
-    // Cancel any in-flight progressive ingestion
-    if (this.chunkTimer !== null) {
-      cancelAnimationFrame(this.chunkTimer)
-      this.chunkTimer = null
-    }
-
-    if (data.length <= this.chunkThreshold) {
-      // Small dataset — ingest all at once
-      this.callback({ inserts: data, bounded: true })
-      return
-    }
-
-    // Large dataset — progressive chunked ingestion.
-    // First chunk is bounded: true (resets buffer and sizes it to full length).
-    // Subsequent chunks are bounded: false (appends without clearing).
-    this.callback({ inserts: data.slice(0, this.chunkSize), bounded: true, totalSize: data.length })
-
-    let offset = this.chunkSize
-    const scheduleNext = () => {
-      // Clear on every exit path so `chunkTimer === null iff no rAF
-      // scheduled` holds. See matching note in `setReplacementData`.
-      if (offset >= data.length) {
-        this.chunkTimer = null
-        return
-      }
-      // Check that this is still the active dataset
-      if (data !== this.lastBoundedData) {
-        this.chunkTimer = null
-        return
-      }
-
-      const end = Math.min(offset + this.chunkSize, data.length)
-      this.callback({ inserts: data.slice(offset, end), bounded: false })
-      offset = end
-
-      if (offset < data.length) {
-        this.chunkTimer = requestAnimationFrame(scheduleNext)
-      } else {
-        this.chunkTimer = null
-      }
-    }
-
-    if (offset < data.length) {
-      this.chunkTimer = requestAnimationFrame(scheduleNext)
-    } else {
-      this.chunkTimer = null
-    }
+    this.replace(data, false)
   }
 
-  /**
-   * Replace the buffer contents without clearing category insertion-order
-   * memory. Intended for aggregator HOCs (e.g. LikertChart) that re-derive
-   * a full dataset from streaming input on every push — the transport is
-   * wholesale replacement, but the user perceives it as a live stream
-   * where categories should stay put across updates.
-   *
-   * Small datasets (≤ chunkThreshold) emit a single synchronous
-   * changeset — the common aggregator case. Larger datasets fall
-   * through to progressive chunking so an unexpectedly-huge replacement
-   * doesn't block the main thread. Only the first chunk carries
-   * `preserveCategoryOrder: true` (it's the one that resets the
-   * buffer and seeds the category Set); subsequent chunks are plain
-   * append-only streaming changesets, which preserve order anyway via
-   * the streaming-mode branch.
-   */
+  /** Replace aggregate rows while preserving the store's category ordering. */
   setReplacementData(data: T[]): void {
-    // Same sparse-array hardening as `setBoundedData`. Aggregator
-    // replace() flows (e.g. LikertChart re-aggregating streaming input)
-    // hand the input array straight from upstream loaders, so a sparse
-    // `[null, validRow, undefined]` would crash the bounded-replace
-    // ingestion path the same way it would crash a normal bounded
-    // ingest. Identity-preserving filter keeps the dedup cache fast
-    // path when the input is already clean.
-    data = filterSparseArray(data) as T[]
-    this.lastBoundedData = data
-    if (this.chunkTimer !== null) {
-      cancelAnimationFrame(this.chunkTimer)
-      this.chunkTimer = null
-    }
-    // Drop any pending push microtask state so replacement is atomic —
-    // otherwise a buffered push()/pushMany() from just before this call
-    // can flush after the replacement and append stale points onto the
-    // fresh dataset.
-    this.pushBuffer = []
-    this.flushScheduled = false
-
-    if (data.length <= this.chunkThreshold) {
-      this.callback({ inserts: data, bounded: true, preserveCategoryOrder: true })
-      return
-    }
-
-    this.callback({
-      inserts: data.slice(0, this.chunkSize),
-      bounded: true,
-      preserveCategoryOrder: true,
-      totalSize: data.length,
-    })
-
-    let offset = this.chunkSize
-    const scheduleNext = () => {
-      // Clear the timer on ANY exit path — the adapter-state invariant
-      // is "chunkTimer is null iff no rAF is scheduled". Without these
-      // explicit resets, an already-complete chunk sequence (or a
-      // superseded dataset) could leave chunkTimer non-null and
-      // `setBoundedData` / `clearLastData` would needlessly call
-      // `cancelAnimationFrame` on a stale token.
-      if (offset >= data.length) {
-        this.chunkTimer = null
-        return
-      }
-      if (data !== this.lastBoundedData) {
-        this.chunkTimer = null
-        return
-      }
-      const end = Math.min(offset + this.chunkSize, data.length)
-      this.callback({ inserts: data.slice(offset, end), bounded: false })
-      offset = end
-      if (offset < data.length) {
-        this.chunkTimer = requestAnimationFrame(scheduleNext)
-      } else {
-        this.chunkTimer = null
-      }
-    }
-    if (offset < data.length) {
-      this.chunkTimer = requestAnimationFrame(scheduleNext)
-    } else {
-      this.chunkTimer = null
-    }
+    this.replace(filterSparseArray(data) as T[], true)
   }
 
-  /**
-   * Flush all buffered push data as a single changeset.
-   * Called automatically via microtask after push()/pushMany().
-   */
+  private replace(data: T[], preserveCategoryOrder: boolean): void {
+    this.clear()
+    this.lastBoundedData = data
+    const progressive = data.length > this.chunkThreshold
+    const snapshot = {
+      data,
+      offset: progressive ? Math.min(data.length, this.chunkSize) : data.length
+    }
+    if (snapshot.offset < data.length) this.pendingSnapshot = snapshot
+    this.callback({
+      inserts: progressive ? data.slice(0, snapshot.offset) : data,
+      bounded: true,
+      ...(progressive ? { totalSize: data.length } : {}),
+      ...(preserveCategoryOrder ? { preserveCategoryOrder: true } : {})
+    })
+    // The callback may synchronously replace or clear this dataset.
+    if (this.pendingSnapshot === snapshot) this.scheduleChunk()
+  }
+
+  private cancelChunk(): void {
+    if (this.chunkTimer !== null) cancelAnimationFrame(this.chunkTimer)
+    this.chunkTimer = null
+  }
+
+  private emitChunk(): void {
+    const snapshot = this.pendingSnapshot
+    if (!snapshot) return
+    const start = snapshot.offset
+    snapshot.offset = Math.min(snapshot.data.length, start + this.chunkSize)
+    if (snapshot.offset >= snapshot.data.length) this.pendingSnapshot = null
+    this.callback({
+      inserts: snapshot.data.slice(start, snapshot.offset),
+      bounded: false,
+      boundedAppend: true
+    })
+  }
+
+  private scheduleChunk(): void {
+    this.cancelChunk()
+    this.chunkTimer = requestAnimationFrame(() => {
+      this.chunkTimer = null
+      this.emitChunk()
+      if (this.pendingSnapshot) this.scheduleChunk()
+    })
+  }
+
   private flushPushBuffer(): void {
     this.flushScheduled = false
+    if (this.pushBuffer.length === 0) return
+    // Finish history before appending live rows. Otherwise a late history chunk
+    // can evict newer rows or reintroduce data outside a sliding live window.
+    this.flushSnapshot()
     if (this.pushBuffer.length === 0) return
     const inserts = this.pushBuffer
     this.pushBuffer = []
     this.callback({ inserts, bounded: false })
   }
 
-  /** Schedule a microtask flush if one isn't already pending. */
+  private flushSnapshot(): void {
+    this.cancelChunk()
+    while (this.pendingSnapshot) this.emitChunk()
+  }
+
   private scheduleFlush(): void {
     if (this.flushScheduled) return
     this.flushScheduled = true
-    queueMicrotask(() => this.flushPushBuffer())
+    const generation = this.generation
+    queueMicrotask(() => {
+      if (generation === this.generation) this.flushPushBuffer()
+    })
   }
 
-  /**
-   * Push a single datum (streaming mode).
-   * Data is buffered and flushed as a single changeset via microtask,
-   * so rapid sequential push() calls within the same task are batched
-   * into one callback invocation.
-   *
-   * Drops `null`/non-object data so a `ref.push(null)` (typically from a
-   * loader returning a falsy row) doesn't reach extent/accessor reads
-   * inside the pipeline store. Mirrors the bounded-ingest hardening.
-   */
   push(datum: T): void {
     if (datum == null || typeof datum !== "object") return
     this.pushBuffer.push(datum)
     this.scheduleFlush()
   }
 
-  /**
-   * Push multiple data (streaming batch).
-   * Like push(), data is buffered and flushed via microtask. Multiple
-   * pushMany() calls within the same task are coalesced.
-   *
-   * Sparse entries are dropped during the buffer copy. Mirrors the
-   * bounded-ingest hardening — `ref.pushMany([null, valid])` lands the
-   * valid row and silently skips the null instead of crashing the
-   * pipeline. The early `length === 0` short-circuit still applies.
-   */
   pushMany(data: T[]): void {
-    if (data.length === 0) return
-    let appended = 0
-    for (let i = 0; i < data.length; i++) {
-      const d = data[i]
-      if (d == null || typeof d !== "object") continue
-      this.pushBuffer.push(d)
-      appended++
+    for (const datum of data) {
+      if (datum != null && typeof datum === "object")
+        this.pushBuffer.push(datum)
     }
-    if (appended === 0) return
-    this.scheduleFlush()
+    if (this.pushBuffer.length > 0) this.scheduleFlush()
   }
 
-  /**
-   * Immediately flush any buffered push data without waiting for the microtask.
-   * Useful when you need the data to be processed synchronously (e.g., in tests).
-   */
+  /** Synchronously expose the complete snapshot and all queued live rows. */
   flush(): void {
+    this.flushSnapshot()
     this.flushPushBuffer()
   }
 
-  /**
-   * Reset the adapter state.
-   */
   clear(): void {
-    if (this.chunkTimer !== null) {
-      cancelAnimationFrame(this.chunkTimer)
-      this.chunkTimer = null
-    }
+    this.generation++
+    this.cancelChunk()
+    this.pendingSnapshot = null
     this.lastBoundedData = null
     this.pushBuffer = []
     this.flushScheduled = false

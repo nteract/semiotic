@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useRef } from "react"
-import type { Dispatch, KeyboardEvent, SetStateAction } from "react"
+import type { Dispatch, FocusEvent, KeyboardEvent, SetStateAction } from "react"
 import type { HoverData } from "../realtime/types"
 import { isInteractiveKeyboardTarget } from "../charts/shared/semanticInteractions"
 import type {
@@ -117,6 +117,36 @@ export function useGraphKeyboardNavigation<
   const navGraphCacheRef = useRef<{ version: number; graph: NavGraph } | null>(
     null
   )
+  const clearFocus = useCallback(() => {
+    clearPointerHover?.()
+    const hadHover = hoverRef.current !== null
+    kbFocusIndexRef.current = -1
+    focusedNavPointRef.current = null
+    neighborIndexRef.current = -1
+    hoverRef.current = null
+    if (hoveredNodeRef) hoveredNodeRef.current = null
+    setHoverPoint(null)
+    if (hadHover) customHoverBehavior?.(null)
+    scheduleRender()
+  }, [
+    clearPointerHover,
+    hoverRef,
+    hoveredNodeRef,
+    setHoverPoint,
+    customHoverBehavior,
+    scheduleRender
+  ])
+  const onBlur = useCallback(
+    (event: FocusEvent<HTMLElement>) => {
+      if (!event.currentTarget.contains(event.relatedTarget)) clearFocus()
+    },
+    [clearFocus]
+  )
+
+  // Hover listeners can change with selection styling. Keep refresh stable so
+  // network ingestion effects do not interpret a listener change as new geometry.
+  const hoverBehaviorRef = useRef(customHoverBehavior)
+  hoverBehaviorRef.current = customHoverBehavior
   const refreshKeyboardFocus = useCallback(() => {
     const store = storeRef.current
     if (!store) return
@@ -124,8 +154,12 @@ export function useGraphKeyboardNavigation<
       navGraphCacheRef.current = null
       return
     }
-    const graph = buildNavGraph(extractPoints(store.scene), navigation === "ordered")
+    const graph = buildNavGraph(
+      extractPoints(store.scene),
+      navigation === "ordered"
+    )
     navGraphCacheRef.current = { version: store.version, graph }
+    const previousHover = hoverRef.current
     refreshFocusedPoint(
       graph.flat,
       kbFocusIndexRef,
@@ -134,6 +168,7 @@ export function useGraphKeyboardNavigation<
       setHoverPoint,
       (point) => toHover(point, store)
     )
+    if (previousHover && !hoverRef.current) hoverBehaviorRef.current?.(null)
     if (kbFocusIndexRef.current < 0 && hoveredNodeRef)
       hoveredNodeRef.current = null
   }, [
@@ -151,17 +186,6 @@ export function useGraphKeyboardNavigation<
       if (isInteractiveKeyboardTarget(event)) return
       const store = storeRef.current
       if (!store) return
-      const clearFocus = () => {
-        const hadHover = hoverRef.current !== null
-        kbFocusIndexRef.current = -1
-        focusedNavPointRef.current = null
-        neighborIndexRef.current = -1
-        hoverRef.current = null
-        if (hoveredNodeRef) hoveredNodeRef.current = null
-        setHoverPoint(null)
-        if (hadHover) customHoverBehavior?.(null)
-        scheduleRender()
-      }
       if (store.scene.length === 0) {
         if (kbFocusIndexRef.current >= 0 || event.key === "Escape") clearFocus()
         return
@@ -236,8 +260,12 @@ export function useGraphKeyboardNavigation<
         neighborIndexRef.current = -1
         next =
           nextConnected && graph.flat.some((point) => point.navParentId != null)
-            ? nextConnected(event.key, graph, -1, neighborIndexRef) ?? 0
-            : 0
+            ? (nextConnected(event.key, graph, -1, neighborIndexRef) ?? 0)
+            : event.key === "End"
+              ? graph.flat.length - 1
+              : event.key === "PageDown"
+                ? nextIndex(event.key, -1, graph.flat.length)
+                : 0
       } else {
         next = nextConnected
           ? nextConnected(event.key, graph, current, neighborIndexRef)
@@ -263,6 +291,7 @@ export function useGraphKeyboardNavigation<
       scheduleRender()
     },
     [
+      clearFocus,
       clearPointerHover,
       customClickBehavior,
       customHoverBehavior,
@@ -270,7 +299,6 @@ export function useGraphKeyboardNavigation<
       nextConnected,
       navigation,
       hoverRef,
-      hoveredNodeRef,
       scheduleRender,
       setHoverPoint,
       storeRef,
@@ -283,6 +311,8 @@ export function useGraphKeyboardNavigation<
     focusedNavPointRef,
     neighborIndexRef,
     onKeyDown,
+    onBlur,
+    clearFocus,
     refreshKeyboardFocus
   }
 }

@@ -96,6 +96,7 @@ export default defineConfig(({ mode }) => ({
         ssrParity: resolve(integrationRoot, "ssr-parity-examples/index.html"),
         statusScaleTheme: resolve(integrationRoot, "status-scale-theme-examples/index.html"),
         statisticalRegressions: resolve(integrationRoot, "statistical-regressions/index.html"),
+        streamingLifecycle: resolve(integrationRoot, "streaming-lifecycle/index.html"),
         streamingRegression: resolve(integrationRoot, "streaming-regression-examples/index.html"),
         themed: resolve(integrationRoot, "themed-examples/index.html"),
         themeUpdates: resolve(integrationRoot, "theme-updates/index.html"),

@@ -71,18 +71,58 @@ describe("network keyboard focus follows layout", () => {
       fireEvent.keyDown(frame, { key })
       expect(onObservation.mock.calls.at(-1)![0]).toMatchObject({
         type: "focus",
-        datum: { id: "A" }
+        datum: { id: key === "End" ? "C" : "A" }
       })
       expect(
         container.querySelector(".stream-network-tooltip")
-      ).toHaveTextContent("Alpha")
+      ).toHaveTextContent(key === "End" ? "Gamma" : "Alpha")
+      fireEvent.keyDown(frame, { key: "Home" })
       fireEvent.keyDown(frame, { key: "ArrowRight" })
       expect(
         container.querySelector(".stream-network-tooltip")
       ).toHaveTextContent("Beta")
-      fireEvent.keyDown(frame, { key: "Escape" })
+      fireEvent.blur(frame, { relatedTarget: document.body })
       expect(container.querySelector(".stream-network-tooltip")).toBeNull()
+      expect(container.querySelector('[stroke-dasharray="4,2"]')).toBeNull()
+      fireEvent.keyDown(frame, { key: "Escape" })
     }
+  })
+
+  it("notifies the current hover listener when focused data disappears", () => {
+    const previousListener = vi.fn()
+    const currentListener = vi.fn()
+    const props = {
+      nodes,
+      edges,
+      size: [600, 400] as [number, number],
+      chartType: "sankey" as const,
+      animate: false as const
+    }
+    const { container, rerender } = render(
+      <StreamNetworkFrame {...props} customHoverBehavior={previousListener} />
+    )
+    const frame = container.querySelector<HTMLElement>(".stream-network-frame")!
+    fireEvent.keyDown(frame, { key: "End" })
+    expect(
+      container.querySelector(".stream-network-tooltip")
+    ).toHaveTextContent("Gamma")
+    previousListener.mockClear()
+    rerender(
+      <StreamNetworkFrame {...props} customHoverBehavior={currentListener} />
+    )
+    expect(currentListener).not.toHaveBeenCalled()
+    rerender(
+      <StreamNetworkFrame
+        {...props}
+        nodes={nodes.slice(0, 2)}
+        edges={edges.slice(0, 1)}
+        customHoverBehavior={currentListener}
+      />
+    )
+    expect(container.querySelector(".stream-network-tooltip")).toBeNull()
+    expect(currentListener).toHaveBeenCalledTimes(1)
+    expect(currentListener.mock.lastCall?.[0]).toBeNull()
+    expect(previousListener).not.toHaveBeenCalled()
   })
 
   it.each(["sankey", "force"] as const)(

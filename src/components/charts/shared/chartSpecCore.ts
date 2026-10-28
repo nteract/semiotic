@@ -402,7 +402,8 @@ const realtimeProps: Record<string, ChartPropSpec> = {
   legendInteraction: { type: "string", enum: ["highlight", "isolate", "none"] as const, default: "none" },
   timeAccessor: { type: ["string", "function"], description: "Field name or function returning a number, Date, or numeric/date string for time/x values" },
   valueAccessor: { type: ["string", "function"], description: "Key for y values" },
-  windowSize: { type: "number", description: "Number of data points visible" },
+  windowSize: { type: "number", description: "Live sliding-window capacity (reactive); growing-mode initial capacity. Bounded snapshots retain all rows until live pushes begin." },
+  maxCapacity: { type: "number", default: 100000, description: "Maximum live rows retained in growing mode; then evict oldest rows. Bounded snapshots are not capped." },
   windowMode: { type: "string", enum: ["sliding", "growing"] as const },
   capacity: {
     type: "number",

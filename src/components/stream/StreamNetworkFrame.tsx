@@ -521,6 +521,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     focusedNavPointRef,
     neighborIndexRef,
     onKeyDown,
+    onBlur,
     refreshKeyboardFocus
   } = useNetworkKeyboardNavigation({
     storeRef,
@@ -1461,6 +1462,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       ref={responsiveRef}
       tabIndex={0}
       onKeyDown={onKeyDown}
+      onBlur={onBlur}
     >
       {process.env.NODE_ENV !== "production" && storeRef.current && (
         <SceneRevisionDiagnosticsObserver

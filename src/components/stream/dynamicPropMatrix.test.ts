@@ -348,7 +348,7 @@ describe("dynamic-prop contract matrix — configuration lifecycle", () => {
     expect(store.scene.every((node) => node.type !== "point" || node.style.fill === "#dc2626")).toBe(true)
   })
 
-  it("adds/removes pulse resources and keeps windowSize explicitly mount-only", () => {
+  it("adds/removes pulse resources and applies windowSize when live streaming begins", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
     const store = new PipelineStore(makeXYConfig({ windowSize: 3 }))
     seedXY(store)
@@ -361,7 +361,10 @@ describe("dynamic-prop contract matrix — configuration lifecycle", () => {
     store.updateConfig({ pulse: undefined, windowSize: 8 })
     store.computeScene(XY_LAYOUT)
     expect(store.getBuffer().capacity).toBe(originalCapacity)
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining("windowSize changed after mount"))
+    expect(warn).not.toHaveBeenCalled()
+    store.ingest({ inserts: [{ id: "d", x: 4, y: 8 }], bounded: false })
+    expect(store.getBuffer().capacity).toBe(8)
+    expect(store.getData()).toHaveLength(4)
     expect(store.scene.some((node) => "_pulseIntensity" in node)).toBe(false)
   })
 

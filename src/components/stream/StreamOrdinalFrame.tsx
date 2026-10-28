@@ -132,6 +132,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       oSort,
       windowMode = "sliding",
       windowSize = 200,
+      maxCapacity,
       pieceStyle,
       summaryStyle,
       renderMode,
@@ -346,6 +347,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       chartType,
       runtimeMode: isStreaming ? "streaming" : "bounded",
       windowSize,
+      maxCapacity,
       windowMode,
       extentPadding,
       projection,
@@ -409,7 +411,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       onLayoutError,
       layoutConfig,
       layoutMargin: margin,
-    }), [chartType, isStreaming, windowSize, windowMode, extentPadding, projection, effectiveOAccessor, effectiveRAccessor, accessorRevision, colorAccessor, symbolAccessor, symbolMap, stackBy, groupBy, multiAxis, timeAccessor, valueAccessor, rExtent, oExtent, axisExtent, rTickValues, barPadding, roundedTop, gradientFill, trackFill, baselinePadding, innerRadius, cornerRadius, normalize, startAngle, sweepAngle, dynamicColumnWidth, bins, showOutliers, showIQR, amplitude, connectorOpacity, showLabels, connectorAccessor, connectorStyle, dataIdAccessor, oSort, pieceStyle, summaryStyle, colorScheme, currentTheme, barColors, decay, pulse, transition, introEnabled, staleness, frameRuntime.now, customLayout, onLayoutError, layoutConfig, margin])
+    }), [chartType, isStreaming, windowSize, maxCapacity, windowMode, extentPadding, projection, effectiveOAccessor, effectiveRAccessor, accessorRevision, colorAccessor, symbolAccessor, symbolMap, stackBy, groupBy, multiAxis, timeAccessor, valueAccessor, rExtent, oExtent, axisExtent, rTickValues, barPadding, roundedTop, gradientFill, trackFill, baselinePadding, innerRadius, cornerRadius, normalize, startAngle, sweepAngle, dynamicColumnWidth, bins, showOutliers, showIQR, amplitude, connectorOpacity, showLabels, connectorAccessor, connectorStyle, dataIdAccessor, oSort, pieceStyle, summaryStyle, colorScheme, currentTheme, barColors, decay, pulse, transition, introEnabled, staleness, frameRuntime.now, customLayout, onLayoutError, layoutConfig, margin])
 
     // Stabilize the config reference so inline-object / inline-array
     // props don't shed identity every parent render. See
@@ -439,6 +441,9 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
 
     // ── DataSourceAdapter ────────────────────────────────────────────────
 
+    const dataInteractionRef = useRef<(resetFocus?: boolean) => void>(() => {})
+    const invalidateInteraction = useCallback((resetFocus?: boolean) => dataInteractionRef.current(resetFocus), [])
+    useEffect(() => invalidateInteraction(), [windowSize, windowMode, maxCapacity, invalidateInteraction])
     const adapterRef = useRef<DataSourceAdapter | null>(null)
     if (!adapterRef.current) {
       adapterRef.current = new DataSourceAdapter((changeset) => {
@@ -446,6 +451,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
         if (!store) return
         const needsRender = store.ingest(changeset)
         if (needsRender) {
+          if (!changeset.bounded && !changeset.boundedAppend) dataInteractionRef.current()
           dirtyRef.current = true
           // Legend-category emission deferred to the post-computeScene path
           // in the render loop — single canonical emit point per data change,
@@ -463,8 +469,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       adapterRef,
       dirtyRef,
       scheduleRender,
-      hoverRef,
-      setHoverPoint
+      invalidateInteraction
     })
 
     // ── Controlled data prop ─────────────────────────────────────────────
@@ -495,7 +500,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       pointerStateRef
     } = frame
 
-    hoverHandlerRef.current = (e: HoverPointerCoords) => {
+    hoverHandlerRef.current = (e: HoverPointerCoords, refresh = false) => {
       const canvas = canvasRef.current
       if (!canvas) return
       const store = storeRef.current
@@ -543,7 +548,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       // restarts transitions on every pointermove. Selection-driven restyle
       // (hoverHighlight / linkedHover) updates React state → pieceStyle →
       // useConfigSync, which dirties only when styles actually change.
-      customHoverBehavior?.(hover)
+      if (!refresh) customHoverBehavior?.(hover)
       scheduleRender()
     }
 
@@ -614,7 +619,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
 
     // ── Keyboard navigation ───────────────────────────────────────────
 
-    const { kbFocusIndexRef, focusedNavPointRef, onKeyDown, refreshKeyboardFocus } =
+    const { kbFocusIndexRef, focusedNavPointRef, onKeyDown, onBlur, clearFocus, refreshKeyboardFocus } =
       useOrdinalKeyboardNavigation({
         clearPointerHover: onPointerLeave,
         storeRef,
@@ -624,9 +629,15 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
         customClickBehavior,
         scheduleRender,
         chartType,
+        dataIdAccessor,
         oAccessor: effectiveOAccessor,
         rAccessor: effectiveRAccessor
       })
+
+    dataInteractionRef.current = (resetFocus = false) => {
+      if (resetFocus) clearFocus()
+      else if (kbFocusIndexRef.current < 0 && hoverRef.current) onPointerLeave()
+    }
 
     const onMouseMoveWrapped = useCallback((e: React.MouseEvent) => {
       if (!shouldHandleFramePointer(
@@ -675,6 +686,11 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       if ((wasDirty || dimsChanged) && (!isTransitioning || dimsChanged)) {
         store.computeScene({ width: adjustedWidth, height: adjustedHeight })
         refreshKeyboardFocus()
+        // A controlled parent may recreate data when observing hover. Refresh
+        // the hit against the new scene without feeding that observation back.
+        if (kbFocusIndexRef.current < 0 && hoverRef.current && pointerStateRef.current.inside) {
+          hoverHandlerRef.current(pointerStateRef.current, true)
+        }
         lastSceneDimsRef.current = { w: adjustedWidth, h: adjustedHeight }
         computedSceneThisFrame = true
         emitLegendCategories()
@@ -769,7 +785,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       }
 
       // Push scales to React state for SVG overlay
-      if (store.scales && (computedSceneThisFrame || (transitionWasActive && (!transitionActive || now - lastAnnotationFrameTimeRef.current >= 33)))) {
+      if (computedSceneThisFrame || (transitionWasActive && (!transitionActive || now - lastAnnotationFrameTimeRef.current >= 33))) {
         if (computedSceneThisFrame) setCurrentScales(store.scales)
         setAnnotationFrame((f) => f + 1)
         lastAnnotationFrameTimeRef.current = now
@@ -1001,6 +1017,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
           overflow: "visible",
         }}
       onKeyDown={onKeyDown}
+      onBlur={onBlur}
     >
       {process.env.NODE_ENV !== "production" && storeRef.current && (
         <SceneRevisionDiagnosticsObserver

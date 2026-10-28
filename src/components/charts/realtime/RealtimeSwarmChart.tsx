@@ -116,6 +116,8 @@ export interface RealtimeSwarmChartProps<
   capacityMode?: WindowMode
   /** Ring buffer capacity */
   windowSize?: number
+  /** Maximum live rows retained in growing mode. Defaults to 100,000. */
+  maxCapacity?: number
   /** Controlled data array */
   data?: RealtimeData<TDatum>
   /** Time accessor returning a number, Date, or numeric/date string. */
@@ -255,6 +257,7 @@ export const RealtimeSwarmChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
     windowMode: windowModeProp,
     capacityMode,
     windowSize: windowSizeProp,
+    maxCapacity,
     capacity,
     data,
     timeAccessor,
@@ -502,6 +505,7 @@ export const RealtimeSwarmChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
       arrowOfTime={arrowOfTime}
       windowMode={windowMode}
       windowSize={windowSize}
+      maxCapacity={maxCapacity}
       data={data}
       timeAccessor={timeAccessor}
       valueAccessor={valueAccessor}

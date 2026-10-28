@@ -1,3 +1,4 @@
+import { DEFAULT_GROWING_MAX_CAPACITY } from "./pipelineConfig"
 import { RingBuffer } from "../realtime/RingBuffer"
 
 /**
@@ -71,4 +72,48 @@ export function compactTimestampBufferForRemoval<T>(
   for (let i = 0; i < oldTimestamps.length; i++) {
     if (!removeSet.has(i)) timestampBuffer.push(oldTimestamps[i])
   }
+}
+
+/** The retention policy applies to live appends, not bounded snapshots. */
+export interface StreamingWindowConfig {
+  windowSize: number
+  windowMode: "sliding" | "growing"
+  maxCapacity?: number
+}
+
+export function validateStreamingWindow(config: StreamingWindowConfig): void {
+  for (const [name, value] of [
+    ["windowSize", config.windowSize],
+    ["maxCapacity", config.maxCapacity]
+  ] as const) {
+    if (
+      (value === undefined && name === "windowSize") ||
+      (value !== undefined && (!Number.isSafeInteger(value) || value < 1))
+    ) {
+      throw new Error(`${name} must be a positive safe integer`)
+    }
+  }
+}
+
+/** Resize both rings together, preserving the newest rows and their timestamps. */
+export function resizeStreamingBuffer<T>(
+  buffer: RingBuffer<T>,
+  timestamps: RingBuffer<number> | null | undefined,
+  config: StreamingWindowConfig,
+  grow = false
+): T[] {
+  const capacity =
+    config.windowMode === "sliding"
+      ? config.windowSize
+      : Math.min(
+          config.maxCapacity ?? DEFAULT_GROWING_MAX_CAPACITY,
+          Math.max(
+            config.windowSize,
+            buffer.capacity * (grow && buffer.full ? 2 : 1)
+          )
+        )
+  if (capacity === buffer.capacity) return []
+  const evicted = buffer.resize(capacity)
+  timestamps?.resize(capacity)
+  return evicted
 }

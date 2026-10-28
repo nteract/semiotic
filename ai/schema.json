@@ -21102,7 +21102,12 @@
             },
             "windowSize": {
               "type": "number",
-              "description": "Number of data points visible"
+              "description": "Live sliding-window capacity (reactive); growing-mode initial capacity. Bounded snapshots retain all rows until live pushes begin."
+            },
+            "maxCapacity": {
+              "type": "number",
+              "description": "Maximum live rows retained in growing mode; then evict oldest rows. Bounded snapshots are not capped.",
+              "default": 100000
             },
             "windowMode": {
               "type": "string",
@@ -21671,7 +21676,12 @@
             },
             "windowSize": {
               "type": "number",
-              "description": "Number of data points visible"
+              "description": "Live sliding-window capacity (reactive); growing-mode initial capacity. Bounded snapshots retain all rows until live pushes begin."
+            },
+            "maxCapacity": {
+              "type": "number",
+              "description": "Maximum live rows retained in growing mode; then evict oldest rows. Bounded snapshots are not capped.",
+              "default": 100000
             },
             "windowMode": {
               "type": "string",
@@ -22311,7 +22321,12 @@
             },
             "windowSize": {
               "type": "number",
-              "description": "Number of data points visible"
+              "description": "Live sliding-window capacity (reactive); growing-mode initial capacity. Bounded snapshots retain all rows until live pushes begin."
+            },
+            "maxCapacity": {
+              "type": "number",
+              "description": "Maximum live rows retained in growing mode; then evict oldest rows. Bounded snapshots are not capped.",
+              "default": 100000
             },
             "windowMode": {
               "type": "string",
@@ -22888,7 +22903,12 @@
             },
             "windowSize": {
               "type": "number",
-              "description": "Number of data points visible"
+              "description": "Live sliding-window capacity (reactive); growing-mode initial capacity. Bounded snapshots retain all rows until live pushes begin."
+            },
+            "maxCapacity": {
+              "type": "number",
+              "description": "Maximum live rows retained in growing mode; then evict oldest rows. Bounded snapshots are not capped.",
+              "default": 100000
             },
             "windowMode": {
               "type": "string",
@@ -23453,7 +23473,12 @@
             },
             "windowSize": {
               "type": "number",
-              "description": "Number of data points visible"
+              "description": "Live sliding-window capacity (reactive); growing-mode initial capacity. Bounded snapshots retain all rows until live pushes begin."
+            },
+            "maxCapacity": {
+              "type": "number",
+              "description": "Maximum live rows retained in growing mode; then evict oldest rows. Bounded snapshots are not capped.",
+              "default": 100000
             },
             "windowMode": {
               "type": "string",
@@ -31034,6 +31059,11 @@
                 "string",
                 "function"
               ]
+            },
+            "maxCapacity": {
+              "type": "number",
+              "description": "Maximum live rows retained in growing mode; then evict oldest rows. Bounded snapshots are not capped.",
+              "default": 100000
             },
             "arrowOfTime": {
               "type": "string",

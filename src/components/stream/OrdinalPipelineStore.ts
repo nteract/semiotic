@@ -20,7 +20,7 @@ import { ordinalAxisTickCount } from "./ordinalAxisTicks"
 import { roundScaleDomain } from "./roundScaleDomain"
 import type { Quadtree } from "d3-quadtree"
 import { RingBuffer } from "../realtime/RingBuffer"
-import { IncrementalExtent } from "../realtime/IncrementalExtent"
+import { SlidingExtent } from "../realtime/SlidingExtent"
 import type {
   OrdinalPipelineConfig,
   OrdinalScales,
@@ -56,7 +56,9 @@ import type { MarginType } from "../types/marginType"
 import {
   compactTimestampBufferForRemoval,
   ensureRingBufferCapacity,
-  pushWithTimestamp
+  pushWithTimestamp,
+  resizeStreamingBuffer,
+  validateStreamingWindow
 } from "./pipelineBufferUtils"
 import { UpdateResultStoreBase, type UpdateResult } from "./pipelineUpdateStore"
 import { buildOrdinalCategoryIndex } from "./ordinalDataIndex"
@@ -68,11 +70,11 @@ import { snapOrdinalIntroTargets } from "./pipelineIntroCancellation"
 
 export class OrdinalPipelineStore extends UpdateResultStoreBase {
   private buffer: RingBuffer<Datum>
-  private rExtent = new IncrementalExtent()
+  private rExtent = new SlidingExtent()
   /** Per-accessor extents for multiAxis mode */
-  private rExtents: IncrementalExtent[] = []
+  private rExtents: SlidingExtent[] = []
   private config: OrdinalPipelineConfig
-  private windowSizeWarned = false
+  private liveWindow = true
   protected updateResults = new OrdinalPipelineUpdateResults()
 
   private getO: (d: Datum) => string
@@ -144,6 +146,7 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
 
   constructor(config: OrdinalPipelineConfig) {
     super()
+    validateStreamingWindow(config)
     this.config = config
     this.buffer = new RingBuffer(config.windowSize)
 
@@ -160,7 +163,7 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
     if (Array.isArray(rawR)) {
       this.rAccessors = rawR.map(acc => resolveAccessor(acc, "value"))
       this.getR = this.rAccessors[0]
-      this.rExtents = rawR.map(() => new IncrementalExtent())
+      this.rExtents = rawR.map(() => new SlidingExtent())
     } else {
       if (isStreaming && (config.timeAccessor || rawR)) {
         this.getR = resolveAccessor(rawR as string | ((d: Datum) => number) | undefined, "value")
@@ -210,9 +213,10 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
     this._dataVersion++
 
     if (changeset.bounded) {
+      this.liveWindow = false
       this.buffer.clear()
       // Clear all per-accessor extents — in multiAxis (rAccessor is an
-      // array), `rExtents` holds distinct IncrementalExtent instances
+      // array), `rExtents` holds distinct SlidingExtent instances
       // that aren't aliased by `rExtent`, so only clearing `rExtent`
       // leaves stale min/max on the other axes. In the single-accessor
       // case `rExtents[0]` *is* `rExtent`, so the two-line sequence is
@@ -243,14 +247,19 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
       }
     } else {
       // Streaming append
-      this._hasStreamingData = true
+      if (!changeset.boundedAppend) {
+        this.liveWindow = true
+        this._hasStreamingData = true
+        this.resizeWindow()
+      }
       for (const d of changeset.inserts) {
+        if (!changeset.boundedAppend && this.config.windowMode === "growing" && this.buffer.full) this.resizeWindow(true)
         const evicted = pushWithTimestamp(this.buffer, d, this.timestampBuffer, now)
         this.categories.add(this.getO(d))
         this.pushValueExtent(d)
 
         if (evicted != null) {
-          this.evictValueExtent(evicted)
+          this.evictValueExtent(evicted, true)
         }
       }
     }
@@ -286,20 +295,21 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
     }
   }
 
-  private evictValueExtent(d: Datum): void {
+  private evictValueExtent(d: Datum, oldest = false): void {
+    const method = oldest ? "evictOldest" : "evict"
     if (this.config.chartType === "timeline") {
       const range = this.getRawRange(d)
       if (range) {
-        this.rExtent.evict(range[0])
-        this.rExtent.evict(range[1])
+        this.rExtent[method](range[0])
+        this.rExtent[method](range[1])
       }
     } else if (this.rAccessors.length > 1) {
       for (let i = 0; i < this.rAccessors.length; i++) {
-        this.rExtents[i].evict(this.rAccessors[i](d))
+        this.rExtents[i][method](this.rAccessors[i](d))
       }
-      this.rExtent.evict(this.getR(d))
+      this.rExtent[method](this.getR(d))
     } else {
-      this.rExtent.evict(this.getR(d))
+      this.rExtent[method](this.getR(d))
     }
   }
 
@@ -1338,10 +1348,6 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
     }
     const ids = toIdSet(id)
     const getDataId = this.getDataId
-    // Capture matched indices before mutation (updater may change the ID field)
-    const matchedIndices = new Set<number>()
-    this.buffer.forEach((d, i) => { if (ids.has(getDataId(d))) matchedIndices.add(i) })
-
     const previous = this.buffer.update(
       item => ids.has(getDataId(item)),
       updater
@@ -1351,18 +1357,9 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
       return previous
     }
 
-    // Evict old values using the existing extent helper (handles timeline/multiAxis)
-    for (const old of previous) {
-      this.evictValueExtent(old)
-    }
-    // Rebuild categories and push new extents using pre-captured indices
-    this.categories.clear()
-    this.buffer.forEach((d, i) => {
-      this.categories.add(this.getO(d))
-      if (matchedIndices.has(i)) {
-        this.pushValueExtent(d)
-      }
-    })
+    // Edits can insert a previously invalid value at any retained position.
+    // Rebuild in buffer order before resuming FIFO extent tracking.
+    this.rebuildAccessorDerivedState()
 
     this._dataVersion++
     this.version++
@@ -1375,7 +1372,9 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
 
   clear(): void {
     this.buffer.clear()
+    this.liveWindow = true
     this.rExtent.clear()
+    for (const extent of this.rExtents) extent.clear()
     this.categories.clear()
     this._hasStreamingData = false
     this._hasRenderedOnce = false
@@ -1461,6 +1460,13 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
     })
   }
 
+  private resizeWindow(grow = false): void {
+    const evicted = resizeStreamingBuffer(this.buffer, this.timestampBuffer, this.config, grow)
+    if (evicted.length === 0) return
+    this.rebuildAccessorDerivedState()
+    this._dataVersion++
+  }
+
   updateConfig(config: Partial<OrdinalPipelineConfig>): void {
     const prev = { ...this.config }
     const changedConfigKeys = Object.keys(config).filter(
@@ -1468,23 +1474,7 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
         (prev as Record<string, unknown>)[key]
     )
 
-    // `windowSize` allocates the data and pulse rings in the constructor.
-    // Resizing it after mount would need coordinated category/extent and
-    // transition semantics, so keep the current mount-only contract explicit
-    // rather than silently updating only the config object.
-    if (
-      process.env.NODE_ENV !== "production" &&
-      !this.windowSizeWarned &&
-      "windowSize" in config &&
-      config.windowSize !== prev.windowSize
-    ) {
-      this.windowSizeWarned = true
-      console.warn(
-        `[Semiotic] windowSize changed after mount (${prev.windowSize} → ${config.windowSize}) ` +
-          `but it is a mount-only setting — the ring buffer keeps its original capacity. ` +
-          `Remount the chart (e.g. via a React key) to apply a new windowSize.`,
-      )
-    }
+    validateStreamingWindow({ ...prev, ...config })
 
     // The style resolver falls back to `themeCategorical` and looks up colors
     // via `getColor` (derived from `colorAccessor`) — all three of those must
@@ -1509,6 +1499,8 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
     }
 
     Object.assign(this.config, config)
+    if (this.liveWindow && changedConfigKeys.some(key =>
+      key === "windowSize" || key === "windowMode" || key === "maxCapacity")) this.resizeWindow()
 
     // Pulse is a dynamic prop even though its timestamp resource was created
     // in the constructor. Preserve active timestamps across style/duration
@@ -1550,7 +1542,7 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
         if (Array.isArray(rawR)) {
           this.rAccessors = rawR.map(acc => resolveAccessor(acc, "value"))
           this.getR = this.rAccessors[0]
-          this.rExtents = rawR.map(() => new IncrementalExtent())
+          this.rExtents = rawR.map(() => new SlidingExtent())
         } else {
           this.getR = resolveAccessor(rawR, "value")
           this.rAccessors = [this.getR]
@@ -1580,7 +1572,11 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
     // the same data merely because an accessor changed.
     const accessorRevisionChanged =
       "accessorRevision" in config && config.accessorRevision !== prev.accessorRevision
-    if (oAccessorChanged || rAccessorChanged || accessorRevisionChanged) {
+    if ("dataIdAccessor" in config && !accessorsEquivalent(config.dataIdAccessor, prev.dataIdAccessor)) {
+      this.getDataId = resolveStringAccessor(this.config.dataIdAccessor)
+    }
+    if (oAccessorChanged || rAccessorChanged || accessorRevisionChanged ||
+      ("chartType" in config && config.chartType !== prev.chartType)) {
       this.rebuildAccessorDerivedState()
     }
     this.updateResults.recordConfig(changedConfigKeys)

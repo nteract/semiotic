@@ -93,7 +93,13 @@ const analyze = process.argv.includes("--analyze")
 // This requested navigation behavior retains less than 0.3 KiB of headroom.
 // Composed line-gap, ordinal-navigation, and touch fixes measure at most
 // 315.56 KiB gzip. Keep a narrow 0.04 KiB margin for this correctness payload.
-const MULTI_IMPORT_GZIP_BUDGET = 315.6 * 1024
+// Streaming lifecycle (2026-10-28, #1315/#1314), same-dependency clean
+// cef77e32f -> feature: 323,128 -> 323,791 bytes (315.55 -> 316.20 KiB).
+// The union still reaches 28 files, with no dependency/family coupling added.
+// This is the measured retention/extent/interaction payload after sharing
+// mutation handles and replacement scheduling. Keep <0.3 KiB headroom;
+// cold-consumer baselines and tree-shaking isolation limits stay unchanged.
+const MULTI_IMPORT_GZIP_BUDGET = 316.5 * 1024
 
 const MULTI_IMPORT_SOURCE = `
 export { LineChart } from "semiotic/xy"

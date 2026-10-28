@@ -149,8 +149,9 @@ export const ORDINAL_CONFIG_PATCH_DEPENDENCIES: Readonly<
   staleness: /* @__PURE__ */ dependency("preserve", STYLE),
   layoutSelection: /* @__PURE__ */ dependency("preserve", STYLE),
 
-  windowSize: /* @__PURE__ */ dependency("preserve", NOOP),
-  windowMode: /* @__PURE__ */ dependency("preserve", NOOP),
+  windowSize: /* @__PURE__ */ dependency("rebuild", DATA_INVALIDATIONS),
+  windowMode: /* @__PURE__ */ dependency("rebuild", DATA_INVALIDATIONS),
+  maxCapacity: /* @__PURE__ */ dependency("rebuild", DATA_INVALIDATIONS),
   clock: /* @__PURE__ */ dependency("preserve", NOOP),
   transition: /* @__PURE__ */ dependency("preserve", NOOP),
   introAnimation: /* @__PURE__ */ dependency("preserve", NOOP),

@@ -127,6 +127,7 @@ export const RealtimeLineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */
     windowMode: windowModeProp,
     capacityMode,
     windowSize: windowSizeProp,
+    maxCapacity,
     capacity,
     seriesAccessor,
     data,
@@ -592,6 +593,7 @@ export const RealtimeLineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */
       arrowOfTime={arrowOfTime}
       windowMode={frameWindowMode}
       windowSize={frameWindowSize}
+      maxCapacity={maxCapacity}
       data={frameData}
       timeAccessor={frameTimeAccessor}
       valueAccessor={frameValueAccessor}

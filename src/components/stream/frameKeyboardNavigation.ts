@@ -51,19 +51,31 @@ interface OrdinalKeyboardParams extends KeyboardInteractionParams<
   OrdinalSceneNode
 > {
   chartType: string
+  dataIdAccessor?: string | ((datum: Record<string, unknown>) => string)
   oAccessor: unknown
   rAccessor: unknown
 }
 
 export function useOrdinalKeyboardNavigation({
   chartType,
+  dataIdAccessor,
   oAccessor,
   rAccessor,
   ...params
 }: OrdinalKeyboardParams) {
   return useGraphKeyboardNavigation({
     ...params,
-    extractPoints: extractOrdinalNavPoints,
+    extractPoints: (scene) => {
+      const points = extractOrdinalNavPoints(scene)
+      if (dataIdAccessor) for (const point of points) {
+        const datum = point.datum
+        if (datum && typeof datum === "object" && !Array.isArray(datum) && point.semanticKey == null) {
+          const id = typeof dataIdAccessor === "function" ? dataIdAccessor(datum) : datum[dataIdAccessor]
+          if (id != null) point.semanticKey = JSON.stringify(["datum", id, datum.__rIndex ?? 0])
+        }
+      }
+      return points
+    },
     navigation: "ordered",
     toHover: (point) => ({
       ...navPointToHover(point),

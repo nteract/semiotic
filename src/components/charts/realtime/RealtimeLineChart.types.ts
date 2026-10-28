@@ -89,6 +89,8 @@ export interface RealtimeLineChartProps<
   windowMode?: WindowMode
   /** Ring buffer capacity */
   windowSize?: number
+  /** Maximum live rows retained in growing mode. Defaults to 100,000. */
+  maxCapacity?: number
   /**
    * Ring-buffer capacity. Alias for `windowSize` — prefer this name when
    * "window" means the aggregation window (`aggregate.window`).

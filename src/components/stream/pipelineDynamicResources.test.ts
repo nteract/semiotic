@@ -127,7 +127,7 @@ describe("pipeline dynamic resources", () => {
     expectAlignedTimestampBuffer(store, reseeded)
   })
 
-  it("warns once that ordinal windowSize remains mount-only", () => {
+  it("resizes the ordinal live window and its pulse buffer together", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
     const store = new OrdinalPipelineStore(makeOrdinalConfig({ windowSize: 2 }))
 
@@ -135,8 +135,11 @@ describe("pipeline dynamic resources", () => {
     store.updateConfig({ windowSize: 4 })
     store.updateConfig({ windowSize: 4 })
 
-    expect(warn).toHaveBeenCalledTimes(1)
-    expect(String(warn.mock.calls[0][0])).toContain("windowSize")
-    expect(String(warn.mock.calls[0][0])).toContain("mount-only")
+    expect(warn).not.toHaveBeenCalled()
+    store.ingest({ inserts: Array.from({ length: 6 }, (_, value) => ({ category: String(value), value })), bounded: false })
+    expect(store.getData().map(d => d.value)).toEqual([2, 3, 4, 5])
+    store.updateConfig({ pulse: { duration: 1000 }, windowSize: 2 })
+    expect(store.getData().map(d => d.value)).toEqual([4, 5])
+    expectAlignedTimestampBuffer(store, getTimestampBuffer(store))
   })
 })
