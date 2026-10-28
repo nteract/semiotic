@@ -5,7 +5,7 @@ import type { OrdinalPipelineConfig, OrdinalSceneNode } from "./ordinalTypes"
 
 function store(config: Partial<OrdinalPipelineConfig> = {}) {
   return new OrdinalPipelineStore({ chartType: "bar", windowSize: 100,
-    windowMode: "sliding", projection: "vertical", oAccessor: "step",
+    windowMode: "sliding", extentPadding: 0.05, projection: "vertical", oAccessor: "step",
     rAccessor: "value", ...config })
 }
 
