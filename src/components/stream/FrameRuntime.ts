@@ -66,7 +66,10 @@ export class FrameRuntime {
   /** Stable callable seam for stores and render loops. */
   readonly now = (): number => this.advance()
   /** Freshness time keeps advancing while animation is paused or hidden. */
-  readonly wallNow = (): number => { this.advance(); return this.wallTime }
+  readonly wallNow = (): number => {
+    this.advance()
+    return this.wallTime
+  }
   /** Stable callable seam for stochastic renderers. */
   readonly random = (): number => this.randomSource()
 
