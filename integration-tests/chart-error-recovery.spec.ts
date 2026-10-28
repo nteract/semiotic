@@ -38,6 +38,8 @@ test("chart repairs restore painted marks and tooltips, including after resize",
   await expect(chart.getByRole("alert")).toContainText(
     "Invalid region in chart data"
   )
+  await expect(chart.getByRole("alert")).toHaveCSS("height", "400px")
+  await expect(chart.getByRole("alert")).toHaveCSS("width", "600px")
 
   for (const width of [600, 360]) {
     await page.getByRole("button", { name: "Repair data" }).click()
@@ -48,6 +50,7 @@ test("chart repairs restore painted marks and tooltips, including after resize",
     await expect
       .poll(async () => (await canvas.boundingBox())?.width)
       .toBe(width)
+    await expect(canvas).toHaveCSS("height", "400px")
     const point = { x: 50 + (width - 70) / 4, y: 150 }
     await expect
       .poll(async () =>

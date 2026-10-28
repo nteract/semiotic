@@ -536,7 +536,7 @@ export const EventDropChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE_
       layoutMode
     )
   }
-), "EventDropChart") as {
+), "EventDropChart", EVENT_DROP_CHART_SIZE) as {
   // Existing object refs can keep the common physics handle type. Callback
   // refs and ComponentRef infer the complete EventDrop handle below.
   (

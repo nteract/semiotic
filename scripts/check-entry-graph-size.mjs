@@ -31,6 +31,15 @@ const printOnly = process.argv.includes("--print")
  * `scripts/treeshake-isolation.test.mjs`.
  */
 const ENTRY_GRAPHS = [
+  // Error recovery must retain chart/mode defaults and composed viewport sizes
+  // (#1358, #1671). Compared with merged recovery commit 49202da63, identical
+  // Node 22.22.1/dependencies: realtime 179.0 -> 179.1045 KiB, physics 183.8 ->
+  // 183.9619, Atlas 311.2 -> 311.4131. Graph counts remain 57/21/54 files.
+  // Reuse the existing mode/default resolvers; value cards retain their own
+  // small resolver. Eighteen size/recovery cases and all three browsers cover
+  // the added behavior. Round only these affected facade limits to 0.1 KiB;
+  // the combined consumer grows 325758 -> 325884 bytes within its unchanged
+  // budget, and named-consumer tolerances/dependency/isolation limits stay fixed.
   // Realtime aggregate/balance/freshness contracts (#1344/#1345/#1357).
   // Clean 03bfb99f2 -> feature, identical Node 22.22.2/dependencies, gzip KiB:
   // root 396.7 -> 398.9, xy 165.3 -> 165.9, line 125.1 -> 125.5,
@@ -329,7 +338,7 @@ const ENTRY_GRAPHS = [
   // Feature graph: 170.5 KiB (previous built HEAD: 168.5 KiB).
   // Bumped 174.1→175: the same shared XY domain and heatmap projection
   // measure 174.4 KiB gzip.
-  { entry: "realtime.module.min.js", label: "realtime", limitKb: 179.1 },
+  { entry: "realtime.module.min.js", label: "realtime", limitKb: 179.2 },
   // Bumped 160→161 (3.8.6): PacketFlow and Crucible now join the shared
   // physics selection contract. The chart-local split keeps source modules
   // bounded, while the reachable graph gains less than one KiB gzip.
@@ -345,7 +354,7 @@ const ENTRY_GRAPHS = [
   // Bumped 168→169: the shared hatch tile and tooltip flip state measure
   // 167.9 KiB gzip.
   // Feature graph: 169.4 KiB (previous built HEAD: 168.3 KiB).
-  { entry: "physics.module.min.js", label: "physics", limitKb: 183.8 },
+  { entry: "physics.module.min.js", label: "physics", limitKb: 184.0 },
   // Bumped 240→242 (3.9.0): static Gauge SVG content and opt-in geometry
   // precision add serializer/runtime code to the server entry.
   // Bumped 242→244: the published Atlas readers and renderer-aware server
@@ -492,7 +501,7 @@ const ENTRY_GRAPHS = [
   // tooltip flip state measure 289.8 KiB gzip.
   // Shared lazy-module loading changes measure 290.5 KiB; allow 0.5 KiB headroom.
   // Feature graph: 291.8 KiB (previous built HEAD: 290.6 KiB).
-  { entry: "semiotic-atlas.module.min.js", label: "atlas", limitKb: 311.4 },
+  { entry: "semiotic-atlas.module.min.js", label: "atlas", limitKb: 311.5 },
   { entry: "semiotic-atlas-core.module.min.js", label: "atlas/core", limitKb: 15 },
   // Config serialization preserves and validates the optional interpretation
   // sidecar. Isolating the neutral utility graph removes unrelated shared

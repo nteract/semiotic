@@ -774,7 +774,7 @@ export const GauntletChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__
     />,
     layoutMode
   )
-}), "GauntletChart") as unknown as {
+}), "GauntletChart", GAUNTLET_CHART_SIZE) as unknown as {
   <TDatum extends Datum = Datum>(
     props: GauntletChartProps<TDatum> & React.RefAttributes<PhysicsFrameHandle>
   ): React.ReactElement | null

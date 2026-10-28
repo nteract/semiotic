@@ -297,4 +297,4 @@ export const CirclePack = /* @__PURE__ */ withChartErrorBoundary(function Circle
       {...frameProps}
     />
   )
-}, "CirclePack")
+}, "CirclePack", CIRCLE_PACK_SIZE)

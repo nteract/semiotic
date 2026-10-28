@@ -378,7 +378,7 @@ export const ChordDiagram = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ 
       {...frameProps}
     />
   )
-}), "ChordDiagram") as unknown as {
+}), "ChordDiagram", CHORD_DIAGRAM_SIZE) as unknown as {
   <TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ChordDiagramProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }

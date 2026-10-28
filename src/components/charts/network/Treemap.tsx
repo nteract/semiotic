@@ -356,4 +356,4 @@ export const Treemap = /* @__PURE__ */ withChartErrorBoundary(function Treemap<T
       {...framePropsRest}
     />
   )
-}, "Treemap")
+}, "Treemap", TREEMAP_SIZE)

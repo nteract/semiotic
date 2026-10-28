@@ -387,7 +387,7 @@ export const SankeyDiagram = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__
       {...frameProps}
     />
   )
-}), "SankeyDiagram") as unknown as {
+}), "SankeyDiagram", SANKEY_DIAGRAM_SIZE) as unknown as {
   <TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: SankeyDiagramProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }

@@ -38,7 +38,7 @@ import type {
   BigNumberSlot,
   BigNumberSlotContext
 } from "./types"
-import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
+import { withSizedChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // ── Mode-specific defaults ───────────────────────────────────────────
 
@@ -1181,7 +1181,10 @@ const BigNumberInner = (
  * />
  * ```
  */
-const ForwardedBigNumber = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(BigNumberInner), "BigNumber") as (
+const ForwardedBigNumber = /* @__PURE__ */ withSizedChartErrorBoundary(/* @__PURE__ */ forwardRef(BigNumberInner), "BigNumber", (props) => {
+  const defaults = MODE_DEFAULTS[props.mode ?? "tile"] ?? MODE_DEFAULTS.tile
+  return { width: props.width ?? defaults.width, height: props.height ?? defaults.height }
+}) as (
   props: BigNumberProps & { ref?: React.ForwardedRef<BigNumberHandle> }
 ) => React.ReactElement | null
 

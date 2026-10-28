@@ -581,6 +581,6 @@ export const ProcessFlowChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PUR
     />,
     layoutMode
   )
-}), "ProcessFlowChart")
+}), "ProcessFlowChart", PROCESS_FLOW_CHART_SIZE)
 
 export default ProcessFlowChart

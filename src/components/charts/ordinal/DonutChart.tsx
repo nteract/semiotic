@@ -262,7 +262,7 @@ export const DonutChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */
   if (validationError) return <ChartError componentName="DonutChart" message={validationError} width={width} height={height} />
 
   return <StreamOrdinalFrame ref={frameRef} {...streamProps} />
-}), "DonutChart") as unknown as {
+}), "DonutChart", DONUT_CHART_SIZE) as unknown as {
   <TDatum extends Datum = Datum>(props: DonutChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }

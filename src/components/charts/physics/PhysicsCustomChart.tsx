@@ -497,7 +497,7 @@ export const PhysicsCustomChart = /* @__PURE__ */ withChartErrorBoundary(/* @__P
     />,
     layoutMode
   )
-}), "PhysicsCustomChart") as unknown as {
+}), "PhysicsCustomChart", PHYSICS_CUSTOM_CHART_SIZE) as unknown as {
   <
     TDatum extends Datum = Datum,
     TConfig extends object = Record<string, unknown>

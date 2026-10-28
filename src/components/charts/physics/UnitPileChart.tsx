@@ -297,7 +297,7 @@ export const UnitPileChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__
     />,
     layoutMode
   )
-}), "UnitPileChart")
+}), "UnitPileChart", UNIT_PILE_CHART_SIZE)
 
 /**
  * @deprecated Renamed to {@link UnitPileChart} in 3.9.0. Unitizes category values into countable bodies; the substrate is an implementation detail, not the reading.

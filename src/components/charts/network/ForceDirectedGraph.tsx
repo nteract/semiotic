@@ -536,7 +536,7 @@ export const ForceDirectedGraph = /* @__PURE__ */ withChartErrorBoundary(/* @__P
       {...frameProps}
     />
   )
-}), "ForceDirectedGraph") as unknown as {
+}), "ForceDirectedGraph", FORCE_DIRECTED_GRAPH_SIZE) as unknown as {
   <TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ForceDirectedGraphProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }

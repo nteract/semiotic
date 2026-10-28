@@ -424,5 +424,5 @@ export const OrbitDiagram = /* @__PURE__ */ withChartErrorBoundary(function Orbi
         {...frameProps}
       />
   )
-}, "OrbitDiagram")
+}, "OrbitDiagram", ORBIT_DIAGRAM_SIZE)
 

@@ -959,7 +959,7 @@ export const CrucibleChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__
       />
     </div>
   )
-}), "CrucibleChart") as unknown as {
+}), "CrucibleChart", CRUCIBLE_CHART_SIZE) as unknown as {
   <TDatum extends Datum = Datum>(
     props: CrucibleChartProps<TDatum> &
       React.RefAttributes<CrucibleChartHandle<TDatum>>

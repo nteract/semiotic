@@ -22,7 +22,7 @@ import type { MinimapChartProps } from "./minimapChartTypes"
 import { minimapChromeMargins, minimapOverviewHeight, MINIMAP_DEFAULT_HEIGHT } from "./minimapLayout"
 import { groupLineChartRows } from "./lineGapStrategy"
 import { resolveChartMode } from "../shared/chartMode"
-import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
+import { withSizedChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 export type {
   MinimapBrushEndMeta,
@@ -90,7 +90,7 @@ function ensureMinimapChartRegistrations(): void {
  * />
  * ```
  */
-export const MinimapChart = /* @__PURE__ */ withChartErrorBoundary(function MinimapChart<TDatum extends Datum = Datum>(
+export const MinimapChart = /* @__PURE__ */ withSizedChartErrorBoundary(function MinimapChart<TDatum extends Datum = Datum>(
   props: MinimapChartProps<TDatum>
 ) {
   ensureMinimapChartRegistrations()
@@ -467,4 +467,7 @@ export const MinimapChart = /* @__PURE__ */ withChartErrorBoundary(function Mini
         {renderBefore ? mainChart : overviewChart}
       </div>
   )
-}, "MinimapChart")
+}, "MinimapChart", (props) => {
+  const size = resolveChartMode(undefined, { width: props.width, height: props.height })
+  return { width: size.width, height: size.height + minimapOverviewHeight(props.minimap ?? {}) }
+})

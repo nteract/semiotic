@@ -321,6 +321,6 @@ export const GaltonBoardChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PUR
     />,
     layoutMode
   )
-}), "GaltonBoardChart")
+}), "GaltonBoardChart", GALTON_BOARD_CHART_SIZE)
 
 export default GaltonBoardChart

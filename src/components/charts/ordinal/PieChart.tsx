@@ -302,7 +302,7 @@ export const PieChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ f
   if (validationError) return <ChartError componentName="PieChart" message={validationError} width={width} height={height} />
 
   return <StreamOrdinalFrame ref={frameRef} {...streamProps} />
-}), "PieChart") as unknown as {
+}), "PieChart", PIE_CHART_SIZE) as unknown as {
   <TDatum extends Datum = Datum>(props: PieChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }

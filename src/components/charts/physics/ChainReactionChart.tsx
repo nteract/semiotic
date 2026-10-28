@@ -56,7 +56,7 @@ import {
 import { ChainReactionOverlay } from "./chainReactionOverlay"
 import { ChainReactionAccessibleTable } from "./chainReactionAccessibleTable"
 import { AccessibleTablePortal } from "../../stream/AccessibleDataTable"
-import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
+import { withSizedChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 export type * from "./chainReactionTypes"
 
@@ -89,7 +89,7 @@ export type * from "./chainReactionTypes"
  *   insight="blocker-amplification"
  * />
  */
-export const ChainReactionChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function ChainReactionChart<
+export const ChainReactionChart = /* @__PURE__ */ withSizedChartErrorBoundary(/* @__PURE__ */ forwardRef(function ChainReactionChart<
   TDatum extends Datum = Datum
 >(
   props: ChainReactionChartProps<TDatum>,
@@ -784,7 +784,10 @@ export const ChainReactionChart = /* @__PURE__ */ withChartErrorBoundary(/* @__P
       )}
     </div>
   )
-}), "ChainReactionChart") as unknown as {
+}), "ChainReactionChart", (props) => ({
+  width: Math.max(1, props.width ?? CHAIN_REACTION_CHART_SIZE.width),
+  height: Math.max(1, props.height ?? CHAIN_REACTION_CHART_SIZE.height)
+})) as unknown as {
   <TDatum extends Datum = Datum>(
     props: ChainReactionChartProps<TDatum> &
       React.RefAttributes<ChainReactionChartHandle>

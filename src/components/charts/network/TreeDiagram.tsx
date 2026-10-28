@@ -319,4 +319,4 @@ export const TreeDiagram = /* @__PURE__ */ withChartErrorBoundary(function TreeD
       {...frameProps}
     />
   )
-}, "TreeDiagram")
+}, "TreeDiagram", TREE_DIAGRAM_SIZE)

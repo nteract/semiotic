@@ -32,7 +32,6 @@ export function ErrorRecoveryFixture() {
           categoryAccessor="category"
           valueAccessor="value"
           responsiveWidth
-          height={300}
           margin={{ left: 50, right: 20, top: 20, bottom: 40 }}
           showLegend={false}
           animate={false}

@@ -683,7 +683,7 @@ export const MultiAxisLineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__P
   return (
     <StreamXYFrame ref={frameRef} {...streamProps} />
   )
-}), "MultiAxisLineChart") as unknown as {
+}), "MultiAxisLineChart", MULTI_AXIS_LINE_CHART_SIZE) as unknown as {
   <TDatum extends Datum = Datum>(
     props: MultiAxisLineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>
   ): React.ReactElement | null

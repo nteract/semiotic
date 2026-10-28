@@ -4,9 +4,9 @@ import { renderToString } from "react-dom/server"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { ChartErrorBoundary } from "./ChartErrorBoundary"
 import { ChartContainer } from "./ChartContainer"
-import { BarChart } from "semiotic/ordinal"
-import { Scatterplot } from "semiotic/xy"
-import { ForceDirectedGraph } from "semiotic/network"
+import { BarChart, PieChart } from "semiotic/ordinal"
+import { Scatterplot, MinimapChart } from "semiotic/xy"
+import { ForceDirectedGraph, ProcessSankey } from "semiotic/network"
 import { ProportionalSymbolMap } from "semiotic/geo"
 import { GaltonBoardChart } from "semiotic/physics"
 import { RealtimeLineChart } from "semiotic/realtime"
@@ -79,6 +79,109 @@ describe("chart error recovery", () => {
     expect(screen.queryByRole("alert")).toBeNull()
     expect(view.container.querySelector("canvas")).not.toBeNull()
   })
+
+  it.each([
+    ["default", <BarChart key="size-0" />, 600, 400],
+    ["context", <BarChart key="size-1" mode="context" />, 400, 250],
+    ["mobile", <BarChart key="size-2" mode="mobile" />, 390, 300],
+    ["sparkline", <BarChart key="size-3" mode="sparkline" />, 120, 24],
+    ["chart defaults", <PieChart key="size-4" />, 400, 400],
+    ["network defaults", <ForceDirectedGraph key="size-5" />, 600, 600],
+    [
+      "process composition",
+      <ProcessSankey key="size-6" nodes={[]} edges={[]} domain={[0, 10]} />,
+      600,
+      400
+    ],
+    ["minimap composition", <MinimapChart key="size-7" data={[]} />, 600, 480],
+    ["physics defaults", <GaltonBoardChart key="size-8" paused />, 700, 420],
+    [
+      "physics context",
+      <GaltonBoardChart key="size-9" mode="context" paused />,
+      400,
+      250
+    ],
+    [
+      "physics tuple",
+      <GaltonBoardChart
+        key="size-10"
+        size={[520, 280]}
+        responsiveRules={[
+          { when: { maxWidth: 800 }, transform: { width: 300 } }
+        ]}
+        paused
+      />,
+      520,
+      280
+    ],
+    [
+      "realtime tuple",
+      <RealtimeLineChart key="size-11" size={[520, 280]} />,
+      520,
+      280
+    ],
+    ["value defaults", <BigNumber key="size-12" value={42} />, 280, 184],
+    [
+      "value thumbnail",
+      <BigNumber key="size-13" value={42} mode="thumbnail" />,
+      96,
+      56
+    ],
+    [
+      "value CSS sizes",
+      <BigNumber key="size-14" value={42} width="50%" height="10rem" />,
+      "50%",
+      "10rem"
+    ],
+    [
+      "responsive rules",
+      <BarChart
+        key="size-15"
+        responsiveRules={[
+          { when: { maxWidth: 650 }, transform: { mode: "context" } }
+        ]}
+      />,
+      400,
+      250
+    ],
+    [
+      "responsive width",
+      <BarChart key="size-16" responsiveWidth />,
+      "100%",
+      400
+    ],
+    [
+      "responsive height",
+      <BarChart key="size-17" responsiveHeight />,
+      600,
+      "100%"
+    ]
+  ] as const)(
+    "retains %s dimensions after failure and recovery",
+    (_name, chart, width, height) => {
+      const view = render(
+        React.cloneElement(chart, {
+          loading: true,
+          loadingContent: <Payload valid={false} />
+        })
+      )
+      const alert = screen.getByRole("alert")
+      expect(alert.style.width).toBe(
+        typeof width === "number" ? `${width}px` : width
+      )
+      expect(alert.style.height).toBe(
+        typeof height === "number" ? `${height}px` : height
+      )
+      view.rerender(
+        React.cloneElement(chart, {
+          loading: true,
+          loadingContent: <Payload valid />
+        })
+      )
+      expect(screen.queryByRole("alert")).toBeNull()
+      expect(screen.getByText("Corrected chart")).toBeVisible()
+    }
+  )
 
   it("honors explicit reset keys and compares their values, not the array identity", () => {
     const onError = vi.fn()

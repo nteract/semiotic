@@ -282,6 +282,6 @@ export const CollisionSwarmChart = /* @__PURE__ */ withChartErrorBoundary(/* @__
     />,
     layoutMode
   )
-}), "CollisionSwarmChart")
+}), "CollisionSwarmChart", COLLISION_SWARM_CHART_SIZE)
 
 export default CollisionSwarmChart

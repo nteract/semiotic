@@ -570,7 +570,7 @@ export const GaugeChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */
   return (
     <StreamOrdinalFrame ref={frameRef} {...streamProps} />
   )
-}), "GaugeChart") as unknown as {
+}), "GaugeChart", GAUGE_CHART_SIZE) as unknown as {
   (props: GaugeChartProps & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }

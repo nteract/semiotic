@@ -658,7 +658,7 @@ export const PacketFlowChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE
     />,
     layoutMode
   )
-}), "PacketFlowChart") as unknown as {
+}), "PacketFlowChart", PACKET_FLOW_CHART_SIZE) as unknown as {
   <TNode extends Datum = Datum, TLink extends Datum = Datum>(
     props: PacketFlowChartProps<TNode, TLink> &
       React.RefAttributes<PhysicsFrameHandle>
