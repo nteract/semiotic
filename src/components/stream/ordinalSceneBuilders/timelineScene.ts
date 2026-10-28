@@ -1,14 +1,15 @@
+import { orderedColumns } from "./orderedColumns"
 import { buildRectNode } from "../SceneGraph"
 import type { OrdinalSceneNode, OrdinalLayout } from "../ordinalTypes"
 import type { OrdinalSceneContext } from "./types"
 
 export function buildTimelineScene(ctx: OrdinalSceneContext, _layout: OrdinalLayout): OrdinalSceneNode[] {
-  const { scales, columns, getRawRange, resolvePieceStyle } = ctx
+  const { scales, getRawRange, resolvePieceStyle } = ctx
   const { r: rScale, projection } = scales
   const nodes: OrdinalSceneNode[] = []
   const isHorizontal = projection === "horizontal"
 
-  for (const col of Object.values(columns)) {
+  for (const col of orderedColumns(ctx)) {
     for (const d of col.pieceData) {
       const range = getRawRange(d)
       if (!range) continue

@@ -154,13 +154,7 @@ export function extractOrdinalNavPoints(scene: OrdinalSceneNode[]): NavPoint[] {
       if (node.datum == null) continue
       // Group by node.group (set by stacking/grouping) falling back to category.
       const category = node.datum?.category ?? ""
-      const step = node.datum.__funnelStep ?? node.datum.__barFunnelStep
-      let group = node.group ?? category
-      // A step name used as the group splits a one-series funnel into
-      // columns, so ArrowRight never leaves the current step.
-      if (step != null && (group === "" || String(group) === String(step))) {
-        group = "_funnel"
-      }
+      const group = node.datum.__funnelNavGroup ?? node.group ?? category
       push({
         x: node.x + node.w / 2,
         y: node.y + node.h / 2,
@@ -228,6 +222,7 @@ export function extractOrdinalNavPoints(scene: OrdinalSceneNode[]): NavPoint[] {
         x: (node.x1 + node.x2) / 2, y: (node.y1 + node.y2) / 2,
         datum: normalizeHoverDatum(node.datum),
         shape: "path", pathData: `M${node.x1},${node.y1}L${node.x2},${node.y2}`,
+        readingOrder: scene.length + points.length,
         category: node.group, group: node.group ?? "_default"
       })
     } else if (node.type === "wedge" && node.cx != null) {

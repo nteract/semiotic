@@ -1,3 +1,4 @@
+import { orderedColumns } from "./orderedColumns"
 import type { OrdinalSceneNode, OrdinalLayout } from "../ordinalTypes"
 import type { Style } from "../types"
 import type { Datum } from "../../charts/shared/datumTypes"
@@ -33,7 +34,7 @@ function pushMark(
 }
 
 export function buildPointScene(ctx: OrdinalSceneContext, _layout: OrdinalLayout): OrdinalSceneNode[] {
-  const { scales, columns, getR, multiScales, resolvePieceStyle } = ctx
+  const { scales, getR, multiScales, resolvePieceStyle } = ctx
   const { r: rScale, projection } = scales
   const nodes: OrdinalSceneNode[] = []
   const isVertical = projection === "vertical"
@@ -44,7 +45,7 @@ export function buildPointScene(ctx: OrdinalSceneContext, _layout: OrdinalLayout
   const twoPi = Math.PI * 2
   const startAngleOffset = -Math.PI / 2
 
-  for (const col of Object.values(columns)) {
+  for (const col of orderedColumns(ctx)) {
     for (const d of col.pieceData) {
       const rIndex = d.__rIndex ?? 0
       const val = d.__rValue ?? getR(d)
@@ -76,13 +77,13 @@ export function buildPointScene(ctx: OrdinalSceneContext, _layout: OrdinalLayout
 }
 
 export function buildSwarmScene(ctx: OrdinalSceneContext, _layout: OrdinalLayout): OrdinalSceneNode[] {
-  const { scales, columns, getR, resolvePieceStyle } = ctx
+  const { scales, getR, resolvePieceStyle } = ctx
   const { r: rScale, projection } = scales
   const nodes: OrdinalSceneNode[] = []
   const isVertical = projection === "vertical"
   const shapeFor = makeShapeResolver(ctx)
 
-  for (const col of Object.values(columns)) {
+  for (const col of orderedColumns(ctx)) {
     // Simple jittered placement (real force sim in Phase 3)
     const halfWidth = col.width / 2
     for (let i = 0; i < col.pieceData.length; i++) {

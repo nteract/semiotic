@@ -359,9 +359,9 @@ describe("extractOrdinalNavPoints", () => {
   it("lets ArrowRight cross funnel steps that were split into their own groups", () => {
     // Centers are x 80, 20, 50, so a geometric sort would visit interest first.
     const scene = [
-      { type: "rect", x: 30, y: 0, w: 100, h: 20, datum: { id: "awareness", __funnelStep: "Awareness" }, group: "Awareness" },
-      { type: "rect", x: 10, y: 40, w: 20, h: 20, datum: { id: "interest", __funnelStep: "Interest" }, group: "Interest" },
-      { type: "rect", x: 40, y: 80, w: 20, h: 20, datum: { id: "purchase", __funnelStep: "Purchase" }, group: "Purchase" }
+      { type: "rect", x: 30, y: 0, w: 100, h: 20, datum: { id: "awareness", __funnelStep: "Awareness", __funnelNavGroup: "_funnel" }, group: "Awareness" },
+      { type: "rect", x: 10, y: 40, w: 20, h: 20, datum: { id: "interest", __funnelStep: "Interest", __funnelNavGroup: "_funnel" }, group: "Interest" },
+      { type: "rect", x: 40, y: 80, w: 20, h: 20, datum: { id: "purchase", __funnelStep: "Purchase", __funnelNavGroup: "_funnel" }, group: "Purchase" }
     ]
     const points = extractOrdinalNavPoints(asOrd(scene))
     expect(points.every(point => point.group === "_funnel")).toBe(true)
@@ -375,10 +375,10 @@ describe("extractOrdinalNavPoints", () => {
 
   it("keeps multi-category funnel groups and walks steps inside a category", () => {
     const scene = [
-      { type: "rect", x: 100, y: 0, w: 80, h: 20, datum: { id: "a-east", category: "East", __funnelStep: "Awareness" }, group: "East" },
-      { type: "rect", x: 0, y: 0, w: 40, h: 20, datum: { id: "a-west", category: "West", __funnelStep: "Awareness" }, group: "West" },
-      { type: "rect", x: 20, y: 40, w: 20, h: 20, datum: { id: "i-east", category: "East", __funnelStep: "Interest" }, group: "East" },
-      { type: "rect", x: 10, y: 40, w: 10, h: 20, datum: { id: "i-west", category: "West", __funnelStep: "Interest" }, group: "West" }
+      { type: "rect", x: 100, y: 0, w: 80, h: 20, datum: { id: "a-east", category: "East", __funnelStep: "East", __funnelNavGroup: "East" }, group: "East" },
+      { type: "rect", x: 0, y: 0, w: 40, h: 20, datum: { id: "a-west", category: "West", __funnelStep: "East", __funnelNavGroup: "West" }, group: "West" },
+      { type: "rect", x: 20, y: 40, w: 20, h: 20, datum: { id: "i-east", category: "East", __funnelStep: "Purchase", __funnelNavGroup: "East" }, group: "East" },
+      { type: "rect", x: 10, y: 40, w: 10, h: 20, datum: { id: "i-west", category: "West", __funnelStep: "Purchase", __funnelNavGroup: "West" }, group: "West" }
     ]
     const points = extractOrdinalNavPoints(asOrd(scene))
     const graph = buildNavGraph(points)
@@ -391,8 +391,8 @@ describe("extractOrdinalNavPoints", () => {
 
   it("walks a category-less bar funnel by step instead of bar width", () => {
     const scene = [
-      { type: "rect", x: 0, y: 80, w: 90, h: 20, datum: { id: "s1", __barFunnelStep: "S1" }, group: "S1" },
-      { type: "rect", x: 0, y: 40, w: 20, h: 20, datum: { id: "s2", __barFunnelStep: "S2" }, group: "S2" }
+      { type: "rect", x: 0, y: 80, w: 90, h: 20, datum: { id: "s1", __funnelNavGroup: "_funnel", __barFunnelStep: "S1" }, group: "S1" },
+      { type: "rect", x: 0, y: 40, w: 20, h: 20, datum: { id: "s2", __funnelNavGroup: "_funnel", __barFunnelStep: "S2" }, group: "S2" }
     ]
     const points = extractOrdinalNavPoints(asOrd(scene))
     expect(points.map(point => idOf(point.datum))).toEqual(["s1", "s2"])

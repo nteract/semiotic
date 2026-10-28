@@ -93,6 +93,7 @@ export function buildBarFunnelScene(
         __barFunnelIsFirstStep: isFirstStep,
         __barFunnelIsDropoff: false,
         __barFunnelStep: col.name,
+        __funnelNavGroup: hasCategories ? catKey : "_funnel",
         __barFunnelDropoffValue: dropoff,
         __barFunnelCategory: catKey === "_default" ? undefined : catKey,
         category: hasCategories ? catKey : col.name,
@@ -129,6 +130,7 @@ export function buildBarFunnelScene(
           __barFunnelIsFirstStep: false,
           __barFunnelIsDropoff: true,
           __barFunnelStep: col.name,
+        __funnelNavGroup: hasCategories ? catKey : "_funnel",
           __barFunnelCategory: catKey === "_default" ? undefined : catKey,
           category: hasCategories ? catKey : col.name,
         }
