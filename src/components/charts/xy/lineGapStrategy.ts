@@ -47,21 +47,23 @@ export function groupRowsIntoLines(
   keyOf: (row: Datum) => unknown,
   annotate?: (line: Datum, key: unknown, row: Datum) => void,
 ): Datum[] {
-  const grouped = new Map<string, Datum>()
+  const grouped: Record<string, Datum> = Object.create(null)
+  const lines: Datum[] = []
   for (const row of rows) {
     const rawKey = keyOf(row)
     // Match ordinary property-key coercion (`null` → "null", `undefined` →
     // "undefined") without ever consulting Object.prototype.
     const key = String(rawKey)
-    let line = grouped.get(key)
+    let line = grouped[key]
     if (!line) {
       line = { [lineDataAccessor]: [] }
       annotate?.(line, rawKey, row)
-      grouped.set(key, line)
+      grouped[key] = line
+      lines.push(line)
     }
     ;(line[lineDataAccessor] as Datum[]).push(row)
   }
-  return [...grouped.values()]
+  return lines
 }
 
 /** LineChart's flat-row grouping, including forecast compound keys. */
@@ -91,16 +93,6 @@ export function groupLineChartRows(
       if (typeof lineBy === "string") line[lineBy] = row[lineBy]
     },
   )
-}
-
-/** Re-evaluate gaps on grouped, label, and enriched tooltip copies. */
-export function yAccessorForZeroedGaps<TDatum extends Datum>(
-  yAccessor: string | ((datum: TDatum) => number),
-  isGap: (datum: TDatum) => boolean,
-): string | ((datum: TDatum) => number) {
-  return typeof yAccessor === "function"
-    ? (datum) => isGap(datum) ? 0 : yAccessor(datum)
-    : yAccessor
 }
 
 export function applyLineGapStrategy({

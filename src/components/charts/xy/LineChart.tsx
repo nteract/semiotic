@@ -36,7 +36,6 @@ import {
   segmentAreaGroups,
   withSegmentSeriesStyle,
   withSegmentSeriesTooltip,
-  yAccessorForZeroedGaps,
 } from "./lineGapStrategy"
 import type { LegendValue } from "../../types/legendTypes"
 import { composeLegendConfigs } from "../../types/legendTypes"
@@ -649,7 +648,9 @@ export const LineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forward
   }, [lineData, gapStrategy, lineDataAccessor, isGap, frameGroupAccessor, yAccessor])
 
   const frameYAccessor = useMemo(
-    () => gapStrategy === "zero" ? yAccessorForZeroedGaps(yAccessor as string | ((d: Datum) => number), isGap) : yAccessor,
+    () => gapStrategy === "zero" && typeof yAccessor === "function"
+      ? (datum: TDatum) => isGap(datum) ? 0 : yAccessor(datum)
+      : yAccessor,
     [yAccessor, gapStrategy, isGap],
   )
 

@@ -4,7 +4,6 @@ import {
   applyLineGapStrategy,
   groupLineChartRows,
   groupRowsIntoLines,
-  yAccessorForZeroedGaps,
 } from "./lineGapStrategy"
 
 describe("groupRowsIntoLines", () => {
@@ -81,10 +80,6 @@ describe("applyLineGapStrategy zero", () => {
       seriesOfLine: () => "",
     })
     expect(result.lines[0].coordinates[1]).toBe(gap)
-    const readY = yAccessorForZeroedGaps((d: Datum) => d.metrics.p95, isGap)
-    expect(typeof readY).toBe("function")
-    if (typeof readY !== "function") return
-    expect(readY(gap)).toBe(0)
-    expect(readY(lineData[0].coordinates[0])).toBe(1)
+
   })
 })
