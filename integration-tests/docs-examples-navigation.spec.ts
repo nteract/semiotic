@@ -23,6 +23,12 @@ test.describe("structured navigation hierarchy and geo contract", () => {
     await expect(hierarchy).toBeVisible()
     await expect(geography).toBeVisible()
 
+    for (const tree of [hierarchy, geography]) {
+      const root = tree.getByRole("treeitem").first()
+      const label = await root.locator(":scope > .semiotic-nav-tree-label").evaluate(element => element.lastChild!.textContent!)
+      await expect(root).toHaveAccessibleName(label)
+    }
+
     const hierarchySnapshot = await hierarchy.ariaSnapshot()
     expect(hierarchySnapshot).toContain(
       'tree "Organization hierarchy navigation"'

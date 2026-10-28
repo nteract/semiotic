@@ -73,7 +73,7 @@ export function DependencyMatrix({
                         }}
                         type="button"
                         title={cell.edgeIds.join(", ")}
-                        aria-label={`${source} to ${target}: ${cell.edgeIds.join(", ")} (${cell.edgeIds.length})`}
+                        aria-label={`${source} to ${target}: ${cell.edgeIds.join(", ")}, count ${cell.edgeIds.length}`}
                         onClick={() => onSelectEdges?.(cell.edgeIds)}
                       >
                         {cell.edgeIds.length}

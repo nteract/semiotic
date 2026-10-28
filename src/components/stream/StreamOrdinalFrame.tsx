@@ -562,7 +562,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     const onClick = useCallback((e: React.MouseEvent) => {
       if (isAnnotationActivationTarget(e.target)) return
       if (!customClickBehavior) return
-      flushPointerMove()
+      flushPointerMove(e)
       const canvas = canvasRef.current
       if (!canvas) {
         customClickBehavior(null)

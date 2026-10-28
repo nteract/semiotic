@@ -235,7 +235,6 @@ export function AccessibleNavTree({ tree, label, visible = false, className, onA
       <li
         key={node.id}
         role="treeitem"
-        aria-label={node.label}
         aria-level={node.level}
         aria-posinset={posinset}
         aria-setsize={setsize}

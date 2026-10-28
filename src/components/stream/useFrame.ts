@@ -256,7 +256,7 @@ export interface UseFrameResult {
    *  Captures the coords and queues a single rAF to drain into hoverHandlerRef. */
   onPointerMove: (e: { clientX: number; clientY: number; pointerType?: string }) => void
   /** Process a queued move before a newer synchronous activation changes state. */
-  flushPointerMove: () => void
+  flushPointerMove: (event?: Pick<React.MouseEvent, "clientX" | "clientY" | "nativeEvent">) => void
   /** Stable callback to attach to canvas's onPointerLeave (or onMouseLeave).
    *  Cancels any pending hover rAF and invokes hoverLeaveRef. */
   onPointerLeave: () => void
@@ -509,7 +509,12 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
       }
     }
   }, [flushPendingMove])
-  const flushPointerMove = useCallback(() => {
+  const flushPointerMove = useCallback((event?: Pick<React.MouseEvent, "clientX" | "clientY" | "nativeEvent">) => {
+    // Touch pointers leave the surface before their compatibility click.
+    // Re-hit the final activation position so tap-to-inspect detail persists.
+    if (event && "pointerType" in event.nativeEvent && event.nativeEvent.pointerType === "touch") {
+      onPointerMove({ clientX: event.clientX, clientY: event.clientY, pointerType: "touch" })
+    }
     if (moveRafRef.current !== null) {
       const scheduler = pendingMoveSchedulerRef.current ?? frameSchedulerRef.current
       scheduler.cancelAnimationFrame(moveRafRef.current)
@@ -517,7 +522,7 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
       pendingMoveSchedulerRef.current = null
     }
     flushPendingMove()
-  }, [flushPendingMove])
+  }, [flushPendingMove, onPointerMove])
   const onPointerLeave = useCallback(() => {
     pointerStateRef.current.inside = false
     pendingMoveCoordsRef.current = null

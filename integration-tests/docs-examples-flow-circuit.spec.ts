@@ -93,7 +93,7 @@ test("ETL observation and modeled candidate retain counts through display change
     .getByRole("combobox", { name: "Module", exact: true })
     .selectOption("router")
   await page
-    .getByRole("button", { name: "router to p1: in:p1", exact: true })
+    .getByRole("button", { name: "router to p1: in:p1, count 1", exact: true })
     .click()
   await expect(
     page.getByTestId("circuit-overview").locator('[data-circuit-edge="in:p1"]')
@@ -200,7 +200,7 @@ test("module grammar preserves original multigraph ports and requires explicit j
     grammar.getByRole("combobox", { name: "Module", exact: true })
   ).toHaveValue("source")
   await grammar
-    .getByRole("button", { name: "source to a: sa, sa-parallel", exact: true })
+    .getByRole("button", { name: "source to a: sa, sa-parallel, count 2", exact: true })
     .click()
   await expect(surface.locator('[data-highlighted="true"]')).toHaveCount(2)
   await grammar.getByLabel("Declare join and selection rules").uncheck()
@@ -214,7 +214,7 @@ test("module grammar preserves original multigraph ports and requires explicit j
     .getByRole("combobox", { name: "Module", exact: true })
     .selectOption("gate")
   await grammar
-    .getByRole("button", { name: "gate to gate: gg", exact: true })
+    .getByRole("button", { name: "gate to gate: gg, count 1", exact: true })
     .click()
   await expect(surface.locator('[data-circuit-edge="gg"]')).toHaveAttribute(
     "data-highlighted",
