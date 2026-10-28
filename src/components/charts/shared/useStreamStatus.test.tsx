@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import React from "react"
 import { renderHook, act } from "@testing-library/react"
 import { useStreamStatus } from "./useStreamStatus"
+import { useFrameImperativeHandle } from "./useFrameImperativeHandle"
 import { TooltipProvider } from "../../store/TooltipStore"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 
@@ -122,6 +123,45 @@ describe("useStreamStatus", () => {
     expect(origPushMany).toHaveBeenCalledWith([{ a: 1 }])
   })
 
+  it("observes the latest overridden push without rewriting the chart handle", () => {
+    const frame = { current: makeFakeHandle() }
+    const first = vi.fn()
+    const second = vi.fn()
+    const { result, rerender } = renderHook(({ push }) => {
+      const status = useStreamStatus()
+      useFrameImperativeHandle(status.ref, { variant: "xy", frameRef: frame, overrides: { push } })
+      return status
+    }, { initialProps: { push: first }, wrapper })
+    act(() => { result.current.ref.current!.push({ x: 1 }) })
+    expect(first).toHaveBeenCalledWith({ x: 1 })
+    expect(result.current.status).toBe("active")
+    const observed = result.current.ref.current
+    rerender({ push: second })
+    expect(result.current.ref.current).toBe(observed)
+    act(() => { observed!.push({ x: 2 }) })
+    expect(second).toHaveBeenCalledWith({ x: 2 })
+    expect(first).toHaveBeenCalledTimes(1)
+  })
+
+  it("publishes timestamps at the polling cadence instead of on every push", () => {
+    let renders = 0
+    const { result } = renderHook(() => {
+      renders++
+      return useStreamStatus({ pollIntervalMs: 1000 })
+    }, { wrapper })
+    act(() => { result.current.ref.current = makeFakeHandle() })
+    const initial = renders
+    for (let i = 0; i < 20; i++) act(() => {
+      vi.advanceTimersByTime(10)
+      result.current.ref.current!.push({ value: i })
+    })
+    expect(renders - initial).toBe(1)
+    const firstTime = result.current.lastPushTime!
+    act(() => { vi.advanceTimersByTime(800) })
+    expect(result.current.lastPushTime).toBeGreaterThan(firstTime)
+    expect(renders - initial).toBe(2)
+  })
+
   it("status stays idle while no pushes happen (poll timer is safe)", () => {
     const { result } = renderHook(
       () => useStreamStatus({ staleThresholdMs: 500, pollIntervalMs: 100 }),
@@ -160,22 +200,40 @@ describe("useStreamStatus", () => {
     expect(result.current.status).toBe("active")
   })
 
-  it("restores the previous handle's originals when a new handle is assigned", () => {
-    // If the consumer swaps charts (e.g. a Suspense boundary swaps in
-    // a different chart with its own RealtimeFrameHandle), we should
-    // release the old handle by restoring its push/pushMany. Without
-    // this, the old handle would still call our `markPushed` every
-    // time anyone held a reference to it.
+  it("leaves original handles untouched and stops observing a detached view", () => {
     const handleA = makeFakeHandle()
     const handleB = makeFakeHandle()
     const origPushA = handleA.push
     const { result } = renderHook(() => useStreamStatus(), { wrapper })
     act(() => { result.current.ref.current = handleA })
-    // After wrap, handleA.push is the wrapped function (not the
-    // original).
-    expect(handleA.push).not.toBe(origPushA)
-    act(() => { result.current.ref.current = handleB })
-    // Swapping handles restores handleA.push to its original.
+    const detached = result.current.ref.current!
     expect(handleA.push).toBe(origPushA)
+    act(() => { result.current.ref.current = handleB })
+    act(() => { detached.push({ x: 1 }) })
+    expect(origPushA).toHaveBeenCalledWith({ x: 1 })
+    expect(result.current.status).toBe("idle")
+    act(() => { result.current.ref.current!.push({ x: 2 }) })
+    expect(result.current.status).toBe("active")
+  })
+
+  it("observes frozen class handles while preserving method receivers", () => {
+    class Handle {
+      #rows: Record<string, number>[] = []
+      push(row: Record<string, number>) { this.#rows.push(row) }
+      pushMany(rows: Record<string, number>[]) { this.#rows.push(...rows) }
+      getData() { return this.#rows }
+      clear() { this.#rows = [] }
+      remove() { return [] }
+      update() { return [] }
+    }
+    const handle = new Handle()
+    Object.freeze(handle)
+    const { result } = renderHook(() => useStreamStatus<Handle>(), { wrapper })
+    act(() => { result.current.ref.current = handle })
+    act(() => { result.current.ref.current!.push({ x: 1 }) })
+    expect(result.current.status).toBe("active")
+    expect(result.current.ref.current!.getData()).toEqual([{ x: 1 }])
+    act(() => { result.current.ref.current!.clear() })
+    expect(handle.getData()).toEqual([])
   })
 })

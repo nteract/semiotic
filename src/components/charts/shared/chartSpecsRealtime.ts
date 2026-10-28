@@ -35,12 +35,12 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
       aggregate: {
         type: "object",
         description:
-          "Windowed event-time aggregation config. Structural changes replay controlled data; push-only streams begin a new aggregate epoch because raw events are not retained."
+          "Windowed event-time aggregation. Push retention defaults to windowSize (200) per series; controlled snapshots remain complete unless retain is set. Emission is coalesced per animation frame. idleAdvance closes partial windows during idle. Structural changes, including enabling new sketches, replay controlled data or reset push history."
       },
       eventTime: {
         type: "object",
         description:
-          "Out-of-order event buffering and lateness policy. Call RealtimeLineChartHandle.flush() when the source ends to release the grace-window tail in order."
+          "Out-of-order buffering with lateness and latePolicy. Optional maxFutureSkew rejects future-dated events; idleAdvance releases a quiet tail. Without idleAdvance, call RealtimeLineChartHandle.flush() at an ordering boundary."
       },
       transition: {
         type: "object",
@@ -373,6 +373,7 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: [],
     propBags: ["realtime"],
     ownProps: {
+      initialValue: { type: "number", default: 0, description: "Initial cumulative balance. Evicted deltas carry forward until clear() or controlled data replacement." },
       styleRules: STYLE_RULES_PROP_SPEC,
       positiveColor: { type: "string" },
       negativeColor: { type: "string" },

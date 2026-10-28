@@ -162,6 +162,7 @@ export const waterfallChart: ChartConfig = {
       : undefined
     return {
       chartType: "waterfall",
+      initialValue: rest.initialValue,
       data: plotData,
       xAccessor: needsIndex ? "__waterfallX" : xAcc,
       yAccessor: rest.yAccessor || "y",

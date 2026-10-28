@@ -197,3 +197,28 @@ describe("ReorderBuffer", () => {
     expect(rb.lateCount).toBe(0)
   })
 })
+
+
+describe("ReorderBuffer future and idle policies", () => {
+  it("rejects a poisoned watermark and continues to release real events", () => {
+    const rb = new ReorderBuffer<Pt>({ lateness: 100, getTime, maxFutureSkew: 60_000, now: () => 1_000 })
+    expect(rb.push({ t: 31_536_000_000, v: 0 }).future).toHaveLength(1)
+    expect(rb.watermark).toBe(-Infinity)
+    rb.push({ t: 1000, v: 1 })
+    expect(rb.push({ t: 1100, v: 2 }).released).toEqual([{ t: 1000, v: 1 }])
+    expect(rb.lateCount).toBe(0)
+    expect(rb.futureCount).toBe(1)
+    expect(rb.advanceIdle(100)).toEqual([{ t: 1100, v: 2 }])
+    expect(rb.push({ t: 1000, v: 3 }).late).toHaveLength(1)
+    rb.clear()
+    expect(rb.futureCount).toBe(0)
+    expect(rb.heldCount).toBe(0)
+  })
+  it("does not assume epoch timestamps when advancing a replay's quiet tail", () => {
+    const rb = new ReorderBuffer<Pt>({ lateness: 100, getTime })
+    rb.push({ t: 0, v: 1 })
+    expect(rb.advanceIdle(99)).toEqual([])
+    expect(rb.advanceIdle(1)).toEqual([{ t: 0, v: 1 }])
+    expect(rb.advanceIdle(100)).toEqual([])
+  })
+})

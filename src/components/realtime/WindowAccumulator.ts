@@ -100,6 +100,7 @@ export interface AggregatedWindow {
 }
 
 class WindowBucket {
+  snapshot?: AggregatedWindow
   readonly stats = new RunningStats()
   readonly digest: TDigest | null
   readonly hll: HyperLogLog | null
@@ -140,13 +141,14 @@ export class WindowAccumulator {
   private readonly size: number
   private readonly hop: number
   private readonly gap: number
-  private readonly retain: number
+  private retain: number
   private readonly percentiles: ReadonlyArray<number>
   private readonly wantDistinct: boolean
 
   // Tumbling / hopping: window-start (ms) → bucket.
   private windows = new Map<number, WindowBucket>()
   private starts: number[] = []
+  private sortedStarts: number[] | null = null
   // Session: sorted-by-start list of live sessions.
   private sessions: SessionEntry[] = []
 
@@ -155,13 +157,24 @@ export class WindowAccumulator {
 
   constructor(config: WindowAccumulatorConfig) {
     this.type = config.window ?? "tumbling"
-    this.size = config.size
-    // hop defaults to size (tumbling); clamp to (0, size].
-    const hop = config.hop ?? config.size
-    this.hop = hop > 0 && hop <= config.size ? hop : config.size
+    this.size = this.type === "session" ? config.gap ?? config.size : config.size
+    this.hop = config.hop ?? this.size
     this.gap = config.gap ?? config.size
-    this.retain =
-      config.retain != null && config.retain > 0 ? config.retain : Infinity
+    this.retain = config.retain ?? Infinity
+    for (const [name, value] of [["size", this.size], ["hop", this.hop], ["gap", this.gap]] as const) {
+      if (!Number.isFinite(value) || value <= 0) throw new RangeError(`WindowAccumulator ${name} must be a positive finite duration`)
+    }
+    if (!["tumbling", "hopping", "session"].includes(this.type)) throw new RangeError("Unknown aggregation window")
+    if (this.hop > this.size) throw new RangeError("WindowAccumulator hop must not exceed size")
+    if (this.type === "hopping" && Math.ceil(this.size / this.hop) > 1000) {
+      throw new RangeError("WindowAccumulator hopping fanout exceeds 1000 windows per event")
+    }
+    if (this.retain !== Infinity && (!Number.isInteger(this.retain) || this.retain < 1)) {
+      throw new RangeError("WindowAccumulator retain must be a positive integer or Infinity")
+    }
+    if (config.percentiles?.some(q => !Number.isFinite(q) || q < 0 || q > 1)) {
+      throw new RangeError("WindowAccumulator percentiles must be between 0 and 1")
+    }
     this.percentiles = config.percentiles ?? []
     this.wantDistinct = config.distinct === true
   }
@@ -201,10 +214,14 @@ export class WindowAccumulator {
     // contains it. Window starts are multiples of `hop`, with
     //   t - size < start ≤ t   ⇒   k in (floor((t-size)/hop), floor(t/hop)]
     const hop = this.hop
-    const kMax = Math.floor(time / hop)
-    const kMin = Math.floor((time - this.size) / hop) + 1
-    for (let k = kMin; k <= kMax; k++) {
-      this.bump(k * hop, value, distinctKey)
+    const newest = Math.floor(time / hop) * hop
+    let previous = Infinity
+    // Count iterations rather than incrementing a potentially unsafe integer
+    // timestamp quotient (k + 1 can equal k for large event times).
+    for (let offset = 0; offset < Math.ceil(this.size / hop); offset++) {
+      const start = newest - offset * hop
+      if (start > time - this.size && start !== previous && Number.isFinite(start)) this.bump(start, value, distinctKey)
+      previous = start
     }
   }
 
@@ -220,6 +237,7 @@ export class WindowAccumulator {
       if (this.windows.size >= this.retain && start < this.starts[0]) return
       bucket = this.newBucket()
       this.windows.set(start, bucket)
+      this.sortedStarts = null
       if (this.retain !== Infinity) heapPush(this.starts, start, compareStarts)
     }
     bucket.push(value, distinctKey)
@@ -271,6 +289,17 @@ export class WindowAccumulator {
     if (next > lo + 1) this.sessions.splice(lo + 1, next - lo - 1)
   }
 
+  setRetention(retain: number): void {
+    if (retain !== Infinity && (!Number.isInteger(retain) || retain < 1)) throw new RangeError("WindowAccumulator retain must be a positive integer or Infinity")
+    if (retain === this.retain) return
+    if (this.retain === Infinity && retain !== Infinity) {
+      this.starts = []
+      for (const start of this.windows.keys()) heapPush(this.starts, start, compareStarts)
+    }
+    this.retain = retain
+    this.prune()
+  }
+
   private prune(): void {
     if (this.retain === Infinity) return
     if (this.type === "session") {
@@ -281,6 +310,7 @@ export class WindowAccumulator {
     }
     while (this.windows.size > this.retain) {
       this.windows.delete(heapPop(this.starts, compareStarts)!)
+      this.sortedStarts = null
     }
   }
 
@@ -300,11 +330,12 @@ export class WindowAccumulator {
       })
     }
     const rows: AggregatedWindow[] = []
-    for (const [start, bucket] of this.windows) {
+    this.sortedStarts ??= [...this.windows.keys()].sort(compareStarts)
+    for (const start of this.sortedStarts) {
+      const bucket = this.windows.get(start)!
       const end = start + this.size
       rows.push(this.row(start, end, bucket, this.latest < end))
     }
-    rows.sort((a, b) => a.start - b.start)
     return rows
   }
 
@@ -315,6 +346,8 @@ export class WindowAccumulator {
     partial: boolean
   ): AggregatedWindow {
     const stats = bucket.stats
+    const cached = bucket.snapshot
+    if (cached && cached.count === stats.count && cached.start === start && cached.end === end && cached.partial === partial) return cached
     const row: AggregatedWindow = {
       start,
       end,
@@ -334,7 +367,13 @@ export class WindowAccumulator {
       row.percentiles = percentiles
     }
     if (bucket.hll) row.distinct = bucket.hll.count()
+    bucket.snapshot = row
     return row
+  }
+
+  /** Advance event time without fabricating an observation (opt-in idle release). */
+  advanceWatermark(time: number): void {
+    if (Number.isFinite(time)) this.latest = Math.max(this.latest, time)
   }
 
   /** Number of live windows (or sessions). */
@@ -350,6 +389,7 @@ export class WindowAccumulator {
   clear(): void {
     this.windows.clear()
     this.starts = []
+    this.sortedStarts = null
     this.sessions = []
     this.latest = -Infinity
   }

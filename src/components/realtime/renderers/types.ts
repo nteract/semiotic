@@ -5,6 +5,7 @@ export interface RendererOptions {
   binSize?: number
   barColors?: Record<string, string>
   barStyle?: BarStyle
+  initialValue?: number
   waterfallStyle?: WaterfallStyle
   swarmStyle?: SwarmStyle
 }

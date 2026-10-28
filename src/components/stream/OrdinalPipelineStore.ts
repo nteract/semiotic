@@ -1,3 +1,4 @@
+import { IngestActivity } from "./IngestActivity"
 import type { Datum } from "../charts/shared/datumTypes"
 /**
  * OrdinalPipelineStore — stateful pipeline for ordinal chart data.
@@ -105,6 +106,7 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
 
   // ── Staleness tracking ──────────────────────────────────────────────
   lastIngestTime = 0
+  readonly activity = new IngestActivity(() => this.config.activityClock?.() ?? this.currentTime())
 
   scales: OrdinalScales | null = null
   /** Per-accessor scales for multiAxis */
@@ -200,7 +202,7 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
     )
   }
 
-  /** Keep ingest, pulse, staleness, and transition timestamps on one clock. */
+  /** Keep pulse and transition timestamps on the logical animation clock. */
   private currentTime(): number {
     return this.config.clock?.() ?? getTimestamp()
   }
@@ -209,6 +211,7 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
 
   ingest(changeset: Changeset): boolean {
     const now = this.currentTime()
+    this.activity.touch()
     this.lastIngestTime = now
     this._dataVersion++
 
@@ -1333,6 +1336,7 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
     this._dataVersion++
     this.version++
     // A removal is data activity — refresh the staleness clock.
+    this.activity.touch()
     this.lastIngestTime = this.currentTime()
     this.updateResults.recordData("remove", removed.length)
     return removed
@@ -1365,6 +1369,7 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
     this.version++
     // An in-place update is data activity — refresh the staleness clock so a
     // chart streamed via update() (e.g. a refill demo) isn't flagged stale.
+    this.activity.touch()
     this.lastIngestTime = this.currentTime()
     this.updateResults.recordData("update", previous.length)
     return previous
@@ -1382,6 +1387,7 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
     this.prevPositionMap.clear()
     this.exitNodes = []
     this.activeTransition = null
+    this.activity.clear()
     this.lastIngestTime = 0
     this.scales = null
     this.scene = []

@@ -681,6 +681,7 @@ interface-member StreamXYFrameProps::property::heatmapYBins = optional heatmapYB
 interface-member StreamXYFrameProps::property::highAccessor = optional highAccessor: ((d: T) => number) | string | undefined
 interface-member StreamXYFrameProps::property::hoverAnnotation = optional hoverAnnotation: HoverAnnotationConfig | boolean | undefined
 interface-member StreamXYFrameProps::property::hoverRadius = optional hoverRadius: number | undefined
+interface-member StreamXYFrameProps::property::initialValue = optional initialValue: number | undefined
 interface-member StreamXYFrameProps::property::interactiveGraphics = optional interactiveGraphics: InteractiveGraphicsProp<StreamScales>
 interface-member StreamXYFrameProps::property::interactiveGraphicsLabel = optional interactiveGraphicsLabel: string | undefined
 interface-member StreamXYFrameProps::property::invertY = optional invertY: boolean | undefined
@@ -825,6 +826,7 @@ interface-member WaterfallChartProps::property::data = optional data: TDatum[] |
 interface-member WaterfallChartProps::property::enableHover = optional enableHover: boolean | undefined
 interface-member WaterfallChartProps::property::frameProps = optional frameProps: Partial<Omit<StreamXYFrameProps<Datum>, "chartType" | "data" | "size">> | undefined
 interface-member WaterfallChartProps::property::gap = optional gap: number | undefined
+interface-member WaterfallChartProps::property::initialValue = optional initialValue: number | undefined
 interface-member WaterfallChartProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
 interface-member WaterfallChartProps::property::legendPosition = optional legendPosition: LegendPosition | undefined
 interface-member WaterfallChartProps::property::negativeColor = optional negativeColor: string | undefined

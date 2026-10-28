@@ -158,6 +158,7 @@ export const NETWORK_CONFIG_PATCH_DEPENDENCIES: Readonly<
   layoutSelection: /* @__PURE__ */ dependency("preserve", STYLE),
 
   clock: /* @__PURE__ */ dependency("preserve", NOOP),
+  activityClock: /* @__PURE__ */ dependency("preserve", NOOP),
   random: /* @__PURE__ */ dependency("preserve", NOOP),
   seed: /* @__PURE__ */ dependency("preserve", NOOP),
   tensionConfig: /* @__PURE__ */ dependency("preserve", NOOP),

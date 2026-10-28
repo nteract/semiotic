@@ -87,3 +87,25 @@ describe("hasBand", () => {
     expect(hasBand({ size: 10, band: "minmax" })).toBe(true)
   })
 })
+
+
+it.each(["p50", "p95", "p99", "distinct"] as const)("automatically enables the sketch for %s", stat => {
+  const config = { size: 1000, stat }
+  const acc = createAccumulator(config)!
+  acc.push(1, 10)
+  acc.push(2, 20)
+  const row = aggregatedRows(acc, config)[0]
+  expect(Number.isFinite(row.value)).toBe(true)
+  expect(row.value).toBeGreaterThan(0)
+  if (stat === "distinct") expect(row.value).toBe(2)
+})
+it("reports malformed duration fields and accepts space-separated compounds", () => {
+  const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+  expect(createAccumulator({ size: "1 min" })).toBeNull()
+  expect(createAccumulator({ size: 1000, hop: "bad" })).toBeNull()
+  expect(warn).toHaveBeenCalledTimes(2)
+  warn.mockRestore()
+  const acc = createAccumulator({ size: "1m 30s" })!
+  acc.push(1, 10)
+  expect(acc.emit()[0]).toMatchObject({ start: 0, end: 90_000, count: 1 })
+})

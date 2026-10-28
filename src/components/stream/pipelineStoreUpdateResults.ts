@@ -167,6 +167,7 @@ export const XY_CONFIG_PATCH_DEPENDENCIES: Readonly<
   areaStyle: /* @__PURE__ */ dependency("preserve", STYLE),
   barStyle: /* @__PURE__ */ dependency("preserve", STYLE),
   swarmStyle: /* @__PURE__ */ dependency("preserve", STYLE),
+  initialValue: /* @__PURE__ */ dependency("preserve", DOMAIN_LAYOUT),
   waterfallStyle: /* @__PURE__ */ dependency("preserve", STYLE),
   candlestickStyle: /* @__PURE__ */ dependency("preserve", STYLE),
   boundsStyle: /* @__PURE__ */ dependency("preserve", STYLE),
@@ -190,6 +191,7 @@ export const XY_CONFIG_PATCH_DEPENDENCIES: Readonly<
   windowMode: /* @__PURE__ */ dependency("rebuild", DATA_INVALIDATIONS),
   maxCapacity: /* @__PURE__ */ dependency("rebuild", DATA_INVALIDATIONS),
   clock: /* @__PURE__ */ dependency("preserve", NOOP),
+  activityClock: /* @__PURE__ */ dependency("preserve", NOOP),
   transition: /* @__PURE__ */ dependency("preserve", NOOP),
   introAnimation: /* @__PURE__ */ dependency("preserve", NOOP),
   onLayoutError: /* @__PURE__ */ dependency("preserve", NOOP)

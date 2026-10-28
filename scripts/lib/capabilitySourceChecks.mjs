@@ -11,6 +11,7 @@ export const PUSH_HANDLE_CALLEES = Object.freeze([
   "usePhysicsChartData",
   "useProcessSankeyPush",
   "useRealtimeFrameHandle",
+  "useRealtimeLineIngestion",
   "useImperativeHandle"
 ])
 

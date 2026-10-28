@@ -265,6 +265,7 @@ interface-member GeoParticleStyle::property::opacity = optional opacity: number 
 interface-member GeoParticleStyle::property::radius = optional radius: number | undefined
 interface-member GeoParticleStyle::property::spawnRate = optional spawnRate: number | undefined
 interface-member GeoParticleStyle::property::speedMultiplier = optional speedMultiplier: number | undefined
+interface-member GeoPipelineConfig::property::activityClock = optional activityClock: (() => number) | undefined
 interface-member GeoPipelineConfig::property::annotations = optional annotations: Datum[] | undefined
 interface-member GeoPipelineConfig::property::areaStyle = optional areaStyle: ((d: GeoJSON.Feature) => Style) | Style | undefined
 interface-member GeoPipelineConfig::property::autoPlaceAnnotations = optional autoPlaceAnnotations: AutoPlaceAnnotations | undefined

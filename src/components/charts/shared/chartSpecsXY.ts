@@ -436,6 +436,7 @@ export const XY_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: ["xAccessor", "yAccessor"],
     propBags: ["common", "xyAxis"],
     ownProps: {
+      initialValue: { type: "number", default: 0, description: "Initial cumulative balance. Evicted deltas carry forward until clear() or controlled data replacement." },
       data: { type: "array", description: "Array of step/delta rows." },
       xAccessor: { type: ["string", "function"], default: "x" },
       yAccessor: { type: ["string", "function"], default: "y", description: "Signed delta for this step." },

@@ -31,6 +31,8 @@ export interface PipelineConfig {
   runtimeMode?: "streaming" | "bounded"
   /** Optional monotonic clock owned by a frame runtime or embedding host. */
   clock?: () => number
+  /** Wall clock for data freshness; animation continues to use `clock`. */
+  activityClock?: () => number
   windowSize: number
   windowMode: WindowMode
   arrowOfTime: ArrowOfTime
@@ -139,6 +141,8 @@ export interface PipelineConfig {
   pointStyle?: (d: Datum) => Style & { r?: number }
   areaStyle?: (d: Datum) => Style
   swarmStyle?: SwarmStyle
+  /** Starting cumulative balance for waterfall charts. @default 0 */
+  initialValue?: number
   waterfallStyle?: WaterfallStyle
   colorScheme?: string | string[] | Record<string, string>
   /** Theme categorical palette — used as fallback when colorScheme is not an explicit array */
