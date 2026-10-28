@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { OrdinalPipelineStore } from "./OrdinalPipelineStore"
-import { extractOrdinalNavPoints } from "./keyboardNav"
-import type { OrdinalPipelineConfig, OrdinalSceneNode } from "./ordinalTypes"
+import { buildNavGraph, nextGraphIndex, resolvePosition, extractOrdinalNavPoints } from "./keyboardNav"
+import type { OrdinalPipelineConfig } from "./ordinalTypes"
 
 function store(config: Partial<OrdinalPipelineConfig> = {}) {
   return new OrdinalPipelineStore({ chartType: "bar", windowSize: 100,
@@ -26,10 +26,17 @@ describe("ordinal navigation domain order", () => {
   })
 
   it("ranks radar data points before connectors without removing connectors", () => {
-    const scene = [
-      { type: "connector", x1: 0, y1: 0, x2: 10, y2: 10, style: {}, datum: { id: "edge" }, group: "series" },
-      { type: "point", x: 10, y: 10, datum: { id: "point" } }
-    ] as OrdinalSceneNode[]
-    expect(extractOrdinalNavPoints(scene).map(point => point.datum?.id)).toEqual(["point", "edge"])
+    const pipeline = store({ chartType: "point", projection: "radial", connectorAccessor: "series", connectorStyle: { stroke: "black", strokeWidth: 1 } })
+    pipeline.ingest({ inserts: ["A", "B", "C"].map((step, index) => ({ step, value: index + 1, series: "S", id: step })), bounded: true })
+    pipeline.computeScene({ width: 400, height: 300 })
+    expect(pipeline.scene[0].type).toBe("connector")
+    const points = extractOrdinalNavPoints(pipeline.scene)
+    expect(pipeline.scales!.o.domain()).toEqual(["C", "B", "A"])
+    expect(points.slice(0, 3).map(point => point.datum?.id)).toEqual(["C", "B", "A"])
+    expect(points.slice(0, 3).every(point => point.shape === "circle")).toBe(true)
+    expect(points.some(point => point.shape === "path")).toBe(true)
+    const graph = buildNavGraph(points, true)
+    const next = nextGraphIndex("ArrowRight", resolvePosition(graph, 0), graph)!
+    expect(graph.flat[next].datum?.id).toBe("B")
   })
 })
