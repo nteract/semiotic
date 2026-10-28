@@ -34,7 +34,9 @@ describe("ordinal keyboard identity through streaming mutations", () => {
       ref.current!.getData()
     })
     await waitFor(() => expect(tooltip()).toHaveTextContent("Alpha: 50"))
-    expect(frame.querySelector('[stroke-dasharray="4,2"]')).not.toBeNull()
+    const ring = frame.querySelector('[stroke-dasharray="4,2"]')
+    expect(Number(ring?.getAttribute("width"))).toBeGreaterThan(6)
+    expect(Number(ring?.getAttribute("height"))).toBeGreaterThan(6)
   })
 
   it.each(["boxplot", "violin", "ridgeline", "pie", "donut"] as const)(
