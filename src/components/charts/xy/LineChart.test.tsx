@@ -1,3 +1,4 @@
+import { enrichDatumWithBand } from "../../stream/xySceneBuilders/ribbonScene"
 import type { CapturedXYFrameProps } from "../../../test-utils/capturedFrameProps"
 import type { StreamXYFrameHandle } from "../../stream/types"
 import { vi } from "vitest"
@@ -598,6 +599,24 @@ describe("LineChart", () => {
     })
   })
 
+  it("groups prototype-key series in first-seen order", () => {
+    const data = [
+      { x: 1, y: 1, role: "constructor" },
+      { x: 2, y: 2, role: "constructor" },
+      { x: 3, y: 4, role: "toString" },
+      { x: 1, y: 5, role: "10" },
+      { x: 2, y: 6, role: "2" },
+    ]
+    render(
+      <TooltipProvider>
+        <LineChart data={data} xAccessor="x" yAccessor="y" lineBy="role" />
+      </TooltipProvider>
+    )
+    expect((lastXYFrameProps.data as Datum[]).map((d) => d.role)).toEqual([
+      "constructor", "constructor", "toString", "10", "2",
+    ])
+  })
+
   describe("gapStrategy", () => {
     const gapData = [
       { x: 1, y: 10, series: "A" },
@@ -633,6 +652,41 @@ describe("LineChart", () => {
       const replaced = forwarded.find((d: Datum) => d.x === 2)
       expect(replaced).toBeDefined()
       expect(replaced!.y).toBe(0)
+    })
+
+    it("plots function-accessor gaps at zero without copying the row", () => {
+      const data = [
+        { x: 1, metrics: { p95: 1 } },
+        { x: 2, metrics: { p95: null } },
+        { x: 3, metrics: { p95: 3 } },
+      ]
+      const yAccessor = (d: Datum) => d.metrics.p95 as number
+      render(
+        <TooltipProvider>
+          <LineChart data={data} xAccessor="x" yAccessor={yAccessor} gapStrategy="zero" />
+        </TooltipProvider>
+      )
+      const forwarded = lastXYFrameProps.data as Datum[]
+      const readY = lastXYFrameProps.yAccessor as (d: Datum) => number
+      expect(forwarded).toHaveLength(3)
+      expect(forwarded[1]).toBe(data[1])
+      expect(readY(data[1])).toBe(0)
+      expect(readY(data[0])).toBe(1)
+      expect(readY(data[2])).toBe(3)
+    })
+
+    it.each([[false, "start"], [false, "end"], [true, "start"], [true, "end"]] as const)("keeps copied grouped zero gaps and %s/%s label endpoints at zero", (objects, position) => {
+      const coordinates = [{ x: 1, value: NaN, series: "A" }, { x: 2, value: 4, series: "A" }, { x: 3, value: NaN, series: "A" }]
+      render(<LineChart data={objects ? [{ series: "A", coordinates }] : coordinates}
+        xAccessor="x" yAccessor={(d: Datum) => d.value} lineBy="series" colorBy="series"
+        gapStrategy="zero" directLabel={{ position }} />)
+      const readY = lastXYFrameProps.yAccessor as (d: Datum) => number
+      const rows = lastXYFrameProps.data as Datum[]
+      expect(rows.map(readY)).toEqual([0, 4, 0])
+      const enriched = enrichDatumWithBand(rows[0], [{ kind: "band", getTop: () => 1, getBottom: () => -1, perSeries: true, interactive: false }])
+      expect(enriched).not.toBe(rows[0])
+      expect(readY(enriched)).toBe(0)
+      expect(lastXYFrameProps.annotations).toEqual(expect.arrayContaining([expect.objectContaining({ y: 0 })]))
     })
 
     it("filters out null entries when gapStrategy is 'interpolate'", () => {
