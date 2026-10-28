@@ -166,11 +166,21 @@ const axisProps = [
   },
   {
     name: "extent",
-    type: '"nice" | "exact"',
+    type: '"nice" | "exact" | "rounded"',
     required: false,
     default: null,
     description:
-      'Per-axis override for chart-level axisExtent. "exact" pins first/last ticks to the domain endpoints; "nice" uses rounded tick intervals. On the left/right (value) axes, exact also skips y-domain extentPadding.',
+      'Per-axis override for chart-level axisExtent. "nice" draws round ticks inside the domain; "exact" includes its ends and skips value-axis padding. "rounded" widens open value-axis ends to round ticks after padding and final layout.',
+  },
+  {
+    name: "includeMin",
+    type: "boolean",
+    description: "Include domain[0] as a tick, replacing a nearby label if needed. Ignored for band axes, exact mode, or explicit tickValues.",
+  },
+  {
+    name: "includeMax",
+    type: "boolean",
+    description: "Include the final domain bound as a tick, replacing a nearby label if needed. Ignored for band axes, exact mode, or explicit tickValues.",
   },
   {
     name: "tickValues",
@@ -421,7 +431,52 @@ export default function AxesPage() {
       {/* ----------------------------------------------------------------- */}
       {/* Exact-extent axes */}
       {/* ----------------------------------------------------------------- */}
-      <h2 id="axis-extent">Exact vs. Nice Tick Endpoints</h2>
+      <h2 id="axis-extent">Nice, Exact, and Rounded Extents</h2>
+
+      <p>
+        Use <code>axisExtent="rounded"</code> for a value axis with a round, labeled top edge.
+        The frame adds <code>extentPadding</code>, then widens the open domain ends using
+        the tick count that fits its final plot size, including space reserved for a wrapped
+        legend. XY y axes and ordinal value axes support this mode; x axes keep their existing
+        domain and nice ticks. It works with pushed data and server rendering too.
+      </p>
+      <LiveExample
+        frameProps={{
+          data: [{ x: 0, y: 600 }, { x: 1, y: 1265 }, { x: 2, y: 900 }],
+          xAccessor: "x", yAccessor: "y", yExtent: [0], axisExtent: "rounded",
+          height: 160, margin: { top: 10, bottom: 40, left: 50, right: 20 },
+        }}
+        type={LineChart}
+        overrideProps={{}}
+        hiddenProps={{}}
+      />
+      <p>
+        A bound supplied through <code>yExtent</code> or <code>valueExtent</code> stays fixed:
+        <code>{" yExtent={[0]}"}</code> rounds only the upper end. Explicit <code>tickValues</code>
+        (ordinal <code>rTickValues</code>) disable domain rounding. A positive line series does
+        not gain a negative step from padding; all-negative histograms end at zero.
+        <code> includeMin</code> and <code>includeMax</code> are unnecessary on naturally rounded
+        ends, but can still label a pinned endpoint that falls between ticks.
+      </p>
+      <p>
+        For shared domains across small multiples, import <code>resolveAxisTickCount</code>
+        from <code>semiotic/utils</code>. Pass <code>size</code> as the final plot dimension
+        before <code>scalePadding</code>, <code>orientation: "vertical"</code> or
+        <code> "horizontal"</code>, and optionally <code>axis</code> and <code>axisExtent</code>.
+        The default request is five ticks, capped at one per 30px vertically or 70px
+        horizontally, with room for at least two. <code>ticks</code> takes precedence over
+        its alias <code>tickCount</code>. d3 treats the returned count as a hint.
+        Existing ordinal nice/exact modes retain their fixed request of five.
+      </p>
+      <CodeBlock code={`import { resolveAxisTickCount } from "semiotic/utils"
+
+resolveAxisTickCount({ size: 130, orientation: "vertical" }) // 4`} language="js" />
+      <p>
+        Resolved margins are already available in <code>renderChartWithEvidence</code>'s
+        <code> evidence.margin</code> and <code>evidence.plot</code>. In React,
+        <code> frameProps.foregroundGraphics</code> can receive a function with
+        <code> {"{ size, margin, scales }"}</code> for graphics positioned against the final layout.
+      </p>
 
       <p>
         By default every Semiotic chart uses d3-scale's <em>nice</em> tick algorithm: tick values
@@ -432,7 +487,7 @@ export default function AxesPage() {
         max, with equidistant intermediate ticks in between.
       </p>
 
-      <p>The prop is available on every XY and ordinal HOC and applies to:</p>
+      <p>Exact mode is available on every XY and ordinal HOC and applies to:</p>
       <ul>
         <li>
           <strong>XY charts</strong> — both x and y axes (linear, time, log)
@@ -447,7 +502,7 @@ export default function AxesPage() {
       </ul>
 
       <p>
-        Explicit <code>tickValues</code> still win over both modes. Use
+        Explicit <code>tickValues</code> still win over all modes. Use
         <code> "exact"</code> when you want the algorithm to do the work but the endpoints must read
         as the actual boundaries; reach for <code>tickValues</code> when you have hand-picked tick
         locations.
@@ -464,7 +519,7 @@ export default function AxesPage() {
 
       <p>
         <strong>Trade-off:</strong> exact mode on a <strong>value (y)</strong> axis also pins the
-        scale domain to the data extent — the usual 5% extent padding (which keeps symbols clear of
+        scale domain to the data extent — the usual extent padding (which keeps symbols clear of
         the plot edge) is skipped, so marks at the extremes sit on the plot boundary. Exact mode on
         the time/x axis only affects tick placement; x domains are not padded by{" "}
         <code>extentPadding</code>. If you need exact y labels <em>and</em> visual breathing room,
@@ -1089,10 +1144,13 @@ axes={[{
         hiddenProps={{}}
       />
 
-      <h3 id="include-max">Include Max Tick</h3>
+      <h3 id="include-max">Include Min and Max Ticks</h3>
       <p>
         Set <code>includeMax: true</code> to ensure the domain maximum always appears as a labeled
-        tick, even if d3's default tick generation skips it.
+        tick, even if d3's default tick generation skips it. <code>includeMin: true</code>
+        does the same for the first domain bound, including a pinned negative minimum.
+        Each option replaces a neighboring tick if the labels would overlap. Both are
+        ignored for band ticks, exact mode, and explicit tick values.
       </p>
 
       <LiveExample

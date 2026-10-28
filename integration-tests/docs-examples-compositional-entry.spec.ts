@@ -95,6 +95,27 @@ test("compositional docs demonstrate geometry, optimization, trace and exact dup
   )
   await page.mouse.move(0, 0)
   await expect(page.getByRole("tooltip")).toHaveCount(0)
+  // The owner covers its rows: smaller nested hit targets retain their datum.
+  await lab.locator('[data-part="orders:customer"] rect').click({ force: true })
+  await expect(page.getByLabel("Trace a connection upstream")).toHaveValue("")
+  await page.getByLabel("Trace a connection upstream").selectOption("output-customer")
+  const keyboardFrame = lab.locator(".stream-network-frame")
+  await keyboardFrame.focus()
+  await keyboardFrame.press("Home")
+  await expect(page.getByRole("tooltip")).toContainText("Order input")
+  await keyboardFrame.press("ArrowRight")
+  await expect(page.getByRole("tooltip")).toContainText("Copy fields")
+  await keyboardFrame.press("ArrowRight")
+  await expect(page.getByRole("tooltip")).toContainText("Invoice output")
+  await keyboardFrame.press("Enter")
+  await expect(page.getByRole("tooltip")).toContainText("Invoice output / Customer")
+  await keyboardFrame.press("ArrowDown")
+  await expect(page.getByRole("tooltip")).toContainText("Invoice output / Quantity")
+  await keyboardFrame.press("Escape")
+  await expect(page.getByRole("tooltip")).toContainText("Invoice output")
+  await expect(page.getByRole("tooltip")).not.toContainText("Quantity")
+  await keyboardFrame.press("Escape")
+  await expect(page.getByRole("tooltip")).toHaveCount(0)
   const wire = await hoverWire(page, "output-quantity")
   await page.mouse.click(wire.x, wire.y)
   await expect(page.getByLabel("Trace a connection upstream")).toHaveValue(
@@ -129,6 +150,20 @@ test("compositional docs demonstrate geometry, optimization, trace and exact dup
   await expect(page.getByTestId("dag-trace")).toHaveText(trace!)
   await page.getByLabel("DAG representation").selectOption("exploded")
   await expect(lab.locator("[data-part]")).toHaveCount(9)
+  const firstExplodedRow = await lab.locator('[data-part^="orders:"]').evaluateAll((rows) =>
+    rows.sort((a, b) => a.getBoundingClientRect().y - b.getBoundingClientRect().y)[0]
+      .querySelector("text")!.textContent
+  )
+  await keyboardFrame.focus()
+  await keyboardFrame.press("Home")
+  await expect(page.getByRole("tooltip")).toContainText("Order input")
+  await expect(page.getByRole("tooltip")).not.toContainText("Order input /")
+  await keyboardFrame.press("Enter")
+  await expect(page.getByRole("tooltip")).toContainText(`Order input / ${firstExplodedRow}`)
+  await keyboardFrame.press("Escape")
+  await expect(page.getByRole("tooltip")).not.toContainText("Order input /")
+  await keyboardFrame.press("Escape")
+  await expect(page.getByRole("tooltip")).toHaveCount(0)
   await expect(page.getByTestId("dag-trace")).toHaveText(trace!)
   await expect(lab.locator('[data-wire="output-quantity"]')).toHaveAttribute(
     "data-active",

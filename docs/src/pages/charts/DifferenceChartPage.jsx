@@ -154,7 +154,7 @@ const differenceChartProps = [
   { name: "gradientFill", type: "{ stops }", required: false, default: null, description: "Tip-to-base gradient using { stops: [{ offset: 0–1, color?, opacity? }] }." },
   { name: "xExtent", type: "[number, number]", required: false, default: null, description: "Fixed x domain. Either bound may be undefined." },
   { name: "yExtent", type: "[number, number]", required: false, default: null, description: "Fixed y domain. Either bound may be undefined." },
-  { name: "axisExtent", type: '"nice" | "exact"', required: false, default: '"nice"', description: "Tick endpoint mode (see /features/axes#axis-extent)." },
+  { name: "axisExtent", type: '"nice" | "exact" | "rounded"', required: false, default: '"nice"', description: "Tick endpoint mode (see /features/axes#axis-extent)." },
   { name: "pointIdAccessor", type: "string | function", required: false, default: null, description: "Stable ID accessor for push-mode remove()/update()." },
   { name: "windowSize", type: "number", required: false, default: null, description: "Maximum number of raw rows kept in the push buffer. When exceeded, oldest rows are evicted FIFO. Recommended for long-running streams so segment recomputation stays bounded." },
   { name: "annotations", type: "array", required: false, default: null, description: "Annotation objects (x-threshold, y-threshold, etc.)." },

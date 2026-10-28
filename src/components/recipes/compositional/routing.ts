@@ -1,4 +1,10 @@
-import type { PathCommand, PathSection, Point, Rect } from "./types"
+import type {
+  PathCommand,
+  PathSection,
+  Point,
+  Rect,
+  TerminalGeometry
+} from "./types"
 import { pointBounds } from "./geometry"
 
 const epsilon = 1e-8
@@ -257,4 +263,50 @@ export function flattened(section: PathSection): Point[] {
     }
   }
   return points.length ? points : [...section.points]
+}
+
+/** Direct chord or bump geometry. Terminal anchors are shared with obstacle routing. */
+export function terminalSection(
+  id: string,
+  source: TerminalGeometry,
+  target: TerminalGeometry,
+  start: Point = source.escape,
+  end: Point = target.escape,
+  bump = false,
+  horizontal = true
+): PathSection {
+  const points = [
+    source.anchor,
+    source.escape,
+    ...(distance(start, source.escape) ? [start] : []),
+    ...(distance(end, target.escape) ? [end] : []),
+    target.escape,
+    target.anchor
+  ]
+  if (!bump) return { id, points, bounds: pointBounds(points) }
+  const midpoint = horizontal ? (start.x + end.x) / 2 : (start.y + end.y) / 2
+  const control1 = horizontal
+    ? { x: midpoint, y: start.y }
+    : { x: start.x, y: midpoint }
+  const control2 = horizontal
+    ? { x: midpoint, y: end.y }
+    : { x: end.x, y: midpoint }
+  const commands: PathCommand[] = [
+    { kind: "M", point: source.anchor },
+    { kind: "L", point: source.escape },
+    ...(distance(start, source.escape)
+      ? [{ kind: "L" as const, point: start }]
+      : []),
+    { kind: "C", control1, control2, point: end },
+    ...(distance(end, target.escape)
+      ? [{ kind: "L" as const, point: target.escape }]
+      : []),
+    { kind: "L", point: target.anchor }
+  ]
+  return {
+    id,
+    points,
+    commands,
+    bounds: pointBounds([...points, control1, control2])
+  }
 }

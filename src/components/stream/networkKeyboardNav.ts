@@ -1,5 +1,7 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import type { NetworkSceneEdge, NetworkSceneNode } from "./networkTypes"
+import { findNearestSpatial } from "./networkSpatialNavigation"
+import { groupedNetworkIndex } from "./networkNavGroups"
 import { glyphHitGeometry } from "./glyphDef"
 import {
   nextGraphIndex,
@@ -24,6 +26,7 @@ export function extractNetworkNavPoints(scene: NetworkSceneNode[]): NavPoint[] {
   // nav graph or focus would start on an off-canvas invisible node.
   for (const node of scene) {
     if (!node.datum) continue
+    const before = points.length
     if (node.type === "circle" && node.cx != null) {
       if (node.r <= 0) continue
       points.push({
@@ -74,10 +77,16 @@ export function extractNetworkNavPoints(scene: NetworkSceneNode[]): NavPoint[] {
         group: node.datum.id ?? "_default"
       })
     }
+    if (points.length > before) {
+      const point = points[points.length - 1]
+      point.navId =
+        node.id ?? (node.datum.id == null ? undefined : String(node.datum.id))
+      point.navParentId = node.navParentId
+    }
   }
 
   for (const point of points)
-    if (point.datum?.id != null) point.semanticKey = String(point.datum.id)
+    if (point.navId != null) point.semanticKey = point.navId
 
   points.sort((a, b) => a.x - b.x || a.y - b.y)
   return points
@@ -104,6 +113,8 @@ export function nextNetworkIndex(
   edges: EdgeLike[],
   neighborIndexRef: { current: number }
 ): number | null {
+  const grouped = groupedNetworkIndex(key, pos.flatIndex, graph)
+  if (grouped !== undefined) return grouped
   const currentPoint = graph.flat[pos.flatIndex]
   if (!currentPoint) return nextGraphIndex(key, pos, graph)
 
@@ -172,51 +183,6 @@ export function nextNetworkIndex(
       return result
     }
   }
-}
-
-/** Find the nearest node in a cardinal direction from a reference point. */
-function findNearestSpatial(
-  graph: NavGraph,
-  from: NavPoint,
-  direction: "right" | "left" | "up" | "down"
-): number | null {
-  let bestIdx: number | null = null
-  let bestDist = Infinity
-
-  for (let i = 0; i < graph.flat.length; i++) {
-    const p = graph.flat[i]
-    if (p === from) continue
-
-    const dx = p.x - from.x
-    const dy = p.y - from.y
-
-    // Check if the candidate is in the correct direction
-    // Use a cone: primary axis delta must exceed cross-axis delta
-    let inDirection = false
-    switch (direction) {
-      case "right":
-        inDirection = dx > 0 && Math.abs(dx) >= Math.abs(dy)
-        break
-      case "left":
-        inDirection = dx < 0 && Math.abs(dx) >= Math.abs(dy)
-        break
-      case "down":
-        inDirection = dy > 0 && Math.abs(dy) >= Math.abs(dx)
-        break
-      case "up":
-        inDirection = dy < 0 && Math.abs(dy) >= Math.abs(dx)
-        break
-    }
-
-    if (!inDirection) continue
-
-    const dist = dx * dx + dy * dy
-    if (dist < bestDist) {
-      bestDist = dist
-      bestIdx = i
-    }
-  }
-  return bestIdx
 }
 
 /** Collect neighbor node ids from edge list for a given node. */

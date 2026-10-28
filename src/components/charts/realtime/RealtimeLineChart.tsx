@@ -600,6 +600,7 @@ export const RealtimeLineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */
       }
       xExtent={timeExtent}
       yExtent={valueExtent}
+      axisExtent={props.axisExtent}
       extentPadding={extentPadding}
       band={frameBand}
       lineStyle={interactiveLineStyle ?? lineStyleWithPrimitives}

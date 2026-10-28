@@ -1,3 +1,4 @@
+import authoredRowAnchorsSource from "./authoredRowAnchors.ts?raw"
 import React, { useMemo, useState, useCallback } from "react"
 import { XYCustomChart } from "../../../../src/components/charts/custom/XYCustomChart"
 import { NetworkCustomChart } from "../../../../src/components/charts/custom/NetworkCustomChart"
@@ -821,6 +822,32 @@ import { lineageDagLayout } from "semiotic/recipes"
           and legal row swaps with bounded work. It reports infeasible pins, missing anchors,
           unsupported compound routing, and shared-channel congestion through diagnostics.
         </p>
+        <p>
+          When the application draws its own curves, set <code>routing: "terminals"</code>.
+          It computes exact attachments without obstacle routing; crossings describe escape-to-escape
+          chords, with zero congestion and bends. Exact duplicates retain distinct lanes. Use
+          <code>routing: "bump"</code> for a midpoint cubic with straight terminal stubs;
+          this mode also ignores obstacles and measures curves with 24 samples.
+          Same-owner connections default to <code>route: "none"</code>; an edge hint can override
+          that with <code>route: "auto"</code>. Unrouted connections keep their terminals and
+          trace identity but do not contribute to routing metrics or bundles.
+        </p>
+        <p>
+          Model an operator chain step as a same-owner connection from one row's out-port to
+          the next row's in-port. Declare a transfer from each row's in-port to its out-port
+          so tracing can pass through it. Keep operator order fixed; permit optimization only
+          when row order has no semantic meaning. When every owner has <code>pin: "both"</code>,
+          optimization changes rows without rank placement, including compound graphs and cyclic
+          owner projections. Semantic cycles still require <code>topology: "feedback"</code>;
+          use that option for cyclic owner projections when the solver places owners too.
+        </p>
+        <p>
+          Overlapping rect scene nodes prefer the smaller rectangle; equal areas prefer the
+          deeper node. Nodes take priority over edges. Set a row's <code>navParentId</code> to
+          its owner's scene ID: arrows move between owners, Enter descends into rows, and Escape
+          ascends. Arrows and Home/End stay among siblings. Accessible tables include a group
+          column for child rows when the authored accessible data does not already provide one. Scene IDs must be unique even when local row IDs repeat.
+        </p>
         <CodeBlock language="jsx">{`import { NetworkCustomChart } from "semiotic/network"
 import {
   prepareCompositionalGraph, routeCompositionalGraph,
@@ -870,13 +897,53 @@ const layoutConfig = { prepared, solved, showParts: true }
           No worker or optional optimizer dependency is loaded automatically. Cancellation of the
           built-in synchronous solve discards stale results; it cannot interrupt an executing sweep.
         </p>
+        <CodeBlock language="ts">{`// topology.worker.ts (a module worker owned by the application)
+import { installCompositionalWorker } from "semiotic/recipes/core"
+installCompositionalWorker(self)
+
+// Main thread; use the same worker alongside other protocols with distinct message types.
+import { createCompositionalWorkerEngine, CompositionalLayoutController } from "semiotic/recipes/core"
+const engine = createCompositionalWorkerEngine(worker)
+const controller = new CompositionalLayoutController()
+await controller.solve({ ...request,
+  requestId: [chartId, structuralKey, revision].join(":")
+}, engine)
+// revision must advance for every request, including retries and cancelled requests.
+// On teardown: controller.dispose(); engine.dispose(); worker.terminate()`}</CodeBlock>
+        <h3>Fallback for applications still on 3.13.2</h3>
+        <p>
+          On 3.13.2, an orthogonal routing failure makes the entire result infeasible.
+          A consumer drawing its own curves from authored LR cards can recompute anchors
+          from its current rectangles when diagnostics report <code>ROUTING_NO_PATH</code>
+          or <code>ROUTING_LANE_SPACE</code>. Do this before deciding to retain a previous
+          solution, including on the first solve. With <code>CompositionalLayoutController</code>,
+          inspect the boolean returned by <code>solve</code> and its diagnostics; a retained
+          <code>controller.solution</code> is not fresh geometry after failure. Each row anchor is its vertical center
+          on the card's right source edge or left target edge. This fallback is consumer
+          geometry, not a feasible orthogonal routing result; retain the routing diagnostic.
+        </p>
+        <p>
+          The following recipe needs no newer runtime. Pass current world-space card positions
+          and owner-local row rectangles; map folded rows to their authored proxy rectangles.
+          Missing rows are an input error. For node-level header attachments, supply a header
+          rectangle as a row; omitted row IDs use the card center. It preserves duplicate edge
+          IDs and must be recomputed after layout changes. After upgrading, prefer
+          <code>routing: "terminals"</code>. Keep the consumer fallback if duplicate-lane
+          clearance failures must also leave row edges visible.
+        </p>
+        <CodeBlock language="ts">{authoredRowAnchorsSource}</CodeBlock>
         <p>
           <code>CompositionalNavigator</code> from <code>semiotic/recipes/react</code> supplies
-          keyboard access to parts and ports. Stable glyph visibility and camera changes reuse
+          keyboard access to parts and ports. <code>useCompositionalInterfaces(prepared, ownerId)</code>
+          from the same entry returns semantic <code>items</code> (ref, label, kind),
+          <code>isRemoved(selected)</code>, <code>onOwnerKeyDown(event, focus)</code> and
+          <code>onItemKeyDown(event, index, focus)</code>. Supply <code>focusOwner()</code> and
+          <code>focusItem(index)</code> callbacks to use your own controls and theme.
+          Stable glyph visibility and camera changes reuse
           solved geometry. Explicit scrolling can use <code>projectCompositionalScroll</code>
           with horizontal boundary slots to disclose clipped rows as continuation proxies.
           <code>CompositionalMeasurementTransaction</code> caps host measurement corrections at
-          two. General compound optimization, free port permutations and arbitrary interior
+          two. Unpinned compound optimization, free port permutations and arbitrary interior
           routing corridors require another adapter. See the working controls, trace, individual
           duplicate selection and shared HTML row geometry in the{" "}
           <Link to="/examples/pipeline-explorer">compositional Pipeline Explorer</Link>.

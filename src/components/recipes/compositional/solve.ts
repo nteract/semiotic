@@ -5,7 +5,6 @@ import type {
   LayoutRequest,
   NodeMeasure,
   Point,
-  RoutedConnection,
   SolvedCompositionalLayout,
   PlacedNode
 } from "./types"
@@ -14,7 +13,6 @@ import {
   compareIds,
   CompositionalGraphError,
   compositionalEndpointKey,
-  endpoint,
   fail,
   freeze
 } from "./identity"
@@ -26,15 +24,12 @@ import {
   validateGeometry
 } from "./geometry"
 import { measureRoutes } from "./metrics"
-import { project, terminal, validateView } from "./projection"
+import type { Projection } from "./projection"
+import { project, validateView } from "./projection"
+import { distance } from "./routing"
+import { createEdgeRouter } from "./edgeRouting"
 import {
-  compact,
-  distance,
-  orthogonalRoute,
-  routeSection,
-  segmentBlocked
-} from "./routing"
-import {
+  allOwnersPinned,
   initialPositions,
   placeRanks,
   projectedRanks,
@@ -94,7 +89,9 @@ function validateOptions(request: LayoutRequest): void {
   if (
     !["route-only", "optimize"].includes(o.mode) ||
     !["strict-dag", "feedback"].includes(o.topology) ||
-    !["orthogonal", "polyline", "smooth"].includes(o.routing) ||
+    !["orthogonal", "polyline", "smooth", "terminals", "bump"].includes(
+      o.routing
+    ) ||
     !["none", "parallel", "overview"].includes(o.bundles) ||
     !["LR", "RL", "TB", "BT"].includes(request.view.direction)
   )
@@ -120,6 +117,7 @@ function validateOptions(request: LayoutRequest): void {
   )
   if (
     o.mode === "optimize" &&
+    !allOwnersPinned(request) &&
     request.prepared.graph.nodes.some((n) => n.parentId)
   )
     fail(
@@ -127,22 +125,23 @@ function validateOptions(request: LayoutRequest): void {
       "Compound graphs require authored positions in this adapter."
     )
   const hints = new Set<string>()
+  const edgeIds = new Set(request.prepared.graph.edges.map((e) => e.id))
   for (const hint of request.view.edgeHints ?? []) {
-    if (
-      hints.has(hint.edgeId) ||
-      !request.prepared.graph.edges.some((e) => e.id === hint.edgeId)
-    )
+    if (hints.has(hint.edgeId) || !edgeIds.has(hint.edgeId))
       fail(
         "IDENTITY_EDGE_HINT",
         "Edge hints must refer to unique existing edges."
       )
     hints.add(hint.edgeId)
+    if (hint.route !== undefined && !["auto", "none"].includes(hint.route))
+      fail("CAPABILITY_OPTIONS", "Unknown edge routing hint.")
     if (hint.priority !== undefined) finite(hint.priority, "priority")
   }
 }
 function baseResult(request: LayoutRequest): SolvedCompositionalLayout {
   return {
     schemaVersion: "semiotic.compositional-layout.v0.1",
+    direction: request.view.direction,
     requestId: request.requestId,
     semanticHash: request.prepared.semanticHash,
     graphRevision: request.prepared.graph.revision,
@@ -173,184 +172,44 @@ function baseResult(request: LayoutRequest): SolvedCompositionalLayout {
   }
 }
 
+interface SolveContext {
+  projection?: Projection
+  ranks?: Map<string, number>
+  routeEdges: ReturnType<typeof createEdgeRouter>
+}
 function solveAt(
   request: LayoutRequest,
   measures: Map<string, NodeMeasure>,
   positions: Map<string, Point>,
-  orders: Map<string, string[]>
+  orders: Map<string, string[]>,
+  context: SolveContext
 ): SolvedCompositionalLayout {
-  const projection = project(request, measures, positions, orders)
-  const rankMap = projectedRanks(request, projection)
+  const projection = project(
+    request,
+    measures,
+    positions,
+    orders,
+    context.projection
+  )
+  context.projection = projection
+  const rankMap = (context.ranks ??= projectedRanks(request, projection))
   const horizontal =
     request.view.direction === "LR" || request.view.direction === "RL"
-  const diagnostics: Diagnostic[] = [],
-    edges: RoutedConnection[] = []
-  const hints = new Map(request.view.edgeHints?.map((h) => [h.edgeId, h]))
-  const sorted = [...request.prepared.graph.edges].sort(
-    (a, b) =>
-      compareIds(
-        hints.get(a.id)?.laneId ?? "",
-        hints.get(b.id)?.laneId ?? ""
-      ) || compareIds(a.id, b.id)
+  const diagnostics: Diagnostic[] = []
+  const { edges, hints, sorted, excluded } = context.routeEdges(
+    projection,
+    rankMap
   )
-  const pairKey = (e: (typeof sorted)[number]) =>
-    JSON.stringify([
-      compositionalEndpointKey(endpoint(e.source, e.sourceEndpoint)),
-      compositionalEndpointKey(endpoint(e.target, e.targetEndpoint))
-    ])
-  const duplicateGroups = new Map<string, string[]>()
-  for (const e of sorted) {
-    const k = pairKey(e),
-      group = duplicateGroups.get(k) ?? []
-    group.push(e.id)
-    duplicateGroups.set(k, group)
-  }
-  const ownerPairs = new Map<string, string[]>()
-  for (const edge of sorted) {
-    const key = JSON.stringify([edge.source, edge.target])
-    const group = ownerPairs.get(key) ?? []
-    group.push(edge.id)
-    ownerPairs.set(key, group)
-  }
-  const owners = projection.nodes.filter(
-    (n) => n.semantic.endpoint.kind === "node"
-  )
-  const pad = request.options.obstaclePadding
-  const obstacles = owners.map((n) => ({
-    x: n.rect.x - pad,
-    y: n.rect.y - pad,
-    width: n.rect.width + 2 * pad,
-    height: n.rect.height + 2 * pad
-  }))
-  const compound = request.prepared.graph.nodes.some((n) => n.parentId)
-  for (const edge of sorted) {
-    const source = terminal(
-      request,
-      projection,
-      edge.id,
-      endpoint(edge.source, edge.sourceEndpoint),
-      "source"
-    )
-    const target = terminal(
-      request,
-      projection,
-      edge.id,
-      endpoint(edge.target, edge.targetEndpoint),
-      "target"
-    )
-    const group = duplicateGroups.get(pairKey(edge))!
-    const lane =
-      (group.indexOf(edge.id) - (group.length - 1) / 2) *
-      request.options.laneGap
-    if (
-      group.length > 1 &&
-      request.options.laneGap === 0 &&
-      request.options.bundles === "none"
-    )
-      fail(
-        "ROUTING_COINCIDENT",
-        "Exact duplicates require lane space or an explicit bundle.",
-        { edgeIds: group }
-      )
-    // Retain common terminal stubs, then fan out perpendicular to the normal.
-    const move = (p: Point, normal: Point): Point => ({
-      x: p.x - normal.y * lane,
-      y: p.y + normal.x * lane
-    })
-    const start = move(source.escape, source.normal),
-      end = move(target.escape, { x: -target.normal.x, y: -target.normal.y })
-    if (
-      compound &&
-      owners.some(
-        (n) =>
-          n.id !== source.displayNodeId &&
-          n.id !== target.displayNodeId &&
-          n.id !== edge.source &&
-          n.id !== edge.target &&
-          [source.anchor, target.anchor].some(
-            (p) =>
-              p.x > n.rect.x &&
-              p.x < n.rect.x + n.rect.width &&
-              p.y > n.rect.y &&
-              p.y < n.rect.y + n.rect.height
-          )
-      )
-    )
-      fail(
-        "CAPABILITY_COMPOUND_ROUTING",
-        "Cross-hierarchy routing needs collapsed authored boundary exposures.",
-        { edgeIds: [edge.id] }
-      )
-    const exploded =
-      source.displayNodeId !== edge.source ||
-      target.displayNodeId !== edge.target
-    const routeObstacles = exploded
-      ? obstacles.filter(
-          (_, i) =>
-            !(
-              (source.displayNodeId !== edge.source &&
-                owners[i].id === edge.source) ||
-              (target.displayNodeId !== edge.target &&
-                owners[i].id === edge.target)
-            )
-        )
-      : obstacles
-    if (
-      segmentBlocked(source.escape, start, routeObstacles) ||
-      segmentBlocked(end, target.escape, routeObstacles)
-    )
-      fail(
-        "ROUTING_LANE_SPACE",
-        "Pinned terminal lanes have insufficient clearance.",
-        { edgeIds: [edge.id] }
-      )
-    const siblings = ownerPairs.get(JSON.stringify([edge.source, edge.target]))!
-    const channel =
-      (siblings.indexOf(edge.id) - (siblings.length - 1) / 2) *
-      request.options.laneGap
-    const middle = orthogonalRoute(
-      start,
-      end,
-      routeObstacles,
-      channel,
-      horizontal
-    )
-    if (!middle)
-      fail(
-        "ROUTING_NO_PATH",
-        "No route found within the adapter's visibility-grid budget.",
-        { edgeIds: [edge.id] }
-      )
-    const points = compact([
-      source.anchor,
-      source.escape,
-      ...middle,
-      target.escape,
-      target.anchor
-    ])
-    const section = routeSection(
-      JSON.stringify([edge.id, "route"]),
-      points,
-      request.options.routing === "smooth",
-      routeObstacles
-    )
-    const owner = (id: string) => projection.hidden.get(id) ?? id
-    const feedback =
-      owner(edge.source) !== owner(edge.target) &&
-      rankMap.get(owner(edge.source))! >= rankMap.get(owner(edge.target))!
-    edges.push({
-      edgeId: edge.id,
-      source,
-      target,
-      sections: [section],
-      bounds: section.bounds,
-      feedback
-    })
-  }
   const aligned = new Set(
     sorted.filter((e) => hints.get(e.id)?.alignment !== "none").map((e) => e.id)
   )
-  const { metrics, partial } = measureRoutes(edges, horizontal, aligned)
+  const { metrics, partial } = measureRoutes(
+    edges,
+    horizontal,
+    aligned,
+    request.options.routing,
+    excluded
+  )
   if (metrics.channelCongestion > 1e-8)
     diagnostics.push({
       code: "ROUTING_CONGESTION",
@@ -372,18 +231,23 @@ function solveAt(
       severity: "warning",
       message: "Attachment geometry is provisional."
     })
-  if (request.options.routing === "smooth")
+  if (
+    request.options.routing === "smooth" ||
+    request.options.routing === "bump"
+  )
     diagnostics.push({
       code: "ROUTING_CURVE_METRICS",
       severity: "info",
       message:
-        "Curve length and crossings use 24 samples per corner; bounds use conservative control envelopes."
+        "Curve length and crossings use 24 samples per cubic; bounds use conservative control envelopes."
     })
+  const byEdgeId = new Map(sorted.map((e) => [e.id, e]))
   const bundles: BundleGeometry[] = []
   if (request.options.bundles !== "none") {
-    const groups = new Map<string, RoutedConnection[]>()
+    const groups = new Map<string, typeof edges>()
     for (const route of edges) {
-      const e = sorted.find((e) => e.id === route.edgeId)!
+      if (excluded.has(route.edgeId)) continue
+      const e = byEdgeId.get(route.edgeId)!
       const id = JSON.stringify([
         "bundle",
         route.source.displayNodeId,
@@ -408,15 +272,13 @@ function solveAt(
           path: members[0].sections,
           count: members.length,
           countStatus: "exact",
-          semanticKind:
-            sorted.find((e) => e.id === members[0].edgeId)?.kind ??
-            "unspecified"
+          semanticKind: byEdgeId.get(members[0].edgeId)?.kind ?? "unspecified"
         })
   }
   return {
     ...baseResult(request),
     status:
-      partial ||
+      (partial && request.options.routing !== "terminals") ||
       metrics.channelCongestion > 1e-8 ||
       request.geometry.basis === "estimated"
         ? "degraded"
@@ -486,7 +348,7 @@ export function routeCompositionalGraph(
     for (const n of request.view.nodes)
       if (n.partLayout?.kind === "rows")
         orders.set(n.nodeId, orderIds(n.partLayout.order))
-    if (request.options.mode === "optimize") {
+    if (request.options.mode === "optimize" && !allOwnersPinned(request)) {
       const graph = request.prepared.graph
       const map = ranks(
         graph.nodes.map((n) => n.id),
@@ -507,14 +369,26 @@ export function routeCompositionalGraph(
         positions
       )
     }
-    let best = solveAt(request, measures, positions, orders),
+    const context: SolveContext = { routeEdges: createEdgeRouter(request) }
+    const hints = new Map(request.view.edgeHints?.map((h) => [h.edgeId, h]))
+    const alignable = new Set(
+      request.prepared.graph.edges
+        .filter(
+          (e) =>
+            hints.get(e.id)?.alignment !== "none" &&
+            (hints.get(e.id)?.route ??
+              (e.source === e.target ? "none" : "auto")) !== "none"
+        )
+        .map((e) => e.id)
+    )
+    let best = solveAt(request, measures, positions, orders, context),
       score = objective(best, request, orders),
       completedSweeps = 0,
       candidates = 0
     const tryCandidate = () => {
       candidates++
       try {
-        const next = solveAt(request, measures, positions, orders),
+        const next = solveAt(request, measures, positions, orders, context),
           value = objective(next, request, orders)
         if (value + 1e-8 < score) {
           best = next
@@ -564,11 +438,7 @@ export function routeCompositionalGraph(
           const c = request.view.constraints?.find((c) => c.nodeId === n.id)
           if (c?.pin === "both" || c?.pin === (horizontal ? "y" : "x")) continue
           const differences = best.edges
-            .filter(
-              (e) =>
-                request.view.edgeHints?.find((h) => h.edgeId === e.edgeId)
-                  ?.alignment !== "none"
-            )
+            .filter((e) => alignable.has(e.edgeId))
             .flatMap((e) =>
               ownerByDisplay.get(e.source.displayNodeId) === n.id
                 ? [

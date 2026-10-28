@@ -25,7 +25,8 @@
  * explicit `tickValues` (e.g. `[1, 10, 100, 1000]`) — those bypass
  * `axisExtent` entirely.
  */
-export type AxisExtentMode = "nice" | "exact"
+/** "rounded" also widens open value-domain ends during scale construction. */
+export type AxisExtentMode = "nice" | "exact" | "rounded"
 
 /** A d3-style continuous scale (linear, time, log) — the bit we use.
  *  The `domain()` return type stays as `number[]` / `Date[]` rather
@@ -54,19 +55,14 @@ export function equidistantTicks<T extends number | Date>(scale: TickableScale<T
   const lo = domain[0]
   const hi = domain[domain.length - 1]
   const isDate = lo instanceof Date
-  const loVal = lo instanceof Date ? lo.getTime() : (lo as number)
-  const hiVal = hi instanceof Date ? hi.getTime() : (hi as number)
-
-  if (count < 2 || loVal === hiVal) {
-    return (isDate
-      ? [new Date(loVal), new Date(hiVal)]
-      : [loVal, hiVal]) as T[]
-  }
+  const loVal = +lo
+  const hiVal = +hi
+  if (count < 2 || loVal === hiVal) count = 2
 
   const step = (hiVal - loVal) / (count - 1)
   const out: T[] = new Array(count)
   for (let i = 0; i < count; i++) {
-    const val = i === count - 1 ? hiVal : loVal + i * step
+    const val = i === 0 ? loVal : i === count - 1 ? hiVal : loVal + i * step
     out[i] = (isDate ? new Date(val) : val) as T
   }
   return out
