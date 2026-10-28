@@ -55,6 +55,7 @@ export class FrameRuntime {
   private clock: FrameClock
   private lastWallTime: number
   private logicalTime: number
+  private wallTime: number
   private randomInput: FrameRandom | undefined
   private randomSource: FrameRandom = Math.random
   private seedValue: number | undefined
@@ -64,6 +65,11 @@ export class FrameRuntime {
 
   /** Stable callable seam for stores and render loops. */
   readonly now = (): number => this.advance()
+  /** Freshness time keeps advancing while animation is paused or hidden. */
+  readonly wallNow = (): number => {
+    this.advance()
+    return this.wallTime
+  }
   /** Stable callable seam for stochastic renderers. */
   readonly random = (): number => this.randomSource()
 
@@ -71,6 +77,7 @@ export class FrameRuntime {
     this.clock = options.clock ?? defaultClock
     this.lastWallTime = readClock(this.clock, 0)
     this.logicalTime = this.lastWallTime
+    this.wallTime = this.lastWallTime
     this.pausedValue = options.paused === true
     this.visibleValue = options.visible !== false
     this.setRandomSource(options.random, options.seed)
@@ -129,6 +136,7 @@ export class FrameRuntime {
     const wallTime = readClock(this.clock, this.lastWallTime)
     const elapsed = Math.max(0, wallTime - this.lastWallTime)
     this.lastWallTime = wallTime
+    this.wallTime += elapsed
     if (this.isActive) this.logicalTime += elapsed
     return this.logicalTime
   }

@@ -42,7 +42,7 @@ const FRESH: ResolvedStaleness = { alpha: 1, band: "fresh", isStale: false }
 
 /**
  * Resolve the dimming + band for a given idle duration. Pure — the
- * render path computes idle from `now - lastIngestTime` each paint and
+ * render path reads wall-clock idle time from the activity tracker each paint and
  * the staleness poll uses the same function to decide when to repaint.
  *
  * `idleMs` of 0 (no data yet) is treated as fresh.

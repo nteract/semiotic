@@ -319,14 +319,15 @@ export function resolveCenteredBinXDomain(
 export function waterfallCumulativeEnds(
   data: Iterable<Datum>,
   getX: (d: Datum) => number,
-  getY: (d: Datum) => number
+  getY: (d: Datum) => number,
+  initialValue = 0
 ): number[] {
   const values: number[] = []
-  let cumulative = 0
+  let cumulative = initialValue
   for (const datum of data) {
     const value = getY(datum)
     const x = getX(datum)
-    if (value == null || Number.isNaN(value) || x == null || !isFinite(x as number)) continue
+    if (value == null || !Number.isFinite(value) || x == null || !isFinite(x as number)) continue
     cumulative += value
     values.push(cumulative)
   }
@@ -338,11 +339,12 @@ export function resolveWaterfallYDomain(
   getX: (d: Datum) => number,
   getY: (d: Datum) => number,
   extentPadding: number,
-  exactMode: boolean
+  exactMode: boolean,
+  initialValue = 0
 ): [number, number] {
-  let minCum = 0
-  let maxCum = 0
-  for (const cumulative of waterfallCumulativeEnds(buffer, getX, getY)) {
+  let minCum = initialValue
+  let maxCum = initialValue
+  for (const cumulative of waterfallCumulativeEnds(buffer, getX, getY, initialValue)) {
     if (cumulative < minCum) minCum = cumulative
     if (cumulative > maxCum) maxCum = cumulative
   }

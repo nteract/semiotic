@@ -34,6 +34,14 @@ describe("check-capabilities push-handle detection", () => {
     )
   })
 
+  it("recognizes the invoked aggregation bridge and verifies its imperative implementation", () => {
+    assert.equal(sourceWiresPushHandle('import { useRealtimeLineIngestion } from "./useRealtimeLineIngestion"'), false)
+    assert.equal(sourceWiresPushHandle("useRealtimeLineIngestion(ref, frameRef, windowSize, props)"), true)
+    assert.equal(sourceWiresPushHandle("useRealtimeLineIngestionFactory(ref)"), false)
+    const bridge = readFileSync(resolve(realtimeDir, "useRealtimeLineIngestion.ts"), "utf8")
+    assert.match(bridge, /useImperativeHandle\s*</)
+  })
+
   it("recognizes typed bespoke React handles", () => {
     assert.equal(
       sourceWiresPushHandle(

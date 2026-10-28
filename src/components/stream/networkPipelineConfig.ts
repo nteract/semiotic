@@ -65,6 +65,7 @@ export type NetworkPipelineConfigSources = Pick<
   | "layoutConfig"
   | "perspective"
 > & {
+  activityClock?: () => number
   tensionConfig: NetworkPipelineConfig["tensionConfig"]
   showParticles: boolean
   particleStyle: NetworkPipelineConfig["particleStyle"]

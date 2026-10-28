@@ -407,11 +407,12 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       introAnimation: introEnabled,
       staleness,
       clock: frameRuntime.now,
+      activityClock: frameRuntime.wallNow,
       customLayout,
       onLayoutError,
       layoutConfig,
       layoutMargin: margin,
-    }), [chartType, isStreaming, windowSize, maxCapacity, windowMode, extentPadding, projection, effectiveOAccessor, effectiveRAccessor, accessorRevision, colorAccessor, symbolAccessor, symbolMap, stackBy, groupBy, multiAxis, timeAccessor, valueAccessor, rExtent, oExtent, axisExtent, rTickValues, barPadding, roundedTop, gradientFill, trackFill, baselinePadding, innerRadius, cornerRadius, normalize, startAngle, sweepAngle, dynamicColumnWidth, bins, showOutliers, showIQR, amplitude, connectorOpacity, showLabels, connectorAccessor, connectorStyle, dataIdAccessor, oSort, pieceStyle, summaryStyle, colorScheme, currentTheme, barColors, decay, pulse, transition, introEnabled, staleness, frameRuntime.now, customLayout, onLayoutError, layoutConfig, margin])
+    }), [chartType, isStreaming, windowSize, maxCapacity, windowMode, extentPadding, projection, effectiveOAccessor, effectiveRAccessor, accessorRevision, colorAccessor, symbolAccessor, symbolMap, stackBy, groupBy, multiAxis, timeAccessor, valueAccessor, rExtent, oExtent, axisExtent, rTickValues, barPadding, roundedTop, gradientFill, trackFill, baselinePadding, innerRadius, cornerRadius, normalize, startAngle, sweepAngle, dynamicColumnWidth, bins, showOutliers, showIQR, amplitude, connectorOpacity, showLabels, connectorAccessor, connectorStyle, dataIdAccessor, oSort, pieceStyle, summaryStyle, colorScheme, currentTheme, barColors, decay, pulse, transition, introEnabled, staleness, frameRuntime.now, frameRuntime.wallNow, customLayout, onLayoutError, layoutConfig, margin])
 
     // Stabilize the config reference so inline-object / inline-array
     // props don't shed identity every parent render. See
@@ -730,8 +731,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
 
       // Staleness dimming
       const staleThreshold = staleness?.threshold ?? 5000
-      const currentlyStale = staleness && store.lastIngestTime > 0 &&
-          now - store.lastIngestTime > staleThreshold
+      const currentlyStale = staleness && store.activity.elapsed() > staleThreshold
 
       if (currentlyStale) {
         ctx.globalAlpha = staleness?.dimOpacity ?? 0.5
@@ -804,7 +804,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     }
 
     // Staleness check timer
-    useStalenessCheck(staleness, storeRef, dirtyRef, scheduleRender, frameRuntime.now, isStale, setIsStale)
+    useStalenessCheck(staleness, storeRef, dirtyRef, scheduleRender, isStale, setIsStale)
 
     // ── Tooltip positioning ──────────────────────────────────────────────
 
@@ -1139,14 +1139,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
             width={size[0]} height={size[1]} />
         )}
 
-        {staleness?.showBadge && (
-          <StalenessBadge
-            isStale={isStale}
-            position={staleness.badgePosition}
-            state={staleness.state}
-            settling={staleness.settling}
-          />
-        )}
+
         <FocusRing
           active={kbFocusIndexRef.current >= 0}
           hoverPoint={hoverPoint}
@@ -1159,6 +1152,14 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
         />
         {tooltipElement}
         </div>{/* end role="img" */}
+        {staleness?.showBadge && (
+          <StalenessBadge
+            isStale={isStale}
+            position={staleness.badgePosition}
+            state={staleness.state}
+            settling={staleness.settling}
+          />
+        )}
         {/* Controls stay outside role="img" so assistive technology reaches them. */}
         <FrameInteractiveLayer
           graphics={interactiveGraphics}

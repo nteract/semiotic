@@ -305,6 +305,7 @@ const COMMON_FRAME_PROP_KEYS = [
   "areaStyle",
   "barStyle",
   "waterfallStyle",
+  "initialValue",
   "swarmStyle",
   "pieceStyle",
   "summaryStyle",

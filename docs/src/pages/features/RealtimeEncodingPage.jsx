@@ -298,6 +298,13 @@ export default function RealtimeEncodingPage() {
       {/* Staleness */}
       {/* ----------------------------------------------------------------- */}
       <h2 id="staleness">Staleness</h2>
+      <p>
+        Freshness uses elapsed wall time, including time spent paused or in a hidden tab;
+        pulse and transition animations retain their paused logical clock. The badge uses theme
+        status colors with contrasting text and announces changes through a polite live region.
+        <code>useStreamStatus</code> also observes chart-specific push overrides and publishes
+        timestamps at its polling cadence, so ingestion does not rerender the parent on every push.
+      </p>
 
       <p>
         When the data feed stops, the chart dims and optionally shows a

@@ -337,6 +337,8 @@ export interface NetworkPipelineConfig {
 
   /** Frame-owned logical clock for ingest, live encodings, and transitions. */
   clock?: import("./FrameRuntime").FrameClock
+  /** Wall clock for data freshness; animation continues to use `clock`. */
+  activityClock?: () => number
   /** Frame-local random source used by synchronous force layout. */
   random?: import("./FrameRuntime").FrameRandom
   /** Serializable deterministic seed, including the force-worker protocol. */

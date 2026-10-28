@@ -223,6 +223,7 @@ for (const e of specEntries) {
   //     the HOC source stays under the file-size budget).
   //   - `useRealtimeFrameHandle` — the canonical ref bridge shared by
   //     realtime HOCs that do not need a chart-specific handle extension.
+  //   - `useRealtimeLineIngestion` — the aggregation/reordering handle bridge.
   // The shared hooks are preferred; the raw call is the fallback for
   // charts whose ref API legitimately needs custom plumbing. All
   // signal that the chart exposes a working `ref.current.push`.

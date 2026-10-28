@@ -1,3 +1,5 @@
+import { ThemeProvider } from "../ThemeProvider"
+import { contrastRatio } from "../charts/shared/colorContrast"
 import { render } from "@testing-library/react"
 import { StalenessBadge } from "./StalenessBadge"
 
@@ -41,4 +43,16 @@ describe("StalenessBadge", () => {
     rerender(<StalenessBadge isStale={false} settling />)
     expect(getByText("SETTLING")).toBeInTheDocument()
   })
+})
+
+it.each(["light", "dark", "high-contrast"] as const)("keeps all %s status labels at text contrast and announces changes", theme => {
+  for (const state of ["live", "stale", "stopped", "failed", "settling"] as const) {
+    const result = render(<ThemeProvider theme={theme}><StalenessBadge isStale={false} state={state} /></ThemeProvider>)
+    const badge = result.getByRole("status")
+    const hex = (css: string) => "#" + css.match(/\d+/g)!.slice(0, 3).map(value => Number(value).toString(16).padStart(2, "0")).join("")
+    expect(contrastRatio(hex(badge.style.backgroundColor), hex(badge.style.color))).toBeGreaterThanOrEqual(4.5)
+    expect(badge.textContent).toBe(state.toUpperCase())
+    expect(badge.getAttribute("aria-atomic")).toBe("true")
+    result.unmount()
+  }
 })

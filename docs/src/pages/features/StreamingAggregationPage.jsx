@@ -406,6 +406,24 @@ export default function StreamingAggregationPage() {
       </div>
 
       {/* ----------------------------------------------------------------- */}
+      <p>
+        Live aggregate retention defaults to <code>windowSize</code> (200 windows per series).
+        Set <code>retain</code> to override it, or <code>Infinity</code> to retain every window.
+        Controlled data snapshots keep their full history unless <code>retain</code> is set.
+        Pushes publish at most once per animation frame; <code>getData()</code> reads the latest aggregates immediately.
+        Percentile and distinct statistics enable their sketches automatically. Enabling a new sketch resets push history;
+        preconfigure <code>percentiles</code> and <code>distinct</code> to switch readouts without a reset.
+        Window durations accept compounds such as <code>"1m 30s"</code>. Invalid durations report a development warning;
+        invalid numeric window settings or hopping fanout above 1,000 windows per event throw an error.
+      </p>
+      <p>
+        Set <code>{`aggregate={{ size: "1s", idleAdvance: true }}`}</code> to close partial windows during quiet periods.
+        With reordering, also set <code>eventTime.idleAdvance</code> to release its quiet tail.
+        Idle advancement uses elapsed wall time and is opt-in for replay streams.
+        Set <code>eventTime.maxFutureSkew</code> (milliseconds or a duration string) to reject timestamps
+        too far ahead of <code>Date.now()</code> before they can advance the watermark.
+      </p>
+
       <h2 id="event-time">Event-time ingestion</h2>
 
       <p>

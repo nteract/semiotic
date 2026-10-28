@@ -15,6 +15,7 @@ import {
   type WindowType,
   type AggregateStat,
   type AggregateBand,
+  type AggregatedWindow,
 } from "../../realtime/WindowAccumulator"
 import { parseWindowDuration } from "../../realtime/parseWindowDuration"
 import type { Datum } from "../shared/datumTypes"
@@ -27,7 +28,9 @@ import type { Datum } from "../shared/datumTypes"
  * arrival rate. Structural window changes start a new accumulator epoch:
  * controlled `data` is replayed, while push-only history resets because the
  * transform does not retain every raw event. `stat`, `band`,
- * and `sigma` are readout-only and update existing windows in place.
+ * and `sigma` update existing windows in place when the required sketches are
+ * already enabled. Selecting a percentile or distinct stat enables its sketch
+ * automatically; enabling a new sketch starts a new epoch.
  */
 export interface AggregateConfig {
   /** Window kind. @default "tumbling" */
@@ -44,18 +47,21 @@ export interface AggregateConfig {
   band?: AggregateBand
   /** Multiplier for the `stddev` band (drawn as value ± sigma·σ). @default 1 */
   sigma?: number
-  /** Keep at most this many most-recent windows per series. @default unbounded */
+  /** Keep at most this many recent windows per series. Push charts default to windowSize (200); bounded data defaults to unbounded. Use Infinity to opt out. */
   retain?: number
   /**
-   * Quantiles to emit per window (e.g. `[0.5, 0.95, 0.99]`). Structural:
+   * Quantiles to emit per window (e.g. `[0.5, 0.95, 0.99]`). Percentile stats
+   * automatically enable p50/p95/p99. Structural:
    * changing this rebuilds the accumulator (same as `window` / `size`).
    */
   percentiles?: ReadonlyArray<number>
   /**
-   * Track an approximate distinct count per window. Structural: changing
+   * Track an approximate distinct count per window (automatic for stat="distinct"). Structural: changing
    * this rebuilds the accumulator.
    */
   distinct?: boolean
+  /** Advance partial windows with elapsed wall time during idle periods. Default false. */
+  idleAdvance?: boolean
 }
 
 // Field names on the emitted frame rows. Underscored synthetic keys are
@@ -84,8 +90,8 @@ export interface AggregatedRealtimeDatum extends Datum {
 
 /**
  * Build a `WindowAccumulator` from a config, parsing duration strings.
- * Returns `null` when the window width is unparseable, so the caller can
- * skip aggregation rather than bucket on a zero-width window.
+ * Returns `null` with a development warning for unparseable durations. Numeric
+ * configuration violations (including excessive hopping fanout) throw RangeError.
  */
 export function createAccumulator(config: AggregateConfig): WindowAccumulator | null {
   const window = config.window ?? "tumbling"
@@ -95,10 +101,13 @@ export function createAccumulator(config: AggregateConfig): WindowAccumulator | 
     window === "session"
       ? parseWindowDuration(config.gap ?? config.size)
       : parseWindowDuration(config.size)
-  if (sizeMs == null) return null
-
   const hopMs = config.hop != null ? parseWindowDuration(config.hop) : undefined
   const gapMs = config.gap != null ? parseWindowDuration(config.gap) : undefined
+  if (sizeMs == null || hopMs === null || gapMs === null) {
+    if (process.env.NODE_ENV !== "production") console.warn("[Semiotic] Invalid aggregate duration; use positive milliseconds or strings such as '1m 30s'.")
+    return null
+  }
+  const percentileStat = config.stat?.startsWith("p") === true || !!config.percentiles?.length
 
   return new WindowAccumulator({
     window,
@@ -106,8 +115,8 @@ export function createAccumulator(config: AggregateConfig): WindowAccumulator | 
     hop: hopMs ?? undefined,
     gap: gapMs ?? undefined,
     retain: config.retain,
-    percentiles: config.percentiles,
-    distinct: config.distinct,
+    percentiles: percentileStat ? [...new Set([...(config.percentiles ?? []), 0.5, 0.95, 0.99])] : config.percentiles,
+    distinct: config.distinct || config.stat === "distinct",
   })
 }
 
@@ -117,6 +126,8 @@ export function createAccumulator(config: AggregateConfig): WindowAccumulator | 
  * bounds (when a band is configured), and provenance fields (`count`,
  * partial flag, raw start/end) for tooltips and partial-window styling.
  */
+const rowCache = new WeakMap<AggregatedWindow, { key: string; row: AggregatedRealtimeDatum }>()
+
 export function aggregatedRows(
   acc: WindowAccumulator,
   config: AggregateConfig
@@ -125,7 +136,10 @@ export function aggregatedRows(
   const band: AggregateBand = config.band ?? "none"
   const sigma = config.sigma ?? 1
 
+  const key = `${stat}|${band}|${sigma}`
   return acc.emit().map((w) => {
+    const cached = rowCache.get(w)
+    if (cached?.key === key) return cached.row
     const row: AggregatedRealtimeDatum = {
       [AGG_TIME]: (w.start + w.end) / 2,
       [AGG_VALUE]: statValue(w, stat),
@@ -139,6 +153,7 @@ export function aggregatedRows(
       row[AGG_LOWER] = bounds[0]
       row[AGG_UPPER] = bounds[1]
     }
+    rowCache.set(w, { key, row })
     return row
   })
 }

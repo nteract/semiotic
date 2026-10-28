@@ -212,3 +212,9 @@ describe("WaterfallChart", () => {
     expect(container.querySelector(".stream-xy-frame")).toBeFalsy()
   })
 })
+
+it("forwards linked x-position crosshairs", () => {
+  render(<LinkedCharts><WaterfallChart data={sample} xAccessor="step" yAccessor="value" linkedHover={{ mode: "x-position", name: "shared-time" }} /></LinkedCharts>)
+  expect(lastXYFrameProps.linkedCrosshairName).toBe("shared-time")
+  expect(typeof lastXYFrameProps.linkedCrosshairSourceId).toBe("string")
+})

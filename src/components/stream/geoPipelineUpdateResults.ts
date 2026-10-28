@@ -129,6 +129,7 @@ export const GEO_CONFIG_PATCH_DEPENDENCIES: Readonly<
   autoPlaceAnnotations: /* @__PURE__ */ dependency("preserve", OVERLAY),
 
   clock: /* @__PURE__ */ dependency("preserve", NOOP),
+  activityClock: /* @__PURE__ */ dependency("preserve", NOOP),
   transition: /* @__PURE__ */ dependency("preserve", NOOP),
   introAnimation: /* @__PURE__ */ dependency("preserve", NOOP),
   onLayoutError: /* @__PURE__ */ dependency("preserve", NOOP),

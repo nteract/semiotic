@@ -25,9 +25,12 @@ class-member IncrementalExtent::method::evict = required evict(value: number): v
 class-member IncrementalExtent::method::push = required push(value: number): void
 class-member IncrementalExtent::method::recalculate = required recalculate<T>(values: Iterable<T>, accessor?: ((v: T) => number) | undefined): void
 class-member ReorderBuffer::construct::%24construct = required new <T>(config: ReorderBufferConfig<T>): ReorderBuffer<T>
+class-member ReorderBuffer::get::futureCount = get futureCount: number
 class-member ReorderBuffer::get::heldCount = get heldCount: number
 class-member ReorderBuffer::get::lateCount = get lateCount: number
+class-member ReorderBuffer::get::releaseWatermark = get releaseWatermark: number
 class-member ReorderBuffer::get::watermark = get watermark: number
+class-member ReorderBuffer::method::advanceIdle = required advanceIdle(elapsed: number): T[]
 class-member ReorderBuffer::method::clear = required clear(): void
 class-member ReorderBuffer::method::flush = required flush(): T[]
 class-member ReorderBuffer::method::push = required push(item: T): ReorderResult<T>
@@ -69,9 +72,11 @@ class-member TDigest::method::quantile = required quantile(q: number): number
 class-member WindowAccumulator::construct::%24construct = required new (config: WindowAccumulatorConfig): WindowAccumulator
 class-member WindowAccumulator::get::watermark = get watermark: number
 class-member WindowAccumulator::get::windowCount = get windowCount: number
+class-member WindowAccumulator::method::advanceWatermark = required advanceWatermark(time: number): void
 class-member WindowAccumulator::method::clear = required clear(): void
 class-member WindowAccumulator::method::emit = required emit(): AggregatedWindow[]
 class-member WindowAccumulator::method::push = required push(time: number, value: number, distinctKey?: number | string | undefined): void
+class-member WindowAccumulator::method::setRetention = required setRetention(retain: number): void
 const DEFAULT_LIFECYCLE_THRESHOLDS: Required<LifecycleBandThresholds>
 function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function MultiPointTooltip({ xFormat, yFormat }?: undefined | {xFormat?: (Date | string | value: number) => React.ReactNode; yFormat?: (value: number, group?: string) => React.ReactNode;}): TooltipContentFn
@@ -172,6 +177,7 @@ interface-member AggregateConfig::property::band = optional band: AggregateBand 
 interface-member AggregateConfig::property::distinct = optional distinct: boolean | undefined
 interface-member AggregateConfig::property::gap = optional gap: number | string | undefined
 interface-member AggregateConfig::property::hop = optional hop: number | string | undefined
+interface-member AggregateConfig::property::idleAdvance = optional idleAdvance: boolean | undefined
 interface-member AggregateConfig::property::percentiles = optional percentiles: readonly number[] | undefined
 interface-member AggregateConfig::property::retain = optional retain: number | undefined
 interface-member AggregateConfig::property::sigma = optional sigma: number | undefined
@@ -234,8 +240,10 @@ interface-member DecayConfig::property::halfLife = optional halfLife: number | u
 interface-member DecayConfig::property::minOpacity = optional minOpacity: number | undefined
 interface-member DecayConfig::property::stepThreshold = optional stepThreshold: number | undefined
 interface-member DecayConfig::property::type = required type: "exponential" | "linear" | "step"
+interface-member EventTimeConfig::property::idleAdvance = optional idleAdvance: boolean | undefined
 interface-member EventTimeConfig::property::latePolicy = optional latePolicy: LatePolicy | undefined
 interface-member EventTimeConfig::property::lateness = required lateness: number | string
+interface-member EventTimeConfig::property::maxFutureSkew = optional maxFutureSkew: number | string | undefined
 interface-member GradientLegendConfig::property::colorFn = required colorFn: (value: number) => string
 interface-member GradientLegendConfig::property::domain = required domain: [number, number]
 interface-member GradientLegendConfig::property::format = optional format: ((v: number) => string) | undefined
@@ -620,6 +628,7 @@ interface-member RealtimeWaterfallChartProps::property::enableHover = optional e
 interface-member RealtimeWaterfallChartProps::property::extentPadding = optional extentPadding: number | undefined
 interface-member RealtimeWaterfallChartProps::property::gap = optional gap: number | undefined
 interface-member RealtimeWaterfallChartProps::property::height = optional height: number | undefined
+interface-member RealtimeWaterfallChartProps::property::initialValue = optional initialValue: number | undefined
 interface-member RealtimeWaterfallChartProps::property::legendInteraction = optional legendInteraction: LegendInteractionMode | undefined
 interface-member RealtimeWaterfallChartProps::property::legendPosition = optional legendPosition: LegendPosition | undefined
 interface-member RealtimeWaterfallChartProps::property::linkedHover = optional linkedHover: LinkedHoverProp | undefined
@@ -665,6 +674,9 @@ interface-member RealtimeWaterfallChartProps::property::windowSize = optional wi
 interface-member ReorderBufferConfig::property::getTime = required getTime: (item: T) => number
 interface-member ReorderBufferConfig::property::latePolicy = optional latePolicy: LatePolicy | undefined
 interface-member ReorderBufferConfig::property::lateness = required lateness: number
+interface-member ReorderBufferConfig::property::maxFutureSkew = optional maxFutureSkew: number | undefined
+interface-member ReorderBufferConfig::property::now = optional now: (() => number) | undefined
+interface-member ReorderResult::property::future = optional future: T[] | undefined
 interface-member ReorderResult::property::late = required late: T[]
 interface-member ReorderResult::property::released = required released: T[]
 interface-member ResolvedMotionEncodingRow::property::accessible = required accessible: {description?: string; group?: string; label: string;}
@@ -862,6 +874,7 @@ interface-member StreamXYFrameProps::property::heatmapYBins = optional heatmapYB
 interface-member StreamXYFrameProps::property::highAccessor = optional highAccessor: ((d: T) => number) | string | undefined
 interface-member StreamXYFrameProps::property::hoverAnnotation = optional hoverAnnotation: HoverAnnotationConfig | boolean | undefined
 interface-member StreamXYFrameProps::property::hoverRadius = optional hoverRadius: number | undefined
+interface-member StreamXYFrameProps::property::initialValue = optional initialValue: number | undefined
 interface-member StreamXYFrameProps::property::interactiveGraphics = optional interactiveGraphics: InteractiveGraphicsProp<StreamScales>
 interface-member StreamXYFrameProps::property::interactiveGraphicsLabel = optional interactiveGraphicsLabel: string | undefined
 interface-member StreamXYFrameProps::property::invertY = optional invertY: boolean | undefined

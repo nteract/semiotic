@@ -99,7 +99,13 @@ const analyze = process.argv.includes("--analyze")
 // This is the measured retention/extent/interaction payload after sharing
 // mutation handles and replacement scheduling. Keep <0.3 KiB headroom;
 // cold-consumer baselines and tree-shaking isolation limits stay unchanged.
-const MULTI_IMPORT_GZIP_BUDGET = 316.5 * 1024
+// Realtime aggregate/balance/freshness contracts (#1344/#1345/#1357): clean
+// 03bfb99f2 -> feature with identical Node 22.22.2/dependencies measures
+// 323,872 -> 325,685 bytes (316.28 -> 318.05 KiB), still 28 files. Bounded
+// aggregate caches, idle/future policies, and shared wall-clock activity account
+// for this intentional runtime cost; no dependency or graph duplication.
+// Keep ~0.25 KiB headroom; all cold-consumer/isolation limits remain fixed.
+const MULTI_IMPORT_GZIP_BUDGET = 318.3 * 1024
 
 const MULTI_IMPORT_SOURCE = `
 export { LineChart } from "semiotic/xy"

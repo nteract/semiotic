@@ -51,6 +51,11 @@ export default function WaterfallChartPage() {
       />
 
       <p>
+        Set <code>initialValue</code> to start from an existing balance (default 0).
+        In push mode, evicted deltas carry forward so the visible total remains cumulative.
+        <code>clear()</code> and a new controlled data snapshot restart from that initial balance.
+      </p>
+      <p>
         WaterfallChart draws cumulative signed steps as floating bars. Each row
         is a delta. For a live window of the same geometry, use
         RealtimeWaterfallChart.

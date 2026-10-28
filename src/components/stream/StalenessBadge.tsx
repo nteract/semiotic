@@ -1,3 +1,5 @@
+import { useTheme } from "../store/useTheme"
+import { contrastRatio } from "../charts/shared/colorContrast"
 import type { SourceLiveness, StalenessConfig } from "./types"
 
 interface StalenessBadgeProps {
@@ -40,11 +42,17 @@ export function StalenessBadge({
   settling,
 }: StalenessBadgeProps) {
   const kind = resolveStalenessBadgeState(isStale, state, settling)
-  const background = BADGE_COLORS[kind] ?? BADGE_COLORS.live
+  const { colors } = useTheme()
+  const background = ({ live: colors.success, stale: colors.danger, stopped: colors.textSecondary,
+    failed: colors.error, settling: colors.warning })[kind] ?? BADGE_COLORS[kind]
+  const color = (contrastRatio(background, "#ffffff") ?? 0) >= 4.5 ? "#ffffff" : "#000000"
   const label = Object.hasOwn(BADGE_COLORS, kind) ? kind.toUpperCase() : "LIVE"
   return (
     <div
       className="stream-staleness-badge"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
       style={{
         position: "absolute",
         ...(position === "top-left"
@@ -61,7 +69,7 @@ export function StalenessBadge({
         pointerEvents: "none",
         zIndex: 3,
         background,
-        color: "white"
+        color
       }}
     >
       {label}

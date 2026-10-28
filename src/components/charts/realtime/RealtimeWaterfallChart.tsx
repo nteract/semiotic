@@ -136,6 +136,8 @@ export interface RealtimeWaterfallChartProps<
   /** Mark transition configuration. */
   transition?: TransitionConfig
   /** Color for positive (gain) bars */
+  /** Initial cumulative balance. Evicted deltas carry forward until clear or data replacement. */
+  initialValue?: number
   positiveColor?: string
   /** Color for negative (loss) bars */
   negativeColor?: string
@@ -465,6 +467,7 @@ export const RealtimeWaterfallChart = /* @__PURE__ */ withDisplayName(/* @__PURE
         ref={frameRef}
       {...getCrosshairProps(linkedHover, crosshairSourceId)}
         chartType="waterfall"
+        initialValue={props.initialValue}
         runtimeMode="streaming"
         size={resolvedSize}
         maxDevicePixelRatio={props.maxDevicePixelRatio}

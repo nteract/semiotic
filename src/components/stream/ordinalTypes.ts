@@ -362,8 +362,10 @@ export interface OrdinalPipelineConfig {
   /** Whether to animate elements on first render (bars grow from baseline, wedges sweep in) */
   introAnimation?: boolean
   staleness?: StalenessConfig
-  /** Frame-owned logical clock for ingest, pulse, staleness, and transitions. */
+  /** Frame-owned logical clock for ingest, pulse, and transitions. */
   clock?: import("./FrameRuntime").FrameClock
+  /** Wall clock for data freshness; animation continues to use `clock`. */
+  activityClock?: () => number
 
   // ── customLayout escape hatch ────────────────────
   /** When provided, replaces chart-type dispatch in scene building.

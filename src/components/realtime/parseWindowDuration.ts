@@ -22,7 +22,7 @@ const UNIT_MS: Record<string, number> = {
 
 // One `<number><unit>` term. `ms` must precede `m`/`s` in the alternation
 // so the longer unit wins (regex alternation is leftmost-eager).
-const TERM = /(\d+(?:\.\d+)?)(ms|s|m|h|d)/g
+const TERM = /(\d+(?:\.\d+)?)(ms|s|m|h|d)\s*/g
 
 /**
  * Parse a window duration to milliseconds.
@@ -52,6 +52,7 @@ export function parseWindowDuration(spec: number | string): number | null {
     const amount = parseFloat(match[1])
     const unit = UNIT_MS[match[2]]
     if (unit == null || !Number.isFinite(amount)) return null
+    if (match.index !== matchedLength) return null
     total += amount * unit
     matchedLength += match[0].length
   }
@@ -59,5 +60,5 @@ export function parseWindowDuration(spec: number | string): number | null {
   // Reject strings with leftover junk ("1m!", "abc", "10") — every
   // character must belong to a recognized term.
   if (matchedLength !== trimmed.length) return null
-  return total > 0 ? total : null
+  return Number.isFinite(total) && total > 0 ? total : null
 }

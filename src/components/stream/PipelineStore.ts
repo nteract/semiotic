@@ -1,3 +1,4 @@
+import { IngestActivity } from "./IngestActivity"
 import { requestsSelectionProvenance } from "../store/selectionProvenance"
 import type { Datum } from "../charts/shared/datumTypes"
 /**
@@ -121,6 +122,17 @@ export class PipelineStore extends UpdateResultStoreBase {
   private buffer: RingBuffer<Datum>
   private xExtent = new SlidingExtent()
   private yExtent = new SlidingExtent()
+  private waterfallCarry = 0
+  private get waterfallBaseline(): number {
+    return (Number.isFinite(this.config.initialValue) ? this.config.initialValue! : 0) + this.waterfallCarry
+  }
+
+  private carryWaterfall(d: Datum): void {
+    if (this.config.chartType !== "waterfall") return
+    const value = this.getY(d)
+    if (Number.isFinite(value) && Number.isFinite(this.getX(d))) this.waterfallCarry += value
+  }
+
   private config: PipelineConfig
   private liveWindow = true
   private growingCapacityWarned = false
@@ -158,8 +170,9 @@ export class PipelineStore extends UpdateResultStoreBase {
 
   // ── Staleness tracking ──────────────────────────────────────────────
   lastIngestTime = 0
+  readonly activity = new IngestActivity(() => this.config.activityClock?.() ?? this.currentTime())
 
-  /** Keep ingest, pulse, staleness, and transition timestamps on one clock. */
+  /** Keep pulse and transition timestamps on the logical animation clock. */
   private currentTime(): number {
     return this.config.clock?.() ?? getTimestamp()
   }
@@ -427,6 +440,7 @@ export class PipelineStore extends UpdateResultStoreBase {
       return false
     }
     const now = this.currentTime()
+    this.activity.touch()
     this.lastIngestTime = now
     this.needsFullRebuild = true
     this._bufferDirty = true
@@ -435,6 +449,7 @@ export class PipelineStore extends UpdateResultStoreBase {
     if (changeset.bounded) {
       this._lastBoundedInsertsRef = changeset.inserts
       this.liveWindow = false
+      this.waterfallCarry = 0
       // Full replacement for bounded data
       this.buffer.clear()
       this.xExtent.clear()
@@ -478,6 +493,7 @@ export class PipelineStore extends UpdateResultStoreBase {
         this.pushDatumYExtent(d)
 
         if (evicted != null) {
+          this.carryWaterfall(evicted)
           this.xExtent.evictOldest(this.getX(evicted))
           this.evictDatumYExtent(evicted, true)
         }
@@ -596,7 +612,8 @@ export class PipelineStore extends UpdateResultStoreBase {
         this.getX,
         this.getY,
         config.extentPadding,
-        exactMode
+        exactMode,
+        this.waterfallBaseline
       )
     } else if (!yFullySpecified && yDomain[0] !== Infinity) {
       yDomain = expandYDomainWithRibbons(
@@ -831,6 +848,7 @@ export class PipelineStore extends UpdateResultStoreBase {
     if (data.length === 0) return []
 
     const ctx: XYSceneContext = {
+      waterfallBaseline: this.waterfallBaseline,
       scales,
       config,
       getX: this.getX,
@@ -1162,6 +1180,7 @@ export class PipelineStore extends UpdateResultStoreBase {
     this._ingestVersion++
     // A removal is data activity — refresh the staleness clock so a chart
     // mutated via remove() isn't flagged stale.
+    this.activity.touch()
     this.lastIngestTime = this.currentTime()
     this.updateResults.recordData("remove", removed.length)
     return removed
@@ -1196,6 +1215,7 @@ export class PipelineStore extends UpdateResultStoreBase {
     this._ingestVersion++
     // An in-place update is data activity — refresh the staleness clock so a
     // chart streamed via update() isn't flagged stale between updates.
+    this.activity.touch()
     this.lastIngestTime = this.currentTime()
     this.updateResults.recordData("update", previous.length)
     return previous
@@ -1259,7 +1279,7 @@ export class PipelineStore extends UpdateResultStoreBase {
       return stacked.stackExtentCache.plottedY ?? null
     }
     if (config.chartType === "waterfall" && buffer.size > 0) {
-      return waterfallCumulativeEnds(buffer, this.getX, this.getY)
+      return [this.waterfallBaseline, ...waterfallCumulativeEnds(buffer, this.getX, this.getY, this.waterfallBaseline)]
     }
     return null
   }
@@ -1279,6 +1299,7 @@ export class PipelineStore extends UpdateResultStoreBase {
   }
 
   clear(): void {
+    this.waterfallCarry = 0
     this.buffer.clear()
     this.liveWindow = true
     this.resolveXAccessor()
@@ -1290,6 +1311,7 @@ export class PipelineStore extends UpdateResultStoreBase {
     this.prevPathMap.clear()
     this.exitNodes = []
     this.activeTransition = null
+    this.activity.clear()
     this.lastIngestTime = 0
     // Forget the last bounded ingest reference so a subsequent
     // ingest with the same array re-runs the buffer fill (the
@@ -1370,6 +1392,7 @@ export class PipelineStore extends UpdateResultStoreBase {
   private resizeWindow(grow = false): void {
     const evicted = resizeStreamingBuffer(this.buffer, this.timestampBuffer, this.config, grow)
     if (evicted.length === 0) return
+    for (const d of evicted) this.carryWaterfall(d)
     this.rebuildExtents()
     this._bufferDirty = true
     this._ingestVersion++
