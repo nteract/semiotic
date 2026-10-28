@@ -52,12 +52,12 @@ export const layout: NetworkCustomLayout<Config> = ({ config }) => {
           x: n.rect.x,
           y: n.rect.y,
           width: n.rect.width,
-          height: 40,
+          height: n.rect.height,
         }),
       ),
       ...(!summary
         ? parts.map((p) =>
-            networkHitTarget({
+            ({ ...networkHitTarget({
               id: p.key,
               datum: {
                 id: p.key,
@@ -69,7 +69,7 @@ export const layout: NetworkCustomLayout<Config> = ({ config }) => {
               y: p.rect.y,
               width: p.rect.width,
               height: p.rect.height,
-            }),
+            }), navParentId: p.owner }),
           )
         : []),
     ],

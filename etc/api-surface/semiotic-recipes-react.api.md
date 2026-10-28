@@ -6,10 +6,18 @@ _Edit dist/semiotic-recipes-react.d.ts's sources, then re-run `npm run docs:api-
 ```
 function CompositionalNavigator({ prepared, selected, onSelect, proxy }: CompositionalNavigatorProps): React.JSX.Element
 function Glyph({ def, size, color, accent, fraction, fractionStart, fractionDirection, ghostColor, x, y, opacity, className, }: GlyphProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function useCompositionalInterfaces(prepared: PreparedCompositionalGraph, ownerId?: string | undefined): {items: CompositionalInterfaceItem[]; isRemoved(selected?: EndpointRef): boolean; onOwnerKeyDown(event: KeyboardEvent, focus: CompositionalInterfaceFocus): void; onItemKeyDown(event: KeyboardEvent, index: number, focus: CompositionalInterfaceFocus): void;}
 function useCustomLayoutSelection(): CustomLayoutSelection
+interface CompositionalInterfaceFocus
+interface CompositionalInterfaceItem
 interface CompositionalNavigatorProps
 interface CustomLayoutSelection
 interface GlyphProps
+interface-member CompositionalInterfaceFocus::property::focusItem = required focusItem: (index: number) => void
+interface-member CompositionalInterfaceFocus::property::focusOwner = required focusOwner: () => void
+interface-member CompositionalInterfaceItem::property::kind = required kind: "part" | "port"
+interface-member CompositionalInterfaceItem::property::label = required label: string
+interface-member CompositionalInterfaceItem::property::ref = required ref: EndpointRef
 interface-member CompositionalNavigatorProps::property::onSelect = required onSelect: (endpoint: EndpointRef) => void
 interface-member CompositionalNavigatorProps::property::prepared = required prepared: PreparedCompositionalGraph
 interface-member CompositionalNavigatorProps::property::proxy = optional proxy: boolean | undefined

@@ -74,7 +74,11 @@ export function projectedRanks(
     .filter((e) => owner(e.source) !== owner(e.target))
     .map((e) => [owner(e.source), owner(e.target)] as [string, string])
   const result = ranks(ids, links)
-  if (!result && request.options.topology === "strict-dag")
+  if (
+    !result &&
+    request.options.topology === "strict-dag" &&
+    !allOwnersPinned(request)
+  )
     fail(
       "TOPOLOGY_PROJECTION_CYCLE",
       "The display quotient is cyclic; expand the group or explicitly select feedback mode."
@@ -88,8 +92,9 @@ export function initialPositions(request: LayoutRequest): Map<string, Point> {
   )
   if (constraints.size !== (request.view.constraints?.length ?? 0))
     fail("CONSTRAINT_DUPLICATE", "Duplicate node constraints.")
+  const nodeIds = new Set(request.prepared.graph.nodes.map((n) => n.id))
   for (const c of constraints.values()) {
-    if (!request.prepared.graph.nodes.some((n) => n.id === c.nodeId))
+    if (!nodeIds.has(c.nodeId))
       fail("CONSTRAINT_OWNER", "Unknown constrained node.")
     if (
       c.position &&
@@ -176,4 +181,14 @@ export function placeRanks(
     }
     along += maxAlong + request.options.rankGap
   }
+}
+
+/** Pins constrain owner placement, not the semantic dependency graph. */
+export function allOwnersPinned(request: LayoutRequest): boolean {
+  const pinned = new Set(
+    request.view.constraints
+      ?.filter((c) => c.pin === "both" && c.position)
+      .map((c) => c.nodeId)
+  )
+  return request.prepared.graph.nodes.every((n) => pinned.has(n.id))
 }

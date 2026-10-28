@@ -568,7 +568,8 @@ export class PipelineStore extends UpdateResultStoreBase {
     let yDomain = mergePartialDomain(dataYDomain, config.yExtent)
 
     const yFullySpecified = isFullySpecifiedExtent(config.yExtent)
-    const exactMode = (config.yAxisExtent ?? config.axisExtent) === "exact"
+    const yAxisMode = config.yAxisExtent ?? config.axisExtent
+    const exactMode = yAxisMode === "exact"
 
     if (config.chartType === "stackedarea" && !yFullySpecified && buffer.size > 0) {
       const stacked = resolveStackedAreaYDomain({
@@ -609,6 +610,7 @@ export class PipelineStore extends UpdateResultStoreBase {
       )
       yDomain = padYDomain(yDomain, {
         exactMode,
+        roundedMode: yAxisMode === "rounded" && !config.yAxisTickValues,
         extentPadding: config.extentPadding,
         userMin: config.yExtent?.[0],
         userMax: config.yExtent?.[1],

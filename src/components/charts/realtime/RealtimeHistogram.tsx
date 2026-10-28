@@ -136,7 +136,9 @@ export interface RealtimeHistogramProps<
   /** Fixed time domain */
   timeExtent?: [number, number]
   /** Fixed value domain */
-  valueExtent?: [number, number]
+  valueExtent?: [number | undefined, number | undefined] | [number]
+  /** Round open value-domain ends after padding and final plot layout. */
+  axisExtent?: import("../shared/axisExtent").AxisExtentMode
   /**
    * Direction bars grow from the baseline.
    * "up" uses the normal y-domain. "down" flips the resolved value
@@ -638,6 +640,7 @@ export const RealtimeHistogram = /* @__PURE__ */ withDisplayName(/* @__PURE__ */
       valueAccessor={numericValue}
       xExtent={timeExtent}
       yExtent={valueExtent}
+      axisExtent={props.axisExtent}
       invertY={direction === "down"}
       extentPadding={extentPadding}
       binSize={binSize}

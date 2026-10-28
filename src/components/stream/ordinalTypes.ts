@@ -253,6 +253,8 @@ export interface OrdinalPipelineConfig {
    *  land on the actual data bounds. Default `"nice"` keeps the existing
    *  padded domain so symbols at the extremes don't clip the plot edge. */
   axisExtent?: import("../charts/shared/axisExtent").AxisExtentMode
+  /** Explicit ticks disable automatic value-domain rounding. */
+  rTickValues?: number[]
   projection: "vertical" | "horizontal" | "radial"
 
   // Primary accessors
@@ -484,7 +486,9 @@ export interface StreamOrdinalFrameProps<T = Datum> {
   /** Axis extent mode for the value (r) axis. `"nice"` (default) uses
    *  d3-scale's rounded tick generator. `"exact"` pins the first and
    *  last tick to the actual data min and max with equidistant
-   *  intermediate ticks. The categorical (o) axis is unaffected since
+   *  intermediate ticks. `"rounded"` widens open ends to round ticks after
+   *  padding and final layout, retaining explicit rExtent bounds.
+   *  The categorical (o) axis is unaffected since
    *  it's a band scale, not a continuous one. Ignored when explicit
    *  `rTickValues` are provided — caller has hand-picked positions. */
   axisExtent?: import("../charts/shared/axisExtent").AxisExtentMode

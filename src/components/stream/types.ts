@@ -834,7 +834,7 @@ export interface StreamXYFrameProps<T = Datum>
   /**
    * Per-axis config array. See `XYFrameAxisConfig` for the full set of
    * fields — covers `tickValues`, `tickFormat`, `tickAnchor`,
-   * `landmarkTicks`, `autoRotate`, `gridStyle`, `includeMax`,
+   * `landmarkTicks`, `autoRotate`, `gridStyle`, `includeMin`, `includeMax`,
    * `baseline`, `jaggedBase`, `label`, and `ticks`.
    */
   axes?: XYFrameAxisConfig[]
@@ -849,7 +849,9 @@ export interface StreamXYFrameProps<T = Datum>
    *  reaching the exact data min/max. `"exact"` pins the first
    *  and last tick to the data domain and spaces intermediate
    *  ticks equidistantly. Applies to both x and y axes unless an entry in
-   *  `axes` supplies its own `extent` override. */
+   *  `axes` supplies its own `extent` override. `"rounded"` widens open y
+   *  bounds after padding to the tick step for the final plot height; pinned
+   *  ends and explicit tick values stay fixed. The x domain is unchanged. */
   axisExtent?: import("../charts/shared/axisExtent").AxisExtentMode
   tickFormatTime?: (value: number) => string
   tickFormatValue?: (value: number) => string

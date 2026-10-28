@@ -369,6 +369,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       rExtent,
       oExtent,
       axisExtent,
+      rTickValues,
       barPadding,
       roundedTop,
       gradientFill: normalizeGradient(gradientFill),
@@ -408,7 +409,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       onLayoutError,
       layoutConfig,
       layoutMargin: margin,
-    }), [chartType, isStreaming, windowSize, windowMode, extentPadding, projection, effectiveOAccessor, effectiveRAccessor, accessorRevision, colorAccessor, symbolAccessor, symbolMap, stackBy, groupBy, multiAxis, timeAccessor, valueAccessor, rExtent, oExtent, axisExtent, barPadding, roundedTop, gradientFill, trackFill, baselinePadding, innerRadius, cornerRadius, normalize, startAngle, sweepAngle, dynamicColumnWidth, bins, showOutliers, showIQR, amplitude, connectorOpacity, showLabels, connectorAccessor, connectorStyle, dataIdAccessor, oSort, pieceStyle, summaryStyle, colorScheme, currentTheme, barColors, decay, pulse, transition, introEnabled, staleness, frameRuntime.now, customLayout, onLayoutError, layoutConfig, margin])
+    }), [chartType, isStreaming, windowSize, windowMode, extentPadding, projection, effectiveOAccessor, effectiveRAccessor, accessorRevision, colorAccessor, symbolAccessor, symbolMap, stackBy, groupBy, multiAxis, timeAccessor, valueAccessor, rExtent, oExtent, axisExtent, rTickValues, barPadding, roundedTop, gradientFill, trackFill, baselinePadding, innerRadius, cornerRadius, normalize, startAngle, sweepAngle, dynamicColumnWidth, bins, showOutliers, showIQR, amplitude, connectorOpacity, showLabels, connectorAccessor, connectorStyle, dataIdAccessor, oSort, pieceStyle, summaryStyle, colorScheme, currentTheme, barColors, decay, pulse, transition, introEnabled, staleness, frameRuntime.now, customLayout, onLayoutError, layoutConfig, margin])
 
     // Stabilize the config reference so inline-object / inline-array
     // props don't shed identity every parent render. See

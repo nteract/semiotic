@@ -118,7 +118,9 @@ export interface RealtimeHeatmapProps<
   /** Fixed time domain */
   timeExtent?: [number, number]
   /** Fixed value domain */
-  valueExtent?: [number, number]
+  valueExtent?: [number | undefined, number | undefined] | [number]
+  /** Round open value-domain ends after padding and final plot layout. */
+  axisExtent?: import("../shared/axisExtent").AxisExtentMode
   /** Extent padding factor */
   extentPadding?: number
   /** Number of x-axis bins (default: 20) */
@@ -462,6 +464,7 @@ export const RealtimeHeatmap = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ f
       categoryAccessor={categoryAccessor}
       xExtent={timeExtent}
       yExtent={valueExtent}
+      axisExtent={props.axisExtent}
       extentPadding={extentPadding}
       heatmapXBins={heatmapXBins}
       heatmapYBins={heatmapYBins}

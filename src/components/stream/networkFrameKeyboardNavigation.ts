@@ -44,7 +44,9 @@ export function useNetworkKeyboardNavigation(
     ) =>
       nextNetworkIndex(
         key,
-        resolvePosition(graph, index),
+        index < 0
+          ? { flatIndex: -1, group: "", indexInGroup: -1 }
+          : resolvePosition(graph, index),
         graph,
         storeRef.current?.sceneEdges ?? [],
         neighbor

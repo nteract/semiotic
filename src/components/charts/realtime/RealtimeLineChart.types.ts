@@ -107,7 +107,9 @@ export interface RealtimeLineChartProps<
   /** Fixed time domain */
   timeExtent?: [number, number]
   /** Fixed value domain */
-  valueExtent?: [number, number]
+  valueExtent?: [number | undefined, number | undefined] | [number]
+  /** Round open value-domain ends after padding and final plot layout. */
+  axisExtent?: import("../shared/axisExtent").AxisExtentMode
   /** Extent padding factor */
   extentPadding?: number
   /** Line color */
