@@ -143,6 +143,16 @@ export function extractOrdinalNavPoints(scene: OrdinalSceneNode[]): NavPoint[] {
       // Group by node.group (set by stacking/grouping) falling back to category.
       const category = node.datum?.category ?? ""
       const group = node.datum.__funnelNavGroup ?? node.group ?? category
+      const datum = node.datum
+      const aggregateKey = datum.__aggregateValue !== undefined
+        ? [category, node.group ?? category]
+        : datum.__funnelStep != null
+          ? ["funnel", datum.__funnelStep, group]
+          : datum.__barFunnelStep != null
+            ? ["bar-funnel", datum.__barFunnelStep, group, datum.__barFunnelIsDropoff]
+            : datum.bin != null && datum.count != null && Array.isArray(datum.range)
+              ? ["bin", category, ...datum.range]
+              : undefined
       push({
         x: node.x + node.w / 2,
         y: node.y + node.h / 2,
@@ -150,9 +160,7 @@ export function extractOrdinalNavPoints(scene: OrdinalSceneNode[]): NavPoint[] {
         shape: "rect",
         w: node.w,
         h: node.h,
-        semanticKey: node.datum.__aggregateValue !== undefined
-          ? JSON.stringify([category, node.group ?? category])
-          : undefined,
+        semanticKey: aggregateKey && JSON.stringify(aggregateKey),
         group
       })
     } else if (node.type === "point" || node.type === "symbol") {
@@ -180,6 +188,7 @@ export function extractOrdinalNavPoints(scene: OrdinalSceneNode[]): NavPoint[] {
         shape: "rect",
         w: vertical ? node.columnWidth : Math.abs(node.q3Pos - node.q1Pos),
         h: vertical ? Math.abs(node.q3Pos - node.q1Pos) : node.columnWidth,
+        semanticKey: node.category != null ? JSON.stringify([node.type, node.category]) : undefined,
         stats: node.stats, category: node.category, group: "_default"
       })
     } else if (node.type === "violin" && node.bounds) {
@@ -189,6 +198,7 @@ export function extractOrdinalNavPoints(scene: OrdinalSceneNode[]): NavPoint[] {
         x: x + width / 2, y: y + height / 2,
         datum: normalizeHoverDatum(node.datum),
         shape: "rect", w: width, h: height,
+        semanticKey: node.category != null ? JSON.stringify([node.type, node.category]) : undefined,
         stats: node.stats, category: node.category, group: "_default"
       })
     } else if (node.type === "trapezoid") {
@@ -219,6 +229,8 @@ export function extractOrdinalNavPoints(scene: OrdinalSceneNode[]): NavPoint[] {
         y: node.cy + Math.sin(midAngle) * r,
         datum: node.datum,
         shape: "wedge",
+        semanticKey: node.category != null ? JSON.stringify([node.type, node.category]) : undefined,
+        category: node.category,
         readingOrder: node.startAngle,
         group: "_default"
       })
