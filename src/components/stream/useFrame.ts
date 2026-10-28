@@ -488,12 +488,9 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
     if (coords) hoverHandlerRef.current(coords)
   }, [])
   const onPointerMove = useCallback((e: { clientX: number; clientY: number; pointerType?: string }) => {
-    const pointer = pointerStateRef.current
-    pointer.inside = true
-    pointer.clientX = e.clientX
-    pointer.clientY = e.clientY
-    pointer.pointerType = e.pointerType
-    pendingMoveCoordsRef.current = { clientX: e.clientX, clientY: e.clientY, pointerType: e.pointerType }
+    const coords = { clientX: e.clientX, clientY: e.clientY, pointerType: e.pointerType }
+    Object.assign(pointerStateRef.current, coords).inside = true
+    pendingMoveCoordsRef.current = coords
     if (moveRafRef.current === null) {
       const scheduler = frameSchedulerRef.current
       let firedSynchronously = false
@@ -540,14 +537,9 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
   useEffect(() => {
     return () => {
       pendingMoveCoordsRef.current = null
-      if (moveRafRef.current !== null) {
-        const scheduler = pendingMoveSchedulerRef.current ?? frameSchedulerRef.current
-        scheduler.cancelAnimationFrame(moveRafRef.current)
-        moveRafRef.current = null
-        pendingMoveSchedulerRef.current = null
-      }
+      flushPointerMove()
     }
-  }, [])
+  }, [flushPointerMove])
 
   // ── Theme-change effect ───────────────────────────────────────────────
   // When the theme changes (currentTheme reference changes), invalidate
