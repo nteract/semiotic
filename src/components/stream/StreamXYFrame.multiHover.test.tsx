@@ -1,6 +1,6 @@
 import "../../test-utils/registerBuiltInXYPlugins"
 import React from "react"
-import { act, fireEvent, render } from "@testing-library/react"
+import { act, fireEvent, render, waitFor } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import StreamXYFrame from "./StreamXYFrame"
 import { setupCanvasMock } from "../../test-utils/canvasMock"
@@ -96,6 +96,24 @@ describe("StreamXYFrame multi hover at the data edges", () => {
     const focused = lastHover()
     expect(rows(focused)).toEqual([["A", 0], ["B", 0]])
     expect(focused?.xValue).toBe(0)
+  })
+
+  it("refreshes hover-anywhere series after replacement without replaying pointer callbacks", async () => {
+    const tooltipContent = (hover: HoverData) => JSON.stringify(rows(hover))
+    const { container, rerender, hoverAt, onHover } = await renderFrame({ tooltipContent })
+    hoverAt(180)
+    const tooltip = () => container.querySelector(".stream-frame-tooltip")
+    expect(tooltip()).toHaveTextContent('[["A",11],["B",22]]')
+    rerender(<StreamXYFrame {...baseProps} customHoverBehavior={onHover}
+      tooltipContent={tooltipContent}
+      data={[...series("A", upTo(11), 1), ...series("B", upTo(11), 3)]} />)
+    await waitFor(() => expect(tooltip()).toHaveTextContent('[["A",11],["B",33]]'))
+    expect(onHover).toHaveBeenCalledTimes(1)
+    rerender(<StreamXYFrame {...baseProps} customHoverBehavior={onHover}
+      tooltipContent={tooltipContent} data={[]} />)
+    await waitFor(() => expect(tooltip()).toBeNull())
+    expect(onHover).toHaveBeenCalledTimes(2)
+    expect(onHover.mock.lastCall?.[0]).toBeNull()
   })
 
   it("still clears single-mode hover past the data", async () => {

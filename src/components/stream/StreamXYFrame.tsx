@@ -556,7 +556,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
         if (!store) return
         const needsRender = store.ingest(changeset)
         if (needsRender) {
-          dataInteractionRef.current()
+          if (!changeset.bounded && !changeset.boundedAppend) dataInteractionRef.current()
           dirtyRef.current = true
           // Legend-category emission deferred to the post-computeScene path
           // in the render loop — that's the single canonical emit point per
@@ -621,7 +621,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       pointerStateRef
     } = frame
 
-    hoverHandlerRef.current = (e: HoverPointerCoords) => {
+    hoverHandlerRef.current = (e: HoverPointerCoords, refresh = false) => {
       const canvas = canvasRef.current
       if (!canvas) return
       const rect = canvas.getBoundingClientRect()
@@ -646,7 +646,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
 
       const store = storeRef.current
       if (!store || store.scene.length === 0) {
-        setCanvasMarkCursor(canvas)
+        onPointerLeave()
         return
       }
 
@@ -732,7 +732,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       // Hover paint lives on the interaction canvas / tooltip — do not dirty
       // the retained scene (avoids replaying transitions on every move).
       // Selection restyle flows through React state → style fn → useConfigSync.
-      customHoverBehavior?.(hover)
+      if (!refresh) customHoverBehavior?.(hover)
       scheduleRender()
     }
 
@@ -914,6 +914,11 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       if ((dirtyRef.current || dimsChanged) && (!isTransitioning || dimsChanged)) {
         store.computeScene({ width: adjustedWidth, height: adjustedHeight })
         refreshKeyboardFocus()
+        // A controlled parent may recreate data when observing hover. Refresh
+        // the hit against the new scene without feeding that observation back.
+        if (kbFocusIndexRef.current < 0 && hoverRef.current && pointerStateRef.current.inside) {
+          hoverHandlerRef.current(pointerStateRef.current, true)
+        }
         lastSceneDimsRef.current = { w: adjustedWidth, h: adjustedHeight }
         computedSceneThisFrame = true
         emitLegendCategories()

@@ -196,6 +196,54 @@ for (const family of ["xy", "ordinal"] as const)
       expect(tooltip()).toHaveTextContent("Alpha: 99")
     })
 
+    it("refreshes inline bounded data without replaying the parent's hover observation", async () => {
+      const observe = vi.fn()
+      function ObservedChart() {
+        const [rows, setRows] = React.useState([data[1]])
+        const [observation, setObservation] = React.useState<HoverData | null>(null)
+        const common = {
+          // Both array and rows are recreated after each observation, as in
+          // JSX-authored data. A replacement must still ingest the latest rows.
+          data: rows.map((row) => ({ ...row })),
+          size: [400, 300] as [number, number],
+          margin,
+          hoverAnnotation: true,
+          customHoverBehavior: (hover: HoverData | null) => {
+            observe(hover)
+            setObservation(hover)
+          },
+          tooltipContent: (hover: HoverData) => `${hover.data?.category}: ${hover.data?.value}`
+        }
+        return <>
+          <output>{observation?.data?.category ?? "None"}</output>
+          <button onClick={() => setRows([{ ...data[1], value: 25 }])}>Update</button>
+          <button onClick={() => setRows([])}>Empty</button>
+          {family === "xy" ? <StreamXYFrame {...common} chartType="scatter"
+            xAccessor="x" yAccessor="y" xExtent={[0, 2]} yExtent={[0, 40]} />
+            : <StreamOrdinalFrame {...common} chartType="bar"
+                categoryAccessor="category" valueAccessor="value" rExtent={[0, 40]} />}
+        </>
+      }
+      const view = render(<ObservedChart />)
+      const tooltip = () => view.container.querySelector(
+        family === "xy" ? ".stream-frame-tooltip" : ".stream-ordinal-tooltip"
+      )
+      fireEvent.mouseMove(view.container.querySelector("canvas")!, {
+        clientX: 200, clientY: 190 - (family === "xy" ? 40 : 0)
+      })
+      await waitFor(() => expect(tooltip()).toHaveTextContent("Beta: 20"))
+      expect(view.getByRole("status")).toHaveTextContent("Beta")
+      expect(observe).toHaveBeenCalledTimes(1)
+      fireEvent.click(view.getByText("Update"))
+      await waitFor(() => expect(tooltip()).toHaveTextContent("Beta: 25"))
+      expect(observe).toHaveBeenCalledTimes(1)
+      fireEvent.click(view.getByText("Empty"))
+      await waitFor(() => expect(tooltip()).toBeNull())
+      expect(view.getByRole("status")).toHaveTextContent("None")
+      expect(observe).toHaveBeenCalledTimes(2)
+      expect(observe.mock.lastCall?.[0]).toBeNull()
+    })
+
     it.each(["clear", "update", "remove", "shrink"] as const)(
       "dismisses real pointer detail through the shared callback on %s",
       async (operation) => {

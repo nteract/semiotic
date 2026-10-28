@@ -451,7 +451,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
         if (!store) return
         const needsRender = store.ingest(changeset)
         if (needsRender) {
-          dataInteractionRef.current()
+          if (!changeset.bounded && !changeset.boundedAppend) dataInteractionRef.current()
           dirtyRef.current = true
           // Legend-category emission deferred to the post-computeScene path
           // in the render loop — single canonical emit point per data change,
@@ -500,7 +500,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       pointerStateRef
     } = frame
 
-    hoverHandlerRef.current = (e: HoverPointerCoords) => {
+    hoverHandlerRef.current = (e: HoverPointerCoords, refresh = false) => {
       const canvas = canvasRef.current
       if (!canvas) return
       const store = storeRef.current
@@ -548,7 +548,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       // restarts transitions on every pointermove. Selection-driven restyle
       // (hoverHighlight / linkedHover) updates React state → pieceStyle →
       // useConfigSync, which dirties only when styles actually change.
-      customHoverBehavior?.(hover)
+      if (!refresh) customHoverBehavior?.(hover)
       scheduleRender()
     }
 
@@ -686,6 +686,11 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       if ((wasDirty || dimsChanged) && (!isTransitioning || dimsChanged)) {
         store.computeScene({ width: adjustedWidth, height: adjustedHeight })
         refreshKeyboardFocus()
+        // A controlled parent may recreate data when observing hover. Refresh
+        // the hit against the new scene without feeding that observation back.
+        if (kbFocusIndexRef.current < 0 && hoverRef.current && pointerStateRef.current.inside) {
+          hoverHandlerRef.current(pointerStateRef.current, true)
+        }
         lastSceneDimsRef.current = { w: adjustedWidth, h: adjustedHeight }
         computedSceneThisFrame = true
         emitLegendCategories()

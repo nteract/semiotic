@@ -248,8 +248,9 @@ export interface UseFrameResult {
   // The hook owns: rAF coalescing, cleanup of the pending move on
   // unmount, and the pendingMoveCoordsRef nullification on leave.
 
-  /** Frame assigns its hover handler closure here. */
-  hoverHandlerRef: React.MutableRefObject<(coords: HoverPointerCoords) => void>
+  /** Frame assigns its hover handler closure here. Refresh updates presentation
+   *  after a scene rebuild without replaying pointer callbacks. */
+  hoverHandlerRef: React.MutableRefObject<(coords: HoverPointerCoords, refresh?: boolean) => void>
   /** Frame assigns its pointer-leave closure here. */
   hoverLeaveRef: React.MutableRefObject<() => void>
   /** Stable callback to attach to canvas's onPointerMove (or onMouseMove).
@@ -467,7 +468,7 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
   useEffect(() => cancelRender, [cancelRender])
 
   // ── Pointer event coalescing (hover handler) ──────────────────────────
-  const hoverHandlerRef = useRef<(coords: HoverPointerCoords) => void>(() => {})
+  const hoverHandlerRef = useRef<(coords: HoverPointerCoords, refresh?: boolean) => void>(() => {})
   const hoverLeaveRef = useRef<() => void>(() => {})
   const pointerStateRef = useRef({
     inside: false,
