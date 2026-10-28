@@ -161,14 +161,8 @@ export function useGraphKeyboardNavigation<
         if (hadHover) customHoverBehavior?.(null)
         scheduleRender()
       }
-      if (event.key === "Escape") {
-        event.preventDefault()
-        clearPointerHover?.()
-        clearFocus()
-        return
-      }
       if (store.scene.length === 0) {
-        if (kbFocusIndexRef.current >= 0) clearFocus()
+        if (kbFocusIndexRef.current >= 0 || event.key === "Escape") clearFocus()
         return
       }
 
@@ -178,13 +172,31 @@ export function useGraphKeyboardNavigation<
       } else {
         const navPoints = extractPoints(store.scene)
         if (navPoints.length === 0) {
-          if (kbFocusIndexRef.current >= 0) clearFocus()
+          if (kbFocusIndexRef.current >= 0 || event.key === "Escape")
+            clearFocus()
           return
         }
         graph = buildNavGraph(navPoints)
         navGraphCacheRef.current = { version: store.version, graph }
       }
 
+      if (event.key === "Escape") {
+        const parent = nextConnected?.(
+          "Escape",
+          graph,
+          kbFocusIndexRef.current,
+          neighborIndexRef
+        )
+        if (parent == null || parent < 0) {
+          event.preventDefault()
+          clearPointerHover?.()
+          clearFocus()
+          return
+        }
+        // This Escape ascends a keyboard group; document-level pointer dismissal
+        // must not clear the newly focused owner while the mouse is still inside.
+        event.stopPropagation()
+      }
       const requestedIndex = kbFocusIndexRef.current
       let current = requestedIndex
       if (current >= graph.flat.length) {
@@ -221,7 +233,10 @@ export function useGraphKeyboardNavigation<
         )
           return
         neighborIndexRef.current = -1
-        next = 0
+        next =
+          nextConnected && graph.flat.some((point) => point.navParentId != null)
+            ? nextConnected(event.key, graph, -1, neighborIndexRef) ?? 0
+            : 0
       } else {
         next = nextConnected
           ? nextConnected(event.key, graph, current, neighborIndexRef)

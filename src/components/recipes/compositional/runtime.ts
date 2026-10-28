@@ -19,6 +19,8 @@ export const compositionalDagEngine: AsyncLayoutEngine = {
     multiedges: true,
     compoundCrossHierarchy: false,
     orthogonalRouting: true,
+    terminalRouting: true,
+    bumpRouting: true,
     deterministicSeed: true
   },
   async layout(request, signal) {
@@ -71,6 +73,16 @@ export async function layoutCompositionalGraph(
       normalized.options.routing === "orthogonal",
       capabilities.orthogonalRouting,
       "orthogonal routing"
+    ],
+    [
+      normalized.options.routing === "terminals",
+      !!capabilities.terminalRouting,
+      "terminal routing"
+    ],
+    [
+      normalized.options.routing === "bump",
+      !!capabilities.bumpRouting,
+      "bump routing"
     ]
   ]
   for (const [needed, supported, label] of requirements)

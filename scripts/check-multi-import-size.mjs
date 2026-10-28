@@ -87,7 +87,11 @@ const analyze = process.argv.includes("--analyze")
 // 320,804 bytes (313.3 KiB) on the same union.
 // Empty-axis log rescue and cached heatmap keys (2026-10-23, #1641) measure
 // 321,995 bytes on Linux CI and 322,001 bytes locally (314.5 KiB).
-const MULTI_IMPORT_GZIP_BUDGET = 315 * 1024
+// Authored owner/row keyboard groups (2026-10-27) add 504 bytes versus clean
+// 9f54b35b0 with identical dependencies: 322,286 -> 322,790 bytes (315.2 KiB).
+// Both builds reach 28 files; no family coupling or dependency was added.
+// This requested navigation behavior retains less than 0.3 KiB of headroom.
+const MULTI_IMPORT_GZIP_BUDGET = 315.5 * 1024
 
 const MULTI_IMPORT_SOURCE = `
 export { LineChart } from "semiotic/xy"

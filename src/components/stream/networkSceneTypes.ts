@@ -21,6 +21,8 @@ export interface NetworkCircleNode {
   datum: SceneDatum
   accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
   accessibility?: SceneAccessibilityMetadata["accessibility"]
+  /** Scene node ID of the containing keyboard navigation group. */
+  navParentId?: string
   id?: string
   label?: string
   depth?: number
@@ -56,6 +58,8 @@ export interface NetworkRectNode {
   datum: SceneDatum
   accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
   accessibility?: SceneAccessibilityMetadata["accessibility"]
+  /** Scene node ID of the containing keyboard navigation group. */
+  navParentId?: string
   id?: string
   label?: string
   depth?: number
@@ -89,6 +93,8 @@ export interface NetworkArcNode {
   datum: SceneDatum
   accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
   accessibility?: SceneAccessibilityMetadata["accessibility"]
+  /** Scene node ID of the containing keyboard navigation group. */
+  navParentId?: string
   id?: string
   label?: string
   _pulseIntensity?: number
@@ -125,6 +131,8 @@ export interface NetworkSymbolNode {
   datum: SceneDatum
   accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
   accessibility?: SceneAccessibilityMetadata["accessibility"]
+  /** Scene node ID of the containing keyboard navigation group. */
+  navParentId?: string
   id?: string
   label?: string
   depth?: number
@@ -169,6 +177,8 @@ export interface NetworkGlyphNode {
   datum: SceneDatum
   accessibleDatum?: SceneAccessibilityMetadata["accessibleDatum"]
   accessibility?: SceneAccessibilityMetadata["accessibility"]
+  /** Scene node ID of the containing keyboard navigation group. */
+  navParentId?: string
   id?: string
   label?: string
   depth?: number

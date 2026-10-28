@@ -44,6 +44,9 @@ export interface PipelineConfig {
   axisExtent?: import("../charts/shared/axisExtent").AxisExtentMode
   /** Resolved y-axis mode. Falls back to `axisExtent` when omitted. */
   yAxisExtent?: import("../charts/shared/axisExtent").AxisExtentMode
+  /** Value-axis tick selection, shared with the overlay when rounding domains. */
+  yAxisTicks?: number
+  yAxisTickValues?: import("./xyFrameAxisTypes").XYFrameAxisConfig["tickValues"]
   /**
    * Hard cap for `windowMode: "growing"`. Defaults to
    * {@link DEFAULT_GROWING_MAX_CAPACITY} (100_000). Canvas scene graphs

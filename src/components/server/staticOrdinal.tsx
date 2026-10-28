@@ -4,7 +4,7 @@ import { XHTML_NAMESPACE } from "../shared/svgNamespace"
 import { numericTickFormatter } from "../charts/shared/numericTickFormatter"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 import { normalizeGradient } from "../charts/shared/gradient"
-import { ticksForMode } from "../charts/shared/axisExtent"
+import { ordinalAxisTicks } from "../stream/ordinalAxisTicks"
 import * as React from "react"
 import * as ReactDOMServer from "react-dom/server"
 import { OrdinalPipelineStore } from "../stream/OrdinalPipelineStore"
@@ -94,13 +94,7 @@ export function generateOrdinalAxesSVG(
     label: catFormat ? catFormat(col.name, index) : col.name
   }))
 
-  // ticksForMode mirrors the client OrdinalSVGOverlay: "exact" pins the
-  // value-axis ticks to the data min/max (the axisExtent headline behavior);
-  // "nice"/undefined falls through to scale.ticks — byte-identical to before.
-  // OrdinalSVGOverlay requests five value ticks for both projections; d3 may
-  // return a nearby "nice" count. Do not apply the XY frame's pixel-budget
-  // heuristic here or SSR and CSR choose different intervals.
-  const values = props.rTickValues ?? ticksForMode(scales.r, 5, props.axisExtent)
+  const values = ordinalAxisTicks(scales, layout, props.axisExtent, props.rTickValues)
   const format = valFormat || numericTickFormatter(values)
   const rTicks = values.map(v => ({
     pixel: scales.r(v),
@@ -261,9 +255,9 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
     timeAccessor: props.timeAccessor,
     rExtent: props.rExtent,
     oExtent: props.oExtent,
-    // axisExtent ("nice"|"exact") pins the value-axis first/last tick to
-    // the data min/max through domain resolution.
+    // Share value-domain and tick settings with the browser pipeline.
     axisExtent: props.axisExtent,
+    rTickValues: props.rTickValues,
     barPadding: props.barPadding,
     roundedTop: props.roundedTop,
     innerRadius: props.innerRadius,

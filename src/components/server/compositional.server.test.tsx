@@ -10,9 +10,9 @@ import {
 import type { NetworkCustomLayout } from "../stream/networkCustomLayout"
 
 describe("compositional SSR and export", () => {
-  it.each([false, true])(
-    "keeps duplicate IDs and emits accepted paths (empty commands: %s)",
-    (emptyCommands) => {
+  it.each(["orthogonal", "terminals", "bump", "empty-commands"] as const)(
+    "keeps duplicate IDs and emits accepted paths (routing: %s)",
+    (routing) => {
       const nodes = [{ id: "a" }, { id: "b" }]
       const edges = ["one", "two"].map((id) => ({
         id,
@@ -48,9 +48,9 @@ describe("compositional SSR and export", () => {
             parts: []
           }))
         },
-        options: compositionalLayoutOptions({ mode: "route-only" })
+        options: compositionalLayoutOptions({ mode: "route-only", routing: routing === "empty-commands" ? "smooth" : routing })
       })
-      const solved = emptyCommands
+      const solved = routing === "empty-commands"
         ? {
             ...routed,
             edges: routed.edges.map((edge) => ({

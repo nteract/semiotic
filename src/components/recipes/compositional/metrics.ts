@@ -1,4 +1,9 @@
-import type { LayoutMetrics, Point, RoutedConnection } from "./types"
+import type {
+  LayoutMetrics,
+  LayoutOptions,
+  Point,
+  RoutedConnection
+} from "./types"
 import { flattened, distance } from "./routing"
 
 function intersection(a: Point, b: Point, c: Point, d: Point): Point | null {
@@ -15,20 +20,30 @@ function intersection(a: Point, b: Point, c: Point, d: Point): Point | null {
     : null
 }
 export function measureRoutes(
-  edges: readonly RoutedConnection[],
+  allEdges: readonly RoutedConnection[],
   horizontal: boolean,
-  alignmentIds: Set<string>
+  alignmentIds: Set<string>,
+  routing: LayoutOptions["routing"] = "orthogonal",
+  excluded: ReadonlySet<string> = new Set()
 ): { metrics: LayoutMetrics; partial: boolean } {
+  const edges = allEdges.filter((e) => !excluded.has(e.edgeId))
+  const terminals = routing === "terminals"
   let totalRouteLength = 0,
     bendCount = 0,
     alignmentError = 0,
     crossings = 0,
     comparisons = 0,
     channelCongestion = 0
-  const paths = edges.map((e) => e.sections.flatMap(flattened))
+  const paths = edges.map((e) =>
+    terminals
+      ? [e.source.escape, e.target.escape]
+      : e.sections.flatMap(flattened)
+  )
   for (let i = 0; i < edges.length; i++) {
     const e = edges[i],
-      path = paths[i]
+      path = terminals
+        ? e.sections.flatMap((section) => section.points)
+        : paths[i]
     if (alignmentIds.has(e.edgeId))
       alignmentError += Math.abs(
         horizontal
@@ -38,6 +53,7 @@ export function measureRoutes(
     for (let j = 1; j < path.length; j++) {
       totalRouteLength += distance(path[j - 1], path[j])
       if (
+        !terminals &&
         j > 1 &&
         Math.abs(
           (path[j - 1].x - path[j - 2].x) * (path[j].y - path[j - 1].y) -
@@ -76,6 +92,27 @@ export function measureRoutes(
         b.e.bounds[crossAxis] > a.e.bounds[crossAxis] + a.e.bounds[crossBreadth]
       )
         continue
+      if (terminals) {
+        if (++comparisons > 2000000) {
+          partial = true
+          break outer
+        }
+        const [startA, endA] = paths[a.i],
+          [startB, endB] = paths[b.i]
+        const hit = intersection(startA, endA, startB, endB)
+        const sharedEnd =
+          hit &&
+          [startA, endA].some(
+            (p) =>
+              Math.abs(p.x - hit.x) < 1e-8 &&
+              Math.abs(p.y - hit.y) < 1e-8 &&
+              [startB, endB].some(
+                (q) => Math.abs(q.x - p.x) < 1e-8 && Math.abs(q.y - p.y) < 1e-8
+              )
+          )
+        if (hit && !sharedEnd) crossings++
+        continue
+      }
       const hits = new Set<string>(),
         ap = paths[a.i],
         bp = paths[b.i]
@@ -116,7 +153,7 @@ export function measureRoutes(
             Math.abs(aa.y - ab.y) < 1e-8 &&
             Math.abs(aa.y - ba.y) < 1e-8 &&
             Math.abs(aa.y - bb.y) < 1e-8
-          if (vertical || horizontal) {
+          if (!terminals && (vertical || horizontal)) {
             const axis = vertical ? "y" : "x"
             const low = Math.max(
               Math.min(aa[axis], ab[axis]),
@@ -149,7 +186,7 @@ export function measureRoutes(
       nodeDisplacement: 0,
       reorderedParts: 0,
       hardConstraintViolations: 0,
-      routedEdgeCount: edges.length,
+      routedEdgeCount: allEdges.length,
       omittedEdgeCount: 0,
       completedSweeps: 0
     },

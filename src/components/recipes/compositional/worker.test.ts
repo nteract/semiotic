@@ -1,3 +1,4 @@
+import { fixture } from "./testFixtures"
 import { describe, expect, it } from "vitest"
 import {
   createCompositionalWorkerEngine,
@@ -175,7 +176,9 @@ describe("compositional worker transaction boundaries", () => {
       expect(await solving).toBe(false)
       expect(controller.updating).toBe(false)
       expect(controller.solution).toBe(accepted)
-      expect(controller.diagnostics[0].message).toContain("REVISION_WORKER_FAILED")
+      expect(controller.diagnostics[0].message).toContain(
+        "REVISION_WORKER_FAILED"
+      )
       engine.dispose()
     }
   })
@@ -187,13 +190,48 @@ describe("compositional worker transaction boundaries", () => {
       queueMicrotask(() => worker.receive(message))
     }
     worker.postMessage = (message) => {
-      if (message.type === "result") throw new Error("DataCloneError: function could not be cloned")
+      if (message.type === "result")
+        throw new Error("DataCloneError: function could not be cloned")
       queueMicrotask(() => host.receive(message))
     }
     const uninstall = installCompositionalWorker(worker)
     const engine = createCompositionalWorkerEngine(host)
-    await expect(engine.layout(request("unclonable"))).rejects.toThrow("DataCloneError")
+    await expect(engine.layout(request("unclonable"))).rejects.toThrow(
+      "DataCloneError"
+    )
     engine.dispose()
     uninstall()
   })
 })
+
+it.each(
+  (["LR", "RL", "TB", "BT"] as const).flatMap((direction) =>
+    (["terminals", "bump"] as const).map((routing) => ({ direction, routing }))
+  )
+)(
+  "round-trips $direction $routing geometry through the worker controller",
+  async ({ direction, routing }) => {
+    const host = port(),
+      worker = port()
+    host.postMessage = (message) =>
+      queueMicrotask(() => worker.receive(JSON.parse(JSON.stringify(message))))
+    worker.postMessage = (message) =>
+      queueMicrotask(() => host.receive(JSON.parse(JSON.stringify(message))))
+    const remove = installCompositionalWorker(worker)
+    const engine = createCompositionalWorkerEngine(host)
+    const controller = new CompositionalLayoutController()
+    const r = fixture()
+    r.options = { ...r.options, routing }
+    r.view = { ...r.view, direction }
+    try {
+      expect(await controller.solve(r, engine)).toBe(true)
+      expect(controller.solution).toEqual(routeCompositionalGraph(r))
+      expect(controller.solution!.direction).toBe(direction)
+      expect(controller.solution!.edges).toHaveLength(3)
+    } finally {
+      controller.dispose()
+      engine.dispose()
+      remove()
+    }
+  }
+)
