@@ -22,6 +22,8 @@ export type { NavGraph, NavPoint, NavPosition } from "./navigationGraph"
 export { extractNetworkNavPoints, nextNetworkIndex } from "./networkKeyboardNav"
 import type { NavPoint } from "./navigationGraph"
 
+const spatialOrder = (a: NavPoint, b: NavPoint) => a.x - b.x || a.y - b.y
+
 // ── XY Extraction ────────────────────────────────────────────────────────
 
 /**
@@ -68,10 +70,12 @@ export function extractXYNavPoints(scene: SceneNode[]): NavPoint[] {
         break
       }
 
-      case "rect": {
+      case "rect":
+      case "heatcell": {
         // A restyle or a data push rebuilds every histogram bin datum, so
         // focus finds its bin again by stack segment and bin start.
-        const binStart = node.datum?.binStart
+        const group = node.type === "rect" ? node.group : undefined
+        const binStart = node.type === "rect" ? node.datum?.binStart : undefined
         points.push({
           x: node.x + node.w / 2,
           y: node.y + node.h / 2,
@@ -80,9 +84,9 @@ export function extractXYNavPoints(scene: SceneNode[]): NavPoint[] {
           w: node.w,
           h: node.h,
           semanticKey: typeof binStart === "number" && Number.isFinite(binStart)
-            ? JSON.stringify(["bin", node.group ?? null, binStart])
+            ? JSON.stringify(["bin", group ?? null, binStart])
             : undefined,
-          group: node.group ?? "_default"
+          group: group ?? "_default"
         })
         break
       }
@@ -98,21 +102,11 @@ export function extractXYNavPoints(scene: SceneNode[]): NavPoint[] {
         break
       }
 
-      case "heatcell":
-        points.push({
-          x: node.x + node.w / 2,
-          y: node.y + node.h / 2,
-          datum: node.datum,
-          shape: "rect",
-          w: node.w,
-          h: node.h,
-          group: "_default"
-        })
-        break
+
     }
   }
 
-  points.sort((a, b) => a.x - b.x || a.y - b.y)
+  points.sort(spatialOrder)
   return points
 }
 
@@ -217,7 +211,7 @@ export function extractOrdinalNavPoints(scene: OrdinalSceneNode[]): NavPoint[] {
     }
   }
 
-  points.sort((a, b) => a.x - b.x || a.y - b.y)
+  points.sort(spatialOrder)
   return points
 }
 
@@ -288,7 +282,7 @@ export function extractGeoNavPoints(scene: GeoSceneNode[]): NavPoint[] {
     }
   }
 
-  points.sort((a, b) => a.x - b.x || a.y - b.y)
+  points.sort(spatialOrder)
   return points
 }
 
