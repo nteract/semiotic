@@ -236,8 +236,9 @@ const realtimeLineChartKeyProps = [
   { name: "timeAccessor", type: "string | function", required: false, default: '"time"', description: "Field name or function to access the time value." },
   { name: "valueAccessor", type: "string | function", required: false, default: '"value"', description: "Field name or function to access the numeric value." },
   { name: "size", type: "[number, number]", required: false, default: "[500, 300]", description: "Chart dimensions as [width, height]." },
-  { name: "windowMode", type: '"sliding" | "growing"', required: false, default: '"sliding"', description: '"sliding" discards old points beyond windowSize; "growing" keeps all.' },
-  { name: "windowSize", type: "number", required: false, default: "200", description: "Ring buffer capacity in sliding mode." },
+  { name: "windowMode", type: '"sliding" | "growing"', required: false, default: '"sliding"', description: '"sliding" discards old points beyond windowSize; "growing" expands up to maxCapacity, then discards oldest rows.' },
+  { name: "maxCapacity", type: "number", required: false, default: "100000", description: "Maximum live rows in growing mode; once full, evicts oldest rows. Bounded snapshots are not capped." },
+  { name: "windowSize", type: "number", required: false, default: "200", description: "Reactive live buffer capacity in sliding mode; initial capacity in growing mode. Bounded snapshots retain all rows until live pushes begin." },
   { name: "stroke", type: "string", required: false, default: '"#007bff"', description: "Line color." },
   { name: "enableHover", type: "boolean | object", required: false, default: null, description: "Enable hover annotations." },
 ]

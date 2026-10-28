@@ -702,6 +702,7 @@ interface-member StreamXYFrameProps::property::linkedCrosshairSourceId = optiona
 interface-member StreamXYFrameProps::property::lowAccessor = optional lowAccessor: ((d: T) => number) | string | undefined
 interface-member StreamXYFrameProps::property::margin = optional margin: undefined | {top?: number; right?: number; bottom?: number; left?: number;}
 interface-member StreamXYFrameProps::property::marginalGraphics = optional marginalGraphics: MarginalGraphicsConfig | undefined
+interface-member StreamXYFrameProps::property::maxCapacity = optional maxCapacity: number | undefined
 interface-member StreamXYFrameProps::property::maxDevicePixelRatio = optional maxDevicePixelRatio: number | undefined
 interface-member StreamXYFrameProps::property::normalize = optional normalize: boolean | undefined
 interface-member StreamXYFrameProps::property::onBrush = optional onBrush: ((extent: {x: [number, number]; y: [number, number];} | null) => void) | undefined

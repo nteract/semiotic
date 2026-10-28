@@ -103,6 +103,8 @@ export interface RealtimeHeatmapProps<
   windowMode?: WindowMode
   /** Ring buffer capacity */
   windowSize?: number
+  /** Maximum live rows retained in growing mode. Defaults to 100,000. */
+  maxCapacity?: number
   /** Alias for `windowSize` — ring-buffer capacity, not the aggregation window. */
   capacity?: number
   /** Alias for `windowMode`. */
@@ -261,6 +263,7 @@ export const RealtimeHeatmap = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ f
     windowMode: windowModeProp,
     capacityMode,
     windowSize: windowSizeProp,
+    maxCapacity,
     capacity,
     data,
     timeAccessor,
@@ -458,6 +461,7 @@ export const RealtimeHeatmap = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ f
       arrowOfTime={arrowOfTime}
       windowMode={windowMode}
       windowSize={windowSize}
+      maxCapacity={maxCapacity}
       data={data}
       timeAccessor={timeAccessor}
       valueAccessor={valueAccessor}

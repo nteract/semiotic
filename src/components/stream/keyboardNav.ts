@@ -33,11 +33,12 @@ export function extractXYNavPoints(scene: SceneNode[]): NavPoint[] {
   const points: NavPoint[] = []
 
   for (const node of scene) {
+    if (node.datum == null) continue
     switch (node.type) {
       case "point":
       case "symbol":
         if (node.type === "point" ? node.interactive === false : node.size <= 0) break
-        points.push({ x: node.x, y: node.y, datum: node.datum, shape: "circle", group: "_default" })
+        points.push({ x: node.x, y: node.y, datum: node.datum, semanticKey: node.pointId, shape: "circle", group: "_default" })
         break
 
       case "glyph": {
@@ -63,7 +64,7 @@ export function extractXYNavPoints(scene: SceneNode[]): NavPoint[] {
         const data = Array.isArray(node.datum) ? node.datum : []
         const group = node.group ?? "_default"
         for (let i = 0; i < path.length && i < data.length; i++) {
-          points.push({ x: path[i][0], y: path[i][1], datum: data[i], shape: "circle", group })
+          points.push({ x: path[i][0], y: path[i][1], datum: data[i], semanticKey: node.pathIds?.[i], shape: "circle", group })
         }
         break
       }
@@ -155,7 +156,7 @@ export function extractOrdinalNavPoints(scene: OrdinalSceneNode[]): NavPoint[] {
         group
       })
     } else if (node.type === "point" || node.type === "symbol") {
-      if (node.type === "point" ? node.interactive === false : node.size <= 0) continue
+      if (node.datum == null || (node.type === "point" ? node.interactive === false : node.size <= 0)) continue
       push({ x: node.x, y: node.y, datum: node.datum, shape: "circle", group: "_default" })
     } else if (node.type === "glyph") {
       if (node.size <= 0 || node.datum == null) continue

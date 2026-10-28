@@ -31,6 +31,14 @@ const printOnly = process.argv.includes("--print")
  * `scripts/treeshake-isolation.test.mjs`.
  */
 const ENTRY_GRAPHS = [
+  // Streaming retention and interaction lifecycle (2026-10-28, #1315/#1314).
+  // Clean cef77e32f -> feature, identical Node/dependencies, gzip KiB:
+  // root 395.7 -> 396.5, line 124.2 -> 124.9, realtime 175.7 -> 176.6,
+  // AI 638.2 -> 638.8. Monotonic FIFO extents, reactive capped retention,
+  // atomic replacement, and focus/hover cleanup account for this payload.
+  // Mutation handles and replacement scheduling are shared; no dependency
+  // was added. Keep roughly 0.3 KiB headroom only for these affected facades.
+  // All other graph budgets and cold-consumer/isolation limits stay fixed.
   // Compositional row routing and grouped keyboard navigation (2026-10-27).
   // Clean 9f54b35b0 -> feature build, same Node/dependencies, gzip KiB:
   // root 394.6 -> 395.0, network 170.4 -> 170.8, realtime 174.7 -> 175.2,
@@ -158,7 +166,7 @@ const ENTRY_GRAPHS = [
   // Feature graph: 387.3 KiB (previous built HEAD: 385.9 KiB).
   // Bumped 393.8→395: shared log-domain repair and heatmap band projection
   // (explicit empty ends, cached numeric keys) measure 394.2 KiB gzip.
-  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 395.7 },
+  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 396.8 },
   // Bumped 150→154: custom-layout painter registration now loads on demand
   // rather than retaining every painter in every chart HOC. The lightweight
   // readiness bridge and fallback paint selection live in the shared XY
@@ -199,7 +207,7 @@ const ENTRY_GRAPHS = [
   // Lowered 124→122 (2026-09-30): on-demand transitions measure 121.0 KiB gzip.
   // Feature graph: 123.3 KiB (previous built HEAD: 121.9 KiB).
   // Combined line-gap, navigation, and touch fixes measure 124.23 KiB.
-  { entry: "semiotic-line.module.min.js", label: "line", limitKb: 124.3 },
+  { entry: "semiotic-line.module.min.js", label: "line", limitKb: 125.2 },
   // The opt-in text adapter stays isolated. This budgets Semiotic's code;
   // @chenglou/pretext remains an external optional peer, like React.
   { entry: "semiotic-text.module.min.js", label: "text (adapter)", limitKb: 2 },
@@ -311,7 +319,7 @@ const ENTRY_GRAPHS = [
   // Feature graph: 170.5 KiB (previous built HEAD: 168.5 KiB).
   // Bumped 174.1→175: the same shared XY domain and heatmap projection
   // measure 174.4 KiB gzip.
-  { entry: "realtime.module.min.js", label: "realtime", limitKb: 175.7 },
+  { entry: "realtime.module.min.js", label: "realtime", limitKb: 176.9 },
   // Bumped 160→161 (3.8.6): PacketFlow and Crucible now join the shared
   // physics selection contract. The chart-local split keeps source modules
   // bounded, while the reachable graph gains less than one KiB gzip.
@@ -442,7 +450,7 @@ const ENTRY_GRAPHS = [
   // User-approved 3.13.2 refresh (2026-10-27): the production AI graph
   // measures 652,373 bytes (637.083 KiB) gzip across 78 files. Allow 637.5 KiB,
   // retaining about 0.4 KiB headroom for the patch's correctness fixes.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 638.2 },
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 639.1 },
   // Bumped 100→101: transitDiagramLayout's public detail modes, source-rooted
   // line derivation, and station-rendering contract extend the curated recipes
   // entry. Linux CI measures 100.3 KiB gzip; retain a reviewable 0.7 KiB

@@ -71,17 +71,20 @@ describe("network keyboard focus follows layout", () => {
       fireEvent.keyDown(frame, { key })
       expect(onObservation.mock.calls.at(-1)![0]).toMatchObject({
         type: "focus",
-        datum: { id: "A" }
+        datum: { id: key === "End" ? "C" : "A" }
       })
       expect(
         container.querySelector(".stream-network-tooltip")
-      ).toHaveTextContent("Alpha")
+      ).toHaveTextContent(key === "End" ? "Gamma" : "Alpha")
+      fireEvent.keyDown(frame, { key: "Home" })
       fireEvent.keyDown(frame, { key: "ArrowRight" })
       expect(
         container.querySelector(".stream-network-tooltip")
       ).toHaveTextContent("Beta")
-      fireEvent.keyDown(frame, { key: "Escape" })
+      fireEvent.blur(frame, { relatedTarget: document.body })
       expect(container.querySelector(".stream-network-tooltip")).toBeNull()
+      expect(container.querySelector('[stroke-dasharray="4,2"]')).toBeNull()
+      fireEvent.keyDown(frame, { key: "Escape" })
     }
   })
 

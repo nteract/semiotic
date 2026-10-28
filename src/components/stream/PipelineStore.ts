@@ -14,13 +14,13 @@ import type { Datum } from "../charts/shared/datumTypes"
  *   xySceneBuilders/ — per-chartType scene layout (line, area, point, etc.)
  *   SceneGraph        — node constructors (buildLineNode, buildPointNode, etc.)
  *   RingBuffer         — sliding window data storage
- *   IncrementalExtent  — O(1) min/max tracking
+ *   SlidingExtent      — amortized O(1) FIFO extrema; O(n) after arbitrary edits
  *
  * Consumed by: StreamXYFrame (sole consumer).
  */
 import { barPlottedYValues } from "../realtime/BinAccumulator"
 import { RingBuffer } from "../realtime/RingBuffer"
-import { IncrementalExtent } from "../realtime/IncrementalExtent"
+import { SlidingExtent } from "../realtime/SlidingExtent"
 import type {
   Changeset,
   StreamScales,
@@ -88,7 +88,9 @@ import {
   compactTimestampBufferForRemoval,
   createTimestampBufferForData,
   ensureRingBufferCapacity,
-  pushWithTimestamp
+  pushWithTimestamp,
+  resizeStreamingBuffer,
+  validateStreamingWindow
 } from "./pipelineBufferUtils"
 import type { UpdateResult } from "./pipelineUpdateContract"
 import { UpdateResultStoreBase } from "./pipelineUpdateStore"
@@ -117,12 +119,11 @@ export const GROUP_COLOR_MAP_CAP = 1000
 
 export class PipelineStore extends UpdateResultStoreBase {
   private buffer: RingBuffer<Datum>
-  private xExtent = new IncrementalExtent()
-  private yExtent = new IncrementalExtent()
+  private xExtent = new SlidingExtent()
+  private yExtent = new SlidingExtent()
   private config: PipelineConfig
-  private growingCap: number
+  private liveWindow = true
   private growingCapacityWarned = false
-  private windowSizeWarned = false
 
   private getX!: (d: Datum) => number
   private getY: (d: Datum) => number
@@ -242,9 +243,9 @@ export class PipelineStore extends UpdateResultStoreBase {
 
   constructor(config: PipelineConfig) {
     super()
+    validateStreamingWindow(config)
     this.config = config
     this.buffer = new RingBuffer(config.windowSize)
-    this.growingCap = config.windowSize
 
     // Resolve accessors based on streaming vs bounded mode.
     // Streaming types use time/value defaults; bounded types use x/y defaults.
@@ -361,19 +362,20 @@ export class PipelineStore extends UpdateResultStoreBase {
    * visible domain beyond the point itself, so removing or replacing that
    * datum must evict its envelope extrema too.
    */
-  private evictDatumYExtent(d: Datum): void {
+  private evictDatumYExtent(d: Datum, oldest = false): void {
+    const method = oldest ? "evictOldest" : "evict"
     if (this.config.chartType === "candlestick" && this.getHigh && this.getLow) {
-      this.yExtent.evict(this.getHigh(d))
-      this.yExtent.evict(this.getLow(d))
+      this.yExtent[method](this.getHigh(d))
+      this.yExtent[method](this.getLow(d))
       return
     }
-    this.yExtent.evict(this.getY(d))
-    if (this.getY0) this.yExtent.evict(this.getY0(d))
+    this.yExtent[method](this.getY(d))
+    if (this.getY0) this.yExtent[method](this.getY0(d))
     for (const r of this.resolvedRibbons) {
       const top = r.getTop(d)
       const bottom = r.getBottom(d)
-      if (Number.isFinite(top)) this.yExtent.evict(top)
-      if (Number.isFinite(bottom)) this.yExtent.evict(bottom)
+      if (Number.isFinite(top)) this.yExtent[method](top)
+      if (Number.isFinite(bottom)) this.yExtent[method](bottom)
     }
   }
 
@@ -432,6 +434,7 @@ export class PipelineStore extends UpdateResultStoreBase {
 
     if (changeset.bounded) {
       this._lastBoundedInsertsRef = changeset.inserts
+      this.liveWindow = false
       // Full replacement for bounded data
       this.buffer.clear()
       this.xExtent.clear()
@@ -454,26 +457,19 @@ export class PipelineStore extends UpdateResultStoreBase {
     } else {
       // The first usable pushed value establishes the temporal x contract.
       if (!this.xTypeDetected) this.resolveXAccessor(changeset.inserts)
-      // Streaming append
+      if (!changeset.boundedAppend) {
+        this.liveWindow = true
+        this.resizeWindow()
+      }
       for (const d of changeset.inserts) {
-        if (this.config.windowMode === "growing" && this.buffer.full) {
-          const maxCap = this.config.maxCapacity ?? DEFAULT_GROWING_MAX_CAPACITY
-          if (this.growingCap < maxCap) {
-            this.growingCap = Math.min(this.growingCap * 2, maxCap)
-            this.buffer.resize(this.growingCap)
-            if (this.timestampBuffer) this.timestampBuffer.resize(this.growingCap)
-            if (
-              process.env.NODE_ENV !== "production" &&
-              !this.growingCapacityWarned &&
-              this.growingCap >= GROWING_CAPACITY_WARN_THRESHOLD
-            ) {
-              this.growingCapacityWarned = true
-              console.warn(
-                `[Semiotic] Growing window buffer reached ${this.growingCap} points ` +
-                  `(cap ${maxCap}). Large canvas scenes are expensive — prefer a sliding ` +
-                  `window, aggregation, or an explicit maxCapacity if this is intentional.`
-              )
-            }
+        if (!changeset.boundedAppend && this.config.windowMode === "growing" && this.buffer.full) {
+          this.resizeWindow(true)
+          if (process.env.NODE_ENV !== "production" && !this.growingCapacityWarned &&
+            this.buffer.capacity >= GROWING_CAPACITY_WARN_THRESHOLD) {
+            this.growingCapacityWarned = true
+            console.warn(`[Semiotic] Growing window buffer reached ${this.buffer.capacity} points ` +
+              `(cap ${this.config.maxCapacity ?? DEFAULT_GROWING_MAX_CAPACITY}). ` +
+              `Prefer a sliding window, aggregation, or an explicit maxCapacity.`)
           }
         }
 
@@ -482,8 +478,8 @@ export class PipelineStore extends UpdateResultStoreBase {
         this.pushDatumYExtent(d)
 
         if (evicted != null) {
-          this.xExtent.evict(this.getX(evicted))
-          this.evictDatumYExtent(evicted)
+          this.xExtent.evictOldest(this.getX(evicted))
+          this.evictDatumYExtent(evicted, true)
         }
       }
     }
@@ -1129,7 +1125,7 @@ export class PipelineStore extends UpdateResultStoreBase {
   // ── Public accessors ─────────────────────────────────────────────────
 
   getData(): Datum[] {
-    return this.getBufferArray()
+    return this.getBufferArray().slice()
   }
 
   /**
@@ -1297,6 +1293,7 @@ export class PipelineStore extends UpdateResultStoreBase {
 
   clear(): void {
     this.buffer.clear()
+    this.liveWindow = true
     this.resolveXAccessor()
     this.xExtent.clear()
     this.yExtent.clear()
@@ -1383,30 +1380,22 @@ export class PipelineStore extends UpdateResultStoreBase {
     this.updateResults.recordRestyle(true)
   }
 
+  private resizeWindow(grow = false): void {
+    const evicted = resizeStreamingBuffer(this.buffer, this.timestampBuffer, this.config, grow)
+    if (evicted.length === 0) return
+    this.rebuildExtents()
+    this._bufferDirty = true
+    this._ingestVersion++
+    this.needsFullRebuild = true
+  }
+
   updateConfig(config: Partial<PipelineConfig>): void {
     const prev = { ...this.config }
     const changedConfigKeys = Object.keys(config).filter(
       key => (config as Record<string, unknown>)[key] !== (prev as Record<string, unknown>)[key],
     )
 
-    // `windowSize` sizes the ring buffer in the constructor and is NOT applied
-    // reactively — changing it after mount has no effect on the retained
-    // buffer. Warn once in development so the setting isn't silently ignored.
-    // (Reactive resize via RingBuffer.resize is a tracked follow-up; it has
-    // bounded-vs-streaming mode interactions that need their own contract.)
-    if (
-      process.env.NODE_ENV !== "production" &&
-      !this.windowSizeWarned &&
-      "windowSize" in config &&
-      config.windowSize !== prev.windowSize
-    ) {
-      this.windowSizeWarned = true
-      console.warn(
-        `[Semiotic] windowSize changed after mount (${prev.windowSize} → ${config.windowSize}) ` +
-          `but it is a mount-only setting — the ring buffer keeps its original capacity. ` +
-          `Remount the chart (e.g. via a React key) to apply a new windowSize.`,
-      )
-    }
+    validateStreamingWindow({ ...prev, ...config })
 
     // Invalidate color map caches when any color-relevant config changes.
     // resolveColorMap short-circuits on _ingestVersion, so we must explicitly
@@ -1446,6 +1435,8 @@ export class PipelineStore extends UpdateResultStoreBase {
     let extentAccessorChanged = false
 
     Object.assign(this.config, config)
+    if (this.liveWindow && changedConfigKeys.some(key =>
+      key === "windowSize" || key === "windowMode" || key === "maxCapacity")) this.resizeWindow()
 
     // `pulse` owns a constructor-created parallel timestamp resource. React
     // can add, remove, or replace it after mount, so synchronize that resource

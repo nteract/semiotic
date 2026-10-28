@@ -108,10 +108,11 @@ describe("PipelineStore update-result reference path", () => {
     expect(style.changed.has("scene-style")).toBe(true)
     expect(style.changed.has("layout")).toBe(false)
 
-    const futureOnly = store.updateConfigWithResult({ maxCapacity: 100 })
-    expect(futureOnly.changeSet).toEqual({ kind: "config", keys: ["maxCapacity"] })
-    expect(futureOnly.changed.size).toBe(0)
-    expect(futureOnly.revisions).toEqual(style.revisions)
+    const retention = store.updateConfigWithResult({ maxCapacity: 100 })
+    expect(retention.changeSet).toEqual({ kind: "config", keys: ["maxCapacity"] })
+    expect(retention.changed.has("data")).toBe(true)
+    expect(retention.changed.has("accessibility")).toBe(true)
+    expect(retention.revisions.data).toBe(style.revisions.data + 1)
   })
 })
 

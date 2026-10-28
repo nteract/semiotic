@@ -186,9 +186,9 @@ export const XY_CONFIG_PATCH_DEPENDENCIES: Readonly<
 
   annotations: /* @__PURE__ */ dependency("preserve", OVERLAY),
 
-  windowSize: /* @__PURE__ */ dependency("preserve", NOOP),
-  windowMode: /* @__PURE__ */ dependency("preserve", NOOP),
-  maxCapacity: /* @__PURE__ */ dependency("preserve", NOOP),
+  windowSize: /* @__PURE__ */ dependency("rebuild", DATA_INVALIDATIONS),
+  windowMode: /* @__PURE__ */ dependency("rebuild", DATA_INVALIDATIONS),
+  maxCapacity: /* @__PURE__ */ dependency("rebuild", DATA_INVALIDATIONS),
   clock: /* @__PURE__ */ dependency("preserve", NOOP),
   transition: /* @__PURE__ */ dependency("preserve", NOOP),
   introAnimation: /* @__PURE__ */ dependency("preserve", NOOP),

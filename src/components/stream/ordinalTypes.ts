@@ -246,6 +246,7 @@ export interface OrdinalPipelineConfig {
   chartType: OrdinalChartType
   runtimeMode?: "bounded" | "streaming"
   windowSize: number
+  maxCapacity?: number
   windowMode: WindowMode
   extentPadding: number
   /** When `"exact"`, the value-axis domain is pinned to the literal data
@@ -471,6 +472,8 @@ export interface StreamOrdinalFrameProps<T = Datum> {
   // Streaming
   windowMode?: WindowMode
   windowSize?: number
+  /** Maximum retained live rows in growing mode (default 100,000). */
+  maxCapacity?: number
 
   // Connectors
   connectorAccessor?: string | ((d: T) => string)

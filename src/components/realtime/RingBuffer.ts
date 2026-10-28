@@ -4,8 +4,8 @@ export class RingBuffer<T> {
   private _size: number = 0
 
   constructor(private _capacity: number) {
-    if (_capacity < 1) {
-      throw new Error("RingBuffer capacity must be at least 1")
+    if (!Number.isSafeInteger(_capacity) || _capacity < 1) {
+      throw new Error("RingBuffer capacity must be a positive safe integer")
     }
     this.buffer = new Array(_capacity)
   }
@@ -77,8 +77,8 @@ export class RingBuffer<T> {
   }
 
   resize(newCapacity: number): T[] {
-    if (newCapacity < 1) {
-      throw new Error("RingBuffer capacity must be at least 1")
+    if (!Number.isSafeInteger(newCapacity) || newCapacity < 1) {
+      throw new Error("RingBuffer capacity must be a positive safe integer")
     }
     const items = this.toArray()
     // Drop oldest items with slice — avoid O(n²) shift() loops when

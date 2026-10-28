@@ -116,6 +116,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       windowMode: windowModeProp,
       capacityMode,
       windowSize: windowSizeProp,
+      maxCapacity,
       capacity,
       timeAccessor,
       xExtent,
@@ -399,6 +400,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       chartType,
       runtimeMode: isStreaming ? "streaming" : "bounded",
       windowSize,
+      maxCapacity,
       windowMode,
       arrowOfTime: isStreaming ? arrowOfTime : "right",
       extentPadding,
@@ -480,7 +482,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       onLayoutError,
       layoutConfig,
       layoutMargin: margin,
-    }), [chartType, isStreaming, windowSize, windowMode, arrowOfTime, extentPadding, scalePadding, axisExtent, yAxisExtent, yAxisTicks, yAxisTickValues, xAccessor, yAccessor, accessorRevision, timeAccessor, valueAccessor, colorAccessor, sizeAccessor, symbolAccessor, symbolMap, groupAccessor, lineDataAccessor, categoryAccessor, xScaleType, yScaleType, xExtent, yExtent, invertY, sizeRange, binSize, binAlign, normalize, baseline, stackOrder, boundsAccessor, boundsStyle, y0Accessor, band, gradientFill, areaGroups, lineGradient, semanticLineStops, openAccessor, highAccessor, lowAccessor, closeAccessor, candlestickStyle, lineStyle, trackHoverRows, pointStyle, areaStyle, swarmStyle, waterfallStyle, colorScheme, barColors, barStyle, annotations, decay, pulse, transition, introEnabled, staleness, frameRuntime.now, heatmapAggregation, heatmapXBins, heatmapYBins, showValues, heatmapValueFormat, heatmapColorScale, pointIdAccessor, curve, currentTheme, customLayout, onLayoutError, layoutConfig, margin])
+    }), [chartType, isStreaming, windowSize, maxCapacity, windowMode, arrowOfTime, extentPadding, scalePadding, axisExtent, yAxisExtent, yAxisTicks, yAxisTickValues, xAccessor, yAccessor, accessorRevision, timeAccessor, valueAccessor, colorAccessor, sizeAccessor, symbolAccessor, symbolMap, groupAccessor, lineDataAccessor, categoryAccessor, xScaleType, yScaleType, xExtent, yExtent, invertY, sizeRange, binSize, binAlign, normalize, baseline, stackOrder, boundsAccessor, boundsStyle, y0Accessor, band, gradientFill, areaGroups, lineGradient, semanticLineStops, openAccessor, highAccessor, lowAccessor, closeAccessor, candlestickStyle, lineStyle, trackHoverRows, pointStyle, areaStyle, swarmStyle, waterfallStyle, colorScheme, barColors, barStyle, annotations, decay, pulse, transition, introEnabled, staleness, frameRuntime.now, heatmapAggregation, heatmapXBins, heatmapYBins, showValues, heatmapValueFormat, heatmapColorScale, pointIdAccessor, curve, currentTheme, customLayout, onLayoutError, layoutConfig, margin])
 
     // Stabilize the config reference so inline-object / inline-array
     // props don't shed identity on every parent render. Without this
@@ -544,6 +546,9 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
 
     // ── DataSourceAdapter ────────────────────────────────────────────────
 
+    const dataInteractionRef = useRef<(resetFocus?: boolean) => void>(() => {})
+    const invalidateInteraction = useCallback((resetFocus?: boolean) => dataInteractionRef.current(resetFocus), [])
+    useEffect(() => invalidateInteraction(), [windowSize, windowMode, maxCapacity, invalidateInteraction])
     const adapterRef = useRef<DataSourceAdapter | null>(null)
     if (!adapterRef.current) {
       adapterRef.current = new DataSourceAdapter((changeset) => {
@@ -551,6 +556,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
         if (!store) return
         const needsRender = store.ingest(changeset)
         if (needsRender) {
+          dataInteractionRef.current()
           dirtyRef.current = true
           // Legend-category emission deferred to the post-computeScene path
           // in the render loop — that's the single canonical emit point per
@@ -573,8 +579,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       adapterRef,
       dirtyRef,
       scheduleRender,
-      hoverRef,
-      setHoverPoint
+      invalidateInteraction
     })
 
     // ── Controlled data prop ─────────────────────────────────────────────
@@ -792,7 +797,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
 
     // ── Keyboard navigation ───────────────────────────────────────────
 
-    const { kbFocusIndexRef, focusedNavPointRef, onKeyDown, refreshKeyboardFocus } =
+    const { kbFocusIndexRef, focusedNavPointRef, onKeyDown, onBlur, clearFocus, refreshKeyboardFocus } =
       useXYKeyboardNavigation({
         clearPointerHover: onPointerLeave,
         storeRef,
@@ -826,6 +831,11 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
 
     // Clear keyboard focus on mouse interaction; reuses the rAF-coalesced
     // hover path so the per-frame work cap still applies.
+    dataInteractionRef.current = (resetFocus = false) => {
+      if (resetFocus) clearFocus()
+      else if (kbFocusIndexRef.current < 0 && hoverRef.current) onPointerLeave()
+    }
+
     const onPointerMoveWrapped = useCallback((e: React.PointerEvent) => {
       if (!shouldHandleFramePointer(
         pointerStateRef, e, Boolean(effectiveHoverAnnotation),
@@ -1070,7 +1080,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       resolutionDirtyRef.current = false
 
       // Push scales into React state so SVGOverlay renders axes/grid
-      if (wasDirty && store.scales) {
+      if (wasDirty) {
         // A rebuilt scale can change mapping or tick intervals without changing
         // domain/range endpoints (linear → log, or numeric → calendar time).
         if (currentScales !== store.scales) {
@@ -1344,6 +1354,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
           touchAction: brushTouchAction(brush),
         }}
         onKeyDown={onKeyDown}
+        onBlur={onBlur}
       >
         {process.env.NODE_ENV !== "production" && storeRef.current && (
           <SceneRevisionDiagnosticsObserver

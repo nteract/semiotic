@@ -569,6 +569,7 @@ interface-member StreamOrdinalFrameProps::property::legendIsolatedCategories = o
 interface-member StreamOrdinalFrameProps::property::legendLayout = optional legendLayout: LegendLayout | undefined
 interface-member StreamOrdinalFrameProps::property::legendPosition = optional legendPosition: "bottom" | "left" | "right" | "top" | undefined
 interface-member StreamOrdinalFrameProps::property::margin = optional margin: undefined | {top?: number; right?: number; bottom?: number; left?: number;}
+interface-member StreamOrdinalFrameProps::property::maxCapacity = optional maxCapacity: number | undefined
 interface-member StreamOrdinalFrameProps::property::maxDevicePixelRatio = optional maxDevicePixelRatio: number | undefined
 interface-member StreamOrdinalFrameProps::property::multiAxis = optional multiAxis: boolean | undefined
 interface-member StreamOrdinalFrameProps::property::normalize = optional normalize: boolean | undefined

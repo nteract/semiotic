@@ -47,4 +47,28 @@ describe("generated realtime registrations", () => {
       })
     }
   )
+
+  it.each(Object.entries(realtimeDefinitionFixtures))(
+    "keeps every bounded %s row in server output despite a smaller live cap",
+    (chart, props) => {
+      const snapshot = {
+        ...props,
+        _idPrefix: "retained-snapshot",
+        width: 600,
+        height: 400
+      }
+      const baseline = renderChartWithEvidence(chart, snapshot)
+      const capped = renderChartWithEvidence(chart, {
+        ...snapshot,
+        windowMode: "growing",
+        windowSize: 1,
+        maxCapacity: 1
+      })
+      expect(baseline.evidence.empty).toBe(false)
+      expect(capped.evidence.markCount).toBe(baseline.evidence.markCount)
+      expect(capped.evidence.xDomain).toEqual(baseline.evidence.xDomain)
+      expect(capped.evidence.yDomain).toEqual(baseline.evidence.yDomain)
+      expect(capped.svg).toBe(baseline.svg)
+    }
+  )
 })

@@ -580,7 +580,7 @@ const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
 
     // ── Keyboard navigation ───────────────────────────────────────────
 
-    const { kbFocusIndexRef, focusedNavPointRef, onKeyDown, refreshKeyboardFocus } = useGeoKeyboardNavigation({
+    const { kbFocusIndexRef, focusedNavPointRef, onKeyDown, onBlur, refreshKeyboardFocus } = useGeoKeyboardNavigation({
       clearPointerHover: onPointerLeave,
       storeRef,
       hoverRef,
@@ -1291,6 +1291,7 @@ const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
           ...(zoomable ? { touchAction: "none" } : {}),
         }}
         onKeyDown={onKeyDown}
+      onBlur={onBlur}
       >
         {process.env.NODE_ENV !== "production" && storeRef.current && (
           <SceneRevisionDiagnosticsObserver

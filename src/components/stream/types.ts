@@ -524,6 +524,8 @@ export interface Changeset<T = Datum> {
   bounded: boolean
   /** Hint: total dataset size when progressively chunking bounded data */
   totalSize?: number
+  /** Append another chunk of the current bounded snapshot, without applying live retention. */
+  boundedAppend?: boolean
   /** When true on a bounded changeset, the store replaces the buffer
    *  contents but does NOT clear its category insertion-order memory
    *  and marks itself as having received streaming-sourced data. Used
@@ -776,6 +778,8 @@ export interface StreamXYFrameProps<T = Datum>
   arrowOfTime?: ArrowOfTime
   windowMode?: WindowMode
   windowSize?: number
+  /** Maximum retained live rows in growing mode (default 100,000). */
+  maxCapacity?: number
   /**
    * Ring-buffer capacity. Alias for `windowSize` — prefer this name when
    * talking to a Kafka Streams / Flink audience, where "window" means the

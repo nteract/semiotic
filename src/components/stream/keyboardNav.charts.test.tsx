@@ -179,5 +179,8 @@ describe("public chart keyboard mark access", () => {
     expect(frame.querySelector('[aria-live="polite"]')?.textContent).toContain("value: 75")
     fireEvent.keyDown(frame, { key: "Enter" })
     expect(onClick).toHaveBeenCalledWith(expect.objectContaining(flow), expect.objectContaining({ x: expect.any(Number), y: expect.any(Number) }))
+    fireEvent.blur(frame, { relatedTarget: document.body })
+    expect(frame.querySelector('[stroke-dasharray="4,2"]')).toBeNull()
+    expect(frame.querySelector('[aria-live="polite"]')?.textContent).toBe("")
   })
 })
