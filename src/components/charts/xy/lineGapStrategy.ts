@@ -44,12 +44,11 @@ export function groupLineChartRows(
     segmentField?: string
   },
 ): Datum[] {
-  const grouped: Record<string, Datum> = Object.create(null)
-  const lines: Datum[] = []
+  const grouped = new Map<string, Datum>()
   for (const row of rows) {
     const rawKey = typeof groupAccessor === "function" ? groupAccessor(row) : row[groupAccessor]
     const key = String(rawKey)
-    let line = grouped[key]
+    let line = grouped.get(key)
     if (!line) {
       line = { [lineDataAccessor]: [] }
       if (typeof groupAccessor === "string") line[groupAccessor] = rawKey
@@ -57,12 +56,11 @@ export function groupLineChartRows(
         line[segmentField] = row[segmentField]
         if (typeof lineBy === "string") line[lineBy] = row[lineBy]
       }
-      grouped[key] = line
-      lines.push(line)
+      grouped.set(key, line)
     }
     ;(line[lineDataAccessor] as Datum[]).push(row)
   }
-  return lines
+  return [...grouped.values()]
 }
 
 export function applyLineGapStrategy({
@@ -179,14 +177,13 @@ export function withSegmentSeriesTooltip<
   const content = tooltipProps.tooltipContent
   const relabeled = (hover: Datum) => {
     const allSeries = hover?.allSeries
-    if (!Array.isArray(allSeries)) return content(hover)
-    return content({
+    return content(Array.isArray(allSeries) ? {
       ...hover,
       allSeries: allSeries.map((row: Datum) => ({
         ...row,
         group: segments.seriesOf.get(row.group) ?? row.group,
       })),
-    })
+    } : hover)
   }
   return {
     ...tooltipProps,

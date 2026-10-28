@@ -629,12 +629,10 @@ export const LineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forward
   const { lines: gapProcessedLineData, hasGaps, segments } = useMemo(() => {
     const seriesOfLine = (line: Datum): string => {
       if (!frameGroupAccessor) return ""
-      if (typeof frameGroupAccessor === "string") {
-        const value = line[frameGroupAccessor]
-        return value == null ? "" : String(value)
-      }
       const first: Datum | undefined = line[lineDataAccessor]?.[0]
-      const value = first ? frameGroupAccessor(first) : undefined
+      const value = typeof frameGroupAccessor === "string"
+        ? line[frameGroupAccessor]
+        : first ? frameGroupAccessor(first) : undefined
       return value == null ? "" : String(value)
     }
     return applyLineGapStrategy({
