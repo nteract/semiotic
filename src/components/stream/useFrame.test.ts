@@ -731,7 +731,9 @@ describe("useFrame — hover coalescing", () => {
   it("restores touch detail after pointer leave at the final activation position", () => {
     const { result } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
     const hover = vi.fn()
+    const leave = vi.fn()
     result.current.hoverHandlerRef.current = hover
+    result.current.hoverLeaveRef.current = leave
     result.current.onPointerMove({ clientX: 5, clientY: 6, pointerType: "touch" })
     flushRafs()
     result.current.onPointerLeave()
@@ -740,6 +742,13 @@ describe("useFrame — hover coalescing", () => {
     result.current.flushPointerMove({ clientX: 20, clientY: 30, nativeEvent })
     flushRafs()
     expect(hover).toHaveBeenCalledExactlyOnceWith({ clientX: 20, clientY: 30, pointerType: "touch" })
+    leave.mockClear()
+    result.current.onPointerLeave({ type: "mouseleave" })
+    expect(leave).not.toHaveBeenCalled()
+    expect(result.current.pointerStateRef.current.inside).toBe(true)
+    result.current.onPointerLeave({ type: "pointerleave" })
+    expect(leave).toHaveBeenCalledOnce()
+    expect(result.current.pointerStateRef.current.inside).toBe(false)
   })
 
   it("processes an older hover before activation without replaying it afterward", () => {

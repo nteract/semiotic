@@ -259,7 +259,7 @@ export interface UseFrameResult {
   flushPointerMove: (event?: Pick<React.MouseEvent, "clientX" | "clientY" | "nativeEvent">) => void
   /** Stable callback to attach to canvas's onPointerLeave (or onMouseLeave).
    *  Cancels any pending hover rAF and invokes hoverLeaveRef. */
-  onPointerLeave: () => void
+  onPointerLeave: (event?: { type: string }) => void
   /** Last pointer position over the frame. Frames use this to refresh
    *  geometry-derived presentation while marks animate under a stationary
    *  pointer; reading/writing the ref never schedules work by itself. */
@@ -512,7 +512,7 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
   const flushPointerMove = useCallback((event?: Pick<React.MouseEvent, "clientX" | "clientY" | "nativeEvent">) => {
     // Touch pointers leave the surface before their compatibility click.
     // Re-hit the final activation position so tap-to-inspect detail persists.
-    if (event && "pointerType" in event.nativeEvent && event.nativeEvent.pointerType === "touch") {
+    if (event && (event.nativeEvent as PointerEvent).pointerType === "touch") {
       onPointerMove({ clientX: event.clientX, clientY: event.clientY, pointerType: "touch" })
     }
     if (moveRafRef.current !== null) {
@@ -523,7 +523,10 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
     }
     flushPendingMove()
   }, [flushPendingMove, onPointerMove])
-  const onPointerLeave = useCallback(() => {
+  const onPointerLeave = useCallback((event?: { type: string }) => {
+    // Chromium can dispatch a compatibility mouseleave after a touch click.
+    // Only a real pointer leave or explicit dismissal should clear tap detail.
+    if (event?.type === "mouseleave" && pointerStateRef.current.pointerType === "touch") return
     pointerStateRef.current.inside = false
     pendingMoveCoordsRef.current = null
     flushPointerMove()
@@ -545,14 +548,9 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
   useEffect(() => {
     return () => {
       pendingMoveCoordsRef.current = null
-      if (moveRafRef.current !== null) {
-        const scheduler = pendingMoveSchedulerRef.current ?? frameSchedulerRef.current
-        scheduler.cancelAnimationFrame(moveRafRef.current)
-        moveRafRef.current = null
-        pendingMoveSchedulerRef.current = null
-      }
+      flushPointerMove()
     }
-  }, [])
+  }, [flushPointerMove])
 
   // ── Theme-change effect ───────────────────────────────────────────────
   // When the theme changes (currentTheme reference changes), invalidate
