@@ -22,28 +22,6 @@ export type { NavGraph, NavPoint, NavPosition } from "./navigationGraph"
 export { extractNetworkNavPoints, nextNetworkIndex } from "./networkKeyboardNav"
 import type { NavPoint } from "./navigationGraph"
 
-/** Common focus geometry for marks shared by XY and ordinal scenes. */
-function markNavPoint(node: SceneNode | OrdinalSceneNode): NavPoint | undefined {
-  switch (node.type) {
-    case "point":
-    case "symbol":
-      if (node.type === "point" ? node.interactive === false : node.size <= 0) return
-      return { x: node.x, y: node.y, datum: node.datum, shape: "circle", group: "_default" }
-    case "glyph": {
-      if (node.size <= 0 || node.datum == null) return
-      const geometry = glyphHitGeometry(node.glyph, node.size)
-      return { x: node.x + geometry.centerDx, y: node.y + geometry.centerDy,
-        datum: node.datum, shape: "rect", w: geometry.halfWidth * 2,
-        h: geometry.halfHeight * 2, group: "_default" }
-    }
-    case "rect":
-    case "heatcell":
-      return { x: node.x + node.w / 2, y: node.y + node.h / 2,
-        datum: node.datum, shape: "rect", w: node.w, h: node.h,
-        group: node.type === "rect" ? node.group ?? "_default" : "_default" }
-  }
-}
-
 // ── XY Extraction ────────────────────────────────────────────────────────
 
 /**
@@ -55,27 +33,70 @@ export function extractXYNavPoints(scene: SceneNode[]): NavPoint[] {
   const points: NavPoint[] = []
 
   for (const node of scene) {
-    const point = markNavPoint(node)
-    if (point) {
-      if (node.type === "rect") {
-        const binStart = node.datum?.binStart
-        point.semanticKey = typeof binStart === "number" && Number.isFinite(binStart)
-          ? JSON.stringify(["bin", node.group ?? null, binStart]) : undefined
-      }
-      points.push(point)
-      continue
-    }
-
     switch (node.type) {
-      case "line":
-      case "area": {
-        if (node.type === "area" && node.interactive === false) break
-        const path = node.type === "line" ? node.path : node.topPath
-        const data = Array.isArray(node.datum) ? node.datum : []
-        const group = node.group ?? "_default"
-        for (let i = 0; i < path.length && i < data.length; i++) {
-          points.push({ x: path[i][0], y: path[i][1], datum: data[i], shape: "circle", group })
+      case "point":
+        if (node.interactive === false) break
+        points.push({ x: node.x, y: node.y, datum: node.datum, shape: "circle", group: "_default" })
+        break
+
+      case "symbol":
+        if (node.size <= 0) break
+        points.push({ x: node.x, y: node.y, datum: node.datum, shape: "circle", group: "_default" })
+        break
+
+      case "glyph": {
+        if (node.size <= 0 || node.datum == null) break
+        // Focus ring hugs the drawn pictogram bounds (anchor-aware).
+        const geometry = glyphHitGeometry(node.glyph, node.size)
+        points.push({
+          x: node.x + geometry.centerDx,
+          y: node.y + geometry.centerDy,
+          datum: node.datum,
+          shape: "rect",
+          w: geometry.halfWidth * 2,
+          h: geometry.halfHeight * 2,
+          group: "_default"
+        })
+        break
+      }
+
+      case "line": {
+        const line = node
+        const data = Array.isArray(line.datum) ? line.datum : []
+        const group = line.group ?? "_default"
+        for (let i = 0; i < line.path.length && i < data.length; i++) {
+          points.push({ x: line.path[i][0], y: line.path[i][1], datum: data[i], shape: "circle", group })
         }
+        break
+      }
+
+      case "area": {
+        if (node.interactive === false) break
+        const area = node
+        const data = Array.isArray(area.datum) ? area.datum : []
+        const group = area.group ?? "_default"
+        for (let i = 0; i < area.topPath.length && i < data.length; i++) {
+          points.push({ x: area.topPath[i][0], y: area.topPath[i][1], datum: data[i], shape: "circle", group })
+        }
+        break
+      }
+
+      case "rect": {
+        // A restyle or a data push rebuilds every histogram bin datum, so
+        // focus finds its bin again by stack segment and bin start.
+        const binStart = node.datum?.binStart
+        points.push({
+          x: node.x + node.w / 2,
+          y: node.y + node.h / 2,
+          datum: node.datum,
+          shape: "rect",
+          w: node.w,
+          h: node.h,
+          semanticKey: typeof binStart === "number" && Number.isFinite(binStart)
+            ? JSON.stringify(["bin", node.group ?? null, binStart])
+            : undefined,
+          group: node.group ?? "_default"
+        })
         break
       }
 
@@ -126,16 +147,44 @@ export function extractOrdinalNavPoints(scene: OrdinalSceneNode[]): NavPoint[] {
   }
 
   for (const node of scene) {
-    if (node.type === "rect" && (node.datum == null || node.x == null)) continue
-    const point = markNavPoint(node)
-    if (point) {
-      if (node.type === "rect") {
-        const category = node.datum?.category ?? ""
-        point.group = node.datum?.__funnelNavGroup ?? node.group ?? category
-        point.semanticKey = node.datum?.__aggregateValue !== undefined
-          ? JSON.stringify([category, node.group ?? category]) : undefined
-      }
-      push(point)
+    if (node.type === "rect" && node.x != null) {
+      // Skip non-interactive rects (e.g. swimlane track backgrounds —
+      // emitted with `datum: null` so arrow-key navigation lands on
+      // real data segments, not empty track tiles with no tooltip).
+      if (node.datum == null) continue
+      // Group by node.group (set by stacking/grouping) falling back to category.
+      const category = node.datum?.category ?? ""
+      const group = node.datum.__funnelNavGroup ?? node.group ?? category
+      push({
+        x: node.x + node.w / 2,
+        y: node.y + node.h / 2,
+        datum: node.datum,
+        shape: "rect",
+        w: node.w,
+        h: node.h,
+        semanticKey: node.datum.__aggregateValue !== undefined
+          ? JSON.stringify([category, node.group ?? category])
+          : undefined,
+        group
+      })
+    } else if (node.type === "point") {
+      if (node.interactive === false) continue
+      push({ x: node.x, y: node.y, datum: node.datum, shape: "circle", group: "_default" })
+    } else if (node.type === "symbol") {
+      if (node.size <= 0) continue
+      push({ x: node.x, y: node.y, datum: node.datum, shape: "circle", group: "_default" })
+    } else if (node.type === "glyph") {
+      if (node.size <= 0 || node.datum == null) continue
+      const geometry = glyphHitGeometry(node.glyph, node.size)
+      push({
+        x: node.x + geometry.centerDx,
+        y: node.y + geometry.centerDy,
+        datum: node.datum,
+        shape: "rect",
+        w: geometry.halfWidth * 2,
+        h: geometry.halfHeight * 2,
+        group: "_default"
+      })
     } else if (node.type === "boxplot") {
       if (node.datum == null) continue
       const vertical = node.projection === "vertical"

@@ -65,29 +65,17 @@ export interface NavPosition {
   indexInGroup: number
 }
 
-function compareNavPoints(a: NavPoint, b: NavPoint): number {
-  if (a.readingOrder != null && b.readingOrder != null && a.readingOrder !== b.readingOrder) {
-    return a.readingOrder - b.readingOrder
-  }
-  return a.x - b.x || a.y - b.y
-}
-
-function earliestReadingOrder(points: NavPoint[]): number | null {
-  let earliest: number | null = null
-  for (const point of points) {
-    if (point.readingOrder == null) continue
-    if (earliest == null || point.readingOrder < earliest) earliest = point.readingOrder
-  }
-  return earliest
-}
-
 /**
  * Build a navigation graph from grouped NavPoints.
- * Points within each group follow `readingOrder` when it is set, and
+ * Points within each group follow `readingOrder` when every point sets it, and
  * otherwise x then y. Groups with a reading order follow first appearance.
  * Groups without one stay in top-to-bottom order.
  */
 export function buildNavGraph(points: NavPoint[]): NavGraph {
+  const ordered = points.every(point => point.readingOrder != null)
+  const spatial = (a: NavPoint, b: NavPoint) => a.x - b.x || a.y - b.y
+  if (ordered) points = points.slice().sort((a, b) => a.readingOrder! - b.readingOrder! || spatial(a, b))
+
   const byGroup = new Map<string, NavPoint[]>()
 
   for (const p of points) {
@@ -102,29 +90,16 @@ export function buildNavGraph(points: NavPoint[]): NavGraph {
 
   // Sort within each group, then stamp group indices
   for (const arr of byGroup.values()) {
-    arr.sort(compareNavPoints)
+    if (!ordered) arr.sort(spatial)
     for (let i = 0; i < arr.length; i++) {
       arr[i]._groupIndex = i
     }
   }
 
-  // Series with a reading order follow first appearance. Others stay
-  // top-to-bottom so XY lines keep their existing group order.
-  const groups = Array.from(byGroup.keys()).sort((a, b) => {
-    const aPoints = byGroup.get(a)!
-    const bPoints = byGroup.get(b)!
-    const aOrder = earliestReadingOrder(aPoints)
-    const bOrder = earliestReadingOrder(bPoints)
-    if (aOrder != null && bOrder != null) {
-      return aOrder - bOrder || (aPoints[0]?.y ?? 0) - (bPoints[0]?.y ?? 0)
-    }
-    const aY = aPoints.length > 0 ? aPoints[0].y : 0
-    const bY = bPoints.length > 0 ? bPoints[0].y : 0
-    return aY - bY
-  })
-
-  const flat = Array.from(byGroup.values()).flat()
-  flat.sort(compareNavPoints)
+  // Ordered input is globally sorted once; each group retains that order.
+  const groups = Array.from(byGroup.keys())
+  if (!ordered) groups.sort((a, b) => byGroup.get(a)![0].y - byGroup.get(b)![0].y)
+  const flat = ordered ? points : Array.from(byGroup.values()).flat().sort(spatial)
 
   // Stamp flat index on each point for O(1) lookup and build id→index map
   const idToIdx = new Map<string, number>()
