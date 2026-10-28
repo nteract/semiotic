@@ -12,7 +12,7 @@ import type { OrdinalSceneContext } from "./types"
  * they simply stack sequentially.
  */
 export function buildSwimlaneScene(ctx: OrdinalSceneContext, _layout: OrdinalLayout): OrdinalSceneNode[] {
-  const { scales, columns, getR, getStack, resolvePieceStyle } = ctx
+  const { scales, getR, getStack, resolvePieceStyle } = ctx
   const { r: rScale, projection } = scales
   const nodes: OrdinalSceneNode[] = []
   const isHorizontal = projection === "horizontal"
@@ -49,7 +49,7 @@ export function buildSwimlaneScene(ctx: OrdinalSceneContext, _layout: OrdinalLay
     const [r0, r1] = rScale.range()
     const trackStart = Math.min(r0, r1)
     const trackLen = Math.abs(r1 - r0)
-    for (const col of Object.values(columns)) {
+    for (const col of ctx.orderedColumns) {
       const trackStyle = { fill: trackColor, opacity: trackOpacity }
       // datum: null so hit-testing returns no payload — track is purely visual.
       const node = isHorizontal
@@ -66,7 +66,7 @@ export function buildSwimlaneScene(ctx: OrdinalSceneContext, _layout: OrdinalLay
     }
   }
 
-  for (const col of Object.values(columns)) {
+  for (const col of ctx.orderedColumns) {
     // Each piece becomes its own rect, stacked sequentially within the lane.
     // No aggregation — duplicates of the same subcategory are expected.
     let offset = 0

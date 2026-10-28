@@ -24,6 +24,10 @@ export interface NavPoint {
   category?: string
   /** Group identifier for graph navigation (series name, category, node id) */
   group?: string
+  /**
+   * Rank used while extracting ordinal marks in authored reading order.
+   */
+  readingOrder?: number
   /** Index in NavGraph.flat — set by buildNavGraph for O(1) lookup */
   _flatIndex?: number
   /** Index within its group — set by buildNavGraph for O(1) resolvePosition */
@@ -61,10 +65,11 @@ export interface NavPosition {
 
 /**
  * Build a navigation graph from grouped NavPoints.
- * Points within each group are sorted by x then y.
- * Groups are sorted by their first-point y position (top to bottom).
+ * With ordered input, points and groups retain their supplied reading order.
+ * Otherwise points sort by x then y and groups stay in top-to-bottom order.
  */
-export function buildNavGraph(points: NavPoint[]): NavGraph {
+export function buildNavGraph(points: NavPoint[], ordered = false): NavGraph {
+  const spatial = (a: NavPoint, b: NavPoint) => a.x - b.x || a.y - b.y
   const byGroup = new Map<string, NavPoint[]>()
 
   for (const p of points) {
@@ -77,26 +82,18 @@ export function buildNavGraph(points: NavPoint[]): NavGraph {
     arr.push(p)
   }
 
-  // Sort within each group by x then y, then stamp group indices
+  // Sort within each group, then stamp group indices
   for (const arr of byGroup.values()) {
-    arr.sort((a, b) => a.x - b.x || a.y - b.y)
+    if (!ordered) arr.sort(spatial)
     for (let i = 0; i < arr.length; i++) {
       arr[i]._groupIndex = i
     }
   }
 
-  // Sort groups by first point's y position (top-to-bottom ordering)
-  const groups = Array.from(byGroup.keys()).sort((a, b) => {
-    const aPoints = byGroup.get(a)!
-    const bPoints = byGroup.get(b)!
-    const aY = aPoints.length > 0 ? aPoints[0].y : 0
-    const bY = bPoints.length > 0 ? bPoints[0].y : 0
-    return aY - bY
-  })
-
-  // Build flat list: all groups interleaved by x position
-  const flat = Array.from(byGroup.values()).flat()
-  flat.sort((a, b) => a.x - b.x || a.y - b.y)
+  // Ordinal extraction supplies reading order; avoid sorting it again.
+  const groups = Array.from(byGroup.keys())
+  if (!ordered) groups.sort((a, b) => byGroup.get(a)![0].y - byGroup.get(b)![0].y)
+  const flat = ordered ? points : Array.from(byGroup.values()).flat().sort(spatial)
 
   // Stamp flat index on each point for O(1) lookup and build id→index map
   const idToIdx = new Map<string, number>()

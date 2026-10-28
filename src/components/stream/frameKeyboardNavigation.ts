@@ -64,6 +64,7 @@ export function useOrdinalKeyboardNavigation({
   return useGraphKeyboardNavigation({
     ...params,
     extractPoints: extractOrdinalNavPoints,
+    navigation: "ordered",
     toHover: (point) => ({
       ...navPointToHover(point),
       __oAccessor: typeof oAccessor === "string" ? oAccessor : undefined,
