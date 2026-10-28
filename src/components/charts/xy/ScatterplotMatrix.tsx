@@ -27,7 +27,7 @@ import {
 import type { AccessibleSceneNode } from "../../stream/accessibleDataRows"
 import { ScatterplotCell, DiagonalCell, LabelCell, SPLOM_IDX } from "./scatterplotMatrixCells"
 import { type StyleRule } from "../shared/styleRules"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -479,7 +479,7 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
  * />
  * ```
  */
-export const ScatterplotMatrix = /* @__PURE__ */ withDisplayName(function ScatterplotMatrix<TDatum extends Datum = Datum>(
+export const ScatterplotMatrix = /* @__PURE__ */ withChartErrorBoundary(function ScatterplotMatrix<TDatum extends Datum = Datum>(
   props: ScatterplotMatrixProps<TDatum>
 ) {
   const { brushMode = "crossfilter", hoverMode = true } = props

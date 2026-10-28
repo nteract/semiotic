@@ -22,7 +22,6 @@ import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import { useNetworkChartSetup } from "../shared/useNetworkChartSetup"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import ChartError from "../shared/ChartError"
-import { SafeRender } from "../shared/withChartWrapper"
 import { validateObjectData } from "../shared/validateChartData"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import {
@@ -30,7 +29,7 @@ import {
   makeNodeRuleContext,
   type StyleRule,
 } from "../shared/styleRules"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureTreeDiagramRegistrations(): void {
@@ -119,7 +118,7 @@ export interface TreeDiagramProps<TNode extends Datum = Datum> extends BaseChart
  * />
  * ```
  */
-export const TreeDiagram = /* @__PURE__ */ withDisplayName(function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps<TNode>) {
+export const TreeDiagram = /* @__PURE__ */ withChartErrorBoundary(function TreeDiagram<TNode extends Datum = Datum>(props: TreeDiagramProps<TNode>) {
   ensureTreeDiagramRegistrations()
 
   const resolved = useChartMode(props.mode, {
@@ -268,8 +267,7 @@ export const TreeDiagram = /* @__PURE__ */ withDisplayName(function TreeDiagram<
   // ── Loading guard (deferred to after all hooks) ────────────────────────
   if (setup.loadingEl) return setup.loadingEl
 
-  return (<SafeRender componentName="TreeDiagram" width={width} height={height}>
-    <StreamNetworkFrame
+  return (<StreamNetworkFrame
       chartType={layout}
       {...(data != null && { data })}
       size={[width, height]}
@@ -320,5 +318,5 @@ export const TreeDiagram = /* @__PURE__ */ withDisplayName(function TreeDiagram<
       perspective={props.perspective}
       {...frameProps}
     />
-  </SafeRender>)
+  )
 }, "TreeDiagram")

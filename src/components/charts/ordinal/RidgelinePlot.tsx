@@ -11,7 +11,6 @@ import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/types"
 import { type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
-import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import { useChartSetup } from "../shared/useChartSetup"
@@ -20,7 +19,7 @@ import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { buildStatsTooltip } from "../shared/statsTooltip"
 import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 export interface RidgelinePlotProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
@@ -86,7 +85,7 @@ export interface RidgelinePlotProps<TDatum extends Datum = Datum> extends BaseCh
  * />
  * ```
  */
-export const RidgelinePlot = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function RidgelinePlot<TDatum extends Datum = Datum>(props: RidgelinePlotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const RidgelinePlot = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function RidgelinePlot<TDatum extends Datum = Datum>(props: RidgelinePlotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -248,7 +247,7 @@ export const RidgelinePlot = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ for
     ...Object.fromEntries(Object.entries(frameProps).filter(([k]) => k !== "pieceStyle")),
   }
 
-  return <SafeRender componentName="RidgelinePlot" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
+  return <StreamOrdinalFrame ref={frameRef} {...streamProps} />
 }), "RidgelinePlot") as unknown as {
   <TDatum extends Datum = Datum>(props: RidgelinePlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string

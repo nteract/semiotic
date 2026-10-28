@@ -19,11 +19,7 @@ import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { composeStyleRules, type StyleRule } from "../shared/styleRules"
 import ChartError from "../shared/ChartError"
-import {
-  SafeRender,
-  renderEmptyState,
-  renderLoadingState
-} from "../shared/withChartWrapper"
+import { renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import { useResolvedSelection } from "../shared/useResolvedSelection"
 import { scaleSequential } from "d3-scale"
@@ -32,7 +28,7 @@ import type { Style } from "../../stream/types"
 import { useReferenceAreas, type AreasProp } from "../../geo/useReferenceAreas"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import type { GradientLegendConfig } from "../../types/legendTypes"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 function flattenFeatureProperties(datum: Datum): Datum {
   return datum.properties && typeof datum.properties === "object"
@@ -197,7 +193,7 @@ export interface ChoroplethMapProps<
  * `colorScheme`. For diverging data (positive/negative around zero), use
  * a diverging scheme name and pass `frameProps={{ colorDomain: [-max, max] }}`.
  */
-export const ChoroplethMap = /* @__PURE__ */ withDisplayName(function ChoroplethMap<TDatum extends Datum = Datum>(
+export const ChoroplethMap = /* @__PURE__ */ withChartErrorBoundary(function ChoroplethMap<TDatum extends Datum = Datum>(
   props: ChoroplethMapProps<TDatum>
 ) {
   const resolved = useChartMode(props.mode, {
@@ -562,12 +558,6 @@ export const ChoroplethMap = /* @__PURE__ */ withDisplayName(function Choropleth
   if (emptyEl) return emptyEl
 
   return (
-    <SafeRender
-      componentName="ChoroplethMap"
-      width={resolved.width}
-      height={resolved.height}
-    >
-      <StreamGeoFrame {...streamProps} />
-    </SafeRender>
+    <StreamGeoFrame {...streamProps} />
   )
 }, "ChoroplethMap")

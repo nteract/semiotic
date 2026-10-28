@@ -11,7 +11,6 @@ import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/types"
 import { defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
-import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -20,7 +19,7 @@ import { resolveOrdinalAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useOrdinalBrush } from "../shared/useOrdinalBrush"
 import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 /**
  * Default categoryAccessor — hoisted to module scope so it stays
@@ -170,7 +169,7 @@ export interface HistogramProps<TDatum extends Datum = Datum> extends BaseChartP
  * For streaming distributions (window-based binning over a live data
  * stream), use {@link RealtimeHistogram} from `semiotic/realtime` instead.
  */
-export const Histogram = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function Histogram<TDatum extends Datum = Datum>(props: HistogramProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const Histogram = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function Histogram<TDatum extends Datum = Datum>(props: HistogramProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -380,7 +379,7 @@ export const Histogram = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forward
     ...Object.fromEntries(Object.entries(frameProps).filter(([k]) => k !== "pieceStyle")),
   }
 
-  return <SafeRender componentName="Histogram" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
+  return <StreamOrdinalFrame ref={frameRef} {...streamProps} />
 }), "Histogram") as unknown as {
   <TDatum extends Datum = Datum>(props: HistogramProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string

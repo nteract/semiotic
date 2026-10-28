@@ -13,7 +13,6 @@ import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/
 import { type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildOrdinalTooltip } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
-import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -21,7 +20,7 @@ import { useChartSetup } from "../shared/useChartSetup"
 import { resolveOrdinalAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 export interface RadarChartProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
@@ -89,7 +88,7 @@ export interface RadarChartProps<TDatum extends Datum = Datum> extends BaseChart
  * />
  * ```
  */
-export const RadarChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function RadarChart<TDatum extends Datum = Datum>(
+export const RadarChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function RadarChart<TDatum extends Datum = Datum>(
   props: RadarChartProps<TDatum>,
   ref: React.Ref<RealtimeFrameHandle>
 ) {
@@ -297,9 +296,7 @@ export const RadarChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwar
   }
 
   return (
-    <SafeRender componentName="RadarChart" width={width} height={height}>
-      <StreamOrdinalFrame ref={frameRef} {...streamProps} />
-    </SafeRender>
+    <StreamOrdinalFrame ref={frameRef} {...streamProps} />
   )
 }), "RadarChart") as unknown as {
   <TDatum extends Datum = Datum>(props: RadarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null

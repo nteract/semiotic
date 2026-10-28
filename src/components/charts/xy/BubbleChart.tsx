@@ -18,7 +18,6 @@ import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
-import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useXYBrush } from "../shared/useXYBrush"
@@ -28,7 +27,7 @@ import { useXYPointStyle } from "../shared/useXYPointStyle"
 import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
 import { useEncodingDomain } from "../shared/useEncodingDomain"
 import { buildRegressionAnnotation, type RegressionProp } from "../shared/regressionUtils"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureBubbleChartRegistrations(): void {
@@ -259,7 +258,7 @@ export interface BubbleChartProps<TDatum extends Datum = Datum> extends BaseChar
  * @param props - BubbleChart configuration
  * @returns Rendered bubble chart
  */
-export const BubbleChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function BubbleChart<TDatum extends Datum = Datum>(props: BubbleChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const BubbleChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function BubbleChart<TDatum extends Datum = Datum>(props: BubbleChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   ensureBubbleChartRegistrations()
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
@@ -550,7 +549,7 @@ export const BubbleChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwa
     ...frameProps
   }
 
-  return <SafeRender componentName="BubbleChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
+  return <StreamXYFrame ref={frameRef} {...streamProps} />
 }), "BubbleChart") as unknown as {
   <TDatum extends Datum = Datum>(props: BubbleChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string

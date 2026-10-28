@@ -12,7 +12,6 @@ import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/
 import { type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildOrdinalTooltip } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
-import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import { useOrdinalBrush } from "../shared/useOrdinalBrush"
@@ -22,7 +21,7 @@ import { useChartSetup } from "../shared/useChartSetup"
 import { resolveOrdinalAxisChrome } from "../../legendLayout"
 import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
 import { normalizeGradient, type GradientInput } from "../shared/gradient"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 export interface GroupedBarChartProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
@@ -111,7 +110,7 @@ export interface GroupedBarChartProps<TDatum extends Datum = Datum> extends Base
  * />
  * ```
  */
-export const GroupedBarChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function GroupedBarChart<TDatum extends Datum = Datum>(props: GroupedBarChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const GroupedBarChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function GroupedBarChart<TDatum extends Datum = Datum>(props: GroupedBarChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -297,7 +296,7 @@ export const GroupedBarChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ f
 
   if (validationError) return <ChartError componentName="GroupedBarChart" message={validationError} width={width} height={height} />
 
-  return <SafeRender componentName="GroupedBarChart" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
+  return <StreamOrdinalFrame ref={frameRef} {...streamProps} />
 }), "GroupedBarChart") as unknown as {
   <TDatum extends Datum = Datum>(props: GroupedBarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string

@@ -20,7 +20,7 @@ import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import { useChartMode } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
-import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
+import { warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useXYBrush } from "../shared/useXYBrush"
 import { useChartSetup } from "../shared/useChartSetup"
@@ -32,7 +32,7 @@ import { useEncodingDomain } from "../shared/useEncodingDomain"
 import { buildRegressionAnnotation, type RegressionProp } from "../shared/regressionUtils"
 import { useSeriesFeatures } from "../shared/useSeriesFeatures"
 import type { ForecastConfig, AnomalyConfig } from "../shared/statisticalOverlays"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureScatterplotRegistrations(): void {
@@ -195,7 +195,7 @@ export interface ScatterplotProps<TDatum extends Datum = Datum> extends BaseChar
  * />
  * ```
  */
-export const Scatterplot = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function Scatterplot<TDatum extends Datum = Datum>(props: ScatterplotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const Scatterplot = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function Scatterplot<TDatum extends Datum = Datum>(props: ScatterplotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   ensureScatterplotRegistrations()
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
@@ -521,7 +521,7 @@ export const Scatterplot = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwa
     ...frameProps
   }
 
-  return <SafeRender componentName="Scatterplot" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
+  return <StreamXYFrame ref={frameRef} {...streamProps} />
 }), "Scatterplot") as unknown as {
   <TDatum extends Datum = Datum>(props: ScatterplotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string

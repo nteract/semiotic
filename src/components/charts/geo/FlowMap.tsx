@@ -24,7 +24,6 @@ import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import { resolveAxisFreeMarginDefaults } from "../shared/chartMode"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
-import { SafeRender } from "../shared/withChartWrapper"
 import { normalizeLinkedHover, wrapStyleWithSelection } from "../shared/selectionUtils"
 import { useLinkedHover } from "../../store/useSelection"
 import { useObservationSelector } from "../../store/ObservationStore"
@@ -37,7 +36,7 @@ import { useReferenceAreas, type AreasProp } from "../../geo/useReferenceAreas"
 import { GEO_BACKGROUND_AREA_STYLE } from "../shared/geoStyleDefaults"
 import { type StyleRule } from "../shared/styleRules"
 import { buildFlowMapLineStyle } from "./flowMapLineStyle"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 export interface FlowMapProps<TDatum extends Datum = Datum> extends BaseChartProps {
   /** Flow edges with source/target/value */
@@ -183,7 +182,7 @@ export interface FlowMapProps<TDatum extends Datum = Datum> extends BaseChartPro
  * />
  * ```
  */
-export const FlowMap = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function FlowMap<TDatum extends Datum = Datum>(
+export const FlowMap = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function FlowMap<TDatum extends Datum = Datum>(
   props: FlowMapProps<TDatum>,
   ref: React.Ref<RealtimeFrameHandle>,
 ) {
@@ -660,9 +659,7 @@ export const FlowMap = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRe
   }
 
   return (
-    <SafeRender componentName="FlowMap" width={resolved.width} height={resolved.height}>
-      <StreamGeoFrame ref={frameRef} {...streamProps} />
-    </SafeRender>
+    <StreamGeoFrame ref={frameRef} {...streamProps} />
   )
 }), "FlowMap") as unknown as {
   <TDatum extends Datum = Datum>(

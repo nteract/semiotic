@@ -2,6 +2,7 @@
 import { EVENT_DROP_CHART_SIZE } from "../shared/chartSizeDefaultsPhysics"
 
 import * as React from "react"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 import { forwardRef, useCallback, useEffect, useMemo, useRef } from "react"
 import { useStableShallow } from "../../stream/useStableShallow"
 import StreamPhysicsFrame, {
@@ -210,7 +211,7 @@ function eventDropSemanticItems(
  * />
  * ```
  */
-export const EventDropChart = /* @__PURE__ */ forwardRef(
+export const EventDropChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(
   function EventDropChart<TDatum extends Datum = Datum>(
     props: EventDropChartProps<TDatum>,
     ref: React.Ref<EventDropChartHandle>
@@ -487,7 +488,6 @@ export const EventDropChart = /* @__PURE__ */ forwardRef(
     )
 
     return renderPhysicsFrame(
-      "EventDropChart",
       chartSize,
       <StreamPhysicsFrame
         {...frameProps}
@@ -536,7 +536,7 @@ export const EventDropChart = /* @__PURE__ */ forwardRef(
       layoutMode
     )
   }
-) as {
+), "EventDropChart") as {
   // Existing object refs can keep the common physics handle type. Callback
   // refs and ComponentRef infer the complete EventDrop handle below.
   (

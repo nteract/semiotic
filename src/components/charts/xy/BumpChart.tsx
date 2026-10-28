@@ -27,7 +27,7 @@ import {
 import type {
   RankedBumpDatum,
 } from "./bumpData"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 export { mapBumpAnnotations, rankBumpData, resolveBumpColorScheme } from "./bumpData"
 export type { RankBumpDataOptions, RankedBumpData, RankedBumpDatum } from "./bumpData"
@@ -130,7 +130,7 @@ export interface BumpChartProps<TDatum extends Datum = Datum> extends BaseChartP
  *   ribbon
  * />
  */
-export const BumpChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function BumpChart<TDatum extends Datum = Datum>(
+export const BumpChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function BumpChart<TDatum extends Datum = Datum>(
   props: BumpChartProps<TDatum>,
   ref: React.Ref<RealtimeFrameHandle>,
 ) {

@@ -50,11 +50,10 @@ describe("SafeRender", () => {
     const alert = screen.getByRole("alert")
     expect(alert).toBeTruthy()
     expect(alert.textContent).toContain("something broke")
-    // No diagnosticHint div should appear (it's conditionally rendered)
-    // ChartError only renders the hint <div> when diagnosticHint is truthy
-    // With no props, diagnosticHint remains ""
+    // Runtime error UI keeps the chart name separate from the message;
+    // detailed configuration diagnosis belongs to the CLI and MCP tools.
     const monoDivs = container.querySelectorAll("div[style*='monospace']")
-    // The only monospace div should be the componentName, not a diagnosticHint
+    // The only monospace div should be the componentName.
     const hintDivs = Array.from(monoDivs).filter(
       (el) => el.textContent !== "LineChart"
     )

@@ -46,7 +46,7 @@ import {
   type TooltipProp
 } from "./physicsHocUtils"
 import { physicalFlowOverlay } from "./packetFlowOverlay"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 export interface PacketFlowChartProps<
   TNode extends Datum = Datum,
@@ -362,7 +362,7 @@ function withPhysicalFlowObservation(
  * />
  * ```
  */
-export const PacketFlowChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function PacketFlowChart<
+export const PacketFlowChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function PacketFlowChart<
   TNode extends Datum = Datum,
   TLink extends Datum = Datum
 >(
@@ -628,7 +628,6 @@ export const PacketFlowChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ f
   )
 
   return renderPhysicsFrame(
-    "PacketFlowChart",
     chartSize,
     <StreamPhysicsFrame
       {...frameProps}

@@ -19,7 +19,7 @@ import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
-import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
+import { renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useResolvedSelection } from "../shared/useResolvedSelection"
 import { getMinMax } from "../shared/minMax"
@@ -27,7 +27,7 @@ import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import { composeStyleRules, type StyleRule } from "../shared/styleRules"
 import { makeHeatmapRuleContext } from "../shared/heatmapStyleRules"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureHeatmapRegistrations(): void {
@@ -257,7 +257,7 @@ export interface HeatmapProps<TDatum extends Datum = Datum> extends BaseChartPro
  * @param props - Heatmap configuration
  * @returns Rendered heatmap
  */
-export const Heatmap = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function Heatmap<TDatum extends Datum = Datum>(props: HeatmapProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const Heatmap = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function Heatmap<TDatum extends Datum = Datum>(props: HeatmapProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   ensureHeatmapRegistrations()
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
@@ -539,7 +539,7 @@ export const Heatmap = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRe
   if (emptyEl) return emptyEl
   if (validationError) return <ChartError componentName="Heatmap" message={validationError} width={width} height={height} />
 
-  return <SafeRender componentName="Heatmap" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
+  return <StreamXYFrame ref={frameRef} {...streamProps} />
 }), "Heatmap") as unknown as {
   <TDatum extends Datum = Datum>(props: HeatmapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string

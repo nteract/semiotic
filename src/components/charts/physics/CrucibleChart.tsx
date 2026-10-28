@@ -79,7 +79,7 @@ import type {
   CrucibleChartProps
 } from "./crucibleChartProps"
 import type { CrucibleBodyDatum, CrucibleProjectionSpec } from "./crucibleTypes"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Public pure API (also consumed by SSR, evidence, and focused tests).
 export * from "./crucibleTypes"
@@ -176,7 +176,7 @@ export type {
  * />
  * ```
  */
-export const CrucibleChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function CrucibleChart<
+export const CrucibleChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function CrucibleChart<
   TDatum extends Datum = Datum
 >(
   props: CrucibleChartProps<TDatum>,
@@ -897,7 +897,6 @@ export const CrucibleChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ for
   }
 
   return renderPhysicsFrame(
-    "CrucibleChart",
     resolvedChartSize,
     <div
       ref={responsiveContainerRef}

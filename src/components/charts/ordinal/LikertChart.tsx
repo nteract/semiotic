@@ -9,7 +9,6 @@ import type { LegendInteractionMode } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/types"
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
-import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -24,7 +23,7 @@ import {
 } from "../shared/useLikertAggregation"
 import { DEFAULT_LIKERT_LEVELS } from "./LikertChart.defaults"
 import type { StyleRule } from "../shared/styleRules"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Stable empty map for `useOrdinalPieceStyle.categoryIndexMap`.
 // LikertChart drives fill from `baseStyleExtras` (level-keyed
@@ -191,7 +190,7 @@ export interface LikertChartHandle extends RealtimeFrameHandle {
  * />
  * ```
  */
-export const LikertChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function LikertChart<TDatum extends Datum = Datum>(
+export const LikertChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function LikertChart<TDatum extends Datum = Datum>(
   props: LikertChartProps<TDatum>,
   ref: React.Ref<LikertChartHandle>
 ) {
@@ -570,9 +569,7 @@ export const LikertChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwa
   }
 
   return (
-    <SafeRender componentName="LikertChart" width={width} height={height}>
-      <StreamOrdinalFrame ref={frameRef} {...streamProps} />
-    </SafeRender>
+    <StreamOrdinalFrame ref={frameRef} {...streamProps} />
   )
 }), "LikertChart") as unknown as {
   <TDatum extends Datum = Datum>(

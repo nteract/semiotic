@@ -246,6 +246,12 @@ return rows.length ? (
       <h2 id="error-state">Error State</h2>
 
       <p>
+        High-level charts catch render failures in their setup, accessors, and
+        child frames. A corrected data or configuration prop retries rendering
+        automatically. Ordinary updates preserve the mounted chart and its
+        pushed data; recovering from a failure remounts the failed subtree.
+      </p>
+      <p>
         <Link to="/features/chart-container">ChartContainer</Link> provides
         error display and error boundary support. Set <code>error</code> to show
         a message, or <code>errorBoundary</code> to catch render crashes.
@@ -282,6 +288,17 @@ return rows.length ? (
 </ChartContainer>`}
         language="jsx"
       />
+
+      <p>
+        To protect other React children or low-level Stream Frames with explicit
+        retry control, use <code>ChartErrorBoundary</code> from <code>semiotic</code>.
+        Its optional <code>resetKeys</code> array retries
+        when a value changes; without it, changed children trigger a retry.
+        A function fallback receives <code>(error, reset)</code>, so a retry
+        button can call <code>reset()</code>. Error boundaries cover React render
+        and lifecycle failures. Handle errors in event handlers, asynchronous
+        work, and server rendering at their call sites.
+      </p>
 
       {/* ----------------------------------------------------------------- */}
       {/* Related */}

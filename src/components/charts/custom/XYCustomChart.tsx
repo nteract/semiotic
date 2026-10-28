@@ -9,7 +9,6 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { CustomLayout } from "../../stream/customLayout"
 import type { Datum } from "../shared/datumTypes"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
-import { SafeRender } from "../shared/withChartWrapper"
 import { useCustomChartSetup } from "../shared/useCustomChartSetup"
 import { buildBaseMetadataProps, buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import {
@@ -21,7 +20,7 @@ import type { ChartRecipe } from "../../ai/chartRecipes"
 import type { LegendValue } from "../../types/legendTypes"
 import { composeLegendConfigs } from "../../types/legendTypes"
 import type { LegendInteractionMode, LegendPosition } from "../shared/useChartLegend"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureXYCustomChartRegistrations(): void {
@@ -92,7 +91,7 @@ export interface XYCustomChartProps<
  * />
  * ```
  */
-export const XYCustomChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function XYCustomChart<
+export const XYCustomChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function XYCustomChart<
   TDatum extends Datum = Datum,
   TConfig extends object = Record<string, unknown>
 >(props: XYCustomChartProps<TDatum, TConfig>, ref: React.Ref<RealtimeFrameHandle>) {
@@ -236,9 +235,7 @@ export const XYCustomChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ for
   }
 
   return (
-    <SafeRender componentName="XYCustomChart" width={width} height={height}>
-      <StreamXYFrame ref={frameRef} {...streamProps} />
-    </SafeRender>
+    <StreamXYFrame ref={frameRef} {...streamProps} />
   )
 }), "XYCustomChart") as unknown as {
   <

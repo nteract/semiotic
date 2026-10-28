@@ -12,7 +12,7 @@ import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/
 import { type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildOrdinalTooltip } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
-import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
+import { warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
@@ -23,7 +23,7 @@ import { useOrdinalBrush } from "../shared/useOrdinalBrush"
 import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
 import { buildRegressionAnnotation, type RegressionProp } from "../shared/regressionUtils"
 import { normalizeGradient, type GradientInput } from "../shared/gradient"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 /**
  * BarChart component props
@@ -225,7 +225,7 @@ export interface BarChartProps<TDatum extends Datum = Datum> extends BaseChartPr
  * `frameProps` or use StreamOrdinalFrame directly. See
  * {@link https://semiotic.nteract.io/charts/bar-chart} for live demos.
  */
-export const BarChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function BarChart<TDatum extends Datum = Datum>(props: BarChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const BarChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function BarChart<TDatum extends Datum = Datum>(props: BarChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -459,7 +459,7 @@ export const BarChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardR
     ...Object.fromEntries(Object.entries(frameProps).filter(([k]) => k !== "pieceStyle")),
   }
 
-  return <SafeRender componentName="BarChart" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
+  return <StreamOrdinalFrame ref={frameRef} {...streamProps} />
 }), "BarChart") as unknown as {
   <TDatum extends Datum = Datum>(props: BarChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string

@@ -61,7 +61,7 @@ import {
   processFlowChrome,
   processFlowProjectionOverlay
 } from "./processFlowOverlays"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 export type { ProcessFlowStageDef, ProcessFlowProjectionMetadata }
 
@@ -191,7 +191,7 @@ function capacitySnapshotsEqual(
  * ref.current?.push({ id: "pr-42", stage: "review", work: 2 })
  * ```
  */
-export const ProcessFlowChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function ProcessFlowChart<
+export const ProcessFlowChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function ProcessFlowChart<
   TDatum extends Datum = Datum
 >(props: ProcessFlowChartProps<TDatum>, ref: React.Ref<PhysicsFrameHandle>) {
   const {
@@ -487,7 +487,6 @@ export const ProcessFlowChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ 
 
   if (!stages?.length) {
     return renderPhysicsFrame(
-      "ProcessFlowChart",
       chartSize,
       <div
         role="status"
@@ -551,7 +550,6 @@ export const ProcessFlowChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ 
   ]
 
   return renderPhysicsFrame(
-    "ProcessFlowChart",
     chartSize,
     <StreamPhysicsFrame
       {...frameProps}

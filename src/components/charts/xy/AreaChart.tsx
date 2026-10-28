@@ -14,7 +14,7 @@ import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { MultiPointTooltip, resolveMultiCapableTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
-import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
+import { warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useChartSetup } from "../shared/useChartSetup"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
@@ -35,7 +35,7 @@ import {
   type SemanticGradientInput,
   type SemanticGradientStopInput,
 } from "../shared/gradient"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureAreaChartRegistrations(): void {
@@ -348,7 +348,7 @@ export interface AreaChartProps<TDatum extends Datum = Datum> extends BaseChartP
  * return <AreaChart ref={ref} xAccessor="x" yAccessor="y" pointIdAccessor="id" />
  * ```
  */
-export const AreaChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function AreaChart<TDatum extends Datum = Datum>(props: AreaChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const AreaChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function AreaChart<TDatum extends Datum = Datum>(props: AreaChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   ensureAreaChartRegistrations()
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
@@ -589,7 +589,7 @@ export const AreaChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forward
   if (setup.earlyReturn) return setup.earlyReturn
   if (validationError) return <ChartError componentName="AreaChart" message={validationError} width={width} height={height} />
 
-  return <SafeRender componentName="AreaChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
+  return <StreamXYFrame ref={frameRef} {...streamProps} />
 }), "AreaChart") as unknown as {
   <TDatum extends Datum = Datum>(props: AreaChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
