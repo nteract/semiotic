@@ -10,7 +10,6 @@
  * HoverData state that mouse hover does.
  */
 
-import type { HoverData } from "../realtime/types"
 import type { SceneNode } from "./types"
 import type { GeoSceneNode } from "./geoTypes"
 import { glyphHitGeometry } from "./glyphDef"
@@ -188,17 +187,4 @@ export function extractGeoNavPoints(scene: GeoSceneNode[]): NavPoint[] {
   return points
 }
 
-/**
- * Convert a NavPoint to HoverData for the tooltip system.
- */
-export function navPointToHover(point: NavPoint): HoverData {
-  const rawDatum = point.datum || {}
-  return {
-    data: rawDatum,
-    ...(point.stats && { stats: point.stats }),
-    ...(point.category != null && { category: point.category }),
-    x: point.x,
-    y: point.y,
-    __semioticHoverData: true,
-  }
-}
+export { navPointToHover } from "./navPointToHover"

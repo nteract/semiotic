@@ -89,7 +89,7 @@ export function renderStaticAnnotationFallback(
         ) as { x: number; y: number; r: number }[]
       if (coords.length < 2) return null
       const enclosure = packEnclose(coords)
-      const padding = ann.padding || 10
+      const padding = ann.padding ?? 10
       return (
         <g key={`ann-${index}`}>
           <circle
@@ -128,7 +128,7 @@ export function renderStaticAnnotationFallback(
             coordinate.x != null && coordinate.y != null,
         ) as { x: number; y: number }[]
       if (coords.length < 2) return null
-      const padding = ann.padding || 10
+      const padding = ann.padding ?? 10
       const [rawMinX, rawMaxX] = getMinMax(coords.map((coordinate) => coordinate.x))
       const [rawMinY, rawMaxY] = getMinMax(coords.map((coordinate) => coordinate.y))
       const minX = rawMinX - padding
@@ -181,7 +181,7 @@ export function renderStaticAnnotationFallback(
             const x = resolveX(datum, context)
             const y = resolveY(datum, context)
             if (x == null || y == null) return null
-            const radius = typeof ann.r === "function" ? ann.r(datum) : (ann.r || 6)
+            const radius = typeof ann.r === "function" ? ann.r(datum) : (ann.r ?? 6)
             const style = typeof ann.style === "function"
               ? ann.style(datum)
               : (ann.style || defaultStyle)
@@ -194,12 +194,13 @@ export function renderStaticAnnotationFallback(
     case "bracket": {
       const x = resolveX(ann, context)
       const y = resolveY(ann, context)
+      if (x == null || y == null) return null
       return (
         <Annotation
           key={`ann-${index}`}
           noteData={{
-            x: x ?? 0,
-            y: y ?? 0,
+            x,
+            y,
             dx: ann.dx || 0,
             dy: ann.dy || 0,
             note: annotationNote(ann),
@@ -208,7 +209,7 @@ export function renderStaticAnnotationFallback(
               type: ann.bracketType || "curly",
               width: ann.width,
               height: ann.height,
-              depth: ann.depth || 30,
+              depth: ann.depth ?? 30,
             },
             color: ann.color,
           }}
