@@ -101,9 +101,10 @@ export function groupLineChartRows(
 export function yAccessorForZeroedGaps<TDatum extends Datum>(
   yAccessor: string | ((datum: TDatum) => number),
   zeroedPoints: WeakSet<Datum> | undefined,
+  isGap?: (datum: TDatum) => boolean,
 ): string | ((datum: TDatum) => number) {
   if (!zeroedPoints || typeof yAccessor !== "function") return yAccessor
-  return (datum) => (zeroedPoints.has(datum) ? 0 : yAccessor(datum))
+  return (datum) => ((zeroedPoints.has(datum) || isGap?.(datum)) ? 0 : yAccessor(datum))
 }
 
 export function applyLineGapStrategy({

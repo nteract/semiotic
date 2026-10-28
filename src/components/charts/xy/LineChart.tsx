@@ -649,8 +649,8 @@ export const LineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forward
   }, [lineData, gapStrategy, lineDataAccessor, isGap, frameGroupAccessor, yAccessor])
 
   const frameYAccessor = useMemo(
-    () => yAccessorForZeroedGaps(yAccessor as string | ((d: Datum) => number), zeroedPoints),
-    [yAccessor, zeroedPoints],
+    () => yAccessorForZeroedGaps(yAccessor as string | ((d: Datum) => number), zeroedPoints, isGap),
+    [yAccessor, zeroedPoints, isGap],
   )
 
   const directLabelConfig = typeof directLabel === "object" ? directLabel : {}
