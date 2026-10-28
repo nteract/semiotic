@@ -627,7 +627,7 @@ export const LineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forward
   // Apply gap strategy to line data. "break" segments carry index-based
   // frame group keys (no marker field on the data); `seriesOfLine` records
   // the authored series each segment belongs to.
-  const { lines: gapProcessedLineData, hasGaps, segments, zeroedPoints } = useMemo(() => {
+  const { lines: gapProcessedLineData, hasGaps, segments } = useMemo(() => {
     const seriesOfLine = (line: Datum): string => {
       if (!frameGroupAccessor) return ""
       if (typeof frameGroupAccessor === "string") {
@@ -649,8 +649,8 @@ export const LineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forward
   }, [lineData, gapStrategy, lineDataAccessor, isGap, frameGroupAccessor, yAccessor])
 
   const frameYAccessor = useMemo(
-    () => yAccessorForZeroedGaps(yAccessor as string | ((d: Datum) => number), zeroedPoints, isGap),
-    [yAccessor, zeroedPoints, isGap],
+    () => gapStrategy === "zero" ? yAccessorForZeroedGaps(yAccessor as string | ((d: Datum) => number), isGap) : yAccessor,
+    [yAccessor, gapStrategy, isGap],
   )
 
   const directLabelConfig = typeof directLabel === "object" ? directLabel : {}

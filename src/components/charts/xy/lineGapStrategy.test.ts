@@ -65,7 +65,6 @@ describe("applyLineGapStrategy zero", () => {
       yField: "y",
       seriesOfLine: () => "",
     })
-    expect(result.zeroedPoints).toBeUndefined()
     expect(result.lines[0].coordinates[0]).toBe(source[0].coordinates[0])
     expect(result.lines[0].coordinates[1]).not.toBe(gap)
     expect(result.lines[0].coordinates[1].y).toBe(0)
@@ -82,9 +81,7 @@ describe("applyLineGapStrategy zero", () => {
       seriesOfLine: () => "",
     })
     expect(result.lines[0].coordinates[1]).toBe(gap)
-    expect(result.zeroedPoints?.has(gap)).toBe(true)
-    expect(result.zeroedPoints?.has(lineData[0].coordinates[0])).toBe(false)
-    const readY = yAccessorForZeroedGaps((d: Datum) => d.metrics.p95, result.zeroedPoints)
+    const readY = yAccessorForZeroedGaps((d: Datum) => d.metrics.p95, isGap)
     expect(typeof readY).toBe("function")
     if (typeof readY !== "function") return
     expect(readY(gap)).toBe(0)

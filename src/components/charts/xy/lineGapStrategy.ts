@@ -31,11 +31,7 @@ export interface LineGapResult {
   hasGaps: boolean
   /** Present when "break" split the data at one or more gaps. */
   segments?: LineGapSegments
-  /**
-   * Gap points whose plotted y is 0 when the y accessor is a function.
-   * Absent for string accessors, which write the field onto a copy instead.
-   */
-  zeroedPoints?: WeakSet<Datum>
+
 }
 
 /**
@@ -97,14 +93,14 @@ export function groupLineChartRows(
   )
 }
 
-/** Plot listed gap points at y = 0 without copying them onto a synthetic field. */
+/** Re-evaluate gaps on grouped, label, and enriched tooltip copies. */
 export function yAccessorForZeroedGaps<TDatum extends Datum>(
   yAccessor: string | ((datum: TDatum) => number),
-  zeroedPoints: WeakSet<Datum> | undefined,
-  isGap?: (datum: TDatum) => boolean,
+  isGap: (datum: TDatum) => boolean,
 ): string | ((datum: TDatum) => number) {
-  if (!zeroedPoints || typeof yAccessor !== "function") return yAccessor
-  return (datum) => ((zeroedPoints.has(datum) || isGap?.(datum)) ? 0 : yAccessor(datum))
+  return typeof yAccessor === "function"
+    ? (datum) => isGap(datum) ? 0 : yAccessor(datum)
+    : yAccessor
 }
 
 export function applyLineGapStrategy({
@@ -144,18 +140,7 @@ export function applyLineGapStrategy({
 
   if (strategy === "zero") {
     if (!yField) {
-      const zeroedPoints = new WeakSet<Datum>()
-      let found = false
-      for (const line of lineData) {
-        for (const d of coordsOf(line)) {
-          if (!isGap(d)) continue
-          found = true
-          zeroedPoints.add(d)
-        }
-      }
-      return found
-        ? { lines: lineData, hasGaps: true, zeroedPoints }
-        : { lines: lineData, hasGaps: false }
+      return { lines: lineData, hasGaps: lineData.some(line => coordsOf(line).some(isGap)) }
     }
     let found = false
     const lines = lineData.map(line => ({
