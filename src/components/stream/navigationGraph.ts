@@ -25,9 +25,7 @@ export interface NavPoint {
   /** Group identifier for graph navigation (series name, category, node id) */
   group?: string
   /**
-   * Data reading order. When set on the points being compared, it replaces
-   * geometric x-then-y sorting so keyboard order follows the scene instead
-   * of bar length or screen position.
+   * Rank used while extracting ordinal marks in authored reading order.
    */
   readingOrder?: number
   /** Index in NavGraph.flat — set by buildNavGraph for O(1) lookup */
