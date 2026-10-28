@@ -6,7 +6,7 @@
  *   This must happen before the frame, whose accessors coerce null to 0.
  * - "zero" drops a gap point to the baseline. A string y field is written on a
  *   copy. A function y accessor cannot be written through, so those points stay
- *   the caller's objects and are listed in `zeroedPoints` for a wrapped accessor.
+ *   the caller's objects; a wrapped accessor re-evaluates gaps on copied rows.
  *
  * Segment lines are keyed by index and held off the data (no marker field),
  * so frame grouping never merges two series and datums reach tooltips,
@@ -117,7 +117,7 @@ export function applyLineGapStrategy({
   isGap: (d: Datum) => boolean
   /**
    * Field "zero" writes 0 into. Omit it when y is read by a function;
-   * those gap points are returned in `zeroedPoints` instead of copied.
+   * the wrapped accessor resolves gaps instead of writing a synthetic field.
    */
   yField?: string
   /** Authored series label of a line object before it is split. */
