@@ -18,6 +18,8 @@ import type { PipelineConfig } from "./pipelineConfig"
 import type { ArrowOfTime, StreamScales } from "./types"
 import type { ResolvedRibbon } from "./xySceneBuilders/ribbonScene"
 import type { RingBuffer } from "../realtime/RingBuffer"
+import { resolveAxisTickCount } from "./axisTickUtils"
+import { roundScaleDomain } from "./roundScaleDomain"
 
 export type StackExtentCache = {
   key: string
@@ -245,7 +247,7 @@ export function resolveStackedAreaYDomain(options: {
     }
     const range = hi - lo
     const pad = exactMode ? 0 : range > 0 ? range * config.extentPadding : 1
-    return finish([lo - pad, hi + pad])
+    return finish([lo - pad, hi === 0 && lo < 0 ? 0 : hi + pad])
   } else {
     // Walk the same stack order as the scene. A commutative total hides
     // negative layers and order-dependent peaks, so the domain follows the
@@ -268,7 +270,7 @@ export function resolveStackedAreaYDomain(options: {
     const pad = exactMode ? 0 : range > 0 ? range * config.extentPadding : 1
     yDomain = config.normalize
       ? [0, exactMode ? 1 : 1 + config.extentPadding]
-      : [lo < 0 ? lo - pad : 0, hi + pad]
+      : [lo < 0 ? lo - pad : 0, hi === 0 && lo < 0 ? 0 : hi + pad]
     return finish(yDomain)
   }
 }
@@ -294,7 +296,7 @@ export function resolveBarBinYDomain(
   if (minTotal === 0 && maxTotal === 0) return [0, 0]
   const span = maxTotal - minTotal
   const pad = exactMode ? 0 : span * extentPadding
-  return [minTotal < 0 ? minTotal - pad : 0, maxTotal + pad]
+  return [minTotal < 0 ? minTotal - pad : 0, maxTotal > 0 ? maxTotal + pad : 0]
 }
 
 /** Cover whole centered edge bins automatically, preserving explicit bounds. */
@@ -417,6 +419,7 @@ export function padYDomain(
   yDomain: [number, number],
   options: {
     exactMode: boolean
+    roundedMode?: boolean
     extentPadding: number
     userMin?: number
     userMax?: number
@@ -431,6 +434,12 @@ export function padYDomain(
     options.userMin != null ? yDomain[0] : yDomain[0] - pad,
     options.userMax != null ? yDomain[1] : yDomain[1] + pad
   ]
+  // In rounded mode, padding must not introduce a new sign into a line or
+  // ribbon's extent. Explicit bounds and log-domain repair still take priority.
+  if (options.roundedMode) {
+    if (yDomain[0] >= 0) next[0] = Math.max(0, next[0])
+    if (yDomain[1] <= 0 && yDomain[0] < 0) next[1] = Math.min(0, next[1])
+  }
   if (
     options.yScaleType === "log" &&
     next[0] <= 0 &&
@@ -632,17 +641,11 @@ export function makePipelineScale(
       .range(range)
       .clamp(true) as unknown as ScaleLinear<number, number>
   }
-  if (type === "symlog") {
-    return scaleSymlog()
-      .domain(domain)
-      .range(range) as unknown as ScaleLinear<number, number>
-  }
-  if (type === "time" || type === "utc") {
-    return (type === "utc" ? scaleUtc() : scaleTime())
-      .domain([new Date(domain[0]), new Date(domain[1])])
-      .range(range) as unknown as ScaleLinear<number, number>
-  }
-  return scaleLinear().domain(domain).range(range)
+  const scale = (type === "utc" ? scaleUtc()
+    : type === "time" ? scaleTime()
+    : type === "symlog" ? scaleSymlog()
+    : scaleLinear()) as unknown as ScaleLinear<number, number>
+  return scale.domain(domain).range(range)
 }
 
 export function buildPipelineScales(options: {
@@ -665,28 +668,20 @@ export function buildPipelineScales(options: {
     Math.min(rawSp, Math.min(layout.width, layout.height) / 2 - 1)
   )
 
-  if (isStreaming) {
-    // Streaming XY scene builders consistently encode time on x and value on
-    // y. Treat the source-compatible legacy vertical values (and any untyped
-    // invalid runtime value) as the safe default `right` direction instead of
-    // constructing a vertical scale that the builders do not consume.
-    const xRange: [number, number] = config.arrowOfTime === "left"
-      ? [layout.width - sp, sp]
-      : [sp, layout.width - sp]
-    return {
-      x: makePipelineScale(xScaleType, xDomain, xRange),
-      y: makePipelineScale(config.yScaleType, yDomain, [
-        layout.height - sp,
-        sp
-      ])
-    }
+  const y = makePipelineScale(config.yScaleType, yDomain, [layout.height - sp, sp])
+  if ((config.yAxisExtent ?? config.axisExtent) === "rounded" && !config.yAxisTickValues) {
+    const pinned = [config.yExtent?.[0] != null, config.yExtent?.[1] != null]
+    roundScaleDomain(y, resolveAxisTickCount({ axis: { ticks: config.yAxisTicks }, size: layout.height }),
+      config.invertY ? pinned.reverse() : pinned)
   }
 
+  // Streaming scenes encode time on x and value on y. Legacy vertical arrow
+  // values use the default right direction, matching the scene builders.
+  const xRange: [number, number] = isStreaming && config.arrowOfTime === "left"
+    ? [layout.width - sp, sp]
+    : [sp, layout.width - sp]
   return {
-    x: makePipelineScale(xScaleType, xDomain, [sp, layout.width - sp]),
-    y: makePipelineScale(config.yScaleType, yDomain, [
-      layout.height - sp,
-      sp
-    ])
+    x: makePipelineScale(xScaleType, xDomain, xRange),
+    y
   }
 }

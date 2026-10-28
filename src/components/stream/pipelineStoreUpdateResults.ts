@@ -139,6 +139,8 @@ export const XY_CONFIG_PATCH_DEPENDENCIES: Readonly<
   scalePadding: /* @__PURE__ */ dependency("preserve", DOMAIN_LAYOUT),
   axisExtent: /* @__PURE__ */ dependency("preserve", DOMAIN_LAYOUT),
   yAxisExtent: /* @__PURE__ */ dependency("preserve", DOMAIN_LAYOUT),
+  yAxisTicks: /* @__PURE__ */ dependency("preserve", DOMAIN_LAYOUT),
+  yAxisTickValues: /* @__PURE__ */ dependency("preserve", DOMAIN_LAYOUT),
   binSize: /* @__PURE__ */ dependency("preserve", DOMAIN_LAYOUT),
   binAlign: /* @__PURE__ */ dependency("preserve", DOMAIN_LAYOUT),
   normalize: /* @__PURE__ */ dependency("preserve", DOMAIN_LAYOUT),

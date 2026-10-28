@@ -91,8 +91,9 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
 
   // Use theme's categorical palette when no explicit colorScheme provided
   const effectiveColorScheme = props.colorScheme || theme.colors.categorical
-  const yAxisExtent = (props.axes?.find(axis => axis.orient === "left")
-    ?? props.axes?.find(axis => axis.orient === "right"))?.extent ?? props.axisExtent
+  const yAxis = props.axes?.find(axis => axis.orient === "left")
+    ?? props.axes?.find(axis => axis.orient === "right")
+  const yAxisExtent = yAxis?.extent ?? props.axisExtent
 
   const pipelineConfig: PipelineConfig = {
     chartType: props.chartType,
@@ -116,10 +117,11 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     xExtent: props.xExtent,
     yExtent: props.yExtent,
     invertY: props.invertY,
-    // axisExtent ("nice"|"exact") pins the first/last tick to the data
-    // min/max through domain resolution.
+    // Share domain and tick settings with the browser pipeline.
     axisExtent: props.axisExtent,
     yAxisExtent,
+    yAxisTicks: yAxis?.ticks ?? yAxis?.tickCount,
+    yAxisTickValues: yAxis?.tickValues,
     sizeRange: props.sizeRange,
     xScaleType: props.xScaleType,
     yScaleType: props.yScaleType,

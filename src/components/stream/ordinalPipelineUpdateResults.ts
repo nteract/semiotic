@@ -107,6 +107,7 @@ export const ORDINAL_CONFIG_PATCH_DEPENDENCIES: Readonly<
   projection: /* @__PURE__ */ dependency("preserve", DOMAIN_LAYOUT),
   extentPadding: /* @__PURE__ */ dependency("preserve", DOMAIN_LAYOUT),
   axisExtent: /* @__PURE__ */ dependency("preserve", DOMAIN_LAYOUT),
+  rTickValues: /* @__PURE__ */ dependency("preserve", DOMAIN_LAYOUT),
   rExtent: /* @__PURE__ */ dependency("preserve", DOMAIN_LAYOUT),
   oExtent: /* @__PURE__ */ dependency("preserve", DOMAIN_LAYOUT),
   multiAxis: /* @__PURE__ */ dependency("preserve", DOMAIN_LAYOUT),

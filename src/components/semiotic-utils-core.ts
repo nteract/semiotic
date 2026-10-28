@@ -278,6 +278,8 @@ export type { VegaLiteSpec, VegaLiteEncoding } from "./data/fromVegaLite"
 // ── Data structures ──────────────────────────────────────────────────────
 export { RingBuffer } from "./realtime/RingBuffer"
 export { IncrementalExtent } from "./realtime/IncrementalExtent"
+export { resolveAxisTickCount } from "./stream/axisTickUtils"
+export type { AxisTickCountOptions } from "./stream/axisTickUtils"
 
 // ── Tooltip utilities ────────────────────────────────────────────────────
 export {

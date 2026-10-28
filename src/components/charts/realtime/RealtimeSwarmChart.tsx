@@ -125,7 +125,9 @@ export interface RealtimeSwarmChartProps<
   /** Fixed time domain */
   timeExtent?: [number, number]
   /** Fixed value domain */
-  valueExtent?: [number, number]
+  valueExtent?: [number | undefined, number | undefined] | [number]
+  /** Round open value-domain ends after padding and final plot layout. */
+  axisExtent?: import("../shared/axisExtent").AxisExtentMode
   /** Value-axis scale. "symlog" supports signed values while compressing large magnitudes. */
   yScaleType?: "linear" | "log" | "symlog"
   /** Extent padding factor */
@@ -505,6 +507,7 @@ export const RealtimeSwarmChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
       valueAccessor={valueAccessor}
       xExtent={timeExtent}
       yExtent={valueExtent}
+      axisExtent={props.axisExtent}
       yScaleType={yScaleType}
       extentPadding={extentPadding}
       decay={decay}

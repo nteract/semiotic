@@ -343,8 +343,11 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
 
     const adjustedWidth = Math.max(1, size[0] - margin.left - margin.right)
     const adjustedHeight = Math.max(1, size[1] - margin.top - margin.bottom)
-    const yAxisExtent = (axesConfig?.find(axis => axis.orient === "left")
-      ?? axesConfig?.find(axis => axis.orient === "right"))?.extent ?? axisExtent
+    const yAxis = axesConfig?.find(axis => axis.orient === "left")
+      ?? axesConfig?.find(axis => axis.orient === "right")
+    const yAxisExtent = yAxis?.extent ?? axisExtent
+    const yAxisTicks = yAxis?.ticks ?? yAxis?.tickCount
+    const yAxisTickValues = yAxis?.tickValues
     const safeData = useMemo(() => filterSparseArray(data), [data])
 
     // Determine effective hover annotation config
@@ -402,6 +405,8 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       scalePadding,
       axisExtent,
       yAxisExtent,
+      yAxisTicks,
+      yAxisTickValues,
       // Forward `xAccessor`/`yAccessor` even when `isStreaming` is true.
       // The store's streaming-mode resolution chain
       // (`timeAccessor || xAccessor || "time"`) already gives `timeAccessor`
@@ -475,7 +480,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       onLayoutError,
       layoutConfig,
       layoutMargin: margin,
-    }), [chartType, isStreaming, windowSize, windowMode, arrowOfTime, extentPadding, scalePadding, axisExtent, yAxisExtent, xAccessor, yAccessor, accessorRevision, timeAccessor, valueAccessor, colorAccessor, sizeAccessor, symbolAccessor, symbolMap, groupAccessor, lineDataAccessor, categoryAccessor, xScaleType, yScaleType, xExtent, yExtent, invertY, sizeRange, binSize, binAlign, normalize, baseline, stackOrder, boundsAccessor, boundsStyle, y0Accessor, band, gradientFill, areaGroups, lineGradient, semanticLineStops, openAccessor, highAccessor, lowAccessor, closeAccessor, candlestickStyle, lineStyle, trackHoverRows, pointStyle, areaStyle, swarmStyle, waterfallStyle, colorScheme, barColors, barStyle, annotations, decay, pulse, transition, introEnabled, staleness, frameRuntime.now, heatmapAggregation, heatmapXBins, heatmapYBins, showValues, heatmapValueFormat, heatmapColorScale, pointIdAccessor, curve, currentTheme, customLayout, onLayoutError, layoutConfig, margin])
+    }), [chartType, isStreaming, windowSize, windowMode, arrowOfTime, extentPadding, scalePadding, axisExtent, yAxisExtent, yAxisTicks, yAxisTickValues, xAccessor, yAccessor, accessorRevision, timeAccessor, valueAccessor, colorAccessor, sizeAccessor, symbolAccessor, symbolMap, groupAccessor, lineDataAccessor, categoryAccessor, xScaleType, yScaleType, xExtent, yExtent, invertY, sizeRange, binSize, binAlign, normalize, baseline, stackOrder, boundsAccessor, boundsStyle, y0Accessor, band, gradientFill, areaGroups, lineGradient, semanticLineStops, openAccessor, highAccessor, lowAccessor, closeAccessor, candlestickStyle, lineStyle, trackHoverRows, pointStyle, areaStyle, swarmStyle, waterfallStyle, colorScheme, barColors, barStyle, annotations, decay, pulse, transition, introEnabled, staleness, frameRuntime.now, heatmapAggregation, heatmapXBins, heatmapYBins, showValues, heatmapValueFormat, heatmapColorScale, pointIdAccessor, curve, currentTheme, customLayout, onLayoutError, layoutConfig, margin])
 
     // Stabilize the config reference so inline-object / inline-array
     // props don't shed identity on every parent render. Without this

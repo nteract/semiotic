@@ -96,6 +96,7 @@ function matchesThreshold(threshold: StyleRuleThreshold, datum: Datum, ctx: Styl
 function mobileVisualizationCaveats(): string[]
 function normalizeTooltip(tooltip: TooltipProp | undefined): TooltipContentFn | false | undefined
 function profileNumericFields(data: null | readonly Datum[] | undefined, options?: ProfileNumericFieldsOptions | undefined): Readonly<Record<string, NumericFieldProfile>>
+function resolveAxisTickCount({ axis, size, orientation, axisExtent }: AxisTickCountOptions): number
 function resolveChartSize(chart: "AreaChart" | "BarChart" | "BoxPlot" | "BubbleChart" | "BumpChart" | "CandlestickChart" | "ChainReactionChart" | "ChordDiagram" | "ChoroplethMap" | "CirclePack" | "CollisionSwarmChart" | "ConnectedScatterplot" | "CrucibleChart" | "DependencyForestChart" | "DifferenceChart" | "DistanceCartogram" | "DonutChart" | "DotPlot" | "EventDropChart" | "FlowCircuitChart" | "FlowMap" | "ForceDirectedGraph" | "FunnelChart" | "GaltonBoardChart" | "GaugeChart" | "GauntletChart" | "GeoCustomChart" | "GroupedBarChart" | "Heatmap" | "Histogram" | "LikertChart" | "LineChart" | "MinimapChart" | "MotifBraidChart" | "MultiAxisLineChart" | "NetworkCustomChart" | "OrbitDiagram" | "OrdinalCustomChart" | "PacketFlowChart" | "PhysicsCustomChart" | "PieChart" | "ProcessFlowChart" | "ProcessSankey" | "ProportionalSymbolMap" | "QuadrantChart" | "RadarChart" | "RealtimeHeatmap" | "RealtimeHistogram" | "RealtimeLineChart" | "RealtimeSwarmChart" | "RealtimeTemporalHistogram" | "RealtimeWaterfallChart" | "RidgelinePlot" | "SankeyDiagram" | "Scatterplot" | "ScatterplotMatrix" | "Sparkline" | "StackedAreaChart" | "StackedBarChart" | "SwarmPlot" | "SwimlaneChart" | "TemporalHistogram" | "TreeDiagram" | "Treemap" | "UnitPileChart" | "ViolinPlot" | "WaterfallChart" | "XYCustomChart", props?: ChartSizeOptions | undefined): ChartSize
 function resolveChartSize(chart: "BigNumber", props?: BigNumberSizeOptions | undefined): BigNumberSize
 function resolveCommunicativeAct(component: string, context: ChartCapability | DescribeCapabilityContext | undefined): CommunicativeAct | undefined
@@ -132,6 +133,7 @@ interface AuditAccessibilityOptions
 interface AuditDataOptions
 interface AuditMobileVisualizationOptions
 interface AuditObservedSceneInput
+interface AxisTickCountOptions
 interface BigNumberSize
 interface BigNumberSizeOptions
 interface BuildNavigationTreeOptions
@@ -279,6 +281,10 @@ interface-member AuditObservedSceneInput::property::layoutConfig = optional layo
 interface-member AuditObservedSceneInput::property::recipe = required recipe: ChartRecipe<Datum, Record<string, unknown>>
 interface-member AuditObservedSceneInput::property::scene = required scene: null | readonly Record<string, unknown>[] | undefined | {nodes?: ReadonlyArray<Record<string, unknown>>; sceneNodes?: ReadonlyArray<Record<string, unknown>>; sceneEdges?: ReadonlyArray<Record<string, unknown>>;}
 interface-member AuditObservedSceneInput::property::theme = optional theme: undefined | {background?: string; categorical?: string[];}
+interface-member AxisTickCountOptions::property::axis = optional axis: undefined | {ticks?: number; tickCount?: number; extent?: AxisExtentMode;}
+interface-member AxisTickCountOptions::property::axisExtent = optional axisExtent: AxisExtentMode | undefined
+interface-member AxisTickCountOptions::property::orientation = optional orientation: "horizontal" | "vertical" | undefined
+interface-member AxisTickCountOptions::property::size = required size: number
 interface-member BigNumberSize::property::height = required height: number | string | undefined
 interface-member BigNumberSize::property::width = required width: number | string | undefined
 interface-member BigNumberSizeOptions::property::height = optional height: number | string | undefined

@@ -1,3 +1,4 @@
+import { ordinalAxisTicks } from "../stream/ordinalAxisTicks"
 import { createSvgIdPrefix, renderWithContentSvgIdPrefix } from "../shared/svgNamespace"
 import { resolveXYAxes } from "../stream/resolveXYAxes"
 import type { Datum } from "../charts/shared/datumTypes"
@@ -49,7 +50,7 @@ import {
   tickPixelExtent,
   jaggedBaselinePath,
 } from "../stream/svgOverlayUtils"
-import { ticksForMode, type AxisExtentMode } from "../charts/shared/axisExtent"
+import type { AxisExtentMode } from "../charts/shared/axisExtent"
 import {
   isStaticTextTickLabel,
   renderStaticTickForeignObject,
@@ -342,10 +343,8 @@ export function renderOrdinalGridSVG(
   const { grid } = themeStyles(theme)
   const pfx = idPrefix ? `${idPrefix}-` : ""
   const isVertical = scales.projection === "vertical"
-  // Match the axis ticks (and the client) under axisExtent:"exact".
-  // Match OrdinalSVGOverlay's fixed request; this is intentionally distinct
-  // from the responsive XY tick budget.
-  const rTicks = rTickValues ?? ticksForMode(scales.r, 5, axisExtent)
+  // Match client axes and underlays, including the rounded domain tick count.
+  const rTicks = ordinalAxisTicks(scales, layout, axisExtent, rTickValues)
 
   if (isVertical) {
     return (

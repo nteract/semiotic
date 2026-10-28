@@ -74,6 +74,8 @@ export interface XYFrameAxisConfig {
   grid?: boolean
   /** Always include the domain max as a tick, even if d3 omits it. */
   includeMax?: boolean
+  /** Always include domain[0] as a tick, even if d3 omits it. */
+  includeMin?: boolean
   /** Auto-rotate labels 45° when horizontal spacing is too tight. */
   autoRotate?: boolean
   /** Highlight ticks at time boundaries (new month, year, etc.) with
