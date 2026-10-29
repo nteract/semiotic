@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test"
+import { hoverCanvasMark } from "./helpers/hoverCanvasMark"
 
 async function capturePage(page: Page, path: string) {
   await page.evaluate(async () => {
@@ -14,43 +15,9 @@ async function capturePage(page: Page, path: string) {
 async function hoverPaintedEvent(page: Page) {
   const host = page.getByTestId("emitter-chart")
   const canvas = host.locator("canvas").first()
-  await canvas.scrollIntoViewIfNeeded()
   // Locate a real blue data mark in the canvas. The source tile is SVG and
   // cannot satisfy this check; no test-only chart handle is needed.
-  const point = await canvas.evaluate((element: HTMLCanvasElement) => {
-    const { width, height } = element
-    const pixels = element
-      .getContext("2d")!
-      .getImageData(0, 0, width, height).data
-    const bounds = element.getBoundingClientRect()
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        const i = (y * width + x) * 4
-        if (
-          Math.abs(pixels[i] - 37) < 5 &&
-          Math.abs(pixels[i + 1] - 99) < 5 &&
-          Math.abs(pixels[i + 2] - 235) < 5 &&
-          pixels[i + 3] > 240
-        ) {
-          const point = {
-            x: (x * bounds.width) / width,
-            y: ((y + 2) * bounds.height) / height
-          }
-          // Newly emitted bodies may be behind the source. Use a visible mark
-          // without bypassing the real pointer hit target.
-          if (
-            document.elementFromPoint(
-              bounds.x + point.x,
-              bounds.y + point.y
-            ) === element
-          )
-            return point
-        }
-      }
-    }
-    throw new Error("No blue event was painted")
-  })
-  await canvas.hover({ position: point })
+  await hoverCanvasMark(canvas, [37, 99, 235])
   const tooltip = host.locator(".stream-physics-tooltip")
   await expect(tooltip).toContainText("Event p1-")
   await expect(tooltip).toContainText("Event time:")
