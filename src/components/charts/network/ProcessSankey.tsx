@@ -42,7 +42,7 @@ import type { LegendGroup } from "../../types/legendTypes"
 import { clampLegendReservation, reserveLegendMargin } from "../../legendLayout"
 import type { ProcessSankeyProps } from "./ProcessSankeyProps"
 import { registerNetworkPerspective } from "../../stream/networkPerspectiveRuntime"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withSizedChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureProcessSankeyRegistrations(): void {
@@ -106,7 +106,7 @@ type TimeLike = ProcessSankeyTimeLike
  * />
  * ```
  */
-export const ProcessSankey = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function ProcessSankey<
+export const ProcessSankey = /* @__PURE__ */ withSizedChartErrorBoundary(/* @__PURE__ */ forwardRef(function ProcessSankey<
   TNode extends Datum = Datum,
   TEdge extends Datum = Datum
 >(
@@ -705,7 +705,7 @@ export const ProcessSankey = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ for
       />
     </div>
   )
-}), "ProcessSankey") as unknown as {
+}), "ProcessSankey", (props) => resolveChartMode(undefined, { width: props.width, height: props.height })) as unknown as {
   <TNode extends Datum = Datum, TEdge extends Datum = Datum>(
     props: ProcessSankeyProps<TNode, TEdge> &
       React.RefAttributes<RealtimeFrameHandle>

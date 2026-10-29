@@ -30,7 +30,6 @@ import {
   resolveMultiCapableTooltip,
   defaultTooltipStyle
 } from "../../Tooltip/Tooltip"
-import { SafeRender } from "../shared/withChartWrapper"
 import { useChartSetup } from "../shared/useChartSetup"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import type { HoverData } from "../../realtime/types"
@@ -44,7 +43,7 @@ import {
   buildDifferenceLineStyle,
   buildDifferencePointStyle
 } from "./differenceMarkStyle"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureDifferenceChartRegistrations(): void {
@@ -243,7 +242,7 @@ function buildOverlayLineRows<TDatum extends Datum>(
  * return <DifferenceChart ref={ref} xAccessor="x" seriesAAccessor="a" seriesBAccessor="b" />
  * ```
  */
-export const DifferenceChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function DifferenceChart<
+export const DifferenceChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function DifferenceChart<
   TDatum extends Datum = Datum
 >(props: DifferenceChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   ensureDifferenceChartRegistrations()
@@ -784,9 +783,7 @@ export const DifferenceChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ f
   }
 
   return (
-    <SafeRender componentName="DifferenceChart" width={width} height={height}>
-      <StreamXYFrame ref={frameRef} {...streamProps} />
-    </SafeRender>
+    <StreamXYFrame ref={frameRef} {...streamProps} />
   )
 }), "DifferenceChart") as unknown as {
   <TDatum extends Datum = Datum>(

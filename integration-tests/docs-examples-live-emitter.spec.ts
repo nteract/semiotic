@@ -1,35 +1,10 @@
 import { expect, test, type Page } from "@playwright/test"
+import { hoverCanvasMark } from "./helpers/hoverCanvasMark"
 
 async function hoverEvent(page: Page) {
   const host = page.getByTestId("live-emitter-chart")
   const canvas = host.locator("canvas").first()
-  await canvas.scrollIntoViewIfNeeded()
-  const point = await canvas.evaluate((canvas: HTMLCanvasElement) => {
-    const pixels = canvas
-      .getContext("2d")!
-      .getImageData(0, 0, canvas.width, canvas.height).data
-    const rect = canvas.getBoundingClientRect()
-    for (let y = 2; y < canvas.height - 2; y++) {
-      for (let x = 2; x < canvas.width - 2; x++) {
-        const i = (y * canvas.width + x) * 4
-        if (
-          Math.abs(pixels[i] - 37) < 5 &&
-          Math.abs(pixels[i + 1] - 99) < 5 &&
-          Math.abs(pixels[i + 2] - 235) < 5 &&
-          pixels[i + 3] > 240
-        ) {
-          const p = {
-            x: (x / canvas.width) * rect.width,
-            y: (y / canvas.height) * rect.height
-          }
-          if (document.elementFromPoint(rect.x + p.x, rect.y + p.y) === canvas)
-            return p
-        }
-      }
-    }
-    throw new Error("No visible blue event")
-  })
-  await canvas.hover({ position: point })
+  await hoverCanvasMark(canvas, [37, 99, 235])
   const tooltip = host.locator(".stream-physics-tooltip")
   await expect(tooltip).toContainText("Event live-")
   await expect(tooltip).toContainText("Event time:")

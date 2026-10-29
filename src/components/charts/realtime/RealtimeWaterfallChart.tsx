@@ -65,7 +65,7 @@ import {
   makeXYRuleContext,
   type StyleRule,
 } from "../shared/styleRules"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureRealtimeWaterfallChartRegistrations(): void {
@@ -237,7 +237,7 @@ export interface RealtimeWaterfallChartProps<
  * </ThemeProvider>
  * ```
  */
-export const RealtimeWaterfallChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(
+export const RealtimeWaterfallChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(
   function RealtimeWaterfallChart<TDatum extends Datum = Datum>(
     props: RealtimeWaterfallChartProps<TDatum>,
     ref: React.Ref<RealtimeFrameHandle<TDatum>>

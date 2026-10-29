@@ -2,6 +2,7 @@
 import { COLLISION_SWARM_CHART_SIZE } from "../shared/chartSizeDefaultsPhysics"
 
 import * as React from "react"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 import { forwardRef, useCallback, useMemo, useRef } from "react"
 import { useStableShallow } from "../../stream/useStableShallow"
 import StreamPhysicsFrame, {
@@ -115,7 +116,7 @@ function collisionSwarmSemanticItems(
  * />
  * ```
  */
-export const CollisionSwarmChart = /* @__PURE__ */ forwardRef(function CollisionSwarmChart<
+export const CollisionSwarmChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function CollisionSwarmChart<
   TDatum extends Datum = Datum
 >(props: CollisionSwarmChartProps<TDatum>, ref: React.Ref<PhysicsFrameHandle>) {
   const {
@@ -259,7 +260,6 @@ export const CollisionSwarmChart = /* @__PURE__ */ forwardRef(function Collision
     }
   )
   return renderPhysicsFrame(
-    "CollisionSwarmChart",
     chartSize,
     <StreamPhysicsFrame
       key={`${chartSize[0]}x${chartSize[1]}:${rerun.rerunKey}`}
@@ -282,6 +282,6 @@ export const CollisionSwarmChart = /* @__PURE__ */ forwardRef(function Collision
     />,
     layoutMode
   )
-})
+}), "CollisionSwarmChart", COLLISION_SWARM_CHART_SIZE)
 
 export default CollisionSwarmChart

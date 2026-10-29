@@ -73,7 +73,7 @@ import {
 import { useRealtimeCategoryColors } from "./useRealtimeCategoryColors"
 import { composeStyleRules, type StyleRule } from "../shared/styleRules"
 import { makeHistogramRuleContext } from "./realtimeStyleRules"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureRealtimeHistogramRegistrations(): void {
@@ -310,7 +310,7 @@ export interface RealtimeHistogramProps<
  * />
  * ```
  */
-export const RealtimeHistogram = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function RealtimeHistogram<
+export const RealtimeHistogram = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function RealtimeHistogram<
   TDatum extends Datum = Datum
 >(props: RealtimeHistogramProps<TDatum>, ref: React.Ref<RealtimeFrameHandle<TDatum>>) {
   ensureRealtimeHistogramRegistrations()
@@ -719,7 +719,7 @@ export interface TemporalHistogramProps<
  * bounded array rather than a ref-driven stream; the realtime push API is not
  * part of this public surface.
  */
-export const TemporalHistogram = /* @__PURE__ */ withDisplayName(function TemporalHistogram<TDatum extends Datum = Datum>(
+export const TemporalHistogram = /* @__PURE__ */ withChartErrorBoundary(function TemporalHistogram<TDatum extends Datum = Datum>(
   props: TemporalHistogramProps<TDatum>
 ) {
   return (

@@ -12,7 +12,6 @@ import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/
 import { type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildOrdinalTooltip } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
-import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -21,7 +20,7 @@ import { resolveOrdinalAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { buildRegressionAnnotation, type RegressionProp } from "../shared/regressionUtils"
 import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 export interface DotPlotProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
@@ -100,7 +99,7 @@ export interface DotPlotProps<TDatum extends Datum = Datum> extends BaseChartPro
  * />
  * ```
  */
-export const DotPlot = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function DotPlot<TDatum extends Datum = Datum>(props: DotPlotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const DotPlot = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function DotPlot<TDatum extends Datum = Datum>(props: DotPlotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -270,7 +269,7 @@ export const DotPlot = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRe
     ...Object.fromEntries(Object.entries(frameProps).filter(([k]) => k !== "pieceStyle")),
   }
 
-  return <SafeRender componentName="DotPlot" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
+  return <StreamOrdinalFrame ref={frameRef} {...streamProps} />
 }), "DotPlot") as unknown as {
   <TDatum extends Datum = Datum>(props: DotPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string

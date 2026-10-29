@@ -68,7 +68,7 @@ import {
   makeXYRuleContext,
   type StyleRule,
 } from "../shared/styleRules"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureRealtimeSwarmChartRegistrations(): void {
@@ -243,7 +243,7 @@ export interface RealtimeSwarmChartProps<
  * />
  * ```
  */
-export const RealtimeSwarmChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function RealtimeSwarmChart<
+export const RealtimeSwarmChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function RealtimeSwarmChart<
   TDatum extends Datum = Datum
 >(props: RealtimeSwarmChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle<TDatum>>) {
   ensureRealtimeSwarmChartRegistrations()

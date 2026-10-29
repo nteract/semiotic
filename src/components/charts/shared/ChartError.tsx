@@ -6,17 +6,15 @@ export interface ChartErrorProps {
   componentName: string
   /** The error message to display */
   message: string
-  /** Optional diagnostic suggestions from diagnoseConfig */
-  diagnosticHint?: string
   /** Chart width */
-  width: number
+  width: number | string
   /** Chart height */
-  height: number
+  height: number | string
 }
 
 /**
  * Renders a visible, styled error state inside the chart's dimensions.
- * Shows the component name, error message, and a hint for developers.
+ * Shows the component name and error message.
  *
  * Designed to be obvious in development but not alarming in production —
  * uses muted colors that adapt to light/dark backgrounds.
@@ -24,16 +22,15 @@ export interface ChartErrorProps {
 export default function ChartError({
   componentName,
   message,
-  diagnosticHint,
   width,
-  height,
+  height
 }: ChartErrorProps) {
   return (
     <div
       role="alert"
       style={{
         width,
-        height: Math.max(height, 120),
+        height: typeof height === "number" ? Math.max(height, 120) : height,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -41,7 +38,7 @@ export default function ChartError({
         borderRadius: 8,
         background: "rgba(128, 128, 128, 0.04)",
         padding: 24,
-        boxSizing: "border-box",
+        boxSizing: "border-box"
       }}
     >
       <div style={{ textAlign: "center", maxWidth: 400 }}>
@@ -51,7 +48,7 @@ export default function ChartError({
             fontWeight: 600,
             color: "rgba(128, 128, 128, 0.7)",
             marginBottom: 6,
-            fontFamily: "monospace",
+            fontFamily: "monospace"
           }}
         >
           {componentName}
@@ -60,30 +57,11 @@ export default function ChartError({
           style={{
             fontSize: 14,
             color: "rgba(128, 128, 128, 0.9)",
-            lineHeight: 1.5,
+            lineHeight: 1.5
           }}
         >
           {message}
         </div>
-        {diagnosticHint && (
-          <div
-            data-testid="semiotic-diagnostic-hint"
-            style={{
-              marginTop: 10,
-              padding: "8px 12px",
-              background: "rgba(128, 128, 128, 0.06)",
-              borderRadius: 4,
-              fontSize: 12,
-              color: "rgba(128, 128, 128, 0.8)",
-              fontFamily: "monospace",
-              textAlign: "left",
-              whiteSpace: "pre-wrap",
-              lineHeight: 1.6,
-            }}
-          >
-            {diagnosticHint}
-          </div>
-        )}
       </div>
     </div>
   )

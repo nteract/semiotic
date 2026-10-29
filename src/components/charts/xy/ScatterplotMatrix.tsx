@@ -27,7 +27,7 @@ import {
 import type { AccessibleSceneNode } from "../../stream/accessibleDataRows"
 import { ScatterplotCell, DiagonalCell, LabelCell, SPLOM_IDX } from "./scatterplotMatrixCells"
 import { type StyleRule } from "../shared/styleRules"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withSizedChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -479,7 +479,7 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
  * />
  * ```
  */
-export const ScatterplotMatrix = /* @__PURE__ */ withDisplayName(function ScatterplotMatrix<TDatum extends Datum = Datum>(
+export const ScatterplotMatrix = /* @__PURE__ */ withSizedChartErrorBoundary(function ScatterplotMatrix<TDatum extends Datum = Datum>(
   props: ScatterplotMatrixProps<TDatum>
 ) {
   const { brushMode = "crossfilter", hoverMode = true } = props
@@ -497,4 +497,8 @@ export const ScatterplotMatrix = /* @__PURE__ */ withDisplayName(function Scatte
       <ScatterplotMatrixInner {...props} />
     </LinkedCharts>
   )
-}, "ScatterplotMatrix")
+}, "ScatterplotMatrix", (props) => {
+  const side = SCATTERPLOT_MATRIX_SIZE.labelWidth + (props.fields?.length ?? 0) *
+    ((props.cellSize ?? SCATTERPLOT_MATRIX_SIZE.cellSize) + (props.cellGap ?? SCATTERPLOT_MATRIX_SIZE.cellGap))
+  return { width: side, height: side }
+})

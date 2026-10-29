@@ -15,7 +15,7 @@ import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { composeStyleRules, makeNodeRuleContext, type StyleRule } from "../shared/styleRules"
 
-import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
+import { warnMissingField } from "../shared/withChartWrapper"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import type { Style } from "../../stream/types"
 import { useReferenceAreas, type AreasProp } from "../../geo/useReferenceAreas"
@@ -24,7 +24,7 @@ import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { getMinMax } from "../shared/minMax"
 import { GEO_BACKGROUND_AREA_STYLE } from "../shared/geoStyleDefaults"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 const DEFAULT_SIZE_RANGE: [number, number] = [3, 30]
 const SPARKLINE_SIZE_RANGE: [number, number] = [1, 4]
@@ -151,7 +151,7 @@ export interface ProportionalSymbolMapProps<TDatum extends Datum = Datum> extend
  * />
  * ```
  */
-export const ProportionalSymbolMap = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function ProportionalSymbolMap<TDatum extends Datum = Datum>(props: ProportionalSymbolMapProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const ProportionalSymbolMap = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function ProportionalSymbolMap<TDatum extends Datum = Datum>(props: ProportionalSymbolMapProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamGeoFrameHandle>(null)
   useFrameImperativeHandle(ref, { variant: "geo-points", frameRef })
 
@@ -392,9 +392,7 @@ export const ProportionalSymbolMap = /* @__PURE__ */ withDisplayName(/* @__PURE_
   }
 
   return (
-    <SafeRender componentName="ProportionalSymbolMap" width={resolved.width} height={resolved.height}>
-      <StreamGeoFrame ref={frameRef} {...streamProps} />
-    </SafeRender>
+    <StreamGeoFrame ref={frameRef} {...streamProps} />
   )
 }), "ProportionalSymbolMap") as unknown as {
   <TDatum extends Datum = Datum>(props: ProportionalSymbolMapProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null

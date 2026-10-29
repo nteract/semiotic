@@ -22,7 +22,7 @@ import { useChartMode } from "../shared/hooks"
 import { useThemeCategorical } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
-import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
+import { renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useChartSetup } from "../shared/useChartSetup"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
@@ -35,7 +35,7 @@ import {
   makeMultiAxisRuleContext,
   resolveMultiAxisSeriesColors,
 } from "./multiAxisFields"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureMultiAxisLineChartRegistrations(): void {
@@ -173,7 +173,7 @@ function invertUnitized(unitized: number, extent: [number, number]): number {
  * />
  * ```
  */
-export const MultiAxisLineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function MultiAxisLineChart<TDatum extends Datum = Datum>(
+export const MultiAxisLineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function MultiAxisLineChart<TDatum extends Datum = Datum>(
   props: MultiAxisLineChartProps<TDatum>,
   ref: React.Ref<RealtimeFrameHandle>
 ) {
@@ -681,11 +681,9 @@ export const MultiAxisLineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
   if (validationError) return <ChartError componentName="MultiAxisLineChart" message={validationError} width={width} height={height} />
 
   return (
-    <SafeRender componentName="MultiAxisLineChart" width={width} height={height}>
-      <StreamXYFrame ref={frameRef} {...streamProps} />
-    </SafeRender>
+    <StreamXYFrame ref={frameRef} {...streamProps} />
   )
-}), "MultiAxisLineChart") as unknown as {
+}), "MultiAxisLineChart", MULTI_AXIS_LINE_CHART_SIZE) as unknown as {
   <TDatum extends Datum = Datum>(
     props: MultiAxisLineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>
   ): React.ReactElement | null

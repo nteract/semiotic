@@ -9,7 +9,7 @@ import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../st
 import type { BaseChartProps } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
-import { SafeRender, renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
+import { renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { sweepToAngles, computeArcBoundingBox } from "../shared/radialGeometry"
 import { useChartMode, useChartSelection } from "../shared/hooks"
@@ -20,7 +20,7 @@ import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import { useResolvedSelection } from "../shared/useResolvedSelection"
 import { composeStyleRules, type StyleRule } from "../shared/styleRules"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
@@ -161,7 +161,7 @@ export interface GaugeChartProps extends BaseChartProps {
  * />
  * ```
  */
-export const GaugeChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function GaugeChart(props: GaugeChartProps, _ref: React.Ref<RealtimeFrameHandle>) {
+export const GaugeChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function GaugeChart(props: GaugeChartProps, _ref: React.Ref<RealtimeFrameHandle>) {
   // Width/height passed through unmassaged so `useChartMode` can substitute
   // the mode default (context: 400×250, sparkline: 120×24). Primary-mode
   // default is 300×250 via the third arg — a gauge reads better compact.
@@ -568,11 +568,9 @@ export const GaugeChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwar
   }
 
   return (
-    <SafeRender componentName="GaugeChart" width={width} height={height}>
-      <StreamOrdinalFrame ref={frameRef} {...streamProps} />
-    </SafeRender>
+    <StreamOrdinalFrame ref={frameRef} {...streamProps} />
   )
-}), "GaugeChart") as unknown as {
+}), "GaugeChart", GAUGE_CHART_SIZE) as unknown as {
   (props: GaugeChartProps & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }

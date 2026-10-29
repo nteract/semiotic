@@ -5,9 +5,11 @@ import ChartError from "./charts/shared/ChartError"
 export interface ChartErrorBoundaryProps {
   children: ReactNode
   /** Custom fallback to show on error. Can be a ReactNode or render function. */
-  fallback?: ReactNode | ((error: Error) => ReactNode)
+  fallback?: ReactNode | ((error: Error, reset: () => void) => ReactNode)
   /** Callback when an error is caught */
   onError?: (error: Error, errorInfo: ErrorInfo) => void
+  /** Retry after an error when a key changes (Object.is). When omitted, retries when children change. */
+  resetKeys?: readonly unknown[]
 }
 
 interface ChartErrorBoundaryState {
@@ -52,13 +54,32 @@ export class ChartErrorBoundary extends Component<
     this.props.onError?.(error, errorInfo)
   }
 
+  componentDidUpdate(
+    prevProps: ChartErrorBoundaryProps,
+    prevState: ChartErrorBoundaryState
+  ): void {
+    // Only retry an existing failure. The update that first catches an error
+    // must not immediately retry the same failing child.
+    if (!this.state.error || !prevState.error) return
+    const previous = prevProps.resetKeys ?? [prevProps.children]
+    const current = this.props.resetKeys ?? [this.props.children]
+    const changed =
+      previous.length !== current.length ||
+      current.some((key, index) => !Object.is(key, previous[index]))
+    if (changed) this.reset()
+  }
+
+  private reset = (): void => {
+    this.setState({ error: null })
+  }
+
   render(): ReactNode {
     if (this.state.error) {
       const { fallback } = this.props
       const error = this.state.error
 
       if (typeof fallback === "function") {
-        return fallback(error)
+        return fallback(error, this.reset)
       }
       if (fallback !== undefined) {
         return fallback
@@ -68,9 +89,12 @@ export class ChartErrorBoundary extends Component<
       return (
         <ChartError
           componentName="ChartErrorBoundary"
-          message={error.message || "An unexpected error occurred while rendering this chart."}
-          width={600}
-          height={400}
+          message={
+            error.message ||
+            "An unexpected error occurred while rendering this chart."
+          }
+          width="100%"
+          height="100%"
         />
       )
     }

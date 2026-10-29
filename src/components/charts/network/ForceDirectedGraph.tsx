@@ -20,14 +20,13 @@ import { useNetworkChartSetup } from "../shared/useNetworkChartSetup"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { composeStyleRules, makeNodeRuleContext, type StyleRule } from "../shared/styleRules"
 import ChartError from "../shared/ChartError"
-import { SafeRender } from "../shared/withChartWrapper"
 import { validateNetworkData } from "../shared/validateChartData"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import {
   wrapNetworkEdgeStyleWithSelection,
   wrapNetworkNodeStyleWithSelection,
 } from "../shared/networkUtils"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureForceDirectedGraphRegistrations(): void {
@@ -257,7 +256,7 @@ export interface ForceDirectedGraphProps<TNode extends Datum = Datum, TEdge exte
  * a reasonable frame budget. Hover, click, and selection wiring follow
  * the same patterns as the rest of the library.
  */
-export const ForceDirectedGraph = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function ForceDirectedGraph<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ForceDirectedGraphProps<TNode, TEdge>, ref: React.Ref<RealtimeFrameHandle>) {
+export const ForceDirectedGraph = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function ForceDirectedGraph<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ForceDirectedGraphProps<TNode, TEdge>, ref: React.Ref<RealtimeFrameHandle>) {
   ensureForceDirectedGraphRegistrations()
   const frameRef = useRef<StreamNetworkFrameHandle>(null)
   useFrameImperativeHandle(ref, { variant: "network", frameRef })
@@ -479,7 +478,6 @@ export const ForceDirectedGraph = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
   if (setup.emptyEl) return setup.emptyEl
 
   return (
-    <SafeRender componentName="ForceDirectedGraph" width={width} height={height}>
     <StreamNetworkFrame
       ref={frameRef}
       chartType="force"
@@ -537,8 +535,8 @@ export const ForceDirectedGraph = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
       perspective={props.perspective}
       {...frameProps}
     />
-  </SafeRender>)
-}), "ForceDirectedGraph") as unknown as {
+  )
+}), "ForceDirectedGraph", FORCE_DIRECTED_GRAPH_SIZE) as unknown as {
   <TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ForceDirectedGraphProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }

@@ -76,7 +76,7 @@ import {
   gauntletSemanticItem
 } from "./gauntletChrome"
 import type { GauntletChartProps } from "./gauntletChartProps"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 export * from "./gauntletPublic"
 
@@ -103,7 +103,7 @@ export * from "./gauntletPublic"
  * ```
  * Compose timed gates, capacity controls, staggered starts, and projections through the corresponding props.
  */
-export const GauntletChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function GauntletChart<
+export const GauntletChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function GauntletChart<
   TDatum extends Datum = Datum
 >(props: GauntletChartProps<TDatum>, ref: React.Ref<PhysicsFrameHandle>) {
   const {
@@ -733,7 +733,6 @@ export const GauntletChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ for
     tooltipProps.tooltipContent ?? defaultGauntletTooltipContent
 
   return renderPhysicsFrame(
-    "GauntletChart",
     chartSize,
     <StreamPhysicsFrame
       {...frameProps}
@@ -775,7 +774,7 @@ export const GauntletChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ for
     />,
     layoutMode
   )
-}), "GauntletChart") as unknown as {
+}), "GauntletChart", GAUNTLET_CHART_SIZE) as unknown as {
   <TDatum extends Datum = Datum>(
     props: GauntletChartProps<TDatum> & React.RefAttributes<PhysicsFrameHandle>
   ): React.ReactElement | null

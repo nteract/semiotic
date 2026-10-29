@@ -2,6 +2,7 @@
 import { UNIT_PILE_CHART_SIZE } from "../shared/chartSizeDefaultsPhysics"
 
 import * as React from "react"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 import { forwardRef, useCallback, useMemo, useRef } from "react"
 import { useStableShallow } from "../../stream/useStableShallow"
 import StreamPhysicsFrame, {
@@ -102,7 +103,7 @@ export type PhysicsPileChartProps<TDatum extends Datum = Datum> =
  * />
  * ```
  */
-export const UnitPileChart = /* @__PURE__ */ forwardRef(function UnitPileChart<
+export const UnitPileChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function UnitPileChart<
   TDatum extends Datum = Datum
 >(props: UnitPileChartProps<TDatum>, ref: React.Ref<PhysicsFrameHandle>) {
   const {
@@ -273,7 +274,6 @@ export const UnitPileChart = /* @__PURE__ */ forwardRef(function UnitPileChart<
   )
 
   return renderPhysicsFrame(
-    "UnitPileChart",
     chartSize,
     <StreamPhysicsFrame
       {...frameProps}
@@ -297,7 +297,7 @@ export const UnitPileChart = /* @__PURE__ */ forwardRef(function UnitPileChart<
     />,
     layoutMode
   )
-})
+}), "UnitPileChart", UNIT_PILE_CHART_SIZE)
 
 /**
  * @deprecated Renamed to {@link UnitPileChart} in 3.9.0. Unitizes category values into countable bodies; the substrate is an implementation detail, not the reading.

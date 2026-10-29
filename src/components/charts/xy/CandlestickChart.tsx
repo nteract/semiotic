@@ -17,11 +17,11 @@ import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName, type TooltipFieldConfig } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
-import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
+import { warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import { composeStyleRules, makeXYRuleContext, type StyleRule } from "../shared/styleRules"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureCandlestickChartRegistrations(): void {
@@ -102,7 +102,7 @@ export interface CandlestickChartProps<TDatum extends Datum = Datum> extends Bas
  * />
  * ```
  */
-export const CandlestickChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function CandlestickChart<TDatum extends Datum = Datum>(
+export const CandlestickChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function CandlestickChart<TDatum extends Datum = Datum>(
   props: CandlestickChartProps<TDatum>,
   ref: React.Ref<RealtimeFrameHandle>
 ) {
@@ -312,9 +312,7 @@ export const CandlestickChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ 
   if (validationError) return <ChartError componentName="CandlestickChart" message={validationError} width={width} height={height} />
 
   return (
-    <SafeRender componentName="CandlestickChart" width={width} height={height}>
-      <StreamXYFrame ref={frameRef} {...streamProps} />
-    </SafeRender>
+    <StreamXYFrame ref={frameRef} {...streamProps} />
   )
 }), "CandlestickChart") as unknown as {
   <TDatum extends Datum = Datum>(props: CandlestickChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null

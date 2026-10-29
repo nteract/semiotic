@@ -61,7 +61,7 @@ import {
 } from "./realtimeChartRuntime"
 import { composeStyleRules, type StyleRule } from "../shared/styleRules"
 import { makeHeatmapRuleContext } from "../shared/heatmapStyleRules"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureRealtimeHeatmapRegistrations(): void {
@@ -249,7 +249,7 @@ export interface RealtimeHeatmapProps<
  * />
  * ```
  */
-export const RealtimeHeatmap = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function RealtimeHeatmap<
+export const RealtimeHeatmap = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function RealtimeHeatmap<
   TDatum extends Datum = Datum
 >(props: RealtimeHeatmapProps<TDatum>, ref: React.Ref<RealtimeFrameHandle<TDatum>>) {
   ensureRealtimeHeatmapRegistrations()

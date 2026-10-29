@@ -13,14 +13,13 @@ import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildOrdinalTooltip } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
-import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
 import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 /**
  * PieChart component props
@@ -134,7 +133,7 @@ export interface PieChartProps<TDatum extends Datum = Datum> extends BaseChartPr
  * Wraps {@link StreamOrdinalFrame} with pie-specific defaults. See
  * {@link https://semiotic.nteract.io/charts/pie-chart} for live demos.
  */
-export const PieChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function PieChart<TDatum extends Datum = Datum>(props: PieChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const PieChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function PieChart<TDatum extends Datum = Datum>(props: PieChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -302,8 +301,8 @@ export const PieChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardR
 
   if (validationError) return <ChartError componentName="PieChart" message={validationError} width={width} height={height} />
 
-  return <SafeRender componentName="PieChart" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
-}), "PieChart") as unknown as {
+  return <StreamOrdinalFrame ref={frameRef} {...streamProps} />
+}), "PieChart", PIE_CHART_SIZE) as unknown as {
   <TDatum extends Datum = Datum>(props: PieChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }

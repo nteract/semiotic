@@ -51,7 +51,7 @@ import {
   type TooltipProp
 } from "./physicsHocUtils"
 import { resolveCustomLayout } from "./physicsCustomLayout"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 export { resolveCustomLayout } from "./physicsCustomLayout"
 
@@ -192,7 +192,7 @@ function normalizeSpawnDatumResult(
   }
 }
 
-export const PhysicsCustomChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function PhysicsCustomChart<
+export const PhysicsCustomChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function PhysicsCustomChart<
   TDatum extends Datum = Datum,
   TConfig extends object = Record<string, unknown>
 >(
@@ -461,7 +461,6 @@ export const PhysicsCustomChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
   )
 
   return renderPhysicsFrame(
-    "PhysicsCustomChart",
     chartSize,
     <StreamPhysicsFrame
       {...frameProps}
@@ -498,7 +497,7 @@ export const PhysicsCustomChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
     />,
     layoutMode
   )
-}), "PhysicsCustomChart") as unknown as {
+}), "PhysicsCustomChart", PHYSICS_CUSTOM_CHART_SIZE) as unknown as {
   <
     TDatum extends Datum = Datum,
     TConfig extends object = Record<string, unknown>

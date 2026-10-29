@@ -11,7 +11,6 @@ import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/types"
 import { type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
-import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -20,7 +19,7 @@ import { resolveOrdinalAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { buildStatsTooltip } from "../shared/statsTooltip"
 import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 export interface BoxPlotProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
@@ -83,7 +82,7 @@ export interface BoxPlotProps<TDatum extends Datum = Datum> extends BaseChartPro
  * />
  * ```
  */
-export const BoxPlot = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function BoxPlot<TDatum extends Datum = Datum>(props: BoxPlotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const BoxPlot = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function BoxPlot<TDatum extends Datum = Datum>(props: BoxPlotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -241,7 +240,7 @@ export const BoxPlot = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRe
     ...Object.fromEntries(Object.entries(frameProps).filter(([k]) => k !== "pieceStyle")),
   }
 
-  return <SafeRender componentName="BoxPlot" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
+  return <StreamOrdinalFrame ref={frameRef} {...streamProps} />
 }), "BoxPlot") as unknown as {
   <TDatum extends Datum = Datum>(props: BoxPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string

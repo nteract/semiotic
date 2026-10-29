@@ -15,7 +15,7 @@ import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { resolveMultiCapableTooltip, MultiPointTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName, bandTooltipFields } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
-import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
+import { warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useChartSetup } from "../shared/useChartSetup"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
@@ -39,7 +39,7 @@ import {
 } from "./lineGapStrategy"
 import type { LegendValue } from "../../types/legendTypes"
 import { composeLegendConfigs } from "../../types/legendTypes"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureLineChartRegistrations(): void {
@@ -396,7 +396,7 @@ export interface LineChartProps<TDatum extends Datum = Datum> extends BaseChartP
  * @param props - LineChart configuration
  * @returns Rendered line chart
  */
-export const LineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(
+export const LineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(
   function LineChart<TDatum extends Datum = Datum>(props: LineChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   ensureLineChartRegistrations()
   const frameRef = useRef<StreamXYFrameHandle>(null)
@@ -981,7 +981,7 @@ export const LineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forward
   if (setup.earlyReturn) return setup.earlyReturn
   if (validationError) return <ChartError componentName="LineChart" message={validationError} width={width} height={height} />
 
-  return <SafeRender componentName="LineChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
+  return <StreamXYFrame ref={frameRef} {...streamProps} />
 }), "LineChart") as unknown as {
   <TDatum extends Datum = Datum>(props: LineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string

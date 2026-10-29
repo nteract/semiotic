@@ -12,13 +12,12 @@ import type { ChartRecipe } from "../../ai/chartRecipes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { Datum } from "../shared/datumTypes"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
-import { SafeRender } from "../shared/withChartWrapper"
 import { filterSparseArray } from "../shared/sparseArray"
 import { useCustomChartScaffold } from "../shared/useCustomChartSetup"
 import { useChartSetup } from "../shared/useChartSetup"
 import { buildBaseMetadataProps, buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 export interface GeoCustomChartProps<
   TDatum extends Datum = Datum,
@@ -73,7 +72,7 @@ export interface GeoCustomChartProps<
  * polygon/point/line hit-testing, accessibility, tooltips, selection, and SSR.
  * The supplied layout owns only the scene geometry and SVG overlays.
  */
-export const GeoCustomChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function GeoCustomChart<
+export const GeoCustomChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function GeoCustomChart<
   TDatum extends Datum = Datum,
   TConfig extends object = Record<string, unknown>
 >(
@@ -238,9 +237,7 @@ export const GeoCustomChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ fo
   }
 
   return (
-    <SafeRender componentName="GeoCustomChart" width={width} height={height}>
-      <StreamGeoFrame ref={frameRef} {...streamProps} />
-    </SafeRender>
+    <StreamGeoFrame ref={frameRef} {...streamProps} />
   )
 }), "GeoCustomChart") as unknown as {
   <

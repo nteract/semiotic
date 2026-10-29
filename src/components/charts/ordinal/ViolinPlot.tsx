@@ -11,7 +11,6 @@ import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/types"
 import { type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
-import { SafeRender } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -21,7 +20,7 @@ import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useOrdinalBrush } from "../shared/useOrdinalBrush"
 import { buildStatsTooltip } from "../shared/statsTooltip"
 import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 export interface ViolinPlotProps<TDatum extends Datum = Datum> extends BaseChartProps {
   data?: TDatum[]
@@ -92,7 +91,7 @@ export interface ViolinPlotProps<TDatum extends Datum = Datum> extends BaseChart
  * />
  * ```
  */
-export const ViolinPlot = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function ViolinPlot<TDatum extends Datum = Datum>(props: ViolinPlotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const ViolinPlot = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function ViolinPlot<TDatum extends Datum = Datum>(props: ViolinPlotProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -259,7 +258,7 @@ export const ViolinPlot = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwar
     ...Object.fromEntries(Object.entries(frameProps).filter(([k]) => k !== "pieceStyle")),
   }
 
-  return <SafeRender componentName="ViolinPlot" width={width} height={height}><StreamOrdinalFrame ref={frameRef} {...streamProps} /></SafeRender>
+  return <StreamOrdinalFrame ref={frameRef} {...streamProps} />
 }), "ViolinPlot") as unknown as {
   <TDatum extends Datum = Datum>(props: ViolinPlotProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string

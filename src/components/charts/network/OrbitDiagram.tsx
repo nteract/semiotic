@@ -22,7 +22,6 @@ import { resolveAxisFreeMarginDefaults } from "../shared/chartMode"
 import { useNetworkChartSetup } from "../shared/useNetworkChartSetup"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import ChartError from "../shared/ChartError"
-import { SafeRender } from "../shared/withChartWrapper"
 import { validateObjectData } from "../shared/validateChartData"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import {
@@ -30,7 +29,7 @@ import {
   makeNodeRuleContext,
   type StyleRule,
 } from "../shared/styleRules"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureOrbitDiagramRegistrations(): void {
@@ -171,7 +170,7 @@ const DEPTH_COLORS = DEPTH_PALETTE_COLORS
  * />
  * ```
  */
-export const OrbitDiagram = /* @__PURE__ */ withDisplayName(function OrbitDiagram<TDatum extends Datum = Datum>(
+export const OrbitDiagram = /* @__PURE__ */ withChartErrorBoundary(function OrbitDiagram<TDatum extends Datum = Datum>(
   props: OrbitDiagramProps<TDatum>
 ) {
   ensureOrbitDiagramRegistrations()
@@ -366,8 +365,7 @@ export const OrbitDiagram = /* @__PURE__ */ withDisplayName(function OrbitDiagra
   if (setup.loadingEl) return setup.loadingEl
 
   return (
-    <SafeRender componentName="OrbitDiagram" width={width} height={height}>
-      <StreamNetworkFrame
+    <StreamNetworkFrame
         chartType="orbit"
         {...(data != null && { data })}
         size={[width, height]}
@@ -425,7 +423,6 @@ export const OrbitDiagram = /* @__PURE__ */ withDisplayName(function OrbitDiagra
         perspective={props.perspective}
         {...frameProps}
       />
-    </SafeRender>
   )
-}, "OrbitDiagram")
+}, "OrbitDiagram", ORBIT_DIAGRAM_SIZE)
 

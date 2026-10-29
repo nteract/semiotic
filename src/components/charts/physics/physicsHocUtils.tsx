@@ -2,11 +2,7 @@
 
 import * as React from "react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import {
-  SafeRender,
-  renderEmptyState,
-  renderLoadingState
-} from "../shared/withChartWrapper"
+import { renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import type { FrameGraphicsProp } from "../../stream/useFrame"
 import { useResponsiveSize } from "../../stream/useResponsiveSize"
 import type {
@@ -565,14 +561,13 @@ export function renderPhysicsChartState<TDatum extends Datum>(options: {
 }
 
 export function renderPhysicsFrame(
-  componentName: string,
   size: [number, number],
   children: React.ReactNode,
   responsiveLayout?: Pick<
     PhysicsChartModeResult,
     "responsiveContainerRef" | "responsiveHeight" | "responsiveWidth"
   >
-): React.ReactElement {
+): React.ReactNode {
   const content =
     responsiveLayout?.responsiveWidth || responsiveLayout?.responsiveHeight ? (
       <div
@@ -589,11 +584,7 @@ export function renderPhysicsFrame(
     ) : (
       children
     )
-  return (
-    <SafeRender componentName={componentName} width={size[0]} height={size[1]}>
-      {content}
-    </SafeRender>
-  )
+  return content
 }
 
 export function composePhysicsFrameGraphics(

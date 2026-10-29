@@ -9,6 +9,7 @@ class IncrementalExtent
 class RingBuffer<T>
 class-member ChartErrorBoundary::construct::%24construct = required new (props: ChartErrorBoundaryProps): ChartErrorBoundary
 class-member ChartErrorBoundary::method::componentDidCatch = required componentDidCatch(error: Error, errorInfo: ErrorInfo): void
+class-member ChartErrorBoundary::method::componentDidUpdate = required componentDidUpdate(prevProps: ChartErrorBoundaryProps, prevState: ChartErrorBoundaryState): void
 class-member ChartErrorBoundary::method::getDerivedStateFromError = required static getDerivedStateFromError(error: Error): ChartErrorBoundaryState
 class-member ChartErrorBoundary::method::render = required render(): ReactNode
 class-member IncrementalExtent::get::dirty = get dirty: boolean
@@ -821,8 +822,9 @@ interface-member ChartContainerProps::property::subtitle = optional subtitle: st
 interface-member ChartContainerProps::property::title = optional title: React.ReactNode
 interface-member ChartContainerProps::property::width = optional width: number | string | undefined
 interface-member ChartErrorBoundaryProps::property::children = required children: ReactNode
-interface-member ChartErrorBoundaryProps::property::fallback = optional fallback: ((error: Error) => ReactNode) | ReactNode
+interface-member ChartErrorBoundaryProps::property::fallback = optional fallback: ((error: Error, reset: () => void) => ReactNode) | ReactNode
 interface-member ChartErrorBoundaryProps::property::onError = optional onError: ((error: Error, errorInfo: ErrorInfo) => void) | undefined
+interface-member ChartErrorBoundaryProps::property::resetKeys = optional resetKeys: readonly unknown[] | undefined
 interface-member ChartGridProps::property::chartDefaults = optional chartDefaults: Record<string, unknown> | undefined
 interface-member ChartGridProps::property::children = required children: React.ReactNode
 interface-member ChartGridProps::property::className = optional className: string | undefined

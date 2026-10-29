@@ -11,11 +11,7 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { NetworkCustomLayout, NetworkLayoutSelection } from "../../stream/networkCustomLayout"
 import type { Datum } from "../shared/datumTypes"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
-import {
-  renderEmptyState,
-  renderLoadingState,
-  SafeRender,
-} from "../shared/withChartWrapper"
+import { renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { useChartSelection, resolveMobileInteraction } from "../shared/hooks"
 import { useCustomChartScaffold } from "../shared/useCustomChartSetup"
 import { filterSparseArray } from "../shared/sparseArray"
@@ -23,7 +19,7 @@ import { buildBaseMetadataProps, buildCustomBehaviorProps } from "../shared/stre
 import type { ChartRecipe } from "../../ai/chartRecipes"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { registerNetworkPerspective } from "../../stream/networkPerspectiveRuntime"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureNetworkCustomChartRegistrations(): void {
@@ -117,7 +113,7 @@ export interface NetworkCustomChartProps<
  * />
  * ```
  */
-export const NetworkCustomChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function NetworkCustomChart<
+export const NetworkCustomChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function NetworkCustomChart<
   TNode extends Datum = Datum,
   TEdge extends Datum = Datum,
   TConfig extends object = Record<string, unknown>
@@ -285,9 +281,7 @@ export const NetworkCustomChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
   }
 
   return (
-    <SafeRender componentName="NetworkCustomChart" width={width} height={height}>
-      <StreamNetworkFrame ref={frameRef} {...streamProps} />
-    </SafeRender>
+    <StreamNetworkFrame ref={frameRef} {...streamProps} />
   )
 }), "NetworkCustomChart") as unknown as {
   <

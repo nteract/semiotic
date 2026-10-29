@@ -15,7 +15,7 @@ import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
 import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import ChartError from "../shared/ChartError"
-import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
+import { warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useChartSetup } from "../shared/useChartSetup"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
@@ -26,7 +26,7 @@ import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
 import { DEFAULT_QUADRANTS } from "./QuadrantChart.defaults"
 import { getMinMax } from "../shared/minMax"
 import { resolveCSSColor } from "../../stream/renderers/resolveCSSColor"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureQuadrantChartRegistrations(): void {
@@ -186,7 +186,7 @@ export interface QuadrantChartProps<TDatum extends Datum = Datum> extends BaseCh
  * />
  * ```
  */
-export const QuadrantChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function QuadrantChart<TDatum extends Datum = Datum>(props: QuadrantChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const QuadrantChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function QuadrantChart<TDatum extends Datum = Datum>(props: QuadrantChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   ensureQuadrantChartRegistrations()
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
@@ -684,7 +684,7 @@ export const QuadrantChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ for
 
   if (validationError) return <ChartError componentName="QuadrantChart" message={validationError} width={width} height={height} />
 
-  return <SafeRender componentName="QuadrantChart" width={width} height={height}><StreamXYFrame ref={frameRef} {...streamProps} /></SafeRender>
+  return <StreamXYFrame ref={frameRef} {...streamProps} />
 }), "QuadrantChart") as unknown as {
   <TDatum extends Datum = Datum>(props: QuadrantChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string

@@ -14,7 +14,7 @@ import type { LegendPosition } from "../shared/hooks"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { composeStyleRules, makeNodeRuleContext, type StyleRule } from "../shared/styleRules"
 
-import { SafeRender, warnMissingField } from "../shared/withChartWrapper"
+import { warnMissingField } from "../shared/withChartWrapper"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import type { Style } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -26,7 +26,7 @@ import {
   type DistanceCartogramOverlayLayout,
   type DistanceCartogramRingStyle
 } from "./cartogramOverlay"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 export interface DistanceCartogramProps<TDatum extends Datum = Datum> extends BaseChartProps {
   /** Point data with geographic coordinates */
@@ -187,7 +187,7 @@ export interface DistanceCartogramProps<TDatum extends Datum = Datum> extends Ba
  * />
  * ```
  */
-export const DistanceCartogram = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function DistanceCartogram<TDatum extends Datum = Datum>(props: DistanceCartogramProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
+export const DistanceCartogram = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function DistanceCartogram<TDatum extends Datum = Datum>(props: DistanceCartogramProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -521,9 +521,7 @@ export const DistanceCartogram = /* @__PURE__ */ withDisplayName(/* @__PURE__ */
   }
 
   return (
-    <SafeRender componentName="DistanceCartogram" width={resolved.width} height={resolved.height}>
-      <StreamGeoFrame ref={geoRef} {...streamProps} />
-    </SafeRender>
+    <StreamGeoFrame ref={geoRef} {...streamProps} />
   )
 }), "DistanceCartogram") as unknown as {
   <TDatum extends Datum = Datum>(props: DistanceCartogramProps<TDatum> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null

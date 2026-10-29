@@ -56,7 +56,7 @@ import {
 } from "./realtimeChartRuntime"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { composeStyleRules, makeXYRuleContext } from "../shared/styleRules"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 export type { RealtimeLineChartHandle, RealtimeLineChartProps }
 
@@ -105,7 +105,7 @@ function ensureRealtimeLineChartRegistrations(): void {
  * />
  * ```
  */
-export const RealtimeLineChart = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function RealtimeLineChart<
+export const RealtimeLineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function RealtimeLineChart<
   TDatum extends Datum = Datum
 >(
   props: RealtimeLineChartProps<TDatum>,

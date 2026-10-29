@@ -2,6 +2,7 @@
 import { GALTON_BOARD_CHART_SIZE } from "../shared/chartSizeDefaultsPhysics"
 
 import * as React from "react"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 import { forwardRef, useCallback, useMemo, useRef } from "react"
 import { useStableShallow } from "../../stream/useStableShallow"
 import StreamPhysicsFrame, {
@@ -120,7 +121,7 @@ function normalizeValueExtent(
  * />
  * ```
  */
-export const GaltonBoardChart = /* @__PURE__ */ forwardRef(function GaltonBoardChart<
+export const GaltonBoardChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function GaltonBoardChart<
   TDatum extends Datum = Datum
 >(props: GaltonBoardChartProps<TDatum>, ref: React.Ref<PhysicsFrameHandle>) {
   const {
@@ -297,7 +298,6 @@ export const GaltonBoardChart = /* @__PURE__ */ forwardRef(function GaltonBoardC
     }
   )
   return renderPhysicsFrame(
-    "GaltonBoardChart",
     chartSize,
     <StreamPhysicsFrame
       key={`${chartSize[0]}x${chartSize[1]}:${rerun.rerunKey}`}
@@ -321,6 +321,6 @@ export const GaltonBoardChart = /* @__PURE__ */ forwardRef(function GaltonBoardC
     />,
     layoutMode
   )
-})
+}), "GaltonBoardChart", GALTON_BOARD_CHART_SIZE)
 
 export default GaltonBoardChart

@@ -25,10 +25,9 @@ import { useNetworkChartSetup } from "../shared/useNetworkChartSetup"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { composeStyleRules, makeNodeRuleContext, type StyleRule } from "../shared/styleRules"
 import ChartError from "../shared/ChartError"
-import { SafeRender } from "../shared/withChartWrapper"
 import { validateNetworkData } from "../shared/validateChartData"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
-import { withDisplayName } from "../shared/withDisplayName"
+import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureChordDiagramRegistrations(): void {
@@ -115,7 +114,7 @@ export interface ChordDiagramProps<TNode extends Datum = Datum, TEdge extends Da
  * />
  * ```
  */
-export const ChordDiagram = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forwardRef(function ChordDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ChordDiagramProps<TNode, TEdge>, ref: React.Ref<RealtimeFrameHandle>) {
+export const ChordDiagram = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function ChordDiagram<TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ChordDiagramProps<TNode, TEdge>, ref: React.Ref<RealtimeFrameHandle>) {
   ensureChordDiagramRegistrations()
   const frameRef = useRef<StreamNetworkFrameHandle>(null)
     // getData exposes original edge payloads, including absent payloads.
@@ -322,7 +321,6 @@ export const ChordDiagram = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forw
   if (setup.emptyEl) return setup.emptyEl
 
   return (
-    <SafeRender componentName="ChordDiagram" width={width} height={height}>
     <StreamNetworkFrame
       ref={frameRef}
       chartType="chord"
@@ -379,8 +377,8 @@ export const ChordDiagram = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ forw
       perspective={props.perspective}
       {...frameProps}
     />
-  </SafeRender>)
-}), "ChordDiagram") as unknown as {
+  )
+}), "ChordDiagram", CHORD_DIAGRAM_SIZE) as unknown as {
   <TNode extends Datum = Datum, TEdge extends Datum = Datum>(props: ChordDiagramProps<TNode, TEdge> & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null
   displayName?: string
 }
