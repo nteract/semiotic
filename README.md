@@ -464,24 +464,24 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 |---|---:|---:|---:|
 | `import { semioticVite } from "semiotic/vite"` | node | **0.6 KiB** | — |
 | `import { getNetworkPerspectiveSize } from "semiotic/network/perspective/core"` | browser | **1.1 KiB** | — |
-| `import { MotifBraidChart } from "semiotic/atlas"` | browser | **111.9 KiB** | 29.3 KiB |
+| `import { MotifBraidChart } from "semiotic/atlas"` | browser | **111.9 KiB** | 29.4 KiB |
 | `import { prepareNetworkAtlas } from "semiotic/atlas/core"` | browser | **7.1 KiB** | — |
 | `import { LineChart } from "semiotic"` | browser | **126.2 KiB** | 44.4 KiB |
 | `import { LineChart } from "semiotic/xy"` | browser | **125.8 KiB** | 32.4 KiB |
 | `import { LineChart } from "semiotic/line"` | browser | **126.0 KiB** | 32.4 KiB |
 | `import { BarChart } from "semiotic/ordinal"` | browser | **107.1 KiB** | 14.7 KiB |
-| `import { SankeyDiagram } from "semiotic/network"` | browser | **135.6 KiB** | 6.6 KiB |
-| `import { ZoomableNetworkCustomChart } from "semiotic/network/zoom"` | browser | **115.1 KiB** | 29.3 KiB |
+| `import { SankeyDiagram } from "semiotic/network"` | browser | **135.8 KiB** | 6.6 KiB |
+| `import { ZoomableNetworkCustomChart } from "semiotic/network/zoom"` | browser | **115.2 KiB** | 29.4 KiB |
 | `import { isometricGlyphs } from "semiotic/network/perspective"` | browser | **1.4 KiB** | — |
-| `import { RealtimeLineChart } from "semiotic/realtime"` | browser | **127.0 KiB** | 42.2 KiB |
+| `import { RealtimeLineChart } from "semiotic/realtime"` | browser | **127.0 KiB** | 42.1 KiB |
 | `import { RingBuffer } from "semiotic/realtime/core"` | browser | **0.7 KiB** | 13.6 KiB |
 | `import { useStreamStatus } from "semiotic/realtime/react"` | browser | **0.8 KiB** | — |
 | `import { GaltonBoardChart } from "semiotic/physics"` | browser | **96.1 KiB** | 2.7 KiB |
 | `import { MATTER_PHYSICS_CAPABILITIES } from "semiotic/physics/matter"` | browser | **0.1 KiB** | — |
 | `import { RAPIER_PHYSICS_CAPABILITIES } from "semiotic/physics/rapier"` | browser | **0.2 KiB** | — |
-| `import { renderChart } from "semiotic/server"` | node | **303.7 KiB** | — |
-| `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **128.7 KiB** | — |
-| `import { renderToImage } from "semiotic/server/node"` | node | **304.1 KiB** | 0.6 KiB |
+| `import { renderChart } from "semiotic/server"` | node | **303.8 KiB** | — |
+| `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **128.9 KiB** | — |
+| `import { renderToImage } from "semiotic/server/node"` | node | **304.2 KiB** | 0.6 KiB |
 | `import { suggestCharts } from "semiotic/ai"` | browser | **38.1 KiB** | 13.6 KiB |
 | `import { suggestCharts } from "semiotic/ai/core"` | browser | **32.2 KiB** | — |
 | `import { buildArtifactContract } from "semiotic/artifact"` | browser | **4.5 KiB** | — |
