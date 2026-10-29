@@ -36,10 +36,10 @@ for (const execution of ["sync", "worker"] as const) {
     if (execution === "worker")
       await page.getByLabel("Compare three producers", { exact: false }).check()
     const demo = page.getByTestId("live-emitter-demo")
-    await demo.getByLabel("Simulation engine").selectOption(execution)
     await demo.getByLabel("Live simulation speed").selectOption("4")
-    // Worker startup snapshots the paused host asynchronously. Start the
-    // workload only after that handshake, rather than racing it at 4× speed.
+    await demo.getByLabel("Simulation engine").selectOption(execution)
+    // Wait for worker startup with the final paused configuration before
+    // starting the workload at 4× speed.
     await expect(demo.getByTestId("live-execution")).toHaveText(execution)
     await demo
       .getByRole("button", { name: "Start live stream", exact: true })
