@@ -323,7 +323,8 @@ export function pickValueField(
 /**
  * The primary categorical channel. An explicit `role: "category"` wins
  * (key or not); then the first non-key categorical, then a boolean; then,
- * for keyed tables, a key column (see {@link isCategoryLikeKey}).
+ * for keyed tables, a key column that is neither a date nor the selected time
+ * field, has no `series` role, and has no ID-like name.
  */
 export function pickCategoryField(
   schema: StreamSchema
