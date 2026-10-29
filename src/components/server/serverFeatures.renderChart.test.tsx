@@ -486,12 +486,82 @@ describe("renderChart", () => {
       height: 300,
     })
 
-    // The scene center is offset so the *visible* half arc is centered in the
-    // widget, rather than treating its hub as a full-circle chart center.
-    expect(svg).toContain('transform="translate(200,244)"')
+    // The scene center is offset so the *visible* half arc and the readout
+    // hanging below it are centered in the widget, rather than treating its
+    // hub as a full-circle chart center.
+    expect(svg).toContain('transform="translate(200,232.36)"')
     expect(svg).not.toContain("<foreignObject")
     expect(svg).toContain(">70<")
     expect(svg).not.toContain("stroke-linecap=\"round\"")
+  })
+
+  it.each([undefined, "Success %"])(
+    "keeps a short half-circle GaugeChart's readout inside the SVG in SSR (title %s)",
+    (title) => {
+      const height = 158
+      const svg = renderChart("GaugeChart", {
+        value: 62,
+        sweep: 180,
+        showNeedle: false,
+        width: 850,
+        height,
+        title,
+      })
+      const center = /class="semiotic-radial-center-content" transform="translate\(([\d.]+),([\d.]+)\)"/.exec(svg)
+      expect(center).not.toBeNull()
+      const centerY = Number(center![2])
+      const ys = [...svg.matchAll(/<text y="([-\d.e]+)"/g)].map((match) => Number(match[1]))
+      expect(ys).toHaveLength(2)
+      // Value above the line through the arc's ends; caption inside the SVG,
+      // below the title strip when there is one.
+      expect(ys[0]).toBeLessThan(0)
+      expect(centerY + ys[1] + 3).toBeLessThanOrEqual(height)
+    }
+  )
+
+  it("keeps a short half-circle GaugeChart's needle clear of its readout in SSR", () => {
+    for (const value of [0, 25, 50, 62, 100]) {
+      const svg = renderChart("GaugeChart", { value, sweep: 180, width: 850, height: 158 })
+      const needle = /<line x1="([-\d.e]+)" y1="([-\d.e]+)" x2="([-\d.e]+)" y2="([-\d.e]+)"[^>]*stroke-width="2.5"/.exec(svg)
+      expect(needle).not.toBeNull()
+      const [x1, y1, x2, y2] = needle!.slice(1).map(Number)
+      const center = /class="semiotic-radial-center-content" transform="translate\(([\d.]+),([\d.]+)\)"/.exec(svg)!
+      const valueText = /<text y="([-\d.e]+)" dominant-baseline="central" font-size="([\d.]+)"[^>]*>([^<]+)</.exec(svg)!
+      const fontSize = Number(valueText[2])
+      const halfWidth = (valueText[3].length * fontSize * 0.6) / 2
+      const top = Number(center[2]) + Number(valueText[1]) - fontSize / 2
+      const [left, right] = [Number(center[1]) - halfWidth, Number(center[1]) + halfWidth]
+      for (let step = 0; step <= 100; step++) {
+        const x = x1 + ((x2 - x1) * step) / 100
+        const y = y1 + ((y2 - y1) * step) / 100
+        expect(x >= left && x <= right && y >= top && y <= top + fontSize).toBe(false)
+      }
+    }
+  })
+
+  it("keeps a short GaugeChart's threshold labels inside the SVG in SSR", () => {
+    const [width, height] = [850, 150]
+    const svg = renderChart("GaugeChart", {
+      value: 65,
+      width,
+      height,
+      thresholds: [
+        { value: 50, color: "#22c55e", label: "Good" },
+        { value: 80, color: "#eab308", label: "Warn" },
+        { value: 100, color: "#ef4444" },
+      ],
+    })
+    const labels = [...svg.matchAll(/<text x="([-\d.e]+)" y="([-\d.e]+)" text-anchor="(\w+)" dominant-baseline="(\w+)"[^>]*>([^<]+)<\/text>/g)]
+    expect(labels.map((match) => match[5])).toEqual(["Good", "Warn"])
+    for (const [, x, y, anchor, baseline, text] of labels) {
+      const textWidth = text.length * 6
+      const left = anchor === "start" ? Number(x) : anchor === "end" ? Number(x) - textWidth : Number(x) - textWidth / 2
+      const top = baseline === "auto" ? Number(y) - 8 : baseline === "hanging" ? Number(y) : Number(y) - 5
+      expect(top).toBeGreaterThanOrEqual(0)
+      expect(top + 10).toBeLessThanOrEqual(height)
+      expect(left).toBeGreaterThanOrEqual(0)
+      expect(left + textWidth).toBeLessThanOrEqual(width)
+    }
   })
 
   it("renders GaugeChart threshold tick lines and labels", () => {

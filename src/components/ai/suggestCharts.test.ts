@@ -505,3 +505,53 @@ describe("scoreChart", () => {
     expect(audienceAdjusted.caveats.some((caveat) => /slice|density/i.test(caveat))).toBe(true)
   })
 })
+
+describe("suggestCharts default ranking without an intent", () => {
+  const day = 86_400_000
+  const t0 = Date.UTC(2026, 0, 1)
+  const timeSeries = Array.from({ length: 60 }, (_, i) => ({
+    date: new Date(t0 + i * day),
+    price: 100 + Math.sin(i / 5) * 20 + i,
+  }))
+  const components = (data: Array<Record<string, unknown>>) =>
+    suggestCharts(data, { maxResults: 3, includeVariants: false }).map((s) => s.component)
+
+  it("leads a measure over time with a line chart", () => {
+    expect(components(timeSeries)[0]).toBe("LineChart")
+  })
+
+  it("leads aggregated categories with a bar chart", () => {
+    const totals = ["A", "B", "C", "D", "E", "F"].map((category, i) => ({ category, value: 10 + i * 7 }))
+    expect(components(totals)[0]).toBe("BarChart")
+  })
+
+  it("leads raw observations per category with a distribution chart", () => {
+    const observations = ["ingest", "query", "render"].flatMap((service, k) =>
+      Array.from({ length: 30 }, (_, i) => ({ service, latencyMs: 40 + k * 30 + ((i * 17) % 25) }))
+    )
+    expect(["BoxPlot", "ViolinPlot", "SwarmPlot"]).toContain(components(observations)[0])
+  })
+
+  it("leads two plain measures with a scatterplot", () => {
+    const pairs = Array.from({ length: 80 }, (_, i) => ({ height: 150 + ((i * 13) % 40), weight: 50 + ((i * 7) % 30) }))
+    expect(components(pairs)[0]).toBe("Scatterplot")
+  })
+
+  it("ranks scoreChart by the same default intents as suggestCharts", () => {
+    const top = suggestCharts(timeSeries, { includeVariants: false, maxResults: 1 })[0]
+    const scored = scoreChart(top.component, timeSeries)
+    expect(scored.status).toBe("ok")
+    // suggestCharts adds a scale bias scoreChart does not; the intents agree.
+    if (scored.status === "ok") {
+      expect(top.reasons[0]).toMatch(/^Strong fit for trend/)
+      expect(scored.reasons[0]).toBe(top.reasons[0])
+    }
+  })
+
+  it("drops zero-scored charts unless minScore is 0", () => {
+    const ranked = suggestCharts(timeSeries, { intent: "part-to-whole", maxResults: 50 })
+    expect(ranked.every((s) => s.score > 0)).toBe(true)
+    const kept = suggestCharts(timeSeries, { intent: "part-to-whole", maxResults: 50, minScore: 0 })
+    expect(kept.length).toBeGreaterThan(ranked.length)
+  })
+})

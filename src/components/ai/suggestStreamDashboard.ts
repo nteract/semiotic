@@ -8,8 +8,10 @@ import type { AudienceProfile } from "./audienceProfile"
 import {
   hasCategoryField,
   hasNumericValue,
-  hasSeriesField,
   hasTimeField,
+  normalizeStreamSchema,
+  pickMeasureFields,
+  pickSplitField,
   resolveStreamShape
 } from "./streamSchema"
 
@@ -26,6 +28,8 @@ export interface StreamDashboardSuggestion {
   intentsMissing: IntentId[]
   stretchPanels: StreamStretchSuggestion[]
   schemas: ReadonlyArray<StreamSchema>
+  /** Schema problems, prefixed with the schema index when there are several. */
+  warnings: string[]
 }
 
 export interface SuggestStreamDashboardOptions {
@@ -41,12 +45,11 @@ export interface SuggestStreamDashboardOptions {
 
 function defaultStreamIntents(schema: StreamSchema): IntentId[] {
   const intents: IntentId[] = []
-  const fields = schema.fields ?? []
   const shape = resolveStreamShape(schema)
 
   if (hasTimeField(schema)) {
     intents.push("trend", "change-detection")
-    if (hasSeriesField(schema)) {
+    if (pickSplitField(schema)) {
       intents.push("compare-series", "composition-over-time")
     }
   }
@@ -59,8 +62,8 @@ function defaultStreamIntents(schema: StreamSchema): IntentId[] {
     intents.push("part-to-whole")
   }
 
-  const numericCount = fields.filter((field) => field.kind === "numeric").length
-  if (numericCount >= 2) {
+  // Id-like and key columns are numeric but not measures.
+  if (pickMeasureFields(schema).length >= 2) {
     intents.push("correlation", "outlier-detection")
   } else if (hasNumericValue(schema) && hasTimeField(schema)) {
     intents.push("distribution")
@@ -105,9 +108,20 @@ export function suggestStreamDashboard(
   schemas: StreamSchema | ReadonlyArray<StreamSchema>,
   options: SuggestStreamDashboardOptions = {}
 ): StreamDashboardSuggestion {
-  const list = (Array.isArray(schemas) ? schemas : [schemas]).map((schema) =>
-    withWindowPreference(schema, options.audience?.dashboard?.windowPreference)
-  )
+  const inputs: ReadonlyArray<StreamSchema> = Array.isArray(schemas)
+    ? schemas
+    : [schemas as StreamSchema]
+  const warnings: string[] = []
+  const list = inputs.map((input, index) => {
+    const normalized = normalizeStreamSchema(input)
+    for (const warning of normalized.warnings) {
+      warnings.push(inputs.length > 1 ? `schemas[${index}]: ${warning}` : warning)
+    }
+    return withWindowPreference(
+      normalized.schema,
+      options.audience?.dashboard?.windowPreference
+    )
+  })
   const maxPanels =
     options.budget ?? options.audience?.dashboard?.cellBudget ?? 6
   const diversify = options.diversifyByFamily !== false
@@ -252,6 +266,7 @@ export function suggestStreamDashboard(
     intentsCovered,
     intentsMissing,
     stretchPanels,
-    schemas: list
+    schemas: list,
+    warnings
   }
 }

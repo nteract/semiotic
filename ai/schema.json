@@ -22112,6 +22112,15 @@
               "type": "number",
               "description": "Time bin size in milliseconds (required)"
             },
+            "aggregation": {
+              "type": "string",
+              "enum": [
+                "sum",
+                "count"
+              ],
+              "description": "What each bin totals: \"sum\" adds valueAccessor; \"count\" counts events with a valid time and ignores valueAccessor, so streams without a numeric field still bin.",
+              "default": "sum"
+            },
             "binAlign": {
               "type": "string",
               "enum": [
@@ -31491,6 +31500,15 @@
                 "growing"
               ],
               "description": "Alias for windowMode inherited from RealtimeHistogram."
+            },
+            "aggregation": {
+              "type": "string",
+              "enum": [
+                "sum",
+                "count"
+              ],
+              "description": "What each bin totals: \"sum\" adds valueAccessor; \"count\" counts events with a valid time and ignores valueAccessor, so streams without a numeric field still bin.",
+              "default": "sum"
             },
             "binAlign": {
               "type": "string",

@@ -16,6 +16,8 @@ describe("inferIntent", () => {
     ["how did the cohort composition change over time?", "composition-over-time"],
     ["where did revenue suddenly shift?", "change-detection"],
     ["compare regions side by side", "compare-series"],
+    ["show me what is spiking", "outlier-detection"],
+    ["when did signups surge?", "change-detection"],
   ]
 
   it.each(cases)("maps %j → %s", (query, expected) => {

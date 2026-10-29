@@ -56,7 +56,7 @@ describe.each([RealtimeHistogram, TemporalHistogram])("%s multi tooltip", (Histo
   it("lists every stacked category in the hovered bin", async () => {
     const tooltip = await hoverFirstBin("multi")
     const lines = Array.from(tooltip?.querySelectorAll(".semiotic-tooltip > div") ?? []).map(line => line.textContent)
-    expect(lines).toEqual(["range:0–10", "North:5", "South:1", "count:6"])
+    expect(lines).toEqual(["range:0–10", "North:5", "South:1", "total:6"])
   })
 
   it("gives custom multi content the ordered rows and the bin's source rows", async () => {

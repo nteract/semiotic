@@ -57,6 +57,21 @@ export interface StreamFieldSchema {
   kind: StreamFieldKind
   /** Optional role hint — overrides the engine's inference. */
   role?: StreamFieldRole
+  /**
+   * Expected number of distinct values (categorical, boolean, or key
+   * fields). Lets pie/donut fits and series caveats use the real count
+   * instead of warning that cardinality is unknown.
+   */
+  cardinality?: number
+  /**
+   * Whether summing this measure across events is meaningful. `true` for
+   * counts, amounts, and signed changes; `false` for levels such as
+   * prices, latencies, or percentages. Charts that sum per bin or per
+   * category (RealtimeHistogram, append-stream bars and pies) and the
+   * running-total RealtimeWaterfallChart rank lower while this is unknown
+   * and are excluded when it is `false`.
+   */
+  additive?: boolean
 }
 
 /**
@@ -65,9 +80,11 @@ export interface StreamFieldSchema {
 export interface StreamSchema {
   fields: ReadonlyArray<StreamFieldSchema>
   /**
-   * Hint about expected event rate. Affects chart selection — heatmaps and
-   * waterfalls amortize high-throughput streams better than line charts do.
-   * A number is rows per second; string bands are qualitative.
+   * Hint about expected event rate. Affects chart selection — binned charts
+   * (heatmaps, histograms) and windowed aggregation amortize high-throughput
+   * streams; per-event marks (swarms, waterfalls) do not. A number is rows
+   * per second and also sizes the suggested retention buffer; string bands
+   * are qualitative.
    */
   throughput?: StreamThroughput
   /**
@@ -97,7 +114,7 @@ export interface StreamChartCapability {
   /**
    * Import specifier for generated code. Built-ins use family subpaths
    * (`semiotic/realtime`, `semiotic/ordinal`, `semiotic/value`); wrappers
-   * may declare any string (e.g. `"@iris/charts"`).
+   * may declare any string (e.g. `"@acme/charts"`).
    */
   importPath: string
   /**
@@ -112,6 +129,12 @@ export interface StreamChartCapability {
   fits: (schema: StreamSchema) => null | string
   intentScores: Partial<Record<IntentId, StreamIntentScorer>>
   caveats?: (schema: StreamSchema) => ReadonlyArray<string>
+  /**
+   * Schema-specific explanations of how `buildProps` adapted the chart
+   * (windowed aggregation, buffer sizing, counting instead of summing).
+   * Appended to the suggestion's `reasons`.
+   */
+  reasons?: (schema: StreamSchema) => ReadonlyArray<string>
   buildProps: (schema: StreamSchema) => Record<string, unknown>
 }
 

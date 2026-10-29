@@ -1,6 +1,7 @@
 
 import { useEffect } from "react"
 import { render, waitFor } from "@testing-library/react"
+import { renderToString } from "react-dom/server"
 import { Heatmap } from "./Heatmap"
 import { TooltipProvider } from "../../store/TooltipStore"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
@@ -436,5 +437,51 @@ describe("Heatmap", () => {
     // The measured gradient determines the automatic right margin. Its 3px
     // edge gutter keeps the interactive focus ring inside the SVG.
     expect(x).toBe(497)
+  })
+})
+
+describe("Heatmap aggregated legend", () => {
+  // Raw values span 1000-1199. Two x bins hold three rows and one row, so
+  // the cells, and their legend, encode counts of 1-3.
+  const rows = [
+    { x: 1, y: 1, value: 1000 },
+    { x: 2, y: 2, value: 1100 },
+    { x: 3, y: 3, value: 1150 },
+    { x: 9, y: 9, value: 1199 }
+  ]
+  const chart = (
+    <TooltipProvider>
+      <Heatmap
+        data={rows}
+        heatmapAggregation="count"
+        heatmapXBins={2}
+        heatmapYBins={1}
+        showLegend
+      />
+    </TooltipProvider>
+  )
+
+  // The side legend lists its label, then the high and low domain ends.
+  function legendEnds(root: ParentNode): (string | null)[] {
+    const legend = root.querySelector('g[aria-label="value"]')
+    return Array.from(
+      legend?.querySelectorAll(":scope > text") ?? [],
+      (text) => text.textContent
+    ).slice(1)
+  }
+
+  let cleanup: () => void
+  beforeEach(() => { cleanup = setupCanvasMock() })
+  afterEach(() => { cleanup() })
+
+  it("labels the server-rendered legend with the cell counts", () => {
+    const host = document.createElement("div")
+    host.innerHTML = renderToString(chart)
+    expect(legendEnds(host)).toEqual(["3", "1"])
+  })
+
+  it("labels the client legend with the same cell counts", async () => {
+    const { container } = render(chart)
+    await waitFor(() => expect(legendEnds(container)).toEqual(["3", "1"]))
   })
 })

@@ -53,9 +53,9 @@
       "DEGENERATE_EXTENT"
     ],
     "alternatives": [
-      "ViolinPlot",
       "BoxPlot",
-      "DotPlot"
+      "SwarmPlot",
+      "ViolinPlot"
     ],
     "timestamp": 1792000003000,
     "sessionId": "conference-stage-recorded",

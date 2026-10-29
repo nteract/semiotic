@@ -4,9 +4,10 @@ import type { AxisTickFormatter, XYFrameAxisConfig } from "./xyFrameAxisTypes"
 import {
   resolveAxisTickCount,
   filterTicksByPixelDistance,
-  hasSameTickLabel
+  dropRepeatedTickLabels
 } from "./axisTickUtils"
-import { makeDateTickFormatter } from "./xyDateTicks"
+import { scaleUtc } from "d3-scale"
+import { isEpochTickFormatter, makeDateTickFormatter } from "./xyDateTicks"
 import { numericTickFormatter } from "../charts/shared/numericTickFormatter"
 import {
   heatmapBandIndex,
@@ -86,7 +87,15 @@ export function generateXYTicks(options: {
       ? count === 0
         ? []
         : bandTicks.map((tick) => tick.value)
-      : (axis?.tickValues ?? ticksForMode(scale, count, extentMode)).filter(
+      : (axis?.tickValues ?? (
+          extentMode !== "exact" && isEpochTickFormatter(options.format)
+            // Epoch-ms on a linear scale: calendar ticks, numeric positions.
+            ? scaleUtc()
+                .domain([+domain[0], +domain[domain.length - 1]])
+                .ticks(count)
+                .map(Number)
+            : ticksForMode(scale, count, extentMode)
+        )).filter(
           (value): value is number | Date => typeof value !== "string"
         )
   const labelByValue = !explicitBand && bandTicks
@@ -159,10 +168,7 @@ export function generateXYTicks(options: {
       : undefined
   let ticks = filterTicksByPixelDistance(visible, minPx)
   if (relabel) ticks = relabel(ticks)
-  ticks = ticks.filter(
-    (tick, index) =>
-      index === 0 || !hasSameTickLabel(tick.label, ticks[index - 1].label)
-  )
+  ticks = dropRepeatedTickLabels(ticks)
   // Explicit values already lock the endpoints; exact ticks include them.
   if (
     (axis?.includeMin || axis?.includeMax) &&

@@ -729,6 +729,15 @@ describe("xySceneNodeToSVG — heatcell", () => {
     expect(html).toContain('stroke-width="0"')
   })
 
+  it("draws the canvas renderer's default separator around unstyled cells", () => {
+    const node = { type: "heatcell", x: 0, y: 0, w: 10, h: 10, fill: "#123456" }
+
+    const html = markup(xySceneNodeToSVG(node as XYSceneNode, 0))
+
+    expect(html).toContain('stroke="var(--semiotic-surface, #fff)"')
+    expect(html).toContain('stroke-width="1"')
+  })
+
   it("makes rendered cell values addressable and font-token aware", () => {
     const node = {
       type: "heatcell",

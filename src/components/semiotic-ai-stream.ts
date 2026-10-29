@@ -14,7 +14,8 @@ export type {
   SuggestStreamChartsOptions,
   SuggestStreamChartsResult,
   RejectedStreamCapability,
-  StreamStretchSuggestion
+  StreamStretchSuggestion,
+  StreamCapabilityExplanation
 } from "./ai/suggestStreamCharts"
 export type {
   StreamSchema,
@@ -36,8 +37,12 @@ export {
   pickValueField,
   pickCategoryField,
   pickTimeField,
-  pickSeriesField
+  pickSeriesField,
+  pickSplitField,
+  pickMeasureFields,
+  normalizeStreamSchema
 } from "./ai/streamSchema"
+export type { NormalizedStreamSchema } from "./ai/streamSchema"
 export { suggestStreamDashboard } from "./ai/suggestStreamDashboard"
 export type {
   StreamDashboardPanel,

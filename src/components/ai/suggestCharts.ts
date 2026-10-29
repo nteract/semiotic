@@ -13,6 +13,11 @@ import type {
 } from "./chartCapabilityTypes"
 import type { IntentId } from "./intents"
 import { expandComposedIntentScores } from "./intentRegistry"
+import {
+  defaultProfileIntentWeights,
+  requestedIntentWeights,
+  weightedIntentScore,
+} from "./intentWeights"
 import { getCapabilities } from "./chartCapabilities"
 import {
   applyAudienceBias,
@@ -167,24 +172,13 @@ function recipeScoreAdjustment(
   return { delta, reasons, caveats }
 }
 
-function compositeScore(
-  intentScores: Partial<Record<IntentId, number>>,
-  rankingIntents: IntentId[]
-): number {
-  if (rankingIntents.length === 0) {
-    // No intent specified — use mean of non-zero scores across all intents
-    const nonZero = Object.values(intentScores).filter((n): n is number => typeof n === "number" && n > 0)
-    if (nonZero.length === 0) return 0
-    return nonZero.reduce((a, b) => a + b, 0) / nonZero.length
-  }
-  // Average the requested intents
-  let sum = 0
-  for (const intent of rankingIntents) sum += intentScores[intent] ?? 0
-  return sum / rankingIntents.length
-}
-
 export interface SuggestChartsOptions extends ProfileDataOptions {
-  /** Ranking intent(s). When omitted, suggestions are ranked by mean intent score. */
+  /**
+   * Ranking intent(s). When omitted, intents are weighted from the profile:
+   * a time axis ranks as a trend first, categories as a ranking, two plain
+   * measures as a correlation. Graph, hierarchy, and geo data rank by the
+   * mean of each chart's non-zero intent scores.
+   */
   intent?: IntentId | IntentId[]
   /** Restrict to these component names. */
   allow?: ReadonlyArray<string>
@@ -194,7 +188,10 @@ export interface SuggestChartsOptions extends ProfileDataOptions {
   maxResults?: number
   /** Include variant-level suggestions (default true). */
   includeVariants?: boolean
-  /** Filter out suggestions with a composite score below this (default 0 — keep all). */
+  /**
+   * Filter out suggestions with a composite score below this. When omitted,
+   * charts scoring 0 for the ranking intents are dropped; pass `0` to keep them.
+   */
   minScore?: number
   /** Provide a pre-built profile instead of re-deriving from data. */
   profile?: ChartDataProfile
@@ -238,11 +235,16 @@ export function suggestCharts(
 ): Suggestion[] {
   const profile = options.profile ?? profileData(data ?? [], options)
   const capabilities = options.capabilities ?? getCapabilities()
-  const rankingIntents: IntentId[] = options.intent
+  const requestedIntents: IntentId[] = options.intent
     ? Array.isArray(options.intent) ? options.intent : [options.intent]
     : []
+  const weights = requestedIntents.length > 0
+    ? requestedIntentWeights(requestedIntents)
+    : defaultProfileIntentWeights(profile)
+  const rankingIntents = weights.map(([intent]) => intent)
   const includeVariants = options.includeVariants !== false
-  const minScore = options.minScore ?? 0
+  const keepScore = (finalScore: number) =>
+    options.minScore === undefined ? finalScore > 0 : finalScore >= options.minScore
   const maxResults = options.maxResults ?? 10
 
   const allow = options.allow ? new Set(options.allow) : null
@@ -297,7 +299,7 @@ export function suggestCharts(
         applyVariantToScores(baseScores, variant),
         rankingIntents,
       )
-      const baseComposite = compositeScore(intentScores, rankingIntents)
+      const baseComposite = weightedIntentScore(intentScores, weights)
       const variantRubric = applyVariantToRubric(capability.rubric, variant)
       const props = capability.buildProps(profile, variant)
       if (identifierMeasureViolation(capability, profile, props, variant)) {
@@ -342,7 +344,7 @@ export function suggestCharts(
       const recipeBias = recipeScoreAdjustment(capability, options)
       if (recipeBias.excluded) continue
       const finalScore = biased.score + scaleBias.delta + recipeBias.delta
-      if (finalScore < minScore) continue
+      if (!keepScore(finalScore)) continue
 
       const reasons = buildReasons(capability, scaledProfile, intentScores, rankingIntents)
       if (biased.appliedReason) reasons.push(biased.appliedReason)
@@ -532,9 +534,13 @@ export function scoreChart(
     ? capability.variants?.find((v) => v.key === options.variantKey)
     : undefined
 
-  const intents: IntentId[] = options.intent
+  const requestedIntents: IntentId[] = options.intent
     ? Array.isArray(options.intent) ? options.intent : [options.intent]
     : []
+  const weights = requestedIntents.length > 0
+    ? requestedIntentWeights(requestedIntents)
+    : defaultProfileIntentWeights(profile)
+  const intents = weights.map(([intent]) => intent)
 
   const baseScores: Partial<Record<IntentId, number>> = {}
   for (const [intent, scorer] of Object.entries(capability.intentScores) as Array<[IntentId, IntentScorer]>) {
@@ -544,7 +550,7 @@ export function scoreChart(
     applyVariantToScores(baseScores, variant),
     intents,
   )
-  const composite = compositeScore(intentScores, intents)
+  const composite = weightedIntentScore(intentScores, weights)
   const rubric = applyVariantToRubric(capability.rubric, variant)
   const recipeBias = recipeScoreAdjustment(capability, options)
   if (recipeBias.excluded) return { status: "rejected", reason: recipeBias.excluded }

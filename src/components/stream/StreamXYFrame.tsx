@@ -52,10 +52,10 @@ import { buildHoverData, getPointerHitRadius, resolveHistogramHoverXValue, type 
 import { useLegendCategoryEmission } from "./useLegendCategoryEmission"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 import { resolveAnnotationAccessor, buildEnrichAnnotationData } from "./annotationAccessorResolver"
-import { makeDateTickFormatter } from "./xyDateTicks"
-import { heatmapBandTicks, invertHeatmapBandValue } from "./heatmapBandTicks"
+import { resolveFrameAutoXFormat } from "./xyDateTicks"
+import { invertHeatmapBandValue } from "./heatmapBandTicks"
 import { collectAnnotationAnchors } from "./xyAnnotationAnchors"
-import { getXYCanvasRenderers } from "./xyPlugins/registry"
+import { getXYCanvasRenderers, getXYPlugin } from "./xyPlugins/registry"
 import { useEnsureXYPlugins } from "./useEnsureCustomXYRenderers"
 import { paintSceneWithBackend, renderSceneWithBackend } from "./renderBackend"
 import { drawCrosshair, drawLineHighlight } from "./xyCrosshair"
@@ -1135,14 +1135,10 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
     useStalenessCheck(staleness, storeRef, dirtyRef, scheduleRender, isStale, setIsStale)
 
     // ── Auto-detect date x-axis formatting ──────────────────────────────
-    const autoDateXFormat = useMemo(() => {
-      if (xFormat || tickFormatTime) return undefined
-      const store = storeRef.current
-      if (!store?.xIsDate || !currentScales) return undefined
-      if (heatmapBandTicks(currentScales.x)) return undefined
-      const domain = currentScales.x.domain() as [number, number]
-      return makeDateTickFormatter(domain)
-    }, [xFormat, tickFormatTime, currentScales])
+    const autoDateXFormat = useMemo(
+      () => (xFormat || tickFormatTime ? undefined : resolveFrameAutoXFormat(storeRef.current, currentScales, isStreaming)),
+      [xFormat, tickFormatTime, currentScales, isStreaming]
+    )
 
     const effectiveXFormat: StreamXYFrameProps["xFormat"] = xFormat || (tickFormatTime as StreamXYFrameProps["xFormat"]) || (autoDateXFormat as StreamXYFrameProps["xFormat"])
 
@@ -1196,6 +1192,11 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
     // control falls through to the canvas branch below — same DOM
     // root, the inner content is reconciled.
 
+    // A heatmap legend reads its domain from the built scene. Resolving it in
+    // both render paths keeps SSR, hydration, and canvas paints identical.
+    const resolveSceneLegend = (store: PipelineStore | null) =>
+      (store && getXYPlugin(chartType)?.resolveLegend?.(legend, store.scene, stablePipelineConfig)) ?? legend
+
     if (isServerEnvironment || (!hydrated && wasHydratingFromSSR)) {
       // Compute scene synchronously for server rendering
       const store = storeRef.current
@@ -1224,13 +1225,8 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       const plotClipId = `${svgInstanceId}-plot-clip`
 
       // SSR: compute date format from SSR-computed scales (currentScales is null in SSR)
-      const ssrXFormat: StreamXYFrameProps["xFormat"] = effectiveXFormat || ((): StreamXYFrameProps["xFormat"] => {
-        if (store?.xIsDate && scales && !heatmapBandTicks(scales.x)) {
-          const domain = scales.x.domain() as [number, number]
-          return makeDateTickFormatter(domain) as StreamXYFrameProps["xFormat"]
-        }
-        return undefined
-      })()
+      const ssrXFormat: StreamXYFrameProps["xFormat"] =
+        effectiveXFormat || (resolveFrameAutoXFormat(store, scales, isStreaming) as StreamXYFrameProps["xFormat"])
 
       const chartAriaLabel = description || (typeof title === "string" ? title : "XY chart")
       const ssrMarginal = marginalGraphics && store
@@ -1308,7 +1304,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
             showGrid={showGrid}
             title={title}
             description={description}
-            legend={legend}
+            legend={resolveSceneLegend(store)}
             legendHoverBehavior={legendHoverBehavior}
             legendClickBehavior={legendClickBehavior}
             legendHighlightedCategory={legendHighlightedCategory}
@@ -1436,7 +1432,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
           showGrid={showGrid}
           title={title}
           description={description}
-          legend={legend}
+          legend={resolveSceneLegend(storeRef.current)}
           legendHoverBehavior={legendHoverBehavior}
           legendClickBehavior={legendClickBehavior}
           legendHighlightedCategory={legendHighlightedCategory}

@@ -305,7 +305,9 @@ export const temporalHistogram: ChartConfig = {
       windowSize: Math.max(1, rows.length),
       arrowOfTime: rest.arrowOfTime || "right",
       timeAccessor: (datum: Datum) => readRealtimeTime(datum, timeAccessor, "time") ?? NaN,
-      valueAccessor: (datum: Datum) => readRealtimeNumber(datum, valueAccessor, "value") ?? NaN,
+      valueAccessor: rest.aggregation === "count"
+        ? () => 1
+        : (datum: Datum) => readRealtimeNumber(datum, valueAccessor, "value") ?? NaN,
       xExtent: rest.timeExtent || common.xExtent,
       yExtent: valueExtent,
       invertY: rest.direction === "down",

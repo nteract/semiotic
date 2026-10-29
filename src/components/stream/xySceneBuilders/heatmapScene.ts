@@ -10,15 +10,26 @@ import type { Datum } from "../../charts/shared/datumTypes"
  * Consumed by: PipelineStore.buildSceneNodes (chartType "heatmap")
  */
 import { getSequentialInterpolator, SEQUENTIAL_INTERPOLATORS } from "../../charts/shared/colorPalettes"
-import type { HeatcellSceneNode, StreamLayout } from "../types"
+import type { HeatcellSceneNode, SceneNode, StreamLayout } from "../types"
 import { buildHeatcellNode } from "../SceneGraph"
 import { resolveAccessor, resolveRawAccessor, type CoercibleNumber } from "../accessorUtils"
 import { heatmapBandDomain, heatmapBandScale } from "../heatmapBandTicks"
-import type { XYSceneContext } from "./types"
+import type { XYSceneConfig, XYSceneContext } from "./types"
 import {
   attachSelectionProvenance,
   requestsSelectionProvenance
 } from "../../store/selectionProvenance"
+import {
+  isGradientLegendConfig,
+  type GradientLegendConfig,
+  type GradientLegendValue,
+  type LegendValue
+} from "../../types/legendTypes"
+
+type HeatmapColorConfig = Pick<
+  XYSceneConfig,
+  "colorScheme" | "heatmapColorScale" | "themeSequential"
+>
 
 // Precomputed color LUT: 256 entries per scheme, built lazily and cached.
 // Avoids per-cell d3 interpolation (which creates CSS strings through multiple fn calls).
@@ -53,6 +64,62 @@ function getColorLut(schemeName: string): string[] {
   }
   colorLutCache.set(cacheKey, lut)
   return lut
+}
+
+// Scheme priority: explicit string colorScheme > theme sequential > "blues".
+function heatmapSchemeName(config: HeatmapColorConfig): string {
+  return typeof config.colorScheme === "string"
+    ? config.colorScheme
+    : config.themeSequential || "blues"
+}
+
+const sceneLegendCache = new WeakMap<
+  GradientLegendConfig,
+  { key: unknown[]; legend: GradientLegendValue }
+>()
+
+/**
+ * Give a gradient legend the domain and ramp of the drawn cells, so binned,
+ * aggregated, and live heatmaps label the values they colour by. Every
+ * renderer applies this to its scene; without heatcells the legend is kept.
+ */
+export function resolveHeatmapSceneLegend(
+  legend: LegendValue | undefined,
+  scene: readonly SceneNode[],
+  config: HeatmapColorConfig
+): LegendValue | undefined {
+  if (!isGradientLegendConfig(legend)) return legend
+  let min = Infinity
+  let max = -Infinity
+  for (const node of scene) {
+    if (node.type !== "heatcell") continue
+    const value = Number(node.value)
+    if (!Number.isFinite(value)) continue
+    if (value < min) min = value
+    if (value > max) max = value
+  }
+  if (!(min <= max)) return legend
+
+  const custom = config.heatmapColorScale
+  const scheme = heatmapSchemeName(config)
+  const key = [legend, min, max, custom, scheme]
+  const cached = sceneLegendCache.get(legend.gradient)
+  if (cached && cached.key.every((part, i) => part === key[i])) {
+    return cached.legend
+  }
+  const lut = custom ? undefined : getColorLut(scheme)
+  const resolved: GradientLegendValue = {
+    ...legend,
+    gradient: {
+      ...legend.gradient,
+      domain: [min, max],
+      // The same LUT lookup the cells use, clamped for the legend's ends.
+      colorFn: custom ?? ((value: number) =>
+        lut![Math.max(0, colorLutIndex(value, min, max))])
+    }
+  }
+  sceneLegendCache.set(legend.gradient, { key, legend: resolved })
+  return resolved
 }
 
 function heatmapAxisKey(value: CoercibleNumber): {
@@ -241,12 +308,9 @@ export function buildHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: St
   }
   if (!isFinite(minVal) || !isFinite(maxVal)) return []
 
-  // Scheme priority: explicit string colorScheme > theme sequential > "blues".
   // d3-scale-chromatic scheme names (e.g. "blues", "viridis") are what the LUT
   // expects, and SemioticTheme.colors.sequential is already a scheme name.
-  const schemeName = typeof ctx.config.colorScheme === "string"
-    ? ctx.config.colorScheme
-    : ctx.config.themeSequential || "blues"
+  const schemeName = heatmapSchemeName(ctx.config)
   const customColorScale = ctx.config.heatmapColorScale
   const lut = customColorScale ? undefined : getColorLut(schemeName)
 
@@ -370,9 +434,7 @@ function buildStreamingHeatmapScene(ctx: XYSceneContext, data: Datum[], layout: 
   if (!isFinite(minVal)) return []
 
   const customColorScale = ctx.config.heatmapColorScale
-  const schemeName = typeof ctx.config.colorScheme === "string"
-    ? ctx.config.colorScheme
-    : ctx.config.themeSequential || "blues"
+  const schemeName = heatmapSchemeName(ctx.config)
   const lut = customColorScale ? undefined : getColorLut(schemeName)
   const cellW = layout.width / xBins
   const cellH = layout.height / yBins

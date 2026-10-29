@@ -1,17 +1,20 @@
 "use client"
 import { GAUGE_CHART_SIZE } from "../shared/chartSizeDefaultsOrdinal"
-import { resolveGaugeCenterContent } from "../shared/GaugeReadout"
+import { describeGaugeCenter, gaugeCenterCaptionLines, renderGaugeCenter } from "../shared/GaugeReadout"
+import { computeGaugeLayout, gaugeScaleLabelAlignment, GAUGE_LABEL_FONT_SIZE, GAUGE_LABEL_OFFSET } from "../shared/gaugeLayout"
+import { MIN_TITLE_TOP_MARGIN } from "../../stream/titleLayout"
 import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
+import { useResponsiveSize } from "../../stream/useResponsiveSize"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import type { BaseChartProps } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
 import { renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
-import { sweepToAngles, computeArcBoundingBox } from "../shared/radialGeometry"
+import { sweepToAngles } from "../shared/radialGeometry"
 import { useChartMode, useChartSelection } from "../shared/hooks"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { buildGaugeArcModel, type GaugeGradientFill } from "../shared/gaugeGradient"
@@ -217,6 +220,18 @@ export const GaugeChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */
   } = props
 
   const { width, height, title, description, summary, accessibleTable } = resolved
+  // The arc, readout, and margins are laid out here rather than in the frame,
+  // so a responsive gauge measures its own host (as the Physics charts do) and
+  // hands the frame that fixed size; the nominal size stays the fallback and
+  // the size of loading/empty placeholders.
+  const isResponsive = Boolean(props.responsiveWidth || props.responsiveHeight)
+  const [responsiveHostRef, measuredSize] = useResponsiveSize(
+    [width, height],
+    props.responsiveWidth,
+    props.responsiveHeight,
+  )
+  const layoutWidth = Math.max(1, measuredSize[0])
+  const layoutHeight = Math.max(1, measuredSize[1])
   const resolvedGradientFill = normalizeColorGradient(gradientFill)
 
   // Clamp value to [min, max]
@@ -276,65 +291,56 @@ export const GaugeChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */
     [pieceStyleWithPrimitives, activeSelectionHook, resolvedSelection],
   )
 
-  // ── Arc geometry ────────────────────────────────────────────────────
-  // Sweep convention (pieScene.ts): 0° = 12 o'clock, positive = clockwise.
-  // `sweepToAngles` produces the matching start angle (gap centered at the
-  // 6 o'clock position) and the radian offset for unit-circle math.
-  // `computeArcBoundingBox` returns the visible bbox so the arc radius can
-  // be sized to fit the widget. Both helpers live in `radialGeometry.ts`
-  // and are exported from `semiotic/utils`.
-  const { sweepRad, startAngleDeg: startAngleDegFinal } = sweepToAngles(sweep)
-  const arcBBox = computeArcBoundingBox(sweep)
-
-  // Scale padding with the smaller dimension so compact gauges retain a
-  // visible arc while larger modes keep the standard inset.
-  const PAD = Math.min(10, Math.max(1, Math.min(width, height) / 12))
-  const arcW = arcBBox.width
-  const arcH = arcBBox.height
-  const arcCX = arcBBox.cx
-  const arcCY = arcBBox.cy
-  // Floor the radius at 4px (arbitrary but enough for the canvas content-check
-  // to detect painted pixels) rather than 10, since a 10 floor at 120×24 would
-  // push the gauge outside its own bbox. The arc stays legible at any realistic
-  // primary/context size and remains detectable as "has content" at sparkline.
-  const radius = Math.max(4, Math.min(
-    (width - 2 * PAD) / arcW,
-    (height - 2 * PAD) / arcH
-  ) - 2)
-  // Minimum visible thickness: ensure `radius - innerRadius >= 1.5px` so the
-  // arc always has SOME width to paint, even when the outer radius itself is
-  // near the floor.
-  const innerRadius = Math.max(0, Math.min(radius - 1.5, radius * (1 - arcWidth)))
-
-  // Position the frame center so the arc bbox is centered in the widget.
-  // The arc center (0,0 in unit circle) maps to the frame layout center.
-  // Arc bbox center = frameCenterY + arcCY*R. We want this at height/2.
-  // So frameCenterY = height/2 - arcCY*R.
-  const frameCenterX = width / 2 - arcCX * radius
-  const frameCenterY = height / 2 - arcCY * radius
-
-  // The layout must be at least 2*(R+4) square for the frame to produce this radius.
-  // Allow the layout to extend outside the widget — the canvas clips to the widget size anyway.
-  const S = 2 * (radius + 4)
-
   // ── Center content ──────────────────────────────────────────────────────
   // - primary: value in the hub, min–max range beneath it
   // - context: centerContent suppressed — value renders as an SVG annotation
   //   below the dial (see `gauge-value` rule) so it can't be clipped by the
   //   center-slot's absolute-positioning constraints
   // - sparkline: nothing at all — a sparkline gauge is a dial indicator
-  const centerEl = useMemo(() => resolveGaugeCenterContent({
+  // Resolved before the arc geometry so a text readout can be fitted with it.
+  const center = useMemo(() => describeGaugeCenter({
     centerContent,
     centerLabel,
     value: clampedValue,
     min,
     max,
-    radius,
-    innerRadius,
     showScaleLabels,
     valueFormat,
     compact: compactMode,
-  }), [centerContent, centerLabel, clampedValue, min, max, valueFormat, showScaleLabels, radius, innerRadius, compactMode])
+  }), [centerContent, centerLabel, clampedValue, min, max, valueFormat, showScaleLabels, compactMode])
+
+  // ── Arc geometry ────────────────────────────────────────────────────
+  // Sweep convention (pieScene.ts): 0° = 12 o'clock, positive = clockwise.
+  // `sweepToAngles` produces the matching start angle (gap centered at the
+  // 6 o'clock position) and the radian offset for unit-circle math.
+  // `computeGaugeLayout` (shared with static rendering) sizes the arc so its
+  // visible bounding box and any text readout fit the widget, then centers it.
+  const { sweepRad, startAngleDeg: startAngleDegFinal } = sweepToAngles(sweep)
+  const readoutValue = center && "readout" in center ? center.readout.value : undefined
+  const captionLines = gaugeCenterCaptionLines(center)
+  const scaleLabels = useMemo(
+    () => gaugeAnnotations
+      .filter((ann) => ann.type === "gauge-label")
+      .map((ann) => ({ fraction: (ann.value - min) / range, text: String(ann.label) })),
+    [gaugeAnnotations, min, range]
+  )
+  const layout = useMemo(() => computeGaugeLayout({
+    width: layoutWidth,
+    height: layoutHeight,
+    sweep,
+    arcWidth,
+    readout: readoutValue != null ? { value: readoutValue, captionLines } : null,
+    needle: showNeedle,
+    scaleLabels,
+    // The frame reserves this strip for any title (see reserveFrameChromeMargin).
+    topInset: title ? MIN_TITLE_TOP_MARGIN : 0,
+  }), [layoutWidth, layoutHeight, sweep, arcWidth, readoutValue, captionLines, showNeedle, scaleLabels, title])
+  const { radius, innerRadius, readoutOffset } = layout
+
+  const centerEl = useMemo(
+    () => renderGaugeCenter(center, { min, max, radius, innerRadius, offsetY: readoutOffset }),
+    [center, min, max, radius, innerRadius, readoutOffset]
+  )
 
   // Context-mode value annotation: rendered as SVG text inside the bottom gap
   // of the arc (the 120° wedge the 240° sweep leaves at 6 o'clock). User-
@@ -368,8 +374,8 @@ export const GaugeChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */
   const svgAnnotationRules = useMemo(() => {
     return (ann: Datum, index: number, context: Datum) => {
       if (ann.type === "gauge-needle") {
-        const cx = (context.width || width) / 2
-        const cy = (context.height || height) / 2
+        const cx = (context.width || layoutWidth) / 2
+        const cy = (context.height || layoutHeight) / 2
         // Needle stroke + hub scale with the arc's thickness so sparkline's
         // 24px-tall gauge gets a ~1px needle and a ~2px hub rather than the
         // literal 2.5/5 values that overwhelmed the tiny dial.
@@ -388,8 +394,8 @@ export const GaugeChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */
         const labelPct = (ann.value - min) / range
         const startRad = -Math.PI / 2 + (startAngleDegFinal * Math.PI) / 180
         const labelAngle = startRad + labelPct * sweepRad
-        const cx = (context.width || width) / 2
-        const cy = (context.height || height) / 2
+        const cx = (context.width || layoutWidth) / 2
+        const cy = (context.height || layoutHeight) / 2
         // Radial tick mark spanning the arc band — 1px past each edge so it
         // reads as 2px wider than the arc total.
         const markInner = innerRadius - 1
@@ -398,30 +404,12 @@ export const GaugeChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */
         const my1 = Math.sin(labelAngle) * markInner
         const mx2 = Math.cos(labelAngle) * markOuter
         const my2 = Math.sin(labelAngle) * markOuter
-        // Text sits outside the arc. Alignment follows the clock position
-        // of the mark: top sector (11–1) centered above, right sector (1–5)
-        // left-aligned, bottom sector (5–7) centered below, left sector
-        // (7–11) right-aligned.
-        const labelR = radius + 10
+        // Text sits outside the arc, aligned by the mark's clock position;
+        // computeGaugeLayout reserves room for it.
+        const labelR = radius + GAUGE_LABEL_OFFSET
         const lx = Math.cos(labelAngle) * labelR
         const ly = Math.sin(labelAngle) * labelR
-        // Clock hour from labelAngle: 12 at top, clockwise.
-        const hour = (((labelAngle + Math.PI / 2) / (2 * Math.PI)) * 12 + 12) % 12
-        let textAnchor: "start" | "middle" | "end"
-        let dominantBaseline: "auto" | "middle" | "hanging"
-        if (hour >= 11 || hour < 1) {
-          textAnchor = "middle"
-          dominantBaseline = "auto" // text sits above the mark
-        } else if (hour >= 1 && hour < 5) {
-          textAnchor = "start"
-          dominantBaseline = "middle"
-        } else if (hour >= 5 && hour < 7) {
-          textAnchor = "middle"
-          dominantBaseline = "hanging" // text sits below the mark
-        } else {
-          textAnchor = "end"
-          dominantBaseline = "middle"
-        }
+        const { textAnchor, dominantBaseline } = gaugeScaleLabelAlignment(labelAngle)
         return (
           <g key={`gauge-label-${index}`} transform={`translate(${cx},${cy})`}>
             <line
@@ -434,7 +422,7 @@ export const GaugeChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */
               x={lx} y={ly}
               textAnchor={textAnchor} dominantBaseline={dominantBaseline}
               fill="var(--semiotic-text-secondary, #666)"
-              fontSize={10}
+              fontSize={GAUGE_LABEL_FONT_SIZE}
               style={{
                 userSelect: "none",
                 fontSize: "var(--semiotic-gauge-label-font-size, 10px)",
@@ -453,8 +441,8 @@ export const GaugeChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */
         // `cy - innerRadius * 0.2` lands the text roughly mid-arc — same
         // visual weight as primary's hub label, no hub overlap, and matches
         // the requested upward shift.
-        const cx = (context.width || width) / 2
-        const cy = (context.height || height) / 2
+        const cx = (context.width || layoutWidth) / 2
+        const cy = (context.height || layoutHeight) / 2
         const ty = cy - innerRadius * 0.2
         const fontSize = Math.max(12, Math.min(22, radius * 0.28))
         return (
@@ -471,7 +459,7 @@ export const GaugeChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */
       }
       return null
     }
-  }, [width, height, min, range, startAngleDegFinal, sweepRad, innerRadius, radius])
+  }, [layoutWidth, layoutHeight, min, range, startAngleDegFinal, sweepRad, innerRadius, radius])
 
   // Combine annotations
   const allAnnotations = useMemo(() => {
@@ -529,16 +517,9 @@ export const GaugeChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */
     // roundedEnds) as a clip mask and paints unrounded slices inside.
     ...(cornerRadius != null && { cornerRadius }),
     centerContent: centerEl,
-    size: [width, height],
-    responsiveWidth: props.responsiveWidth,
-    responsiveHeight: props.responsiveHeight,
+    size: [layoutWidth, layoutHeight],
     maxDevicePixelRatio: props.maxDevicePixelRatio,
-    margin: {
-      top: frameCenterY - S / 2,
-      bottom: height - frameCenterY - S / 2,
-      left: frameCenterX - S / 2,
-      right: width - frameCenterX - S / 2,
-    },
+    margin: layout.margin,
     enableHover: resolved.enableHover,
     showAxes: false,
     showCategoryTicks: false,
@@ -567,8 +548,23 @@ export const GaugeChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */
     ...frameProps,
   }
 
+  const frame = <StreamOrdinalFrame ref={frameRef} {...streamProps} />
+  if (!isResponsive) return frame
   return (
-    <StreamOrdinalFrame ref={frameRef} {...streamProps} />
+    <div
+      ref={responsiveHostRef}
+      data-semiotic-gauge-responsive-host="true"
+      style={{
+        position: "relative",
+        width: props.responsiveWidth ? "100%" : layoutWidth,
+        height: props.responsiveHeight ? "100%" : layoutHeight,
+        // Let a flex parent shrink the host below the frame it last measured.
+        minWidth: 0,
+        minHeight: 0,
+      }}
+    >
+      {frame}
+    </div>
   )
 }), "GaugeChart", GAUGE_CHART_SIZE) as unknown as {
   (props: GaugeChartProps & React.RefAttributes<RealtimeFrameHandle>): React.ReactElement | null

@@ -102,7 +102,11 @@ export interface LegendLayout {
   itemGap?: number
   /** Vertical row height for stacked legend items in pixels */
   rowHeight?: number
-  /** Override the alignment width used for top/bottom legends */
+  /**
+   * Override the alignment width used for top/bottom legends. For left/right
+   * legends, the widest box the legend may reserve (default: 30% of the chart
+   * width, never below 100px); longer labels truncate with an ellipsis.
+   */
   maxWidth?: number
   /**
    * Space between a left/right legend and the outer SVG edge. The default is
@@ -150,4 +154,11 @@ export interface LegendProps {
   orientation?: string
   position?: "left" | "right"
   legendLayout?: LegendLayout
+  /**
+   * Height available to the legend. When set, a vertical legend treats
+   * `width` as the most it may use (items wrap into columns, labels truncate)
+   * and a horizontal legend stops adding rows; items that still do not fit
+   * are summarized as "+N more".
+   */
+  maxHeight?: number
 }

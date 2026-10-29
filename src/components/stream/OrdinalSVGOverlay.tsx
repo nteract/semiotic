@@ -1,5 +1,4 @@
 "use client"
-import { numericTickFormatter } from "../charts/shared/numericTickFormatter"
 import type { Datum } from "../charts/shared/datumTypes"
 import * as React from "react"
 import { useMemo, useRef, useId } from "react"
@@ -17,7 +16,7 @@ import {
 import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import { filterAnnotationsByStatus } from "../charts/shared/annotationStatusFilter"
 import type { AxisExtentMode } from "../charts/shared/axisExtent"
-import { ordinalAxisTicks } from "./ordinalAxisTicks"
+import { ordinalValueTicks } from "./ordinalAxisTicks"
 import { SVGChartTitle } from "./SVGChartTitle"
 import {
   overlayAccessibleDescription,
@@ -28,6 +27,7 @@ import {
   resolveLegendSideGutter,
   resolveOrdinalAxisChrome,
 } from "../legendLayout"
+import { resolveHorizontalTickLabelShift } from "./svgOverlayUtils"
 
 interface OrdinalSVGOverlayProps {
   width: number
@@ -134,19 +134,16 @@ export function OrdinalSVGUnderlay(props: OrdinalSVGUnderlayProps) {
     showAxes,
     showGrid
   } = props
-  const { rTickValues, axisExtent } = props
+  const { rTickValues, axisExtent, rFormat } = props
   const isRadial = scales?.projection === "radial"
   const isHorizontal = scales?.projection === "horizontal"
 
   const valueTicks = useMemo(() => {
     if (!scales || isRadial || !showGrid) return []
-    // Share value ticks with the overlay and static renderer.
-    const rawTicks: number[] = ordinalAxisTicks(scales, { width, height }, axisExtent, rTickValues)
-    return rawTicks.map((v) => ({
-      value: v,
-      pixel: scales.r(v)
-    }))
-  }, [scales, isRadial, rTickValues, axisExtent, showGrid, width, height])
+    // Share value ticks (including repeated-label removal) with the overlay
+    // and static renderer so grid lines stay under their labels.
+    return ordinalValueTicks(scales, { width, height }, axisExtent, rTickValues, rFormat)
+  }, [scales, isRadial, rTickValues, axisExtent, rFormat, showGrid, width, height])
 
   const hasGrid = showGrid && scales && !isRadial
   const hasBaselines = showAxes && scales && !isRadial
@@ -331,13 +328,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
   const valueTicks = useMemo(() => {
     if ((!showAxes && !showGrid) || !scales || isRadial) return []
     // Rounded mode shares its size-dependent count with domain construction.
-    const rawTicks: number[] = ordinalAxisTicks(scales, { width, height }, axisExtent, rTickValues)
-    const format = rFormat || numericTickFormatter(rawTicks)
-    return rawTicks.map((v) => ({
-      value: v,
-      pixel: scales.r(v),
-      label: format(v)
-    }))
+    return ordinalValueTicks(scales, { width, height }, axisExtent, rTickValues, rFormat)
   }, [showAxes, showGrid, scales, rFormat, isRadial, rTickValues, axisExtent, width, height])
 
   // Persistent cache for sticky annotation positions
@@ -536,6 +527,13 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
                     <g key={`val-${i}`} transform={`translate(${tick.pixel},${height})`}>
                       <line y2={5} stroke="var(--semiotic-border, #ccc)" strokeWidth={1} />
                       <text
+                        x={resolveHorizontalTickLabelShift(
+                          anchor,
+                          tick.pixel,
+                          tick.label,
+                          TICK_FONT_SIZE,
+                          { min: -margin.left, max: width + margin.right },
+                        ) || undefined}
                         y={18}
                         textAnchor={anchor}
                         fill="var(--semiotic-text-secondary, #666)"

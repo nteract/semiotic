@@ -551,6 +551,7 @@ const RealtimeHistogramProps = [
   { name: "data", type: "array", required: false, default: "[]", description: "Controlled data array. Each object should contain fields matched by timeAccessor and valueAccessor." },
   { name: "timeAccessor", type: "string | function", required: false, default: '"time"', description: "Field name or function to access the time value from each data point." },
   { name: "valueAccessor", type: "string | function", required: false, default: '"value"', description: "Field name or function to access the numeric value from each data point." },
+  { name: "aggregation", type: '"sum" | "count"', required: false, default: '"sum"', description: "What each bin totals. \"count\" counts events with a valid time and ignores valueAccessor, so click or log streams without a numeric field still bin." },
   { name: "size", type: "[number, number]", required: false, default: "[500, 300]", description: "Chart dimensions as [width, height]." },
   { name: "margin", type: "object", required: false, default: null, description: "Chart margins: { top, right, bottom, left }." },
   { name: "arrowOfTime", type: '"left" | "right"', required: false, default: '"right"', description: "Direction that time flows across the chart." },

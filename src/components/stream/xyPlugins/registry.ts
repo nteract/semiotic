@@ -5,6 +5,7 @@ import type { XYSceneContext } from "../xySceneBuilders/types"
 import type { BarSceneResult } from "../xySceneBuilders/barScene"
 import type { HoverData } from "../../realtime/types"
 import type { PipelineStore } from "../PipelineStore"
+import type { LegendValue } from "../../types/legendTypes"
 
 /**
  * Register XY scene + canvas plugins with a value import of the plugin.
@@ -34,11 +35,22 @@ export type XYMultiHover = (
   options: { hasHit: boolean; fallbackColor: string }
 ) => HoverData
 
+/**
+ * Chart-specific legend resolution against the built scene, applied by every
+ * renderer before it draws the legend (for example a heatmap's cell domain).
+ */
+export type XYSceneLegendResolver = (
+  legend: LegendValue | undefined,
+  scene: readonly SceneNode[],
+  config: XYSceneContext["config"]
+) => LegendValue | undefined
+
 export interface XYChartPlugin {
   chartType: StreamChartType
   buildScene: XYSceneBuilder
   canvasRenderers: StreamRendererFn[]
   multiHover?: XYMultiHover
+  resolveLegend?: XYSceneLegendResolver
 }
 
 const registry: Partial<Record<StreamChartType, XYChartPlugin>> = Object.create(null)

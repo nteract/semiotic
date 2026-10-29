@@ -130,7 +130,7 @@ describe("public chart keyboard mark access", () => {
       await new Promise((resolve) => setTimeout(resolve, 50))
       expect(frame.querySelector('[aria-live="polite"]')?.textContent)
         .toContain(`binStart: ${binStart}, binEnd: ${binStart + 10}, total: ${total}`)
-      expect(frame.querySelector(".stream-frame-tooltip")?.textContent).toContain(`count:${total}`)
+      expect(frame.querySelector(".stream-frame-tooltip")?.textContent).toContain(`total:${total}`)
     }
   })
 

@@ -56,5 +56,38 @@ describe(
         suggestion: { props: { valueAccessor: "latency" } }
       })
     })
+
+    it("keeps field hints and reports the inferred ranking intents", async () => {
+      const ranked = await sendRequest(
+        proc,
+        "tools/call",
+        {
+          name: "suggestStreamCharts",
+          arguments: {
+            schema: {
+              fields: [
+                { name: "ts", kind: "date" },
+                { name: "price", kind: "numeric", additive: false },
+                { name: "brand", kind: "categorical", cardinality: 400 }
+              ]
+            }
+          }
+        },
+        "stream-hints"
+      )
+      expect(ranked.result.isError).not.toBe(true)
+      const content = ranked.result.structuredContent
+      expect(content.rankingIntents[0]).toBe("trend")
+      expect(content.warnings).toEqual([])
+      const excluded = Object.fromEntries(
+        content.excluded.map((e: { component: string; reason: string }) => [
+          e.component,
+          e.reason
+        ])
+      )
+      expect(excluded.PieChart).toMatch(/400 slices/)
+      expect(excluded.RealtimeWaterfallChart).toMatch(/non-additive/)
+      expect(ranked.result.content[0].text).toMatch(/inferred intents: trend/)
+    })
   }
 )

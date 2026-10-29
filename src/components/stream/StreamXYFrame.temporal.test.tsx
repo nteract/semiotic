@@ -57,4 +57,19 @@ describe("temporal and nonlinear scale updates in live charts", () => {
     await waitFor(() => expect(tickLabels(container, "bottom")).toContain("Feb 1"))
     expect(ref.current!.getScales()!.x.ticks(5)[0]).toBeInstanceOf(Date)
   })
+
+  it("labels pushed epoch-ms numbers as distinct clock times on a streaming axis", async () => {
+    const ref = React.createRef<StreamXYFrameHandle>()
+    const t0 = Date.UTC(2026, 9, 24, 13, 0, 16, 123)
+    const { container } = render(<StreamXYFrame ref={ref} chartType="line" runtimeMode="streaming"
+      timeAccessor="time" valueAccessor="value" size={[600, 300]} windowSize={300} />)
+    // ~75ms of data at a high arrival rate, as Date.now() timestamps.
+    await act(async () => {
+      ref.current!.pushMany(Array.from({ length: 300 }, (_, i) => ({ time: t0 + i / 4, value: i % 5 })))
+    })
+    await waitFor(() => expect(tickLabels(container, "bottom").length).toBeGreaterThan(1))
+    const labels = tickLabels(container, "bottom")
+    expect(new Set(labels).size).toBe(labels.length)
+    for (const label of labels) expect(label).toMatch(/^13:00:16\.\d{3}$/)
+  })
 })

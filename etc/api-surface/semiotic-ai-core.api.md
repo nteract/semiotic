@@ -74,6 +74,7 @@ function evaluateVariantProposal(proposal: VariantProposal, profile: ChartDataPr
 function eventTimePresentationFinding(context: TemporalContext, referenceTime?: string | undefined): ObligationResult | undefined
 function explainArtifactRefusal(evaluation: ArtifactEvaluation): string
 function explainCapabilityFit(data: null | readonly Datum[] | undefined, options?: SuggestChartsOptions | undefined): ExplainCapabilityFitResult
+function explainStreamCapabilityFit(schema: StreamSchema, component: string, options?: SuggestStreamChartsOptions | undefined): StreamCapabilityExplanation
 function explainStreamCapabilityFit(schema: StreamSchema, options?: SuggestStreamChartsOptions | undefined): SuggestStreamChartsResult
 function fingerprintArtifactCollection(collection: ArtifactCollectionContract): string
 function fingerprintValue(input: unknown): ValueFingerprint
@@ -101,8 +102,11 @@ function listIntents(): IntentDescriptor[]
 function mergeTemporalContexts(...contexts: readonly (TemporalContext | undefined)[]): TemporalContext
 function migrateArtifactContract(value: unknown): ArtifactContractMigrationResult
 function mobileVisualizationCaveats(): string[]
+function normalizeStreamSchema(input: StreamSchema): NormalizedStreamSchema
 function pickCategoryField(schema: StreamSchema): StreamFieldSchema | undefined
+function pickMeasureFields(schema: StreamSchema): StreamFieldSchema[]
 function pickSeriesField(schema: StreamSchema): StreamFieldSchema | undefined
+function pickSplitField(schema: StreamSchema): StreamFieldSchema | undefined
 function pickTimeField(schema: StreamSchema): StreamFieldSchema | undefined
 function pickValueField(schema: StreamSchema): StreamFieldSchema | undefined
 function prepareArtifactRevision(component: string, currentProps: Datum, currentContract: ArtifactContract, options: PrepareArtifactRevisionOptions): PreparedArtifactRevision
@@ -286,6 +290,7 @@ interface JsonObject
 interface MetricDefinition
 interface MobileVisualizationAuditResult
 interface NavTreeNode
+interface NormalizedStreamSchema
 interface NumericAggregateContract
 interface NumericContracts
 interface NumericFieldContract
@@ -329,6 +334,7 @@ interface SemanticViabilityRule
 interface SerializeArtifactContractOptions
 interface SerializedArtifactCollection
 interface SerializedArtifactContract
+interface StreamCapabilityExplanation
 interface StreamChartCapability
 interface StreamDashboardPanel
 interface StreamDashboardSuggestion
@@ -1081,6 +1087,8 @@ interface-member NavTreeNode::property::label = required label: string
 interface-member NavTreeNode::property::level = required level: number
 interface-member NavTreeNode::property::role = required role: NavTreeRole
 interface-member NavTreeNode::property::value = optional value: number | undefined
+interface-member NormalizedStreamSchema::property::schema = required schema: StreamSchema
+interface-member NormalizedStreamSchema::property::warnings = required warnings: string[]
 interface-member NumericAggregateContract::property::defaultGroupAccessor = optional readonly defaultGroupAccessor: string | undefined
 interface-member NumericAggregateContract::property::groupAccessor = optional readonly groupAccessor: string | undefined
 interface-member NumericAggregateContract::property::kind = required readonly kind: "normalized-total" | "positive-total"
@@ -1306,6 +1314,12 @@ interface-member SerializedArtifactCollection::property::collection = optional c
 interface-member SerializedArtifactCollection::property::transfer = required transfer: ArtifactCollectionTransfer
 interface-member SerializedArtifactContract::property::contract = optional contract: PortableArtifactContract | undefined
 interface-member SerializedArtifactContract::property::transfer = required transfer: ArtifactTransferStatus
+interface-member StreamCapabilityExplanation::property::component = required component: string
+interface-member StreamCapabilityExplanation::property::rank = optional rank: number | undefined
+interface-member StreamCapabilityExplanation::property::reason = required reason: string
+interface-member StreamCapabilityExplanation::property::status = required status: "excluded" | "filtered" | "suggested" | "unknown"
+interface-member StreamCapabilityExplanation::property::suggestion = optional suggestion: StreamSuggestion | undefined
+interface-member StreamCapabilityExplanation::property::warnings = required warnings: string[]
 interface-member StreamChartCapability::property::buildProps = required buildProps: (schema: StreamSchema) => Record<string, unknown>
 interface-member StreamChartCapability::property::caveats = optional caveats: ((schema: StreamSchema) => ReadonlyArray<string>) | undefined
 interface-member StreamChartCapability::property::component = required component: string
@@ -1313,6 +1327,7 @@ interface-member StreamChartCapability::property::family = optional family: Char
 interface-member StreamChartCapability::property::fits = required fits: (schema: StreamSchema) => null | string
 interface-member StreamChartCapability::property::importPath = required importPath: string
 interface-member StreamChartCapability::property::intentScores = required intentScores: Partial<Record<IntentId, StreamIntentScorer>>
+interface-member StreamChartCapability::property::reasons = optional reasons: ((schema: StreamSchema) => ReadonlyArray<string>) | undefined
 interface-member StreamChartCapability::property::requiresLiveData = optional requiresLiveData: boolean | undefined
 interface-member StreamChartCapability::property::rubric = required rubric: ChartRubric
 interface-member StreamDashboardPanel::property::intent = required intent: IntentId
@@ -1323,6 +1338,9 @@ interface-member StreamDashboardSuggestion::property::intentsMissing = required 
 interface-member StreamDashboardSuggestion::property::panels = required panels: StreamDashboardPanel[]
 interface-member StreamDashboardSuggestion::property::schemas = required schemas: readonly StreamSchema[]
 interface-member StreamDashboardSuggestion::property::stretchPanels = required stretchPanels: StreamStretchSuggestion[]
+interface-member StreamDashboardSuggestion::property::warnings = required warnings: string[]
+interface-member StreamFieldSchema::property::additive = optional additive: boolean | undefined
+interface-member StreamFieldSchema::property::cardinality = optional cardinality: number | undefined
 interface-member StreamFieldSchema::property::kind = required kind: StreamFieldKind
 interface-member StreamFieldSchema::property::name = required name: string
 interface-member StreamFieldSchema::property::role = optional role: StreamFieldRole | undefined
@@ -1390,8 +1408,10 @@ interface-member SuggestStreamChartsOptions::property::maxResults = optional max
 interface-member SuggestStreamChartsOptions::property::maxStretchResults = optional maxStretchResults: number | undefined
 interface-member SuggestStreamChartsOptions::property::minScore = optional minScore: number | undefined
 interface-member SuggestStreamChartsResult::property::excluded = required excluded: readonly RejectedStreamCapability[]
+interface-member SuggestStreamChartsResult::property::rankingIntents = required rankingIntents: IntentId[]
 interface-member SuggestStreamChartsResult::property::stretchSuggestions = required stretchSuggestions: StreamStretchSuggestion[]
 interface-member SuggestStreamChartsResult::property::suggestions = required suggestions: StreamSuggestion[]
+interface-member SuggestStreamChartsResult::property::warnings = required warnings: string[]
 interface-member SuggestStreamDashboardOptions::property::allow = optional allow: readonly string[] | undefined
 interface-member SuggestStreamDashboardOptions::property::audience = optional audience: AudienceProfile | undefined
 interface-member SuggestStreamDashboardOptions::property::budget = optional budget: number | undefined

@@ -2001,6 +2001,7 @@ interface-member RealtimeHeatmapProps::property::valueExtent = optional valueExt
 interface-member RealtimeHeatmapProps::property::width = optional width: number | undefined
 interface-member RealtimeHeatmapProps::property::windowMode = optional windowMode: WindowMode | undefined
 interface-member RealtimeHeatmapProps::property::windowSize = optional windowSize: number | undefined
+interface-member RealtimeHistogramProps::property::aggregation = optional aggregation: "count" | "sum" | undefined
 interface-member RealtimeHistogramProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member RealtimeHistogramProps::property::arrowOfTime = optional arrowOfTime: ArrowOfTime | undefined
 interface-member RealtimeHistogramProps::property::autoPlaceAnnotations = optional autoPlaceAnnotations: AutoPlaceAnnotations | undefined

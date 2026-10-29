@@ -9,10 +9,20 @@ import {
   LegendProps
 } from "./types/legendTypes"
 import {
-  layoutVerticalLegendGroups,
+  estimateLegendTextWidth,
+  fitLegendRows,
+  fitSideLegend,
+  legendDisplayLabel,
+  legendMoreLabel,
+  legendMoreTitle,
+  legendRowsFor,
   resolveLegendMetrics,
-  type LegendMetrics
-} from "./legendLayout"
+  sideLegendSlotOffset,
+  truncateLegendLabel,
+  type LegendMetrics,
+  type SideLegendFit,
+  type SideLegendGroupFit
+} from "./legendGeometry"
 
 export { GradientLegend } from "./GradientLegend"
 
@@ -83,7 +93,8 @@ function renderCategoricalLegendItem(
   item: LegendItem,
   index: number,
   transform: string,
-  horizontal: boolean
+  horizontal: boolean,
+  maxLabelWidth = Number.POSITIVE_INFINITY
 ) {
   const {
     legendGroup: { type = "fill", styleFn },
@@ -101,6 +112,8 @@ function renderCategoricalLegendItem(
   } = context
   const isolated =
     !!isolatedCategories?.size && isolatedCategories.has(item.label)
+  const displayLabel = legendDisplayLabel(item.label)
+  const text = truncateLegendLabel(displayLabel, maxLabelWidth)
   return (
     <g
       key={`legend-item-${index}`}
@@ -123,7 +136,7 @@ function renderCategoricalLegendItem(
       }
       role={interactive ? "option" : undefined}
       aria-selected={interactive && useIsolateAria ? isolated : undefined}
-      aria-label={item.label}
+      aria-label={displayLabel}
       onKeyDown={
         interactive
           ? (event: React.KeyboardEvent<SVGGElement>) => {
@@ -169,7 +182,7 @@ function renderCategoricalLegendItem(
           className="semiotic-legend-focus-ring"
           x={-2}
           y={-2}
-          width={swatchSize + labelGap + 2 + item.label.length * 7}
+          width={swatchSize + labelGap + 2 + estimateLegendTextWidth(text)}
           height={swatchSize + 4}
           fill="none"
           stroke="var(--semiotic-focus, #005fcc)"
@@ -178,6 +191,7 @@ function renderCategoricalLegendItem(
           visibility="hidden"
         />
       )}
+      {text !== displayLabel && <title>{displayLabel}</title>}
       {renderType(item, index, type, styleFn, swatchSize)}
       {isolated && <CheckMark swatchSize={swatchSize} />}
       <text
@@ -188,42 +202,74 @@ function renderCategoricalLegendItem(
         style={LEGEND_LABEL_STYLE}
         fill="var(--semiotic-text, #333)"
       >
-        {item.label}
+        {text}
       </text>
     </g>
   )
 }
 
-const renderLegendGroupVertical = (context: LegendItemRenderContext) => {
-  return context.legendGroup.items.map((item, index) => renderCategoricalLegendItem(
-    context, item, index, `translate(0,${index * context.metrics.rowHeight})`, false
-  ))
+const renderLegendGroupVertical = (
+  context: LegendItemRenderContext,
+  fit: SideLegendFit,
+  groupFit: SideLegendGroupFit
+) => {
+  const { items } = context.legendGroup
+  const rendered: React.ReactElement[] = []
+  for (let index = 0; index < groupFit.visibleCount; index++) {
+    const item = items[index]
+    if (!item) continue
+    const { x, y } = sideLegendSlotOffset(fit, groupFit, index)
+    rendered.push(renderCategoricalLegendItem(
+      context, item, index, `translate(${x},${y})`, false, fit.labelWidth
+    ))
+  }
+  if (groupFit.hiddenCount > 0) {
+    const { x, y } = sideLegendSlotOffset(fit, groupFit, groupFit.visibleCount)
+    rendered.push(renderMoreSlot(context, x, y, groupFit.visibleCount))
+  }
+  return rendered
 }
 
-const renderLegendGroupHorizontal = (context: LegendItemRenderContext, maxWidth?: number) => {
+/** The "+N more" slot standing in for items a bounded legend cannot fit. */
+function renderMoreSlot(
+  context: LegendItemRenderContext,
+  x: number,
+  y: number,
+  visibleCount: number
+) {
+  const { items } = context.legendGroup
+  return (
+    <text
+      key="legend-more"
+      className="semiotic-legend-more"
+      transform={`translate(${x},${y})`}
+      y={context.metrics.swatchSize / 2}
+      dominantBaseline="central"
+      fontSize={12}
+      style={LEGEND_LABEL_STYLE}
+      fill="var(--semiotic-text-secondary, #666)"
+    >
+      <title>{legendMoreTitle(items, visibleCount)}</title>
+      {legendMoreLabel(items.length - visibleCount)}
+    </text>
+  )
+}
+
+const renderLegendGroupHorizontal = (
+  context: LegendItemRenderContext,
+  maxWidth: number | undefined,
+  maxRows: number
+) => {
   const { items } = context.legendGroup
   const renderedItems: React.ReactElement[] = []
   const { swatchSize, labelGap, itemGap, rowHeight, align } = context.metrics
-  const itemWidths = items.map(
-    (item) => swatchSize + labelGap + item.label.length * 7
+  const labelOffset = swatchSize + labelGap
+  const fit = fitLegendRows(
+    items.map((item) => labelOffset + estimateLegendTextWidth(legendDisplayLabel(item.label))),
+    { itemGap, labelOffset, maxWidth, maxRows }
   )
-  const rows: Array<{ start: number; end: number; width: number }> = []
-  let rowStart = 0
-  let rowWidth = 0
-  itemWidths.forEach((width, i) => {
-    const nextWidth = rowWidth === 0 ? width : rowWidth + itemGap + width
-    if (maxWidth && maxWidth > 0 && rowWidth > 0 && nextWidth > maxWidth) {
-      rows.push({ start: rowStart, end: i, width: rowWidth })
-      rowStart = i
-      rowWidth = width
-    } else {
-      rowWidth = nextWidth
-    }
-  })
-  if (items.length > 0)
-    rows.push({ start: rowStart, end: items.length, width: rowWidth })
 
-  rows.forEach((row, rowIndex) => {
+  fit.rows.forEach((row, rowIndex) => {
     const rowOffset =
       align === "center"
         ? Math.max(0, ((maxWidth ?? row.width) - row.width) / 2)
@@ -238,31 +284,44 @@ const renderLegendGroupHorizontal = (context: LegendItemRenderContext, maxWidth?
           items[i],
           i,
           `translate(${itemOffset},${rowIndex * rowHeight})`,
-          true
+          true,
+          fit.widths[i] - labelOffset
         )
       )
-      itemOffset += itemWidths[i] + itemGap
+      itemOffset += fit.widths[i] + itemGap
+    }
+    if (fit.hiddenCount > 0 && rowIndex === fit.rows.length - 1) {
+      renderedItems.push(
+        renderMoreSlot(context, rowOffset + fit.moreX, rowIndex * rowHeight, fit.visibleCount)
+      )
     }
   })
 
-  const totalWidth = rows.reduce((max, row) => Math.max(max, row.width), 0)
-  const totalRows = rows.length
+  const totalRows = fit.rows.length
   const totalHeight = totalRows * rowHeight
-  return { items: renderedItems, offset: totalWidth, totalRows, totalHeight }
+  return { items: renderedItems, offset: fit.width, totalRows, totalHeight }
 }
 
-const renderVerticalGroup = (legendGroups: LegendGroup[], width: number, context: LegendRenderContext) => {
+const renderVerticalGroup = (
+  legendGroups: LegendGroup[],
+  width: number,
+  context: LegendRenderContext,
+  layoutConfig: LegendProps["legendLayout"],
+  maxHeight: number | undefined
+) => {
   const renderedGroups: React.ReactElement[] = []
-  const groupLayouts = layoutVerticalLegendGroups(
-    legendGroups.map((group) => ({
-      hasLabel: Boolean(group.label),
-      itemCount: group.items.length
-    })),
-    context.metrics.rowHeight
+  // Without a height bound this is the historic single column. Frames pass
+  // their remaining height, and `width` is then the most the legend may use.
+  const fit = fitSideLegend(
+    legendGroups,
+    layoutConfig,
+    maxHeight != null ? { maxWidth: width, maxHeight } : undefined
   )
+  const groupLabelWidth = maxHeight != null ? width : Number.POSITIVE_INFINITY
 
   legendGroups.forEach((l, i) => {
-    const layout = groupLayouts[i]
+    const layout = fit.groups[i]
+    const groupLabel = l.label ? truncateLegendLabel(l.label, groupLabelWidth) : l.label
     renderedGroups.push(
       <line
         key={`legend-top-line legend-symbol-${i}`}
@@ -285,7 +344,8 @@ const renderVerticalGroup = (legendGroups: LegendGroup[], width: number, context
           style={LEGEND_LABEL_STYLE}
           fill="var(--semiotic-text, #333)"
         >
-          {l.label}
+          {groupLabel !== l.label && <title>{l.label}</title>}
+          {groupLabel}
         </text>
       )
     }
@@ -298,7 +358,7 @@ const renderVerticalGroup = (legendGroups: LegendGroup[], width: number, context
         aria-label={l.label}
         transform={`translate(0,${layout.itemsY})`}
       >
-        {renderLegendGroupVertical({ ...context, legendGroup: l, groupIndex: i })}
+        {renderLegendGroupVertical({ ...context, legendGroup: l, groupIndex: i }, fit, layout)}
       </g>
     )
   })
@@ -306,8 +366,19 @@ const renderVerticalGroup = (legendGroups: LegendGroup[], width: number, context
   return renderedGroups
 }
 
-const renderHorizontalGroup = (legendGroups: LegendGroup[], width: number, height: number, context: LegendRenderContext) => {
+const renderHorizontalGroup = (
+  legendGroups: LegendGroup[],
+  width: number,
+  height: number,
+  context: LegendRenderContext,
+  maxHeight: number | undefined
+) => {
   const { metrics } = context
+  // Frames pass the band reserved for the legend; rows beyond it end in
+  // "+N more" rather than running off the chart.
+  const maxRows = maxHeight != null
+    ? legendRowsFor(maxHeight, metrics.rowHeight, legendGroups.length)
+    : Number.POSITIVE_INFINITY
   // First pass: compute total width of all items
   let totalItemsWidth = 0
   const groupResults: {
@@ -322,7 +393,7 @@ const renderHorizontalGroup = (legendGroups: LegendGroup[], width: number, heigh
     let groupWidth = 0
     if (l.label) groupWidth += 16
     const renderedItems = renderLegendGroupHorizontal(
-      { ...context, legendGroup: l, groupIndex: i }, metrics.maxWidth ?? width
+      { ...context, legendGroup: l, groupIndex: i }, metrics.maxWidth ?? width, maxRows
     )
     groupWidth += renderedItems.offset + 5
     groupResults.push({
@@ -411,7 +482,8 @@ export default function Legend(props: LegendProps) {
     width = 100,
     height = 20,
     orientation = "vertical",
-    legendLayout
+    legendLayout,
+    maxHeight
   } = props
   const metrics = resolveLegendMetrics(legendLayout)
 
@@ -450,8 +522,8 @@ export default function Legend(props: LegendProps) {
     metrics,
   }
   const renderedGroups = orientation === "vertical"
-    ? renderVerticalGroup(groups, width, context)
-    : renderHorizontalGroup(groups, width, height, context)
+    ? renderVerticalGroup(groups, width, context, legendLayout, maxHeight)
+    : renderHorizontalGroup(groups, width, height, context, maxHeight)
 
   return (
     <g

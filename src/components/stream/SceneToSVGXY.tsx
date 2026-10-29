@@ -440,13 +440,17 @@ function xySceneNodeToSVGMark(
       // `style.opacity` dims the cell on canvas (heatmapCanvasRenderer sets
       // globalAlpha, covering fill and stroke alike); without it here the
       // static SVG rendered decayed/dimmed cells at full strength.
+      const paint = svgPaintStyle(n.style ?? {})
       const cellRect = {
         x: n.x,
         y: n.y,
         width: n.w,
         height: n.h,
         fill: n.fill,
-        ...svgPaintStyle(n.style ?? {})
+        ...paint,
+        // Same default separator as heatmapCanvasRenderer for unstyled cells.
+        stroke: paint.stroke ?? "var(--semiotic-surface, #fff)",
+        strokeWidth: paint.strokeWidth ?? 1
       }
       if (n.showValues && n.value != null && n.w >= 20 && n.h >= 20) {
         const formatted = n.valueFormat

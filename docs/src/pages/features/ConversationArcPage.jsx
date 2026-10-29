@@ -63,7 +63,7 @@ const EVENT_PRESETS = [
       component: "Scatterplot",
       stage: "diagnosis",
       codes: ["DEGENERATE_EXTENT"],
-      alternatives: ["ViolinPlot", "BoxPlot", "DotPlot"],
+      alternatives: ["BoxPlot", "SwarmPlot", "ViolinPlot"],
     }),
   },
   {

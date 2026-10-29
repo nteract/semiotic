@@ -1,6 +1,6 @@
 import type { CoercibleNumber } from "../../stream/accessorUtils"
 import * as React from "react"
-import { useRef, forwardRef, useCallback, useMemo, useState } from "react"
+import { useRef, forwardRef, useCallback, useEffect, useMemo, useState } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import { registerXYPlugin } from "../../stream/xyPlugins/registry"
 import { heatmapXYPlugin } from "../../stream/xyPlugins/heatmapPlugin"
@@ -21,7 +21,8 @@ import {
   useChartLegendAndMargin,
   useChartSelection,
   getCrosshairProps,
-  useGradientLegendInteraction
+  useGradientLegendInteraction,
+  useThemeSequential
 } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type {
@@ -115,7 +116,10 @@ export interface RealtimeHeatmapProps<
   timeAccessor?: ChartAccessor<TDatum, CoercibleNumber>
   /** Value/y accessor */
   valueAccessor?: ChartAccessor<TDatum, number>
-  /** Category accessor for colored cells */
+  /**
+   * Retained on source rows for tooltips and custom callbacks. Binned cells
+   * pool every category and are coloured by the aggregate, not by category.
+   */
   categoryAccessor?: ChartAccessor<TDatum, string>
   /** Fixed time domain */
   timeExtent?: [number, number]
@@ -309,20 +313,44 @@ export const RealtimeHeatmap = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE
     resolved.height
   ]
   const [colorDomain, setColorDomain] = useState<[number, number] | null>(null)
+  // Each rebuilt scene reports its domain, which moves on most streaming
+  // frames. Only a rendered legend reads it, so without one record it here
+  // instead of re-rendering the chart every frame.
+  const latestColorDomainRef = useRef<[number, number] | null>(null)
+  const showLegendRef = useRef(resolved.showLegend)
+  showLegendRef.current = resolved.showLegend
+  const handleColorDomainChange = useCallback(
+    (domain: [number, number] | null) => {
+      latestColorDomainRef.current = domain
+      if (showLegendRef.current) setColorDomain(domain)
+    },
+    []
+  )
+  // A legend shown after streaming starts needs the domain already reported.
+  useEffect(() => {
+    if (resolved.showLegend) setColorDomain(latestColorDomainRef.current)
+  }, [resolved.showLegend])
   const valueDomain = useMemo<[number, number]>(
     () => colorDomain ?? [0, 1],
     [colorDomain]
   )
+  // Match the scene builder's scheme resolution so the legend ramp and the
+  // cells agree when the scheme comes from the theme.
+  const themeSequential = useThemeSequential()
   const legendColorFn = useMemo(() => {
     if (colorScheme === "custom" && customColorScale) return customColorScale
-    const interpolator = getSequentialInterpolator(colorScheme || "blues")
+    const interpolator = getSequentialInterpolator(
+      typeof colorScheme === "string" && colorScheme !== "custom"
+        ? colorScheme
+        : themeSequential || "blues"
+    )
     return (value: number) => {
       const range = valueDomain[1] - valueDomain[0] || 1
       return interpolator(
         Math.max(0, Math.min(1, (value - valueDomain[0]) / range))
       )
     }
-  }, [colorScheme, customColorScale, valueDomain])
+  }, [colorScheme, customColorScale, themeSequential, valueDomain])
   const gradientLegendState = useGradientLegendInteraction(
     props.legendInteraction,
     (datum) => Number(datum.value),
@@ -479,7 +507,7 @@ export const RealtimeHeatmap = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE
           ? customColorScale
           : undefined
       }
-      onColorDomainChange={setColorDomain}
+      onColorDomainChange={handleColorDomainChange}
       areaStyle={interactiveCellStyle}
       showAxes={showAxes}
       background={background}

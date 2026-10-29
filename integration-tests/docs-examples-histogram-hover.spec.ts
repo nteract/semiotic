@@ -98,7 +98,7 @@ test("histogram docs combine horizontal grids with whole-column hover", async ({
       })
       .toBe(true)
     await expect(tooltip).toContainText("range:0–10")
-    await expect(tooltip).toContainText("count:8")
+    await expect(tooltip).toContainText("total:8")
     await expectTooltipWithinPlot(chart, margin)
   }
   await hoverSegment(page, chart, 3)
@@ -153,7 +153,7 @@ test("histogram docs list every category in a hovered column", async ({
   await expect(tooltip).toContainText("range:0–10")
   await expect(tooltip).toContainText("Completed:6")
   await expect(tooltip).toContainText("Retried:2")
-  await expect(tooltip).toContainText("count:8")
+  await expect(tooltip).toContainText("total:8")
   await expectTooltipWithinPlot(chart, margin)
   await page.mouse.move(0, 0)
   await expect(tooltip).toHaveCount(0)

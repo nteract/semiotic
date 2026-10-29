@@ -16,8 +16,8 @@ import {
   resolveCategoricalPalette
 } from "../charts/shared/colorUtils"
 import { schemeCategory10 } from "../charts/shared/colorPalettes"
-import { composeLegendConfigs } from "../types/legendTypes"
-import { clampLegendReservation } from "../legendLayout"
+import { composeLegendConfigs, type LegendLayout } from "../types/legendTypes"
+import { clampLegendReservation, reserveLegendMargin } from "../legendLayout"
 import {
   type ChartConfig,
   primitiveStyleOverrides
@@ -165,32 +165,11 @@ export const processSankey: ChartConfig = {
       hasAxisTicks,
       orientation
     )
-    const baseMargin = { ...defaultMargin, ...userMargin }
     // ProcessSankey owns a categorical legend rather than using the frame's
     // auto-legend. It is active only for an actual categorical accessor.
     const showLegend = common.showLegend ?? Boolean(colorBy)
     const legendActive = showLegend && Boolean(colorBy)
     const legendPos = (common.legendPosition as string | undefined) ?? "right"
-    // Match the HOC's custom legend reservation. Numeric caller margins are
-    // minima, so the chart-owned legend can grow its side when necessary.
-    if (legendActive) {
-      const legendSide = legendPos === "left" || legendPos === "top" || legendPos === "bottom" ? legendPos : "right"
-      const baseline = { ...baseMargin }
-      if (legendSide === "right")
-        baseMargin.right = Math.max(baseMargin.right, 140)
-      else if (legendSide === "left")
-        baseMargin.left = Math.max(baseMargin.left, 140)
-      else if (legendSide === "top")
-        baseMargin.top = Math.max(baseMargin.top, 50)
-      else
-        baseMargin.bottom = Math.max(baseMargin.bottom, 80)
-      // Like the HOC, cap the reservation to what the frame can afford so a
-      // compact frame keeps a plot instead of going negative.
-      clampLegendReservation(baseMargin, baseline, [width, height], legendSide)
-    }
-    const margin = baseMargin
-    const plotW = Math.max(1, width - margin.left - margin.right)
-    const plotH = Math.max(1, height - margin.top - margin.bottom)
 
     // Color resolution mirrors the HOC's: prefer colorScheme array, then
     // categorical fallback. Both string-form (`colorBy="category"`)
@@ -278,6 +257,27 @@ export const processSankey: ChartConfig = {
           })()
         : undefined
     const legend = composeLegendConfigs(chartLegend, common.legend)
+
+    // Match the HOC's legend reservation: measure the rendered legend with
+    // the shared routine (a chart-owned floor of 140px beside the plot, 50px
+    // above, 80px below), then cap it so a compact frame keeps a plot.
+    // Numeric caller margins are minima, so the legend can grow its side.
+    const margin = { ...defaultMargin, ...userMargin }
+    if (legend) {
+      const legendSide = legendPos === "left" || legendPos === "top" || legendPos === "bottom" ? legendPos : "right"
+      const baseline = { ...margin }
+      reserveLegendMargin(margin, {
+        legend,
+        position: legendSide,
+        size: [width, height],
+        hasTitle,
+        legendLayout: common.legendLayout as LegendLayout | undefined,
+        minimumMargin: legendSide === "right" || legendSide === "left" ? 140 : legendSide === "top" ? 50 : 80,
+      })
+      clampLegendReservation(margin, baseline, [width, height], legendSide)
+    }
+    const plotW = Math.max(1, width - margin.left - margin.right)
+    const plotH = Math.max(1, height - margin.top - margin.bottom)
 
     const showLabels =
       rest.showLabels === false

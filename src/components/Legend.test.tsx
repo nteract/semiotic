@@ -433,6 +433,127 @@ describe("Legend — non-interactive mode", () => {
   })
 })
 
+// ── Bounded vertical legends ────────────────────────────────────────────
+
+describe("Legend — bounded vertical layout", () => {
+  const manyItems = (count: number) =>
+    makeLegendGroup({
+      label: "",
+      items: Array.from({ length: count }, (_, i) => ({
+        label: i === 3
+          ? "region-03-with-a-rather-long-descriptive-name"
+          : `r${String(i).padStart(2, "0")}`,
+        color: "#555"
+      }))
+    })
+
+  it("wraps into columns and summarizes overflow within maxHeight", () => {
+    const { container } = renderInSvg(
+      <Legend legendGroups={[manyItems(42)]} title="" width={200} maxHeight={200} />
+    )
+    const items = Array.from(container.querySelectorAll(".legend-item > g"))
+    const more = container.querySelector(".semiotic-legend-more")
+    expect(more?.textContent).toMatch(/^r\d\d.*\+\d+ more$/s)
+    const hidden = Number(/\+(\d+) more/.exec(more!.textContent!)![1])
+    expect(items.length + hidden).toBe(42)
+
+    const offsets = items.map((item) =>
+      /translate\(([\d.]+),([\d.]+)\)/.exec(item.getAttribute("transform")!)!.slice(1).map(Number)
+    )
+    expect(new Set(offsets.map(([x]) => x)).size).toBeGreaterThan(1)
+    // The items box starts at y=37 inside the legend; every row stays inside.
+    for (const [x, y] of offsets) {
+      expect(x).toBeLessThan(200)
+      expect(37 + y + 22).toBeLessThanOrEqual(200)
+    }
+  })
+
+  it("truncates long labels and keeps the full text as a title and accessible name", () => {
+    const { container } = renderInSvg(
+      <Legend
+        legendGroups={[manyItems(6)]}
+        title=""
+        width={110}
+        maxHeight={400}
+        customHoverBehavior={() => {}}
+      />
+    )
+    const option = container.querySelector(
+      '[aria-label="region-03-with-a-rather-long-descriptive-name"]'
+    )!
+    expect(option.querySelector("title")?.textContent).toBe(
+      "region-03-with-a-rather-long-descriptive-name"
+    )
+    const label = option.querySelector(":scope > text")!.textContent!
+    expect(label.endsWith("…")).toBe(true)
+    expect(label.length * 7).toBeLessThanOrEqual(110 - 22)
+  })
+
+  it("keeps the historic untruncated single column without maxHeight", () => {
+    const { container } = renderInSvg(
+      <Legend legendGroups={[manyItems(42)]} title="" width={100} />
+    )
+    expect(container.querySelector(".semiotic-legend-more")).toBeNull()
+    expect(container.querySelectorAll(".legend-item > g")).toHaveLength(42)
+    expect(container.textContent).toContain("region-03-with-a-rather-long-descriptive-name")
+  })
+
+  it("labels an empty-string category with a readable placeholder", () => {
+    const { container } = renderInSvg(
+      <Legend
+        legendGroups={[makeLegendGroup({ items: [{ label: "" }, { label: "null" }] })]}
+        customClickBehavior={() => {}}
+      />
+    )
+    const options = Array.from(container.querySelectorAll('[role="option"]'))
+    expect(options.map((option) => option.getAttribute("aria-label"))).toEqual(["(empty)", "null"])
+    expect(options[0].textContent).toBe("(empty)")
+  })
+})
+
+// ── Bounded horizontal legends ──────────────────────────────────────────
+
+describe("Legend — bounded horizontal layout", () => {
+  const items = (count: number) =>
+    makeLegendGroup({
+      label: "",
+      items: Array.from({ length: count }, (_, i) => ({ label: `Category ${i}`, color: "#555" }))
+    })
+
+  it("stops adding rows at maxHeight and ends the last row with +N more", () => {
+    const { container } = renderInSvg(
+      <Legend legendGroups={[items(40)]} orientation="horizontal" width={300} maxHeight={50} />
+    )
+    const drawn = Array.from(container.querySelectorAll(".legend-item > g"))
+    const rows = new Set(drawn.map((item) =>
+      /translate\([\d.]+,([\d.]+)\)/.exec(item.getAttribute("transform")!)![1]
+    ))
+    expect(rows.size).toBe(2)
+    const more = container.querySelector(".semiotic-legend-more")!
+    expect(more.getAttribute("transform")).toMatch(/,22\)$/)
+    const hidden = Number(/\+(\d+) more/.exec(more.lastChild!.textContent!)![1])
+    expect(drawn.length + hidden).toBe(40)
+    expect(more.querySelector("title")?.textContent).toMatch(/^Category \d+, /)
+  })
+
+  it("truncates a single item wider than the row and keeps its full name", () => {
+    const longLabel = "A category name that is far wider than the legend row"
+    const { container } = renderInSvg(
+      <Legend
+        legendGroups={[makeLegendGroup({ label: "", items: [{ label: longLabel }, { label: "B" }] })]}
+        orientation="horizontal"
+        width={160}
+        customHoverBehavior={() => {}}
+      />
+    )
+    const option = container.querySelector(`[aria-label="${longLabel}"]`)!
+    expect(option.querySelector("title")?.textContent).toBe(longLabel)
+    const label = option.querySelector(":scope > text")!.textContent!
+    expect(label.endsWith("…")).toBe(true)
+    expect(22 + label.length * 7).toBeLessThanOrEqual(160)
+  })
+})
+
 // ── GradientLegend ──────────────────────────────────────────────────────
 
 describe("GradientLegend", () => {

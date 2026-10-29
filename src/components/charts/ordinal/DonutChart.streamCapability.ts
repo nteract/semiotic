@@ -1,11 +1,17 @@
-import type { StreamChartCapability } from "../../ai/streamingTypes"
+import type { StreamChartCapability, StreamSchema } from "../../ai/streamingTypes"
 import {
   hasCategoryField,
   hasNumericValue,
   pickCategoryField,
   pickValueField,
   resolveStreamShape,
+  streamCategorySumPolicy,
+  streamFieldCardinality,
+  streamKeyedChangelogCaveat,
 } from "../../ai/streamSchema"
+
+const sumPolicy = (schema: StreamSchema) =>
+  streamCategorySumPolicy(schema, "DonutChart", [pickCategoryField(schema)?.name])
 
 export const DonutChartStreamCapability: StreamChartCapability = {
   component: "DonutChart",
@@ -20,17 +26,26 @@ export const DonutChartStreamCapability: StreamChartCapability = {
     }
     if (!hasCategoryField(schema)) return "needs a category field"
     if (!hasNumericValue(schema)) return "needs a numeric value field"
-    return null
+    const slices = streamFieldCardinality(pickCategoryField(schema))
+    if (slices !== undefined && slices > 8) return `${slices} slices is too many for a donut chart`
+    return sumPolicy(schema).exclude ?? null
   },
 
   intentScores: {
-    "part-to-whole": 4,
-    "compare-categories": 2,
+    "part-to-whole": (schema) => 4 * sumPolicy(schema).factor,
+    "compare-categories": (schema) => 2 * sumPolicy(schema).factor,
   },
 
-  caveats: () => [
-    "stream cardinality is unknown — donuts with more than ~8 slices become hard to read",
-  ],
+  caveats: (schema) => {
+    const category = pickCategoryField(schema)
+    return [
+      ...(streamFieldCardinality(category) === undefined
+        ? [`cardinality of "${category?.name}" is unknown — donuts with more than ~8 slices become hard to read; declare cardinality on the field to check`]
+        : []),
+      ...sumPolicy(schema).caveats,
+      ...streamKeyedChangelogCaveat(schema, "frameProps.dataIdAccessor"),
+    ]
+  },
 
   buildProps: (schema) => ({
     categoryAccessor: pickCategoryField(schema)?.name,

@@ -21,6 +21,7 @@ import { SankeyDiagram } from "../charts/network/SankeyDiagram"
 import { TreeDiagram } from "../charts/network/TreeDiagram"
 import { Treemap } from "../charts/network/Treemap"
 import { CirclePack } from "../charts/network/CirclePack"
+import { ProcessSankey } from "../charts/network/ProcessSankey"
 
 // Standalone SSR for equivalence tests
 import { renderXYToStaticSVG, renderOrdinalToStaticSVG, renderNetworkToStaticSVG, renderGeoToStaticSVG, renderChart } from "./renderToStaticSVG"
@@ -195,6 +196,38 @@ describe("Component SSR — Network Charts", () => {
       expect(svg).not.toMatch(/(?:width|height|x2|y2)="-/)
       expect(svg).not.toContain("NaN")
     }
+  })
+
+  it("renderChart('ProcessSankey', …) reserves the measured legend width the HOC reserves", () => {
+    // Labels well past the 140px chart-owned floor. The server used to
+    // reserve exactly 140px for the band layout while the frame grew its
+    // margin for the legend, so ribbons and the time axis ran under it.
+    const props = {
+      nodes: [
+        { id: "intake", phase: "Intake and eligibility screening", xExtent: [0, 20] },
+        { id: "review", phase: "Review by the regional committee", xExtent: [20, 50] },
+      ],
+      edges: [{ source: "intake", target: "review", value: 4, startTime: 0, endTime: 50 }],
+      domain: [0, 50] as [number, number],
+      nodeIdAccessor: "id" as const,
+      colorBy: "phase" as const,
+      axisTicks: [{ date: 0, label: "Start" }, { date: 50, label: "End" }],
+      width: 1000,
+      height: 320,
+    }
+    const server = renderChart("ProcessSankey", props)
+    const client = ReactDOMServer.renderToStaticMarkup(<ProcessSankey {...props} />)
+    const endTickX = (svg: string) =>
+      Number(/translate\(([\d.]+),[\d.]+\)"><line[^>]*><\/line><text[^>]*>End</.exec(svg)?.[1])
+    const serverLegendX = Number(/class="semiotic-legend" transform="translate\(([\d.]+),/.exec(server)?.[1])
+    const clientLegendX = Number(/translate\(([\d.]+), [\d.]+\)"><g[^>]*aria-label="Chart legend"/.exec(client)?.[1])
+
+    expect(endTickX(server)).toBeGreaterThan(0)
+    expect(endTickX(server)).toBe(endTickX(client))
+    expect(serverLegendX).toBeGreaterThan(0)
+    expect(serverLegendX).toBe(clientLegendX)
+    // The plot ends before the legend's gap begins.
+    expect(80 + endTickX(server)).toBeLessThanOrEqual(serverLegendX - 10)
   })
 
   it("renderChart('ProcessSankey', …) projects its time axis vertically", () => {

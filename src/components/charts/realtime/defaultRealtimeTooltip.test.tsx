@@ -33,6 +33,27 @@ describe("buildDefaultRealtimeTooltip", () => {
     expect(text).toContain("87.50")
   })
 
+  it("leads with the series / category name when a group channel is set", () => {
+    const series = buildDefaultRealtimeTooltip({ groupAccessor: "host" })
+    const { container } = render(
+      <>{series(fakeHover({ data: { time: 1, value: 2, host: "web-1" } }))}</>
+    )
+    expect(container.textContent).toBe("series:web-1x:1y:2")
+    const category = buildDefaultRealtimeTooltip({
+      groupAccessor: (d) => String(d.band).toUpperCase(),
+      groupLabel: "category",
+    })
+    const { container: categoryContainer } = render(
+      <>{category(fakeHover({ data: { time: 1, value: 2, band: "low" } }))}</>
+    )
+    expect(categoryContainer.textContent).toContain("category:LOW")
+    // No group channel: the historical two-row layout.
+    const { container: plain } = render(
+      <>{buildDefaultRealtimeTooltip()(fakeHover())}</>
+    )
+    expect(plain.textContent).not.toContain("series:")
+  })
+
   it("honors a string accessor", () => {
     const Tooltip = buildDefaultRealtimeTooltip({
       timeAccessor: "t" as unknown as never,
@@ -91,10 +112,18 @@ describe("buildHistogramTooltip", () => {
     return Array.from(container.querySelectorAll(".semiotic-tooltip > div")).map(row => row.textContent)
   }
 
-  it("lists the range and count of an unstacked bin", () => {
+  it("labels counted bins as counts", () => {
+    const { container } = render(<>{buildHistogramTooltip({ aggregation: "count" })(
+      fakeHover({ data: { binStart: 0, binEnd: 10, total: 6, category: "North", categoryValue: 4 } })
+    )}</>)
+    expect(Array.from(container.querySelectorAll(".semiotic-tooltip > div")).map(row => row.textContent))
+      .toEqual(["range:0–10", "count:6", "category:North", "category count:4"])
+  })
+
+  it("lists the range and total of an unstacked bin", () => {
     expect(rowsOf(fakeHover({ data: { binStart: 0, binEnd: 10, total: 6 } }))).toEqual([
       "range:0–10",
-      "count:6",
+      "total:6",
     ])
   })
 
@@ -102,9 +131,9 @@ describe("buildHistogramTooltip", () => {
     const data = { binStart: 0, binEnd: 10, total: 6, category: "North", categoryValue: 4 }
     expect(rowsOf(fakeHover({ data }))).toEqual([
       "range:0–10",
-      "count:6",
+      "total:6",
       "category:North",
-      "category count:4",
+      "category total:4",
     ])
   })
 
@@ -147,17 +176,17 @@ describe("buildHistogramMultiTooltip", () => {
       "range:0–10",
       "North:5",
       "South:1",
-      "count:6",
+      "total:6",
     ])
   })
 
   it("omits the category rows of an unstacked bin", () => {
     const allSeries = [{ group: "", value: 6, color: "#f00", datum: {} }]
-    expect(rowsOf(fakeHover({ data: bin, allSeries }))).toEqual(["range:0–10", "count:6"])
+    expect(rowsOf(fakeHover({ data: bin, allSeries }))).toEqual(["range:0–10", "total:6"])
   })
 
   it("falls back to the single-bin tooltip without column rows", () => {
-    expect(rowsOf(fakeHover({ data: bin }))).toEqual(["range:0–10", "count:6"])
+    expect(rowsOf(fakeHover({ data: bin }))).toEqual(["range:0–10", "total:6"])
   })
 
   it("labels an epoch-millisecond column with a UTC date and time", () => {

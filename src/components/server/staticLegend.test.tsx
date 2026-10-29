@@ -13,6 +13,7 @@ import {
   extractCategories,
 } from "./staticLegend"
 import { LIGHT_THEME, DARK_THEME } from "../store/ThemeStore"
+import { renderLegendFromConfig } from "../stream/legendRenderer"
 
 function renderLegendString(config: Parameters<typeof renderStaticLegend>[0]): string {
   const node = renderStaticLegend(config)
@@ -210,15 +211,19 @@ describe("renderStaticLegend", () => {
     expect(svg).toContain('font-weight="600"')
   })
 
-  it("reports actual horizontal width when a single item exceeds maxWidth", () => {
-    const metrics = measureStaticLegend({
+  it("truncates a single horizontal item that exceeds maxWidth", () => {
+    // This used to report (and draw) the item's full, overflowing width.
+    const config = {
       ...baseConfig,
-      position: "top",
-      categories: ["A very long category name"],
-      legendLayout: { maxWidth: 24 },
-    })
-
-    expect(metrics.width).toBeGreaterThan(24)
+      position: "top" as const,
+      margin: { ...baseConfig.margin, top: 80 },
+      categories: ["A very long category name that overflows", "B"],
+      legendLayout: { maxWidth: 120 },
+    }
+    expect(measureStaticLegend(config).width).toBe(120)
+    const svg = renderLegendString(config)
+    expect(svg).toContain("<title>A very long category name that overflows</title>")
+    expect(svg).toMatch(/A very long[^<]*…</)
   })
 
   it("renders horizontal layout for top/bottom positions", () => {
@@ -350,6 +355,119 @@ describe("renderStaticLegendGroups", () => {
     expect(svg).toContain('transform="translate(0,61)"')
     expect(svg).toContain('y1="118" x2="100" y2="118" stroke="gray"')
     expect(svg).toContain(DARK_THEME.colors.text)
+  })
+})
+
+describe("bounded static side legends", () => {
+  const labels = [
+    ...Array.from({ length: 40 }, (_, i) => i % 7 === 0
+      ? `region-${String(i).padStart(2, "0")}-with-a-rather-long-descriptive-name`
+      : `r${String(i).padStart(2, "0")}`),
+    "null",
+    "",
+  ]
+  const frame = {
+    theme: LIGHT_THEME,
+    totalWidth: 830,
+    totalHeight: 250,
+    margin: { top: 20, right: 261, bottom: 50, left: 70 },
+  }
+  const groups = [{
+    label: "",
+    type: "fill" as const,
+    styleFn: () => ({ fill: "#555" }),
+    items: labels.map(label => ({ label })),
+  }]
+  const parse = (markup: string) => new DOMParser().parseFromString(markup, "image/svg+xml")
+  const itemTransforms = (root: Document, selector: string) =>
+    Array.from(root.querySelectorAll(selector), node => node.getAttribute("transform"))
+
+  it("wraps, truncates and summarizes like the interactive legend", () => {
+    const staticSvg = parse(ReactDOMServer.renderToStaticMarkup(
+      <svg>{renderStaticLegendGroups({ ...frame, legendGroups: groups })}</svg>
+    ))
+    const liveSvg = parse(ReactDOMServer.renderToStaticMarkup(
+      <svg>{renderLegendFromConfig({ ...frame, legend: { legendGroups: groups } })}</svg>
+    ))
+    const staticItems = itemTransforms(staticSvg, ".semiotic-legend > g > g")
+    expect(staticItems.length).toBeGreaterThan(1)
+    expect(staticItems).toEqual(itemTransforms(liveSvg, ".legend-item > g"))
+    expect(staticSvg.querySelector(".semiotic-legend-more")?.lastChild?.textContent)
+      .toBe(liveSvg.querySelector(".semiotic-legend-more")?.lastChild?.textContent)
+    // Truncated labels keep their full name as hover text.
+    expect(staticSvg.querySelector("title")?.textContent).toBe(labels[0])
+  })
+
+  it("keeps every slot of the categorical path inside the chart height", () => {
+    const svg = parse(ReactDOMServer.renderToStaticMarkup(
+      <svg>{renderStaticLegend({ ...frame, categories: labels })}</svg>
+    ))
+    const legend = svg.querySelector(".semiotic-legend")!
+    const legendY = Number(/translate\([\d.]+,([\d.]+)\)/.exec(legend.getAttribute("transform")!)![1])
+    const slots = Array.from(legend.querySelectorAll(":scope > g, :scope > text"))
+    expect(svg.querySelector(".semiotic-legend-more")).toBeTruthy()
+    for (const slot of slots) {
+      const y = Number(/translate\([\d.]+,([\d.]+)\)/.exec(slot.getAttribute("transform")!)![1])
+      expect(legendY + y + 22).toBeLessThanOrEqual(frame.totalHeight)
+    }
+  })
+
+  it("labels an empty-string category with a readable placeholder", () => {
+    for (const position of ["right", "bottom"] as const) {
+      const svg = renderLegendString({ ...frame, position, categories: ["", "A"] })
+      expect(svg).toContain(">(empty)<")
+    }
+  })
+})
+
+describe("bounded static top and bottom legends", () => {
+  const labels = Array.from({ length: 40 }, (_, i) => `Category ${i}`)
+  const frame = {
+    theme: LIGHT_THEME,
+    totalWidth: 420,
+    totalHeight: 300,
+    margin: { top: 20, right: 20, bottom: 46 + 10 + 44, left: 60 },
+    position: "bottom" as const,
+    axisChrome: { hasAxis: true, hasAxisLabel: true },
+  }
+  const groups = [{
+    label: "",
+    type: "fill" as const,
+    styleFn: () => ({ fill: "#555" }),
+    items: labels.map(label => ({ label })),
+  }]
+  const parse = (markup: string) => new DOMParser().parseFromString(markup, "image/svg+xml")
+  const translateY = (node: Element | null) =>
+    Number(/translate\([\d.]+,\s*([\d.]+)\)/.exec(node?.getAttribute("transform") ?? "")?.[1] ?? 0)
+
+  it("caps rows and summarizes like the interactive legend", () => {
+    const staticSvg = parse(ReactDOMServer.renderToStaticMarkup(
+      <svg>{renderStaticLegendGroups({ ...frame, legendGroups: groups })}</svg>
+    ))
+    const liveSvg = parse(ReactDOMServer.renderToStaticMarkup(
+      <svg>{renderLegendFromConfig({ ...frame, legendPosition: "bottom", legend: { legendGroups: groups } })}</svg>
+    ))
+    const staticItems = Array.from(staticSvg.querySelectorAll(".semiotic-legend > g"), node => node.getAttribute("transform"))
+    const liveItems = Array.from(liveSvg.querySelectorAll(".legend-item > g"), node => node.getAttribute("transform"))
+    expect(staticItems.length).toBe(liveItems.length)
+    expect(staticItems.length).toBeLessThan(40)
+    const staticMore = staticSvg.querySelector(".semiotic-legend-more")
+    const liveMore = liveSvg.querySelector(".semiotic-legend-more")
+    expect(staticMore?.lastChild?.textContent).toBe(liveMore?.lastChild?.textContent)
+    expect(staticMore?.getAttribute("transform")).toBe(liveMore?.getAttribute("transform"))
+  })
+
+  it("keeps every row of the categorical path inside the chart", () => {
+    const svg = parse(ReactDOMServer.renderToStaticMarkup(
+      <svg>{renderStaticLegend({ ...frame, categories: labels })}</svg>
+    ))
+    const legend = svg.querySelector(".semiotic-legend")!
+    const legendY = translateY(legend)
+    const slots = Array.from(legend.querySelectorAll(":scope > g, :scope > text"))
+    expect(svg.querySelector(".semiotic-legend-more")).toBeTruthy()
+    for (const slot of slots) {
+      expect(legendY + translateY(slot) + 22).toBeLessThanOrEqual(frame.totalHeight)
+    }
   })
 })
 

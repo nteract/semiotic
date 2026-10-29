@@ -209,6 +209,107 @@ describe("realtime controlled-data SSR", () => {
     expect(means.every((value) => Number.isFinite(value))).toBe(true)
   })
 
+  it.each([undefined, { size: 10 }])(
+    "colours and lists each RealtimeLineChart series (aggregate %o)",
+    (aggregate) => {
+      const rows = ["cpu", "mem", "disk"].flatMap((series, i) => [
+        { time: 1, value: i, series },
+        { time: 2, value: i + 1, series }
+      ])
+      const lineStrokes = (svg: string) =>
+        (svg.match(/<path[^>]*fill="none" stroke="([^"]+)"/g) ?? []).map(
+          (path) => /stroke="([^"]+)"/.exec(path)?.[1]
+        )
+      const svg = renderChart("RealtimeLineChart", {
+        data: rows,
+        seriesAccessor: "series",
+        aggregate,
+        size: [400, 200]
+      })
+      const strokes = lineStrokes(svg)
+      expect(strokes).toHaveLength(3)
+      expect(new Set(strokes).size).toBe(3)
+      for (const series of ["cpu", "mem", "disk"]) {
+        expect(svg).toContain(`>${series}</text>`)
+      }
+
+      const stroked = renderChart("RealtimeLineChart", {
+        data: rows,
+        seriesAccessor: "series",
+        aggregate,
+        stroke: "#123456",
+        showLegend: false,
+        size: [400, 200]
+      })
+      expect(new Set(lineStrokes(stroked))).toEqual(new Set(["#123456"]))
+      expect(stroked).not.toContain(">cpu</text>")
+    }
+  )
+
+  it("keeps a long right-edge time label inside the SVG", () => {
+    const rows = Array.from({ length: 50 }, (_, i) => ({ time: i, value: i }))
+    const svg = renderChart("RealtimeLineChart", {
+      data: rows,
+      size: [400, 200],
+      margin: { right: 10 },
+      timeExtent: [0, 50],
+      tickFormatTime: (v: number) => `10/24/2026 10:50:${v} AM`
+    })
+    const labels = [
+      ...svg.matchAll(/<text (?:x="([^"]+)" )?y="18"[^>]*>([^<]+)<\/text>/g)
+    ]
+    const last = labels.at(-1)!
+    // Centred at the plot's right edge, half a 0.6em-per-glyph label (12px)
+    // would cross the 10px right margin; the label is pulled back by that much.
+    const halfWidth = (last[2].length * 7.2) / 2
+    expect(Number(last[1])).toBeCloseTo(10 - halfWidth, 1)
+  })
+
+  it("stops a right-edge time label before a right-side series legend", () => {
+    const rows = ["a", "b", "c"].flatMap((series, s) =>
+      Array.from({ length: 5 }, (_, i) => ({ time: i * 10, value: s + i, series }))
+    )
+    const svg = renderChart("RealtimeLineChart", {
+      data: rows,
+      seriesAccessor: "series",
+      size: [600, 220],
+      timeExtent: [0, 40],
+      tickFormatTime: (v: number) => `${v} seconds`
+    })
+    const labels = [
+      ...svg.matchAll(/<text (?:x="([^"]+)" )?y="18"[^>]*>([^<]+)<\/text>/g)
+    ]
+    const last = labels.at(-1)!
+    expect(last[2]).toBe("40 seconds")
+    // The legend starts 10px (its default distance) past the plot edge, so a
+    // centred label may reach at most that far right.
+    const halfWidth = (last[2].length * 7.2) / 2
+    expect(Number(last[1])).toBeCloseTo(10 - halfWidth, 1)
+  })
+
+  it.each(["RealtimeLineChart", "RealtimeSwarmChart", "RealtimeHistogram"] as const)(
+    "%s labels epoch-ms numeric time as distinct clock times",
+    (component) => {
+      const t0 = Date.UTC(2026, 9, 24, 13, 0, 16, 123)
+      const rows = Array.from({ length: 300 }, (_, i) => ({
+        time: t0 + i * 4,
+        value: i % 7
+      }))
+      const svg = renderChart(component, {
+        data: rows,
+        windowSize: 300,
+        binSize: 100,
+        size: [600, 200]
+      })
+      const labels = [
+        ...svg.matchAll(/<text (?:x="[^"]+" )?y="18"[^>]*>([^<]+)<\/text>/g)
+      ].map((match) => match[1])
+      expect(labels.length).toBeGreaterThan(1)
+      expect(new Set(labels).size).toBe(labels.length)
+      for (const label of labels) expect(label).toMatch(/^13:00:1\d\.\d{3}$/)
+    }
+  )
+
   it("renders RealtimeHistogram from controlled data", () => {
     const svg = renderChart("RealtimeHistogram", {
       data: points,

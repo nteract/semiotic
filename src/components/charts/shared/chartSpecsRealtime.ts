@@ -86,6 +86,12 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
         type: "number",
         description: "Time bin size in milliseconds (required)"
       },
+      aggregation: {
+        type: "string",
+        enum: ["sum", "count"] as const,
+        default: "sum",
+        description: 'What each bin totals: "sum" adds valueAccessor; "count" counts events with a valid time and ignores valueAccessor, so streams without a numeric field still bin.'
+      },
       binAlign: {
         type: "string",
         enum: ["start", "center"] as const,
@@ -203,6 +209,12 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
       valueAccessor: {
         type: ["string", "function"],
         description: "Key for y values"
+      },
+      aggregation: {
+        type: "string",
+        enum: ["sum", "count"] as const,
+        default: "sum",
+        description: 'What each bin totals: "sum" adds valueAccessor; "count" counts events with a valid time and ignores valueAccessor, so streams without a numeric field still bin.'
       },
       binAlign: {
         type: "string",

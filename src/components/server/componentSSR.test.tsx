@@ -572,13 +572,25 @@ describe("Component SSR — Ordinal Charts", () => {
       height: 400,
     })
 
-    // HOC primary margins are 70/50/40/60, placing the radial center at
-    // (70 + 490 / 2, 50 + 290 / 2) rather than staticOrdinal's generic center.
-    expect(svg).toContain('transform="translate(315,195)"')
+    // HOC primary margins are 70/50/40/60 plus DonutChart's default category
+    // legend on the right, placing the radial center at (278.5, 50 + 290 / 2)
+    // like the React chart rather than staticOrdinal's generic center.
+    expect(svg).toContain('transform="translate(278.5,195)"')
+    expect(svg).toContain("legend")
     expect(svg).toContain("<foreignObject")
     expect(svg).toContain("Total: 100")
     // The explicit hole size is still reflected in the d3 arc command.
     expect(svg).toContain("A80,80")
+  })
+
+  it.each(["PieChart", "DonutChart"])("renderChart('%s', …) colors slices by the default category accessor", (component) => {
+    // No categoryAccessor: the React charts still color and legend each slice
+    // by the default "category" field.
+    const svg = renderChart(component, { data: categoryData, width: 400, height: 400 })
+    const fills = [...svg.matchAll(/<path[^>]*fill="([^"]*)"/g)].map((match) => match[1])
+    expect(fills).toHaveLength(3)
+    expect(new Set(fills).size).toBe(3)
+    expect(svg).toContain("legend")
   })
 
   it("BoxPlot renders boxplot elements (lines + rects)", () => {
