@@ -1,3 +1,5 @@
+import { networkFrameDefaultMargin } from "../stream/frameDefaultMargins"
+import { resolveAxisFreeMarginDefaults } from "../charts/shared/chartMode"
 import type { Datum } from "../charts/shared/datumTypes"
 import { createColorScale, getColor, resolveDefaultFill } from "../charts/shared/colorUtils"
 import { mergeShapeStyle } from "../charts/shared/mergeShapeStyle"
@@ -8,6 +10,7 @@ import { resolveTheme } from "./themeResolver"
 
 export const forceDirectedGraph: ChartConfig = {
   frameType: "network",
+  layout: { margin: (_props, resolved) => resolveAxisFreeMarginDefaults(resolved, networkFrameDefaultMargin("force")) },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const edgeStyle = resolveForceEdgeStyle(rest)
     const themeCategorical = resolveTheme(

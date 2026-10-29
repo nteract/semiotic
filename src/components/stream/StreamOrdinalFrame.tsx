@@ -74,11 +74,10 @@ import { isAnnotationActivationTarget } from "../charts/shared/annotationActivat
 import { useSemanticFrameInteractions } from "./useSemanticFrameInteractions"
 import { useOrdinalKeyboardNavigation } from "./frameKeyboardNavigation"
 import { normalizeGradient } from "../charts/shared/gradient"
-import { AXIS_FRAME_DEFAULT_MARGIN } from "./frameDefaultMargins"
+import { ordinalFrameDefaultMargin } from "./frameDefaultMargins"
 import { ordinalFrameLegendOptions } from "./frameLegendOptions"
 import { withDisplayName } from "../charts/shared/withDisplayName"
 
-const DEFAULT_MARGIN = AXIS_FRAME_DEFAULT_MARGIN
 
 // ── Component ──────────────────────────────────────────────────────────
 
@@ -230,7 +229,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       responsiveWidth,
       responsiveHeight,
       userMargin,
-      marginDefault: DEFAULT_MARGIN,
+      marginDefault: ordinalFrameDefaultMargin(chartType),
       title,
       legend,
       legendPosition,

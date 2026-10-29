@@ -129,7 +129,7 @@ const pieChartProps = [
   { name: "tooltip", type: "object | function", required: false, default: null, description: "Tooltip configuration or render function." },
   { name: "width", type: "number", required: false, default: "400", description: "Chart width in pixels." },
   { name: "height", type: "number", required: false, default: "400", description: "Chart height in pixels." },
-  { name: "margin", type: "object", required: false, default: "{ top: 20, bottom: 20, left: 20, right: 20 }", description: "Margin around the chart area." },
+  { name: "margin", type: "object", required: false, default: "{ top: 10, bottom: 10, left: 10, right: 10 }", description: "Primary/mobile layout padding without Cartesian axis gutters. Titles and legends reserve additional space; context and sparkline use compact insets." },
   { name: "animate", type: "boolean | object", required: false, default: "false", description: "Enable animated intro and smooth data-change transitions. `true` for defaults (300ms ease-out, intro enabled), or `{ duration, easing, intro }`. Set `{ intro: false }` to disable intro." },
   { name: "title", type: "string", required: false, default: null, description: "Chart title displayed at the top." },
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamOrdinalFrame props for advanced customization." },

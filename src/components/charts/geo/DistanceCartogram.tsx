@@ -300,6 +300,7 @@ export const DistanceCartogram = /* @__PURE__ */ withChartErrorBoundary(/* @__PU
     width: resolved.width,
     height: resolved.height,
     hasTitle: !!resolved.title,
+    axisChrome: { hasAxis: false },
   })
 
   const pointStyleFn = useMemo(() => {

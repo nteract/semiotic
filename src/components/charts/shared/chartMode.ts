@@ -8,6 +8,7 @@ import type { MobileVisualizationContract } from "./auditMobileVisualization"
 import { resolveResponsiveRules } from "./responsiveRules"
 import type { ResponsiveRule } from "./responsiveRules"
 import type { AccessibleTableProp } from "../../stream/accessibleTableTypes"
+import { AXIS_FREE_FRAME_DEFAULT_MARGIN } from "../../stream/frameDefaultMargins"
 
 export const MOBILE_INTERACTION_TARGET_SIZE = 44
 export const MOBILE_INTERACTION_MIN_HIT_RADIUS = 24
@@ -199,17 +200,16 @@ export function resolveChartMode(
   }
 }
 
-const AXIS_FREE_MARGIN_DEFAULTS = { top: 10, bottom: 10, left: 10, right: 10 }
-
 /**
- * Axis-free charts keep their established 10px regular-mode inset while
+ * Axis-free charts use a small inset (or layout-specific label padding) while
  * adopting the shared context/sparkline margins. Reading `resolved` here is
  * important: responsive rules may have changed the effective chart mode.
  */
 export function resolveAxisFreeMarginDefaults(
   resolved: Pick<ChartModeResult, "compactMode" | "marginDefaults">,
+  defaults: ChartModeResult["marginDefaults"] = AXIS_FREE_FRAME_DEFAULT_MARGIN,
 ): ChartModeResult["marginDefaults"] {
-  return resolved.compactMode ? resolved.marginDefaults : AXIS_FREE_MARGIN_DEFAULTS
+  return resolved.compactMode ? resolved.marginDefaults : defaults
 }
 
 function adjustMarginsForCategoryTicks(

@@ -320,6 +320,7 @@ export const ProcessSankey = /* @__PURE__ */ withSizedChartErrorBoundary(/* @__P
     width,
     height,
     hasTitle: !!title,
+    axisChrome: { hasAxis: true, hasAxisLabel: true },
     loading,
     loadingContent,
     emptyContent

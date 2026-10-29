@@ -1,4 +1,6 @@
 "use client"
+import { resolveAxisFreeMarginDefaults } from "../shared/chartMode"
+import { networkFrameDefaultMargin } from "../../stream/frameDefaultMargins"
 import { TREEMAP_SIZE } from "../shared/chartSizeDefaultsNetwork"
 import type { NetworkPerspectiveProps } from "../shared/networkPerspectiveProps"
 import type { Datum } from "../shared/datumTypes"
@@ -204,7 +206,7 @@ export const Treemap = /* @__PURE__ */ withChartErrorBoundary(function Treemap<T
     mobileSemantics: resolved.mobileSemantics,
     chartType: "Treemap",
     chartId,
-    marginDefaults: resolved.marginDefaults,
+    marginDefaults: resolveAxisFreeMarginDefaults(resolved, networkFrameDefaultMargin("treemap")),
     userMargin,
     width, height,
     hasTitle: !!title,

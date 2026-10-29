@@ -45,7 +45,7 @@ import {
   renderOrdinalGridSVG,
   wrapSVG
 } from "./staticSVGChrome"
-import { AXIS_FRAME_DEFAULT_MARGIN } from "../stream/frameDefaultMargins"
+import { ordinalFrameDefaultMargin } from "../stream/frameDefaultMargins"
 import {
   isStaticTextTickLabel,
   renderStaticTickForeignObject,
@@ -195,7 +195,7 @@ export function generateOrdinalAxesSVG(
 
 export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps, sink?: EvidenceSink): string {
   const theme = resolveTheme(props.theme)
-  const defaultMargin = AXIS_FRAME_DEFAULT_MARGIN
+  const defaultMargin = ordinalFrameDefaultMargin(props.chartType)
   const size = props.size || [500, 400]
   const margin = reserveTitleMargin({ ...defaultMargin, ...props.margin }, staticTitleText(props.title))
   const hasVisibleTitle = hasTextTitle(staticTitleText(props.title))

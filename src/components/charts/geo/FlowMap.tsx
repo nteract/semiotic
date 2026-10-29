@@ -303,6 +303,7 @@ export const FlowMap = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ fo
     width: resolved.width,
     height: resolved.height,
     hasTitle: !!resolved.title,
+    axisChrome: { hasAxis: false },
   })
 
   // Alias `setup.data` (sparse-filtered by useChartSetup) so the rest

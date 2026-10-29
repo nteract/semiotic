@@ -1,3 +1,5 @@
+import { networkFrameDefaultMargin } from "../stream/frameDefaultMargins"
+import { resolveAxisFreeMarginDefaults } from "../charts/shared/chartMode"
 import type { Datum } from "../charts/shared/datumTypes"
 import { buildProcessSankeyScenes } from "../charts/network/processSankey/buildScenes"
 import { resolveProcessSankeyMarginDefaults } from "../charts/network/processSankey/frameMargins"
@@ -400,6 +402,7 @@ export const processSankey: ChartConfig = {
 
 export const sankeyDiagram: ChartConfig = {
   frameType: "network",
+  layout: { margin: (_props, resolved) => resolveAxisFreeMarginDefaults(resolved, networkFrameDefaultMargin("sankey")) },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const nodes = Array.isArray(rest.nodes)
       ? (rest.nodes as Datum[])
@@ -505,6 +508,7 @@ export const sankeyDiagram: ChartConfig = {
 
 export const treeDiagram: ChartConfig = {
   frameType: "network",
+  layout: { margin: (_props, resolved) => resolveAxisFreeMarginDefaults(resolved, networkFrameDefaultMargin("tree")) },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const fill = createHierarchyNodeFill(data, colorBy, colorScheme, common, rest)
     const baseNodeStyle = (d: Datum) => {
@@ -539,6 +543,7 @@ export const treeDiagram: ChartConfig = {
 
 export const treemap: ChartConfig = {
   frameType: "network",
+  layout: { margin: (_props, resolved) => resolveAxisFreeMarginDefaults(resolved, networkFrameDefaultMargin("treemap")) },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const fill = createHierarchyNodeFill(data, colorBy, colorScheme, common, rest)
     const baseNodeStyle = (d: Datum) => {

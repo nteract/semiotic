@@ -1,3 +1,4 @@
+import { resolveAxisFreeMarginDefaults } from "../charts/shared/chartMode"
 import type { Datum } from "../charts/shared/datumTypes"
 import { createColorScale, getColor, getSize, DEFAULT_COLOR } from "../charts/shared/colorUtils"
 import { getMinMax } from "../charts/shared/minMax"
@@ -113,7 +114,7 @@ function buildChoroplethAreaStyle(
 
 export const choroplethMap: ChartConfig = {
   frameType: "geo",
-  layout: { margin: { top: 10, right: 10, bottom: 10, left: 10 } },
+  layout: { margin: (_props, resolved) => resolveAxisFreeMarginDefaults(resolved) },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const scheme = typeof colorScheme === "string" ? colorScheme : "blues"
     const colorModel = buildChoroplethColorModel(
@@ -162,7 +163,7 @@ export const choroplethMap: ChartConfig = {
 
 export const proportionalSymbolMap: ChartConfig = {
   frameType: "geo",
-  layout: { margin: { top: 10, right: 10, bottom: 10, left: 10 } },
+  layout: { margin: (_props, resolved) => resolveAxisFreeMarginDefaults(resolved) },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const points = data || rest.points
     // Base per-point fill/size (CSR parity) — user `pointStyle` overrides it.
@@ -209,7 +210,7 @@ export const proportionalSymbolMap: ChartConfig = {
  */
 export const distanceCartogram: ChartConfig = {
   frameType: "geo",
-  layout: { margin: { top: 10, right: 10, bottom: 10, left: 10 } },
+  layout: { margin: (_props, resolved) => resolveAxisFreeMarginDefaults(resolved) },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const points = data || rest.points
     const mode = common.__resolvedMode ?? rest.mode
@@ -279,7 +280,7 @@ export const distanceCartogram: ChartConfig = {
 
 export const flowMap: ChartConfig = {
   frameType: "geo",
-  layout: { margin: { top: 10, right: 10, bottom: 10, left: 10 } },
+  layout: { margin: (_props, resolved) => resolveAxisFreeMarginDefaults(resolved) },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     // Accept flows either via the primary `data` arg (matches how
     // ProportionalSymbolMap / ChoroplethMap consume their data) or via

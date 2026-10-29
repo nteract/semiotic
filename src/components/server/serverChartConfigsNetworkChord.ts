@@ -1,3 +1,5 @@
+import { networkFrameDefaultMargin } from "../stream/frameDefaultMargins"
+import { resolveAxisFreeMarginDefaults } from "../charts/shared/chartMode"
 import type { Datum } from "../charts/shared/datumTypes"
 import { inferNodesFromEdges } from "../charts/shared/networkUtils"
 import {
@@ -18,6 +20,7 @@ import { resolveTheme } from "./themeResolver"
 
 export const chordDiagram: ChartConfig = {
   frameType: "network",
+  layout: { margin: (_props, resolved) => resolveAxisFreeMarginDefaults(resolved, networkFrameDefaultMargin("chord")) },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     // Match ChordDiagram HOC coloring:
     //  - colorBy → categorical scale fill
