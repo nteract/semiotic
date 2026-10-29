@@ -9,7 +9,7 @@ import PageLayout from "../components/PageLayout"
 const bundleSizeRows = Object.freeze([
   {
     "importPath": "semiotic/atlas",
-    "kb": 323,
+    "kb": 324,
     "blurb": "Motif Braid, Dependency Forest, and Flow Circuit readers"
   },
   {
@@ -29,7 +29,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/artifact",
-    "kb": 125,
+    "kb": 126,
     "blurb": "Renderer-independent contracts, claims, time, policy, grounding, and transfer audits"
   },
   {
@@ -39,7 +39,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/line",
-    "kb": 149,
+    "kb": 150,
     "blurb": "LineChart only — one-chart micro boundary"
   },
   {
@@ -49,17 +49,17 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/ordinal",
-    "kb": 138,
+    "kb": 139,
     "blurb": "BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts"
   },
   {
     "importPath": "semiotic/network",
-    "kb": 182,
+    "kb": 183,
     "blurb": "ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more"
   },
   {
     "importPath": "semiotic/network/zoom",
-    "kb": 191,
+    "kb": 192,
     "blurb": "Optional virtual network viewport, camera controls and consumer-owned LOD"
   },
   {
@@ -79,7 +79,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/geo",
-    "kb": 113,
+    "kb": 114,
     "blurb": "ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap"
   },
   {
@@ -89,7 +89,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/realtime/core",
-    "kb": 219,
+    "kb": 220,
     "blurb": "Streaming chart types, HOCs, and buffer helpers"
   },
   {
@@ -99,17 +99,17 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/server",
-    "kb": 282,
+    "kb": 284,
     "blurb": "renderChart, renderDashboard, renderToImage, renderToAnimatedGif"
   },
   {
     "importPath": "semiotic/server/node",
-    "kb": 282,
+    "kb": 284,
     "blurb": "renderChart, renderDashboard, renderToImage, renderToAnimatedGif"
   },
   {
     "importPath": "semiotic/server/edge",
-    "kb": 288,
+    "kb": 289,
     "blurb": "renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard"
   },
   {
@@ -184,7 +184,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/ai",
-    "kb": 679,
+    "kb": 680,
     "blurb": "All schema-backed charts + validation — optimized for LLM code generation"
   },
   {
@@ -209,7 +209,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic",
-    "kb": 436,
+    "kb": 437,
     "blurb": "Full chart API and shared utilities"
   }
 ])
