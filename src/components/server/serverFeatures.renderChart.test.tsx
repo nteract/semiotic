@@ -730,16 +730,16 @@ describe("renderChart", () => {
     const explicitRight = renderChart("ProcessSankey", { ...props, margin: { right: 30 } })
 
     // The HOC owns this specific legend rather than the frame auto-legend.
-    // Its default right gutter is 140px; explicit numeric margins are minima,
-    // so the legend contract still grows a smaller caller baseline.
+    // These labels need a measured 113px side gutter. Explicit numeric margins
+    // are minima, so the legend still grows a smaller caller baseline.
     expect(svg).toContain(">Intake<")
     expect(svg).toContain(">Review<")
     expect(countMatches(svg, />Intake</g)).toBe(1)
     expect(countMatches(svg, />Review</g)).toBe(1)
-    expect(svg).toContain('class="semiotic-legend" transform="translate(270,8)"')
-    expect(explicitRight).toContain('class="semiotic-legend" transform="translate(270,8)"')
+    expect(svg).toContain('class="semiotic-legend" transform="translate(297,8)"')
+    expect(explicitRight).toContain('class="semiotic-legend" transform="translate(297,8)"')
     for (const [position, minimum] of [
-      ["right", 140], ["left", 140], ["top", 50], ["bottom", 80],
+      ["right", 113], ["left", 113], ["top", 50], ["bottom", 80],
     ] as const) {
       const { evidence } = renderChartWithEvidence("ProcessSankey", {
         ...props, legendPosition: position, margin: { [position]: 30 },

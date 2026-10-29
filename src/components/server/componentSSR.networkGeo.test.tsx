@@ -199,7 +199,7 @@ describe("Component SSR — Network Charts", () => {
   })
 
   it("renderChart('ProcessSankey', …) reserves the measured legend width the HOC reserves", () => {
-    // Labels well past the 140px chart-owned floor. The server used to
+    // Labels wider than the old 140px gutter. The server used to
     // reserve exactly 140px for the band layout while the frame grew its
     // margin for the legend, so ribbons and the time axis ran under it.
     const props = {
