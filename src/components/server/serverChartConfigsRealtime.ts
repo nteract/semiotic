@@ -144,15 +144,18 @@ export const realtimeHistogram: ChartConfig = /* @__PURE__ */ Object.assign(
   {
     buildProps: (data, colorBy, colorScheme, common, rest) => {
       const rows = Array.isArray(data) ? filterSparseArray(data) : []
+      const mapped = temporalHistogram.buildProps(
+        rows,
+        colorBy,
+        colorScheme,
+        common,
+        rest
+      )
       return {
-        ...temporalHistogram.buildProps(
-          rows,
-          colorBy,
-          colorScheme,
-          common,
-          rest
-        ),
-        ...realtimeFrameProps(rows, common, rest)
+        ...mapped,
+        ...realtimeFrameProps(rows, common, rest),
+        // Histogram aggregation owns the measure: count mode ignores values.
+        valueAccessor: mapped.valueAccessor
       }
     }
   } satisfies Pick<ChartConfig, "buildProps">

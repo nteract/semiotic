@@ -9,6 +9,44 @@ const points = Array.from({ length: 12 }, (_, i) => ({
 }))
 
 describe("realtime controlled-data SSR", () => {
+  it.each(["RealtimeHistogram", "TemporalHistogram"] as const)("%s counts events even without numeric values", (component) => {
+    const { evidence } = renderChartWithEvidence(component, {
+      data: [
+        { ts: 1, amount: 20 },
+        { ts: 2 },
+        { ts: 3, amount: null },
+        { ts: 11, amount: 100 },
+        { ts: "not-a-time", amount: 30 }
+      ],
+      timeAccessor: "ts",
+      valueAccessor: "amount",
+      aggregation: "count",
+      binSize: 10,
+      extentPadding: 0,
+      showAxes: false
+    })
+    expect(evidence.status).toBe("ok")
+    expect(evidence.markCountByType.rect).toBe(2)
+    expect(evidence.yDomain).toEqual([0, 3])
+  })
+
+  it.each(["RealtimeHistogram", "TemporalHistogram"] as const)("%s still sums numeric values by default", (component) => {
+    for (const aggregation of [undefined, "sum"]) {
+      const { evidence } = renderChartWithEvidence(component, {
+        data: [{ ts: 1, amount: 20 }, { ts: 2 }, { ts: 3, amount: 30 }],
+        timeAccessor: "ts",
+        valueAccessor: "amount",
+        aggregation,
+        binSize: 10,
+        extentPadding: 0,
+        showAxes: false
+      })
+      expect(evidence.status).toBe("ok")
+      expect(evidence.markCountByType.rect).toBe(1)
+      expect(evidence.yDomain).toEqual([0, 50])
+    }
+  })
+
   it.each(["p50", "p95", "distinct"])(
     "renders %s aggregate readouts with data-mark evidence",
     (stat) => {

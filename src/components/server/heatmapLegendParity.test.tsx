@@ -1,7 +1,7 @@
 import * as React from "react"
 import { renderToString } from "react-dom/server"
 import { describe, it, expect } from "vitest"
-import { renderChart } from "./renderToStaticSVG"
+import { renderChart, renderChartWithEvidence } from "./renderToStaticSVG"
 import { Heatmap } from "../charts/xy/Heatmap"
 import { RealtimeHeatmap } from "../charts/realtime/RealtimeHeatmap"
 import { DARK_THEME } from "../ThemeProvider"
@@ -56,6 +56,24 @@ const realtimeProps = {
 }
 
 describe("heatmap gradient legends in renderChart", () => {
+  it.each(["Heatmap", "RealtimeHeatmap"] as const)("%s filters sparse rows before reading legend values", (component) => {
+    const props = component === "Heatmap" ? staticProps : realtimeProps
+    const sparseRows = new Array<(typeof props.data)[number] | null | undefined>(8)
+    sparseRows[0] = null
+    sparseRows[2] = undefined
+    props.data.forEach((row, index) => { sparseRows[index + 4] = row })
+    for (const valueAccessor of ["value", (row: { value: number }) => row.value]) {
+      const { svg, evidence } = renderChartWithEvidence(component, {
+        ...props,
+        data: sparseRows,
+        valueAccessor
+      })
+      expect(evidence.status).toBe("ok")
+      expect(evidence.markCountByType.heatcell).toBe(2)
+      expect(legendEnds(svg, component === "Heatmap" ? "value" : "count")).toEqual(["1", "3"])
+    }
+  })
+
   it("labels an aggregated Heatmap legend with the cell counts, like React", () => {
     const server = renderChart("Heatmap", staticProps)
     const react = renderToString(<Heatmap {...staticProps} />)

@@ -89,5 +89,52 @@ describe(
       expect(excluded.RealtimeWaterfallChart).toMatch(/non-additive/)
       expect(ranked.result.content[0].text).toMatch(/inferred intents: trend/)
     })
+
+    const tools = [
+      { name: "suggestStreamCharts", input: "schema", multiple: false },
+      { name: "suggestStreamDashboard", input: "schemas", multiple: false },
+      { name: "suggestStreamDashboard", input: "schemas", multiple: true }
+    ]
+
+    it.each(tools)("$name reports unknown schema and field keys (array: $multiple)", async ({ name, input, multiple }) => {
+      const schema = {
+        fields: [
+          { name: "time", kind: "date" },
+          { name: "amount", kind: "numeric", additive: true },
+          { name: "brand", kind: "categorical", cardinalty: 4 }
+        ],
+        throughpu: 10
+      }
+      const response = await sendRequest(proc, "tools/call", {
+        name,
+        arguments: { [input]: multiple ? [schema] : schema }
+      })
+      expect(response.result.isError).not.toBe(true)
+      const warnings = response.result.structuredContent.warnings.join("\n")
+      expect(warnings).toContain('unknown schema key "throughpu"')
+      expect(warnings).toContain('did you mean "throughput"?')
+      expect(warnings).toContain('field "brand" has unknown key "cardinalty"')
+      expect(warnings).toContain('did you mean "cardinality"?')
+      expect(response.result.content[0].text).toContain("throughpu")
+      expect(response.result.content[0].text).toContain("cardinalty")
+    })
+
+    it.each(tools)("$name still validates recognized schema fields (array: $multiple)", async ({ name, input, multiple }) => {
+      const field = { name: "amount", kind: "numeric" }
+      for (const schema of [
+        { fields: [{ ...field, kind: "number" }] },
+        { fields: [{ ...field, role: "measure" }] },
+        { fields: [{ ...field, cardinality: -1 }] },
+        { fields: [{ ...field, additive: "false" }] },
+        { fields: [field], throughput: "fast" },
+        { fields: [field], retention: "forever" }
+      ]) {
+        const response = await sendRequest(proc, "tools/call", {
+          name,
+          arguments: { [input]: multiple ? [schema] : schema }
+        })
+        expect(response.result.isError).toBe(true)
+      }
+    })
   }
 )

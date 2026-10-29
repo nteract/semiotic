@@ -2,6 +2,7 @@ import { resolveAxisFreeMarginDefaults } from "../charts/shared/chartMode"
 import type { Datum } from "../charts/shared/datumTypes"
 import { createColorScale, getColor, getSize, DEFAULT_COLOR } from "../charts/shared/colorUtils"
 import { getMinMax } from "../charts/shared/minMax"
+import { filterSparseArray } from "../charts/shared/sparseArray"
 import { GEO_BACKGROUND_AREA_STYLE } from "../charts/shared/geoStyleDefaults"
 import { type ChartConfig } from "./serverChartConfigShared"
 import { composeStyleRules, makeNodeRuleContext, type StyleRule } from "../charts/shared/styleRules"
@@ -22,7 +23,7 @@ function buildGeoPointBaseStyle(
   colorScheme: string | string[] | Record<string, string> | undefined,
   opts: { sizeBy?: string | ((d: Datum) => number); sizeRange?: [number, number]; pointRadius?: number; fillOpacity: number; strokeWidth: number },
 ): (d: Datum) => Datum {
-  const arr: Datum[] = Array.isArray(points) ? (points as Datum[]) : []
+  const arr: Datum[] = Array.isArray(points) ? filterSparseArray(points) : []
   let colorScale: ((v: string) => string) | undefined
   if (colorBy) {
     // createColorScale keys off a string field; project a function accessor
@@ -76,7 +77,7 @@ function buildChoroplethColorModel(
         : undefined
   let min = Infinity
   let max = -Infinity
-  for (const feature of areas as Datum[]) {
+  for (const feature of filterSparseArray(areas)) {
     const v = valAcc(feature)
     if (v == null || !isFinite(v)) continue
     if (v < min) min = v
@@ -289,7 +290,7 @@ export const flowMap: ChartConfig = {
     // behave consistently with the rest of the registry.
     const flows: Array<Datum> =
       (Array.isArray(data) ? data : null) || rest.flows || []
-    const nodes: Array<Datum> = rest.nodes || []
+    const nodes: Array<Datum> = filterSparseArray(rest.nodes)
     const nodeIdAccessor = rest.nodeIdAccessor || "id"
     const valueAccessor = rest.valueAccessor || "value"
     const xAccessorIn = rest.xAccessor || "lon"

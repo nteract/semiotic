@@ -4,6 +4,7 @@ import { composeStyleRules, type StyleRule } from "../charts/shared/styleRules"
 import { makeHeatmapRuleContext } from "../charts/shared/heatmapStyleRules"
 import { getSequentialInterpolator } from "../charts/shared/colorPalettes"
 import { getMinMax } from "../charts/shared/minMax"
+import { filterSparseArray } from "../charts/shared/sparseArray"
 import type { GradientLegendValue } from "../types/legendTypes"
 
 /**
@@ -80,7 +81,7 @@ export const heatmap: ChartConfig = {
     const legendSlot = (rest.legend ?? common.legend) as { legendDistance?: number } | undefined
     const legend = common.showLegend
       ? heatmapGradientLegend({
-          domain: getMinMax(Array.isArray(data) ? data as Datum[] : [], readValue),
+          domain: getMinMax(Array.isArray(data) ? filterSparseArray(data) : [], readValue),
           label: typeof valueAccessor === "string" ? valueAccessor : "value",
           format: rest.valueFormat as ((value: number) => string) | undefined,
           legendDistance: legendSlot?.legendDistance,

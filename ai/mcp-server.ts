@@ -4611,13 +4611,13 @@ function createServer(
           .boolean()
           .optional()
           .describe("Whether summing the measure across events is meaningful (counts, amounts, changes) or not (prices, latencies, percentages).")
-      })
+      }).passthrough()
     ),
     throughput: z.union([z.enum(["low", "medium", "high"]), z.number()]).optional(),
     retention: z.enum(["windowed", "cumulative"]).optional(),
     shape: z.enum(["append", "keyed", "aggregate"]).optional(),
     keyFields: z.array(z.string()).optional()
-  })
+  }).passthrough()
 
   srv.tool(
     "suggestStreamCharts",
