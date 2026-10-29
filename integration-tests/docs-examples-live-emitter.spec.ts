@@ -1,6 +1,8 @@
 import { expect, test, type Page } from "@playwright/test"
 import { hoverCanvasMark } from "./helpers/hoverCanvasMark"
 
+test.use({ screenshot: "only-on-failure", trace: "retain-on-failure" })
+
 async function hoverEvent(page: Page) {
   const host = page.getByTestId("live-emitter-chart")
   const canvas = host.locator("canvas").first()
@@ -34,8 +36,11 @@ for (const execution of ["sync", "worker"] as const) {
     if (execution === "worker")
       await page.getByLabel("Compare three producers", { exact: false }).check()
     const demo = page.getByTestId("live-emitter-demo")
-    await demo.getByLabel("Simulation engine").selectOption(execution)
     await demo.getByLabel("Live simulation speed").selectOption("4")
+    await demo.getByLabel("Simulation engine").selectOption(execution)
+    // Wait for worker startup with the final paused configuration before
+    // starting the workload at 4× speed.
+    await expect(demo.getByTestId("live-execution")).toHaveText(execution)
     await demo
       .getByRole("button", { name: "Start live stream", exact: true })
       .click()

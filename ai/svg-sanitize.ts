@@ -464,8 +464,13 @@ function sanitizeSvgNode(
 }
 
 // Static rendering and schema operations must not pay the DOM startup cost.
-// Keep parsing in the isolated widget child's enforced sanitization budget.
+// Widget operations initialize it inside their whole-operation deadline, then
+// process the untrusted SVG inside the separate sanitization-stage budget.
 let jsdomModulePromise: Promise<typeof import("jsdom")> | null = null
+
+export async function initializeSvgSanitizer(): Promise<void> {
+  await (jsdomModulePromise ??= import("jsdom"))
+}
 
 /** Build a fresh, inert SVG tree for the widget's innerHTML boundary. */
 export async function sanitizeSvgForWidget(svg: string): Promise<string> {

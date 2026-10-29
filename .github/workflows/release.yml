@@ -154,12 +154,26 @@ jobs:
         with:
           ref: ${{ github.sha }}
           path: .release-validation
-          sparse-checkout: integration-tests/docs-examples-contract.spec.ts
+          sparse-checkout: |
+            integration-tests/docs-examples-contract.spec.ts
+            integration-tests/docs-examples-novel-network-lab.spec.ts
+            integration-tests/docs-examples-last-scarcity-theme.spec.ts
+            integration-tests/docs-examples-live-emitter.spec.ts
           sparse-checkout-cone-mode: false
           persist-credentials: false
 
-      - name: Use current manifest evidence harness against tagged source
-        run: cp .release-validation/integration-tests/docs-examples-contract.spec.ts integration-tests/docs-examples-contract.spec.ts
+      - name: Use current browser validation harness against tagged source
+        run: |
+          cp .release-validation/integration-tests/docs-examples-contract.spec.ts integration-tests/docs-examples-contract.spec.ts
+          if [ -f integration-tests/docs-examples-novel-network-lab.spec.ts ]; then
+            cp .release-validation/integration-tests/docs-examples-novel-network-lab.spec.ts integration-tests/docs-examples-novel-network-lab.spec.ts
+          fi
+          if [ -f integration-tests/docs-examples-last-scarcity-theme.spec.ts ]; then
+            cp .release-validation/integration-tests/docs-examples-last-scarcity-theme.spec.ts integration-tests/docs-examples-last-scarcity-theme.spec.ts
+          fi
+          if [ -f integration-tests/docs-examples-live-emitter.spec.ts ]; then
+            cp .release-validation/integration-tests/docs-examples-live-emitter.spec.ts integration-tests/docs-examples-live-emitter.spec.ts
+          fi
 
       - name: Use Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
@@ -186,7 +200,7 @@ jobs:
       # The pinned Playwright image supplies browsers and OS dependencies.
       # Keep release validation independent of Ubuntu package mirror updates.
       - name: Run docs example source tests
-        run: npm run test:examples:source
+        run: npm run test:examples:source -- --max-failures=1 --reporter=line
 
       - name: Upload local docs example contract evidence
         if: always()

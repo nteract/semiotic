@@ -9,7 +9,7 @@
       "summary": "Compare three totals in React, inspect their exact values, and verify the server-rendered bar geometry.",
       "route": "/tasks/compare-category-totals",
       "packageVersion": "3.13.3",
-      "sourceRevision": "sha256:5c157ec4d2aa90998103d6f7637c10ddbca5093951c534fbf458f370d0196778",
+      "sourceRevision": "sha256:75888f416ac915209fd27384d63267474119c5ba7ce9c9e04149427a245105f6",
       "markdown": "/tasks/compare-category-totals.md",
       "json": "/tasks/compare-category-totals.json",
       "evidenceStatus": "stale"
@@ -20,7 +20,7 @@
       "summary": "Maintain a bounded window of incoming records, apply corrections, and reconcile the display after reconnecting.",
       "route": "/tasks/update-live-chart",
       "packageVersion": "3.13.3",
-      "sourceRevision": "sha256:e79ef556da50a94ac8181f4eb71e59e7b57ca7929df7512cd91a23a2c507f8b4",
+      "sourceRevision": "sha256:ffd622c4b11bdc8d79f752fb511ffd5015a12eba5536ca2f1500c5055426b759",
       "markdown": "/tasks/update-live-chart.md",
       "json": "/tasks/update-live-chart.json",
       "evidenceStatus": "stale"
@@ -31,7 +31,7 @@
       "summary": "Apply a source correction, replace affected claims explicitly, and preserve the context a later reader needs.",
       "route": "/tasks/correct-published-chart",
       "packageVersion": "3.13.3",
-      "sourceRevision": "sha256:2d4c4016d3c48d0863373059165d8a903a2f482727834deb01e7e95a22f7f88b",
+      "sourceRevision": "sha256:686ee66895923721d4322f04257eed7f1d8d0024b2f44acaed785d524add2c33",
       "markdown": "/tasks/correct-published-chart.md",
       "json": "/tasks/correct-published-chart.json",
       "evidenceStatus": "stale"

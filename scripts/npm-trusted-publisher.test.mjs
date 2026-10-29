@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { spawnSync } from "node:child_process"
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 import { test } from "node:test"
@@ -546,11 +546,54 @@ test("manual browser recovery uses the workflow harness against tagged applicati
   const docs = workflow.split("  docs-examples:")[1].split("  publish:")[0]
   assert.match(docs, /name: Checkout tagged source[\s\S]*?ref: \$\{\{ env.RELEASE_TAG \}\}/)
   assert.match(docs, /name: Checkout release validation harness[\s\S]*?ref: \$\{\{ github.sha \}\}/)
-  assert.match(docs, /sparse-checkout: integration-tests\/docs-examples-contract.spec.ts/)
-  assert.match(docs, /run: cp \.release-validation\/integration-tests\/docs-examples-contract.spec.ts integration-tests\/docs-examples-contract.spec.ts/)
-  assert.ok(docs.indexOf("run: cp ") < docs.indexOf("run: npm run test:examples:source"))
+  const harnessFiles = [
+    "integration-tests/docs-examples-contract.spec.ts",
+    "integration-tests/docs-examples-novel-network-lab.spec.ts",
+    "integration-tests/docs-examples-last-scarcity-theme.spec.ts",
+    "integration-tests/docs-examples-live-emitter.spec.ts",
+  ]
+  const sparse = /sparse-checkout: \|\n([\s\S]*?)\n\s+sparse-checkout-cone-mode:/.exec(docs)?.[1]
+  assert.deepEqual(sparse?.trim().split("\n").map((line) => line.trim()), harnessFiles)
+  const copies = [...docs.matchAll(/^\s+cp \.release-validation\/(\S+) (\S+)$/gm)]
+  assert.deepEqual(copies.map(([, source, target]) => [source, target]), harnessFiles.map((file) => [file, file]))
+  assert.ok(docs.indexOf(copies[0][0]) < docs.indexOf("run: npm run test:examples:source"))
+  assert.match(docs, /run: npm run test:examples:source -- --max-failures=1 --reporter=line/)
   const publish = workflow.split("  publish:")[1]
   assert.doesNotMatch(publish, /run: cp \.release-validation/)
+})
+
+test("browser recovery updates existing tests without adding a newer example to an older tag", () => {
+  const workflow = readFileSync(new URL("../.github/workflows/release.yml", import.meta.url), "utf8")
+  const script = /name: Use current browser validation harness against tagged source\n\s+run: \|([\s\S]*?)(?=\n\s{6}- name:)/.exec(workflow)?.[1]
+  assert.ok(script)
+  const regressions = ["novel-network-lab", "last-scarcity-theme", "live-emitter"]
+  for (let mask = 0; mask < 2 ** regressions.length; mask++) {
+    const included = regressions.filter((_, index) => mask & (1 << index))
+    const root = mkdtempSync(join(tmpdir(), "semiotic-browser-recovery-"))
+    try {
+      mkdirSync(join(root, ".release-validation/integration-tests"), { recursive: true })
+      mkdirSync(join(root, "integration-tests"))
+      for (const name of ["contract", ...regressions]) {
+        writeFileSync(join(root, `.release-validation/integration-tests/docs-examples-${name}.spec.ts`), `current ${name}`)
+      }
+      writeFileSync(join(root, "integration-tests/docs-examples-contract.spec.ts"), "tagged contract")
+      for (const name of included) {
+        writeFileSync(join(root, `integration-tests/docs-examples-${name}.spec.ts`), `tagged ${name}`)
+      }
+      writeFileSync(join(root, "application.ts"), "immutable tagged application")
+      const result = spawnSync("sh", ["-eu", "-c", script], { cwd: root, encoding: "utf8" })
+      assert.equal(result.status, 0, result.stderr)
+      assert.equal(readFileSync(join(root, "integration-tests/docs-examples-contract.spec.ts"), "utf8"), "current contract")
+      for (const name of regressions) {
+        const file = join(root, `integration-tests/docs-examples-${name}.spec.ts`)
+        assert.equal(existsSync(file), included.includes(name))
+        if (included.includes(name)) assert.equal(readFileSync(file, "utf8"), `current ${name}`)
+      }
+      assert.equal(readFileSync(join(root, "application.ts"), "utf8"), "immutable tagged application")
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  }
 })
 
 test("release dependency installs retry transient package-download failures", () => {
