@@ -152,24 +152,27 @@ describe("static/runtime parity regressions", () => {
     expect(svg).toContain(">100</text>")
   })
 
-  it("keeps radial ordinal background graphics at the plot origin", () => {
-    const svg = renderOrdinalToStaticSVG({
-      chartType: "donut",
-      projection: "radial",
-      data: [{ category: "A", value: 1 }],
-      oAccessor: "category",
-      rAccessor: "value",
-      _idPrefix: "runtime",
-      backgroundGraphics: <rect id="radial-background" x={0} y={0} width={20} height={20} />,
-      size: [300, 240],
-    })
-    // Direct static frames now share the live ordinal chrome-safe margin, so
-    // the absolute radial center and counter-transform use that same plot.
-    expect(svg).toContain('transform="translate(165,115)"')
-    expect(svg).toContain(
-      '<g transform="translate(-95,-65)"><rect id="runtime-radial-background"'
-    )
-  })
+  it.each(["pie", "donut"] as const)(
+    "keeps %s background graphics at the axis-free plot origin",
+    (chartType) => {
+      const svg = renderOrdinalToStaticSVG({
+        chartType,
+        projection: "radial",
+        data: [{ category: "A", value: 1 }],
+        oAccessor: "category",
+        rAccessor: "value",
+        _idPrefix: "runtime",
+        backgroundGraphics: <rect id="radial-background" x={0} y={0} width={20} height={20} />,
+        size: [300, 240],
+      })
+      // A 10px inset leaves a 280×220 plot. Marks use its center while the
+      // background counter-transform returns graphics to the (10,10) origin.
+      expect(svg).toContain('transform="translate(150,120)"')
+      expect(svg).toContain(
+        '<g transform="translate(-140,-110)"><rect id="runtime-radial-background"'
+      )
+    }
+  )
 
   it("inserts gauge overlays before the outer SVG close when center content contains SVG", () => {
     const svg = renderChart("GaugeChart", {

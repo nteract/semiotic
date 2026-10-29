@@ -572,12 +572,11 @@ describe("Component SSR — Ordinal Charts", () => {
       height: 400,
     })
 
-    // HOC primary margins are 70/50/40/60 plus DonutChart's default category
-    // legend on the right, placing the radial center at (278.5, 50 + 290 / 2)
-    // like the React chart rather than staticOrdinal's generic center.
-    expect(svg).toContain('transform="translate(278.5,195)"')
-    expect(svg).toContain("legend")
-    expect(svg).toContain("<foreignObject")
+    // The HOC uses a 10px inset; the default right legend grows that side to
+    // 113px, leaving a 477×380 plot centered at (248.5,200).
+    expect(svg).toContain('transform="translate(248.5,200)"')
+    expect(svg).toContain('class="semiotic-legend" transform="translate(497,10)"')
+    expect(svg).toContain('<foreignObject x="10" y="10" width="477" height="380"')
     expect(svg).toContain("Total: 100")
     // The explicit hole size is still reflected in the d3 arc command.
     expect(svg).toContain("A80,80")
