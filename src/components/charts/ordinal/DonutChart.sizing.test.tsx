@@ -68,11 +68,16 @@ async function flushFrames() {
 }
 
 describe("DonutChart sizing in short containers", () => {
-  // A wide, short dashboard card: the default margins leave a ~110px-tall
-  // plot, so the outer radius (51px) is smaller than the requested hole.
-  it.each([12, 400])("keeps a pushed %i-slice ring inside an 850x220 plot", async (count) => {
+  // The 10px inset leaves an 830×200 plot with a 96px outer radius.
+  // A 70px hole now fits; an oversized request still needs the 12px fallback band.
+  it.each([
+    { count: 12, innerRadius: 70, expectedInnerRadius: 70 },
+    { count: 400, innerRadius: 70, expectedInnerRadius: 70 },
+    { count: 12, innerRadius: 120, expectedInnerRadius: 84 },
+    { count: 400, innerRadius: 120, expectedInnerRadius: 84 },
+  ])("keeps a pushed $count-slice ring with a $innerRadius px hole inside an 850x220 plot", async ({ count, innerRadius, expectedInnerRadius }) => {
     const ref = React.createRef<RealtimeFrameHandle>()
-    render(<DonutChart ref={ref} width={850} height={220} innerRadius={70} showLegend={false} />)
+    render(<DonutChart ref={ref} width={850} height={220} innerRadius={innerRadius} showLegend={false} />)
     await act(async () => {
       ref.current?.pushMany(rows(count))
     })
@@ -80,9 +85,12 @@ describe("DonutChart sizing in short containers", () => {
 
     const scene = lastPaintedScene()
     expectRingInsidePlot(scene)
-    expect(scene.wedges[0].outerRadius).toBe(51)
-    // The hole that cannot fit falls back to a readable band, not an inverted ring.
-    expect(scene.wedges[0].innerRadius).toBe(51 - 12)
+    expect(scene.width).toBe(830)
+    expect(scene.height).toBe(200)
+    for (const wedge of scene.wedges) {
+      expect(wedge.outerRadius).toBe(96)
+      expect(wedge.innerRadius).toBe(expectedInnerRadius)
+    }
   })
 
   it.each([
@@ -105,12 +113,12 @@ describe("DonutChart sizing in short containers", () => {
     expect(wedges[0].innerRadius).toBe(40)
   })
 
-  it("never produces a negative radius when chrome consumes the plot", async () => {
-    render(<PieChart data={rows(5)} width={300} height={100} showLegend={false} />)
+  it("never produces a negative radius when explicit margins consume the plot", async () => {
+    render(<PieChart data={rows(5)} width={300} height={100} margin={{ top: 60, bottom: 60 }} showLegend={false} />)
     await flushFrames()
     const { wedges } = lastPaintedScene()
     for (const wedge of wedges) {
-      expect(wedge.outerRadius).toBeGreaterThanOrEqual(0)
+      expect(wedge.outerRadius).toBe(0)
       expect(wedge.innerRadius).toBe(0)
     }
   })
