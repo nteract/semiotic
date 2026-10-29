@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.13.3] - 2026-10-29
+
 ### Added
 
 - Compositional `routing: "terminals"` for applications drawing their own curves, and `routing: "bump"` with shared paint/metric geometry. Same-owner connections default to routing opt-out; per-edge `route` hints preserve trace identities without routing costs.
@@ -27,6 +29,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Pie and donut charts use padding without reserving space for axes. Sankey,
+  tree, and ProcessSankey charts use smaller side margins with labels fitted
+  inside the plot; treemap layouts keep their compact cell padding. React,
+  direct Stream Frames, and server rendering share the matching defaults.
+- Chart error boundaries recover when data, props, or dimensions change after
+  a rendering failure, preserving the intended chart size during recovery.
+- Streaming replacements and retention preserve edited extents, pointer detail,
+  and keyboard focus. Aggregation, waterfall carry-in, and freshness updates
+  stay consistent as retained data changes.
+- MCP stream schemas retain unknown keys for typo warnings. Heatmap legends
+  tolerate sparse input, and server-rendered realtime histograms preserve
+  count aggregation for rows without numeric values.
+- Patched the Hono Node adapter and Seroval dependencies.
+- Line charts preserve series whose names match JavaScript prototype keys and
+  retain zero-value gaps through function accessors and copied rows.
+- Annotations preserve zero coordinates and skip brackets whose positions
+  cannot be resolved. Value domains can round to ticks from the final layout.
+- Touch interactions retain inspected detail through compatibility mouse
+  events, and chart marks retain their native accessible names.
 - Stream chart suggestions read the schema more faithfully:
   - A `keyFields` column is now a category candidate, so a keyed table gets a
     bar per key instead of only BigNumber or GaugeChart. An explicit

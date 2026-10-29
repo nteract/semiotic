@@ -26,15 +26,16 @@ evidence scope; source availability does not establish installed or deployed par
 <img src="./docs/public/assets/img/semiotic-release-dashboard.svg" alt="Semiotic release dashboard showing chart count, bundle sizes, capability coverage, chart families, and documentation growth" width="100%">
 <!-- semiotic-readme-dashboard:end -->
 
-## What's New in 3.13.2
+## What's New in 3.13.3
 
-3.13.2 fixes nested theme inheritance and prop updates, preserves mark opacity
-across selection, staleness, and animation, and reduces tooltip measurement
-work. Network charts improve edge picking and camera updates, with a camera
-handle available during layout commits. Release artifact preparation also
-supports renamed checkouts and retrying failed builds.
+3.13.3 improves streaming chart suggestions with field cardinality, additivity,
+and schema warnings, and adds count aggregation for realtime histograms.
+Streaming charts preserve extents, hover detail, and keyboard focus as data
+changes. Pie, donut, and network charts use more of their available space,
+with matching server rendering. This release also improves chart error
+recovery, legend fitting, heatmap colors, and compositional routing.
 
-See [the changelog](CHANGELOG.md#3132) for the complete fixes and additions.
+See [the changelog](CHANGELOG.md#3133---2026-10-29) for the complete fixes and additions.
 
 ## Why Semiotic
 
