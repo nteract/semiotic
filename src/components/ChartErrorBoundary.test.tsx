@@ -1,5 +1,12 @@
 import * as React from "react"
-import { act, fireEvent, render, screen } from "@testing-library/react"
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within
+} from "@testing-library/react"
 import { renderToString } from "react-dom/server"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { ChartErrorBoundary } from "./ChartErrorBoundary"
@@ -60,7 +67,7 @@ describe("chart error recovery", () => {
     expect(screen.getByText("Corrected chart")).toBeVisible()
   })
 
-  it("contains errors in chart wrapper accessors and recovers with corrected props", () => {
+  it("contains errors in chart wrapper accessors and recovers with corrected props", async () => {
     const data = [{ category: "A", value: 12 }]
     const brokenColor = () => {
       throw new Error("Invalid color field")
@@ -77,7 +84,23 @@ describe("chart error recovery", () => {
       <BarChart data={data} colorBy="category" width={320} height={180} />
     )
     expect(screen.queryByRole("alert")).toBeNull()
-    expect(view.container.querySelector("canvas")).not.toBeNull()
+    await waitFor(() =>
+      expect(view.container.querySelector("canvas")).toHaveAttribute(
+        "aria-label",
+        "bar chart, 1 bar"
+      )
+    )
+    fireEvent.click(
+      await screen.findByRole("button", { name: /View data summary/ })
+    )
+    const table = await screen.findByRole("table")
+    expect(within(table).getAllByRole("row")).toHaveLength(2)
+    expect(within(table).getByRole("cell", { name: "A" })).toHaveTextContent(
+      "A"
+    )
+    expect(within(table).getByRole("cell", { name: "12" })).toHaveTextContent(
+      "12"
+    )
   })
 
   it.each([
@@ -313,7 +336,7 @@ describe("chart error recovery", () => {
     ],
     [
       "physics",
-      <GaltonBoardChart key="physics" data={[{ value: 1 }]} paused />
+      <GaltonBoardChart key="physics" data={[{ value: 1 }]} bins={1} paused />
     ],
     [
       "realtime",
@@ -328,7 +351,7 @@ describe("chart error recovery", () => {
     ["value", <BigNumber key="value" value={42} />]
   ] as const)(
     "contains failures in %s loading content and renders corrected inputs",
-    (_family, chart) => {
+    async (family, chart) => {
       const view = render(
         React.cloneElement(chart, {
           loading: true,
@@ -338,8 +361,31 @@ describe("chart error recovery", () => {
       expect(screen.getByRole("alert")).toHaveTextContent("Invalid payload")
       view.rerender(chart)
       expect(screen.queryByRole("alert")).toBeNull()
-      if (_family === "value") expect(view.container).toHaveTextContent("42")
-      else expect(view.container.querySelector("canvas")).not.toBeNull()
+      if (family === "value") {
+        expect(view.container).toHaveTextContent("42")
+      } else if (family === "physics") {
+        fireEvent.click(
+          await screen.findByRole("button", { name: /View data summary/ })
+        )
+        const table = await screen.findByRole("table")
+        expect(
+          within(table).getByRole("cell", { name: "bin 1: 1" })
+        ).toHaveTextContent("bin 1: 1")
+      } else {
+        const expectedScenes = {
+          XY: "scatter chart, 1 point",
+          ordinal: "bar chart, 1 bar",
+          network: "Network chart, 2 nodes, 1 edge",
+          geo: "Geographic chart, 1 point",
+          realtime: "line chart, 1 line"
+        }
+        await waitFor(() =>
+          expect(view.container.querySelector("canvas")).toHaveAttribute(
+            "aria-label",
+            expectedScenes[family]
+          )
+        )
+      }
     }
   )
 
