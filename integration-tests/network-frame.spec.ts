@@ -1,5 +1,31 @@
-import { test, expect } from "@playwright/test"
-import { waitForChartReady, waitForRafs } from "./helpers"
+import { test, expect, type Locator } from "@playwright/test"
+import { waitForChartReady, waitForRafs, expectTooltipWithinPlot } from "./helpers"
+
+async function hoverPaintedForceNode(chart: Locator) {
+  await chart.scrollIntoViewIfNeeded()
+  await waitForRafs(chart.page())
+  const canvas = chart.locator("canvas").first()
+  // Pick a real purple node in the fixture, independent of layout margins.
+  const point = await canvas.evaluate((element: HTMLCanvasElement) => {
+    const { width, height } = element
+    const pixels = element.getContext("2d")!.getImageData(0, 0, width, height).data
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const i = (y * width + x) * 4
+        if (pixels[i + 3] > 250 &&
+          Math.abs(pixels[i] - 172) < 3 &&
+          Math.abs(pixels[i + 1] - 88) < 3 &&
+          Math.abs(pixels[i + 2] - 229) < 3) {
+          return { x: x / width, y: (y + 4) / height }
+        }
+      }
+    }
+    throw new Error("Force graph has no painted purple node")
+  })
+  const box = await canvas.boundingBox()
+  if (!box) throw new Error("Force graph canvas has no bounding box")
+  await chart.page().mouse.move(box.x + point.x * box.width, box.y + point.y * box.height)
+}
 
 test.describe("Network Charts - Force-Directed", () => {
   test.beforeEach(async ({ page }) => {
@@ -25,20 +51,27 @@ test.describe("Network Charts - Force-Directed", () => {
     await waitForChartReady(page, "network-force-hover")
 
     const testCase = page.locator('[data-testid="network-force-hover"]')
-    const canvas = testCase.locator("canvas").first()
-    const box = await canvas.boundingBox()
-    if (box) {
-      // Hover near the center of the chart where nodes cluster
-      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
-      await waitForRafs(page)
+    const tooltip = testCase.locator(".stream-network-tooltip")
+    const margin = { left: 40, right: 40, top: 40, bottom: 40 }
+    await hoverPaintedForceNode(testCase)
+    await expect(tooltip).toContainText(/Node [A-E]/)
+    await expectTooltipWithinPlot(testCase, margin)
+    const content = await tooltip.innerText()
 
-      await expect(testCase).toHaveScreenshot(
-        "network-force-hover-state.png",
-        // Same host-dependent AA variance as the static force graph above,
-        // plus the hover tooltip — keep the tolerance aligned.
-        { maxDiffPixels: 900 }
-      )
-    }
+    await expect(testCase).toHaveScreenshot(
+      "network-force-hover-state.png",
+      // Same host-dependent AA variance as the static force graph above,
+      // plus the hover tooltip — keep the tolerance aligned.
+      { maxDiffPixels: 900 }
+    )
+    await expect(tooltip).toHaveText(content, { useInnerText: true })
+
+    await page.setViewportSize({ width: 720, height: 700 })
+    await hoverPaintedForceNode(testCase)
+    await expect(tooltip).toHaveText(content, { useInnerText: true })
+    await expectTooltipWithinPlot(testCase, margin)
+    await page.mouse.move(0, 0)
+    await expect(tooltip).toBeHidden()
   })
 })
 
