@@ -2,9 +2,15 @@ import { expect, test, type Page } from "@playwright/test"
 import { collectBrowserErrors } from "./helpers/browser"
 import { expectThemeRoundTrip } from "./helpers/themeRoundTrip"
 
+test.use({ screenshot: "only-on-failure", trace: "retain-on-failure" })
+
 const ROUTE = "/examples/the-last-scarcity#flood"
 
 async function readThemePaints(page: Page) {
+  // The theme toggle scrolls to the header, which restores the prologue's
+  // different diagram. Sample the same chapter map on every theme read.
+  await page.locator("#flood").scrollIntoViewIfNeeded()
+  await expect(page.locator(".ls-palace-svg text").first()).toBeVisible()
   return page.locator(".last-scarcity").evaluate((root) => {
     const sample = (selector: string) => {
       const node = document.querySelector(selector)
@@ -34,7 +40,7 @@ async function readThemePaints(page: Page) {
       explicitLightSurfaces,
       wheel: sample("#empty-office svg circle"),
       courtLabel: sample("#court svg text"),
-      palaceLabel: sample(".ls-palace svg text"),
+      palaceLabel: sample(".ls-palace-svg text"),
       gauntletBackdrop: sample("#agon .stream-frame-background__backdrop"),
     }
   })

@@ -1,4 +1,4 @@
-import { sanitizeSvgForWidget } from "./svg-sanitize"
+import { initializeSvgSanitizer, sanitizeSvgForWidget } from "./svg-sanitize"
 /**
  * Semiotic MCP Server
  *
@@ -1760,6 +1760,10 @@ async function renderInteractiveChart(
   )
   let svg: string
   try {
+    // Loading the optional DOM runtime has a fixed cold-start cost on every
+    // disposable child. The parent still enforces its whole-operation deadline;
+    // reserve the SVG stage's budget for processing the actual chart input.
+    await initializeSvgSanitizer()
     svg = await runRenderStep(
       "interactive SVG sanitization",
       limits.maxInteractiveSanitizeMs,

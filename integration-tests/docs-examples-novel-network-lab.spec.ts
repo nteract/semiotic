@@ -2,13 +2,20 @@ import { test, expect, type Page, type Locator } from "@playwright/test"
 import AxeBuilder from "@axe-core/playwright"
 import { expectCanvasPainted } from "./helpers"
 
+test.use({ screenshot: "only-on-failure", trace: "retain-on-failure" })
+
 const route = "/examples/novel-network-lab"
 const tooltip = (page: Page) =>
   page
     .locator(".stream-network-tooltip, .stream-physics-tooltip")
     .filter({ visible: true })
 
-async function moveToNode(page: Page, pane: Locator, view: string) {
+async function hoverCopyMark(
+  page: Page,
+  pane: Locator,
+  view: string,
+  kind: "node" | "incoming-edge" = "node"
+) {
   // Expansion and view changes resize the host before the chart catches up.
   // Wait for its measured width before locating a mark in the rendered output.
   const minimum =
@@ -36,8 +43,8 @@ async function moveToNode(page: Page, pane: Locator, view: string) {
     .filter({ hasText: /^Copy$/ })
     .first()
   await label.scrollIntoViewIfNeeded()
-  // Scroll before sampling the canvas: scrolling can update responsive layout,
-  // and the sampled pixel must be in the current viewport coordinate system.
+  // Scroll before projecting the mark: scrolling can update responsive layout,
+  // and the pointer must use the current viewport coordinate system.
   await label.evaluate((element) => {
     const box = element.getBoundingClientRect()
     window.scrollBy(0, box.y + box.height / 2 - innerHeight / 2)
@@ -48,78 +55,45 @@ async function moveToNode(page: Page, pane: Locator, view: string) {
         requestAnimationFrame(() => requestAnimationFrame(resolve))
       )
   )
+  if (view === "force" || view === "sankey") {
+    // Locate the node from its rendered label, including the SVG's current
+    // margin/resize transform. The fixture uses 14px Sankey bars; Force labels
+    // sit 4px above circles whose minimum radius is 6px. Neither placement
+    // depends on exact canvas colors or identical rasterization across frames.
+    await expect.poll(async () => {
+      const point = await label.evaluate((element: SVGTextElement, { view, kind }) => {
+        const matrix = element.getScreenCTM()
+        if (!matrix) return null
+        let x = Number(element.getAttribute("x"))
+        let y = Number(element.getAttribute("y"))
+        if (view === "sankey") {
+          x += element.getAttribute("text-anchor") === "start" ? -13 : 13
+          // Half the 14px bar plus 4px puts the pointer inside its incoming band.
+          if (kind === "incoming-edge") x -= 11
+        } else {
+          y += 10
+        }
+        const node = new DOMPoint(x, y).matrixTransform(matrix)
+        return { x: node.x, y: node.y }
+      }, { view, kind })
+      if (!point) return "Copy label has no rendered transform"
+      await page.mouse.move(point.x, point.y)
+      // Let the frame's pointer coalescer and React tooltip commit process this
+      // real mouse event before testing the semantic result.
+      await page.evaluate(() => new Promise((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(resolve))))
+      return (await tooltip(page).allTextContents()).join("\n")
+    }, {
+      message: `Painted Copy ${kind} in ${view} must expose its ledger tooltip`,
+      intervals: [50]
+    }).toMatch(kind === "node"
+      ? /^Copy[\s\S]*63 visits/
+      : /^Editor → Copy[\s\S]*45 handoffs/)
+    return
+  }
   const box = (await label.boundingBox())!
   let x = box.x + box.width / 2,
     y = box.y + box.height / 2
-  let left = x
-  if (view === "force" || view === "sankey") {
-    // Locate the pinned Copy circle or rectangle in the actual canvas. Other
-    // review nodes are dimmed, so only Copy uses the opaque department color.
-    const canvas = pane.locator("canvas").first()
-    const readPixel = () =>
-      canvas.evaluate((element: HTMLCanvasElement) => {
-        const hex = getComputedStyle(element)
-          .getPropertyValue("--semiotic-category-3")
-          .trim()
-        const rgb = [1, 3, 5].map((offset) =>
-          parseInt(hex.slice(offset, offset + 2), 16)
-        )
-        const { data } = element
-          .getContext("2d")!
-          .getImageData(0, 0, element.width, element.height)
-        let sx = 0,
-          sy = 0,
-          count = 0,
-          left = element.width
-        for (let i = 0; i < data.length; i += 4) {
-          if (
-            data[i] === rgb[0] &&
-            data[i + 1] === rgb[1] &&
-            data[i + 2] === rgb[2] &&
-            data[i + 3] === 255
-          ) {
-            sx += (i / 4) % element.width
-            sy += Math.floor(i / 4 / element.width)
-            left = Math.min(left, (i / 4) % element.width)
-            count++
-          }
-        }
-        const rect = element.getBoundingClientRect()
-        return {
-          count,
-          x: rect.x + ((sx / count) * rect.width) / element.width,
-          y: rect.y + ((sy / count) * rect.height) / element.height,
-          left: rect.x + (left * rect.width) / element.width
-        }
-      })
-    // Matching canvas width does not mean the resize transition is finished.
-    // A point sampled mid-transition can be empty by the time mousemove arrives.
-    let previous: Awaited<ReturnType<typeof readPixel>> | undefined
-    let settled = 0
-    await expect
-      .poll(
-        async () => {
-          const pixel = await readPixel()
-          settled =
-            pixel.count > 100 &&
-            previous &&
-            pixel.count === previous.count &&
-            Math.hypot(pixel.x - previous.x, pixel.y - previous.y) < 0.25
-              ? settled + 1
-              : 0
-          previous = pixel
-          x = pixel.x
-          y = pixel.y
-          left = pixel.left
-          return settled
-        },
-        {
-          message: "Pinned Copy node must settle after resize",
-          intervals: [50]
-        }
-      )
-      .toBeGreaterThanOrEqual(3)
-  }
   if (view === "braid") y -= 24
   if (view === "circuit") y += 23
   if (view === "chord") {
@@ -132,7 +106,6 @@ async function moveToNode(page: Page, pane: Locator, view: string) {
     y += ((cy - y) * 28) / length
   }
   await page.mouse.move(x, y)
-  return { x, y, left }
 }
 
 test("all eight readers use the ledger and expose real mark tooltips", async ({
@@ -156,7 +129,7 @@ test("all eight readers use the ledger and expose real mark tooltips", async ({
       .selectOption(view)
     const pane = page.locator(`.novel-pane[data-view="${view}"]`)
     await expectCanvasPainted(pane.locator("canvas").first())
-    await moveToNode(page, pane, view)
+    await hoverCopyMark(page, pane, view)
     await expect(tooltip(page).first(), view).toContainText("Copy")
     if (view !== "atlas")
       await expect(tooltip(page).first(), view).toContainText("63 visits")
@@ -193,9 +166,9 @@ test("all eight readers use the ledger and expose real mark tooltips", async ({
     .getByRole("combobox", { name: "View A", exact: true })
     .selectOption("sankey")
   const sankey = page.locator('.novel-pane[data-view="sankey"]')
-  const copy = await moveToNode(page, sankey, "sankey")
-  // The incoming Editor ribbon occupies the center of Copy's left boundary.
-  await page.mouse.move(copy.left - 4, copy.y)
+  // Re-read the ribbon's rendered position; resize/intro animation may have
+  // moved it since the preceding node hover.
+  await hoverCopyMark(page, sankey, "sankey", "incoming-edge")
   await expect(tooltip(page).first()).toContainText(
     "Editor → Copy: 45 handoffs"
   )
@@ -205,7 +178,7 @@ test("all eight readers use the ledger and expose real mark tooltips", async ({
     .getByRole("combobox", { name: "View A", exact: true })
     .selectOption("circuit")
   const circuit = page.locator('.novel-pane[data-view="circuit"]')
-  await moveToNode(page, circuit, "circuit")
+  await hoverCopyMark(page, circuit, "circuit")
   await expect(tooltip(page).first()).toContainText(
     "Queue and capacity: unmeasured"
   )
@@ -219,7 +192,7 @@ test("all eight readers use the ledger and expose real mark tooltips", async ({
       requestAnimationFrame(() => requestAnimationFrame(resolve)))
   )
   await expect(tooltip(page)).toHaveCount(0)
-  await moveToNode(page, circuit, "circuit")
+  await hoverCopyMark(page, circuit, "circuit")
   await expect(tooltip(page).first()).toContainText("63 visits")
   await page.keyboard.press("Escape")
   await expect(tooltip(page)).toHaveCount(0)
@@ -269,9 +242,19 @@ for (const view of ["force", "sankey"]) {
     await page.getByRole("button", { name: "Expand A", exact: true }).click()
     await page.getByRole("combobox", { name: "View A", exact: true }).selectOption(view)
     const pane = page.locator(`.novel-pane[data-view="${view}"]`)
+    // The same theme color expressed as RGB is valid CSS. Hover targeting must
+    // work with it too; a hex-only canvas pixel locator cannot find this mark.
+    await pane.evaluate((element: HTMLElement) => {
+      const swatch = document.createElement("span")
+      swatch.style.color = "var(--semiotic-category-3)"
+      element.append(swatch)
+      const color = getComputedStyle(swatch).color
+      swatch.remove()
+      element.style.setProperty("--semiotic-category-3", color)
+    })
     for (const width of [980, 1280, 1100]) {
       await page.setViewportSize({ width, height: 900 })
-      const copy = await moveToNode(page, pane, view)
+      await hoverCopyMark(page, pane, view)
       await expect(tooltip(page).first()).toContainText("Copy")
       await expect(tooltip(page).first()).toContainText("63 visits")
       const box = (await tooltip(page).first().boundingBox())!
@@ -280,7 +263,7 @@ for (const view of ["force", "sankey"]) {
       await page.mouse.move(2, 2)
       await expect(tooltip(page)).toHaveCount(0)
       if (view === "sankey") {
-        await page.mouse.move(copy.left - 4, copy.y)
+        await hoverCopyMark(page, pane, view, "incoming-edge")
         await expect(tooltip(page).first()).toContainText("Editor → Copy: 45 handoffs")
         const edgeBox = (await tooltip(page).first().boundingBox())!
         expect(edgeBox.x).toBeGreaterThanOrEqual(0)
@@ -311,7 +294,7 @@ test("guided comparisons, shared pin, resize, theme and source access", async ({
   await page.getByRole("button", { name: "Expand A", exact: true }).click()
   await page.setViewportSize({ width: 980, height: 900 })
   const forest = page.locator('.novel-pane[data-view="forest"]')
-  await moveToNode(page, forest, "forest")
+  await hoverCopyMark(page, forest, "forest")
   await expect(tooltip(page).first()).toContainText("63 visits")
   await page.mouse.click(
     (await forest
@@ -328,7 +311,7 @@ test("guided comparisons, shared pin, resize, theme and source access", async ({
   )
   await page.getByRole("button", { name: /Switch to light mode/ }).click()
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light")
-  await moveToNode(page, forest, "forest")
+  await hoverCopyMark(page, forest, "forest")
   await expect(tooltip(page).first()).toContainText("Copy")
   await page.mouse.move(2, 2)
   await expect(tooltip(page)).toHaveCount(0)
