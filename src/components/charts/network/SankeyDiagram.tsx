@@ -1,4 +1,6 @@
 "use client"
+import { resolveAxisFreeMarginDefaults } from "../shared/chartMode"
+import { networkFrameDefaultMargin } from "../../stream/frameDefaultMargins"
 import { SANKEY_DIAGRAM_SIZE } from "../shared/chartSizeDefaultsNetwork"
 import type { NetworkPerspectiveProps } from "../shared/networkPerspectiveProps"
 import type { Datum } from "../shared/datumTypes"
@@ -226,7 +228,7 @@ export const SankeyDiagram = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__
     mobileSemantics: resolved.mobileSemantics,
     chartType: "SankeyDiagram",
     chartId,
-    marginDefaults: resolved.marginDefaults,
+    marginDefaults: resolveAxisFreeMarginDefaults(resolved, networkFrameDefaultMargin("sankey")),
     userMargin,
     width, height,
     hasTitle: !!title,

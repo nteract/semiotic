@@ -126,8 +126,6 @@ describe("ProcessSankey HOC", () => {
   })
 
   it.each([
-    ["right", 140],
-    ["left", 140],
     ["top", 50],
     ["bottom", 80]
   ] as const)(
@@ -149,6 +147,14 @@ describe("ProcessSankey HOC", () => {
     }
   )
 
+  it.each(["left", "right"] as const)("measures the %s legend without a fixed side gutter", (position) => {
+    render(<ProcessSankey nodes={sampleNodes} edges={sampleEdges} domain={DOMAIN}
+      colorBy="category" legendPosition={position} margin={{ [position]: 30 }} />)
+    expect(lastFrameProps?.margin[position]).toBeGreaterThan(30)
+    expect(lastFrameProps?.margin[position]).toBeLessThan(140)
+    expect(lastFrameProps?.margin[position === "left" ? "right" : "left"]).toBe(20)
+  })
+
   it("uses frameProps legendPosition while reserving its chart-owned legend", () => {
     render(
       <TooltipProvider>
@@ -163,7 +169,8 @@ describe("ProcessSankey HOC", () => {
     )
 
     expect(lastFrameProps?.legendPosition).toBe("left")
-    expect(lastFrameProps?.margin.left).toBe(140)
+    expect(lastFrameProps?.margin.left).toBeGreaterThan(30)
+    expect(lastFrameProps?.margin.left).toBeLessThan(140)
     expect(
       (lastFrameProps as unknown as Record<string, unknown>)
         ?.__legendMarginReservedFor
@@ -365,7 +372,7 @@ describe("ProcessSankey HOC", () => {
     ).toEqual(smoothedRibbon?.bezier)
   })
 
-  it("reserves vertical margin only for chrome that is rendered", () => {
+  it("reserves axis height without fixed side gutters", () => {
     const { rerender } = render(
       <TooltipProvider>
         <ProcessSankey
@@ -377,7 +384,7 @@ describe("ProcessSankey HOC", () => {
       </TooltipProvider>
     )
 
-    expect(lastFrameProps?.margin).toMatchObject({ top: 8, bottom: 8 })
+    expect(lastFrameProps?.margin).toEqual({ top: 8, bottom: 8, left: 20, right: 20 })
 
     rerender(
       <TooltipProvider>
@@ -391,10 +398,10 @@ describe("ProcessSankey HOC", () => {
       </TooltipProvider>
     )
 
-    expect(lastFrameProps?.margin).toMatchObject({ top: 24, bottom: 28 })
+    expect(lastFrameProps?.margin).toEqual({ top: 24, bottom: 28, left: 20, right: 20 })
   })
 
-  it("keeps explicit vertical margins authoritative", () => {
+  it("keeps explicit margins authoritative", () => {
     render(
       <TooltipProvider>
         <ProcessSankey
@@ -403,12 +410,12 @@ describe("ProcessSankey HOC", () => {
           domain={DOMAIN}
           axisTicks={[{ date: DOMAIN[0], label: "Start" }]}
           showQualityReadout
-          margin={{ top: 3, bottom: 5 }}
+          margin={{ top: 3, bottom: 5, left: 7, right: 9 }}
         />
       </TooltipProvider>
     )
 
-    expect(lastFrameProps?.margin).toMatchObject({ top: 3, bottom: 5 })
+    expect(lastFrameProps?.margin).toEqual({ top: 3, bottom: 5, left: 7, right: 9 })
   })
 
   it("resolves visible lane labels independently from stable node ids", () => {

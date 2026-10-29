@@ -29,6 +29,7 @@ import {
 } from "./charts/shared/colorUtils"
 import { resolveBoundedCategoryIndex } from "./charts/shared/boundedCategoryRegistry"
 import Legend from "./Legend"
+import { estimateLegendTextWidth, legendDisplayLabel } from "./legendGeometry"
 import type { LegendGroup } from "./types/legendTypes"
 import { useResponsiveSize } from "./stream/useResponsiveSize"
 
@@ -394,7 +395,7 @@ export function estimateLegendRowCount(
   let offset = 0
   let rows = 1
   for (const label of labels) {
-    const itemWidth = 16 + 10 + label.length * 7
+    const itemWidth = 16 + 10 + estimateLegendTextWidth(legendDisplayLabel(label))
     if (offset > 0 && offset + itemWidth > width) {
       rows++
       offset = 0

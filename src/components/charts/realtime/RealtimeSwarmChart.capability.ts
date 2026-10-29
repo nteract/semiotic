@@ -6,6 +6,8 @@ import {
   pickCategoryField,
   pickTimeField,
   pickValueField,
+  streamBufferProps,
+  streamFieldCardinality,
   streamThroughputBand,
 } from "../../ai/streamSchema"
 
@@ -26,6 +28,9 @@ export const RealtimeSwarmChartCapability: StreamChartCapability = {
     if (!hasCategoryField(schema)) {
       return "needs a category to swarm by"
     }
+    if (streamThroughputBand(schema) === "high") {
+      return "draws every event as a dot — for high-throughput streams, prefer RealtimeHeatmap, or RealtimeLineChart with aggregate"
+    }
     return null
   },
 
@@ -35,14 +40,23 @@ export const RealtimeSwarmChartCapability: StreamChartCapability = {
     "compare-categories": 3,
   },
 
-  caveats: (schema) =>
-    streamThroughputBand(schema) === "high"
-      ? ["high-throughput swarms get crowded — consider RealtimeHistogram"]
-      : [],
+  reasons: (schema) => {
+    const { windowSize } = streamBufferProps(schema, 5000)
+    return windowSize ? [`windowSize ${windowSize} keeps recent history visible at this event rate`] : []
+  },
+
+  caveats: (schema) => {
+    const category = pickCategoryField(schema)
+    const count = streamFieldCardinality(category)
+    return category && count !== undefined && count > 10
+      ? [`"${category.name}" has ~${count} values; colours repeat once the categorical palette runs out — group rare values or pick a coarser category`]
+      : []
+  },
 
   buildProps: (schema) => ({
     timeAccessor: pickTimeField(schema)?.name,
     valueAccessor: pickValueField(schema)?.name,
     categoryAccessor: pickCategoryField(schema)?.name,
+    ...streamBufferProps(schema, 5000),
   }),
 }

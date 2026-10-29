@@ -1,4 +1,5 @@
 "use client"
+import { resolveAxisFreeMarginDefaults } from "../shared/chartMode"
 import { DONUT_CHART_SIZE } from "../shared/chartSizeDefaultsOrdinal"
 import type { Datum } from "../shared/datumTypes"
 import { filterSparseArray } from "../shared/sparseArray"
@@ -149,7 +150,7 @@ export const DonutChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */
     chartId,
     showLegend,
     userMargin,
-    marginDefaults: resolved.marginDefaults,
+    marginDefaults: resolveAxisFreeMarginDefaults(resolved),
     loading,
     loadingContent,
     emptyContent,

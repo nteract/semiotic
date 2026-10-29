@@ -14,21 +14,50 @@ import type { SemioticTheme } from "../store/themeCore"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { CategoricalLegendConfig, GradientLegendConfig, LegendGroup, LegendLayout } from "../types/legendTypes"
 import {
-  DEFAULT_LEGEND_ROW_HEIGHT,
+  legendCharWidth,
+  legendFontFamily,
+  legendFontSize,
+  legendFontWeight,
+  renderStaticMoreRow,
+  staticLegendLabelText,
+} from "./staticLegendText"
+import {
   GRADIENT_LEGEND_HORIZONTAL_HEIGHT,
   GRADIENT_LEGEND_HORIZONTAL_HEIGHT_UNLABELED,
   GRADIENT_LEGEND_LABEL_BASELINE,
   GRADIENT_LEGEND_LABELED_BAR_Y,
+  fitSideLegend,
   layoutVerticalLegendGroups,
+  legendDisplayLabel,
+  legendMoreTitle,
   resolveLegendMetrics,
+  fitLegendRows,
+  resolveHorizontalLegendMaxRows,
   resolveLegendPlacement,
+  resolveLegendRenderBounds,
   resolveSideLegendWidth,
+  sideLegendSlotOffset,
   type AxisChromeInput,
+  type LegendPlacementInput,
+  type SideLegendFit,
 } from "../legendLayout"
 
-// Keep static SVG legends on the same metric grid as the interactive
-// <Legend> component used by Stream frames.
-const ROW_HEIGHT = DEFAULT_LEGEND_ROW_HEIGHT
+/**
+ * Fit a side legend with the same columns, truncation and "+N more" summary
+ * as the interactive <Legend>, so SSR output matches the hydrated chart.
+ */
+function fitStaticSideLegend(
+  legend: CategoricalLegendConfig,
+  input: LegendPlacementInput,
+  reservedWidth: number | undefined,
+): SideLegendFit {
+  const bounds = resolveLegendRenderBounds(legend, input)
+  return fitSideLegend(
+    legend.legendGroups,
+    input.legendLayout,
+    reservedWidth != null ? { ...bounds, maxWidth: reservedWidth } : bounds,
+  )
+}
 
 interface LegendItemLayout {
   category: string
@@ -39,6 +68,8 @@ interface LegendItemLayout {
 
 interface StaticLegendMetrics {
   items: LegendItemLayout[]
+  /** Origin of a horizontal "+N more" slot when rows were capped. */
+  more?: { x: number; y: number }
   width: number
   height: number
   swatchSize: number
@@ -55,6 +86,7 @@ interface StaticLegendGroupLayout {
   width: number
   height: number
   items: LegendItemLayout[]
+  more?: { x: number; y: number }
 }
 
 interface StaticLegendGroupMetrics extends Omit<StaticLegendMetrics, "items"> {
@@ -143,24 +175,14 @@ function normalizedAlign(align: LegendLayout["align"]): "start" | "center" | "en
   return align ?? "start"
 }
 
-function legendFontSize(theme: SemioticTheme): number {
-  return Number(theme.typography.legendSize ?? theme.typography.labelSize ?? theme.typography.tickSize) || 11
-}
-
-function legendFontFamily(theme: SemioticTheme): string {
-  return theme.typography.legendFontFamily ?? theme.typography.fontFamily
-}
-
-function legendFontWeight(theme: SemioticTheme): string | number | undefined {
-  return theme.typography.legendFontWeight
-}
-
 function itemWidth(category: string, swatchSize: number, labelGap: number, theme: SemioticTheme): number {
-  const size = legendFontSize(theme)
-  return swatchSize + labelGap + Math.ceil(category.length * size * 0.58)
+  return swatchSize + labelGap + Math.ceil(legendDisplayLabel(category).length * legendCharWidth(theme))
 }
 
-function computeStaticLegendLayout(config: StaticLegendConfig): StaticLegendMetrics {
+function computeStaticLegendLayout(
+  config: StaticLegendConfig,
+  maxRows = Number.POSITIVE_INFINITY,
+): StaticLegendMetrics {
   const {
     categories,
     theme,
@@ -178,24 +200,18 @@ function computeStaticLegendLayout(config: StaticLegendConfig): StaticLegendMetr
 
   if (isHorizontal) {
     const maxWidth = Math.max(swatchSize, legendLayout?.maxWidth ?? plotWidth)
-    const rows: Array<{ start: number; end: number; width: number }> = []
-    let rowStart = 0
-    let rowWidth = 0
-    widths.forEach((width, i) => {
-      const nextWidth = rowWidth === 0 ? width : rowWidth + itemGap + width
-      if (rowWidth > 0 && nextWidth > maxWidth) {
-        rows.push({ start: rowStart, end: i, width: rowWidth })
-        rowStart = i
-        rowWidth = width
-      } else {
-        rowWidth = nextWidth
-      }
+    const fit = fitLegendRows(widths, {
+      itemGap,
+      labelOffset,
+      maxWidth,
+      maxRows,
+      charWidth: legendCharWidth(theme),
     })
-    if (categories.length > 0) rows.push({ start: rowStart, end: categories.length, width: rowWidth })
 
     const align = normalizedAlign(legendLayout?.align)
     const items: LegendItemLayout[] = []
-    rows.forEach((row, rowIndex) => {
+    let more: StaticLegendMetrics["more"]
+    fit.rows.forEach((row, rowIndex) => {
       const rowOffset =
         align === "center"
           ? Math.max(0, (maxWidth - row.width) / 2)
@@ -204,15 +220,19 @@ function computeStaticLegendLayout(config: StaticLegendConfig): StaticLegendMetr
             : 0
       let x = rowOffset
       for (let i = row.start; i < row.end; i++) {
-        items.push({ category: categories[i], width: widths[i], x, y: rowIndex * rowHeight })
-        x += widths[i] + itemGap
+        items.push({ category: categories[i], width: fit.widths[i], x, y: rowIndex * rowHeight })
+        x += fit.widths[i] + itemGap
+      }
+      if (fit.hiddenCount > 0 && rowIndex === fit.rows.length - 1) {
+        more = { x: rowOffset + fit.moreX, y: rowIndex * rowHeight }
       }
     })
 
     return {
       items,
-      width: rows.reduce((max, row) => Math.max(max, row.width), 0),
-      height: rows.length * rowHeight,
+      more,
+      width: fit.width,
+      height: fit.rows.length * rowHeight,
       swatchSize,
       labelOffset,
       swatchRadius,
@@ -244,7 +264,10 @@ export function measureStaticLegend(config: StaticLegendConfig): Omit<StaticLege
   return { width, height, swatchSize }
 }
 
-function computeStaticLegendGroupsLayout(config: StaticLegendGroupsConfig): StaticLegendGroupMetrics {
+function computeStaticLegendGroupsLayout(
+  config: StaticLegendGroupsConfig,
+  maxRows = Number.POSITIVE_INFINITY,
+): StaticLegendGroupMetrics {
   const { legendGroups, theme, position = "right", totalWidth, margin, legendLayout } = config
   const { swatchSize, labelGap, rowHeight } = resolveLegendMetrics(legendLayout)
   const labelOffset = swatchSize + labelGap
@@ -268,7 +291,7 @@ function computeStaticLegendGroupsLayout(config: StaticLegendGroupsConfig): Stat
         ...config,
         categories: groupLabels,
         legendLayout: { ...legendLayout, maxWidth: Math.max(swatchSize, maxWidth - groupLabelSize - labelPadding), align: "start" },
-      })
+      }, maxRows)
       const labelWidth = group.label ? groupLabelSize : 0
       const rotatedLabelHeight = group.label ? itemWidth(group.label, 0, 0, theme) : 0
       const itemOffsetX = labelWidth > 0 ? labelWidth + labelPadding : 0
@@ -283,6 +306,7 @@ function computeStaticLegendGroupsLayout(config: StaticLegendGroupsConfig): Stat
         width: groupWidth,
         height: groupHeight,
         items: itemMetrics.items,
+        more: itemMetrics.more,
       })
       x += groupWidth + separatorGap
       height = Math.max(height, groupHeight)
@@ -377,7 +401,6 @@ export function renderStaticLegend(config: StaticLegendConfig): React.ReactNode 
 
   const colorScale = buildColorScale(categories, colorScheme, theme)
   const isHorizontal = position === "top" || position === "bottom"
-  const metrics = computeStaticLegendLayout(config)
 
   // `StaticLegendConfig.legendDistance` predates the structured categorical
   // config. Carry it into the shared placement input so an explicit caller
@@ -387,38 +410,78 @@ export function renderStaticLegend(config: StaticLegendConfig): React.ReactNode 
     ...buildStaticCategoricalLegendConfig(categories, colorScheme, theme)!,
     legendDistance: config.legendDistance,
   }
-  const sideLegendWidth = config.reservedWidth ?? resolveSideLegendWidth(categoricalLegend, config.legendLayout)
-  const { x: tx, y: ty } = resolveLegendPlacement(categoricalLegend, {
+  const placementInput = {
     totalWidth,
     totalHeight,
     margin,
     position,
     legendLayout: config.legendLayout,
     axisChrome: config.axisChrome,
+    hasTitle: config.hasTitle,
+  }
+  const metrics = computeStaticLegendLayout(
+    config,
+    isHorizontal ? resolveHorizontalLegendMaxRows(categoricalLegend, placementInput) : undefined,
+  )
+  const fit = isHorizontal
+    ? undefined
+    : fitStaticSideLegend(categoricalLegend, placementInput, config.reservedWidth)
+  const sideLegendWidth = config.reservedWidth ?? fit?.width ?? resolveSideLegendWidth(categoricalLegend, config.legendLayout)
+  const { x: tx, y: ty } = resolveLegendPlacement(categoricalLegend, {
+    ...placementInput,
     reservedWidth: sideLegendWidth,
   })
 
   // Both orientations paint identical swatches and labels; vertical legends
-  // additionally reserve the shared header and neatline above their items.
-  const verticalLayout = isHorizontal ? undefined : layoutVerticalLegendGroups(
-    [{ hasLabel: false, itemCount: categories.length }],
-    Math.max(metrics.swatchSize, config.legendLayout?.rowHeight ?? ROW_HEIGHT)
-  )[0]
-  const items = metrics.items.map((item, i) => (
-    <g key={`legend-${i}`} transform={`translate(${item.x},${item.y + (verticalLayout?.itemsY ?? 0)})`}>
-      <rect width={metrics.swatchSize} height={metrics.swatchSize} fill={colorScale(item.category)} rx={metrics.swatchRadius} />
-      <text
-        x={metrics.labelOffset}
-        y={metrics.swatchSize / 2}
-        dominantBaseline="central"
-        fontSize={legendFontSize(theme)}
-        fill={theme.colors.text}
-        fontFamily={legendFontFamily(theme)}
-      >
-        {item.category}
-      </text>
-    </g>
-  ))
+  // additionally reserve the shared header and neatline above their items,
+  // and wrap into columns or a "+N more" row instead of leaving the chart.
+  const verticalLayout = fit?.groups[0]
+  const visibleItems = verticalLayout
+    ? metrics.items.slice(0, verticalLayout.visibleCount)
+    : metrics.items
+  const items = visibleItems.map((item, i) => {
+    const offset = fit && verticalLayout
+      ? sideLegendSlotOffset(fit, verticalLayout, i)
+      : item
+    return (
+      <g key={`legend-${i}`} transform={`translate(${offset.x},${offset.y + (verticalLayout?.itemsY ?? 0)})`}>
+        <rect width={metrics.swatchSize} height={metrics.swatchSize} fill={colorScale(item.category)} rx={metrics.swatchRadius} />
+        <text
+          x={metrics.labelOffset}
+          y={metrics.swatchSize / 2}
+          dominantBaseline="central"
+          fontSize={legendFontSize(theme)}
+          fill={theme.colors.text}
+          fontFamily={legendFontFamily(theme)}
+        >
+          {fit
+            ? staticLegendLabelText(item.category, fit.labelWidth)
+            : staticLegendLabelText(item.category, item.width - metrics.labelOffset, legendCharWidth(theme))}
+        </text>
+      </g>
+    )
+  })
+  if (metrics.more && !fit) {
+    items.push(renderStaticMoreRow(
+      "legend-more",
+      metrics.more,
+      metrics.swatchSize,
+      categories.length - metrics.items.length,
+      legendMoreTitle(categoricalLegend.legendGroups[0].items, metrics.items.length),
+      theme,
+    ))
+  }
+  if (fit && verticalLayout && verticalLayout.hiddenCount > 0) {
+    const offset = sideLegendSlotOffset(fit, verticalLayout, verticalLayout.visibleCount)
+    items.push(renderStaticMoreRow(
+      "legend-more",
+      { x: offset.x, y: offset.y + verticalLayout.itemsY },
+      metrics.swatchSize,
+      verticalLayout.hiddenCount,
+      legendMoreTitle(categoricalLegend.legendGroups[0].items, verticalLayout.visibleCount),
+      theme,
+    ))
+  }
 
   return (
     <g className="semiotic-legend" transform={`translate(${tx},${ty})`} fontWeight={legendFontWeight(theme)}>
@@ -431,32 +494,34 @@ export function renderStaticLegend(config: StaticLegendConfig): React.ReactNode 
 export function renderStaticLegendGroups(config: StaticLegendGroupsConfig): React.ReactNode {
   if (!config.legendGroups.some(group => group.items.some(() => true))) return null
 
-  const metrics = computeStaticLegendGroupsLayout(config)
   const isHorizontal = config.position === "top" || config.position === "bottom"
   const legendConfig = { legendGroups: config.legendGroups, legendDistance: config.legendDistance }
-  const sideLegendWidth = config.reservedWidth ?? resolveSideLegendWidth(legendConfig, config.legendLayout)
   const separatorStroke = config.theme.colors.grid || config.theme.colors.textSecondary
-  const { x: tx, y: ty } = resolveLegendPlacement(legendConfig, {
+  const placementInput = {
     totalWidth: config.totalWidth,
     totalHeight: config.totalHeight,
     margin: config.margin,
     position: config.position,
     legendLayout: config.legendLayout,
     axisChrome: config.axisChrome,
+    hasTitle: config.hasTitle,
+  }
+  const metrics = computeStaticLegendGroupsLayout(
+    config,
+    isHorizontal ? resolveHorizontalLegendMaxRows(legendConfig, placementInput) : undefined,
+  )
+  const fit = isHorizontal
+    ? undefined
+    : fitStaticSideLegend(legendConfig, placementInput, config.reservedWidth)
+  const sideLegendWidth = config.reservedWidth ?? fit?.width ?? resolveSideLegendWidth(legendConfig, config.legendLayout)
+  const { x: tx, y: ty } = resolveLegendPlacement(legendConfig, {
+    ...placementInput,
     reservedWidth: sideLegendWidth,
   })
 
-  if (!isHorizontal) {
-    const groupLayouts = layoutVerticalLegendGroups(
-      config.legendGroups.map((group) => ({
-        hasLabel: Boolean(group.label),
-        itemCount: group.items.length,
-      })),
-      Math.max(metrics.swatchSize, config.legendLayout?.rowHeight ?? ROW_HEIGHT)
-    )
-
+  if (fit) {
     const groups = config.legendGroups.flatMap((group, groupIndex) => {
-      const layout = groupLayouts[groupIndex]
+      const layout = fit.groups[groupIndex]
       const type = group.type ?? "fill"
       const nodes: React.ReactNode[] = [
         <line
@@ -478,37 +543,50 @@ export function renderStaticLegendGroups(config: StaticLegendGroupsConfig): Reac
             fill={config.theme.colors.text}
             fontFamily={legendFontFamily(config.theme)}
           >
-            {group.label}
+            {staticLegendLabelText(group.label, sideLegendWidth)}
           </text>
         )
       }
 
+      const itemNodes = group.items.slice(0, layout.visibleCount).map((item, itemIndex) => {
+        const style = group.styleFn(item, itemIndex)
+        const typeNode = typeof type === "function"
+          ? type(item)
+          : type === "line"
+            ? <line x1={0} y1={0} x2={metrics.swatchSize} y2={metrics.swatchSize} style={style} />
+            : <rect width={metrics.swatchSize} height={metrics.swatchSize} rx={metrics.swatchRadius} style={style} />
+        const offset = sideLegendSlotOffset(fit, layout, itemIndex)
+
+        return (
+          <g key={`legend-${groupIndex}-${itemIndex}`} transform={`translate(${offset.x},${offset.y})`}>
+            {typeNode}
+            <text
+              x={metrics.labelOffset}
+              y={metrics.swatchSize / 2}
+              dominantBaseline="central"
+              fontSize={legendFontSize(config.theme)}
+              fill={config.theme.colors.text}
+              fontFamily={legendFontFamily(config.theme)}
+            >
+              {staticLegendLabelText(item.label, fit.labelWidth)}
+            </text>
+          </g>
+        )
+      })
+      if (layout.hiddenCount > 0) {
+        itemNodes.push(renderStaticMoreRow(
+          `legend-more-${groupIndex}`,
+          sideLegendSlotOffset(fit, layout, layout.visibleCount),
+          metrics.swatchSize,
+          layout.hiddenCount,
+          legendMoreTitle(group.items, layout.visibleCount),
+          config.theme,
+        ))
+      }
+
       nodes.push(
         <g key={`legend-group-${groupIndex}`} transform={`translate(0,${layout.itemsY})`}>
-          {group.items.map((item, itemIndex) => {
-            const style = group.styleFn(item, itemIndex)
-            const typeNode = typeof type === "function"
-              ? type(item)
-              : type === "line"
-                ? <line x1={0} y1={0} x2={metrics.swatchSize} y2={metrics.swatchSize} style={style} />
-                : <rect width={metrics.swatchSize} height={metrics.swatchSize} rx={metrics.swatchRadius} style={style} />
-
-            return (
-              <g key={`legend-${groupIndex}-${itemIndex}`} transform={`translate(0,${itemIndex * Math.max(metrics.swatchSize, config.legendLayout?.rowHeight ?? ROW_HEIGHT)})`}>
-                {typeNode}
-                <text
-                  x={metrics.labelOffset}
-                  y={metrics.swatchSize / 2}
-                  dominantBaseline="central"
-                  fontSize={legendFontSize(config.theme)}
-                  fill={config.theme.colors.text}
-                  fontFamily={legendFontFamily(config.theme)}
-                >
-                  {item.label}
-                </text>
-              </g>
-            )
-          })}
+          {itemNodes}
         </g>
       )
 
@@ -565,11 +643,24 @@ export function renderStaticLegendGroups(config: StaticLegendGroupsConfig): Reac
             fill={config.theme.colors.text}
             fontFamily={legendFontFamily(config.theme)}
           >
-            {layout.category}
+            {staticLegendLabelText(layout.category, layout.width - metrics.labelOffset, legendCharWidth(config.theme))}
           </text>
         </g>
       )
     }))
+    if (groupLayout.more) {
+      groupNodes.push(renderStaticMoreRow(
+        `legend-more-${groupIndex}`,
+        {
+          x: groupLayout.x + groupLayout.itemOffsetX + groupLayout.more.x,
+          y: groupLayout.y + groupLayout.itemOffsetY + groupLayout.more.y,
+        },
+        metrics.swatchSize,
+        group.items.length - groupLayout.items.length,
+        legendMoreTitle(group.items, groupLayout.items.length),
+        config.theme,
+      ))
+    }
 
     if (groupIndex < metrics.groups.length - 1) {
       const x = groupLayout.x + groupLayout.width + 6

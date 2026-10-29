@@ -1,4 +1,4 @@
-import type { StreamChartCapability } from "../../ai/streamingTypes"
+import type { StreamChartCapability, StreamSchema } from "../../ai/streamingTypes"
 import {
   hasCategoryField,
   hasNumericValue,
@@ -7,7 +7,15 @@ import {
   pickSeriesField,
   pickValueField,
   resolveStreamShape,
+  streamCategorySumPolicy,
+  streamKeyedChangelogCaveat,
 } from "../../ai/streamSchema"
+
+const sumPolicy = (schema: StreamSchema) =>
+  streamCategorySumPolicy(schema, "StackedBarChart", [
+    pickCategoryField(schema)?.name,
+    pickSeriesField(schema)?.name,
+  ])
 
 export const StackedBarChartStreamCapability: StreamChartCapability = {
   component: "StackedBarChart",
@@ -23,17 +31,19 @@ export const StackedBarChartStreamCapability: StreamChartCapability = {
     if (!hasCategoryField(schema)) return "needs a category field"
     if (!hasNumericValue(schema)) return "needs a numeric value field"
     if (!hasSeriesField(schema)) return "needs a series field to stack by"
-    return null
+    return sumPolicy(schema).exclude ?? null
   },
 
   intentScores: {
-    "part-to-whole": 4,
-    "compare-categories": 4,
-    "compare-series": 2,
+    "part-to-whole": (schema) => 4 * sumPolicy(schema).factor,
+    "compare-categories": (schema) => 4 * sumPolicy(schema).factor,
+    "compare-series": (schema) => 2 * sumPolicy(schema).factor,
   },
 
-  caveats: () => [
+  caveats: (schema) => [
     "only the bottom segment shares a baseline; others are harder to compare across categories",
+    ...sumPolicy(schema).caveats,
+    ...streamKeyedChangelogCaveat(schema, "frameProps.dataIdAccessor"),
   ],
 
   buildProps: (schema) => ({

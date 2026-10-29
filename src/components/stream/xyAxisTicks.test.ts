@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest"
 import { scaleLinear, scaleUtc } from "d3-scale"
 import { generateXYTicks } from "./xyAxisTicks"
+import { resolveAutoDateTickFormatter } from "./xyDateTicks"
 import { isStaticAxisLandmark } from "../server/staticXYAxisTicks"
 import { heatmapBandDomain, heatmapBandScale, heatmapBandTicks } from "./heatmapBandTicks"
 import { adaptiveTimeTicks } from "../charts/shared/formatUtils"
@@ -299,5 +300,42 @@ describe("generateXYTicks with heatmap band scales", () => {
     expect(heatmapBandTicks(twice)?.map((tick) => tick.label)).toEqual(["b", "a"])
     expect(twice.range()).toEqual([0, 50])
     expect(labelsOf(generateXYTicks({ scale: twice, size: 50, horizontal: true }))).toEqual(["b", "a"])
+  })
+})
+
+describe("generateXYTicks on streaming epoch-ms time axes", () => {
+  const epochFormat = (domain: [number, number]) =>
+    resolveAutoDateTickFormatter({ xIsDate: false, streaming: true, domain })
+
+  it("keeps sub-second labels distinct instead of collapsing them", () => {
+    const domain: [number, number] = [start + 123, start + 198]
+    const ticks = generateXYTicks({
+      scale: scaleLinear().domain(domain).range([0, 500]),
+      size: 500,
+      horizontal: true,
+      format: epochFormat(domain)
+    })
+    const labels = labelsOf(ticks)
+    expect(labels.length).toBeGreaterThan(1)
+    expect(new Set(labels).size).toBe(labels.length)
+    expect(labels.every((label) => /^12:00:00\.\d{3}$/.test(String(label)))).toBe(true)
+  })
+
+  it("places ticks on UTC calendar boundaries like a time scale", () => {
+    const domain: [number, number] = [start + 16_123, start + 3 * HOUR + 16_123]
+    const linear = generateXYTicks({
+      scale: scaleLinear().domain(domain).range([0, 600]),
+      size: 600,
+      horizontal: true,
+      format: epochFormat(domain)
+    })
+    const utc = generateXYTicks({
+      scale: scaleUtc().domain(domain).range([0, 600]),
+      size: 600,
+      horizontal: true,
+      format: epochFormat(domain)
+    })
+    expect(valuesOf(linear)).toEqual(valuesOf(utc))
+    expect(labelsOf(linear)).toEqual(["12:30", "13:00", "13:30", "14:00", "14:30", "15:00"])
   })
 })

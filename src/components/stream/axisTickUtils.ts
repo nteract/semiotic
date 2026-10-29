@@ -40,6 +40,21 @@ export function hasSameTickLabel(
   return aIsText && bIsText && String(a) === String(b)
 }
 
+/**
+ * Drop each tick whose text label repeats the one before it. A coarse
+ * formatter (whole seconds over a sub-second domain, rounded currency) would
+ * otherwise print the same label at several positions. Shared by XY and
+ * ordinal value axes so axis labels, tick marks, and grid lines stay aligned.
+ */
+export function dropRepeatedTickLabels<T extends { label: string | ReactNode }>(
+  ticks: T[]
+): T[] {
+  return ticks.filter(
+    (tick, index) =>
+      index === 0 || !hasSameTickLabel(tick.label, ticks[index - 1].label)
+  )
+}
+
 /** Greedily filter ticks so consecutive labels are at least `minPx` apart. */
 export function filterTicksByPixelDistance<
   T extends {

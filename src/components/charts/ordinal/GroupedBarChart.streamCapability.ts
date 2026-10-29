@@ -1,4 +1,4 @@
-import type { StreamChartCapability } from "../../ai/streamingTypes"
+import type { StreamChartCapability, StreamSchema } from "../../ai/streamingTypes"
 import {
   hasCategoryField,
   hasNumericValue,
@@ -7,7 +7,15 @@ import {
   pickSeriesField,
   pickValueField,
   resolveStreamShape,
+  streamCategorySumPolicy,
+  streamKeyedChangelogCaveat,
 } from "../../ai/streamSchema"
+
+const sumPolicy = (schema: StreamSchema) =>
+  streamCategorySumPolicy(schema, "GroupedBarChart", [
+    pickCategoryField(schema)?.name,
+    pickSeriesField(schema)?.name,
+  ])
 
 export const GroupedBarChartStreamCapability: StreamChartCapability = {
   component: "GroupedBarChart",
@@ -23,14 +31,19 @@ export const GroupedBarChartStreamCapability: StreamChartCapability = {
     if (!hasCategoryField(schema)) return "needs a category field"
     if (!hasNumericValue(schema)) return "needs a numeric value field"
     if (!hasSeriesField(schema)) return "needs a series field to group by"
-    return null
+    return sumPolicy(schema).exclude ?? null
   },
 
   intentScores: {
-    "compare-categories": 5,
-    "compare-series": 4,
-    "rank": 3,
+    "compare-categories": (schema) => 5 * sumPolicy(schema).factor,
+    "compare-series": (schema) => 4 * sumPolicy(schema).factor,
+    "rank": (schema) => 3 * sumPolicy(schema).factor,
   },
+
+  caveats: (schema) => [
+    ...sumPolicy(schema).caveats,
+    ...streamKeyedChangelogCaveat(schema, "frameProps.dataIdAccessor"),
+  ],
 
   buildProps: (schema) => ({
     categoryAccessor: pickCategoryField(schema)?.name,

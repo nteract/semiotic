@@ -1,4 +1,6 @@
 "use client"
+import { resolveAxisFreeMarginDefaults } from "../shared/chartMode"
+import { networkFrameDefaultMargin } from "../../stream/frameDefaultMargins"
 import { CIRCLE_PACK_SIZE } from "../shared/chartSizeDefaultsNetwork"
 import type { NetworkPerspectiveProps } from "../shared/networkPerspectiveProps"
 import type { Datum } from "../shared/datumTypes"
@@ -186,7 +188,7 @@ export const CirclePack = /* @__PURE__ */ withChartErrorBoundary(function Circle
     mobileSemantics: resolved.mobileSemantics,
     chartType: "CirclePack",
     chartId,
-    marginDefaults: resolved.marginDefaults,
+    marginDefaults: resolveAxisFreeMarginDefaults(resolved, networkFrameDefaultMargin("circlepack")),
     userMargin,
     width, height,
     hasTitle: !!title,

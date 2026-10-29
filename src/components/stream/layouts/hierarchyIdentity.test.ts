@@ -50,7 +50,7 @@ describe("hierarchy identities (#1322)", () => {
       const label = store.labels.find((label) => label.text === "root")
       expect(store.labels.some((label) => label.text === "leaf")).toBe(true)
       if (chartType === "treemap") expect(label).toBeUndefined()
-      else if (chartType === "tree") expect(label!.x).toBeLessThan(root.x)
+      else if (chartType === "tree") expect(label!.x).toBeGreaterThan(root.x)
       else expect(label!.y).toBeLessThan(root.y)
     }
   )

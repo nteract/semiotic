@@ -6,6 +6,7 @@ import * as React from "react"
 import * as ReactDOMServer from "react-dom/server"
 import { PipelineStore, type PipelineConfig } from "../stream/PipelineStore"
 import { registerServerXYPlugins } from "./registerServerXYPlugins"
+import { getXYPlugin } from "../stream/xyPlugins/registry"
 
 registerServerXYPlugins()
 import type { StreamXYFrameProps } from "../stream/types"
@@ -35,8 +36,7 @@ import {
   generateAxesSVG
 } from "./staticSVGChrome"
 import { renderGridSVG } from "./staticXYGrid"
-import { makeDateTickFormatter } from "../stream/xyDateTicks"
-import { heatmapBandTicks } from "../stream/heatmapBandTicks"
+import { resolveFrameAutoXFormat } from "../stream/xyDateTicks"
 import { isUnderLayerBand, underBandSVGRenderer } from "../stream/underLayerBands"
 import { normalizeColorGradient, normalizeGradient } from "../charts/shared/gradient"
 import { normalizeXYData } from "../stream/normalizeXYData"
@@ -74,15 +74,6 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     size,
     hasTitle: hasVisibleTitle,
   })
-  const legend = renderFrameLegend({
-    props: { ...props, axisChrome: legendAxisChrome },
-    categories: xyLegendCategories,
-    theme,
-    size,
-    margin,
-    hasTitle: hasVisibleTitle,
-  })
-
   const width = Math.max(1, size[0] - margin.left - margin.right)
   const height = Math.max(1, size[1] - margin.top - margin.bottom)
 
@@ -186,6 +177,21 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
   }
 
   store.computeScene({ width, height })
+  // Rendered after the scene: a heatmap legend reads its domain from the
+  // drawn cells, exactly as the browser frame does.
+  const sceneLegend = getXYPlugin(props.chartType)?.resolveLegend?.(props.legend, store.scene, pipelineConfig)
+  const legend = renderFrameLegend({
+    props: {
+      ...props,
+      ...(sceneLegend !== undefined && { legend: sceneLegend }),
+      axisChrome: legendAxisChrome,
+    },
+    categories: xyLegendCategories,
+    theme,
+    size,
+    margin,
+    hasTitle: hasVisibleTitle,
+  })
   const resolvedBackgroundGraphics = resolveFrameGraphics(
     props.backgroundGraphics,
     size,
@@ -257,9 +263,10 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
       xySceneNodeToSVG(node, index, idPfx, props.hoverRadius ?? 30),
   })
 
-  const axisProps = store.xIsDate && !props.xFormat && !props.tickFormatTime && !heatmapBandTicks(store.scales.x)
-    ? { ...props, xFormat: makeDateTickFormatter(store.scales.x.domain().map(value => value.valueOf()) as [number, number]) }
-    : props
+  const autoXFormat = !props.xFormat && !props.tickFormatTime
+    ? resolveFrameAutoXFormat(store, store.scales, isStreaming)
+    : undefined
+  const axisProps = autoXFormat ? { ...props, xFormat: autoXFormat } : props
   const grid = props.showGrid
     ? renderGridSVG(store.scales, { width, height }, theme, idPfx, props.axisExtent, props.axes, axisProps)
     : null

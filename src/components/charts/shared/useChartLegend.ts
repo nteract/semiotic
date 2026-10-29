@@ -524,7 +524,8 @@ export function useGradientLegendInteraction(
 
   useEffect(() => {
     setHighlighted(null)
-    setIsolatedRanges(new Map())
+    // Keep an empty map so a live domain change does not force a re-render.
+    setIsolatedRanges((previous) => (previous.size === 0 ? previous : new Map()))
   }, [domainStart, domainEnd, binCount, mode])
 
   const onLegendHover = useCallback(

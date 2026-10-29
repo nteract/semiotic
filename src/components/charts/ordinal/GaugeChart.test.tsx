@@ -250,6 +250,57 @@ describe("GaugeChart", () => {
     expect(lastOrdinalFrameProps.startAngle).toBe(270)
   })
 
+  it("fits a half-circle readout inside a short chart, with the value inside the arch", () => {
+    const [width, height] = [850, 158]
+    render(
+      <TooltipProvider>
+        <GaugeChart value={62} sweep={180} showNeedle={false} cornerRadius={8} width={width} height={height} />
+      </TooltipProvider>
+    )
+    const margin = lastOrdinalFrameProps.margin as { top: number; bottom: number }
+    // The arc center (and the line through a half circle's ends) sits at the
+    // middle of the frame's square layout.
+    const centerY = margin.top + (height - margin.top - margin.bottom) / 2
+    const markup = renderToStaticMarkup(<svg>{lastOrdinalFrameProps.centerContent}</svg>)
+    const texts = [...markup.matchAll(/<text y="([-\d.e]+)"[^>]*font-size="([\d.]+)"/g)]
+      .map((match) => ({ y: Number(match[1]), fontSize: Number(match[2]) }))
+    expect(texts).toHaveLength(2)
+    const [valueText, caption] = texts
+    expect(centerY + valueText.y + valueText.fontSize / 2).toBeLessThan(centerY)
+    // Caption baseline plus descenders stays inside the chart.
+    expect(centerY + caption.y + 3).toBeLessThanOrEqual(height)
+  })
+
+  it("lays a responsive gauge out at its measured size, not the nominal one", () => {
+    // The responsive host measures a container smaller than width/height.
+    const rect = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+      const measured = this.dataset.semioticGaugeResponsiveHost ? { width: 200, height: 150 } : { width: 0, height: 0 }
+      return { ...measured, x: 0, y: 0, top: 0, left: 0, right: measured.width, bottom: measured.height, toJSON: () => ({}) } as DOMRect
+    })
+    try {
+      const { container } = render(
+        <TooltipProvider>
+          <GaugeChart value={62} width={300} height={250} responsiveWidth responsiveHeight />
+        </TooltipProvider>
+      )
+      const host = container.querySelector<HTMLElement>("[data-semiotic-gauge-responsive-host]")
+      expect(host?.style.width).toBe("100%")
+      expect(host?.style.height).toBe("100%")
+      // The frame gets the measured size as a fixed size and margins that
+      // reproduce the gauge's radius inside it.
+      expect(lastOrdinalFrameProps.size).toEqual([200, 150])
+      expect(lastOrdinalFrameProps.responsiveWidth).toBeUndefined()
+      const margin = lastOrdinalFrameProps.margin as { top: number; right: number; bottom: number; left: number }
+      const side = Math.min(200 - margin.left - margin.right, 150 - margin.top - margin.bottom)
+      const radius = side / 2 - 4
+      const centerY = margin.top + (150 - margin.top - margin.bottom) / 2
+      expect(centerY - radius).toBeGreaterThanOrEqual(0)
+      expect(radius * 2).toBeLessThanOrEqual(200)
+    } finally {
+      rect.mockRestore()
+    }
+  })
+
   it("supports valueFormat for center label", () => {
     render(
       <TooltipProvider>

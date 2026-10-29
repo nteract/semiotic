@@ -14,7 +14,11 @@ import type { AnnotationContext } from "../realtime/types"
 import type { ReactNode } from "react"
 import type { LegendLayout, LegendValue } from "../types/legendTypes"
 import { renderLegendFromConfig } from "./legendRenderer"
-import { resolveLegendSideGutter, resolveXYAxisChrome } from "../legendLayout"
+import {
+  resolveLegendDistance,
+  resolveLegendSideGutter,
+  resolveXYAxisChrome,
+} from "../legendLayout"
 import { MarginalGraphicsLazy as MarginalGraphics, normalizeMarginalConfig } from "./MarginalGraphicsLazy"
 import { createDefaultAnnotationRules, renderAnnotationPass } from "../charts/shared/annotationRules"
 import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
@@ -30,6 +34,7 @@ import {
   jaggedBaselinePath,
   resolveAxisLineStyle,
   resolveHorizontalTickAnchor,
+  resolveHorizontalTickLabelShift,
   resolveVerticalTickBaseline,
   tickPixelExtent
 } from "./svgOverlayUtils"
@@ -239,6 +244,11 @@ export function SVGOverlay(props: SVGOverlayProps) {
   const rightAxisLabelMargin =
     legend && legendPosition === "right" && rightSideLegendGutter > 0
       ? rightSideLegendGutter
+      : margin.right
+  // A right legend starts this far past the plot; edge tick labels stop there.
+  const xLabelRightRoom =
+    legend && legendPosition === "right"
+      ? Math.min(margin.right, rightSideLegendGutter + resolveLegendDistance(legend))
       : margin.right
 
   const xTicks = useMemo(() => {
@@ -481,17 +491,25 @@ export function SVGOverlay(props: SVGOverlayProps) {
                       i > 0 ? axisTickDataValue(xTicks[i - 1]) : undefined
                     )
                 : false
+              const xTickAnchor = shouldRotateXAxis ? "end" : resolveHorizontalTickAnchor(
+                xTickAnchorMode,
+                tick.pixel === xPixelExtent.min,
+                tick.pixel === xPixelExtent.max,
+              )
               return (
               <g key={`xtick-${i}`} transform={`translate(${tick.pixel},${xBaselineY})`}>
                 <line y2={xTickDirection * 5} {...xAxisLine} />
                 {typeof tick.label === "string" || typeof tick.label === "number" ? (
                   <text
+                    x={shouldRotateXAxis ? undefined : resolveHorizontalTickLabelShift(
+                      xTickAnchor,
+                      tick.pixel,
+                      tick.label,
+                      isLandmark ? LANDMARK_TICK_FONT_SIZE : TICK_FONT_SIZE,
+                      { min: -margin.left, max: width + xLabelRightRoom },
+                    ) || undefined}
                     y={xTickDirection * (shouldRotateXAxis ? 12 : 18)}
-                    textAnchor={shouldRotateXAxis ? "end" : resolveHorizontalTickAnchor(
-                      xTickAnchorMode,
-                      tick.pixel === xPixelExtent.min,
-                      tick.pixel === xPixelExtent.max,
-                    )}
+                    textAnchor={xTickAnchor}
                     fontWeight={isLandmark ? 600 : 400}
                     fill={tickColor}
                     fontSize={isLandmark ? LANDMARK_TICK_FONT_SIZE : TICK_FONT_SIZE}

@@ -72,8 +72,15 @@ export function staggerProcessSankeyLabels(
   bands: readonly ProcessSankeyBandSpec[],
   slotByNode: SlotByNode,
   plotH: number,
+  plotW?: number,
 ): ProcessSankeyBandSpec[] {
-  const resolved = bands.map((band) => ({ ...band }))
+  const resolved = bands.map((band) => ({
+    ...band,
+    // Horizontal labels remain end-anchored, but fit inside the plot before
+    // resolving collisions. Source labels no longer need a fixed side gutter.
+    labelX: plotW === undefined ? band.labelX
+      : Math.min(plotW - 4, Math.max(estimatedLabelWidth(band.labelText) + 4, band.labelX)),
+  }))
   const bySlot = new Map<number, ProcessSankeyBandSpec[]>()
   for (const band of resolved) {
     const slot = slotByNode[band.id]

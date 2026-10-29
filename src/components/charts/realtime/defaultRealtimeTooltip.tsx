@@ -57,8 +57,22 @@ interface DefaultRealtimeTooltipOptions<TDatum extends Datum = Datum> {
    */
   xLabel?: string
   yLabel?: string
+  /**
+   * Series/category channel. When set, the tooltip leads with the hovered
+   * datum's series name so multi-series charts identify the mark.
+   */
+  groupAccessor?: string | ((d: Datum) => unknown)
+  /** Label for the series row ("series" by default). */
+  groupLabel?: string
   /** Formats a histogram bin's bounds (the chart's `tickFormatTime`). */
   formatTime?: (value: number) => string
+  /** What a histogram bin totals; labels the bin total row. @default "sum" */
+  aggregation?: "sum" | "count"
+}
+
+/** A histogram bin totals its events ("count") or a summed field ("total"). */
+function histogramTotalLabel(options: { aggregation?: "sum" | "count" }): string {
+  return options.aggregation === "count" ? "count" : "total"
 }
 
 /**
@@ -122,13 +136,29 @@ function format(v: unknown): string {
 export function buildDefaultRealtimeTooltip<TDatum extends Datum = Datum>(
   options: DefaultRealtimeTooltipOptions<TDatum> = {},
 ): (d: HoverData) => ReactNode {
-  const { timeAccessor, valueAccessor, xLabel = "x", yLabel = "y" } = options
+  const {
+    timeAccessor,
+    valueAccessor,
+    xLabel = "x",
+    yLabel = "y",
+    groupAccessor,
+    groupLabel = "series"
+  } = options
   return (d: HoverData) => {
     const datum = (d?.data ?? null) as TDatum | null
     const x = readField(datum, timeAccessor, "time")
     const y = readField(datum, valueAccessor, "value")
+    const group =
+      groupAccessor != null && datum != null
+        ? typeof groupAccessor === "function"
+          ? groupAccessor(datum)
+          : datum[groupAccessor]
+        : undefined
     return (
       <div className="semiotic-tooltip" style={tooltipStyle}>
+        {group != null && (
+          <div><span style={labelStyle}>{groupLabel}:</span>{format(group)}</div>
+        )}
         <div><span style={labelStyle}>{xLabel}:</span>{format(x)}</div>
         <div><span style={labelStyle}>{yLabel}:</span>{format(y)}</div>
       </div>
@@ -159,7 +189,7 @@ export function buildHistogramMultiTooltip<TDatum extends Datum = Datum>(
           </div>
         ))}
         {datum.total != null && (
-          <div><span style={labelStyle}>count:</span>{format(datum.total)}</div>
+          <div><span style={labelStyle}>{histogramTotalLabel(options)}:</span>{format(datum.total)}</div>
         )}
       </div>
     )
@@ -233,6 +263,7 @@ export function buildHistogramTooltip<TDatum extends Datum = Datum>(
   options: DefaultRealtimeTooltipOptions<TDatum> = {},
 ): (d: HoverData) => ReactNode {
   const { timeAccessor, valueAccessor, formatTime } = options
+  const totalLabel = histogramTotalLabel(options)
   return (d: HoverData) => {
     const datum = (d?.data ?? null) as (TDatum & {
       binStart?: number; binEnd?: number; total?: number;
@@ -254,13 +285,13 @@ export function buildHistogramTooltip<TDatum extends Datum = Datum>(
       <div className="semiotic-tooltip" style={tooltipStyle}>
         <div><span style={labelStyle}>range:</span>{formatBinRange(datum!.binStart!, datum!.binEnd!, formatTime)}</div>
         {datum!.total != null && (
-          <div><span style={labelStyle}>count:</span>{format(datum!.total)}</div>
+          <div><span style={labelStyle}>{totalLabel}:</span>{format(datum!.total)}</div>
         )}
         {datum!.category != null && (
           <div><span style={labelStyle}>category:</span>{format(datum!.category)}</div>
         )}
         {datum!.category != null && datum!.categoryValue != null && (
-          <div><span style={labelStyle}>category count:</span>{format(datum!.categoryValue)}</div>
+          <div><span style={labelStyle}>category {totalLabel}:</span>{format(datum!.categoryValue)}</div>
         )}
       </div>
     )

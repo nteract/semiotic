@@ -2,12 +2,19 @@ import { describe, it, expect } from "vitest"
 import type { StreamSchema } from "./streamingTypes"
 import {
   hasCategoryField,
+  isDeltaLikeFieldName,
   isIdLikeFieldName,
+  isSingleValueStream,
+  normalizeStreamSchema,
   pickCategoryField,
+  pickSeriesField,
+  pickSplitField,
   pickTimeField,
   pickValueField,
   resolveStreamShape,
+  streamBufferProps,
   streamKeyFields,
+  streamMeasureAdditivity,
   streamThroughputBand
 } from "./streamSchema"
 
@@ -120,5 +127,81 @@ describe("streamSchema helpers", () => {
     expect(hasCategoryField(schema)).toBe(true)
     expect(pickValueField(schema)?.name).toBe("revenue")
     expect(pickTimeField(schema)).toBeUndefined()
+  })
+})
+
+describe("stream field selection", () => {
+  it("uses a categorical key as the category of a keyed table", () => {
+    const schema: StreamSchema = {
+      fields: [
+        { name: "brand", kind: "categorical" },
+        { name: "revenue", kind: "numeric" }
+      ],
+      shape: "keyed",
+      keyFields: ["brand"]
+    }
+    expect(pickCategoryField(schema)?.name).toBe("brand")
+    expect(pickValueField(schema)?.name).toBe("revenue")
+  })
+
+  it("does not promote id-like or time keys to categories", () => {
+    const schema: StreamSchema = {
+      fields: [
+        { name: "window_start", kind: "date", role: "x" },
+        { name: "order_id", kind: "categorical", role: "key" },
+        { name: "price", kind: "numeric" }
+      ],
+      keyFields: ["window_start"]
+    }
+    expect(pickCategoryField(schema)).toBeUndefined()
+  })
+
+  it("splits time charts by the series role, else the primary category", () => {
+    const fields = [
+      { name: "ts", kind: "date" as const },
+      { name: "v", kind: "numeric" as const },
+      { name: "a", kind: "categorical" as const },
+      { name: "b", kind: "categorical" as const }
+    ]
+    expect(pickSplitField({ fields })?.name).toBe("a")
+    expect(pickSeriesField({ fields })?.name).toBe("b")
+    expect(
+      pickSplitField({ fields: [...fields.slice(0, 3), { ...fields[3], role: "series" }] })?.name
+    ).toBe("b")
+  })
+
+  it("reads additivity from the hint, then from count and delta names", () => {
+    expect(streamMeasureAdditivity({ name: "price", kind: "numeric" })).toBeUndefined()
+    expect(streamMeasureAdditivity({ name: "cnt", kind: "numeric" })).toBe(true)
+    expect(streamMeasureAdditivity({ name: "netFlow", kind: "numeric" })).toBe(true)
+    expect(streamMeasureAdditivity({ name: "cnt", kind: "numeric", additive: false })).toBe(false)
+    expect(isDeltaLikeFieldName("price_delta")).toBe(true)
+    expect(isDeltaLikeFieldName("cnt")).toBe(false)
+  })
+
+  it("treats only measure-without-time-or-category streams as single values", () => {
+    expect(isSingleValueStream({ fields: [{ name: "total", kind: "numeric" }] })).toBe(true)
+    expect(
+      isSingleValueStream({
+        fields: [{ name: "total", kind: "numeric" }, { name: "id", kind: "numeric", role: "key" }]
+      })
+    ).toBe(false)
+  })
+
+  it("sizes the retention buffer for 30 seconds at the event rate", () => {
+    const fields = [{ name: "v", kind: "numeric" as const }]
+    expect(streamBufferProps({ fields, throughput: 260 }, 5000)).toEqual({ windowSize: 5000 })
+    expect(streamBufferProps({ fields, throughput: 50 }, 5000)).toEqual({ windowSize: 1500 })
+    expect(streamBufferProps({ fields, throughput: 2 }, 5000)).toEqual({})
+    expect(streamBufferProps({ fields, retention: "cumulative" }, 5000)).toEqual({ windowMode: "growing" })
+  })
+
+  it("keeps unknown keys for custom capabilities while warning about them", () => {
+    const { schema, warnings } = normalizeStreamSchema({
+      fields: [{ name: "v", kind: "numeric" }],
+      myHint: 3
+    } as StreamSchema)
+    expect((schema as unknown as Record<string, unknown>).myHint).toBe(3)
+    expect(warnings).toEqual(['unknown schema key "myHint" was ignored'])
   })
 })

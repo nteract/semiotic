@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { buildHeatmapScene } from "./heatmapScene"
+import { buildHeatmapScene, resolveHeatmapSceneLegend } from "./heatmapScene"
 import { heatmapBandTicks } from "../heatmapBandTicks"
 import type { XYSceneContext } from "./types"
 import type { StreamLayout } from "../types"
@@ -982,5 +982,80 @@ describe("buildStreamingHeatmapScene", () => {
     const nodes = buildHeatmapScene(ctx, data, defaultLayout)
 
     expect(nodes.map((node) => node.fill)).toEqual(["stream-5", "stream-7"])
+  })
+})
+
+describe("resolveHeatmapSceneLegend", () => {
+  const layout: StreamLayout = { width: 400, height: 400 }
+  const gradientLegend = {
+    gradient: {
+      colorFn: (_value: number) => "#000",
+      domain: [1000, 1199] as [number, number],
+      label: "value",
+      format: (value: number) => `${value}!`
+    },
+    legendDistance: 12
+  }
+  // Two rows share a bin, so count aggregation colours by 1 and 2 while
+  // the raw values span 1000-1199.
+  const rows = [
+    { x: 5, y: 5, value: 1000 },
+    { x: 6, y: 6, value: 1100 },
+    { x: 95, y: 95, value: 1199 }
+  ]
+  const binnedCtx = (config: XYSceneContext["config"] = {}) =>
+    makeCtx({
+      config: {
+        heatmapAggregation: "count",
+        heatmapXBins: 2,
+        heatmapYBins: 2,
+        valueAccessor: "value",
+        ...config
+      }
+    })
+
+  it("takes the domain from the aggregated cells, not the raw rows", () => {
+    const ctx = binnedCtx()
+    const scene = buildHeatmapScene(ctx, rows, layout)
+    const resolved = resolveHeatmapSceneLegend(gradientLegend, scene, ctx.config)
+    expect(resolved).toMatchObject({
+      legendDistance: 12,
+      gradient: { domain: [1, 2], label: "value" }
+    })
+    const gradient = (resolved as typeof gradientLegend).gradient
+    expect(gradient.format(2)).toBe("2!")
+    // Each legend end is the exact colour of the cell holding that value.
+    for (const cell of scene) {
+      expect(gradient.colorFn(cell.value!)).toBe(cell.fill)
+    }
+  })
+
+  it("uses the theme sequential scheme and custom scales like the cells", () => {
+    const themed = binnedCtx({ themeSequential: "viridis" })
+    const themedScene = buildHeatmapScene(themed, rows, layout)
+    const themedLegend = resolveHeatmapSceneLegend(gradientLegend, themedScene, themed.config)
+    const top = themedScene.find((cell) => cell.value === 2)!
+    expect((themedLegend as typeof gradientLegend).gradient.colorFn(2)).toBe(top.fill)
+
+    const custom = (value: number) => `rgb(${value}, 0, 0)`
+    const customCtx = binnedCtx({ heatmapColorScale: custom })
+    const customScene = buildHeatmapScene(customCtx, rows, layout)
+    const customLegend = resolveHeatmapSceneLegend(gradientLegend, customScene, customCtx.config)
+    expect((customLegend as typeof gradientLegend).gradient.colorFn).toBe(custom)
+  })
+
+  it("keeps the legend when there are no cells or no gradient", () => {
+    expect(resolveHeatmapSceneLegend(gradientLegend, [], {})).toBe(gradientLegend)
+    const categorical = { legendGroups: [] }
+    const scene = buildHeatmapScene(binnedCtx(), rows, layout)
+    expect(resolveHeatmapSceneLegend(categorical, scene, {})).toBe(categorical)
+  })
+
+  it("returns the same legend object while the domain is unchanged", () => {
+    const ctx = binnedCtx()
+    const scene = buildHeatmapScene(ctx, rows, layout)
+    expect(resolveHeatmapSceneLegend(gradientLegend, scene, ctx.config)).toBe(
+      resolveHeatmapSceneLegend(gradientLegend, scene, ctx.config)
+    )
   })
 })

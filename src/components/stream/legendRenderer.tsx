@@ -6,6 +6,7 @@ import type { LegendLayout, LegendValue } from "../types/legendTypes"
 import { isLegendConfig, isGradientLegendConfig } from "../types/legendTypes"
 import {
   resolveLegendPlacement,
+  resolveLegendRenderBounds,
   type AxisChromeInput,
 } from "../legendLayout"
 
@@ -52,14 +53,16 @@ export function renderLegendFromConfig(config: LegendRenderConfig): ReactNode {
 
   if (!legend) return null
 
-  const { x, y, width: legendWidth } = resolveLegendPlacement(legend, {
+  const placementInput = {
     totalWidth,
     totalHeight,
     margin,
     position: legendPosition,
     legendLayout,
     axisChrome: config.axisChrome,
-  })
+    hasTitle: Boolean(config.title),
+  }
+  const { x, y, width: legendWidth } = resolveLegendPlacement(legend, placementInput)
   const isHorizontal = legendPosition === "top" || legendPosition === "bottom"
 
   return (
@@ -82,6 +85,7 @@ export function renderLegendFromConfig(config: LegendRenderConfig): ReactNode {
             width={legendWidth}
             orientation={isHorizontal ? "horizontal" : "vertical"}
             legendLayout={legendLayout}
+            maxHeight={resolveLegendRenderBounds(legend, placementInput).maxHeight}
             customHoverBehavior={legendHoverBehavior}
             customClickBehavior={legendClickBehavior}
             highlightedCategory={legendHighlightedCategory}

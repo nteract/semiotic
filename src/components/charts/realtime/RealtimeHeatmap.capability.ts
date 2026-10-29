@@ -2,10 +2,9 @@ import type { StreamChartCapability } from "../../ai/streamingTypes"
 import {
   hasNumericValue,
   hasTimeField,
-  pickCategoryField,
-  pickSeriesField,
   pickTimeField,
   pickValueField,
+  streamBufferProps,
   streamThroughputBand,
 } from "../../ai/streamSchema"
 
@@ -26,19 +25,24 @@ export const RealtimeHeatmapCapability: StreamChartCapability = {
     return null
   },
 
+  // Time × value bins coloured by event count: how the measure's values are
+  // spread, and how that spread moves.
   intentScores: {
     "trend": (schema) => (streamThroughputBand(schema) === "high" ? 4 : 2),
-    "distribution": 3,
+    "distribution": 4,
     "change-detection": 3,
-    "compare-series": (schema) => (pickSeriesField(schema) ? 4 : 1),
+    // Bins pool every event, so series are not separated.
+    "compare-series": 1,
   },
 
-  buildProps: (schema) => {
-    const categoryField = pickCategoryField(schema)
-    return {
-      timeAccessor: pickTimeField(schema)?.name,
-      valueAccessor: pickValueField(schema)?.name,
-      ...(categoryField ? { categoryAccessor: categoryField.name } : {}),
-    }
+  reasons: (schema) => {
+    const { windowSize } = streamBufferProps(schema, 20000)
+    return windowSize ? [`windowSize ${windowSize} keeps recent history visible at this event rate`] : []
   },
+
+  buildProps: (schema) => ({
+    timeAccessor: pickTimeField(schema)?.name,
+    valueAccessor: pickValueField(schema)?.name,
+    ...streamBufferProps(schema, 20000),
+  }),
 }

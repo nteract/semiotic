@@ -217,9 +217,8 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
   } = props
 
   // ── Frame composition (Tier A concerns; see useFrame.ts) ─────────────
-  // Network has a compact centered default for radial chart types and a wider
-  // label-safe default for directional layouts. Static rendering resolves the
-  // exact same family default through networkFrameDefaultMargin.
+  // Reserve layout padding, without axis gutters. Directional labels face
+  // into the plot at its boundaries. Static rendering uses the same defaults.
   const baseMargin = networkFrameDefaultMargin(chartType)
   // dirtyRef declared before useFrame so it can be threaded in for the
   // theme-change effect. Network inits to true (required).

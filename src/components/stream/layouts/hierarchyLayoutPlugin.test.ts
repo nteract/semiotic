@@ -42,6 +42,31 @@ describe("hierarchyLayoutPlugin", () => {
   })
 
   describe("tree layout", () => {
+    it.each(["horizontal", "vertical", "radial"] as const)(
+      "keeps %s boundary labels inside a compact plot",
+      (treeOrientation) => {
+        const nodes: RealtimeNode[] = []
+        const edges: RealtimeEdge[] = []
+        const config: NetworkPipelineConfig = {
+          chartType: "tree", treeOrientation,
+          __hierarchyRoot: { name: "Root", children: Array.from({ length: 18 }, (_, i) => ({ name: `Leaf number ${i}` })) },
+          showLabels: true, nodeIDAccessor: "name"
+        }
+        const size: [number, number] = [360, 360]
+        hierarchyLayoutPlugin.computeLayout(nodes, edges, config, size)
+        const scene = hierarchyLayoutPlugin.buildScene(nodes, edges, config, size)
+        expect(scene.labels).toHaveLength(nodes.length)
+        for (const label of scene.labels) {
+          const width = label.text.length * label.fontSize! * 0.6
+          const left = label.x - (label.anchor === "end" ? width : label.anchor === "middle" ? width / 2 : 0)
+          expect(left).toBeGreaterThanOrEqual(0)
+          expect(left + width).toBeLessThanOrEqual(size[0])
+          expect(label.y - 6).toBeGreaterThanOrEqual(0)
+          expect(label.y + 6).toBeLessThanOrEqual(size[1])
+        }
+      }
+    )
+
     it("populates nodes and edges from hierarchy", () => {
       const nodes: RealtimeNode[] = []
       const edges: RealtimeEdge[] = []

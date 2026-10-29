@@ -1,3 +1,5 @@
+import { networkFrameDefaultMargin } from "../stream/frameDefaultMargins"
+import { resolveAxisFreeMarginDefaults } from "../charts/shared/chartMode"
 import type { Datum } from "../charts/shared/datumTypes"
 import { flattenHierarchy } from "../charts/shared/networkUtils"
 import {
@@ -21,6 +23,7 @@ import {
 
 export const circlePack: ChartConfig = {
   frameType: "network",
+  layout: { margin: (_props, resolved) => resolveAxisFreeMarginDefaults(resolved, networkFrameDefaultMargin("circlepack")) },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const fill = createHierarchyNodeFill(data, colorBy, colorScheme, common, rest)
     const baseNodeStyle = (d: Datum) => {
@@ -56,6 +59,7 @@ export const circlePack: ChartConfig = {
 
 export const orbitDiagram: ChartConfig = {
   frameType: "network",
+  layout: { margin: (_props, resolved) => resolveAxisFreeMarginDefaults(resolved) },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const hierarchyRoot = (data ?? rest.data) as Datum
     const childrenAccessor = rest.childrenAccessor || "children"

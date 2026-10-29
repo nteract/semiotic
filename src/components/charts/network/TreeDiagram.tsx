@@ -1,4 +1,6 @@
 "use client"
+import { resolveAxisFreeMarginDefaults } from "../shared/chartMode"
+import { networkFrameDefaultMargin } from "../../stream/frameDefaultMargins"
 import { TREE_DIAGRAM_SIZE } from "../shared/chartSizeDefaultsNetwork"
 import type { NetworkPerspectiveProps } from "../shared/networkPerspectiveProps"
 import type { Datum } from "../shared/datumTypes"
@@ -197,7 +199,7 @@ export const TreeDiagram = /* @__PURE__ */ withChartErrorBoundary(function TreeD
     mobileSemantics: resolved.mobileSemantics,
     chartType: "TreeDiagram",
     chartId,
-    marginDefaults: resolved.marginDefaults,
+    marginDefaults: resolveAxisFreeMarginDefaults(resolved, networkFrameDefaultMargin(layout)),
     userMargin,
     width, height,
     hasTitle: !!title,

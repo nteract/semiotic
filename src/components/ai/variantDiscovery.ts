@@ -19,6 +19,11 @@ import type {
 import type { IntentId } from "./intents"
 import { expandComposedIntentScores } from "./intentRegistry"
 import {
+  defaultProfileIntentWeights,
+  requestedIntentWeights,
+  weightedIntentScore,
+} from "./intentWeights"
+import {
   applyAudienceBias,
   receivabilityBias,
   type AudienceProfile,
@@ -227,15 +232,18 @@ function intentScoresFor(
   return out
 }
 
+/** Same composite as `suggestCharts`: requested intents, else profile weights. */
 function compositeScore(
   intentScores: Partial<Record<IntentId, number>>,
-  rankingIntents: ReadonlyArray<IntentId>
+  rankingIntents: ReadonlyArray<IntentId>,
+  profile: ChartDataProfile
 ): number {
-  if (rankingIntents.length > 0) {
-    return rankingIntents.reduce((sum, intent) => sum + (intentScores[intent] ?? 0), 0) / rankingIntents.length
-  }
-  const nonZero = Object.values(intentScores).filter((n): n is number => typeof n === "number" && n > 0)
-  return nonZero.length ? nonZero.reduce((sum, n) => sum + n, 0) / nonZero.length : 0
+  return weightedIntentScore(
+    intentScores,
+    rankingIntents.length > 0
+      ? requestedIntentWeights(rankingIntents)
+      : defaultProfileIntentWeights(profile)
+  )
 }
 
 function applyRubricDeltas(
@@ -372,7 +380,7 @@ function builtInHeuristicProposals(
         )
         return {
           candidate,
-          fit: compositeScore(scores, intents),
+          fit: compositeScore(scores, intents, profile),
           scores,
         }
       })
@@ -512,7 +520,7 @@ export const evaluateVariantProposal: EvaluateVariantProposalFn = (
       reasons: [`Rejected: ${policyFailure}`],
     }
   }
-  const baseFit = compositeScore(intentScores, rankingIntents)
+  const baseFit = compositeScore(intentScores, rankingIntents, profile)
   const rubric = applyRubricDeltas(capability.rubric, proposal.rubricDeltas)
 
   // Receivability: mirror `suggestCharts`. When the audience declares a

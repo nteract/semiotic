@@ -33,7 +33,7 @@ const PATTERNS: IntentPattern[] = [
     weight: 4,
     patterns: [
       /\b(outlier|outliers|anomal|anomaly|anomalies|extreme|extremes|unusual|stands? out|sticks? out|odd one)\b/i,
-      /\b(peak|peaks|highest|lowest|biggest spike|spikes?|min|max|maximum|minimum)\b/i,
+      /\b(peak|peaks|highest|lowest|biggest spike|spikes?|spiking|spiked|min|max|maximum|minimum)\b/i,
     ],
   },
   {
@@ -48,7 +48,7 @@ const PATTERNS: IntentPattern[] = [
     intent: "change-detection",
     weight: 3,
     patterns: [
-      /\b(when did|what changed|shift|shifted|breakpoint|inflection|turning point|sudden|abrupt)\b/i,
+      /\b(when did|what changed|shift|shifted|breakpoint|inflection|turning point|sudden|abrupt|surge|surged|surging)\b/i,
     ],
   },
   {

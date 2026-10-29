@@ -15,6 +15,18 @@ function band(id: string, labelX: number, labelY = 100): ProcessSankeyBandSpec {
 }
 
 describe("staggerProcessSankeyLabels", () => {
+  it("fits boundary labels before resolving their collisions without moving the bands", () => {
+    const bands = [band("Intake queue", -4), band("Incoming work", 2), band("Complete", 500)]
+    const result = staggerProcessSankeyLabels(bands, { "Intake queue": 0, "Incoming work": 0, Complete: 1 }, 300, 360)
+    for (const label of result) {
+      expect(label.labelX - label.labelText.length * 11 * 0.58).toBeGreaterThanOrEqual(0)
+      expect(label.labelX).toBeLessThanOrEqual(360)
+      expect(label.pathD).toBe("M0,0Z")
+    }
+    expect(result[1].labelY - result[0].labelY).toBeGreaterThanOrEqual(16)
+    expect(bands.map(band => band.labelX)).toEqual([-4, 2, 500])
+  })
+
   it("stacks colliding labels only within the same reused row", () => {
     const result = staggerProcessSankeyLabels(
       [band("Low pass", 205), band("Lunar surface", 210), band("Recovery", 380)],

@@ -1,12 +1,16 @@
-import { resolveGaugeCenterContent } from "../charts/shared/GaugeReadout"
+import {
+  describeGaugeCenter,
+  gaugeCenterCaptionLines,
+  renderGaugeCenter
+} from "../charts/shared/GaugeReadout"
+import { computeGaugeLayout } from "../charts/shared/gaugeLayout"
+import { hasTextTitle, MIN_TITLE_TOP_MARGIN } from "../stream/titleLayout"
+import { staticTitleText } from "./staticTitle"
 import type { Datum } from "../charts/shared/datumTypes"
 import { buildGaugeArcModel } from "../charts/shared/gaugeGradient"
 import { normalizeColorGradient } from "../charts/shared/gradient"
 import { mergeShapeStyle } from "../charts/shared/mergeShapeStyle"
-import {
-  computeArcBoundingBox,
-  sweepToAngles
-} from "../charts/shared/radialGeometry"
+import { sweepToAngles } from "../charts/shared/radialGeometry"
 import { resolveStyleRules, type StyleRule } from "../charts/shared/styleRules"
 import {
   primitiveStyleOverrides,
@@ -67,39 +71,51 @@ export const gaugeChart: ChartConfig = {
     const [width, height] = (common.size as [number, number] | undefined) || [
       300, 250
     ]
-    const arcBBox = computeArcBoundingBox(sweep)
-    const pad = Math.min(10, Math.max(1, Math.min(width, height) / 12))
-    const radius = Math.max(
-      4,
-      Math.min(
-        (width - 2 * pad) / arcBBox.width,
-        (height - 2 * pad) / arcBBox.height
-      ) - 2
-    )
-    const computedInnerRadius = Math.max(
-      0,
-      Math.min(radius - 1.5, radius * (1 - arcWidth))
-    )
-    const frameCenterX = width / 2 - arcBBox.cx * radius
-    const frameCenterY = height / 2 - arcBBox.cy * radius
-    const sceneSize = 2 * (radius + 4)
     const value = Math.max(gMin, Math.min(gMax, rest.value ?? gMin))
     const formattedValue =
       typeof rest.valueFormat === "function"
         ? rest.valueFormat(value)
         : String(Math.round(value))
     const suppliedCenterContent = rest.centerContent ?? common.centerContent
-    const centerContent = resolveGaugeCenterContent({
+    const center = describeGaugeCenter({
       centerContent: suppliedCenterContent,
       centerLabel: typeof rest.centerLabel === "string" ? rest.centerLabel : undefined,
       value,
       min: gMin,
       max: gMax,
-      radius,
-      innerRadius: computedInnerRadius,
       showScaleLabels,
       valueFormat: typeof rest.valueFormat === "function" ? rest.valueFormat : undefined,
       compact
+    })
+    // Same arc + readout fit as the React chart (see computeGaugeLayout).
+    const layout = computeGaugeLayout({
+      width,
+      height,
+      sweep,
+      arcWidth,
+      readout:
+        center && "readout" in center
+          ? { value: center.readout.value, captionLines: gaugeCenterCaptionLines(center) }
+          : null,
+      needle: showNeedle,
+      scaleLabels: gaugeModel.gaugeAnnotations
+        .filter((ann) => ann.type === "gauge-label")
+        .map((ann) => ({
+          fraction: gMax === gMin ? 0 : (ann.value - gMin) / (gMax - gMin),
+          text: String(ann.label)
+        })),
+      // Static output reserves the title strip only for text titles.
+      topInset: hasTextTitle(staticTitleText(common.title ?? rest.title)) ? MIN_TITLE_TOP_MARGIN : 0
+    })
+    const { radius, innerRadius: computedInnerRadius } = layout
+    const frameCenterX = layout.centerX
+    const frameCenterY = layout.centerY
+    const centerContent = renderGaugeCenter(center, {
+      min: gMin,
+      max: gMax,
+      radius,
+      innerRadius: computedInnerRadius,
+      offsetY: layout.readoutOffset
     })
 
     return {
@@ -119,12 +135,7 @@ export const gaugeChart: ChartConfig = {
       ...(rest.cornerRadius != null && { cornerRadius: rest.cornerRadius }),
       ...common,
       size: [width, height],
-      margin: {
-        top: frameCenterY - sceneSize / 2,
-        bottom: height - frameCenterY - sceneSize / 2,
-        left: frameCenterX - sceneSize / 2,
-        right: width - frameCenterX - sceneSize / 2
-      },
+      margin: layout.margin,
       ...(centerContent != null && { centerContent }),
       showAxes: false,
       annotations: [

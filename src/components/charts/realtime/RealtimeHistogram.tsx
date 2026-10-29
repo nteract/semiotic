@@ -135,6 +135,14 @@ export interface RealtimeHistogramProps<
   timeAccessor?: ChartAccessor<TDatum, CoercibleNumber>
   /** Value accessor */
   valueAccessor?: ChartAccessor<TDatum, number>
+  /**
+   * What each bin totals. `"sum"` adds `valueAccessor` per bin. `"count"`
+   * counts events instead — every row with a valid time counts once and
+   * `valueAccessor` is ignored — so streams without a numeric field (click
+   * or log events) still bin.
+   * @default "sum"
+   */
+  aggregation?: "sum" | "count"
   /** Fixed time domain */
   timeExtent?: [number, number]
   /** Fixed value domain */
@@ -333,6 +341,7 @@ export const RealtimeHistogram = /* @__PURE__ */ withChartErrorBoundary(/* @__PU
     data,
     timeAccessor,
     valueAccessor,
+    aggregation = "sum",
     direction = "up",
     timeExtent,
     valueExtent,
@@ -464,8 +473,8 @@ export const RealtimeHistogram = /* @__PURE__ */ withChartErrorBoundary(/* @__PU
   // Multi mode lists every stacked category in the hovered bin.
   const tooltipProps = resolveMultiCapableTooltip({
     tooltip,
-    defaultTooltipContent: buildHistogramTooltip({ timeAccessor, valueAccessor, formatTime: tickFormatTime }),
-    multiDefaultContent: buildHistogramMultiTooltip({ timeAccessor, valueAccessor, formatTime: tickFormatTime }),
+    defaultTooltipContent: buildHistogramTooltip({ timeAccessor, valueAccessor, aggregation, formatTime: tickFormatTime }),
+    multiDefaultContent: buildHistogramMultiTooltip({ timeAccessor, valueAccessor, aggregation, formatTime: tickFormatTime }),
     customFunctionContext: "hover"
   })
   const resolvedTooltip = tooltipContent ?? tooltipProps.tooltipContent
@@ -613,7 +622,10 @@ export const RealtimeHistogram = /* @__PURE__ */ withChartErrorBoundary(/* @__PU
     : className
 
   const numericTime = useCallback((datum: Datum) => readRealtimeTime(datum as TDatum, timeAccessor, "time") ?? NaN, [timeAccessor])
-  const numericValue = useCallback((datum: Datum) => readRealtimeNumber(datum as TDatum, valueAccessor, "value") ?? NaN, [valueAccessor])
+  const numericValue = useCallback(
+    (datum: Datum) => aggregation === "count" ? 1 : readRealtimeNumber(datum as TDatum, valueAccessor, "value") ?? NaN,
+    [aggregation, valueAccessor]
+  )
   const windowMode = windowModeProp ?? capacityMode ?? "sliding"
   const windowSize = resolveRealtimeWindowSize(windowSizeProp, data, capacity)
   // ── Loading / empty guards (deferred to after all hooks) ───────────────

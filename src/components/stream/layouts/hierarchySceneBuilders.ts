@@ -198,7 +198,14 @@ export function buildTreeScene(
         }
       } else if (orientation === "horizontal") {
         const isLeaf = isHierarchyLeaf(node)
-        if (isLeaf) {
+        // Keep boundary labels inside the plot instead of reserving a fixed
+        // 80px gutter on both sides, including when labels are disabled.
+        const labelWidth = String(text).length * 11 * 0.6
+        const labelGap = defaultNodeSize + 6
+        const faceRight = isLeaf
+          ? nx + labelGap + labelWidth <= size[0]
+          : nx - labelGap - labelWidth < 0
+        if (faceRight) {
           x = nx + defaultNodeSize + 6
           anchor = "start"
         } else {
@@ -208,9 +215,17 @@ export function buildTreeScene(
         y = ny
       } else {
         x = nx
-        y = ny + defaultNodeSize + 14
+        const labelGap = defaultNodeSize + 14
+        y = ny + labelGap + 6 <= size[1] ? ny + labelGap : ny - labelGap
         anchor = "middle"
       }
+
+      // Vertical and radial trees can also place a long label near a side.
+      // Re-anchor it into the plot without squeezing the layout for all nodes.
+      const textWidth = String(text).length * 11 * 0.6
+      const left = x - (anchor === "end" ? textWidth : anchor === "middle" ? textWidth / 2 : 0)
+      if (left < 0) anchor = "start"
+      else if (left + textWidth > size[0]) anchor = "end"
 
       labels.push({
         x,

@@ -1292,7 +1292,9 @@ export default function ProcessSankeyPage() {
         <li>
           <code>showLabels</code> (default <code>true</code>) — render
           each lane&rsquo;s <code>nodeLabel</code> (falling back to its id)
-          at the band&rsquo;s opening edge. Turn off
+          at the band&rsquo;s opening edge, fitted inside the plot. Horizontal
+          charts use 20px of padding on each side; a visible legend reserves
+          its measured width. Turn off
           for dense layouts where labels would overlap, or when the
           legend already names every band.
         </li>

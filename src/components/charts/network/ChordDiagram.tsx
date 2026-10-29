@@ -1,4 +1,6 @@
 "use client"
+import { resolveAxisFreeMarginDefaults } from "../shared/chartMode"
+import { networkFrameDefaultMargin } from "../../stream/frameDefaultMargins"
 import { CHORD_DIAGRAM_SIZE } from "../shared/chartSizeDefaultsNetwork"
 import type { NetworkPerspectiveProps } from "../shared/networkPerspectiveProps"
 import type { Datum } from "../shared/datumTypes"
@@ -203,7 +205,7 @@ export const ChordDiagram = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ 
     mobileSemantics: resolved.mobileSemantics,
     chartType: "ChordDiagram",
     chartId,
-    marginDefaults: resolved.marginDefaults,
+    marginDefaults: resolveAxisFreeMarginDefaults(resolved, networkFrameDefaultMargin("chord")),
     userMargin,
     width, height,
     hasTitle: !!title,

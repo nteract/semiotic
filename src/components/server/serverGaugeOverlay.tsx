@@ -1,6 +1,11 @@
 import * as React from "react"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { ServerChartOverlayContext } from "./serverChartConfigShared"
+import {
+  GAUGE_LABEL_FONT_SIZE,
+  GAUGE_LABEL_OFFSET,
+  gaugeScaleLabelAlignment
+} from "../charts/shared/gaugeLayout"
 
 export interface ServerGaugeDescriptor {
   gMin: number
@@ -60,10 +65,8 @@ export function renderServerGaugeOverlay(
         const angle = (g.startAngleDeg + fraction * g.sweep - 90) * Math.PI / 180
         const inner = g.innerRadius - 1
         const outer = g.radius + 1
-        const labelRadius = g.radius + 10
-        const hour = (((angle + Math.PI / 2) / (2 * Math.PI)) * 12 + 12) % 12
-        const textAnchor = hour >= 11 || hour < 1 ? "middle" : hour < 5 ? "start" : hour < 7 ? "middle" : "end"
-        const dominantBaseline = hour >= 11 || hour < 1 ? "auto" : hour < 5 ? "middle" : hour < 7 ? "hanging" : "middle"
+        const labelRadius = g.radius + GAUGE_LABEL_OFFSET
+        const { textAnchor, dominantBaseline } = gaugeScaleLabelAlignment(angle)
         return <g key={`gauge-label-${index}`}>
           <line
             x1={g.centerX + Math.cos(angle) * inner}
@@ -80,7 +83,7 @@ export function renderServerGaugeOverlay(
             textAnchor={textAnchor}
             dominantBaseline={dominantBaseline}
             fill={theme.colors.textSecondary}
-            fontSize={10}
+            fontSize={GAUGE_LABEL_FONT_SIZE}
           >
             {threshold.label || String(threshold.value)}
           </text>

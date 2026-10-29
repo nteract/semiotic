@@ -63,6 +63,23 @@ const examples = [
 
   // 3. Treemap
   TestCase({
+    title: "Vertical Tree",
+    testId: "network-tree-vertical",
+    children: React.createElement(TreeDiagram, {
+      data: { name: "root", children: Array.from({ length: 18 }, (_, i) => ({ name: `branch${i} label` })) },
+      width: 400, height: 400,
+      orientation: "vertical", colorByDepth: true
+    })
+  }),
+  TestCase({
+    title: "TreeDiagram Treemap Layout",
+    testId: "network-tree-treemap",
+    children: React.createElement(TreeDiagram, {
+      data: hierarchyData, width: 400, height: 400,
+      layout: "treemap", colorByDepth: true
+    })
+  }),
+  TestCase({
     title: "Treemap",
     testId: "network-treemap",
     children: React.createElement(Treemap, {

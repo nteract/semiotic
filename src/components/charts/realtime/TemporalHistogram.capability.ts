@@ -1,15 +1,12 @@
 import type { StreamChartCapability } from "../../ai/streamingTypes"
-import {
-  hasNumericValue,
-  hasTimeField,
-  pickTimeField,
-  pickValueField,
-} from "../../ai/streamSchema"
+import { pickTimeField, pickValueField } from "../../ai/streamSchema"
 
 /**
- * TemporalHistogram is the bounded sibling of RealtimeHistogram — same chart
- * but for static data with a fixed window. For stream selection it competes
- * with RealtimeHistogram; the choice depends on retention.
+ * TemporalHistogram is the bounded sibling of RealtimeHistogram: same chart,
+ * but it takes a static `data` array and has no push API. A stream — even
+ * one with cumulative retention — belongs to RealtimeHistogram (which
+ * suggests `windowMode: "growing"` for cumulative retention), so this
+ * descriptor stays registered only to explain the redirect.
  */
 export const TemporalHistogramCapability: StreamChartCapability = {
   component: "TemporalHistogram",
@@ -17,23 +14,13 @@ export const TemporalHistogramCapability: StreamChartCapability = {
   importPath: "semiotic/realtime",
   rubric: { familiarity: 3, accuracy: 4, precision: 3 },
 
-  fits: (schema) => {
-    if (!hasTimeField(schema)) {
-      return "needs a time field"
-    }
-    if (!hasNumericValue(schema)) {
-      return "needs a numeric value field"
-    }
-    if (schema.retention === "windowed") {
-      return "windowed retention is RealtimeHistogram's job; TemporalHistogram serves bounded/cumulative data"
-    }
-    return null
-  },
+  fits: () =>
+    "renders a bounded data array without a push API — use RealtimeHistogram for a stream (cumulative retention maps to windowMode \"growing\")",
 
   intentScores: {
-    "distribution": 5,
+    "distribution": 2,
     "change-detection": 3,
-    "trend": 2,
+    "trend": 3,
   },
 
   buildProps: (schema) => ({

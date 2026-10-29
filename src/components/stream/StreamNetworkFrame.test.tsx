@@ -10,6 +10,7 @@ import { setupCanvasMock } from "../../test-utils/canvasMock"
 import type { StreamNetworkFrameHandle } from "./networkTypes"
 import type { NetworkCustomLayout } from "./networkCustomLayout"
 import { createFrameScheduler } from "./test-utils/frameScheduler"
+import { networkFrameDefaultMargin } from "./frameDefaultMargins"
 import { DARK_THEME, ThemeProvider } from "../ThemeProvider"
 
 // ResizeObserver is polyfilled globally in src/setupTests.ts.
@@ -450,8 +451,9 @@ describe("StreamNetworkFrame", () => {
 
     const canvas = container.querySelector("canvas")!
     const image = container.querySelector<HTMLElement>('[role="img"]')!
-    const clientX = 80 + ((node.x0! + node.x1!) / 2)
-    const clientY = 20 + ((node.y0! + node.y1!) / 2)
+    const margin = networkFrameDefaultMargin("sankey")
+    const clientX = margin.left + ((node.x0! + node.x1!) / 2)
+    const clientY = margin.top + ((node.y0! + node.y1!) / 2)
     fireEvent.mouseMove(image, { clientX, clientY })
     await act(async () => { scheduler.flush() })
     expect(canvas.style.cursor).toBe("pointer")

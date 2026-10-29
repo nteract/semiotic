@@ -1,4 +1,4 @@
-import { ordinalAxisTicks } from "../stream/ordinalAxisTicks"
+import { ordinalValueTicks } from "../stream/ordinalAxisTicks"
 import { createSvgIdPrefix, renderWithContentSvgIdPrefix } from "../shared/svgNamespace"
 import { resolveXYAxes } from "../stream/resolveXYAxes"
 import type { Datum } from "../charts/shared/datumTypes"
@@ -46,6 +46,7 @@ import { staticTitleText, staticTitleContent } from "./staticTitle"
 import {
   resolveAxisLineStyle,
   resolveHorizontalTickAnchor,
+  resolveHorizontalTickLabelShift,
   resolveVerticalTickBaseline,
   tickPixelExtent,
   jaggedBaselinePath,
@@ -59,6 +60,7 @@ import { isStaticAxisLandmark } from "./staticXYAxisTicks"
 import { generateXYTicks, axisTicksNeedRotation } from "../stream/xyAxisTicks"
 import {
   clampLegendReservation,
+  resolveLegendDistance,
   resolveLegendSideGutter,
   type AxisChromeInput
 } from "../legendLayout"
@@ -336,15 +338,18 @@ export function renderOrdinalGridSVG(
   theme: SemioticTheme,
   idPrefix?: string,
   axisExtent?: AxisExtentMode,
-  rTickValues?: number[]
+  rTickValues?: number[],
+  rFormat?: (value: number) => string
 ): React.ReactNode {
   const scales = store.scales
   if (!scales || scales.projection === "radial") return null
   const { grid } = themeStyles(theme)
   const pfx = idPrefix ? `${idPrefix}-` : ""
   const isVertical = scales.projection === "vertical"
-  // Match client axes and underlays, including the rounded domain tick count.
-  const rTicks = ordinalAxisTicks(scales, layout, axisExtent, rTickValues)
+  // Match client axes and underlays, including the rounded domain tick count
+  // and the labels that repeated-label removal keeps.
+  const rTicks = ordinalValueTicks(scales, layout, axisExtent, rTickValues, rFormat)
+    .map((tick) => tick.value)
 
   if (isVertical) {
     return (
@@ -518,6 +523,14 @@ export function generateAxesSVG(
   const shouldRotateXAxis = Boolean(xAxis?.autoRotate && axisTicksNeedRotation(xTicks))
   const xPixelExtent = tickPixelExtent(xTicks)
   const yPixelExtent = tickPixelExtent(yTicks)
+  // Edge tick labels stay within the SVG's side margins (see the live overlay).
+  const xLabelLeftRoom = margin?.left ?? props.margin?.left ?? 40
+  const rightRoom = margin?.right ?? props.margin?.right ?? 40
+  // A rendered right legend starts this far past the plot (see the overlay).
+  const xLabelRightRoom =
+    hasRenderedLegend && legendPosition === "right"
+      ? Math.min(rightRoom, rightSideLegendGutter + resolveLegendDistance(props.legend as LegendValue | undefined))
+      : rightRoom
   const xLabel = xAxis?.label ?? props.xLabel
   const yLabel = yAxis?.label ?? (yOrient === "right" ? (props.yLabelRight ?? props.yLabel) : props.yLabel)
   const xAxisLine = resolveAxisLineStyle(xAxis?.axisStyle, { stroke: s.border, strokeWidth: 1 })
@@ -544,6 +557,11 @@ export function generateAxesSVG(
       )}
       {xTicks.map((tick, i) => {
         const isLandmark = isStaticAxisLandmark(xAxis?.landmarkTicks, tick, i, xTicks)
+        const xTickAnchor = shouldRotateXAxis ? "end" : resolveHorizontalTickAnchor(
+          xAxis?.tickAnchor,
+          tick.pixel === xPixelExtent.min,
+          tick.pixel === xPixelExtent.max,
+        )
         return (
         <g
           key={`xtick-${i}`}
@@ -552,12 +570,15 @@ export function generateAxesSVG(
           <line y2={xTickDirection * 5} {...xAxisLine} />
           {isStaticTextTickLabel(tick.label) ? (
             <text
+              x={shouldRotateXAxis ? undefined : resolveHorizontalTickLabelShift(
+                xTickAnchor,
+                tick.pixel,
+                tick.label,
+                isLandmark ? s.tickSize + 1 : s.tickSize,
+                { min: -xLabelLeftRoom, max: layout.width + xLabelRightRoom },
+              ) || undefined}
               y={xTickDirection * (shouldRotateXAxis ? 12 : 18)}
-              textAnchor={shouldRotateXAxis ? "end" : resolveHorizontalTickAnchor(
-                xAxis?.tickAnchor,
-                tick.pixel === xPixelExtent.min,
-                tick.pixel === xPixelExtent.max,
-              )}
+              textAnchor={xTickAnchor}
               fontWeight={isLandmark ? 600 : 400}
               fontSize={isLandmark ? s.tickSize + 1 : s.tickSize}
               fill={s.textSecondary}

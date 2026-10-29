@@ -1,6 +1,6 @@
 import { scaleLinear, scaleBand } from "d3-scale"
 import { buildBarScene, buildClusterBarScene } from "./barScene"
-import { buildPieScene } from "./pieScene"
+import { buildPieScene, fitDonutInnerRadius } from "./pieScene"
 import { buildPointScene, buildSwarmScene } from "./pointScene"
 import { buildBoxplotScene, buildViolinScene, buildHistogramScene, buildRidgelineScene } from "./statisticalScene"
 import { buildTimelineScene } from "./timelineScene"
@@ -401,6 +401,41 @@ describe("buildPieScene", () => {
     })
     const nodes = buildPieScene(ctx, layout)
     expect(nodes[0].innerRadius).toBe(60)
+  })
+
+  it("falls back to a readable ring when the donut hole is wider than the plot", () => {
+    const ctx = makeCtx({
+      config: makeConfig({ chartType: "donut", innerRadius: 70 }),
+      columns: {
+        A: makeColumn("A", [{ value: 100 }], { pct: 1, pctStart: 0 })
+      }
+    })
+    // A short dashboard plot: outerRadius = 110 / 2 - 4 = 51 < 70.
+    const nodes = buildPieScene(ctx, { width: 740, height: 110 })
+    expect(nodes[0].outerRadius).toBe(51)
+    expect(nodes[0].innerRadius).toBe(51 - 12)
+  })
+
+  it("keeps any requested hole that leaves a ring, including thin rings and gauges", () => {
+    expect(fitDonutInnerRadius(100, 104.5)).toBe(100)
+    expect(fitDonutInnerRadius(140, 146)).toBe(140)
+    // GaugeChart's thinnest band is 1.5px.
+    expect(fitDonutInnerRadius(2.5, 4)).toBe(2.5)
+    expect(fitDonutInnerRadius(0, 50)).toBe(0)
+  })
+
+  it("shrinks the fallback ring with very small donuts and never goes negative", () => {
+    expect(fitDonutInnerRadius(40, 20)).toBe(15)
+    expect(fitDonutInnerRadius(40, 0)).toBe(0)
+    const ctx = makeCtx({
+      config: makeConfig({ chartType: "donut", innerRadius: 40 }),
+      columns: {
+        A: makeColumn("A", [{ value: 100 }], { pct: 1, pctStart: 0 })
+      }
+    })
+    const nodes = buildPieScene(ctx, { width: 300, height: 1 })
+    expect(nodes[0].outerRadius).toBe(0)
+    expect(nodes[0].innerRadius).toBe(0)
   })
 
   it("wedge angles span from pctStart to pctStart+pct", () => {

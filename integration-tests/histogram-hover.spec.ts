@@ -66,7 +66,7 @@ test("multi histogram tooltip lists every category above the stacks and at bin e
     await expect(tooltip).toContainText("range:10–20")
     await expect(tooltip).toContainText("North:4")
     await expect(tooltip).toContainText("South:4")
-    await expect(tooltip).toContainText("count:8")
+    await expect(tooltip).toContainText("total:8")
     await expect(page.getByTestId("hovered-bin")).toHaveText("10")
     await expectTooltipWithinPlot(chart, margin)
 
@@ -132,7 +132,7 @@ for (const mode of ["bounded", "push", "single"]) {
       await expect(tooltip).toContainText(
         `range:${column * 10}–${column * 10 + 10}`
       )
-      await expect(tooltip).toContainText("count:8")
+      await expect(tooltip).toContainText("total:8")
       await expectTooltipWithinPlot(chart, margin)
     }
 
@@ -206,7 +206,7 @@ test.describe("touch bin highlighting", () => {
           await expect.poll(async () => (await columnPixels(chart))[1]).not.toEqual(baseline[1])
           await expect(tooltip).toContainText(`range:${column * 10}–${column * 10 + 10}`)
           await expect(tooltip).toContainText(`category:${category}`)
-          await expect(tooltip).toContainText("count:8")
+          await expect(tooltip).toContainText("total:8")
           await expectTooltipWithinPlot(chart, margin)
           // The top of the plot is outside every bar and its touch hit radius.
           await tap(column, 22)

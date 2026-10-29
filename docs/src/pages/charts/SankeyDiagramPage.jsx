@@ -176,7 +176,7 @@ const sankeyDiagramProps = [
   { name: "tooltip", type: "object | function", required: false, default: null, description: "Tooltip configuration or render function." },
   { name: "width", type: "number", required: false, default: "800", description: "Chart width in pixels." },
   { name: "height", type: "number", required: false, default: "600", description: "Chart height in pixels." },
-  { name: "margin", type: "object", required: false, default: "{ top: 50, bottom: 50, left: 50, right: 50 }", description: "Margin around the chart area." },
+  { name: "margin", type: "object", required: false, default: "{ top: 20, bottom: 20, left: 20, right: 20 }", description: "Symmetric primary/mobile padding. Node labels face into the plot; titles and legends reserve additional space. Context and sparkline use compact insets." },
   { name: "title", type: "string", required: false, default: null, description: "Chart title displayed at the top." },
   { name: "perspective", type: "string | object", required: false, default: '"flat"', description: <>{'Parallel projection applied after layout: "isometric", "pixel", "dimetric", "military", "cabinet", or a config object (elevation, ground grid/plate, regions, edges.route, labels, transition). Node rects and bands lie on the ground as projected shapes. Layout is unchanged; tooltips and keyboard focus follow the projected marks. Use for categorical or topological positions, not measured ones.'} <Link to="/features/perspective">See Perspective</Link>.</> },
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamNetworkFrame props for advanced customization." },

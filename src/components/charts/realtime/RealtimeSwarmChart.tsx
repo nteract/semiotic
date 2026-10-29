@@ -365,7 +365,12 @@ export const RealtimeSwarmChart = /* @__PURE__ */ withChartErrorBoundary(/* @__P
       tooltip,
       defaultTooltipContent: buildDefaultRealtimeTooltip({
         timeAccessor,
-        valueAccessor
+        valueAccessor,
+        groupAccessor: categoryAccessor as
+          | string
+          | ((d: Datum) => unknown)
+          | undefined,
+        groupLabel: "category"
       }),
       customFunctionContext: "hover"
     }).tooltipContent

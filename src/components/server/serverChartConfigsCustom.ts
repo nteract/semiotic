@@ -1,3 +1,4 @@
+import { resolveAxisFreeMarginDefaults } from "../charts/shared/chartMode"
 import { type ChartConfig } from "./serverChartConfigShared"
 import { calendarLayout } from "../recipes/calendar"
 import { parallelCoordinatesLayout } from "../recipes/parallelCoordinates"
@@ -62,6 +63,7 @@ export const networkCustomChart: ChartConfig = {
 
 export const geoCustomChart: ChartConfig = {
   frameType: "geo",
+  layout: { margin: (_props, resolved) => resolveAxisFreeMarginDefaults(resolved) },
   buildProps: (data, colorBy, colorScheme, common, rest) => ({
     points: rest.points || data || [],
     areas: rest.areas || [],

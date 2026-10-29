@@ -13,11 +13,24 @@ export const AXIS_FRAME_DEFAULT_MARGIN = {
   left: 70,
 } as const
 
+export const AXIS_FREE_FRAME_DEFAULT_MARGIN = {
+  top: 10,
+  right: 10,
+  bottom: 10,
+  left: 10,
+} as const
+
+export function ordinalFrameDefaultMargin(chartType: string) {
+  return chartType === "pie" || chartType === "donut"
+    ? AXIS_FREE_FRAME_DEFAULT_MARGIN
+    : AXIS_FRAME_DEFAULT_MARGIN
+}
+
 export const NETWORK_FRAME_DEFAULT_MARGIN = {
   top: 20,
-  right: 80,
+  right: 20,
   bottom: 20,
-  left: 80,
+  left: 20,
 } as const
 
 export const CENTERED_NETWORK_FRAME_DEFAULT_MARGIN = {
@@ -35,6 +48,8 @@ const CENTERED_NETWORK_CHART_TYPES = new Set([
 ])
 
 export function networkFrameDefaultMargin(chartType: string) {
+  // Rectangular hierarchy labels sit inside their cells.
+  if (chartType === "treemap" || chartType === "partition") return AXIS_FREE_FRAME_DEFAULT_MARGIN
   return CENTERED_NETWORK_CHART_TYPES.has(chartType)
     ? CENTERED_NETWORK_FRAME_DEFAULT_MARGIN
     : NETWORK_FRAME_DEFAULT_MARGIN

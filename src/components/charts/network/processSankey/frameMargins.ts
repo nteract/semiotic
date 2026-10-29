@@ -1,5 +1,5 @@
 /**
- * Reserve vertical frame space only for chrome that is actually rendered.
+ * Reserve frame space only for chrome that is actually rendered.
  * Eight pixels clear the bare axis rule; telemetry needs its two-line
  * readout, and labeled ticks need their 20px baseline plus font descent.
  */
@@ -19,8 +19,8 @@ export function resolveProcessSankeyMarginDefaults(
   }
   return {
     top: hasTitle ? 30 : showQualityReadout ? 24 : 8,
-    right: 80,
+    right: 20,
     bottom: hasAxisTicks ? 28 : 8,
-    left: 80,
+    left: 20,
   }
 }

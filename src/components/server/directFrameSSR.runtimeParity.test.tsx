@@ -67,7 +67,7 @@ describe("direct Stream Frame SSR runtime parity", () => {
     for (const svg of [xy, ordinal]) {
       expect(svg).toContain('transform="translate(70,50)"')
     }
-    expect(sankey).toContain('transform="translate(80,20)"')
+    expect(sankey).toContain('transform="translate(20,20)"')
     expect(force).toContain('transform="translate(40,40)"')
   })
 
@@ -155,8 +155,8 @@ describe("direct Stream Frame SSR runtime parity", () => {
     ]
 
     for (const svg of network) {
-      expect(svg).toContain('translate(80,34)')
-      expect(svg).toMatch(/transform="translate\(80,\s*4\)"/)
+      expect(svg).toContain('translate(20,34)')
+      expect(svg).toMatch(/transform="translate\(20,\s*4\)"/)
     }
     for (const svg of geo) {
       expect(svg).toContain('translate(10,34)')
@@ -253,33 +253,36 @@ describe("direct Stream Frame SSR runtime parity", () => {
     expectMarkupLayerOrder(html, "<circle")
   })
 
-  it("does not center radial ordinal background graphics with the marks", () => {
-    const html = ReactDOMServer.renderToStaticMarkup(
-      <StreamOrdinalFrame
-        chartType="pie"
-        projection="radial"
-        data={[{ category: "A", value: 1 }]}
-        oAccessor="category"
-        rAccessor="value"
-        background="#badbad"
-        backgroundGraphics={
-          <rect
-            id="custom-background"
-            data-testid="radial-background"
-            width={20}
-            height={20}
-          />
-        }
-        size={[300, 240]}
-      />
-    )
+  it.each(["pie", "donut"] as const)(
+    "keeps %s background graphics at the axis-free plot origin",
+    (chartType) => {
+      const html = ReactDOMServer.renderToStaticMarkup(
+        <StreamOrdinalFrame
+          chartType={chartType}
+          projection="radial"
+          data={[{ category: "A", value: 1 }]}
+          oAccessor="category"
+          rAccessor="value"
+          background="#badbad"
+          backgroundGraphics={
+            <rect
+              id="custom-background"
+              data-testid="radial-background"
+              width={20}
+              height={20}
+            />
+          }
+          size={[300, 240]}
+        />
+      )
 
-    expect(html).toMatch(
-      /<g transform="translate\(70,50\)"><rect\b[^>]*data-semiotic-layer="canvas-background"[^>]*x="-70" y="-50" width="300" height="240" fill="#badbad"><\/rect><rect id="custom-background"/
-    )
-    expectMarkupLayerOrder(html, "<path")
-    expect(html).toContain('<g transform="translate(165,115)"><path')
-  })
+      expect(html).toMatch(
+        /<g transform="translate\(10,10\)"><rect\b[^>]*data-semiotic-layer="canvas-background"[^>]*x="-10" y="-10" width="300" height="240" fill="#badbad"><\/rect><rect id="custom-background"/
+      )
+      expectMarkupLayerOrder(html, "<path")
+      expect(html).toContain('<g transform="translate(150,120)"><path')
+    }
+  )
 
   it("composes geo solid background, graphics, then marks", () => {
     const html = ReactDOMServer.renderToStaticMarkup(

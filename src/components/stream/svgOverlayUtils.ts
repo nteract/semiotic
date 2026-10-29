@@ -10,6 +10,33 @@ export function resolveHorizontalTickAnchor(
   return "middle"
 }
 
+/**
+ * Horizontal offset that keeps a text tick label inside `[min, max]` (the
+ * frame's full width, in plot coordinates). Centred end labels — long time
+ * stamps especially — otherwise run past the side margin and are clipped by
+ * the host container. Returns 0 for any label that already fits, so interior
+ * ticks are untouched. Width is the shared 0.6em estimate; a slight
+ * overestimate only nudges the label further inside.
+ */
+export function resolveHorizontalTickLabelShift(
+  anchor: "start" | "middle" | "end",
+  pixel: number,
+  label: string | number,
+  fontSize: number,
+  bounds: { min: number; max: number }
+): number {
+  const width = String(label).length * fontSize * 0.6
+  const left =
+    anchor === "start" ? pixel : anchor === "end" ? pixel - width : pixel - width / 2
+  const right = left + width
+  if (right > bounds.max) {
+    // A label wider than the whole frame keeps its leading edge visible.
+    return Math.max(bounds.max - right, bounds.min - left)
+  }
+  if (left < bounds.min) return bounds.min - left
+  return 0
+}
+
 export function resolveVerticalTickBaseline(
   mode: "middle" | "edges" | undefined,
   isTopmost: boolean,

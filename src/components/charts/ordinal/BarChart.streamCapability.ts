@@ -1,11 +1,17 @@
-import type { StreamChartCapability } from "../../ai/streamingTypes"
+import type { StreamChartCapability, StreamSchema } from "../../ai/streamingTypes"
 import {
   hasCategoryField,
   hasNumericValue,
   pickCategoryField,
   pickValueField,
   resolveStreamShape,
+  streamCategorySumPolicy,
+  streamFieldCardinality,
+  streamKeyedChangelogCaveat,
 } from "../../ai/streamSchema"
+
+const sumPolicy = (schema: StreamSchema) =>
+  streamCategorySumPolicy(schema, "BarChart", [pickCategoryField(schema)?.name])
 
 export const BarChartStreamCapability: StreamChartCapability = {
   component: "BarChart",
@@ -20,13 +26,26 @@ export const BarChartStreamCapability: StreamChartCapability = {
     }
     if (!hasCategoryField(schema)) return "needs a category field"
     if (!hasNumericValue(schema)) return "needs a numeric value field"
-    return null
+    return sumPolicy(schema).exclude ?? null
   },
 
   intentScores: {
-    "compare-categories": 5,
-    "rank": 5,
-    "part-to-whole": 3,
+    "compare-categories": (schema) => 5 * sumPolicy(schema).factor,
+    "rank": (schema) => 5 * sumPolicy(schema).factor,
+    "part-to-whole": (schema) => 3 * sumPolicy(schema).factor,
+  },
+
+  caveats: (schema) => {
+    const out = [
+      ...sumPolicy(schema).caveats,
+      ...streamKeyedChangelogCaveat(schema, "frameProps.dataIdAccessor"),
+    ]
+    const category = pickCategoryField(schema)
+    const bars = streamFieldCardinality(category)
+    if (category && bars !== undefined && bars > 30) {
+      out.push(`"${category.name}" has ~${bars} values — show the top categories rather than ${bars} bars`)
+    }
+    return out
   },
 
   buildProps: (schema) => ({

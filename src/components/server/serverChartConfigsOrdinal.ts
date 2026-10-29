@@ -1,3 +1,4 @@
+import { resolveAxisFreeMarginDefaults } from "../charts/shared/chartMode"
 import type { Datum } from "../charts/shared/datumTypes"
 import {
   makeRuleValueResolver,
@@ -307,8 +308,11 @@ export const groupedBarChart: ChartConfig = {
 
 export const pieChart: ChartConfig = {
   frameType: "ordinal",
+  layout: { margin: (_props, resolved) => resolveAxisFreeMarginDefaults(resolved) },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
-    const effectiveColorBy = colorBy || rest.categoryAccessor
+    // Slices are colored by category even when the accessor is left at its
+    // "category" default, as in PieChart.
+    const effectiveColorBy = colorBy || rest.categoryAccessor || "category"
     const readValue = makeRuleValueResolver(
       (rest.valueAccessor ?? "value") as string | ((d: Datum) => unknown)
     )
@@ -342,8 +346,11 @@ export const pieChart: ChartConfig = {
 
 export const donutChart: ChartConfig = {
   frameType: "ordinal",
+  layout: { margin: (_props, resolved) => resolveAxisFreeMarginDefaults(resolved) },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
-    const effectiveColorBy = colorBy || rest.categoryAccessor
+    // Slices are colored by category even when the accessor is left at its
+    // "category" default, as in DonutChart.
+    const effectiveColorBy = colorBy || rest.categoryAccessor || "category"
     const readValue = makeRuleValueResolver(
       (rest.valueAccessor ?? "value") as string | ((d: Datum) => unknown)
     )
@@ -353,8 +360,6 @@ export const donutChart: ChartConfig = {
       oAccessor: rest.categoryAccessor || "category",
       rAccessor: rest.valueAccessor || "value",
       projection: "radial",
-      // Use DonutChart's primary-mode margins for the same outer radius.
-      margin: common.margin ?? { top: 50, right: 40, bottom: 60, left: 70 },
       innerRadius: rest.innerRadius ?? 60,
       colorAccessor: effectiveColorBy,
       colorScheme,
@@ -375,7 +380,9 @@ export const donutChart: ChartConfig = {
           const value = readValue(d)
           return value == null ? undefined : Math.abs(value)
         }
-      )
+      ),
+      // DonutChart shows its category legend by default, like PieChart.
+      showLegend: common.showLegend ?? Boolean(effectiveColorBy)
     }
   }
 }

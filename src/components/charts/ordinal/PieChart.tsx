@@ -1,4 +1,5 @@
 "use client"
+import { resolveAxisFreeMarginDefaults } from "../shared/chartMode"
 import { PIE_CHART_SIZE } from "../shared/chartSizeDefaultsOrdinal"
 import type { Datum } from "../shared/datumTypes"
 import { filterSparseArray } from "../shared/sparseArray"
@@ -195,7 +196,7 @@ export const PieChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ f
     chartId,
     showLegend,
     userMargin,
-    marginDefaults: resolved.marginDefaults,
+    marginDefaults: resolveAxisFreeMarginDefaults(resolved),
     loading,
     loadingContent,
     emptyContent,

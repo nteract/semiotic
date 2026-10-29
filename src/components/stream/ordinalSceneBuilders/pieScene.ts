@@ -1,6 +1,24 @@
 import type { WedgeSceneNode, OrdinalLayout } from "../ordinalTypes"
 import type { OrdinalSceneContext } from "./types"
 
+/** Ring a donut falls back to when its requested hole does not fit. */
+const FALLBACK_DONUT_RING = 12
+
+/**
+ * `innerRadius` is a pixel request, but the outer radius follows the plot
+ * area. On a short plot the requested hole can be wider than the pie; drawing
+ * that inverted ring paints it outside the plot, where the clip cuts it flat.
+ * A hole that leaves at least a 1px ring is kept as requested (thin rings are
+ * a legitimate style, and gauges size their hole against the radius they
+ * reserve); one that does not falls back to a readable ring of
+ * `FALLBACK_DONUT_RING` px, or a quarter of the radius on very small donuts.
+ */
+export function fitDonutInnerRadius(requested: number, outerRadius: number): number {
+  if (!(requested > 0)) return 0
+  if (requested <= outerRadius - 1) return requested
+  return Math.max(0, outerRadius - Math.min(FALLBACK_DONUT_RING, outerRadius / 4))
+}
+
 export function buildPieScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): WedgeSceneNode[] {
   const { scales: _scales, config, resolvePieceStyle, getR } = ctx
   const nodes: WedgeSceneNode[] = []
@@ -8,8 +26,12 @@ export function buildPieScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): 
   // to the center of the chart area for radial projection
   const cx = 0
   const cy = 0
-  const outerRadius = Math.min(layout.width, layout.height) / 2 - 4
-  const innerRadius = config.chartType === "donut" ? (config.innerRadius || 60) : 0
+  // Floor at 0: a plot under 8px would give a negative radius, which canvas
+  // `arc()` rejects with an IndexSizeError.
+  const outerRadius = Math.max(0, Math.min(layout.width, layout.height) / 2 - 4)
+  const innerRadius = config.chartType === "donut"
+    ? fitDonutInnerRadius(config.innerRadius || 60, outerRadius)
+    : 0
   // Angles are in canvas convention (0 = 3 o'clock / east).
   // Start from 12 o'clock (-π/2) plus any user offset in degrees.
   // The SVG renderer (SceneToSVG.tsx) adds π/2 back when converting to d3-shape arcs.

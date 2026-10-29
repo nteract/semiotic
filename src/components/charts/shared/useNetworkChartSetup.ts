@@ -39,6 +39,7 @@ import type {
 import type { MobileVisualizationContract } from "./auditMobileVisualization"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 import type { PartialMargin, MarginType } from "../../types/marginType"
+import type { AxisChromeInput } from "../../legendLayout"
 import {
   useColorScale,
   useChartSelection,
@@ -116,6 +117,8 @@ export interface NetworkChartSetupInput<TNode extends Datum = Datum, TEdge exten
   height: number
   responsive?: PlaceholderLayout
   hasTitle?: boolean
+  /** Only layouts with chart-owned axes need extra legend clearance. */
+  axisChrome?: AxisChromeInput
 
   // ── Loading / empty states ───────────────────────────────────────
   loading?: boolean
@@ -265,6 +268,7 @@ export function useNetworkChartSetup<TNode extends Datum = Datum, TEdge extends 
     width,
     height,
     hasTitle,
+    axisChrome,
     loading,
     loadingContent,
     emptyContent,
@@ -376,6 +380,7 @@ export function useNetworkChartSetup<TNode extends Datum = Datum, TEdge extends 
     chartHeight: height,
     frameLegend,
     hasTitle,
+    axisChrome: axisChrome ?? { hasAxis: false },
   })
   const legendBehaviorProps = useMemo<Record<string, unknown>>(() => {
     const behavior: Record<string, unknown> = {}

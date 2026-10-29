@@ -44,7 +44,17 @@ describe("direct static frame defaults", () => {
       size: [500, 320],
     })
 
-    expect(sankey).toContain('transform="translate(80,20)"')
+    expect(sankey).toContain('transform="translate(20,20)"')
     expect(force).toContain('transform="translate(40,40)"')
+  })
+
+  it("keeps treemap padding small because labels are inside cells", () => {
+    const treemap = renderNetworkToStaticSVG({
+      chartType: "treemap",
+      data: { id: "root", children: [{ id: "A", value: 10 }] },
+      size: [500, 320],
+    })
+    expect(treemap).toContain('transform="translate(10,10)"')
+    expect(treemap).toContain("<rect")
   })
 })

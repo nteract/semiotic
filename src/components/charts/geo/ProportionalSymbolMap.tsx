@@ -258,6 +258,7 @@ export const ProportionalSymbolMap = /* @__PURE__ */ withChartErrorBoundary(/* @
     width: resolved.width,
     height: resolved.height,
     hasTitle: !!resolved.title,
+    axisChrome: { hasAxis: false },
   })
 
   // Alias `setup.data` (sparse-filtered by useChartSetup) so the rest

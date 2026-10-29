@@ -20,9 +20,11 @@ import {
   type AggregateConfig
 } from "../charts/realtime/aggregate"
 import { temporalHistogram } from "./serverChartConfigsXY"
-import { heatmap } from "./serverChartConfigHeatmap"
+import { heatmap, heatmapGradientLegend } from "./serverChartConfigHeatmap"
+import { resolveTheme } from "./themeResolver"
 import { waterfallChart } from "./serverChartConfigsXYExtra"
 import { realtimeCategoryColors } from "./serverRealtimeCategoryColors"
+import { resolveStringAccessor } from "../stream/accessorUtils"
 
 function prepareRealtimeRows(data: unknown, rest: Datum): Datum[] {
   const rows = Array.isArray(data) ? filterSparseArray(data) : []
@@ -69,8 +71,27 @@ export const realtimeLineChart: ChartConfig = {
     const accessors = rest.aggregate
       ? { timeAccessor: "time", valueAccessor: "value" }
       : realtimeAccessors(rest)
+    const groupAccessor =
+      aggregate && rest.seriesAccessor != null
+        ? AGG_SERIES
+        : rest.seriesAccessor
+    // Mirror the client: one palette colour per series (unless an explicit
+    // `stroke` paints them all) and an automatic series legend.
+    const seriesColors = realtimeCategoryColors(
+      rows,
+      common,
+      { categoryAccessor: groupAccessor },
+      "discovery"
+    )
+    const readSeries = resolveStringAccessor(groupAccessor)
     const ruledLineStyle = composeStyleRules(
-      () => ({ stroke: "#007bff", strokeWidth: 2 }),
+      (datum: Datum, group?: string) => ({
+        stroke:
+          (seriesColors &&
+            seriesColors[group ?? readSeries?.(datum) ?? ""]) ||
+          "#007bff",
+        strokeWidth: 2
+      }),
       rest.styleRules as StyleRule[] | undefined,
       makeXYRuleContext(accessors.timeAccessor, accessors.valueAccessor)
     )
@@ -80,10 +101,17 @@ export const realtimeLineChart: ChartConfig = {
       ...common,
       ...realtimeFrameProps(rows, common, rest),
       ...accessors,
-      groupAccessor:
-        aggregate && rest.seriesAccessor != null
-          ? AGG_SERIES
-          : rest.seriesAccessor,
+      groupAccessor,
+      ...(seriesColors && {
+        colorAccessor: groupAccessor,
+        colorScheme:
+          typeof rest.stroke === "string"
+            ? Object.fromEntries(
+                Object.keys(seriesColors).map((key) => [key, rest.stroke])
+              )
+            : seriesColors,
+        showLegend: common.showLegend ?? true
+      }),
       ...(aggregate && {
         windowMode: "growing",
         windowSize: Math.max(1, aggregate.retain ?? Math.max(rows.length, 600)),
@@ -97,8 +125,8 @@ export const realtimeLineChart: ChartConfig = {
       }),
       lineStyle:
         common.lineStyle ||
-        ((datum: Datum) => ({
-          ...ruledLineStyle(datum),
+        ((datum: Datum, group?: string) => ({
+          ...ruledLineStyle(datum, group),
           ...primitiveStyleOverrides(rest),
           ...(rest.strokeDasharray != null && {
             strokeDasharray: rest.strokeDasharray
@@ -116,15 +144,18 @@ export const realtimeHistogram: ChartConfig = /* @__PURE__ */ Object.assign(
   {
     buildProps: (data, colorBy, colorScheme, common, rest) => {
       const rows = Array.isArray(data) ? filterSparseArray(data) : []
+      const mapped = temporalHistogram.buildProps(
+        rows,
+        colorBy,
+        colorScheme,
+        common,
+        rest
+      )
       return {
-        ...temporalHistogram.buildProps(
-          rows,
-          colorBy,
-          colorScheme,
-          common,
-          rest
-        ),
-        ...realtimeFrameProps(rows, common, rest)
+        ...mapped,
+        ...realtimeFrameProps(rows, common, rest),
+        // Histogram aggregation owns the measure: count mode ignores values.
+        valueAccessor: mapped.valueAccessor
       }
     }
   } satisfies Pick<ChartConfig, "buildProps">
@@ -134,17 +165,31 @@ export const realtimeHeatmap: ChartConfig = {
   frameType: "xy",
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const rows = Array.isArray(data) ? filterSparseArray(data) : []
+    const theme = resolveTheme(common.theme as Parameters<typeof resolveTheme>[0])
+    const aggregation = rest.aggregation ?? "count"
     const mapped = heatmap.buildProps(rows, colorBy, colorScheme, common, {
       ...rest,
       xAccessor: rest.timeAccessor || rest.xAccessor || "time",
       yAccessor: rest.valueAccessor || rest.yAccessor || "value",
-      heatmapAggregation: rest.aggregation ?? "count",
-      cellBorderWidth: 0
+      heatmapAggregation: aggregation,
+      // The canvas paints a 1px surface-coloured separator around each cell.
+      cellBorderColor: theme.colors.surface || theme.colors.background,
+      cellBorderWidth: 1
     })
     return {
       ...mapped,
       ...realtimeFrameProps(rows, common, rest),
-      categoryAccessor: rest.categoryAccessor
+      categoryAccessor: rest.categoryAccessor,
+      // Like the client, the legend is sized before data reports a domain;
+      // the renderer then reads it from the drawn cells.
+      ...(common.showLegend && {
+        legend: heatmapGradientLegend({
+          domain: [0, 1],
+          label: aggregation,
+          colorScheme: mapped.colorScheme,
+          colorScale: mapped.heatmapColorScale
+        })
+      })
     }
   }
 }

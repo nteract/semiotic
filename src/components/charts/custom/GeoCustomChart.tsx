@@ -1,4 +1,5 @@
 "use client"
+import { resolveAxisFreeMarginDefaults } from "../shared/chartMode"
 import * as React from "react"
 import { forwardRef, useMemo } from "react"
 import StreamGeoFrame from "../../stream/StreamGeoFrame"
@@ -154,13 +155,14 @@ export const GeoCustomChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE_
     chartId,
     showLegend: false,
     userMargin: normalizedMargin,
-    marginDefaults: resolved.marginDefaults,
+    marginDefaults: resolveAxisFreeMarginDefaults(resolved),
     loading,
     loadingContent,
     emptyContent,
     width: resolved.width,
     height: resolved.height,
     hasTitle: !!resolved.title,
+    axisChrome: { hasAxis: false },
   })
 
   const effectiveSelection = setup.effectiveSelectionHook

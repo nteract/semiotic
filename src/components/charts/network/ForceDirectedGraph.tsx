@@ -1,4 +1,6 @@
 "use client"
+import { resolveAxisFreeMarginDefaults } from "../shared/chartMode"
+import { networkFrameDefaultMargin } from "../../stream/frameDefaultMargins"
 import { FORCE_DIRECTED_GRAPH_SIZE } from "../shared/chartSizeDefaultsNetwork"
 import type { NetworkPerspectiveProps } from "../shared/networkPerspectiveProps"
 import type { Datum } from "../shared/datumTypes"
@@ -351,7 +353,7 @@ export const ForceDirectedGraph = /* @__PURE__ */ withChartErrorBoundary(/* @__P
     mobileSemantics: resolved.mobileSemantics,
     chartType: "ForceDirectedGraph",
     chartId,
-    marginDefaults: resolved.marginDefaults,
+    marginDefaults: resolveAxisFreeMarginDefaults(resolved, networkFrameDefaultMargin("force")),
     userMargin,
     width, height,
     hasTitle: !!title,

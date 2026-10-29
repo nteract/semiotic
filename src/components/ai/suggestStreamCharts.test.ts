@@ -55,25 +55,31 @@ describe("suggestStreamCharts", () => {
     expect(suggestions[0].component).toBe("RealtimeLineChart")
   })
 
-  it("recommends RealtimeHeatmap / Waterfall for high throughput trend", () => {
+  it("aggregates the line into windows for high-throughput trends", () => {
     const { suggestions } = suggestStreamCharts(highVolumeStream, { intent: "trend" })
-    expect(suggestions[0].component).not.toBe("RealtimeLineChart")
-    expect(["RealtimeHeatmap", "RealtimeWaterfallChart"]).toContain(suggestions[0].component)
+    expect(suggestions[0].component).toBe("RealtimeLineChart")
+    expect(suggestions[0].props.aggregate).toEqual({ size: "1s", stat: "mean" })
+    expect(suggestions[0].reasons.join(" ")).toMatch(/1s windows/)
+    expect(suggestions[1].component).toBe("RealtimeHeatmap")
   })
 
-  it("rejects RealtimeLineChart at high throughput, including numeric rates", () => {
-    const { suggestions, excluded } = suggestStreamCharts(highVolumeStream)
-    expect(suggestions.find((s) => s.component === "RealtimeLineChart")).toBeUndefined()
-    expect(excluded.find((e) => e.component === "RealtimeLineChart")?.reason).toMatch(/high-throughput/)
-
-    const numeric = suggestStreamCharts({ ...highVolumeStream, throughput: 250 })
-    expect(numeric.suggestions.find((s) => s.component === "RealtimeLineChart")).toBeUndefined()
-    expect(numeric.excluded.find((e) => e.component === "RealtimeLineChart")).toBeDefined()
+  it("never suggests a raw per-event line, swarm, or waterfall at high throughput", () => {
+    for (const throughput of ["high", 250] as const) {
+      const { suggestions, excluded } = suggestStreamCharts({
+        ...pureValueStream,
+        throughput,
+      })
+      const line = suggestions.find((s) => s.component === "RealtimeLineChart")
+      expect(line?.props.aggregate).toBeDefined()
+      expect(excluded.find((e) => e.component === "RealtimeSwarmChart")?.reason).toMatch(/every event/)
+      expect(excluded.find((e) => e.component === "RealtimeWaterfallChart")?.reason).toMatch(/one bar per event/)
+    }
   })
 
-  it("recommends RealtimeHistogram for distribution", () => {
+  it("ranks value-distribution charts, not the temporal histogram, for distribution", () => {
     const { suggestions } = suggestStreamCharts(latencyStream, { intent: "distribution" })
-    expect(suggestions[0].component).toBe("RealtimeHistogram")
+    expect(["RealtimeSwarmChart", "RealtimeHeatmap"]).toContain(suggestions[0].component)
+    expect(suggestions.slice(0, 2).map((s) => s.component)).toContain("RealtimeHeatmap")
   })
 
   it("recommends RealtimeSwarmChart for outlier detection with categories", () => {
@@ -99,14 +105,15 @@ describe("suggestStreamCharts", () => {
     }
     const { suggestions } = suggestStreamCharts(cumulativeStream, { intent: "trend" })
     const line = suggestions.find((s) => s.component === "RealtimeLineChart")
-    expect(line?.caveats.some((c) => c.includes("buffer") || c.includes("windowSize"))).toBe(true)
+    expect(line?.props.windowMode).toBe("growing")
+    expect(line?.caveats.some((c) => c.includes("maxCapacity"))).toBe(true)
   })
 
   it("respects user-registered capabilities with a custom importPath", () => {
     const custom: StreamChartCapability = {
       component: "MyStreamChart",
       family: "custom",
-      importPath: "@iris/charts",
+      importPath: "@acme/charts",
       rubric: { familiarity: 1, accuracy: 5, precision: 5 },
       fits: () => null,
       intentScores: { "trend": 5 },
@@ -116,7 +123,7 @@ describe("suggestStreamCharts", () => {
     try {
       const { suggestions } = suggestStreamCharts(latencyStream, { allow: ["MyStreamChart"] })
       expect(suggestions[0].component).toBe("MyStreamChart")
-      expect(suggestions[0].importPath).toBe("@iris/charts")
+      expect(suggestions[0].importPath).toBe("@acme/charts")
     } finally {
       unregisterStreamChartCapability("MyStreamChart")
     }
@@ -220,5 +227,287 @@ describe("suggestStreamCharts", () => {
     expect(explained.excluded.length).toBeGreaterThan(0)
     expect(explained.excluded.find((e) => e.component === "RealtimeLineChart")?.reason).toMatch(/time/i)
     expect(explained.suggestions.some((s) => s.component === "BarChart")).toBe(true)
+  })
+})
+
+describe("suggestStreamCharts schema semantics", () => {
+  const names = (list: ReadonlyArray<{ component: string }>) => list.map((s) => s.component)
+
+  it("treats a documented keyFields column as the category of a keyed table", () => {
+    const { suggestions, excluded } = suggestStreamCharts({
+      fields: [
+        { name: "brand", kind: "categorical" },
+        { name: "revenue", kind: "numeric", role: "value" },
+        { name: "units", kind: "numeric", role: "value" },
+      ],
+      shape: "keyed",
+      keyFields: ["brand"],
+      retention: "cumulative",
+      throughput: 5,
+    })
+    expect(suggestions[0].component).toBe("BarChart")
+    expect(suggestions[0].props).toMatchObject({ categoryAccessor: "brand", valueAccessor: "revenue" })
+    // One current row per key: nothing is summed, so no additivity caveat,
+    // only how to keep a changelog to one row per key.
+    expect(suggestions[0].caveats).toEqual([
+      expect.stringMatching(/applyChangelog.*frameProps\.dataIdAccessor set to "brand"/),
+    ])
+    expect(excluded.some((e) => e.reason === "needs a category field")).toBe(false)
+    expect(excluded.find((e) => e.component === "BigNumber")?.reason).toMatch(/keyed table/)
+  })
+
+  it("lets an explicit category role win on a key column", () => {
+    const { suggestions } = suggestStreamCharts({
+      fields: [
+        { name: "brand", kind: "categorical", role: "category" },
+        { name: "revenue", kind: "numeric" },
+      ],
+      shape: "keyed",
+      keyFields: ["brand"],
+    })
+    expect(suggestions[0].props.categoryAccessor).toBe("brand")
+  })
+
+  it("leads with one line per series for a windowed keyed series", () => {
+    const schema: StreamSchema = {
+      fields: [
+        { name: "window_start", kind: "date", role: "x" },
+        { name: "brand", kind: "categorical" },
+        { name: "cnt", kind: "numeric", role: "value" },
+      ],
+      shape: "keyed",
+      keyFields: ["window_start", "brand"],
+      retention: "cumulative",
+      throughput: 5,
+    }
+    const { suggestions } = suggestStreamCharts(schema)
+    expect(suggestions[0].component).toBe("RealtimeLineChart")
+    expect(suggestions[0].props.seriesAccessor).toBe("brand")
+    const compare = suggestStreamCharts(schema, { intent: "compare-series" })
+    expect(compare.suggestions[0]).toMatchObject({ component: "RealtimeLineChart", score: 4 })
+  })
+
+  it("ranks a measure over time as a trend when no intent is given", () => {
+    const result = suggestStreamCharts({
+      fields: [
+        { name: "ts", kind: "date", role: "x" },
+        { name: "price", kind: "numeric", role: "value" },
+      ],
+      throughput: "medium",
+      retention: "windowed",
+    })
+    expect(result.rankingIntents[0]).toBe("trend")
+    expect(result.suggestions[0].component).toBe("RealtimeLineChart")
+  })
+
+  it("demotes the running-total waterfall unless the measure is a change", () => {
+    const fields = (value: Record<string, unknown>) => ({
+      fields: [{ name: "ts", kind: "date" as const }, { kind: "numeric" as const, ...value } as never],
+    })
+    const level = suggestStreamCharts(fields({ name: "price" }), { intent: "change-detection" })
+    const waterfall = level.suggestions.find((s) => s.component === "RealtimeWaterfallChart")
+    expect(waterfall?.score).toBe(2.5)
+    expect(waterfall?.caveats.join(" ")).toMatch(/signed change/)
+
+    const delta = suggestStreamCharts(fields({ name: "price_delta" }), { intent: "change-detection" })
+    expect(delta.suggestions[0].component).toBe("RealtimeWaterfallChart")
+    expect(delta.suggestions[0].caveats).toEqual([])
+
+    const ruledOut = suggestStreamCharts(fields({ name: "price", additive: false }))
+    expect(ruledOut.excluded.find((e) => e.component === "RealtimeWaterfallChart")?.reason).toMatch(/non-additive/)
+  })
+
+  it("says what an append-stream bar sums, and excludes it for non-additive measures", () => {
+    const base = [
+      { name: "ts", kind: "date" as const },
+      { name: "band", kind: "categorical" as const },
+    ]
+    const unknown = suggestStreamCharts({ fields: [...base, { name: "price", kind: "numeric" }] }, { intent: "rank" })
+    const bar = unknown.suggestions.find((s) => s.component === "BarChart")
+    expect(bar?.score).toBe(2.5)
+    expect(bar?.caveats.join(" ")).toMatch(/sums "price" across every retained event per "band"/)
+
+    const level = suggestStreamCharts({ fields: [...base, { name: "price", kind: "numeric", additive: false }] })
+    for (const component of ["BarChart", "PieChart", "DonutChart"]) {
+      expect(level.excluded.find((e) => e.component === component)?.reason).toMatch(/non-additive/)
+    }
+
+    const amount = suggestStreamCharts({ fields: [...base, { name: "amount", kind: "numeric", additive: true }] }, { intent: "rank" })
+    expect(amount.suggestions[0]).toMatchObject({ component: "BarChart", score: 5 })
+  })
+
+  it("drops zero-scored charts by default and keeps them with minScore 0", () => {
+    const schema: StreamSchema = {
+      fields: [{ name: "ts", kind: "date" }, { name: "price", kind: "numeric" }],
+    }
+    expect(suggestStreamCharts(schema, { intent: "rank" }).suggestions).toEqual([])
+    const kept = suggestStreamCharts(schema, { intent: "rank", minScore: 0 }).suggestions
+    expect(kept.length).toBeGreaterThan(0)
+    expect(kept.every((s) => s.score === 0)).toBe(true)
+  })
+
+  it("uses declared cardinality for pie fits and series caveats", () => {
+    const schema = (cardinality: number): StreamSchema => ({
+      fields: [
+        { name: "ts", kind: "date" },
+        { name: "price", kind: "numeric" },
+        { name: "brand", kind: "categorical", cardinality },
+      ],
+    })
+    const many = suggestStreamCharts(schema(400))
+    expect(many.excluded.find((e) => e.component === "PieChart")?.reason).toBe("400 slices is too many for a pie chart")
+    expect(many.excluded.find((e) => e.component === "DonutChart")?.reason).toMatch(/400 slices/)
+    expect(many.suggestions.find((s) => s.component === "RealtimeLineChart")?.caveats.join(" ")).toMatch(/~400 lines/)
+
+    const few = suggestStreamCharts(schema(4), { intent: "part-to-whole", minScore: 0 })
+    const pie = few.suggestions.find((s) => s.component === "PieChart")
+    expect(pie?.caveats.some((c) => c.includes("cardinality"))).toBe(false)
+  })
+
+  it("sizes buffers and bins from the numeric event rate", () => {
+    const schema = (throughput: number): StreamSchema => ({
+      fields: [{ name: "ts", kind: "date" }, { name: "price", kind: "numeric" }],
+      throughput,
+    })
+    const histogram = (rate: number) =>
+      suggestStreamCharts(schema(rate)).suggestions.find((s) => s.component === "RealtimeHistogram")!.props
+    expect(histogram(260)).toMatchObject({ windowSize: 7800, binSize: 1000 })
+    expect(histogram(4000)).toMatchObject({ windowSize: 20000, binSize: 250 })
+    const heatmap = suggestStreamCharts(schema(4000)).suggestions.find((s) => s.component === "RealtimeHeatmap")
+    expect(heatmap?.props.windowSize).toBe(20000)
+  })
+
+  it("covers correlation and composition-over-time on streams", () => {
+    const correlation = suggestStreamCharts(
+      {
+        fields: [
+          { name: "ts", kind: "date" },
+          { name: "price", kind: "numeric" },
+          { name: "qty", kind: "numeric" },
+          { name: "band", kind: "categorical" },
+        ],
+      },
+      { intent: "correlation" },
+    )
+    expect(correlation.suggestions[0]).toMatchObject({
+      component: "Scatterplot",
+      importPath: "semiotic/xy",
+      props: { xAccessor: "price", yAccessor: "qty", colorBy: "band" },
+    })
+
+    const composition = suggestStreamCharts(
+      {
+        fields: [
+          { name: "window_start", kind: "date" },
+          { name: "brand", kind: "categorical" },
+          { name: "cnt", kind: "numeric" },
+        ],
+      },
+      { intent: "composition-over-time" },
+    )
+    expect(composition.suggestions[0]).toMatchObject({
+      component: "RealtimeHistogram",
+      props: { categoryAccessor: "brand", valueAccessor: "cnt" },
+    })
+  })
+
+  it("counts events per bin for streams without a measure", () => {
+    for (const extra of [
+      { name: "page", kind: "categorical" as const },
+      { name: "ok", kind: "boolean" as const },
+      { name: "order_id", kind: "numeric" as const },
+    ]) {
+      const { suggestions } = suggestStreamCharts({
+        fields: [{ name: "ts", kind: "date" }, extra],
+        throughput: "high",
+      })
+      expect(names(suggestions)).toEqual(["RealtimeHistogram"])
+      expect(suggestions[0].props).toMatchObject({ timeAccessor: "ts", aggregation: "count" })
+      expect(typeof suggestions[0].props.binSize).toBe("number")
+    }
+  })
+
+  it("names the field-order choice when several categoricals compete", () => {
+    const { suggestions } = suggestStreamCharts({
+      fields: [
+        { name: "ts", kind: "date" },
+        { name: "price", kind: "numeric" },
+        { name: "a", kind: "categorical" },
+        { name: "b", kind: "categorical" },
+        { name: "c", kind: "categorical" },
+      ],
+    })
+    const line = suggestions.find((s) => s.component === "RealtimeLineChart")
+    expect(line?.props.seriesAccessor).toBe("a")
+    expect(line?.reasons.join(" ")).toMatch(/"a" picked from "a", "b", "c" by field order/)
+  })
+
+  it("scores a single value the same whether or not shape says aggregate", () => {
+    const fields = [{ name: "total", kind: "numeric" as const }]
+    const plain = suggestStreamCharts({ fields })
+    const aggregate = suggestStreamCharts({ fields, shape: "aggregate" })
+    expect(plain.suggestions.map((s) => [s.component, s.score])).toEqual(
+      aggregate.suggestions.map((s) => [s.component, s.score]),
+    )
+    const gauge = plain.suggestions.find((s) => s.component === "GaugeChart")!
+    expect(gauge.props).not.toHaveProperty("max")
+    expect(gauge.caveats.join(" ")).toMatch(/range of "total" is unknown/)
+    expect(plain.suggestions[0].caveats.join(" ")).toMatch(/latest event/)
+
+    const pct = suggestStreamCharts({ fields: [{ name: "success_pct", kind: "numeric" }] })
+    expect(pct.suggestions.find((s) => s.component === "GaugeChart")?.props).toMatchObject({ min: 0, max: 100 })
+  })
+
+  it("reports and repairs bad schema input", () => {
+    const result = suggestStreamCharts({
+      fields: [
+        { name: "ts", kind: "timestamp" as never, role: "x" },
+        { name: "p", kind: "numeric" },
+        { name: "p", kind: "numeric" },
+        { name: "band", kind: "categorical", distinctCount: 4 } as never,
+      ],
+      throughput: "extreme" as never,
+      rowsPerSecond: 10,
+    } as StreamSchema)
+    expect(result.warnings).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(/field "ts" has kind "timestamp"; treated as "date"/),
+        expect.stringMatching(/field "p" is listed more than once/),
+        expect.stringMatching(/field "band" has unknown key "distinctCount" \(did you mean "cardinality"\?\)/),
+        expect.stringMatching(/throughput "extreme" was ignored/),
+        expect.stringMatching(/unknown schema key "rowsPerSecond"/),
+      ]),
+    )
+    // The time field survives the alias repair.
+    expect(result.suggestions[0].component).toBe("RealtimeLineChart")
+    expect(suggestStreamCharts({ fields: [] }).warnings).toEqual(["schema has no fields"])
+  })
+
+  it("explains a single component's fit", () => {
+    const schema: StreamSchema = {
+      fields: [{ name: "ts", kind: "date" }, { name: "price", kind: "numeric" }],
+    }
+    expect(explainStreamCapabilityFit(schema, "RealtimeLineChart")).toMatchObject({
+      status: "suggested",
+      rank: 1,
+    })
+    expect(explainStreamCapabilityFit(schema, "BarChart")).toMatchObject({
+      status: "excluded",
+      reason: "needs a category field",
+    })
+    expect(explainStreamCapabilityFit(schema, "RealtimeHeatmap", { deny: ["RealtimeHeatmap"] })).toMatchObject({
+      status: "filtered",
+      reason: "listed in options.deny",
+    })
+    expect(explainStreamCapabilityFit(schema, "Nope").status).toBe("unknown")
+  })
+
+  it("redirects TemporalHistogram to RealtimeHistogram for streams", () => {
+    const { excluded, suggestions } = suggestStreamCharts({
+      fields: [{ name: "ts", kind: "date" }, { name: "price", kind: "numeric" }],
+      retention: "cumulative",
+    })
+    expect(excluded.find((e) => e.component === "TemporalHistogram")?.reason).toMatch(/RealtimeHistogram/)
+    expect(suggestions.find((s) => s.component === "RealtimeHistogram")?.props.windowMode).toBe("growing")
   })
 })

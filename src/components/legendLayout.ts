@@ -6,12 +6,54 @@ import {
   MIN_TITLE_TOP_LEGEND_MARGIN,
   MIN_TOP_LEGEND_MARGIN,
 } from "./stream/titleLayout"
+import {
+  DEFAULT_SIDE_LEGEND_WIDTH,
+  MAX_HORIZONTAL_LEGEND_HEIGHT_RATIO,
+  MAX_SIDE_LEGEND_WIDTH_RATIO,
+  estimateLegendTextWidth,
+  fitLegendRows,
+  fitSideLegend,
+  legendDisplayLabel,
+  legendRowsFor,
+  resolveLegendMetrics,
+  type LegendBounds,
+} from "./legendGeometry"
 
-export const DEFAULT_LEGEND_SWATCH_SIZE = 16
-export const DEFAULT_LEGEND_LABEL_GAP = 6
-export const DEFAULT_LEGEND_ITEM_GAP = 10
-export const DEFAULT_LEGEND_ROW_HEIGHT = 22
-export const DEFAULT_SIDE_LEGEND_WIDTH = 100
+// Geometry primitives live in `legendGeometry.ts`; re-exported so existing
+// imports from this module keep working.
+export {
+  DEFAULT_LEGEND_ITEM_GAP,
+  DEFAULT_LEGEND_LABEL_GAP,
+  DEFAULT_LEGEND_ROW_HEIGHT,
+  DEFAULT_LEGEND_SWATCH_SIZE,
+  DEFAULT_SIDE_LEGEND_WIDTH,
+  EMPTY_LEGEND_LABEL,
+  MAX_HORIZONTAL_LEGEND_HEIGHT_RATIO,
+  MAX_SIDE_LEGEND_WIDTH_RATIO,
+  MIN_SIDE_LEGEND_LABEL_CHARS,
+  estimateLegendTextWidth,
+  fitLegendRows,
+  fitSideLegend,
+  layoutVerticalLegendGroups,
+  legendDisplayLabel,
+  legendMoreLabel,
+  legendMoreTitle,
+  legendRowsFor,
+  resolveLegendMetrics,
+  sideLegendSlotOffset,
+  truncateLegendLabel,
+} from "./legendGeometry"
+export type {
+  LegendMetrics,
+  LegendRow,
+  LegendRowsFit,
+  LegendBounds,
+  SideLegendFit,
+  SideLegendGroupFit,
+  VerticalLegendGroupInput,
+  VerticalLegendGroupLayout,
+} from "./legendGeometry"
+
 export const DEFAULT_LEGEND_DISTANCE = 10
 // Legend focus rings are drawn at x/y=-2 with a 2px stroke. Three pixels keep
 // the outer stroke inside the SVG when a side legend is placed at an edge.
@@ -51,30 +93,78 @@ export const GRADIENT_LEGEND_LABELED_BAR_Y = 18
 export const GRADIENT_LEGEND_HORIZONTAL_HEIGHT = 46
 export const GRADIENT_LEGEND_HORIZONTAL_HEIGHT_UNLABELED = 26
 
+/** Widest box a measured left/right legend may reserve in a chart. */
+export function resolveSideLegendMaxWidth(
+  chartWidth: number,
+  layout?: LegendLayout,
+): number {
+  if (layout?.maxWidth != null) return Math.max(1, layout.maxWidth)
+  return Math.max(
+    DEFAULT_SIDE_LEGEND_WIDTH,
+    Math.floor(chartWidth * MAX_SIDE_LEGEND_WIDTH_RATIO),
+  )
+}
+
 /**
- * SVG text has no useful intrinsic width until after it is mounted. Keep the
- * estimate shared by margin calculation and rendering so side legends never
- * reserve one width and draw into another.
+ * Space a legend may draw into once margins are known, shared by the live and
+ * static renderers. A left/right legend gets the side margin left after its
+ * gutters (never below the 100px minimum box, which compact frames already
+ * let overlap the plot) and the height from the plot top to the chart bottom.
+ * A top/bottom legend (which wraps to the plot width) gets the height of the
+ * band left in its margin after axis chrome, the plot gap and (above a top
+ * legend) the title.
  */
-export function estimateLegendTextWidth(label: string): number {
-  return Math.ceil(label.length * 7)
+export function resolveLegendRenderBounds(
+  legend: LegendValue | null | undefined,
+  input: LegendPlacementInput,
+): LegendBounds {
+  const position = input.position ?? "right"
+  if (position === "top" || position === "bottom") {
+    const band = position === "top"
+      ? input.margin.top -
+        resolveAxisChromeGutter(input.axisChrome?.topAxis, input.legendLayout) -
+        (input.hasTitle ? 24 : 0)
+      : input.margin.bottom - resolveAxisChromeGutter(input.axisChrome, input.legendLayout)
+    return { maxHeight: Math.max(0, band - resolveLegendDistance(legend)) }
+  }
+  const left = position === "left"
+  const reserved =
+    input.margin[left ? "left" : "right"] -
+    resolveLegendSideGutter(
+      input.legendLayout,
+      left ? input.axisChrome?.leftAxis : input.axisChrome?.rightAxis,
+    ) -
+    resolveLegendDistance(legend) -
+    resolveLegendEdgeGutter(input.legendLayout)
+  const space = Math.max(DEFAULT_SIDE_LEGEND_WIDTH, reserved)
+  return {
+    maxWidth: input.legendLayout?.maxWidth != null
+      ? Math.min(space, Math.max(1, input.legendLayout.maxWidth))
+      : space,
+    maxHeight: Math.max(0, input.totalHeight - input.margin.top),
+  }
+}
+
+/** Rows a top/bottom legend may draw in the band reserved for it. */
+export function resolveHorizontalLegendMaxRows(
+  legend: LegendValue | null | undefined,
+  input: LegendPlacementInput,
+): number {
+  return legendRowsFor(
+    resolveLegendRenderBounds(legend, input).maxHeight ?? 0,
+    resolveLegendMetrics(input.legendLayout).rowHeight,
+    isLegendConfig(legend) ? legend.legendGroups.length : 1,
+  )
 }
 
 /** Resolve the layout box needed by a left/right legend. */
 export function resolveSideLegendWidth(
   legend: LegendValue | null | undefined,
   layout?: LegendLayout,
+  bounds?: LegendBounds,
 ): number {
   if (isLegendConfig(legend)) {
-    const metrics = resolveLegendMetrics(layout)
-    let width = DEFAULT_SIDE_LEGEND_WIDTH
-    for (const group of legend.legendGroups) {
-      if (group.label) width = Math.max(width, estimateLegendTextWidth(group.label))
-      for (const item of group.items) {
-        width = Math.max(width, metrics.swatchSize + metrics.labelGap + estimateLegendTextWidth(item.label))
-      }
-    }
-    return width
+    return fitSideLegend(legend.legendGroups, layout, bounds).width
   }
 
   if (isGradientLegendConfig(legend)) {
@@ -295,6 +385,7 @@ export function resolveHorizontalLegendHeight(
   legend: LegendValue | null | undefined,
   availableWidth: number,
   layout?: LegendLayout,
+  maxRows?: number,
 ): number {
   if (isGradientLegendConfig(legend)) {
     return legend.gradient.label
@@ -305,25 +396,17 @@ export function resolveHorizontalLegendHeight(
 
   const metrics = resolveLegendMetrics(layout)
   const maxWidth = Math.max(1, layout?.maxWidth ?? availableWidth)
+  const labelOffset = metrics.swatchSize + metrics.labelGap
   let height = metrics.rowHeight
 
   for (const group of legend.legendGroups) {
-    let rows = 0
-    let rowWidth = 0
-    for (const item of group.items) {
-      const itemWidth = metrics.swatchSize + metrics.labelGap + estimateLegendTextWidth(item.label)
-      const nextWidth = rowWidth === 0 ? itemWidth : rowWidth + metrics.itemGap + itemWidth
-      if (rowWidth > 0 && nextWidth > maxWidth) {
-        rows += 1
-        rowWidth = itemWidth
-      } else {
-        rowWidth = nextWidth
-      }
-    }
-    if (group.items.length > 0) rows += 1
+    const { rows } = fitLegendRows(
+      group.items.map((item) => labelOffset + estimateLegendTextWidth(legendDisplayLabel(item.label))),
+      { itemGap: metrics.itemGap, labelOffset, maxWidth, maxRows },
+    )
     height = Math.max(
       height,
-      rows * metrics.rowHeight,
+      rows.length * metrics.rowHeight,
       group.label ? estimateLegendTextWidth(group.label) : 0,
     )
   }
@@ -340,9 +423,10 @@ export function resolveSideLegendMargin(
   legend: LegendValue | null | undefined,
   layout?: LegendLayout,
   axisChrome?: Omit<AxisChromeInput, "topAxis" | "leftAxis" | "rightAxis">,
+  bounds?: LegendBounds,
 ): number {
   return (
-    resolveSideLegendWidth(legend, layout) +
+    resolveSideLegendWidth(legend, layout, bounds) +
     resolveLegendDistance(legend) +
     resolveLegendSideGutter(layout, axisChrome) +
     resolveLegendEdgeGutter(layout)
@@ -371,10 +455,17 @@ export function reserveLegendMargin(
   if (!legend) return
   const position = options.position ?? "right"
   const plotWidth = Math.max(1, options.size[0] - margin.left - margin.right)
+  // A top/bottom legend gets at most its share of the chart height; rows
+  // beyond that collapse into "+N more" instead of squeezing the plot.
   const horizontalHeight = resolveHorizontalLegendHeight(
     legend,
     plotWidth,
     options.legendLayout,
+    legendRowsFor(
+      options.size[1] * MAX_HORIZONTAL_LEGEND_HEIGHT_RATIO,
+      resolveLegendMetrics(options.legendLayout).rowHeight,
+      isLegendConfig(legend) ? legend.legendGroups.length : 1,
+    ),
   )
   const distance = resolveLegendDistance(legend)
   const axisChrome = position === "bottom"
@@ -399,17 +490,24 @@ export function reserveLegendMargin(
       : 0,
   )
 
+  // A side legend wraps into columns rather than running below the chart,
+  // and never claims more than its capped share of the chart width.
+  const sideBounds: LegendBounds = {
+    maxWidth: resolveSideLegendMaxWidth(options.size[0], options.legendLayout),
+    maxHeight: Math.max(0, options.size[1] - margin.top),
+  }
+
   if (position === "right") {
     margin.right = Math.max(
       margin.right,
       minimum,
-      resolveSideLegendMargin(legend, options.legendLayout, options.axisChrome?.rightAxis),
+      resolveSideLegendMargin(legend, options.legendLayout, options.axisChrome?.rightAxis, sideBounds),
     )
   } else if (position === "left") {
     margin.left = Math.max(
       margin.left,
       minimum,
-      resolveSideLegendMargin(legend, options.legendLayout, options.axisChrome?.leftAxis),
+      resolveSideLegendMargin(legend, options.legendLayout, options.axisChrome?.leftAxis, sideBounds),
     )
   } else if (position === "top") {
     margin.top = Math.max(margin.top, minimum, horizontalRequirement)
@@ -427,6 +525,8 @@ export interface LegendPlacementInput {
   axisChrome?: AxisChromeInput
   /** Static renderers may reserve a measured side box wider than the default. */
   reservedWidth?: number
+  /** A chart title sits above a top legend's band. */
+  hasTitle?: boolean
 }
 
 /**
@@ -445,7 +545,11 @@ export function resolveLegendPlacement(
     1,
     horizontal
       ? (input.legendLayout?.maxWidth ?? plotWidth)
-      : (input.reservedWidth ?? resolveSideLegendWidth(legend, input.legendLayout))
+      : (input.reservedWidth ?? resolveSideLegendWidth(
+          legend,
+          input.legendLayout,
+          resolveLegendRenderBounds(legend, input),
+        ))
   )
   const distance = resolveLegendDistance(legend)
   const sideGutter = resolveLegendSideGutter(
@@ -453,7 +557,12 @@ export function resolveLegendPlacement(
     position === "left" ? input.axisChrome?.leftAxis : input.axisChrome?.rightAxis,
   )
   const edgeGutter = resolveLegendEdgeGutter(input.legendLayout)
-  const height = resolveHorizontalLegendHeight(legend, plotWidth, input.legendLayout)
+  const height = resolveHorizontalLegendHeight(
+    legend,
+    plotWidth,
+    input.legendLayout,
+    horizontal ? resolveHorizontalLegendMaxRows(legend, input) : undefined,
+  )
   const bottomAxisGutter = resolveAxisChromeGutter(input.axisChrome, input.legendLayout)
   const topAxisGutter = resolveAxisChromeGutter(input.axisChrome?.topAxis, input.legendLayout)
 
@@ -497,75 +606,6 @@ export function resolveLegendPlacement(
     width,
     height,
   }
-}
-
-export interface LegendMetrics {
-  swatchSize: number
-  labelGap: number
-  itemGap: number
-  rowHeight: number
-  align: "start" | "center" | "end"
-  maxWidth?: number
-}
-
-export interface VerticalLegendGroupInput {
-  hasLabel: boolean
-  itemCount: number
-}
-
-export interface VerticalLegendGroupLayout {
-  lineY: number
-  labelY?: number
-  itemsY: number
-  endY: number
-}
-
-/** Resolve the dimensions used by both the interactive and static legends. */
-export function resolveLegendMetrics(layout?: LegendLayout): LegendMetrics {
-  const swatchSize = Math.max(1, layout?.swatchSize ?? DEFAULT_LEGEND_SWATCH_SIZE)
-  const rowHeight = Math.max(swatchSize, layout?.rowHeight ?? DEFAULT_LEGEND_ROW_HEIGHT)
-  return {
-    swatchSize,
-    labelGap: Math.max(0, layout?.labelGap ?? DEFAULT_LEGEND_LABEL_GAP),
-    itemGap: Math.max(0, layout?.itemGap ?? DEFAULT_LEGEND_ITEM_GAP),
-    rowHeight,
-    align: layout?.align === "left"
-      ? "start"
-      : layout?.align === "right"
-        ? "end"
-        : (layout?.align ?? "start"),
-    maxWidth: layout?.maxWidth,
-  }
-}
-
-/**
- * Lay out vertical legend groups using the long-standing Legend.tsx geometry.
- * Keeping this calculation renderer-neutral prevents SSR and CSR from drifting
- * when labels, multiple groups, or custom row heights are used.
- */
-export function layoutVerticalLegendGroups(
-  groups: VerticalLegendGroupInput[],
-  rowHeight: number
-): VerticalLegendGroupLayout[] {
-  let offset = 24
-
-  return groups.map(({ hasLabel, itemCount }) => {
-    offset += 5
-    const lineY = offset
-    offset += 8
-
-    let labelY: number | undefined
-    if (hasLabel) {
-      offset += 16
-      labelY = offset
-      offset += 8
-    }
-
-    const itemsY = offset
-    offset += itemCount * rowHeight + 8
-
-    return { lineY, labelY, itemsY, endY: offset }
-  })
 }
 
 /** Drop only default margins belonging to explicitly hidden XY axes. */

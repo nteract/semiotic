@@ -320,6 +320,7 @@ export const ProcessSankey = /* @__PURE__ */ withSizedChartErrorBoundary(/* @__P
     width,
     height,
     hasTitle: !!title,
+    axisChrome: { hasAxis: true, hasAxisLabel: true },
     loading,
     loadingContent,
     emptyContent
@@ -378,7 +379,7 @@ export const ProcessSankey = /* @__PURE__ */ withSizedChartErrorBoundary(/* @__P
       const baseline = { ...merged }
       const minimumMargin =
         setup.legendPosition === "right" || setup.legendPosition === "left"
-          ? 140
+          ? 0
           : setup.legendPosition === "top"
             ? 50
             : 80

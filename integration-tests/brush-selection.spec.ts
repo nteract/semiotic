@@ -527,6 +527,31 @@ test.describe("Brush & Selection - Visual snapshots", () => {
     await testCase.scrollIntoViewIfNeeded()
     await waitForRafs(page, 8)
 
+    // The selected treemap group is only one column. Assert the full layout
+    // before linked hover fades the other groups, so a narrow selection cannot
+    // mask excessive frame margins.
+    const treemapBounds = await testCase.locator('[data-linked-hover-chart="Treemap"] canvas').first().evaluate((canvas: HTMLCanvasElement) => {
+      const { width, height } = canvas
+      const pixels = canvas.getContext("2d")!.getImageData(0, 0, width, height).data
+      let left = width
+      let right = 0
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const i = (y * width + x) * 4
+          const rgb = [pixels[i], pixels[i + 1], pixels[i + 2]]
+          if (pixels[i + 3] < 250 || Math.max(...rgb) - Math.min(...rgb) < 20) continue
+          left = Math.min(left, x)
+          right = Math.max(right, x)
+        }
+      }
+      const scale = canvas.getBoundingClientRect().width / width
+      return { left: left * scale, right: (width - right - 1) * scale }
+    })
+    expect(treemapBounds.left).toBeCloseTo(10, 0)
+    expect(treemapBounds.right).toBeCloseTo(10, 0)
+    await expect(testCase.locator('[data-linked-hover-chart="ProcessSankey"] svg > g').first())
+      .toHaveAttribute("transform", "translate(20,8)")
+
     await proveLinkedHoverTargetsChanged(
       page,
       testCase,

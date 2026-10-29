@@ -13,8 +13,137 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Headless `useCompositionalInterfaces` navigation and opt-in `navParentId` owner/row keyboard groups with accessible table grouping.
 - Fully pinned row optimization supports cyclic owner projections and compound graphs, with request-local geometry/route reuse. Semantic cycle validation remains enforced.
 - Documented and tested nested rectangle hit priority, module-worker integration, and a 3.13.2 consumer fallback that computes fresh row anchors after routing failure.
+- `RealtimeHistogram` and `TemporalHistogram` accept `aggregation="count"` to count
+  events per bin instead of summing `valueAccessor`, so click or log streams
+  without a numeric field still bin. The default stays `"sum"`.
+- Stream schemas can declare `cardinality` (expected distinct values) and
+  `additive` (whether summing across events is meaningful) on each field.
+  `suggestStreamCharts` returns the `rankingIntents` it used and `warnings`
+  for unknown keys, invalid kinds or hints, and duplicate fields. Kind aliases
+  such as `"timestamp"` are mapped to `"date"`. `explainStreamCapabilityFit(schema, component)`
+  explains why one chart was suggested, excluded, or filtered out.
+- `Scatterplot` is registered as a stream capability, so the `correlation`
+  intent has a streaming recommendation.
 
 ### Fixed
+
+- Stream chart suggestions read the schema more faithfully:
+  - A `keyFields` column is now a category candidate, so a keyed table gets a
+    bar per key instead of only BigNumber or GaugeChart. An explicit
+    `role: "category"` wins even on a key.
+  - Time charts split by the series role or, failing that, the primary
+    category. A windowed series per brand gets one line per brand.
+  - Without an intent, ranking weights intents from the schema. A measure over
+    time leads with `RealtimeLineChart` instead of the histogram.
+  - Charts that score zero for the ranking intents are dropped unless you pass
+    `minScore: 0`.
+- Charts that total a measure explain what they sum:
+  - Append-stream bars, pies, and donuts rank lower while the measure's
+    additivity is unknown, and are excluded for `additive: false`.
+  - `RealtimeWaterfallChart` is demoted unless the measure is a declared or
+    delta-named change.
+  - `RealtimeHistogram` counts events unless the measure is additive, and now
+    always includes the `binSize` it requires. It ranks for activity over
+    time rather than value distribution, which `RealtimeHeatmap` covers.
+- Throughput and retention now shape the suggested props:
+  - Numeric throughput sizes `windowSize` and `binSize`, so 260 and 4,000
+    rows/s no longer share a 200-row buffer.
+  - At high throughput the line is suggested with windowed `aggregate`, and
+    per-event swarms, waterfalls, and scatters are excluded.
+  - Cumulative retention maps to `windowMode: "growing"`.
+- Declared cardinality excludes pies and donuts above eight slices and warns
+  about crowded lines, stacks, and swarms.
+- A numeric-only stream scores the same whether or not it declares
+  `shape: "aggregate"`. GaugeChart sets a 0–100 or 0–1 range only for
+  percentage- or ratio-named measures, and says when the range is unknown.
+- `TemporalHistogram` is no longer suggested for live streams because it has
+  no push API; the exclusion reason points to `RealtimeHistogram`.
+- Suggestion `reasons` list field bindings and adaptations such as windowed
+  aggregation, and name the field-order choice when several categoricals
+  compete.
+- `inferIntent` recognizes "spiking" and "surge" phrasing.
+- `suggestCharts`, `scoreChart`, and variant discovery weight intents from
+  the data profile when no intent is given, the same way stream suggestions
+  now do. A time axis ranks as a trend first, so a price series leads with
+  `LineChart` instead of a stepped `AreaChart`. Aggregated categories rank as
+  a ranking, ten or more rows per category rank as a distribution, and two
+  plain measures rank as a correlation. Graph, hierarchy, and geographic
+  data keep the previous mean of each chart's non-zero intent scores.
+  `suggestCharts` also drops charts scoring 0 for the ranking intents unless
+  `minScore: 0` is passed.
+- Left- and right-side categorical legends stay inside the chart. Items that
+  would pass the chart bottom wrap into columns, and long labels truncate with
+  an ellipsis while keeping the full text as hover text and accessible name.
+  When columns still cannot hold every item, the last slot reads "+N more"
+  with the hidden names on hover. A measured side legend takes at most 30% of
+  the chart width, never less than the existing 100px box, so a compact card
+  keeps most of its plot. `legendLayout.maxWidth` now sets this cap for side
+  legends. Empty-string categories are labelled "(empty)" instead of drawing
+  a blank row. Interactive, static, and `renderChart` output share the same
+  layout; the standalone `<Legend>` fits only when given the new `maxHeight`.
+- Top and bottom legends stay inside the chart. A measured legend reserves at
+  most 40% of the chart height; rows beyond that, or beyond the space a
+  compact chart can give, collapse into a "+N more" slot whose hover text
+  names the hidden categories. A single legend item wider than the plot is
+  truncated with an ellipsis instead of overflowing sideways.
+  `renderChart("ProcessSankey")` reserves the measured legend width as the
+  React component does, so long legend labels no longer overlap the ribbons
+  and time axis.
+- `RealtimeLineChart` with `seriesAccessor` gives each series its own palette
+  colour, honouring `CategoryColorProvider`, linked colours, and the theme.
+  An explicit `stroke` still applies to every series. It also shows a series
+  legend by default; pass `showLegend={false}` to hide it. Legend highlight
+  and isolate dim the other series, `styleRules` see the series as
+  `category`, and the default tooltip names the series. The same holds in
+  `renderChart` and aggregate mode. Aggregate-mode tooltips also show window
+  values when custom accessors are used. `RealtimeSwarmChart`'s default
+  tooltip names the category.
+- Streaming time axes fed epoch-millisecond numbers (for example
+  `Date.now()`) show clock-time labels on calendar-aligned ticks instead of
+  raw integers. Automatic time labels carry only the precision their ticks
+  need, so sub-second windows stay distinct and whole-second ticks drop
+  `.000`.
+- XY and ordinal horizontal axis end labels that would overflow the chart's
+  side margin, or run under a right-side legend, are nudged inside, in the
+  browser and in static rendering.
+- `RealtimeHistogram` tooltips label a bin's total "total" when it sums a
+  field and "count" when it counts events; it previously said "count" for
+  both.
+- Ordinal value axes, horizontal or vertical, drop a tick whose label repeats
+  the previous one, matching XY axes, in the browser and in static SVG. Grid
+  lines follow the remaining ticks, so a coarse `valueFormat` no longer
+  prints the same label several times.
+- `DonutChart` and pie layouts no longer draw an inverted, flat-clipped ring
+  when `innerRadius` exceeds the radius available in a short container. A
+  hole that fits is kept exactly; one that does not falls back to a 12px ring
+  (or a quarter of the radius on very small donuts). Tiny plots no longer
+  produce a negative radius.
+- `GaugeChart` sizes its arc so the centre readout (value, scale range, and
+  `centerLabel`) stays inside the chart, below the title strip when there is
+  a title. On half-circle and other shallow
+  sweeps the value sits inside the arch instead of level with the arc's
+  ends. Threshold scale labels count toward the fit, so short or narrow
+  gauges keep them inside the chart. When the needle is shown, the value sits
+  below the hub in the gap the needle never sweeps, so the needle no longer
+  crosses it (on a full circle it can still meet the value near min and max).
+  A responsive gauge (`responsiveWidth`/`responsiveHeight`) lays out at its
+  measured size instead of the nominal width and height. Browser and static
+  rendering share the same layout.
+- Static `renderChart` for `PieChart` and `DonutChart` colours slices by the
+  default `category` field and shows `DonutChart`'s default legend, matching
+  the browser charts.
+- Heatmap gradient legends take their domain and colours from the drawn
+  cells in the browser, server rendering and hydration, and `renderChart`.
+  An aggregated or auto-binned `Heatmap` legend shows counts or means rather
+  than raw values, and a server-rendered `RealtimeHeatmap` legend no longer
+  reads 0–1. `renderChart` draws the gradient legend for `Heatmap` and
+  `RealtimeHeatmap` when `showLegend` is set. Server-rendered
+  `RealtimeHeatmap` and direct `StreamXYFrame` heatmap cells draw the same
+  1px surface-coloured separator as canvas.
+- `RealtimeHeatmap` no longer re-renders on every streaming frame when no
+  legend is shown. Turning on `showLegend` mid-stream shows the current colour
+  domain at once, and the gradient legend uses the theme's sequential scheme
+  when `colorScheme` is not set, matching the cells.
 
 - Ordinal keyboard order follows the scene. Horizontal bars, stacked segments,
   and radar points move in category order, pie and donut wedges move by start

@@ -57,8 +57,15 @@ import {
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
 import { composeStyleRules, makeXYRuleContext } from "../shared/styleRules"
 import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
+import { useStreamingLegend } from "../shared/useStreamingLegend"
+import { useRealtimeCategoryColors } from "./useRealtimeCategoryColors"
+import { extractCategoryDomain } from "../../stream/categoryDomain"
+import { resolveStringAccessor } from "../../stream/accessorUtils"
 
 export type { RealtimeLineChartHandle, RealtimeLineChartProps }
+
+const EMPTY_LEGEND_DATA: Datum[] = []
+const EMPTY_SERIES: string[] = []
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureRealtimeLineChartRegistrations(): void {
@@ -173,8 +180,72 @@ export const RealtimeLineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PU
   const strokeWidth = strokeWidthProp ?? 2
   const seriesLabel =
     typeof valueAccessor === "string" ? valueAccessor : "Value"
+
+  const frameRef = useRef<StreamXYFrameHandle>(null)
+
+  // ── Windowed aggregation (opt-in) ──────────────────────────────────────
+  // When `aggregate` is set the HOC owns a WindowAccumulator and feeds the
+  // frame a controlled, bounded array of per-window rows instead of the raw
+  // stream. Refs keep the imperative handle referentially stable while still
+  // reaching live config/accessors.
+  const windowMode = windowModeProp ?? capacityMode ?? "sliding"
+  const windowSize = resolveRealtimeWindowSize(windowSizeProp, data, capacity)
+  const { aggEnabled, aggRows } = useRealtimeLineIngestion(ref, frameRef, windowSize, {
+    aggregate, eventTime, data, timeAccessor, valueAccessor, seriesAccessor, onObservation, chartId
+  })
+
+  // ── Series colour + legend ─────────────────────────────────────────────
+  // `seriesAccessor` is a categorical channel: each series gets its own
+  // palette colour (provider → theme → streaming palette, as in the sibling
+  // realtime charts) and, like RealtimeHistogram's stacks, an automatic
+  // legend unless `showLegend={false}`. Aggregate mode reads the synthetic
+  // series key off the emitted window rows.
+  const hasSeries = seriesAccessor != null
+  const seriesKey = (
+    !hasSeries ? undefined : aggEnabled ? AGG_SERIES : seriesAccessor
+  ) as string | ((d: Datum) => string) | undefined
+  const showSeriesLegend = hasSeries && resolved.showLegend !== false
+  const streamingSeries = useStreamingLegend({
+    isPushMode: !aggEnabled && data === undefined,
+    colorBy: hasSeries
+      ? (seriesAccessor as string | ((d: Datum) => string))
+      : undefined,
+    colorScheme: undefined,
+    // The visible legend is built below from the shared mark scale; this hook
+    // only discovers the push-mode series domain.
+    showLegend: false,
+    legendPosition: legendPositionProp,
+    trackCategoryDomain: showSeriesLegend,
+    registerLinkedCategories: false
+  })
+  const controlledSeriesList = !hasSeries
+    ? EMPTY_SERIES
+    : aggEnabled
+      ? extractCategoryDomain(aggRows, AGG_SERIES)
+      : data !== undefined
+        ? extractCategoryDomain(data as Datum[], seriesKey)
+        : streamingSeries.categories
+  // Controlled and aggregate rows change identity on every publish; only a
+  // new or departed series should re-key the palette and line style.
+  const seriesDomainKey = controlledSeriesList.join("\u0000")
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const activeSeries = useMemo(() => controlledSeriesList, [seriesDomainKey])
+  const { colorScale: seriesPaletteScale } = useRealtimeCategoryColors({
+    enabled: hasSeries,
+    categories: activeSeries,
+    domainKey: seriesKey
+  })
+  // An explicit `stroke` still paints every series; keep the legend honest.
+  const seriesColorScale = useMemo(
+    () =>
+      seriesPaletteScale && strokeProp != null
+        ? () => strokeProp
+        : seriesPaletteScale,
+    [seriesPaletteScale, strokeProp]
+  )
+
   const lineLegend = useMemo<LegendValue | undefined>(() => {
-    if (!resolved.showLegend) return undefined
+    if (hasSeries || !resolved.showLegend) return undefined
     return {
       legendGroups: [
         {
@@ -188,31 +259,40 @@ export const RealtimeLineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PU
         }
       ]
     }
-  }, [resolved.showLegend, seriesLabel, stroke, strokeWidth])
+  }, [hasSeries, resolved.showLegend, seriesLabel, stroke, strokeWidth])
+  const { legend, margin, legendPosition, hasAutomaticLegend } =
+    useChartLegendAndMargin({
+      data: EMPTY_LEGEND_DATA,
+      colorBy: seriesKey,
+      colorScale: seriesColorScale,
+      showLegend: hasSeries ? resolved.showLegend : false,
+      legendPosition: legendPositionProp,
+      userMargin,
+      defaults: resolved.marginDefaults,
+      categories: activeSeries,
+      additionalLegend: lineLegend,
+      chartWidth: resolvedSize[0],
+      chartHeight: resolvedSize[1],
+      axisChrome: { hasAxis: resolved.showAxes !== false }
+    })
+  const singleSeriesAccessor = useCallback(() => seriesLabel, [seriesLabel])
+  const singleSeriesList = useMemo(() => [seriesLabel], [seriesLabel])
   const legendState = useLegendInteraction(
     props.legendInteraction,
-    () => seriesLabel,
-    [seriesLabel]
+    hasSeries ? seriesKey : singleSeriesAccessor,
+    hasSeries ? activeSeries : singleSeriesList,
+    hasSeries ? hasAutomaticLegend : true,
+    hasSeries
   )
-  const { legend, margin, legendPosition } = useChartLegendAndMargin({
-    data: [],
-    colorBy: undefined,
-    colorScale: undefined,
-    showLegend: false,
-    legendPosition: legendPositionProp,
-    userMargin,
-    defaults: resolved.marginDefaults,
-    additionalLegend: lineLegend,
-    chartWidth: resolvedSize[0],
-    chartHeight: resolvedSize[1],
-    axisChrome: { hasAxis: resolved.showAxes !== false }
-  })
   // Accessor-aware default tooltip — reads data-space `time` /
   // `value` fields off `hover.data` so the user sees real values
   // out of the box. See `buildDefaultRealtimeTooltip` for shape.
+  // Aggregate rows carry their own `time` / `value` fields.
   const defaultTooltipContent = buildDefaultRealtimeTooltip({
-    timeAccessor,
-    valueAccessor
+    timeAccessor: aggEnabled ? AGG_TIME : timeAccessor,
+    valueAccessor: aggEnabled ? AGG_VALUE : valueAccessor,
+    groupAccessor: seriesKey,
+    groupLabel: "series"
   })
   const multiPointTooltip = MultiPointTooltip()
   const tooltipProps = resolveMultiCapableTooltip({
@@ -235,8 +315,6 @@ export const RealtimeLineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PU
       })
   })
   const resolvedTooltip = tooltipContent ?? tooltipProps.tooltipContent
-
-  const frameRef = useRef<StreamXYFrameHandle>(null)
 
   // ── Linked hover via shared hook ──
   const {
@@ -262,17 +340,6 @@ export const RealtimeLineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PU
     [onHover, linkedHoverBehavior]
   )
 
-  // ── Windowed aggregation (opt-in) ──────────────────────────────────────
-  // When `aggregate` is set the HOC owns a WindowAccumulator and feeds the
-  // frame a controlled, bounded array of per-window rows instead of the raw
-  // stream. Refs keep the imperative handle referentially stable while still
-  // reaching live config/accessors.
-  const windowMode = windowModeProp ?? capacityMode ?? "sliding"
-  const windowSize = resolveRealtimeWindowSize(windowSizeProp, data, capacity)
-  const { aggEnabled, aggRows } = useRealtimeLineIngestion(ref, frameRef, windowSize, {
-    aggregate, eventTime, data, timeAccessor, valueAccessor, seriesAccessor, onObservation, chartId
-  })
-
   // ── Loading / empty states (computed early, returned after all hooks) ───
   const loadingEl = renderLoadingState(
     loading,
@@ -289,10 +356,20 @@ export const RealtimeLineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PU
         emptyContent, props)
     : null
 
-  const baseLineStyle = useMemo(
-    () => () => ({ stroke: "#007bff", strokeWidth: 2 }) as LineStyle,
-    []
-  )
+  const baseLineStyle = useMemo(() => {
+    if (!seriesKey || !seriesPaletteScale) {
+      return () => ({ stroke: "#007bff", strokeWidth: 2 }) as LineStyle
+    }
+    const readSeries = resolveStringAccessor(seriesKey) as (d: Datum) => string
+    // The frame passes each line's group key; fall back to the sample row.
+    return (datum: Datum, group?: string) =>
+      ({
+        stroke: seriesPaletteScale(
+          typeof group === "string" ? group : readSeries(datum)
+        ),
+        strokeWidth: 2
+      }) as LineStyle
+  }, [seriesKey, seriesPaletteScale])
   const lineRuleContext = useMemo(
     () =>
       makeXYRuleContext(
@@ -315,8 +392,10 @@ export const RealtimeLineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PU
       strokeWidth: strokeWidthProp,
       opacity
     })
-    return (datum: Datum) => ({
-      ...primitiveStyle(datum),
+    // Forward the frame's series key so palette colour and `category`
+    // style rules see the line being styled.
+    return (datum: Datum, group?: string) => ({
+      ...primitiveStyle(datum, group),
       ...(strokeDasharray != null && { strokeDasharray }),
       ...(cursor != null && { cursor })
     })
@@ -330,7 +409,8 @@ export const RealtimeLineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PU
   ])
   const interactiveLineStyle = useRealtimeSelectionStyle(
     lineStyleWithPrimitives,
-    [activeSelectionHook],
+    // Series legend highlight/isolate dims the other lines.
+    [hasSeries ? legendState.legendSelectionHook : null, activeSelectionHook],
     selection
   )
 
@@ -409,6 +489,7 @@ export const RealtimeLineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PU
       annotations={annotations}
       legend={legend}
       legendPosition={legendPosition}
+      {...streamingSeries.categoryDomainProps}
       autoPlaceAnnotations={autoPlaceAnnotations}
       svgAnnotationRules={svgAnnotationRules}
       tickFormatTime={tickFormatTime}

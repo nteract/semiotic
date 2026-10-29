@@ -2494,7 +2494,7 @@ async function suggestStreamChartsHandler(args: {
     Array.isArray(intent) ? intent : intent ? [intent] : undefined
   ) as IntentId[] | undefined
 
-  const { suggestions, excluded, stretchSuggestions } =
+  const { suggestions, excluded, stretchSuggestions, rankingIntents, warnings } =
     suggestStreamChartsFromCapabilities(schema, {
       intent: intentArg,
       maxResults: maxResults ?? 8,
@@ -2502,7 +2502,8 @@ async function suggestStreamChartsHandler(args: {
     })
 
   const lines: string[] = [
-    `${suggestions.length} stream chart suggestion${suggestions.length === 1 ? "" : "s"}${intentArg ? ` (intent: ${intentArg.join(", ")})` : ""}`,
+    `${suggestions.length} stream chart suggestion${suggestions.length === 1 ? "" : "s"} (${intentArg ? "intent" : "inferred intents"}: ${rankingIntents.join(", ") || "none"})`,
+    ...warnings.map((warning) => `warning: ${warning}`),
     ...(schema.throughput != null ? [`throughput: ${schema.throughput}`] : []),
     ...(schema.retention ? [`retention: ${schema.retention}`] : []),
     ...(schema.shape ? [`shape: ${schema.shape}`] : []),
@@ -2524,7 +2525,14 @@ async function suggestStreamChartsHandler(args: {
 
   return {
     content: [{ type: "text", text: lines.join("\n") }],
-    structuredContent: { suggestions, excluded, stretchSuggestions, schema }
+    structuredContent: {
+      suggestions,
+      excluded,
+      stretchSuggestions,
+      rankingIntents,
+      warnings,
+      schema
+    }
   }
 }
 
@@ -2545,6 +2553,7 @@ async function suggestStreamDashboardHandler(args: {
     ...(dashboard.intentsMissing.length
       ? [`missing: ${dashboard.intentsMissing.join(", ")}`]
       : []),
+    ...dashboard.warnings.map((warning) => `warning: ${warning}`),
     "",
     ...dashboard.panels.map(
       (panel, i) =>
@@ -4592,18 +4601,27 @@ function createServer(
         kind: z.enum(["numeric", "categorical", "date", "boolean"]),
         role: z
           .enum(["x", "y", "value", "category", "series", "size", "key"])
+          .optional(),
+        cardinality: z
+          .number()
+          .min(0)
           .optional()
-      })
+          .describe("Expected distinct values for a categorical, boolean, or key field."),
+        additive: z
+          .boolean()
+          .optional()
+          .describe("Whether summing the measure across events is meaningful (counts, amounts, changes) or not (prices, latencies, percentages).")
+      }).passthrough()
     ),
     throughput: z.union([z.enum(["low", "medium", "high"]), z.number()]).optional(),
     retention: z.enum(["windowed", "cumulative"]).optional(),
     shape: z.enum(["append", "keyed", "aggregate"]).optional(),
     keyFields: z.array(z.string()).optional()
-  })
+  }).passthrough()
 
   srv.tool(
     "suggestStreamCharts",
-    "Recommend streaming Semiotic charts for a schema (not row data). Pass fields plus optional throughput (band or rows/sec), retention, shape ('append'|'keyed'|'aggregate'), and keyFields. Ranks realtime XY charts plus push-capable ordinal/value charts (BarChart, PieChart, BigNumber, GaugeChart, …). Returns suggestions, excluded fits-reasons, and optional stretch picks when audience is set.",
+    "Recommend streaming Semiotic charts for a schema (not row data). Pass fields (with optional cardinality and additive hints) plus optional throughput (band or rows/sec), retention, shape ('append'|'keyed'|'aggregate'), and keyFields. Ranks realtime XY charts plus push-capable ordinal/value/xy charts (BarChart, PieChart, Scatterplot, BigNumber, GaugeChart, …). Returns suggestions, excluded fits-reasons, the ranking intents (inferred when none is given), schema warnings, and optional stretch picks when audience is set.",
     {
       schema: streamSchemaInput.describe(
           "Stream schema — fields plus throughput/retention/shape hints. No row data."

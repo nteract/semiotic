@@ -1,10 +1,10 @@
 import { staticTitleText } from "./staticTitle"
 import { renderSvgCenterContent } from "../charts/shared/radialCenterContent"
 import { XHTML_NAMESPACE } from "../shared/svgNamespace"
-import { numericTickFormatter } from "../charts/shared/numericTickFormatter"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 import { normalizeGradient } from "../charts/shared/gradient"
-import { ordinalAxisTicks } from "../stream/ordinalAxisTicks"
+import { ordinalValueTicks } from "../stream/ordinalAxisTicks"
+import { resolveHorizontalTickLabelShift } from "../stream/svgOverlayUtils"
 import * as React from "react"
 import * as ReactDOMServer from "react-dom/server"
 import { OrdinalPipelineStore } from "../stream/OrdinalPipelineStore"
@@ -45,7 +45,7 @@ import {
   renderOrdinalGridSVG,
   wrapSVG
 } from "./staticSVGChrome"
-import { AXIS_FRAME_DEFAULT_MARGIN } from "../stream/frameDefaultMargins"
+import { ordinalFrameDefaultMargin } from "../stream/frameDefaultMargins"
 import {
   isStaticTextTickLabel,
   renderStaticTickForeignObject,
@@ -94,12 +94,7 @@ export function generateOrdinalAxesSVG(
     label: catFormat ? catFormat(col.name, index) : col.name
   }))
 
-  const values = ordinalAxisTicks(scales, layout, props.axisExtent, props.rTickValues)
-  const format = valFormat || numericTickFormatter(values)
-  const rTicks = values.map(v => ({
-    pixel: scales.r(v),
-    label: format(v)
-  }))
+  const rTicks = ordinalValueTicks(scales, layout, props.axisExtent, props.rTickValues, valFormat)
 
   if (isVertical) {
     return (
@@ -152,7 +147,13 @@ export function generateOrdinalAxesSVG(
         {rTicks.map((tick, i) => (
           <g key={`oxtick-${i}`} transform={`translate(${tick.pixel},${layout.height})`}>
             <line y2={5} stroke={s.border} strokeWidth={1} />
-            <text y={18} textAnchor="middle" fontSize={s.tickSize} fill={s.textSecondary} fontFamily={s.fontFamily}>{tick.label}</text>
+            <text
+              x={resolveHorizontalTickLabelShift("middle", tick.pixel, tick.label, s.tickSize, {
+                min: -(margin?.left ?? 0),
+                max: layout.width + (margin?.right ?? 0),
+              }) || undefined}
+              y={18} textAnchor="middle" fontSize={s.tickSize} fill={s.textSecondary} fontFamily={s.fontFamily}
+            >{tick.label}</text>
           </g>
         ))}
         {valLabel && (
@@ -194,7 +195,7 @@ export function generateOrdinalAxesSVG(
 
 export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps, sink?: EvidenceSink): string {
   const theme = resolveTheme(props.theme)
-  const defaultMargin = AXIS_FRAME_DEFAULT_MARGIN
+  const defaultMargin = ordinalFrameDefaultMargin(props.chartType)
   const size = props.size || [500, 400]
   const margin = reserveTitleMargin({ ...defaultMargin, ...props.margin }, staticTitleText(props.title))
   const hasVisibleTitle = hasTextTitle(staticTitleText(props.title))
@@ -373,7 +374,7 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
   }
 
   const idPfx = (props as ThemeAwareProps)._idPrefix
-  const grid = props.showGrid ? renderOrdinalGridSVG(store, { width, height }, theme, idPfx, props.axisExtent, props.rTickValues) : null
+  const grid = props.showGrid ? renderOrdinalGridSVG(store, { width, height }, theme, idPfx, props.axisExtent, props.rTickValues, props.valueFormat || props.rFormat) : null
 
   // Check for bar-funnel dropoff bars — they need SVG hatch patterns
   const hasDropoffBars = store.scene.some(

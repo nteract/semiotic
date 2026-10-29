@@ -204,6 +204,48 @@ describe("tickAnchor: edges", () => {
     }
   })
 
+  it("shifts centred end labels that would overflow the side margins back inside", () => {
+    const longLabel = (v: number | string | Date) => `10/24/2026 10:50:${v} AM`
+    const { container } = render(
+      <SVGOverlay
+        {...baseProps}
+        scales={makeStubScales()}
+        showAxes={true}
+        axes={[{ orient: "bottom", tickFormat: longLabel }]}
+      />,
+    )
+    const tickTexts = Array.from(
+      container.querySelectorAll("[data-orient='bottom'] text.semiotic-axis-tick"),
+    )
+    expect(tickTexts.length).toBeGreaterThanOrEqual(2)
+    const first = tickTexts[0]
+    const last = tickTexts[tickTexts.length - 1]
+    // Both edge labels keep their tick anchor and are nudged by exactly the
+    // overflow (0.6em per glyph at 12px), centred at 0 and 300 with 40px /
+    // 20px of side margin.
+    const halfWidth = (t: Element) => (t.textContent ?? "").length * 7.2 / 2
+    expect(first.getAttribute("text-anchor")).toBe("middle")
+    expect(Number(first.getAttribute("x"))).toBeCloseTo(halfWidth(first) - 40, 1)
+    expect(last.getAttribute("text-anchor")).toBe("middle")
+    expect(Number(last.getAttribute("x"))).toBeCloseTo(20 - halfWidth(last), 1)
+  })
+
+  it("leaves labels that already fit untouched", () => {
+    const { container } = render(
+      <SVGOverlay
+        {...baseProps}
+        scales={makeStubScales()}
+        showAxes={true}
+        axes={[{ orient: "bottom" }]}
+      />,
+    )
+    for (const t of Array.from(
+      container.querySelectorAll("[data-orient='bottom'] text.semiotic-axis-tick"),
+    )) {
+      expect(t.hasAttribute("x")).toBe(false)
+    }
+  })
+
   it("'edges' mode pins topmost label to hanging and bottommost to auto on left axis", () => {
     // y scale stub: range = [200, 0], so the LOWEST value tick (i=0)
     // sits at the BOTTOM of the plot and should get `auto`, while the
