@@ -197,14 +197,18 @@ export interface SuggestStreamChartsResult {
   /**
    * Intents the ranking used: the requested ones, or the defaults inferred
    * from the schema when none were passed.
+   * Optional for compatibility with stored results; always returned by
+   * `suggestStreamCharts`.
    */
-  rankingIntents: IntentId[]
+  rankingIntents?: IntentId[]
   /**
    * Problems found in the schema — unknown keys, invalid kinds or hints,
    * duplicate fields. Repairable ones (kind aliases) were applied before
    * ranking; the rest were ignored.
+   * Optional for compatibility with stored results; always returned by
+   * `suggestStreamCharts`.
    */
-  warnings: string[]
+  warnings?: string[]
 }
 
 export interface SuggestStreamChartsOptions {
@@ -419,7 +423,7 @@ function buildStreamStretchSuggestions(
 export function suggestStreamCharts(
   schema: StreamSchema,
   options: SuggestStreamChartsOptions = {},
-): SuggestStreamChartsResult {
+): SuggestStreamChartsResult & { rankingIntents: IntentId[]; warnings: string[] } {
   const normalized = normalizeStreamSchema(schema)
   const { suggestions, excluded, rankingIntents } = rankStreamSuggestions(
     normalized.schema,
@@ -464,7 +468,7 @@ export interface StreamCapabilityExplanation {
 export function explainStreamCapabilityFit(
   schema: StreamSchema,
   options?: SuggestStreamChartsOptions,
-): SuggestStreamChartsResult
+): ReturnType<typeof suggestStreamCharts>
 export function explainStreamCapabilityFit(
   schema: StreamSchema,
   component: string,
@@ -474,7 +478,7 @@ export function explainStreamCapabilityFit(
   schema: StreamSchema,
   componentOrOptions: string | SuggestStreamChartsOptions = {},
   maybeOptions: SuggestStreamChartsOptions = {},
-): SuggestStreamChartsResult | StreamCapabilityExplanation {
+): ReturnType<typeof suggestStreamCharts> | StreamCapabilityExplanation {
   if (typeof componentOrOptions !== "string") {
     return suggestStreamCharts(schema, componentOrOptions)
   }

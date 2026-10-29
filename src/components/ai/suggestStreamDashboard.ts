@@ -28,8 +28,12 @@ export interface StreamDashboardSuggestion {
   intentsMissing: IntentId[]
   stretchPanels: StreamStretchSuggestion[]
   schemas: ReadonlyArray<StreamSchema>
-  /** Schema problems, prefixed with the schema index when there are several. */
-  warnings: string[]
+  /**
+   * Schema problems, prefixed with the schema index when there are several.
+   * Optional for compatibility with stored results; always returned by
+   * `suggestStreamDashboard`.
+   */
+  warnings?: string[]
 }
 
 export interface SuggestStreamDashboardOptions {
@@ -107,7 +111,7 @@ function withWindowPreference(
 export function suggestStreamDashboard(
   schemas: StreamSchema | ReadonlyArray<StreamSchema>,
   options: SuggestStreamDashboardOptions = {}
-): StreamDashboardSuggestion {
+): StreamDashboardSuggestion & { warnings: string[] } {
   const inputs: ReadonlyArray<StreamSchema> = Array.isArray(schemas)
     ? schemas
     : [schemas as StreamSchema]

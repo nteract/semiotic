@@ -75,7 +75,7 @@ function eventTimePresentationFinding(context: TemporalContext, referenceTime?: 
 function explainArtifactRefusal(evaluation: ArtifactEvaluation): string
 function explainCapabilityFit(data: null | readonly Datum[] | undefined, options?: SuggestChartsOptions | undefined): ExplainCapabilityFitResult
 function explainStreamCapabilityFit(schema: StreamSchema, component: string, options?: SuggestStreamChartsOptions | undefined): StreamCapabilityExplanation
-function explainStreamCapabilityFit(schema: StreamSchema, options?: SuggestStreamChartsOptions | undefined): SuggestStreamChartsResult
+function explainStreamCapabilityFit(schema: StreamSchema, options?: SuggestStreamChartsOptions | undefined): SuggestStreamChartsResult & {rankingIntents: IntentId[]; warnings: string[];}
 function fingerprintArtifactCollection(collection: ArtifactCollectionContract): string
 function fingerprintValue(input: unknown): ValueFingerprint
 function flattenVisible(root: NavTreeNode, expanded: Set<string>): NavTreeNode[]
@@ -139,8 +139,8 @@ function stretchFamiliarityCeiling(audience: AudienceProfile | undefined): numbe
 function suggestCharts(data: null | readonly Datum[] | undefined, options?: SuggestChartsOptions | undefined): Suggestion[]
 function suggestChartsGrouped(data: null | readonly Datum[] | undefined, options?: (SuggestChartsOptions & {maxPerBand?: number;}) | undefined): ScaledSuggestionGroups
 function suggestDashboard(data: null | readonly Datum[] | undefined, options?: SuggestDashboardOptions | undefined): DashboardSuggestion
-function suggestStreamCharts(schema: StreamSchema, options?: SuggestStreamChartsOptions | undefined): SuggestStreamChartsResult
-function suggestStreamDashboard(schemas: StreamSchema | readonly StreamSchema[], options?: SuggestStreamDashboardOptions | undefined): StreamDashboardSuggestion
+function suggestStreamCharts(schema: StreamSchema, options?: SuggestStreamChartsOptions | undefined): SuggestStreamChartsResult & {rankingIntents: IntentId[]; warnings: string[];}
+function suggestStreamDashboard(schemas: StreamSchema | readonly StreamSchema[], options?: SuggestStreamDashboardOptions | undefined): StreamDashboardSuggestion & {warnings: string[];}
 function suggestStretchCharts(data: null | readonly Datum[] | undefined, options?: SuggestStretchChartsOptions | undefined): StretchSuggestion[]
 function summarizeData(data: null | readonly Datum[] | undefined, options?: SummarizeOptions | undefined): DataSummary
 function summarizeObligations(findings: readonly ObligationResult[]): ObligationSummary
@@ -1338,7 +1338,7 @@ interface-member StreamDashboardSuggestion::property::intentsMissing = required 
 interface-member StreamDashboardSuggestion::property::panels = required panels: StreamDashboardPanel[]
 interface-member StreamDashboardSuggestion::property::schemas = required schemas: readonly StreamSchema[]
 interface-member StreamDashboardSuggestion::property::stretchPanels = required stretchPanels: StreamStretchSuggestion[]
-interface-member StreamDashboardSuggestion::property::warnings = required warnings: string[]
+interface-member StreamDashboardSuggestion::property::warnings = optional warnings: string[] | undefined
 interface-member StreamFieldSchema::property::additive = optional additive: boolean | undefined
 interface-member StreamFieldSchema::property::cardinality = optional cardinality: number | undefined
 interface-member StreamFieldSchema::property::kind = required kind: StreamFieldKind
@@ -1408,10 +1408,10 @@ interface-member SuggestStreamChartsOptions::property::maxResults = optional max
 interface-member SuggestStreamChartsOptions::property::maxStretchResults = optional maxStretchResults: number | undefined
 interface-member SuggestStreamChartsOptions::property::minScore = optional minScore: number | undefined
 interface-member SuggestStreamChartsResult::property::excluded = required excluded: readonly RejectedStreamCapability[]
-interface-member SuggestStreamChartsResult::property::rankingIntents = required rankingIntents: IntentId[]
+interface-member SuggestStreamChartsResult::property::rankingIntents = optional rankingIntents: IntentId[] | undefined
 interface-member SuggestStreamChartsResult::property::stretchSuggestions = required stretchSuggestions: StreamStretchSuggestion[]
 interface-member SuggestStreamChartsResult::property::suggestions = required suggestions: StreamSuggestion[]
-interface-member SuggestStreamChartsResult::property::warnings = required warnings: string[]
+interface-member SuggestStreamChartsResult::property::warnings = optional warnings: string[] | undefined
 interface-member SuggestStreamDashboardOptions::property::allow = optional allow: readonly string[] | undefined
 interface-member SuggestStreamDashboardOptions::property::audience = optional audience: AudienceProfile | undefined
 interface-member SuggestStreamDashboardOptions::property::budget = optional budget: number | undefined
