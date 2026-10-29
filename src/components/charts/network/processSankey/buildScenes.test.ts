@@ -75,10 +75,10 @@ describe("buildProcessSankeyScenes validation policy", () => {
     expect(scene.layoutConfig.ribbons.map((ribbon) => ribbon.opacity)).toEqual([0.8, 1])
   })
 
-  it("CSR/SSR margin defaults stay aligned on horizontal gutters", () => {
+  it("CSR/SSR reserve time-axis height without fixed side gutters", () => {
     const margin = resolveProcessSankeyMarginDefaults(true, true, true, "horizontal")
-    expect(margin.left).toBe(80)
-    expect(margin.right).toBe(80)
+    expect(margin.left).toBe(20)
+    expect(margin.right).toBe(20)
     expect(margin.top).toBe(30)
     expect(margin.bottom).toBe(28)
   })

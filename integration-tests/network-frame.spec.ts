@@ -105,6 +105,77 @@ test.describe("Network Charts - Hierarchical", () => {
   })
 })
 
+test.describe("Network layouts use the available width", () => {
+  for (const testId of ["network-tree", "network-tree-vertical", "network-tree-treemap", "network-treemap", "network-sankey"]) {
+    test(`${testId} keeps marks wide, labels visible, and tooltips usable`, async ({ page }) => {
+      await page.goto("/network-examples/")
+      await waitForChartReady(page, testId)
+      const chart = page.getByTestId(testId)
+      await chart.scrollIntoViewIfNeeded()
+      const canvas = chart.locator("canvas").first()
+      const fill = testId.includes("sankey") ? [172, 88, 229]
+        : testId.includes("treemap") ? [44, 160, 44] : [255, 127, 14]
+      const readPainted = () => canvas.evaluate((element: HTMLCanvasElement, fill) => {
+        const { width, height } = element
+        const pixels = element.getContext("2d")!.getImageData(0, 0, width, height).data
+        const ratio = width / element.getBoundingClientRect().width
+        let left = width
+        let right = 0
+        let point: { x: number; y: number } | undefined
+        for (let y = 0; y < height; y++) {
+          for (let x = 0; x < width; x++) {
+            const i = (y * width + x) * 4
+            const rgb = [pixels[i], pixels[i + 1], pixels[i + 2]]
+            // Opaque, colored node fills exclude gray edges and backgrounds.
+            if (pixels[i + 3] < 250 || Math.max(...rgb) - Math.min(...rgb) < 20) continue
+            left = Math.min(left, x)
+            right = Math.max(right, x)
+            // WebKit's canvas colors vary by a few channels under software
+            // rendering. These stay far from the translucent link colors.
+            if (rgb.every((channel, index) => Math.abs(channel - fill[index]) <= 8)) {
+              point ??= { x: x / width, y: (y + 3 * ratio) / height }
+            }
+          }
+        }
+        return { fraction: (right - left) / width, point }
+      }, fill)
+      let painted = await readPainted()
+      // Scrolling an offscreen frame into view can resume its intro animation.
+      // Wait for the actual node fill before choosing a hover target.
+      await expect.poll(async () => {
+        painted = await readPainted()
+        return painted.point
+      }).toBeDefined()
+      // A vertical tree's lateral extent depends on its branching, but the
+      // horizontal and rectangular fixtures reach both plot boundaries.
+      if (testId !== "network-tree-vertical") expect(painted.fraction).toBeGreaterThan(0.85)
+      const box = (await canvas.boundingBox())!
+      const labels = chart.locator("svg text")
+      expect(await labels.count()).toBeGreaterThan(0)
+      for (const label of await labels.all()) {
+        const bounds = (await label.boundingBox())!
+        expect(bounds.x).toBeGreaterThanOrEqual(box.x - 0.5)
+        expect(bounds.x + bounds.width).toBeLessThanOrEqual(box.x + box.width + 0.5)
+        expect(bounds.y).toBeGreaterThanOrEqual(box.y - 0.5)
+        expect(bounds.y + bounds.height).toBeLessThanOrEqual(box.y + box.height + 0.5)
+      }
+      const tooltip = chart.locator(".stream-network-tooltip")
+      const inset = testId.includes("treemap") ? 10 : 20
+      for (const viewport of [{ width: 900, height: 800 }, { width: 720, height: 700 }]) {
+        await page.setViewportSize(viewport)
+        await chart.scrollIntoViewIfNeeded()
+        await waitForRafs(page)
+        const current = (await canvas.boundingBox())!
+        await page.mouse.move(current.x + painted.point!.x * current.width, current.y + painted.point!.y * current.height)
+        await expect(tooltip).toContainText(/Node [A-E]|root|branch\d|leaf\d-\d/)
+        await expectTooltipWithinPlot(chart, { left: inset, right: inset, top: inset, bottom: inset })
+        await page.mouse.move(0, 0)
+        await expect(tooltip).toBeHidden()
+      }
+    })
+  }
+})
+
 test.describe("Network Charts - Flow Layouts", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/network-examples/")

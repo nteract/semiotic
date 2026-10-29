@@ -261,8 +261,8 @@ export const processSankey: ChartConfig = {
     const legend = composeLegendConfigs(chartLegend, common.legend)
 
     // Match the HOC's legend reservation: measure the rendered legend with
-    // the shared routine (a chart-owned floor of 140px beside the plot, 50px
-    // above, 80px below), then cap it so a compact frame keeps a plot.
+    // the shared routine (measured width beside the plot, floors of 50px
+    // above and 80px below), then cap it so a compact frame keeps a plot.
     // Numeric caller margins are minima, so the legend can grow its side.
     const margin = { ...defaultMargin, ...userMargin }
     if (legend) {
@@ -274,7 +274,7 @@ export const processSankey: ChartConfig = {
         size: [width, height],
         hasTitle,
         legendLayout: common.legendLayout as LegendLayout | undefined,
-        minimumMargin: legendSide === "right" || legendSide === "left" ? 140 : legendSide === "top" ? 50 : 80,
+        minimumMargin: legendSide === "right" || legendSide === "left" ? 0 : legendSide === "top" ? 50 : 80,
       })
       clampLegendReservation(margin, baseline, [width, height], legendSide)
     }
@@ -508,7 +508,7 @@ export const sankeyDiagram: ChartConfig = {
 
 export const treeDiagram: ChartConfig = {
   frameType: "network",
-  layout: { margin: (_props, resolved) => resolveAxisFreeMarginDefaults(resolved, networkFrameDefaultMargin("tree")) },
+  layout: { margin: (props, resolved) => resolveAxisFreeMarginDefaults(resolved, networkFrameDefaultMargin(String(props.layout ?? "tree"))) },
   buildProps: (data, colorBy, colorScheme, common, rest) => {
     const fill = createHierarchyNodeFill(data, colorBy, colorScheme, common, rest)
     const baseNodeStyle = (d: Datum) => {

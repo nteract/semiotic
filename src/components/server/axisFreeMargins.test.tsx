@@ -17,11 +17,13 @@ import { ProportionalSymbolMap } from "../charts/geo/ProportionalSymbolMap"
 import { FlowMap } from "../charts/geo/FlowMap"
 import { DistanceCartogram } from "../charts/geo/DistanceCartogram"
 import StreamOrdinalFrame from "../stream/StreamOrdinalFrame"
+import StreamNetworkFrame from "../stream/StreamNetworkFrame"
 import type { FrameGraphicsContext } from "../stream/types"
 import type { MarginType } from "../types/marginType"
 import {
   renderChartWithEvidence,
-  renderOrdinalToStaticSVG
+  renderOrdinalToStaticSVG,
+  renderNetworkToStaticSVG
 } from "./renderToStaticSVG"
 
 const data = [
@@ -64,7 +66,7 @@ const areas = [
 ]
 const inset = { top: 10, right: 10, bottom: 10, left: 10 }
 const centered = { top: 40, right: 40, bottom: 40, left: 40 }
-const directional = { top: 20, right: 80, bottom: 20, left: 80 }
+const directional = { top: 20, right: 20, bottom: 20, left: 20 }
 const sparkline = { top: 2, right: 0, bottom: 2, left: 0 }
 
 const cases = [
@@ -165,6 +167,34 @@ function hocMargin(Chart: React.ElementType, props: Record<string, unknown>) {
 }
 
 describe("axis-free chart margins across React and static rendering", () => {
+  it.each([
+    ["tree", directional],
+    ["cluster", directional],
+    ["treemap", inset],
+    ["partition", inset],
+    ["circlepack", centered]
+  ] as const)("TreeDiagram uses the %s layout's padding", (layout, margin) => {
+    const input = { data: hierarchy, layout, width: 400, height: 400, showLegend: false }
+    expect(hocMargin(TreeDiagram, input)).toEqual(margin)
+    expect(renderChartWithEvidence("TreeDiagram", input).evidence.margin).toEqual(margin)
+  })
+
+  it.each(["sankey", "tree", "cluster", "treemap", "partition"] as const)(
+    "direct %s frames reserve no fixed label gutters",
+    (chartType) => {
+      const input = {
+        chartType,
+        ...(chartType === "sankey" ? { nodes, edges } : { data: hierarchy }),
+        size: [400, 400] as [number, number],
+        showLabels: false
+      }
+      const margin = chartType === "treemap" || chartType === "partition" ? inset : directional
+      expect(hocMargin(StreamNetworkFrame, input)).toEqual(margin)
+      const svg = renderNetworkToStaticSVG(input)
+      expect(svg).toContain(`transform="translate(${margin.left},${margin.top})"`)
+    }
+  )
+
   for (const { name, Chart, props, margin } of cases) {
     it.each(["primary", "mobile", "context", "sparkline"] as const)(
       `${name} in %s mode reserves layout padding only`,

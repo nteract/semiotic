@@ -25,8 +25,8 @@ async function hoverMark(page: Page, kind: "band" | "ribbon") {
     const bounds = document
       .querySelector(".stream-network-frame")!
       .getBoundingClientRect()
-    for (let x = 4; x < bounds.width - 80; x += 4) {
-      for (let y = 4; y < 290; y += 4) {
+    for (let x = 4; x < bounds.width - 40; x += 4) {
+      for (let y = 4; y < bounds.height - 36; y += 4) {
         if (
           ctx.isPointInPath(path, x, y) &&
           ctx.isPointInPath(path, x + 2, y + 2) &&
@@ -37,7 +37,7 @@ async function hoverMark(page: Page, kind: "band" | "ribbon") {
               ctx.isPointInStroke(band, x, y)
           )
         )
-          return { x: x + 40, y: y + 30 }
+          return { x: x + 20, y: y + 8 }
       }
     }
     throw new Error(`No exposed interior point in ${kind}`)
@@ -66,6 +66,18 @@ for (const time of ["numeric", "dates"]) {
           .first()
       ).toHaveText(time === "numeric" ? "14" : /02 PM|04 PM|06 PM/)
       const check = async () => {
+        const frameBounds = (await frame.boundingBox())!
+        const labels = frame.locator("svg text").filter({ hasText: /^(Intake|Treatment)$/ })
+        await expect(labels).toHaveCount(2)
+        // Resize can animate the retained scene after the outer frame shrinks.
+        await expect.poll(async () => {
+          for (const label of await labels.all()) {
+            const bounds = (await label.boundingBox())!
+            if (bounds.x < frameBounds.x + 20 ||
+              bounds.x + bounds.width > frameBounds.x + frameBounds.width - 20) return false
+          }
+          return true
+        }).toBe(true)
         await hoverMark(page, "band")
         await expect(tooltip).toHaveCount(1)
         await expect(tooltip).toContainText("Intake")

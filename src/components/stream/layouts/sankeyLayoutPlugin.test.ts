@@ -105,4 +105,25 @@ describe("sankeyLayoutPlugin", () => {
     const nodeB = nodes.find(n => n.id === "B")!
     expect(nodeA.x0).toBeLessThan(nodeB.x0)
   })
+
+  it.each(["horizontal", "vertical"] as const)(
+    "keeps %s endpoint labels inside the plot without external gutters",
+    (orientation) => {
+      const nodes = [makeNode("Source"), makeNode("Target")]
+      const edges = [makeEdge("Source", "Target", 10)]
+      const config: NetworkPipelineConfig = { chartType: "sankey", orientation, showLabels: true }
+      const size: [number, number] = [360, 360]
+      sankeyLayoutPlugin.computeLayout(nodes, edges, config, size)
+      const scene = sankeyLayoutPlugin.buildScene(nodes, edges, config, size)
+      expect(scene.labels.map(label => label.text)).toEqual(["Source", "Target"])
+      for (const label of scene.labels) {
+        const width = label.text.length * label.fontSize! * 0.6
+        const left = label.x - (label.anchor === "end" ? width : label.anchor === "middle" ? width / 2 : 0)
+        expect(left).toBeGreaterThanOrEqual(0)
+        expect(left + width).toBeLessThanOrEqual(size[0])
+        expect(label.y - 6).toBeGreaterThanOrEqual(0)
+        expect(label.y + 6).toBeLessThanOrEqual(size[1])
+      }
+    }
+  )
 })

@@ -105,7 +105,15 @@ const analyze = process.argv.includes("--analyze")
 // aggregate caches, idle/future policies, and shared wall-clock activity account
 // for this intentional runtime cost; no dependency or graph duplication.
 // Keep ~0.25 KiB headroom; all cold-consumer/isolation limits remain fixed.
-const MULTI_IMPORT_GZIP_BUDGET = 318.3 * 1024
+// Streaming fixes and axis-free layouts (2026-10-29): clean 0a351c567 ->
+// 532ebdc21, identical Linux amd64/Node 24.22.1/dependencies, measure
+// 325,871 -> 330,251 bytes (318.23 -> 322.51 KiB), still 28 files. Shared
+// legend geometry, date ticks, push capabilities, and AI schema/ranking own
+// the retained payload; the primary graph adds no external dependency input.
+// Keep <0.2 KiB headroom for this measured feature cost. Named-consumer
+// tolerances and tree-shaking/isolation limits remain unchanged; regenerated
+// named-import measurements are documented in check-entry-graph-size.mjs.
+const MULTI_IMPORT_GZIP_BUDGET = 322.7 * 1024
 
 const MULTI_IMPORT_SOURCE = `
 export { LineChart } from "semiotic/xy"

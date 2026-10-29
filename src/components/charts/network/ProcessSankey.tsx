@@ -379,7 +379,7 @@ export const ProcessSankey = /* @__PURE__ */ withSizedChartErrorBoundary(/* @__P
       const baseline = { ...merged }
       const minimumMargin =
         setup.legendPosition === "right" || setup.legendPosition === "left"
-          ? 140
+          ? 0
           : setup.legendPosition === "top"
             ? 50
             : 80

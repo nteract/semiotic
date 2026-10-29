@@ -164,8 +164,8 @@ describe("Component SSR — Network Charts", () => {
     expect(svg).toContain(">Finish<")
     // Theme tokens with hex fallback — must not hard-code slate hex alone.
     expect(svg).toMatch(/stroke="var\(--semiotic-grid,\s*#94a3b8\)"/)
-    // CSR/SSR margin parity: horizontal defaults reserve 80px gutters.
-    expect(svg).toContain('transform="translate(80,')
+    // The time axis reserves height; source labels fit inside the plot.
+    expect(svg).toContain('transform="translate(20,')
   })
 
   it("renderChart('ProcessSankey', …) accepts zero-duration edges", () => {
@@ -227,7 +227,7 @@ describe("Component SSR — Network Charts", () => {
     expect(serverLegendX).toBeGreaterThan(0)
     expect(serverLegendX).toBe(clientLegendX)
     // The plot ends before the legend's gap begins.
-    expect(80 + endTickX(server)).toBeLessThanOrEqual(serverLegendX - 10)
+    expect(20 + endTickX(server)).toBeLessThanOrEqual(serverLegendX - 10)
   })
 
   it("renderChart('ProcessSankey', …) projects its time axis vertically", () => {

@@ -321,7 +321,9 @@ export function buildProcessSankeyScenes(
     })
   })
 
-  const packedBands = staggerProcessSankeyLabels(bands, layout.slotByNode, laneExtent)
+  const packedBands = staggerProcessSankeyLabels(
+    bands, layout.slotByNode, laneExtent, orientation === "horizontal" ? plotW : undefined,
+  )
     .map((band) => orientProcessSankeyBand(band, orientation))
   const orientedBands = orientation === "vertical"
     ? staggerVerticalProcessSankeyLabels(packedBands, plotW, plotH)

@@ -67,7 +67,7 @@ describe("direct Stream Frame SSR runtime parity", () => {
     for (const svg of [xy, ordinal]) {
       expect(svg).toContain('transform="translate(70,50)"')
     }
-    expect(sankey).toContain('transform="translate(80,20)"')
+    expect(sankey).toContain('transform="translate(20,20)"')
     expect(force).toContain('transform="translate(40,40)"')
   })
 
@@ -155,8 +155,8 @@ describe("direct Stream Frame SSR runtime parity", () => {
     ]
 
     for (const svg of network) {
-      expect(svg).toContain('translate(80,34)')
-      expect(svg).toMatch(/transform="translate\(80,\s*4\)"/)
+      expect(svg).toContain('translate(20,34)')
+      expect(svg).toMatch(/transform="translate\(20,\s*4\)"/)
     }
     for (const svg of geo) {
       expect(svg).toContain('translate(10,34)')

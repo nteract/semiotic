@@ -22,7 +22,6 @@ export function ProcessTimeFixture() {
         ref={ref}
         width={narrow ? 420 : 640}
         height={360}
-        margin={{ top: 30, right: 40, bottom: 40, left: 40 }}
         domain={[stamp(12), stamp(20)]}
         nodes={[
           { id: "a", label: "Intake", xExtent: [stamp(12), stamp(20)] },

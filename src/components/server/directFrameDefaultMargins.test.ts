@@ -44,7 +44,7 @@ describe("direct static frame defaults", () => {
       size: [500, 320],
     })
 
-    expect(sankey).toContain('transform="translate(80,20)"')
+    expect(sankey).toContain('transform="translate(20,20)"')
     expect(force).toContain('transform="translate(40,40)"')
   })
 

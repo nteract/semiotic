@@ -31,6 +31,20 @@ const printOnly = process.argv.includes("--print")
  * `scripts/treeshake-isolation.test.mjs`.
  */
 const ENTRY_GRAPHS = [
+  // Streaming fixes and axis-free layouts (2026-10-29): clean 0a351c567 ->
+  // 532ebdc21, identical Linux amd64/Node 24.22.1/dependencies, gzip KiB:
+  // root 398.9 -> 402.8, xy 166.1 -> 168.4, line 125.7 -> 127.8,
+  // artifact 125.3 -> 125.6, ordinal 132.0 -> 135.1, network 171.4 -> 173.0,
+  // realtime 179.1 -> 181.9, physics 184.0 -> 185.7, server 278.7 -> 282.6,
+  // AI 641.3 -> 650.1, Atlas 311.4 -> 313.0. Retained-input comparison
+  // attributes the growth to shared legend geometry, fitted gauge layouts,
+  // date ticks, push capabilities, and stream-schema normalization/ranking.
+  // No external dependency input was added; primary ESM outputs fell 120 ->
+  // 119. Keep <=0.25 KiB headroom only on affected facades. Named-import
+  // measurements are regenerated for this same payload: RealtimeLineChart
+  // 125808 -> 130057 gzip bytes, GaltonBoardChart 96871 -> 98437, renderChart
+  // 307145 -> 310949, ChoroplethMap 110133 -> 111757. All measurement
+  // tolerances and tree-shaking/isolation limits remain unchanged.
   // Error recovery must retain chart/mode defaults and composed viewport sizes
   // (#1358, #1671). Compared with merged recovery commit 49202da63, identical
   // Node 22.22.1/dependencies: realtime 179.0 -> 179.1045 KiB, physics 183.8 ->
@@ -185,7 +199,7 @@ const ENTRY_GRAPHS = [
   // Feature graph: 387.3 KiB (previous built HEAD: 385.9 KiB).
   // Bumped 393.8→395: shared log-domain repair and heatmap band projection
   // (explicit empty ends, cached numeric keys) measure 394.2 KiB gzip.
-  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 399.1 },
+  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 403 },
   // Bumped 150→154: custom-layout painter registration now loads on demand
   // rather than retaining every painter in every chart HOC. The lightweight
   // readiness bridge and fallback paint selection live in the shared XY
@@ -211,7 +225,7 @@ const ENTRY_GRAPHS = [
   // Lowered 165→163.5 (2026-09-30): the XY transition engine loads on demand
   // (only `animate`/`transition` charts fetch it); measures 162.3 KiB gzip.
   // Feature graph: 164.6 KiB (previous built HEAD: 163.2 KiB).
-  { entry: "xy.module.min.js", label: "xy", limitKb: 166.1 },
+  { entry: "xy.module.min.js", label: "xy", limitKb: 168.6 },
   // One-chart micro boundary: LineChart registers only its line/area/mixed
   // renderer family. Keep the budget narrow so unrelated HOCs or direct
   // StreamXYFrame consumers cannot quietly rejoin this graph.
@@ -226,7 +240,7 @@ const ENTRY_GRAPHS = [
   // Lowered 124→122 (2026-09-30): on-demand transitions measure 121.0 KiB gzip.
   // Feature graph: 123.3 KiB (previous built HEAD: 121.9 KiB).
   // Combined line-gap, navigation, and touch fixes measure 124.23 KiB.
-  { entry: "semiotic-line.module.min.js", label: "line", limitKb: 125.7 },
+  { entry: "semiotic-line.module.min.js", label: "line", limitKb: 128 },
   // The opt-in text adapter stays isolated. This budgets Semiotic's code;
   // @chenglou/pretext remains an external optional peer, like React.
   { entry: "semiotic-text.module.min.js", label: "text (adapter)", limitKb: 2 },
@@ -269,7 +283,7 @@ const ENTRY_GRAPHS = [
     // identities. The published contract graph now measures 121.6 KiB gzip.
     // Bumped 122→123: histogram valueBands and annotation labelColor in the
     // chart specs measure 122.2 KiB gzip.
-    limitKb: 125.5
+    limitKb: 125.7
   },
   {
     entry: "semiotic-artifact-react.module.min.js",
@@ -279,7 +293,7 @@ const ENTRY_GRAPHS = [
   // Bumped 130→131: the shared hatch tile, var()-safe label boxes, and
   // tooltip flip state measure 130.0 KiB gzip, level with the old limit.
   // Feature graph: 132.1 KiB (previous built HEAD: 131.0 KiB).
-  { entry: "ordinal.module.min.js", label: "ordinal", limitKb: 132.7 },
+  { entry: "ordinal.module.min.js", label: "ordinal", limitKb: 135.3 },
   // Bumped 140→147: ProcessSankey layout/worker/ordering growth on the network
   // subpath. Production graph measures 144.8 KiB gzip.
   // Bumped 147→148: topology-safe boundary-fan centering and exclusive sibling
@@ -312,7 +326,7 @@ const ENTRY_GRAPHS = [
   // tooltip flip state measure 165.8 KiB gzip.
   // Shared lazy-module loading changes measure 166.7 KiB; retain narrow headroom.
   // Feature graph: 167.9 KiB (previous built HEAD: 166.8 KiB).
-  { entry: "network.module.min.js", label: "network", limitKb: 171.4 },
+  { entry: "network.module.min.js", label: "network", limitKb: 173.2 },
   { entry: "geo.module.min.js", label: "geo", limitKb: 113 },
   // Bumped 160→161 (3.9.0): compact-frame legend reservation now carries the
   // resolved plot height through every realtime chart so legends cannot erase
@@ -338,7 +352,7 @@ const ENTRY_GRAPHS = [
   // Feature graph: 170.5 KiB (previous built HEAD: 168.5 KiB).
   // Bumped 174.1→175: the same shared XY domain and heatmap projection
   // measure 174.4 KiB gzip.
-  { entry: "realtime.module.min.js", label: "realtime", limitKb: 179.2 },
+  { entry: "realtime.module.min.js", label: "realtime", limitKb: 182.1 },
   // Bumped 160→161 (3.8.6): PacketFlow and Crucible now join the shared
   // physics selection contract. The chart-local split keeps source modules
   // bounded, while the reachable graph gains less than one KiB gzip.
@@ -354,7 +368,7 @@ const ENTRY_GRAPHS = [
   // Bumped 168→169: the shared hatch tile and tooltip flip state measure
   // 167.9 KiB gzip.
   // Feature graph: 169.4 KiB (previous built HEAD: 168.3 KiB).
-  { entry: "physics.module.min.js", label: "physics", limitKb: 184.0 },
+  { entry: "physics.module.min.js", label: "physics", limitKb: 185.9 },
   // Bumped 240→242 (3.9.0): static Gauge SVG content and opt-in geometry
   // precision add serializer/runtime code to the server entry.
   // Bumped 242→244: the published Atlas readers and renderer-aware server
@@ -375,7 +389,7 @@ const ENTRY_GRAPHS = [
   // Bumped 261.5→262.5: static value-banded histogram bars, standalone-safe
   // (var()-free) annotation label paints, and the shared hatch tile measure
   // 261.8 KiB gzip.
-  { entry: "server.module.min.js", label: "server", limitKb: 278.9 },
+  { entry: "server.module.min.js", label: "server", limitKb: 282.8 },
   // Bumped 450→460: the public numeric audit + chart contract evaluator adds
   // ~5–6 KB gzip to the AI graph; ChartContainer loads the same code lazily.
   // Bumped 460→462 (3.8.6): BumpChart (+ its ribbon geometry) joins the AI graph.
@@ -469,7 +483,7 @@ const ENTRY_GRAPHS = [
   // User-approved 3.13.2 refresh (2026-10-27): the production AI graph
   // measures 652,373 bytes (637.083 KiB) gzip across 78 files. Allow 637.5 KiB,
   // retaining about 0.4 KiB headroom for the patch's correctness fixes.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 641.5 },
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 650.3 },
   // Bumped 100→101: transitDiagramLayout's public detail modes, source-rooted
   // line derivation, and station-rendering contract extend the curated recipes
   // entry. Linux CI measures 100.3 KiB gzip; retain a reviewable 0.7 KiB
@@ -501,7 +515,7 @@ const ENTRY_GRAPHS = [
   // tooltip flip state measure 289.8 KiB gzip.
   // Shared lazy-module loading changes measure 290.5 KiB; allow 0.5 KiB headroom.
   // Feature graph: 291.8 KiB (previous built HEAD: 290.6 KiB).
-  { entry: "semiotic-atlas.module.min.js", label: "atlas", limitKb: 311.5 },
+  { entry: "semiotic-atlas.module.min.js", label: "atlas", limitKb: 313.2 },
   { entry: "semiotic-atlas-core.module.min.js", label: "atlas/core", limitKb: 15 },
   // Config serialization preserves and validates the optional interpretation
   // sidecar. Isolating the neutral utility graph removes unrelated shared

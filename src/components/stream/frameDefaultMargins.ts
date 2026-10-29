@@ -28,9 +28,9 @@ export function ordinalFrameDefaultMargin(chartType: string) {
 
 export const NETWORK_FRAME_DEFAULT_MARGIN = {
   top: 20,
-  right: 80,
+  right: 20,
   bottom: 20,
-  left: 80,
+  left: 20,
 } as const
 
 export const CENTERED_NETWORK_FRAME_DEFAULT_MARGIN = {
@@ -48,8 +48,8 @@ const CENTERED_NETWORK_CHART_TYPES = new Set([
 ])
 
 export function networkFrameDefaultMargin(chartType: string) {
-  // Treemap labels sit inside their cells, so they need no external label band.
-  if (chartType === "treemap") return AXIS_FREE_FRAME_DEFAULT_MARGIN
+  // Rectangular hierarchy labels sit inside their cells.
+  if (chartType === "treemap" || chartType === "partition") return AXIS_FREE_FRAME_DEFAULT_MARGIN
   return CENTERED_NETWORK_CHART_TYPES.has(chartType)
     ? CENTERED_NETWORK_FRAME_DEFAULT_MARGIN
     : NETWORK_FRAME_DEFAULT_MARGIN

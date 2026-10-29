@@ -448,17 +448,17 @@ export const sankeyLayoutPlugin: NetworkLayoutPlugin = {
           // Vertical: x = depth (0→height), y = breadth (0→width) in raw sankey coords.
           // Swap for rendering: horizontal = breadth (y), vertical = depth (x).
           x = node.y0 + (node.y1 - node.y0) / 2
-          y = node.x1 + 14
+          y = node.x0 + w / 2 < size[1] / 2 ? node.x1 + 14 : node.x0 - 14
           anchor = "start"
         } else {
-          // Horizontal: label to the right or left depending on position
+          // Face labels into the plot rather than requiring empty side gutters.
           const midX = size[0] / 2
           if (node.x0 + w / 2 < midX) {
-            x = node.x0 - 6
-            anchor = "end"
-          } else {
             x = node.x1 + 6
             anchor = "start"
+          } else {
+            x = node.x0 - 6
+            anchor = "end"
           }
           y = node.y0 + h / 2
         }

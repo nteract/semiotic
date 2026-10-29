@@ -199,7 +199,7 @@ export const TreeDiagram = /* @__PURE__ */ withChartErrorBoundary(function TreeD
     mobileSemantics: resolved.mobileSemantics,
     chartType: "TreeDiagram",
     chartId,
-    marginDefaults: resolveAxisFreeMarginDefaults(resolved, networkFrameDefaultMargin("tree")),
+    marginDefaults: resolveAxisFreeMarginDefaults(resolved, networkFrameDefaultMargin(layout)),
     userMargin,
     width, height,
     hasTitle: !!title,

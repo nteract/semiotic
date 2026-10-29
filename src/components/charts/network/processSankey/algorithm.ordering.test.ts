@@ -409,15 +409,15 @@ describe("ProcessSankey public defaults alignment", () => {
     expect([...def.entries()]).toEqual([...temporal.entries()])
   })
 
-  it("margin defaults use 80px horizontal gutters for CSR/SSR parity", () => {
+  it("margin defaults use 20px horizontal padding for CSR/SSR parity", () => {
     const m = resolveProcessSankeyMarginDefaults(
       false,
       false,
       false,
       "horizontal"
     )
-    expect(m.left).toBe(80)
-    expect(m.right).toBe(80)
+    expect(m.left).toBe(20)
+    expect(m.right).toBe(20)
     expect(m.top).toBe(8)
   })
 })
