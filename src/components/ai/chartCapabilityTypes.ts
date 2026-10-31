@@ -232,7 +232,7 @@ export interface ChartFieldPolicy {
 /** The scene-derived evidence exposed to capability-owned semantic checks. */
 export interface SemanticRenderEvidence {
   readonly component: string
-  readonly frameType: "xy" | "ordinal" | "network" | "geo" | "physics" | "value"
+  readonly frameType: "xy" | "ordinal" | "network" | "geo" | "physics" | "value" | "wordcloud"
   readonly empty: boolean
   readonly markCount: number
   readonly markCountByType: Readonly<Record<string, number>>

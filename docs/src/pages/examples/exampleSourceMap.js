@@ -5,7 +5,7 @@ import { EXAMPLE_DEFINITIONS } from "./exampleDefinitions"
 // import, where source panels are not loaded. Do not test typeof import.meta.glob:
 // that silently discards every transformed source loader in the browser.
 const RAW_EXAMPLE_SOURCE_MODULES = import.meta.env
-  ? import.meta.glob(["./**/*.{js,jsx,mjs,ts,tsx,css}", "!./**/*.test.{js,jsx,ts,tsx}"], {
+  ? import.meta.glob(["./**/*.{js,jsx,mjs,ts,tsx,css,json}", "!./**/*.test.{js,jsx,ts,tsx}"], {
       eager: false,
       query: "?raw",
       import: "default",

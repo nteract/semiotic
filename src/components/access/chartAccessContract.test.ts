@@ -16,6 +16,36 @@ const lineData = [
 ]
 
 describe("ChartAccessContract@1", () => {
+  it.each([
+    "WordCloud",
+    "MotifBraidChart",
+    "DependencyForestChart",
+    "FlowCircuitChart"
+  ])(
+    "recognizes explicitly exposed accessible tables without a common prop bag: %s",
+    (component) => {
+      expect(
+        createChartAccessContract({ component, props: {} }).table.enabled
+      ).toBe(true)
+      expect(
+        createChartAccessContract({
+          component,
+          props: { accessibleTable: false }
+        }).table.enabled
+      ).toBe(false)
+    }
+  )
+
+  it("records native word-cloud keyboard interaction without claiming a navigation tree", () => {
+    const contract = createChartAccessContract({
+      component: "WordCloud",
+      props: {}
+    })
+    expect(contract.keyboard.markNavigation).toBe("built-in")
+    expect(contract.keyboard.focusRing).toBe("built-in")
+    expect(contract.navigation.supported).toBe(false)
+  })
+
   it.each(Object.getOwnPropertyNames(Object.prototype))(
     "does not invent capabilities for the undeclared component %s",
     (component) => {

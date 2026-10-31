@@ -30,6 +30,16 @@ export type SemanticViabilityStatus =
 
 export interface RenderEvidence {
   /** EventDrop admission accounting, independent of current body positions. */
+  wordCloud?: {
+    inputCount: number
+    placedCount: number
+    omitted: import("../wordcloud/types").WordCloudOmission[]
+    seed: number
+    fontFingerprint: string
+    maskFingerprint?: string
+    maskResolution: [number, number] | null
+    bounds: import("../wordcloud/types").WordCloudLayoutResult["bounds"]
+  }
   watermarkValue?: number
   openWindows?: number
   closedWindows?: number
@@ -42,7 +52,7 @@ export interface RenderEvidence {
   sceneHashVersion?: 2
   /** HOC component name as passed to renderChart. */
   component: string
-  frameType: "xy" | "ordinal" | "network" | "geo" | "physics" | "value"
+  frameType: "xy" | "ordinal" | "network" | "geo" | "physics" | "value" | "wordcloud"
   /** "ok" when the scene produced data marks; "empty" when it did not. */
   status: "ok" | "empty"
   /** True when zero data marks rendered. */

@@ -1,8 +1,9 @@
 "use strict"
 
-const CATEGORY_ORDER = ["xy", "ordinal", "network", "geo", "realtime", "physics", "value", "recipe"]
+const CATEGORY_ORDER = ["xy", "ordinal", "network", "geo", "realtime", "physics", "value", "wordcloud", "recipe"]
 
 const COMPONENTS_BY_CATEGORY = {
+  wordcloud: ["WordCloud"],
   // BEGIN GENERATED XY CHARTS
   xy: [
     "LineChart",

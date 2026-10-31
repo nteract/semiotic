@@ -10,11 +10,13 @@ import { EXAMPLE_DEFINITIONS } from "../exampleDefinitions.js"
  * pretending that the codebase is a strict hierarchy.
  */
 export const SEMIOTIC_ARCHITECTURE_NODES = [
+  { id: "frame-wordcloud", label: "Word Cloud Frame", detail: "Prepared native text geometry with silhouette constraints and omission accounting.", layer: "frame", cluster: "wordcloud", parent: "semiotic-core" },
+  { id: "hoc-wordcloud", label: "WordCloud", detail: "Aggregated terms, shaped placement and linked exact readings.", layer: "leaf", cluster: "wordcloud", parent: "frame-wordcloud", order: 0 },
   {
     id: "semiotic-core",
     label: "Visible Semiotic",
     detail:
-      "The public React-facing system where data inputs, five frame models, shared capabilities, and value components meet.",
+      "The public React-facing system where data inputs, six frame models, shared capabilities, and value components meet.",
     layer: "trunk",
   },
   {
@@ -574,6 +576,9 @@ export const SEMIOTIC_ARCHITECTURE_NODES = [
     supports: ["input-static", "input-push", "feature-accessors"],
   },
   {
+    id: "root-preparation", label: "Text layout preparation", detail: "Font-aware raster placement produces portable text geometry and omission evidence.", layer: "root", order: 1.5, supports: ["frame-wordcloud"],
+  },
+  {
     id: "root-pipelines",
     label: "Pipeline stores",
     detail:
@@ -589,6 +594,7 @@ export const SEMIOTIC_ARCHITECTURE_NODES = [
     layer: "root",
     order: 2,
     supports: [
+      "frame-wordcloud",
       "frame-xy",
       "frame-ordinal",
       "frame-network",
@@ -1702,6 +1708,11 @@ const EXPLICIT_EXAMPLE_PROFILES = [
     shortLabel: "Pipeline Explorer",
     note: "An optional camera on NetworkCustomChart scales canvas ports, SVG connections and virtualized HTML cards together. Consumer-authored semantic detail, a shared-window minimap, persistent notes and an accessible inspector make the same pipeline readable at every scale.",
     uses: ["input-static", "hoc-network-custom", "feature-custom-layout", "feature-custom-overlays", "feature-observation", "feature-accessibility", "feature-responsive", "feature-theme", "feature-canvas-svg"],
+  },
+  {
+    id: "word-cloud", shortLabel: "A story takes shape",
+    note: "Native retained text shares tooltip, selection, accessibility and Canvas/SVG infrastructure. Deterministic silhouettes preserve every source term in placement or omission evidence and a ranked reading.",
+    uses: ["input-static", "hoc-wordcloud", "feature-accessors", "feature-tooltips", "feature-observation", "feature-accessibility", "feature-responsive", "feature-canvas-svg"],
   },
   {
     id: "novel-network-lab",

@@ -1,0 +1,330 @@
+@font-face {
+  font-family: "Crimson Text";
+  src: url("/fonts/wordcloud/CrimsonText-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+.wonderland {
+  --ink: #29262b;
+  --paper: #fffaf1;
+  --rule: #dcd3c4;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: clamp(18px, 3vw, 42px);
+  font-family: Georgia, serif;
+}
+.wonderland * {
+  box-sizing: border-box;
+}
+.wonderland-hero {
+  max-width: 850px;
+  margin: 0 auto 30px;
+  text-align: center;
+}
+.wonderland-kicker {
+  font:
+    600 11px/1.5 system-ui,
+    sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #7b4f43;
+}
+.wonderland h1 {
+  font:
+    normal clamp(38px, 5vw, 70px)/1.03 Georgia,
+    serif;
+  letter-spacing: -0.04em;
+  margin: 14px 0 20px;
+  color: var(--ink);
+}
+.wonderland h1 em {
+  color: #a63b3b;
+  font-weight: normal;
+}
+.wonderland-hero > p:not(.wonderland-kicker) {
+  max-width: 620px;
+  margin: 0 auto;
+  font-size: 18px;
+  line-height: 1.7;
+}
+.wonderland-ledger {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px 30px;
+  margin: 24px 0 0;
+  font:
+    12px/1.6 system-ui,
+    sans-serif;
+}
+.wonderland-ledger b {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.wonderland-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 14px;
+  padding: 18px 0;
+  border-block: 1px solid var(--rule);
+  margin-bottom: 24px;
+}
+.wonderland label {
+  font:
+    600 11px/1.5 system-ui,
+    sans-serif;
+  display: grid;
+  gap: 5px;
+}
+.wonderland select,
+.wonderland input[type="search"],
+.wonderland button {
+  font:
+    13px/1.4 system-ui,
+    sans-serif;
+  color: var(--ink);
+  border: 1px solid #b9ad9c;
+  border-radius: 3px;
+  padding: 8px 10px;
+  background: var(--paper);
+}
+.wonderland button {
+  cursor: pointer;
+}
+.wonderland button:hover {
+  background: #f1e8d9;
+}
+.wonderland button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.wonderland :focus-visible {
+  outline: 2px solid #a63b3b;
+  outline-offset: 3px;
+}
+.wonderland-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  gap: 28px;
+}
+.wonderland-paper {
+  min-width: 0;
+}
+.wonderland-paper-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font:
+    10px/1.5 system-ui,
+    sans-serif;
+  letter-spacing: 0.05em;
+  color: #655d54;
+}
+.wonderland-paper-heading label {
+  display: flex;
+  align-items: center;
+  font-weight: 400;
+}
+.wonderland-paper-heading select {
+  padding: 4px;
+}
+.wonderland-cloud {
+  width: 100%;
+  margin: 12px auto;
+  max-width: 800px;
+}
+.wonderland-key {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  font:
+    11px/1.5 system-ui,
+    sans-serif;
+}
+.wonderland-key span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.wonderland-key i {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.wonderland-caption {
+  font:
+    12px/1.7 system-ui,
+    sans-serif;
+  color: #655d54;
+  margin: 18px 0;
+}
+.wonderland-exports {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  font:
+    11px/1.5 system-ui,
+    sans-serif;
+  padding-top: 14px;
+  border-top: 1px solid var(--rule);
+}
+.wonderland-exports span {
+  margin-right: auto;
+}
+.wonderland-exports button {
+  font-size: 11px;
+  padding: 6px 8px;
+}
+.wonderland h2 {
+  font:
+    normal 25px/1.2 Georgia,
+    serif;
+  color: var(--ink);
+  margin: 0 0 12px;
+}
+.wonderland-ranking > p {
+  font:
+    12px/1.6 system-ui,
+    sans-serif;
+  color: #655d54;
+}
+.wonderland-search {
+  margin: 16px 0 12px;
+}
+.wonderland .wonderland-omissions {
+  display: flex;
+  align-items: center;
+  font-weight: 400;
+  gap: 6px;
+}
+.wonderland-terms {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0 6px 0 0;
+  max-height: 460px;
+  overflow: auto;
+  scrollbar-color: #b9ad9c transparent;
+}
+.wonderland-terms li {
+  margin: 0 0 3px;
+}
+.wonderland-terms li[data-dimmed="true"] {
+  opacity: 0.4;
+}
+.wonderland-terms button {
+  width: 100%;
+  text-align: left;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  padding: 7px 6px;
+  display: block;
+}
+.wonderland-terms button[aria-pressed="true"] {
+  border-color: #b9ad9c;
+  background: #f1e8d9;
+}
+.wonderland-term {
+  display: flex;
+  justify-content: space-between;
+  font-variant-numeric: tabular-nums;
+}
+.wonderland-term b {
+  font-weight: 500;
+}
+.wonderland-bar {
+  display: block;
+  min-width: 1px;
+  height: 3px;
+  margin-top: 5px;
+  opacity: 0.75;
+}
+.wonderland-terms small {
+  font-size: 10px;
+  color: #655d54;
+}
+.wonderland-passage {
+  border-block: 1px solid var(--rule);
+  margin: 32px 0;
+  padding: 26px 0;
+}
+.wonderland-passage h2 {
+  font-size: 34px;
+  color: #a63b3b;
+}
+.wonderland-passage small {
+  font:
+    12px system-ui,
+    sans-serif;
+  color: #655d54;
+  margin-left: 12px;
+}
+.wonderland-passage blockquote {
+  border: 0;
+  padding: 0;
+  margin: 16px 0;
+  max-width: 850px;
+  font:
+    italic 20px/1.7 Georgia,
+    serif;
+  color: var(--ink);
+}
+.wonderland-passage > p:last-child {
+  font:
+    12px/1.5 system-ui,
+    sans-serif;
+  color: #655d54;
+}
+.wonderland-notes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+}
+.wonderland-notes p:not(.wonderland-kicker),
+.wonderland-notes details {
+  font:
+    13px/1.8 system-ui,
+    sans-serif;
+}
+.wonderland a {
+  color: #8c3535;
+  text-decoration: underline;
+}
+.wonderland .stream-wordcloud-tooltip {
+  color: #29262b;
+}
+@media (max-width: 900px) {
+  .wonderland-grid {
+    grid-template-columns: 1fr;
+  }
+  .wonderland-terms {
+    max-height: 290px;
+  }
+  .wonderland-notes {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+}
+@media (forced-colors: active) {
+  .wonderland {
+    --ink: CanvasText;
+    --paper: Canvas;
+    --rule: CanvasText;
+  }
+  .wonderland :is(h1, h2, p, a, small, blockquote, span) {
+    color: CanvasText;
+  }
+  .wonderland-bar {
+    background: CanvasText !important;
+  }
+  .wonderland-terms button[aria-pressed="true"] {
+    outline: 2px solid Highlight;
+  }
+}

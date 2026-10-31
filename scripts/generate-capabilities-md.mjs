@@ -55,6 +55,7 @@ const CATEGORY_DISPLAY_LABEL = {
   realtime: "Realtime",
   physics: "Physics",
   value: "Value",
+  wordcloud: "Word Cloud",
 }
 
 let lastCategory = null

@@ -44,7 +44,7 @@ export type PropType =
   | "function"
   | "null"
 export type DataShape = "array" | "object" | "network" | "realtime" | "none"
-export type ChartCategory = "xy" | "ordinal" | "network" | "geo" | "realtime" | "physics" | "value"
+export type ChartCategory = "xy" | "ordinal" | "network" | "geo" | "realtime" | "physics" | "value" | "wordcloud"
 
 /**
  * Capability tags for runtime behavior. Each chart declares which

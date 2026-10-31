@@ -65,12 +65,15 @@ import {
   type AxisChromeInput
 } from "../legendLayout"
 
-export type FrameType = "xy" | "ordinal" | "network" | "geo" | "physics"
+import type { StaticWordCloudProps } from "./staticWordCloud"
+
+export type FrameType = "xy" | "ordinal" | "network" | "geo" | "physics" | "wordcloud"
 export type StaticFrameProps = (
   | StreamXYFrameProps
   | StreamNetworkFrameProps
   | StreamOrdinalFrameProps
   | StreamGeoFrameProps
+  | StaticWordCloudProps
   | StaticPhysicsFrameProps
 ) &
   ThemeAwareProps

@@ -54,7 +54,7 @@ const explicitExternals = [
  * MessagePort in short-lived Node processes.
  */
 function nodeStaticMarkupSourcePlugin() {
-  const nodeRenderedSources = /(?:\/|\\)(?:renderToStaticSVG|staticXY|staticOrdinal|staticNetwork|staticGeo|staticValue|animatedGif|PhysicsSettledSVG)\.tsx$/
+  const nodeRenderedSources = /(?:\/|\\)(?:renderToStaticSVG|staticXY|staticOrdinal|staticNetwork|staticGeo|staticValue|staticWordCloud|animatedGif|PhysicsSettledSVG)\.tsx$/
   return {
     name: "node-static-markup-source",
     setup(build) {
@@ -117,6 +117,9 @@ function baseBuildOptions({ minify, serverOnly, clientOnly, entryNames, format, 
     minify: minify && format === "cjs" ? "terser" : false,
     terserOptions,
     external: explicitExternals,
+    // d3-cloud 2 exposes only an ESM import condition. Bundle it into the
+    // opt-in wordcloud graph so the CommonJS boundary remains require()-safe.
+    noExternal: ["d3-cloud"],
     pure: ["console.log", "console.debug"],
     plugins: [
       ...(minify && format === "esm"
@@ -159,7 +162,7 @@ async function createCjsBundle(options = {}) {
     format: "cjs",
     splitting: false,
     esbuildPlugins: [nodeStaticMarkupSourcePlugin(), ...(serverOnly ? [serverRuntimeLoadersPlugin()] : []), externalizePerspectivePlacementPlugin(true), ...esbuildPlugins],
-    noExternal: esbuildPlugins.length > 0 ? ["d3-geo"] : undefined,
+    noExternal: ["d3-cloud", ...(esbuildPlugins.length > 0 ? ["d3-geo"] : [])],
     outExtension: () => ({ js: ".min.js" }),
     esbuildOptions(esbuildOptions) {
       esbuildOptions.conditions = ["module", "import", "default"]
@@ -529,6 +532,7 @@ module.exports=out;
 }
 
 const generatedBundleMetadata = {
+  "semiotic-wordcloud": { platform: "browser", rsc: false, edge: false, native: false, stability: "stable", loading: "eager" },
   semiotic: {
     platform: "browser",
     rsc: false,
@@ -1150,6 +1154,7 @@ async function build() {
   //                        wrap React hooks or providers)
   //   neither            — agnostic pure-function bundle (data, recipes/core)
   const bundles = [
+    { input: "src/components/semiotic-wordcloud.ts", name: "semiotic-wordcloud", minify, clientOnly: true },
     {
       input: "src/components/semiotic-text.ts",
       name: "semiotic-text",
@@ -1502,6 +1507,7 @@ async function build() {
   // independent bundle entries would fragment the primary graph by every
   // possible entry-reachability combination and inflate cold gzip cost.
   const auxiliaryClientEntryNames = new Set([
+    "semiotic-wordcloud",
     "semiotic-text",
     "semiotic-network-zoom",
     "semiotic-network-perspective",
@@ -1669,6 +1675,7 @@ async function build() {
   // path cannot reach a chart from another. Bundle all client namespaces once
   // and emit tiny public facades that select the requested namespace.
   const isolatedClientCjsNames = new Set([
+    "semiotic-wordcloud",
     "semiotic-network-zoom",
     "geo",
     "semiotic-artifact-react",
@@ -1708,6 +1715,10 @@ async function build() {
   await createCjsBundle({
     ...bundledEntries.find((bundle) => bundle.name === "semiotic-network-zoom"),
     esbuildPlugins: [externalizeNetworkZoomHostPlugin(true)]
+  })
+  await createCjsBundle({
+    ...bundledEntries.find((bundle) => bundle.name === "semiotic-wordcloud"),
+    esbuildPlugins: [externalizeSharedClientModulesForCjsPlugin()],
   })
   const geoBundle = bundledEntries.find((bundle) => bundle.name === "geo")
   const artifactReactBundle = bundledEntries.find(
@@ -1919,6 +1930,11 @@ const buildPromise = isDeclarationsOnly
 
 buildPromise
   .then(() => {
+    if (!isDeclarationsOnly)
+      writeFileSync(
+        "dist/d3-cloud.LICENSE.txt",
+        readFileSync("node_modules/d3-cloud/LICENSE", "utf8")
+      )
     if (!isDeclarationsOnly)
       bundleFreshness.writeBuildFingerprint(
         process.cwd(),

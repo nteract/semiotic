@@ -9,6 +9,7 @@ import { glyphHitGeometry } from "./glyphDef"
 import { findHitPointInQuadtree } from "./quadtreeHitTest"
 import { resolveCurveFactory } from "./renderers/canvasRenderHelpers"
 import { sampleCurvePath } from "./sampleCurvePath"
+import { hitTestText } from "./textScene"
 
 /**
  * Memo for the dense curve-sampled polyline. Keyed by the
@@ -98,6 +99,9 @@ export function findNearestNode(
     let result: HitResult | null = null
 
     switch (node.type) {
+      case "text":
+        if (hitTestText(node, px, py)) result = { node, datum: node.datum, x: node.x, y: node.y, distance: 0 }
+        break
       case "point":
         if (node.interactive === false) break
         // Quadtree visit was authoritative — skip redundant linear scan.

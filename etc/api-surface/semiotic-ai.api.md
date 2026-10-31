@@ -151,6 +151,7 @@ function Treemap<TNode extends Datum = Datum>(props: TreemapProps<TNode>): React
 function UnitPileChart(props: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").UnitPileChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
 function ViolinPlot<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & ViolinPlotProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function WaterfallChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & WaterfallChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
+function WordCloud(props: WordCloudProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function accessibilityCaveats(result: AccessibilityAuditResult, { onlyCritical }?: undefined | {onlyCritical?: boolean;}): string[]
 function activePolicyRules(policy: ArtifactPolicy, exceptions?: readonly ArtifactPolicyException[] | undefined, now?: string | undefined): {rules: ArtifactPolicyRules; appliedExceptions: ArtifactPolicyException[]; rejectedExceptions: ArtifactPolicyException[];}
 function adaptHistoricalSnapshotMetadata(metadata: HistoricalSnapshotMetadata): TemporalContext
@@ -769,6 +770,7 @@ interface VisualToken<D = unknown>
 interface VisualizationControlDefinition
 interface WebhookConversationArcSinkOptions
 interface WhyCustomExplanation
+interface WordCloudProps extends WordCloudLayoutOptions
 interface-member A11yFinding::property::critical = required critical: boolean
 interface-member A11yFinding::property::fix = optional fix: string | undefined
 interface-member A11yFinding::property::heuristic = required heuristic: string
@@ -2492,7 +2494,7 @@ interface-member SemanticRenderEvidence::property::categories = optional readonl
 interface-member SemanticRenderEvidence::property::component = required readonly component: string
 interface-member SemanticRenderEvidence::property::edgeCount = optional readonly edgeCount: number | undefined
 interface-member SemanticRenderEvidence::property::empty = required readonly empty: boolean
-interface-member SemanticRenderEvidence::property::frameType = required readonly frameType: "geo" | "network" | "ordinal" | "physics" | "value" | "xy"
+interface-member SemanticRenderEvidence::property::frameType = required readonly frameType: "geo" | "network" | "ordinal" | "physics" | "value" | "wordcloud" | "xy"
 interface-member SemanticRenderEvidence::property::markCount = required readonly markCount: number
 interface-member SemanticRenderEvidence::property::markCountByType = required readonly markCountByType: Readonly<Record<string, number>>
 interface-member SemanticRenderEvidence::property::nodeCount = optional readonly nodeCount: number | undefined
@@ -2992,6 +2994,30 @@ interface-member WebhookConversationArcSinkOptions::property::url = required url
 interface-member WhyCustomExplanation::property::defaultAlternative = optional defaultAlternative: string | undefined
 interface-member WhyCustomExplanation::property::reason = required reason: string
 interface-member WhyCustomExplanation::property::tradeoff = optional tradeoff: string | undefined
+interface-member WordCloudProps::property::accessibleTable = optional accessibleTable: AccessibleTableProp | undefined
+interface-member WordCloudProps::property::annotations = optional annotations: WordCloudAnnotation[] | undefined
+interface-member WordCloudProps::property::canvasEnvironment = optional canvasEnvironment: WordCloudCanvasEnvironment | undefined
+interface-member WordCloudProps::property::chartId = optional chartId: string | undefined
+interface-member WordCloudProps::property::className = optional className: string | undefined
+interface-member WordCloudProps::property::colorBy = optional colorBy: ((datum: Datum) => string) | string | undefined
+interface-member WordCloudProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
+interface-member WordCloudProps::property::description = optional description: string | undefined
+interface-member WordCloudProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member WordCloudProps::property::layout = optional layout: WordCloudLayoutResult | undefined
+interface-member WordCloudProps::property::linkedHover = optional linkedHover: LinkedHoverProp | undefined
+interface-member WordCloudProps::property::margin = optional margin: PartialMargin | undefined
+interface-member WordCloudProps::property::maxDevicePixelRatio = optional maxDevicePixelRatio: number | undefined
+interface-member WordCloudProps::property::onClick = optional onClick: ((datum: Datum, point: {x: number; y: number;}) => void) | undefined
+interface-member WordCloudProps::property::onLayout = optional onLayout: ((layout: WordCloudLayoutResult) => void) | undefined
+interface-member WordCloudProps::property::onLayoutError = optional onLayoutError: ((error: WordCloudLayoutError) => void) | undefined
+interface-member WordCloudProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic-ai-observations").ChartObservation) => void) | undefined
+interface-member WordCloudProps::property::renderAs = optional renderAs: "canvas" | "svg" | undefined
+interface-member WordCloudProps::property::responsiveHeight = optional responsiveHeight: boolean | undefined
+interface-member WordCloudProps::property::responsiveWidth = optional responsiveWidth: boolean | undefined
+interface-member WordCloudProps::property::selection = optional selection: SelectionConfig | undefined
+interface-member WordCloudProps::property::summary = optional summary: string | undefined
+interface-member WordCloudProps::property::title = optional title: string | undefined
+interface-member WordCloudProps::property::tooltip = optional tooltip: TooltipProp | undefined
 type A11yPrinciple = "assistive" | "compromising" | "flexible" | "operable" | "perceivable" | "robust" | "understandable"
 type A11yStatus = "fail" | "manual" | "not-applicable" | "pass" | "warn"
 type AestheticFeatureId = "editorial-emphasis" | "mark-scaffold-hierarchy" | "palette-authorship" | "palette-economy" | "theme-coherence" | "typographic-hierarchy"

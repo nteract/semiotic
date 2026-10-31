@@ -106,6 +106,7 @@ interface StyleRule
 interface StyleRuleContext
 interface StyleRuleStyle
 interface StyleRuleThreshold
+interface TextSceneNode extends SceneAccessibilityMetadata
 interface TooltipConfig
 interface TooltipField
 interface TooltipRootProps extends React.HTMLAttributes<HTMLDivElement>
@@ -806,6 +807,26 @@ interface-member StyleRuleThreshold::property::lte = optional lte: number | unde
 interface-member StyleRuleThreshold::property::ne = optional ne: number | string | undefined
 interface-member StyleRuleThreshold::property::outside = optional outside: [number, number] | undefined
 interface-member StyleRuleThreshold::property::within = optional within: [number, number] | undefined
+interface-member TextSceneNode::property::_targetOpacity = optional _targetOpacity: number | undefined
+interface-member TextSceneNode::property::_transitionKey = optional _transitionKey: string | undefined
+interface-member TextSceneNode::property::datum = required datum: Datum | null
+interface-member TextSceneNode::property::fontFamily = required fontFamily: string
+interface-member TextSceneNode::property::fontSize = required fontSize: number
+interface-member TextSceneNode::property::fontStyle = optional fontStyle: string | undefined
+interface-member TextSceneNode::property::fontWeight = optional fontWeight: number | string | undefined
+interface-member TextSceneNode::property::group = optional group: string | undefined
+interface-member TextSceneNode::property::id = required id: string
+interface-member TextSceneNode::property::interactive = optional interactive: boolean | undefined
+interface-member TextSceneNode::property::rotate = optional rotate: number | undefined
+interface-member TextSceneNode::property::style = required style: Style
+interface-member TextSceneNode::property::text = required text: string
+interface-member TextSceneNode::property::type = required type: "text"
+interface-member TextSceneNode::property::x = required x: number
+interface-member TextSceneNode::property::x0 = required x0: number
+interface-member TextSceneNode::property::x1 = required x1: number
+interface-member TextSceneNode::property::y = required y: number
+interface-member TextSceneNode::property::y0 = required y0: number
+interface-member TextSceneNode::property::y1 = required y1: number
 interface-member TooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
 interface-member TooltipConfig::property::className = optional className: string | undefined
 interface-member TooltipConfig::property::fields = optional fields: (TooltipField | string)[] | undefined

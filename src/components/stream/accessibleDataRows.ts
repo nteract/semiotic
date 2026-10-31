@@ -142,6 +142,7 @@ export function countDataRows(scene: AccessibleSceneNode[]): number {
         break
       }
       case "rect":
+      case "text":
       case "heatcell":
       case "wedge":
       case "circle":
@@ -173,6 +174,10 @@ export function extractAllRows(scene: AccessibleSceneNode[]): DataRow[] {
     if (node.datum === null) continue
     try {
       switch (node.type) {
+        case "text": {
+          rows.push({ label: String(nodeRecord(node.accessibility).label ?? "Text"), values: datumToValues(accessibleDatumFor(node)) })
+          break
+        }
         case "point":
         case "symbol":
         case "glyph": {

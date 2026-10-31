@@ -11,7 +11,7 @@ import { interpolateViridis } from "../charts/shared/colorPalettes"
 import type { PrimitiveStyleOverrides } from "../charts/shared/mergeShapeStyle"
 import { buildRegressionAnnotation, type RegressionProp } from "../charts/shared/regressionUtils"
 
-export type FrameType = "xy" | "ordinal" | "network" | "geo" | "physics"
+export type FrameType = "xy" | "ordinal" | "network" | "geo" | "physics" | "wordcloud"
 export type ServerAccessorValue = string | number | boolean | Date | null | undefined
 export type ServerAccessor = string | ((datum: Datum) => ServerAccessorValue)
 export type ServerColorScheme = string | string[] | Record<string, string> | undefined

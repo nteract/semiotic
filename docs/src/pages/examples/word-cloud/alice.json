@@ -1,0 +1,1994 @@
+{
+  "title": "Alice's Adventures in Wonderland",
+  "author": "Lewis Carroll",
+  "year": 1865,
+  "source": "https://www.gutenberg.org/ebooks/11",
+  "sourceText": "https://www.gutenberg.org/cache/epub/11/pg11.txt",
+  "retrieved": "2026-10-31",
+  "sourceSha256": "01b38ea4c710a84bc18d0bd41271a5a1a92b94e97b2812f4dece97d4a694725e",
+  "license": "Public domain in the USA; Project Gutenberg source license retained in scripts/wordcloud/fixtures/alice.txt.",
+  "method": "Chapters I–XII, excluding the table of contents and license. Case-insensitive English tokens; possessive 's removed; explicit stop list; no stemming. Character/object groups are editorial labels, not automated entity recognition.",
+  "tokens": 26689,
+  "stopWords": [
+    "a",
+    "about",
+    "again",
+    "alice's",
+    "all",
+    "also",
+    "am",
+    "an",
+    "and",
+    "another",
+    "any",
+    "are",
+    "aren't",
+    "as",
+    "at",
+    "be",
+    "been",
+    "being",
+    "but",
+    "by",
+    "came",
+    "can",
+    "can't",
+    "chapter",
+    "come",
+    "could",
+    "couldn't",
+    "did",
+    "didn't",
+    "do",
+    "does",
+    "doesn't",
+    "don't",
+    "done",
+    "down",
+    "each",
+    "even",
+    "ever",
+    "every",
+    "few",
+    "first",
+    "for",
+    "from",
+    "get",
+    "go",
+    "got",
+    "had",
+    "has",
+    "have",
+    "having",
+    "he",
+    "he'd",
+    "her",
+    "here",
+    "hers",
+    "herself",
+    "him",
+    "himself",
+    "his",
+    "how",
+    "i",
+    "i'd",
+    "i'll",
+    "i'm",
+    "i've",
+    "if",
+    "in",
+    "into",
+    "is",
+    "isn't",
+    "it",
+    "it's",
+    "its",
+    "just",
+    "know",
+    "last",
+    "let",
+    "like",
+    "little",
+    "made",
+    "make",
+    "many",
+    "may",
+    "me",
+    "might",
+    "more",
+    "most",
+    "much",
+    "must",
+    "my",
+    "myself",
+    "never",
+    "no",
+    "nor",
+    "not",
+    "now",
+    "of",
+    "off",
+    "on",
+    "once",
+    "one",
+    "only",
+    "or",
+    "other",
+    "our",
+    "ours",
+    "out",
+    "over",
+    "own",
+    "said",
+    "same",
+    "say",
+    "saying",
+    "says",
+    "second",
+    "shall",
+    "she",
+    "she'd",
+    "should",
+    "shouldn't",
+    "so",
+    "some",
+    "still",
+    "such",
+    "than",
+    "that",
+    "that's",
+    "the",
+    "their",
+    "them",
+    "themselves",
+    "then",
+    "there",
+    "there's",
+    "these",
+    "they",
+    "they'll",
+    "they're",
+    "think",
+    "this",
+    "those",
+    "thought",
+    "three",
+    "to",
+    "too",
+    "twice",
+    "two",
+    "under",
+    "up",
+    "us",
+    "very",
+    "was",
+    "wasn't",
+    "we",
+    "well",
+    "went",
+    "were",
+    "weren't",
+    "what",
+    "what's",
+    "when",
+    "where",
+    "which",
+    "who",
+    "whom",
+    "whose",
+    "why",
+    "will",
+    "with",
+    "without",
+    "would",
+    "wouldn't",
+    "you",
+    "you'll",
+    "you're",
+    "you've",
+    "your",
+    "yourself"
+  ],
+  "data": [
+    {
+      "text": "alice",
+      "value": 397,
+      "category": "Characters",
+      "excerpt": "…CHAPTER I. Down the Rabbit-Hole Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do:…"
+    },
+    {
+      "text": "queen",
+      "value": 75,
+      "category": "Characters",
+      "excerpt": "…ver to the other, saying, in a solemn tone, “For the Duchess. An invitation from the Queen to play croquet.” The Frog-Footman repeated, in the same solemn tone, only changing the order of th…"
+    },
+    {
+      "text": "time",
+      "value": 71,
+      "category": "Story language",
+      "excerpt": "…r afterwards, it occurred to her that she ought to have wondered at this, but at the time it all seemed quite natural); but when the Rabbit actually took a watch out of its waistcoat-pocke…"
+    },
+    {
+      "text": "see",
+      "value": 67,
+      "category": "Story language",
+      "excerpt": "…th curiosity, she ran across the field after it, and fortunately was just in time to see it pop down a large rabbit-hole under the hedge. In another moment down went Alice after it, never…"
+    },
+    {
+      "text": "king",
+      "value": 63,
+      "category": "Characters",
+      "excerpt": "…d, and went by without noticing her. Then followed the Knave of Hearts, carrying the King's crown on a crimson velvet cushion; and, last of all this grand procession, came THE KING AND QUEEN…"
+    },
+    {
+      "text": "turtle",
+      "value": 59,
+      "category": "Characters",
+      "excerpt": "…for it, while the rest of the party went back to the game. CHAPTER IX. The Mock Turtle's Story “You can't think how glad I am to see you again, you dear old thing!” said the Duchess, as…"
+    },
+    {
+      "text": "began",
+      "value": 58,
+      "category": "Story language",
+      "excerpt": "…or Longitude either, but thought they were nice grand words to say.) Presently she began again. “I wonder if I shall fall right through the earth! How funny it'll seem to come out among…"
+    },
+    {
+      "text": "way",
+      "value": 57,
+      "category": "Story language",
+      "excerpt": "…thing so very remarkable in that; nor did Alice think it so very much out of the way to hear the Rabbit say to itself, “Oh dear! Oh dear! I shall be late!” (when she thought it over af…"
+    },
+    {
+      "text": "hatter",
+      "value": 56,
+      "category": "Characters",
+      "excerpt": "…ut here?” “In that direction,” the Cat said, waving its right paw round, “lives a Hatter: and in that direction,” waving the other paw, “lives a March Hare. Visit either you like: they'r…"
+    },
+    {
+      "text": "mock",
+      "value": 56,
+      "category": "Characters",
+      "excerpt": "…oking for it, while the rest of the party went back to the game. CHAPTER IX. The Mock Turtle's Story “You can't think how glad I am to see you again, you dear old thing!” said the Duc…"
+    },
+    {
+      "text": "gryphon",
+      "value": 55,
+      "category": "Characters",
+      "excerpt": "…happy at the number of executions the Queen had ordered. They very soon came upon a Gryphon, lying fast asleep in the sun. (If you don't know what a Gryphon is, look at the picture.) “Up, laz…"
+    },
+    {
+      "text": "quite",
+      "value": 55,
+      "category": "Story language",
+      "excerpt": "…curred to her that she ought to have wondered at this, but at the time it all seemed quite natural); but when the Rabbit actually took a watch out of its waistcoat-pocket, and looked at it…"
+    },
+    {
+      "text": "rabbit",
+      "value": 51,
+      "category": "Characters",
+      "excerpt": "…CHAPTER I. Down the Rabbit-Hole Alice was beginning to get very tired of sitting by her sister on the bank, and of having no…"
+    },
+    {
+      "text": "head",
+      "value": 50,
+      "category": "Places & objects",
+      "excerpt": "…hose beds of bright flowers and those cool fountains, but she could not even get her head through the doorway; “and even if my head would go through,” thought poor Alice, “it would be of ve…"
+    },
+    {
+      "text": "thing",
+      "value": 49,
+      "category": "Story language",
+      "excerpt": "…ke after the candle is blown out, for she could not remember ever having seen such a thing. After a while, finding that nothing more happened, she decided on going into the garden at once;…"
+    },
+    {
+      "text": "voice",
+      "value": 48,
+      "category": "Story language",
+      "excerpt": "…o ask help of any one; so, when the Rabbit came near her, she began, in a low, timid voice, “If you please, sir—” The Rabbit started violently, dropped the white kid gloves and the fan, and…"
+    },
+    {
+      "text": "looked",
+      "value": 45,
+      "category": "Story language",
+      "excerpt": "…tural); but when the Rabbit actually took a watch out of its waistcoat-pocket, and looked at it, and then hurried on, Alice started to her feet, for it flashed across her mind that she had…"
+    },
+    {
+      "text": "mouse",
+      "value": 44,
+      "category": "Characters",
+      "excerpt": "…re no mice in the air, I'm afraid, but you might catch a bat, and that's very like a mouse, you know. But do cats eat bats, I wonder?” And here Alice began to get rather sleepy, and went on…"
+    },
+    {
+      "text": "after",
+      "value": 43,
+      "category": "Story language",
+      "excerpt": "…, or a watch to take out of it, and burning with curiosity, she ran across the field after it, and fortunately was just in time to see it pop down a large rabbit-hole under the hedge. In an…"
+    },
+    {
+      "text": "duchess",
+      "value": 42,
+      "category": "Characters",
+      "excerpt": "…: he came trotting along in a great hurry, muttering to himself as he came, “Oh! the Duchess, the Duchess! Oh! won't she be savage if I've kept her waiting!” Alice felt so desperate that she w…"
+    },
+    {
+      "text": "round",
+      "value": 41,
+      "category": "Story language",
+      "excerpt": "…all, which was lit up by a row of lamps hanging from the roof. There were doors all round the hall, but they were all locked; and when Alice had been all the way down one side and up the ot…"
+    },
+    {
+      "text": "dormouse",
+      "value": 40,
+      "category": "Characters",
+      "excerpt": "…ee in front of the house, and the March Hare and the Hatter were having tea at it: a Dormouse was sitting between them, fast asleep, and the other two were using it as a cushion, resting their…"
+    },
+    {
+      "text": "tone",
+      "value": 40,
+      "category": "Story language",
+      "excerpt": "…ould you like cats if you were me?” “Well, perhaps not,” said Alice in a soothing tone: “don't be angry about it. And yet I wish I could show you our cat Dinah: I think you'd take a fanc…"
+    },
+    {
+      "text": "back",
+      "value": 39,
+      "category": "Story language",
+      "excerpt": "…ly impossible. There seemed to be no use in waiting by the little door, so she went back to the table, half hoping she might find another key on it, or at any rate a book of rules for shut…"
+    },
+    {
+      "text": "great",
+      "value": 39,
+      "category": "Story language",
+      "excerpt": "…rom one of the shelves as she passed; it was labelled “ORANGE MARMALADE”, but to her great disappointment it was empty: she did not like to drop the jar for fear of killing somebody undernea…"
+    },
+    {
+      "text": "before",
+      "value": 38,
+      "category": "Story language",
+      "excerpt": "…ied on, Alice started to her feet, for it flashed across her mind that she had never before seen a rabbit with either a waistcoat-pocket, or a watch to take out of it, and burning with curios…"
+    },
+    {
+      "text": "cat",
+      "value": 37,
+      "category": "Characters",
+      "excerpt": "…talking again. “Dinah'll miss me very much to-night, I should think!” (Dinah was the cat.) “I hope they'll remember her saucer of milk at tea-time. Dinah my dear! I wish you were down here…"
+    },
+    {
+      "text": "march",
+      "value": 34,
+      "category": "Characters",
+      "excerpt": "…paw round, “lives a Hatter: and in that direction,” waving the other paw, “lives a March Hare. Visit either you like: they're both mad.” “But I don't want to go among mad people,” Alice r…"
+    },
+    {
+      "text": "nothing",
+      "value": 34,
+      "category": "Story language",
+      "excerpt": "…was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or…"
+    },
+    {
+      "text": "large",
+      "value": 33,
+      "category": "Story language",
+      "excerpt": "…ran across the field after it, and fortunately was just in time to see it pop down a large rabbit-hole under the hedge. In another moment down went Alice after it, never once considering ho…"
+    },
+    {
+      "text": "found",
+      "value": 32,
+      "category": "Story language",
+      "excerpt": "…, so suddenly that Alice had not a moment to think about stopping herself before she found herself falling down a very deep well. Either the well was very deep, or she fell very slowly, for…"
+    },
+    {
+      "text": "long",
+      "value": 32,
+      "category": "Story language",
+      "excerpt": "…eet in a moment: she looked up, but it was all dark overhead; before her was another long passage, and the White Rabbit was still in sight, hurrying down it. There was not a moment to be lo…"
+    },
+    {
+      "text": "looking",
+      "value": 32,
+      "category": "Story language",
+      "excerpt": "…the shore. CHAPTER III. A Caucus-Race and a Long Tale They were indeed a queer-looking party that assembled on the bank—the birds with draggled feathers, the animals with their fur cling…"
+    },
+    {
+      "text": "right",
+      "value": 32,
+      "category": "Story language",
+      "excerpt": "…to listen to her, still it was good practice to say it over) “—yes, that's about the right distance—but then I wonder what Latitude or Longitude I've got to?” (Alice had no idea what Latitud…"
+    },
+    {
+      "text": "tell",
+      "value": 32,
+      "category": "Story language",
+      "excerpt": "…was walking hand in hand with Dinah, and saying to her very earnestly, “Now, Dinah, tell me the truth: did you ever eat a bat?” when suddenly, thump! thump! down she came upon a heap of st…"
+    },
+    {
+      "text": "hare",
+      "value": 31,
+      "category": "Characters",
+      "excerpt": "…und, “lives a Hatter: and in that direction,” waving the other paw, “lives a March Hare. Visit either you like: they're both mad.” “But I don't want to go among mad people,” Alice remark…"
+    },
+    {
+      "text": "moment",
+      "value": 31,
+      "category": "Story language",
+      "excerpt": "…was just in time to see it pop down a large rabbit-hole under the hedge. In another moment down went Alice after it, never once considering how in the world she was to get out again. The ra…"
+    },
+    {
+      "text": "put",
+      "value": 31,
+      "category": "Story language",
+      "excerpt": "…did not like to drop the jar for fear of killing somebody underneath, so managed to put it into one of the cupboards as she fell past it. “Well!” thought Alice to herself, “after such a…"
+    },
+    {
+      "text": "things",
+      "value": 31,
+      "category": "Story language",
+      "excerpt": "…would be four thousand miles down, I think—” (for, you see, Alice had learnt several things of this sort in her lessons in the schoolroom, and though this was not a very good opportunity fo…"
+    },
+    {
+      "text": "door",
+      "value": 30,
+      "category": "Places & objects",
+      "excerpt": "…ed; and when Alice had been all the way down one side and up the other, trying every door, she walked sadly down the middle, wondering how she was ever to get out again. Suddenly she came…"
+    },
+    {
+      "text": "heard",
+      "value": 30,
+      "category": "Story language",
+      "excerpt": "…round her, about four inches deep and reaching half down the hall. After a time she heard a little pattering of feet in the distance, and she hastily dried her eyes to see what was coming.…"
+    },
+    {
+      "text": "next",
+      "value": 30,
+      "category": "Story language",
+      "excerpt": "…ty of time as she went down to look about her and to wonder what was going to happen next. First, she tried to look down and make out what she was coming to, but it was too dark to see anyt…"
+    },
+    {
+      "text": "white",
+      "value": 30,
+      "category": "Characters",
+      "excerpt": "…in would be worth the trouble of getting up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her. There was nothing so very remarkable in that; nor did Al…"
+    },
+    {
+      "text": "day",
+      "value": 29,
+      "category": "Story language",
+      "excerpt": "…sations?” So she was considering in her own mind (as well as she could, for the hot day made her feel very sleepy and stupid), whether the pleasure of making a daisy-chain would be worth…"
+    },
+    {
+      "text": "dear",
+      "value": 29,
+      "category": "Story language",
+      "excerpt": "…d Alice think it so very much out of the way to hear the Rabbit say to itself, “Oh dear! Oh dear! I shall be late!” (when she thought it over afterwards, it occurred to her that she ought…"
+    },
+    {
+      "text": "eyes",
+      "value": 29,
+      "category": "Places & objects",
+      "excerpt": "…rouble of getting up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her. There was nothing so very remarkable in that; nor did Alice think it so very…"
+    },
+    {
+      "text": "look",
+      "value": 29,
+      "category": "Story language",
+      "excerpt": "…s very deep, or she fell very slowly, for she had plenty of time as she went down to look about her and to wonder what was going to happen next. First, she tried to look down and make out w…"
+    },
+    {
+      "text": "replied",
+      "value": 29,
+      "category": "Story language",
+      "excerpt": "…bury, found it advisable—'” “Found what?” said the Duck. “Found it,” the Mouse replied rather crossly: “of course you know what ‘it' means.” “I know what ‘it' means well enough, when I…"
+    },
+    {
+      "text": "caterpillar",
+      "value": 28,
+      "category": "Characters",
+      "excerpt": "…ed over the edge of the mushroom, and her eyes immediately met those of a large blue caterpillar, that was sitting on the top with its arms folded, quietly smoking a long hookah, and taking not th…"
+    },
+    {
+      "text": "going",
+      "value": 27,
+      "category": "Story language",
+      "excerpt": "…for she had plenty of time as she went down to look about her and to wonder what was going to happen next. First, she tried to look down and make out what she was coming to, but it was too d…"
+    },
+    {
+      "text": "good",
+      "value": 27,
+      "category": "Story language",
+      "excerpt": "…ings of this sort in her lessons in the schoolroom, and though this was not a very good opportunity for showing off her knowledge, as there was no one to listen to her, still it was good…"
+    },
+    {
+      "text": "poor",
+      "value": 27,
+      "category": "Story language",
+      "excerpt": "…en get her head through the doorway; “and even if my head would go through,” thought poor Alice, “it would be of very little use without my shoulders. Oh, how I wish I could shut up like a…"
+    },
+    {
+      "text": "seemed",
+      "value": 27,
+      "category": "Story language",
+      "excerpt": "…, it occurred to her that she ought to have wondered at this, but at the time it all seemed quite natural); but when the Rabbit actually took a watch out of its waistcoat-pocket, and looked…"
+    },
+    {
+      "text": "course",
+      "value": 26,
+      "category": "Story language",
+      "excerpt": "…lose to them, and all dripping wet, cross, and uncomfortable. The first question of course was, how to get dry again: they had a consultation about this, and after a few minutes it seemed qu…"
+    },
+    {
+      "text": "upon",
+      "value": 26,
+      "category": "Story language",
+      "excerpt": "…illed with cupboards and book-shelves; here and there she saw maps and pictures hung upon pegs. She took down a jar from one of the shelves as she passed; it was labelled “ORANGE MARMALADE”…"
+    },
+    {
+      "text": "away",
+      "value": 25,
+      "category": "Story language",
+      "excerpt": "…hite Rabbit was still in sight, hurrying down it. There was not a moment to be lost: away went Alice like the wind, and was just in time to hear it say, as it turned a corner, “Oh my ears a…"
+    },
+    {
+      "text": "rather",
+      "value": 25,
+      "category": "Story language",
+      "excerpt": "…the people that walk with their heads downward! The Antipathies, I think—” (she was rather glad there was no one listening, this time, as it didn't sound at all the right word) “—but I sha…"
+    },
+    {
+      "text": "soon",
+      "value": 25,
+      "category": "Story language",
+      "excerpt": "…it written up somewhere.” Down, down, down. There was nothing else to do, so Alice soon began talking again. “Dinah'll miss me very much to-night, I should think!” (Dinah was the cat.) “I…"
+    },
+    {
+      "text": "while",
+      "value": 25,
+      "category": "Story language",
+      "excerpt": "…dle is blown out, for she could not remember ever having seen such a thing. After a while, finding that nothing more happened, she decided on going into the garden at once; but, alas for po…"
+    },
+    {
+      "text": "yet",
+      "value": 25,
+      "category": "Story language",
+      "excerpt": "…” “Well, perhaps not,” said Alice in a soothing tone: “don't be angry about it. And yet I wish I could show you our cat Dinah: I think you'd take a fancy to cats if you could only see her…"
+    },
+    {
+      "text": "sure",
+      "value": 24,
+      "category": "Story language",
+      "excerpt": "…growing, and she was quite surprised to find that she remained the same size: to be sure, this generally happens when one eats cake, but Alice had got so much into the way of expecting not…"
+    },
+    {
+      "text": "took",
+      "value": 24,
+      "category": "Story language",
+      "excerpt": "…at this, but at the time it all seemed quite natural); but when the Rabbit actually took a watch out of its waistcoat-pocket, and looked at it, and then hurried on, Alice started to her f…"
+    },
+    {
+      "text": "won't",
+      "value": 24,
+      "category": "Story language",
+      "excerpt": "…e the best way you can;—but I must be kind to them,” thought Alice, “or perhaps they won't walk the way I want to go! Let me see: I'll give them a new pair of boots every Christmas.” And sh…"
+    },
+    {
+      "text": "added",
+      "value": 23,
+      "category": "Story language",
+      "excerpt": "…o tell me your history, you know,” said Alice, “and why it is you hate—C and D,” she added in a whisper, half afraid that it would be offended again. “Mine is a long and a sad tale!” said t…"
+    },
+    {
+      "text": "felt",
+      "value": 23,
+      "category": "Story language",
+      "excerpt": "…she couldn't answer either question, it didn't much matter which way she put it. She felt that she was dozing off, and had just begun to dream that she was walking hand in hand with Dinah,…"
+    },
+    {
+      "text": "half",
+      "value": 23,
+      "category": "Story language",
+      "excerpt": "…re seemed to be no use in waiting by the little door, so she went back to the table, half hoping she might find another key on it, or at any rate a book of rules for shutting people up like…"
+    },
+    {
+      "text": "getting",
+      "value": 22,
+      "category": "Story language",
+      "excerpt": "…stupid), whether the pleasure of making a daisy-chain would be worth the trouble of getting up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her. There wa…"
+    },
+    {
+      "text": "jury",
+      "value": 22,
+      "category": "Characters",
+      "excerpt": "…nothing to do.' Said the mouse to the cur, ‘Such a trial, dear sir, With no jury or judge, would be wasting our breath.' ‘I'll be judge, I'll be jury,' Said cunning old Fu…"
+    },
+    {
+      "text": "take",
+      "value": 22,
+      "category": "Story language",
+      "excerpt": "…hat she had never before seen a rabbit with either a waistcoat-pocket, or a watch to take out of it, and burning with curiosity, she ran across the field after it, and fortunately was just…"
+    },
+    {
+      "text": "find",
+      "value": 21,
+      "category": "Story language",
+      "excerpt": "…in waiting by the little door, so she went back to the table, half hoping she might find another key on it, or at any rate a book of rules for shutting people up like telescopes: this time…"
+    },
+    {
+      "text": "hand",
+      "value": 21,
+      "category": "Places & objects",
+      "excerpt": "…. She felt that she was dozing off, and had just begun to dream that she was walking hand in hand with Dinah, and saying to her very earnestly, “Now, Dinah, tell me the truth: did you ever…"
+    },
+    {
+      "text": "minute",
+      "value": 21,
+      "category": "Story language",
+      "excerpt": "…g like that!” said Alice to herself, rather sharply; “I advise you to leave off this minute!” She generally gave herself very good advice, (though she very seldom followed it), and sometimes…"
+    },
+    {
+      "text": "till",
+      "value": 21,
+      "category": "Story language",
+      "excerpt": "…st, and then, if I like being that person, I'll come up: if not, I'll stay down here till I'm somebody else'—but, oh dear!” cried Alice, with a sudden burst of tears, “I do wish they would…"
+    },
+    {
+      "text": "wish",
+      "value": 21,
+      "category": "Story language",
+      "excerpt": "…the cat.) “I hope they'll remember her saucer of milk at tea-time. Dinah my dear! I wish you were down here with me! There are no mice in the air, I'm afraid, but you might catch a bat, an…"
+    },
+    {
+      "text": "words",
+      "value": 21,
+      "category": "Story language",
+      "excerpt": "…had no idea what Latitude was, or Longitude either, but thought they were nice grand words to say.) Presently she began again. “I wonder if I shall fall right through the earth! How funny…"
+    },
+    {
+      "text": "anything",
+      "value": 20,
+      "category": "Story language",
+      "excerpt": "…e tried to look down and make out what she was coming to, but it was too dark to see anything; then she looked at the sides of the well, and noticed that they were filled with cupboards and boo…"
+    },
+    {
+      "text": "cried",
+      "value": 20,
+      "category": "Story language",
+      "excerpt": "…; and when she had tired herself out with trying, the poor little thing sat down and cried. “Come, there's no use in crying like that!” said Alice to herself, rather sharply; “I advise you…"
+    },
+    {
+      "text": "however",
+      "value": 20,
+      "category": "Story language",
+      "excerpt": "…too large, or the key was too small, but at any rate it would not open any of them. However, on the second time round, she came upon a low curtain she had not noticed before, and behind it wa…"
+    },
+    {
+      "text": "sort",
+      "value": 20,
+      "category": "Story language",
+      "excerpt": "…housand miles down, I think—” (for, you see, Alice had learnt several things of this sort in her lessons in the schoolroom, and though this was not a very good opportunity for showing off…"
+    },
+    {
+      "text": "curious",
+      "value": 19,
+      "category": "Story language",
+      "excerpt": "…* * * * * * * * * * * * “What a curious feeling!” said Alice; “I must be shutting up like a telescope.” And so it was indeed: she was now…"
+    },
+    {
+      "text": "feet",
+      "value": 19,
+      "category": "Places & objects",
+      "excerpt": "…f its waistcoat-pocket, and looked at it, and then hurried on, Alice started to her feet, for it flashed across her mind that she had never before seen a rabbit with either a waistcoat-poc…"
+    },
+    {
+      "text": "old",
+      "value": 19,
+      "category": "Story language",
+      "excerpt": "…than you, and must know better;” and this Alice would not allow without knowing how old it was, and, as the Lory positively refused to tell its age, there was no more to be said. At last…"
+    },
+    {
+      "text": "please",
+      "value": 19,
+      "category": "Story language",
+      "excerpt": "…ight word) “—but I shall have to ask them what the name of the country is, you know. Please, Ma'am, is this New Zealand or Australia?” (and she tried to curtsey as she spoke—fancy curtseying…"
+    },
+    {
+      "text": "tea",
+      "value": 19,
+      "category": "Places & objects",
+      "excerpt": "…I should think!” (Dinah was the cat.) “I hope they'll remember her saucer of milk at tea-time. Dinah my dear! I wish you were down here with me! There are no mice in the air, I'm afraid, b…"
+    },
+    {
+      "text": "tried",
+      "value": 19,
+      "category": "Story language",
+      "excerpt": "…went down to look about her and to wonder what was going to happen next. First, she tried to look down and make out what she was coming to, but it was too dark to see anything; then she loo…"
+    },
+    {
+      "text": "court",
+      "value": 18,
+      "category": "Places & objects",
+      "excerpt": "…umpet in one hand, and a scroll of parchment in the other. In the very middle of the court was a table, with a large dish of tarts upon it: they looked so good, that it made Alice quite hung…"
+    },
+    {
+      "text": "eat",
+      "value": 18,
+      "category": "Story language",
+      "excerpt": "…raid, but you might catch a bat, and that's very like a mouse, you know. But do cats eat bats, I wonder?” And here Alice began to get rather sleepy, and went on saying to herself, in a dre…"
+    },
+    {
+      "text": "end",
+      "value": 18,
+      "category": "Story language",
+      "excerpt": "…” (Which was very likely true.) Down, down, down. Would the fall never come to an end? “I wonder how many miles I've fallen by this time?” she said aloud. “I must be getting somewhere n…"
+    },
+    {
+      "text": "enough",
+      "value": 18,
+      "category": "Story language",
+      "excerpt": "…s no use now,” thought poor Alice, “to pretend to be two people! Why, there's hardly enough of me left to make one respectable person!” Soon her eye fell on a little glass box that was lyi…"
+    },
+    {
+      "text": "house",
+      "value": 18,
+      "category": "Places & objects",
+      "excerpt": "…me at home! Why, I wouldn't say anything about it, even if I fell off the top of the house!” (Which was very likely true.) Down, down, down. Would the fall never come to an end? “I wonder…"
+    },
+    {
+      "text": "something",
+      "value": 18,
+      "category": "Story language",
+      "excerpt": "…queer thing, to be sure! However, everything is queer to-day.” Just then she heard something splashing about in the pool a little way off, and she swam nearer to make out what it was: at first…"
+    },
+    {
+      "text": "soup",
+      "value": 18,
+      "category": "Places & objects",
+      "excerpt": "…cook was leaning over the fire, stirring a large cauldron which seemed to be full of soup. “There's certainly too much pepper in that soup!” Alice said to herself, as well as she could for…"
+    },
+    {
+      "text": "table",
+      "value": 18,
+      "category": "Places & objects",
+      "excerpt": "…ing how she was ever to get out again. Suddenly she came upon a little three-legged table, all made of solid glass; there was nothing on it except a tiny golden key, and Alice's first thoug…"
+    },
+    {
+      "text": "use",
+      "value": 18,
+      "category": "Story language",
+      "excerpt": "…sister was reading, but it had no pictures or conversations in it, “and what is the use of a book,” thought Alice “without pictures or conversations?” So she was considering in her own m…"
+    },
+    {
+      "text": "wonder",
+      "value": 18,
+      "category": "Story language",
+      "excerpt": "…ll very slowly, for she had plenty of time as she went down to look about her and to wonder what was going to happen next. First, she tried to look down and make out what she was coming to, b…"
+    },
+    {
+      "text": "asked",
+      "value": 17,
+      "category": "Story language",
+      "excerpt": "…nd all must have prizes.” “But who is to give the prizes?” quite a chorus of voices asked. “Why, she, of course,” said the Dodo, pointing to Alice with one finger; and the whole party at…"
+    },
+    {
+      "text": "bill",
+      "value": 17,
+      "category": "Characters",
+      "excerpt": "…nd was coming back to finish his story. CHAPTER IV. The Rabbit Sends in a Little Bill It was the White Rabbit, trotting slowly back again, and looking anxiously about as it went, as i…"
+    },
+    {
+      "text": "perhaps",
+      "value": 17,
+      "category": "Story language",
+      "excerpt": "…what an ignorant little girl she'll think me for asking! No, it'll never do to ask: perhaps I shall see it written up somewhere.” Down, down, down. There was nothing else to do, so Alice soo…"
+    },
+    {
+      "text": "question",
+      "value": 17,
+      "category": "Story language",
+      "excerpt": "…ats?” and sometimes, “Do bats eat cats?” for, you see, as she couldn't answer either question, it didn't much matter which way she put it. She felt that she was dozing off, and had just begun t…"
+    },
+    {
+      "text": "sat",
+      "value": 17,
+      "category": "Story language",
+      "excerpt": "…too slippery; and when she had tired herself out with trying, the poor little thing sat down and cried. “Come, there's no use in crying like that!” said Alice to herself, rather sharply;…"
+    },
+    {
+      "text": "side",
+      "value": 17,
+      "category": "Story language",
+      "excerpt": "…und the hall, but they were all locked; and when Alice had been all the way down one side and up the other, trying every door, she walked sadly down the middle, wondering how she was ever t…"
+    },
+    {
+      "text": "spoke",
+      "value": 17,
+      "category": "Story language",
+      "excerpt": "…. Please, Ma'am, is this New Zealand or Australia?” (and she tried to curtsey as she spoke—fancy curtseying as you're falling through the air! Do you think you could manage it?) “And what…"
+    },
+    {
+      "text": "talking",
+      "value": 17,
+      "category": "Story language",
+      "excerpt": "…up somewhere.” Down, down, down. There was nothing else to do, so Alice soon began talking again. “Dinah'll miss me very much to-night, I should think!” (Dinah was the cat.) “I hope they'll…"
+    },
+    {
+      "text": "bit",
+      "value": 16,
+      "category": "Story language",
+      "excerpt": "…e came upon a heap of sticks and dry leaves, and the fall was over. Alice was not a bit hurt, and she jumped up on to her feet in a moment: she looked up, but it was all dark overhead; be…"
+    },
+    {
+      "text": "garden",
+      "value": 16,
+      "category": "Places & objects",
+      "excerpt": "…rger than a rat-hole: she knelt down and looked along the passage into the loveliest garden you ever saw. How she longed to get out of that dark hall, and wander about among those beds of bri…"
+    },
+    {
+      "text": "hastily",
+      "value": 16,
+      "category": "Story language",
+      "excerpt": "…he hall. After a time she heard a little pattering of feet in the distance, and she hastily dried her eyes to see what was coming. It was the White Rabbit returning, splendidly dressed, with…"
+    },
+    {
+      "text": "high",
+      "value": 16,
+      "category": "Story language",
+      "excerpt": "…ain she had not noticed before, and behind it was a little door about fifteen inches high: she tried the little golden key in the lock, and to her great delight it fitted! Alice opened the…"
+    },
+    {
+      "text": "indeed",
+      "value": 16,
+      "category": "Story language",
+      "excerpt": "…e-way things had happened lately, that Alice had begun to think that very few things indeed were really impossible. There seemed to be no use in waiting by the little door, so she went back…"
+    },
+    {
+      "text": "ran",
+      "value": 16,
+      "category": "Story language",
+      "excerpt": "…e of getting up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her. There was nothing so very remarkable in that; nor did Alice think it so very muc…"
+    },
+    {
+      "text": "turned",
+      "value": 16,
+      "category": "Story language",
+      "excerpt": "…o be lost: away went Alice like the wind, and was just in time to hear it say, as it turned a corner, “Oh my ears and whiskers, how late it's getting!” She was close behind it when she turned…"
+    },
+    {
+      "text": "air",
+      "value": 15,
+      "category": "Story language",
+      "excerpt": "…d she tried to curtsey as she spoke—fancy curtseying as you're falling through the air! Do you think you could manage it?) “And what an ignorant little girl she'll think me for asking! N…"
+    },
+    {
+      "text": "arm",
+      "value": 15,
+      "category": "Story language",
+      "excerpt": "…nd she tried the effect of lying down with one elbow against the door, and the other arm curled round her head. Still she went on growing, and, as a last resource, she put one arm out of t…"
+    },
+    {
+      "text": "because",
+      "value": 15,
+      "category": "Story language",
+      "excerpt": "…dren who had got burnt, and eaten up by wild beasts and other unpleasant things, all because they would not remember the simple rules their friends had taught them: such as, that a red-hot p…"
+    },
+    {
+      "text": "called",
+      "value": 15,
+      "category": "Story language",
+      "excerpt": "…as hard as it could go, and making quite a commotion in the pool as it went. So she called softly after it, “Mouse dear! Do come back again, and we won't talk about cats or dogs either, if y…"
+    },
+    {
+      "text": "face",
+      "value": 15,
+      "category": "Story language",
+      "excerpt": "…like a telescope.” And so it was indeed: she was now only ten inches high, and her face brightened up at the thought that she was now the right size for going through the little door into…"
+    },
+    {
+      "text": "gave",
+      "value": 15,
+      "category": "Story language",
+      "excerpt": "…e to herself, rather sharply; “I advise you to leave off this minute!” She generally gave herself very good advice, (though she very seldom followed it), and sometimes she scolded herself s…"
+    },
+    {
+      "text": "idea",
+      "value": 15,
+      "category": "Story language",
+      "excerpt": "…ht distance—but then I wonder what Latitude or Longitude I've got to?” (Alice had no idea what Latitude was, or Longitude either, but thought they were nice grand words to say.) Presently…"
+    },
+    {
+      "text": "knew",
+      "value": 15,
+      "category": "Story language",
+      "excerpt": "…oulders. Oh, how I wish I could shut up like a telescope! I think I could, if I only knew how to begin.” For, you see, so many out-of-the-way things had happened lately, that Alice had begu…"
+    },
+    {
+      "text": "low",
+      "value": 15,
+      "category": "Story language",
+      "excerpt": "…ed the corner, but the Rabbit was no longer to be seen: she found herself in a long, low hall, which was lit up by a row of lamps hanging from the roof. There were doors all round the hal…"
+    },
+    {
+      "text": "mad",
+      "value": 15,
+      "category": "Story language",
+      "excerpt": "…ion,” waving the other paw, “lives a March Hare. Visit either you like: they're both mad.” “But I don't want to go among mad people,” Alice remarked. “Oh, you can't help that,” said the…"
+    },
+    {
+      "text": "near",
+      "value": 15,
+      "category": "Story language",
+      "excerpt": "…w many miles I've fallen by this time?” she said aloud. “I must be getting somewhere near the centre of the earth. Let me see: that would be four thousand miles down, I think—” (for, you se…"
+    },
+    {
+      "text": "seen",
+      "value": 15,
+      "category": "Story language",
+      "excerpt": "…Alice started to her feet, for it flashed across her mind that she had never before seen a rabbit with either a waistcoat-pocket, or a watch to take out of it, and burning with curiosity,…"
+    },
+    {
+      "text": "speak",
+      "value": 15,
+      "category": "Story language",
+      "excerpt": "…cried Alice (she was so much surprised, that for the moment she quite forgot how to speak good English); “now I'm opening out like the largest telescope that ever was! Good-bye, feet!” (for…"
+    },
+    {
+      "text": "anxiously",
+      "value": 14,
+      "category": "Story language",
+      "excerpt": "…et into the garden, and I don't care which happens!” She ate a little bit, and said anxiously to herself, “Which way? Which way?”, holding her hand on the top of her head to feel which way it w…"
+    },
+    {
+      "text": "baby",
+      "value": 14,
+      "category": "Story language",
+      "excerpt": "…the other: the Duchess was sitting on a three-legged stool in the middle, nursing a baby; the cook was leaning over the fire, stirring a large cauldron which seemed to be full of soup. “T…"
+    },
+    {
+      "text": "beginning",
+      "value": 14,
+      "category": "Story language",
+      "excerpt": "…CHAPTER I. Down the Rabbit-Hole Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice…"
+    },
+    {
+      "text": "better",
+      "value": 14,
+      "category": "Story language",
+      "excerpt": "…y, who at last turned sulky, and would only say, “I am older than you, and must know better;” and this Alice would not allow without knowing how old it was, and, as the Lory positively refuse…"
+    },
+    {
+      "text": "both",
+      "value": 14,
+      "category": "Story language",
+      "excerpt": "…thing like this:— “Fury said to a mouse, That he met in the house, ‘Let us both go to law: I will prosecute you.—Come, I'll take no denial; We must have a tr…"
+    },
+    {
+      "text": "certainly",
+      "value": 14,
+      "category": "Story language",
+      "excerpt": "…utting people up like telescopes: this time she found a little bottle on it, (“which certainly was not here before,” said Alice,) and round the neck of the bottle was a paper label, with the wor…"
+    },
+    {
+      "text": "change",
+      "value": 14,
+      "category": "Story language",
+      "excerpt": "…her. “That was a narrow escape!” said Alice, a good deal frightened at the sudden change, but very glad to find herself still in existence; “and now for the garden!” and she ran with all s…"
+    },
+    {
+      "text": "everything",
+      "value": 14,
+      "category": "Story language",
+      "excerpt": "…t, she kept fanning herself all the time she went on talking: “Dear, dear! How queer everything is to-day! And yesterday things went on just as usual. I wonder if I've been changed in the night?…"
+    },
+    {
+      "text": "footman",
+      "value": 14,
+      "category": "Characters",
+      "excerpt": "…r two she stood looking at the house, and wondering what to do next, when suddenly a footman in livery came running out of the wood—(she considered him to be a footman because he was in livery…"
+    },
+    {
+      "text": "hear",
+      "value": 14,
+      "category": "Story language",
+      "excerpt": "…o very remarkable in that; nor did Alice think it so very much out of the way to hear the Rabbit say to itself, “Oh dear! Oh dear! I shall be late!” (when she thought it over afterwards…"
+    },
+    {
+      "text": "itself",
+      "value": 14,
+      "category": "Story language",
+      "excerpt": "…that; nor did Alice think it so very much out of the way to hear the Rabbit say to itself, “Oh dear! Oh dear! I shall be late!” (when she thought it over afterwards, it occurred to her that…"
+    },
+    {
+      "text": "left",
+      "value": 14,
+      "category": "Story language",
+      "excerpt": "…” thought poor Alice, “to pretend to be two people! Why, there's hardly enough of me left to make one respectable person!” Soon her eye fell on a little glass box that was lying under th…"
+    },
+    {
+      "text": "ought",
+      "value": 14,
+      "category": "Story language",
+      "excerpt": "…I shall be late!” (when she thought it over afterwards, it occurred to her that she ought to have wondered at this, but at the time it all seemed quite natural); but when the Rabbit actuall…"
+    },
+    {
+      "text": "remember",
+      "value": 14,
+      "category": "Story language",
+      "excerpt": "…ll miss me very much to-night, I should think!” (Dinah was the cat.) “I hope they'll remember her saucer of milk at tea-time. Dinah my dear! I wish you were down here with me! There are no mice…"
+    },
+    {
+      "text": "saw",
+      "value": 14,
+      "category": "Story language",
+      "excerpt": "…nd noticed that they were filled with cupboards and book-shelves; here and there she saw maps and pictures hung upon pegs. She took down a jar from one of the shelves as she passed; it was…"
+    },
+    {
+      "text": "sea",
+      "value": 14,
+      "category": "Places & objects",
+      "excerpt": "…p to her chin in salt water. Her first idea was that she had somehow fallen into the sea, “and in that case I can go back by railway,” she said to herself. (Alice had been to the seaside o…"
+    },
+    {
+      "text": "set",
+      "value": 14,
+      "category": "Story language",
+      "excerpt": "…n, that it seemed quite dull and stupid for life to go on in the common way. So she set to work, and very soon finished off the cake. * * * * * * * *…"
+    },
+    {
+      "text": "silence",
+      "value": 14,
+      "category": "Story language",
+      "excerpt": "…he Mouse with an important air, “are you all ready? This is the driest thing I know. Silence all round, if you please! ‘William the Conqueror, whose cause was favoured by the pope, was soon su…"
+    },
+    {
+      "text": "suppose",
+      "value": 14,
+      "category": "Story language",
+      "excerpt": "…e, as she swam about, trying to find her way out. “I shall be punished for it now, I suppose, by being drowned in my own tears! That will be a queer thing, to be sure! However, everything is…"
+    },
+    {
+      "text": "talk",
+      "value": 14,
+      "category": "Story language",
+      "excerpt": "…e? Everything is so out-of-the-way down here, that I should think very likely it can talk: at any rate, there's no harm in trying.” So she began: “O Mouse, do you know the way out of this p…"
+    },
+    {
+      "text": "through",
+      "value": 14,
+      "category": "Story language",
+      "excerpt": "…ce grand words to say.) Presently she began again. “I wonder if I shall fall right through the earth! How funny it'll seem to come out among the people that walk with their heads downward!…"
+    },
+    {
+      "text": "trying",
+      "value": 14,
+      "category": "Story language",
+      "excerpt": "…were all locked; and when Alice had been all the way down one side and up the other, trying every door, she walked sadly down the middle, wondering how she was ever to get out again. Suddenl…"
+    },
+    {
+      "text": "always",
+      "value": 13,
+      "category": "Story language",
+      "excerpt": "…ing down to the end of his tail. “As if I would talk on such a subject! Our family always hated cats: nasty, low, vulgar things! Don't let me hear the name again!” “I won't indeed!” said…"
+    },
+    {
+      "text": "beautiful",
+      "value": 13,
+      "category": "Story language",
+      "excerpt": "…nother! However, I've got back to my right size: the next thing is, to get into that beautiful garden—how is that to be done, I wonder?” As she said this, she came suddenly upon an open place,…"
+    },
+    {
+      "text": "begin",
+      "value": 13,
+      "category": "Story language",
+      "excerpt": "…how I wish I could shut up like a telescope! I think I could, if I only knew how to begin.” For, you see, so many out-of-the-way things had happened lately, that Alice had begun to think th…"
+    },
+    {
+      "text": "behind",
+      "value": 13,
+      "category": "Story language",
+      "excerpt": "…it turned a corner, “Oh my ears and whiskers, how late it's getting!” She was close behind it when she turned the corner, but the Rabbit was no longer to be seen: she found herself in a long…"
+    },
+    {
+      "text": "cats",
+      "value": 13,
+      "category": "Story language",
+      "excerpt": "…'m afraid, but you might catch a bat, and that's very like a mouse, you know. But do cats eat bats, I wonder?” And here Alice began to get rather sleepy, and went on saying to herself, in a…"
+    },
+    {
+      "text": "close",
+      "value": 13,
+      "category": "Story language",
+      "excerpt": "…getting up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her. There was nothing so very remarkable in that; nor did Alice think it so very much out…"
+    },
+    {
+      "text": "cook",
+      "value": 13,
+      "category": "Characters",
+      "excerpt": "…: the Duchess was sitting on a three-legged stool in the middle, nursing a baby; the cook was leaning over the fire, stirring a large cauldron which seemed to be full of soup. “There's cer…"
+    },
+    {
+      "text": "dance",
+      "value": 13,
+      "category": "Story language",
+      "excerpt": "…delightful thing a Lobster Quadrille is!” “No, indeed,” said Alice. “What sort of a dance is it?” “Why,” said the Gryphon, “you first form into a line along the sea-shore—” “Two lines!” c…"
+    },
+    {
+      "text": "dodo",
+      "value": 13,
+      "category": "Characters",
+      "excerpt": "…crowded with the birds and animals that had fallen into it: there were a Duck and a Dodo, a Lory and an Eaglet, and several other curious creatures. Alice led the way, and the whole party…"
+    },
+    {
+      "text": "far",
+      "value": 13,
+      "category": "Story language",
+      "excerpt": "…looked down at her feet, they seemed to be almost out of sight, they were getting so far off). “Oh, my poor little feet, I wonder who will put on your shoes and stockings for you now, dear…"
+    },
+    {
+      "text": "game",
+      "value": 13,
+      "category": "Story language",
+      "excerpt": "…; and once she remembered trying to box her own ears for having cheated herself in a game of croquet she was playing against herself, for this curious child was very fond of pretending to b…"
+    },
+    {
+      "text": "gone",
+      "value": 13,
+      "category": "Story language",
+      "excerpt": "…ger and smaller, and being ordered about by mice and rabbits. I almost wish I hadn't gone down that rabbit-hole—and yet—and yet—it's rather curious, you know, this sort of life! I do wonder…"
+    },
+    {
+      "text": "grow",
+      "value": 13,
+      "category": "Story language",
+      "excerpt": "…beautifully marked in currants. “Well, I'll eat it,” said Alice, “and if it makes me grow larger, I can reach the key; and if it makes me grow smaller, I can creep under the door; so either…"
+    },
+    {
+      "text": "kept",
+      "value": 13,
+      "category": "Story language",
+      "excerpt": "…o himself as he came, “Oh! the Duchess, the Duchess! Oh! won't she be savage if I've kept her waiting!” Alice felt so desperate that she was ready to ask help of any one; so, when the Rabbi…"
+    },
+    {
+      "text": "people",
+      "value": 13,
+      "category": "Story language",
+      "excerpt": "…f I shall fall right through the earth! How funny it'll seem to come out among the people that walk with their heads downward! The Antipathies, I think—” (she was rather glad there was no…"
+    },
+    {
+      "text": "really",
+      "value": 13,
+      "category": "Story language",
+      "excerpt": "…had happened lately, that Alice had begun to think that very few things indeed were really impossible. There seemed to be no use in waiting by the little door, so she went back to the table…"
+    },
+    {
+      "text": "room",
+      "value": 13,
+      "category": "Places & objects",
+      "excerpt": "…ring people about like that!” By this time she had found her way into a tidy little room with a table in the window, and on it (as she had hoped) a fan and two or three pairs of tiny white…"
+    },
+    {
+      "text": "size",
+      "value": 13,
+      "category": "Story language",
+      "excerpt": "…en inches high, and her face brightened up at the thought that she was now the right size for going through the little door into that lovely garden. First, however, she waited for a few min…"
+    },
+    {
+      "text": "suddenly",
+      "value": 13,
+      "category": "Story language",
+      "excerpt": "…a daisy-chain would be worth the trouble of getting up and picking the daisies, when suddenly a White Rabbit with pink eyes ran close by her. There was nothing so very remarkable in that; no…"
+    },
+    {
+      "text": "used",
+      "value": 13,
+      "category": "Story language",
+      "excerpt": "…nd I'm I, and—oh dear, how puzzling it all is! I'll try if I know all the things I used to know. Let me see: four times five is twelve, and four times six is thirteen, and four times seve…"
+    },
+    {
+      "text": "whole",
+      "value": 13,
+      "category": "Story language",
+      "excerpt": "…Lory and an Eaglet, and several other curious creatures. Alice led the way, and the whole party swam to the shore. CHAPTER III. A Caucus-Race and a Long Tale They were indeed a queer-…"
+    },
+    {
+      "text": "yes",
+      "value": 13,
+      "category": "Story language",
+      "excerpt": "…, as there was no one to listen to her, still it was good practice to say it over) “—yes, that's about the right distance—but then I wonder what Latitude or Longitude I've got to?” (Alice…"
+    },
+    {
+      "text": "afraid",
+      "value": 12,
+      "category": "Story language",
+      "excerpt": "…Dinah my dear! I wish you were down here with me! There are no mice in the air, I'm afraid, but you might catch a bat, and that's very like a mouse, you know. But do cats eat bats, I wonder?…"
+    },
+    {
+      "text": "among",
+      "value": 12,
+      "category": "Story language",
+      "excerpt": "…I wonder if I shall fall right through the earth! How funny it'll seem to come out among the people that walk with their heads downward! The Antipathies, I think—” (she was rather glad the…"
+    },
+    {
+      "text": "best",
+      "value": 12,
+      "category": "Story language",
+      "excerpt": "…ssibly reach it: she could see it quite plainly through the glass, and she tried her best to climb up one of the legs of the table, but it was too slippery; and when she had tired herself o…"
+    },
+    {
+      "text": "deal",
+      "value": 12,
+      "category": "Story language",
+      "excerpt": "…es and stockings for you now, dears? I'm sure I shan't be able! I shall be a great deal too far off to trouble myself about you: you must manage the best way you can;—but I must be kind t…"
+    },
+    {
+      "text": "dinah",
+      "value": 12,
+      "category": "Characters",
+      "excerpt": "…ce soon began talking again. “Dinah'll miss me very much to-night, I should think!” (Dinah was the cat.) “I hope they'll remember her saucer of milk at tea-time. Dinah my dear! I wish you we…"
+    },
+    {
+      "text": "else",
+      "value": 12,
+      "category": "Story language",
+      "excerpt": "…: perhaps I shall see it written up somewhere.” Down, down, down. There was nothing else to do, so Alice soon began talking again. “Dinah'll miss me very much to-night, I should think!” (D…"
+    },
+    {
+      "text": "finished",
+      "value": 12,
+      "category": "Story language",
+      "excerpt": "…t, custard, pine-apple, roast turkey, toffee, and hot buttered toast,) she very soon finished it off. * * * * * * * * * * * * * *…"
+    },
+    {
+      "text": "give",
+      "value": 12,
+      "category": "Story language",
+      "excerpt": "…,” thought Alice, “or perhaps they won't walk the way I want to go! Let me see: I'll give them a new pair of boots every Christmas.” And she went on planning to herself how she would manag…"
+    },
+    {
+      "text": "hands",
+      "value": 12,
+      "category": "Places & objects",
+      "excerpt": "…en changed for Mabel! I'll try and say ‘How doth the little—'” and she crossed her hands on her lap as if she were saying lessons, and began to repeat it, but her voice sounded hoarse and…"
+    },
+    {
+      "text": "hardly",
+      "value": 12,
+      "category": "Story language",
+      "excerpt": "…But it's no use now,” thought poor Alice, “to pretend to be two people! Why, there's hardly enough of me left to make one respectable person!” Soon her eye fell on a little glass box that…"
+    },
+    {
+      "text": "life",
+      "value": 12,
+      "category": "Story language",
+      "excerpt": "…othing but out-of-the-way things to happen, that it seemed quite dull and stupid for life to go on in the common way. So she set to work, and very soon finished off the cake. * *…"
+    },
+    {
+      "text": "majesty",
+      "value": 12,
+      "category": "Story language",
+      "excerpt": "…to Alice, she went on, “What's your name, child?” “My name is Alice, so please your Majesty,” said Alice very politely; but she added, to herself, “Why, they're only a pack of cards, after al…"
+    },
+    {
+      "text": "pigeon",
+      "value": 12,
+      "category": "Story language",
+      "excerpt": "…ich she had been wandering, when a sharp hiss made her draw back in a hurry: a large pigeon had flown into her face, and was beating her violently with its wings. “Serpent!” screamed the Pig…"
+    },
+    {
+      "text": "queer",
+      "value": 12,
+      "category": "Story language",
+      "excerpt": "…ery hot, she kept fanning herself all the time she went on talking: “Dear, dear! How queer everything is to-day! And yesterday things went on just as usual. I wonder if I've been changed in…"
+    },
+    {
+      "text": "try",
+      "value": 12,
+      "category": "Story language",
+      "excerpt": "…little! Besides, she's she, and I'm I, and—oh dear, how puzzling it all is! I'll try if I know all the things I used to know. Let me see: four times five is twelve, and four times six…"
+    },
+    {
+      "text": "turning",
+      "value": 12,
+      "category": "Story language",
+      "excerpt": "…t the insolence of his Normans—' How are you getting on now, my dear?” it continued, turning to Alice as it spoke. “As wet as ever,” said Alice in a melancholy tone: “it doesn't seem to dry m…"
+    },
+    {
+      "text": "ask",
+      "value": 11,
+      "category": "Story language",
+      "excerpt": "…istening, this time, as it didn't sound at all the right word) “—but I shall have to ask them what the name of the country is, you know. Please, Ma'am, is this New Zealand or Australia?” (…"
+    },
+    {
+      "text": "book",
+      "value": 11,
+      "category": "Places & objects",
+      "excerpt": "…ster on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was reading, but it had no pictures or conversations in it, “and what is the use of a bo…"
+    },
+    {
+      "text": "child",
+      "value": 11,
+      "category": "Story language",
+      "excerpt": "…eated herself in a game of croquet she was playing against herself, for this curious child was very fond of pretending to be two people. “But it's no use now,” thought poor Alice, “to preten…"
+    },
+    {
+      "text": "glad",
+      "value": 11,
+      "category": "Story language",
+      "excerpt": "…ople that walk with their heads downward! The Antipathies, I think—” (she was rather glad there was no one listening, this time, as it didn't sound at all the right word) “—but I shall ha…"
+    },
+    {
+      "text": "gloves",
+      "value": 11,
+      "category": "Places & objects",
+      "excerpt": "…ing. It was the White Rabbit returning, splendidly dressed, with a pair of white kid gloves in one hand and a large fan in the other: he came trotting along in a great hurry, muttering to him…"
+    },
+    {
+      "text": "growing",
+      "value": 11,
+      "category": "Story language",
+      "excerpt": "…h way? Which way?”, holding her hand on the top of her head to feel which way it was growing, and she was quite surprised to find that she remained the same size: to be sure, this generally ha…"
+    },
+    {
+      "text": "hurried",
+      "value": 11,
+      "category": "Story language",
+      "excerpt": "…bbit actually took a watch out of its waistcoat-pocket, and looked at it, and then hurried on, Alice started to her feet, for it flashed across her mind that she had never before seen a rabb…"
+    },
+    {
+      "text": "hurry",
+      "value": 11,
+      "category": "Story language",
+      "excerpt": "…ry well to say “Drink me,” but the wise little Alice was not going to do that in a hurry. “No, I'll look first,” she said, “and see whether it's marked ‘poison' or not”; for she had read…"
+    },
+    {
+      "text": "keep",
+      "value": 11,
+      "category": "Story language",
+      "excerpt": "…he stick, and made believe to worry it; then Alice dodged behind a great thistle, to keep herself from being run over; and the moment she appeared on the other side, the puppy made another…"
+    },
+    {
+      "text": "makes",
+      "value": 11,
+      "category": "Story language",
+      "excerpt": "…ME” were beautifully marked in currants. “Well, I'll eat it,” said Alice, “and if it makes me grow larger, I can reach the key; and if it makes me grow smaller, I can creep under the door; s…"
+    },
+    {
+      "text": "mind",
+      "value": 11,
+      "category": "Story language",
+      "excerpt": "…hought Alice “without pictures or conversations?” So she was considering in her own mind (as well as she could, for the hot day made her feel very sleepy and stupid), whether the pleasure…"
+    },
+    {
+      "text": "minutes",
+      "value": 11,
+      "category": "Story language",
+      "excerpt": "…hrough the little door into that lovely garden. First, however, she waited for a few minutes to see if she was going to shrink any further: she felt a little nervous about this; “for it might…"
+    },
+    {
+      "text": "nearly",
+      "value": 11,
+      "category": "Story language",
+      "excerpt": "…gain.” She got up and went to the table to measure herself by it, and found that, as nearly as she could guess, she was now about two feet high, and was going on shrinking rapidly: she soon f…"
+    },
+    {
+      "text": "pig",
+      "value": 11,
+      "category": "Characters",
+      "excerpt": "…ear the house till she had brought herself down to nine inches high. CHAPTER VI. Pig and Pepper For a minute or two she stood looking at the house, and wondering what to do next, whe…"
+    },
+    {
+      "text": "pool",
+      "value": 11,
+      "category": "Places & objects",
+      "excerpt": "…* * * * * * * * * * CHAPTER II. The Pool of Tears “Curiouser and curiouser!” cried Alice (she was so much surprised, that for the moment s…"
+    },
+    {
+      "text": "read",
+      "value": 11,
+      "category": "Story language",
+      "excerpt": "…look first,” she said, “and see whether it's marked ‘poison' or not”; for she had read several nice little histories about children who had got burnt, and eaten up by wild beasts and oth…"
+    },
+    {
+      "text": "tears",
+      "value": 11,
+      "category": "Places & objects",
+      "excerpt": "…very seldom followed it), and sometimes she scolded herself so severely as to bring tears into her eyes; and once she remembered trying to box her own ears for having cheated herself in a g…"
+    },
+    {
+      "text": "thinking",
+      "value": 11,
+      "category": "Story language",
+      "excerpt": "…xt question is, Who in the world am I? Ah, that's the great puzzle!” And she began thinking over all the children she knew that were of the same age as herself, to see if she could have been…"
+    },
+    {
+      "text": "though",
+      "value": 11,
+      "category": "Story language",
+      "excerpt": "…, Alice had learnt several things of this sort in her lessons in the schoolroom, and though this was not a very good opportunity for showing off her knowledge, as there was no one to listen…"
+    },
+    {
+      "text": "turn",
+      "value": 11,
+      "category": "Story language",
+      "excerpt": "…lar. “Well, perhaps you haven't found it so yet,” said Alice; “but when you have to turn into a chrysalis—you will some day, you know—and then after that into a butterfly, I should think y…"
+    },
+    {
+      "text": "waited",
+      "value": 11,
+      "category": "Story language",
+      "excerpt": "…size for going through the little door into that lovely garden. First, however, she waited for a few minutes to see if she was going to shrink any further: she felt a little nervous about th…"
+    },
+    {
+      "text": "whether",
+      "value": 11,
+      "category": "Story language",
+      "excerpt": "…n mind (as well as she could, for the hot day made her feel very sleepy and stupid), whether the pleasure of making a daisy-chain would be worth the trouble of getting up and picking the daisi…"
+    },
+    {
+      "text": "birds",
+      "value": 10,
+      "category": "Story language",
+      "excerpt": "…and dogs.” It was high time to go, for the pool was getting quite crowded with the birds and animals that had fallen into it: there were a Duck and a Dodo, a Lory and an Eaglet, and severa…"
+    },
+    {
+      "text": "bottle",
+      "value": 10,
+      "category": "Places & objects",
+      "excerpt": "…a book of rules for shutting people up like telescopes: this time she found a little bottle on it, (“which certainly was not here before,” said Alice,) and round the neck of the bottle was a…"
+    },
+    {
+      "text": "box",
+      "value": 10,
+      "category": "Story language",
+      "excerpt": "…rself so severely as to bring tears into her eyes; and once she remembered trying to box her own ears for having cheated herself in a game of croquet she was playing against herself, for t…"
+    },
+    {
+      "text": "children",
+      "value": 10,
+      "category": "Story language",
+      "excerpt": "…it's marked ‘poison' or not”; for she had read several nice little histories about children who had got burnt, and eaten up by wild beasts and other unpleasant things, all because they would…"
+    },
+    {
+      "text": "creatures",
+      "value": 10,
+      "category": "Story language",
+      "excerpt": "…to it: there were a Duck and a Dodo, a Lory and an Eaglet, and several other curious creatures. Alice led the way, and the whole party swam to the shore. CHAPTER III. A Caucus-Race and a Lon…"
+    },
+    {
+      "text": "either",
+      "value": 10,
+      "category": "Story language",
+      "excerpt": "…er feet, for it flashed across her mind that she had never before seen a rabbit with either a waistcoat-pocket, or a watch to take out of it, and burning with curiosity, she ran across the fi…"
+    },
+    {
+      "text": "explain",
+      "value": 10,
+      "category": "Story language",
+      "excerpt": "…no one else seemed inclined to say anything. “Why,” said the Dodo, “the best way to explain it is to do it.” (And, as you might like to try the thing yourself, some winter day, I will tell yo…"
+    },
+    {
+      "text": "fan",
+      "value": 10,
+      "category": "Places & objects",
+      "excerpt": "…turning, splendidly dressed, with a pair of white kid gloves in one hand and a large fan in the other: he came trotting along in a great hurry, muttering to himself as he came, “Oh! the Du…"
+    },
+    {
+      "text": "foot",
+      "value": 10,
+      "category": "Places & objects",
+      "excerpt": "…esents to one's own feet! And how odd the directions will look! Alice's Right Foot, Esq., Hearthrug, near the Fender, (with Alice's love). Oh dear, what nonsense I'm talking…"
+    },
+    {
+      "text": "glass",
+      "value": 10,
+      "category": "Story language",
+      "excerpt": "…et out again. Suddenly she came upon a little three-legged table, all made of solid glass; there was nothing on it except a tiny golden key, and Alice's first thought was that it might belo…"
+    },
+    {
+      "text": "heads",
+      "value": 10,
+      "category": "Places & objects",
+      "excerpt": "…h the earth! How funny it'll seem to come out among the people that walk with their heads downward! The Antipathies, I think—” (she was rather glad there was no one listening, this time,…"
+    },
+    {
+      "text": "hold",
+      "value": 10,
+      "category": "Story language",
+      "excerpt": "…es their friends had taught them: such as, that a red-hot poker will burn you if you hold it too long; and that if you cut your finger very deeply with a knife, it usually bleeds; and she…"
+    },
+    {
+      "text": "lessons",
+      "value": 10,
+      "category": "Story language",
+      "excerpt": "…s down, I think—” (for, you see, Alice had learnt several things of this sort in her lessons in the schoolroom, and though this was not a very good opportunity for showing off her knowledge,…"
+    },
+    {
+      "text": "mean",
+      "value": 10,
+      "category": "Story language",
+      "excerpt": "…e, getting up and walking away. “You insult me by talking such nonsense!” “I didn't mean it!” pleaded poor Alice. “But you're so easily offended, you know!” The Mouse only growled in repl…"
+    },
+    {
+      "text": "mine",
+      "value": 10,
+      "category": "Story language",
+      "excerpt": "…em. “I'm sure I'm not Ada,” she said, “for her hair goes in such long ringlets, and mine doesn't go in ringlets at all; and I'm sure I can't be Mabel, for I know all sorts of things, and s…"
+    },
+    {
+      "text": "mouth",
+      "value": 10,
+      "category": "Story language",
+      "excerpt": "…till at last it sat down a good way off, panting, with its tongue hanging out of its mouth, and its great eyes half shut. This seemed to Alice a good opportunity for making her escape; so s…"
+    },
+    {
+      "text": "name",
+      "value": 10,
+      "category": "Story language",
+      "excerpt": "…e, as it didn't sound at all the right word) “—but I shall have to ask them what the name of the country is, you know. Please, Ma'am, is this New Zealand or Australia?” (and she tried to cu…"
+    },
+    {
+      "text": "offended",
+      "value": 10,
+      "category": "Story language",
+      "excerpt": "…r this time the Mouse was bristling all over, and she felt certain it must be really offended. “We won't talk about her any more if you'd rather not.” “We indeed!” cried the Mouse, who was tre…"
+    },
+    {
+      "text": "opened",
+      "value": 10,
+      "category": "Story language",
+      "excerpt": "…tried the little golden key in the lock, and to her great delight it fitted! Alice opened the door and found that it led into a small passage, not much larger than a rat-hole: she knelt dow…"
+    },
+    {
+      "text": "party",
+      "value": 10,
+      "category": "Story language",
+      "excerpt": "…and an Eaglet, and several other curious creatures. Alice led the way, and the whole party swam to the shore. CHAPTER III. A Caucus-Race and a Long Tale They were indeed a queer-lookin…"
+    },
+    {
+      "text": "remark",
+      "value": 10,
+      "category": "Story language",
+      "excerpt": "…e one crazy!” The Footman seemed to think this a good opportunity for repeating his remark, with variations. “I shall sit here,” he said, “on and off, for days and days.” “But what am I t…"
+    },
+    {
+      "text": "remarked",
+      "value": 10,
+      "category": "Story language",
+      "excerpt": "…uestions.—How am I to get in?” she repeated, aloud. “I shall sit here,” the Footman remarked, “till tomorrow—” At this moment the door of the house opened, and a large plate came skimming out…"
+    },
+    {
+      "text": "repeated",
+      "value": 10,
+      "category": "Story language",
+      "excerpt": "…m not a serpent!” said Alice indignantly. “Let me alone!” “Serpent, I say again!” repeated the Pigeon, but in a more subdued tone, and added with a kind of sob, “I've tried every way, and no…"
+    },
+    {
+      "text": "rest",
+      "value": 10,
+      "category": "Story language",
+      "excerpt": "…he position in which you usually see Shakespeare, in the pictures of him), while the rest waited in silence. At last the Dodo said, “Everybody has won, and all must have prizes.” “But wh…"
+    },
+    {
+      "text": "sight",
+      "value": 10,
+      "category": "Story language",
+      "excerpt": "…ark overhead; before her was another long passage, and the White Rabbit was still in sight, hurrying down it. There was not a moment to be lost: away went Alice like the wind, and was just i…"
+    },
+    {
+      "text": "sitting",
+      "value": 10,
+      "category": "Story language",
+      "excerpt": "…CHAPTER I. Down the Rabbit-Hole Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book…"
+    },
+    {
+      "text": "small",
+      "value": 10,
+      "category": "Story language",
+      "excerpt": "…he doors of the hall; but, alas! either the locks were too large, or the key was too small, but at any rate it would not open any of them. However, on the second time round, she came upon a…"
+    },
+    {
+      "text": "soldiers",
+      "value": 10,
+      "category": "Story language",
+      "excerpt": "…d of many footsteps, and Alice looked round, eager to see the Queen. First came ten soldiers carrying clubs; these were all shaped like the three gardeners, oblong and flat, with their hands a…"
+    },
+    {
+      "text": "trial",
+      "value": 10,
+      "category": "Places & objects",
+      "excerpt": "…to law: I will prosecute you.—Come, I'll take no denial; We must have a trial: For really this morning I've nothing to do.' Said the mouse to the cur, ‘Such a trial, de…"
+    },
+    {
+      "text": "walked",
+      "value": 10,
+      "category": "Story language",
+      "excerpt": "…en Alice had been all the way down one side and up the other, trying every door, she walked sadly down the middle, wondering how she was ever to get out again. Suddenly she came upon a littl…"
+    },
+    {
+      "text": "witness",
+      "value": 10,
+      "category": "Story language",
+      "excerpt": "…it hastily interrupted. “There's a great deal to come before that!” “Call the first witness,” said the King; and the White Rabbit blew three blasts on the trumpet, and called out, “First witn…"
+    },
+    {
+      "text": "word",
+      "value": 10,
+      "category": "Story language",
+      "excerpt": "…er glad there was no one listening, this time, as it didn't sound at all the right word) “—but I shall have to ask them what the name of the country is, you know. Please, Ma'am, is this N…"
+    },
+    {
+      "text": "you'd",
+      "value": 10,
+      "category": "Story language",
+      "excerpt": "…ne: “don't be angry about it. And yet I wish I could show you our cat Dinah: I think you'd take a fancy to cats if you could only see her. She is such a dear quiet thing,” Alice went on, hal…"
+    },
+    {
+      "text": "against",
+      "value": 9,
+      "category": "Story language",
+      "excerpt": "…to box her own ears for having cheated herself in a game of croquet she was playing against herself, for this curious child was very fond of pretending to be two people. “But it's no use now,…"
+    },
+    {
+      "text": "angrily",
+      "value": 9,
+      "category": "Story language",
+      "excerpt": "…d got to the fifth bend, I think?” “I had not!” cried the Mouse, sharply and very angrily. “A knot!” said Alice, always ready to make herself useful, and looking anxiously about her. “Oh,…"
+    },
+    {
+      "text": "answer",
+      "value": 9,
+      "category": "Story language",
+      "excerpt": "…Do cats eat bats?” and sometimes, “Do bats eat cats?” for, you see, as she couldn't answer either question, it didn't much matter which way she put it. She felt that she was dozing off, and…"
+    },
+    {
+      "text": "believe",
+      "value": 9,
+      "category": "Story language",
+      "excerpt": "…aglet. “I don't know the meaning of half those long words, and, what's more, I don't believe you do either!” And the Eaglet bent down its head to hide a smile: some of the other birds tittered…"
+    },
+    {
+      "text": "butter",
+      "value": 9,
+      "category": "Places & objects",
+      "excerpt": "…ittle, and then said “The fourth.” “Two days wrong!” sighed the Hatter. “I told you butter wouldn't suit the works!” he added looking angrily at the March Hare. “It was the best butter,”…"
+    },
+    {
+      "text": "call",
+      "value": 9,
+      "category": "Story language",
+      "excerpt": "…ertainly,” said Alice, looking down with wonder at the Mouse's tail; “but why do you call it sad?” And she kept on puzzling about it while the Mouse was speaking, so that her idea of the ta…"
+    },
+    {
+      "text": "coming",
+      "value": 9,
+      "category": "Story language",
+      "excerpt": "…at was going to happen next. First, she tried to look down and make out what she was coming to, but it was too dark to see anything; then she looked at the sides of the well, and noticed that…"
+    },
+    {
+      "text": "continued",
+      "value": 9,
+      "category": "Story language",
+      "excerpt": "…oderate. But the insolence of his Normans—' How are you getting on now, my dear?” it continued, turning to Alice as it spoke. “As wet as ever,” said Alice in a melancholy tone: “it doesn't seem…"
+    },
+    {
+      "text": "conversation",
+      "value": 9,
+      "category": "Story language",
+      "excerpt": "…ame again!” “I won't indeed!” said Alice, in a great hurry to change the subject of conversation. “Are you—are you fond—of—of dogs?” The Mouse did not answer, so Alice went on eagerly: “There is s…"
+    },
+    {
+      "text": "croquet",
+      "value": 9,
+      "category": "Places & objects",
+      "excerpt": "…ce she remembered trying to box her own ears for having cheated herself in a game of croquet she was playing against herself, for this curious child was very fond of pretending to be two peopl…"
+    },
+    {
+      "text": "different",
+      "value": 9,
+      "category": "Story language",
+      "excerpt": "…the same when I got up this morning? I almost think I can remember feeling a little different. But if I'm not the same, the next question is, Who in the world am I? Ah, that's the great puzzl…"
+    },
+    {
+      "text": "hall",
+      "value": 9,
+      "category": "Story language",
+      "excerpt": "…he corner, but the Rabbit was no longer to be seen: she found herself in a long, low hall, which was lit up by a row of lamps hanging from the roof. There were doors all round the hall, bu…"
+    },
+    {
+      "text": "help",
+      "value": 9,
+      "category": "Story language",
+      "excerpt": "…savage if I've kept her waiting!” Alice felt so desperate that she was ready to ask help of any one; so, when the Rabbit came near her, she began, in a low, timid voice, “If you please, si…"
+    },
+    {
+      "text": "important",
+      "value": 9,
+      "category": "Story language",
+      "excerpt": "…d catch a bad cold if she did not get dry very soon. “Ahem!” said the Mouse with an important air, “are you all ready? This is the driest thing I know. Silence all round, if you please! ‘Willia…"
+    },
+    {
+      "text": "interrupted",
+      "value": 9,
+      "category": "Story language",
+      "excerpt": "…ning again?” Alice ventured to ask. “Suppose we change the subject,” the March Hare interrupted, yawning. “I'm getting tired of this. I vote the young lady tells us a story.” “I'm afraid I don't…"
+    },
+    {
+      "text": "join",
+      "value": 9,
+      "category": "Story language",
+      "excerpt": "…sters and the turtles all advance! They are waiting on the shingle—will you come and join the dance? Will you, won't you, will you, won't you, will you join the dance? Will you, won't you,…"
+    },
+    {
+      "text": "key",
+      "value": 9,
+      "category": "Places & objects",
+      "excerpt": "…-legged table, all made of solid glass; there was nothing on it except a tiny golden key, and Alice's first thought was that it might belong to one of the doors of the hall; but, alas! eit…"
+    },
+    {
+      "text": "knave",
+      "value": 9,
+      "category": "Characters",
+      "excerpt": "…ing at everything that was said, and went by without noticing her. Then followed the Knave of Hearts, carrying the King's crown on a crimson velvet cushion; and, last of all this grand proce…"
+    },
+    {
+      "text": "least",
+      "value": 9,
+      "category": "Story language",
+      "excerpt": "…I grow up, I'll write one—but I'm grown up now,” she added in a sorrowful tone; “at least there's no room to grow up any more here.” “But then,” thought Alice, “shall I never get any o…"
+    },
+    {
+      "text": "leave",
+      "value": 9,
+      "category": "Story language",
+      "excerpt": "…no use in crying like that!” said Alice to herself, rather sharply; “I advise you to leave off this minute!” She generally gave herself very good advice, (though she very seldom followed it)…"
+    },
+    {
+      "text": "matter",
+      "value": 9,
+      "category": "Story language",
+      "excerpt": "…bats eat cats?” for, you see, as she couldn't answer either question, it didn't much matter which way she put it. She felt that she was dozing off, and had just begun to dream that she was wa…"
+    },
+    {
+      "text": "puzzled",
+      "value": 9,
+      "category": "Story language",
+      "excerpt": "…ing to her; “but those serpents! There's no pleasing them!” Alice was more and more puzzled, but she thought there was no use in saying anything more till the Pigeon had finished. “As if it…"
+    },
+    {
+      "text": "rate",
+      "value": 9,
+      "category": "Story language",
+      "excerpt": "…ll; but, alas! either the locks were too large, or the key was too small, but at any rate it would not open any of them. However, on the second time round, she came upon a low curtain she h…"
+    },
+    {
+      "text": "reason",
+      "value": 9,
+      "category": "Story language",
+      "excerpt": "…orgetting that she was now about a thousand times as large as the Rabbit, and had no reason to be afraid of it. Presently the Rabbit came up to the door, and tried to open it; but, as the do…"
+    },
+    {
+      "text": "serpent",
+      "value": 9,
+      "category": "Story language",
+      "excerpt": "…was delighted to find that her neck would bend about easily in any direction, like a serpent. She had just succeeded in curving it down into a graceful zigzag, and was going to dive in among t…"
+    },
+    {
+      "text": "shook",
+      "value": 9,
+      "category": "Story language",
+      "excerpt": "…after it; and the others all joined in chorus, “Yes, please do!” but the Mouse only shook its head impatiently, and walked a little quicker. “What a pity it wouldn't stay!” sighed the Lory…"
+    },
+    {
+      "text": "shouted",
+      "value": 9,
+      "category": "Story language",
+      "excerpt": "…ome of them hit her in the face. “I'll put a stop to this,” she said to herself, and shouted out, “You'd better not do that again!” which produced another dead silence. Alice noticed with som…"
+    },
+    {
+      "text": "sister",
+      "value": 9,
+      "category": "Characters",
+      "excerpt": "…ER I. Down the Rabbit-Hole Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do: once or twice she had peeped into the book her sister was…"
+    },
+    {
+      "text": "tail",
+      "value": 9,
+      "category": "Story language",
+      "excerpt": "…he same as they used to do:— “How doth the little crocodile Improve his shining tail, And pour the waters of the Nile On every golden scale! “How cheerfully he seems to grin,…"
+    },
+    {
+      "text": "timidly",
+      "value": 9,
+      "category": "Story language",
+      "excerpt": "…not said right,” said the Caterpillar. “Not quite right, I'm afraid,” said Alice, timidly; “some of the words have got altered.” “It is wrong from beginning to end,” said the Caterpillar d…"
+    },
+    {
+      "text": "together",
+      "value": 9,
+      "category": "Story language",
+      "excerpt": "…ame a rumbling of little cartwheels, and the sound of a good many voices all talking together: she made out the words: “Where's the other ladder?—Why, I hadn't to bring but one; Bill's got the…"
+    },
+    {
+      "text": "tree",
+      "value": 9,
+      "category": "Places & objects",
+      "excerpt": "…aid Alice, who was beginning to see its meaning. “And just as I'd taken the highest tree in the wood,” continued the Pigeon, raising its voice to a shriek, “and just as I was thinking I sh…"
+    },
+    {
+      "text": "waiting",
+      "value": 9,
+      "category": "Story language",
+      "excerpt": "…nk that very few things indeed were really impossible. There seemed to be no use in waiting by the little door, so she went back to the table, half hoping she might find another key on it, or…"
+    },
+    {
+      "text": "want",
+      "value": 9,
+      "category": "Story language",
+      "excerpt": "…n;—but I must be kind to them,” thought Alice, “or perhaps they won't walk the way I want to go! Let me see: I'll give them a new pair of boots every Christmas.” And she went on planning t…"
+    },
+    {
+      "text": "appeared",
+      "value": 8,
+      "category": "Story language",
+      "excerpt": "…re giving it something out of a bottle. They all made a rush at Alice the moment she appeared; but she ran off as hard as she could, and soon found herself safe in a thick wood. “The first thi…"
+    },
+    {
+      "text": "asleep",
+      "value": 8,
+      "category": "Story language",
+      "excerpt": "…Hare and the Hatter were having tea at it: a Dormouse was sitting between them, fast asleep, and the other two were using it as a cushion, resting their elbows on it, and talking over its hea…"
+    },
+    {
+      "text": "beg",
+      "value": 8,
+      "category": "Story language",
+      "excerpt": "…ve a sudden leap out of the water, and seemed to quiver all over with fright. “Oh, I beg your pardon!” cried Alice hastily, afraid that she had hurt the poor animal's feelings. “I quite fo…"
+    },
+    {
+      "text": "bright",
+      "value": 8,
+      "category": "Story language",
+      "excerpt": "…w. How she longed to get out of that dark hall, and wander about among those beds of bright flowers and those cool fountains, but she could not even get her head through the doorway; “and eve…"
+    },
+    {
+      "text": "changed",
+      "value": 8,
+      "category": "Story language",
+      "excerpt": "…rything is to-day! And yesterday things went on just as usual. I wonder if I've been changed in the night? Let me think: was I the same when I got up this morning? I almost think I can remembe…"
+    },
+    {
+      "text": "distance",
+      "value": 8,
+      "category": "Story language",
+      "excerpt": "…ten to her, still it was good practice to say it over) “—yes, that's about the right distance—but then I wonder what Latitude or Longitude I've got to?” (Alice had no idea what Latitude was, or…"
+    },
+    {
+      "text": "dry",
+      "value": 8,
+      "category": "Story language",
+      "excerpt": "…ver eat a bat?” when suddenly, thump! thump! down she came upon a heap of sticks and dry leaves, and the fall was over. Alice was not a bit hurt, and she jumped up on to her feet in a mom…"
+    },
+    {
+      "text": "eagerly",
+      "value": 8,
+      "category": "Story language",
+      "excerpt": "…ation. “Are you—are you fond—of—of dogs?” The Mouse did not answer, so Alice went on eagerly: “There is such a nice little dog near our house I should like to show you! A little bright-eyed te…"
+    },
+    {
+      "text": "everybody",
+      "value": 8,
+      "category": "Story language",
+      "excerpt": "…in the pictures of him), while the rest waited in silence. At last the Dodo said, “Everybody has won, and all must have prizes.” “But who is to give the prizes?” quite a chorus of voices ask…"
+    },
+    {
+      "text": "exactly",
+      "value": 8,
+      "category": "Story language",
+      "excerpt": "…kily the salt water had not got into it), and handed them round as prizes. There was exactly one a-piece, all round. “But she must have a prize herself, you know,” said the Mouse. “Of course…"
+    },
+    {
+      "text": "fact",
+      "value": 8,
+      "category": "Story language",
+      "excerpt": "…arked “poison,” so Alice ventured to taste it, and finding it very nice, (it had, in fact, a sort of mixed flavour of cherry-tart, custard, pine-apple, roast turkey, toffee, and hot buttere…"
+    },
+    {
+      "text": "feel",
+      "value": 8,
+      "category": "Story language",
+      "excerpt": "…she was considering in her own mind (as well as she could, for the hot day made her feel very sleepy and stupid), whether the pleasure of making a daisy-chain would be worth the trouble of…"
+    },
+    {
+      "text": "fish",
+      "value": 8,
+      "category": "Story language",
+      "excerpt": "…e he was in livery: otherwise, judging by his face only, she would have called him a fish)—and rapped loudly at the door with his knuckles. It was opened by another footman in livery, with…"
+    },
+    {
+      "text": "five",
+      "value": 8,
+      "category": "Story language",
+      "excerpt": "…it all is! I'll try if I know all the things I used to know. Let me see: four times five is twelve, and four times six is thirteen, and four times seven is—oh dear! I shall never get to tw…"
+    },
+    {
+      "text": "followed",
+      "value": 8,
+      "category": "Story language",
+      "excerpt": "…f this minute!” She generally gave herself very good advice, (though she very seldom followed it), and sometimes she scolded herself so severely as to bring tears into her eyes; and once she re…"
+    },
+    {
+      "text": "four",
+      "value": 8,
+      "category": "Story language",
+      "excerpt": "…“I must be getting somewhere near the centre of the earth. Let me see: that would be four thousand miles down, I think—” (for, you see, Alice had learnt several things of this sort in her l…"
+    },
+    {
+      "text": "gardeners",
+      "value": 8,
+      "category": "Story language",
+      "excerpt": "…the entrance of the garden: the roses growing on it were white, but there were three gardeners at it, busily painting them red. Alice thought this a very curious thing, and she went nearer to wa…"
+    },
+    {
+      "text": "ground",
+      "value": 8,
+      "category": "Places & objects",
+      "excerpt": "…when she next peeped out the Fish-Footman was gone, and the other was sitting on the ground near the door, staring stupidly up into the sky. Alice went timidly up to the door, and knocked.…"
+    },
+    {
+      "text": "hadn't",
+      "value": 8,
+      "category": "Story language",
+      "excerpt": "…was in the pool of tears which she had wept when she was nine feet high. “I wish I hadn't cried so much!” said Alice, as she swam about, trying to find her way out. “I shall be punished for…"
+    },
+    {
+      "text": "happen",
+      "value": 8,
+      "category": "Story language",
+      "excerpt": "…ad plenty of time as she went down to look about her and to wonder what was going to happen next. First, she tried to look down and make out what she was coming to, but it was too dark to see…"
+    },
+    {
+      "text": "hard",
+      "value": 8,
+      "category": "Story language",
+      "excerpt": "…ly, dropped the white kid gloves and the fan, and skurried away into the darkness as hard as he could go. Alice took up the fan and gloves, and, as the hall was very hot, she kept fanning…"
+    },
+    {
+      "text": "haven't",
+      "value": 8,
+      "category": "Story language",
+      "excerpt": "…in a day is very confusing.” “It isn't,” said the Caterpillar. “Well, perhaps you haven't found it so yet,” said Alice; “but when you have to turn into a chrysalis—you will some day, you kn…"
+    },
+    {
+      "text": "hearts",
+      "value": 8,
+      "category": "Story language",
+      "excerpt": "…is tea spoon at the March Hare,) “—it was at the great concert given by the Queen of Hearts, and I had to sing ‘Twinkle, twinkle, little bat! How I wonder what you're at!' You know the son…"
+    },
+    {
+      "text": "it'll",
+      "value": 8,
+      "category": "Story language",
+      "excerpt": "…ntly she began again. “I wonder if I shall fall right through the earth! How funny it'll seem to come out among the people that walk with their heads downward! The Antipathies, I think—” (…"
+    },
+    {
+      "text": "live",
+      "value": 8,
+      "category": "Story language",
+      "excerpt": "…h tears again as she went on, “I must be Mabel after all, and I shall have to go and live in that poky little house, and have next to no toys to play with, and oh! ever so many lessons to l…"
+    },
+    {
+      "text": "lying",
+      "value": 8,
+      "category": "Story language",
+      "excerpt": "…to make one respectable person!” Soon her eye fell on a little glass box that was lying under the table: she opened it, and found in it a very small cake, on which the words “EAT ME” were…"
+    },
+    {
+      "text": "making",
+      "value": 8,
+      "category": "Story language",
+      "excerpt": "…ould, for the hot day made her feel very sleepy and stupid), whether the pleasure of making a daisy-chain would be worth the trouble of getting up and picking the daisies, when suddenly a Whi…"
+    },
+    {
+      "text": "meaning",
+      "value": 8,
+      "category": "Story language",
+      "excerpt": "…on of more energetic remedies—” “Speak English!” said the Eaglet. “I don't know the meaning of half those long words, and, what's more, I don't believe you do either!” And the Eaglet bent dow…"
+    }
+  ]
+}

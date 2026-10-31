@@ -2859,8 +2859,14 @@ async function createChartHandler(
       (suggestion) => metadataForComponent(suggestion.component).renderable
     )
     .slice(0, 8)
+  // Prepared readers and composite charts deliberately have no flat-data
+  // recommendation. Honor an explicit authored config, then run the same
+  // diagnosis, render and evidence gates as a recommendation.
+  const authored = args.component && args.props && !getCapability(args.component) && metadataForComponent(args.component).renderable
+    ? { component: args.component, props: args.props, selection: "explicit" as const }
+    : undefined
   const selected = args.component
-    ? suggestions.find((suggestion) => suggestion.component === args.component)
+    ? suggestions.find((suggestion) => suggestion.component === args.component) ?? authored
     : suggestions[0]
   if (!selected) {
     return {
@@ -3902,12 +3908,12 @@ function createServer(
             .string()
             .optional()
             .describe(
-              "Optional chart preference; the fit-ranked result remains authoritative."
+              "Optional chart preference. Fit ranking applies to recommended charts; prepared readers and composites excluded from ranking require complete authored props."
             ),
           props: unknownRecordInput
             .optional()
             .describe(
-              "Optional props to merge over the selected chart recipe."
+              "Optional overrides, or complete props for a prepared reader or composite (for example WordCloud data plus layout). Validation and render evidence remain required."
             ),
           theme: z.record(z.string(), z.string()).optional()
         },

@@ -44,7 +44,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/xy",
-    "kb": 187,
+    "kb": 188,
     "blurb": "LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts"
   },
   {
@@ -83,13 +83,18 @@ const bundleSizeRows = Object.freeze([
     "blurb": "ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap"
   },
   {
+    "importPath": "semiotic/wordcloud",
+    "kb": 39,
+    "blurb": "WordCloud, shaped text placement, and portable layouts"
+  },
+  {
     "importPath": "semiotic/realtime",
-    "kb": 222,
+    "kb": 223,
     "blurb": "RealtimeLineChart, RealtimeHistogram, + 4 streaming charts"
   },
   {
     "importPath": "semiotic/realtime/core",
-    "kb": 220,
+    "kb": 221,
     "blurb": "Streaming chart types, HOCs, and buffer helpers"
   },
   {
@@ -99,17 +104,17 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/server",
-    "kb": 284,
+    "kb": 287,
     "blurb": "renderChart, renderDashboard, renderToImage, renderToAnimatedGif"
   },
   {
     "importPath": "semiotic/server/node",
-    "kb": 284,
+    "kb": 287,
     "blurb": "renderChart, renderDashboard, renderToImage, renderToAnimatedGif"
   },
   {
     "importPath": "semiotic/server/edge",
-    "kb": 289,
+    "kb": 293,
     "blurb": "renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard"
   },
   {
@@ -119,7 +124,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/utils/core",
-    "kb": 102,
+    "kb": 103,
     "blurb": "Pure theme helpers, numeric/accessibility audits, and serialization"
   },
   {
@@ -164,7 +169,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/value",
-    "kb": 6,
+    "kb": 7,
     "blurb": "BigNumber — focal-value KPI / scorecard (SingleValueFrame POC)"
   },
   {
@@ -184,7 +189,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/ai",
-    "kb": 680,
+    "kb": 694,
     "blurb": "All schema-backed charts + validation — optimized for LLM code generation"
   },
   {
@@ -209,7 +214,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic",
-    "kb": 437,
+    "kb": 438,
     "blurb": "Full chart API and shared utilities"
   }
 ])

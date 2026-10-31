@@ -30,7 +30,7 @@ describe("Semiotic architecture example data", () => {
       SEMIOTIC_ARCHITECTURE_NODES.filter((node) => node.layer === "frame").map((node) => node.id),
     )
     expect(frames).toEqual(
-      new Set(["frame-xy", "frame-ordinal", "frame-network", "frame-geo", "frame-physics"]),
+      new Set(["frame-xy", "frame-ordinal", "frame-network", "frame-geo", "frame-physics", "frame-wordcloud"]),
     )
 
     const profilesById = new Map(SEMIOTIC_EXAMPLE_PROFILES.map((profile) => [profile.id, profile]))
@@ -113,7 +113,7 @@ describe("Semiotic architecture example data", () => {
       const highlighted = architectureHighlight(profile)
       expect(highlighted).toContain("semiotic-core")
       expect(highlighted).toContain("root-data")
-      expect(highlighted).toContain("root-pipelines")
+      expect(highlighted).toContain(profile.id === "word-cloud" ? "root-preparation" : "root-pipelines")
       expect(highlighted).toContain("root-scene")
       expect(highlighted.size).toBeGreaterThan(profile.uses.length)
     }

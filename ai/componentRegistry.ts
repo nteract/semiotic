@@ -9,6 +9,7 @@ import { XY_COMPONENT_REGISTRY } from "./componentRegistryXY.generated"
 import { NETWORK_COMPONENT_REGISTRY } from "./componentRegistryNetwork.generated"
 import { PHYSICS_COMPONENT_REGISTRY } from "./componentRegistryPhysics.generated"
 
+import { WordCloud } from "semiotic/wordcloud"
 import { BigNumber, ChartRecipe } from "semiotic/ai"
 
 import {
@@ -20,11 +21,12 @@ import {
 
 export interface RegistryEntry {
   component: ComponentType<any>
-  category: "xy" | "ordinal" | "network" | "geo" | "physics" | "value"
+  category: "xy" | "ordinal" | "network" | "geo" | "physics" | "value" | "wordcloud"
   recipeId?: string
 }
 
 export const COMPONENT_REGISTRY: Record<string, RegistryEntry> = /* @__PURE__ */ Object.assign(Object.create(null), {
+  WordCloud: { component: WordCloud, category: "wordcloud" },
   ...XY_COMPONENT_REGISTRY,
   ...REALTIME_COMPONENT_REGISTRY,
 

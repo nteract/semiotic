@@ -164,7 +164,7 @@ export default function SemioticArchitectureExamplePage() {
         <div className="architecture-explanation-grid">
           <p>
             The upper network diagram fans from Visible Semiotic into XY, Ordinal, Network, Geo,
-            and Physics frames, then into exact HOCs and grouped chart families. Shared settings
+            Physics, and Word Cloud frames, then into exact HOCs and grouped chart families. Shared settings
             and composition tools sit on the two gold-star semicircles that frame this public
             surface.
           </p>
@@ -732,6 +732,8 @@ function positionArchitecture(rawNodes, plot) {
 }
 
 function nodeTarget(node, width, rootIndex) {
+  if (node.id === "frame-wordcloud") return { x: width * 0.16, y: 555 }
+  if (node.id === "hoc-wordcloud") return { x: width * 0.16 - 36, y: 505 }
   const clusterCenter = {
     xy: width * 0.16,
     ordinal: width * 0.34,

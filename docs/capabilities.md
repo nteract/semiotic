@@ -4,7 +4,7 @@
 > edit by hand — re-run `npm run docs:capabilities` after adding a
 > chart and commit the output.
 
-Last regen: 2026-09-17 · 62 charts indexed.
+Last regen: 2026-10-31 · 63 charts indexed.
 
 **Column key**
 
@@ -113,12 +113,18 @@ Last regen: 2026-09-17 · 62 charts indexed.
 |---|:-:|:-:|:-:|:-:|:-:|---|---|---|
 | **BigNumber** | — | — | — | ✓ | ✓ | threshold | synthetic | `threshold-zones` `value-only` `comparison` `target` `staleness` `intl-format` `chart-slot` `trend-slot` `native-value-svg` |
 
+## Word Cloud
+
+| Chart | Legend | Sel | Hover | Push | SSR | Color | Layout | Features |
+|---|:-:|:-:|:-:|:-:|:-:|---|---|---|
+| **WordCloud** | — | ✓ | ✓ | — | ✓ | categorical | plugin | `native-text` `native-keyboard-navigation` `seeded-placement` `silhouette-mask` `prepared-layout-ssr` `omission-reporting` `controlled-prop-repacking` |
+
 ---
 
 ## Aggregate counts
 
-- 54/62 charts render a top-level legend.
-- 47/62 charts expose a push API.
-- 62/62 charts SSR via the `renderChart()` registry.
-- 5/62 charts use the customLayout escape hatch.
-- 11/62 charts use synthetic (no-layout) construction.
+- 54/63 charts render a top-level legend.
+- 47/63 charts expose a push API.
+- 63/63 charts SSR via the `renderChart()` registry.
+- 5/63 charts use the customLayout escape hatch.
+- 11/63 charts use synthetic (no-layout) construction.

@@ -132,6 +132,7 @@ export interface SceneAccessibilityMetadata {
 }
 
 export type SceneNode =
+  | import("./textScene").TextSceneNode
   | LineSceneNode
   | AreaSceneNode
   | PointSceneNode

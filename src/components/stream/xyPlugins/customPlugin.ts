@@ -9,6 +9,8 @@ import { candlestickCanvasRenderer } from "../renderers/candlestickCanvasRendere
 import { swarmCanvasRenderer } from "../renderers/swarmCanvasRenderer"
 import { waterfallCanvasRenderer } from "../renderers/waterfallCanvasRenderer"
 import type { XYChartPlugin } from "./registry"
+import { renderCanvasText } from "../textScene"
+import type { TextSceneNode } from "../textScene"
 
 /**
  * Painter set for customLayout. Scene geometry comes from the user callback;
@@ -18,6 +20,7 @@ export const customXYPlugin: XYChartPlugin = {
   chartType: "custom",
   buildScene: () => [],
   canvasRenderers: [
+    (ctx, nodes) => renderCanvasText(ctx, nodes.filter((node): node is TextSceneNode => node.type === "text")),
     areaCanvasRenderer,
     barCanvasRenderer,
     heatmapCanvasRenderer,

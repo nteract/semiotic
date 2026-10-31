@@ -47,7 +47,7 @@ export function applyPulse(
   })()
 
   for (const node of nodes) {
-    if (node.type === "line") continue
+    if (node.type === "line" || node.type === "text") continue
 
     // Area nodes: datum is an array of data points for the group.
     // Pulse the area when any constituent point was recently inserted.

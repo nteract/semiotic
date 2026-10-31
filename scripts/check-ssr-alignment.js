@@ -43,7 +43,7 @@ const CHART_SHARED_DIR = path.join(ROOT, "src/components/charts/shared")
 
 // ── 1. Discover HOC chart names ────────────────────────────────────────
 
-const HOC_DIRS = ["xy", "ordinal", "network", "geo", "physics", "custom", "realtime"]
+const HOC_DIRS = ["xy", "ordinal", "network", "geo", "physics", "custom", "realtime", "wordcloud"]
 const hocsOnDisk = new Set()
 const namedHocCandidates = new Set()
 
@@ -290,7 +290,7 @@ const PARITY_EXCEPTIONS = {
 }
 
 /** Type-files that hold scene-node interfaces, indexed by unqualified file name. */
-const TYPES_FILES = Object.values(FRAMES).map(f => f.typesFile)
+const TYPES_FILES = [...Object.values(FRAMES).map(f => f.typesFile), "textScene.tsx"]
 
 /**
  * Build a global map of `interfaceName → type-discriminant string` by
@@ -304,7 +304,7 @@ function buildInterfaceTypeMap() {
     const src = fs.readFileSync(path.join(STREAM_DIR, file), "utf8")
     // Match `export interface NAME { ... type: "X" ... }` non-greedily on
     // the body — the [^}]* prevents bleeding into the next interface.
-    const re = /export\s+interface\s+(\w+(?:Node|Edge))\s*\{[^}]*?\btype:\s*"(\w+)"/gs
+    const re = /export\s+interface\s+(\w+(?:Node|Edge))(?:\s+extends\s+[^{]+)?\s*\{[^}]*?\btype:\s*"(\w+)"/gs
     let m
     while ((m = re.exec(src))) {
       map.set(m[1], m[2])

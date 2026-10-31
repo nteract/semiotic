@@ -184,6 +184,7 @@ function markNavigation(
 ): ChartAccessContractKeyboard["markNavigation"] {
   if (!capabilities) return "unsupported"
   if (
+    capabilities.markNavigation === "built-in" ||
     capabilities.markNavigation === "delegated" ||
     capabilities.markNavigation === "not-applicable"
   ) {

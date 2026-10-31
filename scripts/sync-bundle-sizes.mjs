@@ -78,6 +78,7 @@ const BLURBS = {
   "./network/perspective":
     "Isometric pictograms and an accessible perspective toggle (the prop ships in ./network)",
   "./geo": "ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap",
+  "./wordcloud": "WordCloud, shaped text placement, and portable layouts",
   "./realtime": "RealtimeLineChart, RealtimeHistogram, + 4 streaming charts",
   "./server":
     "renderChart, renderDashboard, renderToImage, renderToAnimatedGif",
@@ -139,6 +140,7 @@ const ORDER = [
   "./network/perspective/core",
   "./vite",
   "./geo",
+  "./wordcloud",
   "./realtime",
   "./realtime/core",
   "./realtime/react",

@@ -45121,6 +45121,323 @@
     {
       "type": "function",
       "function": {
+        "name": "WordCloud",
+        "description": "Shaped word cloud of aggregated positive term weights. Uses deterministic native text placements with omission reporting. Static/MCP rendering requires layout from prepareWordCloudLayout; no server-side raster engine is assumed. Use a ranked chart or table for exact comparisons.",
+        "x-semiotic-import-path": "semiotic/wordcloud",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "array",
+              "description": "Aggregated term rows. Invalid rows, duplicate IDs and nonpositive/nonfinite weights are reported as omissions. No implicit tokenization."
+            },
+            "layout": {
+              "type": "object",
+              "description": "Version-1 portable placements returned by prepareWordCloudLayout. Required for synchronous server/MCP rendering; must match data, dimensions, seed, mask and font options."
+            },
+            "width": {
+              "type": "number",
+              "default": 640,
+              "minimum": 1,
+              "maximum": 2040
+            },
+            "height": {
+              "type": "number",
+              "default": 400,
+              "minimum": 1,
+              "maximum": 2040
+            },
+            "textAccessor": {
+              "type": "string",
+              "default": "text",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "valueAccessor": {
+              "type": "string",
+              "default": "value",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "idAccessor": {
+              "type": "string",
+              "description": "Stable term identity; defaults to normalized text. Duplicate IDs keep the first valid row.",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "fontFamily": {
+              "type": "string",
+              "description": "Load this font before placement; use the same font for SVG/PNG rendering on other hosts.",
+              "default": "sans-serif"
+            },
+            "fontWeight": {
+              "type": [
+                "string",
+                "number"
+              ],
+              "default": "normal"
+            },
+            "fontStyle": {
+              "type": "string",
+              "enum": [
+                "normal",
+                "italic",
+                "oblique"
+              ],
+              "default": "normal"
+            },
+            "fontSizeRange": {
+              "type": "array",
+              "default": [
+                12,
+                64
+              ],
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 1024
+              }
+            },
+            "fontSizeScale": {
+              "type": "string",
+              "enum": [
+                "sqrt",
+                "linear",
+                "log"
+              ],
+              "default": "sqrt"
+            },
+            "rotate": {
+              "type": [
+                "string",
+                "array"
+              ],
+              "description": "horizontal, orthogonal, or explicit angles in degrees. Seed controls angle choice and placement.",
+              "default": "horizontal"
+            },
+            "padding": {
+              "type": "number",
+              "default": 1,
+              "minimum": 0,
+              "maximum": 64
+            },
+            "seed": {
+              "type": "number",
+              "description": "Safe integer seed; repeatability also requires identical fonts and raster environment.",
+              "default": 42
+            },
+            "strategy": {
+              "type": "string",
+              "enum": [
+                "archimedean",
+                "rectangular"
+              ],
+              "default": "archimedean"
+            },
+            "maxWords": {
+              "type": "number",
+              "default": 250,
+              "minimum": 0,
+              "maximum": 10000
+            },
+            "mask": {
+              "type": "object",
+              "description": "SVG path or image-alpha silhouette. Inside mode allows occupied shape pixels; outside mode forbids them. Image URLs must permit CORS.",
+              "oneOf": [
+                {
+                  "type": "object",
+                  "required": [
+                    "type",
+                    "path",
+                    "viewBox"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "type": {
+                      "const": "svgPath"
+                    },
+                    "path": {
+                      "type": "string"
+                    },
+                    "viewBox": {
+                      "type": "array",
+                      "minItems": 4,
+                      "maxItems": 4,
+                      "items": {
+                        "type": "number"
+                      }
+                    },
+                    "fillRule": {
+                      "enum": [
+                        "nonzero",
+                        "evenodd"
+                      ]
+                    },
+                    "mode": {
+                      "enum": [
+                        "inside",
+                        "outside"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "type",
+                    "src"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "type": {
+                      "const": "image"
+                    },
+                    "src": {
+                      "type": "string"
+                    },
+                    "mode": {
+                      "enum": [
+                        "inside",
+                        "outside"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "maskFit": {
+              "type": "string",
+              "enum": [
+                "contain",
+                "cover"
+              ],
+              "default": "contain"
+            },
+            "maskThreshold": {
+              "type": "number",
+              "default": 128,
+              "minimum": 1,
+              "maximum": 255
+            },
+            "margin": {
+              "type": [
+                "object",
+                "number"
+              ],
+              "description": "Explicit outer padding only. Layout dimensions describe the inner rectangle. No axis margins.",
+              "default": 0
+            },
+            "colorBy": {
+              "type": "string",
+              "x-semiotic-runtime-types": [
+                "string",
+                "function"
+              ]
+            },
+            "colorScheme": {
+              "type": [
+                "string",
+                "array",
+                "object"
+              ]
+            },
+            "title": {
+              "type": "string",
+              "description": "Accessible title; does not reserve visible title space."
+            },
+            "description": {
+              "type": "string"
+            },
+            "summary": {
+              "type": "string"
+            },
+            "accessibleTable": {
+              "type": [
+                "boolean",
+                "object"
+              ],
+              "default": true
+            },
+            "annotations": {
+              "type": "array",
+              "description": "Annotation objects to render on the chart. Each must have a `type` field. Position using your data field names (e.g. { type: \"widget\", month: \"Jan\", revenue: 500 }). Supported types: \"widget\" (arbitrary HTML/React content via foreignObject — v3 replacement for htmlAnnotationRules), \"label\" (callout with connector), \"callout\" (circle + label), \"text\" (plain data-anchored label), \"frame-text\" (serializable plot-relative text for endpoints and chart-adjacent chrome), \"y-threshold\" (horizontal reference line), \"x-threshold\" (vertical reference line), \"band\" (shaded y-region), \"x-band\" (shaded x-region), \"enclose\" (circle around points), \"rect-enclose\" (rect around points), \"highlight\" (colored dots on filtered points), \"trend\" (regression line), \"envelope\" (upper/lower bounds), \"anomaly-band\" (mean ± stddev), \"forecast\" (extrapolated trend). Frame-text annotations accept: label or text, position (\"top-left\"|\"top-center\"|\"top-right\"|\"middle-left\"|\"center\"|\"middle-right\"|\"bottom-left\"|\"bottom-center\"|\"bottom-right\"), dx, dy, fill/color, fontSize, fontWeight. Widget annotations accept: content (ReactNode), dx, dy, width, height, anchor (\"fixed\"|\"latest\"|\"sticky\"). Threshold annotations accept: value, label, color, labelColor (label text color; defaults to color), labelBackground, strokeWidth, strokeDasharray. Band annotations accept `y0`/`y1`; x-band annotations accept `x0`/`x1`; either bound may be omitted to extend to the axis extent. Either band may use `color` as its solid-fill alias or `gradient: { stops: [{ offset: 0-1, color, opacity? }], direction?: \"horizontal\"|\"vertical\" }`; y-bands default vertical and x-bands horizontal. Band labels also accept `labelColor`. Enclose annotations accept: coordinates (array of data objects), label, color, padding.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "widget",
+                      "label",
+                      "callout",
+                      "text",
+                      "frame-text",
+                      "bracket",
+                      "y-threshold",
+                      "x-threshold",
+                      "band",
+                      "x-band",
+                      "enclose",
+                      "rect-enclose",
+                      "highlight",
+                      "trend",
+                      "envelope",
+                      "anomaly-band",
+                      "forecast"
+                    ],
+                    "description": "Annotation type"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "renderAs": {
+              "type": "string",
+              "enum": [
+                "canvas",
+                "svg"
+              ],
+              "default": "canvas"
+            },
+            "enableHover": {
+              "type": "boolean",
+              "default": true
+            },
+            "responsiveWidth": {
+              "type": "boolean"
+            },
+            "responsiveHeight": {
+              "type": "boolean"
+            },
+            "chartId": {
+              "type": "string"
+            },
+            "className": {
+              "type": "string"
+            },
+            "maxDevicePixelRatio": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "data"
+          ]
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
         "name": "ParallelCoordinatesRecipe",
         "description": "Parallel Coordinates. The task is to compare whole multivariate profiles, not isolated pairwise projections.",
         "parameters": {

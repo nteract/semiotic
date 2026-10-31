@@ -417,6 +417,7 @@ interface SwimlaneChartProps<TDatum extends Datum = Datum> extends BaseChartProp
 interface SyncedPushDataOptions<T = Datum>
 interface SyncedPushHandle<T = Datum>
 interface TemporalHistogramProps<TDatum extends Datum = Datum> extends Omit<RealtimeHistogramProps<TDatum>, "data" | "windowMode" | "windowSize">
+interface TextSceneNode extends SceneAccessibilityMetadata
 interface ThresholdAlertConfig
 interface ToConfigOptions
 interface ToURLOptions
@@ -3048,6 +3049,26 @@ interface-member SyncedPushHandle::property::pushMany = optional pushMany: ((dat
 interface-member SyncedPushHandle::property::remove = optional remove: ((id: string | string[]) => unknown) | undefined
 interface-member SyncedPushHandle::property::update = optional update: ((id: string, updater: (datum: T) => T) => unknown) | undefined
 interface-member TemporalHistogramProps::property::data = required data: TDatum[]
+interface-member TextSceneNode::property::_targetOpacity = optional _targetOpacity: number | undefined
+interface-member TextSceneNode::property::_transitionKey = optional _transitionKey: string | undefined
+interface-member TextSceneNode::property::datum = required datum: Datum | null
+interface-member TextSceneNode::property::fontFamily = required fontFamily: string
+interface-member TextSceneNode::property::fontSize = required fontSize: number
+interface-member TextSceneNode::property::fontStyle = optional fontStyle: string | undefined
+interface-member TextSceneNode::property::fontWeight = optional fontWeight: number | string | undefined
+interface-member TextSceneNode::property::group = optional group: string | undefined
+interface-member TextSceneNode::property::id = required id: string
+interface-member TextSceneNode::property::interactive = optional interactive: boolean | undefined
+interface-member TextSceneNode::property::rotate = optional rotate: number | undefined
+interface-member TextSceneNode::property::style = required style: Style
+interface-member TextSceneNode::property::text = required text: string
+interface-member TextSceneNode::property::type = required type: "text"
+interface-member TextSceneNode::property::x = required x: number
+interface-member TextSceneNode::property::x0 = required x0: number
+interface-member TextSceneNode::property::x1 = required x1: number
+interface-member TextSceneNode::property::y = required y: number
+interface-member TextSceneNode::property::y0 = required y0: number
+interface-member TextSceneNode::property::y1 = required y1: number
 interface-member ThresholdAlertConfig::property::critical = optional critical: number | undefined
 interface-member ThresholdAlertConfig::property::criticalColor = optional criticalColor: string | undefined
 interface-member ThresholdAlertConfig::property::metric = required metric: (node: RealtimeNode) => number
@@ -3356,7 +3377,7 @@ type RealtimeTemporalHistogramProps<TDatum extends Datum = Datum> = RealtimeHist
 type ResolutionMode = "crossfilter" | "intersect" | "union"
 type ResponsiveOrientation = "landscape" | "portrait"
 type RuntimeMode = "bounded" | "streaming"
-type SceneNode = AreaSceneNode | CandlestickSceneNode | GlyphSceneNode | HeatcellSceneNode | LineSceneNode | PointSceneNode | RectSceneNode | SymbolSceneNode
+type SceneNode = AreaSceneNode | CandlestickSceneNode | GlyphSceneNode | HeatcellSceneNode | LineSceneNode | PointSceneNode | RectSceneNode | SymbolSceneNode | import("./textScene").TextSceneNode
 type SemanticGradientInput = GradientConfig | SemanticGradientStopInput[]
 type SemanticGradientStop = SemanticGradientStopInput
 type SerializedFieldSelection = {type: "interval"; range: [number, number];} | {type: "point"; values: unknown[];}
