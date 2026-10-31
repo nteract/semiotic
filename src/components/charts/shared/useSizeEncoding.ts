@@ -17,17 +17,17 @@ export function useSizeEncoding(
   variant: "xy" | "geo-points" = "xy"
 ): ((datum: Datum) => number) | undefined {
   const { accessor, data, isPushMode, range } = options
-  const pushedDomain = useRef<[number, number]>([Infinity, -Infinity])
+  const pushedDomain = useRef<[number, number] | undefined>(undefined)
   const boundedDomain = useMemo(
     () => encodingDomain(data, accessor),
     [data, accessor]
   )
-  // Frames compute the whole retained scene after a push. Update the tuple
+  // Frames compute the whole retained scene after a push. Update the domain
   // before forwarding so every radius reads the new domain in that paint,
   // without scheduling a second React render for each new extreme.
   const trackPushed = (rows: Parameters<SizeFrame["pushMany"]>[0]) => {
     if (!isPushMode) return
-    encodingDomain(rows, accessor, pushedDomain.current)
+    pushedDomain.current = encodingDomain(rows, accessor, pushedDomain.current)
   }
   useFrameImperativeHandle(ref, {
     variant,
@@ -42,18 +42,24 @@ export function useSizeEncoding(
         frameRef.current?.pushMany(rows)
       },
       clear: () => {
-        pushedDomain.current[0] = Infinity
-        pushedDomain.current[1] = -Infinity
+        pushedDomain.current = undefined
         frameRef.current?.clear()
       }
     }
   })
-  const domain = isPushMode ? pushedDomain.current : boundedDomain
   return useMemo(
     () =>
       accessor
-        ? (datum: Datum) => getSize(datum, accessor, range, domain)
+        ? (datum: Datum) =>
+            // Read the live domain at paint time, including after clear().
+            // Until finite values arrive, the fallback keeps sizes clamped.
+            getSize(
+              datum,
+              accessor,
+              range,
+              (isPushMode ? pushedDomain.current : boundedDomain) ?? [0, 1]
+            )
         : undefined,
-    [accessor, range, domain]
+    [accessor, range, isPushMode, boundedDomain]
   )
 }

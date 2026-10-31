@@ -11,7 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Keep pushed `SwarmPlot`, `QuadrantChart`, and `ProportionalSymbolMap` size
   encodings within `sizeRange`, including the first point and data pushed after
-  `clear()` (#1355).
+  `clear()`. Preserve sparse-row ingestion and clamp infinite sizes in React
+  and static SVG across size-encoded charts (#1355).
 - Honor `DonutChart innerRadius={0}` in canvas and server SVG output (#1673).
 - Avoid React update loops when live physics charts repaint unchanged semantic
   navigation state; cover worker execution, snapshot restore, and keyboard focus

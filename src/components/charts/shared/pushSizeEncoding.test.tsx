@@ -10,6 +10,7 @@ import { OrdinalPipelineStore } from "../../stream/OrdinalPipelineStore"
 import { PipelineStore } from "../../stream/PipelineStore"
 import { GeoPipelineStore } from "../../stream/GeoPipelineStore"
 import type { RealtimeFrameHandle } from "../../realtime/types"
+import type { Datum } from "./datumTypes"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
 
 let restoreCanvas: () => void
@@ -82,6 +83,104 @@ describe.each([
   ["BubbleChart", BubbleChart],
   ["ProportionalSymbolMap", MapSizeFixture]
 ] as const)("%s size encoding", (_name, Chart) => {
+  describe.each(["field", "function"])("%s accessor safety", (kind) => {
+    const sizeBy =
+      kind === "field"
+        ? "size"
+        : (row: Record<string, unknown>) => Number(row.size)
+    const row = (size: number, value = 1) => ({
+      x: value,
+      y: value,
+      category: String(value),
+      value,
+      size
+    })
+
+    it("discards sparse rows before reading sizes and ingests the valid rows", async () => {
+      const ref = React.createRef<RealtimeFrameHandle>()
+      render(
+        <Chart
+          ref={ref}
+          sizeBy={sizeBy}
+          sizeRange={[3, 9]}
+          showLegend={false}
+        />
+      )
+      const valid = [row(50_000), row(100_000, 2)]
+      const sparse = [
+        null,
+        undefined,
+        0,
+        "invalid",
+        false
+      ] as unknown as Datum[]
+      sparse.length += 1
+      sparse.push(...valid)
+      await act(async () => {
+        ref.current!.push(null as unknown as Datum)
+        ref.current!.push(0 as unknown as Datum)
+        ref.current!.pushMany(sparse)
+      })
+      await flushFrames()
+      expect(ref.current!.getData()).toEqual(valid)
+      expect(radii.toSorted((a, b) => a - b)).toEqual([3, 9])
+    })
+
+    it.each([Infinity, -Infinity])(
+      "clamps a bounded size of %s without a finite domain",
+      async (size) => {
+        render(
+          <Chart
+            data={[row(size)]}
+            sizeBy={sizeBy}
+            sizeRange={[3, 9]}
+            showLegend={false}
+          />
+        )
+        await flushFrames()
+        expect(radii).toEqual([size > 0 ? 9 : 3])
+      }
+    )
+
+    it.each([Infinity, -Infinity])(
+      "clamps a pushed size of %s before valid data and after clear",
+      async (size) => {
+        const ref = React.createRef<RealtimeFrameHandle>()
+        render(
+          <Chart
+            ref={ref}
+            sizeBy={sizeBy}
+            sizeRange={[3, 9]}
+            showLegend={false}
+          />
+        )
+        const expected = size > 0 ? 9 : 3
+        await act(async () => {
+          ref.current!.push(row(size))
+        })
+        await flushFrames()
+        expect(radii).toEqual([expected])
+        await act(async () => {
+          ref.current!.clear()
+        })
+        await act(async () => {
+          ref.current!.push(row(size))
+        })
+        await flushFrames()
+        expect(radii).toEqual([expected])
+        // The same callback must read the live domain once finite values arrive.
+        await act(async () => {
+          ref.current!.pushMany([row(100, 2), row(200, 3)])
+        })
+        await flushFrames()
+        expect(radii.toSorted((a, b) => a - b)).toEqual(
+          [3, expected, 9].toSorted((a, b) => a - b)
+        )
+        expect(ref.current!.getData()).toHaveLength(3)
+      }
+    )
+  })
+
   it.each(["field", "function"])(
     "scales a pushed %s accessor and resets the domain when cleared",
     async (accessor) => {

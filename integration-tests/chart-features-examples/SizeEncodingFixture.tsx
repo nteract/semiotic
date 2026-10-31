@@ -22,6 +22,7 @@ export function SizeEncodingFixture() {
   const map = useRef<RealtimeFrameHandle>(null)
   const [width, setWidth] = useState(360)
   const [dark, setDark] = useState(false)
+  const frames = [swarm, quadrant, map]
   const shared = {
     width,
     height: 240,
@@ -53,6 +54,33 @@ export function SizeEncodingFixture() {
           }}
         >
           Push observation
+        </button>
+        <button
+          onClick={() => {
+            for (const frame of frames)
+              frame.current?.push({ ...point, size: Infinity })
+          }}
+        >
+          Push infinite observation
+        </button>
+        <button
+          onClick={() => {
+            const sparse = [null, undefined, 0] as unknown as Parameters<
+              RealtimeFrameHandle["pushMany"]
+            >[0]
+            sparse.length += 1
+            sparse.push(point)
+            for (const frame of frames) frame.current?.pushMany(sparse)
+          }}
+        >
+          Push sparse observations
+        </button>
+        <button
+          onClick={() => {
+            for (const frame of frames) frame.current?.clear()
+          }}
+        >
+          Clear encoded charts
         </button>
         <button onClick={() => setWidth(260)}>Resize encoded charts</button>
         <div style={{ display: "flex", flexWrap: "wrap" }}>

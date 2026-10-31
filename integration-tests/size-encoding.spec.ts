@@ -7,6 +7,34 @@ test.beforeEach(async ({ page }) => {
 })
 
 for (const chart of ["swarm", "quadrant", "map"]) {
+  test(`${chart} keeps infinite sizes and sparse pushes hoverable`, async ({
+    page
+  }) => {
+    const errors = collectBrowserErrors(page)
+    const host = page.getByTestId(`size-${chart}`)
+    for (const [button, value] of [
+      ["Push infinite observation", "Infinity"],
+      ["Push sparse observations", "50000"]
+    ]) {
+      if (value === "50000")
+        await page.getByRole("button", { name: "Clear encoded charts" }).click()
+      await page.getByRole("button", { name: button, exact: true }).click()
+      await hoverCanvasMark(host.locator("canvas").first(), [18, 84, 171])
+      const tooltip = host
+        .locator('[class*="tooltip"]')
+        .filter({ hasText: `Observation ${value}` })
+        .first()
+      await expect(tooltip).toBeVisible()
+      const tip = (await tooltip.boundingBox())!
+      const bounds = (await host.boundingBox())!
+      expect(tip.x).toBeGreaterThanOrEqual(bounds.x - 1)
+      expect(tip.x + tip.width).toBeLessThanOrEqual(bounds.x + bounds.width + 1)
+      await page.mouse.move(0, 0)
+      await expect(tooltip).toHaveCount(0)
+    }
+    expect(errors).toEqual([])
+  })
+
   test(`${chart} scales and hovers a pushed size encoding after resize`, async ({
     page
   }, info) => {

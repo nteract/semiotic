@@ -119,9 +119,10 @@ export function encodingDomain(
   if (!accessor) return undefined
   const domain: [number, number] = previous ?? [Infinity, -Infinity]
   for (const row of rows) {
+    if (row == null || typeof row !== "object") continue
     const raw = typeof accessor === "function" ? accessor(row) : row[accessor]
     if (raw == null) continue
-    const value = typeof raw === "number" ? raw : Number(raw)
+    const value = Number(raw)
     if (!Number.isFinite(value)) continue
     if (value < domain[0]) domain[0] = value
     if (value > domain[1]) domain[1] = value
