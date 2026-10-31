@@ -113,6 +113,14 @@ export function usePhysicsSemanticNavigation({
   hoverDataRef.current = hoverData
   const focusedBodyIdRef = useRef<string | null>(null)
   const lastBodySemanticUpdateRef = useRef(0)
+  // Paint also runs from effects while worker/hover updates are pending.
+  // Compare before dispatch so identical paints cannot queue another update.
+  const publishedBodySemanticItems = useRef<PhysicsSemanticItem[]>([])
+  const publishBodySemanticItems = useCallback((next: PhysicsSemanticItem[]) => {
+    if (!semanticItemsChanged(publishedBodySemanticItems.current, next)) return
+    publishedBodySemanticItems.current = next
+    setBodySemanticItemsSnapshot(next)
+  }, [setBodySemanticItemsSnapshot])
   // Authored semantic data can change while fixed physical bodies retain their
   // initial spawns. Use the current semantic record for every input channel.
   const semanticByBody = useMemo(
@@ -141,9 +149,7 @@ export function usePhysicsSemanticNavigation({
       force = false
     ) => {
       if (!bodySemanticItems) {
-        setBodySemanticItemsSnapshot((current) =>
-          current.length ? [] : current
-        )
+        publishBodySemanticItems([])
         return
       }
       const now = logicalClockRef.current()
@@ -164,16 +170,14 @@ export function usePhysicsSemanticNavigation({
         const camera = storeRef.current?.viewTransform() ?? { x: 0, y: 0 }
         return { ...item, x: item.x + camera.x, y: item.y + camera.y }
       })
-      setBodySemanticItemsSnapshot((current) =>
-        semanticItemsChanged(current, next) ? next : current
-      )
+      publishBodySemanticItems(next)
     },
     [
       bodySemanticItemLimit,
       bodySemanticItems,
       bodySemanticUpdateMs,
       logicalClockRef,
-      setBodySemanticItemsSnapshot,
+      publishBodySemanticItems,
       storeRef
     ]
   )

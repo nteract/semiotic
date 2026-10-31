@@ -3,7 +3,7 @@ import type { Datum } from "../shared/datumTypes"
 import { filterSparseArray } from "../shared/sparseArray"
 import { buildBaseMetadataProps, buildCustomBehaviorProps, buildTooltipProps } from "../shared/streamPropsHelpers"
 import * as React from "react"
-import { useMemo, useCallback, forwardRef, useRef } from "react"
+import { useMemo, forwardRef, useRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import { registerXYPlugin } from "../../stream/xyPlugins/registry"
 import { scatterXYPlugin } from "../../stream/xyPlugins/pointPlugin"
@@ -13,7 +13,6 @@ import { MarginalGraphics } from "../../stream/MarginalGraphics"
 import { provideMarginalGraphics } from "../../stream/MarginalGraphicsLazy"
 import type { SymbolName } from "../../stream/symbolPath"
 import type { RealtimeFrameHandle } from "../../realtime/types"
-import { getSize } from "../shared/colorUtils"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
@@ -25,10 +24,9 @@ import { validateArrayData } from "../shared/validateChartData"
 import { useXYBrush } from "../shared/useXYBrush"
 import { useChartSetup } from "../shared/useChartSetup"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
-import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useXYPointStyle } from "../shared/useXYPointStyle"
 import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
-import { useEncodingDomain } from "../shared/useEncodingDomain"
+import { useSizeEncoding } from "../shared/useSizeEncoding"
 import { buildRegressionAnnotation, type RegressionProp } from "../shared/regressionUtils"
 import { useSeriesFeatures } from "../shared/useSeriesFeatures"
 import type { ForecastConfig, AnomalyConfig } from "../shared/statisticalOverlays"
@@ -274,51 +272,11 @@ export const Scatterplot = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ *
   const safeData = useMemo(() => filterSparseArray(data), [data])
   const isPushMode = data === undefined
 
-  // ── Encoding domain (sizeBy) — bounded + push-mode tracking ──────────
-  // When `sizeBy` is set and the user streams data via ref, the
-  // domain has to be tracked from pushed values; otherwise the
-  // domain comes straight from bounded data. The shared hook owns
-  // the running min/max and the version counter that triggers
-  // radius-fn recompute on each new min/max.
-  const {
-    domain: sizeDomain,
-    trackPushed: trackSizeDomain,
-    reset: resetSizeDomain,
-  } = useEncodingDomain<Datum>({
+  const sizedRadiusFn = useSizeEncoding(ref, frameRef, {
     accessor: sizeBy,
     data: safeData,
     isPushMode,
-  })
-
-  // Wrap push/pushMany/clear so sizeBy-driven radii stay in sync
-  // when the chart is driven through a ref. Other handle methods
-  // get the vanilla XY defaults from the helper.
-  const wrappedPush = useCallback(
-    (d: Datum) => {
-      trackSizeDomain([d])
-      frameRef.current?.push(d)
-    },
-    [trackSizeDomain]
-  )
-  const wrappedPushMany = useCallback(
-    (d: Datum[]) => {
-      trackSizeDomain(d)
-      frameRef.current?.pushMany(d)
-    },
-    [trackSizeDomain]
-  )
-
-  useFrameImperativeHandle(ref, {
-    variant: "xy",
-    frameRef,
-    overrides: {
-      push: wrappedPush,
-      pushMany: wrappedPushMany,
-      clear: () => {
-        resetSizeDomain()
-        frameRef.current?.clear()
-      },
-    },
+    range: sizeRange,
   })
 
   // ── Shared setup (color, legend, selection, loading/empty) ────────────
@@ -366,31 +324,6 @@ export const Scatterplot = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ *
   // ── Dev-mode warnings ─────────────────────────────────────────────────
   warnMissingField("Scatterplot", safeData, "xAccessor", xAccessor)
   warnMissingField("Scatterplot", safeData, "yAccessor", yAccessor)
-
-  // ── Core chart logic ───────────────────────────────────────────────────
-  // `sizeDomain` comes from the shared `useEncodingDomain` hook
-  // above — same value in bounded mode, push-mode-tracked when
-  // streaming.
-
-  // Push-mode initial state — first pushed point arrives before the
-  // domain-update setState re-renders, so `sizeDomain` is undefined
-  // for one render. The `[0, 1]` fallback combined with `getSize`'s
-  // internal clamp keeps the radius inside `sizeRange` even when the
-  // pushed value is well outside `[0, 1]`: the value normalizes
-  // above 1, then clamps to maxSize. Harmless in bounded mode
-  // because `sizeDomain` is non-null whenever data is non-empty.
-  const effectiveSizeDomain = useMemo<[number, number] | undefined>(
-    () => sizeBy ? (sizeDomain ?? [0, 1]) : undefined,
-    [sizeBy, sizeDomain],
-  )
-
-  // useMemo'd because `radiusFn` is a dep of useXYPointStyle's
-  // internal memo — passing an inline literal would re-allocate the
-  // returned `pointStyle` on every render.
-  const sizedRadiusFn = useMemo(
-    () => sizeBy ? (d: Datum) => getSize(d, sizeBy, sizeRange, effectiveSizeDomain) : undefined,
-    [sizeBy, sizeRange, effectiveSizeDomain],
-  )
 
   const ruleContext = useMemo(
     () => makeXYRuleContext(

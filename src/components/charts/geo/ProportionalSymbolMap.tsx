@@ -8,7 +8,7 @@ import type { StreamGeoFrameProps, StreamGeoFrameHandle, ProjectionProp } from "
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
-import { getColor, getSize } from "../shared/colorUtils"
+import { getColor } from "../shared/colorUtils"
 import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import { resolveAxisFreeMarginDefaults } from "../shared/chartMode"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
@@ -21,8 +21,7 @@ import type { Style } from "../../stream/types"
 import { useReferenceAreas, type AreasProp } from "../../geo/useReferenceAreas"
 import { useChartSetup } from "../shared/useChartSetup"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
-import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
-import { getMinMax } from "../shared/minMax"
+import { useSizeEncoding } from "../shared/useSizeEncoding"
 import { GEO_BACKGROUND_AREA_STYLE } from "../shared/geoStyleDefaults"
 import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
@@ -153,7 +152,6 @@ export interface ProportionalSymbolMapProps<TDatum extends Datum = Datum> extend
  */
 export const ProportionalSymbolMap = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function ProportionalSymbolMap<TDatum extends Datum = Datum>(props: ProportionalSymbolMapProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
   const frameRef = useRef<StreamGeoFrameHandle>(null)
-  useFrameImperativeHandle(ref, { variant: "geo-points", frameRef })
 
   const resolved = useChartMode(props.mode, {
     width: props.width,
@@ -265,14 +263,12 @@ export const ProportionalSymbolMap = /* @__PURE__ */ withChartErrorBoundary(/* @
   // of this HOC body still reads `safeData`.
   const safeData = setup.data
 
-  // Compute size domain for scaling
-  const sizeDomain = useMemo(() => {
-    if (!sizeBy) return undefined
-    const acc = typeof sizeBy === "function" ? sizeBy : (d: Datum) => d?.[sizeBy as string]
-    const vals = safeData.filter(Boolean).map(d => acc(d)).filter(v => v != null && isFinite(v))
-    if (vals.length === 0) return undefined
-    return getMinMax(vals)
-  }, [safeData, sizeBy])
+  const sizeRadius = useSizeEncoding(ref, frameRef, {
+    accessor: sizeBy,
+    data: safeData,
+    isPushMode: points === undefined,
+    range: sizeRange,
+  }, "geo-points")
 
   const pointStyleFn = useMemo(() => {
     const base = (d: Datum): Style & { r?: number } => ({
@@ -280,7 +276,7 @@ export const ProportionalSymbolMap = /* @__PURE__ */ withChartErrorBoundary(/* @
       fillOpacity: 0.7,
       stroke: "#fff",
       strokeWidth: 0.5,
-      r: sizeBy ? getSize(d, sizeBy, sizeRange, sizeDomain) : defaultPointRadius
+      r: sizeRadius ? sizeRadius(d) : defaultPointRadius
     })
     const ruled = composeStyleRules(
       base,
@@ -295,7 +291,7 @@ export const ProportionalSymbolMap = /* @__PURE__ */ withChartErrorBoundary(/* @
       return wrapStyleWithSelection(withPrimitives, setup.effectiveSelectionHook, setup.resolvedSelection) as (d: Datum) => Style & { r?: number }
     }
     return withPrimitives
-  }, [colorBy, setup.colorScale, setup.effectiveSelectionHook, setup.resolvedSelection, sizeBy, sizeRange, sizeDomain, defaultPointRadius, stroke, strokeWidth, opacity, styleRules])
+  }, [colorBy, setup.colorScale, setup.effectiveSelectionHook, setup.resolvedSelection, sizeBy, sizeRadius, defaultPointRadius, stroke, strokeWidth, opacity, styleRules])
 
   const defaultTooltip = useMemo(() => (d: Datum) => {
     // Try to find a human-readable name for the point

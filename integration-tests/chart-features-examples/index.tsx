@@ -11,6 +11,7 @@ import { HistogramHoverFixture } from "./HistogramHoverFixture"
 import { LineMultiEdgeFixture } from "./LineMultiEdgeFixture"
 import { CandlestickSizingFixture } from "./CandlestickSizingFixture"
 import { ErrorRecoveryFixture } from "./ErrorRecoveryFixture"
+import { SizeEncodingFixture } from "./SizeEncodingFixture"
 
 import { RoundedAxesFixture } from "./RoundedAxesFixture"
 
@@ -105,6 +106,7 @@ function App() {
   )
 }
 createRoot(document.getElementById("root")!).render(
+  new URLSearchParams(location.search).has("size-encoding") ? <SizeEncodingFixture /> :
   new URLSearchParams(location.search).has("error-recovery") ? <ErrorRecoveryFixture /> :
   new URLSearchParams(location.search).has("rounded-axes") ? <RoundedAxesFixture /> :
   new URLSearchParams(location.search).has("candlestick-sizing") ? <CandlestickSizingFixture /> :

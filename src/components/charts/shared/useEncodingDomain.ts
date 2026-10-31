@@ -14,9 +14,9 @@
  * clears the running domain (paired with a `clear()` override).
  *
  * The surface is generic so any per-datum numeric encoding
- * accessor can drive it. Scatterplot uses it for `sizeBy` too;
- * future charts with opacity/color-intensity encodings can adopt
- * the same hook.
+ * accessor can drive it. The size-encoding bridge shares the numeric
+ * reader below and updates its tuple before frame ingestion; other
+ * encodings can use this hook when React needs the updated domain.
  */
 "use client"
 import { useCallback, useMemo, useRef, useState } from "react"
@@ -71,68 +71,62 @@ export interface EncodingDomainResult<TDatum extends Datum = Datum> {
  * ```
  */
 export function useEncodingDomain<TDatum extends Datum = Datum>(
-  options: EncodingDomainOptions<TDatum>,
+  options: EncodingDomainOptions<TDatum>
 ): EncodingDomainResult<TDatum> {
   const { accessor, data, isPushMode } = options
 
-  const streamingDomainRef = useRef<[number, number] | null>(null)
-  const [streamingVersion, setStreamingVersion] = useState(0)
+  const streamingDomainRef = useRef<[number, number] | undefined>(undefined)
+  const [, invalidateDomain] = useState(0)
 
-  const trackPushed = useCallback((items: TDatum[]) => {
-    if (!isPushMode || !accessor) return
-    let changed = false
-    for (const d of items) {
-      const raw = typeof accessor === "function"
-        ? (accessor as (d: TDatum) => number)(d)
-        : (d as Datum)[accessor as string]
-      if (raw == null) continue
-      // String-field accessors can return numeric strings ("5"). Coerce
-      // before storing so the domain never contains strings — downstream
-      // math (`d3-scale`, getSize) would happily multiply "5" * 1 but
-      // tests and other consumers expect numbers.
-      const n = typeof raw === "number" ? raw : Number(raw)
-      if (!Number.isFinite(n)) continue
-      if (!streamingDomainRef.current) {
-        streamingDomainRef.current = [n, n]
-        changed = true
-      } else {
-        if (n < streamingDomainRef.current[0]) { streamingDomainRef.current[0] = n; changed = true }
-        if (n > streamingDomainRef.current[1]) { streamingDomainRef.current[1] = n; changed = true }
+  const trackPushed = useCallback(
+    (items: TDatum[]) => {
+      if (!isPushMode || !accessor) return
+      const previous = streamingDomainRef.current
+      const min = previous?.[0]
+      const max = previous?.[1]
+      const next = encodingDomain(items, accessor, previous)
+      if (next && (next[0] !== min || next[1] !== max)) {
+        streamingDomainRef.current = next
+        invalidateDomain((version) => version + 1)
       }
-    }
-    if (changed) setStreamingVersion((v) => v + 1)
-  }, [isPushMode, accessor])
+    },
+    [isPushMode, accessor]
+  )
 
   const reset = useCallback(() => {
     if (!isPushMode) return
-    streamingDomainRef.current = null
-    setStreamingVersion((v) => v + 1)
+    streamingDomainRef.current = undefined
+    invalidateDomain((version) => version + 1)
   }, [isPushMode])
 
-  const domain = useMemo<[number, number] | undefined>(() => {
-    if (isPushMode) {
-      // Touch version so memo refreshes when ref mutates.
-      void streamingVersion
-      return streamingDomainRef.current ?? undefined
-    }
-    if (!accessor || data.length === 0) return undefined
-    const get = typeof accessor === "function"
-      ? (accessor as (d: TDatum) => number)
-      : (d: TDatum) => (d as Datum)[accessor as string] as number
-    let min = Infinity
-    let max = -Infinity
-    for (const d of data) {
-      const raw = get(d)
-      if (raw == null) continue
-      // Coerce before comparing — same reason as `trackPushed` above.
-      const v = typeof raw === "number" ? raw : Number(raw)
-      if (!Number.isFinite(v)) continue
-      if (v < min) min = v
-      if (v > max) max = v
-    }
-    if (!Number.isFinite(min) || !Number.isFinite(max)) return undefined
-    return [min, max]
-  }, [data, accessor, isPushMode, streamingVersion])
+  const boundedDomain = useMemo(
+    () => (isPushMode ? undefined : encodingDomain(data, accessor)),
+    [data, accessor, isPushMode]
+  )
+  return {
+    domain: isPushMode ? streamingDomainRef.current : boundedDomain,
+    trackPushed,
+    reset
+  }
+}
 
-  return { domain, trackPushed, reset }
+/** Extend a domain in place using the same finite reads for either data mode. */
+export function encodingDomain(
+  rows: readonly Datum[],
+  accessor: Accessor<number> | undefined,
+  previous?: [number, number]
+): [number, number] | undefined {
+  if (!accessor) return undefined
+  const domain: [number, number] = previous ?? [Infinity, -Infinity]
+  for (const row of rows) {
+    const raw = typeof accessor === "function" ? accessor(row) : row[accessor]
+    if (raw == null) continue
+    const value = typeof raw === "number" ? raw : Number(raw)
+    if (!Number.isFinite(value)) continue
+    if (value < domain[0]) domain[0] = value
+    if (value > domain[1]) domain[1] = value
+  }
+  return Number.isFinite(domain[0]) && Number.isFinite(domain[1])
+    ? domain
+    : undefined
 }

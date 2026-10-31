@@ -450,6 +450,18 @@ describe("renderChart", () => {
     expect(svg).toContain("<path")
   })
 
+  it("renders a zero-hole DonutChart with the same filled wedges as PieChart", () => {
+    const props = {
+      data: [{ category: "A", value: 2 }, { category: "B", value: 3 }],
+      width: 300, height: 240, margin: 10, showLegend: false,
+    }
+    const paths = (svg: string) => [...svg.matchAll(/<path\b[^>]*\bd="([^"]+)"/g)].map((match) => match[1])
+    const pie = paths(renderChart("PieChart", props))
+    expect(pie).toHaveLength(2)
+    expect(paths(renderChart("DonutChart", { ...props, innerRadius: 0 }))).toEqual(pie)
+    expect(paths(renderChart("DonutChart", { ...props, innerRadius: 40 }))).not.toEqual(pie)
+  })
+
   it("renders GaugeChart arc-length gradients across multiple slices", () => {
     const svg = renderChart("GaugeChart", {
       value: 70,
