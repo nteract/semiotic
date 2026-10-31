@@ -363,7 +363,7 @@
     "check:browser-baseline": "node scripts/browser-baseline.mjs --check",
     "print:browser-baseline": "node scripts/browser-baseline.mjs --print",
     "test:browser-baseline": "node --test scripts/browser-baseline.test.mjs",
-    "test:release-infrastructure": "node --test scripts/bench-manifest.test.mjs scripts/bench-results.test.mjs scripts/browser-baseline.test.mjs scripts/browser-process-defines.test.mjs scripts/check-docs-entry-contract.test.mjs scripts/machine-baseline.test.mjs scripts/npm-trusted-publisher.test.mjs scripts/prerender-determinism.test.mjs scripts/risk-weighted-coverage.test.mjs scripts/vitest-projects.test.mjs && npm run test:release-preflight",
+    "test:release-infrastructure": "node --test scripts/bench-manifest.test.mjs scripts/bench-results.test.mjs scripts/browser-baseline.test.mjs scripts/browser-process-defines.test.mjs scripts/check-docs-entry-contract.test.mjs scripts/machine-baseline.test.mjs scripts/npm-trusted-publisher.test.mjs scripts/prerender-determinism.test.mjs scripts/risk-weighted-coverage.test.mjs scripts/vitest-projects.test.mjs scripts/typedoc-compat.test.mjs && npm run test:release-preflight",
     "baseline:stream-file-sizes": "node scripts/stream-file-size-ratchet.mjs --write",
     "report:stream-file-sizes": "node scripts/stream-file-size-ratchet.mjs",
     "test:stream-file-size-ratchet": "node --test scripts/stream-file-size-ratchet.test.mjs",
@@ -405,8 +405,8 @@
     "check:website-build:from-dist": "npm run website:build:from-dist && npm run check:docs-asset-sizes && npm run check:protected-doc-boundaries",
     "build:mcp": "node scripts/build-mcp.mjs --production",
     "check:mcp-bundle": "node scripts/check-mcp-bundle.mjs",
-    "docs:api": "typedoc --gitRevision \"v$npm_package_version\"",
-    "docs:api:json": "typedoc --gitRevision \"v$npm_package_version\" --json docs/public/api/api.json && node scripts/generate-component-descriptions.mjs",
+    "docs:api": "node --import ./scripts/typedoc-compat.mjs ./node_modules/typedoc/bin/typedoc --gitRevision \"v$npm_package_version\"",
+    "docs:api:json": "node --import ./scripts/typedoc-compat.mjs ./node_modules/typedoc/bin/typedoc --gitRevision \"v$npm_package_version\" --json docs/public/api/api.json && node scripts/generate-component-descriptions.mjs",
     "docs:descriptions:json": "node scripts/generate-component-descriptions.mjs",
     "typescript": "tsc --noEmit",
     "pretypescript:tests": "npm run build:declarations",
@@ -511,7 +511,7 @@
     "docs:readme-dashboard": "npx tsx scripts/generate-readme-dashboard.tsx",
     "check:readme-dashboard": "npx tsx scripts/generate-readme-dashboard.tsx --check",
     "check:release-version-alignment": "node scripts/check-release-version-alignment.mjs",
-    "check:typedoc": "typedoc --emit none",
+    "check:typedoc": "node --import ./scripts/typedoc-compat.mjs ./node_modules/typedoc/bin/typedoc --emit none",
     "release:check": "npm run check:release-preflight && npm run dist:prod && npm run check:bundle-budgets && npm run check:release-version-alignment && npm run check:playwright-alignment && npm run lint && npm run check:file-size && npm run typescript && npm run typescript:tests && npm run typescript:mcp && npm run test:examples:source && npm run check:mcp-bundle && npm run build:mcp && npm run test:coverage && npm run test:artifact-cli:from-dist && npm run test:protected-doc-boundaries && npm run test:release-infrastructure && npm run check:chart-specs && npm run check:artifact-contract && npm run check:ai-schema && npm run check:capabilities && npm run check:capability-coverage && npm run check:docs-coverage && npm run check:docs-example-integrity && npm run check:docs-prop-tables && npm run check:docs-playground-controls && npm run check:llms && npm run check:blog-entries && npm run check:ai-reference-coverage && npm run check:context7 && npm run check:mcp-registry && npm run test:mcp-registry-live && npm run check:surface && npm run check:ai-surface && npm run check:agent-skill && npm run check:ai-tasks && npm run test:adoption-evals && npm run check:adoption-evals && npm run check:ai-contracts && npm run check:ai-instructions && npm run check:ssr && npm run check:test-quality && npm run check:jsdoc-coverage && npm run check:ai-examples-coverage && npm run check:typedoc && npm run check:website-build && npm run check:package-surface && npm run check:api-surface && npm run check:api-compat && npm run check:protected-doc-boundaries && npm run check:readme-dashboard && npm run check:bundle-sizes && npm run size && npm run check:pack && npm run check:consumer-compatibility && npm pack --dry-run",
     "prepublishOnly": "npm run check:release-preflight && npm run dist:prod && npm run check:bundle-budgets && npm run check:release-version-alignment && npm run check:playwright-alignment && npm run lint && npm run check:file-size && npm run typescript && npm run typescript:tests && npm run typescript:mcp && npm run test:examples:source && npm run check:mcp-bundle && npm run build:mcp && npm run test:coverage && npm run test:artifact-cli:from-dist && npm run test:protected-doc-boundaries && npm run test:release-infrastructure && npm run check:chart-specs && npm run check:artifact-contract && npm run check:ai-schema && npm run check:capabilities && npm run check:capability-coverage && npm run check:docs-coverage && npm run check:docs-example-integrity && npm run check:docs-prop-tables && npm run check:llms && npm run check:blog-entries && npm run check:ai-reference-coverage && npm run check:context7 && npm run check:mcp-registry && npm run test:mcp-registry-live && npm run check:surface && npm run check:ai-surface && npm run check:agent-skill && npm run check:ai-tasks && npm run check:ai-contracts && npm run check:ai-instructions && npm run check:ssr && npm run check:test-quality && npm run check:jsdoc-coverage && npm run check:ai-examples-coverage && npm run check:typedoc && rm -rf dist && npm run check:website-build && npm run check:package-surface && npm run check:api-surface && npm run check:api-compat && npm run check:protected-doc-boundaries && npm run check:readme-dashboard && npm run check:bundle-sizes && npm run size && npm run check:consumer-compatibility",
     "check:router-alignment": "node scripts/check-router-alignment.mjs",
@@ -523,7 +523,7 @@
     "test:adoption-evals": "node --test scripts/prepare-adoption-evals.test.mjs",
     "check:release-preflight": "node --experimental-strip-types scripts/check-release-preflight.ts",
     "test:release-preflight": "node --experimental-strip-types --test scripts/release-preflight.test.ts",
-    "check:test-discovery": "node --test scripts/vitest-projects.test.mjs"
+    "check:test-discovery": "node --test scripts/vitest-projects.test.mjs scripts/typedoc-compat.test.mjs"
   },
   "repository": {
     "type": "git",
@@ -686,12 +686,12 @@
     "node": ">=22.12.0"
   },
   "volta": {
-    "node": "22.22.1"
+    "node": "22.23.2"
   },
   "overrides": {
     "esbuild": "0.28.2",
     "flatted": "3.4.2",
-    "minimatch": ">=9.0.7",
+    "minimatch": "^11.0.3",
     "seroval": "1.6.11"
   }
 }

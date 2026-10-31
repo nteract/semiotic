@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Keep the modern lint/documentation toolchain while resolving the minimatch
+  advisory; preserve TypeDoc glob discovery with the patched matcher.
 - Keep pushed `SwarmPlot`, `QuadrantChart`, and `ProportionalSymbolMap` size
   encodings within `sizeRange`, including the first point and data pushed after
   `clear()`. Preserve sparse-row ingestion and clamp infinite sizes in React
