@@ -6,6 +6,7 @@
 
 export const PUSH_HANDLE_CALLEES = Object.freeze([
   "useFrameImperativeHandle",
+  "useSizeEncoding",
   "useOrdinalStreaming",
   "usePhysicsHocHandle",
   "usePhysicsChartData",
