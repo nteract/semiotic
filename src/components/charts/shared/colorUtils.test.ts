@@ -266,6 +266,11 @@ describe("getSize", () => {
     expect(getSize({ count: 42 }, "count")).toBe(42)
   })
 
+  it.each([Infinity, -Infinity])("preserves a raw size of %s without a domain", (size) => {
+    expect(getSize({ size }, "size", [3, 9])).toBe(size)
+    expect(getSize({ size }, (row) => row.size, [3, 9])).toBe(size)
+  })
+
   it("scales value to size range when domain is provided", () => {
     const size = getSize({ val: 50 }, "val", [5, 25], [0, 100])
     expect(size).toBe(15) // midpoint of range

@@ -205,7 +205,9 @@ function buildSwarmPieceStyle(
         )
         .filter(Number.isFinite)
     : []
-  const sizeDomain = sizeValues.length ? getMinMax(sizeValues) : undefined
+  const sizeDomain: [number, number] = sizeValues.length
+    ? getMinMax(sizeValues)
+    : [0, 1]
   const radius = typeof rest.pointRadius === "number" ? rest.pointRadius : 4
   const fillOpacity =
     typeof rest.pointOpacity === "number" ? rest.pointOpacity : 0.7

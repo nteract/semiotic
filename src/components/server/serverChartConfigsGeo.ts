@@ -32,7 +32,7 @@ function buildGeoPointBaseStyle(
     const scaleData = typeof colorBy === "string" ? arr : arr.map((p) => ({ ...p, __geoColorBy: (colorBy as (d: Datum) => unknown)(p) }))
     colorScale = createColorScale(scaleData, key, colorScheme)
   }
-  let sizeDomain: [number, number] | undefined
+  let sizeDomain: [number, number] = [0, 1]
   if (opts.sizeBy) {
     const acc = typeof opts.sizeBy === "function" ? opts.sizeBy : (d: Datum) => d?.[opts.sizeBy as string]
     const vals = arr.map(acc).filter((v): v is number => v != null && isFinite(v as number))

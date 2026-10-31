@@ -8,6 +8,21 @@ const wrapper = ({ children }: { children: React.ReactNode }) =>
   <TooltipProvider>{children}</TooltipProvider>
 
 describe("useEncodingDomain", () => {
+  describe.each([false, true])("sparse input (push mode: %s)", (isPushMode) => {
+    it.each(["field", "function"])("skips sparse rows before reading a %s accessor", (kind) => {
+      const data = [null, undefined, false, 0, "invalid"] as unknown as { size: number }[]
+      data.length += 1
+      data.push({ size: 3 }, { size: 8 })
+      const accessor = kind === "field" ? "size" : (row: Record<string, unknown>) => Number(row.size)
+      const { result } = renderHook(
+        () => useEncodingDomain({ accessor, data: isPushMode ? [] : data, isPushMode }),
+        { wrapper },
+      )
+      if (isPushMode) act(() => result.current.trackPushed(data))
+      expect(result.current.domain).toEqual([3, 8])
+    })
+  })
+
   describe("bounded mode", () => {
     it("derives [min, max] from data via the string accessor", () => {
       const data = [{ size: 1 }, { size: 5 }, { size: 3 }, { size: 8 }]
