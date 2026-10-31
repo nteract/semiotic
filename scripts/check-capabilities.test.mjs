@@ -42,6 +42,46 @@ describe("check-capabilities push-handle detection", () => {
     assert.match(bridge, /useImperativeHandle\s*</)
   })
 
+  it("recognizes the size-encoding handle only when it is invoked", () => {
+    assert.equal(
+      sourceWiresPushHandle('import { useSizeEncoding } from "./useSizeEncoding"'),
+      false
+    )
+    assert.equal(
+      sourceWiresPushHandle("useSizeEncoding(ref, frameRef, options)"),
+      true
+    )
+    assert.equal(sourceWiresPushHandle("useSizeEncodingFactory(ref)"), false)
+  })
+
+  it("recognizes all five size-encoded charts through their imperative bridge", () => {
+    for (const chart of [
+      "xy/BubbleChart",
+      "xy/QuadrantChart",
+      "xy/Scatterplot",
+      "ordinal/SwarmPlot",
+      "geo/ProportionalSymbolMap"
+    ]) {
+      const source = readFileSync(
+        resolve(repoRoot, `src/components/charts/${chart}.tsx`),
+        "utf8"
+      )
+      assert.equal(sourceWiresPushHandle(source), true, chart)
+      assert.equal(
+        sourceWiresPushHandle(
+          source.replace(/\buseSizeEncoding\s*\(/g, "unwiredSizeEncoding(")
+        ),
+        false,
+        `${chart} must invoke its bridge, not just import it`
+      )
+    }
+    const bridge = readFileSync(
+      resolve(repoRoot, "src/components/charts/shared/useSizeEncoding.ts"),
+      "utf8"
+    )
+    assert.match(bridge, /\buseFrameImperativeHandle\s*\(/)
+  })
+
   it("recognizes typed bespoke React handles", () => {
     assert.equal(
       sourceWiresPushHandle(

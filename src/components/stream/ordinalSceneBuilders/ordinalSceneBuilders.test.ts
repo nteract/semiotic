@@ -403,6 +403,16 @@ describe("buildPieScene", () => {
     expect(nodes[0].innerRadius).toBe(60)
   })
 
+  it("honors an explicitly zero donut inner radius", () => {
+    const ctx = makeCtx({
+      config: makeConfig({ chartType: "donut", innerRadius: 0 }),
+      columns: {
+        A: makeColumn("A", [{ value: 100 }], { pct: 1, pctStart: 0 })
+      }
+    })
+    expect(buildPieScene(ctx, layout)[0].innerRadius).toBe(0)
+  })
+
   it("falls back to a readable ring when the donut hole is wider than the plot", () => {
     const ctx = makeCtx({
       config: makeConfig({ chartType: "donut", innerRadius: 70 }),

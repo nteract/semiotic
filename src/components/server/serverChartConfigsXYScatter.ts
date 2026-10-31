@@ -55,7 +55,9 @@ export function buildScatterPointStyle(
         )
         .filter(Number.isFinite)
     : []
-  const sizeDomain = sizeValues.length ? getMinMax(sizeValues) : undefined
+  const sizeDomain: [number, number] = sizeValues.length
+    ? getMinMax(sizeValues)
+    : [0, 1]
   const ruleContext = makeXYRuleContext(
     rest.xAccessor as string | ((d: Datum) => unknown) | undefined,
     rest.yAccessor as string | ((d: Datum) => unknown) | undefined

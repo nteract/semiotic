@@ -68,6 +68,22 @@ async function flushFrames() {
 }
 
 describe("DonutChart sizing in short containers", () => {
+  it.each(["bounded", "push"])("honors a zero hole after a %s radius update", async (mode) => {
+    const ref = React.createRef<RealtimeFrameHandle>()
+    const data = rows(2)
+    const shared = {
+      ref, width: 300, height: 240, showLegend: false,
+      data: mode === "bounded" ? data : undefined,
+    }
+    const { rerender } = render(<DonutChart {...shared} innerRadius={40} />)
+    if (mode === "push") await act(async () => { ref.current!.pushMany(data) })
+    await flushFrames()
+    expect(lastPaintedScene().wedges.map((node) => node.innerRadius)).toEqual([40, 40])
+    rerender(<DonutChart {...shared} innerRadius={0} />)
+    await flushFrames()
+    expect(lastPaintedScene().wedges.map((node) => node.innerRadius)).toEqual([0, 0])
+  })
+
   // The 10px inset leaves an 830×200 plot with a 96px outer radius.
   // A 70px hole now fits; an oversized request still needs the 12px fallback band.
   it.each([

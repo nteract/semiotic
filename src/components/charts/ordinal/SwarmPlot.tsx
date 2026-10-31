@@ -7,7 +7,6 @@ import { useMemo, forwardRef, useRef } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import type { SymbolName } from "../../stream/symbolPath"
-import { getSize } from "../shared/colorUtils"
 import { useChartMode, useThemeCategorical } from "../shared/hooks"
 import { resolveOrdinalAxisChrome } from "../../legendLayout"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
@@ -19,9 +18,8 @@ import { validateArrayData } from "../shared/validateChartData"
 import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
-import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useOrdinalBrush } from "../shared/useOrdinalBrush"
-import { getMinMax } from "../shared/minMax"
+import { useSizeEncoding } from "../shared/useSizeEncoding"
 import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
 import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
@@ -126,7 +124,6 @@ export const SwarmPlot = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
 })
 
   const frameRef = useRef<StreamOrdinalFrameHandle>(null)
-  useFrameImperativeHandle(ref, { variant: "xy", frameRef })
 
   const {
     data, margin: userMargin, className,
@@ -192,11 +189,12 @@ export const SwarmPlot = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
 
   const ordinalBrush = useOrdinalBrush({ brushProp, onBrushProp, linkedBrush, valueAccessor })
 
-  const sizeDomain = useMemo(() => {
-    if (!sizeBy) return undefined
-    const sizes = safeData.map((d) => typeof sizeBy === "function" ? sizeBy(d) : d[sizeBy])
-    return getMinMax(sizes)
-  }, [safeData, sizeBy])
+  const sizeRadius = useSizeEncoding(ref, frameRef, {
+    accessor: sizeBy,
+    data: safeData,
+    isPushMode: data === undefined,
+    range: sizeRange,
+  })
 
   const themeCategorical = useThemeCategorical()
   const categoryIndexMap = useMemo(() => new Map<string, number>(), [])
@@ -218,7 +216,7 @@ export const SwarmPlot = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
     resolvedSelection: setup.resolvedSelection,
     baseStyleExtras: (d) => ({
       fillOpacity: pointOpacity,
-      r: sizeBy ? getSize(d, sizeBy, sizeRange, sizeDomain) : pointRadius,
+      r: sizeRadius ? sizeRadius(d) : pointRadius,
     }),
     styleRules,
     resolveRuleValue,

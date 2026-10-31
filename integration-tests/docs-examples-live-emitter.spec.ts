@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test"
 import { hoverCanvasMark } from "./helpers/hoverCanvasMark"
+import { collectBrowserErrors } from "./helpers/browser"
 
 test.use({ screenshot: "only-on-failure", trace: "retain-on-failure" })
 
@@ -25,8 +26,7 @@ for (const execution of ["sync", "worker"] as const) {
   test(`live ${execution}: retirement, snapshot replay, source gating and camera hover`, async ({
     page
   }, info) => {
-    const errors: string[] = []
-    page.on("pageerror", (error) => errors.push(error.message))
+    const errors = collectBrowserErrors(page)
     page.on("console", (message) => {
       if (/StreamPhysicsFrame.*unchanged scene revisions/.test(message.text()))
         errors.push(message.text())
@@ -93,6 +93,14 @@ for (const execution of ["sync", "worker"] as const) {
     await demo.getByRole("button", { name: "Restore live snapshot" }).click()
     await expect(demo.getByTestId("live-clock")).toHaveText(savedClock)
     await expect(demo.getByTestId("live-accepted")).toHaveText(savedAccepted)
+    const frame = demo.locator('.stream-physics-frame[tabindex="0"]')
+    await frame.focus()
+    await frame.press("Home")
+    const announcementId = await frame.getAttribute("aria-describedby")
+    expect(announcementId).toBeTruthy()
+    await expect(page.locator(`[id="${announcementId}"]`)).toContainText("window")
+    await frame.press("Escape")
+    await expect(frame).not.toHaveAttribute("aria-describedby")
     await hoverEvent(page)
     // Stop every source, flush the travellers already in flight, and prove the
     // live clock continues while admissions stop. Resume without resetting.
@@ -127,6 +135,7 @@ for (const execution of ["sync", "worker"] as const) {
 test("reduced motion advances the live program in finite batches", async ({
   page
 }) => {
+  const errors = collectBrowserErrors(page)
   await page.emulateMedia({ reducedMotion: "reduce" })
   await page.goto("/examples/emitter-playground")
   const demo = page.getByTestId("live-emitter-demo")
@@ -150,4 +159,5 @@ test("reduced motion advances the live program in finite batches", async ({
   await demo.getByRole("button", { name: "Advance live stream by one second" }).click()
   await expect(demo.getByTestId("live-clock")).toHaveText("27.0s")
   await expect(demo.getByTestId("live-accepted")).toHaveText(admitted)
+  expect(errors).toEqual([])
 })

@@ -30,7 +30,7 @@ export function buildPieScene(ctx: OrdinalSceneContext, layout: OrdinalLayout): 
   // `arc()` rejects with an IndexSizeError.
   const outerRadius = Math.max(0, Math.min(layout.width, layout.height) / 2 - 4)
   const innerRadius = config.chartType === "donut"
-    ? fitDonutInnerRadius(config.innerRadius || 60, outerRadius)
+    ? fitDonutInnerRadius(config.innerRadius ?? 60, outerRadius)
     : 0
   // Angles are in canvas convention (0 = 3 o'clock / east).
   // Start from 12 o'clock (-π/2) plus any user offset in degrees.

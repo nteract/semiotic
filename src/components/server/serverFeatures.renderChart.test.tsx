@@ -125,6 +125,25 @@ describe("renderChart", () => {
     expect(svg).toContain("<circle")
   })
 
+  it.each(["SwarmPlot", "QuadrantChart", "Scatterplot", "BubbleChart", "ProportionalSymbolMap"] as const)(
+    "clamps infinite %s sizes in static SVG, including sparse input",
+    (component) => {
+      for (const sizeBy of ["size", (row: Record<string, unknown>) => Number(row.size)]) {
+        for (const size of [Infinity, -Infinity]) {
+          const data: unknown[] = [null, undefined, false, 0, "invalid"]
+          data.length += 1
+          data.push({ x: 1, y: 1, lon: 0, lat: 0, category: "A", value: 1, size })
+          const svg = renderChart(component, {
+            [component === "ProportionalSymbolMap" ? "points" : "data"]: data,
+            width: 300, height: 240, sizeBy, sizeRange: [3, 9], showLegend: false,
+          })
+          const radii = [...svg.matchAll(/<circle\b[^>]*\br="([^"]+)"/g)].map((match) => Number(match[1]))
+          expect(radii).toEqual([size > 0 ? 9 : 3])
+        }
+      }
+    }
+  )
+
   it("mirrors Scatterplot's categorical point and legend defaults", () => {
     const svg = renderChart("Scatterplot", {
       data: scatterData.map((d, index) => ({ ...d, color: index === 1 ? "legend-beta" : "legend-alpha" })),
@@ -448,6 +467,18 @@ describe("renderChart", () => {
       height: 400,
     })
     expect(svg).toContain("<path")
+  })
+
+  it("renders a zero-hole DonutChart with the same filled wedges as PieChart", () => {
+    const props = {
+      data: [{ category: "A", value: 2 }, { category: "B", value: 3 }],
+      width: 300, height: 240, margin: 10, showLegend: false,
+    }
+    const paths = (svg: string) => [...svg.matchAll(/<path\b[^>]*\bd="([^"]+)"/g)].map((match) => match[1])
+    const pie = paths(renderChart("PieChart", props))
+    expect(pie).toHaveLength(2)
+    expect(paths(renderChart("DonutChart", { ...props, innerRadius: 0 }))).toEqual(pie)
+    expect(paths(renderChart("DonutChart", { ...props, innerRadius: 40 }))).not.toEqual(pie)
   })
 
   it("renders GaugeChart arc-length gradients across multiple slices", () => {

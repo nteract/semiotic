@@ -3,7 +3,7 @@ import type { Datum } from "../shared/datumTypes"
 import { filterSparseArray } from "../shared/sparseArray"
 import { buildBaseMetadataProps, buildCustomBehaviorProps, buildTooltipProps } from "../shared/streamPropsHelpers"
 import * as React from "react"
-import { useMemo, useCallback, forwardRef, useRef } from "react"
+import { useMemo, forwardRef, useRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import { registerXYPlugin } from "../../stream/xyPlugins/registry"
 import { bubbleXYPlugin } from "../../stream/xyPlugins/pointPlugin"
@@ -11,7 +11,6 @@ import type { StreamXYFrameProps, StreamXYFrameHandle, MarginalGraphicsConfig, D
 import { MarginalGraphics } from "../../stream/MarginalGraphics"
 import { provideMarginalGraphics } from "../../stream/MarginalGraphicsLazy"
 import type { RealtimeFrameHandle } from "../../realtime/types"
-import { getSize } from "../shared/colorUtils"
 import { useChartMode } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
@@ -22,10 +21,9 @@ import { validateArrayData } from "../shared/validateChartData"
 import { useChartSetup } from "../shared/useChartSetup"
 import { useXYBrush } from "../shared/useXYBrush"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
-import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useXYPointStyle } from "../shared/useXYPointStyle"
 import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
-import { useEncodingDomain } from "../shared/useEncodingDomain"
+import { useSizeEncoding } from "../shared/useSizeEncoding"
 import { buildRegressionAnnotation, type RegressionProp } from "../shared/regressionUtils"
 import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
@@ -365,49 +363,11 @@ export const BubbleChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ *
     axisChrome: resolveXYFramePropsAxisChrome(frameProps, { showAxes: resolved.showAxes, xLabel, yLabel }),
   })
 
-  // ── Encoding domain (sizeBy) — bounded + push-mode tracking ──────────
-  // The shared `useEncodingDomain` hook owns the running min/max
-  // across both bounded data and ref-pushed items. The HOC wraps
-  // the frame's push/pushMany to feed the hook before delegating.
-  const {
-    domain: sizeDomain,
-    trackPushed: trackSizeDomain,
-    reset: resetSizeDomain,
-  } = useEncodingDomain<Datum>({
+  const bubbleRadiusFn = useSizeEncoding(ref, frameRef, {
     accessor: sizeBy,
     data: safeData,
     isPushMode,
-  })
-
-  const wrappedPush = useCallback(
-    (d: Datum) => {
-      trackSizeDomain([d])
-      frameRef.current?.push(d)
-    },
-    [trackSizeDomain]
-  )
-  const wrappedPushMany = useCallback(
-    (d: Datum[]) => {
-      trackSizeDomain(d)
-      frameRef.current?.pushMany(d)
-    },
-    [trackSizeDomain]
-  )
-
-  // Wrapped push/pushMany add streaming-size-domain tracking; clear
-  // also resets that domain. Other 5 methods get the vanilla XY
-  // defaults from the helper.
-  useFrameImperativeHandle(ref, {
-    variant: "xy",
-    frameRef,
-    overrides: {
-      push: wrappedPush,
-      pushMany: wrappedPushMany,
-      clear: () => {
-        resetSizeDomain()
-        frameRef.current?.clear()
-      },
-    },
+    range: sizeRange,
   })
 
   const { brushStreamProps } = useXYBrush({
@@ -433,22 +393,6 @@ export const BubbleChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ *
     () => ({ stroke: bubbleStrokeColor, strokeWidth: bubbleStrokeWidth }),
     [bubbleStrokeColor, bubbleStrokeWidth],
   )
-  // Push-mode initial state — no values seen yet → domain undefined.
-  // Fall back to `[0, 1]` so `getSize` switches into its scaling
-  // branch; the internal clamp then bounds the radius to `sizeRange`
-  // even when the first pushed value is outside `[0, 1]` (otherwise
-  // the un-clamped linear scale would produce arbitrarily large
-  // pixel radii). Memoized so the fallback doesn't churn the radius
-  // fn.
-  const effectiveSizeDomain = useMemo<[number, number]>(
-    () => sizeDomain ?? [0, 1],
-    [sizeDomain],
-  )
-  const bubbleRadiusFn = useCallback(
-    (d: Datum) => getSize(d, sizeBy, sizeRange, effectiveSizeDomain),
-    [sizeBy, sizeRange, effectiveSizeDomain],
-  )
-
   const ruleContext = useMemo(
     () => makeXYRuleContext(
       xAccessor as string | ((d: Datum) => unknown),

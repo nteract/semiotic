@@ -8,7 +8,6 @@ import { registerXYPlugin } from "../../stream/xyPlugins/registry"
 import { scatterXYPlugin } from "../../stream/xyPlugins/pointPlugin"
 import type { StreamXYFrameProps, StreamXYFrameHandle, CanvasRendererFn, SVGPreRendererFn, StreamScales, StreamLayout, SceneNode } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
-import { getSize } from "../shared/colorUtils"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildDefaultTooltip, accessorName } from "../shared/tooltipUtils"
@@ -20,11 +19,10 @@ import { validateArrayData } from "../shared/validateChartData"
 import { useChartSetup } from "../shared/useChartSetup"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
-import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useXYPointStyle } from "../shared/useXYPointStyle"
 import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
 import { DEFAULT_QUADRANTS } from "./QuadrantChart.defaults"
-import { getMinMax } from "../shared/minMax"
+import { useSizeEncoding } from "../shared/useSizeEncoding"
 import { resolveCSSColor } from "../../stream/renderers/resolveCSSColor"
 import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
@@ -190,8 +188,6 @@ export const QuadrantChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__
   ensureQuadrantChartRegistrations()
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
-  useFrameImperativeHandle(ref, { variant: "xy", frameRef })
-
   const resolved = useChartMode(props.mode, {
     width: props.width,
     height: props.height,
@@ -334,14 +330,12 @@ export const QuadrantChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__
     }
   }, [safeData, xAccessor, yAccessor, xCenter, yCenter])
 
-  const sizeDomain = useMemo(() => {
-    if (!sizeBy || safeData.length === 0) return undefined
-    const sizes = safeData
-      .map((d) => typeof sizeBy === "function" ? sizeBy(d) : d[sizeBy])
-      .filter((v): v is number => typeof v === "number" && Number.isFinite(v))
-    if (sizes.length === 0) return undefined
-    return getMinMax(sizes)
-  }, [safeData, sizeBy])
+  const sizedRadiusFn = useSizeEncoding(ref, frameRef, {
+    accessor: sizeBy,
+    data: safeData,
+    isPushMode: data === undefined,
+    range: sizeRange,
+  })
 
   // Resolve x/y accessors for quadrant coloring
   const getXValue = useMemo(() =>
@@ -368,14 +362,6 @@ export const QuadrantChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__
     if (!isTop && isRight) return quadrants.bottomRight.color
     return quadrants.bottomLeft.color
   }, [getXValue, getYValue, xCenter, yCenter, quadrants, color])
-
-  // useMemo'd because `radiusFn` is a dep of useXYPointStyle's
-  // internal memo — passing an inline literal would re-allocate the
-  // returned `pointStyle` on every render.
-  const sizedRadiusFn = useMemo(
-    () => sizeBy ? (d: Datum) => getSize(d, sizeBy, sizeRange, sizeDomain) : undefined,
-    [sizeBy, sizeRange, sizeDomain],
-  )
 
   const ruleContext = useMemo(
     () => makeXYRuleContext(

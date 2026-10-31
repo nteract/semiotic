@@ -293,7 +293,14 @@ const ENTRY_GRAPHS = [
   // Bumped 130→131: the shared hatch tile, var()-safe label boxes, and
   // tooltip flip state measure 130.0 KiB gzip, level with the old limit.
   // Feature graph: 132.1 KiB (previous built HEAD: 131.0 KiB).
-  { entry: "ordinal.module.min.js", label: "ordinal", limitKb: 135.3 },
+  // Push-mode size encoding (#1355): clean 986f3a79c -> fix, identical
+  // Node 22.22.1/zlib/dependencies, ordinal 135.1387 -> 135.5840 KiB gzip
+  // (+456 bytes). Swarm now shares the finite domain/size bridge with XY
+  // and geo charts, including sparse pushes, empty-domain clamping and clear.
+  // Root shrinks 23 bytes; XY grows 4 bytes. No dependency or public export
+  // was added. Keep <0.13 KiB headroom only here; all other graph and
+  // named-import limits stay put.
+  { entry: "ordinal.module.min.js", label: "ordinal", limitKb: 135.7 },
   // Bumped 140→147: ProcessSankey layout/worker/ordering growth on the network
   // subpath. Production graph measures 144.8 KiB gzip.
   // Bumped 147→148: topology-safe boundary-fan centering and exclusive sibling

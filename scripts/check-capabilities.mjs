@@ -210,6 +210,8 @@ for (const e of specEntries) {
   // Paths that qualify:
   //   - `useFrameImperativeHandle` — the standard ref bridge used by
   //     XY, network, and the simpler ordinal HOCs.
+  //   - `useSizeEncoding` — wraps useFrameImperativeHandle to track size
+  //     domains before forwarding pushes in XY, swarm, and point-map HOCs.
   //   - `useOrdinalStreaming` — the aggregator-aware push pipeline
   //     used by BarChart family.
   //   - `useImperativeHandle(` (a raw call, not just an import) —

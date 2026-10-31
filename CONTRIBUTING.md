@@ -26,7 +26,9 @@ artifacts before serving. If reusing an existing server, rebuild with
 `npm run dist && npm run build:mcp` before running Playwright. CI and the Linux
 snapshot bootstrap build production library and MCP artifacts explicitly.
 
-The repo pins Node with Volta in `package.json`. Use that version when possible.
+The repo pins the development Node version in `.node-version` and Volta in
+`package.json`. Use that version for the current toolchain; historical story
+rebuilds retain the runtime versions documented with each edition.
 
 ## Project Structure
 
@@ -261,6 +263,12 @@ use structural types from internal modules, while the checked-in API snapshots
 and clean packed-consumer compilation are the authoritative export-resolution
 gates. Invalid links, paths, and all non-validation warnings remain fatal;
 third-party React lifecycle links are mapped explicitly in `typedoc.json`.
+
+Use the `docs:api`, `docs:api:json`, and `check:typedoc` npm scripts for TypeDoc.
+They load a scoped compatibility adapter for TypeDoc 0.28's directory walker,
+which still calls the `matchOne` method removed in minimatch 11. The adapter
+uses the patched matcher's public partial-match API without modifying installed
+packages. Its file-discovery regressions run with `node --test scripts/typedoc-compat.test.mjs`.
 
 ## Architecture
 
