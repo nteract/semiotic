@@ -1,4 +1,5 @@
 import type { ChartSpec } from "./chartSpecCore"
+import { WORD_CLOUD_SIZE } from "./chartSizeDefaultsWordCloud"
 
 export const WORDCLOUD_CHART_SPECS: Record<string, ChartSpec> = {
   WordCloud: {
@@ -25,12 +26,12 @@ export const WORDCLOUD_CHART_SPECS: Record<string, ChartSpec> = {
       },
       width: {
         type: "number",
-        default: 640,
+        default: WORD_CLOUD_SIZE.width,
         schema: { minimum: 1, maximum: 2040 }
       },
       height: {
         type: "number",
-        default: 400,
+        default: WORD_CLOUD_SIZE.height,
         schema: { minimum: 1, maximum: 2040 }
       },
       textAccessor: { type: ["string", "function"], default: "text" },

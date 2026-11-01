@@ -1,5 +1,6 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import { WordCloudLayoutError } from "./types"
+import { WORD_CLOUD_SIZE } from "../charts/shared/chartSizeDefaultsWordCloud"
 import type {
   WordCloudAccessor,
   WordCloudLayoutOptions,
@@ -40,8 +41,8 @@ function read<T>(row: Datum, accessor: WordCloudAccessor<T>): unknown {
 export function normalizeWordCloudInput(options: WordCloudLayoutOptions) {
   const {
     data,
-    width = 640,
-    height = 400,
+    width = WORD_CLOUD_SIZE.width,
+    height = WORD_CLOUD_SIZE.height,
     seed = 42,
     textAccessor = "text",
     valueAccessor = "value",

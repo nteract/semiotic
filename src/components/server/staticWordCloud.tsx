@@ -12,6 +12,7 @@ import { resolveTheme, type ThemeInput } from "./themeResolver"
 import type { EvidenceSink } from "./renderEvidence"
 import type { ChartConfig } from "./serverChartConfigShared"
 import { renderNetworkFrame } from "./staticNetwork"
+import { WORD_CLOUD_SIZE } from "../charts/shared/chartSizeDefaultsWordCloud"
 
 export type StaticWordCloudProps = WordCloudProps & {
   theme?: ThemeInput
@@ -117,7 +118,7 @@ export function renderWordCloud(
 export const wordCloud: ChartConfig = {
   frameType: "network",
   layout: {
-    primarySize: { width: 640, height: 400 },
+    primarySize: WORD_CLOUD_SIZE,
     margin: { top: 0, right: 0, bottom: 0, left: 0 }
   },
   buildProps: (data, colorBy, colorScheme, common, rest) => ({

@@ -24,10 +24,56 @@ import { extractNetworkNavPoints } from "../stream/networkKeyboardNav"
 import { act } from "@testing-library/react"
 import { wordCloudTableScene } from "./wordCloudTable"
 import { countDataRows, extractAllRows } from "../stream/accessibleDataRows"
+import { resolveChartSize } from "../semiotic-utils-core"
 
 const options = fixture.options as unknown as WordCloudLayoutOptions
 const layout = fixture.layout as unknown as WordCloudLayoutResult
 const config = { ...options, layout }
+
+describe("WordCloud size resolution across renderers", () => {
+  it("shares default dimensions with preparation, React and static rendering", async () => {
+    const size = resolveChartSize("WordCloud")
+    const prepared = await prepareWordCloudLayout({ data: [] })
+    expect(prepared).toMatchObject(size)
+    const { container, rerender } = render(<WordCloud data={[]} />)
+    expect(container.querySelector(".stream-network-frame")).toHaveStyle({
+      width: `${size.width}px`,
+      height: `${size.height}px`
+    })
+    expect(container.querySelector("[data-wordcloud-state]")).toHaveAttribute("data-wordcloud-state", "preparing")
+    rerender(<WordCloud data={[]} layout={prepared} />)
+    expect(container.querySelector("[data-wordcloud-state]")).toHaveAttribute("data-wordcloud-state", "ready")
+    expect(container.querySelector(".stream-network-frame")).toHaveStyle({
+      width: `${size.width}px`,
+      height: `${size.height}px`
+    })
+    const svg = renderChart("WordCloud", { data: [], layout: prepared })
+    const root = new DOMParser().parseFromString(svg, "image/svg+xml").documentElement
+    expect(root.getAttribute("width")).toBe(String(size.width))
+    expect(root.getAttribute("height")).toBe(String(size.height))
+  })
+
+  it.each([
+    { width: undefined, height: undefined, margin: 0, expected: { width: 320, height: 200 } },
+    { width: 350, height: undefined, margin: { left: 12, right: 18 }, expected: { width: 350, height: 200 } },
+    { width: 350, height: 222, margin: { left: 12, right: 18, top: 8, bottom: 14 }, expected: { width: 350, height: 222 } }
+  ])("keeps saved placements inside the resolved $expected viewport", ({ expected, ...dimensions }) => {
+    const props = { ...config, ...dimensions, accessibleTable: false }
+    const size = resolveChartSize("WordCloud", props)
+    expect(size).toEqual(expected)
+    const { container } = render(<WordCloud {...props} renderAs="svg" />)
+    expect(container.querySelector(".stream-network-frame")).toHaveStyle({
+      width: `${size.width}px`,
+      height: `${size.height}px`
+    })
+    expect(container.querySelector("[data-wordcloud-state]")).toHaveAttribute("data-wordcloud-state", "ready")
+    const { svg, evidence } = renderChartWithEvidence("WordCloud", props)
+    expect(evidence).toMatchObject({ status: "ok", markCount: 3 })
+    const root = new DOMParser().parseFromString(svg, "image/svg+xml").documentElement
+    expect(root.getAttribute("width")).toBe(String(size.width))
+    expect(root.getAttribute("height")).toBe(String(size.height))
+  })
+})
 
 describe("WordCloud normalization and portable layouts", () => {
   it("rejects oversized raster requests and invalid configuration before preparation", () => {

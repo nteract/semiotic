@@ -27,6 +27,7 @@ import { wordCloudTableScene } from "../../wordcloud/wordCloudTable"
 import { AccessibleDataTableSlot } from "../../stream/AccessibleDataTable"
 import { normalizePartialMargin } from "../../types/marginType"
 import type { AccessibleTableProp } from "../../stream/accessibleTableTypes"
+import { WORD_CLOUD_SIZE } from "../shared/chartSizeDefaultsWordCloud"
 
 export interface WordCloudAnnotation {
   id: string
@@ -141,8 +142,8 @@ export function WordCloud(props: WordCloudProps): React.ReactElement {
   )
   const [containerRef, size] = useResponsiveSize(
     [
-      props.width ?? props.layout?.width ?? 640,
-      props.height ?? props.layout?.height ?? 400
+      props.width ?? props.layout?.width ?? WORD_CLOUD_SIZE.width,
+      props.height ?? props.layout?.height ?? WORD_CLOUD_SIZE.height
     ],
     props.responsiveWidth,
     props.responsiveHeight
