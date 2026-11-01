@@ -4,7 +4,8 @@
 export { WordCloud } from "./charts/wordcloud/WordCloud"
 export type {
   WordCloudProps,
-  WordCloudAnnotation
+  WordCloudAnnotation,
+  WordCloudGroupHull
 } from "./charts/wordcloud/WordCloud"
 export { prepareWordCloudLayout } from "./wordcloud/prepareWordCloudLayout"
 export { normalizeWordCloudInput } from "./wordcloud/normalizeWordCloudInput"

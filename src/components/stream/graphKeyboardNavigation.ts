@@ -72,6 +72,8 @@ export interface KeyboardInteractionParams<Store, Node = unknown> {
   scheduleRender: () => void
   /** Cancel queued pointer hit testing when keyboard interaction dismisses hover. */
   clearPointerHover?: () => void
+  /** Spatial-only readers activate marks with Enter as well as Space. */
+  activateOnEnter?: boolean
 }
 
 interface VersionedSceneStore<Node> {
@@ -106,6 +108,7 @@ export function useGraphKeyboardNavigation<
   customClickBehavior,
   scheduleRender,
   clearPointerHover,
+  activateOnEnter,
   extractPoints,
   toHover,
   navigation = "graph",
@@ -229,7 +232,7 @@ export function useGraphKeyboardNavigation<
         current = -1
       }
       if (
-        ((event.key === "Enter" && !nextConnected) || event.key === " ") &&
+        ((event.key === "Enter" && (!nextConnected || activateOnEnter)) || event.key === " ") &&
         current >= 0
       ) {
         event.preventDefault()
@@ -297,6 +300,7 @@ export function useGraphKeyboardNavigation<
       customHoverBehavior,
       extractPoints,
       nextConnected,
+      activateOnEnter,
       navigation,
       hoverRef,
       scheduleRender,

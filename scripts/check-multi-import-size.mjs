@@ -117,7 +117,8 @@ const analyze = process.argv.includes("--analyze")
 // 22.23.2/dependencies: 330409 -> 332827 bytes (29 reachable files). This
 // retains native text and the new schema; isolated named chart consumers do
 // not retain d3-cloud. Keep 0.2 KiB headroom; isolation limits stay unchanged.
-const MULTI_IMPORT_GZIP_BUDGET = 325.2 * 1024
+// Shared network-frame migration: 332827 -> 332583 bytes; recover 0.2 KiB.
+const MULTI_IMPORT_GZIP_BUDGET = 325 * 1024
 
 const MULTI_IMPORT_SOURCE = `
 export { LineChart } from "semiotic/xy"

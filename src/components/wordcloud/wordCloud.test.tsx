@@ -11,7 +11,6 @@ import { WordCloud } from "../charts/wordcloud/WordCloud"
 import {
   renderChart,
   renderChartWithEvidence,
-  renderToStaticSVG,
   renderToImage
 } from "../server/renderToStaticSVG"
 import {
@@ -19,7 +18,10 @@ import {
   textSceneNodeToSVG,
   type TextSceneNode
 } from "../stream/textScene"
-import { findNearestNode } from "../stream/CanvasHitTester"
+import { findNearestNetworkNode } from "../stream/NetworkCanvasHitTester"
+import { wordCloudNetworkLayout } from "./wordCloudNetworkLayout"
+import { extractNetworkNavPoints } from "../stream/networkKeyboardNav"
+import { act } from "@testing-library/react"
 import { wordCloudTableScene } from "./wordCloudTable"
 import { countDataRows, extractAllRows } from "../stream/accessibleDataRows"
 
@@ -207,29 +209,49 @@ describe("native retained text across renderers", () => {
     expect(ctx.fillText).not.toHaveBeenCalled()
   })
   it("hit-tests stored bounds and excludes decorative text from interaction and accessible rows", () => {
+    const scene = wordCloudNetworkLayout({
+      nodes: [],
+      edges: [],
+      dimensions: {
+        width: 320,
+        height: 200,
+        plot: { x: 0, y: 0, width: 320, height: 200 }
+      },
+      theme: { semantic: {}, categorical: [] },
+      resolveColor: () => "#333",
+      config
+    }).sceneNodes!
+    const first = scene[0]
+    expect(first.type).toBe("rect")
+    if (first.type !== "rect") throw new Error("Expected network bounds")
     expect(
-      findNearestNode([node], node.x + node.x0, node.y + node.y0)?.datum
+      findNearestNetworkNode(
+        scene,
+        [],
+        first.x + first.w / 2,
+        first.y + first.h / 2
+      )?.datum
     ).toBe(options.data[0])
-    expect(findNearestNode([node], 0, 0)).toBeNull()
+    expect(findNearestNetworkNode(scene, [], -100, -100)).toBeNull()
     expect(
-      findNearestNode([{ ...node, interactive: false }], node.x, node.y)
+      findNearestNetworkNode([{ ...first, datum: null }], [], first.x, first.y)
     ).toBeNull()
-    expect(
-      findNearestNode([{ ...node, datum: null }], node.x, node.y)
-    ).toBeNull()
+    expect(extractNetworkNavPoints(scene).map((point) => point.datum)).toEqual(
+      expect.arrayContaining([...options.data])
+    )
     expect(countDataRows([node, { ...node, datum: null }])).toBe(1)
     expect(extractAllRows([node])[0]).toMatchObject({
       values: { text: "care", value: 12 }
     })
   })
-  it("renders original data through keyboard tooltips and activation, including dismissal", () => {
+  it("renders original data through the shared network keyboard and tooltip lifecycle", async () => {
     const tooltip = vi.fn((row) => (
       <span>
         {row.text}: {row.value} original
       </span>
     ))
     const onClick = vi.fn()
-    render(
+    const { container } = render(
       <WordCloud
         {...config}
         renderAs="svg"
@@ -238,21 +260,31 @@ describe("native retained text across renderers", () => {
         accessibleTable={false}
       />
     )
-    const care = screen.getByRole("button", { name: "care: 12" })
-    fireEvent.focus(care)
-    expect(screen.getByText("care: 12 original")).toBeTruthy()
-    expect(tooltip.mock.calls.at(-1)?.[0]).toMatchObject(options.data[0])
-    fireEvent.keyDown(care, { key: "Enter" })
-    expect(onClick.mock.calls[0][0]).toBe(options.data[0])
-    fireEvent.keyDown(care, { key: "Escape" })
-    expect(screen.queryByText("care: 12 original")).toBeNull()
+    const frame = container.querySelector(".stream-network-frame")!
+    expect(container.querySelector(".stream-wordcloud-frame")).toBeNull()
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50))
+    })
+    fireEvent.focus(frame)
+    fireEvent.keyDown(frame, { key: "Home" })
+    const original = tooltip.mock.calls.at(-1)?.[0]
+    expect(options.data).toContain(original)
+    expect(
+      screen.getByText(`${original.text}: ${original.value} original`)
+    ).toBeTruthy()
+    fireEvent.keyDown(frame, { key: "Enter" })
+    expect(onClick.mock.calls[0][0]).toBe(original)
+    fireEvent.keyDown(frame, { key: "Escape" })
+    expect(
+      screen.queryByText(`${original.text}: ${original.value} original`)
+    ).toBeNull()
   })
   it("exports identical placements and reports marks and omissions without a mask mark", async () => {
     const { svg, evidence } = renderChartWithEvidence("WordCloud", config)
     expect(evidence).toMatchObject({
-      frameType: "wordcloud",
+      frameType: "network",
       markCount: 3,
-      markCountByType: { text: 3 },
+      markCountByType: { "node:rect": 3 },
       wordCloud: { inputCount: 3, placedCount: 3, omitted: [] },
       margin: { top: 0, left: 0, bottom: 0, right: 0 }
     })
@@ -264,9 +296,8 @@ describe("native retained text across renderers", () => {
       expect(svg).toContain(transform)
       expect(client).toContain(transform)
     }
-    expect(renderToStaticSVG("wordcloud", config)).toContain(
-      'data-word-id="care"'
-    )
+    expect(svg).toContain('class="stream-network-frame"')
+    expect(svg).toContain('data-word-id="care"')
     const png = await renderToImage("WordCloud", config)
     expect(png.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a")
     expect(png.readUInt32BE(16)).toBe(320)

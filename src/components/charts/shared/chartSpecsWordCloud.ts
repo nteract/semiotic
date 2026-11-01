@@ -159,6 +159,25 @@ export const WORDCLOUD_CHART_SPECS: Record<string, ChartSpec> = {
         description:
           "Term anchors: { id, label, dx?, dy? }. IDs refer to placed terms."
       },
+      groupHulls: {
+        type: "array",
+        description:
+          "Rounded network background enclosures: { id, ids, label?, color?, padding? }. IDs name placed terms; omitted terms are ignored. Groups may overlap and never affect placement.",
+        schema: {
+          items: {
+            type: "object",
+            required: ["id", "ids"],
+            additionalProperties: false,
+            properties: {
+              id: { type: "string" },
+              ids: { type: "array", items: { type: "string" } },
+              label: { type: "string" },
+              color: { type: "string" },
+              padding: { type: "number", minimum: 0 }
+            }
+          }
+        }
+      },
       renderAs: { type: "string", enum: ["canvas", "svg"], default: "canvas" },
       enableHover: { type: "boolean", default: true },
       responsiveWidth: { type: "boolean" },

@@ -47,6 +47,7 @@ import { useNetworkLayoutCommit } from "./useNetworkLayoutCommit"
 import { NetworkHtmlMarksLayer } from "./NetworkHtmlMarksLayer"
 import { isServerEnvironment } from "./isServerEnvironment"
 import { NetworkSSRFrame } from "./NetworkSSRFrame"
+import { NetworkSceneSVG } from "./NetworkSceneSVG"
 import {
   useHydration,
   useWasHydratingFromSSR
@@ -530,7 +531,8 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     customHoverBehavior,
     customClickBehavior,
     scheduleRender,
-    clearPointerHover: onPointerLeave
+    clearPointerHover: onPointerLeave,
+    activateOnEnter: props.keyboardNavigation === "spatial"
   })
   const sceneCursorInventoryRef = useRef<NetworkCursorInventory>({
     nodes: false,
@@ -620,7 +622,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
     skipInitialCanvasPaintInvalidation: true,
     canvasPaintInvalidator: invalidateCanvasPaint,
     maxDevicePixelRatio,
-    canvasPaintDependencies: [chartType, adjustedWidth, adjustedHeight, background, backgroundGraphics, renderMode, scheduleRender]
+    canvasPaintDependencies: [chartType, adjustedWidth, adjustedHeight, background, backgroundGraphics, renderMode, props.renderAs, scheduleRender]
   })
 
   // Fallback color for edges/particles when no source or target is resolvable.
@@ -1387,6 +1389,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       },
       syncColorMap: () => syncColorMap(store),
       onSceneOrStyleChange: ({ inventoryChanged, geometryChanged }) => {
+        if (props.renderAs === "svg") setAnnotationFrame((frame) => frame + 1)
         if (inventoryChanged || geometryChanged) prepareNetworkCustomHits(store)
         if (store.lastCustomLayoutResult?.edgeHitTesting === false && hoverRef.current?.nodeOrEdge === "edge") hoverLeaveRef.current()
         if (inventoryChanged || geometryChanged) refreshKeyboardFocus()
@@ -1520,9 +1523,11 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
           style={{
             position: "absolute",
             top: 0,
-            left: 0
+            left: 0,
+            opacity: props.renderAs === "svg" ? 0 : undefined
           }}
         />
+        {props.renderAs === "svg" && <NetworkSceneSVG store={store} props={props} size={size} margin={margin} width={adjustedWidth} height={adjustedHeight} />}
 
         <div style={{ display: "contents" }} onMouseMove={onMouseMoveWrapped}>
           <NetworkSVGOverlay

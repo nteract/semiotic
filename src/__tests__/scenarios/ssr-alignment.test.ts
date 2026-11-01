@@ -95,7 +95,7 @@ describe("check-ssr-alignment.js", () => {
       path.join(ROOT, "src/components/stream/SceneToSVG.tsx")
     )
     expect(result.status).toBe(1)
-    expect(result.stdout).toMatch(/xy:\s+9 emitted \/ 0 handled/)
+    expect(result.stdout).toMatch(/xy:\s+8 emitted \/ 0 handled/)
     expect(result.stderr).toContain("SSR will drop these marks")
   })
 
@@ -117,18 +117,6 @@ describe("check-ssr-alignment.js", () => {
           'xySceneNodeToSVG has a `case "phantomForTest":` branch but no scene-node interface in the xy SceneNode union declares'
         )
         expect(result.stderr).toContain("likely dead code")
-      }
-    )
-  })
-
-  it("checks imported text interfaces with inherited accessibility metadata", () => {
-    withSceneToSVGMutation(
-      (src) => src.replace('case "text":', 'case "removedText":'),
-      (sceneToSvgPath) => {
-        const result = runCheck(sceneToSvgPath)
-        expect(result.status).toBe(1)
-        expect(result.stderr).toContain('Scene type "text" is part of the xy SceneNode union')
-        expect(result.stderr).toContain("SSR will drop these marks")
       }
     )
   })

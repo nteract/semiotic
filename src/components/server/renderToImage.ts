@@ -28,7 +28,7 @@ export async function renderImage(
   } : props
 
   let svg: string
-  const frameTypes = ["xy", "ordinal", "network", "geo", "physics", "wordcloud"]
+  const frameTypes = ["xy", "ordinal", "network", "geo", "physics"]
   if (frameTypes.includes(frameTypeOrComponent)) {
     svg = renderToStaticSVG(
       frameTypeOrComponent as FrameType,

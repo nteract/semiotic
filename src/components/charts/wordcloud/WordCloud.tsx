@@ -1,6 +1,6 @@
 "use client"
 import * as React from "react"
-import { useMemo } from "react"
+import { useMemo, useId } from "react"
 import type {
   WordCloudLayoutOptions,
   WordCloudLayoutResult,
@@ -15,7 +15,16 @@ import type { TooltipProp } from "../../Tooltip/Tooltip"
 import { resolveMultiCapableTooltip } from "../../Tooltip/Tooltip"
 import { useChartSelection, useColorScale } from "../shared/hooks"
 import { filterSparseArray } from "../shared/sparseArray"
-import { StreamWordCloudFrame } from "../../stream/StreamWordCloudFrame"
+import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
+import { useResponsiveSize } from "../../stream/useResponsiveSize"
+import { useHighContrast } from "../../stream/useMediaPreferences"
+import { useWordCloudLayout } from "../../wordcloud/useWordCloudLayout"
+import {
+  wordCloudNetworkLayout,
+  wordCloudRenderBackend
+} from "../../wordcloud/wordCloudNetworkLayout"
+import { wordCloudTableScene } from "../../wordcloud/wordCloudTable"
+import { AccessibleDataTableSlot } from "../../stream/AccessibleDataTable"
 import { normalizePartialMargin } from "../../types/marginType"
 import type { AccessibleTableProp } from "../../stream/accessibleTableTypes"
 
@@ -24,6 +33,17 @@ export interface WordCloudAnnotation {
   label: string
   dx?: number
   dy?: number
+}
+
+/** A rounded enclosure around placed terms, painted by the network background layer. */
+export interface WordCloudGroupHull {
+  id: string
+  label?: string
+  /** Stable term IDs. Missing or omitted terms are ignored; groups may overlap. */
+  ids: string[]
+  color?: string
+  /** Extra space around the occupied word bounds, in pixels. Defaults to 8. */
+  padding?: number
 }
 
 export interface WordCloudProps extends WordCloudLayoutOptions {
@@ -53,6 +73,8 @@ export interface WordCloudProps extends WordCloudLayoutOptions {
   /** Canvas is primary; SVG paints the same retained text geometry. */
   renderAs?: "canvas" | "svg"
   annotations?: WordCloudAnnotation[]
+  /** Story or category enclosures; changing them never repacks the words. */
+  groupHulls?: WordCloudGroupHull[]
   className?: string
   maxDevicePixelRatio?: number
 }
@@ -112,13 +134,160 @@ export function WordCloud(props: WordCloudProps): React.ReactElement {
       }),
     [props.tooltip]
   )
+  const [containerRef, size] = useResponsiveSize(
+    [
+      props.width ?? props.layout?.width ?? 640,
+      props.height ?? props.layout?.height ?? 400
+    ],
+    props.responsiveWidth,
+    props.responsiveHeight
+  )
+  const margin = {
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    ...normalizePartialMargin(props.margin)
+  }
+  const { layout, error, pending } = useWordCloudLayout(
+    props,
+    Math.floor(size[0] - margin.left - margin.right),
+    Math.floor(size[1] - margin.top - margin.bottom)
+  )
+  const forcedColors = useHighContrast()
+  const nodes = useMemo(
+    () => layout?.words.map((word) => ({ id: word.id })) ?? [],
+    [layout]
+  )
+  const layoutConfig = useMemo(
+    () => ({
+      layout,
+      data: props.data,
+      colorBy: props.colorBy,
+      colorScale,
+      selection: props.selection,
+      annotations: props.annotations,
+      groupHulls: props.groupHulls,
+      forcedColors,
+      clickable: Boolean(props.onClick || props.selection)
+    }),
+    [
+      layout,
+      props.data,
+      props.colorBy,
+      colorScale,
+      props.selection,
+      props.annotations,
+      props.groupHulls,
+      forcedColors,
+      props.onClick
+    ]
+  )
+  const { activeSelectionHook, hoverSelectionHook } = interaction
+  const layoutSelection = useMemo(() => {
+    const active = [activeSelectionHook, hoverSelectionHook].filter(
+      (hook) => hook?.isActive
+    )
+    return active.length
+      ? {
+          isActive: true,
+          predicate: (datum: Datum) =>
+            active.every((hook) => hook!.predicate(datum))
+        }
+      : null
+  }, [activeSelectionHook, hoverSelectionHook])
+  const tableScene = useMemo(
+    () =>
+      wordCloudTableScene(
+        {
+          data: props.data,
+          textAccessor: props.textAccessor,
+          valueAccessor: props.valueAccessor
+        },
+        layout
+      ),
+    [props.data, props.textAccessor, props.valueAccessor, layout]
+  )
+  const tableId = `wordcloud-table-${useId()}`
+  const tooltipContent = useMemo(
+    () => (hover: Datum) => {
+      const word = layout?.words.find(
+        (candidate) => props.data[candidate.sourceIndex] === hover.data
+      )
+      return tooltip.tooltipContent({
+        ...hover,
+        text: word?.text,
+        value: word?.value
+      })
+    },
+    [layout, props.data, tooltip]
+  )
   return (
-    <StreamWordCloudFrame
-      {...props}
-      margin={normalizePartialMargin(props.margin)}
-      colorScale={colorScale}
-      interaction={interaction}
-      tooltipContent={tooltip.tooltipContent}
-    />
+    <div
+      className={`semiotic-wordcloud ${props.className ?? ""}`}
+      role="group"
+      aria-label={props.title ?? "Word cloud"}
+    >
+      <div
+        ref={containerRef}
+        aria-busy={pending}
+        data-wordcloud-state={error ? "error" : pending ? "preparing" : "ready"}
+        data-placed-count={layout?.words.length ?? 0}
+        data-omitted-count={layout?.omitted.length ?? 0}
+        style={{
+          position: "relative",
+          width: props.responsiveWidth ? "100%" : size[0],
+          height: props.responsiveHeight ? "100%" : size[1]
+        }}
+      >
+        <StreamNetworkFrame
+          chartType="force"
+          nodes={nodes}
+          size={size}
+          margin={margin}
+          customNetworkLayout={wordCloudNetworkLayout}
+          layoutConfig={layoutConfig}
+          layoutSelection={layoutSelection}
+          renderMode={wordCloudRenderBackend}
+          renderAs={forcedColors ? "svg" : props.renderAs}
+          keyboardNavigation="spatial"
+          animate={false}
+          showLabels={false}
+          enableHover={props.enableHover}
+          tooltipContent={tooltipContent}
+          customHoverBehavior={interaction.customHoverBehavior}
+          customClickBehavior={interaction.customClickBehavior}
+          description={
+            [props.title, props.description].filter(Boolean).join(". ") ||
+            "Word cloud"
+          }
+          summary={props.summary}
+          accessibleTable={false}
+          maxDevicePixelRatio={props.maxDevicePixelRatio}
+        />
+        {pending && (
+          <div role="status" style={{ position: "absolute", inset: 16 }}>
+            Preparing words…
+          </div>
+        )}
+        {error && (
+          <div role="alert" style={{ position: "absolute", inset: 16 }}>
+            {error.message}
+          </div>
+        )}
+        {!pending && !error && !layout?.words.length && (
+          <div role="status" style={{ position: "absolute", inset: 16 }}>
+            No terms could be placed. See the data summary for omitted terms.
+          </div>
+        )}
+      </div>
+      <AccessibleDataTableSlot
+        accessibleTable={props.accessibleTable ?? true}
+        scene={tableScene}
+        chartType="word cloud"
+        chartTitle={props.title}
+        tableId={tableId}
+      />
+    </div>
   )
 }

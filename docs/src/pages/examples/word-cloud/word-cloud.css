@@ -134,6 +134,7 @@
   padding: 4px;
 }
 .wonderland-cloud {
+  --semiotic-bg: var(--paper);
   width: 100%;
   margin: 12px auto;
   max-width: 800px;
@@ -146,6 +147,51 @@
   font:
     11px/1.5 system-ui,
     sans-serif;
+}
+.wonderland-threads {
+  border-block: 1px dashed var(--rule);
+  padding: 14px 0 4px;
+  margin: 8px 0 18px;
+}
+.wonderland-thread-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 16px;
+  font: italic 13px Georgia, serif;
+  margin-bottom: 10px;
+}
+.wonderland-thread-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.wonderland-thread-buttons button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 18px;
+  padding: 6px 10px;
+  font-size: 11px;
+}
+.wonderland-thread-buttons button[aria-pressed="true"] {
+  border-color: var(--thread-color, var(--ink));
+  box-shadow: inset 0 0 0 1px var(--thread-color, var(--ink));
+  background: #f1e8d9;
+}
+.wonderland-thread-buttons i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--thread-color);
+}
+.wonderland-thread-reading {
+  font: 12px/1.8 system-ui, sans-serif;
+  min-height: 44px;
+  margin: 12px 0 0;
+}
+.wonderland-threads .wonderland-caption {
+  margin: 6px 0 10px;
 }
 .wonderland-key span {
   display: flex;
@@ -297,7 +343,7 @@
   color: #8c3535;
   text-decoration: underline;
 }
-.wonderland .stream-wordcloud-tooltip {
+.wonderland .stream-network-tooltip {
   color: #29262b;
 }
 @media (max-width: 900px) {

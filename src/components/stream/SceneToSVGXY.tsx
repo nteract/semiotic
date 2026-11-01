@@ -34,7 +34,6 @@ import {
   symbolSceneNodeToSVG
 } from "./sceneToSVGShared"
 import { sceneMarkCursor, withSceneMarkCursor } from "./sceneCursor"
-import { textSceneNodeToSVG } from "./textScene"
 
 // ── Color parsing helper (for heatcell contrast text) ───────────────────
 
@@ -142,7 +141,6 @@ function xySceneNodeToSVGMark(
   cursorHitRadius = 30
 ): React.ReactNode {
   switch (node.type) {
-    case "text": return textSceneNodeToSVG(node, i)
     case "line": {
       const n = node as LineSceneNode
       if (n.path.length === 0) return null

@@ -54,7 +54,7 @@ const explicitExternals = [
  * MessagePort in short-lived Node processes.
  */
 function nodeStaticMarkupSourcePlugin() {
-  const nodeRenderedSources = /(?:\/|\\)(?:renderToStaticSVG|staticXY|staticOrdinal|staticNetwork|staticGeo|staticValue|staticWordCloud|animatedGif|PhysicsSettledSVG)\.tsx$/
+  const nodeRenderedSources = /(?:\/|\\)(?:renderToStaticSVG|staticXY|staticOrdinal|staticNetwork|staticGeo|staticValue|animatedGif|PhysicsSettledSVG)\.tsx$/
   return {
     name: "node-static-markup-source",
     setup(build) {

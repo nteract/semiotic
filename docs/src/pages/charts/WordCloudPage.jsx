@@ -128,6 +128,12 @@ const props = [
     description: "Explicit outer padding. No axis margins are reserved.",
   },
   {
+    name: "groupHulls",
+    type: "array",
+    description:
+      "Rounded enclosures in the network background layer: { id, ids, label?, color?, padding? }. ids are stable term IDs; only placed members contribute. Groups may overlap without repacking words. Available in Canvas, SVG and server output.",
+  },
+  {
     name: "renderAs",
     type: "string",
     default: '"canvas"',
@@ -273,6 +279,12 @@ console.log(evidence.wordCloud) // placed count, omissions, mask and font identi
         and reason. Duplicate IDs, missing labels, invalid values, term limits, failed rasterization
         and lack of space remain distinguishable. The hidden mask obstacle never counts as a mark.
       </p>
+      <h2>Shared network frame</h2>
+      <p>
+        WordCloud uses StreamNetworkFrame with a custom layout and text render backend.
+        Prepared word bounds supply its hit targets; the frame owns painting, pointer and
+        keyboard interaction, selection, and SVG rendering. No separate word-cloud frame is used.
+      </p>
       <h2>Fonts, Node and interaction</h2>
       <p>
         Browser preparation awaits font loading. Node preparation accepts a second argument with
@@ -281,7 +293,7 @@ console.log(evidence.wordCloud) // placed count, omissions, mask and font identi
         Font substitution on another host can change the painted ink.
       </p>
       <p>
-        Tab reaches the first term, arrows move in frequency order, Enter/Space activates the
+        Tab reaches the network frame; Home selects a term and arrows move spatially. Enter/Space activates the
         original datum, and Escape dismisses its tooltip. Hit testing uses stored rotated bounds.
         Shape changes repack discretely; there is no incremental push API or layout animation.
       </p>

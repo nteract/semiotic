@@ -15,6 +15,7 @@ function useSelectionActions(name: string, clientId?: string | undefined): UseSe
 function validateWordCloudLayout(options: WordCloudLayoutOptions, layout: WordCloudLayoutResult): void
 interface WordCloudAnnotation
 interface WordCloudCanvasEnvironment
+interface WordCloudGroupHull
 interface WordCloudLayoutOptions
 interface WordCloudLayoutResult
 interface WordCloudOmission
@@ -28,6 +29,11 @@ interface-member WordCloudCanvasEnvironment::property::canvas = optional canvas:
 interface-member WordCloudCanvasEnvironment::property::fontIdentity = optional fontIdentity: string | undefined
 interface-member WordCloudCanvasEnvironment::property::loadImage = optional loadImage: ((src: string) => Promise<CanvasImageSource & {width: number; height: number;}>) | undefined
 interface-member WordCloudCanvasEnvironment::property::path = optional path: ((svgPath: string) => Path2D) | undefined
+interface-member WordCloudGroupHull::property::color = optional color: string | undefined
+interface-member WordCloudGroupHull::property::id = required id: string
+interface-member WordCloudGroupHull::property::ids = required ids: string[]
+interface-member WordCloudGroupHull::property::label = optional label: string | undefined
+interface-member WordCloudGroupHull::property::padding = optional padding: number | undefined
 interface-member WordCloudLayoutOptions::property::data = required data: readonly Datum[]
 interface-member WordCloudLayoutOptions::property::fontFamily = optional fontFamily: string | undefined
 interface-member WordCloudLayoutOptions::property::fontSizeRange = optional fontSizeRange: [number, number] | undefined
@@ -88,6 +94,7 @@ interface-member WordCloudProps::property::colorBy = optional colorBy: ((datum: 
 interface-member WordCloudProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
 interface-member WordCloudProps::property::description = optional description: string | undefined
 interface-member WordCloudProps::property::enableHover = optional enableHover: boolean | undefined
+interface-member WordCloudProps::property::groupHulls = optional groupHulls: WordCloudGroupHull[] | undefined
 interface-member WordCloudProps::property::layout = optional layout: WordCloudLayoutResult | undefined
 interface-member WordCloudProps::property::linkedHover = optional linkedHover: LinkedHoverProp | undefined
 interface-member WordCloudProps::property::margin = optional margin: PartialMargin | undefined

@@ -210,6 +210,10 @@ export interface RealtimeNetworkFrameProps {
 
   /** Optional scene paint backend. Exact node and edge geometry remains interactive. */
   renderMode?: SceneRenderMode<NetworkSceneNode | NetworkSceneEdge>
+  /** Paint the retained scene as Canvas (default) or interactive SVG. */
+  renderAs?: "canvas" | "svg"
+  /** Graph navigation follows edges on Enter; spatial navigation activates the focused mark. */
+  keyboardNavigation?: "graph" | "spatial"
   colorBy?: string | ((d: RealtimeNode) => string)
   colorScheme?: string | string[] | Record<string, string>
   edgeColorBy?: "source" | "target" | ((d: RealtimeEdge) => string)
@@ -525,6 +529,10 @@ export interface StreamNetworkFrameProps<T = Datum>
   edgeSort?: NetworkDatumComparator
   /** Optional scene paint backend. Exact node and edge geometry remains interactive. */
   renderMode?: SceneRenderMode<NetworkSceneNode | NetworkSceneEdge>
+  /** Paint the retained scene as Canvas (default) or interactive SVG. */
+  renderAs?: "canvas" | "svg"
+  /** Graph navigation follows edges on Enter; spatial navigation activates the focused mark. */
+  keyboardNavigation?: "graph" | "spatial"
   /**
    * Parallel projection applied after layout: `"isometric"`, `"pixel"` (2:1),
    * `"dimetric"`, `"military"`, `"cabinet"`, or a config object with

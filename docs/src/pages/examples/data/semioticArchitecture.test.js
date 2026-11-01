@@ -30,7 +30,7 @@ describe("Semiotic architecture example data", () => {
       SEMIOTIC_ARCHITECTURE_NODES.filter((node) => node.layer === "frame").map((node) => node.id),
     )
     expect(frames).toEqual(
-      new Set(["frame-xy", "frame-ordinal", "frame-network", "frame-geo", "frame-physics", "frame-wordcloud"]),
+      new Set(["frame-xy", "frame-ordinal", "frame-network", "frame-geo", "frame-physics"]),
     )
 
     const profilesById = new Map(SEMIOTIC_EXAMPLE_PROFILES.map((profile) => [profile.id, profile]))
@@ -43,6 +43,7 @@ describe("Semiotic architecture example data", () => {
       "frame-geo",
     )
     expect(architectureHighlight(profilesById.get("watermarks"))).toContain("frame-physics")
+    expect(architectureHighlight(profilesById.get("word-cloud"))).toContain("frame-network")
   })
 
   it("maps the Wikipedia realtime example to the imperative Push API", () => {

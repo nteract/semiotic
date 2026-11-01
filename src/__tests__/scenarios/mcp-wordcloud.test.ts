@@ -86,7 +86,7 @@ describe("portable WordCloud through the shipped MCP server", () => {
           expect(
             prepared.result.structuredContent.evidenceEnvelope.render.evidence
           ).toMatchObject({
-            frameType: "wordcloud",
+            frameType: "network",
             markCount: 3,
             wordCloud: { placedCount: 3, inputCount: 3 }
           })
@@ -97,7 +97,7 @@ describe("portable WordCloud through the shipped MCP server", () => {
           )
           expect(
             JSON.parse(block.text.slice("Render evidence:\n".length))
-          ).toMatchObject({ frameType: "wordcloud", markCount: 3 })
+          ).toMatchObject({ frameType: "network", markCount: 3 })
         }
         const missing = await render({ ...props, layout: undefined })
         expect(missing.result.isError).toBe(true)

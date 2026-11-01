@@ -110,6 +110,15 @@ test("the CommonJS word-cloud boundary bundles its ESM-only engine", async () =>
   const require = createRequire(import.meta.url)
   const cloud = require(resolve(root, pkg.exports["./wordcloud"].require))
   assert.equal(typeof cloud.WordCloud, "function")
+  const fixture = JSON.parse(readFileSync(join(root, "src/components/wordcloud/wordCloud.fixture.json"), "utf8"))
+  const React = require("react")
+  const { renderToStaticMarkup } = require("react-dom/server")
+  for (const api of [cloud, await import(resolve(root, pkg.exports["./wordcloud"].import))]) {
+    const html = renderToStaticMarkup(React.createElement(api.WordCloud, { ...fixture.options, layout: fixture.layout }))
+    assert.match(html, /class="stream-network-frame"/)
+    assert.doesNotMatch(html, /class="stream-wordcloud-frame"/)
+    assert.equal((html.match(/data-word-id=/g) ?? []).length, 3)
+  }
   const empty = await cloud.prepareWordCloudLayout({ data: [] })
   assert.deepEqual(empty.words, [])
   assert.ok(Object.isFrozen(empty))

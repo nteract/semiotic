@@ -149,7 +149,8 @@ test("browser Canvas, browser SVG and server PNG retain the same bundled-font in
     )
     const svg = await readFile(`${output}.svg`, "utf8")
     const evidence = JSON.parse(await readFile(`${output}.json`, "utf8"))
-    expect(evidence.markCountByType).toEqual({ text: 3 })
+    expect(evidence.frameType).toBe("network")
+    expect(evidence.markCountByType).toEqual({ "node:rect": 3 })
     expect(evidence.wordCloud.placedCount).toBe(3)
     const fontBase64 = (
       await readFile("docs/public/fonts/wordcloud/CrimsonText-Regular.ttf")
@@ -277,10 +278,58 @@ test("shaped reading exposes original values through marks, keyboard, omissions 
   page.on("pageerror", (error) => errors.push(error.message))
   await page.goto("/examples/word-cloud")
   await ready(page)
-  const alice = page.locator('g[role="button"][data-word-id="alice"]')
-  const rect = alice.locator("rect")
-  await rect.hover({ force: true })
-  const tooltip = page.locator(".stream-wordcloud-tooltip")
+  const frame = page.locator(".semiotic-wordcloud .stream-network-frame")
+  const alice = frame.locator('text[data-word-id="alice"]')
+  await alice.scrollIntoViewIfNeeded()
+  // Word bounds can overlap in whitespace. Hover exposed glyph ink, as a
+  // reader would, rather than assuming the bounding-box center belongs to it.
+  const alicePoint = await alice.evaluate((element) => {
+    const text = element as SVGTextElement
+    const box = text.getBoundingClientRect()
+    const others = [
+      ...text.ownerSVGElement!.querySelectorAll("text[data-word-id]")
+    ]
+      .filter((other) => other !== text)
+      .map((other) => other.getBoundingClientRect())
+    const canvas = document.createElement("canvas")
+    canvas.width = Math.ceil(box.width)
+    canvas.height = Math.ceil(box.height)
+    const ctx = canvas.getContext("2d")!
+    const matrix = text.getScreenCTM()!
+    ctx.setTransform(
+      matrix.a,
+      matrix.b,
+      matrix.c,
+      matrix.d,
+      matrix.e - box.x,
+      matrix.f - box.y
+    )
+    ctx.font = `${text.getAttribute("font-style")} ${text.getAttribute("font-weight")} ${text.getAttribute("font-size")}px ${text.getAttribute("font-family")}`
+    ctx.textAlign = "center"
+    ctx.textBaseline = "alphabetic"
+    ctx.fillText(text.textContent!, 0, 0)
+    const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data
+    for (let y = 1; y < canvas.height - 1; y++)
+      for (let x = 1; x < canvas.width - 1; x++) {
+        if (pixels[(y * canvas.width + x) * 4 + 3] < 240) continue
+        const px = box.x + x + 0.5,
+          py = box.y + y + 0.5
+        if (
+          !others.some(
+            (other) =>
+              px >= other.left - 2 &&
+              px <= other.right + 2 &&
+              py >= other.top - 2 &&
+              py <= other.bottom + 2
+          )
+        )
+          return { x: px, y: py }
+      }
+    throw new Error("Alice must have exposed, interactive glyph ink")
+  })
+  await page.mouse.move(alicePoint.x, alicePoint.y)
+  const initialFrameBox = (await frame.boundingBox())!
+  const tooltip = page.locator(".stream-network-tooltip")
   await expect(tooltip).toContainText("397 occurrences")
   await expect(tooltip).toContainText("Characters")
   const tooltipBox = (await tooltip.boundingBox())!
@@ -290,39 +339,61 @@ test("shaped reading exposes original values through marks, keyboard, omissions 
   )
   await page.mouse.move(0, 0)
   await expect(tooltip).not.toBeVisible()
-  await alice.focus()
-  await expect(tooltip).toContainText("397 occurrences")
+  await frame.focus()
+  await page.keyboard.press("Home")
+  await expect(tooltip).toBeVisible()
+  const firstTerm = await tooltip.locator("strong").textContent()
   await page.keyboard.press("ArrowRight")
+  await expect(tooltip.locator("strong")).not.toHaveText(firstTerm!)
+  const activatedTerm = await tooltip.locator("strong").textContent()
   await page.keyboard.press("Enter")
-  await expect(page.getByLabel("Selected word passage")).toContainText("queen")
+  await expect(page.getByLabel("Selected word passage")).toContainText(
+    activatedTerm!
+  )
   await page.keyboard.press("Escape")
   await expect(tooltip).not.toBeVisible()
-  const before = await page
-    .locator('g[role="button"][data-word-id]')
-    .evaluateAll((nodes) =>
-      nodes.map((node) => [
-        node.getAttribute("data-word-id"),
-        node.getAttribute("data-word-x"),
-        node.getAttribute("data-word-y")
-      ])
-    )
-  await page.getByLabel("Word cloud renderer").selectOption("canvas")
-  await ready(page)
-  await expect(page.locator(".stream-wordcloud-frame canvas")).toBeVisible()
-  await rect.hover({ force: true })
-  await expect(tooltip).toContainText("397 occurrences")
-  expect(
-    await page
-      .locator('g[role="button"][data-word-id]')
+  const placements = () =>
+    frame
+      .locator("text[data-word-id]")
       .evaluateAll((nodes) =>
         nodes.map((node) => [
           node.getAttribute("data-word-id"),
-          node.getAttribute("data-word-x"),
-          node.getAttribute("data-word-y")
+          node.getAttribute("transform")
         ])
       )
-  ).toEqual(before)
+  const before = await placements()
+  const hulls = frame.locator("[data-wordcloud-hull]")
+  await expect(hulls).toHaveCount(1)
+  await expect(hulls).toHaveAttribute("data-wordcloud-hull", "tea")
+  const teaPath = await hulls.getAttribute("d")
+  await page.getByRole("button", { name: "The royal court", exact: true }).click()
+  await expect(hulls).toHaveAttribute("data-wordcloud-hull", "court")
+  await expect(alice).toHaveAttribute("opacity", "1")
+  await expect(frame.locator('text[data-word-id="hatter"]')).toHaveAttribute("opacity", /^0\.\d+$/)
+  expect(await placements()).toEqual(before)
+  await page.getByRole("button", { name: "All threads", exact: true }).click()
+  await expect(hulls).toHaveCount(3)
+  await expect(frame.locator('[data-wordcloud-hull="tea"]')).toHaveAttribute("d", teaPath!)
+  expect(await placements()).toEqual(before)
+  await page.getByRole("button", { name: "Hide threads", exact: true }).click()
+  await expect(hulls).toHaveCount(0)
+  await page.getByRole("button", { name: "The tea party", exact: true }).click()
+  await expect(hulls).toHaveCount(1)
+  await page.getByLabel("Word cloud renderer").selectOption("canvas")
+  await ready(page)
+  await expect(frame.locator("canvas")).toHaveCSS("opacity", "1")
+  await expect(hulls).toHaveAttribute("d", teaPath!)
+  await expect(frame.locator("svg[data-network-scene]")).toHaveCount(0)
+  await frame.scrollIntoViewIfNeeded()
+  const canvasFrameBox = (await frame.boundingBox())!
+  await page.mouse.move(
+    canvasFrameBox.x + alicePoint.x - initialFrameBox.x,
+    canvasFrameBox.y + alicePoint.y - initialFrameBox.y
+  )
+  await expect(tooltip).toContainText("397 occurrences")
   await page.getByLabel("Word cloud renderer").selectOption("svg")
+  await expect(alice).toBeVisible()
+  expect(await placements()).toEqual(before)
   const downloadPromise = page.waitForEvent("download")
   await page
     .getByRole("button", { name: "Placement JSON", exact: true })
@@ -341,6 +412,7 @@ test("shaped reading exposes original values through marks, keyboard, omissions 
     ).value
   ).toBe(397)
   expect(exported.props.data).toHaveLength(120)
+  expect(exported.props.groupHulls[0].id).toBe("tea")
   for (const format of ["SVG", "PNG"]) {
     const nextDownload = page.waitForEvent("download")
     await page.getByRole("button", { name: format, exact: true }).click()
@@ -352,6 +424,8 @@ test("shaped reading exposes original values through marks, keyboard, omissions 
       expect(body.toString()).toContain("data:font/ttf;base64,")
       expect(body.toString()).toContain("SIL OPEN FONT LICENSE")
       expect(body.toString()).toContain('data-word-id="alice"')
+      expect(body.toString()).toContain('data-wordcloud-hull="tea"')
+      expect(body.toString().indexOf("data-wordcloud-hull")).toBeLessThan(body.toString().indexOf("data-word-id"))
       expect(body.toString()).not.toContain('role="button"')
     } else {
       expect(body.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a")
@@ -370,18 +444,23 @@ test("shaped reading exposes original values through marks, keyboard, omissions 
   await ready(page)
   await expect
     .poll(async () =>
-      page.locator(".stream-wordcloud-frame svg").getAttribute("width")
+      frame.locator("svg[data-network-scene]").getAttribute("width")
     )
     .not.toBe(String(exported.props.width))
-  await page.locator('g[role="button"][data-word-id]').first().focus()
+  await expect(hulls).not.toHaveAttribute("d", teaPath!)
+  await frame.focus()
+  await page.keyboard.press("Home")
   await expect(tooltip).toBeVisible()
   const mobileBox = (await tooltip.boundingBox())!
   expect(mobileBox.x).toBeGreaterThanOrEqual(0)
   expect(mobileBox.x + mobileBox.width).toBeLessThanOrEqual(391)
   await page.emulateMedia({ forcedColors: "active", reducedMotion: "reduce" })
-  await expect(
-    page.locator(".stream-wordcloud-frame text[data-word-id]").first()
-  ).toHaveAttribute("fill", "CanvasText")
+  await expect(frame.locator("text[data-word-id]").first()).toHaveAttribute(
+    "fill",
+    "CanvasText"
+  )
+  await expect(hulls).toHaveAttribute("stroke", "CanvasText")
+  await expect(hulls).toHaveAttribute("fill", "none")
   await page.keyboard.press("Escape")
   await expect(tooltip).not.toBeVisible()
   expect(errors).toEqual([])

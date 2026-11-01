@@ -417,7 +417,6 @@ interface SwimlaneChartProps<TDatum extends Datum = Datum> extends BaseChartProp
 interface SyncedPushDataOptions<T = Datum>
 interface SyncedPushHandle<T = Datum>
 interface TemporalHistogramProps<TDatum extends Datum = Datum> extends Omit<RealtimeHistogramProps<TDatum>, "data" | "windowMode" | "windowSize">
-interface TextSceneNode extends SceneAccessibilityMetadata
 interface ThresholdAlertConfig
 interface ToConfigOptions
 interface ToURLOptions
@@ -2590,6 +2589,7 @@ interface-member StreamNetworkFrameProps::property::hierarchySum = optional hier
 interface-member StreamNetworkFrameProps::property::htmlMarkCulling = optional htmlMarkCulling: import("./networkViewportTypes").NetworkHtmlMarkCulling | undefined
 interface-member StreamNetworkFrameProps::property::initialEdges = optional initialEdges: Datum[] | undefined
 interface-member StreamNetworkFrameProps::property::iterations = optional iterations: number | undefined
+interface-member StreamNetworkFrameProps::property::keyboardNavigation = optional keyboardNavigation: "graph" | "spatial" | undefined
 interface-member StreamNetworkFrameProps::property::labelMode = optional labelMode: "all" | "leaf" | "parent" | undefined
 interface-member StreamNetworkFrameProps::property::layoutConfig = optional layoutConfig: object | undefined
 interface-member StreamNetworkFrameProps::property::layoutExecution = optional layoutExecution: "auto" | "sync" | "worker" | undefined
@@ -2635,6 +2635,7 @@ interface-member StreamNetworkFrameProps::property::paused = optional paused: bo
 interface-member StreamNetworkFrameProps::property::perspective = optional perspective: import("./networkPerspective").NetworkPerspective | undefined
 interface-member StreamNetworkFrameProps::property::pulse = optional pulse: PulseConfig | undefined
 interface-member StreamNetworkFrameProps::property::random = optional random: import("./FrameRuntime").FrameRandom | undefined
+interface-member StreamNetworkFrameProps::property::renderAs = optional renderAs: "canvas" | "svg" | undefined
 interface-member StreamNetworkFrameProps::property::renderMode = optional renderMode: SceneRenderMode<NetworkSceneEdge | NetworkSceneNode> | undefined
 interface-member StreamNetworkFrameProps::property::responsiveHeight = optional responsiveHeight: boolean | undefined
 interface-member StreamNetworkFrameProps::property::responsiveWidth = optional responsiveWidth: boolean | undefined
@@ -3049,26 +3050,6 @@ interface-member SyncedPushHandle::property::pushMany = optional pushMany: ((dat
 interface-member SyncedPushHandle::property::remove = optional remove: ((id: string | string[]) => unknown) | undefined
 interface-member SyncedPushHandle::property::update = optional update: ((id: string, updater: (datum: T) => T) => unknown) | undefined
 interface-member TemporalHistogramProps::property::data = required data: TDatum[]
-interface-member TextSceneNode::property::_targetOpacity = optional _targetOpacity: number | undefined
-interface-member TextSceneNode::property::_transitionKey = optional _transitionKey: string | undefined
-interface-member TextSceneNode::property::datum = required datum: Datum | null
-interface-member TextSceneNode::property::fontFamily = required fontFamily: string
-interface-member TextSceneNode::property::fontSize = required fontSize: number
-interface-member TextSceneNode::property::fontStyle = optional fontStyle: string | undefined
-interface-member TextSceneNode::property::fontWeight = optional fontWeight: number | string | undefined
-interface-member TextSceneNode::property::group = optional group: string | undefined
-interface-member TextSceneNode::property::id = required id: string
-interface-member TextSceneNode::property::interactive = optional interactive: boolean | undefined
-interface-member TextSceneNode::property::rotate = optional rotate: number | undefined
-interface-member TextSceneNode::property::style = required style: Style
-interface-member TextSceneNode::property::text = required text: string
-interface-member TextSceneNode::property::type = required type: "text"
-interface-member TextSceneNode::property::x = required x: number
-interface-member TextSceneNode::property::x0 = required x0: number
-interface-member TextSceneNode::property::x1 = required x1: number
-interface-member TextSceneNode::property::y = required y: number
-interface-member TextSceneNode::property::y0 = required y0: number
-interface-member TextSceneNode::property::y1 = required y1: number
 interface-member ThresholdAlertConfig::property::critical = optional critical: number | undefined
 interface-member ThresholdAlertConfig::property::criticalColor = optional criticalColor: string | undefined
 interface-member ThresholdAlertConfig::property::metric = required metric: (node: RealtimeNode) => number
@@ -3377,7 +3358,7 @@ type RealtimeTemporalHistogramProps<TDatum extends Datum = Datum> = RealtimeHist
 type ResolutionMode = "crossfilter" | "intersect" | "union"
 type ResponsiveOrientation = "landscape" | "portrait"
 type RuntimeMode = "bounded" | "streaming"
-type SceneNode = AreaSceneNode | CandlestickSceneNode | GlyphSceneNode | HeatcellSceneNode | LineSceneNode | PointSceneNode | RectSceneNode | SymbolSceneNode | import("./textScene").TextSceneNode
+type SceneNode = AreaSceneNode | CandlestickSceneNode | GlyphSceneNode | HeatcellSceneNode | LineSceneNode | PointSceneNode | RectSceneNode | SymbolSceneNode
 type SemanticGradientInput = GradientConfig | SemanticGradientStopInput[]
 type SemanticGradientStop = SemanticGradientStopInput
 type SerializedFieldSelection = {type: "interval"; range: [number, number];} | {type: "point"; values: unknown[];}

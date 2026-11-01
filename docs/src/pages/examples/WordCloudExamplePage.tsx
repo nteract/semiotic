@@ -1,5 +1,5 @@
 import * as React from "react"
-import { WordCloud, useSelection, type WordCloudLayoutResult } from "semiotic/wordcloud"
+import { WordCloud, useSelection, type WordCloudGroupHull, type WordCloudLayoutResult } from "semiotic/wordcloud"
 import ExamplePageLayout from "./ExamplePageLayout"
 import fixture from "./word-cloud/alice.json"
 import { cloudMask, shapes, type ShapeName } from "./word-cloud/shapes"
@@ -10,6 +10,11 @@ const palette = {
   "Places & objects": "#376b62",
   "Story language": "#685987",
 }
+const storyThreads: WordCloudGroupHull[] = [
+  { id: "tea", label: "The tea party", color: "#906024", ids: ["alice", "hatter", "hare", "dormouse", "tea", "time", "table"] },
+  { id: "court", label: "The royal court", color: "#a63b3b", ids: ["alice", "queen", "king", "jury", "court", "head"] },
+  { id: "rabbit", label: "Down the rabbit hole", color: "#376b62", ids: ["alice", "rabbit", "door", "garden", "curious", "wonder"] },
+]
 const fontFamily = "Crimson Text"
 const fontEnvironment = {
   fontIdentity:
@@ -35,6 +40,7 @@ export default function WordCloudExamplePage() {
   const [count, setCount] = React.useState(120)
   const [seed, setSeed] = React.useState(42)
   const [rotate, setRotate] = React.useState<"horizontal" | "orthogonal">("horizontal")
+  const [thread, setThread] = React.useState("tea")
   const [paint, setPaint] = React.useState<"canvas" | "svg">("svg")
   const [layout, setLayout] = React.useState<WordCloudLayoutResult>()
   const [error, setError] = React.useState("")
@@ -74,6 +80,12 @@ export default function WordCloudExamplePage() {
     layout?.inputCount === count
       ? layout
       : undefined
+  const groupHulls = React.useMemo(
+    () => storyThreads.filter((group) => thread === "all" || group.id === thread),
+    [thread],
+  )
+  const threadTerms = [...new Set(groupHulls.flatMap((group) => group.ids))]
+  const placedIds = new Set(current?.words.map((word) => word.id))
   const omitted = new Map(current?.omitted.map((word) => [word.id, word.reason]) ?? [])
   const term = fixture.data.find((row) => row.text === selected)!
   const filtered = data.filter(
@@ -87,7 +99,7 @@ export default function WordCloudExamplePage() {
           JSON.stringify(
             {
               component: "WordCloud",
-              props: { ...options, colorBy: "category", colorScheme: palette, layout: current },
+              props: { ...options, colorBy: "category", colorScheme: palette, groupHulls, layout: current },
             },
             null,
             2,
@@ -98,8 +110,14 @@ export default function WordCloudExamplePage() {
       "wonderland-word-cloud.json",
     )
   const svgExport = async () => {
-    const node = host.current?.querySelector("svg")?.cloneNode(true) as SVGElement | undefined
+    const node = host.current?.querySelector("svg[data-network-scene]")?.cloneNode(true) as SVGElement | undefined
     if (!node) return ""
+    // The shared network frame composites its backgrounds, marks and annotations
+    // in separate SVGs. Preserve that layer order in the standalone download.
+    const background = host.current?.querySelector(".wordcloud-group-hulls")?.closest("svg")
+    if (background) node.prepend(...Array.from(background.childNodes, (child) => child.cloneNode(true)))
+    const overlay = host.current?.querySelector("svg[data-semiotic-overlay]")
+    if (overlay) node.append(...Array.from(overlay.childNodes, (child) => child.cloneNode(true)))
     node.querySelectorAll('[role="button"]').forEach((element) => element.remove())
     const response = await fetch("/fonts/wordcloud/CrimsonText-Regular.ttf")
     if (!response.ok) throw new Error("Font unavailable for export")
@@ -263,6 +281,7 @@ export default function WordCloudExamplePage() {
                 renderAs={paint}
                 colorBy="category"
                 colorScheme={palette}
+                groupHulls={groupHulls}
                 onLayout={(value) => {
                   setLayout(value)
                   setError("")
@@ -285,6 +304,40 @@ export default function WordCloudExamplePage() {
                   </div>
                 )}
               />
+            </div>
+            <div className="wonderland-threads" aria-label="Story threads">
+              <div className="wonderland-thread-heading">
+                <span className="wonderland-kicker">Pull a story thread</span>
+                <span>Same words. Another connection.</span>
+              </div>
+              <div className="wonderland-thread-buttons">
+                {storyThreads.map((group) => (
+                  <button
+                    key={group.id}
+                    aria-pressed={thread === group.id}
+                    style={{ "--thread-color": group.color } as React.CSSProperties}
+                    onClick={() => setThread(group.id)}
+                    onPointerEnter={() => hover.selectPoints({ text: group.ids })}
+                    onPointerLeave={hover.clear}
+                    onFocus={() => hover.selectPoints({ text: group.ids })}
+                    onBlur={hover.clear}
+                  >
+                    <i aria-hidden="true" />{group.label}
+                  </button>
+                ))}
+                <button aria-pressed={thread === "all"} onClick={() => setThread("all")}>All threads</button>
+                <button aria-pressed={thread === "none"} onClick={() => setThread("none")}>Hide threads</button>
+              </div>
+              <p className="wonderland-thread-reading" aria-live="polite">
+                {groupHulls.length ? <>
+                  <b>{threadTerms.filter((id) => placedIds.has(id)).length} of {threadTerms.length} thread terms placed.</b>{" "}
+                  {threadTerms.join(" · ")}
+                </> : "Reveal a cast of characters, a scene, or a journey without moving a single word."}
+              </p>
+              <p className="wonderland-caption">
+                These are hand-picked story groups, not discovered clusters. Alice belongs to all
+                three. A hull wraps its members and may enclose other words along the way.
+              </p>
             </div>
             <div className="wonderland-key">
               {Object.entries(palette).map(([category, color]) => (
@@ -396,6 +449,11 @@ export default function WordCloudExamplePage() {
               The same seed, source, font and viewport produce the same placement in the same raster
               environment. Rearranging changes position, never frequency. Smaller screens repack the
               words; the ranked list keeps every input.
+            </p>
+            <p>
+              The story threads reuse the network frame’s background layer and rounded hull
+              geometry. The same frame handles word hover, keyboard navigation and linked
+              highlighting, whether the words are painted with SVG or Canvas.
             </p>
             <p>
               A cloud is useful for a first impression. Use the exact counts for comparisons: word

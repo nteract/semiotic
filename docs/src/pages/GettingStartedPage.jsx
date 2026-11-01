@@ -49,7 +49,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/ordinal",
-    "kb": 139,
+    "kb": 140,
     "blurb": "BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts"
   },
   {
@@ -59,7 +59,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/network/zoom",
-    "kb": 192,
+    "kb": 193,
     "blurb": "Optional virtual network viewport, camera controls and consumer-owned LOD"
   },
   {
@@ -84,7 +84,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/wordcloud",
-    "kb": 39,
+    "kb": 134,
     "blurb": "WordCloud, shaped text placement, and portable layouts"
   },
   {
@@ -104,17 +104,17 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/server",
-    "kb": 287,
+    "kb": 290,
     "blurb": "renderChart, renderDashboard, renderToImage, renderToAnimatedGif"
   },
   {
     "importPath": "semiotic/server/node",
-    "kb": 287,
+    "kb": 290,
     "blurb": "renderChart, renderDashboard, renderToImage, renderToAnimatedGif"
   },
   {
     "importPath": "semiotic/server/edge",
-    "kb": 293,
+    "kb": 295,
     "blurb": "renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard"
   },
   {
@@ -134,7 +134,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/recipes",
-    "kb": 118,
+    "kb": 119,
     "blurb": "Pure layout functions (waffle, marimekko, flextree, dagre, …)"
   },
   {
@@ -189,7 +189,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/ai",
-    "kb": 694,
+    "kb": 695,
     "blurb": "All schema-backed charts + validation — optimized for LLM code generation"
   },
   {

@@ -1,4 +1,3 @@
-import { renderWordCloud, type StaticWordCloudProps } from "./staticWordCloud"
 import { resolveThemePreset } from "../store/themePresets"
 import { resolveHiddenAxisMargins } from "../legendLayout"
 import { scopeSvgIdentifiers } from "../shared/svgIdentifiers"
@@ -84,9 +83,6 @@ function renderFrameToStaticSVG(
 ): string {
   let svg: string
   switch (frameType) {
-    case "wordcloud":
-      svg = renderWordCloud(props as StaticWordCloudProps)
-      break
     case "xy":
       svg = renderStreamXYFrame(props as StreamXYFrameProps & ThemeAwareProps)
       break
@@ -110,7 +106,7 @@ function renderFrameToStaticSVG(
       break
     default:
       throw new Error(
-        `Unknown frame type: ${frameType}. Must be "xy", "ordinal", "network", "geo", "physics", or "wordcloud".`
+        `Unknown frame type: ${frameType}. Must be "xy", "ordinal", "network", "geo", or "physics".`
       )
   }
   return scopeSvgIdentifiers(svg, prefix)
@@ -611,9 +607,6 @@ function renderChartScoped(
     svg = config.renderStatic(frameProps2, sink)
   } else {
     switch (config.frameType) {
-      case "wordcloud":
-        svg = renderWordCloud(frameProps2 as StaticWordCloudProps, sink)
-        break
       case "xy":
         svg = renderStreamXYFrame(
           frameProps2 as StreamXYFrameProps & ThemeAwareProps,

@@ -140,5 +140,3 @@ export type { HatchFill } from "./charts/shared/hatchFill"
 
 export { useLinkedCrosshair, useCrosshairPosition } from "./store/LinkedCrosshairStore"
 export type { CrosshairPosition, CrosshairPositionInput, LinkedCrosshairConfig, UseLinkedCrosshairResult } from "./store/LinkedCrosshairStore"
-
-export type { TextSceneNode } from "./stream/textScene"
