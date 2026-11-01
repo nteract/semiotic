@@ -129,7 +129,7 @@ jobs:
 
       - name: Upload AI reference evaluation
         if: always() && matrix.shard == 1
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: ai-reference-eval
           path: ai-reference-eval.json
@@ -138,7 +138,7 @@ jobs:
 
       - name: Upload coverage shard
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: coverage-shard-${{ matrix.shard }}
           path: vitest-reports/*.json
@@ -332,7 +332,7 @@ jobs:
 
       - name: Upload consumer compatibility report
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: consumer-compatibility
           path: test-results/consumer-compatibility/
@@ -498,7 +498,7 @@ jobs:
 
       - name: Upload timing and correctness reports
         if: always() && hashFiles('test-results/network-camera/**') != ''
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: network-camera-${{ matrix.mode }}
           path: test-results/network-camera/
@@ -543,7 +543,7 @@ jobs:
       # claiming policy-specific animation, performance, or cross-browser parity.
       - name: Upload local docs example contract evidence
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: docs-example-local-contract-evidence
           path: test-results/**/docs-example-local-contract-evidence.v2.json
@@ -552,7 +552,7 @@ jobs:
 
       - name: Upload docs example test artifacts
         if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: playwright-report-docs-examples
           path: |
@@ -620,7 +620,7 @@ jobs:
 
       - name: Upload snapshot baselines
         if: always() && matrix.project == 'chromium'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: playwright-snapshots
           path: integration-tests/*.spec.ts-snapshots/
@@ -628,7 +628,7 @@ jobs:
 
       - name: Upload test artifacts
         if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: playwright-report-${{ matrix.project }}
           path: |
