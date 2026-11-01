@@ -25,7 +25,7 @@ export * as experimental from "../semiotic-experimental"
 export * as value from "../semiotic-value"
 
 // Context-bearing modules consumed by the lazy geo CommonJS implementation.
-// Keep these top-level exports aligned with externalizeSharedClientModulesForCjsPlugin.
+// Keep these top-level exports aligned with externalizeSharedClientModulesPlugin.
 export * from "../CategoryColors"
 export { ThemeProvider, useTheme } from "../ThemeProvider"
 export {

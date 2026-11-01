@@ -118,7 +118,13 @@ const analyze = process.argv.includes("--analyze")
 // retains native text and the new schema; isolated named chart consumers do
 // not retain d3-cloud. Keep 0.2 KiB headroom; isolation limits stay unchanged.
 // Shared network-frame migration: 332827 -> 332583 bytes; recover 0.2 KiB.
-const MULTI_IMPORT_GZIP_BUDGET = 325 * 1024
+// Shared provider identity across WordCloud and primary ESM graphs (2026-11-01):
+// the same 29-file consumer union measures 333093 bytes versus 332582 before
+// the fix. Canonical selection/observation/theme/color contexts add 511 gzip
+// bytes (0.5 KiB); no dependency or chart family was added. Real cross-entry
+// hover, provider isolation, and ESM/CJS theme tests cover the correctness cost.
+// Retain <0.25 KiB headroom; cold-consumer and isolation limits are unchanged.
+const MULTI_IMPORT_GZIP_BUDGET = 325.5 * 1024
 
 const MULTI_IMPORT_SOURCE = `
 export { LineChart } from "semiotic/xy"

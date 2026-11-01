@@ -9,7 +9,7 @@ import PageLayout from "../components/PageLayout"
 const bundleSizeRows = Object.freeze([
   {
     "importPath": "semiotic/atlas",
-    "kb": 324,
+    "kb": 325,
     "blurb": "Motif Braid, Dependency Forest, and Flow Circuit readers"
   },
   {
@@ -39,7 +39,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/line",
-    "kb": 150,
+    "kb": 151,
     "blurb": "LineChart only — one-chart micro boundary"
   },
   {
@@ -54,7 +54,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/network",
-    "kb": 183,
+    "kb": 184,
     "blurb": "ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more"
   },
   {
@@ -79,12 +79,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/geo",
-    "kb": 114,
+    "kb": 115,
     "blurb": "ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap"
   },
   {
     "importPath": "semiotic/wordcloud",
-    "kb": 134,
+    "kb": 132,
     "blurb": "WordCloud, shaped text placement, and portable layouts"
   },
   {
@@ -99,7 +99,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/realtime/react",
-    "kb": 2,
+    "kb": 7,
     "blurb": "Stream status and synced push hooks"
   },
   {
@@ -119,7 +119,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/utils",
-    "kb": 113,
+    "kb": 112,
     "blurb": "ThemeProvider, numeric/accessibility audits, serialization — no chart components"
   },
   {
@@ -129,12 +129,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/utils/react",
-    "kb": 10,
+    "kb": 9,
     "blurb": "ThemeProvider, useTheme, useReducedMotion, useHighContrast, useStreamStatus"
   },
   {
     "importPath": "semiotic/recipes",
-    "kb": 119,
+    "kb": 118,
     "blurb": "Pure layout functions (waffle, marimekko, flextree, dagre, …)"
   },
   {
@@ -159,7 +159,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/themes/react",
-    "kb": 9,
+    "kb": 8,
     "blurb": "ThemeProvider/useTheme and hooks"
   },
   {
@@ -169,12 +169,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/value",
-    "kb": 7,
+    "kb": 6,
     "blurb": "BigNumber — focal-value KPI / scorecard (SingleValueFrame POC)"
   },
   {
     "importPath": "semiotic/physics",
-    "kb": 190,
+    "kb": 191,
     "blurb": "GaltonBoardChart, EventDropChart, UnitPileChart, CollisionSwarmChart, PacketFlowChart, PhysicsCustomChart"
   },
   {
@@ -189,7 +189,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/ai",
-    "kb": 695,
+    "kb": 696,
     "blurb": "All schema-backed charts + validation — optimized for LLM code generation"
   },
   {
@@ -214,7 +214,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic",
-    "kb": 438,
+    "kb": 439,
     "blurb": "Full chart API and shared utilities"
   }
 ])

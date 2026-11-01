@@ -15,7 +15,8 @@ import { minifyLibraryPlugin } from "./lib/minify-library-chunk.mjs"
 import { libraryTerserOptions as terserOptions } from "./lib/library-minification-options.mjs"
 import { stripPureBareChunkImports } from "./lib/strip-pure-bare-imports.mjs"
 import { serverRuntimeLoadersPlugin } from "./lib/server-runtime-loaders.mjs"
-import { shortenChunkExportsPlugin } from "./lib/shorten-chunk-exports.mjs"
+import { shortenChunkExportsPlugin, shortenBuiltEntryExports } from "./lib/shorten-chunk-exports.mjs"
+import { externalizeSharedClientModulesPlugin } from "./lib/shared-client-modules.mjs"
 
 const buildSourceFingerprint = bundleFreshness.sourceFingerprint(
   process.cwd(),
@@ -192,6 +193,7 @@ async function createSharedEsmGroup({
   analyze = false,
   deferIdentifierMinification = false,
   mergeImports = false,
+  entryNamePattern = "[name].module.min",
   esbuildPlugins = []
 } = {}) {
   const names = Object.keys(entries)
@@ -237,7 +239,7 @@ async function createSharedEsmGroup({
       // original local identifiers. Shorten their private module interfaces
       // separately so cross-chunk imports still use compact names.
       esbuildOptions.minifyIdentifiers = minify && !deferIdentifierMinification
-      esbuildOptions.entryNames = "[name].module.min"
+      esbuildOptions.entryNames = entryNamePattern
       // Private filenames do not need a descriptive basename: the content
       // hash is their cache identity, and shorter specifiers recur throughout
       // every separately-compressed entry graph.
@@ -263,28 +265,6 @@ function externalizePerspectivePlacementPlugin(cjs = false) {
         path: cjs ? "./semiotic-network-placement.min.js" : "./semiotic-network-placement.module.min.js",
         external: true
       }))
-    }
-  }
-}
-
-function externalizeExperimentalBridgeStoresPlugin() {
-  return {
-    name: "externalize-experimental-bridge-stores",
-    setup(build) {
-      build.onResolve(
-        {
-          filter: /^\.\.\/store\/(?:ObservationStore|SelectionStore)$/
-        },
-        (args) => {
-          if (!/[\\/]ai[\\/]SemioticVACPBridge\.tsx$/.test(args.importer)) {
-            return null
-          }
-          return {
-            path: "./semiotic-client-shared.module.min.js",
-            external: true
-          }
-        }
-      )
     }
   }
 }
@@ -350,46 +330,6 @@ function writeSharedClientSymbolFacade(publicEntry, symbol, output) {
     return
   }
   throw new Error(`${publicEntry} does not expose a shared binding for ${symbol}`)
-}
-
-/**
- * Geo remains a lazy CommonJS implementation so importing an ordinary chart
- * does not eagerly load d3-geo. Its React contexts and module-scoped stores,
- * however, must be the same instances used by the shared client namespaces.
- */
-function externalizeSharedClientModulesForCjsPlugin() {
-  const sharedModules = [
-    "CategoryColors",
-    "ThemeProvider",
-    "store/ThemeStore",
-    "store/SelectionStore",
-    "store/useSelection",
-    "store/ObservationStore",
-    "store/LinkedCrosshairStore",
-    "store/TooltipStore",
-    "stream/customLayoutSelection",
-  ]
-  return {
-    name: "externalize-shared-client-modules-for-cjs",
-    setup(build) {
-      build.onResolve({ filter: /^\.\.?\// }, (args) => {
-        const request = args.path.replace(/\\/g, "/")
-        if (request.endsWith("stream/customLayoutSelection")) {
-          return {
-            path: "./semiotic-custom-layout-selection-cjs-shared.min.js",
-            external: true,
-          }
-        }
-        if (!sharedModules.some((module) => request.endsWith(module))) {
-          return null
-        }
-        return {
-          path: "./semiotic-client-cjs-shared.min.js",
-          external: true,
-        }
-      })
-    },
-  }
 }
 
 /**
@@ -1546,7 +1486,7 @@ async function build() {
   // purity annotations preserve downstream named-import tree shaking.
   const auxiliaryClientEntries = Object.fromEntries(
     Object.entries(clientEntries).filter(([name]) =>
-      auxiliaryClientEntryNames.has(name)
+      auxiliaryClientEntryNames.has(name) && name !== "semiotic-wordcloud"
     )
   )
   // Stateless React helpers do not belong in the context-identity anchor.
@@ -1562,10 +1502,21 @@ async function build() {
     "src/components/internal/semioticExperimentalEsmAuxiliary.ts"
   // The bridge itself is experimental and otherwise partitions every stable
   // chart/AI chunk. Bundle it with auxiliary clients, but resolve its two
-  // context-bearing selectors through the canonical primary client anchor so
+  // context-bearing selectors through the canonical client-store bundle so
   // it still observes the nearest LinkedCharts providers.
   auxiliaryClientEntries["semiotic-experimental-react-shared"] =
     "src/components/ai/SemioticVACPBridge.tsx"
+  // Context identity crosses independently built graphs. Keep the stores in
+  // one small bundle, without pulling provider UI or chart-family code into
+  // optional entries or partitioning every primary chunk by another anchor.
+  await createSharedEsmGroup({
+    entries: {
+      s: "src/components/internal/semioticClientStores.ts",
+      t: "src/components/internal/semioticClientThemeStore.ts"
+    },
+    minify, clientOnly: true, groupName: "client-stores",
+    entryNamePattern: "[name].min"
+  })
   await createSharedEsmGroup({
     entries: primaryClientEntries,
     minify,
@@ -1573,6 +1524,7 @@ async function build() {
     groupName: "client-primary",
     deferIdentifierMinification: true,
     mergeImports: true,
+    esbuildPlugins: [externalizeSharedClientModulesPlugin(false)],
     analyze
   })
   writeSharedClientSymbolFacade("semiotic-ai.module.min.js", "useSelection", "semiotic-atlas-selection.module.min.js")
@@ -1593,7 +1545,15 @@ async function build() {
     minify,
     clientOnly: true,
     groupName: "client-auxiliary",
-    esbuildPlugins: [externalizeExperimentalBridgeStoresPlugin(), externalizeNetworkZoomHostPlugin()]
+    // Pure auxiliary adapters need no store dependency just to use colors.
+    esbuildPlugins: [externalizeSharedClientModulesPlugin(false, false), externalizeNetworkZoomHostPlugin()]
+  })
+  // WordCloud shares canonical contexts, but keeps its renderer/preparation
+  // code together instead of duplicating it across auxiliary shared chunks.
+  await createSharedEsmGroup({
+    entries: { "semiotic-wordcloud": clientEntries["semiotic-wordcloud"] },
+    minify, clientOnly: true, groupName: "client-wordcloud",
+    esbuildPlugins: [externalizeSharedClientModulesPlugin(false)]
   })
   await createSharedEsmGroup({
     entries: { server: serverEntries.server },
@@ -1659,6 +1619,9 @@ async function build() {
     esbuildPlugins: [nodeStaticMarkupSourcePlugin()]
   })
   writeNodeExperimentalFacade()
+  // This bridge is private, even though it crosses independent build groups.
+  // Keep public re-exports intact while shortening its repeated import names.
+  shortenBuiltEntryExports("dist", ["s.min.js", "t.min.js"])
   // esbuild links chunks with side-effect-only imports to preserve evaluation
   // order. Consumer bundlers that honor them hoist the target into the eager
   // graph even when only a lazy chunk needs it; drop them when the target's
@@ -1718,7 +1681,7 @@ async function build() {
   })
   await createCjsBundle({
     ...bundledEntries.find((bundle) => bundle.name === "semiotic-wordcloud"),
-    esbuildPlugins: [externalizeSharedClientModulesForCjsPlugin()],
+    esbuildPlugins: [externalizeSharedClientModulesPlugin()],
   })
   const geoBundle = bundledEntries.find((bundle) => bundle.name === "geo")
   const artifactReactBundle = bundledEntries.find(
@@ -1741,7 +1704,7 @@ async function build() {
   await createCjsBundle({
     ...geoBundle,
     name: "geo",
-    esbuildPlugins: [externalizeSharedClientModulesForCjsPlugin()],
+    esbuildPlugins: [externalizeSharedClientModulesPlugin()],
   })
   await createCjsBundle({
     ...artifactReactBundle,

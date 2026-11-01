@@ -16,6 +16,7 @@ import { makeAtlasStoryParityCases } from "../atlas-story-parity-fixtures"
 import { makeNetworkPerspectiveParityCases } from "../network-perspective-parity-fixtures"
 import { makeCompositionalParityCases } from "../compositional-parity-fixtures"
 import { makeWordCloudParityCases } from "../wordcloud-parity-fixtures"
+import { WordCloudLinkedHoverFixture } from "../wordcloud-linked-hover-fixture"
 
 const { ThemeProvider } = Semiotic
 const COMPONENTS = { ...Semiotic, ...SemioticGeo, ...SemioticPhysics, MotifBraidChart, DependencyForestChart, FlowCircuitChart, WordCloud }
@@ -156,5 +157,7 @@ if (cloudCase) {
 }
 
 createRoot(document.getElementById("root")).render(
-  React.createElement(React.Fragment, null, ...examples),
+  new URLSearchParams(window.location.search).has("linkedWords")
+    ? React.createElement(WordCloudLinkedHoverFixture)
+    : React.createElement(React.Fragment, null, ...examples),
 )

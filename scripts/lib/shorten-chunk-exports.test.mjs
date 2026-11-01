@@ -14,7 +14,8 @@ import { test } from "node:test"
 import { build } from "esbuild"
 import {
   shortenChunkExports,
-  shortenChunkExportsPlugin
+  shortenChunkExportsPlugin,
+  shortenBuiltEntryExports
 } from "./shorten-chunk-exports.mjs"
 
 async function fixture(t) {
@@ -23,6 +24,56 @@ async function fixture(t) {
   await writeFile(join(dir, "package.json"), '{"type":"module"}')
   return realpath(dir)
 }
+
+test("separately built private entries preserve public names, live bindings and singleton identity", async (t) => {
+  const dir = await fixture(t)
+  await writeFile(join(dir, "stores.js"), `
+    let currentSelection = 0
+    const contextIdentity = {}
+    const updateSelection = () => ++currentSelection
+    export { currentSelection, contextIdentity, updateSelection }
+  `)
+  await writeFile(join(dir, "chart.js"), `
+    import { currentSelection, contextIdentity } from "./stores.js"
+    const read = () => currentSelection
+    export { read, contextIdentity }
+  `)
+  await writeFile(join(dir, "provider.js"), `
+    export { updateSelection as select, contextIdentity } from "./stores.js"
+  `)
+  shortenBuiltEntryExports(dir, ["stores.js"])
+  const chart = await import(pathToFileURL(join(dir, "chart.js")))
+  const provider = await import(pathToFileURL(join(dir, "provider.js")))
+  const stores = await import(pathToFileURL(join(dir, "stores.js")))
+  assert.ok(Object.keys(stores).every((key) => key.length === 1))
+  assert.deepEqual(Object.keys(chart), ["contextIdentity", "read"])
+  assert.equal(chart.contextIdentity, provider.contextIdentity)
+  assert.equal(chart.read(), 0)
+  provider.select()
+  assert.equal(chart.read(), 1)
+})
+
+test("private entries observed through namespaces retain their interface", async (t) => {
+  const dir = await fixture(t)
+  await writeFile(join(dir, "stores.js"), "const contextIdentity = {}; export { contextIdentity }")
+  await writeFile(join(dir, "public.js"), 'export * as state from "./stores.js"')
+  shortenBuiltEntryExports(dir, ["stores.js"])
+  const api = await import(pathToFileURL(join(dir, "public.js")))
+  assert.deepEqual(Object.keys(api.state), ["contextIdentity"])
+  assert.throws(() => shortenBuiltEntryExports(dir, ["missing.js"]), /Missing private ESM entry/)
+})
+
+test("built private entries reuse short locals without colliding on duplicate bindings", async (t) => {
+  const dir = await fixture(t)
+  await writeFile(join(dir, "stores.js"), "const a = {}, b = {}; export { a as first, a as alias, b as second }")
+  await writeFile(join(dir, "public.js"), 'export { first, alias, second } from "./stores.js"')
+  shortenBuiltEntryExports(dir, ["stores.js"])
+  const api = await import(pathToFileURL(join(dir, "public.js")))
+  assert.deepEqual(Object.keys(api), ["alias", "first", "second"])
+  assert.equal(api.first, api.alias)
+  assert.notEqual(api.first, api.second)
+  assert.match(await readFile(join(dir, "stores.js"), "utf8"), /export \{ a,/)
+})
 
 test("shortened chunk imports preserve public exports, live bindings, identity and lazy APIs", async (t) => {
   const dir = await fixture(t)
