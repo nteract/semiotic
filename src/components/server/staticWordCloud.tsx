@@ -28,7 +28,7 @@ export function renderWordCloud(
   if (!layout)
     throw new WordCloudLayoutError(
       "STALE_LAYOUT",
-      "WordCloud server rendering requires a prepared layout. Call prepareWordCloudLayout with browser Canvas or an injected raster environment, then pass layout with the matching data and options."
+      "WordCloud server rendering requires a prepared layout. Pass the prepareWordCloudLayout result with matching data and options."
     )
   const width = props.width ?? layout.width,
     height = props.height ?? layout.height
@@ -91,17 +91,18 @@ export function renderWordCloud(
     },
     sink
   )
-  if (sink?.evidence) {
-    sink.evidence.component = "WordCloud"
-    sink.evidence.annotationInputCount = props.annotations?.length ?? 0
-    sink.evidence.annotationCount =
+  const evidence = sink?.evidence
+  if (evidence) {
+    evidence.component = "WordCloud"
+    evidence.annotationInputCount = props.annotations?.length ?? 0
+    evidence.annotationCount =
       props.annotations?.filter((annotation) =>
         layout.words.some((word) => word.id === annotation.id)
       ).length ?? 0
-    sink.evidence.unrenderedAnnotationCount =
-      sink.evidence.annotationInputCount - sink.evidence.annotationCount
-    if (layout.omitted.length) sink.evidence.warnings.push("OMITTED_TERMS")
-    sink.evidence.wordCloud = {
+    evidence.unrenderedAnnotationCount =
+      evidence.annotationInputCount - evidence.annotationCount
+    if (layout.omitted.length) evidence.warnings.push("OMITTED_TERMS")
+    evidence.wordCloud = {
       inputCount: layout.inputCount,
       placedCount: layout.words.length,
       omitted: layout.omitted,

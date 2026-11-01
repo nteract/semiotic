@@ -27,6 +27,9 @@ vi.mock("d3-cloud", () => ({
   }
 }))
 import { prepareWordCloudLayout } from "./prepareWordCloudLayout"
+import { wordCloudBounds } from "./wordCloudBounds"
+import type { WordCloudLayoutResult } from "./types"
+import fixture from "./wordCloud.fixture.json"
 
 beforeEach(() => {
   // Model costly rasterization deterministically instead of relying on how
@@ -61,7 +64,16 @@ it("allows another browser task to run before completing placement, without chan
   expect(yielded).toBe(true)
   expect(placedAtYield).toBeLessThan(options.data.length)
   expect(result.words).toHaveLength(100)
+  expect(result.bounds).toEqual([{ x: -2, y: -2 }, { x: 2, y: 2 }])
+  expect(Object.isFrozen(result.bounds)).toBe(true)
+  expect(result.bounds!.every(Object.isFrozen)).toBe(true)
   expect(result).toEqual(await prepareWordCloudLayout(options))
+})
+
+it("preserves independently saved bounds and leaves empty clouds without bounds", () => {
+  const layout = fixture.layout as unknown as WordCloudLayoutResult
+  expect(wordCloudBounds(layout.words)).toEqual(layout.bounds)
+  expect(wordCloudBounds([])).toBeNull()
 })
 
 it("stops obsolete work at the next batch and preserves the abort reason", async () => {

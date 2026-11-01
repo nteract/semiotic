@@ -3,6 +3,7 @@ import {
   wordCloudFingerprint
 } from "./normalizeWordCloudInput"
 import { WordCloudLayoutError } from "./types"
+import { wordCloudBounds } from "./wordCloudBounds"
 import type { WordCloudLayoutOptions, WordCloudLayoutResult } from "./types"
 
 /** Reject stale or malformed serialized geometry before painting or exporting. */
@@ -33,7 +34,7 @@ export function validateWordCloudLayout(
     layout.maskFingerprint !== input.maskFingerprint
   ) {
     fail(
-      "WordCloud layout does not match the current data, dimensions, font, mask, or arrangement options. Prepare a fresh layout."
+      "WordCloud layout does not match its data, size, font, mask or options. Prepare a fresh layout."
     )
   }
   const fontFingerprint = layout.fontIdentity
@@ -93,18 +94,7 @@ export function validateWordCloudLayout(
     : null
   if (JSON.stringify(layout.maskResolution) !== JSON.stringify(resolution))
     fail("WordCloud mask resolution does not match its viewport.")
-  const bounds = layout.words.length
-    ? [
-        {
-          x: Math.min(...layout.words.map((word) => word.x + word.x0)),
-          y: Math.min(...layout.words.map((word) => word.y + word.y0))
-        },
-        {
-          x: Math.max(...layout.words.map((word) => word.x + word.x1)),
-          y: Math.max(...layout.words.map((word) => word.y + word.y1))
-        }
-      ]
-    : null
+  const bounds = wordCloudBounds(layout.words)
   if (JSON.stringify(layout.bounds) !== JSON.stringify(bounds))
     fail("WordCloud bounds must describe its placed words, excluding the mask.")
 }

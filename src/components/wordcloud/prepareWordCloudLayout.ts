@@ -6,6 +6,7 @@ import {
 } from "./normalizeWordCloudInput"
 import { createWordCloudCanvas, rasterizeWordCloudMask } from "./wordCloudMask"
 import { WordCloudLayoutError } from "./types"
+import { wordCloudBounds } from "./wordCloudBounds"
 import type {
   WordCloudCanvasEnvironment,
   WordCloudLayoutOptions,
@@ -134,25 +135,6 @@ export async function prepareWordCloudLayout(
         y1: placed.y1
       }
       result.words.push(word)
-      const x0 = word.x + word.x0,
-        y0 = word.y + word.y0
-      const x1 = word.x + word.x1,
-        y1 = word.y + word.y1
-      result.bounds = result.bounds
-        ? [
-            {
-              x: Math.min(result.bounds[0].x, x0),
-              y: Math.min(result.bounds[0].y, y0)
-            },
-            {
-              x: Math.max(result.bounds[1].x, x1),
-              y: Math.max(result.bounds[1].y, y1)
-            }
-          ]
-        : [
-            { x: x0, y: y0 },
-            { x: x1, y: y1 }
-          ]
     }
   } catch (error) {
     signal?.throwIfAborted()
@@ -162,6 +144,7 @@ export async function prepareWordCloudLayout(
       `WordCloud rasterization failed: ${error instanceof Error ? error.message : String(error)}`
     )
   }
+  result.bounds = wordCloudBounds(result.words)
   // Freeze the JSON boundary as well as the outer object; callers clone to edit.
   for (const word of result.words) Object.freeze(word)
   for (const omission of result.omitted) Object.freeze(omission)

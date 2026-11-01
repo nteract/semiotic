@@ -69,7 +69,7 @@ export function normalizeWordCloudInput(options: WordCloudLayoutOptions) {
     ![width, height].every((v) => Number.isInteger(v) && v >= 1 && v <= 2040)
   ) {
     fail(
-      "WordCloud layout dimensions must be integers from 1 to 2040 pixels (d3-cloud's 2048px scratch canvas reserves edge slack)."
+      "WordCloud layout dimensions must be integers from 1 to 2040 pixels."
     )
   }
   if (!Number.isSafeInteger(seed))
