@@ -169,7 +169,7 @@ const props = [
   {
     name: "linkedHover",
     type: "boolean | string | object",
-    description: "Standard named linked selection; default field is the term identity accessor.",
+    description: "Named linked selection. String accessors supply the default identity field. With callback accessors, provide raw source fields explicitly, e.g. linkedHover={{ fields: [\"term\"] }}.",
   },
   {
     name: "selection",
@@ -260,6 +260,12 @@ console.log(evidence.wordCloud) // placed count, omissions, mask and font identi
         reuse geometry. Server PNG exports require the intended font to be available to Sharp’s
         text renderer (for example through the host font configuration). Saving
         coordinates does not embed a font in a server SVG.
+      </p>
+      <p>
+        Preparation yields between small batches so controls and resize events can run. React
+        cancels obsolete work automatically. For manual preparation, pass an AbortSignal as
+        the third argument: prepareWordCloudLayout(options, environment, controller.signal).
+        Aborting stops placement between words and rejects with the signal’s reason.
       </p>
       <h2>Silhouettes and omissions</h2>
       <CodeBlock

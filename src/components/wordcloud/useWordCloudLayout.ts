@@ -39,20 +39,24 @@ export function useWordCloudLayout(
       return
     }
     if (props.layout) return
-    let cancelled = false
+    const controller = new AbortController()
     const currentOptions = { ...callbacks.current, width, height }
     import("./prepareWordCloudLayout")
       .then(({ prepareWordCloudLayout }) =>
-        prepareWordCloudLayout(currentOptions, currentOptions.canvasEnvironment)
+        prepareWordCloudLayout(
+          currentOptions,
+          currentOptions.canvasEnvironment,
+          controller.signal
+        )
       )
       .then(
         (layout) => {
-          if (cancelled) return
+          if (controller.signal.aborted) return
           setPrepared({ key, layout })
           callbacks.current.onLayout?.(layout)
         },
         (error) => {
-          if (cancelled) return
+          if (controller.signal.aborted) return
           const diagnostic =
             error instanceof WordCloudLayoutError
               ? error
@@ -61,14 +65,12 @@ export function useWordCloudLayout(
           callbacks.current.onLayoutError?.(diagnostic)
         }
       )
-    return () => {
-      cancelled = true
-    }
+    return () => controller.abort()
   }, [key, failure, props.layout, props.canvasEnvironment, width, height])
   const current = prepared?.key === key ? prepared : null
   return {
     layout: validationError ? undefined : (props.layout ?? current?.layout),
-    error: validationError ?? current?.error,
+    error: validationError ?? (props.layout ? undefined : current?.error),
     pending: !validationError && !props.layout && !current
   }
 }

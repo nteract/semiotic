@@ -24,7 +24,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/evidence",
-    "kb": 47,
+    "kb": 48,
     "blurb": "Chart Evidence Envelope, deterministic hashing, and publication gate"
   },
   {

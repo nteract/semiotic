@@ -402,7 +402,7 @@ The numbers below are **first-party artifact cost**: the gzip size of Semiotic's
 | `semiotic/atlas` | **324 KB** | Motif Braid, Dependency Forest, and Flow Circuit readers |
 | `semiotic/atlas/core` | **15 KB** | Network Atlas preparation, projections, and evidence queries |
 | `semiotic/access` | **31 KB** | Chart Access Contract factory and first-wave baseline contracts |
-| `semiotic/evidence` | **47 KB** | Chart Evidence Envelope, deterministic hashing, and publication gate |
+| `semiotic/evidence` | **48 KB** | Chart Evidence Envelope, deterministic hashing, and publication gate |
 | `semiotic/artifact` | **126 KB** | Renderer-independent contracts, claims, time, policy, grounding, and transfer audits |
 | `semiotic/artifact/react` | **4 KB** | Accessible progressive disclosure for artifact contracts and policy evaluations |
 | `semiotic/line` | **150 KB** | LineChart only — one-chart micro boundary |

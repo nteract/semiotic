@@ -5,17 +5,20 @@ import { prepareMotifBraid } from "semiotic/atlas/core"
 import { LinkedCharts } from "semiotic/ai"
 import * as SemioticPhysics from "../../dist/physics.module.min.js"
 import * as SemioticRecipes from "../../dist/semiotic-recipes.module.min.js"
+import { WordCloud } from "semiotic/wordcloud"
+import wordCloudFont from "../../docs/public/fonts/wordcloud/CrimsonText-Regular.ttf?url"
 import React from "react"
-import { createRoot } from "react-dom/client"
+import { createRoot, hydrateRoot } from "react-dom/client"
 import { makeSsrParityCases } from "../ssr-parity-fixtures.js"
 import { makeDependencyXRayParityCases } from "../dependency-xray-parity-fixtures"
 import { makeFlowCircuitParityCases } from "../flow-circuit-parity-fixtures"
 import { makeAtlasStoryParityCases } from "../atlas-story-parity-fixtures"
 import { makeNetworkPerspectiveParityCases } from "../network-perspective-parity-fixtures"
 import { makeCompositionalParityCases } from "../compositional-parity-fixtures"
+import { makeWordCloudParityCases } from "../wordcloud-parity-fixtures"
 
 const { ThemeProvider } = Semiotic
-const COMPONENTS = { ...Semiotic, ...SemioticGeo, ...SemioticPhysics, MotifBraidChart, DependencyForestChart, FlowCircuitChart }
+const COMPONENTS = { ...Semiotic, ...SemioticGeo, ...SemioticPhysics, MotifBraidChart, DependencyForestChart, FlowCircuitChart, WordCloud }
 
 const TestCase = ({ title, testId, children }) =>
   React.createElement(
@@ -34,6 +37,7 @@ const parityCases = [
   ...makeFlowCircuitParityCases(),
   ...makeNetworkPerspectiveParityCases(SemioticRecipes),
   ...makeCompositionalParityCases(),
+  ...makeWordCloudParityCases(),
 ]
 const selectedCases = requestedCase
   ? parityCases.filter((c) => c.id === requestedCase)
@@ -136,6 +140,20 @@ const examples = selectedCases.map((c) => {
 // Server rendering installs perspective extras synchronously; load the same
 // browser chunk before the first CSR paint so both sides draw ground chrome.
 await Semiotic.preloadNetworkPerspectiveExtras()
+
+const cloudCase = selectedCases.find((fixture) => fixture.component === "WordCloud")
+if (cloudCase) {
+  // Register and load the exact fixture font before the first canvas paint.
+  const font = new FontFace("Crimson Text", `url(${wordCloudFont})`)
+  document.fonts.add(font)
+  await font.load()
+  window.__wordCloudHydrationErrors = []
+  window.__hydrateWordCloud = (host) => hydrateRoot(
+    host,
+    React.createElement(WordCloud, cloudCase.props),
+    { onRecoverableError: (error) => window.__wordCloudHydrationErrors.push(String(error)) }
+  )
+}
 
 createRoot(document.getElementById("root")).render(
   React.createElement(React.Fragment, null, ...examples),

@@ -67,6 +67,8 @@ export interface WordCloudProps extends WordCloudLayoutOptions {
   enableHover?: boolean
   onClick?: (datum: Datum, point: { x: number; y: number }) => void
   selection?: SelectionConfig
+  /** Callback accessors cannot identify source field names. Supply
+   * `linkedHover={{ fields: ["term"] }}` when neither identity accessor is a field name. */
   linkedHover?: LinkedHoverProp
   onObservation?: OnObservationCallback
   chartId?: string
@@ -122,16 +124,19 @@ export function WordCloud(props: WordCloudProps): React.ReactElement {
     onClick: props.onClick
   })
   const tooltip = useMemo(
-    () =>
-      resolveMultiCapableTooltip({
+    () => {
+      const wordContent = (hover: Datum) => (
+        <>
+          <strong>{String(hover.text)}</strong>
+          <div>{String(hover.value)}</div>
+        </>
+      )
+      return resolveMultiCapableTooltip({
         tooltip: props.tooltip,
-        defaultTooltipContent: (hover: Datum) => (
-          <>
-            <strong>{String(hover.text)}</strong>
-            <div>{String(hover.value)}</div>
-          </>
-        )
-      }),
+        defaultTooltipContent: wordContent,
+        multiDefaultContent: wordContent
+      })
+    },
     [props.tooltip]
   )
   const [containerRef, size] = useResponsiveSize(

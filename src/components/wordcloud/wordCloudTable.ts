@@ -1,4 +1,20 @@
-import type { WordCloudLayoutOptions, WordCloudLayoutResult } from "./types"
+import type {
+  WordCloudLayoutOptions,
+  WordCloudLayoutResult,
+  WordCloudAccessor
+} from "./types"
+import type { Datum } from "../charts/shared/datumTypes"
+
+// Normalization may skip an accessor for an omitted row (for example, a
+// missing label). The accessible omission report must not turn that into a crash.
+function tableValue(row: Datum, accessor: WordCloudAccessor<unknown>): unknown {
+  if (!row || typeof row !== "object") return undefined
+  try {
+    return typeof accessor === "function" ? accessor(row) : row[accessor]
+  } catch {
+    return undefined
+  }
+}
 
 /** Ranked source values remain available even when a term cannot be placed. */
 export function wordCloudTableScene(
@@ -14,22 +30,10 @@ export function wordCloudTableScene(
     const source = options.data[word.sourceIndex]
     const datum =
       source && typeof source === "object" ? source : { input: "Invalid row" }
-    const raw =
-      source && typeof source === "object"
-        ? typeof options.valueAccessor === "function"
-          ? options.valueAccessor(source)
-          : source[options.valueAccessor ?? "value"]
-        : undefined
+    const raw = tableValue(source, options.valueAccessor ?? "value")
     const value =
       typeof raw === "number" || typeof raw === "string" ? Number(raw) : NaN
-    const term =
-      source && typeof source === "object"
-        ? String(
-            typeof options.textAccessor === "function"
-              ? options.textAccessor(source)
-              : (source[options.textAccessor ?? "text"] ?? word.id)
-          )
-        : word.id
+    const term = String(tableValue(source, options.textAccessor ?? "text") ?? word.id)
     return {
       type: "text",
       datum,

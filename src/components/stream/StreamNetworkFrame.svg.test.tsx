@@ -5,13 +5,45 @@ import StreamNetworkFrame from "./StreamNetworkFrame"
 import type { NetworkCustomLayout } from "./networkCustomLayout"
 import { createFrameScheduler } from "./test-utils/frameScheduler"
 import { setupCanvasMock } from "../../test-utils/canvasMock"
+import { IngestActivity } from "./IngestActivity"
 
 describe("shared network SVG painting", () => {
   let restore: () => void
   beforeEach(() => {
     restore = setupCanvasMock({ stubRaf: "noop" })
   })
-  afterEach(() => restore())
+  afterEach(() => {
+    restore()
+    vi.restoreAllMocks()
+    vi.useRealTimers()
+  })
+
+  it("repaints graded SVG staleness when idle time crosses each band", async () => {
+    vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] })
+    const elapsed = vi.spyOn(IngestActivity.prototype, "elapsed").mockReturnValue(0)
+    const scheduler = createFrameScheduler()
+    const { container } = render(
+      <StreamNetworkFrame
+        chartType="tree"
+        data={{ id: "root", children: [{ id: "leaf" }] }}
+        size={[300, 180]}
+        renderAs="svg"
+        animate={false}
+        accessibleTable={false}
+        staleness={{ threshold: 1000, graded: true }}
+        frameScheduler={scheduler.scheduler}
+      />
+    )
+    await act(async () => scheduler.flush())
+    const marks = () => container.querySelector("svg[data-network-scene] > g")!
+    expect(marks()).toHaveAttribute("opacity", "1")
+    for (const [age, opacity] of [[1200, "0.7"], [1700, "0.45"], [3100, "0.25"]] as const) {
+      elapsed.mockReturnValue(age)
+      await act(async () => vi.advanceTimersByTime(1000))
+      await act(async () => scheduler.flush())
+      expect(marks()).toHaveAttribute("opacity", opacity)
+    }
+  })
 
   it("repaints retained SVG styles without relayout and keeps pointer/keyboard datum identity", async () => {
     const scheduler = createFrameScheduler()
@@ -55,6 +87,8 @@ describe("shared network SVG painting", () => {
     await act(async () => scheduler.flush())
     const marks = () =>
       container.querySelectorAll("svg[data-network-scene] rect")
+    expect(container.querySelector("canvas")!.style.opacity).toBe("")
+    expect(container.querySelector("svg[data-network-scene]")!.compareDocumentPosition(container.querySelector("canvas")!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(marks()).toHaveLength(2)
     expect(marks()[0]).toHaveAttribute("x", "30")
     const calls = layout.mock.calls.length

@@ -71,6 +71,7 @@ import * as fs from "fs"
 import * as path from "path"
 import * as http from "http"
 import { McpStartupOptionsError, resolveMcpServerOptions } from "./mcp-server-options"
+import { compactPublicChartProps } from "./mcp-public-chart-props"
 import { capMcpToolResult } from "./mcp-tool-output-limits"
 import { handleMcpHttpRequest } from "./mcp-http-response"
 import { createMcpHttpAccessPolicy } from "./mcp-http-access"
@@ -1170,18 +1171,9 @@ function compactArtifactCandidateProps(
 ): Record<string, unknown> | undefined {
   if (!value || typeof value !== "object" || Array.isArray(value))
     return undefined
-  const bulkKeys = new Set([
-    "data",
-    "nodes",
-    "edges",
-    "points",
-    "areas",
-    "lines",
-    "flows"
-  ])
   const compact: Record<string, unknown> = {}
-  for (const [key, item] of Object.entries(value).slice(0, 24)) {
-    if (bulkKeys.has(key)) continue
+  const presentation = compactPublicChartProps(value as Record<string, unknown>)
+  for (const [key, item] of Object.entries(presentation).slice(0, 24)) {
     if (typeof item === "string") {
       compact[key] = truncateUtf8(item, 600)
       continue
@@ -2812,23 +2804,13 @@ async function groundChartHandler(args: {
   }
 }
 
-function compactPublicChartProps(
-  props: Record<string, unknown>
-): Record<string, unknown> {
-  const compact = { ...props }
-  delete compact.data
-  delete compact.nodes
-  delete compact.edges
-  return compact
-}
-
 function compactPublicSuggestion<T extends { props: Record<string, unknown> }>(
   suggestion: T
 ): Omit<T, "props"> & { props: Record<string, unknown> } {
   return { ...suggestion, props: compactPublicChartProps(suggestion.props) }
 }
 
-async function createChartHandler(
+async function createChartResult(
   args: {
     data: Record<string, unknown>[]
     intent?: string | string[]
@@ -2887,7 +2869,13 @@ async function createChartHandler(
   // Keep capability-built data shapes (for example hierarchy roots or
   // nodes/edges) and explicit caller overrides. args.data is the profiling
   // input, not necessarily the final component's `data` prop shape.
-  const props: Record<string, unknown> = { data: args.data, ...selected.props, ...args.props }
+  const props: Record<string, unknown> = {
+    ...(schemaByComponent[selected.component]?.parameters?.properties?.data
+      ? { data: args.data }
+      : {}),
+    ...selected.props,
+    ...args.props
+  }
   const publicProps = compactPublicChartProps(props)
   const publicSuggestion = compactPublicSuggestion(selected)
   const diagnosis = diagnoseConfig(selected.component, props)
@@ -3020,6 +3008,14 @@ async function createChartHandler(
       evidenceGate: gate
     })
   }
+}
+
+/** Cap the final public envelope, including suggestions/evidence added after rendering. */
+async function createChartHandler(
+  args: Parameters<typeof createChartResult>[0],
+  context: RenderContext = {}
+): Promise<ToolResult> {
+  return capInteractiveWidgetResult(await createChartResult(args, context))
 }
 
 async function improveChartHandler(args: {

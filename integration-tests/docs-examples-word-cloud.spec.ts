@@ -9,6 +9,40 @@ import { promisify } from "node:util"
 const moduleURL = `/@fs/${process.cwd()}/src/components/semiotic-wordcloud.ts`
 const shapesURL = `/@fs/${process.cwd()}/docs/src/pages/examples/word-cloud/shapes.ts`
 
+test("real placement yields to input events and cancels obsolete work between batches", async ({ page }) => {
+  await page.goto("/examples/word-cloud")
+  await ready(page)
+  const result = await page.evaluate(async (moduleURL) => {
+    const { prepareWordCloudLayout } = await import(/* @vite-ignore */ moduleURL)
+    const controller = new AbortController()
+    let sprites = 0
+    const canvas = () => {
+      const element = document.createElement("canvas")
+      const context = element.getContext("2d")!
+      const fill = context.fillText.bind(context)
+      context.fillText = (...args: Parameters<CanvasRenderingContext2D["fillText"]>) => {
+        sprites++
+        // This input event is scheduled only AFTER actual raster work starts.
+        if (sprites === 1) setTimeout(() => controller.abort(), 0)
+        fill(...args)
+      }
+      return element
+    }
+    try {
+      await prepareWordCloudLayout({
+        data: Array.from({ length: 1000 }, (_, i) => ({ text: `term${i}`, value: 1000 - i })),
+        maxWords: 1000, width: 640, height: 400, fontSizeRange: [8, 20]
+      }, { canvas }, controller.signal)
+      return { name: "unexpected completion", sprites }
+    } catch (error) {
+      return { name: error.name, sprites }
+    }
+  }, moduleURL)
+  expect(result.name).toBe("AbortError")
+  expect(result.sprites).toBeGreaterThan(0)
+  expect(result.sprites).toBeLessThan(1000)
+})
+
 test("invalid, empty and unreadable masks fail descriptively; oversized words are omitted", async ({
   page
 }) => {
@@ -470,6 +504,9 @@ test("real raster placements are deterministic and respect holes, concavities, i
   page
 }) => {
   await page.goto("/examples/word-cloud")
+  // The lazy route registers the bundled font face. Starting before it mounts
+  // can rasterize fallback text while that font is still being registered.
+  await ready(page)
   const results = await page.evaluate(
     async ({ moduleURL, shapesURL }) => {
       const { prepareWordCloudLayout, validateWordCloudLayout } = await import(
@@ -595,7 +632,7 @@ test("real raster placements are deterministic and respect holes, concavities, i
     expect(check.total, `${check.shape} ${check.mode}`).toBe(100)
     expect(check.placed, `${check.shape} ${check.mode}`).toBeGreaterThan(0)
     expect(check.ink).toBeGreaterThan(0)
-    expect(check.stable).toBe(true)
+    expect(check.stable, `${check.shape} ${check.mode} deterministic`).toBe(true)
     expect(check.outside, `${check.shape} ${check.mode} outside`).toBe(0)
     expect(check.overlaps, `${check.shape} ${check.mode} collisions`).toBe(0)
   }

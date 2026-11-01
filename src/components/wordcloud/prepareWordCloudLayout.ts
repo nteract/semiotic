@@ -16,12 +16,15 @@ import type {
 /**
  * Prepare portable word placements using d3-cloud 2.0. Browser fonts load before
  * rasterization. Node callers inject a compatible Canvas and load fonts first.
- * This operation is separate from synchronous SVG/server rendering.
+ * This operation is separate from synchronous SVG/server rendering. Placement
+ * yields between bounded batches; an optional signal cancels obsolete work.
  */
 export async function prepareWordCloudLayout(
   options: WordCloudLayoutOptions,
-  environment: WordCloudCanvasEnvironment = {}
+  environment: WordCloudCanvasEnvironment = {},
+  signal?: AbortSignal
 ): Promise<WordCloudLayoutResult> {
+  signal?.throwIfAborted()
   const input = normalizeWordCloudInput(options)
   if (typeof document !== "undefined" && document.fonts && input.words.length) {
     const word = input.words[0]
@@ -30,12 +33,14 @@ export async function prepareWordCloudLayout(
       await document.fonts.load(font, input.words.map((w) => w.text).join(" "))
       if (!document.fonts.check(font)) throw new Error("Font unavailable")
     } catch {
+      signal?.throwIfAborted()
       throw new WordCloudLayoutError(
         "FONT_UNAVAILABLE",
         `WordCloud could not load ${word.fontFamily}. Load the intended font before preparing placements.`
       )
     }
   }
+  signal?.throwIfAborted()
   const result: WordCloudLayoutResult = {
     version: 1,
     width: input.width,
@@ -70,6 +75,7 @@ export async function prepareWordCloudLayout(
       .strategy(input.strategy)
       .random(wordCloudRandom(input.seed))
     const mask = await rasterizeWordCloudMask(input, environment)
+    signal?.throwIfAborted()
     if (mask) {
       result.maskResolution = [mask.canvas.width, mask.canvas.height]
       if (mask.forbiddenPixels) {
@@ -91,7 +97,15 @@ export async function prepareWordCloudLayout(
         cloud.overflow(false)
       }
     }
+    let batchStart = performance.now()
     for (const term of input.words) {
+      // Yield to input/resize events even when many words cannot fit. The
+      // seeded engine and insertion order stay unchanged across batches.
+      if (performance.now() - batchStart >= 8) {
+        await new Promise<void>((resolve) => setTimeout(resolve, 0))
+        batchStart = performance.now()
+      }
+      signal?.throwIfAborted()
       const sprite = cloud.getSprite(term.text, {
         datum: term,
         font: term.fontFamily,
@@ -141,6 +155,7 @@ export async function prepareWordCloudLayout(
           ]
     }
   } catch (error) {
+    signal?.throwIfAborted()
     if (error instanceof WordCloudLayoutError) throw error
     throw new WordCloudLayoutError(
       "RASTERIZATION",

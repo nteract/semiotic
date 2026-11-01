@@ -5,6 +5,7 @@ import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
 import { NetworkViewGroup } from "./networkViewTransform"
 import { NetworkHtmlMarksLayer } from "./NetworkHtmlMarksLayer"
 import { networkFrameAccessibility } from "./networkFrameAccessibility"
+import { resolveStaleness } from "./stalenessBands"
 import { NetworkSceneMarks } from "./NetworkSceneSVG"
 import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
@@ -117,7 +118,7 @@ export function NetworkSSRFrame({
                   )}
                 </NetworkViewGroup>
               </g>
-              <g transform={`translate(${margin.left},${margin.top})`}>
+              <g transform={`translate(${margin.left},${margin.top})`} opacity={props.staleness ? resolveStaleness(props.staleness, store.activity.elapsed()).alpha : undefined}>
                 <NetworkViewGroup
                   view={props.viewTransform}
                   width={adjustedWidth}

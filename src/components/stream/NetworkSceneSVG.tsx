@@ -6,6 +6,7 @@ import {
   networkSceneEdgeToSVG
 } from "./SceneToSVGNetwork"
 import { renderSceneWithBackend } from "./renderBackend"
+import { resolveStaleness } from "./stalenessBands"
 import { NetworkViewGroup } from "./networkViewTransform"
 
 /** The retained network scene has one SVG paint path for hydration and live SVG. */
@@ -69,7 +70,12 @@ export function NetworkSceneSVG({
       style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
     >
       {props.description && <desc>{props.description}</desc>}
-      <g transform={`translate(${margin.left},${margin.top})`}>
+      <g
+        transform={`translate(${margin.left},${margin.top})`}
+        opacity={
+          resolveStaleness(props.staleness, store.activity.elapsed()).alpha
+        }
+      >
         <NetworkViewGroup
           view={props.viewTransform}
           width={width}

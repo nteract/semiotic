@@ -9,7 +9,7 @@ class-member WordCloudLayoutError::construct::%24construct = required new (code:
 class-member WordCloudLayoutError::property::code = required readonly code: "CANVAS_REQUIRED" | "FONT_UNAVAILABLE" | "INVALID_INPUT" | "INVALID_MASK" | "MASK_LOAD" | "RASTERIZATION" | "STALE_LAYOUT"
 function WordCloud(props: WordCloudProps): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function normalizeWordCloudInput(options: WordCloudLayoutOptions): {width: number; height: number; seed: number; padding: number; strategy: "archimedean" | "rectangular"; mask: import("./types").WordCloudMask | undefined; maskFit: "contain" | "cover"; maskThreshold: number; words: {fontFamily: string; fontWeight: number | string; fontStyle: "italic" | "normal" | "oblique"; fontSize: number; rotate: number; id: string; text: string; value: number; sourceIndex: number;}[]; omitted: WordCloudOmission[]; fontFingerprint: string; maskFingerprint: string | undefined; inputFingerprint: string; inputCount: number;}
-function prepareWordCloudLayout(options: WordCloudLayoutOptions, environment?: WordCloudCanvasEnvironment | undefined): Promise<WordCloudLayoutResult>
+function prepareWordCloudLayout(options: WordCloudLayoutOptions, environment?: WordCloudCanvasEnvironment | undefined, signal?: AbortSignal | undefined): Promise<WordCloudLayoutResult>
 function useSelection(options: UseSelectionOptions): UseSelectionResult
 function useSelectionActions(name: string, clientId?: string | undefined): UseSelectionActionsResult
 function validateWordCloudLayout(options: WordCloudLayoutOptions, layout: WordCloudLayoutResult): void

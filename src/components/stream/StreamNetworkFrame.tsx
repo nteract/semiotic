@@ -1362,6 +1362,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       themeBackground,
       maxDevicePixelRatio,
       renderMode,
+      svgScene: props.renderAs === "svg",
       viewTransform: props.viewTransform,
       cameraOnly: cameraPaint.current,
       layoutCommitPending: layoutCommitPending(store),
@@ -1516,6 +1517,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
           </CanvasFrameBackground>
         </div>
 
+        {props.renderAs === "svg" && <NetworkSceneSVG store={store} props={props} size={size} margin={margin} width={adjustedWidth} height={adjustedHeight} />}
         <canvas
           aria-hidden="true"
           ref={canvasRef}
@@ -1523,11 +1525,9 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
           style={{
             position: "absolute",
             top: 0,
-            left: 0,
-            opacity: props.renderAs === "svg" ? 0 : undefined
+            left: 0
           }}
         />
-        {props.renderAs === "svg" && <NetworkSceneSVG store={store} props={props} size={size} margin={margin} width={adjustedWidth} height={adjustedHeight} />}
 
         <div style={{ display: "contents" }} onMouseMove={onMouseMoveWrapped}>
           <NetworkSVGOverlay
