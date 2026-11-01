@@ -88,7 +88,11 @@ describe("shared network SVG painting", () => {
     const marks = () =>
       container.querySelectorAll("svg[data-network-scene] rect")
     expect(container.querySelector("canvas")!.style.opacity).toBe("")
-    expect(container.querySelector("svg[data-network-scene]")!.compareDocumentPosition(container.querySelector("canvas")!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    const scene = container.querySelector("svg[data-network-scene]")!
+    const particleCanvas = container.querySelector("canvas")!
+    expect(scene.compareDocumentPosition(particleCanvas)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING
+    )
     expect(marks()).toHaveLength(2)
     expect(marks()[0]).toHaveAttribute("x", "30")
     const calls = layout.mock.calls.length

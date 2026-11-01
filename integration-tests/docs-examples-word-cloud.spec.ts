@@ -1,10 +1,11 @@
 import { test, expect } from "@playwright/test"
-import type { Page } from "@playwright/test"
+import type { Locator, Page } from "@playwright/test"
 import { writeFile, readFile, mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { execFile } from "node:child_process"
 import { promisify } from "node:util"
+import aliceWords from "../docs/src/pages/examples/word-cloud/alice.json"
 
 const moduleURL = `/@fs/${process.cwd()}/src/components/semiotic-wordcloud.ts`
 const shapesURL = `/@fs/${process.cwd()}/docs/src/pages/examples/word-cloud/shapes.ts`
@@ -305,6 +306,18 @@ async function ready(page: Page) {
   )
 }
 
+async function expectWordTooltip(tooltip: Locator) {
+  await expect(tooltip.locator("strong")).toHaveText(/\S+/)
+  const term = (await tooltip.locator("strong").textContent())!
+  const source = aliceWords.data.find((row) => row.text === term)
+  expect(source, `Tooltip term ${term} must belong to the source text`).toBeDefined()
+  await expect(tooltip).toContainText(
+    `${source!.value} occurrences · ${source!.category}`
+  )
+  await expect(tooltip).toBeInViewport()
+  return term
+}
+
 test("shaped reading exposes original values through marks, keyboard, omissions and exports", async ({
   page
 }) => {
@@ -372,20 +385,19 @@ test("shaped reading exposes original values through marks, keyboard, omissions 
     page.viewportSize()!.width
   )
   await page.mouse.move(0, 0)
-  await expect(tooltip).not.toBeVisible()
+  await expect(tooltip).toHaveCount(0)
   await frame.focus()
   await page.keyboard.press("Home")
-  await expect(tooltip).toBeVisible()
-  const firstTerm = await tooltip.locator("strong").textContent()
+  const firstTerm = await expectWordTooltip(tooltip)
   await page.keyboard.press("ArrowRight")
-  await expect(tooltip.locator("strong")).not.toHaveText(firstTerm!)
-  const activatedTerm = await tooltip.locator("strong").textContent()
+  await expect(tooltip.locator("strong")).not.toHaveText(firstTerm)
+  const activatedTerm = await expectWordTooltip(tooltip)
   await page.keyboard.press("Enter")
   await expect(page.getByLabel("Selected word passage")).toContainText(
     activatedTerm!
   )
   await page.keyboard.press("Escape")
-  await expect(tooltip).not.toBeVisible()
+  await expect(tooltip).toHaveCount(0)
   const placements = () =>
     frame
       .locator("text[data-word-id]")
@@ -484,7 +496,7 @@ test("shaped reading exposes original values through marks, keyboard, omissions 
   await expect(hulls).not.toHaveAttribute("d", teaPath!)
   await frame.focus()
   await page.keyboard.press("Home")
-  await expect(tooltip).toBeVisible()
+  await expectWordTooltip(tooltip)
   const mobileBox = (await tooltip.boundingBox())!
   expect(mobileBox.x).toBeGreaterThanOrEqual(0)
   expect(mobileBox.x + mobileBox.width).toBeLessThanOrEqual(391)
@@ -496,7 +508,7 @@ test("shaped reading exposes original values through marks, keyboard, omissions 
   await expect(hulls).toHaveAttribute("stroke", "CanvasText")
   await expect(hulls).toHaveAttribute("fill", "none")
   await page.keyboard.press("Escape")
-  await expect(tooltip).not.toBeVisible()
+  await expect(tooltip).toHaveCount(0)
   expect(errors).toEqual([])
 })
 
