@@ -126,7 +126,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value)
 }
 
-function isSensitiveField(name: string): boolean {
+export function isSensitiveField(name: string): boolean {
   return /password|passwd|secret|token|api[-_]?key|authorization|cookie|credential|private[-_]?key/i.test(name)
 }
 

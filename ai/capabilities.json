@@ -874,6 +874,25 @@
         "trend-slot",
         "native-value-svg"
       ]
+    },
+    "WordCloud": {
+      "category": "wordcloud",
+      "supportsLegend": false,
+      "supportsSelection": true,
+      "supportsLinkedHover": true,
+      "supportsPush": false,
+      "supportsSSR": true,
+      "colorModel": "categorical",
+      "layoutMode": "plugin",
+      "specialFeatures": [
+        "native-text",
+        "native-keyboard-navigation",
+        "seeded-placement",
+        "silhouette-mask",
+        "prepared-layout-ssr",
+        "omission-reporting",
+        "controlled-prop-repacking"
+      ]
     }
   }
 }

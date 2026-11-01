@@ -84,6 +84,20 @@ const UNASSESSED_EXAMPLE_CONTRACT = Object.freeze({
 /** @type {readonly ExampleDefinition[]} */
 const PILOT_EXAMPLE_DEFINITIONS = Object.freeze([
   {
+    id: "word-cloud", path: "/examples/word-cloud", sourceFile: "WordCloudExamplePage.tsx",
+    sourceFiles: ["WordCloudExamplePage.tsx", "word-cloud/shapes.ts", "word-cloud/alice.json", "word-cloud/word-cloud.css"], isPilot: true,
+    contract: {
+      publicImports: ["semiotic/wordcloud"],
+      data: { states: ["snapshot", "error"], fixture: { kind: "aggregated-public-domain-book", replay: false, schemaVersion: "1", inventory: { terms: 300 } } },
+      provenance: { source: "Alice’s Adventures in Wonderland, Project Gutenberg #11; reproducible counting script and original source checked in", capturedAt: "2026-10-31", freshnessOwner: "Semiotic maintainers", reviewCadence: "Word-cloud layout or source-method changes" },
+      accessibility: { summary: "Ranked frequencies include every term and omission reason; first-occurrence passages", navigation: "Native shape, density, search and download controls", keyboard: "Arrow-key mark navigation, Enter to inspect, Escape to dismiss, exact-count buttons", forcedColors: "Native SVG CanvasText marks and system-color text alternatives; manual assistive-technology review pending" },
+      motion: { reducedMotion: "Discrete placement without animation", visibility: "No recurring background work" },
+      responsive: { status: "Container-sized repacking; controls and ranked reading stack on narrow screens", viewports: [390, 1280], selectionIdentity: "Term IDs survive repacking and renderer changes" },
+      ssr: { status: "Prepared placements render through semiotic/server; source page prepares after fonts load", hydration: "Static article and full term list available before canvas preparation" },
+      performance: { status: "Bounded example; no device timing claim", budgets: { bundle: "Dedicated semiotic/wordcloud entry in a lazy route", interaction: "Selection and SVG/Canvas changes reuse placements", memory: "At most 300 terms; d3-cloud scratch canvas capped at 2048 pixels", hiddenPage: "No recurring background work" } },
+    },
+  },
+  {
     id: "emitter-playground",
     path: "/examples/emitter-playground",
     sourceFile: "EmitterPlaygroundPage.tsx",
@@ -2118,6 +2132,11 @@ const EXAMPLE_REGISTRY_METADATA = [
     topics: ["process", "design"],
   },
   {
+    title: "A story takes shape", path: "/examples/word-cloud", publishedAt: "2026-10-31T12:00:00-07:00",
+    eyebrow: "Shaped word clouds · exact counts", description: "Read Wonderland through shaped text, ranked frequencies and original passages. Keep every term visible, even when it cannot fit.",
+    preview: "word-cloud", badges: ["Shaped text", "Portable layout", "Accessible reading"], frames: ["custom"], topics: ["design", "accessibility"],
+  },
+  {
     title: "The Novel Network Lab",
     path: "/examples/novel-network-lab",
     publishedAt: "2026-10-03T12:00:00-07:00",
@@ -3522,7 +3541,7 @@ export function validateExampleDefinitions(definitions = EXAMPLE_DEFINITIONS) {
         sourceFiles.forEach((file) => {
           const valid =
             isNonEmptyString(file) &&
-            /\.(?:js|jsx|mjs|ts|tsx|css)$/.test(file) &&
+            /\.(?:js|jsx|mjs|ts|tsx|css|json)$/.test(file) &&
             !file.startsWith("/") &&
             !file.split("/").includes("..")
           if (!valid) {

@@ -7,6 +7,7 @@
  * and the supported text props, not the entire prop-validation catalog.
  */
 export const KNOWN_CHART_COMPONENTS = [
+  "WordCloud",
   "MotifBraidChart",
   "DependencyForestChart",
   "FlowCircuitChart",

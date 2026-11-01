@@ -68,9 +68,32 @@ for (const fixture of atlasParityFixtures) {
   if (!ssrParitySource.includes(`from "./${fixture}"`))
     note(`${ssrParitySpecPath} no longer imports ${fixture}.`)
 }
+// Some components own a separate parity sheet to cover additional renderers
+// and hydration. Count their fixtures only alongside the suite that uses them.
+const dedicatedParitySuites = [
+  {
+    source: "integration-tests/wordcloud-ssr-parity.spec.ts",
+    fixture: "wordcloud-parity-fixtures",
+    factory: "makeWordCloudParityCases",
+    screenshot: "ssr-csr-${fixture.id}.png"
+  }
+]
+for (const suite of dedicatedParitySuites) {
+  const source = readRepoFile(suite.source)
+  for (const snippet of [
+    `from "./${suite.fixture}"`,
+    `of ${suite.factory}()`,
+    "toHaveScreenshot(",
+    suite.screenshot
+  ]) {
+    if (!source.includes(snippet))
+      note(`${suite.source} no longer contains SSR/CSR parity evidence snippet: ${snippet}`)
+  }
+}
 const ssrParityFixtureSource = [
   readRepoFile(ssrParityFixturePath),
-  ...atlasParityFixtures.map((name) => readRepoFile(`integration-tests/${name}.ts`))
+  ...atlasParityFixtures.map((name) => readRepoFile(`integration-tests/${name}.ts`)),
+  ...dedicatedParitySuites.map(({ fixture }) => readRepoFile(`integration-tests/${fixture}.ts`))
 ].join("\n")
 const SSR_COMPONENT_RE = /component:\s*"([^"]+)"/g
 const ssrParityCharts = sortedSet(
@@ -140,7 +163,7 @@ const staleSsrBurnDown = [...ssrBurnDownCharts]
 
 if (missingSsrCoverage.length) {
   note(
-    `SSR-capable charts without SSR/CSR parity coverage or burn-down entry:\n  ${missingSsrCoverage.join(", ")}\n  Add a case to ${ssrParitySpecPath}, or add an explicit temporary entry to SSR_PARITY_BURN_DOWN.`
+    `SSR-capable charts without SSR/CSR parity coverage or burn-down entry:\n  ${missingSsrCoverage.join(", ")}\n  Add a case to ${ssrParitySpecPath}, register a dedicated parity suite, or add an explicit temporary entry to SSR_PARITY_BURN_DOWN.`
   )
 }
 if (staleSsrBurnDown.length) {
@@ -152,6 +175,17 @@ if (staleSsrBurnDown.length) {
 // ── Linked-hover interaction-state coverage ─────────────────────────
 
 const linkedHoverEvidence = [
+  {
+    charts: ["WordCloud"],
+    source: "integration-tests/wordcloud-linked-hover.spec.ts",
+    fixture: "integration-tests/wordcloud-linked-hover-fixture.tsx",
+    requiredSnippets: [
+      "linked-hover connects canvas and SVG words in both directions",
+      "must redraw when its linked-hover selection becomes active",
+      "wordcloud-linked-hover-${renderAs}.png",
+      "await expectSelection(\"none\")"
+    ]
+  },
   {
     charts: ["MotifBraidChart", "DependencyForestChart", "FlowCircuitChart"],
     source: "integration-tests/atlas-linked-hover.spec.ts",

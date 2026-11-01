@@ -1,4 +1,5 @@
 import { MULTI_AXIS_LINE_CHART_SIZE } from "./chartSizeDefaultsXY"
+import { WORD_CLOUD_SIZE } from "./chartSizeDefaultsWordCloud"
 import {
   PIE_CHART_SIZE,
   DONUT_CHART_SIZE,
@@ -32,6 +33,7 @@ import {
 /** Shared size values; individual exports keep unrelated charts out of family bundles. */
 
 const PRIMARY_SIZE_OVERRIDES = {
+  WordCloud: WORD_CLOUD_SIZE,
   MultiAxisLineChart: MULTI_AXIS_LINE_CHART_SIZE,
   PieChart: PIE_CHART_SIZE,
   DonutChart: DONUT_CHART_SIZE,
@@ -116,7 +118,8 @@ export function hasFixedModeSize(name: string): boolean {
     "ProcessSankey",
     "ChainReactionChart",
     "DependencyForestChart",
-    "FlowCircuitChart"
+    "FlowCircuitChart",
+    "WordCloud"
   ].includes(name)
 }
 

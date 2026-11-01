@@ -50,6 +50,7 @@ while ((match = importRe.exec(registrySrc)) !== null) {
 //    (XY/Ordinal/NetworkCustomChart) and LinkedCharts aren't in capabilities.json
 //    because they don't fit the standard chart-spec model.
 const DELIBERATELY_EXCLUDED = new Map([
+  ["WordCloud", "requires font/raster preparation before a serialized suggestion can be rendered synchronously"],
   ["MotifBraidChart", "requires an admitted prepared atlas, not a profiled flat dataset"],
   ["DependencyForestChart", "requires a prepared forest and declared relation/root scope"],
   ["FlowCircuitChart", "requires admitted module semantics and an observed or modeled edition"],
@@ -88,7 +89,7 @@ for (const chart of DELIBERATELY_EXCLUDED.keys()) {
 
 // 6. Capability files that aren't imported (orphans)
 const colocatedFiles = []
-const chartDirs = ["xy", "ordinal", "network", "geo", "physics"]
+const chartDirs = ["xy", "ordinal", "network", "geo", "physics", "wordcloud"]
 for (const dir of chartDirs) {
   const dirPath = path.join(repoRoot, "src", "components", "charts", dir)
   if (!fs.existsSync(dirPath)) continue

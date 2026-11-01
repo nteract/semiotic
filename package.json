@@ -194,6 +194,12 @@
       "require": "./dist/geo.min.js",
       "default": "./dist/geo.module.min.js"
     },
+    "./wordcloud": {
+      "types": "./dist/semiotic-wordcloud.d.ts",
+      "import": "./dist/semiotic-wordcloud.module.min.js",
+      "require": "./dist/semiotic-wordcloud.min.js",
+      "default": "./dist/semiotic-wordcloud.module.min.js"
+    },
     "./text": {
       "types": "./dist/semiotic-text.d.ts",
       "import": "./dist/semiotic-text.module.min.js",
@@ -300,6 +306,7 @@
   "files": [
     "dist/*.min.js",
     "dist/**/*.d.ts",
+    "dist/d3-cloud.LICENSE.txt",
     "dist/forceLayoutWorker.js",
     "dist/physicsWorker.js",
     "dist/processSankeyLayoutWorker.js",
@@ -592,6 +599,7 @@
     "@vitest/coverage-v8": "4.1.12",
     "@vitest/ui": "4.1.12",
     "ajv": "^8.20.0",
+    "d3-cloud": "2.0.0",
     "d3-dsv": "^3.0.1",
     "d3-flextree-v4": "^1.0.1",
     "esbuild": "0.28.2",

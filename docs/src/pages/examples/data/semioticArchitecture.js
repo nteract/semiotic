@@ -10,6 +10,7 @@ import { EXAMPLE_DEFINITIONS } from "../exampleDefinitions.js"
  * pretending that the codebase is a strict hierarchy.
  */
 export const SEMIOTIC_ARCHITECTURE_NODES = [
+  { id: "hoc-wordcloud", label: "WordCloud", detail: "Aggregated terms, shaped placement and linked exact readings.", layer: "leaf", cluster: "network", parent: "frame-network", order: 5 },
   {
     id: "semiotic-core",
     label: "Visible Semiotic",
@@ -572,6 +573,9 @@ export const SEMIOTIC_ARCHITECTURE_NODES = [
     layer: "root",
     order: 0,
     supports: ["input-static", "input-push", "feature-accessors"],
+  },
+  {
+    id: "root-preparation", label: "Text layout preparation", detail: "Font-aware raster placement produces portable text geometry and omission evidence.", layer: "root", order: 1.5, supports: ["hoc-wordcloud"],
   },
   {
     id: "root-pipelines",
@@ -1702,6 +1706,11 @@ const EXPLICIT_EXAMPLE_PROFILES = [
     shortLabel: "Pipeline Explorer",
     note: "An optional camera on NetworkCustomChart scales canvas ports, SVG connections and virtualized HTML cards together. Consumer-authored semantic detail, a shared-window minimap, persistent notes and an accessible inspector make the same pipeline readable at every scale.",
     uses: ["input-static", "hoc-network-custom", "feature-custom-layout", "feature-custom-overlays", "feature-observation", "feature-accessibility", "feature-responsive", "feature-theme", "feature-canvas-svg"],
+  },
+  {
+    id: "word-cloud", shortLabel: "A story takes shape",
+    note: "Native retained text shares tooltip, selection, accessibility and Canvas/SVG infrastructure. Deterministic silhouettes preserve every source term in placement or omission evidence and a ranked reading.",
+    uses: ["input-static", "hoc-wordcloud", "feature-accessors", "feature-tooltips", "feature-observation", "feature-accessibility", "feature-responsive", "feature-canvas-svg"],
   },
   {
     id: "novel-network-lab",

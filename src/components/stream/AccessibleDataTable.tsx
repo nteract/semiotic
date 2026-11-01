@@ -60,6 +60,7 @@ export function computeCanvasAriaLabel(
 
   const parts: string[] = []
   const typeLabels: Record<string, readonly [string, string]> = {
+    text: ["term", "terms"],
     point: ["point", "points"],
     line: ["line", "lines"],
     area: ["area", "areas"],

@@ -132,6 +132,7 @@ export interface SceneAccessibilityMetadata {
 }
 
 export type SceneNode =
+
   | LineSceneNode
   | AreaSceneNode
   | PointSceneNode

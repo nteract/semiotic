@@ -14,6 +14,7 @@ interface ChartClinicMetadata {
 }
 
 export const CHART_CLINIC_METADATA: Readonly<Record<string, ChartClinicMetadata>> = {
+  "WordCloud": {"category":"wordcloud","recommendedImport":"semiotic/wordcloud","docsRoute":"/charts/word-cloud","serverImport":"semiotic/server"},
   "MotifBraidChart": {"category":"network","recommendedImport":"semiotic/atlas","serverImport":"semiotic/server","docsRoute":"/charts/motif-braid-chart","definition":true},
   "DependencyForestChart": {"category":"network","recommendedImport":"semiotic/atlas","serverImport":"semiotic/server","docsRoute":"/charts/dependency-forest-chart","definition":true},
   "FlowCircuitChart": {"category":"physics","recommendedImport":"semiotic/atlas","serverImport":"semiotic/server","docsRoute":"/charts/flow-circuit-chart","definition":true},

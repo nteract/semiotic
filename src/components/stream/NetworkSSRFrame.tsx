@@ -5,11 +5,8 @@ import { NetworkSVGOverlay } from "./NetworkSVGOverlay"
 import { NetworkViewGroup } from "./networkViewTransform"
 import { NetworkHtmlMarksLayer } from "./NetworkHtmlMarksLayer"
 import { networkFrameAccessibility } from "./networkFrameAccessibility"
-import {
-  networkSceneNodeToSVG,
-  networkSceneEdgeToSVG
-} from "./SceneToSVGNetwork"
-import { renderSceneWithBackend } from "./renderBackend"
+import { resolveStaleness } from "./stalenessBands"
+import { NetworkSceneMarks } from "./NetworkSceneSVG"
 import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
 import { withNetworkPerspective } from "./networkPerspectiveContext"
@@ -68,11 +65,9 @@ export function NetworkSSRFrame({
   } = props
 
   const sceneNodes = store.sceneNodes
-  const sceneEdges = store.sceneEdges
   const labels = store.labels
   const perspectiveFrame = store.perspective.frame
   const perspectiveMode = store.lastCustomLayoutResult?.perspective
-  const underlay = store.perspective.underlay
   const containerProps = networkFrameContainerProps(props, `${tableId}-frame`, size, layoutPending)
 
   return (
@@ -123,38 +118,13 @@ export function NetworkSSRFrame({
                   )}
                 </NetworkViewGroup>
               </g>
-              <g transform={`translate(${margin.left},${margin.top})`}>
+              <g transform={`translate(${margin.left},${margin.top})`} opacity={props.staleness ? resolveStaleness(props.staleness, store.activity.elapsed()).alpha : undefined}>
                 <NetworkViewGroup
                   view={props.viewTransform}
                   width={adjustedWidth}
                   height={adjustedHeight}
                 >
-                  {underlay.map((edge, index) =>
-                    networkSceneEdgeToSVG(
-                      edge,
-                      index + sceneEdges.length + sceneNodes.length
-                    )
-                  )}
-                  {sceneEdges
-                    .map((edge, index) =>
-                      renderSceneWithBackend({
-                        node: edge,
-                        index,
-                        renderMode,
-                        fallback: () => networkSceneEdgeToSVG(edge, index)
-                      })
-                    )
-                    .filter(Boolean)}
-                  {sceneNodes
-                    .map((node, index) =>
-                      renderSceneWithBackend({
-                        node,
-                        index,
-                        renderMode,
-                        fallback: () => networkSceneNodeToSVG(node, index)
-                      })
-                    )
-                    .filter(Boolean)}
+                  <NetworkSceneMarks store={store} renderMode={renderMode} />
                 </NetworkViewGroup>
               </g>
             </svg>

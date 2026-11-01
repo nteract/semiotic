@@ -152,7 +152,7 @@ function parseRecipeComponents() {
 function parseSemioticAIChartExports() {
   const source = read(files.semioticAI)
   const names = new Set()
-  const exportRegex = /export\s+\{([^}]+)\}\s+from\s+"\.\/charts\/(?:xy|ordinal|network|realtime|physics|value)\//g
+  const exportRegex = /export\s+\{([^}]+)\}\s+from\s+"\.\/charts\/[^/]+\//g
   for (const match of source.matchAll(exportRegex)) {
     for (const raw of match[1].split(",")) {
       const name = raw.trim().split(/\s+as\s+/)[0].trim()

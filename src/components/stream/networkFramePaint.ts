@@ -2,6 +2,7 @@
  * Canvas paint tick for StreamNetworkFrame.
  * Extracted so the React component stays focused on wiring/state.
  */
+import { resolveStaleness } from "./stalenessBands"
 import { getDevicePixelRatio, prepareCanvas } from "./canvasSetup"
 import { paintCanvasBackground } from "./canvasBackground"
 import { needsDataCanvasPaint } from "./paintNeeds"
@@ -50,6 +51,8 @@ export interface NetworkFramePaintContext {
   themeBackground?: string
   maxDevicePixelRatio?: number
   renderMode?: SceneRenderMode<NetworkSceneNode | NetworkSceneEdge>
+  /** SVG owns scene marks; keep this transparent canvas for animated particles. */
+  svgScene?: boolean
   viewTransform?: NetworkViewTransform
   /** Reproject retained pixels without advancing layout/animation, even paused. */
   cameraOnly?: boolean
@@ -176,7 +179,8 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
   // The final transition step mutates/snap-aligns geometry while returning
   // false. Rebuild once for that step too so paint and pointer geometry reach
   // the same target.
-  const computedScene = transitionWasActive || wasDirty || animationTicked || perspectiveTicked
+  const computedScene =
+    transitionWasActive || wasDirty || animationTicked || perspectiveTicked
   if (computedScene) {
     store.buildScene([adjustedWidth, adjustedHeight])
     canvas.setAttribute("aria-label", networkFrameAriaLabel(store))
@@ -209,7 +213,12 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
   // and asks for a repaint via this flag — folded into the paint gate only.
   // resolutionDirty is the same paint-only path for browser zoom / DPR caps.
   const stylePaintPending = store.consumeStylePaintPending()
-  if (computedScene || stylePaintPending || ctx.cameraOnly) {
+  if (
+    computedScene ||
+    stylePaintPending ||
+    ctx.cameraOnly ||
+    (ctx.svgScene && liveEncoding)
+  ) {
     onSceneOrStyleChange?.({
       // Pure force/orbit motion preserves the authored style inventory. Avoid
       // a second O(n+m) scan on every animation frame; the frame caches this
@@ -232,25 +241,24 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
   })
   if (resolutionDirtyRef) resolutionDirtyRef.current = false
 
-  const staleThreshold = staleness?.threshold ?? 5000
-  const currentlyStale =
-    !!staleness &&
-    store.activity.elapsed() > staleThreshold
+  const stale = resolveStaleness(staleness, store.activity.elapsed())
+  const currentlyStale = stale.isStale
 
   if (needsDataRepaint) {
     const dpr = getDevicePixelRatio(maxDevicePixelRatio, size)
     if (!prepareCanvas(canvas, size, margin, dpr)) return
     c2d.clearRect(-margin.left, -margin.top, size[0], size[1])
 
-    paintCanvasBackground(c2d, {
-      background,
-      themeBackground,
-      hasBackgroundGraphics,
-      x: -margin.left,
-      y: -margin.top,
-      width: size[0],
-      height: size[1]
-    })
+    if (!ctx.svgScene)
+      paintCanvasBackground(c2d, {
+        background,
+        themeBackground,
+        hasBackgroundGraphics,
+        x: -margin.left,
+        y: -margin.top,
+        width: size[0],
+        height: size[1]
+      })
 
     c2d.save()
     if (ctx.viewTransform) {
@@ -269,44 +277,44 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
       if (animate !== false) store.applyTopologyDiff(now)
     }
 
-    if (currentlyStale) {
-      c2d.globalAlpha = staleness?.dimOpacity ?? 0.5
-    }
+    c2d.globalAlpha = stale.alpha
 
-    // Perspective ground chrome (grid, plates, regions, shadows) sits under edges.
-    if (store.perspective.underlay.length) {
-      networkEdgeRenderer(c2d, store.perspective.underlay)
-    }
-
-    paintSceneWithBackend<NetworkSceneNode | NetworkSceneEdge>({
-      context: c2d,
-      nodes: store.sceneEdges,
-      renderMode,
-      pixelRatio: dpr,
-      paintBuiltIn: (edges) =>
-        networkEdgeRenderer(c2d, edges as NetworkSceneEdge[])
-    })
-
-    paintSceneWithBackend<NetworkSceneNode | NetworkSceneEdge>({
-      context: c2d,
-      nodes: store.sceneNodes,
-      renderMode,
-      pixelRatio: dpr,
-      paintBuiltIn: (nodes) => {
-        const builtInNodes = nodes as NetworkSceneNode[]
-        // A projected scene is depth-sorted across mark types; flat scenes
-        // use one pass per scene type.
-        if (store.perspective.frame) {
-          paintNetworkNodesInOrder(c2d, builtInNodes)
-          return
-        }
-        networkRectRenderer(c2d, builtInNodes)
-        networkCircleRenderer(c2d, builtInNodes)
-        networkArcRenderer(c2d, builtInNodes)
-        networkSymbolRenderer(c2d, builtInNodes)
-        networkGlyphRenderer(c2d, builtInNodes)
+    if (!ctx.svgScene) {
+      // Perspective ground chrome (grid, plates, regions, shadows) sits under edges.
+      if (store.perspective.underlay.length) {
+        networkEdgeRenderer(c2d, store.perspective.underlay)
       }
-    })
+
+      paintSceneWithBackend<NetworkSceneNode | NetworkSceneEdge>({
+        context: c2d,
+        nodes: store.sceneEdges,
+        renderMode,
+        pixelRatio: dpr,
+        paintBuiltIn: (edges) =>
+          networkEdgeRenderer(c2d, edges as NetworkSceneEdge[])
+      })
+
+      paintSceneWithBackend<NetworkSceneNode | NetworkSceneEdge>({
+        context: c2d,
+        nodes: store.sceneNodes,
+        renderMode,
+        pixelRatio: dpr,
+        paintBuiltIn: (nodes) => {
+          const builtInNodes = nodes as NetworkSceneNode[]
+          // A projected scene is depth-sorted across mark types; flat scenes
+          // use one pass per scene type.
+          if (store.perspective.frame) {
+            paintNetworkNodesInOrder(c2d, builtInNodes)
+            return
+          }
+          networkRectRenderer(c2d, builtInNodes)
+          networkCircleRenderer(c2d, builtInNodes)
+          networkArcRenderer(c2d, builtInNodes)
+          networkSymbolRenderer(c2d, builtInNodes)
+          networkGlyphRenderer(c2d, builtInNodes)
+        }
+      })
+    }
 
     if (particlesWanted && !currentlyStale) {
       const edges = store.edgesArray
@@ -351,9 +359,6 @@ export function paintNetworkFrame(ctx: NetworkFramePaintContext): void {
       }
     }
 
-    if (currentlyStale) {
-      c2d.globalAlpha = 1
-    }
     c2d.restore()
   }
 

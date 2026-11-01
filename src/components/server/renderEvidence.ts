@@ -30,6 +30,16 @@ export type SemanticViabilityStatus =
 
 export interface RenderEvidence {
   /** EventDrop admission accounting, independent of current body positions. */
+  wordCloud?: {
+    inputCount: number
+    placedCount: number
+    omitted: import("../wordcloud/types").WordCloudOmission[]
+    seed: number
+    fontFingerprint: string
+    maskFingerprint?: string
+    maskResolution: [number, number] | null
+    bounds: import("../wordcloud/types").WordCloudLayoutResult["bounds"]
+  }
   watermarkValue?: number
   openWindows?: number
   closedWindows?: number
