@@ -223,6 +223,19 @@ function InterrogatableChart({ data }) {
 }`}
       </CodeBlock>
 
+      <p>
+        Concurrent questions keep their answers beside the matching question,
+        even if replies arrive out of order. <code>loading</code> stays true
+        until every pending question settles. Only the most recently submitted
+        question can update the query error or replace AI annotations.
+      </p>
+      <p>
+        Call <code>reset()</code> to clear the conversation, AI annotations, error,
+        and loading state. Replies from before the reset, or after the hook
+        unmounts, are ignored. Your <code>onQuery</code> handler still owns network
+        cancellation; reset does not abort its request.
+      </p>
+
       <h2>The statistical summary</h2>
       <p>
         <code>context.summary</code> is the payload to send to an LLM. It's compact, typed, and

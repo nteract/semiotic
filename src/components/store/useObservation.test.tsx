@@ -43,6 +43,69 @@ function useObserverWithPush(options?: Parameters<typeof useChartObserver>[0]) {
 }
 
 describe("useChartObserver", () => {
+  it("publishes stable snapshots that update memoized consumers without changing earlier snapshots", () => {
+    const observed: ChartObservation[][] = []
+    const { result, rerender } = renderHook(() => {
+      const observer = useObserverWithPush()
+      const count = React.useMemo(() => observer.observations.length, [observer.observations])
+      React.useEffect(() => { observed.push(observer.observations) }, [observer.observations])
+      return { ...observer, count }
+    }, { wrapper })
+    const empty = result.current.observations
+    const first = makeHover({ timestamp: 1 })
+    act(() => result.current.push(first))
+    const one = result.current.observations
+    act(() => result.current.push(makeClick({ timestamp: 2 })))
+    const two = result.current.observations
+
+    expect(empty).toEqual([])
+    expect(one).toEqual([first])
+    expect(two).not.toBe(one)
+    expect(result.current.count).toBe(2)
+    expect(observed.map(snapshot => snapshot.length)).toEqual([0, 1, 2])
+    rerender()
+    expect(result.current.observations).toBe(two)
+
+    act(() => {
+      for (let i = 3; i <= 105; i++) result.current.push(makeHover({ timestamp: i }))
+    })
+    expect(two.map(o => o.timestamp)).toEqual([1, 2])
+    expect(result.current.observations.map(o => o.timestamp)).toEqual(
+      Array.from({ length: 50 }, (_, i) => i + 56)
+    )
+    act(() => result.current.clear())
+    expect(result.current.count).toBe(0)
+    expect(two.map(o => o.timestamp)).toEqual([1, 2])
+  })
+
+  it("keeps equivalent inline filters stable and returns detached filtered snapshots", () => {
+    const { result, rerender } = renderHook(() =>
+      useObserverWithPush({ types: ["click"], chartId: "main", limit: 2 }), { wrapper })
+    act(() => result.current.push(makeClick({ chartId: "main", timestamp: 1 })))
+    const snapshot = result.current.observations
+    rerender()
+    expect(result.current.observations).toBe(snapshot)
+    act(() => result.current.push(makeHover({ chartId: "main", timestamp: 2 })))
+    expect(result.current.observations).toEqual(snapshot)
+    expect(snapshot.map(o => o.timestamp)).toEqual([1])
+  })
+
+  it("increments the change signal across clear and subsequent pushes", () => {
+    const { result } = renderHook(() => ({
+      ...useObserverWithPush(),
+      version: useObservationSelector(s => s.version)
+    }), { wrapper })
+    const initial = result.current.version
+    act(() => result.current.push(makeHover()))
+    const pushed = result.current.version
+    act(() => result.current.clear())
+    const cleared = result.current.version
+    act(() => result.current.push(makeClick()))
+    expect(initial).toBeLessThan(pushed)
+    expect(pushed).toBeLessThan(cleared)
+    expect(cleared).toBeLessThan(result.current.version)
+  })
+
   it("returns empty observations initially", () => {
     const { result } = renderHook(() => useChartObserver(), { wrapper })
 

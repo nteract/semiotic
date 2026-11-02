@@ -72,6 +72,7 @@ export default defineConfig(({ mode }) => ({
         controlAudit: resolve(integrationRoot, "control-audit-examples/index.html"),
         controlAccessibilityRegressions: resolve(integrationRoot, "control-accessibility-regressions/index.html"),
         selectionPredicates: resolve(integrationRoot, "selection-predicates-examples/index.html"),
+        observationLifecycle: resolve(integrationRoot, "observation-lifecycle/index.html"),
         linkedColors: resolve(integrationRoot, "linked-color-examples/index.html"),
         customLayout: resolve(integrationRoot, "custom-layout-examples/index.html"),
         geo: resolve(integrationRoot, "geo-examples/index.html"),
