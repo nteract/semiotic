@@ -1,6 +1,7 @@
 "use client"
 import type { Datum } from "../charts/shared/datumTypes"
-import { useId, useMemo, useCallback, useEffect, useRef } from "react"
+import { useId, useMemo, useCallback, useEffect } from "react"
+import { useStableShallow } from "../stream/useStableShallow"
 import {
   useSelectionSelector,
   createOwnedSelectionWriter,
@@ -56,14 +57,11 @@ function useSelectionState(options: UseSelectionOptions, fieldScope?: readonly u
 
   const isActive = !!selection?.clauses.size
   const predicate = useMemo(() => {
-    if (!selection || selection.clauses.size === 0) return () => true
+    if (!selection) return () => true
     return buildPredicate(selection, clientId)
   }, [selection, clientId])
 
-  return useMemo(
-    () => ({ ...actions, predicate, isActive }),
-    [actions, predicate, isActive]
-  )
+  return useStableShallow({ ...actions, predicate, isActive })
 }
 
 // Both public writers share callbacks and cleanup without subscribing to values.
@@ -131,7 +129,7 @@ export interface UseSelectionActionsResult {
  */
 export function useSelectionActions(name: string, clientId?: string): UseSelectionActionsResult {
   const { selectPoints, clear, clientId: cid } = useSelectionWriter({ name, clientId })
-  return useMemo(() => ({ selectPoints, clear, clientId: cid }), [selectPoints, clear, cid])
+  return useStableShallow({ selectPoints, clear, clientId: cid })
 }
 
 // ── useLinkedHover ─────────────────────────────────────────────────────────
@@ -154,23 +152,12 @@ export interface UseLinkedHoverResult {
   isActive: boolean
 }
 
-// Field lists contain only strings (or an absent brush axis). Keep inline lists
-// stable without importing the frame config comparator into the store bundle.
-function useStableFields<T extends string | undefined>(fields: T[]): T[] {
-  const ref = useRef(fields)
-  if (fields.length !== ref.current.length || fields.some((field, i) => field !== ref.current[i])) {
-    ref.current = fields
-  }
-  return ref.current
-}
-
 export function useLinkedHover(options: UseLinkedHoverOptions): UseLinkedHoverResult {
   const selName = options.name || "hover"
-  const fields = useStableFields(options.fields)
+  const fields = useStableShallow(options.fields)
 
   const { predicate, isActive, selectPoints, clear } = useSelectionState({
     name: selName,
-    fields,
     enabled: options.enabled
   }, fields)
 
@@ -190,7 +177,7 @@ export function useLinkedHover(options: UseLinkedHoverOptions): UseLinkedHoverRe
     [fields, selectPoints, clear]
   )
 
-  return useMemo(() => ({ onHover, predicate, isActive }), [onHover, predicate, isActive])
+  return useStableShallow({ onHover, predicate, isActive })
 }
 
 // ── useBrushSelection ──────────────────────────────────────────────────────
@@ -244,11 +231,8 @@ function isLinearBrushExtent(extent: BrushExtent): extent is LinearBrushExtent {
 export function useBrushSelection(options: UseBrushSelectionOptions): UseBrushSelectionResult {
   const { name, xField, yField } = options
 
-  const fields = useStableFields([xField, yField])
-  const { predicate, isActive, selectInterval, clear } = useSelectionState({
-    name,
-    fields: [xField, yField].filter(Boolean) as string[]
-  }, fields)
+  const fields = useStableShallow([xField, yField])
+  const { predicate, isActive, selectInterval, clear } = useSelectionState({ name }, fields)
 
   const brushType = xField && yField ? "xyBrush" : xField ? "xBrush" : "yBrush"
 
@@ -272,26 +256,18 @@ export function useBrushSelection(options: UseBrushSelectionOptions): UseBrushSe
         setRange(xField || yField, extent[0], extent[1])
       }
 
-      if (hasOwnEnumerableKey(fieldRanges)) {
-        selectInterval(fieldRanges)
-      }
+      selectInterval(fieldRanges)
     },
     [brushType, xField, yField, selectInterval, clear]
   )
 
-  const brushInteraction = useMemo(
-    () => ({
-      brush: brushType as "xyBrush" | "xBrush" | "yBrush",
-      during: handleBrush,
-      end: handleBrush
-    }),
-    [brushType, handleBrush]
-  )
+  const brushInteraction = useStableShallow<UseBrushSelectionResult["brushInteraction"]>({
+    brush: brushType,
+    during: handleBrush,
+    end: handleBrush
+  })
 
-  return useMemo(
-    () => ({ brushInteraction, predicate, isActive, clear }),
-    [brushInteraction, predicate, isActive, clear]
-  )
+  return useStableShallow({ brushInteraction, predicate, isActive, clear })
 }
 
 // ── useFilteredData ────────────────────────────────────────────────────────

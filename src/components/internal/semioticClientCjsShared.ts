@@ -34,7 +34,7 @@ export {
   HIGH_CONTRAST_THEME,
   useThemeSelector
 } from "../store/ThemeStore"
-export * from "../store/SelectionStore"
+export { SelectionProvider, useSelectionSelector } from "../store/SelectionStore"
 export * from "../store/useSelection"
 export * from "../store/ObservationStore"
 export * from "../store/LinkedCrosshairStore"

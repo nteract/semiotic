@@ -46,6 +46,18 @@ for (const cjs of [false, true]) {
     assert.equal(read("./ThemeProvider", "semiotic.ts")?.external, cjs ? true : undefined)
     assert.equal(read("./CategoryColors", "semiotic.ts")?.external, cjs ? true : undefined)
     assert.equal(read("./store/categoryColorContext", "CategoryColors.tsx")?.external, cjs ? undefined : true)
+    assert.equal(
+      read("../../store/createStore", "charts/shared/chartSelectionUtils.ts")?.path,
+      cjs ? undefined : "./s.min.js"
+    )
+    // The theme boundary shares config comparison without making theme-only
+    // consumers import the selection/observation stores.
+    for (const helper of ["shallowEqual", "useStableShallow"]) {
+      assert.equal(
+        read(`./${helper}`, "stream/StreamXYFrame.tsx")?.path,
+        cjs ? undefined : "./t.min.js"
+      )
+    }
   })
 }
 

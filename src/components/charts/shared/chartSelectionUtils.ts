@@ -30,12 +30,4 @@ export function observationDatum(interactionDatum: Datum): Datum {
   return datum || {}
 }
 
-export function hasOwnEnumerableKey(
-  value: object | undefined | null
-): boolean {
-  if (!value) return false
-  for (const key in value) {
-    if (Object.prototype.hasOwnProperty.call(value, key)) return true
-  }
-  return false
-}
+export { hasOwnEnumerableKey } from "../../store/createStore"

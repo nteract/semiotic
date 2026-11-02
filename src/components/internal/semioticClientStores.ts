@@ -1,8 +1,13 @@
 /** Canonical ESM contexts shared by primary and optional chart graphs. */
 export * from "../store/categoryColorContext"
 export * from "../store/ObservationStore"
-export * from "../store/SelectionStore"
-export * from "../store/selectionProvenance"
+export { SelectionProvider, useSelectionSelector } from "../store/SelectionStore"
+export { hasOwnEnumerableKey } from "../store/createStore"
+export {
+  attachSelectionProvenance, getSelectionProvenance, getSourceRows,
+  selectionDatumWithParent, seriesSelectionDatum, requestsSelectionProvenance,
+  attachSelectionCoverage, selectionFieldValues
+} from "../store/selectionProvenance"
 export {
   useSelection, useSelectionActions, useLinkedHover, useBrushSelection, useFilteredData
 } from "../store/useSelection"
@@ -10,7 +15,7 @@ export {
 export {
   LinkedCrosshairProvider, useCrosshairActions, useCrosshairPosition, useLinkedCrosshair
 } from "../store/LinkedCrosshairStore"
-export * from "../store/TooltipStore"
+export { TooltipProvider } from "../store/TooltipStore"
 // Providers and chart encodings consume the same palettes and color helpers.
 export {
   SEQUENTIAL_INTERPOLATORS, getSequentialInterpolator, interpolateBrBG,

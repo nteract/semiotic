@@ -183,7 +183,6 @@ function fieldSelectionsAreEqual(
   a: FieldSelection,
   b: FieldSelection
 ): boolean {
-  if (a.type !== b.type) return false
   if (a.type === "interval" && b.type === "interval") {
     return a.range[0] === b.range[0] && a.range[1] === b.range[1]
   }
@@ -206,7 +205,7 @@ function clausesAreEqual(a: SelectionClause, b: SelectionClause): boolean {
 
 export const [SelectionProvider, useSelectionSelector] =
   /* @__PURE__ */ createStore<SelectionStoreState>((set) => {
-    const owners = new WeakMap<SelectionClause, object>()
+    const owners = new WeakMap<SelectionClause, object | undefined>()
     // Every mutation replaces just its named selection and preserves the rest.
     function updateSelection(
       name: string,
@@ -231,8 +230,7 @@ export const [SelectionProvider, useSelectionSelector] =
           existingClause && clausesAreEqual(existingClause, clause)
         const storedClause = unchanged ? existingClause : clause
         // Equal values still transfer ownership, without notifying readers.
-        if (owner) owners.set(storedClause, owner)
-        else owners.delete(storedClause)
+        owners.set(storedClause, owner)
         if (unchanged) return
         return {
           name: selectionName,

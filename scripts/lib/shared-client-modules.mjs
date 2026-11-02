@@ -7,6 +7,8 @@ const sharedModules = new Set([
   "store/TooltipStore", "store/categoryColorContext", "stream/customLayoutSelection"
 ])
 const sharedEsmData = new Set([
+  "store/createStore",
+  "stream/shallowEqual", "stream/useStableShallow",
   "store/selectionProvenance", "store/themeCore", "store/cloneTheme",
   "store/concreteThemeAccessibility",
   "charts/shared/colorPalettes", "charts/shared/colorContrast", "charts/shared/withDisplayName"
@@ -40,7 +42,7 @@ export function externalizeSharedClientModulesPlugin(cjs = true, shareData = !cj
         return {
           path: cjs
             ? "./semiotic-client-cjs-shared.min.js"
-            : ["store/ThemeStore", "store/themeCore", "store/cloneTheme", "store/concreteThemeAccessibility"].includes(module)
+            : ["store/ThemeStore", "store/themeCore", "store/cloneTheme", "store/concreteThemeAccessibility", "stream/shallowEqual", "stream/useStableShallow"].includes(module)
               ? "./t.min.js"
               : "./s.min.js",
           external: true

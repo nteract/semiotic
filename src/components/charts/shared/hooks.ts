@@ -123,7 +123,7 @@ export function useColorScale(
     // the pipeline's color assignment.
     if (data.length === 0) {
       // Still use CategoryColorProvider if available — it has stable colors
-      if (providerColors && hasOwnEnumerableKey(providerColors)) {
+      if (hasOwnEnumerableKey(providerColors)) {
         // Use effectiveScheme as fallback for categories not in the provider
         const fallbackScale = createColorScale(
           [{ _: "a" }],
@@ -140,7 +140,7 @@ export function useColorScale(
       const categories = Array.from(
         new Set(data.map((d) => String(colorBy(d))))
       )
-      if (providerColors && hasOwnEnumerableKey(providerColors)) {
+      if (hasOwnEnumerableKey(providerColors)) {
         // Use CategoryColorProvider colors, with effectiveScheme as fallback for unknown categories
         const syntheticData = categories.map((c) => ({ _cat: c }))
         const fallbackScale = createColorScale(
@@ -156,7 +156,7 @@ export function useColorScale(
       return createColorScale(syntheticData, "_cat", effectiveScheme)
     }
     // If a CategoryColorProvider is present, use its color map as the scale
-    if (providerColors && hasOwnEnumerableKey(providerColors)) {
+    if (hasOwnEnumerableKey(providerColors)) {
       const fallbackScale = createColorScale(
         data,
         colorBy as string,
@@ -480,13 +480,9 @@ export function useChartSelection({
 
           if (
             selection &&
-            mobileInteraction?.tapToSelect &&
-            linkFields.length > 0
+            mobileInteraction?.tapToSelect
           ) {
-            const fieldValues = selectionFieldValues(datum, linkFields)
-            if (hasOwnEnumerableKey(fieldValues)) {
-              selectionHook.selectPoints(fieldValues)
-            }
+            selectionHook.selectPoints(selectionFieldValues(datum, linkFields))
           }
 
           if (hoverHighlight && seriesField) {
