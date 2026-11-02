@@ -1,42 +1,19 @@
+import React from "react"
+import { act, renderHook } from "@testing-library/react"
+import { ObservationProvider, useObservationSelector } from "./ObservationStore"
 import type { ChartObservation, HoverObservation, ClickObservation, BrushObservation } from "./ObservationStore"
 
-/**
- * Tests for ObservationStore's core push/eviction/clear logic.
- *
- * The real store is created via createStore() and requires a React Provider.
- * useObservation.test.tsx exercises the full production store through the
- * ObservationProvider + useChartObserver hook. This file tests the logic
- * independently (same algorithm, mirrored implementation) for fast,
- * React-free validation of eviction semantics and edge cases.
- */
-
 function createTestStore() {
-  const observations: ChartObservation[] = []
-  const maxObservations = 100
-  let version = 0
-
-  function pushObservation(observation: ChartObservation) {
-    observations.push(observation)
-    if (observations.length > maxObservations) {
-      observations.shift()
-    }
-    version++
-  }
-
-  function clearObservations() {
-    // Note: real store replaces the array via set(() => ({ observations: [] })),
-    // but push semantics (what we test here) are identical. Full store
-    // integration is covered by useObservation.test.tsx.
-    observations.length = 0
-    version = 0
-  }
-
+  const { result } = renderHook(() => useObservationSelector(state => state), {
+    wrapper: ({ children }) => React.createElement(ObservationProvider, { children })
+  })
   return {
-    get observations() { return observations },
-    get version() { return version },
-    maxObservations,
-    pushObservation,
-    clearObservations
+    get observations() { return result.current.observations },
+    get version() { return result.current.version },
+    pushObservation(observation: ChartObservation) {
+      act(() => result.current.pushObservation(observation))
+    },
+    clearObservations() { act(() => result.current.clearObservations()) }
   }
 }
 
@@ -181,7 +158,7 @@ describe("ObservationStore", () => {
   })
 
   describe("clearObservations", () => {
-    it("empties the observation list and resets version", () => {
+    it("empties the observation list and increments version", () => {
       const store = createTestStore()
       store.pushObservation(makeHover())
       store.pushObservation(makeClick())
@@ -190,7 +167,7 @@ describe("ObservationStore", () => {
 
       store.clearObservations()
       expect(store.observations).toHaveLength(0)
-      expect(store.version).toBe(0)
+      expect(store.version).toBe(3)
     })
 
     it("allows new pushes after clear", () => {
@@ -201,7 +178,7 @@ describe("ObservationStore", () => {
 
       expect(store.observations).toHaveLength(1)
       expect(store.observations[0].type).toBe("click")
-      expect(store.version).toBe(1)
+      expect(store.version).toBe(3)
     })
   })
 

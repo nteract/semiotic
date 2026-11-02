@@ -434,6 +434,14 @@ export default function ObservationHooksPage() {
 
       <LinkedObserverDemo />
 
+      <p>
+        <code>observations</code> is an array snapshot: later events, eviction,
+        and <code>clear()</code> do not change an earlier snapshot. Its reference
+        stays stable between store changes when the filters have the same values,
+        so it can safely drive memoized summaries and effect dependencies.
+        Observation payloads retain their original datum references.
+      </p>
+
       <CodeBlock
         code={`import { CategoryColorProvider, LinkedCharts, Scatterplot, BarChart, useChartObserver } from "semiotic"
 

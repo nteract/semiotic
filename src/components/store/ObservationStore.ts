@@ -131,7 +131,7 @@ export interface ObservationStoreState {
   /** Ring buffer of recent observations (newest last). Mutated in place for perf. */
   observations: ChartObservation[]
   maxObservations: number
-  /** Monotonic counter incremented on each push — use as change signal */
+  /** Monotonic counter incremented on each push or clear — use as change signal */
   version: number
   pushObservation: (observation: ChartObservation) => void
   clearObservations: () => void
@@ -157,7 +157,7 @@ export const [ObservationProvider, useObservationSelector] = /* @__PURE__ */ cre
     },
 
     clearObservations() {
-      set(() => ({ observations: [], version: 0 }))
+      set(current => ({ observations: [], version: current.version + 1 }))
     }
   })
 )

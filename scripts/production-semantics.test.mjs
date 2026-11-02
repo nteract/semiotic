@@ -134,6 +134,46 @@ function exercise(target, program) {
   )
 }
 
+for (const target of publicTargets("./ai")) {
+  test(`interrogation (${target.conditions}) preserves pending queries and rejects replies from reset sessions`, () => {
+    exercise(target, `
+      const { JSDOM } = await import("jsdom")
+      const dom = new JSDOM("<!doctype html><body></body>", { url: "http://localhost" })
+      globalThis.window = dom.window
+      globalThis.document = dom.window.document
+      globalThis.IS_REACT_ACT_ENVIRONMENT = true
+      const { act, renderHook } = await import("@testing-library/react")
+      const pending = new Map()
+      const { result, unmount } = renderHook(() => api.useChartInterrogation({
+        data: [],
+        onQuery: question => new Promise(resolve => pending.set(question, resolve))
+      }))
+      let first, second, current
+      act(() => {
+        first = result.current.ask("first")
+        second = result.current.ask("second")
+      })
+      await act(async () => { pending.get("second")({ answer: "second answer" }); await second })
+      assert.equal(result.current.loading, true)
+      act(() => result.current.reset())
+      assert.equal(result.current.loading, false)
+      act(() => { current = result.current.ask("current") })
+      await act(async () => {
+        pending.get("first")({ answer: "stale answer", annotations: [{ id: "stale" }] })
+        await first
+      })
+      assert.equal(result.current.loading, true)
+      assert.deepEqual(result.current.history, [{ role: "user", text: "current" }])
+      assert.deepEqual(result.current.annotations, [])
+      await act(async () => { pending.get("current")({ answer: "current answer" }); await current })
+      assert.equal(result.current.loading, false)
+      assert.deepEqual(result.current.history.map(message => message.text), ["current", "current answer"])
+      unmount()
+      dom.window.close()
+    `)
+  })
+}
+
 for (const target of publicTargets("./wordcloud")) {
   test(`WordCloud (${target.conditions}) shares selection hooks, themes and category colors across entry points`, () => {
     exercise(target, `

@@ -1,5 +1,6 @@
 "use client"
 import { useMemo } from "react"
+import { useStableShallow } from "../stream/useStableShallow"
 import { useObservationSelector } from "./ObservationStore"
 import type { ChartObservation, ObservationStoreState } from "./ObservationStore"
 
@@ -13,7 +14,7 @@ export interface UseChartObserverOptions {
 }
 
 export interface UseChartObserverResult {
-  /** Recent observations (newest last), filtered by options */
+  /** Stable array snapshot (newest last), replaced when observations or filters change. */
   observations: ChartObservation[]
   /** Latest observation matching the filter, or null */
   latest: ChartObservation | null
@@ -24,7 +25,8 @@ export interface UseChartObserverResult {
 export function useChartObserver(
   options: UseChartObserverOptions = {}
 ): UseChartObserverResult {
-  const { limit = 50, types, chartId } = options
+  const { limit = 50, chartId } = options
+  const types = useStableShallow(options.types)
 
   // Subscribe to version (cheap number comparison) rather than the array
   const version = useObservationSelector(
@@ -54,11 +56,9 @@ export function useChartObserver(
       result = result.filter(o => o.chartId === chartId)
     }
 
-    if (result.length > limit) {
-      result = result.slice(result.length - limit)
-    }
-
-    return result
+    // Detach even an unfiltered, under-limit result from the mutable buffer.
+    // Captured snapshots must not change on the next push or eviction.
+    return result.slice(Math.max(0, result.length - limit))
     // version triggers recompute when new observations are pushed
   }, [allObservations, types, chartId, limit, version])
 
