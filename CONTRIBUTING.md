@@ -96,6 +96,10 @@ Start with the smallest useful check before running the full release suite:
    shared/public-surface change that needs the complete contract matrix. It and
    `prepublishOnly` run the release preflight first.
 
+Production builds check entry-graph size budgets as soon as their ESM output is
+finalized, before the remaining CommonJS and worker builds. `npm run size` also
+checks those budgets first when validating existing artifacts.
+
 ### New-chart checklist
 
 Before calling a chart public, complete every relevant item:
