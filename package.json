@@ -622,7 +622,7 @@
     "seedrandom": "^3.0.5",
     "size-limit": "^14.3.0",
     "terser": "^5.51.2",
-    "tsup": "^8.5.1",
+    "tsup": "^9.0.0",
     "tsx": "^4.23.15",
     "typedoc": "^0.28.20",
     "typescript": "~6.0.3",
