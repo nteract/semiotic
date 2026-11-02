@@ -1,5 +1,5 @@
 import { dirname, resolve } from "node:path"
-import { realpathSync } from "node:fs"
+import { readFileSync, readdirSync, realpathSync, writeFileSync } from "node:fs"
 import ts from "typescript"
 
 const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$_"
@@ -18,7 +18,7 @@ function shortName(index) {
  * (including lazy ones) and observable module namespaces retain their names.
  * Edits touch specifiers only, preserving bindings, evaluation order and hints.
  */
-export function shortenChunkExports(result, workingDirectory = process.cwd()) {
+export function shortenChunkExports(result, workingDirectory = process.cwd(), preferLocalNames = false) {
   const files = result.outputFiles?.filter((file) => /\.m?js$/.test(file.path))
   if (!files?.length || !result.metafile) return
   // esbuild resolves the working directory through symlinks (for example
@@ -58,6 +58,7 @@ export function shortenChunkExports(result, workingDirectory = process.cwd()) {
     )
       continue
     const aliases = new Map()
+    const usedAliases = new Set()
     for (const statement of source.statements) {
       if (
         !ts.isExportDeclaration(statement) ||
@@ -66,8 +67,15 @@ export function shortenChunkExports(result, workingDirectory = process.cwd()) {
       )
         continue
       for (const specifier of statement.exportClause.elements) {
-        if (specifier.name.text !== "default")
-          aliases.set(specifier.name.text, shortName(aliases.size))
+        if (specifier.name.text !== "default") {
+          let alias = (specifier.propertyName ?? specifier.name).text
+          if (!preferLocalNames || !/^[$A-Za-z_][$\w]?$/.test(alias) || usedAliases.has(alias)) {
+            let index = aliases.size
+            do { alias = shortName(index++) } while (usedAliases.has(alias))
+          }
+          usedAliases.add(alias)
+          aliases.set(specifier.name.text, alias)
+        }
       }
     }
     names.set(file, aliases)
@@ -124,7 +132,7 @@ export function shortenChunkExports(result, workingDirectory = process.cwd()) {
           const alias = importedNames.get(
             (binding.propertyName ?? binding.name).text
           )
-          if (alias) edit(binding, `${alias} as ${binding.name.text}`)
+          if (alias) edit(binding, alias === binding.name.text ? alias : `${alias} as ${binding.name.text}`)
         }
       }
       if (
@@ -142,7 +150,7 @@ export function shortenChunkExports(result, workingDirectory = process.cwd()) {
             imported !== local.getText(source) ||
             exported !== binding.name.getText(source)
           )
-            edit(binding, `${imported} as ${exported}`)
+            edit(binding, imported === exported ? imported : `${imported} as ${exported}`)
         }
       }
     }
@@ -166,4 +174,24 @@ export function shortenChunkExportsPlugin() {
       })
     }
   }
+}
+
+/** Shorten a private interface shared across separately built ESM groups. */
+export function shortenBuiltEntryExports(directory, privateEntries) {
+  directory = realpathSync(directory)
+  const files = readdirSync(directory).filter((file) => /\.m?js$/.test(file))
+  for (const entry of privateEntries) {
+    if (!files.includes(entry)) throw new Error(`Missing private ESM entry: ${entry}`)
+  }
+  const outputFiles = files.map((file) => ({
+    path: resolve(directory, file),
+    contents: readFileSync(resolve(directory, file)),
+    get text() { return Buffer.from(this.contents).toString("utf8") }
+  }))
+  const outputs = Object.fromEntries(files.map((file) => [
+    resolve(directory, file),
+    { entryPoint: privateEntries.includes(file) ? undefined : file, exports: [] }
+  ]))
+  shortenChunkExports({ outputFiles, metafile: { outputs } }, directory, true)
+  for (const file of outputFiles) writeFileSync(file.path, file.contents)
 }

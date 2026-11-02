@@ -32,6 +32,7 @@ const DifferenceChartPage = lazy(() => import("./pages/charts/DifferenceChartPag
 const StackedAreaChartPage = lazy(() => import("./pages/charts/StackedAreaChartPage"))
 const ScatterplotPage = lazy(() => import("./pages/charts/ScatterplotPage"))
 const ConnectedScatterplotPage = lazy(() => import("./pages/charts/ConnectedScatterplotPage"))
+const WordCloudPage = lazy(() => import("./pages/charts/WordCloudPage"))
 const OrbitDiagramPage = lazy(() => import("./pages/charts/OrbitDiagramPage"))
 const BubbleChartPage = lazy(() => import("./pages/charts/BubbleChartPage"))
 const HeatmapPage = lazy(() => import("./pages/charts/HeatmapPage"))
@@ -348,6 +349,7 @@ const MobileDataVisualizationExamplePage = lazy(
 const NetworkVizExamplePage = lazy(() => import("./pages/examples/NetworkVizExamplePage"))
 const PipelineExplorerExamplePage = lazy(() => import("./pages/examples/PipelineExplorerExamplePage"))
 const CompositionalDagExamplePage = lazy(() => import("./pages/examples/CompositionalDagExamplePage"))
+const WordCloudExamplePage = lazy(() => import("./pages/examples/WordCloudExamplePage"))
 const NovelNetworkLabExamplePage = lazy(() => import("./pages/examples/NovelNetworkLabExamplePage"))
 const DependencyXRayExamplePage = lazy(() => import("./pages/examples/DependencyXRayExamplePage"))
 const FlowCircuitExamplePage = lazy(() => import("./pages/examples/FlowCircuitExamplePage"))
@@ -360,6 +362,7 @@ const EqualPlacesAtlasExamplePage = lazy(
 )
 const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
   "CompositionalDagExamplePage.tsx": CompositionalDagExamplePage,
+  "WordCloudExamplePage.tsx": WordCloudExamplePage,
   "NovelNetworkLabExamplePage.tsx": NovelNetworkLabExamplePage,
   "PipelineExplorerExamplePage.tsx": PipelineExplorerExamplePage,
   "AtlasEvaluationExamplePage.tsx": AtlasEvaluationExamplePage,
@@ -1078,6 +1081,7 @@ export default function DocsApp() {
                 <Route path="tree-diagram" element={<TreeDiagramPage />} />
                 <Route path="treemap" element={<TreemapPage />} />
                 <Route path="circle-pack" element={<CirclePackPage />} />
+                <Route path="word-cloud" element={<WordCloudPage />} />
                 <Route path="orbit-diagram" element={<OrbitDiagramPage />} />
                 {/* Geo Charts */}
                 <Route path="choropleth-map" element={<ChoroplethMapPage />} />

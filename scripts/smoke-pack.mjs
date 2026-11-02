@@ -31,6 +31,7 @@ import {
 import { tmpdir } from "node:os"
 import { join, dirname, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
+import { sharedStoreSelectorBindings } from "./lib/shared-client-modules.mjs"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, "..")
@@ -696,21 +697,18 @@ function checkExperimentalBridgeStoreAnchor(packageRoot, failures) {
   }
 
   const code = readFileSync(bridgePath, "utf8")
-  const anchorImports = Array.from(
-    code.matchAll(
-      /import\s*\{([^}]*)\}\s*from\s*["']\.\/semiotic-client-shared\.module\.min\.js["']/g
-    ),
-    (match) => match[1]
-  ).join(",")
-  const missingSelectors = [
-    "useObservationSelector",
-    "useSelectionSelector"
-  ].filter((name) => !anchorImports.includes(name))
+  const selectors = sharedStoreSelectorBindings(code)
+  const missingSelectors = ["observations", "selections"]
+    .filter((field) => !selectors.has(field))
 
   if (missingSelectors.length > 0) {
     failures.push(
       `experimental bridge: canonical store anchor is missing ${missingSelectors.join(", ")}`
     )
+    return
+  }
+  if (selectors.get("observations") === selectors.get("selections")) {
+    failures.push("experimental bridge: observation and selection use the same store selector")
     return
   }
   console.log("  ✓ experimental bridge imports canonical LinkedCharts stores")

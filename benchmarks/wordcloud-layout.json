@@ -1,0 +1,171 @@
+{
+  "environment": {
+    "node": "v22.23.2",
+    "platform": "darwin",
+    "arch": "arm64",
+    "cpu": "Apple M3 Pro"
+  },
+  "engine": "d3-cloud@2.0.0",
+  "seed": 71,
+  "font": "Crimson Text",
+  "method": "One warmup then three full preparations per case; deterministic synthetic aggregated terms, no animation or worker.",
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+  "measurements": [
+    {
+      "width": 600,
+      "height": 400,
+      "count": 100,
+      "masked": false,
+      "placed": 47,
+      "omitted": 53,
+      "milliseconds": [
+        32.5,
+        27.8,
+        26.6
+      ]
+    },
+    {
+      "width": 600,
+      "height": 400,
+      "count": 100,
+      "masked": true,
+      "placed": 21,
+      "omitted": 79,
+      "milliseconds": [
+        31.3,
+        31.1,
+        35.3
+      ]
+    },
+    {
+      "width": 600,
+      "height": 400,
+      "count": 300,
+      "masked": false,
+      "placed": 52,
+      "omitted": 248,
+      "milliseconds": [
+        102.9,
+        87.3,
+        90.3
+      ]
+    },
+    {
+      "width": 600,
+      "height": 400,
+      "count": 300,
+      "masked": true,
+      "placed": 24,
+      "omitted": 276,
+      "milliseconds": [
+        88.2,
+        89.5,
+        92
+      ]
+    },
+    {
+      "width": 600,
+      "height": 400,
+      "count": 1000,
+      "masked": false,
+      "placed": 73,
+      "omitted": 927,
+      "milliseconds": [
+        330.9,
+        323.3,
+        320.3
+      ]
+    },
+    {
+      "width": 600,
+      "height": 400,
+      "count": 1000,
+      "masked": true,
+      "placed": 31,
+      "omitted": 969,
+      "milliseconds": [
+        305.4,
+        296.7,
+        298.6
+      ]
+    },
+    {
+      "width": 1200,
+      "height": 800,
+      "count": 100,
+      "masked": false,
+      "placed": 100,
+      "omitted": 0,
+      "milliseconds": [
+        19.2,
+        17.1,
+        16.9
+      ]
+    },
+    {
+      "width": 1200,
+      "height": 800,
+      "count": 100,
+      "masked": true,
+      "placed": 55,
+      "omitted": 45,
+      "milliseconds": [
+        40.2,
+        40.3,
+        43.8
+      ]
+    },
+    {
+      "width": 1200,
+      "height": 800,
+      "count": 300,
+      "masked": false,
+      "placed": 169,
+      "omitted": 131,
+      "milliseconds": [
+        123.6,
+        124.5,
+        121.1
+      ]
+    },
+    {
+      "width": 1200,
+      "height": 800,
+      "count": 300,
+      "masked": true,
+      "placed": 67,
+      "omitted": 233,
+      "milliseconds": [
+        138.7,
+        141.3,
+        140
+      ]
+    },
+    {
+      "width": 1200,
+      "height": 800,
+      "count": 1000,
+      "masked": false,
+      "placed": 206,
+      "omitted": 794,
+      "milliseconds": [
+        534.6,
+        535.2,
+        539.4
+      ]
+    },
+    {
+      "width": 1200,
+      "height": 800,
+      "count": 1000,
+      "masked": true,
+      "placed": 84,
+      "omitted": 916,
+      "milliseconds": [
+        522.1,
+        522.6,
+        519
+      ]
+    }
+  ]
+}

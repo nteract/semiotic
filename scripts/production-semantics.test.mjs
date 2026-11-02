@@ -7,9 +7,47 @@ import { fileURLToPath } from "node:url"
 import { build } from "esbuild"
 import { EXTERNAL_RUNTIME_PACKAGES } from "./lib/cold-consumer-measurement.mjs"
 import { verifyNestedTheme } from "./theme-artifacts.test-helper.mjs"
+import { externalizeSharedClientModulesPlugin, sharedStoreSelectorBindings } from "./lib/shared-client-modules.mjs"
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const pkg = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8"))
+
+test("packed bridge checks follow invoked shared selectors through minified aliases", () => {
+  const code = 'import { a as observe, b as select } from "./s.min.js"; observe(s => s.observations); select(s => s.selections)'
+  assert.deepEqual([...sharedStoreSelectorBindings(code)], [["observations", "a"], ["selections", "b"]])
+  assert.equal(sharedStoreSelectorBindings(code.replace("./s.min.js", "./unrelated.js")).size, 0)
+  assert.equal(sharedStoreSelectorBindings('import { a as observe } from "./s.min.js"; local(s => s.observations)').size, 0)
+  assert.equal(sharedStoreSelectorBindings('import { a as observe } from "./s.min.js"; observe(s => other.observations)').size, 0)
+})
+
+test("experimental bridge reads observation and selection from canonical packaged stores", () => {
+  const code = readFileSync(resolve(root, "dist/semiotic-experimental-react-shared.module.min.js"), "utf8")
+  const selectors = sharedStoreSelectorBindings(code)
+  assert.ok(selectors.has("observations"))
+  assert.ok(selectors.has("selections"))
+  assert.notEqual(selectors.get("observations"), selectors.get("selections"))
+})
+
+for (const cjs of [false, true]) {
+  test(`shared client resolver (${cjs ? "CJS" : "ESM"}) recognizes sibling imports without matching neighboring hooks`, () => {
+    let resolveImport
+    externalizeSharedClientModulesPlugin(cjs).setup({
+      onResolve(_options, callback) { resolveImport = callback }
+    })
+    const read = (path, importer, kind = "import-statement") => resolveImport({
+      path, importer: resolve(root, "src/components", importer), kind
+    })
+    const sibling = read("./ThemeStore", "store/useTheme.ts")
+    assert.equal(sibling.external, true)
+    assert.equal(read("../store/ThemeStore.ts", "stream/useFrame.ts").path, sibling.path)
+    assert.equal(read("./useRealtimeCategoryColors", "charts/shared/useRealtimeFrameHandle.ts"), null)
+    assert.equal(read("./store/useSelection", "semiotic-wordcloud.ts", "entry-point"), null)
+    assert.equal(read("../../../../node_modules/other/CategoryColors", "charts/shared/hooks.ts"), null)
+    assert.equal(read("./ThemeProvider", "semiotic.ts")?.external, cjs ? true : undefined)
+    assert.equal(read("./CategoryColors", "semiotic.ts")?.external, cjs ? true : undefined)
+    assert.equal(read("./store/categoryColorContext", "CategoryColors.tsx")?.external, cjs ? undefined : true)
+  })
+}
 
 for (const entry of [".", "./themes/react"]) {
   for (const target of publicTargets(entry)) {
@@ -82,6 +120,36 @@ function exercise(target, program) {
     0,
     `${target.file}: ${result.stderr || result.error || result.stdout}`
   )
+}
+
+for (const target of publicTargets("./wordcloud")) {
+  test(`WordCloud (${target.conditions}) shares selection hooks, themes and category colors across entry points`, () => {
+    exercise(target, `
+      const { default: React } = await import("react")
+      const { renderToStaticMarkup } = await import("react-dom/server")
+      const { readFileSync } = await import("node:fs")
+      const load = (name) => filename.endsWith(".module.min.js")
+        ? import("./dist/" + name + ".module.min.js")
+        : createRequire(import.meta.url)("./dist/" + name + ".min.js")
+      const linked = await load("semiotic-ai")
+      const common = await load("semiotic")
+      assert.equal(api.useSelection, linked.useSelection)
+      assert.equal(api.useSelectionActions, linked.useSelectionActions)
+      const fixture = JSON.parse(readFileSync("src/components/wordcloud/wordCloud.fixture.json", "utf8"))
+      const cloud = (extra = {}) => React.createElement(api.WordCloud, {
+        ...fixture.options, layout: fixture.layout, ...extra
+      })
+      const themed = renderToStaticMarkup(React.createElement(common.ThemeProvider,
+        { theme: { colors: { text: "#123456" } } }, cloud()))
+      assert.match(themed, /data-word-id="care"[^>]*fill="#123456"/)
+      const palette = renderToStaticMarkup(React.createElement(common.ThemeProvider,
+        { theme: { colors: { categorical: ["#456789"] } } }, cloud({ colorBy: "text" })))
+      assert.match(palette, /data-word-id="care"[^>]*fill="#456789"/)
+      const colored = renderToStaticMarkup(React.createElement(common.CategoryColorProvider,
+        { colors: { care: "#654321" } }, cloud({ colorBy: "text" })))
+      assert.match(colored, /data-word-id="care"[^>]*fill="#654321"/)
+    `)
+  })
 }
 
 test("server ESM paths share the complete synchronous renderer API", () => {

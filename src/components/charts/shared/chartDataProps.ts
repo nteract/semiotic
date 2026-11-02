@@ -15,6 +15,15 @@ export const CHART_DATA_PROPS: ReadonlySet<string> = new Set([
 ])
 
 export function isChartDataProp(key: string, value: unknown): boolean {
+  // Prepared WordCloud geometry also carries term text and source weights.
+  // Ordinary layout settings (strings or objects without words) remain config.
+  if (
+    key === "layout" &&
+    value &&
+    typeof value === "object" &&
+    Array.isArray((value as { words?: unknown }).words)
+  )
+    return true
   // Dependency's reading is a display mode; Circuit's reading is a tape cursor
   // containing measurements. Only the latter is a data-bearing prop.
   return (

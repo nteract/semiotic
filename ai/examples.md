@@ -2089,3 +2089,23 @@ export function staticProcess(circuit: FlowCircuitProjection, edition: CircuitEd
   })
 }
 ```
+
+### WordCloud
+
+```tsx
+import { WordCloud, prepareWordCloudLayout } from "semiotic/wordcloud"
+
+const options = {
+  data: [{ text: "care", value: 12 }, { text: "trust", value: 8 }],
+  width: 640, height: 400, seed: 42, fontFamily: "Arial"
+}
+// Browser Canvas, or inject compatible raster adapters as the second argument.
+const layout = await prepareWordCloudLayout(options)
+export function Terms() {
+  return <WordCloud {...options} layout={layout} title="Illustrative term weights"
+    description="Font size suggests frequency; position is decorative."
+    summary="Exact weights and omitted terms are available in the data summary." accessibleTable />
+}
+// Serialize options together with layout. Synchronous server/MCP rendering
+// requires both; it does not silently recompute using a substitute font.
+```

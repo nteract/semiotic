@@ -8,6 +8,14 @@ import {
 } from "./exampleSourceMap"
 
 describe("example Full Code source cleanup", () => {
+  it("includes JSON fixtures in complete example source bundles", async () => {
+    const definition = EXAMPLE_DEFINITIONS.find(({ id }) => id === "word-cloud")
+    expect(validateExampleDefinitions([definition]).ok).toBe(true)
+    const loaders = getExampleSourceLoaders("/examples/word-cloud")
+    expect(loaders.map(({ file }) => file)).toEqual(definition.sourceFiles)
+    const fixture = loaders.find(({ file }) => file === "word-cloud/alice.json")
+    expect(JSON.parse(await fixture.load()).data.find(row => row.text === "alice").value).toBe(397)
+  })
   it("removes narrative code-display plumbing and keeps the example body", () => {
     const source = `import React from "react"
 import CodeBlock from "../../components/CodeBlock"

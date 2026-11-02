@@ -9,9 +9,9 @@
   ],
   "version": "3.13.3",
   "components": {
-    "schema": 64,
+    "schema": 65,
     "aiChartExports": 56,
-    "mcpRenderable": 59,
+    "mcpRenderable": 60,
     "browserOnly": 5,
     "requiresLiveData": [
       "RealtimeHeatmap",
@@ -97,6 +97,9 @@
       ],
       "value": [
         "BigNumber"
+      ],
+      "wordcloud": [
+        "WordCloud"
       ],
       "recipe": [
         "CalendarHeatmapRecipe",
@@ -785,6 +788,12 @@
           "sparkline",
           "mobile"
         ]
+      },
+      "WordCloud": {
+        "componentKind": "chart-hoc",
+        "commonChartProps": "supported",
+        "headingProp": "title",
+        "modeValues": []
       }
     },
     "aiChartExportNames": [

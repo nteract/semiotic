@@ -144,6 +144,7 @@ interface-member RenderEvidence::property::unrenderedAnnotationTypes = optional 
 interface-member RenderEvidence::property::warnings = required warnings: string[]
 interface-member RenderEvidence::property::watermarkValue = optional watermarkValue: number | undefined
 interface-member RenderEvidence::property::width = required width: number
+interface-member RenderEvidence::property::wordCloud = optional wordCloud: undefined | {inputCount: number; placedCount: number; omitted: import("../wordcloud/types").WordCloudOmission[]; seed: number; fontFingerprint: string; maskFingerprint?: string; maskResolution: [number, number] | null; bounds: import("../wordcloud/types").WordCloudLayoutResult["bounds"];}
 interface-member RenderEvidence::property::xDomain = optional xDomain: [number, number] | undefined
 interface-member RenderEvidence::property::yDomain = optional yDomain: [number, number] | undefined
 interface-member RenderToImageOptions::property::background = optional background: string | undefined

@@ -170,6 +170,7 @@ export const NAMED_IMPORT_CASES = Object.freeze([
   },
   { exportKey: "./data", symbol: "bin", platform: "browser" },
   { exportKey: "./geo", symbol: "ChoroplethMap", platform: "browser" },
+  { exportKey: "./wordcloud", symbol: "WordCloud", platform: "browser" },
   { exportKey: "./text", symbol: "usePretextAnnotations", platform: "browser" },
   {
     exportKey: "./rough",

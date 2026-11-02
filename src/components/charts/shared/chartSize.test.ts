@@ -31,6 +31,39 @@ describe("public chart size resolution", () => {
     })
   })
 
+  it("resolves WordCloud defaults and saved geometry without applying chart modes", () => {
+    expect(resolveChartSize("WordCloud")).toEqual({ width: 640, height: 400 })
+    expect(resolveChartSize("WordCloud", { height: 180 })).toEqual({
+      width: 640,
+      height: 180
+    })
+    const layout = { width: 320, height: 200 }
+    for (const mode of ["primary", "context", "sparkline", "mobile"] as const) {
+      expect(resolveChartSize("WordCloud", { mode })).toEqual({
+        width: 640,
+        height: 400
+      })
+      expect(resolveChartSize("WordCloud", {
+        mode,
+        layout,
+        width: 350,
+        responsiveRules: [{ when: { maxWidth: 400 }, transform: { height: 100 } }]
+      })).toEqual({ width: 350, height: 200 })
+    }
+    expect(resolveChartSize("WordCloud", {
+      layout,
+      responsiveWidth: true,
+      containerSize: { width: 317.8, height: 180 }
+    })).toEqual({ width: 317, height: 200 })
+    // An unrelated chart's layout callback must remain a valid input; the
+    // WordCloud overload does not narrow the shared ChartSizeOptions contract.
+    const custom = { width: 420, layout: () => ({ nodes: [] }) }
+    expect(resolveChartSize("XYCustomChart", custom)).toEqual({
+      width: 420,
+      height: 400
+    })
+  })
+
   it("applies individual explicit dimensions and responsive rules", () => {
     expect(resolveChartSize("PieChart", { height: 180 })).toEqual({
       width: 400,

@@ -95,6 +95,36 @@ async function eagerBundle(exportKey, symbol) {
   }
 }
 
+test("word-cloud rasterization stays out of ordinary chart consumers", async () => {
+  const engineMarker = "getSprite() expects a nonnegative padding"
+  for (const [entry, symbol] of [[".", "LineChart"], ["./xy", "Scatterplot"], ["./ordinal", "BarChart"], ["./network", "SankeyDiagram"]]) {
+    const bundled = await eagerBundle(entry, symbol)
+    assert.ok(!bundled.code.includes(engineMarker), `${entry} eagerly retained d3-cloud`)
+    assert.ok(!bundled.deferredCode.includes(engineMarker), `${entry} retained an unused raster chunk`)
+  }
+  const cloud = await eagerBundle("./wordcloud", "prepareWordCloudLayout")
+  assert.ok((cloud.code + cloud.deferredCode).includes(engineMarker), "the dedicated entry must contain its raster engine")
+})
+
+test("the CommonJS word-cloud boundary bundles its ESM-only engine", async () => {
+  const require = createRequire(import.meta.url)
+  const cloud = require(resolve(root, pkg.exports["./wordcloud"].require))
+  assert.equal(typeof cloud.WordCloud, "function")
+  const fixture = JSON.parse(readFileSync(join(root, "src/components/wordcloud/wordCloud.fixture.json"), "utf8"))
+  const React = require("react")
+  const { renderToStaticMarkup } = require("react-dom/server")
+  for (const api of [cloud, await import(resolve(root, pkg.exports["./wordcloud"].import))]) {
+    const html = renderToStaticMarkup(React.createElement(api.WordCloud, { ...fixture.options, layout: fixture.layout }))
+    assert.match(html, /class="stream-network-frame"/)
+    assert.doesNotMatch(html, /class="stream-wordcloud-frame"/)
+    assert.equal((html.match(/data-word-id=/g) ?? []).length, 3)
+  }
+  const empty = await cloud.prepareWordCloudLayout({ data: [] })
+  assert.deepEqual(empty.words, [])
+  assert.ok(Object.isFrozen(empty))
+  await assert.rejects(cloud.prepareWordCloudLayout({ data: [{ text: "care", value: 1 }] }), { code: "CANVAS_REQUIRED" })
+})
+
 test("cold recipe facades do not load the physics simulation", () => {
   for (const key of ["./recipes", "./recipes/core"]) {
     const pending = [resolve(root, pkg.exports[key].import)]

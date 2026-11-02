@@ -49,6 +49,11 @@ export interface BigNumberSizeOptions {
   height?: number | string
 }
 
+/** WordCloud uses saved placement dimensions when an explicit viewport is absent. */
+export interface WordCloudSizeOptions extends ChartSizeOptions {
+  layout?: ChartSize
+}
+
 /** Inline or percentage-sized value cards retain their CSS sizing instead of inventing pixel dimensions. */
 export interface BigNumberSize {
   width: number | string | undefined
@@ -70,12 +75,16 @@ export function resolveChartSize(
   props?: BigNumberSizeOptions
 ): BigNumberSize
 export function resolveChartSize(
+  chart: "WordCloud",
+  props?: WordCloudSizeOptions
+): ChartSize
+export function resolveChartSize(
   chart: SizedChartName,
   props?: ChartSizeOptions
 ): ChartSize
 export function resolveChartSize(
   chart: SizedChartName | "BigNumber",
-  props: ChartSizeOptions | BigNumberSizeOptions = {}
+  props: ChartSizeOptions | BigNumberSizeOptions | WordCloudSizeOptions = {}
 ): ChartSize | BigNumberSize {
   if (chart === "BigNumber") {
     const p = props as BigNumberSizeOptions
@@ -91,6 +100,9 @@ export function resolveChartSize(
   if (!Object.hasOwn(CHART_PRIMARY_SIZES, chart))
     throw new Error(`Unknown chart: ${chart}`)
   const p = props as ChartSizeOptions
+  const layout = chart === "WordCloud"
+    ? (props as WordCloudSizeOptions).layout
+    : undefined
   if (chart === "ScatterplotMatrix") {
     const count = p.fields?.length ?? 0
     const side =
@@ -127,8 +139,8 @@ export function resolveChartSize(
           ? p.mode
           : undefined,
     {
-      width: !physics && tuple ? tuple[0] : p.width,
-      height: !physics && tuple ? tuple[1] : p.height,
+      width: !physics && tuple ? tuple[0] : p.width ?? layout?.width,
+      height: !physics && tuple ? tuple[1] : p.height ?? layout?.height,
       responsiveRules: fixed ? undefined : p.responsiveRules
     },
     CHART_PRIMARY_SIZES[chart]

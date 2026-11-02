@@ -1,9 +1,4 @@
-const TABLE_PROP_BAGS = new Set([
-  "common",
-  "physics",
-  "realtime",
-  "realtimeStatic"
-])
+import { readFileSync } from "node:fs"
 
 // Schema-visible recipes are public renderChart/MCP components even though
 // they are not chartSpecs entries. Keep their access/SSR contract in the same
@@ -28,7 +23,21 @@ const BUILT_IN_RECIPE_ACCESS_ENTRIES = [
   }
 ]
 
-export function accessCapabilitiesFor(entries) {
+export function accessCapabilitiesFor(
+  entries,
+  schema = JSON.parse(
+    readFileSync(new URL("../../ai/schema.json", import.meta.url), "utf8")
+  )
+) {
+  // Resolved schemas include ownProps and selected shared props, as well as
+  // whole prop bags. Atlas readers and WordCloud deliberately use no bag.
+  const tables = new Set(
+    schema.tools
+      .filter((tool) =>
+        Object.hasOwn(tool.function.parameters.properties, "accessibleTable")
+      )
+      .map((tool) => tool.function.name)
+  )
   const capabilities = {}
   for (const entry of entries) {
     const composite = entry.features.includes("composite-delegates-interaction")
@@ -36,18 +45,18 @@ export function accessCapabilitiesFor(entries) {
     capabilities[entry.name] = {
       supportsSSR: entry.ssr,
       realtime: entry.features.includes("live-stream"),
-      supportsAccessibleTable: entry.propBags.some((bag) =>
-        TABLE_PROP_BAGS.has(bag)
-      ),
+      supportsAccessibleTable: tables.has(entry.name),
       supportsLegend: entry.legend,
       ...(entry.features.includes("chart-recipe")
         ? { recipeNavigation: true }
         : {}),
       markNavigation: valueOnly
         ? "not-applicable"
-        : composite
-          ? "delegated"
-          : "unsupported"
+        : entry.features.includes("native-keyboard-navigation")
+          ? "built-in"
+          : composite
+            ? "delegated"
+            : "unsupported"
     }
   }
   return capabilities

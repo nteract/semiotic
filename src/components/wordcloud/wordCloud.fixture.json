@@ -1,0 +1,101 @@
+{
+  "options": {
+    "data": [
+      {
+        "text": "care",
+        "value": 12
+      },
+      {
+        "text": "trust",
+        "value": 8
+      },
+      {
+        "text": "wonder",
+        "value": 3
+      }
+    ],
+    "width": 320,
+    "height": 200,
+    "fontFamily": "Crimson Text",
+    "fontSizeRange": [
+      12,
+      36
+    ],
+    "seed": 42
+  },
+  "layout": {
+    "version": 1,
+    "width": 320,
+    "height": 200,
+    "seed": 42,
+    "engineVersion": "d3-cloud@2.0.0",
+    "inputFingerprint": "wc1-46caeef6",
+    "fontFingerprint": "wc1-fa05ada3",
+    "maskResolution": null,
+    "inputCount": 3,
+    "words": [
+      {
+        "id": "care",
+        "text": "care",
+        "value": 12,
+        "sourceIndex": 0,
+        "fontFamily": "Crimson Text",
+        "fontWeight": "normal",
+        "fontStyle": "normal",
+        "fontSize": 36,
+        "rotate": 0,
+        "x": 16,
+        "y": -6,
+        "x0": -31,
+        "y0": -18,
+        "x1": 31,
+        "y1": 2
+      },
+      {
+        "id": "trust",
+        "text": "trust",
+        "value": 8,
+        "sourceIndex": 1,
+        "fontFamily": "Crimson Text",
+        "fontWeight": "normal",
+        "fontStyle": "normal",
+        "fontSize": 31,
+        "rotate": 0,
+        "x": 52,
+        "y": 14,
+        "x0": -29,
+        "y0": -19,
+        "x1": 30,
+        "y1": 2
+      },
+      {
+        "id": "wonder",
+        "text": "wonder",
+        "value": 3,
+        "sourceIndex": 2,
+        "fontFamily": "Crimson Text",
+        "fontWeight": "normal",
+        "fontStyle": "normal",
+        "fontSize": 24,
+        "rotate": 0,
+        "x": -56,
+        "y": -23,
+        "x0": -38,
+        "y0": -18,
+        "x1": 38,
+        "y1": 2
+      }
+    ],
+    "omitted": [],
+    "bounds": [
+      {
+        "x": -94,
+        "y": -41
+      },
+      {
+        "x": 82,
+        "y": 16
+      }
+    ]
+  }
+}

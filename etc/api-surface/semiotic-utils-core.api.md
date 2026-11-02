@@ -97,8 +97,9 @@ function mobileVisualizationCaveats(): string[]
 function normalizeTooltip(tooltip: TooltipProp | undefined): TooltipContentFn | false | undefined
 function profileNumericFields(data: null | readonly Datum[] | undefined, options?: ProfileNumericFieldsOptions | undefined): Readonly<Record<string, NumericFieldProfile>>
 function resolveAxisTickCount({ axis, size, orientation, axisExtent }: AxisTickCountOptions): number
-function resolveChartSize(chart: "AreaChart" | "BarChart" | "BoxPlot" | "BubbleChart" | "BumpChart" | "CandlestickChart" | "ChainReactionChart" | "ChordDiagram" | "ChoroplethMap" | "CirclePack" | "CollisionSwarmChart" | "ConnectedScatterplot" | "CrucibleChart" | "DependencyForestChart" | "DifferenceChart" | "DistanceCartogram" | "DonutChart" | "DotPlot" | "EventDropChart" | "FlowCircuitChart" | "FlowMap" | "ForceDirectedGraph" | "FunnelChart" | "GaltonBoardChart" | "GaugeChart" | "GauntletChart" | "GeoCustomChart" | "GroupedBarChart" | "Heatmap" | "Histogram" | "LikertChart" | "LineChart" | "MinimapChart" | "MotifBraidChart" | "MultiAxisLineChart" | "NetworkCustomChart" | "OrbitDiagram" | "OrdinalCustomChart" | "PacketFlowChart" | "PhysicsCustomChart" | "PieChart" | "ProcessFlowChart" | "ProcessSankey" | "ProportionalSymbolMap" | "QuadrantChart" | "RadarChart" | "RealtimeHeatmap" | "RealtimeHistogram" | "RealtimeLineChart" | "RealtimeSwarmChart" | "RealtimeTemporalHistogram" | "RealtimeWaterfallChart" | "RidgelinePlot" | "SankeyDiagram" | "Scatterplot" | "ScatterplotMatrix" | "Sparkline" | "StackedAreaChart" | "StackedBarChart" | "SwarmPlot" | "SwimlaneChart" | "TemporalHistogram" | "TreeDiagram" | "Treemap" | "UnitPileChart" | "ViolinPlot" | "WaterfallChart" | "XYCustomChart", props?: ChartSizeOptions | undefined): ChartSize
+function resolveChartSize(chart: "AreaChart" | "BarChart" | "BoxPlot" | "BubbleChart" | "BumpChart" | "CandlestickChart" | "ChainReactionChart" | "ChordDiagram" | "ChoroplethMap" | "CirclePack" | "CollisionSwarmChart" | "ConnectedScatterplot" | "CrucibleChart" | "DependencyForestChart" | "DifferenceChart" | "DistanceCartogram" | "DonutChart" | "DotPlot" | "EventDropChart" | "FlowCircuitChart" | "FlowMap" | "ForceDirectedGraph" | "FunnelChart" | "GaltonBoardChart" | "GaugeChart" | "GauntletChart" | "GeoCustomChart" | "GroupedBarChart" | "Heatmap" | "Histogram" | "LikertChart" | "LineChart" | "MinimapChart" | "MotifBraidChart" | "MultiAxisLineChart" | "NetworkCustomChart" | "OrbitDiagram" | "OrdinalCustomChart" | "PacketFlowChart" | "PhysicsCustomChart" | "PieChart" | "ProcessFlowChart" | "ProcessSankey" | "ProportionalSymbolMap" | "QuadrantChart" | "RadarChart" | "RealtimeHeatmap" | "RealtimeHistogram" | "RealtimeLineChart" | "RealtimeSwarmChart" | "RealtimeTemporalHistogram" | "RealtimeWaterfallChart" | "RidgelinePlot" | "SankeyDiagram" | "Scatterplot" | "ScatterplotMatrix" | "Sparkline" | "StackedAreaChart" | "StackedBarChart" | "SwarmPlot" | "SwimlaneChart" | "TemporalHistogram" | "TreeDiagram" | "Treemap" | "UnitPileChart" | "ViolinPlot" | "WaterfallChart" | "WordCloud" | "XYCustomChart", props?: ChartSizeOptions | undefined): ChartSize
 function resolveChartSize(chart: "BigNumber", props?: BigNumberSizeOptions | undefined): BigNumberSize
+function resolveChartSize(chart: "WordCloud", props?: WordCloudSizeOptions | undefined): ChartSize
 function resolveCommunicativeAct(component: string, context: ChartCapability | DescribeCapabilityContext | undefined): CommunicativeAct | undefined
 function resolveMultiCapableTooltip(input: {tooltip: TooltipPropWithHoverCallback | undefined; defaultTooltipContent: (d: any) => React.ReactNode; multiDefaultContent?: (d: any) => React.ReactNode; customFunctionContext?: "datum" | "hover";}): {tooltipContent: (d: any) => React.ReactNode; tooltipMode?: "multi";}
 function resolveResponsiveDimension(value: number, min?: number | undefined, max?: number | undefined, step?: number | undefined): number
@@ -209,6 +210,7 @@ interface VegaLiteSpec
 interface VisualHierarchyAuditResult
 interface VisualHierarchyFinding
 interface VisualHierarchyInput
+interface WordCloudSizeOptions extends ChartSizeOptions
 interface-member A11yFinding::property::critical = required critical: boolean
 interface-member A11yFinding::property::fix = optional fix: string | undefined
 interface-member A11yFinding::property::heuristic = required heuristic: string
@@ -703,6 +705,7 @@ interface-member VisualHierarchyInput::property::minimumHierarchyRatio = optiona
 interface-member VisualHierarchyInput::property::minimumScaffoldContrast = optional readonly minimumScaffoldContrast: number | undefined
 interface-member VisualHierarchyInput::property::scaffoldColor = required readonly scaffoldColor: string
 interface-member VisualHierarchyInput::property::scaffoldOpacity = optional readonly scaffoldOpacity: number | undefined
+interface-member WordCloudSizeOptions::property::layout = optional layout: ChartSize | undefined
 type A11yPrinciple = "assistive" | "compromising" | "flexible" | "operable" | "perceivable" | "robust" | "understandable"
 type A11yStatus = "fail" | "manual" | "not-applicable" | "pass" | "warn"
 type AestheticFeatureId = "editorial-emphasis" | "mark-scaffold-hierarchy" | "palette-authorship" | "palette-economy" | "theme-coherence" | "typographic-hierarchy"

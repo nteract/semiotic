@@ -110,7 +110,8 @@ export function parseCapabilityMatrix() {
     "geo",
     "realtime",
     "physics",
-    "value"
+    "value",
+    "wordcloud"
   ]
   entries.sort((a, b) => {
     const ai = ORDER.indexOf(a.category)
@@ -130,5 +131,6 @@ export const CATEGORY_ORDER = [
   "geo",
   "realtime",
   "physics",
-  "value"
+  "value",
+  "wordcloud"
 ]

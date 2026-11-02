@@ -23,6 +23,17 @@ const optionalD3 = Object.keys(packageJson.optionalDependencies ?? {}).filter(
 const sourceD3 = collectBareD3Imports(join(REPO_ROOT, "src"), [".ts", ".tsx"])
 const artifactD3 = collectBareD3Imports(join(REPO_ROOT, "dist"), [".js"])
 
+// d3-cloud 2 has no require condition. The opt-in wordcloud entry bundles it
+// for both formats; it is a build dependency, not another consumer install.
+// treeshake-isolation.test.mjs verifies its presence in that entry, absence
+// from ordinary charts, and the CommonJS boundary's actual execution.
+const bundledD3 = ["d3-cloud"]
+if (packageJson.devDependencies?.["d3-cloud"] !== "2.0.0")
+  errors.push("the bundled layout engine must stay pinned to d3-cloud 2.0.0")
+const cloudLicense = join(REPO_ROOT, "dist/d3-cloud.LICENSE.txt")
+if (!existsSync(cloudLicense) || !readFileSync(cloudLicense, "utf8").includes("Copyright (c) 2013, Jason Davies"))
+  errors.push("the bundled d3-cloud license must ship with the package")
+
 if (peerD3.length > 0) {
   errors.push(
     `d3 packages must not be consumer-managed peers: ${peerD3.join(", ")}`
@@ -36,7 +47,7 @@ if (optionalD3.length > 0) {
 compareSets(
   "production source imports and package runtime dependencies",
   sourceD3,
-  declaredD3,
+  [...declaredD3, ...bundledD3],
   errors
 )
 compareSets(

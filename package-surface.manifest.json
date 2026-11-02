@@ -1429,6 +1429,37 @@
     },
     {
       "kind": "javascript-module",
+      "subpath": "./wordcloud",
+      "path": "dist/semiotic-wordcloud.module.min.js",
+      "reason": "Object export with ESM/CJS/module entries",
+      "artifacts": [
+        {
+          "kind": "import",
+          "path": "dist/semiotic-wordcloud.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "default",
+          "path": "dist/semiotic-wordcloud.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "require",
+          "path": "dist/semiotic-wordcloud.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "types",
+          "path": "dist/semiotic-wordcloud.d.ts",
+          "sourceMap": false
+        }
+      ],
+      "esm": true,
+      "cjs": true,
+      "types": "dist/semiotic-wordcloud.d.ts"
+    },
+    {
+      "kind": "javascript-module",
       "subpath": "./xy",
       "path": "dist/xy.module.min.js",
       "reason": "Object export with ESM/CJS/module entries",
@@ -1804,6 +1835,13 @@
         "path": "dist/semiotic-vite.d.ts",
         "exports": [
           "./vite"
+        ],
+        "reason": "Public type entry from `exports` map"
+      },
+      {
+        "path": "dist/semiotic-wordcloud.d.ts",
+        "exports": [
+          "./wordcloud"
         ],
         "reason": "Public type entry from `exports` map"
       },

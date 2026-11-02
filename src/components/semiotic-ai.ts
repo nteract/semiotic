@@ -10,6 +10,9 @@ import { registerBuiltInChartRecipeManifests } from "./ai/builtInChartRecipes"
 // a shared one, so it cannot pin code in other entries' published chunks.
 registerBuiltInChartRecipeManifests()
 
+export { WordCloud } from "./charts/wordcloud/WordCloud"
+export type { WordCloudProps } from "./charts/wordcloud/WordCloud"
+
 export { LineChart } from "./charts/xy/LineChart"
 export { BumpChart, rankBumpData } from "./charts/xy/BumpChart"
 export { AreaChart } from "./charts/xy/AreaChart"

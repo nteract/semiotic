@@ -43,6 +43,7 @@ describe("Semiotic architecture example data", () => {
       "frame-geo",
     )
     expect(architectureHighlight(profilesById.get("watermarks"))).toContain("frame-physics")
+    expect(architectureHighlight(profilesById.get("word-cloud"))).toContain("frame-network")
   })
 
   it("maps the Wikipedia realtime example to the imperative Push API", () => {
@@ -113,7 +114,7 @@ describe("Semiotic architecture example data", () => {
       const highlighted = architectureHighlight(profile)
       expect(highlighted).toContain("semiotic-core")
       expect(highlighted).toContain("root-data")
-      expect(highlighted).toContain("root-pipelines")
+      expect(highlighted).toContain(profile.id === "word-cloud" ? "root-preparation" : "root-pipelines")
       expect(highlighted).toContain("root-scene")
       expect(highlighted.size).toBeGreaterThan(profile.uses.length)
     }

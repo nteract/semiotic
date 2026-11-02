@@ -28,10 +28,12 @@
  *
  * Tests can override the XY serializer with a temporary implementation via:
  *   SEMIOTIC_SCENE_TO_SVG=/tmp/SceneToSVGXY.tsx node scripts/check-ssr-alignment.js
+ * The XY scene-type source can likewise be replaced via SEMIOTIC_SCENE_TYPES.
  */
 
 const fs = require("fs")
 const path = require("path")
+const ts = require("typescript")
 const { readRegistryKeys } = require("./lib/registry-source.cjs")
 
 const ROOT = path.resolve(__dirname, "..")
@@ -43,7 +45,7 @@ const CHART_SHARED_DIR = path.join(ROOT, "src/components/charts/shared")
 
 // ── 1. Discover HOC chart names ────────────────────────────────────────
 
-const HOC_DIRS = ["xy", "ordinal", "network", "geo", "physics", "custom", "realtime"]
+const HOC_DIRS = ["xy", "ordinal", "network", "geo", "physics", "custom", "realtime", "wordcloud"]
 const hocsOnDisk = new Set()
 const namedHocCandidates = new Set()
 
@@ -290,7 +292,13 @@ const PARITY_EXCEPTIONS = {
 }
 
 /** Type-files that hold scene-node interfaces, indexed by unqualified file name. */
-const TYPES_FILES = Object.values(FRAMES).map(f => f.typesFile)
+const TYPES_FILES = [...Object.values(FRAMES).map(f => f.typesFile), "textScene.tsx"]
+
+function sceneTypesPath(file) {
+  return file === FRAMES.xy.typesFile && process.env.SEMIOTIC_SCENE_TYPES
+    ? path.resolve(process.env.SEMIOTIC_SCENE_TYPES)
+    : path.join(STREAM_DIR, file)
+}
 
 /**
  * Build a global map of `interfaceName → type-discriminant string` by
@@ -301,10 +309,10 @@ const TYPES_FILES = Object.values(FRAMES).map(f => f.typesFile)
 function buildInterfaceTypeMap() {
   const map = new Map()
   for (const file of TYPES_FILES) {
-    const src = fs.readFileSync(path.join(STREAM_DIR, file), "utf8")
+    const src = fs.readFileSync(sceneTypesPath(file), "utf8")
     // Match `export interface NAME { ... type: "X" ... }` non-greedily on
     // the body — the [^}]* prevents bleeding into the next interface.
-    const re = /export\s+interface\s+(\w+(?:Node|Edge))\s*\{[^}]*?\btype:\s*"(\w+)"/gs
+    const re = /export\s+interface\s+(\w+(?:Node|Edge))(?:\s+extends\s+[^{]+)?\s*\{[^}]*?\btype:\s*"(\w+)"/gs
     let m
     while ((m = re.exec(src))) {
       map.set(m[1], m[2])
@@ -315,14 +323,21 @@ function buildInterfaceTypeMap() {
 
 /** Parse the named union to a list of member interface names. */
 function extractUnionMembers(source, unionName) {
-  // `export type NAME = | A | B | ...` or `= A | B`. Match until the next
-  // top-level `\n\n` or `\nexport` to avoid running past the union.
-  const re = new RegExp(`export\\s+type\\s+${unionName}\\s*=([\\s\\S]*?)(?:\\n\\n|\\nexport)`, "m")
-  const m = re.exec(source)
-  if (!m) return []
-  // Members appear as `| FooNode` or just `FooNode`. Pull everything that
-  // looks like a SceneNode/Edge interface name.
-  return m[1].match(/\w+(?:Node|Edge)/g) || []
+  // Whitespace, comments, parentheses and EOF do not delimit a TypeScript
+  // union. Read its syntax so a formatting change cannot erase scene types
+  // or make names mentioned only in comments look like emitted marks.
+  const file = ts.createSourceFile("scene-types.ts", source, ts.ScriptTarget.Latest, true)
+  const alias = file.statements.find(
+    (statement) => ts.isTypeAliasDeclaration(statement) && statement.name.text === unionName
+  )
+  if (!alias) return []
+  function members(type) {
+    if (ts.isParenthesizedTypeNode(type)) return members(type.type)
+    if (ts.isUnionTypeNode(type)) return type.types.flatMap(members)
+    if (ts.isTypeReferenceNode(type) && ts.isIdentifier(type.typeName)) return [type.typeName.text]
+    throw new Error(`Unsupported scene union member in ${unionName}: ${type.getText(file)}`)
+  }
+  return members(alias.type)
 }
 
 /** Return a named function body, including its outer braces. */
@@ -377,20 +392,19 @@ for (const [frame, { typesFile, unionName, svgFn, svgFile }] of Object.entries(F
     ? path.resolve(process.env.SEMIOTIC_SCENE_TO_SVG)
     : path.join(STREAM_DIR, svgFile)
   const sceneToSvgSrc = fs.readFileSync(svgPath, "utf8")
-  const typesPath = path.join(STREAM_DIR, typesFile)
-  if (!fs.existsSync(typesPath)) continue
+  const typesPath = sceneTypesPath(typesFile)
   const typesSrc = fs.readFileSync(typesPath, "utf8")
 
   const memberNames = extractUnionMembers(typesSrc, unionName)
+  if (memberNames.length === 0) {
+    errors.push(`${frame}: scene union "${unionName}" has no resolvable members in ${typesPath}`)
+  }
   const emitted = new Set()
   for (const memberName of memberNames) {
     const t = interfaceToType.get(memberName)
     if (t) emitted.add(t)
     else {
-      // Member referenced in the union but no interface body found — could
-      // be a re-export or namespace import we can't resolve statically.
-      // Surface it as a check-script limitation, not a hard failure.
-      console.warn(`  · ${frame}: union member "${memberName}" has no resolvable type discriminant — coverage may be incomplete for this type.`)
+      errors.push(`${frame}: union member "${memberName}" has no resolvable type discriminant — scene coverage cannot be verified`)
     }
   }
 

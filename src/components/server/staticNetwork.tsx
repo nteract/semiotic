@@ -1,3 +1,4 @@
+import { resolveStalenessOverride } from "../stream/stalenessBands"
 import { staticTitleText } from "./staticTitle"
 import type { Datum, DatumValue } from "../charts/shared/datumTypes"
 import * as React from "react"
@@ -480,15 +481,15 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
   // Annotation anchors stay in layout coordinates inside the camera group.
   const annotationNodes = renderAnnotations(sceneNodes)
 
+  const marks = [underlay.map((edge, index) => networkSceneEdgeToSVG(edge, index)), edgeElements, nodeElements]
+  const opacity = resolveStalenessOverride(props.staleness)?.alpha ?? 1
   const content = (
     <>
       {resolvedBackgroundGraphics}
       {/* Layout-derived backgrounds share fitted plot coordinates with the
           scene, but paint first so static SVG matches the live canvas stack. */}
       {withNetworkPerspective(customLayoutBackgrounds, perspectiveFrame, customLayoutPerspectiveMode)}
-      {underlay.map((edge, index) => networkSceneEdgeToSVG(edge, index))}
-      {edgeElements}
-      {nodeElements}
+      {opacity === 1 ? marks : <g opacity={opacity}>{marks}</g>}
       {labelElements}
       {annotationNodes}
       {withNetworkPerspective(resolvedForegroundGraphics, perspectiveFrame)}

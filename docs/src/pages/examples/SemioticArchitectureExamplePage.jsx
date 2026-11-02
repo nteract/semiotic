@@ -164,7 +164,7 @@ export default function SemioticArchitectureExamplePage() {
         <div className="architecture-explanation-grid">
           <p>
             The upper network diagram fans from Visible Semiotic into XY, Ordinal, Network, Geo,
-            and Physics frames, then into exact HOCs and grouped chart families. Shared settings
+            Physics, and Word Cloud frames, then into exact HOCs and grouped chart families. Shared settings
             and composition tools sit on the two gold-star semicircles that frame this public
             surface.
           </p>

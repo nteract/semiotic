@@ -40,7 +40,7 @@ export type {
 export { resolveResponsiveDimension } from "./stream/responsiveSize"
 export type { ResponsiveSizeOptions } from "./stream/responsiveSize"
 export { resolveChartSize } from "./charts/shared/chartSize"
-export type { ChartSize, ChartSizeOptions, SizedChartName, BigNumberSize, BigNumberSizeOptions } from "./charts/shared/chartSize"
+export type { ChartSize, ChartSizeOptions, SizedChartName, BigNumberSize, BigNumberSizeOptions, WordCloudSizeOptions } from "./charts/shared/chartSize"
 
 // ── Color manipulation ───────────────────────────────────────────────────
 export { darkenColor, lightenColor } from "./charts/shared/colorManipulation"

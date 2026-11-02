@@ -104,6 +104,7 @@ const navData = [
           { title: "Tile Maps", path: "/charts/tile-map" },
         ],
       },
+      { title: "Text", category: "wordcloud", children: [{ title: "Word Cloud", path: "/charts/word-cloud" }] },
       {
         title: "Physics",
         category: "physics",

@@ -9,7 +9,7 @@ import PageLayout from "../components/PageLayout"
 const bundleSizeRows = Object.freeze([
   {
     "importPath": "semiotic/atlas",
-    "kb": 324,
+    "kb": 325,
     "blurb": "Motif Braid, Dependency Forest, and Flow Circuit readers"
   },
   {
@@ -24,7 +24,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/evidence",
-    "kb": 47,
+    "kb": 48,
     "blurb": "Chart Evidence Envelope, deterministic hashing, and publication gate"
   },
   {
@@ -39,27 +39,27 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/line",
-    "kb": 150,
+    "kb": 151,
     "blurb": "LineChart only — one-chart micro boundary"
   },
   {
     "importPath": "semiotic/xy",
-    "kb": 187,
+    "kb": 188,
     "blurb": "LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts"
   },
   {
     "importPath": "semiotic/ordinal",
-    "kb": 139,
+    "kb": 140,
     "blurb": "BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts"
   },
   {
     "importPath": "semiotic/network",
-    "kb": 183,
+    "kb": 184,
     "blurb": "ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more"
   },
   {
     "importPath": "semiotic/network/zoom",
-    "kb": 192,
+    "kb": 193,
     "blurb": "Optional virtual network viewport, camera controls and consumer-owned LOD"
   },
   {
@@ -79,52 +79,57 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/geo",
-    "kb": 114,
+    "kb": 115,
     "blurb": "ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap"
   },
   {
+    "importPath": "semiotic/wordcloud",
+    "kb": 132,
+    "blurb": "WordCloud, shaped text placement, and portable layouts"
+  },
+  {
     "importPath": "semiotic/realtime",
-    "kb": 222,
+    "kb": 223,
     "blurb": "RealtimeLineChart, RealtimeHistogram, + 4 streaming charts"
   },
   {
     "importPath": "semiotic/realtime/core",
-    "kb": 220,
+    "kb": 221,
     "blurb": "Streaming chart types, HOCs, and buffer helpers"
   },
   {
     "importPath": "semiotic/realtime/react",
-    "kb": 2,
+    "kb": 7,
     "blurb": "Stream status and synced push hooks"
   },
   {
     "importPath": "semiotic/server",
-    "kb": 284,
+    "kb": 290,
     "blurb": "renderChart, renderDashboard, renderToImage, renderToAnimatedGif"
   },
   {
     "importPath": "semiotic/server/node",
-    "kb": 284,
+    "kb": 290,
     "blurb": "renderChart, renderDashboard, renderToImage, renderToAnimatedGif"
   },
   {
     "importPath": "semiotic/server/edge",
-    "kb": 289,
+    "kb": 295,
     "blurb": "renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard"
   },
   {
     "importPath": "semiotic/utils",
-    "kb": 113,
+    "kb": 112,
     "blurb": "ThemeProvider, numeric/accessibility audits, serialization — no chart components"
   },
   {
     "importPath": "semiotic/utils/core",
-    "kb": 102,
+    "kb": 103,
     "blurb": "Pure theme helpers, numeric/accessibility audits, and serialization"
   },
   {
     "importPath": "semiotic/utils/react",
-    "kb": 10,
+    "kb": 9,
     "blurb": "ThemeProvider, useTheme, useReducedMotion, useHighContrast, useStreamStatus"
   },
   {
@@ -154,7 +159,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/themes/react",
-    "kb": 9,
+    "kb": 8,
     "blurb": "ThemeProvider/useTheme and hooks"
   },
   {
@@ -169,7 +174,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/physics",
-    "kb": 190,
+    "kb": 191,
     "blurb": "GaltonBoardChart, EventDropChart, UnitPileChart, CollisionSwarmChart, PacketFlowChart, PhysicsCustomChart"
   },
   {
@@ -184,7 +189,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/ai",
-    "kb": 680,
+    "kb": 696,
     "blurb": "All schema-backed charts + validation — optimized for LLM code generation"
   },
   {
@@ -209,7 +214,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic",
-    "kb": 437,
+    "kb": 439,
     "blurb": "Full chart API and shared utilities"
   }
 ])

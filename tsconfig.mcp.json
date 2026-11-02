@@ -17,6 +17,7 @@
     "baseUrl": ".",
     "paths": {
       "semiotic/ai": ["./dist/semiotic-ai.d.ts"],
+      "semiotic/wordcloud": ["./dist/semiotic-wordcloud.d.ts"],
       "semiotic/atlas": ["./dist/semiotic-atlas.d.ts"],
       "semiotic/artifact": ["./dist/semiotic-artifact.d.ts"],
       "semiotic/geo": ["./dist/semiotic-geo.d.ts"],

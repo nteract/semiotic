@@ -9,10 +9,12 @@ import SuperpersuasionPreview from "./superpersuasion/SuperpersuasionPreview"
 import JobsReportPreview from "./jobs-report/JobsReportPreview"
 import PipelinePreview from "./pipeline-explorer/PipelinePreview"
 import CompositionalPreview from "./compositional-dag/Preview"
+import WordCloudPreview from "./word-cloud/WordCloudPreview"
 import NovelNetworkPreview from "./novel-network-lab/NovelNetworkPreview"
 import { FlowCircuitPreview, DependencyXRayPreview } from "./flow-circuit/AtlasPreviews"
 
 const PREVIEW_COMPONENTS = {
+  "word-cloud": WordCloudPreview,
   "compositional-dag": CompositionalPreview,
   "novel-network-lab": NovelNetworkPreview,
   "pipeline-explorer": PipelinePreview,

@@ -37,7 +37,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { readRegistryKeys } from "./lib/registry-source.cjs"
-import { parseCapabilityMatrix } from "./lib/capabilityMatrix.mjs"
+import { parseCapabilityMatrix, CATEGORY_ORDER } from "./lib/capabilityMatrix.mjs"
 import { renderAccessCapabilitiesModule } from "./lib/accessCapabilities.mjs"
 import {
   PUSH_HANDLE_CALLEES,
@@ -134,7 +134,7 @@ const SERVER_CONFIG_ONLY = new Map([
 // `supportsPush: true` charts must invoke one of the narrowly recognized
 // imperative-handle bridges. Read each HOC's source and check for the call;
 // importing a helper without invoking it does not satisfy the gate.
-const HOC_DIRS = ["../recipes/atlas", "xy", "ordinal", "network", "geo", "realtime", "physics"]
+const HOC_DIRS = ["../recipes/atlas", "xy", "ordinal", "network", "geo", "realtime", "physics", "wordcloud"]
 const hocSources = new Map()
 for (const dir of HOC_DIRS) {
   const fullDir = path.join(CHARTS_DIR, dir)
@@ -346,15 +346,7 @@ if (fs.existsSync(CAPABILITIES_JSON_PATH)) {
     }
   }
   // Sort keys to match the generator's output (category-then-name).
-  const ORDER = [
-    "xy",
-    "ordinal",
-    "network",
-    "geo",
-    "realtime",
-    "physics",
-    "value"
-  ]
+  const ORDER = CATEGORY_ORDER
   const sortedNames = Object.keys(expected).sort((a, b) => {
     const ai = ORDER.indexOf(expected[a].category)
     const bi = ORDER.indexOf(expected[b].category)

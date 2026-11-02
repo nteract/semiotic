@@ -82,6 +82,7 @@ import { BigNumberCapability } from "../charts/value/BigNumber.capability"
  * and append it here.
  *
  * Charts NOT in this registry:
+ *   • WordCloud — serialized rendering requires font/raster preparation, not just profiled terms.
  *   • Atlas readers — schemas accept prepared artifacts; flat-data profiling
  *     cannot infer evidence admission, required roots or circuit editions.
  *   • Realtime variants (RealtimeLineChart, RealtimeHistogram, ...) — they're for

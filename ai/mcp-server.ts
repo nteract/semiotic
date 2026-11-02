@@ -71,6 +71,7 @@ import * as fs from "fs"
 import * as path from "path"
 import * as http from "http"
 import { McpStartupOptionsError, resolveMcpServerOptions } from "./mcp-server-options"
+import { compactPublicChartProps } from "./mcp-public-chart-props"
 import { capMcpToolResult } from "./mcp-tool-output-limits"
 import { handleMcpHttpRequest } from "./mcp-http-response"
 import { createMcpHttpAccessPolicy } from "./mcp-http-access"
@@ -1170,18 +1171,9 @@ function compactArtifactCandidateProps(
 ): Record<string, unknown> | undefined {
   if (!value || typeof value !== "object" || Array.isArray(value))
     return undefined
-  const bulkKeys = new Set([
-    "data",
-    "nodes",
-    "edges",
-    "points",
-    "areas",
-    "lines",
-    "flows"
-  ])
   const compact: Record<string, unknown> = {}
-  for (const [key, item] of Object.entries(value).slice(0, 24)) {
-    if (bulkKeys.has(key)) continue
+  const presentation = compactPublicChartProps(value as Record<string, unknown>)
+  for (const [key, item] of Object.entries(presentation).slice(0, 24)) {
     if (typeof item === "string") {
       compact[key] = truncateUtf8(item, 600)
       continue
@@ -2812,23 +2804,13 @@ async function groundChartHandler(args: {
   }
 }
 
-function compactPublicChartProps(
-  props: Record<string, unknown>
-): Record<string, unknown> {
-  const compact = { ...props }
-  delete compact.data
-  delete compact.nodes
-  delete compact.edges
-  return compact
-}
-
 function compactPublicSuggestion<T extends { props: Record<string, unknown> }>(
   suggestion: T
 ): Omit<T, "props"> & { props: Record<string, unknown> } {
   return { ...suggestion, props: compactPublicChartProps(suggestion.props) }
 }
 
-async function createChartHandler(
+async function createChartResult(
   args: {
     data: Record<string, unknown>[]
     intent?: string | string[]
@@ -2859,8 +2841,14 @@ async function createChartHandler(
       (suggestion) => metadataForComponent(suggestion.component).renderable
     )
     .slice(0, 8)
+  // Prepared readers and composite charts deliberately have no flat-data
+  // recommendation. Honor an explicit authored config, then run the same
+  // diagnosis, render and evidence gates as a recommendation.
+  const authored = args.component && args.props && !getCapability(args.component) && metadataForComponent(args.component).renderable
+    ? { component: args.component, props: args.props, selection: "explicit" as const }
+    : undefined
   const selected = args.component
-    ? suggestions.find((suggestion) => suggestion.component === args.component)
+    ? suggestions.find((suggestion) => suggestion.component === args.component) ?? authored
     : suggestions[0]
   if (!selected) {
     return {
@@ -2881,7 +2869,13 @@ async function createChartHandler(
   // Keep capability-built data shapes (for example hierarchy roots or
   // nodes/edges) and explicit caller overrides. args.data is the profiling
   // input, not necessarily the final component's `data` prop shape.
-  const props: Record<string, unknown> = { data: args.data, ...selected.props, ...args.props }
+  const props: Record<string, unknown> = {
+    ...(schemaByComponent[selected.component]?.parameters?.properties?.data
+      ? { data: args.data }
+      : {}),
+    ...selected.props,
+    ...args.props
+  }
   const publicProps = compactPublicChartProps(props)
   const publicSuggestion = compactPublicSuggestion(selected)
   const diagnosis = diagnoseConfig(selected.component, props)
@@ -3014,6 +3008,14 @@ async function createChartHandler(
       evidenceGate: gate
     })
   }
+}
+
+/** Cap the final public envelope, including suggestions/evidence added after rendering. */
+async function createChartHandler(
+  args: Parameters<typeof createChartResult>[0],
+  context: RenderContext = {}
+): Promise<ToolResult> {
+  return capInteractiveWidgetResult(await createChartResult(args, context))
 }
 
 async function improveChartHandler(args: {
@@ -3902,12 +3904,12 @@ function createServer(
             .string()
             .optional()
             .describe(
-              "Optional chart preference; the fit-ranked result remains authoritative."
+              "Optional chart preference. Fit ranking applies to recommended charts; prepared readers and composites excluded from ranking require complete authored props."
             ),
           props: unknownRecordInput
             .optional()
             .describe(
-              "Optional props to merge over the selected chart recipe."
+              "Optional overrides, or complete props for a prepared reader or composite (for example WordCloud data plus layout). Validation and render evidence remain required."
             ),
           theme: z.record(z.string(), z.string()).optional()
         },

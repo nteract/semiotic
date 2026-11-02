@@ -63,6 +63,10 @@ function loadStaticDataComponentsFromSchema() {
 
 const REQUIRED_COMBINATIONS = [
   {
+    component: "WordCloud", required: ["data"], staticRequired: ["data", "layout"], pushRequired: null,
+    summary: "Serialized/server word clouds need matching placements from prepareWordCloudLayout. React can prepare after fonts load; no imperative push mode is provided.",
+  },
+  {
     component: "StackedAreaChart",
     required: ["areaBy"],
     staticRequired: ["data", "areaBy"],

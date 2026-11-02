@@ -1,6 +1,7 @@
 "use client"
 import * as React from "react"
-import { createContext, useContext, useMemo } from "react"
+import { useContext, useMemo } from "react"
+import { CategoryColorContext, ExplicitCategoryColorContext } from "./store/categoryColorContext"
 import {
   DEFAULT_COLORS,
   resolveCategoricalPalette,
@@ -14,9 +15,6 @@ import { withDisplayName } from "./charts/shared/withDisplayName"
  * colors consistently regardless of what subset of categories each chart displays.
  */
 export type CategoryColorMap = Record<string, string>
-
-const CategoryColorContext = /* @__PURE__ */ createContext<CategoryColorMap | null>(null)
-const ExplicitCategoryColorContext = /* @__PURE__ */ createContext<CategoryColorMap | null>(null)
 
 /** Internal: publish linked defaults without promoting them to explicit overrides. */
 export function LinkedCategoryColorProvider({

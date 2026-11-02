@@ -23,6 +23,7 @@ import {
   parallelCoordinatesRecipe,
   calendarHeatmapRecipe
 } from "./serverChartConfigsCustom"
+import { wordCloud } from "./staticWordCloud"
 import { physicsCustomChart } from "./serverChartConfigsPhysics"
 import { PHYSICS_CHART_CONFIGS } from "./serverChartConfigsPhysics.generated"
 
@@ -36,6 +37,7 @@ import { PHYSICS_CHART_CONFIGS } from "./serverChartConfigsPhysics.generated"
 // consumers of animation helpers can discard the unused static chart registry.
 export const CHART_CONFIGS = /* @__PURE__ */ Object.assign(
   {
+    WordCloud: wordCloud,
     Sparkline: sparkline,
     XYCustomChart: xyCustomChart,
     OrdinalCustomChart: ordinalCustomChart,
