@@ -3131,6 +3131,7 @@ interface-member UseForceLayoutResult::property::positions = required positions:
 interface-member UseForceLayoutResult::property::status = required status: ForceLayoutStatus
 interface-member UseLinkedCrosshairResult::property::position = required position: CrosshairPosition | null
 interface-member UseLinkedCrosshairResult::property::setPosition = required setPosition: (null | position: CrosshairPositionInput) => void
+interface-member UseLinkedHoverOptions::property::enabled = optional enabled: boolean | undefined
 interface-member UseLinkedHoverOptions::property::fields = required fields: string[]
 interface-member UseLinkedHoverOptions::property::name = optional name: string | undefined
 interface-member UseLinkedHoverResult::property::isActive = required isActive: boolean
@@ -3165,6 +3166,7 @@ interface-member UseSelectionActionsResult::property::clear = required clear: ()
 interface-member UseSelectionActionsResult::property::clientId = required clientId: string
 interface-member UseSelectionActionsResult::property::selectPoints = required selectPoints: (fieldValues: Record<string, unknown[]>) => void
 interface-member UseSelectionOptions::property::clientId = optional clientId: string | undefined
+interface-member UseSelectionOptions::property::enabled = optional enabled: boolean | undefined
 interface-member UseSelectionOptions::property::fields = optional fields: string[] | undefined
 interface-member UseSelectionOptions::property::name = required name: string
 interface-member UseSelectionResult::property::clear = required clear: () => void

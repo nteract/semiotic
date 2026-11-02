@@ -1,6 +1,7 @@
 "use client"
 import type { Datum } from "../charts/shared/datumTypes"
-import { useId, useMemo, useCallback } from "react"
+import { useId, useMemo, useCallback, useEffect } from "react"
+import { useStableShallow } from "../stream/useStableShallow"
 import {
   useSelectionSelector,
   buildPredicate,
@@ -23,6 +24,8 @@ export interface UseSelectionOptions {
   clientId?: string
   /** Fields this client cares about (for predicate context) */
   fields?: string[]
+  /** Whether selection is active. Set false to release this client's clause and pause updates. Defaults to true. */
+  enabled?: boolean
 }
 
 export interface UseSelectionResult {
@@ -43,14 +46,20 @@ export interface UseSelectionResult {
 export function useSelection(options: UseSelectionOptions): UseSelectionResult {
   const autoId = useId()
   const clientId = options.clientId || autoId
-  const { name } = options
+  const { name, enabled = true } = options
 
   const selection = useSelectionSelector(
-    (state: SelectionStoreState) => state.selections.get(name)
+    (state: SelectionStoreState) => enabled ? state.selections.get(name) : undefined
   )
 
   const setClause = useSelectionSelector((state: SelectionStoreState) => state.setClause)
   const clearClauseFn = useSelectionSelector((state: SelectionStoreState) => state.clearClause)
+
+  // A clause belongs to the mounted writer and its current selection name.
+  useEffect(() => {
+    if (!enabled) return
+    return () => clearClauseFn(name, clientId)
+  }, [clearClauseFn, name, clientId, enabled])
 
   const isActive = useMemo(() => {
     if (!selection) return false
@@ -64,6 +73,7 @@ export function useSelection(options: UseSelectionOptions): UseSelectionResult {
 
   const selectPoints = useCallback(
     (fieldValues: Record<string, unknown[]>) => {
+      if (!enabled) return
       const fields: Record<string, FieldSelection> = {}
       let hasFields = false
       for (const [field, values] of Object.entries(fieldValues)) {
@@ -78,11 +88,12 @@ export function useSelection(options: UseSelectionOptions): UseSelectionResult {
       }
       setClause(name, clause)
     },
-    [clientId, name, setClause]
+    [clientId, name, setClause, enabled]
   )
 
   const selectInterval = useCallback(
     (fieldRanges: Record<string, [number, number]>) => {
+      if (!enabled) return
       const fields: Record<string, FieldSelection> = {}
       let hasFields = false
       for (const [field, range] of Object.entries(fieldRanges)) {
@@ -97,14 +108,17 @@ export function useSelection(options: UseSelectionOptions): UseSelectionResult {
       }
       setClause(name, clause)
     },
-    [clientId, name, setClause]
+    [clientId, name, setClause, enabled]
   )
 
   const clear = useCallback(() => {
     clearClauseFn(name, clientId)
   }, [clearClauseFn, name, clientId])
 
-  return { predicate, isActive, selectPoints, selectInterval, clear, clientId }
+  return useMemo(
+    () => ({ predicate, isActive, selectPoints, selectInterval, clear, clientId }),
+    [predicate, isActive, selectPoints, selectInterval, clear, clientId]
+  )
 }
 
 // ── useSelectionActions ──────────────────────────────────────────────────────
@@ -139,6 +153,8 @@ export function useSelectionActions(name: string, clientId?: string): UseSelecti
   const setClause = useSelectionSelector((state: SelectionStoreState) => state.setClause)
   const clearClauseFn = useSelectionSelector((state: SelectionStoreState) => state.clearClause)
 
+  useEffect(() => () => clearClauseFn(name, cid), [clearClauseFn, name, cid])
+
   const selectPoints = useCallback(
     (fieldValues: Record<string, unknown[]>) => {
       const fields: Record<string, FieldSelection> = {}
@@ -155,7 +171,7 @@ export function useSelectionActions(name: string, clientId?: string): UseSelecti
 
   const clear = useCallback(() => clearClauseFn(name, cid), [name, cid, clearClauseFn])
 
-  return { selectPoints, clear, clientId: cid }
+  return useMemo(() => ({ selectPoints, clear, clientId: cid }), [selectPoints, clear, cid])
 }
 
 // ── useLinkedHover ─────────────────────────────────────────────────────────
@@ -165,6 +181,8 @@ export interface UseLinkedHoverOptions {
   name?: string
   /** Fields to include in the hover selection */
   fields: string[]
+  /** Whether linked hover is active. Set false to release its clause and pause updates. Defaults to true. */
+  enabled?: boolean
 }
 
 export interface UseLinkedHoverResult {
@@ -178,12 +196,16 @@ export interface UseLinkedHoverResult {
 
 export function useLinkedHover(options: UseLinkedHoverOptions): UseLinkedHoverResult {
   const selName = options.name || "hover"
-  const { fields } = options
+  const fields = useStableShallow(options.fields)
 
   const { predicate, isActive, selectPoints, clear } = useSelection({
     name: selName,
-    fields
+    fields,
+    enabled: options.enabled
   })
+
+  // Changing fields invalidates a hover expressed in the previous fields.
+  useEffect(() => () => clear(), [clear, fields])
 
   const onHover = useCallback(
     (datum: Datum | null) => {
@@ -201,7 +223,7 @@ export function useLinkedHover(options: UseLinkedHoverOptions): UseLinkedHoverRe
     [fields, selectPoints, clear]
   )
 
-  return { onHover, predicate, isActive }
+  return useMemo(() => ({ onHover, predicate, isActive }), [onHover, predicate, isActive])
 }
 
 // ── useBrushSelection ──────────────────────────────────────────────────────
@@ -260,6 +282,8 @@ export function useBrushSelection(options: UseBrushSelectionOptions): UseBrushSe
     fields: [xField, yField].filter(Boolean) as string[]
   })
 
+  useEffect(() => () => clear(), [clear, xField, yField])
+
   const brushType = xField && yField ? "xyBrush" : xField ? "xBrush" : "yBrush"
 
   const handleBrush = useCallback(
@@ -297,7 +321,10 @@ export function useBrushSelection(options: UseBrushSelectionOptions): UseBrushSe
     [brushType, handleBrush]
   )
 
-  return { brushInteraction, predicate, isActive, clear }
+  return useMemo(
+    () => ({ brushInteraction, predicate, isActive, clear }),
+    [brushInteraction, predicate, isActive, clear]
+  )
 }
 
 // ── useFilteredData ────────────────────────────────────────────────────────

@@ -24,6 +24,7 @@ import type {
   ResolvedMobileInteractionConfig
 } from "./types"
 import type { TransitionConfig } from "../../stream/types"
+import { useStableShallow } from "../../stream/useStableShallow"
 import { useTheme } from "../../store/useTheme"
 import type { Datum } from "./datumTypes"
 import { resolveChartMode } from "./chartMode"
@@ -205,9 +206,9 @@ export function useSortedData(
  *   (stream frames wrap the raw datum in { data, time, value, x, y }).
  */
 export function useChartSelection({
-  selection,
-  linkedHover,
-  fallbackFields = EMPTY_FIELDS,
+  selection: selectionProp,
+  linkedHover: linkedHoverProp,
+  fallbackFields: fallbackFieldsProp = EMPTY_FIELDS,
   unwrapData: _unwrapData = false,
   onObservation,
   chartType,
@@ -216,7 +217,7 @@ export function useChartSelection({
   hoverHighlight,
   hoverHighlightField,
   colorByField,
-  mobileInteraction,
+  mobileInteraction: mobileInteractionProp,
   emitObservations = true
 }: {
   selection?: SelectionConfig
@@ -242,6 +243,10 @@ export function useChartSelection({
   /** Stable ID for this chart instance, used to suppress linked crosshair on source chart */
   crosshairSourceId: string
 } {
+  const selection = useStableShallow(selectionProp)
+  const linkedHover = useStableShallow(linkedHoverProp)
+  const fallbackFields = useStableShallow(fallbackFieldsProp)
+  const mobileInteraction = useStableShallow(mobileInteractionProp)
   const crosshairSourceId = useId()
   const crosshairActions = useCrosshairActions()
   const { setCrosshairPosition, clearCrosshairPosition, toggleCrosshairLock, unlockCrosshair } = crosshairActions
@@ -270,12 +275,14 @@ export function useChartSelection({
 
   const selectionHook = useSelection({
     name: selection?.name || "__unused__",
-    fields: linkFields
+    fields: linkFields,
+    enabled: !!selection
   })
 
   const linkedHoverHook = useLinkedHover({
     name: hoverConfig?.name || "hover",
-    fields: linkFields
+    fields: linkFields,
+    enabled: !!hoverConfig && hoverConfig.mode !== "x-position"
   })
 
   const pushObservation = useObservationSelector(
@@ -289,9 +296,12 @@ export function useChartSelection({
     [onObservation, pushObservation]
   )
 
-  const activeSelectionHook: SelectionHookResult | null = selection
-    ? { isActive: selectionHook.isActive, predicate: selectionHook.predicate }
-    : null
+  const activeSelectionHook: SelectionHookResult | null = useMemo(
+    () => selection
+      ? { isActive: selectionHook.isActive, predicate: selectionHook.predicate }
+      : null,
+    [selection, selectionHook.isActive, selectionHook.predicate]
+  )
 
   // ── Hover highlight: track hovered series key for sibling dimming ──────
   const [hoveredSeriesKey, setHoveredSeriesKey] = useState<string | null>(null)
@@ -433,10 +443,15 @@ export function useChartSelection({
 
   const customClickBehavior = useCallback(
     (d: Datum | null, interaction?: SemanticInteractionContext) => {
+      // Frame callbacks identify actual input. Keep context-free custom callers
+      // compatible, but never turn mouse/keyboard activation into a touch lock.
+      const isTap = !interaction || interaction.inputType === "touch"
       const tapLocksHover =
+        isTap &&
         !!mobileInteraction?.enabled &&
         (mobileInteraction.tapToLockTooltip || mobileInteraction.tapToSelect)
       const shouldClearOnBackground =
+        isTap &&
         !!mobileInteraction?.enabled &&
         mobileInteraction.clearSelection === "backgroundTap"
 

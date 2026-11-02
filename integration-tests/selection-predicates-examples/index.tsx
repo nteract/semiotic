@@ -74,6 +74,8 @@ const pushedRows = datedRows()
 
 function DateCharts() {
   const [width, setWidth] = useState(280)
+  const [visible, setVisible] = useState(true)
+  const [revision, setRevision] = useState(0)
   const pushedRef = useRef<RealtimeFrameHandle>(null)
   useEffect(() => {
     pushedRef.current?.pushMany(pushedRows)
@@ -81,20 +83,29 @@ function DateCharts() {
   return (
     <>
       <button onClick={() => setWidth(220)}>Resize Date charts</button>
+      <button onClick={() => setVisible((value) => !value)}>
+        Toggle Date source
+      </button>
+      <button onClick={() => setRevision((value) => value + 1)}>
+        Rerender Date charts
+      </button>
+      <output data-testid="date-revision">{revision}</output>
       <div style={{ display: "flex", gap: 8 }}>
         <div data-testid="date-source">
-          <Scatterplot
-            {...pointProps}
-            width={width}
-            data={sourceRows}
-            title="Date source"
-            linkedHover={{ name: "dates", fields: ["time"] }}
-            tooltip={(datum) => (
-              <span>
-                {datum.id}: {datum.time.toISOString()}
-              </span>
-            )}
-          />
+          {visible && (
+            <Scatterplot
+              {...pointProps}
+              width={width}
+              data={sourceRows}
+              title="Date source"
+              linkedHover={{ name: "dates", fields: ["time"] }}
+              tooltip={(datum) => (
+                <span>
+                  {datum.id}: {datum.time.toISOString()}
+                </span>
+              )}
+            />
+          )}
         </div>
         <div data-testid="date-bounded">
           <Scatterplot
