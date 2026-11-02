@@ -162,3 +162,84 @@ for (const theme of ["light", "dark"]) {
       .toEqual([normal, normal])
   })
 }
+
+test("mouse clicks in narrow charts dismiss hover, and removing a hovered source restores siblings", async ({
+  page
+}) => {
+  await page.goto("/selection-predicates-examples/")
+  const dimmed = await dimmedAlpha(page)
+  const source = page.getByTestId("date-source")
+  const targets = [
+    page.getByTestId("date-bounded"),
+    page.getByTestId("date-pushed")
+  ]
+  await waitForChartReady(page, "date-source")
+  const box = (await source.locator("canvas").first().boundingBox())!
+  const x = box.x + 20 + (box.width - 40) / 5
+  const y = box.y + box.height / 2
+  await page.mouse.click(x, y)
+  await expect(source.locator(".stream-frame-tooltip")).toContainText(
+    "first: 2026-01-01"
+  )
+  await expectTooltipWithinPlot(source, margin)
+  await page.mouse.move(1, 1)
+  await expect(source.locator(".stream-frame-tooltip")).toBeHidden()
+  for (const target of targets) {
+    await expect.poll(() => pointAlphas(target, [1, 4])).toEqual([255, 255])
+  }
+
+  await page.mouse.move(x, y)
+  for (const target of targets) {
+    await expect.poll(() => pointAlphas(target, [1, 4])).toEqual([255, dimmed])
+  }
+  // A route/tab change can remove the chart without any pointerleave event.
+  await page
+    .getByRole("button", { name: "Toggle Date source" })
+    .evaluate((button: HTMLButtonElement) => button.click())
+  await expect(source.locator("canvas")).toHaveCount(0)
+  await expect(source.locator(".stream-frame-tooltip")).toHaveCount(0)
+  for (const target of targets) {
+    await expect.poll(() => pointAlphas(target, [1, 4])).toEqual([255, 255])
+  }
+})
+
+test.describe("touch hover lifetime", () => {
+  test.use({ hasTouch: true })
+  test("keeps a tapped selection across rerenders and releases it on unmount", async ({
+    page
+  }) => {
+    await page.goto("/selection-predicates-examples/")
+    const dimmed = await dimmedAlpha(page)
+    const source = page.getByTestId("date-source")
+    const targets = [
+      page.getByTestId("date-bounded"),
+      page.getByTestId("date-pushed")
+    ]
+    await waitForChartReady(page, "date-source")
+    const box = (await source.locator("canvas").first().boundingBox())!
+    await page.touchscreen.tap(
+      box.x + 20 + (box.width - 40) / 5,
+      box.y + box.height / 2
+    )
+    await expect(source.locator(".stream-frame-tooltip")).toContainText(
+      "first: 2026-01-01"
+    )
+    await expectTooltipWithinPlot(source, margin)
+    await page
+      .getByRole("button", { name: "Rerender Date charts" })
+      .evaluate((button: HTMLButtonElement) => button.click())
+    await expect(page.getByTestId("date-revision")).toHaveText("1")
+    for (const target of targets) {
+      await expect
+        .poll(() => pointAlphas(target, [1, 4]))
+        .toEqual([255, dimmed])
+    }
+    await page
+      .getByRole("button", { name: "Toggle Date source" })
+      .evaluate((button: HTMLButtonElement) => button.click())
+    await expect(source.locator(".stream-frame-tooltip")).toHaveCount(0)
+    for (const target of targets) {
+      await expect.poll(() => pointAlphas(target, [1, 4])).toEqual([255, 255])
+    }
+  })
+})

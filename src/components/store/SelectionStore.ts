@@ -46,6 +46,30 @@ export interface SelectionStoreState {
   clearSelection: (selectionName: string) => void
 }
 
+interface OwnedSelectionWriter {
+  setClause: SelectionStoreState["setClause"]
+  releaseClause: SelectionStoreState["clearClause"]
+}
+
+// Ownership is private, store-scoped metadata, never part of a serialized clause.
+const ownedClauseClearers = /* @__PURE__ */ new WeakMap<
+  SelectionStoreState["setClause"],
+  (name: string, clientId: string, owner: object) => void
+>()
+
+/** Internal writer whose lifecycle cleanup releases only its latest clause. */
+export function createOwnedSelectionWriter(
+  setClause: (name: string, clause: SelectionClause, owner?: object) => void
+): OwnedSelectionWriter {
+  const release = ownedClauseClearers.get(setClause)
+  const owner = {}
+  // A consumer-supplied action has no store-owned lifecycle to release.
+  return {
+    setClause: release ? (name, clause) => setClause(name, clause, owner) : setClause,
+    releaseClause: (name, clientId) => release?.(name, clientId, owner)
+  }
+}
+
 // ── Predicate builders ─────────────────────────────────────────────────────
 
 type RowTest = (d: Datum, coverage?: SelectionCoverage) => boolean
@@ -155,23 +179,10 @@ export function buildPredicate(
 
 // ── Store factory ──────────────────────────────────────────────────────────
 
-function ensureSelection(
-  selections: Map<string, Selection>,
-  name: string
-): Selection {
-  let sel = selections.get(name)
-  if (!sel) {
-    sel = { name, resolution: "union", clauses: new Map() }
-    selections.set(name, sel)
-  }
-  return sel
-}
-
 function fieldSelectionsAreEqual(
   a: FieldSelection,
   b: FieldSelection
 ): boolean {
-  if (a.type !== b.type) return false
   if (a.type === "interval" && b.type === "interval") {
     return a.range[0] === b.range[0] && a.range[1] === b.range[1]
   }
@@ -186,77 +197,87 @@ function fieldSelectionsAreEqual(
 }
 
 function clausesAreEqual(a: SelectionClause, b: SelectionClause): boolean {
-  if (a.clientId !== b.clientId || a.type !== b.type) return false
-  const aFields = Object.entries(a.fields)
-  if (aFields.length !== countObjectKeys(b.fields)) return false
-  for (const [field, selection] of aFields) {
-    const otherSelection = b.fields[field]
-    if (
-      !otherSelection ||
-      !fieldSelectionsAreEqual(selection, otherSelection)
-    ) {
-      return false
-    }
-  }
-  return true
-}
-
-function countObjectKeys(value: object): number {
-  let count = 0
-  for (const _key in value) {
-    count++
-  }
-  return count
+  const fields = Object.keys(a.fields)
+  return a.clientId === b.clientId && a.type === b.type &&
+    fields.length === Object.keys(b.fields).length &&
+    fields.every((field) => !!b.fields[field] && fieldSelectionsAreEqual(a.fields[field], b.fields[field]))
 }
 
 export const [SelectionProvider, useSelectionSelector] =
-  /* @__PURE__ */ createStore<SelectionStoreState>((set) => ({
-    selections: new Map<string, Selection>(),
-
-    setClause(selectionName: string, clause: SelectionClause) {
-      set((current: SelectionStoreState) => {
-        const existingSelection = current.selections.get(selectionName)
-        const existingClause = existingSelection?.clauses.get(clause.clientId)
-        if (existingClause && clausesAreEqual(existingClause, clause)) return {}
-        const selections = new Map(current.selections)
-        const sel = ensureSelection(selections, selectionName)
-        const clauses = new Map(sel.clauses)
-        clauses.set(clause.clientId, clause)
-        selections.set(selectionName, { ...sel, clauses })
-        return { selections }
-      })
-    },
-
-    clearClause(selectionName: string, clientId: string) {
-      set((current: SelectionStoreState) => {
-        const existing = current.selections.get(selectionName)
-        if (!existing || !existing.clauses.has(clientId)) return {}
-        const selections = new Map(current.selections)
-        const clauses = new Map(existing.clauses)
-        clauses.delete(clientId)
-        selections.set(selectionName, { ...existing, clauses })
-        return { selections }
-      })
-    },
-
-    setResolution(selectionName: string, mode: ResolutionMode) {
-      set((current: SelectionStoreState) => {
-        const existing = current.selections.get(selectionName)
-        if (existing?.resolution === mode) return {}
-        const selections = new Map(current.selections)
-        const sel = ensureSelection(selections, selectionName)
-        selections.set(selectionName, { ...sel, resolution: mode })
-        return { selections }
-      })
-    },
-
-    clearSelection(selectionName: string) {
-      set((current: SelectionStoreState) => {
-        const sel = current.selections.get(selectionName)
-        if (!sel || sel.clauses.size === 0) return {}
-        const selections = new Map(current.selections)
-        selections.set(selectionName, { ...sel, clauses: new Map() })
-        return { selections }
+  /* @__PURE__ */ createStore<SelectionStoreState>((set) => {
+    const owners = new WeakMap<SelectionClause, object | undefined>()
+    // Every mutation replaces just its named selection and preserves the rest.
+    function updateSelection(
+      name: string,
+      update: (selection: Selection | undefined) => Selection | undefined
+    ) {
+      set((current) => {
+        const selection = update(current.selections.get(name))
+        return selection
+          ? { selections: new Map(current.selections).set(name, selection) }
+          : {}
       })
     }
-  }))
+
+    function setClause(
+      selectionName: string,
+      clause: SelectionClause,
+      owner?: object
+    ) {
+      updateSelection(selectionName, (existingSelection) => {
+        const existingClause = existingSelection?.clauses.get(clause.clientId)
+        const unchanged =
+          existingClause && clausesAreEqual(existingClause, clause)
+        const storedClause = unchanged ? existingClause : clause
+        // Equal values still transfer ownership, without notifying readers.
+        owners.set(storedClause, owner)
+        if (unchanged) return
+        return {
+          name: selectionName,
+          resolution: "union",
+          ...existingSelection,
+          clauses: new Map(existingSelection?.clauses).set(clause.clientId, clause)
+        }
+      })
+    }
+
+    function clearClause(
+      selectionName: string,
+      clientId: string,
+      owner?: object
+    ) {
+      updateSelection(selectionName, (existing) => {
+        const clause = existing?.clauses.get(clientId)
+        if (!existing || !clause || (owner && owners.get(clause) !== owner))
+          return
+        const clauses = new Map(existing.clauses)
+        clauses.delete(clientId)
+        return { ...existing, clauses }
+      })
+    }
+
+    const state: SelectionStoreState = {
+      selections: new Map<string, Selection>(),
+      setClause,
+      clearClause,
+
+      setResolution(selectionName: string, mode: ResolutionMode) {
+        updateSelection(selectionName, (existing) =>
+          existing?.resolution === mode ? undefined : {
+            name: selectionName,
+            clauses: new Map(),
+            ...existing,
+            resolution: mode
+          }
+        )
+      },
+
+      clearSelection(selectionName: string) {
+        updateSelection(selectionName, (sel) =>
+          sel?.clauses.size ? { ...sel, clauses: new Map() } : undefined
+        )
+      }
+    }
+    ownedClauseClearers.set(setClause, clearClause)
+    return state
+  })

@@ -1,5 +1,5 @@
 import bundleFreshness from "./lib/mcp-bundle-freshness.cjs"
-import { execSync } from "child_process"
+import { execFileSync, execSync } from "child_process"
 import {
   existsSync,
   readFileSync,
@@ -1631,6 +1631,14 @@ async function build() {
     `\u2705 dropped ${bareImports.stripped} inert side-effect-only chunk imports ` +
       `(kept ${bareImports.kept.size} targets with load-time effects)`
   )
+
+  // Entry budgets need only the finalized ESM graphs. Fail here instead of
+  // finishing the CommonJS/worker builds and reaching a later test-suite gate.
+  if (minify) {
+    execFileSync(process.execPath, ["scripts/check-entry-graph-size.mjs"], {
+      stdio: "inherit"
+    })
+  }
 
   // ── CJS: one client namespace graph + independent non-client entries ─────
   // CommonJS cannot split chunks. Building every browser subpath separately

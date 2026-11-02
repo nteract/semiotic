@@ -632,6 +632,16 @@ const filtered = useFilteredData(data, "mySelection")`}
         values, strings, booleans, arrays, and invalid Dates do not match an
         interval, even when it includes zero.
       </p>
+      <p>
+        Selection clauses belong to their mounted writer. Unmounting a writer
+        or changing its selection name or client ID removes its old clause;
+        other writers keep their selections. This also applies to
+        <code> useSelectionActions</code>, <code>useLinkedHover</code>, and
+        <code> useBrushSelection</code>. Pass <code>enabled: false</code> to
+        <code> useSelection</code> or <code>useLinkedHover</code> to release its
+        clause and pause selection updates. Wrap each independent dashboard in
+        <code> LinkedCharts</code> to isolate its selections and crosshairs.
+      </p>
 
       {/* ----------------------------------------------------------------- */}
       {/* Related */}

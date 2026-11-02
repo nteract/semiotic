@@ -1,10 +1,11 @@
 "use client"
 import type { Datum } from "../charts/shared/datumTypes"
-import { useId, useMemo, useCallback } from "react"
+import { useId, useMemo, useCallback, useEffect } from "react"
+import { useStableShallow } from "../stream/useStableShallow"
 import {
   useSelectionSelector,
+  createOwnedSelectionWriter,
   buildPredicate,
-  type SelectionClause,
   type FieldSelection,
   type SelectionStoreState
 } from "./SelectionStore"
@@ -23,6 +24,8 @@ export interface UseSelectionOptions {
   clientId?: string
   /** Fields this client cares about (for predicate context) */
   fields?: string[]
+  /** Whether selection is active. Set false to release this client's clause and pause updates. Defaults to true. */
+  enabled?: boolean
 }
 
 export interface UseSelectionResult {
@@ -41,70 +44,63 @@ export interface UseSelectionResult {
 }
 
 export function useSelection(options: UseSelectionOptions): UseSelectionResult {
-  const autoId = useId()
-  const clientId = options.clientId || autoId
-  const { name } = options
+  return useSelectionState(options)
+}
 
+function useSelectionState(options: UseSelectionOptions, fieldScope?: readonly unknown[]): UseSelectionResult {
+  const { name, enabled = true } = options
+  const actions = useSelectionWriter(options, fieldScope)
+  const { clientId } = actions
   const selection = useSelectionSelector(
-    (state: SelectionStoreState) => state.selections.get(name)
+    (state: SelectionStoreState) => enabled ? state.selections.get(name) : undefined
   )
 
-  const setClause = useSelectionSelector((state: SelectionStoreState) => state.setClause)
-  const clearClauseFn = useSelectionSelector((state: SelectionStoreState) => state.clearClause)
-
-  const isActive = useMemo(() => {
-    if (!selection) return false
-    return selection.clauses.size > 0
-  }, [selection])
-
+  const isActive = !!selection?.clauses.size
   const predicate = useMemo(() => {
-    if (!selection || selection.clauses.size === 0) return () => true
+    if (!selection) return () => true
     return buildPredicate(selection, clientId)
   }, [selection, clientId])
 
-  const selectPoints = useCallback(
-    (fieldValues: Record<string, unknown[]>) => {
+  return useStableShallow({ ...actions, predicate, isActive })
+}
+
+// Both public writers share callbacks and cleanup without subscribing to values.
+function useSelectionWriter(options: UseSelectionOptions, fieldScope?: readonly unknown[]) {
+  const autoId = useId()
+  const clientId = options.clientId || autoId
+  const { name, enabled = true } = options
+
+  const storeSetClause = useSelectionSelector((state: SelectionStoreState) => state.setClause)
+  const { setClause, releaseClause } = useMemo(
+    () => createOwnedSelectionWriter(storeSetClause),
+    [storeSetClause]
+  )
+  const clearClauseFn = useSelectionSelector((state: SelectionStoreState) => state.clearClause)
+
+  // Sharing a client ID replaces values, but only the latest writer owns cleanup.
+  useEffect(() => {
+    if (!enabled) return
+    return () => releaseClause(name, clientId)
+  }, [releaseClause, name, clientId, enabled, fieldScope])
+
+  return useMemo(() => {
+    const select = (type: FieldSelection["type"], fieldValues: Record<string, unknown[]>) => {
+      if (!enabled) return
       const fields: Record<string, FieldSelection> = {}
-      let hasFields = false
       for (const [field, values] of Object.entries(fieldValues)) {
-        fields[field] = { type: "point", values: new Set(values) }
-        hasFields = true
+        fields[field] = type === "point"
+          ? { type, values: new Set(values) }
+          : { type, range: values as [number, number] }
       }
-      if (!hasFields) return
-      const clause: SelectionClause = {
-        clientId,
-        type: "point",
-        fields
-      }
-      setClause(name, clause)
-    },
-    [clientId, name, setClause]
-  )
-
-  const selectInterval = useCallback(
-    (fieldRanges: Record<string, [number, number]>) => {
-      const fields: Record<string, FieldSelection> = {}
-      let hasFields = false
-      for (const [field, range] of Object.entries(fieldRanges)) {
-        fields[field] = { type: "interval", range }
-        hasFields = true
-      }
-      if (!hasFields) return
-      const clause: SelectionClause = {
-        clientId,
-        type: "interval",
-        fields
-      }
-      setClause(name, clause)
-    },
-    [clientId, name, setClause]
-  )
-
-  const clear = useCallback(() => {
-    clearClauseFn(name, clientId)
-  }, [clearClauseFn, name, clientId])
-
-  return { predicate, isActive, selectPoints, selectInterval, clear, clientId }
+      if (hasOwnEnumerableKey(fields)) setClause(name, { clientId, type, fields })
+    }
+    return {
+      selectPoints: (values: Record<string, unknown[]>) => select("point", values),
+      selectInterval: (ranges: Record<string, [number, number]>) => select("interval", ranges),
+      clear: () => clearClauseFn(name, clientId),
+      clientId
+    }
+  }, [name, clientId, enabled, setClause, clearClauseFn])
 }
 
 // ── useSelectionActions ──────────────────────────────────────────────────────
@@ -132,30 +128,8 @@ export interface UseSelectionActionsResult {
  * container subtree. For read + write, use `useSelection`.
  */
 export function useSelectionActions(name: string, clientId?: string): UseSelectionActionsResult {
-  const autoId = useId()
-  const cid = clientId || autoId
-  // Selecting stable action refs only — never the `selections` slice — so this
-  // component is not a subscriber and won't re-render on selection changes.
-  const setClause = useSelectionSelector((state: SelectionStoreState) => state.setClause)
-  const clearClauseFn = useSelectionSelector((state: SelectionStoreState) => state.clearClause)
-
-  const selectPoints = useCallback(
-    (fieldValues: Record<string, unknown[]>) => {
-      const fields: Record<string, FieldSelection> = {}
-      let hasFields = false
-      for (const [field, values] of Object.entries(fieldValues)) {
-        fields[field] = { type: "point", values: new Set(values) }
-        hasFields = true
-      }
-      if (!hasFields) return
-      setClause(name, { clientId: cid, type: "point", fields })
-    },
-    [name, cid, setClause]
-  )
-
-  const clear = useCallback(() => clearClauseFn(name, cid), [name, cid, clearClauseFn])
-
-  return { selectPoints, clear, clientId: cid }
+  const { selectPoints, clear, clientId: cid } = useSelectionWriter({ name, clientId })
+  return useStableShallow({ selectPoints, clear, clientId: cid })
 }
 
 // ── useLinkedHover ─────────────────────────────────────────────────────────
@@ -165,6 +139,8 @@ export interface UseLinkedHoverOptions {
   name?: string
   /** Fields to include in the hover selection */
   fields: string[]
+  /** Whether linked hover is active. Set false to release its clause and pause updates. Defaults to true. */
+  enabled?: boolean
 }
 
 export interface UseLinkedHoverResult {
@@ -178,12 +154,12 @@ export interface UseLinkedHoverResult {
 
 export function useLinkedHover(options: UseLinkedHoverOptions): UseLinkedHoverResult {
   const selName = options.name || "hover"
-  const { fields } = options
+  const fields = useStableShallow(options.fields)
 
-  const { predicate, isActive, selectPoints, clear } = useSelection({
+  const { predicate, isActive, selectPoints, clear } = useSelectionState({
     name: selName,
-    fields
-  })
+    enabled: options.enabled
+  }, fields)
 
   const onHover = useCallback(
     (datum: Datum | null) => {
@@ -201,7 +177,7 @@ export function useLinkedHover(options: UseLinkedHoverOptions): UseLinkedHoverRe
     [fields, selectPoints, clear]
   )
 
-  return { onHover, predicate, isActive }
+  return useStableShallow({ onHover, predicate, isActive })
 }
 
 // ── useBrushSelection ──────────────────────────────────────────────────────
@@ -255,10 +231,8 @@ function isLinearBrushExtent(extent: BrushExtent): extent is LinearBrushExtent {
 export function useBrushSelection(options: UseBrushSelectionOptions): UseBrushSelectionResult {
   const { name, xField, yField } = options
 
-  const { predicate, isActive, selectInterval, clear } = useSelection({
-    name,
-    fields: [xField, yField].filter(Boolean) as string[]
-  })
+  const fields = useStableShallow([xField, yField])
+  const { predicate, isActive, selectInterval, clear } = useSelectionState({ name }, fields)
 
   const brushType = xField && yField ? "xyBrush" : xField ? "xBrush" : "yBrush"
 
@@ -270,34 +244,30 @@ export function useBrushSelection(options: UseBrushSelectionOptions): UseBrushSe
       }
 
       const fieldRanges: Record<string, [number, number]> = {}
+      const setRange = (field: string | undefined, start: number, end: number) => {
+        if (field) fieldRanges[field] = [Math.min(start, end), Math.max(start, end)]
+      }
 
       if (brushType === "xyBrush" && isXYBrushExtent(extent)) {
         // extent = [[x0, y0], [x1, y1]]
-        if (xField) fieldRanges[xField] = [Math.min(extent[0][0], extent[1][0]), Math.max(extent[0][0], extent[1][0])]
-        if (yField) fieldRanges[yField] = [Math.min(extent[0][1], extent[1][1]), Math.max(extent[0][1], extent[1][1])]
-      } else if (brushType === "xBrush" && isLinearBrushExtent(extent)) {
-        if (xField) fieldRanges[xField] = [Math.min(extent[0], extent[1]), Math.max(extent[0], extent[1])]
-      } else if (brushType === "yBrush" && isLinearBrushExtent(extent)) {
-        if (yField) fieldRanges[yField] = [Math.min(extent[0], extent[1]), Math.max(extent[0], extent[1])]
+        setRange(xField, extent[0][0], extent[1][0])
+        setRange(yField, extent[0][1], extent[1][1])
+      } else if (brushType !== "xyBrush" && isLinearBrushExtent(extent)) {
+        setRange(xField || yField, extent[0], extent[1])
       }
 
-      if (hasOwnEnumerableKey(fieldRanges)) {
-        selectInterval(fieldRanges)
-      }
+      selectInterval(fieldRanges)
     },
     [brushType, xField, yField, selectInterval, clear]
   )
 
-  const brushInteraction = useMemo(
-    () => ({
-      brush: brushType as "xyBrush" | "xBrush" | "yBrush",
-      during: handleBrush,
-      end: handleBrush
-    }),
-    [brushType, handleBrush]
-  )
+  const brushInteraction = useStableShallow<UseBrushSelectionResult["brushInteraction"]>({
+    brush: brushType,
+    during: handleBrush,
+    end: handleBrush
+  })
 
-  return { brushInteraction, predicate, isActive, clear }
+  return useStableShallow({ brushInteraction, predicate, isActive, clear })
 }
 
 // ── useFilteredData ────────────────────────────────────────────────────────

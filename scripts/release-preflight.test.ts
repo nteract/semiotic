@@ -124,6 +124,16 @@ test("production bundle budgets fail before size tests and package consumer chec
   }
 })
 
+test("production builds check finalized ESM sizes before building the CommonJS graph", () => {
+  const build = read("scripts/build.mjs")
+  const budget = build.indexOf('execFileSync(process.execPath, ["scripts/check-entry-graph-size.mjs"]')
+  assert.ok(budget > build.indexOf('shortenBuiltEntryExports("dist"'))
+  assert.ok(budget > build.indexOf('stripPureBareChunkImports("dist")'))
+  assert.ok(budget < build.indexOf('input: "src/components/internal/semioticClientCjsShared.ts"'))
+  assert.ok(budget < build.indexOf("await createCjsBundlesWithConcurrency(standaloneCjsBundles"))
+  assert.match(build, /if \(minify\) \{\s+execFileSync\(process\.execPath, \["scripts\/check-entry-graph-size\.mjs"\], \{\s+stdio: "inherit"\s+\}\)/)
+})
+
 test("CI checks bundle budgets immediately after production builds and before expensive work", () => {
   const ci = read(".github/workflows/node.js.yml")
     .split("  docs-package:")[1]
