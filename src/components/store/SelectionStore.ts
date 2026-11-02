@@ -46,6 +46,30 @@ export interface SelectionStoreState {
   clearSelection: (selectionName: string) => void
 }
 
+interface OwnedSelectionWriter {
+  setClause: SelectionStoreState["setClause"]
+  releaseClause: SelectionStoreState["clearClause"]
+}
+
+// Ownership is private, store-scoped metadata, never part of a serialized clause.
+const ownedWriterFactories = /* @__PURE__ */ new WeakMap<
+  SelectionStoreState["setClause"],
+  () => OwnedSelectionWriter
+>()
+
+/** Internal writer whose lifecycle cleanup releases only its latest clause. */
+export function createOwnedSelectionWriter(
+  setClause: SelectionStoreState["setClause"]
+): OwnedSelectionWriter {
+  // A consumer-supplied action has no store-owned lifecycle to release.
+  return (
+    ownedWriterFactories.get(setClause)?.() ?? {
+      setClause,
+      releaseClause: () => {}
+    }
+  )
+}
+
 // ── Predicate builders ─────────────────────────────────────────────────────
 
 type RowTest = (d: Datum, coverage?: SelectionCoverage) => boolean
@@ -210,14 +234,23 @@ function countObjectKeys(value: object): number {
 }
 
 export const [SelectionProvider, useSelectionSelector] =
-  /* @__PURE__ */ createStore<SelectionStoreState>((set) => ({
-    selections: new Map<string, Selection>(),
-
-    setClause(selectionName: string, clause: SelectionClause) {
+  /* @__PURE__ */ createStore<SelectionStoreState>((set) => {
+    const owners = new WeakMap<SelectionClause, object>()
+    function setClause(
+      selectionName: string,
+      clause: SelectionClause,
+      owner?: object
+    ) {
       set((current: SelectionStoreState) => {
         const existingSelection = current.selections.get(selectionName)
         const existingClause = existingSelection?.clauses.get(clause.clientId)
-        if (existingClause && clausesAreEqual(existingClause, clause)) return {}
+        const unchanged =
+          existingClause && clausesAreEqual(existingClause, clause)
+        const storedClause = unchanged ? existingClause : clause
+        // Equal values still transfer ownership, without notifying readers.
+        if (owner) owners.set(storedClause, owner)
+        else owners.delete(storedClause)
+        if (unchanged) return {}
         const selections = new Map(current.selections)
         const sel = ensureSelection(selections, selectionName)
         const clauses = new Map(sel.clauses)
@@ -225,38 +258,58 @@ export const [SelectionProvider, useSelectionSelector] =
         selections.set(selectionName, { ...sel, clauses })
         return { selections }
       })
-    },
+    }
 
-    clearClause(selectionName: string, clientId: string) {
+    function clearClause(
+      selectionName: string,
+      clientId: string,
+      owner?: object
+    ) {
       set((current: SelectionStoreState) => {
         const existing = current.selections.get(selectionName)
-        if (!existing || !existing.clauses.has(clientId)) return {}
+        const clause = existing?.clauses.get(clientId)
+        if (!existing || !clause || (owner && owners.get(clause) !== owner))
+          return {}
         const selections = new Map(current.selections)
         const clauses = new Map(existing.clauses)
         clauses.delete(clientId)
         selections.set(selectionName, { ...existing, clauses })
         return { selections }
       })
-    },
-
-    setResolution(selectionName: string, mode: ResolutionMode) {
-      set((current: SelectionStoreState) => {
-        const existing = current.selections.get(selectionName)
-        if (existing?.resolution === mode) return {}
-        const selections = new Map(current.selections)
-        const sel = ensureSelection(selections, selectionName)
-        selections.set(selectionName, { ...sel, resolution: mode })
-        return { selections }
-      })
-    },
-
-    clearSelection(selectionName: string) {
-      set((current: SelectionStoreState) => {
-        const sel = current.selections.get(selectionName)
-        if (!sel || sel.clauses.size === 0) return {}
-        const selections = new Map(current.selections)
-        selections.set(selectionName, { ...sel, clauses: new Map() })
-        return { selections }
-      })
     }
-  }))
+
+    const state: SelectionStoreState = {
+      selections: new Map<string, Selection>(),
+      setClause: (name, clause) => setClause(name, clause),
+      clearClause: (name, clientId) => clearClause(name, clientId),
+
+      setResolution(selectionName: string, mode: ResolutionMode) {
+        set((current: SelectionStoreState) => {
+          const existing = current.selections.get(selectionName)
+          if (existing?.resolution === mode) return {}
+          const selections = new Map(current.selections)
+          const sel = ensureSelection(selections, selectionName)
+          selections.set(selectionName, { ...sel, resolution: mode })
+          return { selections }
+        })
+      },
+
+      clearSelection(selectionName: string) {
+        set((current: SelectionStoreState) => {
+          const sel = current.selections.get(selectionName)
+          if (!sel || sel.clauses.size === 0) return {}
+          const selections = new Map(current.selections)
+          selections.set(selectionName, { ...sel, clauses: new Map() })
+          return { selections }
+        })
+      }
+    }
+    ownedWriterFactories.set(state.setClause, () => {
+      const owner = {}
+      return {
+        setClause: (name, clause) => setClause(name, clause, owner),
+        releaseClause: (name, clientId) => clearClause(name, clientId, owner)
+      }
+    })
+    return state
+  })

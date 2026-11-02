@@ -4,6 +4,7 @@ import { useId, useMemo, useCallback, useEffect } from "react"
 import { useStableShallow } from "../stream/useStableShallow"
 import {
   useSelectionSelector,
+  createOwnedSelectionWriter,
   buildPredicate,
   type SelectionClause,
   type FieldSelection,
@@ -44,6 +45,10 @@ export interface UseSelectionResult {
 }
 
 export function useSelection(options: UseSelectionOptions): UseSelectionResult {
+  return useSelectionState(options)
+}
+
+function useSelectionState(options: UseSelectionOptions, fieldScope?: readonly unknown[]): UseSelectionResult {
   const autoId = useId()
   const clientId = options.clientId || autoId
   const { name, enabled = true } = options
@@ -52,14 +57,18 @@ export function useSelection(options: UseSelectionOptions): UseSelectionResult {
     (state: SelectionStoreState) => enabled ? state.selections.get(name) : undefined
   )
 
-  const setClause = useSelectionSelector((state: SelectionStoreState) => state.setClause)
+  const storeSetClause = useSelectionSelector((state: SelectionStoreState) => state.setClause)
+  const { setClause, releaseClause } = useMemo(
+    () => createOwnedSelectionWriter(storeSetClause),
+    [storeSetClause]
+  )
   const clearClauseFn = useSelectionSelector((state: SelectionStoreState) => state.clearClause)
 
-  // A clause belongs to the mounted writer and its current selection name.
+  // Sharing a client ID replaces values, but only the latest writer owns cleanup.
   useEffect(() => {
     if (!enabled) return
-    return () => clearClauseFn(name, clientId)
-  }, [clearClauseFn, name, clientId, enabled])
+    return () => releaseClause(name, clientId)
+  }, [releaseClause, name, clientId, enabled, fieldScope])
 
   const isActive = useMemo(() => {
     if (!selection) return false
@@ -150,10 +159,14 @@ export function useSelectionActions(name: string, clientId?: string): UseSelecti
   const cid = clientId || autoId
   // Selecting stable action refs only — never the `selections` slice — so this
   // component is not a subscriber and won't re-render on selection changes.
-  const setClause = useSelectionSelector((state: SelectionStoreState) => state.setClause)
+  const storeSetClause = useSelectionSelector((state: SelectionStoreState) => state.setClause)
+  const { setClause, releaseClause } = useMemo(
+    () => createOwnedSelectionWriter(storeSetClause),
+    [storeSetClause]
+  )
   const clearClauseFn = useSelectionSelector((state: SelectionStoreState) => state.clearClause)
 
-  useEffect(() => () => clearClauseFn(name, cid), [clearClauseFn, name, cid])
+  useEffect(() => () => releaseClause(name, cid), [releaseClause, name, cid])
 
   const selectPoints = useCallback(
     (fieldValues: Record<string, unknown[]>) => {
@@ -198,14 +211,11 @@ export function useLinkedHover(options: UseLinkedHoverOptions): UseLinkedHoverRe
   const selName = options.name || "hover"
   const fields = useStableShallow(options.fields)
 
-  const { predicate, isActive, selectPoints, clear } = useSelection({
+  const { predicate, isActive, selectPoints, clear } = useSelectionState({
     name: selName,
     fields,
     enabled: options.enabled
-  })
-
-  // Changing fields invalidates a hover expressed in the previous fields.
-  useEffect(() => () => clear(), [clear, fields])
+  }, fields)
 
   const onHover = useCallback(
     (datum: Datum | null) => {
@@ -277,12 +287,11 @@ function isLinearBrushExtent(extent: BrushExtent): extent is LinearBrushExtent {
 export function useBrushSelection(options: UseBrushSelectionOptions): UseBrushSelectionResult {
   const { name, xField, yField } = options
 
-  const { predicate, isActive, selectInterval, clear } = useSelection({
+  const fields = useStableShallow([xField, yField])
+  const { predicate, isActive, selectInterval, clear } = useSelectionState({
     name,
     fields: [xField, yField].filter(Boolean) as string[]
-  })
-
-  useEffect(() => () => clear(), [clear, xField, yField])
+  }, fields)
 
   const brushType = xField && yField ? "xyBrush" : xField ? "xBrush" : "yBrush"
 

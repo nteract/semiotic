@@ -2,6 +2,7 @@
 import { ORBIT_DIAGRAM_SIZE } from "../shared/chartSizeDefaultsNetwork"
 import type { NetworkPerspectiveProps } from "../shared/networkPerspectiveProps"
 import type { Datum } from "../shared/datumTypes"
+import type { SemanticInteractionContext } from "../shared/semanticInteractions"
 import * as React from "react"
 import { useMemo } from "react"
 import { orbitLayoutPlugin } from "../../stream/layouts/orbitLayoutPlugin"
@@ -338,21 +339,21 @@ export const OrbitDiagram = /* @__PURE__ */ withChartErrorBoundary(function Orbi
   // Unwrap RealtimeNode wrapper — StreamNetworkFrame's hover payload has
   // data: RealtimeNode, and the user's raw datum is on RealtimeNode.data
   const wrappedHoverBehavior = useMemo(() => {
-    return (hover: Datum | null) => {
+    return (hover: Datum | null, interaction?: SemanticInteractionContext) => {
       if (hover && hover.data && hover.data.data !== undefined) {
-        customHoverBehavior({ ...hover, data: hover.data.data })
+        customHoverBehavior({ ...hover, data: hover.data.data }, interaction)
       } else {
-        customHoverBehavior(hover)
+        customHoverBehavior(hover, interaction)
       }
     }
   }, [customHoverBehavior])
 
   const wrappedClickBehavior = useMemo(() => {
-    return (click: Datum | null) => {
+    return (click: Datum | null, interaction?: SemanticInteractionContext) => {
       if (click && click.data && click.data.data !== undefined) {
-        customClickBehavior({ ...click, data: click.data.data })
+        customClickBehavior({ ...click, data: click.data.data }, interaction)
       } else {
-        customClickBehavior(click)
+        customClickBehavior(click, interaction)
       }
     }
   }, [customClickBehavior])

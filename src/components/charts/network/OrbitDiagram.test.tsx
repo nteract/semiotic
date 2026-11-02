@@ -1,8 +1,9 @@
 import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
 import { vi } from "vitest"
-import { render } from "@testing-library/react"
+import { act, render } from "@testing-library/react"
 import { OrbitDiagram } from "./OrbitDiagram"
 import type { Datum } from "../shared/datumTypes"
+import { LinkedCharts, useSelection } from "semiotic/ai"
 
 // Mock NetworkFrame to capture props
 let lastNetworkFrameProps = {} as StreamNetworkFrameProps
@@ -22,6 +23,53 @@ vi.mock("../../stream/StreamNetworkFrame", () => {
 })
 
 describe("OrbitDiagram", () => {
+  it.each(["pointer", "keyboard", "touch"] as const)(
+    "preserves %s context through datum unwrapping without inventing touch locks",
+    (inputType) => {
+      let hover: ReturnType<typeof useSelection>
+      let selection: ReturnType<typeof useSelection>
+      const onObservation = vi.fn()
+      function Reader() {
+        hover = useSelection({ name: "orbit-hover" })
+        selection = useSelection({ name: "orbit-selection" })
+        return null
+      }
+      render(
+        <LinkedCharts showLegend={false}>
+          <OrbitDiagram
+            data={sampleData}
+            width={300}
+            animated={false}
+            linkedHover={{ name: "orbit-hover", fields: ["name"] }}
+            selection={{ name: "orbit-selection" }}
+            onObservation={onObservation}
+          />
+          <Reader />
+        </LinkedCharts>
+      )
+      const datum = { name: "A" }
+      const hit = { data: { data: datum }, x: 50, y: 60 }
+      act(() => {
+        lastNetworkFrameProps.customHoverBehavior?.(hit, { type: "focus", inputType })
+        lastNetworkFrameProps.customClickBehavior?.(hit, { type: "activate", inputType })
+      })
+      expect(onObservation).toHaveBeenCalledWith(expect.objectContaining({
+        type: "activate", inputType, datum
+      }))
+      expect(onObservation).toHaveBeenCalledWith(expect.objectContaining({
+        type: "focus", inputType: inputType === "touch" ? "pointer" : inputType, datum
+      }))
+      act(() => lastNetworkFrameProps.customHoverBehavior?.(null))
+      expect(hover!.isActive).toBe(inputType === "touch")
+      expect(selection!.isActive).toBe(inputType === "touch")
+      if (inputType === "touch") {
+        expect(selection!.predicate({ name: "B" })).toBe(false)
+        act(() => lastNetworkFrameProps.customClickBehavior?.(null, { type: "activate", inputType }))
+        expect(selection!.isActive).toBe(false)
+      }
+    }
+  )
+
   beforeEach(() => {
     lastNetworkFrameProps = {} as StreamNetworkFrameProps
   })

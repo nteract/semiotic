@@ -9,6 +9,7 @@ import {
 } from "../../dist/semiotic.module.min.js"
 import { Scatterplot } from "../../dist/xy.module.min.js"
 import type { RealtimeFrameHandle } from "../../src/components/realtime/types"
+import { SelectionReviewFixtures } from "./reviewFixtures"
 
 const rows = [
   { id: "both", x: 1, y: 1, value: 0, category: "A" },
@@ -168,18 +169,22 @@ function OpacityCharts() {
 }
 
 createRoot(document.getElementById("root")!).render(
-  <>
-    <LinkedCharts
-      showLegend={false}
-      selections={{ dash: { resolution: "crossfilter" } }}
-    >
-      <CrossfilterControls />
-    </LinkedCharts>
-    <LinkedCharts showLegend={false}>
-      <OpacityCharts />
-    </LinkedCharts>
-    <LinkedCharts showLegend={false}>
-      <DateCharts />
-    </LinkedCharts>
-  </>
+  new URLSearchParams(location.search).has("review") ? (
+    <SelectionReviewFixtures />
+  ) : (
+    <>
+      <LinkedCharts
+        showLegend={false}
+        selections={{ dash: { resolution: "crossfilter" } }}
+      >
+        <CrossfilterControls />
+      </LinkedCharts>
+      <LinkedCharts showLegend={false}>
+        <OpacityCharts />
+      </LinkedCharts>
+      <LinkedCharts showLegend={false}>
+        <DateCharts />
+      </LinkedCharts>
+    </>
+  )
 )
