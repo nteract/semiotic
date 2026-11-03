@@ -48,6 +48,13 @@ describe("networkAnalysis", () => {
     expect(shortestPath(NODES, EDGES, "A", "Z")).toEqual([])
   })
 
+  it("reconstructs long paths in source-to-target order", () => {
+    const nodes = Array.from({ length: 20_000 }, (_, i) => ({ id: `node-${i}` }))
+    const edges = nodes.slice(1).map((node, i) => ({ source: nodes[i].id, target: node.id }))
+    expect(shortestPath(nodes, edges, nodes[0].id, nodes.at(-1)!.id)).toEqual(nodes.map((node) => node.id))
+    expect(shortestPath(nodes, edges, nodes.at(-1)!.id, nodes[0].id)).toEqual(nodes.map((node) => node.id).reverse())
+  })
+
   it("ego network", () => {
     expect([...egoNetwork(NODES, EDGES, "C", 1)].sort()).toEqual(["A", "B", "C", "D"])
   })
@@ -251,6 +258,39 @@ describe("directed reachability", () => {
       "c",
       "d",
     ])
+  })
+
+  it("retains breadth-first discovery order across converging paths and cycles", () => {
+    const adjacency = buildDirectedAdjacency([], [
+      { source: "a", target: "b" },
+      { source: "a", target: "c" },
+      { source: "b", target: "d" },
+      { source: "c", target: "d" },
+      { source: "c", target: "e" },
+      { source: "d", target: "f" },
+      { source: "e", target: "a" },
+      { source: "f", target: "f" }
+    ])
+    expect([...reachableFrom(adjacency, "a")]).toEqual(["b", "c", "d", "e", "f", "a"])
+    expect([...reachableFrom(adjacency, "a", { includeStart: true })]).toEqual([
+      "b", "c", "d", "e", "f", "a"
+    ])
+    expect([...reachableFrom(adjacency, "missing")]).toEqual([])
+    expect([...reachableFrom(adjacency, "missing", { includeStart: true })]).toEqual(["missing"])
+  })
+
+  it("traverses a high-fanout descendant without spreading it into function arguments", () => {
+    const leaves = new Set(Array.from({ length: 150_000 }, (_, i) => `leaf-${i}`))
+    const adjacency = new Map([
+      ["root", new Set(["hub"])],
+      ["hub", leaves]
+    ])
+    const reached = reachableFrom(adjacency, "root")
+    expect(reached.size).toBe(leaves.size + 1)
+    expect(reached.has("hub")).toBe(true)
+    expect(reached.has("leaf-0")).toBe(true)
+    expect(reached.has("leaf-149999")).toBe(true)
+    expect(reached.has("root")).toBe(false)
   })
 
   it("reachableFrom reports a node that can reach itself through a cycle", () => {

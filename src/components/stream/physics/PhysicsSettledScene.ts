@@ -5,7 +5,10 @@ import type {
   SceneNode,
   Style
 } from "../types"
-import type { PhysicsSettledProjectionRow } from "./PhysicsAccessibility"
+import {
+  physicsDatumLabel,
+  type PhysicsSettledProjectionRow
+} from "./PhysicsAccessibility"
 import {
   buildPhysicsSettledEvidence,
   type PhysicsSettledEvidence
@@ -59,16 +62,6 @@ function bodyDatum(body: PhysicsBodyState): SceneDatum {
     : null
 }
 
-function bodyLabel(body: PhysicsBodyState): string {
-  const datum = body.datum
-  if (datum && typeof datum === "object") {
-    const record = datum as Record<string, unknown>
-    const label = record.label ?? record.name ?? record.id
-    if (label != null && label !== "") return String(label)
-  }
-  return body.id
-}
-
 function resolveBodyStyle(
   body: PhysicsBodyState,
   style: PhysicsSettledSceneOptions["bodyStyle"],
@@ -88,7 +81,7 @@ export function physicsBodyToXYSceneNode(
 ): SceneNode {
   const datum = bodyDatum(body)
   const accessibility = {
-    label: options.getBodyLabel?.(body) ?? bodyLabel(body)
+    label: options.getBodyLabel?.(body) ?? physicsDatumLabel(body.datum, body.id)
   }
   const common = {
     style: resolveBodyStyle(body, options.bodyStyle, context),

@@ -52,16 +52,6 @@ export function buildResolveColor(
       ? (colorScheme as Record<string, string>)
       : undefined
 
-  // Defense in depth — `resolveCustomLayoutPalette` should never return
-  // an empty palette, but if it ever did `Math.abs(hash) % 0` is NaN
-  // and `palette[NaN]` is undefined. Bail out to a fixed primary so the
-  // recipe still draws *something* readable instead of silently
-  // falling all the way through to scene-renderer fallbacks. An explicit
-  // map still wins even when the fallthrough palette is empty.
-  if (palette.length === 0) {
-    return (key: string): string =>
-      (colorMap && resolveExplicitColor(colorMap, key)) || "#4e79a7"
-  }
   return (key: string): string => {
     if (colorMap) {
       const mapped = resolveExplicitColor(colorMap, key)

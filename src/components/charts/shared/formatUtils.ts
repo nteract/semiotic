@@ -1,4 +1,5 @@
-import * as React from "react"
+import type * as React from "react"
+import { createElement } from "react"
 import { timeFormat } from "./timeFormat"
 import { format as d3Format } from "./numberFormat"
 import type { Datum } from "./datumTypes"
@@ -103,7 +104,7 @@ export function createTooltip(
   labels?: Record<string, string>
 ): (d: Datum) => React.JSX.Element {
   return (d: Datum) => {
-    return React.createElement(
+    return createElement(
       "div",
       { className: "tooltip-content", style: { padding: "8px" } },
       fields.map((field) => {
@@ -126,10 +127,10 @@ export function createTooltip(
             : undefined
         const displayValue = formatter ? formatter(value) : String(value)
 
-        return React.createElement(
+        return createElement(
           "div",
           { key: field, style: { marginBottom: "4px" } },
-          React.createElement("strong", null, `${label}: `),
+          createElement("strong", null, `${label}: `),
           displayValue
         )
       })

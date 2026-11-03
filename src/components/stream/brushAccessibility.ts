@@ -1,4 +1,5 @@
-import * as React from "react"
+import type * as React from "react"
+import { useId, useRef, useCallback } from "react"
 
 export type BrushKeyboardAction =
   | { type: "nudge"; direction: "left" | "right" | "up" | "down"; resize: boolean }
@@ -27,10 +28,10 @@ export function useBrushAccessibility({
   description = DEFAULT_DESCRIPTION,
   onAction,
 }: BrushAccessibilityOptions = {}) {
-  const descriptionId = React.useId().replace(/:/g, "")
-  const actionRef = React.useRef(onAction)
+  const descriptionId = useId().replace(/:/g, "")
+  const actionRef = useRef(onAction)
   actionRef.current = onAction
-  const onKeyDown = React.useCallback((event: React.KeyboardEvent<SVGSVGElement>) => {
+  const onKeyDown = useCallback((event: React.KeyboardEvent<SVGSVGElement>) => {
     const action = actionForKey(event)
     if (!action) return
     event.preventDefault()

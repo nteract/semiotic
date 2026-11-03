@@ -5,7 +5,7 @@ import type { Datum } from "../shared/datumTypes"
 import type { ChartAccessor, ResolvedMobileInteractionConfig } from "../shared/types"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { StreamXYFrameHandle, HoverData, Style } from "../../stream/types"
-import { registerXYPlugin } from "../../stream/xyPlugins/registry"
+import { ensureXYPlugin } from "../../stream/xyPlugins/registry"
 import { scatterXYPlugin } from "../../stream/xyPlugins/pointPlugin"
 import { getColor, resolveExplicitColor } from "../shared/colorUtils"
 import { getMax, getMinMax } from "../shared/minMax"
@@ -17,7 +17,7 @@ import { composeStyleRules, makeXYRuleContext, type StyleRule } from "../shared/
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureScatterplotMatrixCellsRegistrations(): void {
-  registerXYPlugin(scatterXYPlugin)
+  ensureXYPlugin(scatterXYPlugin)
 }
 
 // Internal field used to identify datums across cells
@@ -208,8 +208,8 @@ export function ScatterplotCell({
           forceHoverBehavior: mode === "hover",
           forceClickBehavior: !!onPointClick,
           mobileInteraction,
-          customHoverBehavior: customHoverBehavior as (d: Datum | null) => void,
-          customClickBehavior: customClickBehavior as (d: Datum | null) => void,
+          customHoverBehavior,
+          customClickBehavior,
         })}
         tooltipContent={mode === "hover" ? (() => null) : undefined}
       />

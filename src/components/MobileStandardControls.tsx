@@ -1,5 +1,6 @@
 "use client"
-import * as React from "react"
+import type * as React from "react"
+import { useState, useCallback, useMemo } from "react"
 import { nodeText } from "./controls/controlText"
 import type {
   MobileStandardControlKind,
@@ -123,11 +124,11 @@ export function useMobileRangeControls(
     formatValue,
     onChange,
   } = options
-  const [valueState, setValueState] = React.useState<[number, number]>(() =>
+  const [valueState, setValueState] = useState<[number, number]>(() =>
     clampMobileRange(initialValue, domain, minSpan)
   )
   const value = clampMobileRange(valueState, domain, minSpan)
-  const setValue = React.useCallback(
+  const setValue = useCallback(
     (next: [number, number]) => {
       const clamped = clampMobileRange(next, domain, minSpan)
       setValueState(clamped)
@@ -135,7 +136,7 @@ export function useMobileRangeControls(
     },
     [domain, minSpan, onChange]
   )
-  const brush = React.useMemo<MobileStandardBrushControls>(
+  const brush = useMemo<MobileStandardBrushControls>(
     () => ({
       label,
       domain,
@@ -147,7 +148,7 @@ export function useMobileRangeControls(
     }),
     [domain, formatValue, label, setValue, step, value]
   )
-  const zoom = React.useMemo<MobileStandardZoomControls>(
+  const zoom = useMemo<MobileStandardZoomControls>(
     () => ({
       onZoomIn: () => setValue(zoomMobileRange(value, domain, "in", options.step ?? Math.max(minSpan, (value[1] - value[0]) / 10), minSpan)),
       onZoomOut: () => setValue(zoomMobileRange(value, domain, "out", options.step ?? Math.max(minSpan, (value[1] - value[0]) / 10), minSpan)),

@@ -4,7 +4,7 @@ import { filterSparseArray } from "../shared/sparseArray"
 import * as React from "react"
 import { useState, useRef, useEffect, useMemo, useCallback } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
-import { registerLineFamilyXYPlugins } from "../../stream/xyPlugins/lineFamily"
+import { ensureLineFamilyXYPlugins } from "../../stream/xyPlugins/lineFamily"
 import type { StreamXYFrameProps, StreamXYFrameHandle, StreamScales } from "../../stream/types"
 import { MinimapBrushLazy } from "./minimapBrushLazy"
 import { getColor } from "../shared/colorUtils"
@@ -34,7 +34,7 @@ export type {
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureMinimapChartRegistrations(): void {
-  registerLineFamilyXYPlugins()
+  ensureLineFamilyXYPlugins()
 }
 
 // ── MinimapChart ────────────────────────────────────────────────────────

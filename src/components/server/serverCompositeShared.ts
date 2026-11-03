@@ -6,8 +6,7 @@ import type {
   ServerColorScheme
 } from "./serverChartConfigShared"
 
-// Helpers shared by the composite server charts (MinimapChart and
-// ScatterplotMatrix), which receive their props as one opaque payload.
+// Composite server charts receive their props through the same payload.
 
 export interface CompositePayload {
   data: ServerChartData
@@ -19,6 +18,15 @@ export interface CompositePayload {
 
 export function readPayload(frameProps: Datum): CompositePayload {
   return frameProps.__composite as CompositePayload
+}
+
+export function compositeRows(value: ServerChartData): Datum[] {
+  return Array.isArray(value)
+    ? value.filter(
+        (datum): datum is Datum =>
+          datum != null && typeof datum === "object" && !Array.isArray(datum)
+      )
+    : []
 }
 
 export function finiteNumber(value: unknown, fallback: number): number {

@@ -76,6 +76,23 @@ it("preserves independently saved bounds and leaves empty clouds without bounds"
   expect(wordCloudBounds([])).toBeNull()
 })
 
+it("combines anchors and occupied offsets without assuming the cloud contains the origin", () => {
+  const word = fixture.layout.words[0]
+  const words = [
+    { ...word, x: 100, y: -80, x0: -3, y0: -12, x1: 30, y1: 2 },
+    { ...word, x: 150, y: -50, x0: -20, y0: -5, x1: 7, y1: 4 },
+  ]
+  expect(wordCloudBounds(words)).toEqual([{ x: 97, y: -92 }, { x: 157, y: -46 }])
+})
+
+it("computes bounds for the maximum supported 10,000 placed words", () => {
+  const word = fixture.layout.words[0]
+  const words = Array.from({ length: 10_000 }, () => word)
+  words[0] = { ...word, x: -1_000, y: -2_000, x0: -10, y0: -20 }
+  words[words.length - 1] = { ...word, x: 1_000, y: 2_000, x1: 30, y1: 40 }
+  expect(wordCloudBounds(words)).toEqual([{ x: -1_010, y: -2_020 }, { x: 1_030, y: 2_040 }])
+})
+
 it("stops obsolete work at the next batch and preserves the abort reason", async () => {
   const controller = new AbortController()
   const reason = new Error("Replaced by a newer viewport")

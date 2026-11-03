@@ -5,7 +5,7 @@ import { buildBaseMetadataProps, buildCustomBehaviorProps, buildTooltipProps } f
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
-import { registerXYPlugin } from "../../stream/xyPlugins/registry"
+import { ensureXYPlugin } from "../../stream/xyPlugins/registry"
 import { bubbleXYPlugin } from "../../stream/xyPlugins/pointPlugin"
 import type { StreamXYFrameProps, StreamXYFrameHandle, MarginalGraphicsConfig, DecayConfig, PulseConfig, StalenessConfig } from "../../stream/types"
 import { MarginalGraphics } from "../../stream/MarginalGraphics"
@@ -30,7 +30,7 @@ import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureBubbleChartRegistrations(): void {
   provideMarginalGraphics(MarginalGraphics)
-  registerXYPlugin(bubbleXYPlugin)
+  ensureXYPlugin(bubbleXYPlugin)
 }
 
 /**

@@ -2,7 +2,8 @@
 import { getMax } from "../charts/shared/minMax"
 // One namespace import: the ESM build keeps every external import statement,
 // so named imports would add bytes to every `semiotic/controls` consumer.
-import * as React from "react"
+import type * as React from "react"
+import { useState, useEffect, useMemo, useRef, useId } from "react"
 import { SR_ONLY_STYLE } from "../screenReaderStyles"
 import { createControlObservationAdapter, type ControlInputSource } from "./controlContract"
 import {
@@ -81,8 +82,8 @@ function isFocusVisible(element: Element): boolean {
 
 /** Track length along the brushed axis from layout, for label placement. */
 function useTrackLength(ref: React.RefObject<HTMLDivElement | null>, orientation: "x" | "y", fallback: number, enabled: boolean) {
-  const [measured, setMeasured] = React.useState(0)
-  React.useEffect(() => {
+  const [measured, setMeasured] = useState(0)
+  useEffect(() => {
     const element = ref.current
     if (!enabled || !element || typeof ResizeObserver === "undefined") return
     const observer = new ResizeObserver(([entry]) => {
@@ -193,7 +194,7 @@ export function LinearBrush(props: LinearBrushProps): React.ReactElement {
 
   const domainLow = domain?.[0]
   const domainHigh = domain?.[1]
-  const track = React.useMemo(
+  const track = useMemo(
     () => createLinearBrushTrack({
       domain: domainLow != null && domainHigh != null ? [domainLow, domainHigh] : undefined,
       scale,
@@ -209,19 +210,19 @@ export function LinearBrush(props: LinearBrushProps): React.ReactElement {
   const isDisabled = disabled || !track
 
   const controlled = controlledValue !== undefined
-  const [internalValue, setInternalValue] = React.useState<LinearBrushValue>(() =>
+  const [internalValue, setInternalValue] = useState<LinearBrushValue>(() =>
     defaultValue ? [defaultValue[0], defaultValue[1]] : null
   )
   const committed = track ? normalizeBrushValue(controlled ? controlledValue : internalValue, track) : null
 
-  const rootRef = React.useRef<HTMLDivElement>(null)
-  const sliderRefs = { start: React.useRef<HTMLDivElement>(null), range: React.useRef<HTMLDivElement>(null), end: React.useRef<HTMLDivElement>(null) }
-  const focusedRef = React.useRef<SliderPart | null>(null)
-  const [focus, setFocus] = React.useState<{ part: SliderPart; visible: boolean } | null>(null)
-  const observedStartRef = React.useRef(false)
-  const descriptionId = `semiotic-linear-brush-${React.useId().replace(/:/g, "")}`
+  const rootRef = useRef<HTMLDivElement>(null)
+  const sliderRefs = { start: useRef<HTMLDivElement>(null), range: useRef<HTMLDivElement>(null), end: useRef<HTMLDivElement>(null) }
+  const focusedRef = useRef<SliderPart | null>(null)
+  const [focus, setFocus] = useState<{ part: SliderPart; visible: boolean } | null>(null)
+  const observedStartRef = useRef(false)
+  const descriptionId = `semiotic-linear-brush-${useId().replace(/:/g, "")}`
 
-  const observe = React.useMemo(
+  const observe = useMemo(
     () => createControlObservationAdapter({ controlType, controlId, chartId, chartType, onObservation }),
     [controlType, controlId, chartId, chartType, onObservation]
   )
@@ -254,7 +255,7 @@ export function LinearBrush(props: LinearBrushProps): React.ReactElement {
   }
 
   // Focus that follows a pointer gesture shows no focus ring.
-  const pointerFocusRef = React.useRef(false)
+  const pointerFocusRef = useRef(false)
   const focusPart = (part: SliderPart) => {
     const element = sliderRefs[part].current ?? sliderRefs.range.current
     if (!element) return
@@ -296,7 +297,7 @@ export function LinearBrush(props: LinearBrushProps): React.ReactElement {
   const shown: [number, number] | null = current ?? (fullExtentWhenEmpty && track ? [track.min, track.max] : null)
 
   // A cleared selection removes its end sliders; keep keyboard focus in the brush.
-  React.useEffect(() => {
+  useEffect(() => {
     if (!shown && (focusedRef.current === "start" || focusedRef.current === "end")) {
       sliderRefs.range.current?.focus({ preventScroll: true })
     }

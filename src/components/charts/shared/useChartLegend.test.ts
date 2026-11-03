@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, vi } from "vitest"
 import { renderHook, act } from "@testing-library/react"
 import {
   useChartLegendAndMargin,
@@ -8,6 +8,9 @@ import {
 } from "./hooks"
 import { isLegendConfig, type CategoricalLegendConfig } from "../../types/legendTypes"
 import type { FrameLegendOverrides } from "./hooks"
+import { createLegend } from "./legendUtils"
+import { getColor, STREAMING_PALETTE } from "./colorUtils"
+import type { Datum } from "./datumTypes"
 
 /**
  * Tests for `useChartLegend.ts` — the legend construction + margin
@@ -26,6 +29,109 @@ describe("distinctCategories", () => {
       { cat: null },
       { cat: "B" },
     ], "cat")).toEqual(["A", "B"])
+  })
+})
+
+describe("createLegend sample matching", () => {
+  it("does not evaluate data callbacks when the explicit legend domain is empty", () => {
+    const colorBy = vi.fn((d: Datum) => d.cat)
+    const sampleColor = vi.fn(() => "#123456")
+    const group = createLegend({
+      data: [{ cat: "A" }], colorBy, getColor: sampleColor, categories: []
+    }).legendGroups[0]
+    expect(group.items).toEqual([])
+    expect(colorBy).not.toHaveBeenCalled()
+    expect(sampleColor).not.toHaveBeenCalled()
+  })
+
+  it.each(["field", "function"])("keeps explicit order, duplicates, and first sample colors with a %s accessor", (kind) => {
+    const data = [
+      { cat: "B", fill: "#123456" },
+      { cat: "B", fill: "#654321" },
+      { cat: "A", fill: "#abcdef" },
+      { cat: "A", fill: "#fedcba" }
+    ]
+    const colorBy = kind === "field" ? "cat" : (d: Datum) => d.cat
+    const colorScale = vi.fn(() => "#999999")
+    const sampleColor = vi.fn((d: Datum) => d.fill)
+    const group = createLegend({
+      data, colorBy, colorScale, getColor: sampleColor,
+      categories: ["missing", "A", "B", "A"],
+      strokeColor: "#010203", strokeWidth: 0
+    }).legendGroups[0]
+
+    expect(group.items.map(({ label, color }) => [label, color])).toEqual([
+      ["missing", "#999999"], ["A", "#abcdef"], ["B", "#123456"], ["A", "#abcdef"]
+    ])
+    expect(sampleColor).toHaveBeenNthCalledWith(1, data[2], colorBy, colorScale)
+    expect(sampleColor).toHaveBeenNthCalledWith(2, data[0], colorBy, colorScale)
+    expect(sampleColor).toHaveBeenNthCalledWith(3, data[2], colorBy, colorScale)
+    expect(colorScale).toHaveBeenCalledExactlyOnceWith("missing")
+    expect(group.styleFn(group.items[1])).toEqual({
+      fill: "#abcdef", stroke: "#010203", strokeWidth: 0
+    })
+  })
+
+  it.each([false, true])("preserves raw category identity and unmatched NaN fallback (scale=%s)", (withScale) => {
+    const firstObject = {}, secondObject = {}
+    const categories = [1, "1", NaN, NaN, firstObject, secondObject, firstObject, null, undefined, 0, -0]
+    const data = categories.map((cat, index) => ({ cat, fill: `sample-${index}` }))
+    const group = createLegend({
+      data, colorBy: "cat", getColor: (d) => d.fill,
+      colorScale: withScale ? () => "#999999" : undefined
+    }).legendGroups[0]
+    expect(group.items.map(({ label, color }) => [label, color])).toEqual([
+      ["1", "sample-0"], ["1", "sample-1"],
+      ["NaN", withScale ? "#999999" : STREAMING_PALETTE[2]],
+      ["[object Object]", "sample-4"], ["[object Object]", "sample-5"],
+      ["null", "sample-7"], ["undefined", "sample-8"], ["0", "sample-9"]
+    ])
+  })
+
+  it("matches explicit categories without coercion and preserves NaN's missing-sample color", () => {
+    const group = createLegend({
+      data: [{ cat: 1, fill: "numeric" }, { cat: "1", fill: "string" }, { cat: NaN, fill: "nan" }],
+      colorBy: "cat", getColor: (d) => d.fill,
+      // Serialized/raw callers can supply values beyond the declared string domain.
+      categories: ["1", NaN, 1, "absent", "1"] as unknown as string[]
+    }).legendGroups[0]
+    expect(group.items.map(({ label, color }) => [label, color])).toEqual([
+      ["1", "string"], ["NaN", STREAMING_PALETTE[1]], ["1", "numeric"],
+      ["absent", STREAMING_PALETTE[3]], ["1", "string"]
+    ])
+  })
+
+  it.each([["null", null], ["undefined", undefined]] as const)("keeps a first %s datum on the fallback path with a function accessor", (_name, first) => {
+    const data = [first, { cat: "A", fill: "later-A" }, { cat: "B", fill: "first-B" }] as unknown as Datum[]
+    for (const categories of [undefined, ["A", "B"]]) {
+      const group = createLegend({
+        data, categories, colorBy: (d) => d?.cat ?? "A",
+        getColor: (d) => d.fill, colorScale: (category) => `fallback-${category}`
+      }).legendGroups[0]
+      expect(group.items.map(({ label, color }) => [label, color])).toEqual([
+        ["A", "fallback-A"], ["B", "first-B"]
+      ])
+    }
+  })
+
+  it("retains direct CSS colors from a function accessor above scale colors", () => {
+    const group = createLegend({
+      data: [{ tint: "#ff0000" }, { tint: "#0000ff" }, { tint: "#ff0000" }],
+      colorBy: (d) => d.tint, colorScale: () => "#00ff00", getColor
+    }).legendGroups[0]
+    expect(group.items.map(({ color }) => color)).toEqual(["#ff0000", "#0000ff"])
+  })
+
+  it("styles the supplied legend item while keeping each legend's paint overrides", () => {
+    const options = { data: [], colorBy: "cat", getColor, categories: ["A"] }
+    const plain = createLegend(options).legendGroups[0].styleFn
+    const outlined = createLegend({ ...options, strokeColor: "", strokeWidth: 0 }).legendGroups[0].styleFn
+    expect(plain({ label: "missing" })).toEqual({ fill: "#333", stroke: "#333" })
+    expect(plain({ label: "empty", color: "" })).toEqual({ fill: "#333", stroke: "#333" })
+    expect(plain({ label: "changed", color: "#abcdef" })).toEqual({ fill: "#abcdef", stroke: "#abcdef" })
+    expect(outlined({ label: "changed", color: "#abcdef" })).toEqual({
+      fill: "#abcdef", stroke: "", strokeWidth: 0
+    })
   })
 })
 
@@ -714,6 +820,37 @@ describe("useLegendInteraction", () => {
 
     rerender({ categories: ["B"] })
     expect(result.current.isolatedCategories.size).toBe(0)
+    expect(result.current.legendSelectionHook).toBeNull()
+  })
+
+  it("retains selection identity while a streaming domain grows, then prunes departed categories", () => {
+    const { result, rerender } = renderHook(
+      ({ categories }) => useLegendInteraction("isolate", "cat", categories),
+      { initialProps: { categories: ["A", "B", "C"] } },
+    )
+    act(() => {
+      result.current.onLegendClick({ label: "A" })
+      result.current.onLegendClick({ label: "B" })
+    })
+    const isolated = result.current.isolatedCategories
+    const selection = result.current.legendSelectionHook
+    rerender({ categories: ["A", "B", "C", "D"] })
+    expect(result.current.isolatedCategories).toBe(isolated)
+    expect(result.current.legendSelectionHook).toBe(selection)
+
+    rerender({ categories: ["B", "C", "D"] })
+    expect(result.current.isolatedCategories).toEqual(new Set(["B"]))
+    expect(result.current.legendSelectionHook!.predicate({ cat: "B" })).toBe(true)
+    expect(result.current.legendSelectionHook!.predicate({ cat: "A" })).toBe(false)
+    expect(result.current.legendSelectionHook!.predicate({ cat: "D" })).toBe(false)
+    expect(isolated).toEqual(new Set(["A", "B"]))
+
+    // When every remaining category is selected, isolation is equivalent to
+    // showing the whole chart and must stop dimming future categories.
+    rerender({ categories: ["B"] })
+    expect(result.current.isolatedCategories.size).toBe(0)
+    expect(result.current.legendSelectionHook).toBeNull()
+    rerender({ categories: ["B", "E"] })
     expect(result.current.legendSelectionHook).toBeNull()
   })
 

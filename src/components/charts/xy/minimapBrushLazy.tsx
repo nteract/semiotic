@@ -2,7 +2,8 @@
  * Lazy-loaded wrapper for MinimapBrush (pulls LinearBrush).
  */
 "use client"
-import * as React from "react"
+import type * as React from "react"
+import { useState, useEffect } from "react"
 import type { MinimapBrushProps } from "./minimapBrush"
 
 type BrushComponent = React.ComponentType<MinimapBrushProps>
@@ -28,9 +29,9 @@ function loadMinimapBrush(): Promise<BrushComponent> {
 
 /** Renders nothing until the brush module resolves, then mounts the brush. */
 export function MinimapBrushLazy(props: MinimapBrushProps) {
-  const [Comp, setComp] = React.useState<BrushComponent | null>(() => cached)
+  const [Comp, setComp] = useState<BrushComponent | null>(() => cached)
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (Comp) return
     let cancelled = false
     loadMinimapBrush().then((Loaded) => {

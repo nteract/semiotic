@@ -1,4 +1,4 @@
-import * as ReactDOMServer from "react-dom/server.browser"
+import { renderToStaticMarkup } from "react-dom/server.browser"
 import type { PhysicsPipelineStore } from "./PhysicsPipelineStore"
 import {
   createPhysicsSettledSVG,
@@ -24,7 +24,7 @@ export function renderPhysicsSettledSVG(
 ): PhysicsSettledSVGRender {
   const { element, scene, evidence } = createPhysicsSettledSVG(store, options)
   return {
-    svg: ReactDOMServer.renderToStaticMarkup(element),
+    svg: renderToStaticMarkup(element),
     scene,
     evidence
   }

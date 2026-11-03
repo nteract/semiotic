@@ -122,7 +122,7 @@ function PacketFlowChart<TNode extends Datum = Datum, TLink extends Datum = Datu
 function PhysicalFlowChart<TNode extends Datum = Datum, TLink extends Datum = Datum>(props: PacketFlowChartProps<TNode, TLink> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function PhysicsCustomChart<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: PhysicsCustomChartProps<TDatum, TConfig> & React.RefAttributes<PhysicsFrameHandle>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function PhysicsPileChart(props: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").UnitPileChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
-function PhysicsSVGOverlay(props: PhysicsSVGOverlayProps): React.JSX.Element
+function PhysicsSVGOverlay(props: PhysicsSVGOverlayProps): import("react").JSX.Element
 function ProcessFlowChart(props: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").ProcessFlowChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
 function StreamPhysicsFrame(props: React.RefAttributes<import("semiotic-internal/semiotic-experimental").UnstableStreamPhysicsFrameHandle> & import("semiotic-internal/semiotic-experimental").UnstableStreamPhysicsFrameProps): React.ReactNode
 function Tooltip(config?: TooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
@@ -2051,7 +2051,7 @@ interface-member PhysicsSVGOverlayProps::property::annotations = optional annota
 interface-member PhysicsSVGOverlayProps::property::autoPlaceAnnotations = optional autoPlaceAnnotations: AutoPlaceAnnotations | undefined
 interface-member PhysicsSVGOverlayProps::property::chartId = optional chartId: string | undefined
 interface-member PhysicsSVGOverlayProps::property::chartType = optional chartType: string | undefined
-interface-member PhysicsSVGOverlayProps::property::children = optional children: React.ReactNode
+interface-member PhysicsSVGOverlayProps::property::children = optional children: ReactNode
 interface-member PhysicsSVGOverlayProps::property::height = required height: number
 interface-member PhysicsSVGOverlayProps::property::legend = optional legend: LegendValue
 interface-member PhysicsSVGOverlayProps::property::legendClickBehavior = optional legendClickBehavior: ((item: {label: string;}) => void) | undefined
@@ -2065,7 +2065,7 @@ interface-member PhysicsSVGOverlayProps::property::onAnnotationActivate = option
 interface-member PhysicsSVGOverlayProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic-ai-observations").ChartObservation) => void) | undefined
 interface-member PhysicsSVGOverlayProps::property::pointNodes = optional pointNodes: PhysicsAnnotationAnchorNode[] | undefined
 interface-member PhysicsSVGOverlayProps::property::svgAnnotationRules = optional svgAnnotationRules: ((annotation: Datum, index: number, context: AnnotationContext) => ReactNode) | undefined
-interface-member PhysicsSVGOverlayProps::property::title = optional title: React.ReactNode
+interface-member PhysicsSVGOverlayProps::property::title = optional title: ReactNode
 interface-member PhysicsSVGOverlayProps::property::totalHeight = required totalHeight: number
 interface-member PhysicsSVGOverlayProps::property::totalWidth = required totalWidth: number
 interface-member PhysicsSVGOverlayProps::property::width = required width: number

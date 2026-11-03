@@ -1,4 +1,5 @@
-import * as React from "react"
+import type * as React from "react"
+import { Fragment } from "react"
 import type { Datum } from "./datumTypes"
 import {
   estimateLabel,
@@ -163,7 +164,7 @@ export function renderDirectLabels(
       }
     }
     return node ? (
-      <React.Fragment key={disposition.id}>{node}</React.Fragment>
+      <Fragment key={disposition.id}>{node}</Fragment>
     ) : null
   })
   // This list is retained even if every visible label is omitted. It carries

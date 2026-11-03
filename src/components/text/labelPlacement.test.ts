@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { scaleLinear, scaleLog, scaleSymlog } from "d3-scale"
 import { placeLabels, type LabelCandidate } from "./labelPlacement"
 import { cacheLabelMeasurer } from "./labelMeasurement"
@@ -100,11 +100,8 @@ describe("endpoint rail placement", () => {
   })
 
   it("includes font identity, version, size, weight and text in cache keys", () => {
-    let calls = 0
-    const measure = cacheLabelMeasurer(() => {
-      calls++
-      return candidate("a", 0).measurement
-    })
+    const uncachedMeasure = vi.fn(() => candidate("a", 0).measurement)
+    const measure = cacheLabelMeasurer(uncachedMeasure)
     const font = { family: "Arial", version: 1, size: 11, weight: 400 }
     measure("A", font)
     measure("A", font)
@@ -116,6 +113,6 @@ describe("endpoint rail placement", () => {
     ])
       measure("A", { ...font, ...change })
     measure("B", font)
-    expect(calls).toBe(6)
+    expect(uncachedMeasure).toHaveBeenCalledTimes(6)
   })
 })

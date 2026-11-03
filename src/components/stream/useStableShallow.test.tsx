@@ -14,7 +14,7 @@
  * level deep — which is the typical config shape — so the effect no
  * longer fires on inline-object churn.
  */
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, vi } from "vitest"
 import { renderHook } from "@testing-library/react"
 import { useStableShallow } from "./useStableShallow"
 import { shallowEqualTwoLevel } from "./shallowEqual"
@@ -30,6 +30,59 @@ it("keeps config equality bounded to two levels and preserves Object.is semantic
   expect(shallowEqualTwoLevel({ a: [{}] }, { a: [{}] })).toBe(false)
   expect(shallowEqualTwoLevel({ a: new Map() }, { a: new Map() })).toBe(false)
   expect(shallowEqualTwoLevel(Object.create(null), {})).toBe(true)
+})
+
+it("compares inline frame configs without materializing key collections", () => {
+  const makeConfig = () => ({
+    pulse: { duration: 600, color: "#abc" },
+    staleness: { threshold: 1000, opacity: 0.5 },
+    colorScheme: ["#abc", "#def"],
+    extent: [0, 100]
+  })
+  const initial = makeConfig()
+  const next = makeConfig()
+  const keys = vi.spyOn(Object, "keys")
+  const equal = shallowEqualTwoLevel(initial, next)
+  const calls = keys.mock.calls.length
+  keys.mockRestore()
+  expect(equal).toBe(true)
+  expect(calls).toBe(0)
+})
+
+it("compares only own enumerable string keys, including null-prototype records", () => {
+  const a = Object.assign(Object.create(null), { color: "blue" })
+  const b = { color: "blue" }
+  Object.defineProperty(b, "hidden", { value: 1 })
+  expect(shallowEqualTwoLevel(a, b)).toBe(true)
+  expect(shallowEqualTwoLevel(b, a)).toBe(true)
+  expect(shallowEqualTwoLevel({ ...a, extra: undefined }, b)).toBe(false)
+  expect(shallowEqualTwoLevel(b, { ...a, extra: undefined })).toBe(false)
+  expect(shallowEqualTwoLevel({ hidden: 1 }, b)).toBe(false)
+  const symbol = Symbol("metadata")
+  expect(shallowEqualTwoLevel({ ...a, [symbol]: 1 }, { ...b, [symbol]: 2 })).toBe(true)
+  expect(shallowEqualTwoLevel([undefined], Array(1))).toBe(true)
+  expect(shallowEqualTwoLevel(Object.assign([1], { label: "a" }), Object.assign([1], { label: "b" }))).toBe(true)
+
+  // A property made enumerable on Object.prototype must not become a config
+  // field, nor supply an own key missing from a null-prototype record.
+  const inherited = Symbol("inherited")
+  const descriptor = Object.getOwnPropertyDescriptor(Object.prototype, "color")
+  Object.defineProperty(Object.prototype, "color", {
+    value: inherited,
+    enumerable: true,
+    configurable: true
+  })
+  let equivalent: boolean
+  let missing: boolean
+  try {
+    equivalent = shallowEqualTwoLevel(a, b)
+    missing = shallowEqualTwoLevel(a, Object.create(null))
+  } finally {
+    if (descriptor) Object.defineProperty(Object.prototype, "color", descriptor)
+    else Reflect.deleteProperty(Object.prototype, "color")
+  }
+  expect(equivalent).toBe(true)
+  expect(missing).toBe(false)
 })
 
 describe("useStableShallow", () => {

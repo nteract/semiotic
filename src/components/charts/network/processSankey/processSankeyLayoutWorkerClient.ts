@@ -151,11 +151,9 @@ const sharedProcessSankeySession = /*#__PURE__*/ createSharedWorkerSessionHolder
 
 /** Explicitly retry after worker deployment/policy changes; also drops live work. */
 export function resetProcessSankeyLayoutWorker(): void {
-  sharedProcessSankeySession.resetForTest()
+  sharedProcessSankeySession.reset()
   processSankeyWorkerAvailability.failed = false
 }
-
-export const _resetSharedProcessSankeyLayoutSessionForTest = resetProcessSankeyLayoutWorker
 
 export async function runProcessSankeyLayoutWorker(
   request: ProcessSankeyWorkerRequest,

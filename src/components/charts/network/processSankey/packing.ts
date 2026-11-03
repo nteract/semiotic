@@ -11,7 +11,6 @@ import {
   type SlotByNode
 } from "./layoutGeometry"
 import {
-  clearProcessSankeyPackingCache,
   lookupPackingCache,
   processSankeyPackingSignature,
   rehydrateProcessSankeySlots,
@@ -27,7 +26,6 @@ import {
 } from "./packingOptimization"
 
 export {
-  clearProcessSankeyPackingCache,
   processSankeyPackingSignature,
   rehydrateProcessSankeySlots
 }

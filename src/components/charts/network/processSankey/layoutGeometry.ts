@@ -419,6 +419,10 @@ export function measureTransitOcclusion(
       : options.ribbonLane === "target"
         ? 0.15
         : 0.5
+  // Intermediate lanes reuse normalized times with the same cubic control.
+  // Keep exact fractions, bounded for caller-authored dense quality samples;
+  // this invocation's numeric cache is released after scoring.
+  const parameters = new Map<number, number>()
   let total = 0
   for (const edge of edges) {
     const sourceSlot = slotByNode[edge.source]
@@ -464,7 +468,11 @@ export function measureTransitOcclusion(
       }
       const ratioAt = (time: number): number => {
         const xFraction = (time - start) / (end - start)
-        const parameter = parameterAtX(xFraction, control)
+        let parameter = parameters.get(xFraction)
+        if (parameter === undefined) {
+          parameter = parameterAtX(xFraction, control)
+          if (parameters.size < 1024) parameters.set(xFraction, parameter)
+        }
         const ribbonTop = cubic(
           sourceTop,
           sourceTop,

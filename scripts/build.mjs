@@ -1553,6 +1553,10 @@ async function build() {
   await createSharedEsmGroup({
     entries: { "semiotic-wordcloud": clientEntries["semiotic-wordcloud"] },
     minify, clientOnly: true, groupName: "client-wordcloud",
+    // Use the same import/export normalization as the primary client group.
+    // Keeping this group separate preserves its optional raster-engine boundary.
+    deferIdentifierMinification: true,
+    mergeImports: true,
     esbuildPlugins: [externalizeSharedClientModulesPlugin(false)]
   })
   await createSharedEsmGroup({

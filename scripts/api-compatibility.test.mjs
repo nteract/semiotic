@@ -233,22 +233,24 @@ describe("public API compatibility comparison", () => {
   it("keeps representative generic React component signatures typed", () => {
     const outDir = mkdtempSync(join(tmpdir(), "semiotic-api-signature-test-"))
     try {
-      const generated = spawnSync(
-        process.execPath,
-        [
-          "scripts/generate-api-surface.mjs",
-          "--only",
-          "semiotic",
-          "--out-dir",
-          outDir,
-        ],
-        { cwd: repoRoot, encoding: "utf8", timeout: 120_000 },
-      )
-      assert.equal(
-        generated.status,
-        0,
-        generated.stderr || generated.stdout || generated.error?.message,
-      )
+      for (const entry of ["semiotic", "semiotic-physics"]) {
+        const generated = spawnSync(
+          process.execPath,
+          [
+            "scripts/generate-api-surface.mjs",
+            "--only",
+            entry,
+            "--out-dir",
+            outDir,
+          ],
+          { cwd: repoRoot, encoding: "utf8", timeout: 120_000 },
+        )
+        assert.equal(
+          generated.status,
+          0,
+          generated.stderr || generated.stdout || generated.error?.message,
+        )
+      }
       const snapshot = readFileSync(join(outDir, "semiotic.api.md"), "utf8")
       const areaChart = snapshot.match(/^function AreaChart.*$/m)?.[0]
       assert.ok(areaChart, "AreaChart call signature is missing")
@@ -294,6 +296,20 @@ describe("public API compatibility comparison", () => {
       assert.ok(tooltipResolver, "resolveMultiCapableTooltip signature is missing")
       assert.match(tooltipResolver, /customFunctionContext\?: "datum" \| "hover"/)
       assert.doesNotMatch(tooltipResolver, /"hover" \| customFunctionContext/)
+
+      const physicsSignatures = readFileSync(join(outDir, "semiotic-physics.api.md"), "utf8").split("\n")
+      for (const name of ["default", "StreamPhysicsFrame"]) {
+        const signature = physicsSignatures.find((line) =>
+          line.startsWith(`function ${name}(`),
+        )
+        assert.ok(signature, `Physics ${name} call signature is missing`)
+        assert.match(signature, /UnstableStreamPhysicsFrameHandle/)
+        assert.match(signature, /UnstableStreamPhysicsFrameProps/)
+        // Keep the released spelling: nominal store types from two releases
+        // prevent the semantic fallback from proving a React alias-only edit.
+        assert.match(signature, /\): React\.ReactNode$/)
+        assert.doesNotMatch(signature, /\bany\b/)
+      }
     } finally {
       rmSync(outDir, { recursive: true, force: true })
     }

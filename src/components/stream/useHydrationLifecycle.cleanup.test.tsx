@@ -24,117 +24,90 @@
  * that contract: the cleanup must fire exactly once across the
  * mount→hydrate→unmount lifecycle.
  */
-import * as React from "react"
 import { useRef } from "react"
-import { render, act } from "@testing-library/react"
-import { describe, it, expect, afterEach } from "vitest"
+import { renderHook } from "@testing-library/react"
+import { describe, it, expect, vi } from "vitest"
 import { useHydrationLifecycle } from "./useHydration"
 
 describe("useHydrationLifecycle cleanup", () => {
-  afterEach(() => {
-    // The second test stashes a `setHydrated` setter on globalThis so
-    // it can flip the dep from outside the component. Clean it up so
-    // it doesn't leak into other test files in the shared environment.
-    delete (globalThis as { __setHydrated?: unknown }).__setHydrated
-  })
-
   it.each([false, true])("fires cleanup once on unmount (SSR handoff: %s)", (wasHydratingFromSSR) => {
-    const calls: string[] = []
-    function Probe() {
+    const paint = vi.fn()
+    const cleanup = vi.fn()
+    const { unmount } = renderHook(() => {
       const storeRef = useRef<{ cancelIntroAnimation?: () => void } | null>({})
       const dirtyRef = useRef(false)
-      const renderFnRef = useRef(() => { calls.push("renderFn") })
+      const renderFnRef = useRef(paint)
       useHydrationLifecycle({
-        // SSR hydration flips false→true after commit; fresh mounts start true.
         hydrated: true,
         wasHydratingFromSSR,
         storeRef,
         dirtyRef,
         renderFnRef,
-        cleanup: () => calls.push("cleanup"),
+        cleanup,
       })
-      return null
-    }
-    const { unmount } = render(<Probe />)
+    })
     // Only an SSR handoff paints synchronously; both modes clean up on unmount.
-    const paints = wasHydratingFromSSR ? ["renderFn"] : []
-    expect(calls).toEqual(paints)
+    expect(paint).toHaveBeenCalledTimes(wasHydratingFromSSR ? 1 : 0)
+    expect(cleanup).not.toHaveBeenCalled()
     unmount()
-    expect(calls).toEqual([...paints, "cleanup"])
+    expect(cleanup).toHaveBeenCalledOnce()
+    if (wasHydratingFromSSR) expect(paint).toHaveBeenCalledBefore(cleanup)
   })
 
   it("cancels a queued render before synchronously painting SSR hydration state", () => {
-    const calls: string[] = []
-    function Probe() {
+    const paint = vi.fn()
+    const cancelRender = vi.fn()
+    renderHook(() => {
       const storeRef = useRef<{ cancelIntroAnimation?: () => void } | null>({})
       const dirtyRef = useRef(false)
-      const renderFnRef = useRef(() => { calls.push("render") })
+      const renderFnRef = useRef(paint)
       useHydrationLifecycle({
         hydrated: true,
         wasHydratingFromSSR: true,
         storeRef,
         dirtyRef,
         renderFnRef,
-        cancelRender: () => calls.push("cancel")
+        cancelRender,
       })
-      return null
-    }
-
-    render(<Probe />)
-    expect(calls).toEqual(["cancel", "render"])
+    })
+    expect(cancelRender).toHaveBeenCalledOnce()
+    expect(paint).toHaveBeenCalledOnce()
+    expect(cancelRender).toHaveBeenCalledBefore(paint)
   })
 
-  it("does NOT fire cleanup when hydrated flips false→true (the regression case)", async () => {
-    const calls: string[] = []
-    function Probe() {
-      const [hydrated, setHydrated] = React.useState(false)
+  it("does NOT fire cleanup when hydrated flips false→true (the regression case)", () => {
+    const paint = vi.fn<(hydrated: boolean) => void>()
+    const cleanup = vi.fn()
+    const { rerender, unmount } = renderHook(({ hydrated }) => {
       const storeRef = useRef<{ cancelIntroAnimation?: () => void } | null>({})
       const dirtyRef = useRef(false)
-      const renderFnRef = useRef(() => { calls.push(`renderFn(hydrated=${hydrated})`) })
-      // Update the renderFn closure on every render so it sees the
-      // current `hydrated` value.
-      renderFnRef.current = () => { calls.push(`renderFn(hydrated=${hydrated})`) }
+      const renderFnRef = useRef(() => paint(hydrated))
+      renderFnRef.current = () => paint(hydrated)
       useHydrationLifecycle({
         hydrated,
         wasHydratingFromSSR: true,
         storeRef,
         dirtyRef,
         renderFnRef,
-        cleanup: () => calls.push("cleanup"),
+        cleanup,
       })
-      // Expose a setter so the test can flip hydrated from outside.
-      ;(globalThis as { __setHydrated?: (v: boolean) => void }).__setHydrated = setHydrated
-      return null
-    }
-    let unmount: () => void = () => {}
-    await act(async () => {
-      const r = render(<Probe />)
-      unmount = r.unmount
-    })
-    expect(calls).toEqual([])
-    // Flip the hydrated flag — exactly the transition that previously
-    // fired the cleanup.
-    await act(async () => {
-      ;(globalThis as { __setHydrated?: (v: boolean) => void }).__setHydrated?.(true)
-    })
-    // The layout effect re-fires (new renderFn call), but the
-    // cleanup must NOT fire — that was the regression.
-    expect(calls).toEqual([
-      "renderFn(hydrated=true)",
-    ])
+    }, { initialProps: { hydrated: false } })
+    expect(paint).not.toHaveBeenCalled()
+    expect(cleanup).not.toHaveBeenCalled()
+
+    // Drive the same dependency transition as SSR hydration through React.
+    rerender({ hydrated: true })
+    expect(paint).toHaveBeenCalledExactlyOnceWith(true)
+    expect(cleanup).not.toHaveBeenCalled()
     unmount()
-    expect(calls).toEqual([
-      "renderFn(hydrated=true)",
-      "cleanup",
-    ])
+    expect(cleanup).toHaveBeenCalledOnce()
+    expect(paint).toHaveBeenCalledBefore(cleanup)
   })
 
   it("uses the latest cleanup closure even if the prop changes between renders", () => {
-    // Defensive guarantee: a parent that recreates the cleanup arrow
-    // every render shouldn't see a stale closure fire on unmount.
-    const calls: string[] = []
-    let activeCleanup = () => { calls.push("cleanup-A") }
-    function Probe({ which }: { which: "A" | "B" }) {
+    const cleanupA = vi.fn()
+    const cleanupB = vi.fn()
+    const { rerender, unmount } = renderHook(({ cleanup }) => {
       const storeRef = useRef<{ cancelIntroAnimation?: () => void } | null>({})
       const dirtyRef = useRef(false)
       const renderFnRef = useRef(() => {})
@@ -144,16 +117,14 @@ describe("useHydrationLifecycle cleanup", () => {
         storeRef,
         dirtyRef,
         renderFnRef,
-        cleanup: activeCleanup,
+        cleanup,
       })
-      return <span>{which}</span>
-    }
-    const { rerender, unmount } = render(<Probe which="A" />)
-    activeCleanup = () => { calls.push("cleanup-B") }
-    rerender(<Probe which="B" />)
-    expect(calls).toEqual([])
+    }, { initialProps: { cleanup: cleanupA } })
+    rerender({ cleanup: cleanupB })
+    expect(cleanupA).not.toHaveBeenCalled()
+    expect(cleanupB).not.toHaveBeenCalled()
     unmount()
-    // The latest closure (B) must run, not the stale A closure.
-    expect(calls).toEqual(["cleanup-B"])
+    expect(cleanupA).not.toHaveBeenCalled()
+    expect(cleanupB).toHaveBeenCalledOnce()
   })
 })

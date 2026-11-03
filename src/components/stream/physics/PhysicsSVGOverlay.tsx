@@ -6,7 +6,8 @@
  * honors the same annotation + auto-place + legend contracts as other frames.
  */
 import type { Datum } from "../../charts/shared/datumTypes"
-import * as React from "react"
+
+import { useMemo } from "react"
 import type { ReactNode } from "react"
 import type { LegendLayout, LegendValue } from "../../types/legendTypes"
 import { renderLegendFromConfig } from "../legendRenderer"
@@ -102,12 +103,12 @@ export function PhysicsSVGOverlay(props: PhysicsSVGOverlayProps) {
     chartType
   })
 
-  const normalized = React.useMemo(
+  const normalized = useMemo(
     () => normalizePhysicsAnnotations(annotations),
     [annotations]
   )
 
-  const annotationContext = React.useMemo(
+  const annotationContext = useMemo(
     () =>
       buildPhysicsAnnotationContext({
         width,
@@ -117,7 +118,7 @@ export function PhysicsSVGOverlay(props: PhysicsSVGOverlayProps) {
     [height, pointNodes, width]
   )
 
-  const layoutAnnotations = React.useMemo(() => {
+  const layoutAnnotations = useMemo(() => {
     if (!normalized || !autoPlaceAnnotations) return normalized
     return annotationLayout({
       annotations: normalized,
@@ -126,7 +127,7 @@ export function PhysicsSVGOverlay(props: PhysicsSVGOverlayProps) {
     })
   }, [annotationContext, autoPlaceAnnotations, normalized])
 
-  const defaultAnnotationRules = React.useMemo(
+  const defaultAnnotationRules = useMemo(
     () => createDefaultAnnotationRules("network", annotationActivation),
     [annotationActivation]
   )

@@ -32,9 +32,10 @@ const defaultClock: FrameClock = () =>
 
 /** Mulberry32 is small, deterministic, and accepts the serializable integer seed surface. */
 export function createSeededFrameRandom(seed: number): FrameRandom {
-  let state = seed >>> 0
+  let state = seed | 0
   return () => {
-    state += 0x6D2B79F5
+    // Unbounded addition loses integer precision in long-running frames.
+    state = (state + 0x6D2B79F5) | 0
     let value = state
     value = Math.imul(value ^ (value >>> 15), value | 1)
     value ^= value + Math.imul(value ^ (value >>> 7), value | 61)

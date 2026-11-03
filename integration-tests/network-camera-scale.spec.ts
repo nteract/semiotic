@@ -14,6 +14,18 @@ async function ready(page: Page, query: string) {
       page.evaluate(() => !!window.cameraScale?.handle?.getCustomLayout?.())
     )
     .toBe(true)
+  // A zero-commit camera measurement only means reuse if both profilers were
+  // actually mounted. Check this before the measurement resets their samples.
+  const mountedLayers = await page.evaluate(() =>
+    window.cameraScale.renders
+      .filter((sample) => sample.phase === "mount")
+      .map((sample) => sample.id)
+  )
+  expect(mountedLayers).toEqual(
+    process.env.NETWORK_CAMERA_PROFILE === "1"
+      ? expect.arrayContaining(["NetworkHtmlMarksLayer", "NetworkSVGOverlay"])
+      : []
+  )
 }
 
 async function settled(page: Page) {

@@ -82,12 +82,25 @@ describe("check-capabilities push-handle detection", () => {
     assert.match(bridge, /\buseFrameImperativeHandle\s*\(/)
   })
 
-  it("recognizes typed bespoke React handles", () => {
+  it("recognizes named and qualified React handle calls, including type arguments", () => {
+    for (const callee of ["useImperativeHandle", "React.useImperativeHandle"]) {
+      assert.equal(sourceWiresPushHandle(`${callee}(ref, factory)`), true)
+      assert.equal(
+        sourceWiresPushHandle(
+          `${callee}<RealtimeFrameHandle, RealtimeLineChartHandle>(ref, factory)`
+        ),
+        true
+      )
+      assert.equal(sourceWiresPushHandle(`const handle = ${callee}`), false)
+      assert.equal(sourceWiresPushHandle(`${callee}Factory(ref)`), false)
+    }
     assert.equal(
-      sourceWiresPushHandle(
-        "useImperativeHandle<RealtimeFrameHandle, RealtimeLineChartHandle>(ref, factory)"
-      ),
-      true
+      sourceWiresPushHandle('import { useImperativeHandle } from "react"'),
+      false
+    )
+    assert.equal(
+      sourceWiresPushHandle('import * as React from "react"'),
+      false
     )
   })
 
@@ -122,6 +135,6 @@ describe("check-capabilities push-handle detection", () => {
       "utf8"
     )
     assert.match(runtime, /export function useRealtimeFrameHandle(?:<[^>]+>)?\s*\(/)
-    assert.match(runtime, /React\.useImperativeHandle\s*\(/)
+    assert.match(runtime, /\buseImperativeHandle\s*\(/)
   })
 })

@@ -1,4 +1,5 @@
-import * as React from "react"
+import type * as React from "react"
+import { useRef, useEffect } from "react"
 import type { Style } from "./types"
 
 export type CursorStyledSceneMark = {
@@ -75,16 +76,16 @@ export function rehitCanvasMarkCursor(
 export function useCanvasMarkCursorCleanup(
   canvasRef: React.RefObject<HTMLCanvasElement | null>
 ): void {
-  const lastCanvasRef = React.useRef<HTMLCanvasElement | null>(null)
+  const lastCanvasRef = useRef<HTMLCanvasElement | null>(null)
 
   // A responsive/hydrating frame can mount its canvas after this hook's first
   // effect. Remember the latest concrete element instead of capturing the
   // initially-null ref in the unmount closure.
-  React.useEffect(() => {
+  useEffect(() => {
     if (canvasRef.current) lastCanvasRef.current = canvasRef.current
   })
 
-  React.useEffect(() => {
+  useEffect(() => {
     return () => setCanvasMarkCursor(lastCanvasRef.current)
   }, [])
 }

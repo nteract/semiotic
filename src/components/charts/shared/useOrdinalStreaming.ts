@@ -5,6 +5,7 @@ import type { Ref, RefObject } from "react"
 import { useImperativeHandle } from "react"
 import type { StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import type { RealtimeFrameHandle } from "../../realtime/types"
+import type { ChartSetupResult } from "./useChartSetup"
 
 interface UseOrdinalStreamingConfig {
   /** External ref for push API */
@@ -12,17 +13,14 @@ interface UseOrdinalStreamingConfig {
   /** Internal frame ref */
   frameRef: RefObject<StreamOrdinalFrameHandle | null>
   /** Results from useChartSetup that should be forwarded to the stream frame */
-  setup: {
-    legendBehaviorProps: Datum
-    margin: { top: number; right: number; bottom: number; left: number }
-  }
+  setup: Pick<ChartSetupResult, "legendBehaviorProps" | "margin">
 }
 
 interface UseOrdinalStreamingResult {
   /** Legend/category-domain props from useChartSetup (spread into streamProps) */
-  effectiveLegendProps: Datum
+  effectiveLegendProps: ChartSetupResult["legendBehaviorProps"]
   /** Margin from useChartSetup, including frame-domain legend expansion */
-  effectiveMargin: { top: number; right: number; bottom: number; left: number }
+  effectiveMargin: ChartSetupResult["margin"]
 }
 
 /**

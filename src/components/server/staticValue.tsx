@@ -1,5 +1,4 @@
-import * as React from "react"
-import * as ReactDOMServer from "react-dom/server"
+import { renderToStaticMarkup } from "react-dom/server"
 
 import type { Datum } from "../charts/shared/datumTypes"
 import {
@@ -17,6 +16,7 @@ import type {
 } from "../charts/value/types"
 import { buildEvidence, type EvidenceSink } from "./renderEvidence"
 import { resolveTheme, themeMediaCSS, type ThemeInput } from "./themeResolver"
+import { finiteDimension } from "./svgSizing"
 
 interface ValueModeDefaults {
   width: number
@@ -82,12 +82,6 @@ const VALUE_MODE_DEFAULTS: Record<BigNumberMode, ValueModeDefaults> = {
     showHeader: false,
     showDetail: false,
   },
-}
-
-function finiteDimension(value: unknown, fallback: number): number {
-  return typeof value === "number" && Number.isFinite(value) && value > 0
-    ? value
-    : fallback
 }
 
 function thresholdColor(
@@ -249,7 +243,7 @@ export function renderBigNumberToStaticSVG(
     "_"
   )
   const mediaCSS = themeMediaCSS(theme, `[data-semiotic-auto="${themeScope}"]`)
-  const svg = ReactDOMServer.renderToStaticMarkup(
+  const svg = renderToStaticMarkup(
     <svg
       xmlns="http://www.w3.org/2000/svg"
       width={width}

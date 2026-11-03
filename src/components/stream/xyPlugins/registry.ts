@@ -54,16 +54,31 @@ export interface XYChartPlugin {
 }
 
 const registry: Partial<Record<StreamChartType, XYChartPlugin>> = Object.create(null)
+// Static rendering installs SVG-only defaults. Only these library-owned
+// placeholders may be upgraded implicitly when a browser needs painters;
+// an explicitly registered custom plugin may intentionally have none.
+const serverOnlyPlugins = new WeakSet<XYChartPlugin>()
 
 export function registerXYPlugin(plugin: XYChartPlugin): void {
+  serverOnlyPlugins.delete(plugin)
   registry[plugin.chartType] = plugin
 }
 
-/** Test-only: drop every plugin so HOC registration can be asserted in isolation. */
-export function resetXYPluginRegistry(): void {
-  for (const key of Object.keys(registry) as StreamChartType[]) {
-    delete registry[key]
-  }
+export function needsXYPlugin(chartType: StreamChartType): boolean {
+  const current = registry[chartType]
+  return !current || serverOnlyPlugins.has(current)
+}
+
+/** Install browser defaults without overwriting a caller's scene/painter plugin. */
+export function ensureXYPlugin(plugin: XYChartPlugin): void {
+  if (needsXYPlugin(plugin.chartType)) registry[plugin.chartType] = plugin
+}
+
+/** Install an SVG-only default, allowing later browser registration to upgrade it. */
+export function ensureServerXYPlugin(plugin: XYChartPlugin): void {
+  if (registry[plugin.chartType]) return
+  serverOnlyPlugins.add(plugin)
+  registry[plugin.chartType] = plugin
 }
 
 export function getXYPlugin(

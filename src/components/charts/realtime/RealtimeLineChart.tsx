@@ -6,7 +6,7 @@ import {
   useMemo
 } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
-import { registerXYPlugin } from "../../stream/xyPlugins/registry"
+import { ensureXYPlugin } from "../../stream/xyPlugins/registry"
 import { lineXYPlugin } from "../../stream/xyPlugins/linePlugin"
 import type {
   LineStyle,
@@ -69,7 +69,7 @@ const EMPTY_SERIES: string[] = []
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureRealtimeLineChartRegistrations(): void {
-  registerXYPlugin(lineXYPlugin)
+  ensureXYPlugin(lineXYPlugin)
 }
 
 /**
@@ -483,7 +483,7 @@ export const RealtimeLineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PU
         onObservation,
         forceHoverBehavior: true,
         mobileInteraction: resolved.mobileInteraction,
-        customHoverBehavior: combinedHoverBehavior as (d: Datum | null) => void,
+        customHoverBehavior: combinedHoverBehavior,
         customClickBehavior
       })}
       annotations={annotations}

@@ -1,4 +1,5 @@
-import * as React from "react"
+import type * as React from "react"
+import { createElement, Fragment } from "react"
 
 /**
  * Compose a stack of overlay ReactNodes into a single fragment, dropping
@@ -17,5 +18,5 @@ export function composeOverlays(...sources: Array<React.ReactNode | null | undef
   const present = sources.filter((s): s is React.ReactNode => s != null)
   if (present.length === 0) return null
   if (present.length === 1) return present[0]
-  return React.createElement(React.Fragment, null, ...present)
+  return createElement(Fragment, null, ...present)
 }

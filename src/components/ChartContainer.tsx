@@ -1,5 +1,16 @@
 "use client"
-import * as React from "react"
+import type * as React from "react"
+import {
+  useState,
+  useRef,
+  useEffect,
+  forwardRef,
+  useMemo,
+  useCallback,
+  useImperativeHandle,
+  isValidElement,
+  cloneElement
+} from "react"
 import { exportChart } from "./export/exportChart"
 import { copyConfig as copyConfigFn } from "./export/chartConfig"
 import { ChartCopyAction } from "./chartContainerCopyAction"
@@ -452,17 +463,17 @@ function ChartNotificationBell({
   visible: VisibleNotification[]
   onDismiss: (entry: VisibleNotification) => void
 }) {
-  const [open, setOpen] = React.useState(false)
-  const wrapperRef = React.useRef<HTMLDivElement>(null)
-  const buttonRef = React.useRef<HTMLButtonElement>(null)
+  const [open, setOpen] = useState(false)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
 
   // Collapse the popover once nothing is left to show.
-  React.useEffect(() => {
+  useEffect(() => {
     if (visible.length === 0 && open) setOpen(false)
   }, [visible.length, open])
 
   // Dismiss on outside click / Escape, returning focus to the toggle.
-  React.useEffect(() => {
+  useEffect(() => {
     if (!open) return
     const onDocPointer = (e: MouseEvent) => {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
@@ -638,7 +649,7 @@ function ErrorDisplay({ error }: { error: string | React.ReactNode }) {
   )
 }
 
-export const ChartContainer = /* @__PURE__ */ React.forwardRef<
+export const ChartContainer = /* @__PURE__ */ forwardRef<
   ChartContainerHandle,
   ChartContainerProps
 >(function ChartContainer(
@@ -669,9 +680,9 @@ export const ChartContainer = /* @__PURE__ */ React.forwardRef<
   },
   ref
 ) {
-  const containerRef = React.useRef<HTMLDivElement>(null)
-  const chartBodyRef = React.useRef<HTMLDivElement>(null)
-  const [isFullscreen, setIsFullscreen] = React.useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const chartBodyRef = useRef<HTMLDivElement>(null)
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
   const automaticDataAuditNotifications = useChartContainerDataAudit(
     chartConfig,
@@ -679,7 +690,7 @@ export const ChartContainer = /* @__PURE__ */ React.forwardRef<
   )
 
   // Keep caller notification indices stable by appending automatic findings.
-  const resolvedNotifications = React.useMemo<ChartNotification[]>(
+  const resolvedNotifications = useMemo<ChartNotification[]>(
     () => [
       ...(notifications ?? []),
       ...automaticDataAuditNotifications,
@@ -691,14 +702,14 @@ export const ChartContainer = /* @__PURE__ */ React.forwardRef<
   // to the visible count — an all-dismissed, notifications-only container must
   // not render an empty toolbar. Keyed by `notification.id`, array-index
   // fallback.
-  const [dismissedNotifications, setDismissedNotifications] = React.useState<
+  const [dismissedNotifications, setDismissedNotifications] = useState<
     ReadonlySet<string>
   >(() => new Set<string>())
 
   // Prune keys that no longer exist in the current list so the set can't grow
   // unboundedly while notifications stream, and a removed notification's key
   // can't keep a fresh notification that later reuses it hidden.
-  React.useEffect(() => {
+  useEffect(() => {
     setDismissedNotifications((prev) => {
       if (prev.size === 0) return prev
       const currentKeys = new Set(
@@ -714,7 +725,7 @@ export const ChartContainer = /* @__PURE__ */ React.forwardRef<
     })
   }, [resolvedNotifications])
 
-  const visibleNotifications = React.useMemo<VisibleNotification[]>(() => {
+  const visibleNotifications = useMemo<VisibleNotification[]>(() => {
     return resolvedNotifications
       .map((notification, index) => ({
         notification,
@@ -725,7 +736,7 @@ export const ChartContainer = /* @__PURE__ */ React.forwardRef<
       .filter(({ key }) => !dismissedNotifications.has(key))
   }, [resolvedNotifications, dismissedNotifications])
 
-  const handleNotificationDismiss = React.useCallback(
+  const handleNotificationDismiss = useCallback(
     (entry: VisibleNotification) => {
       setDismissedNotifications((prev) => new Set(prev).add(entry.key))
       onNotificationDismiss?.(entry.notification, entry.index)
@@ -742,7 +753,7 @@ export const ChartContainer = /* @__PURE__ */ React.forwardRef<
 
   // Opt-in auto-description (ChartContainer is the layer for full-accessibility
   // chrome — title, caption, description — rather than the bare chart).
-  const describeText = React.useMemo(() => {
+  const describeText = useMemo(() => {
     if (!describe || !chartConfig?.component || !chartConfig?.props) return ""
     const levels = typeof describe === "object" ? describe.levels : undefined
     try {
@@ -755,7 +766,7 @@ export const ChartContainer = /* @__PURE__ */ React.forwardRef<
 
   // Opt-in structured navigation tree (Olli / Data Navigator model), built from
   // the same chartConfig and mounted at the container layer.
-  const navTree = React.useMemo(() => {
+  const navTree = useMemo(() => {
     if (!navigable || !chartConfig?.component || !chartConfig?.props) return null
     const maxLeaves = typeof navigable === "object" ? navigable.maxLeaves : undefined
     try {
@@ -766,14 +777,14 @@ export const ChartContainer = /* @__PURE__ */ React.forwardRef<
   }, [navigable, chartConfig])
   const navVisible = typeof navigable === "object" && navigable.visible === true
 
-  const exportConfig = React.useMemo(
+  const exportConfig = useMemo(
     () => (typeof actions?.export === "object" ? actions.export : {}),
     [actions?.export]
   )
   const copyConfigFormat =
     typeof actions?.copyConfig === "object" ? actions.copyConfig.format : "json"
 
-  const handleExport = React.useCallback(async (options?: {
+  const handleExport = useCallback(async (options?: {
     format?: "svg" | "png"
     scale?: number
     filename?: string
@@ -785,7 +796,7 @@ export const ChartContainer = /* @__PURE__ */ React.forwardRef<
     })
   }, [exportConfig])
 
-  const toggleFullscreen = React.useCallback(() => {
+  const toggleFullscreen = useCallback(() => {
     if (!containerRef.current) return
     if (!document.fullscreenElement) {
       containerRef.current.requestFullscreen().catch(() => {})
@@ -794,7 +805,7 @@ export const ChartContainer = /* @__PURE__ */ React.forwardRef<
     }
   }, [])
 
-  const handleCopyConfig = React.useCallback(async (format?: CopyFormat) => {
+  const handleCopyConfig = useCallback(async (format?: CopyFormat) => {
     if (!chartConfig) return
     await copyConfigFn(
       {
@@ -806,7 +817,7 @@ export const ChartContainer = /* @__PURE__ */ React.forwardRef<
     )
   }, [chartConfig, copyConfigFormat])
 
-  React.useEffect(() => {
+  useEffect(() => {
     const handleChange = () => {
       setIsFullscreen(!!document.fullscreenElement)
     }
@@ -814,7 +825,7 @@ export const ChartContainer = /* @__PURE__ */ React.forwardRef<
     return () => document.removeEventListener("fullscreenchange", handleChange)
   }, [])
 
-  React.useImperativeHandle(
+  useImperativeHandle(
     ref,
     () => ({
       export: handleExport,
@@ -842,7 +853,7 @@ export const ChartContainer = /* @__PURE__ */ React.forwardRef<
       ? mobileStandardControlsOption
       : undefined) ??
     standardControlsFromInteraction(mobileInteractionSource)
-  const mobileInteraction = React.useMemo(
+  const mobileInteraction = useMemo(
     () =>
       withStandardControls(
         mobileInteractionSource,
@@ -872,7 +883,7 @@ export const ChartContainer = /* @__PURE__ */ React.forwardRef<
   const mobileAllowScroll = mobileOptions?.allowHorizontalScroll === true
   const mobileHideToolbar = mobileOptions?.hideToolbar === true
 
-  const mobileAuditResult = React.useMemo(() => {
+  const mobileAuditResult = useMemo(() => {
     if (!mobileAudit || !chartConfig?.component || !chartConfig?.props) return null
     const options = typeof mobileAudit === "object" ? mobileAudit : {}
     const chartProps = chartConfig.props as Record<string, unknown>
@@ -895,7 +906,7 @@ export const ChartContainer = /* @__PURE__ */ React.forwardRef<
     }
   }, [mobileAudit, chartConfig, mobileSemantics, mobileInteraction])
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!mobileAuditResult || mobileAuditResult.ok) return
     const findings = mobileAuditResult.findings
       .filter((finding) => finding.status !== "pass")
@@ -935,8 +946,8 @@ export const ChartContainer = /* @__PURE__ */ React.forwardRef<
   const hasNotifications = visibleNotifications.length > 0
   const hasHeader = title || subtitle || controls || showExport || showFullscreen || showCopyConfig || showDataSummary || status || hasNotifications
 
-  const childrenWithMobileProps = React.useMemo(() => {
-    if (!mobileEnabled || !React.isValidElement(children)) return children
+  const childrenWithMobileProps = useMemo(() => {
+    if (!mobileEnabled || !isValidElement(children)) return children
     if (!canReceiveChartProps(children)) return children
     const childProps = children.props as Record<string, unknown>
     const injected: Record<string, unknown> = {}
@@ -944,7 +955,7 @@ export const ChartContainer = /* @__PURE__ */ React.forwardRef<
     if (mobileSemantics && childProps.mobileSemantics == null) injected.mobileSemantics = mobileSemantics
     if (mobileInteraction !== undefined && childProps.mobileInteraction == null) injected.mobileInteraction = mobileInteraction
     return Object.keys(injected).length > 0
-      ? React.cloneElement(
+      ? cloneElement(
           children as React.ReactElement<Record<string, unknown>>,
           injected
         )

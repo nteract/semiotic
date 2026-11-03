@@ -11,7 +11,6 @@ export {
 export {
   useSelection, useSelectionActions, useLinkedHover, useBrushSelection, useFilteredData
 } from "../store/useSelection"
-// Standalone crosshair mutators are test helpers; charts use provider actions.
 export {
   LinkedCrosshairProvider, useCrosshairActions, useCrosshairPosition, useLinkedCrosshair
 } from "../store/LinkedCrosshairStore"

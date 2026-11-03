@@ -16,8 +16,8 @@
  * after roughly fifty cycles.
  *
  * The hook performs a one-level-deep shallow compare: top-level keys
- * are compared with `===`, and any object-typed value is compared by
- * its own keys with `===`. That's enough to absorb the inline-config
+ * are compared with `Object.is`, and nested plain records are compared by
+ * their own enumerable keys with `Object.is`. That's enough to absorb the inline-config
  * pattern (objects of primitives) without paying for full deep
  * equality. Function-valued props are compared by identity — consumers
  * that pass new function refs every render are still expected to

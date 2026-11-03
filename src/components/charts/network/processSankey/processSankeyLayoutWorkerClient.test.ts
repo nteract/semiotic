@@ -1,6 +1,6 @@
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import {
-  _resetSharedProcessSankeyLayoutSessionForTest,
+  resetProcessSankeyLayoutWorker,
   estimateProcessSankeyLayoutCost,
   processSankeyStyleRulesNeedMainThread,
   reattachProcessSankeySceneDatums,
@@ -11,35 +11,17 @@ import {
 } from "./processSankeyLayoutWorkerClient"
 import { buildProcessSankeyScenes } from "./buildScenes"
 
-class MockWorker {
-  static instances: MockWorker[] = []
+const MockWorker = vi.fn(class {
   onmessage: ((event: MessageEvent) => void) | null = null
   onerror: ((event: ErrorEvent) => void) | null = null
-  terminated = false
-  messages: unknown[] = []
-
-  constructor() {
-    MockWorker.instances.push(this)
-  }
-
-  postMessage(request: unknown): void {
-    this.messages.push(request)
-  }
-
-  terminate(): void {
-    this.terminated = true
-  }
-}
-
-const originalWorker = globalThis.Worker
+  postMessage = vi.fn<(request: { requestId: number }) => void>()
+  terminate = vi.fn()
+})
 
 afterEach(() => {
-  _resetSharedProcessSankeyLayoutSessionForTest()
-  MockWorker.instances = []
-  Object.defineProperty(globalThis, "Worker", {
-    configurable: true,
-    value: originalWorker,
-  })
+  resetProcessSankeyLayoutWorker()
+  MockWorker.mockClear()
+  vi.unstubAllGlobals()
 })
 
 describe("ProcessSankey layout worker client", () => {
@@ -76,10 +58,7 @@ describe("ProcessSankey layout worker client", () => {
   })
 
   it("falls back when Worker is unavailable", async () => {
-    Object.defineProperty(globalThis, "Worker", {
-      configurable: true,
-      value: undefined,
-    })
+    vi.stubGlobal("Worker", undefined)
     await expect(
       runProcessSankeyLayoutWorker({
         input: {
@@ -99,10 +78,7 @@ describe("ProcessSankey layout worker client", () => {
   })
 
   it("reuses a long-lived worker across layouts", async () => {
-    Object.defineProperty(globalThis, "Worker", {
-      configurable: true,
-      value: MockWorker,
-    })
+    vi.stubGlobal("Worker", MockWorker)
     const request: ProcessSankeyWorkerRequest = {
       input: {
         nodes: [{ id: "A" }, { id: "B" }],
@@ -126,9 +102,9 @@ describe("ProcessSankey layout worker client", () => {
     }
 
     const first = runProcessSankeyLayoutWorker(request)
-    const worker = MockWorker.instances[0]
-    expect(MockWorker.instances).toHaveLength(1)
-    const firstMsg = worker.messages[0] as { requestId: number }
+    const worker = MockWorker.mock.instances[0]
+    expect(MockWorker.mock.instances).toHaveLength(1)
+    const firstMsg = worker.postMessage.mock.calls[0][0] as { requestId: number }
     // Resolve with a minimal payload shaped like the worker response.
     worker.onmessage?.({
       data: {
@@ -146,11 +122,11 @@ describe("ProcessSankey layout worker client", () => {
       domain: [0, 2],
       timelineExtent: 200,
     })
-    expect(worker.terminated).toBe(false)
+    expect(worker.terminate).not.toHaveBeenCalled()
 
     const second = runProcessSankeyLayoutWorker(request)
-    expect(MockWorker.instances).toHaveLength(1)
-    const secondMsg = worker.messages[1] as { requestId: number }
+    expect(MockWorker.mock.instances).toHaveLength(1)
+    const secondMsg = worker.postMessage.mock.calls[1][0] as { requestId: number }
     worker.onmessage?.({
       data: {
         requestId: secondMsg.requestId,
@@ -163,14 +139,11 @@ describe("ProcessSankey layout worker client", () => {
       },
     } as MessageEvent)
     await second
-    expect(worker.terminated).toBe(false)
+    expect(worker.terminate).not.toHaveBeenCalled()
   })
 
   it("terminates superseded CPU work when its only request is cancelled", async () => {
-    Object.defineProperty(globalThis, "Worker", {
-      configurable: true,
-      value: MockWorker,
-    })
+    vi.stubGlobal("Worker", MockWorker)
     const controller = new AbortController()
     const promise = runProcessSankeyLayoutWorker(
       {
@@ -191,7 +164,7 @@ describe("ProcessSankey layout worker client", () => {
     )
     controller.abort()
     await expect(promise).rejects.toMatchObject({ name: "AbortError" })
-    expect(MockWorker.instances[0].terminated).toBe(true)
+    expect(MockWorker.mock.instances[0].terminate).toHaveBeenCalledOnce()
   })
 
   it("reattaches raw datums and rebuilds the time scale after a worker response", () => {

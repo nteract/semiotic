@@ -23,6 +23,49 @@ const line = (x: number): NetworkSceneEdge => ({
 })
 
 describe("committed network edge index", () => {
+  it("checks retained scenes and width restyles without rebuilding signature collections", () => {
+    const edges = Array.from({ length: 64 }, (_, i) => line(i * 100))
+    const index = buildNetworkEdgeHitIndex(edges)
+    edges[0].style.stroke = "red"
+    edges[0].style.strokeWidth = 100
+    const map = vi.spyOn(Array.prototype, "map")
+    const refreshed = buildNetworkEdgeHitIndex(edges)
+    const unchanged = buildNetworkEdgeHitIndex(edges)
+    const calls = map.mock.calls.length
+    map.mockRestore()
+
+    expect(refreshed).toBe(index)
+    expect(unchanged).toBe(index)
+    expect(calls).toBe(0)
+    expect(findNearestNetworkNode([], edges, 5, 40, 12, null, 0, true, 1, index)?.mark).toBe(edges[0])
+    edges[0].style.strokeWidth = 1
+    expect(buildNetworkEdgeHitIndex(edges)).toBe(index)
+    expect(findNearestNetworkNode([], edges, 5, 40, 12, null, 0, true, 1, index)).toBeNull()
+  })
+
+  it("reindexes live line geometry, same-size replacements and datum admission", () => {
+    const edges = [line(0), line(100)]
+    const initial = buildNetworkEdgeHitIndex(edges)
+    Object.assign(edges[1], { x1: -300, x2: -200, y1: 100, y2: 100 })
+    let index = buildNetworkEdgeHitIndex(edges)
+    expect(index).not.toBe(initial)
+    expect(findNearestNetworkNode([], edges, -250, 100, 12, null, 0, true, 1, index)?.mark).toBe(edges[1])
+    expect(findNearestNetworkNode([], edges, 105, 0, 12, null, 0, true, 1, index)).toBeNull()
+
+    edges[1] = line(100)
+    index = buildNetworkEdgeHitIndex(edges)
+    expect(findNearestNetworkNode([], edges, 105, 0, 12, null, 0, true, 1, index)?.mark).toBe(edges[1])
+    edges[1].datum = null
+    index = buildNetworkEdgeHitIndex(edges)
+    expect(findNearestNetworkNode([], edges, 105, 0, 12, null, 0, true, 1, index)).toBeNull()
+    edges[1].datum = { id: "restored" }
+    index = buildNetworkEdgeHitIndex(edges)
+    expect(findNearestNetworkNode([], edges, 105, 0, 12, null, 0, true, 1, index)?.datum).toEqual({ id: "restored" })
+    edges.pop()
+    index = buildNetworkEdgeHitIndex(edges)
+    expect(findNearestNetworkNode([], edges, 105, 0, 12, null, 0, true, 1, index)).toBeNull()
+  })
+
   it("reuses unchanged/color-only scenes and refreshes retained path, fill, width and ordering changes", () => {
     const edge: NetworkSceneEdge = {
       type: "curved",
@@ -76,16 +119,16 @@ describe("committed network edge index", () => {
     const edges = Array.from({ length: 512 }, () => line(0))
     const index = buildNetworkEdgeHitIndex(edges)
     const query = edgeIndexModule.queryNetworkEdgeHitIndex
-    const candidates: number[] = []
+    const candidate = vi.fn()
     const spy = vi.spyOn(edgeIndexModule, "queryNetworkEdgeHitIndex").mockImplementation(
       (tree, x, y, tolerance, hit) => query(tree, x, y, tolerance, (edge, order) => {
-        candidates.push(order)
+        candidate(order)
         return hit(edge, order)
       })
     )
     try {
       expect(findNearestNetworkNode([], edges, 5, 0, 12, null, 0, true, 1, index)?.mark).toBe(edges.at(-1))
-      expect(candidates).toEqual([511])
+      expect(candidate).toHaveBeenCalledExactlyOnceWith(511)
     } finally { spy.mockRestore() }
   })
 

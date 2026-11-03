@@ -19,7 +19,56 @@ import { buildHeatmapScene } from '../../src/components/stream/xySceneBuilders/h
 import { pointCanvasRenderer } from '../../src/components/stream/renderers/pointCanvasRenderer'
 import type { XYSceneContext } from '../../src/components/stream/xySceneBuilders/types'
 import { RingBuffer } from '../../src/components/realtime/RingBuffer'
+import { shallowEqualTwoLevel } from '../../src/components/stream/shallowEqual'
+import { createLegend } from '../../src/components/charts/shared/legendUtils'
+import { getColor } from '../../src/components/charts/shared/colorUtils'
 import seedrandom from 'seedrandom'
+
+describe("Frame config stabilization", () => {
+  const makeConfig = () => ({
+    pulse: { duration: 600, color: "#abc" },
+    staleness: { threshold: 1000, opacity: 0.5 },
+    transition: { duration: 300 },
+    colorScheme: ["#abc", "#def"],
+    xExtent: [0, 100],
+    width: 800,
+    height: 600
+  })
+  const previous = makeConfig()
+  const current = makeConfig()
+  bench("equal-inline-frame-config", () => {
+    shallowEqualTwoLevel(previous, current)
+  })
+})
+
+describe("Categorical legend samples", () => {
+  // Grouped rows expose repeated full-prefix searches; interleaved rows keep
+  // the first samples near the start. Measure both so indexing cannot trade
+  // that cheap explicit-domain path for an unconditional full-data pass.
+  // Subsets also expose the Map lookup overhead against one linear search;
+  // retaining unrelated categories would make these paths substantially worse.
+  for (const [name, rowCount, categoryCount, grouped, domain] of [
+    ["100k-grouped-100", 100000, 100, true, "all"],
+    ["100k-interleaved-10", 100000, 10, false, "all"],
+    ["push-1k-inferred", 1000, 1000, false, "inferred"],
+    ["100k-missing-subset", 100000, 100000, false, "missing"],
+    ["100k-late-subset", 100000, 100000, false, "last"]
+  ] as const) {
+    const categories = Array.from({ length: categoryCount }, (_, i) => `category-${i}`)
+    const data = Array.from({ length: rowCount }, (_, i) => ({
+      category: categories[grouped ? Math.floor(i * categoryCount / rowCount) : i % categoryCount]
+    }))
+    const options = {
+      data, colorBy: "category", getColor, colorScale: () => "#4e79a7",
+      categories: domain === "inferred" ? undefined
+        : domain === "missing" ? ["missing"]
+        : domain === "last" ? [categories[categoryCount - 1]] : categories
+    }
+    bench(`legend-${name}`, () => {
+      createLegend(options)
+    })
+  }
+})
 
 // ── Shared test context factory ────────────────────────────────────────────
 

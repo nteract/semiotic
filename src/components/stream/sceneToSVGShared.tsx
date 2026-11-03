@@ -5,7 +5,8 @@
  * dependency between them.
  */
 
-import * as React from "react"
+import type * as React from "react"
+import { Fragment } from "react"
 import type { DefaultArcObject } from "d3-shape"
 import { isHatchFill, hatchPatternDef, type HatchFill } from "../charts/shared/hatchFill"
 import { glyphFractionClipRect, glyphPlacement, resolveGlyphPaint } from "./glyphDef"
@@ -302,7 +303,7 @@ export function pointSceneNodeToSVG(n: PointSceneNode, i: number, idPrefix = "",
   const hatchId = `${idPrefix ? `${idPrefix}-` : ""}${hatchPrefix}-${i}-hatch`
   const hatch = isHatchFill(n.style.fill) ? hatchPatternDef(n.style.fill, hatchId) : undefined
   return (
-    <React.Fragment key={`${idPrefix}${hatchPrefix}-${i}`}>
+    <Fragment key={`${idPrefix}${hatchPrefix}-${i}`}>
       {hatch && <defs>{hatch}</defs>}
       <circle
         cx={n.x} cy={n.y} r={n.r}
@@ -310,7 +311,7 @@ export function pointSceneNodeToSVG(n: PointSceneNode, i: number, idPrefix = "",
         {...svgPaintStyle(n.style)}
         opacity={(n.style.opacity ?? 1) * (n._decayOpacity ?? 1)}
       />
-    </React.Fragment>
+    </Fragment>
   )
 }
 
@@ -329,13 +330,13 @@ export function pointOrRectSceneNodeToSVG(
     ? hatchPatternDef(n.style.fill, hatchId)
     : undefined
   return (
-    <React.Fragment key={`${n.type}-${i}`}>
+    <Fragment key={`${n.type}-${i}`}>
       {hatch && <defs>{hatch}</defs>}
       <rect
         x={n.x} y={n.y} width={n.w} height={n.h}
         fill={hatch ? `url(#${hatchId})` : svgFill(n.style.fill)}
         {...svgPaintStyle(n.style)}
       />
-    </React.Fragment>
+    </Fragment>
   )
 }

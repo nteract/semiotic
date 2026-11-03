@@ -101,7 +101,7 @@ function publicTargets(entry) {
 // Run each actual entry in isolation, including the browser/edge ESM build.
 // Browser ReactDOMServer can retain a MessagePort in Node; explicit child exit
 // keeps this semantic check independent of that host-specific idle lifecycle.
-function exercise(target, program) {
+function exercise(target, program, conditions = []) {
   const filename = resolve(root, target.file)
   assert.ok(
     existsSync(filename),
@@ -120,7 +120,10 @@ function exercise(target, program) {
   `
   const result = spawnSync(
     process.execPath,
-    ["--input-type=module", "-e", source, filename],
+    [
+      ...conditions.map((condition) => `--conditions=${condition}`),
+      "--input-type=module", "-e", source, filename
+    ],
     {
       cwd: root,
       encoding: "utf8",
@@ -132,6 +135,24 @@ function exercise(target, program) {
     0,
     `${target.file}: ${result.stderr || result.error || result.stdout}`
   )
+}
+
+// Named client-only React imports fail during ESM linking, even when the
+// corresponding hook or context is only used inside an uncalled function.
+// Exercise each core artifact separately so a failure reports every surface.
+for (const [entry, exportedFunction] of [
+  ["./ai/core", "describeChart"],
+  ["./themes/core", "themeToCSS"],
+  ["./utils/core", "resolveChartSize"],
+  ["./recipes/core", "lineageDagLayout"],
+  ["./atlas/core", "prepareNetworkAtlas"]
+]) {
+  test(`${entry} (react-server) imports its emitted ESM without client-only React exports`, () => {
+    exercise({ file: pkg.exports[entry].import }, `
+      assert.ok(Object.keys(api).length > 0)
+      assert.equal(typeof api[${JSON.stringify(exportedFunction)}], "function")
+    `, ["react-server"])
+  })
 }
 
 for (const target of publicTargets("./ai")) {

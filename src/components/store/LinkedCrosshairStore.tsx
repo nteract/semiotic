@@ -226,29 +226,3 @@ export function useLinkedCrosshair(name: string): UseLinkedCrosshairResult {
   )
   return { position, setPosition }
 }
-
-// Preserve the internal standalone-store helpers used by existing frame tests.
-export function setCrosshairPosition(
-  name: string,
-  xValue: number,
-  sourceId: string
-) {
-  createActions(getFallbackStore()).setCrosshairPosition(name, xValue, sourceId)
-}
-export function clearCrosshairPosition(name: string, sourceId: string) {
-  createActions(getFallbackStore()).clearCrosshairPosition(name, sourceId)
-}
-export function toggleCrosshairLock(
-  name: string,
-  xValue: number,
-  sourceId: string
-): boolean {
-  return createActions(getFallbackStore()).toggleCrosshairLock(
-    name,
-    xValue,
-    sourceId
-  )
-}
-export function unlockCrosshair(name: string, sourceId?: string) {
-  createActions(getFallbackStore()).unlockCrosshair(name, sourceId)
-}

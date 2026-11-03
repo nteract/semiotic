@@ -5,7 +5,7 @@ import { buildBaseMetadataProps, buildCustomBehaviorProps, buildTooltipProps } f
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
-import { registerXYPlugin } from "../../stream/xyPlugins/registry"
+import { ensureXYPlugin } from "../../stream/xyPlugins/registry"
 import { scatterXYPlugin } from "../../stream/xyPlugins/pointPlugin"
 import type { StreamXYFrameProps, StreamXYFrameHandle, MarginalGraphicsConfig } from "../../stream/types"
 import type { DecayConfig, PulseConfig, StalenessConfig } from "../../stream/types"
@@ -35,7 +35,7 @@ import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureScatterplotRegistrations(): void {
   provideMarginalGraphics(MarginalGraphics)
-  registerXYPlugin(scatterXYPlugin)
+  ensureXYPlugin(scatterXYPlugin)
 }
 
 /**

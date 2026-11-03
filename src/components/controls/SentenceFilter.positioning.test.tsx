@@ -4,9 +4,9 @@ import { expect, it, vi } from "vitest"
 import { SentenceFilter } from "./SentenceFilter"
 
 it("coalesces external viewport changes and ignores scrolling inside the open editor", () => {
-  let callback: FrameRequestCallback | undefined
-  const request = vi.spyOn(window, "requestAnimationFrame").mockImplementation((next) => { callback = next; return 17 })
-  const cancel = vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => undefined)
+  vi.useFakeTimers({ toFake: ["requestAnimationFrame", "cancelAnimationFrame"] })
+  const request = vi.spyOn(window, "requestAnimationFrame")
+  const cancel = vi.spyOn(window, "cancelAnimationFrame")
   const listeners = vi.spyOn(window, "addEventListener")
   try {
     const { unmount } = render(<SentenceFilter
@@ -27,15 +27,21 @@ it("coalesces external viewport changes and ignores scrolling inside the open ed
     fireEvent.resize(window)
     expect(request).toHaveBeenCalledTimes(1)
     expect(measure).not.toHaveBeenCalled()
-    act(() => callback?.(16))
+    act(() => vi.advanceTimersToNextFrame())
     expect(measure).toHaveBeenCalledTimes(1)
     expect(listeners.mock.calls.filter(([type]) => type === "scroll")).toHaveLength(scrollListenerCount)
     fireEvent.scroll(window)
+    const pending = request.mock.results.at(-1)!.value
     unmount()
-    expect(cancel).toHaveBeenCalledWith(17)
+    expect(cancel).toHaveBeenCalledWith(pending)
+    expect(vi.getTimerCount()).toBe(0)
+    measure.mockClear()
+    act(() => vi.advanceTimersToNextFrame())
+    expect(measure).not.toHaveBeenCalled()
   } finally {
     request.mockRestore()
     cancel.mockRestore()
     listeners.mockRestore()
+    vi.useRealTimers()
   }
 })

@@ -94,4 +94,33 @@ describe("WordCloud network group hulls", () => {
     expect(forced).not.toMatch(/NaN|Infinity/)
     expect(wordCloudGroupHulls(nodes, [])).toBeNull()
   })
+
+  it("counts each placed ID once and excludes absent and unrelated IDs from hull geometry", () => {
+    const nodes: NetworkRectNode[] = [
+      { type: "rect", id: "left", x: -100, y: 5, w: 10, h: 10, datum: {}, style: {} },
+      { type: "rect", id: "left", x: 0, y: 5, w: 10, h: 10, datum: {}, style: {} },
+      { type: "rect", id: "right", x: 20, y: 5, w: 10, h: 10, datum: {}, style: {} },
+      { type: "rect", id: "other", x: 100, y: 5, w: 10, h: 10, datum: {}, style: {} }
+    ]
+    const svg = renderToStaticMarkup(
+      <>
+        {wordCloudGroupHulls(nodes, [
+          {
+            id: "pair",
+            ids: ["absent", "left", "left", "right", "absent"],
+            padding: 0
+          },
+          { id: "missing", ids: ["absent", "absent"] },
+          { id: "empty", ids: [] }
+        ])}
+      </>
+    )
+    const paths = new DOMParser()
+      .parseFromString(svg, "image/svg+xml")
+      .querySelectorAll("path")
+    expect(paths).toHaveLength(1)
+    expect(paths[0].getAttribute("d")).toBe("M0,5 L30,5 L30,15 L0,15 Z")
+    expect(paths[0].getAttribute("data-member-count")).toBe("2")
+    expect(paths[0].getAttribute("aria-label")).toBe("pair: 2 placed terms")
+  })
 })

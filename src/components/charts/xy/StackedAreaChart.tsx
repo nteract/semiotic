@@ -5,7 +5,7 @@ import { buildBaseMetadataProps, buildCustomBehaviorProps } from "../shared/stre
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
-import { registerXYPlugin } from "../../stream/xyPlugins/registry"
+import { ensureXYPlugin } from "../../stream/xyPlugins/registry"
 import { stackedAreaXYPlugin } from "../../stream/xyPlugins/stackedAreaPlugin"
 import type { StreamXYFrameProps, StreamXYFrameHandle } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -24,7 +24,7 @@ import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureStackedAreaChartRegistrations(): void {
-  registerXYPlugin(stackedAreaXYPlugin)
+  ensureXYPlugin(stackedAreaXYPlugin)
 }
 
 /**

@@ -1,9 +1,9 @@
 import { resolveStalenessOverride } from "../stream/stalenessBands"
 import { staticTitleText } from "./staticTitle"
 import type { Datum, DatumValue } from "../charts/shared/datumTypes"
-import * as React from "react"
+import type * as React from "react"
 import { restyleNetworkCustomScene } from "../stream/networkCustomRestyle"
-import * as ReactDOMServer from "react-dom/server"
+import { renderToStaticMarkup } from "react-dom/server"
 import type {
   NetworkPipelineConfig,
   RealtimeNode,
@@ -13,7 +13,7 @@ import type {
   NetworkSceneNode,
   NetworkSceneEdge,
 } from "../stream/networkTypes"
-import { registerBuiltInNetworkLayouts } from "../stream/layouts/registerBuiltIn"
+import { ensureBuiltInNetworkLayouts } from "../stream/layouts/registerBuiltIn"
 import { getLayoutPlugin } from "../stream/layouts/registry"
 import {
   resolveCustomLayoutPalette,
@@ -62,7 +62,9 @@ import { projectNetworkScene } from "../stream/networkPerspectiveScene"
 // Static rendering projects scenes directly and needs synchronous extras.
 provideNetworkPerspectiveExtras(networkPerspectiveExtras)
 
-registerBuiltInNetworkLayouts()
+// Static rendering selects layouts at runtime. Install missing built-ins on
+// import without replacing custom layouts registered by an embedding app.
+ensureBuiltInNetworkLayouts()
 
 export function resolveAccessor(
   accessor: string | ((d: Datum) => DatumValue) | undefined,
@@ -220,7 +222,7 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
       edgeCount: renderedEdges.length,
       margin,
     })
-    return ReactDOMServer.renderToStaticMarkup(
+    return renderToStaticMarkup(
       wrapSVG(<NetworkViewGroup view={props.viewTransform} width={innerWidth} height={innerHeight}>{content}</NetworkViewGroup>, {
         width: size[0], height: size[1],
         className: `stream-network-frame${props.className ? ` ${props.className}` : ""}`,

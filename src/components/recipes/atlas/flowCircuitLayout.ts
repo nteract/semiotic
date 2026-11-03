@@ -1,4 +1,5 @@
-import * as React from "react"
+import type * as React from "react"
+import { createElement } from "react"
 import type { Datum } from "../../charts/shared/datumTypes"
 import type { PhysicsCustomLayout, PhysicsCustomLayoutContext, PhysicsCustomLayoutResult } from "../../charts/physics/PhysicsCustomChart"
 import type { NetworkCustomLayout, NetworkLayoutResult } from "../../stream/networkCustomLayout"
@@ -39,7 +40,7 @@ export interface FlowCircuitLayoutConfig {
   highlightedEdgeIds?: string[]
 }
 
-const h = React.createElement
+const h = createElement
 
 /** Fixed apparatus and source-backed chrome over the existing physics frame. */
 export const flowCircuitLayout: PhysicsCustomLayout<

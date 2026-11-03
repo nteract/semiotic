@@ -1,5 +1,6 @@
 import { moveLegendFocus } from "./legendKeyboard"
-import * as React from "react"
+import type * as React from "react"
+import { useId, useState, useMemo } from "react"
 import { LEGEND_FONT_STYLE } from "./legendStyles"
 import { numericTickFormatter } from "./charts/shared/numericTickFormatter"
 
@@ -35,15 +36,15 @@ export function GradientLegend({
   const horizontal = orientation === "horizontal"
   const formatValue = format || numericTickFormatter(domain)
   const steps = 64
-  const reactId = React.useId()
+  const reactId = useId()
   const gradientId = `grad-legend-${reactId}`
   const binCount = 5
   const interactive = !!(customClickBehavior || customHoverBehavior)
   const isolateMode =
     legendInteraction === "isolate" ||
     (legendInteraction === undefined && isolatedCategories != null)
-  const [rovingIndex, setRovingIndex] = React.useState(0)
-  const [focusedIndex, setFocusedIndex] = React.useState<number | null>(null)
+  const [rovingIndex, setRovingIndex] = useState(0)
+  const [focusedIndex, setFocusedIndex] = useState<number | null>(null)
 
   const rangeItem = (index: number): LegendItem => {
     const visualIndex = horizontal ? index : binCount - index - 1
@@ -123,7 +124,7 @@ export function GradientLegend({
   }
 
   const [min, max] = domain
-  const stops = React.useMemo(
+  const stops = useMemo(
     () =>
       Array.from({ length: steps + 1 }, (_, index) => {
         const ratio = index / steps

@@ -7,7 +7,7 @@ import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo } from "react"
 import { hierarchyLayoutPlugin } from "../../stream/layouts/hierarchyLayoutPlugin"
-import { registerLayoutPlugin } from "../../stream/layouts/registry"
+import { ensureLayoutPlugin } from "../../stream/layouts/registry"
 import { registerNetworkPerspective } from "../../stream/networkPerspectiveRuntime"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
@@ -35,11 +35,11 @@ import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureTreeDiagramRegistrations(): void {
-  registerLayoutPlugin("tree", hierarchyLayoutPlugin)
-  registerLayoutPlugin("cluster", hierarchyLayoutPlugin)
-  registerLayoutPlugin("treemap", hierarchyLayoutPlugin)
-  registerLayoutPlugin("circlepack", hierarchyLayoutPlugin)
-  registerLayoutPlugin("partition", hierarchyLayoutPlugin)
+  ensureLayoutPlugin("tree", hierarchyLayoutPlugin)
+  ensureLayoutPlugin("cluster", hierarchyLayoutPlugin)
+  ensureLayoutPlugin("treemap", hierarchyLayoutPlugin)
+  ensureLayoutPlugin("circlepack", hierarchyLayoutPlugin)
+  ensureLayoutPlugin("partition", hierarchyLayoutPlugin)
   registerNetworkPerspective()
 }
 

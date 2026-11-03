@@ -121,7 +121,7 @@ export function findNearestNode(
         result = hitTestRect(node, px, py)
         break
       case "heatcell":
-        result = hitTestHeatcell(node, px, py)
+        result = hitTestRect(node, px, py)
         break
       case "area":
         // Skip non-interactive areas (e.g. decorative bounds bands)
@@ -348,15 +348,11 @@ function hitTestLine(node: LineSceneNode, px: number, py: number, maxDistance: n
   return { node, datum, x: nx, y: ny, distance: dist }
 }
 
-function hitTestRect(node: RectSceneNode, px: number, py: number): HitResult | null {
-  const r = sharedHitTestRect(px, py, node)
-  if (r.hit) {
-    return { node, datum: node.datum, x: r.cx, y: r.cy, distance: 0 }
-  }
-  return null
-}
-
-function hitTestHeatcell(node: HeatcellSceneNode, px: number, py: number): HitResult | null {
+function hitTestRect(
+  node: RectSceneNode | HeatcellSceneNode,
+  px: number,
+  py: number
+): HitResult | null {
   const r = sharedHitTestRect(px, py, node)
   if (r.hit) {
     return { node, datum: node.datum, x: r.cx, y: r.cy, distance: 0 }

@@ -4,16 +4,18 @@ import type { WordCloudLayoutResult, WordCloudPlacedWord } from "./types"
 export function wordCloudBounds(
   words: readonly WordCloudPlacedWord[]
 ): WordCloudLayoutResult["bounds"] {
-  return words.length
-    ? [
-        {
-          x: Math.min(...words.map((word) => word.x + word.x0)),
-          y: Math.min(...words.map((word) => word.y + word.y0))
-        },
-        {
-          x: Math.max(...words.map((word) => word.x + word.x1)),
-          y: Math.max(...words.map((word) => word.y + word.y1))
-        }
-      ]
-    : null
+  if (words.length === 0) return null
+  let minX = Infinity
+  let minY = Infinity
+  let maxX = -Infinity
+  let maxY = -Infinity
+  // Preparation and portable-layout validation both need occupied bounds.
+  // Scan once rather than allocating four coordinate arrays.
+  for (const word of words) {
+    minX = Math.min(minX, word.x + word.x0)
+    minY = Math.min(minY, word.y + word.y0)
+    maxX = Math.max(maxX, word.x + word.x1)
+    maxY = Math.max(maxY, word.y + word.y1)
+  }
+  return [{ x: minX, y: minY }, { x: maxX, y: maxY }]
 }

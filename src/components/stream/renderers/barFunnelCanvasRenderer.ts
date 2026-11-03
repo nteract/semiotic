@@ -1,7 +1,6 @@
 import type { RectSceneNode, OrdinalLayout, OrdinalScales, OrdinalSceneNode } from "../ordinalTypes"
-import { createHatchPattern } from "../../charts/shared/hatchPattern"
 import { BAR_FUNNEL_DROPOFF_HATCH } from "../../charts/shared/barFunnelDropoffHatch"
-import { isHatchFill } from "../../charts/shared/hatchFill"
+import { resolveHatchCanvasPattern } from "../../charts/shared/hatchFill"
 import { resolveCSSColor } from "./resolveCSSColor"
 import { parseCanvasColor } from "./colorUtils"
 
@@ -13,44 +12,21 @@ import { parseCanvasColor } from "./colorUtils"
  * background matches the bar's solid fill color.
  */
 
-// Cache hatch patterns by (color + DPR) to avoid re-creating every frame
-// while ensuring patterns aren't reused across contexts with different pixel ratios
-const hatchCache = new Map<string, CanvasPattern | null>()
-
-function getHatchForColor(
-  baseColor: string,
-  ctx: CanvasRenderingContext2D
-): CanvasPattern | null {
-  const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1
-  const key = `${baseColor}@${dpr}`
-  const cached = hatchCache.get(key)
-  if (cached !== undefined) return cached
-  const result = createHatchPattern({ ...BAR_FUNNEL_DROPOFF_HATCH, background: baseColor }, ctx)
-  // This renderer only runs on canvas, so `result` is a CanvasPattern; the
-  // SSR descriptor branch is unreachable. Coerce it away to keep the cache
-  // typed as CanvasPattern | null.
-  const pattern = isHatchFill(result) ? null : result
-  hatchCache.set(key, pattern)
-  return pattern
-}
-
 export const barFunnelHatchRenderer = (
   ctx: CanvasRenderingContext2D,
   nodes: OrdinalSceneNode[],
   _scales: OrdinalScales,
   _layout: OrdinalLayout
 ): void => {
-  const dropoffRects = nodes.filter(
-    (n): n is RectSceneNode =>
-      n.type === "rect" && n.datum?.__barFunnelIsDropoff === true
-  )
-
   const baseAlpha = ctx.globalAlpha
-  for (const node of dropoffRects) {
-    const baseColor =
-      (typeof node.style.fill === "string" ? node.style.fill : null)
-      || resolveCSSColor(ctx, "var(--semiotic-border, #999)")!
-    const hatch = getHatchForColor(baseColor, ctx)
+  for (const node of nodes) {
+    if (node.type !== "rect" || node.datum?.__barFunnelIsDropoff !== true) continue
+    const baseColor = resolveCSSColor(ctx,
+      (typeof node.style.fill === "string" && node.style.fill) || "var(--semiotic-border, #999)"
+    )!
+    const hatch = resolveHatchCanvasPattern({
+      type: "hatch", ...BAR_FUNNEL_DROPOFF_HATCH, background: baseColor
+    }, ctx)
 
     const fillAlpha = baseAlpha * (node.style.opacity ?? 1) * (node.style.fillOpacity ?? 1)
     ctx.globalAlpha = fillAlpha

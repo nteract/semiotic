@@ -1,7 +1,7 @@
 "use client"
 import type { Datum } from "../charts/shared/datumTypes"
-import * as React from "react"
-import { useId } from "react"
+
+import { useId, useMemo } from "react"
 import type { ReactNode } from "react"
 import type { NetworkLabel } from "./networkTypes"
 import type { LegendLayout, LegendValue } from "../types/legendTypes"
@@ -134,7 +134,7 @@ export const NetworkSVGOverlay = /* @__PURE__ */ withDisplayName(function Networ
     chartType
   })
 
-  const annotationContext = React.useMemo<NetworkAnnotationContext>(() => {
+  const annotationContext = useMemo<NetworkAnnotationContext>(() => {
     const pointNodes = collectNetworkAnnotationAnchors(sceneNodes) ?? []
     return {
       scales: null,
@@ -146,7 +146,7 @@ export const NetworkSVGOverlay = /* @__PURE__ */ withDisplayName(function Networ
     }
   }, [height, sceneNodes, width])
 
-  const layoutAnnotations = React.useMemo(() => {
+  const layoutAnnotations = useMemo(() => {
     if (!annotations) return annotations
     const visible = filterAnnotationsByStatus(annotations)
     if (!autoPlaceAnnotations) return visible
@@ -162,7 +162,7 @@ export const NetworkSVGOverlay = /* @__PURE__ */ withDisplayName(function Networ
   // use. This is what makes `pointId`-anchored annotations (callout, label,
   // text, enclose, …) render out of the box on every network chart, including
   // custom layouts; a user `svgAnnotationRules` still overrides per annotation.
-  const defaultAnnotationRules = React.useMemo(
+  const defaultAnnotationRules = useMemo(
     () => createDefaultAnnotationRules("network"),
     []
   )

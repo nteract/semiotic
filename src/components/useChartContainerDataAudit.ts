@@ -1,4 +1,4 @@
-import * as React from "react"
+import { useState, useEffect } from "react"
 import type { ChartNotification } from "./ChartContainer"
 import type { ChartConfig } from "./export/chartConfig"
 import type { ChartContainerDataAudit } from "./chartContainerDataAudit"
@@ -22,7 +22,7 @@ export function useChartContainerDataAudit(
   chartConfig: AuditableChartConfig | undefined,
   dataAudit: ChartContainerDataAudit | undefined,
 ): ChartNotification[] {
-  const [notifications, setNotifications] = React.useState<ChartNotification[]>(
+  const [notifications, setNotifications] = useState<ChartNotification[]>(
     EMPTY_NOTIFICATIONS,
   )
   const component = chartConfig?.component
@@ -34,7 +34,7 @@ export function useChartContainerDataAudit(
     typeof dataAudit === "object" ? dataAudit.errorsOnly : undefined
   const max = typeof dataAudit === "object" ? dataAudit.max : undefined
 
-  React.useEffect(() => {
+  useEffect(() => {
     let current = true
     if (!enabled || !component || !props) {
       setNotifications((previous) =>

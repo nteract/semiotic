@@ -4,7 +4,8 @@
  * never download it.
  */
 "use client"
-import * as React from "react"
+
+import { useMemo } from "react"
 import { LinearBrush } from "../../controls/LinearBrush"
 import { formatBrushValue } from "../../controls/linearBrushLabels"
 import { BRUSH_ACCENT } from "../../stream/brushTheme"
@@ -60,7 +61,7 @@ export function MinimapBrush({
   const scale = scales?.[brushDirection]
   const style = config.brushStyle ?? {}
   const handles = config.handles ? (config.handles === true ? {} : config.handles) : null
-  const format = React.useMemo(
+  const format = useMemo(
     () => (config.extentLabelFormat ? stringFormat(config.extentLabelFormat) : stringFormat(axisFormat)),
     [config.extentLabelFormat, axisFormat]
   )

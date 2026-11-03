@@ -1,25 +1,25 @@
 "use client"
 
-import * as React from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { SR_ONLY_STYLE } from "./screenReaderStyles"
 
 type CopyStatus = "idle" | "pending" | "copied" | "failed"
 
 /** Clipboard feedback with cancellation-safe completion and timer cleanup. */
 export function useClipboard(resetMs = 1200) {
-  const [status, setStatus] = React.useState<CopyStatus>("idle")
-  const requestRef = React.useRef(0)
-  const timerRef = React.useRef<ReturnType<typeof setTimeout> | undefined>(
+  const [status, setStatus] = useState<CopyStatus>("idle")
+  const requestRef = useRef(0)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined
   )
-  React.useEffect(
+  useEffect(
     () => () => {
       requestRef.current++
       clearTimeout(timerRef.current)
     },
     []
   )
-  const copy = React.useCallback(
+  const copy = useCallback(
     async (value: string | (() => Promise<void>)) => {
       const request = ++requestRef.current
       clearTimeout(timerRef.current)

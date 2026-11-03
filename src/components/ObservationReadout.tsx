@@ -1,6 +1,7 @@
 "use client"
 
-import * as React from "react"
+import type * as React from "react"
+import { createElement } from "react"
 import type { Datum } from "./charts/shared/datumTypes"
 import { unwrapDatum } from "./recipes/recipeUtils"
 import type { ChartObservation } from "./store/ObservationStore"
@@ -84,7 +85,7 @@ export const ObservationReadout = /* @__PURE__ */ withDisplayName(function Obser
   const datum = observedDatum<TDatum>(observation)
   const content = datum && observation ? children(datum, observation) : fallback
 
-  return React.createElement(
+  return createElement(
     as,
     {
       className,

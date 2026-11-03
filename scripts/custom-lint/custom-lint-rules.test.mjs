@@ -58,6 +58,48 @@ describe("Semiotic custom lint rules", () => {
     `
     assert.equal(lint(separateTests, "semiotic/interaction-test-layout-control", "src/example.test.tsx").length, 0)
   })
+
+  it("resolves immutable layout prop spreads with JSX override order", () => {
+    const rule = "semiotic/interaction-test-layout-control"
+    const cases = [
+      ["shared BubbleChart fixture", "const plotProps = { width: 400, showLegend: false }", '<BubbleChart {...plotProps} colorBy="category" />', 0],
+      ["typed fixture", "const plotProps = { showLegend: false } as const", '<BubbleChart {...plotProps} colorBy="category" />', 0],
+      ["known spread without a legend override", "const plotProps = { width: 400 }", '<BubbleChart colorBy="category" showLegend={false} {...plotProps} />', 0],
+      ["later JSX true overrides fixture", "const plotProps = { showLegend: false }", '<BubbleChart {...plotProps} colorBy="category" showLegend />', 1],
+      ["later spread true overrides JSX false", "const plotProps = { showLegend: true }", '<BubbleChart colorBy="category" showLegend={false} {...plotProps} />', 1],
+      ["later JSX false overrides spread", "const plotProps = { showLegend: true }", '<BubbleChart {...plotProps} colorBy="category" showLegend={false} />', 0],
+      ["unknown spread invalidates false", "", '<BubbleChart colorBy="category" showLegend={false} {...runtimeProps} />', 1],
+      ["explicit false follows unknown spread", "", '<BubbleChart colorBy="category" {...runtimeProps} showLegend={false} />', 0],
+      ["nested const spreads", "const base = { showLegend: false }; const plotProps = { ...base, width: 400 }", '<BubbleChart {...plotProps} colorBy="category" />', 0],
+      ["nested unknown spread follows false", "const plotProps = { showLegend: false, ...runtimeProps }", '<BubbleChart {...plotProps} colorBy="category" />', 1],
+      ["nested false follows unknown spread", "const plotProps = { ...runtimeProps, showLegend: false }", '<BubbleChart {...plotProps} colorBy="category" />', 0],
+      ["mutated const object", "const plotProps = { showLegend: false }; plotProps.showLegend = true", '<BubbleChart {...plotProps} colorBy="category" />', 1],
+      ["escaped const object", "const plotProps = { showLegend: false }; update(plotProps)", '<BubbleChart {...plotProps} colorBy="category" />', 1],
+      ["aliased mutable object", "const plotProps = { showLegend: false }; const alias = plotProps; alias.showLegend = true", '<BubbleChart {...plotProps} colorBy="category" />', 1],
+      ["destructured binding", "const { plotProps } = { plotProps: { showLegend: true }, showLegend: false }", '<BubbleChart {...plotProps} colorBy="category" />', 1],
+      ["getter can mutate copied properties", "const plotProps = { get width() { this.showLegend = true; return 400 }, showLegend: false }", '<BubbleChart {...plotProps} colorBy="category" />', 1],
+      ["computed overwrite", "const plotProps = { showLegend: false, [runtimeKey]: true }", '<BubbleChart {...plotProps} colorBy="category" />', 1],
+      ["literal computed false", "const plotProps = { ['showLegend']: false }", '<BubbleChart {...plotProps} colorBy="category" />', 0],
+      ["mutable binding", "let plotProps = { showLegend: false }", '<BubbleChart {...plotProps} colorBy="category" />', 1],
+      ["grouping in known spread", "const plotProps = { colorBy: 'category' }", '<BubbleChart {...plotProps} />', 1],
+    ]
+    for (const [label, setup, chart, expected] of cases) {
+      const code = `${setup}; it("hover", () => {
+        const view = ${chart}
+        fireEvent.mouseMove(target, { clientX: 100, clientY: 225 })
+      })`
+      assert.equal(lint(code, rule, "src/example.test.tsx").length, expected, label)
+    }
+    assert.equal(lint(`
+      const plotProps = { showLegend: true }
+      it("hover", () => {
+        const plotProps = { showLegend: false }
+        const view = <BubbleChart {...plotProps} colorBy="category" />
+        fireEvent.mouseMove(target, { clientX: 100, clientY: 225 })
+      })
+    `, rule, "src/example.test.tsx").length, 0)
+  })
+
   it("keeps library module scope free of tree-shaking side effects", () => {
     const rule = "semiotic/no-module-side-effects"
     const chart = "src/components/charts/xy/LineChart.tsx"

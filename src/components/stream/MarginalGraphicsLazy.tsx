@@ -7,7 +7,8 @@
  * {@link provideMarginalGraphics} with a value import so SSR and the
  * hydration SVG pass can paint immediately.
  */
-import * as React from "react"
+import type * as React from "react"
+import { useState, useEffect } from "react"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { MarginalGraphicsProps } from "./MarginalGraphics"
 import { normalizeMarginalConfig } from "./marginalConfig"
@@ -63,9 +64,9 @@ function loadMarginalGraphics(): Promise<MarginalComponent> {
 }
 
 export function MarginalGraphicsLazy(props: MarginalGraphicsProps) {
-  const [Comp, setComp] = React.useState<MarginalComponent | null>(() => cached)
+  const [Comp, setComp] = useState<MarginalComponent | null>(() => cached)
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (Comp) return
     let cancelled = false
     loadMarginalGraphics().then((Loaded) => {

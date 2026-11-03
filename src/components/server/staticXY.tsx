@@ -2,12 +2,14 @@ import { staticTitleText } from "./staticTitle"
 import { filterAnnotationsByStatus } from "../charts/shared/annotationStatusFilter"
 import { directLabelDescription } from "../charts/shared/directLabels"
 import { filterSparseArray } from "../charts/shared/sparseArray"
-import * as React from "react"
-import * as ReactDOMServer from "react-dom/server"
+import { Fragment } from "react"
+import { renderToStaticMarkup } from "react-dom/server"
 import { PipelineStore, type PipelineConfig } from "../stream/PipelineStore"
 import { registerServerXYPlugins } from "./registerServerXYPlugins"
 import { getXYPlugin } from "../stream/xyPlugins/registry"
 
+// Static charts select their scene builder at runtime; install SVG-only
+// defaults on import while preserving registered client/custom plugins.
 registerServerXYPlugins()
 import type { StreamXYFrameProps } from "../stream/types"
 import { resolveThemeSemanticColors } from "../store/themeCore"
@@ -242,7 +244,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
         </>
       )
       : null
-    return ReactDOMServer.renderToStaticMarkup(
+    return renderToStaticMarkup(
       wrapSVG(emptyContent, {
         width: size[0], height: size[1],
         className: `stream-xy-frame${props.className ? ` ${props.className}` : ""}`,
@@ -344,7 +346,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     ? props.svgPreRenderers
         .map((fn, i) => {
           try {
-            return <React.Fragment key={`pre-${i}`}>{fn(store.scene, store.scales!, { width, height })}</React.Fragment>
+            return <Fragment key={`pre-${i}`}>{fn(store.scene, store.scales!, { width, height })}</Fragment>
           } catch (error) {
             if (process.env.NODE_ENV !== "production") {
               console.warn(`[Semiotic] SVG pre-renderer ${i} failed.`, error)
@@ -385,7 +387,7 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
     </>
   )
 
-  return ReactDOMServer.renderToStaticMarkup(
+  return renderToStaticMarkup(
     wrapSVG(content, {
       width: size[0], height: size[1],
       className: `stream-xy-frame${props.className ? ` ${props.className}` : ""}`,

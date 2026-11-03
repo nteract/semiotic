@@ -1,4 +1,5 @@
-import * as React from "react"
+// Core recipe imports must defer access to hooks omitted by react-server.
+import React from "react"
 import type { Datum } from "../charts/shared/datumTypes"
 
 /**

@@ -12,6 +12,7 @@ import {
   underBandSVGRenderer,
   useUnderLayerBandRenderers,
 } from "./underLayerBands"
+import { createMockCanvasContext } from "../../test-utils/canvasMock"
 import type { CanvasRendererFn, StreamScales } from "./types"
 
 const scales = {
@@ -21,20 +22,20 @@ const scales = {
 const layout = { width: 400, height: 200 }
 
 function recordingContext() {
-  const calls: Array<{ fillStyle: unknown; globalAlpha: number; rect: number[] }> = []
   const gradient = { addColorStop: vi.fn() }
   const ctx = {
+    ...createMockCanvasContext(),
     globalAlpha: 0.5,
     fillStyle: "",
     canvas: null,
-    fillRect(x: number, y: number, w: number, h: number) {
-      calls.push({ fillStyle: this.fillStyle, globalAlpha: this.globalAlpha, rect: [x, y, w, h] })
-    },
+    fillRect: vi.fn(function (this: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+      return { fillStyle: this.fillStyle, globalAlpha: this.globalAlpha, rect: [x, y, w, h] }
+    }),
     createLinearGradient: vi.fn(() => gradient),
     save: vi.fn(),
     restore: vi.fn(),
   }
-  return { ctx: ctx as unknown as CanvasRenderingContext2D, calls, gradient }
+  return { ctx: ctx as unknown as CanvasRenderingContext2D, fillRect: ctx.fillRect, gradient }
 }
 
 describe("isUnderLayerBand", () => {
@@ -81,12 +82,12 @@ describe("underBandRect", () => {
 
 describe("underBandCanvasRenderer", () => {
   it("paints each band at its opacity times fillOpacity, on top of the context alpha", () => {
-    const { ctx, calls } = recordingContext()
+    const { ctx, fillRect } = recordingContext()
     underBandCanvasRenderer([
       { type: "band", y0: 20, y1: 60, fill: "#22c55e", fillOpacity: 0.3 },
       { type: "x-band", x0: 10, x1: 20, color: "#ef4444", opacity: 0.5 },
     ])(ctx, [], scales, layout)
-    expect(calls).toEqual([
+    expect(fillRect.mock.results.map(({ value }) => value)).toEqual([
       { fillStyle: "#22c55e", globalAlpha: 0.5 * 0.3, rect: [0, 80, 400, 80] },
       { fillStyle: "#ef4444", globalAlpha: 0.5 * 0.5 * 0.1, rect: [40, 0, 40, 200] },
     ])
@@ -121,15 +122,15 @@ describe("useUnderLayerBandRenderers", () => {
       ({ annotations }) => useUnderLayerBandRenderers(annotations, undefined, undefined),
       { initialProps: { annotations: [band] as Array<Record<string, unknown>> } }
     )
-    const { ctx, calls } = recordingContext()
+    const { ctx, fillRect } = recordingContext()
     paintCanvasPreRenderers(ctx, result.current.canvasPreRenderers, [], scales, layout)
-    expect(calls).toHaveLength(1)
+    expect(fillRect).toHaveBeenCalledOnce()
     rerender({ annotations: [{ ...band, lifecycle: { status: "retracted" } }] })
     paintCanvasPreRenderers(ctx, result.current.canvasPreRenderers, [], scales, layout)
-    expect(calls).toHaveLength(1)
+    expect(fillRect).toHaveBeenCalledOnce()
     rerender({ annotations: [band, { type: "y-threshold", lifecycle: { supersedes: "old" } }] })
     paintCanvasPreRenderers(ctx, result.current.canvasPreRenderers, [], scales, layout)
-    expect(calls).toHaveLength(1)
+    expect(fillRect).toHaveBeenCalledOnce()
     expect(result.current.svgPreRenderers).toBeUndefined()
   })
 

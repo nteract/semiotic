@@ -1,4 +1,5 @@
-import * as React from "react"
+import type * as React from "react"
+import { useRef, useState, useLayoutEffect } from "react"
 import { flushSync } from "react-dom"
 import { useTooltipChrome } from "./tooltipChrome"
 import {
@@ -105,7 +106,7 @@ export function FlippingTooltip({
   const positionFinite = Number.isFinite(x) && Number.isFinite(y)
   const hasContent = hasTooltipContent(children)
 
-  const ref = React.useRef<HTMLDivElement>(null)
+  const ref = useRef<HTMLDivElement>(null)
   const declaresChrome =
     themeChrome === "none" || contentOwnsChrome || hasOwnTooltipChrome(children)
   const rendersOwnChrome = useRenderedRootOwnsChrome(
@@ -113,7 +114,7 @@ export function FlippingTooltip({
     !declaresChrome && positionFinite && hasContent
   )
   const ownsChrome = declaresChrome || rendersOwnChrome
-  const [measured, setMeasured] = React.useState<{
+  const [measured, setMeasured] = useState<{
     width: number
     height: number
     ownsChrome: boolean
@@ -126,7 +127,7 @@ export function FlippingTooltip({
   // measured width by a tiny amount and synchronously set state forever.
   // Dropping fallback chrome changes the box, so each size records the chrome
   // it was taken with and a chrome change re-measures before the first paint.
-  React.useLayoutEffect(() => {
+  useLayoutEffect(() => {
     const el = ref.current
     if (!el) return
     const measure = () => {
@@ -172,7 +173,7 @@ export function FlippingTooltip({
   // The placement of the last committed render. Read during render and
   // written after commit, so a StrictMode double render compares against the
   // same value.
-  const committedPlacement = React.useRef<{ flipX: boolean; flipY: boolean } | null>(null)
+  const committedPlacement = useRef<{ flipX: boolean; flipY: boolean } | null>(null)
 
   const offset = 12
   // A size taken under the other chrome describes a different box, so the
@@ -230,7 +231,7 @@ export function FlippingTooltip({
   // The first measured placement and every flip jump instead.
   const instantMove = !placement || !previous ||
     previous.flipX !== placement.flipX || previous.flipY !== placement.flipY
-  React.useLayoutEffect(() => {
+  useLayoutEffect(() => {
     committedPlacement.current = placement
   })
 

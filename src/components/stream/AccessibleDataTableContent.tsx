@@ -1,6 +1,7 @@
 "use client"
 
-import * as React from "react"
+import type * as React from "react"
+import { useState, useMemo } from "react"
 import type { AccessibleDataTableProps } from "./AccessibleDataTable"
 import type { useAccessibleTableInteraction } from "./useAccessibleTableInteraction"
 import { AccessibleDataRowsTable } from "./AccessibleDataRowsTable"
@@ -22,9 +23,9 @@ export default function AccessibleDataTableContent({
   revealRows
 }: AccessibleDataTableProps &
   Pick<ReturnType<typeof useAccessibleTableInteraction>, "revealRows">) {
-  const [visibleCount, setVisibleCount] = React.useState(SAMPLE_SIZE)
+  const [visibleCount, setVisibleCount] = useState(SAMPLE_SIZE)
   const sceneKey = sceneRevision ?? scene
-  const { allRows, summary } = React.useMemo(() => {
+  const { allRows, summary } = useMemo(() => {
     const allRows = extractAllRows(scene)
     return {
       allRows,

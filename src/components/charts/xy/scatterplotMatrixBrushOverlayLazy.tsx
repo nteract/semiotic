@@ -2,7 +2,8 @@
  * Lazy-loaded wrapper for ScatterplotMatrixBrushOverlay (pulls d3-brush).
  */
 "use client"
-import * as React from "react"
+import type * as React from "react"
+import { useState, useEffect } from "react"
 import type { ScatterplotMatrixBrushOverlayProps } from "./scatterplotMatrixBrushOverlay"
 
 type BrushComponent = React.ComponentType<ScatterplotMatrixBrushOverlayProps>
@@ -27,9 +28,9 @@ function loadBrush(): Promise<BrushComponent> {
 }
 
 export function ScatterplotMatrixBrushOverlayLazy(props: ScatterplotMatrixBrushOverlayProps) {
-  const [Comp, setComp] = React.useState<BrushComponent | null>(() => cached)
+  const [Comp, setComp] = useState<BrushComponent | null>(() => cached)
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (Comp) return
     let cancelled = false
     loadBrush().then((Loaded) => {

@@ -7,45 +7,24 @@ import {
 } from "./moduleWorkerSession"
 
 type FakeWorker = Worker & {
-  messages: unknown[]
-  triggerMessage: (data: unknown) => void
-  triggerError: (message: string) => void
+  postMessage: ReturnType<typeof vi.fn<Worker["postMessage"]>>
+  terminate: ReturnType<typeof vi.fn<Worker["terminate"]>>
 }
 
 function createFakeWorker(): FakeWorker {
-  const messages: unknown[] = []
-  let onmessage: ((event: MessageEvent) => void) | null = null
-  let onerror: ((event: ErrorEvent) => void) | null = null
   return {
-    messages,
-    postMessage(data: unknown) {
-      messages.push(data)
-    },
+    postMessage: vi.fn(),
     terminate: vi.fn(),
-    set onmessage(handler: ((event: MessageEvent) => void) | null) {
-      onmessage = handler
-    },
-    get onmessage() {
-      return onmessage
-    },
-    set onerror(handler: ((event: ErrorEvent) => void) | null) {
-      onerror = handler
-    },
-    get onerror() {
-      return onerror
-    },
-    triggerMessage(data: unknown) {
-      onmessage?.({ data } as MessageEvent)
-    },
-    triggerError(message: string) {
-      onerror?.({ message } as ErrorEvent)
-    },
+    onmessage: null,
+    onerror: null,
+    onmessageerror: null,
   } as unknown as FakeWorker
 }
 
 describe("ModuleWorkerSession", () => {
   afterEach(() => {
     vi.restoreAllMocks()
+    vi.useRealTimers()
   })
 
   it.each(["parse", "messageerror"])("rejects every pending request and retires a worker after %s failure", async (failure) => {
@@ -54,7 +33,7 @@ describe("ModuleWorkerSession", () => {
       parseMessage: () => { throw new Error("malformed response") } })
     const first = session.request({}), second = session.request({})
     const rejected = Promise.all([expect(first).rejects.toThrow(), expect(second).rejects.toThrow()])
-    if (failure === "parse") worker.triggerMessage({})
+    if (failure === "parse") worker.onmessage?.call(worker, new MessageEvent("message", { data: {} }))
     else worker.onmessageerror?.call(worker, new MessageEvent("messageerror"))
     await rejected
     expect(session.isDead).toBe(true)
@@ -88,12 +67,9 @@ describe("ModuleWorkerSession", () => {
     })
 
     const promise = session.request({ n: 21 })
-    expect(worker.messages).toHaveLength(1)
-    const msg = worker.messages[0] as { requestId: number; request: { n: number } }
-    expect(msg.requestId).toBe(1)
-    expect(msg.request).toEqual({ n: 21 })
+    expect(worker.postMessage).toHaveBeenCalledExactlyOnceWith({ requestId: 1, request: { n: 21 } })
 
-    worker.triggerMessage({ requestId: 1, doubled: 42 })
+    worker.onmessage?.call(worker, new MessageEvent("message", { data: { requestId: 1, doubled: 42 } }))
     await expect(promise).resolves.toEqual({ doubled: 42 })
   })
 
@@ -112,10 +88,10 @@ describe("ModuleWorkerSession", () => {
     })
 
     const promise = session.request({})
-    worker.triggerMessage({
+    worker.onmessage?.call(worker, new MessageEvent("message", { data: {
       requestId: 1,
       error: { message: "boom", name: "LayoutError" },
-    })
+    } }))
     await expect(promise).rejects.toMatchObject({
       message: "boom",
       name: "LayoutError",
@@ -143,29 +119,73 @@ describe("ModuleWorkerSession", () => {
       "Test worker response missing requestId",
     )
 
-    worker.triggerMessage({ doubled: 2 })
+    worker.onmessage?.call(worker, new MessageEvent("message", { data: { doubled: 2 } }))
 
     await expect(first).resolves.toEqual({ doubled: 2 })
     await secondRejection
   })
 
   it("createSharedWorkerSessionHolder reuses until reset", () => {
-    let created = 0
-    const holder = createSharedWorkerSessionHolder(() => {
-      created += 1
-      return {
+    const createSession = vi.fn(() => ({
         isDead: false,
         terminate: vi.fn(),
-        id: created,
-      }
-    })
+    }))
+    const holder = createSharedWorkerSessionHolder(createSession)
     const a = holder.get()
     const b = holder.get()
     expect(a).toBe(b)
-    expect(created).toBe(1)
-    holder.resetForTest()
+    expect(createSession).toHaveBeenCalledOnce()
+    holder.reset()
     const c = holder.get()
     expect(c).not.toBe(a)
-    expect(created).toBe(2)
+    expect(createSession).toHaveBeenCalledTimes(2)
+    expect(a.terminate).toHaveBeenCalledOnce()
+  })
+
+  it("rejects request encoding failures without throwing or poisoning the session", async () => {
+    const worker = createFakeWorker()
+    const encodeRequest = vi.fn((requestId: number, request: number) => ({ requestId, request }))
+      .mockImplementationOnce(() => { throw new Error("Cannot encode request") })
+    const session = new ModuleWorkerSession({
+      name: "Test", createWorker: () => worker, encodeRequest,
+      parseMessage: (payload) => ({ ok: true, payload }),
+    })
+    await expect(session.request(1)).rejects.toThrow("Cannot encode request")
+    expect(worker.postMessage).not.toHaveBeenCalled()
+    const next = session.request(2)
+    worker.onmessage?.call(worker, new MessageEvent("message", { data: 4 }))
+    await expect(next).resolves.toBe(4)
+    expect(session.failure).toBeNull()
+  })
+
+  it("retires an unresponsive worker and clears all request timers", async () => {
+    vi.useFakeTimers()
+    const worker = createFakeWorker()
+    const session = new ModuleWorkerSession({
+      name: "Test", createWorker: () => worker, requestTimeoutMs: 100,
+      parseMessage: (payload) => ({ ok: true, payload }),
+    })
+    const first = expect(session.request(1)).rejects.toThrow("timed out")
+    const second = expect(session.request(2)).rejects.toThrow("timed out")
+    await vi.advanceTimersByTimeAsync(100)
+    await Promise.all([first, second])
+    expect(worker.terminate).toHaveBeenCalledOnce()
+    expect(session.isDead).toBe(true)
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it.each([null, undefined])("uses the standard envelope when the encoder returns %s", async (encoded) => {
+    const worker = createFakeWorker()
+    const session = new ModuleWorkerSession({
+      name: "Test", createWorker: () => worker,
+      encodeRequest: () => encoded,
+      parseMessage: (payload) => ({ ok: true, payload }),
+    })
+    const pending = session.request({ value: 42 })
+    expect(worker.postMessage).toHaveBeenCalledExactlyOnceWith({
+      requestId: 1, request: { value: 42 }
+    })
+    worker.onmessage?.call(worker, new MessageEvent("message", { data: "done" }))
+    await expect(pending).resolves.toBe("done")
   })
 })

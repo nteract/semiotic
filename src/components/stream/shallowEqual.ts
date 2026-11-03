@@ -9,14 +9,19 @@ export function equalConfig(a: unknown, b: unknown, depth: number): boolean {
   if (depth === 0) return false
   if (Array.isArray(a) && Array.isArray(b)) return shallowEqualArray(a, b)
   if (!isPlainObject(a) || !isPlainObject(b)) return false
-  const ak = Object.keys(a)
-  const bk = Object.keys(b)
-  if (ak.length !== bk.length) return false
-  for (const k of ak) {
-    if (!Object.prototype.hasOwnProperty.call(b, k)) return false
+  // Inline frame props pass through this comparison on every render. Enumerate
+  // in place instead of allocating key arrays for each nested config record.
+  let keys = 0
+  for (const k in a) {
+    if (!Object.prototype.hasOwnProperty.call(a, k)) continue
+    if (!Object.prototype.propertyIsEnumerable.call(b, k)) return false
     if (!equalConfig(a[k], b[k], depth - 1)) return false
+    keys++
   }
-  return true
+  for (const k in b) {
+    if (Object.prototype.hasOwnProperty.call(b, k)) keys--
+  }
+  return keys === 0
 }
 
 /**

@@ -1,6 +1,6 @@
 "use client"
 
-import * as React from "react"
+import { lazy, Suspense } from "react"
 import { AccessibleTableShell } from "./AccessibleTableShell"
 import { DATA_TABLE_NETWORK_CLASS } from "./accessibleTableStyles"
 import { SR_ONLY_STYLE } from "./AriaLiveTooltip"
@@ -9,7 +9,7 @@ import { countNetworkTableRows } from "./networkTableCounts"
 import { countNoun } from "./countNoun"
 import type { NetworkTableElement } from "./networkAccessibleDataTableModel"
 
-const Content = /* @__PURE__ */ React.lazy(() => import("./NetworkAccessibleDataTableContent"))
+const Content = /* @__PURE__ */ lazy(() => import("./NetworkAccessibleDataTableContent"))
 
 export interface NetworkAccessibleDataTableProps {
   nodes: NetworkTableElement[]
@@ -41,11 +41,11 @@ export default function NetworkAccessibleDataTable(
       className={DATA_TABLE_NETWORK_CLASS}
     >
       {interaction.isExpanded && (
-        <React.Suspense
+        <Suspense
           fallback={<div role="status">Loading data summary…</div>}
         >
           <Content {...props} revealRows={interaction.revealRows} />
-        </React.Suspense>
+        </Suspense>
       )}
     </AccessibleTableShell>
   )

@@ -70,21 +70,31 @@ export interface NetworkEdgeHitIndex {
   root: NetworkHitBranch
 }
 
+type EdgeSignature = [
+  edge: NetworkSceneEdge,
+  interactive: boolean,
+  strokeWidth: number | undefined,
+  filled: boolean,
+  x1OrPath: number | string,
+  y1?: number,
+  x2?: number,
+  y2?: number
+]
+
 const retained = new WeakMap<
   NetworkSceneEdge[],
-  { index: NetworkEdgeHitIndex; signatures: unknown[][] }
+  { index: NetworkEdgeHitIndex; signatures: EdgeSignature[] }
 >()
 
-function signature(edge: NetworkSceneEdge): unknown[] {
-  return [
-    edge,
-    edge.datum != null && edge.interactive !== false,
-    edge.style.strokeWidth,
-    !!edge.style.fill && edge.style.fill !== "none",
-    ...(edge.type === "line"
-      ? [edge.x1, edge.y1, edge.x2, edge.y2]
-      : [edge.pathD])
-  ]
+function refreshRadius(node: NetworkHitBranch, edges: NetworkSceneEdge[]): number {
+  let radius = 0
+  if (node.children) {
+    for (const child of node.children) {
+      radius = Math.max(radius, refreshRadius(child, edges))
+    }
+  } else radius = edgeRadius(edges[node.order])
+  node.radius = radius
+  return radius
 }
 
 export function buildNetworkEdgeHitIndex(
@@ -92,33 +102,51 @@ export function buildNetworkEdgeHitIndex(
 ): NetworkEdgeHitIndex {
   // Scene notifications can repeat after a synchronous build. Colors, cursor
   // and opacity do not affect candidates, so ordinary restyles reuse the tree.
-  const signatures = edges.map(signature)
   const previous = retained.get(edges)
-  if (
-    previous &&
-    previous.signatures.length === signatures.length &&
-    signatures.every(
-      (row, i) =>
-        row.length === previous.signatures[i].length &&
-        row.every(
-          (value, j) => j === 2 || Object.is(value, previous.signatures[i][j])
-        )
-    )
-  ) {
-    if (
-      signatures.some((row, i) => !Object.is(row[2], previous.signatures[i][2]))
-    ) {
-      const refreshRadius = (node: NetworkHitBranch): number => {
-        node.radius = node.children
-          ? Math.max(0, ...node.children.map(refreshRadius))
-          : edgeRadius(edges[node.order])
-        return node.radius
+  if (previous && previous.signatures.length === edges.length) {
+    let matches = true
+    let radiusChanged = false
+    for (let i = 0; i < edges.length; i++) {
+      const edge = edges[i]
+      const row = previous.signatures[i]
+      if (
+        row[0] !== edge ||
+        row[1] !== (edge.datum != null && edge.interactive !== false) ||
+        row[3] !== (!!edge.style.fill && edge.style.fill !== "none") ||
+        (edge.type === "line"
+          ? row.length !== 8 ||
+            !Object.is(row[4], edge.x1) ||
+            !Object.is(row[5], edge.y1) ||
+            !Object.is(row[6], edge.x2) ||
+            !Object.is(row[7], edge.y2)
+          : row.length !== 5 || row[4] !== edge.pathD)
+      ) {
+        matches = false
+        break
       }
-      refreshRadius(previous.index.root)
+      if (!Object.is(row[2], edge.style.strokeWidth)) {
+        row[2] = edge.style.strokeWidth
+        radiusChanged = true
+      }
     }
-    previous.signatures = signatures
-    return previous.index
+    if (matches) {
+      if (radiusChanged) refreshRadius(previous.index.root, edges)
+      return previous.index
+    }
   }
+  // Retain value snapshots only when geometry changes. Repeated scene
+  // notifications and color/width restyles compare live fields without arrays.
+  const signatures = edges.map((edge): EdgeSignature => {
+    const row: EdgeSignature = [
+      edge,
+      edge.datum != null && edge.interactive !== false,
+      edge.style.strokeWidth,
+      !!edge.style.fill && edge.style.fill !== "none",
+      edge.type === "line" ? edge.x1 : edge.pathD
+    ]
+    if (edge.type === "line") row.push(edge.y1, edge.x2, edge.y2)
+    return row
+  })
   const entries: NetworkHitBranch[] = []
   edges.forEach((edge, order) => {
     if (edge.datum == null || edge.interactive === false) return

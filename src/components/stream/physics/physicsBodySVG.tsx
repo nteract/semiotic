@@ -1,4 +1,5 @@
-import * as React from "react"
+import type * as React from "react"
+import { Fragment, cloneElement } from "react"
 import type { Style } from "../types"
 import { glyphNodeToSVG, svgFill } from "../sceneToSVGShared"
 import { isHatchFill, hatchPatternDef } from "../../charts/shared/hatchFill"
@@ -38,12 +39,12 @@ export function physicsBodySVG(
     : undefined
   const wrap = (node: React.ReactElement) =>
     hatch ? (
-      <React.Fragment key={`physics-body-${index}`}>
+      <Fragment key={`physics-body-${index}`}>
         <defs>{hatch}</defs>
         {node}
-      </React.Fragment>
+      </Fragment>
     ) : (
-      React.cloneElement(node, { key: `physics-body-${index}` })
+      cloneElement(node, { key: `physics-body-${index}` })
     )
   const paint = {
     fill: hatch ? `url(#${hatchId})` : svgFill(style.fill),

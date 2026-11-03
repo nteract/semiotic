@@ -28,6 +28,8 @@
 import { useCallback, useMemo, useState } from "react"
 import type { ReactNode, ReactElement } from "react"
 import type { Datum } from "./datumTypes"
+import type { FrameLegendBehaviorProps } from "./useChartLegend"
+import { sameCategoryDomain } from "../../stream/categoryDomain"
 import type {
   Accessor,
   ChartAccessor,
@@ -177,7 +179,7 @@ export interface NetworkChartSetupResult {
   margin: MarginType
   legendPosition: LegendPosition
   /** Internal hand-off which prevents duplicate Stream-frame reservation. */
-  legendBehaviorProps: Record<string, unknown>
+  legendBehaviorProps: FrameLegendBehaviorProps
 
   // ── Interaction ──────────────────────────────────────────────────
   mobileInteraction: ResolvedMobileInteractionConfig
@@ -283,14 +285,9 @@ export function useNetworkChartSetup<TNode extends Datum = Datum, TEdge extends 
   const isPushMode = nodes === undefined && edges === undefined
   const [frameCategories, setFrameCategories] = useState<string[]>([])
   const onCategoriesChange = useCallback((categories: string[]) => {
-    setFrameCategories((previous) => {
-      if (
-        previous.length === categories.length &&
-        previous.every((category, index) => category === categories[index])
-      )
-        return previous
-      return categories
-    })
+    setFrameCategories((previous) =>
+      sameCategoryDomain(previous, categories) ? previous : categories
+    )
   }, [])
 
   // ── Loading / empty states ──────────────────────────────────────
@@ -382,8 +379,8 @@ export function useNetworkChartSetup<TNode extends Datum = Datum, TEdge extends 
     hasTitle,
     axisChrome: axisChrome ?? { hasAxis: false },
   })
-  const legendBehaviorProps = useMemo<Record<string, unknown>>(() => {
-    const behavior: Record<string, unknown> = {}
+  const legendBehaviorProps = useMemo(() => {
+    const behavior: FrameLegendBehaviorProps = {}
     if (legend && legendMarginReserved)
       behavior.__legendMarginReservedFor = legend
     if (isPushMode && colorBy) {

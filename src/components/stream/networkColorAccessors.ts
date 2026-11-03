@@ -24,30 +24,34 @@ export function resolveNetworkNodeColor(options: {
 }): string {
   const { node, colorBy, colorScheme, nodeColorMap, colorIndexRef } = options
   if (typeof colorBy === "function") return String(colorBy(node))
-  if (typeof colorBy === "string" && node.data) {
-    const val = node.data[colorBy]
-    if (val !== undefined) {
-      if (!nodeColorMap.has(String(val))) {
-        const colors = Array.isArray(colorScheme)
-          ? colorScheme
-          : DEFAULT_COLORS
-        nodeColorMap.set(
-          String(val),
-          colors[colorIndexRef.current++ % colors.length]
-        )
-      }
-      return nodeColorMap.get(String(val))!
-    }
-  }
-  if (nodeColorMap.has(node.id)) {
-    return nodeColorMap.get(node.id)!
-  }
+  const category =
+    typeof colorBy === "string" && node.data ? node.data[colorBy] : undefined
+  const key = category === undefined ? node.id : String(category)
+  if (nodeColorMap.has(key)) return nodeColorMap.get(key)!
+
   const colors = Array.isArray(colorScheme) ? colorScheme : DEFAULT_COLORS
-  const color = colorBy
-    ? colors[colorIndexRef.current++ % colors.length]
-    : colors[0]
-  nodeColorMap.set(node.id, color)
+  const color =
+    category !== undefined || colorBy
+      ? colors[colorIndexRef.current++ % colors.length]
+      : colors[0]
+  nodeColorMap.set(key, color)
   return color
+}
+
+/** Edges and particles share the same source/target color fallback. */
+function resolveNetworkEndpointColor(
+  {
+    edge,
+    getNodeColor,
+    resolveEndpoint,
+    fallback
+  }: Parameters<typeof resolveNetworkEdgeColor>[0],
+  colorBy: string | undefined
+): string {
+  const node =
+    (colorBy === "target" && resolveEndpoint(edge.target)) ||
+    resolveEndpoint(edge.source)
+  return node ? getNodeColor(node) : fallback
 }
 
 export function resolveNetworkEdgeColor(options: {
@@ -59,19 +63,9 @@ export function resolveNetworkEdgeColor(options: {
   ) => RealtimeNode | null
   fallback: string
 }): string {
-  const { edge, edgeColorBy, getNodeColor, resolveEndpoint, fallback } =
-    options
+  const { edge, edgeColorBy } = options
   if (typeof edgeColorBy === "function") return edgeColorBy(edge)
-  const sourceNode = resolveEndpoint(edge.source)
-  const targetNode = resolveEndpoint(edge.target)
-
-  if (edgeColorBy === "target" && targetNode) {
-    return getNodeColor(targetNode)
-  }
-  if (sourceNode) {
-    return getNodeColor(sourceNode)
-  }
-  return fallback
+  return resolveNetworkEndpointColor(options, edgeColorBy)
 }
 
 export function resolveNetworkParticleColor(options: {
@@ -92,7 +86,6 @@ export function resolveNetworkParticleColor(options: {
     particleColorBy,
     hasExplicitParticleColorBy,
     getEdgeColor,
-    getNodeColor,
     resolveEndpoint,
     fallback
   } = options
@@ -107,17 +100,7 @@ export function resolveNetworkParticleColor(options: {
   if (!hasExplicitParticleColorBy) {
     return getEdgeColor(edge)
   }
-  const colorByMode = particleColorBy
-  const sourceNode = resolveEndpoint(edge.source)
-  const targetNode = resolveEndpoint(edge.target)
-
-  if (colorByMode === "target" && targetNode) {
-    return getNodeColor(targetNode)
-  }
-  if (sourceNode) {
-    return getNodeColor(sourceNode)
-  }
-  return fallback
+  return resolveNetworkEndpointColor(options, particleColorBy)
 }
 
 /** Sync scene fills into the node color map; fill gaps from palette. */
@@ -134,14 +117,14 @@ export function syncNetworkNodeColorMap(options: {
     }
   }
   const colors = Array.isArray(colorScheme) ? colorScheme : DEFAULT_COLORS
-  const layoutNodes = Array.from(nodes)
-  for (let i = 0; i < layoutNodes.length; i++) {
-    const node = layoutNodes[i]
+  let count = 0
+  for (const node of nodes) {
     if (!nodeColorMap.has(node.id)) {
-      nodeColorMap.set(node.id, colors[i % colors.length])
+      nodeColorMap.set(node.id, colors[count % colors.length])
     }
+    count++
   }
-  return layoutNodes.length
+  return count
 }
 
 export function networkEdgeFallbackColor(theme: {

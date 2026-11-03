@@ -165,10 +165,6 @@ export class ModuleWorkerSession<TRequest, TResponse> {
 
     const requestId = this.nextRequestId
     this.nextRequestId += 1
-    const wire =
-      this.options.encodeRequest?.(requestId, request) ??
-      ({ requestId, request } as unknown)
-
     return new Promise((resolve, reject) => {
       let timeout: ReturnType<typeof setTimeout> | undefined
       const onAbort = () => {
@@ -198,6 +194,8 @@ export class ModuleWorkerSession<TRequest, TResponse> {
       }
 
       try {
+        const wire = this.options.encodeRequest?.(requestId, request)
+          ?? { requestId, request }
         this.worker.postMessage(wire)
       } catch (error) {
         this.pending.delete(requestId)
@@ -231,10 +229,11 @@ export function createSharedWorkerSessionHolder<
 >(create: () => TSession): {
   get: () => TSession
   readonly available: boolean
-  resetForTest: () => void
+  /** Release the shared transport and permit retry after a deployment change. */
+  reset: () => void
 } {
   let session: TSession | null = null
-  let creationFailure: unknown = null
+  let creationFailure: Error | null = null
   return {
     get available() { return !creationFailure && !session?.failure },
     get: () => {
@@ -248,7 +247,7 @@ export function createSharedWorkerSessionHolder<
       }
       return session
     },
-    resetForTest: () => {
+    reset: () => {
       creationFailure = null
       if (session) {
         try {

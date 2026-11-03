@@ -43,7 +43,7 @@ export function datumToValues(datum: unknown): Record<string, string | number> {
       values[key] = value
     } else if (typeof value === "boolean") {
       values[key] = String(value)
-    } else if (value instanceof Date) {
+    } else if (value instanceof Date && Number.isFinite(value.getTime())) {
       values[key] = value.toISOString().slice(0, 10)
     }
   }

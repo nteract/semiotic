@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest"
+import * as palettes from "./colorPalettes"
 import {
   schemeCategory10,
   interpolateBlues,
@@ -8,12 +9,42 @@ import {
   getSequentialInterpolator,
 } from "./colorPalettes"
 
+// Exact paint fixtures cover endpoints, fractional channel rounding,
+// leading zeroes, and channel boundaries.
+const interpolationSamples = {
+  interpolateBlues: ["#f7fbff", "#f1f7fd", "#abd0e6", "#6baed6", "#083877", "#08306b"],
+  interpolateBrBG: ["#543005", "#663a07", "#e7cf94", "#f5f5f5", "#00493e", "#003c30"],
+  interpolateCividis: ["#00224e", "#062859", "#5f646f", "#8a8678", "#ffe942", "#ffea46"],
+  interpolateGreens: ["#f7fcf5", "#f3faf0", "#aedea7", "#74c476", "#004e1f", "#00441b"],
+  interpolateGreys: ["#ffffff", "#fbfbfb", "#c6c6c6", "#969696", "#090909", "#000000"],
+  interpolateInferno: ["#000004", "#070315", "#781c6c", "#bc3754", "#faf387", "#fcffa4"],
+  interpolateMagma: ["#000004", "#060414", "#711f80", "#b73779", "#fdefb1", "#fcfdbf"],
+  interpolateOranges: ["#fff5eb", "#fff1e4", "#fdb97d", "#fd8d3c", "#892b04", "#7f2704"],
+  interpolatePRGn: ["#40004b", "#510d5d", "#ceb5d7", "#f7f7f7", "#085424", "#00441b"],
+  interpolatePiYG: ["#8e0152", "#9f095f", "#f5c4e1", "#f7f7f7", "#33721c", "#276419"],
+  interpolatePlasma: ["#0d0887", "#1d078e", "#9a179d", "#cb4679", "#f4ec22", "#f0f921"],
+  interpolatePurples: ["#fcfbfd", "#f9f8fb", "#c6c7e1", "#9e9ac8", "#440a82", "#3f007d"],
+  interpolateRdBu: ["#67001f", "#7e0823", "#f7b799", "#f7f7f7", "#0e4178", "#053061"],
+  interpolateRdYlBu: ["#a50026", "#b50f26", "#fdbf71", "#ffffbf", "#374a9f", "#313695"],
+  interpolateRdYlGn: ["#a50026", "#b50f26", "#fdbf6f", "#ffffbf", "#08773f", "#006837"],
+  interpolateReds: ["#fff5f0", "#fff0e9", "#fca082", "#fb6a4a", "#77040f", "#67000d"],
+  interpolateSpectral: ["#9e0142", "#af1446", "#fdbf6f", "#ffffbf", "#5061aa", "#5e4fa2"],
+  interpolateTurbo: ["#23171b", "#2e2952", "#46c7af", "#a6ef47", "#8f1004", "#7a0403"],
+  interpolateViridis: ["#440154", "#450c5e", "#31688e", "#23908c", "#e9e427", "#fde725"]
+} as const
+
 describe("colorPalettes — interpolator output shape", () => {
-  it("emits `#rrggbb` (matching d3-color's effective Rgb#toString output)", () => {
+  it.each(Object.entries(interpolationSamples))("preserves %s paints and boundary handling", (name, expected) => {
+    const interpolate = palettes[name as keyof typeof interpolationSamples]
+    expect([0, 0.03125, 1 / 3, 0.5, 0.96875, 1].map(interpolate)).toEqual(expected)
+    for (const value of [NaN, -Infinity, -1, -0]) expect(interpolate(value)).toBe(expected[0])
+    for (const value of [Infinity, 2]) expect(interpolate(value)).toBe(expected[5])
+  })
+
+  it("emits Semiotic's `#rrggbb` output format", () => {
     // Output format is load-bearing: the SSR snapshot tests assert on
-    // hex, JSX `stroke=` consumers expect hex, and the previous d3
-    // dependency stringified to hex via `Rgb#toString()` for opaque
-    // colors. A drift to `rgb(r, g, b)` would silently break both.
+    // hex and JSX `stroke=` consumers expect the same format. A drift to
+    // `rgb(r, g, b)` would silently break those established expectations.
     expect(interpolateBlues(0)).toMatch(/^#[0-9a-f]{6}$/)
     expect(interpolateBlues(0.5)).toMatch(/^#[0-9a-f]{6}$/)
     expect(interpolateBlues(1)).toMatch(/^#[0-9a-f]{6}$/)

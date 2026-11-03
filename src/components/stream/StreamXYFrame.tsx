@@ -1,7 +1,17 @@
 "use client"
 import type { Datum } from "../charts/shared/datumTypes"
-import * as React from "react"
-import { forwardRef, memo, useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
+import type * as React from "react"
+import {
+  forwardRef,
+  memo,
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  Fragment
+} from "react"
 import type {
   HoverAnnotationConfig,
   HoverData,
@@ -1274,7 +1284,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
             </g>
             <g transform={`translate(${margin.left},${margin.top})`} clipPath={`url(#${plotClipId})`}>
               {svgPreRenderers && scales && svgPreRenderers.map((renderer, ri) => (
-                <React.Fragment key={`svgpre-${ri}`}>{renderer(scene, scales, { width: adjustedWidth, height: adjustedHeight })}</React.Fragment>
+                <Fragment key={`svgpre-${ri}`}>{renderer(scene, scales, { width: adjustedWidth, height: adjustedHeight })}</Fragment>
               ))}
               {scene.map((node, i) => renderSceneWithBackend({
                 node,

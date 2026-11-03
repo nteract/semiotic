@@ -131,15 +131,13 @@ describe("variantDiscovery — proposeVariant", () => {
   })
 
   it("forwards (component, capability, context) to each proposer", () => {
-    const calls: Array<{ component: string; intent?: IntentId | ReadonlyArray<IntentId> }> = []
-    registerVariantDiscovery((component, _capability, context) => {
-      calls.push({ component, intent: context.intent })
-      return []
-    })
+    const proposer = vi.fn<ProposeVariantFn>().mockReturnValue([])
+    registerVariantDiscovery(proposer)
+    const context = { profile: stubProfile, intent: ["trend", "change-detection"] as IntentId[] }
 
-    proposeVariant("LineChart", stubCapability, { profile: stubProfile, intent: ["trend", "change-detection"] })
+    proposeVariant("LineChart", stubCapability, context)
 
-    expect(calls).toEqual([{ component: "LineChart", intent: ["trend", "change-detection"] }])
+    expect(proposer).toHaveBeenCalledExactlyOnceWith("LineChart", stubCapability, context)
   })
 
   it("deduplicates proposals by id — first proposer wins", () => {

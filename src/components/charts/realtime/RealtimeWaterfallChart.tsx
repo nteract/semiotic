@@ -2,7 +2,7 @@ import type { CoercibleNumber } from "../../stream/accessorUtils"
 import * as React from "react"
 import { useRef, forwardRef, useCallback, useMemo } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
-import { registerXYPlugin } from "../../stream/xyPlugins/registry"
+import { ensureXYPlugin } from "../../stream/xyPlugins/registry"
 import { waterfallXYPlugin } from "../../stream/xyPlugins/waterfallPlugin"
 import type {
   ArrowOfTime,
@@ -69,7 +69,7 @@ import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureRealtimeWaterfallChartRegistrations(): void {
-  registerXYPlugin(waterfallXYPlugin)
+  ensureXYPlugin(waterfallXYPlugin)
 }
 
 export interface RealtimeWaterfallChartProps<

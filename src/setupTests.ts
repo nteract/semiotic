@@ -1,4 +1,6 @@
 import "@testing-library/jest-dom/vitest"
+import { vi } from "vitest"
+import { createMockCanvasContext } from "./test-utils/canvasMock"
 import { registerBuiltInNetworkLayouts } from "./components/stream/layouts/registerBuiltIn"
 
 registerBuiltInNetworkLayouts()
@@ -16,90 +18,23 @@ if (typeof globalThis.ResizeObserver === "undefined") {
   } as typeof ResizeObserver
 }
 
-// JSDOM does not implement a full Canvas 2D context. Provide stubs for
-// the methods used by Stream Frames so that component tests can render
-// without "ctx.setTransform is not a function" errors.
-const canvasMethods = [
-  "setTransform",
-  "translate",
-  "scale",
-  "rotate",
-  "clearRect",
-  "fillRect",
-  "strokeRect",
-  "beginPath",
-  "closePath",
-  "moveTo",
-  "lineTo",
-  "arc",
-  "arcTo",
-  "quadraticCurveTo",
-  "bezierCurveTo",
-  "rect",
-  "fill",
-  "stroke",
-  "clip",
-  "save",
-  "restore",
-  "measureText",
-  "drawImage",
-  "createLinearGradient",
-  "createRadialGradient",
-  "createPattern",
-  "putImageData",
-  "getImageData",
-  "setLineDash",
-  "getLineDash",
-  "isPointInPath",
-  "fillText",
-  "strokeText",
-  "transform",
-  "resetTransform",
-] as const
-
-function createCanvasContextStub(canvas: HTMLCanvasElement): Partial<CanvasRenderingContext2D> {
-  const ctx: Partial<CanvasRenderingContext2D> & Record<string, unknown> = {
-    canvas,
-    fillStyle: "#000",
-    strokeStyle: "#000",
-    globalAlpha: 1,
-    lineWidth: 1,
-    font: "10px sans-serif",
-    textAlign: "start",
-    textBaseline: "alphabetic",
-  }
-  const methodBag = ctx as Record<string, unknown>
-  for (const method of canvasMethods) {
-    methodBag[method] =
-      method === "measureText"
-        ? () => ({ width: 0 })
-        : method === "getImageData"
-          ? () => ({ data: new Uint8ClampedArray(0) })
-          : method === "createLinearGradient" ||
-              method === "createRadialGradient"
-            ? () => ({ addColorStop: () => {} })
-            : method === "createPattern"
-              ? () => null
-            : method === "getLineDash"
-              ? () => []
-              : method === "isPointInPath"
-                ? () => false
-                : () => {}
-  }
-  return ctx
-}
-
-// Guard: HTMLCanvasElement only exists in jsdom environments, not in Node SSR tests
+// JSDOM has no Canvas 2D implementation. Reuse the same doubles as renderer
+// tests, retaining one context per canvas as browsers do. Tests that need to
+// inspect a shared context can still use setupCanvasMock explicitly.
 if (typeof HTMLCanvasElement !== "undefined") {
-  const patchedGetContext = function (
+  const contexts = new WeakMap<HTMLCanvasElement, CanvasRenderingContext2D>()
+  HTMLCanvasElement.prototype.getContext = vi.fn(function (
     this: HTMLCanvasElement,
     contextId: string,
   ) {
     if (contextId !== "2d") return null
-    return createCanvasContextStub(this) as CanvasRenderingContext2D
-  } as HTMLCanvasElement["getContext"]
-
-  HTMLCanvasElement.prototype.getContext = patchedGetContext
+    let context = contexts.get(this)
+    if (!context) {
+      context = createMockCanvasContext(this) as unknown as CanvasRenderingContext2D
+      contexts.set(this, context)
+    }
+    return context
+  }) as HTMLCanvasElement["getContext"]
 }
 
 if (typeof globalThis.Path2D === "undefined") {

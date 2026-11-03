@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client"
 import { renderToString } from "react-dom/server"
 import { ThemeProvider, useTheme } from "semiotic/themes/react"
 import { Scatterplot } from "semiotic/xy"
+import { BarChart, FunnelChart } from "semiotic/ordinal"
 import { AutomaticThemeFixture } from "./automatic"
 
 const data = [{ x: 5, y: 5, name: "Alpha", group: "A" }]
@@ -10,6 +11,17 @@ const initialOverride = {
   colors: { categorical: ["#c2185b"], background: "#ffeeee" },
   tooltip: { fontSize: "20px" }
 }
+const hatch = {
+  type: "hatch" as const,
+  background: "var(--semiotic-warning)",
+  stroke: "var(--semiotic-text)",
+  spacing: 8,
+  lineWidth: 2,
+  angle: 45
+}
+const hatchData = [{ category: "Capacity", value: 80 }]
+const funnelData = [{ step: "Visit", value: 100 }, { step: "Signup", value: 50 }]
+const hatchMargin = { left: 40, right: 20, top: 40, bottom: 40 }
 
 function ThemeReadout() {
   const theme = useTheme()
@@ -92,6 +104,48 @@ function Fixture() {
                   {String(datum.y)}
                 </span>
               )}
+            />
+          </section>
+        </ThemeProvider>
+        <ThemeProvider theme={{ colors: outer === "dark"
+          ? { warning: "#ffd166", text: "#92400e" }
+          : { warning: "#aabbcc", text: "#123456" }
+        }}>
+          <section data-testid="hatched-bar" style={{ position: "relative", width, height: 240 }}>
+            <BarChart
+              data={hatchData}
+              categoryAccessor="category"
+              valueAccessor="value"
+              valueExtent={[0, 100]}
+              width={width}
+              height={240}
+              margin={hatchMargin}
+              title="Hatched capacity"
+              description="Capacity is eighty out of one hundred"
+              showAxes={false}
+              showLegend={false}
+              animate={false}
+              styleRules={[{ when: { gt: 0 }, style: { fill: hatch } }]}
+              tooltip={(datum) => <span>{String(datum.category)}: {String(datum.value)} units</span>}
+            />
+          </section>
+          <section data-testid="hatched-funnel" style={{ position: "relative", width, height: 240 }}>
+            <FunnelChart
+              data={funnelData}
+              orientation="vertical"
+              stepAccessor="step"
+              valueAccessor="value"
+              width={width}
+              height={240}
+              margin={hatchMargin}
+              title="Hatched conversion loss"
+              description="Fifty of one hundred visitors leave before signing up"
+              color="var(--semiotic-warning)"
+              showAxes={false}
+              showLabels={false}
+              showLegend={false}
+              animate={false}
+              frameProps={{ rExtent: [0, 100] }}
             />
           </section>
         </ThemeProvider>

@@ -15,7 +15,7 @@ import {
   useCallback
 } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
-import { registerXYPlugin } from "../../stream/xyPlugins/registry"
+import { ensureXYPlugin } from "../../stream/xyPlugins/registry"
 import { mixedXYPlugin } from "../../stream/xyPlugins/mixedPlugin"
 import type {
   StreamXYFrameProps,
@@ -47,7 +47,7 @@ import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureDifferenceChartRegistrations(): void {
-  registerXYPlugin(mixedXYPlugin)
+  ensureXYPlugin(mixedXYPlugin)
 }
 
 export { computeDifferenceSegments } from "./differenceSegments"

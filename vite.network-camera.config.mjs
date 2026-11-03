@@ -47,12 +47,15 @@ function cameraInstrumentation() {
             .replace(`export `, "")
             .replace(layer, `Measured${layer}`)
         )
+        // The measured modules use named or type-only React imports. Supply
+        // the wrapper's runtime bindings without relying on their imports.
         source.append(
           `
+import { createElement as createCameraProfileElement, Profiler as CameraProfiler } from "react"
 export function ${layer}(props: ${layer}Props) {
-  return React.createElement(React.Profiler, {
+  return createCameraProfileElement(CameraProfiler, {
     id: "${layer}", onRender: (...args) => window.cameraScale?.recordRender(...args)
-  }, React.createElement(Measured${layer}, props))
+  }, createCameraProfileElement(Measured${layer}, props))
 }
 `
         )

@@ -1,5 +1,6 @@
 "use client"
-import * as React from "react"
+
+import { useSyncExternalStore } from "react"
 import { FocusRing, type FocusRingProps } from "./FocusRing"
 import { FlippingTooltip } from "../Tooltip/FlippingTooltip"
 import { hasOwnTooltipChrome } from "../Tooltip/tooltipChrome"
@@ -20,7 +21,7 @@ interface HoverSubscription {
 }
 
 function useHover(store: NetworkHoverStore, getSnapshot = store.getSnapshot) {
-  return React.useSyncExternalStore(
+  return useSyncExternalStore(
     store.subscribe,
     getSnapshot,
     store.getServerSnapshot

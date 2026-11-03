@@ -1,4 +1,5 @@
 import React from "react"
+import { vi } from "vitest"
 import { renderHook, act } from "@testing-library/react"
 import { useChartObserver } from "./useObservation"
 import { ObservationProvider, useObservationSelector } from "./ObservationStore"
@@ -44,11 +45,11 @@ function useObserverWithPush(options?: Parameters<typeof useChartObserver>[0]) {
 
 describe("useChartObserver", () => {
   it("publishes stable snapshots that update memoized consumers without changing earlier snapshots", () => {
-    const observed: ChartObservation[][] = []
+    const observed = vi.fn<(snapshot: ChartObservation[]) => void>()
     const { result, rerender } = renderHook(() => {
       const observer = useObserverWithPush()
       const count = React.useMemo(() => observer.observations.length, [observer.observations])
-      React.useEffect(() => { observed.push(observer.observations) }, [observer.observations])
+      React.useEffect(() => { observed(observer.observations) }, [observer.observations])
       return { ...observer, count }
     }, { wrapper })
     const empty = result.current.observations
@@ -62,7 +63,7 @@ describe("useChartObserver", () => {
     expect(one).toEqual([first])
     expect(two).not.toBe(one)
     expect(result.current.count).toBe(2)
-    expect(observed.map(snapshot => snapshot.length)).toEqual([0, 1, 2])
+    expect(observed.mock.calls.map(([snapshot]) => snapshot.length)).toEqual([0, 1, 2])
     rerender()
     expect(result.current.observations).toBe(two)
 

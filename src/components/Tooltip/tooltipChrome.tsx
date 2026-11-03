@@ -1,4 +1,6 @@
-import * as React from "react"
+// Core entry imports under react-server must resolve client-only hooks lazily.
+import React from "react"
+import { isValidElement, Fragment } from "react"
 
 /** React-empty callback results suppress the tooltip; numeric zero is content.
  * Inspect fragments/arrays, but never invoke a consumer component to find out
@@ -8,8 +10,8 @@ export function hasTooltipContent(node: React.ReactNode): boolean {
   if (typeof node === "string") return node.trim().length > 0
   if (Array.isArray(node)) return node.some(hasTooltipContent)
   if (
-    React.isValidElement<{ children?: React.ReactNode }>(node) &&
-    node.type === React.Fragment
+    isValidElement<{ children?: React.ReactNode }>(node) &&
+    node.type === Fragment
   )
     return hasTooltipContent(node.props.children)
   return true
@@ -224,7 +226,7 @@ export function hasOwnTooltipChrome(
   if (typeof node === "function") {
     return (node as { ownsChrome?: boolean }).ownsChrome === true
   }
-  if (!React.isValidElement(node)) return false
+  if (!isValidElement(node)) return false
 
   const type = node.type as { ownsChrome?: boolean } | string
   if (typeof type !== "string" && type && type.ownsChrome === true) return true

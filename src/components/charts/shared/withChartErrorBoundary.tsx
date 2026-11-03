@@ -1,5 +1,6 @@
 "use client"
-import * as React from "react"
+import type * as React from "react"
+import { forwardRef } from "react"
 import { ChartErrorBoundary } from "../../ChartErrorBoundary"
 import ChartError from "./ChartError"
 import { isChartMode, resolveChartMode, type ChartModeInput } from "./chartMode"
@@ -58,7 +59,7 @@ export function withSizedChartErrorBoundary<
   const Chart = component as unknown as React.ComponentType<
     ChartBoundaryProps & React.RefAttributes<unknown>
   >
-  const Wrapped = React.forwardRef<unknown, ChartBoundaryProps>(
+  const Wrapped = forwardRef<unknown, ChartBoundaryProps>(
     function ChartWithErrorBoundary(props, ref) {
       return (
         <ChartErrorBoundary

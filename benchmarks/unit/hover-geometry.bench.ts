@@ -1,6 +1,28 @@
 import { bench, describe } from "vitest"
 import { findNearestGeoNode } from "../../src/components/stream/GeoCanvasHitTester"
 import type { GeoLineSceneNode } from "../../src/components/stream/geoTypes"
+import { buildNetworkEdgeHitIndex } from "../../src/components/stream/networkEdgeHitIndex"
+import type { NetworkSceneEdge } from "../../src/components/stream/networkTypes"
+
+describe("Retained network hit geometry", () => {
+  const edges: NetworkSceneEdge[] = Array.from({ length: 10_000 }, (_, i) => ({
+    type: "line",
+    x1: i * 10,
+    y1: 0,
+    x2: i * 10 + 5,
+    y2: 10,
+    style: { stroke: "blue", strokeWidth: 1 },
+    datum: { id: i }
+  }))
+  buildNetworkEdgeHitIndex(edges)
+  bench("retained-10k-edges-unchanged", () => {
+    buildNetworkEdgeHitIndex(edges)
+  })
+  bench("retained-10k-edges-width-restyle", () => {
+    edges[0].style.strokeWidth = edges[0].style.strokeWidth === 1 ? 4 : 1
+    buildNetworkEdgeHitIndex(edges)
+  })
+})
 
 describe("Map route hover", () => {
   const routes: GeoLineSceneNode[] = Array.from({ length: 100 }, (_, row) => ({

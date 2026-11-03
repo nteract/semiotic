@@ -117,10 +117,10 @@ export function shortestPath(
   const path: string[] = []
   let cur: string | null = target
   while (cur != null) {
-    path.unshift(cur)
+    path.push(cur)
     cur = prev[cur]
   }
-  return path
+  return path.reverse()
 }
 
 /**

@@ -1,5 +1,6 @@
 "use client"
-import * as React from "react"
+import type * as React from "react"
+import { isValidElement, cloneElement, Children, useMemo } from "react"
 import type {
   ChartMode,
   LinkedHoverProp,
@@ -174,14 +175,14 @@ function injectChartProps(
   child: React.ReactNode,
   chartProps: Record<string, unknown>
 ): React.ReactNode {
-  if (!React.isValidElement(child)) return child
+  if (!isValidElement(child)) return child
   const childProps = child.props as Record<string, unknown>
   const injected: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(chartProps)) {
     if (value !== undefined && childProps[key] == null) injected[key] = value
   }
   return Object.keys(injected).length > 0
-    ? React.cloneElement(child as React.ReactElement<Record<string, unknown>>, injected)
+    ? cloneElement(child as React.ReactElement<Record<string, unknown>>, injected)
     : child
 }
 
@@ -219,18 +220,18 @@ export function SmallMultipleChart<TItem extends SmallMultipleItem = SmallMultip
 }: SmallMultipleChartProps<TItem>) {
   const linkedChartsActive = useLinkedChartsActive()
   const childArray = !items && typeof children !== "function"
-    ? React.Children.toArray(children)
+    ? Children.toArray(children)
     : []
   const resolvedItems: readonly TItem[] =
     items ?? childArray.map((_, index) => ({ id: `panel-${index + 1}` }) as TItem)
 
   const count = resolvedItems.length
-  const resolvedSharedExtent = React.useMemo(
+  const resolvedSharedExtent = useMemo(
     () => resolveSharedExtent(resolvedItems, sharedExtent, dataAccessor, valueAccessor),
     [resolvedItems, sharedExtent, dataAccessor, valueAccessor]
   )
 
-  const resolvedLinking = React.useMemo(() => {
+  const resolvedLinking = useMemo(() => {
     if (!linkedBy) {
       return {
         name: undefined as string | undefined,
@@ -248,7 +249,7 @@ export function SmallMultipleChart<TItem extends SmallMultipleItem = SmallMultip
       selection: selection ?? { name },
     }
   }, [linkedBy, linkedHover, selection])
-  const linkedConfig = React.useMemo(
+  const linkedConfig = useMemo(
     () => ({
       linkedHover: resolvedLinking.linkedHover,
       selection: resolvedLinking.selection,
@@ -256,7 +257,7 @@ export function SmallMultipleChart<TItem extends SmallMultipleItem = SmallMultip
     [resolvedLinking.linkedHover, resolvedLinking.selection]
   )
 
-  const baseChartDefaults = React.useMemo(() => {
+  const baseChartDefaults = useMemo(() => {
     const defaults: Record<string, unknown> = {
       mode,
       height: chartHeight,

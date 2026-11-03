@@ -1,7 +1,6 @@
 import { staticTitleText } from "./staticTitle"
 import { getMax, getMinMax } from "../charts/shared/minMax"
-import * as React from "react"
-import * as ReactDOMServer from "react-dom/server"
+import { renderToStaticMarkup } from "react-dom/server"
 import type { Datum } from "../charts/shared/datumTypes"
 import {
   createColorScale,
@@ -26,7 +25,12 @@ import { renderChainReaction } from "./serverCompositeChainReaction"
 import { chartUID } from "./staticSVGChrome"
 import { resolveTheme, themeStyles } from "./themeResolver"
 import { renderMinimap } from "./serverCompositeMinimap"
-import { finiteNumber, placedSvg, readPayload } from "./serverCompositeShared"
+import {
+  compositeRows,
+  finiteNumber,
+  placedSvg,
+  readPayload
+} from "./serverCompositeShared"
 
 const CELL_MARGIN = { top: 4, bottom: 4, left: 4, right: 4 }
 
@@ -40,15 +44,6 @@ function payload(
   return {
     __composite: { data, colorBy, colorScheme, common, rest }
   }
-}
-
-function rows(value: ServerChartData): Datum[] {
-  return Array.isArray(value)
-    ? value.filter(
-        (datum): datum is Datum =>
-          datum != null && typeof datum === "object" && !Array.isArray(datum)
-      )
-    : []
 }
 
 function positiveInteger(value: unknown, fallback: number): number {
@@ -121,7 +116,7 @@ function diagonalMarkup(options: {
   if (diagonal === "label") {
     return {
       visibleBars: 0,
-      svg: ReactDOMServer.renderToStaticMarkup(
+      svg: renderToStaticMarkup(
         <svg
           x={x}
           y={y}
@@ -190,7 +185,7 @@ function diagonalMarkup(options: {
   })
   return {
     visibleBars,
-    svg: ReactDOMServer.renderToStaticMarkup(
+    svg: renderToStaticMarkup(
       <svg
         x={x}
         y={y}
@@ -225,7 +220,7 @@ function renderScatterplotMatrix(
     common,
     rest
   } = readPayload(frameProps)
-  const data = rows(input)
+  const data = compositeRows(input)
   const fields = Array.isArray(rest.fields)
     ? rest.fields.filter((field): field is string => typeof field === "string")
     : []
@@ -338,7 +333,7 @@ function renderScatterplotMatrix(
   const idPrefix = chartUID(common)
   const titleId = title ? `${idPrefix}-title` : undefined
   const descriptionId = `${idPrefix}-description`
-  const svg = ReactDOMServer.renderToStaticMarkup(
+  const svg = renderToStaticMarkup(
     <svg
       xmlns="http://www.w3.org/2000/svg"
       className="scatterplot-matrix"

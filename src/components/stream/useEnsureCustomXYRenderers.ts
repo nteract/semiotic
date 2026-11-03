@@ -1,6 +1,6 @@
 import { useEffect, type MutableRefObject, type RefObject } from "react"
 import type { StreamChartType } from "./types"
-import { getXYPlugin, registerXYPlugin } from "./xyPlugins/registry"
+import { needsXYPlugin, ensureXYPlugin } from "./xyPlugins/registry"
 import { loadFrameModule } from "./loadFrameModule"
 
 /**
@@ -17,13 +17,13 @@ export function useEnsureXYPlugins(
 ): void {
   useEffect(() => {
     const type = customLayout ? "custom" : chartType
-    if (getXYPlugin(type)?.canvasRenderers.length || (!customLayout && type === "custom")) return
+    if (!needsXYPlugin(type) || (!customLayout && type === "custom")) return
     const load = customLayout
       ? () => import("./xyPlugins/customPlugin").then((mod) => {
-          registerXYPlugin(mod.customXYPlugin)
+          ensureXYPlugin(mod.customXYPlugin)
         })
       : () => import("./xyPlugins/registerBuiltIn").then((mod) => {
-          mod.registerBuiltInXYPlugins()
+          mod.ensureBuiltInXYPlugins()
         })
     return loadFrameModule(load, () => {
       // Custom geometry was already produced before its painters loaded.

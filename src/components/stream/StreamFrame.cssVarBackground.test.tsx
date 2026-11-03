@@ -22,7 +22,7 @@ import "../../test-utils/registerBuiltInXYPlugins"
  */
 import * as React from "react"
 import { render, act } from "@testing-library/react"
-import { describe, it, expect, beforeEach, afterEach } from "vitest"
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { setupCanvasMock } from "../../test-utils/canvasMock"
 
 import StreamXYFrame from "./StreamXYFrame"
@@ -30,54 +30,6 @@ import StreamOrdinalFrame from "./StreamOrdinalFrame"
 import StreamNetworkFrame from "./StreamNetworkFrame"
 import StreamGeoFrame from "./StreamGeoFrame"
 import { createFrameScheduler } from "./test-utils/frameScheduler"
-
-// Capture every value that flows through `ctx.fillStyle` setter for
-// any canvas created during the render. The canvas mock returns the
-// same `ctx` instance for every `getContext("2d")` call across the
-// test, so we instrument it once. The frame's render loop calls
-// `fillRect` for the chart background; the assignment immediately
-// before that fillRect is the value under test.
-function captureFillStyleAssignments(): {
-  log: string[]
-  install: () => void
-  uninstall: () => void
-} {
-  const log: string[] = []
-  const proto = HTMLCanvasElement.prototype
-  let originalGetContext: typeof proto.getContext
-  let installed = false
-  return {
-    log,
-    install() {
-      if (installed) return
-      installed = true
-      originalGetContext = proto.getContext
-      proto.getContext = function patchedGetContext(
-        this: HTMLCanvasElement,
-        ...args: Parameters<typeof proto.getContext>
-      ) {
-        const ctx = originalGetContext.apply(this, args)
-        if (!ctx || (ctx as { __fillStyleSpyInstalled?: boolean }).__fillStyleSpyInstalled) return ctx
-        let stored: unknown = ""
-        Object.defineProperty(ctx, "fillStyle", {
-          configurable: true,
-          get() { return stored },
-          set(v) {
-            stored = v
-            log.push(String(v))
-          },
-        })
-        ;(ctx as { __fillStyleSpyInstalled?: boolean }).__fillStyleSpyInstalled = true
-        return ctx
-      } as typeof proto.getContext
-    },
-    uninstall() {
-      if (!installed) return
-      installed = false
-      proto.getContext = originalGetContext
-    },
-  }
-}
 
 const VAR_BG = "var(--surface-1, #fafafa)"
 const RESOLVED_BG = "#fafafa"
@@ -94,7 +46,7 @@ afterEach(() => {
 
 describe("Stream Frame: background prop with var() syntax", () => {
   let cleanupCanvas: () => void
-  let spy: ReturnType<typeof captureFillStyleAssignments>
+  let setFillStyle: ReturnType<typeof vi.fn<(value: string | CanvasGradient | CanvasPattern) => void>>
   let scheduler: ReturnType<typeof createFrameScheduler>
 
   beforeEach(() => {
@@ -102,12 +54,17 @@ describe("Stream Frame: background prop with var() syntax", () => {
     // so unrelated continuous animation cannot interfere with this check.
     cleanupCanvas = setupCanvasMock({ stubRaf: "noop" })
     scheduler = createFrameScheduler()
-    spy = captureFillStyleAssignments()
-    spy.install()
+    const context = document.createElement("canvas").getContext("2d")!
+    let fillStyle = context.fillStyle
+    setFillStyle = vi.fn((value) => { fillStyle = value })
+    Object.defineProperty(context, "fillStyle", {
+      configurable: true,
+      get: () => fillStyle,
+      set: setFillStyle,
+    })
   })
 
   afterEach(() => {
-    spy.uninstall()
     cleanupCanvas()
   })
 
@@ -129,8 +86,8 @@ describe("Stream Frame: background prop with var() syntax", () => {
     // exact assignment canvas silently rejects, which produces the
     // flashing-palette regression. The resolved value should appear at
     // least once (the background fillRect uses it).
-    expect(spy.log).not.toContain(VAR_BG)
-    expect(spy.log).toContain(RESOLVED_BG)
+    expect(setFillStyle).not.toHaveBeenCalledWith(VAR_BG)
+    expect(setFillStyle).toHaveBeenCalledWith(RESOLVED_BG)
   })
 
   it("StreamXYFrame keeps a var() background below the transparent mark canvas", async () => {
@@ -150,7 +107,7 @@ describe("Stream Frame: background prop with var() syntax", () => {
       ))
     })
     act(() => scheduler.flush())
-    expect(spy.log).not.toContain(VAR_BG)
+    expect(setFillStyle).not.toHaveBeenCalledWith(VAR_BG)
     expect(container!.querySelector(".stream-frame-background__backdrop")).toHaveAttribute("fill", VAR_BG)
   })
 
@@ -171,7 +128,7 @@ describe("Stream Frame: background prop with var() syntax", () => {
       ))
     })
     act(() => scheduler.flush())
-    expect(spy.log).not.toContain(VAR_BG)
+    expect(setFillStyle).not.toHaveBeenCalledWith(VAR_BG)
     expect(
       container!.querySelector('[data-semiotic-layer="canvas-background"]'),
     ).toHaveAttribute("fill", VAR_BG)
@@ -192,7 +149,7 @@ describe("Stream Frame: background prop with var() syntax", () => {
       )
     })
     act(() => scheduler.flush())
-    expect(spy.log).not.toContain(VAR_BG)
-    expect(spy.log).toContain(RESOLVED_BG)
+    expect(setFillStyle).not.toHaveBeenCalledWith(VAR_BG)
+    expect(setFillStyle).toHaveBeenCalledWith(RESOLVED_BG)
   })
 })

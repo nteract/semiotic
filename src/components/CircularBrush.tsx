@@ -1,5 +1,5 @@
-import * as React from "react"
-import { useRef } from "react"
+import type * as React from "react"
+import { useRef, useState, useMemo } from "react"
 import { polarToXY, xyToAngle, angleScale, ringArcPath, TAU } from "./recipes/radialCoords"
 import { wrapValue, shortestArcDelta } from "./recipes/cyclical"
 import {
@@ -146,10 +146,10 @@ export function CircularBrush({
   // change this component requests before the parent re-renders it.
   const latestValue = useRef(value)
   latestValue.current = value
-  const [focus, setFocus] = React.useState<{ mode: BrushMode; visible: boolean } | null>(null)
+  const [focus, setFocus] = useState<{ mode: BrushMode; visible: boolean } | null>(null)
   const pointerFocus = useRef(false)
 
-  const observe = React.useMemo(
+  const observe = useMemo(
     () => createControlObservationAdapter({ controlType, controlId, chartId, chartType, onObservation }),
     [controlType, controlId, chartId, chartType, onObservation]
   )

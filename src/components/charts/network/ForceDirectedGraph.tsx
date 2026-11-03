@@ -8,7 +8,7 @@ import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import { forceLayoutPlugin } from "../../stream/layouts/forceLayoutPlugin"
-import { registerLayoutPlugin } from "../../stream/layouts/registry"
+import { ensureLayoutPlugin } from "../../stream/layouts/registry"
 import { registerNetworkPerspective } from "../../stream/networkPerspectiveRuntime"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps, StreamNetworkFrameHandle } from "../../stream/networkTypes"
@@ -32,7 +32,7 @@ import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureForceDirectedGraphRegistrations(): void {
-  registerLayoutPlugin("force", forceLayoutPlugin)
+  ensureLayoutPlugin("force", forceLayoutPlugin)
   registerNetworkPerspective()
 }
 

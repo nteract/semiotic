@@ -1,5 +1,6 @@
 import { moveLegendFocus } from "./legendKeyboard"
-import * as React from "react"
+import type * as React from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { LEGEND_FONT_STYLE, LEGEND_LABEL_STYLE } from "./legendStyles"
 
 import {
@@ -487,9 +488,9 @@ export default function Legend(props: LegendProps) {
   } = props
   const metrics = resolveLegendMetrics(legendLayout)
 
-  const [focusedIndex, setFocusedIndex] = React.useState({ group: 0, item: 0 })
-  const rootRef = React.useRef<SVGGElement>(null)
-  const focusedElementRef = React.useRef<SVGGElement | null>(null)
+  const [focusedIndex, setFocusedIndex] = useState({ group: 0, item: 0 })
+  const rootRef = useRef<SVGGElement>(null)
+  const focusedElementRef = useRef<SVGGElement | null>(null)
   const groups = legendGroups || []
   const focusedGroupIndex = groups[focusedIndex.group]?.items.length
     ? focusedIndex.group
@@ -499,14 +500,14 @@ export default function Legend(props: LegendProps) {
     (groups[focusedGroupIndex]?.items.length ?? 1) - 1
   )
 
-  React.useEffect(() => {
+  useEffect(() => {
     const previous = focusedElementRef.current
     if (previous && !previous.isConnected && document.activeElement === document.body) {
       rootRef.current?.querySelector<SVGGElement>("[tabindex='0']")?.focus()
     }
   })
 
-  const handleFocusedIndexChange = React.useCallback(
+  const handleFocusedIndexChange = useCallback(
     (groupIdx: number, itemIdx: number) => {
       setFocusedIndex({ group: groupIdx, item: itemIdx })
     },

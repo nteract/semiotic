@@ -475,7 +475,11 @@ describe("transitDiagramLayout", () => {
   })
 
   it("renders custom primary and compact stations in the fitted SVG station layer", () => {
-    const calls: TransitDiagramStationRenderInfo[] = []
+    const renderStation = vi.fn((info: TransitDiagramStationRenderInfo) => createElement(
+      "text",
+      { x: info.x, y: info.y, "data-station": info.station.id },
+      info.station.icon,
+    ))
     const result = transitDiagramLayout({
       nodes: [wrappedNode({ id: "a", icon: "A" }), wrappedNode({ id: "b", icon: "B" })],
       edges: [wrappedEdge({ source: "a", target: "b", line: "red" })],
@@ -484,19 +488,12 @@ describe("transitDiagramLayout", () => {
       resolveColor: () => "#999",
       config: {
         mode: "compact",
-        renderStation: (info) => {
-          calls.push(info)
-          return createElement(
-            "text",
-            { x: info.x, y: info.y, "data-station": info.station.id },
-            info.station.icon,
-          )
-        },
+        renderStation,
       },
     })
 
-    expect(calls).toHaveLength(2)
-    expect(calls[0]).toMatchObject({
+    expect(renderStation).toHaveBeenCalledTimes(2)
+    expect(renderStation.mock.calls[0][0]).toMatchObject({
       radius: 2.75,
       mode: "compact",
       lineIds: ["red"],

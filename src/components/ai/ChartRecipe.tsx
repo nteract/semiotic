@@ -1,5 +1,6 @@
 "use client"
-import * as React from "react"
+import type * as React from "react"
+import { createElement } from "react"
 import type { Datum } from "../charts/shared/datumTypes"
 import { XYCustomChart } from "../charts/custom/XYCustomChart"
 import { OrdinalCustomChart } from "../charts/custom/OrdinalCustomChart"
@@ -104,5 +105,5 @@ export function ChartRecipe(props: ChartRecipeProps): React.ReactElement {
   const RenderComponent = Component as unknown as React.ComponentType<
     Record<string, unknown>
   >
-  return React.createElement(RenderComponent, componentProps)
+  return createElement(RenderComponent, componentProps)
 }

@@ -1,4 +1,6 @@
 "use client"
+
+import { sameCategoryDomain } from "../../stream/categoryDomain"
 import type { Datum } from "./datumTypes"
 
 import { useState, useCallback, useMemo } from "react"
@@ -125,14 +127,12 @@ export function useStreamingLegend({
   const setCategoryDomain = useCallback(
     (categories: string[]) => {
       if (!shouldTrackCategoryDomain) return
-      const next = Array.from(new Set(categories.map(String)))
-      const current = domain.ordered
-      if (
-        current.length === next.length &&
-        current.every((v, i) => v === next[i])
-      )
-        return
-      domain.categories = new Set(next)
+      // Frames report unique strings; unchanged domains need no new collections.
+      if (sameCategoryDomain(domain.ordered, categories)) return
+      const nextCategories = new Set(categories.map(String))
+      const next = Array.from(nextCategories)
+      if (sameCategoryDomain(domain.ordered, next)) return
+      domain.categories = nextCategories
       domain.ordered = next
       setVersion((v) => v + 1)
     },

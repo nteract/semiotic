@@ -4,7 +4,8 @@
  * Same rationale as XYBrushOverlayLazy: d3-brush is only needed when brushing
  * is enabled. Keep it off the default ordinal cold path (BarChart, PieChart…).
  */
-import * as React from "react"
+import type * as React from "react"
+import { useState, useEffect } from "react"
 import type { OrdinalBrushOverlayProps } from "./OrdinalBrushOverlay"
 
 type BrushComponent = React.ComponentType<OrdinalBrushOverlayProps>
@@ -30,9 +31,9 @@ function loadOrdinalBrushOverlay(): Promise<BrushComponent> {
 }
 
 export function OrdinalBrushOverlayLazy(props: OrdinalBrushOverlayProps) {
-  const [Comp, setComp] = React.useState<BrushComponent | null>(() => cached)
+  const [Comp, setComp] = useState<BrushComponent | null>(() => cached)
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (Comp) return
     let cancelled = false
     loadOrdinalBrushOverlay().then((Loaded) => {

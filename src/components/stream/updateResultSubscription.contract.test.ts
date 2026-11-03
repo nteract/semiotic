@@ -1,5 +1,5 @@
 import "../../test-utils/registerBuiltInXYPlugins"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { GeoPipelineStore } from "./GeoPipelineStore"
 import { NetworkPipelineStore } from "./NetworkPipelineStore"
 import { OrdinalPipelineStore } from "./OrdinalPipelineStore"
@@ -11,19 +11,17 @@ function expectUpdateSubscription(
   store: UpdateResultStore,
   update: () => UpdateResult
 ): void {
-  const observed: UpdateResult[] = []
-  const unsubscribe = store.subscribeUpdateResult(() => {
-    observed.push(store.getUpdateSnapshot())
-  })
+  const observed = vi.fn(() => store.getUpdateSnapshot())
+  const unsubscribe = store.subscribeUpdateResult(observed)
 
   const first = update()
-  expect(observed[observed.length - 1]).toBe(first)
+  expect(observed.mock.results.at(-1)?.value).toBe(first)
   expect(store.getUpdateSnapshot()).toBe(first)
 
-  const observedCount = observed.length
   unsubscribe()
+  observed.mockClear()
   update()
-  expect(observed).toHaveLength(observedCount)
+  expect(observed).not.toHaveBeenCalled()
 }
 
 describe("UpdateResultStore subscription contract", () => {

@@ -1,8 +1,7 @@
 import { staticTitleText } from "./staticTitle"
 import type { Datum } from "../charts/shared/datumTypes"
 import { filterSparseArray } from "../charts/shared/sparseArray"
-import * as React from "react"
-import * as ReactDOMServer from "react-dom/server"
+import { renderToStaticMarkup } from "react-dom/server"
 import { GeoPipelineStore } from "../stream/GeoPipelineStore"
 import type { GeoPipelineConfig, StreamGeoFrameProps } from "../stream/geoTypes"
 import {
@@ -216,7 +215,7 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
     </>
   )
 
-  return ReactDOMServer.renderToStaticMarkup(
+  return renderToStaticMarkup(
     wrapSVG(content, {
       width: size[0], height: size[1],
       className: `stream-geo-frame${props.className ? ` ${props.className}` : ""}`,

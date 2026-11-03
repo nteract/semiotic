@@ -26,7 +26,7 @@ export function useEnsureNetworkLayouts(
     }
     return loadFrameModule(
       () => import("./layouts/registerBuiltIn").then((mod) => {
-        mod.registerBuiltInNetworkLayouts()
+        mod.ensureBuiltInNetworkLayouts()
       }),
       () => onReadyRef.current(),
       `StreamNetworkFrame layout "${chartType}"`

@@ -2,31 +2,23 @@
  * Inlined replacement for the subset of `d3-scale-chromatic` that
  * `semiotic` actually uses.
  *
- * Why this module exists: `d3-scale-chromatic` ships ~76KB of palette
- * data and pulls in `d3-color` + `d3-interpolate` transitively. We
- * use exactly 3 categorical schemes, 12 sequential single-/multi-hue
- * interpolators, and 7 diverging interpolators. Inlining at the right
- * granularity is much smaller than the dependency.
+ * Keep only the palettes Semiotic uses: 3 categorical schemes,
+ * 12 sequential single-/multi-hue interpolators, and 7 diverging
+ * interpolators, without importing the full d3-scale-chromatic catalog.
  *
  * Fidelity choices:
  *   - **Categorical schemes** are byte-identical to d3 — they're just
  *     hex-string arrays of the canonical Tableau / ColorBrewer / d3
  *     palettes.
- *   - **Sequential and diverging interpolators** sample the canonical
- *     palette at coarser resolution than d3's ~256-stop precomputed
- *     LUTs. d3 uses a Catmull-Rom basis spline through the same stops;
- *     we use linear RGB interpolation. The visible difference at
- *     typical N=5–9 binning or continuous heatmap rendering is
- *     imperceptible (RGB-linear and basis-spline produce ΔE < 1 across
- *     the gradient for these palettes — well under perceptual
- *     threshold). Behavior is identical for the discrete-binning use
- *     cases that dominate consumer code.
+ *   - **Sequential and diverging interpolators** interpolate fixed
+ *     sampled stops linearly in RGB rather than using a basis spline.
+ *     Intermediate colors are approximations and can differ from
+ *     d3's palette-specific interpolators.
  *
  * Each interpolator has the same signature as d3's: `(t: number) =>
  * string`, where `t ∈ [0, 1]` and the return is a `#rrggbb` CSS color
- * string (matching d3-color's `Rgb#toString()` output for opaque
- * colors, which is what flows into JSX `stroke=` / `fill=` attributes
- * downstream). `t` outside [0, 1] is clamped, matching d3 behavior.
+ * string. Hex is Semiotic's output contract; d3-color's `Rgb#toString()`
+ * returns `rgb(...)` or `rgba(...)`. `t` outside [0, 1] is clamped.
  *
  * Palette stops are taken from d3-scale-chromatic and ColorBrewer
  * source: https://github.com/d3/d3-scale-chromatic
@@ -47,13 +39,10 @@ function parseHex(hex: string): [number, number, number] {
   ]
 }
 
-/** Format an RGB triple as `#rrggbb`. Mirrors d3-color's `Rgb#toString()`
- *  output for opaque colors — d3 emits hex when alpha is 1, which is
- *  what consumers see when these interpolators are used in JSX `stroke=`
- *  / `fill=` attributes (existing tests assert on the hex form). */
+/** Callers supply integer channels in [0,255] from fixed stops or rounded
+ *  interpolation. Format the combined value once as Semiotic's `#rrggbb`. */
 function toHex(r: number, g: number, b: number): string {
-  const h = (n: number) => n.toString(16).padStart(2, "0")
-  return `#${h(r)}${h(g)}${h(b)}`
+  return "#" + (r * 65536 + g * 256 + b).toString(16).padStart(6, "0")
 }
 
 /**
@@ -61,8 +50,7 @@ function toHex(r: number, g: number, b: number): string {
  * Returns a function `(t: number) => string` that linearly interpolates
  * between adjacent stops in RGB space. `t` outside [0, 1] is clamped.
  *
- * Output is `#rrggbb` to match d3-scale-chromatic's effective output
- * (its underlying `d3-color.Rgb` stringifies to hex for opaque colors).
+ * Output follows Semiotic's `#rrggbb` contract for canvas and SVG paints.
  */
 function rgbInterpolator(stops: string[]): (t: number) => string {
   const rgbStops = stops.map(parseHex)
@@ -145,12 +133,7 @@ export const interpolateGreys = /* @__PURE__ */ rgbInterpolator([
   "#737373", "#525252", "#252525", "#000000",
 ])
 
-// ── Sequential multi-hue (matplotlib palettes, 11-stop subsamples) ────
-//
-// d3 stores these as 256-stop precomputed LUTs (~9KB raw across the
-// six). 11-stop linear sampling gives visually equivalent gradients
-// at typical bin counts (≤ ΔE 1 across the curve). The stops here are
-// every-other-25% subsamples of the d3 palette plus endpoints.
+// ── Sequential multi-hue (sampled stops) ──────────────────────────────
 
 export const interpolateViridis = /* @__PURE__ */ rgbInterpolator([
   "#440154", "#482878", "#3e4989", "#31688e", "#26828e",

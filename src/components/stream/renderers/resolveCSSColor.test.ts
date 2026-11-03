@@ -3,8 +3,7 @@ import {
   resolveCSSColor,
   clearCSSColorCache,
   getCSSColorCacheVersion,
-  subscribeToCSSColorInvalidation,
-  _resetCSSColorCacheForTest
+  subscribeToCSSColorInvalidation
 } from "./resolveCSSColor"
 
 function makeCtx(varName?: string, value?: string): CanvasRenderingContext2D {
@@ -19,7 +18,6 @@ function makeCtx(varName?: string, value?: string): CanvasRenderingContext2D {
 describe("resolveCSSColor", () => {
   beforeEach(() => {
     document.body.innerHTML = ""
-    _resetCSSColorCacheForTest()
   })
 
   it("returns non-var values unchanged", () => {
@@ -81,24 +79,21 @@ describe("resolveCSSColor", () => {
     wrapper.appendChild(canvas)
     const ctx = { canvas } as unknown as CanvasRenderingContext2D
 
-    // Prime the cache via getComputedStyle inheritance
+    // jsdom does not inherit custom properties; mirror the computed value on
+    // the canvas and verify the wrapper's mutation invalidates its cache.
     canvas.style.setProperty("--semiotic-danger", "#ff0000")
-    expect(resolveCSSColor(ctx, "var(--semiotic-danger)")).toBe("#ff0000")
-
-    canvas.style.setProperty("--semiotic-danger", "#0000ff")
-    // MutationObserver is async — wait a tick for the attribute mutation to fire.
-    await new Promise((r) => setTimeout(r, 0))
-    // If the observer fired, version bumped and we re-resolve; if not, clear
-    // still works as a fallback — assert the new value is visible after microtask.
-    // Force a second resolve after observer microtask:
-    const after = resolveCSSColor(ctx, "var(--semiotic-danger)")
-    // Cache may still hold old until observer fires; clear if stuck for flaky jsdom.
-    if (after !== "#0000ff") {
-      // Some jsdom builds don't fire MutationObserver for style.setProperty —
-      // call clear to document expected API and still assert re-read works.
-      clearCSSColorCache()
+    const listener = vi.fn()
+    const unsubscribe = subscribeToCSSColorInvalidation(() => canvas, listener)
+    try {
+      expect(resolveCSSColor(ctx, "var(--semiotic-danger)")).toBe("#ff0000")
+      canvas.style.setProperty("--semiotic-danger", "#0000ff")
+      wrapper.style.setProperty("--semiotic-danger", "#0000ff")
+      await Promise.resolve()
+      expect(listener).toHaveBeenCalledOnce()
+      expect(resolveCSSColor(ctx, "var(--semiotic-danger)")).toBe("#0000ff")
+    } finally {
+      unsubscribe()
     }
-    expect(resolveCSSColor(ctx, "var(--semiotic-danger)")).toBe("#0000ff")
   })
 
   it("notifies only canvas branches affected by a scoped style mutation", async () => {
@@ -208,20 +203,32 @@ describe("resolveCSSColor", () => {
     expect(disconnect).toHaveBeenCalledTimes(2)
   })
 
-  it("repaints settled canvases when an asynchronous web font finishes loading", () => {
-    const fontListeners = new Set<EventListenerOrEventListenerObject>()
-    const fontSet = {
-      addEventListener: vi.fn(
-        (type: string, listener: EventListenerOrEventListenerObject) => {
-          if (type === "loadingdone") fontListeners.add(listener)
-        }
-      ),
-      removeEventListener: vi.fn(
-        (type: string, listener: EventListenerOrEventListenerObject) => {
-          if (type === "loadingdone") fontListeners.delete(listener)
-        }
-      )
+  it.each([false, true])("refreshes retained canvas colors after a subscription gap (active sibling: %s)", async (activeSibling) => {
+    const ctx = makeCtx("--color", "#112233")
+    const sibling = makeCtx()
+    const unsubscribeSibling = activeSibling
+      ? subscribeToCSSColorInvalidation(() => sibling.canvas, vi.fn())
+      : undefined
+    const unsubscribe = subscribeToCSSColorInvalidation(() => ctx.canvas, vi.fn())
+    expect(resolveCSSColor(ctx, "var(--color)")).toBe("#112233")
+    unsubscribe()
+
+    // Hidden/offscreen frames can retain their canvas while effects are stopped.
+    // No subscriber observed this canvas while its scoped CSS variables changed.
+    ctx.canvas.style.setProperty("--color", "#abcdef")
+    await Promise.resolve()
+    const unsubscribeAgain = subscribeToCSSColorInvalidation(() => ctx.canvas, vi.fn())
+    try {
+      expect(resolveCSSColor(ctx, "var(--color)")).toBe("#abcdef")
+    } finally {
+      unsubscribeAgain()
+      unsubscribeSibling?.()
     }
+  })
+
+  it("repaints settled canvases when an asynchronous web font finishes loading", () => {
+    const fontSet = new EventTarget()
+    const removeListener = vi.spyOn(fontSet, "removeEventListener")
     const originalFonts = Object.getOwnPropertyDescriptor(document, "fonts")
     Object.defineProperty(document, "fonts", {
       configurable: true,
@@ -236,20 +243,11 @@ describe("resolveCSSColor", () => {
     try {
       const beforeFontLoad = getCSSColorCacheVersion()
       const emptyLoad = Object.assign(new Event("loadingdone"), { fontfaces: [] })
-      for (const registered of fontListeners) {
-        if (typeof registered === "function") registered(emptyLoad)
-        else registered.handleEvent(emptyLoad)
-      }
+      fontSet.dispatchEvent(emptyLoad)
       expect(listener).not.toHaveBeenCalled()
       expect(getCSSColorCacheVersion()).toBe(beforeFontLoad)
       const loaded = Object.assign(new Event("loadingdone"), { fontfaces: [{}] })
-      for (const registered of fontListeners) {
-        if (typeof registered === "function") {
-          registered(loaded)
-        } else {
-          registered.handleEvent(loaded)
-        }
-      }
+      fontSet.dispatchEvent(loaded)
 
       expect(listener).toHaveBeenCalledTimes(1)
       expect(getCSSColorCacheVersion()).toBe(beforeFontLoad + 1)
@@ -265,11 +263,39 @@ describe("resolveCSSColor", () => {
       }
     }
 
-    expect(fontSet.removeEventListener).toHaveBeenCalledWith(
+    expect(removeListener).toHaveBeenCalledWith(
       "loadingdone",
       expect.any(Function)
     )
-    expect(fontListeners.size).toBe(0)
+    listener.mockClear()
+    fontSet.dispatchEvent(new Event("loadingdone"))
+    expect(listener).not.toHaveBeenCalled()
+  })
+
+  it.each(["modern", "legacy"])("releases %s media-query listeners with the final subscriber", (api) => {
+    const events = new EventTarget()
+    const add = vi.spyOn(events, "addEventListener")
+    const remove = vi.spyOn(events, "removeEventListener")
+    const query = api === "modern" ? events : {
+      addListener: (listener: EventListener) => events.addEventListener("change", listener),
+      removeListener: (listener: EventListener) => events.removeEventListener("change", listener)
+    }
+    vi.stubGlobal("matchMedia", vi.fn(() => query))
+    const ctx = makeCtx()
+    const listener = vi.fn()
+    const unsubscribe = subscribeToCSSColorInvalidation(() => ctx.canvas, listener)
+    try {
+      expect(add).toHaveBeenCalledExactlyOnceWith("change", expect.any(Function))
+      events.dispatchEvent(new Event("change"))
+      expect(listener).toHaveBeenCalledOnce()
+      unsubscribe()
+      expect(remove).toHaveBeenCalledExactlyOnceWith("change", add.mock.calls[0][1])
+      events.dispatchEvent(new Event("change"))
+      expect(listener).toHaveBeenCalledOnce()
+    } finally {
+      unsubscribe()
+      vi.unstubAllGlobals()
+    }
   })
 
   it("isolates caches between canvases", () => {
@@ -301,24 +327,14 @@ describe("resolveCSSColor", () => {
 
   it("calls getComputedStyle once per (canvas, var, version) triple", () => {
     const ctx = makeCtx("--color", "#abcdef")
-    const orig = window.getComputedStyle
-    let calls = 0
-    window.getComputedStyle = ((el: Element) => {
-      calls++
-      return orig.call(window, el)
-    }) as typeof window.getComputedStyle
-
-    try {
-      resolveCSSColor(ctx, "var(--color)")
-      resolveCSSColor(ctx, "var(--color)")
-      resolveCSSColor(ctx, "var(--color)")
-      expect(calls).toBe(1)
-      clearCSSColorCache()
-      resolveCSSColor(ctx, "var(--color)")
-      expect(calls).toBe(2)
-    } finally {
-      window.getComputedStyle = orig
-    }
+    const computedStyle = vi.spyOn(window, "getComputedStyle")
+    resolveCSSColor(ctx, "var(--color)")
+    resolveCSSColor(ctx, "var(--color)")
+    resolveCSSColor(ctx, "var(--color)")
+    expect(computedStyle).toHaveBeenCalledOnce()
+    clearCSSColorCache()
+    resolveCSSColor(ctx, "var(--color)")
+    expect(computedStyle).toHaveBeenCalledTimes(2)
   })
 
   it("falls back to fallback color when ctx.canvas is missing", () => {

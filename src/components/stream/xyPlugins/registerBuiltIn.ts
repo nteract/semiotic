@@ -8,7 +8,7 @@
  * Must be a live function call: `package.json` has `"sideEffects": false`,
  * so a side-effect-only import is dropped from the published bundles.
  */
-import { registerXYPlugin } from "./registry"
+import { ensureXYPlugin, registerXYPlugin } from "./registry"
 import { lineXYPlugin } from "./linePlugin"
 import { areaXYPlugin } from "./areaPlugin"
 import { stackedAreaXYPlugin } from "./stackedAreaPlugin"
@@ -21,17 +21,26 @@ import { waterfallXYPlugin } from "./waterfallPlugin"
 import { candlestickXYPlugin } from "./candlestickPlugin"
 import { customXYPlugin } from "./customPlugin"
 
+function installBuiltInXYPlugins(register: typeof registerXYPlugin): void {
+  register(lineXYPlugin)
+  register(areaXYPlugin)
+  register(stackedAreaXYPlugin)
+  register(mixedXYPlugin)
+  register(scatterXYPlugin)
+  register(bubbleXYPlugin)
+  register(heatmapXYPlugin)
+  register(barXYPlugin)
+  register(swarmXYPlugin)
+  register(waterfallXYPlugin)
+  register(candlestickXYPlugin)
+  register(customXYPlugin)
+}
+
 export function registerBuiltInXYPlugins(): void {
-  registerXYPlugin(lineXYPlugin)
-  registerXYPlugin(areaXYPlugin)
-  registerXYPlugin(stackedAreaXYPlugin)
-  registerXYPlugin(mixedXYPlugin)
-  registerXYPlugin(scatterXYPlugin)
-  registerXYPlugin(bubbleXYPlugin)
-  registerXYPlugin(heatmapXYPlugin)
-  registerXYPlugin(barXYPlugin)
-  registerXYPlugin(swarmXYPlugin)
-  registerXYPlugin(waterfallXYPlugin)
-  registerXYPlugin(candlestickXYPlugin)
-  registerXYPlugin(customXYPlugin)
+  installBuiltInXYPlugins(registerXYPlugin)
+}
+
+/** Fill missing browser plugins without replacing explicitly registered ones. */
+export function ensureBuiltInXYPlugins(): void {
+  installBuiltInXYPlugins(ensureXYPlugin)
 }

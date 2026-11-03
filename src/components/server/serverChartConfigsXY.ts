@@ -1,5 +1,6 @@
 import { readRealtimeNumber, readRealtimeTime } from "../charts/realtime/realtimeAccessors"
-import * as React from "react"
+import type * as React from "react"
+import { createElement, Fragment } from "react"
 import type { Datum } from "../charts/shared/datumTypes"
 import { prepareAreaSeriesData } from "../charts/shared/areaSeriesData"
 import { filterSparseArray } from "../charts/shared/sparseArray"
@@ -592,7 +593,7 @@ export const quadrantChart: ChartConfig = {
       : centerlineStyle.strokeDasharray
     const padding = 8
 
-    const h_ = React.createElement
+    const h_ = createElement
     const svgPreRenderers = quadrants ? [
       (_nodes: unknown, scales: { x: (v: number) => number; y: (v: number) => number } | null, layout: { width: number; height: number }) => {
         if (!scales?.x || !scales?.y) return null
@@ -615,7 +616,7 @@ export const quadrantChart: ChartConfig = {
           h_("text", { key: "lbl", x: padding,     y: h - padding,         fill: quadrants.bottomLeft.color,  fontWeight: 600, fontSize: labelSize, opacity: 0.5 }, quadrants.bottomLeft.label),
           h_("text", { key: "lbr", x: w - padding, y: h - padding,         fill: quadrants.bottomRight.color, fontWeight: 600, fontSize: labelSize, opacity: 0.5, textAnchor: "end" }, quadrants.bottomRight.label),
         ] : []
-        return h_(React.Fragment, null,
+        return h_(Fragment, null,
           ...quads.map((q, i) =>
                 q.w > 0 && q.h > 0
                   ? h_("rect", { key: `qf-${i}`, x: q.x, y: q.y, width: q.w, height: q.h, fill: q.c.color, opacity: q.c.opacity ?? 0.08 })
@@ -682,17 +683,17 @@ export const connectedScatterplot: ChartConfig = {
           const color = viridisColor(i, points.length)
           // Match ConnectedScatterplot's small-data halo + viridis segment.
           if (points.length < 100) {
-            elements.push(React.createElement("line", {
+            elements.push(createElement("line", {
               key: `halo-${i}`, x1: p0.x, y1: p0.y, x2: p1.x, y2: p1.y,
               stroke: "white", strokeWidth: pointRadius + 2, strokeLinecap: "round", opacity: 0.5,
             }))
           }
-          elements.push(React.createElement("line", {
+          elements.push(createElement("line", {
             key: `segment-${i}`, x1: p0.x, y1: p0.y, x2: p1.x, y2: p1.y,
             stroke: color, strokeWidth: pointRadius, strokeLinecap: "round",
           }))
         }
-        return React.createElement(React.Fragment, null, ...elements)
+        return createElement(Fragment, null, ...elements)
       },
     ]
     return {

@@ -15,8 +15,24 @@ export function useWordCloudLayout(
   let key = ""
   let validationError: WordCloudLayoutError | null = null
   try {
-    key = normalizeWordCloudInput(options).inputFingerprint
-    if (props.layout) validateWordCloudLayout(options, props.layout)
+    if (props.layout) {
+      try {
+        // Validate every render, including in-place data or geometry edits.
+        validateWordCloudLayout(options, props.layout)
+      } catch (error) {
+        // Unsupported layouts are rejected before normalization. Preserve input
+        // error precedence and refresh the diagnostic key for changed inputs.
+        if (
+          error instanceof WordCloudLayoutError &&
+          error.code === "STALE_LAYOUT"
+        )
+          key = normalizeWordCloudInput(options).inputFingerprint
+        throw error
+      }
+      key = props.layout.inputFingerprint
+    } else {
+      key = normalizeWordCloudInput(options).inputFingerprint
+    }
   } catch (error) {
     validationError =
       error instanceof WordCloudLayoutError

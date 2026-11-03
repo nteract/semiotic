@@ -6,7 +6,8 @@
  * SceneToSVG.tsx so existing imports are unaffected.
  */
 
-import * as React from "react"
+import type * as React from "react"
+import { Fragment } from "react"
 
 import type { PointSceneNode, GlyphSceneNode } from "./types"
 import type { GeoSceneNode, GeoAreaSceneNode } from "./geoTypes"
@@ -31,7 +32,7 @@ function geoSceneNodeToSVGMark(node: GeoSceneNode, i: number): React.ReactNode {
       // canvas backend, which resolves the same descriptor to a CanvasPattern).
       const hatch = isHatchFill(n.style.fill) ? hatchPatternDef(n.style.fill, `geoarea-${i}-hatch`) : undefined
       return (
-        <React.Fragment key={`geoarea-${i}`}>
+        <Fragment key={`geoarea-${i}`}>
           {hatch && <defs>{hatch}</defs>}
           <path
             d={n.pathData}
@@ -42,7 +43,7 @@ function geoSceneNodeToSVGMark(node: GeoSceneNode, i: number): React.ReactNode {
             strokeDasharray={n.style.strokeDasharray}
             opacity={(n.style.opacity ?? 1) * (n._decayOpacity ?? 1)}
           />
-        </React.Fragment>
+        </Fragment>
       )
     }
     case "point":

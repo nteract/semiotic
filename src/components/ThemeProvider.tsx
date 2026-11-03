@@ -5,7 +5,17 @@ import {
   autoPaletteCSS,
   warnUnknownTheme
 } from "./store/themeResolution"
-import * as React from "react"
+import type * as React from "react"
+import {
+  createContext,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useId,
+  useContext,
+  useState,
+  useMemo
+} from "react"
 import {
   ThemeProvider as StoreProvider,
   useThemeSelector
@@ -37,13 +47,13 @@ interface ThemeProviderProps {
 
 // Preserve authored auto-mode overrides through nested providers so their CSS
 // can follow the OS palette even before hydration.
-const ThemeScopeContext = /* @__PURE__ */ React.createContext<
+const ThemeScopeContext = /* @__PURE__ */ createContext<
   SemioticThemeUpdate | null | undefined
 >(undefined)
 // undefined means no provider; null means a provider with a concrete palette.
 
 const useIsomorphicLayoutEffect =
-  typeof window === "undefined" ? React.useEffect : React.useLayoutEffect
+  typeof window === "undefined" ? useEffect : useLayoutEffect
 
 function resolveInitialTheme(
   theme: ThemePresetName | SemioticThemeUpdate | undefined,
@@ -78,7 +88,7 @@ function themeValuesEqual(a: unknown, b: unknown): boolean {
 }
 
 function useStableThemeValue<T>(value: T): T {
-  const stable = React.useRef(value)
+  const stable = useRef(value)
   if (!themeValuesEqual(stable.current, value)) stable.current = value
   return stable.current
 }
@@ -99,12 +109,12 @@ function ThemeCSSWrapper({
   const { theme, setTheme } = useThemeSelector(
     (state: ThemeStoreState) => state
   )
-  const autoId = React.useId()
-  const auto = React.useContext(ThemeScopeContext)
-  const [hydrated, setHydrated] = React.useState(false)
+  const autoId = useId()
+  const auto = useContext(ThemeScopeContext)
+  const [hydrated, setHydrated] = useState(false)
   // Keep a ref to the latest theme so the forced-colors handler can read it
   // without re-registering the listener on every theme change.
-  const currentThemeRef = React.useRef(theme)
+  const currentThemeRef = useRef(theme)
   currentThemeRef.current = theme
 
   useIsomorphicLayoutEffect(() => {
@@ -159,7 +169,7 @@ function ThemeCSSWrapper({
 
 function ThemeProviderWrapper({ theme, children }: ThemeProviderProps) {
   const parent = useTheme()
-  const parentScope = React.useContext(ThemeScopeContext)
+  const parentScope = useContext(ThemeScopeContext)
   const input = useStableThemeValue(theme)
   const ownAuto = typeof input === "object" && input.mode === "auto"
   const inherits = typeof input !== "string" && !input?.mode
@@ -171,7 +181,7 @@ function ThemeProviderWrapper({ theme, children }: ThemeProviderProps) {
         : undefined
   )
   const inherited = inherits && parentScope !== undefined ? parent : undefined
-  const initial = React.useMemo(
+  const initial = useMemo(
     () => resolveInitialTheme(input, inherited),
     [input, inherited]
   )

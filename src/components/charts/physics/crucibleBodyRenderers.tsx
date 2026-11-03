@@ -1,6 +1,7 @@
 "use client"
 
-import * as React from "react"
+import type * as React from "react"
+import { Fragment } from "react"
 import type { Style } from "../../stream/types"
 import type { PhysicsBodyState } from "../../stream/physics/PhysicsKernel"
 import type {
@@ -177,7 +178,7 @@ export function drawCrucibleBodySVG(
     }).join(" ")
     const filterId = `${key}-glow`
     return (
-      <React.Fragment key={key}>
+      <Fragment key={key}>
         <defs>
           <filter id={filterId} x="-60%" y="-60%" width="220%" height="220%">
             <feDropShadow
@@ -206,12 +207,12 @@ export function drawCrucibleBodySVG(
           strokeWidth={strokeWidth}
           opacity={opacity * 0.72}
         />
-      </React.Fragment>
+      </Fragment>
     )
   }
 
   return (
-    <React.Fragment key={key}>
+    <Fragment key={key}>
       <circle
         cx={body.x}
         cy={body.y}
@@ -227,7 +228,7 @@ export function drawCrucibleBodySVG(
         r={Math.max(1, radius * 0.18)}
         fill="rgba(255,255,255,0.34)"
       />
-    </React.Fragment>
+    </Fragment>
   )
 }
 

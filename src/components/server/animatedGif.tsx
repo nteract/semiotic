@@ -16,13 +16,15 @@ import type { Datum } from "../charts/shared/datumTypes"
  * Both are optional dependencies of semiotic.
  */
 
-import * as React from "react"
-import * as ReactDOMServer from "react-dom/server"
+import type * as React from "react"
+import { renderToStaticMarkup } from "react-dom/server"
 import { PipelineStore, type PipelineConfig } from "../stream/PipelineStore"
 import { registerServerXYPlugins } from "./registerServerXYPlugins"
 import { provideXYTransitionEngine } from "../stream/pipelineTransitionEngine"
 import { xyTransitionEngine } from "../stream/pipelineTransitions"
 
+// GIF export selects scene builders at runtime without loading canvas painters.
+// Preserve any client/custom plugins already registered by the host.
 registerServerXYPlugins()
 // GIF frames interpolate transitions synchronously; install the engine the
 // browser loads on demand.
@@ -51,7 +53,6 @@ import {
   physicsBodiesToXYSceneNodes,
   type PhysicsSettledSceneOptions
 } from "../stream/physics/PhysicsSettledScene"
-
 
  
 // ReactDOMServer imported at top of file via ESM
@@ -384,7 +385,7 @@ function renderPhysicsFrameSVG(
     </svg>
   )
 
-  return ReactDOMServer.renderToStaticMarkup(svgEl)
+  return renderToStaticMarkup(svgEl)
 }
 
 /**
@@ -566,7 +567,7 @@ function renderGifFrameSVG(
     </svg>
   )
 
-  return ReactDOMServer.renderToStaticMarkup(svgEl)
+  return renderToStaticMarkup(svgEl)
 }
 
 // ── GIF encoding ─────────────────────────────────────────────────────

@@ -1,5 +1,6 @@
 "use client"
-import * as React from "react"
+// Core entry imports under react-server must resolve client-only hooks lazily.
+import React from "react"
 import type { NetworkPerspective, NetworkPerspectiveFrame } from "./networkPerspective"
 import { networkPerspectiveKey } from "./networkPerspectiveKey"
 

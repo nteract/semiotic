@@ -6,6 +6,7 @@ import {
   SEQUENTIAL_INTERPOLATORS
 } from "./colorPalettes"
 import type { Datum } from "./datumTypes"
+import type { Accessor } from "./types"
 
 /**
  * Predefined color schemes
@@ -144,10 +145,8 @@ export function getColor(
     return value
   }
 
-  // `dataPoint[colorBy]` is `unknown` at this seam — Datum is a loose
-  // record. Coerce to string for the scale call (d3 ordinal scales
-  // stringify their domain values internally anyway, so the runtime
-  // behavior is unchanged).
+  // Authored datum fields may have any value. Match createColorScale's
+  // string-normalized domain before looking up a color.
   const colorValue = String(dataPoint?.[colorBy])
 
   if (colorScale) {
@@ -181,6 +180,20 @@ export function resolveExplicitColor(
   return typeof value === "string" && value.length > 0 ? value : undefined
 }
 
+/** Non-null, string-coerced color categories in first-seen order. */
+export function distinctCategories(
+  data: readonly Datum[],
+  colorBy: Accessor<string | number> | undefined
+): string[] {
+  if (!colorBy || !data || data.length === 0) return []
+  const values = new Set<string>()
+  for (const datum of data) {
+    const value = typeof colorBy === "function" ? colorBy(datum) : datum[colorBy]
+    if (value != null) values.add(String(value))
+  }
+  return Array.from(values)
+}
+
 /**
  * Creates a color scale function from data
  *
@@ -207,31 +220,19 @@ export function createColorScale(
     return (v: string) => resolveExplicitColor(map, v) ?? "#999"
   }
 
-  // Get unique stringified values. d3 ordinal scales stringify domain
-  // entries internally (it's how the lookup table is keyed), so we do
-  // it explicitly here to thread a `string[]` through the typed
-  // `scaleOrdinal<string, string>` constructor without an unsafe cast.
-  // cast at the seam.
-  const uniqueValues = Array.from(
-    new Set(data.map(d => d?.[colorBy]).filter(v => v != null).map(v => String(v))),
-  )
+  // Scale lookups use string keys. Skip sparse/null rows and support even an
+  // empty field name while collecting the domain without intermediate arrays.
+  const uniqueValues = distinctCategories(data, (datum) => datum?.[colorBy])
 
-  // Check if values are numeric for sequential scale
-  const isNumeric = uniqueValues.every(v => !isNaN(Number(v)))
+  // Only sequential interpolators need a numeric domain. Categorical palettes
+  // share the ordinal constructor and skip the unused numeric scan.
+  const colorScheme = Array.isArray(scheme)
+    ? scheme
+    : Object.prototype.hasOwnProperty.call(COLOR_SCHEMES, scheme)
+      ? COLOR_SCHEMES[scheme as keyof typeof COLOR_SCHEMES]
+      : COLOR_SCHEMES.category10
 
-  // Handle custom color array.
-  if (Array.isArray(scheme)) {
-    return scaleOrdinal<string, string>()
-      .domain(uniqueValues)
-      .range(scheme)
-      .unknown("#999") as (v: string) => string
-  }
-
-  const colorScheme = Object.prototype.hasOwnProperty.call(COLOR_SCHEMES, scheme)
-    ? COLOR_SCHEMES[scheme as keyof typeof COLOR_SCHEMES]
-    : COLOR_SCHEMES.category10
-
-  if (isNumeric && typeof colorScheme === "function") {
+  if (typeof colorScheme === "function" && uniqueValues.every(v => !isNaN(Number(v)))) {
     // Use sequential scale for numeric data
     let maxVal = -Infinity
     for (const v of uniqueValues) { const n = Number(v); if (n > maxVal) maxVal = n }

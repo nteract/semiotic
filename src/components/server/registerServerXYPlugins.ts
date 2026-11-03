@@ -1,8 +1,6 @@
 import {
-  getXYPlugin,
-  registerXYPlugin,
-  type XYSceneBuilder,
-  type XYSceneLegendResolver
+  ensureServerXYPlugin,
+  type XYSceneBuilder
 } from "../stream/xyPlugins/registry"
 import type { StreamChartType } from "../stream/types"
 import { buildLineScene } from "../stream/xySceneBuilders/lineScene"
@@ -33,23 +31,16 @@ const builders: Record<StreamChartType, XYSceneBuilder> = {
   custom: () => []
 }
 
-// Legends that read the built scene, shared with the browser plugins.
-const legendResolvers: Partial<Record<StreamChartType, XYSceneLegendResolver>> = {
-  heatmap: resolveHeatmapSceneLegend
-}
-
 /** SVG rendering needs scene builders without importing the canvas painters. */
 export function registerServerXYPlugins(): void {
   for (const chartType of Object.keys(builders) as StreamChartType[]) {
     // Browser apps can import server rendering too. Preserve any client or
     // custom plugin already installed in the shared registry.
-    if (!getXYPlugin(chartType)) {
-      registerXYPlugin({
-        chartType,
-        buildScene: builders[chartType],
-        canvasRenderers: [],
-        resolveLegend: legendResolvers[chartType]
-      })
-    }
+    ensureServerXYPlugin({
+      chartType,
+      buildScene: builders[chartType],
+      canvasRenderers: [],
+      resolveLegend: chartType === "heatmap" ? resolveHeatmapSceneLegend : undefined
+    })
   }
 }

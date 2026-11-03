@@ -5,6 +5,7 @@ import {
   physicsObservationAnnouncement
 } from "./PhysicsAccessibility"
 import type { PhysicsBodyState } from "./PhysicsKernel"
+import { physicsBodyToXYSceneNode } from "./PhysicsSettledScene"
 
 function body(id: string, windowIndex: number, label = id): PhysicsBodyState {
   return {
@@ -29,6 +30,67 @@ function windowContainerId(state: PhysicsBodyState): string | undefined {
 }
 
 describe("physics accessibility helpers", () => {
+  it.each([
+    { datum: { label: "Label", name: "Name", id: "Datum ID" }, expected: "Label" },
+    { datum: { label: null, name: "Name", id: "Datum ID" }, expected: "Name" },
+    { datum: { id: 0 }, expected: "0" },
+    { datum: { label: false }, expected: "false" },
+    { datum: { label: "", name: "Name" }, expected: "body-id" },
+    { datum: {}, expected: "body-id" },
+    { datum: null, expected: "body-id" },
+    { datum: undefined, expected: "body-id" },
+    { datum: "raw value", expected: "body-id" }
+  ])("keeps mark, projection, navigation and announcement labels aligned for $datum", ({ datum, expected }) => {
+    const state = { ...body("body-id", 0), datum }
+    const rows = buildPhysicsSettledProjection(
+      [{ id: "container", label: "Container" }],
+      { bodies: [state], getContainerId: () => "container" }
+    )
+    const tree = buildPhysicsNavigationTree(rows)
+
+    expect(rows[0].recentBodies[0].label).toBe(expected)
+    expect(tree.children?.[0].children?.[0].label).toBe(expected)
+    expect(physicsBodyToXYSceneNode(state).accessibility?.label).toBe(expected)
+    expect(physicsBodyToXYSceneNode({
+      ...state,
+      shape: { type: "aabb", width: 8, height: 6 }
+    }).accessibility?.label).toBe(expected)
+    expect(physicsObservationAnnouncement({
+      type: "physics-bin-enter",
+      chartId: "chart",
+      chartType: "StreamPhysicsFrame",
+      timestamp: 1,
+      bodyId: state.id,
+      datum,
+      sensorId: "sensor"
+    })).toBe(`${expected} entered sensor.`)
+  })
+
+  it.each([
+    { label: "Authored label", expected: "Authored label" },
+    { label: "", expected: "" },
+    { label: undefined, expected: "Datum label" }
+  ])("honors the same custom label and fallback semantics across physics surfaces: $label", ({ label, expected }) => {
+    const state = body("body-id", 0, "Datum label")
+    const getBodyLabel = () => label
+    const rows = buildPhysicsSettledProjection(
+      [{ id: "container", label: "Container" }],
+      { bodies: [state], getContainerId: () => "container", getBodyLabel }
+    )
+
+    expect(rows[0].recentBodies[0].label).toBe(expected)
+    expect(physicsBodyToXYSceneNode(state, { getBodyLabel }).accessibility?.label).toBe(expected)
+    expect(physicsObservationAnnouncement({
+      type: "physics-bin-enter",
+      chartId: "chart",
+      chartType: "StreamPhysicsFrame",
+      timestamp: 1,
+      bodyId: state.id,
+      datum: state.datum,
+      sensorId: "sensor"
+    }, { getDatumLabel: () => label })).toBe(`${expected} entered sensor.`)
+  })
+
   it("builds settled projection rows from aggregate containers plus live bodies", () => {
     const rows = buildPhysicsSettledProjection(
       [

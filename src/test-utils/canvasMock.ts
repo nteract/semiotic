@@ -17,8 +17,9 @@ type CanvasMockFn = (...args: unknown[]) => unknown
  * This is the single canonical canvas mock for the entire test suite.
  * Import from "../../test-utils/canvasMock" (or appropriate relative path).
  */
-export function createMockCanvasContext(): CanvasContextMock {
+export function createMockCanvasContext(canvas?: HTMLCanvasElement): CanvasContextMock {
   return {
+    ...(canvas && { canvas }),
     // Drawing methods
     beginPath: vi.fn(),
     moveTo: vi.fn(),
@@ -35,6 +36,7 @@ export function createMockCanvasContext(): CanvasContextMock {
     save: vi.fn(),
     restore: vi.fn(),
     scale: vi.fn(),
+    rotate: vi.fn(),
     translate: vi.fn(),
     transform: vi.fn(),
     setLineDash: vi.fn(),
@@ -50,7 +52,7 @@ export function createMockCanvasContext(): CanvasContextMock {
     createRadialGradient: vi.fn(() => ({
       addColorStop: vi.fn(),
     })),
-    createPattern: vi.fn(),
+    createPattern: vi.fn(() => null),
     measureText: vi.fn(() => ({ width: 0 })),
     setTransform: vi.fn(),
     resetTransform: vi.fn(),
@@ -60,12 +62,12 @@ export function createMockCanvasContext(): CanvasContextMock {
     isPointInPath: vi.fn(() => false),
 
     // Style properties
-    strokeStyle: "",
+    strokeStyle: "#000",
     lineWidth: 1,
-    fillStyle: "",
-    font: "",
-    textAlign: "",
-    textBaseline: "",
+    fillStyle: "#000",
+    font: "10px sans-serif",
+    textAlign: "start",
+    textBaseline: "alphabetic",
     globalAlpha: 1,
     globalCompositeOperation: "source-over",
     lineCap: "butt",

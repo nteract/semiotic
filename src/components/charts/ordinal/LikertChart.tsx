@@ -1,7 +1,7 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
-import * as React from "react"
-import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "react"
+import type * as React from "react"
+import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle, createElement } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { useChartMode, useThemeDiverging } from "../shared/hooks"
@@ -430,9 +430,9 @@ export const LikertChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ *
       const rawPct = Math.abs(row.__likertPct || 0)
       const pct = (rawLevel === NEUTRAL_NEG || rawLevel === NEUTRAL_POS) ? rawPct * 2 : rawPct
       const count = row.__likertCount || 0
-      return React.createElement("div", { className: "semiotic-tooltip", style: defaultTooltipStyle },
-        React.createElement("div", { style: { fontWeight: "bold" } }, category),
-        React.createElement("div", { style: { marginTop: 4 } },
+      return createElement("div", { className: "semiotic-tooltip", style: defaultTooltipStyle },
+        createElement("div", { style: { fontWeight: "bold" } }, category),
+        createElement("div", { style: { marginTop: 4 } },
           `${level}: ${pct.toFixed(1)}% (n=${count})`
         )
       )

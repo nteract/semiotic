@@ -11,18 +11,8 @@ import {
 } from "./AccessibleDataTable"
 import NetworkAccessibleDataTable from "./NetworkAccessibleDataTable"
 import { SummaryRegionRoot, useUniqueRegionLabel } from "./uniqueRegionLabel"
-import type { Datum } from "../charts/shared/datumTypes"
-
-// ── Test helpers ────────────────────────────────────────────────────────
-
-// We can't render React components without a DOM environment in these unit tests,
-// but we CAN thoroughly test the pure logic functions that the components depend on.
-// These are the functions most likely to break with weird data.
-
-// For extractAllRows / computeFieldStats / formatSummary we re-export-test them
-// by calling the same logic inline (they're not exported, so we test via
-// computeCanvasAriaLabel which exercises the scene-reading path, plus we add
-// a dedicated extraction test suite below).
+import { computeFieldStats, fmt, fmtCell, formatSummary } from "./accessibleDataTableModel"
+import { buildNetworkTableModel } from "./networkAccessibleDataTableModel"
 
 // ── computeCanvasAriaLabel ──────────────────────────────────────────────
 
@@ -779,311 +769,166 @@ describe("extractAllRows — data shape resilience (never throws)", () => {
   })
 })
 
-// ── computeFieldStats logic ─────────────────────────────────────────────
-
-describe("computeFieldStats resilience", () => {
-  interface TestFieldStats {
-    name: string
-    count: number
-    numeric: boolean
-    min?: number
-    max?: number
-    mean?: number
-    uniqueValues?: string[]
+describe("accessible field statistics", () => {
+  function statsFor(datums: unknown[]) {
+    return computeFieldStats(extractAllRows(datums.map((datum) => ({ type: "point", datum }))))
   }
 
-  // Replicate the production logic for direct testing
-  function computeFieldStats(rows: Array<{ values?: Datum } | null>): TestFieldStats[] {
-    if (!rows || rows.length === 0) return []
-    const fieldNames = new Set<string>()
-    for (const r of rows) {
-      if (!r || !r.values) continue
-      for (const k of Object.keys(r.values)) fieldNames.add(k)
-    }
-    const stats: TestFieldStats[] = []
-    for (const name of fieldNames) {
-      const nums: number[] = []
-      const strs = new Set<string>()
-      for (const r of rows) {
-        if (!r || !r.values) continue
-        const v = r.values[name]
-        if (v == null || v === "") continue
-        if (typeof v === "number" && !Number.isNaN(v) && Number.isFinite(v)) {
-          nums.push(v)
-        } else if (typeof v === "number") {
-          // NaN/Infinity — skip
-        } else if (typeof v !== "object" && typeof v !== "function") {
-          strs.add(String(v))
-        }
-      }
-      if (nums.length > 0) {
-        let min = nums[0], max = nums[0], sum = 0
-        for (const n of nums) {
-          if (n < min) min = n
-          if (n > max) max = n
-          sum += n
-        }
-        stats.push({ name, count: nums.length, numeric: true, min, max, mean: sum / nums.length })
-      } else if (strs.size > 0) {
-        const unique = Array.from(strs)
-        stats.push({ name, count: unique.length, numeric: false, uniqueValues: unique.slice(0, 5) })
-      }
-    }
-    return stats
-  }
-
-  it("handles empty rows", () => {
-    expect(computeFieldStats([])).toEqual([])
+  it.each([
+    [],
+    [{ x: null, y: undefined }],
+    [{ name: "", category: "" }],
+    [{ x: NaN, y: Infinity, z: -Infinity }],
+    [{ arr: [1, 2], obj: { nested: true }, fn: () => 42 }],
+    [null, undefined, {}],
+  ])("omits absent and non-displayable values from %j", (...datums) => {
+    expect(statsFor(datums)).toEqual([])
   })
 
-  it("handles rows with all null/undefined values", () => {
-    const rows = [
-      { values: { x: null, y: undefined } },
-      { values: { x: null, y: undefined } },
-    ]
-    // All values are null/undefined — no stats produced
-    expect(computeFieldStats(rows)).toEqual([])
+  it("summarizes finite numbers without treating zero or missing fields as absent observations", () => {
+    const stats = statsFor([
+      { x: 0, y: 10 },
+      { x: 0, y: NaN },
+      { x: 10, y: 20 },
+      { x: "unavailable", y: Infinity },
+      {},
+    ])
+    expect(stats).toEqual([
+      { name: "x", count: 3, numeric: true, min: 0, max: 10, mean: 10 / 3 },
+      { name: "y", count: 2, numeric: true, min: 10, max: 20, mean: 15 },
+    ])
+    expect(formatSummary(5, stats)).toBe("5 data points. x: 0 to 10, mean 3.33. y: 10 to 20, mean 15.")
   })
 
-  it("handles rows with all empty string values", () => {
-    const rows = [
-      { values: { name: "", category: "" } },
-      { values: { name: "", category: "" } },
-    ]
-    expect(computeFieldStats(rows)).toEqual([])
+  it("keeps a single observation's value as its minimum, maximum and mean", () => {
+    expect(statsFor([{ x: 42 }])).toEqual([
+      { name: "x", count: 1, numeric: true, min: 42, max: 42, mean: 42 },
+    ])
   })
 
-  it("handles mixed numeric and non-numeric in same field", () => {
-    const rows = [
-      { values: { x: 10 } },
-      { values: { x: "hello" } },
-      { values: { x: 20 } },
-    ]
-    // Numbers win: "hello" is not a number, ignored by numeric branch
-    // Actually: loop collects nums=10,20 and strs={"hello"}
-    // Since nums.length > 0, it's numeric
-    const stats = computeFieldStats(rows)
-    expect(stats).toHaveLength(1)
-    expect(stats[0].numeric).toBe(true)
-    expect(stats[0].min).toBe(10)
-    expect(stats[0].max).toBe(20)
-    expect(stats[0].count).toBe(2)
+  it("preserves booleans and dates through the real scene-to-table extraction", () => {
+    expect(statsFor([
+      { enabled: true, date: new Date("2024-01-01T12:00:00Z") },
+      { enabled: false, date: new Date("2024-01-02T12:00:00Z") },
+      { enabled: true },
+    ])).toEqual([
+      { name: "enabled", count: 2, numeric: false, uniqueValues: ["true", "false"] },
+      { name: "date", count: 2, numeric: false, uniqueValues: ["2024-01-01", "2024-01-02"] },
+    ])
   })
 
-  it("handles NaN values — excluded from numeric stats", () => {
-    const rows = [
-      { values: { x: NaN } },
-      { values: { x: 5 } },
-      { values: { x: NaN } },
-    ]
-    const stats = computeFieldStats(rows)
-    expect(stats[0].count).toBe(1)
-    expect(stats[0].min).toBe(5)
+  it("omits invalid dates while retaining the row's other fields", () => {
+    expect(statsFor([{ date: new Date("invalid"), value: 7 }])).toEqual([
+      { name: "value", count: 1, numeric: true, min: 7, max: 7, mean: 7 },
+    ])
   })
 
-  it("handles Infinity values — excluded from numeric stats", () => {
-    const rows = [
-      { values: { x: Infinity } },
-      { values: { x: 5 } },
-      { values: { x: -Infinity } },
-    ]
-    const stats = computeFieldStats(rows)
-    expect(stats[0].count).toBe(1) // only 5 is finite
-    expect(stats[0].min).toBe(5)
-    expect(stats[0].max).toBe(5)
+  it.each(["point", "rect", "geoarea", "line"])(
+    "retains %s table rows when an accessible projection contains an invalid date", (type) => {
+      const values = { date: new Date("invalid"), label: "Retained", value: 7 }
+      expect(extractAllRows([{ type, accessibleDatum: values }])[0].values).toMatchObject({
+        label: "Retained", value: 7,
+      })
+    },
+  )
+
+  it("bounds category examples while retaining the full unique count", () => {
+    const stats = statsFor(Array.from({ length: 20 }, (_, i) => ({ category: `category-${i}` })))
+    expect(stats).toEqual([{
+      name: "category", count: 20, numeric: false,
+      uniqueValues: ["category-0", "category-1", "category-2", "category-3", "category-4"],
+    }])
+    expect(formatSummary(20, stats)).toBe(
+      "20 data points. category: category-0, category-1, category-2… (20 unique).",
+    )
   })
 
-  it("handles boolean values (treated as strings)", () => {
-    const rows = [
-      { values: { flag: true } },
-      { values: { flag: false } },
-      { values: { flag: true } },
-    ]
-    const stats = computeFieldStats(rows)
-    expect(stats[0].numeric).toBe(false)
-    expect(stats[0].uniqueValues).toContain("true")
-    expect(stats[0].uniqueValues).toContain("false")
-  })
-
-  it("handles Date objects — silently skipped (objects are excluded)", () => {
-    const d = new Date("2024-01-01")
-    const rows = [{ values: { date: d } }]
-    const stats = computeFieldStats(rows)
-    expect(stats).toEqual([])
-  })
-
-  it("handles arrays as values — silently skipped", () => {
-    const rows = [{ values: { arr: [1, 2, 3] } }]
-    const stats = computeFieldStats(rows)
-    // Arrays are objects — skipped entirely
-    expect(stats).toEqual([])
-  })
-
-  it("handles objects as values — silently skipped", () => {
-    const rows = [{ values: { obj: { nested: true } } }]
-    const stats = computeFieldStats(rows)
-    expect(stats).toEqual([])
-  })
-
-  it("handles function values — silently skipped", () => {
-    const rows = [{ values: { fn: () => 42 } }]
-    const stats = computeFieldStats(rows)
-    expect(stats).toEqual([])
-  })
-
-  it("handles null rows in array", () => {
-    const rows = [null, { values: { x: 5 } }, null]
-    const stats = computeFieldStats(rows)
-    expect(stats[0].count).toBe(1)
-    expect(stats[0].min).toBe(5)
-  })
-
-  it("handles rows with missing values property", () => {
-    const rows = [{ oops: "wrong" }, { values: { x: 10 } }]
-    const stats = computeFieldStats(rows)
-    expect(stats[0].count).toBe(1)
-  })
-
-  it("limits uniqueValues to 5", () => {
-    const rows = Array.from({ length: 20 }, (_, i) => ({
-      values: { cat: `category-${i}` },
-    }))
-    const stats = computeFieldStats(rows)
-    expect(stats[0].uniqueValues!.length).toBe(5)
-    expect(stats[0].count).toBe(20)
-  })
-
-  it("handles sparse fields across rows", () => {
-    // Some rows have field 'a', others don't
-    const rows = [
-      { values: { a: 1, b: 10 } },
-      { values: { b: 20 } },
-      { values: { a: 3 } },
-    ]
-    const stats = computeFieldStats(rows)
-    const aStats = stats.find((s) => s.name === "a")
-    const bStats = stats.find((s) => s.name === "b")
-    expect(aStats!.count).toBe(2) // only 2 rows have 'a'
-    expect(bStats!.count).toBe(2) // only 2 rows have 'b'
-  })
-
-  it("handles zero values correctly (not treated as missing)", () => {
-    const rows = [
-      { values: { x: 0 } },
-      { values: { x: 0 } },
-      { values: { x: 10 } },
-    ]
-    const stats = computeFieldStats(rows)
-    expect(stats[0].count).toBe(3)
-    expect(stats[0].min).toBe(0)
-    expect(stats[0].mean).toBeCloseTo(10 / 3)
-  })
-
-  it("handles single row", () => {
-    const stats = computeFieldStats([{ values: { x: 42 } }])
-    expect(stats[0].min).toBe(42)
-    expect(stats[0].max).toBe(42)
-    expect(stats[0].mean).toBe(42)
-  })
-
-  it("handles rows with no values object keys", () => {
-    const rows = [{ values: {} }, { values: {} }]
-    expect(computeFieldStats(rows)).toEqual([])
+  it("renders extracted statistics and formatted values in the expanded table", async () => {
+    render(<AccessibleDataTable chartType="scatter chart" scene={[
+      { type: "point", datum: { value: 0, enabled: true, date: new Date("2024-01-01T12:00:00Z") } },
+      { type: "point", datum: { value: -3.14159, enabled: false, date: new Date("2024-01-02T12:00:00Z") } },
+    ]} />)
+    fireEvent.click(screen.getByRole("button", { name: /view data summary/i }))
+    expect(await screen.findByRole("note")).toHaveTextContent(
+      "2 data points. value: -3.14 to 0, mean -1.57. enabled: true, false. date: 2024-01-01, 2024-01-02.",
+    )
+    const table = await screen.findByRole("table")
+    expect(within(table).getByRole("cell", { name: "-3.14" })).toBeInTheDocument()
+    expect(within(table).getByRole("cell", { name: "false" })).toBeInTheDocument()
+    expect(within(table).getByRole("cell", { name: "2024-01-02" })).toBeInTheDocument()
   })
 })
 
-// ── fmt resilience ──────────────────────────────────────────────────────
+describe("accessible value formatting", () => {
+  it.each([
+    [null, ""], [undefined, ""], [NaN, ""], [0, "0"],
+    [-3.14159, "-3.14"], [0.001, "0"], [Infinity, "Infinity"], [-Infinity, "-Infinity"],
+  ])("formats numeric summary value %s as %s", (value, expected) => {
+    expect(fmt(value)).toBe(expected)
+  })
 
-describe("fmt helper resilience", () => {
-  // Replicate for testing
-  const fmt = (v: number | string | boolean | null | undefined): string => {
-    if (v == null) return ""
-    const n = Math.round(Number(v) * 100) / 100
-    if (Number.isNaN(n)) return ""
-    return String(n)
-  }
-
-  it("handles null", () => expect(fmt(null)).toBe(""))
-  it("handles undefined", () => expect(fmt(undefined)).toBe(""))
-  it("handles NaN", () => expect(fmt(NaN)).toBe(""))
-  it("handles 0", () => expect(fmt(0)).toBe("0"))
-  it("handles negative", () => expect(fmt(-3.14159)).toBe("-3.14"))
-  it("handles Infinity", () => expect(fmt(Infinity)).toBe("Infinity"))
-  it("handles -Infinity", () => expect(fmt(-Infinity)).toBe("-Infinity"))
-  it("handles very small decimals", () => expect(fmt(0.001)).toBe("0"))
-  it("handles string coercion", () => expect(fmt("42")).toBe("42"))
-  it("handles boolean coercion", () => {
-    // true * 100 = 100, round = 100
-    expect(fmt(true)).toBe("1")
+  it.each([
+    [null, "—"], [undefined, "—"], [NaN, "—"], ["", "—"],
+    [0, "0"], [-3.14159, "-3.14"], [true, "true"], [false, "false"],
+    ["42 units", "42 units"], [{ nested: true }, "—"], [[1, 2], "—"],
+  ])("formats table cell %j as %s", (value, expected) => {
+    expect(fmtCell(value)).toBe(expected)
   })
 })
 
-// ── Network degree distribution resilience ──────────────────────────────
-
-describe("network degree distribution", () => {
-  type NetworkEndpoint = string | number | ({ id?: string | number } & Record<string, unknown>) | null | undefined
-  function computeDegrees(edges: Array<{ source?: NetworkEndpoint; target?: NetworkEndpoint }>): Map<string | number, number> {
-    const degreeMap = new Map<string | number, number>()
-    for (const e of edges) {
-      const src = typeof e.source === "object" ? e.source?.id : e.source
-      const tgt = typeof e.target === "object" ? e.target?.id : e.target
-      if (src) degreeMap.set(src, (degreeMap.get(src) ?? 0) + 1)
-      if (tgt) degreeMap.set(tgt, (degreeMap.get(tgt) ?? 0) + 1)
-    }
-    return degreeMap
-  }
-
-  it("handles empty edges", () => {
-    expect(computeDegrees([]).size).toBe(0)
+describe("network table degree distribution", () => {
+  it("expands node and edge tables with invalid dates without dropping their other fields", async () => {
+    render(<NetworkAccessibleDataTable
+      chartType="network chart"
+      nodes={[{ id: "a", datum: { id: "a", date: new Date("invalid"), label: "Retained node" } }]}
+      edges={[{ datum: { source: "a", target: "a", date: new Date("invalid"), label: "Retained edge" } }]}
+    />)
+    fireEvent.click(screen.getByRole("button", { name: /view data summary/i }))
+    const tables = await screen.findAllByRole("table")
+    expect(tables).toHaveLength(2)
+    expect(within(tables[0]).getByRole("cell", { name: "Retained node" })).toBeInTheDocument()
+    expect(within(tables[1]).getByRole("cell", { name: "Retained edge" })).toBeInTheDocument()
+    expect(screen.getByRole("note")).toHaveTextContent("1 node, 1 edge. Mean degree: 2, max degree: 2.")
   })
 
-  it("handles edges with object source/target", () => {
-    const edges = [{ source: { id: "a" }, target: { id: "b" } }]
-    const degrees = computeDegrees(edges)
-    expect(degrees.get("a")).toBe(1)
-    expect(degrees.get("b")).toBe(1)
+  it("reports an empty topology", () => {
+    expect(buildNetworkTableModel([], [])).toEqual({
+      nodeRows: [], edgeRows: [], hasWeights: false, summary: "0 nodes, 0 edges.",
+    })
   })
 
-  it("handles edges with string source/target", () => {
-    const edges = [{ source: "a", target: "b" }, { source: "a", target: "c" }]
-    const degrees = computeDegrees(edges)
-    expect(degrees.get("a")).toBe(2)
-    expect(degrees.get("b")).toBe(1)
-    expect(degrees.get("c")).toBe(1)
+  it("counts object and scalar endpoints, including zero-valued IDs and isolated nodes", () => {
+    const model = buildNetworkTableModel(
+      [{ id: 0 }, { id: "a" }, { id: "b" }, { id: "isolated" }],
+      [{ source: { id: 0 }, target: { id: "a" } }, { source: 0, target: "b" }],
+    )
+    expect(model.nodeRows.map(({ id, degree, inDeg, outDeg }) => ({ id, degree, inDeg, outDeg }))).toEqual([
+      { id: "0", degree: 2, inDeg: 0, outDeg: 2 },
+      { id: "a", degree: 1, inDeg: 1, outDeg: 0 },
+      { id: "b", degree: 1, inDeg: 1, outDeg: 0 },
+      { id: "isolated", degree: 0, inDeg: 0, outDeg: 0 },
+    ])
+    expect(model.summary).toBe("4 nodes, 2 edges. Mean degree: 1, max degree: 2.")
   })
 
-  it("handles edges with null/undefined source or target", () => {
-    const edges = [
-      { source: null, target: "b" },
-      { source: "a", target: undefined },
-      { source: null, target: null },
-    ]
-    const degrees = computeDegrees(edges)
-    expect(degrees.get("b")).toBe(1)
-    expect(degrees.get("a")).toBe(1)
-    expect(degrees.size).toBe(2)
+  it("does not invent nodes for missing endpoint IDs", () => {
+    const model = buildNetworkTableModel(
+      [{ id: "a" }, { id: "b" }],
+      [{ source: null, target: "b" }, { source: "a" }, { source: { name: "missing id" }, target: null }],
+    )
+    expect(model.nodeRows.map(({ id, degree }) => [id, degree])).toEqual([["a", 1], ["b", 1]])
+    expect(model.edgeRows).toHaveLength(3)
   })
 
-  it("handles edges where object source has no id", () => {
-    const edges = [{ source: { name: "x" }, target: { id: "b" } }]
-    const degrees = computeDegrees(edges)
-    // source.id is undefined → falsy → skipped
-    expect(degrees.has("undefined")).toBe(false)
-    expect(degrees.get("b")).toBe(1)
-  })
-
-  it("handles numeric source/target IDs", () => {
-    const edges = [{ source: 1, target: 2 }, { source: 1, target: 3 }]
-    const degrees = computeDegrees(edges)
-    // typeof 1 !== "object", so raw number is used as key
-    expect(degrees.get(1)).toBe(2)
-    expect(degrees.get(2)).toBe(1)
-    expect(degrees.get(3)).toBe(1)
-  })
-
-  it("handles self-loops", () => {
-    const edges = [{ source: "a", target: "a" }]
-    const degrees = computeDegrees(edges)
-    expect(degrees.get("a")).toBe(2)
+  it("counts both directions of a weighted self-loop from the authored datum envelope", () => {
+    const model = buildNetworkTableModel(
+      [{ datum: { id: "a" } }],
+      [{ datum: { source: "a", target: "a", value: 3 } }],
+    )
+    expect(model.nodeRows[0]).toMatchObject({
+      id: "a", degree: 2, inDeg: 1, outDeg: 1, wDegree: 6, wInDeg: 3, wOutDeg: 3,
+    })
+    expect(model.hasWeights).toBe(true)
+    expect(model.summary).toBe("1 node, 1 edge. Mean degree: 2, max degree: 2.")
   })
 })

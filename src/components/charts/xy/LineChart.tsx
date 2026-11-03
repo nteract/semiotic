@@ -6,7 +6,7 @@ import * as React from "react"
 import { useMemo, useCallback, useState, useEffect, forwardRef, useRef } from "react"
 import { filterSparseArray } from "../shared/sparseArray"
 import StreamXYFrame from "../../stream/StreamXYFrame"
-import { registerLineFamilyXYPlugins } from "../../stream/xyPlugins/lineFamily"
+import { ensureLineFamilyXYPlugins } from "../../stream/xyPlugins/lineFamily"
 import type { StreamXYFrameProps, StreamXYFrameHandle, BandConfig } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
@@ -43,7 +43,7 @@ import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureLineChartRegistrations(): void {
-  registerLineFamilyXYPlugins()
+  ensureLineFamilyXYPlugins()
 }
 
 // Line-object input needs a group key after its coordinate arrays are

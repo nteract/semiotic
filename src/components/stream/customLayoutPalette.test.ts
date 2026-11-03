@@ -73,9 +73,8 @@ describe("buildResolveColor", () => {
 
   it("returns a constant fallback when palette is empty (regression)", () => {
     // Regression: Math.abs(hash) % 0 is NaN and palette[NaN] is
-    // undefined. Without an explicit guard the resolver could leak
-    // undefined into scene-node fill strings. Now it returns a fixed
-    // primary so something readable still draws.
+    // undefined. The final fallback must cover that lookup as well as
+    // missing entries in a non-empty palette.
     const resolve = buildResolveColor([])
     expect(resolve("alpha")).toBe("#4e79a7")
     expect(resolve("alpha")).toBe(resolve("beta")) // constant

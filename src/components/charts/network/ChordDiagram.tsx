@@ -8,7 +8,7 @@ import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import { chordLayoutPlugin } from "../../stream/layouts/chordLayoutPlugin"
-import { registerLayoutPlugin } from "../../stream/layouts/registry"
+import { ensureLayoutPlugin } from "../../stream/layouts/registry"
 import { registerNetworkPerspective } from "../../stream/networkPerspectiveRuntime"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps, StreamNetworkFrameHandle } from "../../stream/networkTypes"
@@ -33,7 +33,7 @@ import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureChordDiagramRegistrations(): void {
-  registerLayoutPlugin("chord", chordLayoutPlugin)
+  ensureLayoutPlugin("chord", chordLayoutPlugin)
   registerNetworkPerspective()
 }
 

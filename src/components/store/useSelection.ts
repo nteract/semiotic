@@ -13,7 +13,7 @@ import { selectionFieldValues } from "./selectionProvenance"
 import { hasOwnEnumerableKey } from "./createStore"
 
 // Re-export crosshair store for convenience
-export { useCrosshairPosition, setCrosshairPosition, clearCrosshairPosition } from "./LinkedCrosshairStore"
+export { useCrosshairPosition } from "./LinkedCrosshairStore"
 
 // ── useSelection ───────────────────────────────────────────────────────────
 

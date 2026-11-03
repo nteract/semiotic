@@ -491,7 +491,7 @@ describe("renderStaticGradientLegend", () => {
   })
 
   it.each(["right", "left", "top", "bottom"] as const)(
-    "keeps labeled %s legend geometry non-negative within its layout group",
+    "preserves labeled %s gradient direction, bar geometry and endpoint labels",
     (position) => {
       const node = renderStaticGradientLegend({
         theme: LIGHT_THEME,
@@ -501,14 +501,30 @@ describe("renderStaticGradientLegend", () => {
         margin: { top: 70, right: 130, bottom: 80, left: 130 },
         gradient: {
           domain: [0, 1],
-          colorFn: () => "#08519c",
+          colorFn: (value) => value > 0.5 ? "#08519c" : "#deebf7",
           label: "Probability",
+          format: (value) => `${value * 100}%`,
         },
       })
       const svg = ReactDOMServer.renderToStaticMarkup(<svg>{node}</svg>)
 
       expect(svg).not.toMatch(/<text[^>]* y="-/)
       expect(svg).not.toMatch(/<rect[^>]* y="-/)
+      const doc = new DOMParser().parseFromString(svg, "image/svg+xml")
+      const horizontal = position === "top" || position === "bottom"
+      const gradient = doc.querySelector("linearGradient")!
+      expect(gradient.getAttribute("x2")).toBe(horizontal ? "100%" : "0%")
+      expect(gradient.getAttribute("y2")).toBe(horizontal ? "0%" : "100%")
+      const stops = Array.from(gradient.querySelectorAll("stop"))
+      expect(stops[0].getAttribute("stop-color")).toBe(horizontal ? "#deebf7" : "#08519c")
+      expect(stops.at(-1)!.getAttribute("stop-color")).toBe(horizontal ? "#08519c" : "#deebf7")
+      const bar = doc.querySelector("rect")!
+      expect([bar.getAttribute("width"), bar.getAttribute("height")]).toEqual(
+        horizontal ? ["200", "12"] : ["14", "100"]
+      )
+      expect(Array.from(doc.querySelectorAll("text"), (text) => text.textContent)).toEqual(
+        horizontal ? ["Probability", "0%", "100%"] : ["Probability", "100%", "0%"]
+      )
     }
   )
 })

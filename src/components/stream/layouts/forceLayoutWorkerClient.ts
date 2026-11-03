@@ -115,11 +115,6 @@ const sharedForceLayoutSession = /*#__PURE__*/ createSharedWorkerSessionHolder(
   () => new ForceLayoutWorkerSession(),
 )
 
-/** Test helper: drop the shared session so the next call creates a fresh Worker. */
-export function _resetSharedForceLayoutSessionForTest(): void {
-  sharedForceLayoutSession.resetForTest()
-}
-
 /**
  * Run a force layout on a reused worker session.
  * Prefer this over constructing a new Worker per layout.

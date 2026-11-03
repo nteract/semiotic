@@ -1,6 +1,7 @@
 "use client"
 
-import * as React from "react"
+// Retain the released React namespace spelling in this component's inferred declaration.
+import type * as React from "react"
 import {
   forwardRef,
   memo,
@@ -8,7 +9,9 @@ import {
   useEffect,
   useImperativeHandle,
   useId,
-  useRef
+  useRef,
+  useMemo,
+  useState
 } from "react"
 import type { FrameMargin } from "../useFrame"
 import { useFrame } from "../useFrame"
@@ -230,7 +233,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
         beforePaint,
         afterPaint
       } = props
-      const stylePrimitives = React.useMemo(
+      const stylePrimitives = useMemo(
         () => ({ color, stroke, strokeWidth, opacity }),
         [color, opacity, stroke, strokeWidth]
       )
@@ -262,7 +265,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
         paused: boolean
         visible: boolean
       } | null>(null)
-      const composedControllers = React.useMemo(
+      const composedControllers = useMemo(
         () => composePhysicsControllers(controllers),
         [controllers]
       )
@@ -273,7 +276,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
       const continuousRef = useRef(continuousEffective)
       continuousRef.current = continuousEffective
 
-      const composedBodyForces = React.useMemo<
+      const composedBodyForces = useMemo<
         StreamPhysicsBodyForce | undefined
       >(() => {
         if (!composedControllers?.controllers.some((controller) => controller.bodyForce)) return bodyForces
@@ -295,15 +298,15 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
       }, [bodyForces, composedControllers])
       bodyForcesRef.current = composedBodyForces
 
-      const regionBySensorId = React.useMemo(() => {
+      const regionBySensorId = useMemo(() => {
         return new Map(
           regionEffects.map((region) => [regionSensorId(region), region])
         )
       }, [regionEffects])
-      const regionById = React.useMemo(() => {
+      const regionById = useMemo(() => {
         return new Map(regionEffects.map((region) => [region.id, region]))
       }, [regionEffects])
-      const regionSemanticItems = React.useMemo(
+      const regionSemanticItems = useMemo(
         () =>
           regionEffects
             .map(regionToSemanticItem)
@@ -311,8 +314,8 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
         [regionEffects]
       )
       const [bodySemanticItemsSnapshot, setBodySemanticItemsSnapshot] =
-        React.useState<PhysicsSemanticItem[]>([])
-      const allSemanticItems = React.useMemo(
+        useState<PhysicsSemanticItem[]>([])
+      const allSemanticItems = useMemo(
         () =>
           bodySemanticItemsSnapshot.length || regionSemanticItems.length
             ? [
@@ -323,7 +326,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
             : semanticItems,
         [bodySemanticItemsSnapshot, regionSemanticItems, semanticItems]
       )
-      const hasRuntimeRegionEffects = React.useMemo(
+      const hasRuntimeRegionEffects = useMemo(
         () => regionRuntimeEffectsRequireSync(regionEffects),
         [regionEffects]
       )
@@ -477,7 +480,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
       const plotWidth = Math.max(1, frameWidth - margin.left - margin.right)
       const plotHeight = Math.max(1, frameHeight - margin.top - margin.bottom)
 
-      const augmentedConfig = React.useMemo(
+      const augmentedConfig = useMemo(
         () =>
           resolvePhysicsFramePipelineConfig({
             annotations,
@@ -532,7 +535,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
       const workerPendingRef = useRef(false)
       const workerRenderRequestedRef = useRef(false)
       const workerSessionRef = useRef<PhysicsWorkerSession | null>(null)
-      const [hostMutations] = React.useState(() => new PhysicsWorkerHostMutations())
+      const [hostMutations] = useState(() => new PhysicsWorkerHostMutations())
       const workerStartingRef = useRef(false)
       const logicalClockRef = useRef<() => number>(frameRuntime.now)
       logicalClockRef.current = frameRuntime.now
@@ -580,7 +583,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
         storeRef
       })
 
-      const [annotationAnchors, setAnnotationAnchors] = React.useState<
+      const [annotationAnchors, setAnnotationAnchors] = useState<
         PhysicsAnnotationAnchorNode[]
       >([])
       const lastAnnotationAnchorUpdateRef = useRef(0)
@@ -1635,6 +1638,5 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
     }
   )
 ), "StreamPhysicsFrame")
-
 
 export default StreamPhysicsFrame

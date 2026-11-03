@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest"
 import { createDefaultPhysicsEngineAdapter } from "./PhysicsEngineAdapter"
 import { PhysicsPipelineStore } from "./PhysicsPipelineStore"
 import { normalizeObservationConfig } from "./physicsPipelineHelpers"
-import { observePhysicsKernelEvents, observePhysicsSensorTransitions } from "./physicsPipelineObservations"
+import { observePhysicsKernelEvents, observePhysicsSensorTransitions, type PhysicsObservationContext } from "./physicsPipelineObservations"
 
 const spawn = {
   id: "observed", x: 1, y: 2, fixedPosition: { x: 10 },
@@ -110,12 +110,14 @@ describe("physics boundary observations under callback mutations", () => {
     const readBody = vi.spyOn(world, "readBody")
     if (!indexed) world.readBody = undefined
     const readState = vi.spyOn(world, "readState")
-    const events: unknown[] = []
+    const emit = vi.fn<PhysicsObservationContext["emit"]>((event) => {
+      if (event.bodyId === "0") world.remove(["1"])
+    })
     observePhysicsKernelEvents(world, [{ type: "sleep", bodyId: "0" }, { type: "sleep", bodyId: "1" }], {
       elapsedSeconds: 3, observation: normalizeObservationConfig({}),
-      emit(event) { events.push(event); if (event.bodyId === "0") world.remove(["1"]) }
+      emit
     })
-    expect(events).toEqual([
+    expect(emit.mock.calls.map(([event]) => event)).toEqual([
       expect.objectContaining({ bodyId: "0", datum: { id: 0 }, x: 10, y: 2 }),
       expect.objectContaining({ bodyId: "1", datum: { id: 1 }, x: 10, y: 2 }),
     ])
@@ -129,12 +131,14 @@ describe("physics boundary observations under callback mutations", () => {
     world.spawn({ ...spawn, id: "b", datum: { id: "b" } })
     if (!indexed) world.readBody = undefined
     vi.spyOn(world, "activeSensorPairs").mockReturnValue([{ sensorId: "new", bodyId: "a" }])
-    const events: unknown[] = []
+    const emit = vi.fn<PhysicsObservationContext["emit"]>((event) => {
+      if (event.bodyId === "a") world.remove(["b"])
+    })
     observePhysicsSensorTransitions(world, new Set(["old\u0000b"]), {
       elapsedSeconds: 3, observation: normalizeObservationConfig({}),
-      emit(event) { events.push(event); if (event.bodyId === "a") world.remove(["b"]) }
+      emit
     })
-    expect(events).toEqual([
+    expect(emit.mock.calls.map(([event]) => event)).toEqual([
       expect.objectContaining({ type: "physics-bin-enter", bodyId: "a", datum: { id: "a" }, x: 10 }),
       expect.objectContaining({ type: "physics-bin-exit", bodyId: "b", datum: { id: "b" }, x: 10 }),
     ])
