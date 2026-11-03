@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, vi } from "vitest"
 import { packedClusterMatrix } from "./packedClusterMatrix"
 import type { PackedClusterMatrixConfig } from "./packedClusterMatrix"
 import { shade, makeShade, readField, dimFor, matchesHighlight, signatureKey, LayoutCache } from "./recipeUtils"
@@ -451,11 +451,10 @@ describe("signatureKey / LayoutCache", () => {
 
   it("LayoutCache.getOrCompute computes on miss, reuses on hit", () => {
     const cache = new LayoutCache<number>(3)
-    let calls = 0
-    const compute = () => { calls++; return 42 }
+    const compute = vi.fn(() => 42)
     expect(cache.getOrCompute("k", compute)).toBe(42)
     expect(cache.getOrCompute("k", compute)).toBe(42)
-    expect(calls).toBe(1) // second call was a cache hit
+    expect(compute).toHaveBeenCalledOnce() // second call was a cache hit
   })
 
   it("LayoutCache evicts wholesale past maxSize (bounded)", () => {

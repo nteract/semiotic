@@ -3,7 +3,7 @@ import { physicsCanvasThemeCSSValue } from "../stream/physics/PhysicsCanvasTheme
 import { eventDropBodyStyle } from "../charts/physics/eventDropStyle"
 import { eventDropSourceRail } from "../charts/physics/eventDropSources"
 import { fnv1a32 } from "../utils/hash"
-import * as React from "react"
+import { createElement, Fragment } from "react"
 import {
   buildCollisionSwarmPhysics,
   buildEventDropPhysics,
@@ -76,8 +76,8 @@ function composePhysicsGraphics(
   if (!first) return second
   if (!second) return first
   return (context) =>
-    React.createElement(
-      React.Fragment,
+    createElement(
+      Fragment,
       null,
       typeof first === "function" ? first(context) : first,
       typeof second === "function" ? second(context) : second
@@ -474,7 +474,7 @@ export const gauntletChart: ChartConfig = {
       projectionRows: [],
       backgroundGraphics: composePhysicsGraphics(
         physicsChromeEnabled(common, rest, "showChrome")
-          ? React.createElement(GauntletChrome, {
+          ? createElement(GauntletChrome, {
               layout: built.layout,
               states: built.states,
               compact: common.__compactMode === true
@@ -484,7 +484,7 @@ export const gauntletChart: ChartConfig = {
       ),
       foregroundGraphics: composePhysicsGraphics(
         physicsChromeEnabled(common, rest, "showProjection")
-          ? React.createElement(GauntletProjectionOverlay, {
+          ? createElement(GauntletProjectionOverlay, {
               layout: built.layout,
               states: built.states
             })
@@ -577,7 +577,7 @@ export const crucibleChart: ChartConfig = {
     const chrome =
       rest.showChrome === false
         ? null
-        : React.createElement(CrucibleChrome, {
+        : createElement(CrucibleChrome, {
             layout: plan.layout,
             phases: plan.phases,
             state,
@@ -586,7 +586,7 @@ export const crucibleChart: ChartConfig = {
     const projectionOverlay =
       rest.showProjection === false
         ? null
-        : React.createElement(CrucibleProjectionOverlay, {
+        : createElement(CrucibleProjectionOverlay, {
             rows,
             layout: plan.layout,
             projection,

@@ -1,5 +1,6 @@
 import { getMax, getMin } from "../../charts/shared/minMax"
-import * as React from "react"
+import type * as React from "react"
+import { createElement } from "react"
 import type { NetworkCustomLayout } from "../../stream/networkCustomLayout"
 import { NetworkPerspectiveGround } from "../../stream/networkPerspectivePlacement"
 import type { NetworkPerspectiveBound } from "../../stream/networkPerspective"
@@ -264,7 +265,7 @@ export const dependencyForestLayout: NetworkCustomLayout<
           : endX
     const arrowY = fromId === toId ? from.y - 17 : to.y
     overlays.push(
-      React.createElement("path", {
+      createElement("path", {
         key: `arrow:${edge.id}`,
         "data-dependency-edge": edge.id,
         "data-source": edge.source,
@@ -289,7 +290,7 @@ export const dependencyForestLayout: NetworkCustomLayout<
       const high = getMax(points.map((point) => point.y)) + 23
       bracket = { x: x - 7, y: low, width: 7, height: high - low, z: "top" }
       overlays.push(
-        React.createElement("path", {
+        createElement("path", {
           key: "required-bracket",
           d: `M${x - 7},${low} H${x} V${high} H${x - 7}`,
           fill: "none",
@@ -331,10 +332,10 @@ export const dependencyForestLayout: NetworkCustomLayout<
     }),
     // Arrowheads and the required-path bracket lie on the ground at edge
     // height under a `perspective`.
-    overlays: React.createElement(
+    overlays: createElement(
       "g",
       { "aria-hidden": true },
-      React.createElement(NetworkPerspectiveGround, { z: "top" }, ...overlays)
+      createElement(NetworkPerspectiveGround, { z: "top" }, ...overlays)
     ),
     perspective: "manual",
     // The bracket stands beside its targets, past the nodes.

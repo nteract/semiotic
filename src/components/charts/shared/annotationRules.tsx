@@ -1,6 +1,7 @@
 import { ThresholdAnnotation } from "./ThresholdAnnotation"
 import { annotationNote } from "../../text/annotationTextLayout"
-import * as React from "react"
+import type * as React from "react"
+import { cloneElement } from "react"
 import Annotation from "../../Annotation"
 import { packEnclose } from "d3-hierarchy"
 import { area as d3Area, curveLinear, curveMonotoneX, curveMonotoneY, curveStep, curveStepAfter, curveStepBefore, curveBasis, curveCardinal, curveCatmullRom } from "d3-shape"
@@ -683,7 +684,7 @@ export function createDefaultAnnotationRules(
           </text>
         )
         if (ann._redundantConnector !== true) {
-          return React.cloneElement(textEl, { key: `ann-text-${index}` })
+          return cloneElement(textEl, { key: `ann-text-${index}` })
         }
         return (
           <g key={`ann-text-${index}`} opacity={ann.opacity} strokeDasharray={ann.strokeDasharray}>
@@ -697,7 +698,7 @@ export function createDefaultAnnotationRules(
               strokeOpacity={0.5}
               style={{ pointerEvents: "none" }}
             />
-            {React.cloneElement(textEl, { opacity: undefined, strokeDasharray: undefined })}
+            {cloneElement(textEl, { opacity: undefined, strokeDasharray: undefined })}
           </g>
         )
       }

@@ -1,6 +1,5 @@
 import { staticTitleText } from "./staticTitle"
-import * as React from "react"
-import * as ReactDOMServer from "react-dom/server"
+import { renderToStaticMarkup } from "react-dom/server"
 import type { Datum } from "../charts/shared/datumTypes"
 import { minimapChromeMargins, MINIMAP_DEFAULT_HEIGHT } from "../charts/xy/minimapLayout"
 import { renderStreamXYFrame } from "./staticXY"
@@ -87,8 +86,11 @@ export function renderMinimap(frameProps: Datum, sink?: EvidenceSink): string {
   // The overview is deliberately a quiet, non-interactive copy of the full
   // series. Remove detail-only frame overrides before asking the shared line
   // server config to construct it.
+  // Omit detail styles rather than assigning undefined: the computed overview
+  // styles must survive lineChart's final common-prop spread.
+  const { lineStyle: _lineStyle, pointStyle: _pointStyle, ...overviewBase } = common
   const overviewCommon: Datum = {
-    ...common,
+    ...overviewBase,
     size: [width, overviewTotalHeight],
     margin: overviewMargin,
     title: undefined,
@@ -102,11 +104,6 @@ export function renderMinimap(frameProps: Datum, sink?: EvidenceSink): string {
     yExtent: rest.yExtent ?? common.yExtent,
     _idPrefix: `${String(common._idPrefix ?? "minimap")}-overview`
   }
-  // `common` may contain detail-only frameProps. Omitting these keys is
-  // materially different from assigning undefined: lineChart's computed
-  // overview style must survive its final common-prop spread.
-  delete overviewCommon.lineStyle
-  delete overviewCommon.pointStyle
   const overviewRest: Datum = {
     ...lineRest,
     fillArea: false,
@@ -177,7 +174,7 @@ export function renderMinimap(frameProps: Datum, sink?: EvidenceSink): string {
       axisFormat: brushDirection === "x" ? common.xFormat : common.yFormat
     })
     : null
-  const svg = ReactDOMServer.renderToStaticMarkup(
+  const svg = renderToStaticMarkup(
     <svg
       xmlns="http://www.w3.org/2000/svg"
       className="minimap-chart"

@@ -7,7 +7,8 @@
  *
  * Pattern mirrors `statisticalOverlaysLazy.ts`.
  */
-import * as React from "react"
+import type * as React from "react"
+import { useState, useEffect } from "react"
 import type { XYBrushOverlayProps } from "./XYBrushOverlay"
 
 type BrushComponent = React.ComponentType<XYBrushOverlayProps>
@@ -39,9 +40,9 @@ function loadXYBrushOverlay(): Promise<BrushComponent> {
  * lag one tick without affecting chart layout or data marks.
  */
 export function XYBrushOverlayLazy(props: XYBrushOverlayProps) {
-  const [Comp, setComp] = React.useState<BrushComponent | null>(() => cached)
+  const [Comp, setComp] = useState<BrushComponent | null>(() => cached)
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (Comp) return
     let cancelled = false
     loadXYBrushOverlay().then((Loaded) => {

@@ -7,7 +7,7 @@
  */
 import * as React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import type { ReactNode } from "react"
 import type { NetworkLayoutContext, NetworkLayoutResult } from "../stream/networkCustomLayout"
 import type { NetworkRectNode } from "../stream/networkTypes"
@@ -118,15 +118,13 @@ function expectBoundsInPlot(r: NetworkLayoutResult, preset: "isometric" | "dimet
 
 function expectNoWarning(r: NetworkLayoutResult) {
   const state = new NetworkPerspectiveState()
-  const warn = console.warn
-  const calls: unknown[] = []
-  console.warn = (...args: unknown[]) => calls.push(args)
+  const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
   try {
-    state.warnFlatDecorations(r as { backgrounds?: unknown; overlays?: unknown; perspective?: string })
+    state.warnFlatDecorations(r)
+    expect(warn).not.toHaveBeenCalled()
   } finally {
-    console.warn = warn
+    warn.mockRestore()
   }
-  expect(calls).toHaveLength(0)
   expect(r.perspective).toBe("manual")
 }
 

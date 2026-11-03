@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
+import { describe, it, expect, vi } from "vitest"
 import { render, renderHook, act } from "@testing-library/react"
 import * as React from "react"
 import {
@@ -15,10 +15,8 @@ import { useSelection } from "../../store/useSelection"
 import { ObservationProvider } from "../../store/ObservationStore"
 import { CategoryColorProvider } from "../../CategoryColors"
 import {
-  setCrosshairPosition,
-  clearCrosshairPosition,
-  useCrosshairPosition,
-  unlockCrosshair
+  LinkedCrosshairProvider,
+  useCrosshairPosition
 } from "../../store/LinkedCrosshairStore"
 import type { Datum } from "./datumTypes"
 import { useStreamingLegend } from "./useStreamingLegend"
@@ -28,13 +26,19 @@ import { useChartSetup } from "./useChartSetup"
  * Wrapper that provides the store providers needed by hooks that
  * depend on SelectionStore and ObservationStore.
  */
-function createWrapper(options?: { categoryColors?: Record<string, string> }) {
+function createWrapper(options?: {
+  categoryColors?: Record<string, string>
+  crosshair?: boolean
+}) {
   return function Wrapper({ children }: { children: React.ReactNode }) {
-    const inner = React.createElement(
+    let inner = React.createElement(
       SelectionProvider,
       null,
       React.createElement(ObservationProvider, null, children)
     )
+    if (options?.crosshair) {
+      inner = React.createElement(LinkedCrosshairProvider, null, inner)
+    }
     if (options?.categoryColors) {
       return React.createElement(CategoryColorProvider, {
         colors: options.categoryColors,
@@ -151,6 +155,67 @@ describe("useColorScale", () => {
 // ── useStreamingLegend ───────────────────────────────────────────────────
 
 describe("useStreamingLegend", () => {
+  it("preserves published identities when a frame repeats its normalized category domain", () => {
+    const { result } = renderHook(() =>
+      useStreamingLegend({
+        isPushMode: true,
+        colorBy: "cat",
+        colorScheme: undefined,
+        showLegend: true
+      })
+    )
+    act(() => result.current.categoryDomainProps.onCategoriesChange!(["A", "B"]))
+    const { categories, streamingLegend, streamingMarginAdjust } = result.current
+
+    for (const reported of [["A", "B"], ["A", "A", "B", "B"]]) {
+      act(() => result.current.categoryDomainProps.onCategoriesChange!(reported))
+      expect(result.current.categories).toBe(categories)
+      expect(result.current.streamingLegend).toBe(streamingLegend)
+      expect(result.current.streamingMarginAdjust).toBe(streamingMarginAdjust)
+    }
+    expect(categories).toEqual(["A", "B"])
+    expect(streamingLegend?.legendGroups[0].items.map((item) => item.label)).toEqual([
+      "A", "B"
+    ])
+  })
+
+  it("replaces frame domains in reported order and rediscovers removed categories on push", () => {
+    const { result } = renderHook(() =>
+      useStreamingLegend({
+        isPushMode: true,
+        colorBy: "cat",
+        colorScheme: undefined,
+        showLegend: true
+      })
+    )
+    act(() => result.current.categoryDomainProps.onCategoriesChange!(["A", "B"]))
+    const firstCategories = result.current.categories
+    const firstLegend = result.current.streamingLegend
+
+    act(() => result.current.categoryDomainProps.onCategoriesChange!(["B", "A", "B"]))
+    expect(result.current.categories).toEqual(["B", "A"])
+    expect(result.current.categories).not.toBe(firstCategories)
+    expect(result.current.streamingLegend).not.toBe(firstLegend)
+    expect(result.current.streamingLegend?.legendGroups[0].items.map((item) => item.label)).toEqual([
+      "B", "A"
+    ])
+    expect(firstCategories).toEqual(["A", "B"])
+    expect(firstLegend?.legendGroups[0].items.map((item) => item.label)).toEqual(["A", "B"])
+
+    act(() => result.current.categoryDomainProps.onCategoriesChange!(["B"]))
+    expect(result.current.categories).toEqual(["B"])
+    const push = vi.fn()
+    const datum = { cat: "A" }
+    act(() => result.current.wrapPush(push)(datum))
+    expect(push).toHaveBeenCalledExactlyOnceWith(datum)
+    expect(result.current.categories).toEqual(["B", "A"])
+
+    act(() => result.current.categoryDomainProps.onCategoriesChange!([]))
+    expect(result.current.categories).toEqual([])
+    expect(result.current.streamingLegend).toBeUndefined()
+    expect(result.current.streamingMarginAdjust).toBeUndefined()
+  })
+
   it("publishes an immutable category snapshot for each push-domain revision", () => {
     const { result } = renderHook(() =>
       useStreamingLegend({
@@ -244,9 +309,7 @@ describe("useChartSetup", () => {
     )
 
     act(() => {
-      const onCategoriesChange = result.current.legendBehaviorProps
-        .onCategoriesChange as ((categories: string[]) => void) | undefined
-      onCategoriesChange?.(["constructor"])
+      result.current.legendBehaviorProps.onCategoriesChange!(["constructor"])
     })
 
     const legend = result.current.legend as
@@ -1038,13 +1101,6 @@ describe("getCrosshairProps", () => {
 describe("useChartSelection click-to-lock crosshair", () => {
   const LOCK_NAME = "lockTest"
 
-  beforeEach(() => {
-    // Clean up any leftover locked state
-    unlockCrosshair(LOCK_NAME)
-    setCrosshairPosition(LOCK_NAME, 0, "__reset__")
-    clearCrosshairPosition(LOCK_NAME, "__reset__")
-  })
-
   it("click toggles lock on crosshair in x-position mode", () => {
     const { result } = renderHook(
       () => {
@@ -1055,7 +1111,7 @@ describe("useChartSelection click-to-lock crosshair", () => {
         const crosshair = useCrosshairPosition(LOCK_NAME)
         return { selection, crosshair }
       },
-      { wrapper: createWrapper() }
+      { wrapper: createWrapper({ crosshair: true }) }
     )
 
     // Hover to set crosshair
@@ -1117,7 +1173,7 @@ describe("useChartSelection click-to-lock crosshair", () => {
         const crosshair = useCrosshairPosition(LOCK_NAME)
         return { selection, crosshair }
       },
-      { wrapper: createWrapper() }
+      { wrapper: createWrapper({ crosshair: true }) }
     )
 
     act(() => {
@@ -1143,7 +1199,7 @@ describe("useChartSelection click-to-lock crosshair", () => {
         const crosshair = useCrosshairPosition("fieldLock")
         return { selection, crosshair }
       },
-      { wrapper: createWrapper() }
+      { wrapper: createWrapper({ crosshair: true }) }
     )
 
     act(() => {

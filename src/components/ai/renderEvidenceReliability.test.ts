@@ -83,11 +83,11 @@ describe("render evidence reliability through public AI exports", () => {
     "consumes observer failures without an unhandled rejection (%s)",
     async (kind) => {
       const renderError = new Error("private renderer detail")
-      const observed: unknown[] = []
+      const observed = vi.fn<(error: unknown) => void>()
       // Keep the observer unmocked: mock promise tracking would itself attach
       // a rejection handler and hide the production unhandled-rejection bug.
       const onRenderError = (error: unknown) => {
-        observed.push(error)
+        observed(error)
         if (kind === "async rejection")
           return (async () => {
             await Promise.resolve()
@@ -116,7 +116,7 @@ describe("render evidence reliability through public AI exports", () => {
         // Let rejected observers reach Node's unhandled-rejection checkpoint.
         await nextTurn()
         expect(unhandled).not.toHaveBeenCalled()
-        expect(observed).toEqual([renderError, renderError, renderError])
+        expect(observed.mock.calls).toEqual([[renderError], [renderError], [renderError]])
         for (const report of reports) {
           expect(report.ok).toBe(false)
           expect(report.evidence).toBeUndefined()

@@ -2,7 +2,7 @@ import type { CoercibleNumber } from "../../stream/accessorUtils"
 import * as React from "react"
 import { useRef, forwardRef, useCallback, useMemo } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
-import { registerXYPlugin } from "../../stream/xyPlugins/registry"
+import { ensureXYPlugin } from "../../stream/xyPlugins/registry"
 import { swarmXYPlugin } from "../../stream/xyPlugins/swarmPlugin"
 import type {
   ArrowOfTime,
@@ -72,7 +72,7 @@ import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureRealtimeSwarmChartRegistrations(): void {
-  registerXYPlugin(swarmXYPlugin)
+  ensureXYPlugin(swarmXYPlugin)
 }
 
 const EMPTY_LEGEND_DATA: Datum[] = []
@@ -536,7 +536,7 @@ export const RealtimeSwarmChart = /* @__PURE__ */ withChartErrorBoundary(/* @__P
         onObservation,
         forceHoverBehavior: true,
         mobileInteraction: resolved.mobileInteraction,
-        customHoverBehavior: combinedHoverBehavior as (d: Datum | null) => void,
+        customHoverBehavior: combinedHoverBehavior,
         customClickBehavior
       })}
       annotations={annotations}

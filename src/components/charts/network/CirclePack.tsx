@@ -7,7 +7,7 @@ import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo } from "react"
 import { hierarchyLayoutPlugin } from "../../stream/layouts/hierarchyLayoutPlugin"
-import { registerLayoutPlugin } from "../../stream/layouts/registry"
+import { ensureLayoutPlugin } from "../../stream/layouts/registry"
 import { registerNetworkPerspective } from "../../stream/networkPerspectiveRuntime"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
@@ -34,7 +34,7 @@ import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureCirclePackRegistrations(): void {
-  registerLayoutPlugin("circlepack", hierarchyLayoutPlugin)
+  ensureLayoutPlugin("circlepack", hierarchyLayoutPlugin)
   registerNetworkPerspective()
 }
 

@@ -54,20 +54,11 @@ export interface PhysicsObservationAnnouncementOptions {
   ) => string | undefined
 }
 
-function defaultBodyLabel(body: PhysicsBodyState): string {
-  const datum = body.datum
-  if (datum && typeof datum === "object") {
-    const record = datum as Record<string, unknown>
-    const label = record.label ?? record.name ?? record.id
-    if (label != null && label !== "") return String(label)
-  }
-  return body.id
-}
-
-function defaultDatumLabel(
+/** Shared labels for settled marks, their accessible rows and announcements. */
+export function physicsDatumLabel<T extends string | undefined>(
   datum: unknown,
-  fallback: string | undefined
-): string | undefined {
+  fallback: T
+): string | T {
   if (datum && typeof datum === "object") {
     const record = datum as Record<string, unknown>
     const label = record.label ?? record.name ?? record.id
@@ -123,7 +114,7 @@ export function buildPhysicsSettledProjection(
       .slice(Math.max(0, containerBodies.length - recentBodyLimit))
       .map((body) => ({
         id: body.id,
-        label: options.getBodyLabel?.(body) ?? defaultBodyLabel(body),
+        label: options.getBodyLabel?.(body) ?? physicsDatumLabel(body.datum, body.id),
         datum: body.datum
       }))
 
@@ -216,7 +207,7 @@ export function physicsObservationAnnouncement(
 ): string | null {
   const subject =
     options.getDatumLabel?.(event.datum, event) ??
-    defaultDatumLabel(event.datum, event.bodyId)
+    physicsDatumLabel(event.datum, event.bodyId)
 
   if (event.type === "physics-bin-enter") {
     return `${subject ?? "A body"} entered ${event.binId ?? event.sensorId ?? "a bin"}.`

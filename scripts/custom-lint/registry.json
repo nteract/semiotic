@@ -59,7 +59,7 @@
     {
       "id": "semiotic/interaction-test-layout-control",
       "status": "unstable",
-      "score": 5,
+      "score": 3,
       "introducedAt": "2026-08-16",
       "implementation": "scripts/custom-lint/rules/interaction-test-layout-control.mjs",
       "tests": ["scripts/custom-lint/custom-lint-rules.test.mjs"],
@@ -70,6 +70,18 @@
           "date": "2026-08-16",
           "reference": "review-local-interaction-scope",
           "note": "Review limited grouped-chart and literal-pointer correlation to the same function scope."
+        },
+        {
+          "kind": "false_positive",
+          "date": "2026-11-02",
+          "reference": "src/components/charts/xy/BubbleChart.test.tsx:301",
+          "note": "The grouped tooltip interaction test already fixes its plot geometry through an unchanged const plotProps object with showLegend:false. The rule ignored the JSX spread and incorrectly reported its literal hover coordinates; changing the correct chart test would conceal the rule defect."
+        },
+        {
+          "kind": "rule_revision",
+          "date": "2026-11-02",
+          "reference": "scripts/custom-lint/custom-lint-rules.test.mjs:62",
+          "note": "Resolve local const object spreads through lexical scope when references only copy properties, preserving JSX and nested-object override order. Later true values, unknown spreads, computed keys, mutations and escaped aliases cannot prove a disabled legend. Focused cases reproduce the BubbleChart fixture and retain findings for actual legend overrides without grandfathering findings."
         }
       ]
     },

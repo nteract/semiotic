@@ -31,12 +31,24 @@ describe("FrameRuntime", () => {
   it("uses a serializable seed deterministically and preserves an injected RNG seam", () => {
     const first = new FrameRuntime({ seed: 42 })
     const second = new FrameRuntime({ seed: 42 })
-    expect([first.random(), first.random(), first.random()]).toEqual([
-      second.random(), second.random(), second.random(),
-    ])
+    for (const runtime of [first, second]) {
+      expect([runtime.random(), runtime.random(), runtime.random()]).toEqual([
+        0.6011037519201636, 0.44829055899754167, 0.8524657934904099,
+      ])
+    }
 
     const injected = new FrameRuntime({ seed: 42, random: () => 0.25 })
     expect(injected.random()).toBe(0.25)
     expect(injected.snapshot().seed).toBe(42)
+  })
+
+  it("preserves the seeded sequence after millions of particle samples", () => {
+    const runtime = new FrameRuntime({ seed: 0 })
+    // Exact uint32-state reference values. An unbounded accumulator loses
+    // integer precision at draw 4,917,759 even though the seed is valid.
+    for (let draw = 0; draw < 4_917_757; draw++) runtime.random()
+    expect([runtime.random(), runtime.random(), runtime.random()]).toEqual([
+      0.29623389709740877, 0.8771766452118754, 0.9146185866557062,
+    ])
   })
 })

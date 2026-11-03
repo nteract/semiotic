@@ -133,6 +133,55 @@ describe("WordCloud accessor contracts", () => {
     expect(() => renderToStaticMarkup(<WordCloud {...props} />)).not.toThrow()
   })
 
+  it("ranks placed and omitted table rows together, preserving ties and placement status", () => {
+    const rows = [
+      { term: "repeat", count: 5 },
+      { term: "largest", count: "9" },
+      { term: "repeat", count: 5, placement: "no-space" },
+      { count: "invalid" },
+      { term: "zero", count: 0 }
+    ].map((row) => Object.freeze(row))
+    const placed = {
+      ...fixture.layout.words[0],
+      sourceIndex: 2,
+      reason: "no-space"
+    }
+    const prepared: WordCloudLayoutResult = {
+      ...fixture.layout,
+      version: 1,
+      engineVersion: "d3-cloud@2.0.0",
+      bounds: null,
+      inputCount: rows.length,
+      words: [placed, { ...placed, sourceIndex: 1 }],
+      omitted: [
+        { id: "fallback", sourceIndex: 3, reason: "invalid-value" },
+        { id: "repeat", sourceIndex: 0, reason: "duplicate-id" },
+        { id: "zero", sourceIndex: 4, reason: "invalid-value" }
+      ]
+    }
+    const options = { data: rows, textAccessor: "term", valueAccessor: "count" }
+    const scene = wordCloudTableScene(options, prepared)
+    expect(scene.map((row) => row.sourceIndex)).toEqual([1, 0, 2, 4, 3])
+    for (const row of scene) expect(row.datum).toBe(rows[row.sourceIndex])
+    expect(
+      extractAllRows(scene).map(({ values: { term, value, placement } }) => ({
+        term,
+        value,
+        placement
+      }))
+    ).toEqual([
+      { term: "largest", value: 9, placement: "placed" },
+      { term: "repeat", value: 5, placement: "duplicate-id" },
+      { term: "repeat", value: 5, placement: "placed" },
+      { term: "zero", value: 0, placement: "invalid-value" },
+      { term: "fallback", value: "Invalid value", placement: "invalid-value" }
+    ])
+    expect(wordCloudTableScene(options)).toEqual([])
+    expect(
+      wordCloudTableScene(options, { ...prepared, words: [], omitted: [] })
+    ).toEqual([])
+  })
+
   it("excludes prepared term records from data-free configs and artifact configuration identity", () => {
     const props = configured()
     expect(

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import {
   computeProcessSankeyLayout,
   countCrossings,
@@ -6,9 +6,11 @@ import {
   type ProcessSankeyEdge,
   type ProcessSankeyLayoutQuality,
   type ProcessSankeyNode,
+  type ProcessSankeyNodeData,
   type ProcessSankeyOptions,
 } from "./algorithm"
 import { acceptsBoundaryHubCandidate } from "./boundaryHubOrdering"
+import { measureTransitOcclusion } from "./layoutGeometry"
 import {
   processHospitalFixture,
   processLineageFixture,
@@ -373,6 +375,119 @@ describe("ProcessSankey ordering hardening", () => {
     expect(elapsed).toBeLessThan(budgetMs)
     expect(layout.layoutQuality.crossings).toBeLessThan(layout.layoutQualityBefore.crossings)
     expect(layout.layoutQuality.pixelLength).toBeLessThan(layout.layoutQualityBefore.pixelLength)
+  })
+
+  it.each([
+    {
+      epoch: 0.123456789,
+      step: 0.0172413793,
+      expected: [
+        [3.0397454476615473, 3.3683861779242106],
+        [1.3333332906578144, 1.3827679928691547],
+        [3.2853556188644073, 2.32120792286405]
+      ]
+    },
+    {
+      epoch: 1_730_000_000_000,
+      step: 0.0137,
+      expected: [
+        [3.0397454476615478, 3.368124709537538],
+        [1.3333333760088466, 1.3850070383459814],
+        [3.2853556188644073, 2.3177634270882295]
+      ]
+    },
+    {
+      epoch: -2_208_988_800_000,
+      step: 86_400_000 / 7,
+      expected: [
+        [3.0397454476615478, 3.3683861779273254],
+        [1.3333333760088466, 1.3827679928756655],
+        [3.2853556188644073, 2.32120792287036]
+      ]
+    }
+  ])("preserves cubic occlusion at fractional times around epoch $epoch", ({ epoch, step, expected }) => {
+    const time = (value: number) => epoch + value * step
+    const nodes: ProcessSankeyNode[] = processHospitalFixture.nodes.map((node) => ({
+      ...node,
+      xExtent: node.xExtent ? [time(node.xExtent[0]), time(node.xExtent[1])] : undefined
+    }))
+    const edges = processHospitalFixture.edges.map((edge) => ({
+      ...edge,
+      startTime: time(edge.startTime),
+      endTime: time(edge.endTime)
+    }))
+    const layout = computeProcessSankeyLayout(nodes, edges, {
+      ...baseOptions,
+      domain: [time(0), time(100)]
+    })
+
+    // These baselines retain the original 28-step bisection exactly. Large
+    // epochs produce distinct normalized positions near quarter fractions;
+    // rounding those positions changes coverage and can change lane ordering.
+    for (const [index, ribbonLane] of (["source", "both", "target"] as const).entries()) {
+      const values = (["score", "quality"] as const).map((mode) =>
+        measureTransitOcclusion(
+          edges, layout.nodeData, layout.slots, layout.slotByNode,
+          layout.centerlines, layout.laneLifetime,
+          { valueScale: layout.valueScale, ribbonLane, domain: [time(6.3), time(93.1)], mode }
+        )
+      )
+      expect(values).toEqual(expected[index])
+    }
+  })
+
+  it.each([
+    ["source", 1.1091216489667834],
+    ["both", 1.13301901374959],
+    ["target", 1.1570761024381262]
+  ] as const)("bounds the %s cubic cache while preserving dense event coverage", (ribbonLane, expected) => {
+    const edge: ProcessSankeyEdge = {
+      id: "flow", source: "source", target: "target",
+      value: 10, startTime: 0, endTime: 100
+    }
+    const data: Record<string, ProcessSankeyNodeData> = {
+      source: {
+        samples: [], peak: 10, topPeak: 0, botPeak: 10,
+        localAttachments: new Map([["flow", {
+          side: "bot", kind: "out", time: 0, value: 10,
+          sideMassBefore: 10, sideMassAfter: 0
+        }]])
+      },
+      middle: {
+        samples: Array.from({ length: 1100 }, (_, i) => ({
+          t: i * 100 / 1100, topMass: 8 + i % 3, botMass: 12 - i % 3
+        })),
+        peak: 20, topPeak: 10, botPeak: 12, localAttachments: new Map()
+      },
+      target: {
+        samples: [], peak: 10, topPeak: 10, botPeak: 0,
+        localAttachments: new Map([["flow", {
+          side: "top", kind: "in", time: 100, value: 10,
+          sideMassBefore: 0, sideMassAfter: 10
+        }]])
+      }
+    }
+    const slots = ["source", "middle", "target"].map((id) => ({
+      occupants: [{ id, end: 100 }],
+      peak: { topPeak: data[id].topPeak, botPeak: data[id].botPeak }
+    }))
+    const set = vi.spyOn(Map.prototype, "set")
+    let value: number
+    let writes: number
+    try {
+      value = measureTransitOcclusion(
+        [edge], data, slots, { source: 0, middle: 1, target: 2 },
+        { source: 0, middle: 50, target: 100 }, { middle: { start: 0, end: 100 } },
+        { valueScale: 1, ribbonLane, mode: "quality" }
+      )
+      writes = set.mock.calls.length
+    } finally {
+      set.mockRestore()
+    }
+    // 1100 event intervals require 3300 distinct interior samples. The cache
+    // stops growing, while uncached samples retain the original bisection.
+    expect(writes).toBe(1024)
+    expect(value).toBe(expected)
   })
 
   it("does not count same-slot fan-outs as crossings", () => {

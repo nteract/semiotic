@@ -1,5 +1,6 @@
 "use client"
-import * as React from "react"
+import type * as React from "react"
+import { memo, useRef, useState, useLayoutEffect } from "react"
 import type { NetworkHtmlMark } from "./networkCustomLayout"
 import type { CustomLayoutSelection } from "./customLayoutSelection"
 import { CustomLayoutSelectionProvider } from "./customLayoutSelection"
@@ -38,7 +39,7 @@ const containerBaseStyle: React.CSSProperties = {
 // A camera changes the clipping rectangle every frame, often without changing
 // membership. Reuse the positioned subtree in that case; context subscriptions
 // inside card content (selection, projected size) still update independently.
-const NetworkHtmlMarkContents = /* @__PURE__ */ React.memo(
+const NetworkHtmlMarkContents = /* @__PURE__ */ memo(
   function NetworkHtmlMarkContents({ marks }: { marks: NetworkHtmlMark[] }) {
     return (
       <>
@@ -106,8 +107,8 @@ export function NetworkHtmlMarksLayer({
   htmlMarkCulling,
   onViewportChange
 }: NetworkHtmlMarksLayerProps): React.ReactElement | null {
-  const containerRef = React.useRef<HTMLDivElement>(null)
-  const [focusedId, setFocusedId] = React.useState<string | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [focusedId, setFocusedId] = useState<string | null>(null)
   const visible = useNetworkViewport({
     containerRef,
     marks,
@@ -121,7 +122,7 @@ export function NetworkHtmlMarksLayer({
     margin
   })
 
-  React.useLayoutEffect(() => {
+  useLayoutEffect(() => {
     if (focusedId === null || marks?.some((mark) => mark.id === focusedId))
       return
     const layer = containerRef.current

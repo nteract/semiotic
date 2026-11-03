@@ -23,8 +23,8 @@ import { normalizePartialMargin, type PartialMargin } from "../types/marginType"
  * Family implementations live in staticXY / staticOrdinal / staticNetwork /
  * staticGeo / staticPhysics; shared chrome in staticSVGChrome.
  */
-import * as React from "react"
-import * as ReactDOMServer from "react-dom/server"
+
+import { renderToStaticMarkup } from "react-dom/server"
 import type { StreamXYFrameProps } from "../stream/types"
 import type { StreamNetworkFrameProps } from "../stream/networkTypes"
 import type { StreamOrdinalFrameProps } from "../stream/ordinalTypes"
@@ -645,7 +645,7 @@ function renderChartScoped(
     theme: resolveTheme(theme)
   })
   if (overlay != null) {
-    const overlayMarkup = ReactDOMServer.renderToStaticMarkup(<>{overlay}</>)
+    const overlayMarkup = renderToStaticMarkup(<>{overlay}</>)
     // Overlays belong to the outer chart SVG. Gauge center content can itself
     // contain an <svg>, so replacing the first closing tag corrupts nesting.
     const closingSvgIndex = svg.lastIndexOf("</svg>")

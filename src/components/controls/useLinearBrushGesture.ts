@@ -1,5 +1,6 @@
 "use client"
-import * as React from "react"
+import type * as React from "react"
+import { useRef, useState } from "react"
 import {
   createBrush,
   moveBrush,
@@ -59,11 +60,11 @@ const CREATE_THRESHOLD = 3
  * pointer-down snapshot, so a lagging controlled value cannot make it drift.
  */
 export function useLinearBrushGesture(options: LinearBrushGestureOptions) {
-  const optionsRef = React.useRef(options)
+  const optionsRef = useRef(options)
   optionsRef.current = options
-  const gestureRef = React.useRef<Gesture | null>(null)
-  const [draft, setDraft] = React.useState<{ value: LinearBrushValue } | null>(null)
-  const [activeMode, setActiveMode] = React.useState<LinearBrushPointerMode | null>(null)
+  const gestureRef = useRef<Gesture | null>(null)
+  const [draft, setDraft] = useState<{ value: LinearBrushValue } | null>(null)
+  const [activeMode, setActiveMode] = useState<LinearBrushPointerMode | null>(null)
 
   const position = (event: React.PointerEvent<HTMLElement>) => {
     const { orientation, fallbackLength } = optionsRef.current

@@ -19,17 +19,21 @@ export function wordCloudGroupHulls(
   return (
     <g className="wordcloud-group-hulls" style={{ pointerEvents: "none" }}>
       {groups.map((group) => {
-        const members = [...new Set(group.ids)].flatMap((id) => {
+        const corners: Array<{ x: number; y: number }> = []
+        let memberCount = 0
+        for (const id of new Set(group.ids)) {
           const node = byId.get(id)
-          return node ? [node] : []
-        })
-        if (!members.length) return null
-        const corners = members.flatMap(({ x, y, w, h }) => [
-          { x, y },
-          { x: x + w, y },
-          { x: x + w, y: y + h },
-          { x, y: y + h }
-        ])
+          if (!node) continue
+          const { x, y, w, h } = node
+          memberCount++
+          corners.push(
+            { x, y },
+            { x: x + w, y },
+            { x: x + w, y: y + h },
+            { x, y: y + h }
+          )
+        }
+        if (!memberCount) return null
         const padding = Number.isFinite(group.padding)
           ? Math.max(0, group.padding!)
           : 8
@@ -39,9 +43,9 @@ export function wordCloudGroupHulls(
           <path
             key={group.id}
             data-wordcloud-hull={group.id}
-            data-member-count={members.length}
+            data-member-count={memberCount}
             role="img"
-            aria-label={`${group.label ?? group.id}: ${members.length} placed terms`}
+            aria-label={`${group.label ?? group.id}: ${memberCount} placed terms`}
             d={roundedHullPath(hull, Math.min(8, padding))}
             fill={forcedColors ? "none" : color}
             fillOpacity={0.07}

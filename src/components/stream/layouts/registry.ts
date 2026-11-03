@@ -18,6 +18,14 @@ export function registerLayoutPlugin(
   registry[chartType] = plugin
 }
 
+/** Implicit chart initialization must preserve a caller's registered layout. */
+export function ensureLayoutPlugin(
+  chartType: NetworkChartType,
+  plugin: NetworkLayoutPlugin
+): void {
+  registry[chartType] ??= plugin
+}
+
 export function getLayoutPlugin(
   chartType: NetworkChartType
 ): NetworkLayoutPlugin | undefined {

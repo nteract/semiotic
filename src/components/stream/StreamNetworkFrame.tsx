@@ -3,7 +3,7 @@ import { buildNetworkSSRStore } from "./networkSSRStore"
 import { networkFrameContainerProps } from "./networkFrameContainerProps"
 import { HIERARCHICAL_NETWORK_LAYOUTS } from "./networkLayoutCapabilities"
 import type { Datum } from "../charts/shared/datumTypes"
-import * as React from "react"
+import type * as React from "react"
 import {
   useRef,
   useState,
@@ -1160,7 +1160,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
   // Seed initial edges once. ingestEdge is additive (value +=); re-running
   // on StrictMode double-invoke or pushManyEdges identity churn would double
   // edge weights. Guard with a once-ref so the seed is mount-only in practice.
-  const initialEdgesSeededRef = React.useRef(false)
+  const initialEdgesSeededRef = useRef(false)
   useEffect(() => {
     if (initialEdgesSeededRef.current) return
     if (initialEdges && initialEdges.length > 0) {

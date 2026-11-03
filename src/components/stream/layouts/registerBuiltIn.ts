@@ -9,21 +9,30 @@
  * Must be a live function call: `package.json` has `"sideEffects": false`,
  * so a side-effect-only import is dropped from the published bundles.
  */
-import { registerLayoutPlugin } from "./registry"
+import { ensureLayoutPlugin, registerLayoutPlugin } from "./registry"
 import { sankeyLayoutPlugin } from "./sankeyLayoutPlugin"
 import { forceLayoutPlugin } from "./forceLayoutPlugin"
 import { chordLayoutPlugin } from "./chordLayoutPlugin"
 import { hierarchyLayoutPlugin } from "./hierarchyLayoutPlugin"
 import { orbitLayoutPlugin } from "./orbitLayoutPlugin"
 
+function installBuiltInNetworkLayouts(register: typeof registerLayoutPlugin): void {
+  register("sankey", sankeyLayoutPlugin)
+  register("force", forceLayoutPlugin)
+  register("chord", chordLayoutPlugin)
+  register("tree", hierarchyLayoutPlugin)
+  register("cluster", hierarchyLayoutPlugin)
+  register("treemap", hierarchyLayoutPlugin)
+  register("circlepack", hierarchyLayoutPlugin)
+  register("partition", hierarchyLayoutPlugin)
+  register("orbit", orbitLayoutPlugin)
+}
+
 export function registerBuiltInNetworkLayouts(): void {
-  registerLayoutPlugin("sankey", sankeyLayoutPlugin)
-  registerLayoutPlugin("force", forceLayoutPlugin)
-  registerLayoutPlugin("chord", chordLayoutPlugin)
-  registerLayoutPlugin("tree", hierarchyLayoutPlugin)
-  registerLayoutPlugin("cluster", hierarchyLayoutPlugin)
-  registerLayoutPlugin("treemap", hierarchyLayoutPlugin)
-  registerLayoutPlugin("circlepack", hierarchyLayoutPlugin)
-  registerLayoutPlugin("partition", hierarchyLayoutPlugin)
-  registerLayoutPlugin("orbit", orbitLayoutPlugin)
+  installBuiltInNetworkLayouts(registerLayoutPlugin)
+}
+
+/** Fill missing layouts during lazy/server initialization without replacing callers. */
+export function ensureBuiltInNetworkLayouts(): void {
+  installBuiltInNetworkLayouts(ensureLayoutPlugin)
 }

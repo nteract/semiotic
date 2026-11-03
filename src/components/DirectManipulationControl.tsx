@@ -1,5 +1,5 @@
-import * as React from "react"
-import { useRef } from "react"
+import type * as React from "react"
+import { useRef, useMemo } from "react"
 import { createControlObservationAdapter } from "./controls/controlContract"
 import { pointerToLocalPoint, type ControlPoint } from "./controls/controlPointer"
 import { keyboardSliderTarget, snapToStep } from "./controls/directManipulationMath"
@@ -142,7 +142,7 @@ export function DirectManipulationControl({
   const activePointer = useRef<number | null>(null)
   const currentValue = useRef(value)
   currentValue.current = value
-  const emitObservation = React.useMemo(
+  const emitObservation = useMemo(
     () => createControlObservationAdapter({
       controlType,
       controlId,

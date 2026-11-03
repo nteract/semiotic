@@ -4,7 +4,8 @@
  * of the XY entry graph. SceneToSVG.tsx retains the shared export facade.
  */
 
-import * as React from "react"
+import type * as React from "react"
+import { Fragment } from "react"
 import { area as d3Area, line as d3Line } from "d3-shape"
 import { isNoneCanvasPaint, resolveCurveFactory } from "./renderers/canvasRenderHelpers"
 import { buildThresholdLineSegments } from "./renderers/thresholdLineSegments"
@@ -169,7 +170,7 @@ function xySceneNodeToSVGMark(
             n.style.stroke || "#4e79a7"
           )
       return (
-        <React.Fragment key={`line-${i}`}>
+        <Fragment key={`line-${i}`}>
           {strokeGradient && <defs>{strokeGradient}</defs>}
           <path
             d={d}
@@ -186,7 +187,7 @@ function xySceneNodeToSVGMark(
             opacity={n.style.opacity}
             strokeOpacity={n.style.strokeOpacity}
           />
-        </React.Fragment>
+        </Fragment>
       )
     }
     case "area": {
@@ -396,7 +397,7 @@ function xySceneNodeToSVGMark(
         )
       }
       return (
-        <React.Fragment key={`area-${i}`}>
+        <Fragment key={`area-${i}`}>
           {(areaGradient ||
             areaHatch ||
             strokeGradient ||
@@ -417,7 +418,7 @@ function xySceneNodeToSVGMark(
           />
           {topStroke}
           {cursorTarget}
-        </React.Fragment>
+        </Fragment>
       )
     }
     case "point":
@@ -499,7 +500,7 @@ function xySceneNodeToSVGMark(
         const dotRadius = n.dotRadius ?? Math.max(2, n.bodyWidth / 2)
         const rangeFill = hatchFill ?? n.wickColor
         return (
-          <React.Fragment key={`candle-${i}`}>
+          <Fragment key={`candle-${i}`}>
             {hatch && <defs>{hatch}</defs>}
             <g style={groupStyle as React.CSSProperties}>
               <line
@@ -513,7 +514,7 @@ function xySceneNodeToSVGMark(
               <circle cx={n.x} cy={n.highY} r={dotRadius} fill={rangeFill} />
               <circle cx={n.x} cy={n.lowY} r={dotRadius} fill={rangeFill} />
             </g>
-          </React.Fragment>
+          </Fragment>
         )
       }
       const bodyTop = Math.min(n.openY, n.closeY)
@@ -521,7 +522,7 @@ function xySceneNodeToSVGMark(
       const bodyColor = n.isUp ? n.upColor : n.downColor
       const bodyFill = hatchFill ?? bodyColor
       return (
-        <React.Fragment key={`candle-${i}`}>
+        <Fragment key={`candle-${i}`}>
           {hatch && <defs>{hatch}</defs>}
           <g style={groupStyle as React.CSSProperties}>
             <line
@@ -542,7 +543,7 @@ function xySceneNodeToSVGMark(
               strokeWidth={1}
             />
           </g>
-        </React.Fragment>
+        </Fragment>
       )
     }
     default:

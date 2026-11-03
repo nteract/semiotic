@@ -109,8 +109,3 @@ export function storePackingCache(
     packingResultCache.delete(oldest)
   }
 }
-
-/** Test helper: clear the packing topology cache. */
-export function clearProcessSankeyPackingCache(): void {
-  packingResultCache.clear()
-}

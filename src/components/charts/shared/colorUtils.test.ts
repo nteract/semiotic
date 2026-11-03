@@ -157,6 +157,24 @@ describe("createColorScale", () => {
     expect(typeof color).toBe("string")
   })
 
+  it("keeps first-seen string keys while skipping nullish categories and sparse rows", () => {
+    const rows = [
+      { cat: 2 }, { cat: "2" }, { cat: null }, {}, null, undefined,
+      { cat: false }, { cat: "B" }, { cat: "" }
+    ] as unknown as Parameters<typeof createColorScale>[0]
+    rows.length += 2
+    const colors = ["#f00", "#0f0", "#00f", "#ff0"]
+    const scale = createColorScale(rows, "cat", colors)
+    expect(["2", "false", "B", ""].map(scale)).toEqual(colors)
+    expect(scale("undefined")).toBe("#999")
+    expect(scale("null")).toBe("#999")
+  })
+
+  it("supports an empty field name in direct color-scale calls", () => {
+    const scale = createColorScale([{ "": "A" }, { "": "B" }], "", ["#f00", "#00f"])
+    expect([scale("A"), scale("B")]).toEqual(["#f00", "#00f"])
+  })
+
   it("handles many categories (more than palette size)", () => {
     const data = Array.from({ length: 20 }, (_, i) => ({ cat: `c${i}` }))
     const scale = createColorScale(data, "cat")

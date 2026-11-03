@@ -1,8 +1,16 @@
-import { PipelineStore, type PipelineConfig } from "../PipelineStore"
-import { getXYPlugin, resetXYPluginRegistry } from "./registry"
-import { warnIfXYPluginMissing } from "./missingPlugin"
-import { registerXYPlugin } from "./registry"
-import { lineXYPlugin } from "./linePlugin"
+import type { PipelineConfig } from "../PipelineStore"
+
+let PipelineStore: typeof import("../PipelineStore")["PipelineStore"]
+let registry: typeof import("./registry")
+let warnIfXYPluginMissing: typeof import("./missingPlugin")["warnIfXYPluginMissing"]
+let lineXYPlugin: typeof import("./linePlugin")["lineXYPlugin"]
+beforeEach(async () => {
+  vi.resetModules()
+  registry = await import("./registry")
+  ;({ PipelineStore } = await import("../PipelineStore"))
+  ;({ warnIfXYPluginMissing } = await import("./missingPlugin"))
+  ;({ lineXYPlugin } = await import("./linePlugin"))
+})
 
 function makeConfig(overrides: Partial<PipelineConfig> = {}): PipelineConfig {
   return {
@@ -19,12 +27,7 @@ function makeConfig(overrides: Partial<PipelineConfig> = {}): PipelineConfig {
 }
 
 describe("missing XY plugin", () => {
-  afterEach(() => {
-    resetXYPluginRegistry()
-  })
-
   it("builds an empty scene until a plugin is registered", () => {
-    resetXYPluginRegistry()
     const store = new PipelineStore(makeConfig())
     store.ingest({ inserts: [{ x: 0, y: 1 }, { x: 1, y: 2 }], bounded: true })
     store.computeScene({ width: 200, height: 100 })
@@ -32,9 +35,8 @@ describe("missing XY plugin", () => {
   })
 
   it("builds marks after the matching plugin is registered", () => {
-    resetXYPluginRegistry()
-    registerXYPlugin(lineXYPlugin)
-    expect(getXYPlugin("line")).toBe(lineXYPlugin)
+    registry.registerXYPlugin(lineXYPlugin)
+    expect(registry.getXYPlugin("line")).toBe(lineXYPlugin)
     const store = new PipelineStore(makeConfig())
     store.ingest({ inserts: [{ x: 0, y: 1 }, { x: 1, y: 2 }], bounded: true })
     store.computeScene({ width: 200, height: 100 })
@@ -42,7 +44,7 @@ describe("missing XY plugin", () => {
   })
 
   it("does not warn on the client when the plugin is present", () => {
-    registerXYPlugin(lineXYPlugin)
+    registry.registerXYPlugin(lineXYPlugin)
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
     warnIfXYPluginMissing("line")
     expect(warn).not.toHaveBeenCalled()

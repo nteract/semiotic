@@ -24,6 +24,19 @@ export function buildScatterPointStyle(
   common: Datum,
   rest: Datum
 ): (d: Datum) => Datum {
+  return buildServerPointStyle(data, colorBy, colorScheme, common, rest, "scatter")
+}
+
+/** Shared point encoding; the two HOCs differ only in their base mark defaults. */
+export function buildServerPointStyle(
+  data: unknown,
+  colorBy: string | ((d: Datum) => unknown) | undefined,
+  colorScheme: unknown,
+  common: Datum,
+  rest: Datum,
+  kind: "scatter" | "bubble"
+): (d: Datum) => Datum {
+  const bubble = kind === "bubble"
   const rows = Array.isArray(data)
     ? data.filter((d): d is Datum => !!d && typeof d === "object")
     : []
@@ -32,10 +45,15 @@ export function buildScatterPointStyle(
   ).colors.categorical
   const resolvedColorScheme =
     colorScheme ?? common.colorScheme ?? themeCategorical
-  const colorKey = typeof colorBy === "string" ? colorBy : "__ssrScatterColorBy"
+  const colorKey =
+    typeof colorBy === "string"
+      ? colorBy
+      : bubble
+        ? "__ssrBubbleColorBy"
+        : "__ssrScatterColorBy"
   const colorRows =
     typeof colorBy === "function"
-      ? rows.map((d) => ({ ...d, __ssrScatterColorBy: colorBy(d) }))
+      ? rows.map((d) => ({ ...d, [colorKey]: colorBy(d) }))
       : rows
   const colorScale = colorBy
     ? createColorScale(
@@ -47,7 +65,7 @@ export function buildScatterPointStyle(
   const sizeBy = rest.sizeBy as string | ((d: Datum) => number) | undefined
   const sizeRange = Array.isArray(rest.sizeRange)
     ? (rest.sizeRange as [number, number])
-    : ([3, 15] as [number, number])
+    : ((bubble ? [5, 40] : [3, 15]) as [number, number])
   const sizeValues = sizeBy
     ? rows
         .map((d) =>
@@ -76,13 +94,24 @@ export function buildScatterPointStyle(
           : typeof rest.color === "string"
             ? rest.color
             : DEFAULT_COLOR,
-      fillOpacity:
-        typeof rest.pointOpacity === "number" ? rest.pointOpacity : 0.8,
+      fillOpacity: bubble
+        ? typeof rest.bubbleOpacity === "number"
+          ? rest.bubbleOpacity
+          : 0.6
+        : typeof rest.pointOpacity === "number"
+          ? rest.pointOpacity
+          : 0.8,
       r: sizeBy
         ? getSize(d, sizeBy, sizeRange, sizeDomain)
-        : typeof rest.pointRadius === "number"
-          ? rest.pointRadius
-          : 5
+        : bubble
+          ? sizeRange[0]
+          : typeof rest.pointRadius === "number"
+            ? rest.pointRadius
+            : 5
+    }
+    if (bubble) {
+      style.stroke = rest.bubbleStrokeColor ?? "white"
+      style.strokeWidth = rest.bubbleStrokeWidth ?? 1
     }
     if (rules?.length)
       Object.assign(style, resolveStyleRules(d, rules, ruleContext(d)))
@@ -104,12 +133,12 @@ export const scatterplot: ChartConfig = {
       anomaly: rest.anomaly as AnomalyConfig | undefined,
       annotations: common.annotations as Datum[] | undefined,
       themeCategorical: resolveTheme(
-        common.theme as Parameters<typeof resolveTheme>[0],
-      ).colors.categorical,
+        common.theme as Parameters<typeof resolveTheme>[0]
+      ).colors.categorical
     })
     const annotations = mergeServerRegressionAnnotation(
       series.annotations,
-      rest.regression,
+      rest.regression
     )
     return {
       chartType: "scatter",
@@ -128,7 +157,7 @@ export const scatterplot: ChartConfig = {
       pointStyle:
         common.pointStyle ||
         buildScatterPointStyle(data, colorBy, colorScheme, common, rest),
-      showLegend: common.showLegend ?? Boolean(colorBy),
+      showLegend: common.showLegend ?? Boolean(colorBy)
     }
-  },
+  }
 }

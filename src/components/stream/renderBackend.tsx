@@ -97,39 +97,32 @@ export function paintSceneWithBackend<Node extends SceneLike>(args: {
   flushFallback()
 }
 
-interface RenderedSceneResult {
-  element: React.ReactNode
-  renderedByBackend: boolean
-}
-
-function renderSceneWithBackendResult<Node extends SceneLike>(args: {
-  node: Node
-  index: number
-  renderMode: SceneRenderMode<Node> | undefined
-  fallback: () => React.ReactNode
-}): RenderedSceneResult {
-  const { node, index, renderMode, fallback } = args
+function renderSceneElementWithBackend<Node extends SceneLike>(
+  node: Node,
+  index: number,
+  renderMode: SceneRenderMode<Node> | undefined,
+  fallback: (node: Node, index: number) => React.ReactNode,
+  entry?: RenderedSceneEntry<Node>
+): React.ReactNode {
   const backend = resolveSceneRenderBackend(renderMode, node)
-  if (!backend) return { element: fallback(), renderedByBackend: false }
-
-  const rendered = backend.renderStaticSVG({
+  let element = backend?.renderStaticSVG({
     node,
     style: node.style ?? {},
     key: `${backend.id}-${index}`
   })
-  if (rendered != null) {
-    return {
-      element: withSceneMarkCursor(
-        rendered,
-        node,
-        `${backend.id}-${index}-cursor`
-      ),
-      renderedByBackend: true
-    }
+  const renderedByBackend = element != null
+  if (entry) entry.renderedByBackend = renderedByBackend
+  if (renderedByBackend) {
+    element = withSceneMarkCursor(
+      element,
+      node,
+      `${backend!.id}-${index}-cursor`
+    )
+  } else {
+    if (backend) warnFallback(backend.id, node.type ?? "unknown")
+    element = fallback(node, index)
   }
-
-  warnFallback(backend.id, node.type ?? "unknown")
-  return { element: fallback(), renderedByBackend: false }
+  return element
 }
 
 /** Try a backend for SSR/static SVG, then invoke the existing converter. */
@@ -139,7 +132,12 @@ export function renderSceneWithBackend<Node extends SceneLike>(args: {
   renderMode: SceneRenderMode<Node> | undefined
   fallback: () => React.ReactNode
 }): React.ReactNode {
-  return renderSceneWithBackendResult(args).element
+  return renderSceneElementWithBackend(
+    args.node,
+    args.index,
+    args.renderMode,
+    args.fallback
+  )
 }
 
 export interface RenderedSceneEntry<Node> {
@@ -161,19 +159,24 @@ export function renderSceneListWithBackend<Node extends SceneLike>(args: {
 }): RenderedSceneEntry<Node>[] {
   const entries: RenderedSceneEntry<Node>[] = []
   args.nodes.forEach((node, index) => {
-    const result = renderSceneWithBackendResult({
+    const entry: RenderedSceneEntry<Node> = {
       node,
       index,
-      renderMode: args.renderMode,
-      fallback: () => args.fallback(node, index),
-    })
-    if (result.element !== null && result.element !== undefined && result.element !== false) {
-      entries.push({ node, index, ...result })
+      element: null,
+      renderedByBackend: false
+    }
+    // Evidence needs an entry; live SVG callers need only the element. Keep
+    // that metadata allocation out of the per-mark live rendering path.
+    entry.element = renderSceneElementWithBackend(
+      node,
+      index,
+      args.renderMode,
+      args.fallback,
+      entry
+    )
+    if (entry.element != null && entry.element !== false) {
+      entries.push(entry)
     }
   })
   return entries
-}
-
-export function resetRenderBackendWarningsForTests(): void {
-  warnedFallbacks.clear()
 }

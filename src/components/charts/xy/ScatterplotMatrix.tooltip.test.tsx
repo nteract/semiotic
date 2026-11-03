@@ -5,11 +5,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { StreamXYFrameProps } from "../../stream/types"
 import { ScatterplotMatrix } from "./ScatterplotMatrix"
 
-const capturedFrames: StreamXYFrameProps[] = []
+const { frameSpy } = vi.hoisted(() => ({ frameSpy: vi.fn<(props: StreamXYFrameProps) => void>() }))
 
 vi.mock("../../stream/StreamXYFrame", () => ({
   default: React.forwardRef((props: StreamXYFrameProps, _ref) => {
-    capturedFrames.push(props)
+    frameSpy(props)
     return <div data-testid="stream-xy-frame" />
   }),
 }))
@@ -20,7 +20,7 @@ const data = [
 ]
 
 function hoverFirstCell() {
-  const frame = capturedFrames[0]
+  const frame = frameSpy.mock.calls[0][0]
   const indexed = (frame.data as Array<Record<string, unknown>>)[0]
   act(() => {
     frame.customHoverBehavior?.({
@@ -34,7 +34,7 @@ function hoverFirstCell() {
 
 describe("ScatterplotMatrix tooltips", () => {
   beforeEach(() => {
-    capturedFrames.length = 0
+    frameSpy.mockClear()
   })
 
   it("renders the matrix default tooltip at the grid level", () => {

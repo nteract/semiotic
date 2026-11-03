@@ -5,8 +5,8 @@ import { filterSparseArray } from "../charts/shared/sparseArray"
 import { normalizeGradient } from "../charts/shared/gradient"
 import { ordinalValueTicks } from "../stream/ordinalAxisTicks"
 import { resolveHorizontalTickLabelShift } from "../stream/svgOverlayUtils"
-import * as React from "react"
-import * as ReactDOMServer from "react-dom/server"
+import type * as React from "react"
+import { renderToStaticMarkup } from "react-dom/server"
 import { OrdinalPipelineStore } from "../stream/OrdinalPipelineStore"
 import {
   buildEnrichAnnotationData,
@@ -360,7 +360,7 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
         </>
       )
       : null
-    return ReactDOMServer.renderToStaticMarkup(
+    return renderToStaticMarkup(
       wrapSVG(emptyContent, {
         width: size[0], height: size[1],
         className: `stream-ordinal-frame${props.className ? ` ${props.className}` : ""}`,
@@ -533,7 +533,7 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
     </>
   )
 
-  return ReactDOMServer.renderToStaticMarkup(
+  return renderToStaticMarkup(
     wrapSVG(content, {
       width: size[0], height: size[1],
       className: `stream-ordinal-frame${props.className ? ` ${props.className}` : ""}`,

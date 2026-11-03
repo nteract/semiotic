@@ -11,13 +11,16 @@ function attributeName(attribute) {
     : ""
 }
 
-function isExplicitFalse(attribute) {
-  return (
-    attribute?.type === "JSXAttribute" &&
-    attribute.value?.type === "JSXExpressionContainer" &&
-    attribute.value.expression.type === "Literal" &&
-    attribute.value.expression.value === false
-  )
+function unwrap(node) {
+  while (node && ["TSAsExpression", "TSSatisfiesExpression", "TSNonNullExpression", "TSTypeAssertion"].includes(node.type)) {
+    node = node.expression
+  }
+  return node
+}
+
+function isExplicitFalse(expression) {
+  const node = unwrap(expression)
+  return node?.type === "Literal" && node.value === false
 }
 
 function isNumericLiteral(property) {
@@ -59,6 +62,62 @@ export default {
     if (!/\.(test|spec)\.[^.]+$/.test(context.filename)) return {}
     const stateByScope = new Map()
 
+    function copiedConst(identifier) {
+      let variable
+      for (let scope = context.sourceCode.getScope(identifier); scope; scope = scope.upper) {
+        variable = scope.set.get(identifier.name)
+        if (variable) break
+      }
+      const definition = variable?.defs.length === 1 && variable.defs[0]
+      if (definition?.type !== "Variable" || definition.parent.kind !== "const" ||
+        definition.node.id.type !== "Identifier") return undefined
+      // `const` does not freeze an object. Accept bindings whose reads only
+      // copy their properties; member writes, aliases and calls can mutate it.
+      if (!variable.references.every(reference => {
+        if (reference.init) return true
+        if (reference.isWrite()) return false
+        let node = reference.identifier
+        while (unwrap(node.parent) === node) node = node.parent
+        return node.parent?.type === "JSXSpreadAttribute" ||
+          (node.parent?.type === "SpreadElement" && node.parent.parent.type === "ObjectExpression")
+      })) return undefined
+      return definition.node
+    }
+
+    function applyProperty(layout, name, value) {
+      if (GROUPING_PROPS.has(name)) layout.grouped = true
+      if (name === "showLegend") layout.legendDisabled = isExplicitFalse(value)
+    }
+
+    function applySpread(layout, expression, seen = new Set()) {
+      const node = unwrap(expression)
+      if (node?.type === "Identifier") {
+        const declaration = copiedConst(node)
+        if (declaration && !seen.has(declaration)) {
+          seen.add(declaration)
+          applySpread(layout, declaration.init, seen)
+          seen.delete(declaration)
+          return
+        }
+      } else if (node?.type === "ObjectExpression" &&
+        node.properties.every(property => property.type === "SpreadElement" || property.kind === "init")) {
+        for (const property of node.properties) {
+          if (property.type === "SpreadElement") {
+            applySpread(layout, property.argument, seen)
+          } else {
+            const name = !property.computed && property.key.type === "Identifier"
+              ? property.key.name
+              : property.key.type === "Literal" ? property.key.value : undefined
+            if (name === undefined) layout.legendDisabled = false
+            else applyProperty(layout, name, property.value)
+          }
+        }
+        return
+      }
+      // A later dynamic spread may override an earlier showLegend={false}.
+      layout.legendDisabled = false
+    }
+
     function isTestCallback(node) {
       const call = node.parent
       return (
@@ -99,10 +158,15 @@ export default {
       JSXOpeningElement(node) {
         const name = jsxName(node.name)
         if (!name.endsWith("Chart")) return
-        const attributes = node.attributes
-        const hasGrouping = attributes.some(attribute => GROUPING_PROPS.has(attributeName(attribute)))
-        const showLegend = attributes.find(attribute => attributeName(attribute) === "showLegend")
-        if (hasGrouping && !isExplicitFalse(showLegend)) {
+        const layout = { grouped: false, legendDisabled: false }
+        for (const attribute of node.attributes) {
+          if (attribute.type === "JSXSpreadAttribute") {
+            applySpread(layout, attribute.argument)
+          } else {
+            applyProperty(layout, attributeName(attribute), attribute.value?.expression)
+          }
+        }
+        if (layout.grouped && !layout.legendDisabled) {
           stateFor(node).hasGroupedChartWithAutomaticLegend = true
         }
       },

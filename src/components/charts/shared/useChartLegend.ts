@@ -5,7 +5,7 @@ import {
   useLinkedLegendSuppression
 } from "../../LinkedCharts"
 import { getColor } from "./colorUtils"
-import { createLegend } from "./legendUtils"
+import { createLegend, distinctCategories } from "./legendUtils"
 import type { Accessor } from "./types"
 import type { MarginType, PartialMargin } from "../../types/marginType"
 import type {
@@ -22,25 +22,7 @@ import {
 } from "../../legendLayout"
 import type { Datum } from "./datumTypes"
 
-/**
- * Distinct non-null, string-coerced `colorBy` values across `data`, in
- * first-seen order.
- * Shared by chart setup hooks that need the category list for a color scale
- * or legend before any scale/legend object is built.
- */
-export function distinctCategories(
-  data: readonly Datum[],
-  colorBy: Accessor<string | number> | undefined
-): string[] {
-  if (!colorBy) return []
-  const vals = new Set<string>()
-  for (const d of data) {
-    const v = typeof colorBy === "function" ? colorBy(d) : d[colorBy]
-    if (v == null) continue
-    vals.add(String(v))
-  }
-  return Array.from(vals)
-}
+export { distinctCategories } from "./legendUtils"
 
 /**
  * Hook to create a legend and compute margins with legend-aware adjustment.
@@ -61,6 +43,20 @@ export interface FrameLegendOverrides {
   /** Any explicit frame margin replaces the HOC-measured margin. */
   margin?: unknown
   axes?: ReadonlyArray<{ orient: "top" | "bottom" | "left" | "right"; visible?: boolean }>
+}
+
+/** Known legend props passed from chart setup to each Stream Frame. */
+export interface FrameLegendBehaviorProps extends Pick<
+  FrameLegendOverrides,
+  "legend" | "legendPosition" | "legendLayout"
+> {
+  __legendMarginReservedFor?: LegendValue
+  legendHoverBehavior?: LegendInteractionState["onLegendHover"]
+  legendClickBehavior?: LegendInteractionState["onLegendClick"]
+  legendHighlightedCategory?: string | null
+  legendIsolatedCategories?: Set<string>
+  legendCategoryAccessor?: Accessor<string>
+  onCategoriesChange?: (categories: string[]) => void
 }
 
 function hasFrameLegendField(
@@ -176,25 +172,15 @@ export function useChartLegendAndMargin({
   )
 
   const automaticLegend = useMemo(() => {
-    if (!shouldShowLegend || !colorBy) return undefined
-    const built = createLegend({
+    // Empty streaming domains have no swatches or legend margin to reserve.
+    if (!shouldShowLegend || !colorBy || legendCategories.length === 0) return undefined
+    return createLegend({
       data,
       colorBy,
       colorScale,
       getColor,
       categories: legendCategories
     })
-    // Suppress empty legends — when a chart using the push API mounts with no
-    // `data` yet and no explicit `categories`, createLegend returns a shell
-    // with zero items. Returning it would reserve margin for a legend that
-    // renders only a title bar ("neatline"), which is what a user sees as
-    // empty reserved space. Treat zero-item legends as absent.
-    const totalItems = built.legendGroups.reduce(
-      (sum, g) => sum + g.items.length,
-      0
-    )
-    if (totalItems === 0) return undefined
-    return built
   }, [shouldShowLegend, colorBy, data, colorScale, legendCategories])
 
   const legend = useMemo(
@@ -350,6 +336,28 @@ function legendItemKey(item: LegendItem, range: [number, number]): string {
     : `${range[0]}:${range[1]}`
 }
 
+function reconcileIsolatedCategories(
+  isolated: Set<string>,
+  categories: Set<string>,
+  empty: Set<string>,
+): Set<string> {
+  if (isolated.size === 0) return isolated
+  let retained = 0
+  for (const category of isolated) {
+    if (categories.has(category)) retained++
+  }
+  if (retained === 0 || retained === categories.size) return empty
+  // The selection predicate and frame styles depend on this reference. A
+  // streaming domain can change without removing any isolated category; keep
+  // that case allocation-free instead of building and discarding a new Set.
+  if (retained === isolated.size) return isolated
+  const next = new Set<string>()
+  for (const category of isolated) {
+    if (categories.has(category)) next.add(category)
+  }
+  return next
+}
+
 /**
  * Hook managing legend highlight/isolate interaction.
  * - "highlight": hover over a legend item produces a selection hook that
@@ -369,8 +377,8 @@ export function useLegendInteraction(
   const [highlightedCategory, setHighlightedCategory] = useState<string | null>(
     null
   )
-  const [isolatedCategories, setIsolatedCategories] = useState<Set<string>>(
-    new Set()
+  const [isolatedCategories, setIsolatedCategories] = useState(
+    () => new Set<string>()
   )
   const emptyIsolatedCategories = useMemo(() => new Set<string>(), [])
   const categorySet = useMemo(() => new Set(allCategories), [allCategories])
@@ -378,17 +386,14 @@ export function useLegendInteraction(
     highlightedCategory != null && categorySet.has(highlightedCategory)
       ? highlightedCategory
       : null
-  const reconciledIsolatedCategories = useMemo(() => {
-    if (isolatedCategories.size === 0) return isolatedCategories
-    const next = new Set(
-      Array.from(isolatedCategories).filter((category) =>
-        categorySet.has(category)
-      )
-    )
-    if (next.size === 0 || next.size === categorySet.size)
-      return emptyIsolatedCategories
-    return next.size === isolatedCategories.size ? isolatedCategories : next
-  }, [categorySet, emptyIsolatedCategories, isolatedCategories])
+  const reconciledIsolatedCategories = useMemo(
+    () => reconcileIsolatedCategories(
+      isolatedCategories,
+      categorySet,
+      emptyIsolatedCategories
+    ),
+    [categorySet, emptyIsolatedCategories, isolatedCategories],
+  )
 
   useEffect(() => {
     if (!enabled || !colorBy || !mode || mode === "none") {
@@ -403,15 +408,10 @@ export function useLegendInteraction(
     setHighlightedCategory((current) =>
       current != null && !categorySet.has(current) ? null : current
     )
-    setIsolatedCategories((current) => {
-      if (current.size === 0) return current
-      const next = new Set(
-        Array.from(current).filter((category) => categorySet.has(category))
-      )
-      if (next.size === 0 || next.size === categorySet.size) return new Set()
-      return next.size === current.size ? current : next
-    })
-  }, [categorySet])
+    setIsolatedCategories((current) =>
+      reconcileIsolatedCategories(current, categorySet, emptyIsolatedCategories)
+    )
+  }, [categorySet, emptyIsolatedCategories])
 
   const onLegendHover = useCallback(
     (item: LegendItem | null) => {
@@ -437,9 +437,10 @@ export function useLegendInteraction(
       )
         return
       setIsolatedCategories((prev) => {
-        const next = new Set(
-          Array.from(prev).filter((category) => categorySet.has(category))
-        )
+        const next = new Set<string>()
+        for (const category of prev) {
+          if (categorySet.has(category)) next.add(category)
+        }
         if (next.has(item.label)) {
           next.delete(item.label)
         } else {

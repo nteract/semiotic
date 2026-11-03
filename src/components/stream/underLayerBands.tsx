@@ -6,7 +6,8 @@
  * background (browser) and before the marks in static SVG, through the same
  * pre-renderer pass QuadrantChart uses for its fills.
  */
-import * as React from "react"
+
+import { useId, useMemo } from "react"
 import { filterAnnotationsByStatus } from "../charts/shared/annotationStatusFilter"
 import type { Datum } from "../charts/shared/datumTypes"
 import { resolveAnnotationBandFill } from "../charts/shared/annotationBandFill"
@@ -124,14 +125,14 @@ export function useUnderLayerBandRenderers(
 ): { canvasPreRenderers: CanvasRendererFn[] | undefined; svgPreRenderers: SVGPreRendererFn[] | undefined } {
   // Instance-unique, so hatch/gradient defs don't collide across charts in
   // server-rendered markup.
-  const idPrefix = `under-band-${React.useId().replace(/:/g, "")}`
+  const idPrefix = `under-band-${useId().replace(/:/g, "")}`
   // Keyed by index so the two-level shallow compare reaches each band's fields
   // (it compares array entries by identity).
   const byIndex = useStableShallow(
-    React.useMemo((): Record<number, Datum> => Object.assign({}, filterAnnotationsByStatus(annotations ?? []).filter(isUnderLayerBand)), [annotations])
+    useMemo((): Record<number, Datum> => Object.assign({}, filterAnnotationsByStatus(annotations ?? []).filter(isUnderLayerBand)), [annotations])
   )
-  const bands = React.useMemo(() => Object.values(byIndex), [byIndex])
-  return React.useMemo(() => bands.length === 0
+  const bands = useMemo(() => Object.values(byIndex), [byIndex])
+  return useMemo(() => bands.length === 0
     ? { canvasPreRenderers, svgPreRenderers }
     : {
         canvasPreRenderers: [underBandCanvasRenderer(bands), ...(canvasPreRenderers ?? [])],

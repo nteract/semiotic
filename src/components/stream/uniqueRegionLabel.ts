@@ -1,4 +1,13 @@
-import * as React from "react"
+import type * as React from "react"
+import {
+  createContext,
+  useRef,
+  createElement,
+  useId,
+  useContext,
+  useState,
+  useLayoutEffect
+} from "react"
 
 /**
  * Several charts on one page share a human summary name such as
@@ -19,7 +28,7 @@ type SummaryScope = {
 // inside one render, so seeing an id again means the next render reused the
 // tree and the old counts must not leak. The id text is not interpreted.
 // A microtask drops the fallback so a later turn cannot continue unseen ids.
-const SummaryScopeContext = /* @__PURE__ */ React.createContext<SummaryScope | null>(null)
+const SummaryScopeContext = /* @__PURE__ */ createContext<SummaryScope | null>(null)
 let automaticScopeState: SummaryScope | null = null
 let scopeRetirement = false
 
@@ -51,9 +60,9 @@ export function SummaryRegionRoot({
 }: {
   children: React.ReactNode
 }): React.ReactElement {
-  const scope = React.useRef<SummaryScope | null>(null)
+  const scope = useRef<SummaryScope | null>(null)
   if (scope.current == null) scope.current = freshSummaryScope()
-  return React.createElement(
+  return createElement(
     SummaryScopeContext.Provider,
     { value: scope.current },
     children
@@ -78,12 +87,12 @@ function publish(group: Set<symbol>) {
 }
 
 export function useUniqueRegionLabel(base: string): string {
-  const reactId = React.useId()
-  const tokenRef = React.useRef<symbol | null>(null)
+  const reactId = useId()
+  const tokenRef = useRef<symbol | null>(null)
   if (tokenRef.current == null) tokenRef.current = Symbol("summary-region")
   const token = tokenRef.current
-  const providedScope = React.useContext(SummaryScopeContext)
-  const initialOrdinal = React.useRef<number | null>(null)
+  const providedScope = useContext(SummaryScopeContext)
+  const initialOrdinal = useRef<number | null>(null)
   if (initialOrdinal.current == null) {
     initialOrdinal.current = takeRenderOrdinal(
       providedScope ?? automaticScope(reactId),
@@ -91,9 +100,9 @@ export function useUniqueRegionLabel(base: string): string {
       reactId
     )
   }
-  const [ordinal, setOrdinal] = React.useState(initialOrdinal.current)
+  const [ordinal, setOrdinal] = useState(initialOrdinal.current)
 
-  React.useLayoutEffect(() => {
+  useLayoutEffect(() => {
     listeners.set(token, setOrdinal)
     let group = groups.get(base)
     if (!group) {

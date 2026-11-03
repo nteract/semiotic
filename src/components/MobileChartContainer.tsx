@@ -1,5 +1,15 @@
 "use client"
-import * as React from "react"
+import type * as React from "react"
+import {
+  useState,
+  useId,
+  useRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  isValidElement,
+  cloneElement
+} from "react"
 import { ChartContainer } from "./ChartContainer"
 import type {
   ChartContainerMobileOptions,
@@ -81,19 +91,19 @@ export function MobileChartContainer({
   chartDefaults,
   ...containerProps
 }: MobileChartContainerProps) {
-  const [internalChip, setInternalChip] = React.useState<string | undefined>(
+  const [internalChip, setInternalChip] = useState<string | undefined>(
     () => activeChip ?? chips.find((chip) => !chip.disabled)?.id
   )
-  const [detailOpen, setDetailOpen] = React.useState(initialDetailOpen)
-  const detailId = `semiotic-mobile-details-${React.useId().replace(/:/g, "")}`
-  const detailToggleRef = React.useRef<HTMLButtonElement>(null)
-  const detailPanelRef = React.useRef<HTMLElement>(null)
-  const closeDetails = React.useCallback(() => {
+  const [detailOpen, setDetailOpen] = useState(initialDetailOpen)
+  const detailId = `semiotic-mobile-details-${useId().replace(/:/g, "")}`
+  const detailToggleRef = useRef<HTMLButtonElement>(null)
+  const detailPanelRef = useRef<HTMLElement>(null)
+  const closeDetails = useCallback(() => {
     setDetailOpen(false)
     detailToggleRef.current?.focus()
   }, [])
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (activeChip !== undefined) return
     if (!chips.length) {
       setInternalChip(undefined)
@@ -106,7 +116,7 @@ export function MobileChartContainer({
 
   const selectedChipId = activeChip ?? internalChip
 
-  const onSelectChip = React.useCallback(
+  const onSelectChip = useCallback(
     (chip: MobileChartChip) => {
       if (chip.disabled) return
       if (activeChip === undefined) setInternalChip(chip.id)
@@ -167,15 +177,15 @@ export function MobileChartContainer({
     summary: summaryCard,
   }
 
-  const childrenWithDefaults = React.useMemo(() => {
-    if (!chartDefaults || !React.isValidElement(children)) return children
+  const childrenWithDefaults = useMemo(() => {
+    if (!chartDefaults || !isValidElement(children)) return children
     const childProps = children.props as Record<string, unknown>
     const injected: Record<string, unknown> = {}
     for (const [key, value] of Object.entries(chartDefaults)) {
       if (childProps[key] == null) injected[key] = value
     }
     return Object.keys(injected).length > 0
-      ? React.cloneElement(
+      ? cloneElement(
           children as React.ReactElement<Record<string, unknown>>,
           injected
         )
@@ -186,7 +196,7 @@ export function MobileChartContainer({
   const hasInlineDetail = !!detail && detailMode === "inline"
   const detailsVisible = hasInlineDetail || (hasSheetDetail && detailOpen)
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (hasSheetDetail && detailOpen) detailPanelRef.current?.focus()
   }, [detailOpen, hasSheetDetail])
 

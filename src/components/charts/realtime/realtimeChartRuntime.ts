@@ -1,5 +1,6 @@
 import type { RealtimeResponsiveProps } from "./realtimeChartTypes"
-import * as React from "react"
+import type * as React from "react"
+import { useImperativeHandle, useMemo } from "react"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import type { StreamXYFrameHandle } from "../../stream/types"
 import type { Datum } from "../shared/datumTypes"
@@ -49,7 +50,7 @@ export function useRealtimeFrameHandle<TDatum extends Datum = Datum>(
   ref: React.Ref<RealtimeFrameHandle<TDatum>>,
   frameRef: React.RefObject<StreamXYFrameHandle | null>
 ): void {
-  React.useImperativeHandle(
+  useImperativeHandle(
     ref,
     () => ({
       push: (point) => frameRef.current?.push(point),
@@ -76,7 +77,7 @@ export function useRealtimeSelectionStyle<TStyle extends Datum>(
   selectionDatum?: (datum: Datum) => Datum
 ): ((datum: Datum) => TStyle) | undefined {
   const activeHook = hooks.find(Boolean) ?? null
-  return React.useMemo<((datum: Datum) => TStyle) | undefined>(
+  return useMemo<((datum: Datum) => TStyle) | undefined>(
     () =>
       activeHook
         ? (wrapStyleWithSelection(

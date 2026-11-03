@@ -1,4 +1,5 @@
-import * as React from "react"
+import type * as React from "react"
+import { useRef, useCallback, useEffect, useMemo } from "react"
 import { setCanvasMarkCursor, useCanvasMarkCursorCleanup } from "../sceneCursor"
 import type { Style } from "../types"
 import type { PhysicsPipelineStore } from "./PhysicsPipelineStore"
@@ -79,22 +80,22 @@ export function usePhysicsCanvasPointer({
   setHoverData,
   storeRef
 }: PhysicsCanvasPointerOptions) {
-  const pointerRef = React.useRef({
+  const pointerRef = useRef({
     inside: false,
     x: 0,
     y: 0,
     pointerType: undefined as string | undefined
   })
   const bodyCursorCollectionRef =
-    React.useRef<PhysicsBodyCursorCollection | null>(null)
-  const lastHoverPick = React.useRef<{
+    useRef<PhysicsBodyCursorCollection | null>(null)
+  const lastHoverPick = useRef<{
     key: string
     body: PhysicsBodyState | null
   } | null>(null)
   bodyCursorCollectionRef.current ??= { maxSearchRadius: 0 }
   useCanvasMarkCursorCleanup(canvasRef)
 
-  const beginBodyCursors = React.useCallback(() => {
+  const beginBodyCursors = useCallback(() => {
     const collection = bodyCursorCollectionRef.current!
     collection.targets?.clear()
     collection.maxSearchRadius = 0
@@ -102,7 +103,7 @@ export function usePhysicsCanvasPointer({
     return collection
   }, [])
 
-  const setCursorAt = React.useCallback(
+  const setCursorAt = useCallback(
     (
       canvas: HTMLCanvasElement,
       store: PhysicsPipelineStore,
@@ -131,7 +132,7 @@ export function usePhysicsCanvasPointer({
     []
   )
 
-  const publishHoverAt = React.useCallback(
+  const publishHoverAt = useCallback(
     (store: PhysicsPipelineStore, x: number, y: number) => {
       if (!enableHover) {
         lastHoverPick.current = null
@@ -174,7 +175,7 @@ export function usePhysicsCanvasPointer({
     ]
   )
 
-  const handlePointerMove = React.useCallback(
+  const handlePointerMove = useCallback(
     (event: React.PointerEvent<HTMLCanvasElement>) => {
       if (!enableHover && !bodyCursorCollectionRef.current?.targets?.size)
         return
@@ -215,7 +216,7 @@ export function usePhysicsCanvasPointer({
     ]
   )
 
-  const handlePointerLeave = React.useCallback(
+  const handlePointerLeave = useCallback(
     (event: React.PointerEvent<HTMLCanvasElement>) => {
       pointerRef.current.inside = false
       lastHoverPick.current = null
@@ -228,7 +229,7 @@ export function usePhysicsCanvasPointer({
   // WCAG 1.4.13: Escape dismisses the pointer tooltip as leaving does. Repaints
   // re-publish hover only while the pointer is inside, so the dismissal holds
   // until the pointer moves again.
-  React.useEffect(() => {
+  useEffect(() => {
     if (typeof document === "undefined") return
     const onKeyDown = (event: KeyboardEvent) => {
       const pointer = pointerRef.current
@@ -242,7 +243,7 @@ export function usePhysicsCanvasPointer({
     return () => document.removeEventListener("keydown", onKeyDown)
   }, [canvasRef, clearHover, keyboardOwnsFocus])
 
-  const syncBodyCursors = React.useCallback(
+  const syncBodyCursors = useCallback(
     (
       canvas: HTMLCanvasElement,
       store: PhysicsPipelineStore,
@@ -267,7 +268,7 @@ export function usePhysicsCanvasPointer({
     [setCursorAt, publishHoverAt, keyboardOwnsFocus]
   )
 
-  return React.useMemo(
+  return useMemo(
     () => ({
       begin: beginBodyCursors,
       collect: collectPhysicsBodyCursor,

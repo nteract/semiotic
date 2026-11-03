@@ -1,4 +1,5 @@
-import * as React from "react"
+import type * as React from "react"
+import { isValidElement, Fragment, Children, cloneElement } from "react"
 
 // Text and SVG elements use native SVG so rasterizers and design tools retain
 // them. Arbitrary React HTML uses an overlay (foreignObject in static SVG).
@@ -24,9 +25,9 @@ const SVG_CENTER_CONTENT_TAGS = new Set([
 function isSvgCenterContent(node: React.ReactNode): boolean {
   if (Array.isArray(node))
     return node.length > 0 && node.every(isSvgCenterContent)
-  if (!React.isValidElement(node)) return false
-  if (node.type === React.Fragment) {
-    const children = React.Children.toArray(
+  if (!isValidElement(node)) return false
+  if (node.type === Fragment) {
+    const children = Children.toArray(
       (node.props as { children?: React.ReactNode }).children
     )
     return children.length > 0 && children.every(isSvgCenterContent)
@@ -49,8 +50,8 @@ export function renderSvgCenterContent(
   }
   if (!isSvgCenterContent(centerContent)) return null
   if (
-    !React.isValidElement(centerContent) ||
-    centerContent.type === React.Fragment
+    !isValidElement(centerContent) ||
+    centerContent.type === Fragment
   ) {
     return (
       <g
@@ -72,7 +73,7 @@ export function renderSvgCenterContent(
   // caller. Other SVG nodes retain their complete native shape untouched.
   const element =
     svgElement.type === "text"
-      ? React.cloneElement(svgElement, {
+      ? cloneElement(svgElement, {
           x: svgElement.props.x ?? 0,
           y: svgElement.props.y ?? 0,
           textAnchor: svgElement.props.textAnchor ?? "middle",

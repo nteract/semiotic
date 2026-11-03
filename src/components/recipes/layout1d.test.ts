@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import {
   countPairwiseCrossings,
   orderByBarycenter,
@@ -6,6 +6,7 @@ import {
   packBandsBySilhouette,
   placeWithMinGap,
   refineByAdjacentSwaps,
+  type SilhouetteSample,
 } from "./layout1d"
 
 describe("placeWithMinGap", () => {
@@ -37,6 +38,47 @@ describe("packBandsBySilhouette", () => {
     ], 2)
     expect(packed.adjacentClearance).toEqual([9])
     expect(packed.positions).toEqual([0, 11])
+  })
+
+  it("consumes simultaneous steps together and keeps the last duplicate sample", () => {
+    const packed = packBandsBySilhouette([
+      [],
+      [{ at: 0, before: 2, after: 9 }, { at: 3, before: 4, after: 1 }],
+      [
+        { at: 3, before: 100, after: 0 },
+        { at: 3, before: 6, after: 3 },
+        { at: 5, before: 8, after: 2 }
+      ],
+      []
+    ], 2)
+    // The 9-unit upper step ends exactly when the 6-unit lower step begins.
+    // Neither that transient sum nor the overwritten 100-unit sample exists.
+    expect(packed.adjacentClearance).toEqual([4, 9, 3])
+    expect(packed.positions).toEqual([0, 6, 17, 22])
+    expect(packBandsBySilhouette([])).toEqual({ adjacentClearance: [], positions: [] })
+    expect(packBandsBySilhouette([[]])).toEqual({ adjacentClearance: [], positions: [0] })
+  })
+
+  it("matches direct step-function evaluation across staggered and duplicate samples", () => {
+    const bands: SilhouetteSample[][] = Array.from({ length: 7 }, (_, band) =>
+      Array.from({ length: band * 40 }, (_, i) => ({
+        at: Math.floor(i / 2) * 3 - band,
+        before: (i * 7 + band) % 19,
+        after: (i * 13 + band) % 23
+      }))
+    )
+    const expected = bands.slice(1).map((lower, i) => {
+      const upper = bands[i]
+      const times = new Set([...upper, ...lower].map((sample) => sample.at))
+      let clearance = 0
+      for (const at of times) {
+        const after = upper.findLast((sample) => sample.at <= at)?.after ?? 0
+        const before = lower.findLast((sample) => sample.at <= at)?.before ?? 0
+        clearance = Math.max(clearance, after + before)
+      }
+      return clearance
+    })
+    expect(packBandsBySilhouette(bands).adjacentClearance).toEqual(expected)
   })
 })
 
@@ -77,8 +119,8 @@ describe("guarded ordering kit", () => {
   })
 
   it("honors a deterministic evaluation budget", () => {
-    let evaluations = 0
-    orderExactSmall([1, 2, 3, 4], () => ++evaluations, { maxEvaluations: 5 })
-    expect(evaluations).toBe(5)
+    const cost = vi.fn(() => 0)
+    orderExactSmall([1, 2, 3, 4], cost, { maxEvaluations: 5 })
+    expect(cost).toHaveBeenCalledTimes(5)
   })
 })

@@ -4,7 +4,7 @@
  * Every ordinal HOC that paints "pieces" (BarChart, StackedBarChart,
  * GroupedBarChart, PieChart, DonutChart, FunnelChart, BoxPlot,
  * ViolinPlot, RidgelinePlot, DotPlot, SwimlaneChart, SwarmPlot…)
- * builds `pieceStyle` through the same three-step recipe:
+ * builds `pieceStyle` through the same four-step recipe:
  *
  *   1. **Base style** — fill via `getColor(d, colorBy, colorScale)`
  *      when `colorBy` is set, else `resolveDefaultFill(color, theme,
@@ -31,6 +31,7 @@ import { getColor } from "./colorUtils"
 import { resolveDefaultFill } from "./hooks"
 import { resolveStyleRules, type StyleRule } from "./styleRules"
 import type { HatchFill } from "./hatchFill"
+import type { Style } from "../../stream/types"
 
 /**
  * Values a resolved piece style may carry. Wider than the axis-style
@@ -54,15 +55,8 @@ export interface OrdinalPieceStyleOptions {
   colorScheme?: string | string[] | Record<string, string>
   /** Stable category-index map for default-fill cycling. */
   categoryIndexMap: Map<string, number>
-  /** User-supplied `frameProps.pieceStyle`. Accepts the looser
-   *  Frame-side `Style` type (typed fields like `fill: string`) or a
-   *  function returning the same shape; we don't pin a stricter
-   *  contract here because every ordinal HOC re-types pieceStyle
-   *  via its own props interface. */
-  userPieceStyle?:
-    | ((d: Datum, category?: string) => Record<string, unknown>)
-    | Record<string, unknown>
-    | unknown
+  /** User-supplied `frameProps.pieceStyle`, using the frame's known style shape. */
+  userPieceStyle?: Style | ((d: Datum, category?: string) => Style)
   /** Top-level primitive props — applied last so they win over HOC base + user overlay. */
   stroke?: string
   strokeWidth?: number
@@ -232,13 +226,13 @@ export function useOrdinalPieceStyle(
       if (typeof userPieceStyle === "function") {
         return (d: Datum, category?: string) => ({
           ...basePieceStyle(d, category),
-          ...(userPieceStyle as (d: Datum, category?: string) => Record<string, string | number | undefined>)(d, category) || {},
+          ...userPieceStyle(d, category),
         })
       }
       // Object form — spread the static overrides per call.
       return (d: Datum, category?: string) => ({
         ...basePieceStyle(d, category),
-        ...(userPieceStyle as Record<string, string | number | undefined>),
+        ...userPieceStyle,
       })
     })()
     // 3 — primitive props (stroke/strokeWidth/opacity) applied LAST.

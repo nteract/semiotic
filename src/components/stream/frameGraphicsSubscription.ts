@@ -1,7 +1,6 @@
 "use client"
 
-import * as React from "react"
-import { useSyncExternalStore } from "react"
+import { useSyncExternalStore, createElement, Fragment } from "react"
 import type { ReactElement, ReactNode } from "react"
 import type { FrameGraphicsContext, FrameGraphicsProp } from "./types"
 import {
@@ -68,8 +67,8 @@ function SubscribedFrameGraphics<S>({
     tracker.getSnapshot,
     tracker.getSnapshot
   )
-  return React.createElement(
-    React.Fragment,
+  return createElement(
+    Fragment,
     null,
     resolveFrameGraphics(graphics, size, margin, readScales())
   )
@@ -97,7 +96,7 @@ export function resolveSubscribedFrameLayers<S>({
   })
   const subscribed = (graphics: FrameGraphicsProp<S> | undefined) =>
     typeof graphics === "function"
-      ? React.createElement(SubscribedFrameGraphics<S>, {
+      ? createElement(SubscribedFrameGraphics<S>, {
           graphics,
           size: options.size,
           margin: options.margin,

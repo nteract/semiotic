@@ -1,6 +1,7 @@
 "use client"
 
-import * as React from "react"
+import type * as React from "react"
+import { useState } from "react"
 import { SR_ONLY_STYLE } from "./AriaLiveTooltip"
 import { FOCUS_REVEAL_STYLE } from "../screenReaderStyles"
 import type { useAccessibleTableInteraction } from "./useAccessibleTableInteraction"
@@ -44,7 +45,7 @@ export function AccessibleTableShell({
   } = interaction
   // The collapsed trigger is visually hidden until it has focus; revealing it
   // then keeps the keyboard focus indicator visible (WCAG 2.4.7).
-  const [triggerFocused, setTriggerFocused] = React.useState(false)
+  const [triggerFocused, setTriggerFocused] = useState(false)
   const uniqueRegionLabel = useUniqueRegionLabel(regionLabel)
   return (
     <div

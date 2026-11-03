@@ -1,5 +1,6 @@
 "use client"
-import * as React from "react"
+import type * as React from "react"
+import { useState, useRef, useCallback, useMemo, useEffect } from "react"
 import { flattenVisible, type NavTreeNode } from "./ai/navigationTree"
 import { getConversationArcStore } from "./ai/conversationArc"
 import {
@@ -67,31 +68,31 @@ function buildParentMap(root: NavTreeNode): Map<string, NavTreeNode> {
 export function AccessibleNavTree({ tree, label, visible = false, className, onActiveChange, activeId: controlledActiveId, chartId, onObservation, onAnnotationActivate }: AccessibleNavTreeProps) {
   // Start with the root expanded so its direct children (axes, series) are
   // visible; deeper branches collapse until the user drills in.
-  const [expanded, setExpanded] = React.useState<Set<string>>(() => new Set([tree.id]))
-  const [internalActiveId, setInternalActiveId] = React.useState<string>(tree.id)
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set([tree.id]))
+  const [internalActiveId, setInternalActiveId] = useState<string>(tree.id)
   const isControlled = controlledActiveId !== undefined
   const activeId = isControlled ? controlledActiveId : internalActiveId
-  const containerRef = React.useRef<HTMLDivElement>(null)
-  const itemRefs = React.useRef<Map<string, HTMLLIElement | null>>(new Map())
+  const containerRef = useRef<HTMLDivElement>(null)
+  const itemRefs = useRef<Map<string, HTMLLIElement | null>>(new Map())
   const pushObservation = useObservationSelector((state) => state.pushObservation)
 
-  const emitObservation = React.useCallback((observation: ChartObservation) => {
+  const emitObservation = useCallback((observation: ChartObservation) => {
     onObservation?.(observation)
     pushObservation?.(observation)
   }, [onObservation, pushObservation])
 
-  const parentMap = React.useMemo(() => buildParentMap(tree), [tree])
-  const order = React.useMemo(() => flattenVisible(tree, expanded), [tree, expanded])
+  const parentMap = useMemo(() => buildParentMap(tree), [tree])
+  const order = useMemo(() => flattenVisible(tree, expanded), [tree, expanded])
 
   // If the tree changes (new data) and the (uncontrolled) active node vanished, reset.
-  React.useEffect(() => {
+  useEffect(() => {
     if (isControlled) return
     if (!order.some((n) => n.id === internalActiveId)) setInternalActiveId(tree.id)
   }, [order, internalActiveId, tree.id, isControlled])
 
   // Auto-expand the path to the active node so it's visible/focusable — matters
   // when the active node is set externally (canvas → tree) into a collapsed branch.
-  React.useEffect(() => {
+  useEffect(() => {
     const path: string[] = []
     let cur = parentMap.get(activeId)
     while (cur) { path.push(cur.id); cur = parentMap.get(cur.id) }
@@ -107,7 +108,7 @@ export function AccessibleNavTree({ tree, label, visible = false, className, onA
 
   // Move DOM focus to the active item — but only while the tree already holds
   // focus, so we never steal focus on mount or data change.
-  React.useEffect(() => {
+  useEffect(() => {
     if (containerRef.current?.contains(document.activeElement)) {
       itemRefs.current.get(activeId)?.focus()
     }
@@ -117,7 +118,7 @@ export function AccessibleNavTree({ tree, label, visible = false, className, onA
   // recorded; externally-driven active changes (canvas → tree sync) flow
   // through the `activeId` prop, not `setActive`, so they aren't double-counted
   // as a reader's own traversal. No-op (and allocation-free) while disabled.
-  const recordNav = React.useCallback(
+  const recordNav = useCallback(
     (node: NavTreeNode, kind: "focus" | "toggle", expandedNext?: boolean) => {
       const store = getConversationArcStore()
       if (!store.enabled) return
@@ -137,7 +138,7 @@ export function AccessibleNavTree({ tree, label, visible = false, className, onA
     [chartId]
   )
 
-  const setActive = React.useCallback((node: NavTreeNode) => {
+  const setActive = useCallback((node: NavTreeNode) => {
     // No-op when the node is already active (ArrowDown on the last item,
     // re-clicking the active row, etc.). `onActiveChange` fires only "when the
     // active node changes", and skipping it here also avoids redundant
@@ -158,7 +159,7 @@ export function AccessibleNavTree({ tree, label, visible = false, className, onA
     }
   }, [onActiveChange, isControlled, recordNav, activeId, emitObservation, chartId])
 
-  const activateNode = React.useCallback((node: NavTreeNode) => {
+  const activateNode = useCallback((node: NavTreeNode) => {
     if (!node.datum) return
     if (node.role === "annotation") {
       const annotationId = annotationStableId(node.datum)

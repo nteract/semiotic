@@ -40,7 +40,8 @@ export {
 import { resolveTheme,
   themeMediaCSS, themeStyles, type ThemeInput } from "./themeResolver"
 import type { SemioticTheme } from "../store/themeCore"
-import * as React from "react"
+import type * as React from "react"
+import { isValidElement } from "react"
 import { TITLE_BASELINE } from "../stream/titleLayout"
 import { staticTitleText, staticTitleContent } from "./staticTitle"
 import {
@@ -293,7 +294,7 @@ export function renderFrameLegend(options: {
   }
   if (props.legend !== undefined && props.legend !== null) {
     const legend = effectiveFrameLegend(props, categories, theme)
-    if (React.isValidElement(legend)) {
+    if (isValidElement(legend)) {
       return renderStaticRawLegend(
         legend,
         size,

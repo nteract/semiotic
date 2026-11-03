@@ -1,8 +1,8 @@
 "use client"
 import { SCATTERPLOT_MATRIX_SIZE } from "../shared/chartSizeDefaultsXY"
 import type { Datum } from "../shared/datumTypes"
-import * as React from "react"
-import { useMemo, useCallback, useState } from "react"
+
+import { useMemo, useCallback, useState, useId, Fragment } from "react"
 import { resolveExplicitColor } from "../shared/colorUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import {
@@ -150,7 +150,7 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
   }, [data])
 
   const colorScale = useColorScale(indexedData, colorBy, colorScheme)
-  const tableId = `${React.useId().replace(/:/g, "")}-data-table`
+  const tableId = `${useId().replace(/:/g, "")}-data-table`
   const accessibleScene = useMemo<AccessibleSceneNode[]>(
     () => (data || []).map((datum) => ({ type: "point", datum })),
     [data],
@@ -239,7 +239,7 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
       <div style={{ position: "relative", width: "fit-content" }}>
       <div style={gridStyle} onMouseLeave={cellMode === "hover" ? handleGridMouseLeave : undefined}>
         {fields.map((rowField, row) => (
-          <React.Fragment key={`row-${rowField}`}>
+          <Fragment key={`row-${rowField}`}>
             {/* Row label */}
             <div
               style={{
@@ -344,7 +344,7 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
                 />
               )
             })}
-          </React.Fragment>
+          </Fragment>
         ))}
 
         {/* Bottom column labels */}
@@ -383,8 +383,7 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
         // Point position within the cell
         const tooltipLeft = cellLeft + hoveredInfo.px
         const tooltipTop = cellTop + hoveredInfo.py
-        const rawDatum = { ...d }
-        delete rawDatum[SPLOM_IDX]
+        const { [SPLOM_IDX]: _index, ...rawDatum } = d
         const hasCustomContent = typeof normalizedTooltip === "function"
         const customContent = hasCustomContent ? normalizedTooltip(rawDatum) : null
         const defaultContent = (

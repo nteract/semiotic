@@ -1,6 +1,6 @@
 import { getMax, getMin } from "../charts/shared/minMax"
-import * as React from "react"
-import { useRef } from "react"
+import type * as React from "react"
+import { useRef, useMemo } from "react"
 import { createControlObservationAdapter } from "./controlContract"
 import type { ControlInputSource, ControlObservationCallback, VisualizationControlType } from "./controlContract"
 import { pointerToLocalPoint, type ControlPoint } from "./controlPointer"
@@ -132,7 +132,7 @@ export function DirectManipulationMarkers({
   current.current = [...values]
   const drag = useRef<DragState | null>(null)
 
-  const observers = React.useMemo(
+  const observers = useMemo(
     () => markers.map((marker, index) => createControlObservationAdapter({
       controlType,
       controlId: marker.controlId ?? `${controlId}-${index}`,

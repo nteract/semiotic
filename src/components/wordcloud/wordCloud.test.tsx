@@ -2,7 +2,11 @@ import * as React from "react"
 import { describe, it, expect, vi } from "vitest"
 import { renderToStaticMarkup } from "react-dom/server"
 import { render, fireEvent, screen } from "@testing-library/react"
-import { normalizeWordCloudInput } from "./normalizeWordCloudInput"
+import {
+  normalizeWordCloudInput,
+  wordCloudFingerprint,
+  wordCloudRandom
+} from "./normalizeWordCloudInput"
 import { validateWordCloudLayout } from "./validateWordCloudLayout"
 import { prepareWordCloudLayout } from "./prepareWordCloudLayout"
 import type { WordCloudLayoutOptions, WordCloudLayoutResult } from "./types"
@@ -29,6 +33,24 @@ import { resolveChartSize } from "../semiotic-utils-core"
 const options = fixture.options as unknown as WordCloudLayoutOptions
 const layout = fixture.layout as unknown as WordCloudLayoutResult
 const config = { ...options, layout }
+
+describe("WordCloud deterministic helpers", () => {
+  it.each([
+    [null, "wc1-77074ba4"],
+    ["", "wc1-ffcaaa85"],
+    [{ words: ["alpha", "β", "😀"], seed: 42 }, "wc1-779a8926"]
+  ])("preserves the serialized UTF-16 fingerprint for %j", (value, expected) => {
+    expect(wordCloudFingerprint(value)).toBe(expected)
+  })
+
+  it("preserves the seeded sequence at the integer precision boundary", () => {
+    const random = wordCloudRandom(0)
+    for (let draw = 0; draw < 4_917_757; draw++) random()
+    expect([random(), random(), random()]).toEqual([
+      0.29623389709740877, 0.8771766452118754, 0.9146185866557062
+    ])
+  })
+})
 
 describe("WordCloud size resolution across renderers", () => {
   it("shares default dimensions with preparation, React and static rendering", async () => {

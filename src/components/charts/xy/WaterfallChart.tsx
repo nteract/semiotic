@@ -6,7 +6,7 @@ import { buildBaseMetadataProps, buildCustomBehaviorProps, buildTooltipProps } f
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
-import { registerXYPlugin } from "../../stream/xyPlugins/registry"
+import { ensureXYPlugin } from "../../stream/xyPlugins/registry"
 import { waterfallXYPlugin } from "../../stream/xyPlugins/waterfallPlugin"
 import type { StreamXYFrameProps, StreamXYFrameHandle, WaterfallStyle } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -26,7 +26,7 @@ import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureWaterfallChartRegistrations(): void {
-  registerXYPlugin(waterfallXYPlugin)
+  ensureXYPlugin(waterfallXYPlugin)
 }
 
 export interface WaterfallChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig {

@@ -1,15 +1,21 @@
-import { describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type {
   ProcessSankeyEdge,
   ProcessSankeyLaneLifetime,
   ProcessSankeyNode,
   ProcessSankeyNodeData,
 } from "./algorithm"
-import {
-  clearProcessSankeyPackingCache,
-  packProcessSankeySlots,
-  rehydrateProcessSankeySlots,
-} from "./packing"
+let packProcessSankeySlots: typeof import("./packing")["packProcessSankeySlots"]
+let rehydrateProcessSankeySlots: typeof import("./packing")["rehydrateProcessSankeySlots"]
+
+beforeEach(async () => {
+  vi.resetModules()
+  const packing = await import("./packing")
+  packProcessSankeySlots = packing.packProcessSankeySlots
+  rehydrateProcessSankeySlots = packing.rehydrateProcessSankeySlots
+})
+
+afterEach(() => vi.restoreAllMocks())
 
 function band(start: number, end: number): ProcessSankeyNodeData {
   return {
@@ -271,7 +277,6 @@ describe("ProcessSankey temporal row packing", () => {
   })
 
   it("rehydrates peaks onto a frozen packing without changing membership", () => {
-    clearProcessSankeyPackingCache()
     const nodes: ProcessSankeyNode[] = [
       { id: "A" },
       { id: "B" },
@@ -304,17 +309,16 @@ describe("ProcessSankey temporal row packing", () => {
     expect(rehydrated.slots.map((s) => s.occupants.map((o) => o.id))).toEqual(
       packed.slots.map((s) => s.occupants.map((o) => o.id)),
     )
-    for (const slot of rehydrated.slots) {
-      const ids = slot.occupants.map((o) => o.id)
-      const expectedTop = Math.max(...ids.map((id) => hot[id].topPeak))
-      const expectedBot = Math.max(...ids.map((id) => hot[id].botPeak))
-      expect(slot.peak.topPeak).toBe(expectedTop)
-      expect(slot.peak.botPeak).toBe(expectedBot)
-    }
+    expect(rehydrated.slots).toEqual([{
+      occupants: [{ id: "A", end: 5 }, { id: "B", end: 10 }],
+      peak: { topPeak: 9, botPeak: 4 }
+    }])
+    expect(packed.slots[0].peak).toEqual({ topPeak: 1, botPeak: 0 })
   })
 
-  it("caches packing membership across identical topology/mass signatures", () => {
-    clearProcessSankeyPackingCache()
+  it("skips conflict calculation on cache hits and isolates every returned layout", async () => {
+    const optimization = await import("./packingOptimization")
+    const conflicts = vi.spyOn(optimization, "buildPackingConflicts")
     const nodes: ProcessSankeyNode[] = [{ id: "A" }, { id: "B" }]
     const nodeData: Record<string, ProcessSankeyNodeData> = {
       A: band(0, 4),
@@ -325,10 +329,32 @@ describe("ProcessSankey temporal row packing", () => {
       B: { start: 5, end: 9 },
     }
     const first = packProcessSankeySlots(nodes, [], nodeData, laneLifetime)
+    const expected = {
+      slots: [{
+        occupants: [{ id: "A", end: 4 }, { id: "B", end: 9 }],
+        peak: { topPeak: 1, botPeak: 0 }
+      }],
+      slotByNode: { A: 0, B: 0 }
+    }
+    expect(first).toEqual(expected)
+    expect(conflicts).toHaveBeenCalledTimes(1)
+    first.slots[0].occupants[0].id = "mutated"
+    first.slots[0].occupants[0].end = -1
+    first.slots[0].peak.topPeak = 99
+    first.slots[0].group = "mutated"
+    first.slotByNode.A = 99
+
     const second = packProcessSankeySlots(nodes, [], nodeData, laneLifetime)
-    expect(second.slotByNode).toEqual(first.slotByNode)
-    expect(second.slots.map((s) => s.occupants.map((o) => o.id))).toEqual(
-      first.slots.map((s) => s.occupants.map((o) => o.id)),
-    )
+    expect(second).toEqual(expected)
+    expect(conflicts).toHaveBeenCalledTimes(1)
+    second.slots[0].occupants.length = 0
+    second.slotByNode.B = 99
+    expect(packProcessSankeySlots(nodes, [], nodeData, laneLifetime)).toEqual(expected)
+    expect(conflicts).toHaveBeenCalledTimes(1)
+
+    const changedMass = { ...nodeData, A: { ...nodeData.A, topPeak: 7 } }
+    const changed = packProcessSankeySlots(nodes, [], changedMass, laneLifetime)
+    expect(conflicts).toHaveBeenCalledTimes(2)
+    expect(changed.slots[0].peak).toEqual({ topPeak: 7, botPeak: 0 })
   })
 })

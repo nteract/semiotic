@@ -29,127 +29,106 @@ function flushMicrotasks(): Promise<void> {
 // ── Tests ───────────────────────────────────────────────────────────────
 
 describe("DataSourceAdapter Pipeline Scenarios", () => {
-  let rafCallbacks: (() => void)[]
-  let originalRAF: typeof requestAnimationFrame
-  let originalCancelRAF: typeof cancelAnimationFrame
-
   beforeEach(() => {
-    rafCallbacks = []
-    originalRAF = globalThis.requestAnimationFrame
-    originalCancelRAF = globalThis.cancelAnimationFrame
-
-    // Mock requestAnimationFrame to capture and manually flush callbacks
-    let nextId = 1
-    globalThis.requestAnimationFrame = vi.fn((cb: FrameRequestCallback) => {
-      const id = nextId++
-      rafCallbacks.push(() => cb(performance.now()))
-      return id
-    }) as typeof requestAnimationFrame
-    globalThis.cancelAnimationFrame = vi.fn()
+    // Preserve native microtasks: push batching is Promise-based, while only
+    // progressive bounded ingestion waits for animation frames.
+    vi.useFakeTimers({ toFake: ["requestAnimationFrame", "cancelAnimationFrame"] })
   })
 
   afterEach(() => {
-    globalThis.requestAnimationFrame = originalRAF
-    globalThis.cancelAnimationFrame = originalCancelRAF
+    vi.useRealTimers()
   })
-
-  /** Flush all pending rAF callbacks (one level) */
-  function flushRAF() {
-    const cbs = [...rafCallbacks]
-    rafCallbacks = []
-    cbs.forEach((cb) => cb())
-  }
 
   // 1. Small bounded data → single synchronous changeset
   it("small bounded dataset emits a single synchronous changeset", () => {
-    const changesets: Changeset<PipelineDatum>[] = []
-    const adapter = new DataSourceAdapter<PipelineDatum>((cs) => changesets.push(cs))
+    const onChangeset = vi.fn<(changeset: Changeset<PipelineDatum>) => void>()
+    const adapter = new DataSourceAdapter<PipelineDatum>(onChangeset)
 
     const data = generateData(100)
     adapter.setBoundedData(data)
 
-    expect(changesets).toHaveLength(1)
-    expect(changesets[0].bounded).toBe(true)
-    expect(changesets[0].inserts).toHaveLength(100)
-    expect(changesets[0].inserts[0]).toEqual({ id: 0, value: 0 })
-    expect(changesets[0].inserts[99]).toEqual({ id: 99, value: 990 })
+    expect(onChangeset).toHaveBeenCalledTimes(1)
+    expect(onChangeset.mock.calls[0][0].bounded).toBe(true)
+    expect(onChangeset.mock.calls[0][0].inserts).toHaveLength(100)
+    expect(onChangeset.mock.calls[0][0].inserts[0]).toEqual({ id: 0, value: 0 })
+    expect(onChangeset.mock.calls[0][0].inserts[99]).toEqual({ id: 99, value: 990 })
   })
 
   it("same bounded data reference is a no-op", () => {
-    const changesets: Changeset<PipelineDatum>[] = []
-    const adapter = new DataSourceAdapter<PipelineDatum>((cs) => changesets.push(cs))
+    const onChangeset = vi.fn<(changeset: Changeset<PipelineDatum>) => void>()
+    const adapter = new DataSourceAdapter<PipelineDatum>(onChangeset)
 
     const data = generateData(100)
     adapter.setBoundedData(data)
     adapter.setBoundedData(data)
 
-    expect(changesets).toHaveLength(1)
+    expect(onChangeset).toHaveBeenCalledTimes(1)
   })
 
   it("same large bounded data reference does not restart chunking", () => {
-    const changesets: Changeset<PipelineDatum>[] = []
-    const adapter = new DataSourceAdapter<PipelineDatum>((cs) => changesets.push(cs))
+    const onChangeset = vi.fn<(changeset: Changeset<PipelineDatum>) => void>()
+    const adapter = new DataSourceAdapter<PipelineDatum>(onChangeset)
 
     const data = generateData(12000)
     adapter.setBoundedData(data)
     adapter.setBoundedData(data)
 
-    expect(changesets).toHaveLength(1)
-    flushRAF()
-    expect(changesets).toHaveLength(2)
+    expect(onChangeset).toHaveBeenCalledTimes(1)
+    vi.advanceTimersToNextFrame()
+    expect(onChangeset).toHaveBeenCalledTimes(2)
   })
 
   // 2. Large bounded data chunks progressively
   it("large bounded dataset (>5000) chunks: first synchronous, rest on rAF", () => {
-    const changesets: Changeset<PipelineDatum>[] = []
-    const adapter = new DataSourceAdapter<PipelineDatum>((cs) => changesets.push(cs))
+    const onChangeset = vi.fn<(changeset: Changeset<PipelineDatum>) => void>()
+    const adapter = new DataSourceAdapter<PipelineDatum>(onChangeset)
 
     const data = generateData(12000)
     adapter.setBoundedData(data)
 
     // First chunk is immediate (bounded: true)
-    expect(changesets).toHaveLength(1)
-    expect(changesets[0].bounded).toBe(true)
-    expect(changesets[0].inserts).toHaveLength(5000)
-    expect(changesets[0].totalSize).toBe(12000)
+    expect(onChangeset).toHaveBeenCalledTimes(1)
+    expect(onChangeset.mock.calls[0][0].bounded).toBe(true)
+    expect(onChangeset.mock.calls[0][0].inserts).toHaveLength(5000)
+    expect(onChangeset.mock.calls[0][0].totalSize).toBe(12000)
 
     // Flush rAF to get second chunk
-    flushRAF()
-    expect(changesets).toHaveLength(2)
-    expect(changesets[1].bounded).toBe(false) // appends, doesn't reset
-    expect(changesets[1].inserts).toHaveLength(5000)
+    vi.advanceTimersToNextFrame()
+    expect(onChangeset).toHaveBeenCalledTimes(2)
+    expect(onChangeset.mock.calls[1][0].bounded).toBe(false) // appends, doesn't reset
+    expect(onChangeset.mock.calls[1][0].inserts).toHaveLength(5000)
 
     // Flush again for final chunk
-    flushRAF()
-    expect(changesets).toHaveLength(3)
-    expect(changesets[2].inserts).toHaveLength(2000) // remaining items
+    vi.advanceTimersToNextFrame()
+    expect(onChangeset).toHaveBeenCalledTimes(3)
+    expect(onChangeset.mock.calls[2][0].inserts).toHaveLength(2000) // remaining items
 
     // Total items across all changesets
-    const totalItems = changesets.reduce((sum, cs) => sum + cs.inserts.length, 0)
+    const totalItems = onChangeset.mock.calls.reduce((sum, [cs]) => sum + cs.inserts.length, 0)
     expect(totalItems).toBe(12000)
   })
 
   // 3. Push after bounded data appends (hybrid mode)
   it("push after setBoundedData appends without clearing", async () => {
-    const changesets: Changeset<PipelineDatum>[] = []
-    const adapter = new DataSourceAdapter<PipelineDatum>((cs) => changesets.push(cs))
+    const onChangeset = vi.fn<(changeset: Changeset<PipelineDatum>) => void>()
+    const adapter = new DataSourceAdapter<PipelineDatum>(onChangeset)
 
     adapter.setBoundedData(generateData(10))
-    expect(changesets).toHaveLength(1)
-    expect(changesets[0].bounded).toBe(true)
+    expect(onChangeset).toHaveBeenCalledTimes(1)
+    expect(onChangeset.mock.calls[0][0].bounded).toBe(true)
 
     // Now push streaming data — buffered until microtask flushes
     adapter.push({ id: 100, value: 1000 })
     await flushMicrotasks()
-    expect(changesets).toHaveLength(2)
-    expect(changesets[1].bounded).toBe(false)
-    expect(changesets[1].inserts).toEqual([{ id: 100, value: 1000 }])
+    expect(onChangeset).toHaveBeenCalledTimes(2)
+    expect(onChangeset.mock.calls[1][0].bounded).toBe(false)
+    expect(onChangeset.mock.calls[1][0].inserts).toEqual([{ id: 100, value: 1000 }])
   })
 
   // 4. pushMany emits single changeset after microtask flush
   it("pushMany emits a single changeset with all items", async () => {
-    const changesets: Changeset<PipelineDatum>[] = []
-    const adapter = new DataSourceAdapter<PipelineDatum>((cs) => changesets.push(cs))
+    const onChangeset = vi.fn<(changeset: Changeset<PipelineDatum>) => void>()
+    const adapter = new DataSourceAdapter<PipelineDatum>(onChangeset)
 
     adapter.pushMany([
       { id: 1, value: 10 },
@@ -158,63 +137,65 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
     ])
 
     await flushMicrotasks()
-    expect(changesets).toHaveLength(1)
-    expect(changesets[0].bounded).toBe(false)
-    expect(changesets[0].inserts).toHaveLength(3)
+    expect(onChangeset).toHaveBeenCalledTimes(1)
+    expect(onChangeset.mock.calls[0][0].bounded).toBe(false)
+    expect(onChangeset.mock.calls[0][0].inserts).toHaveLength(3)
   })
 
   // 5. pushMany with empty array is no-op
   it("pushMany with empty array does not emit a changeset", async () => {
-    const changesets: Changeset<PipelineDatum>[] = []
-    const adapter = new DataSourceAdapter<PipelineDatum>((cs) => changesets.push(cs))
+    const onChangeset = vi.fn<(changeset: Changeset<PipelineDatum>) => void>()
+    const adapter = new DataSourceAdapter<PipelineDatum>(onChangeset)
 
     adapter.pushMany([])
     await flushMicrotasks()
-    expect(changesets).toHaveLength(0)
+    expect(onChangeset).toHaveBeenCalledTimes(0)
   })
 
   // 6. New setBoundedData cancels previous chunking
   it("setting new bounded data cancels in-flight chunking from previous data", () => {
-    const changesets: Changeset<PipelineDatum>[] = []
-    const adapter = new DataSourceAdapter<PipelineDatum>((cs) => changesets.push(cs))
+    const onChangeset = vi.fn<(changeset: Changeset<PipelineDatum>) => void>()
+    const adapter = new DataSourceAdapter<PipelineDatum>(onChangeset)
 
     // Start chunking a large dataset
     adapter.setBoundedData(generateData(10000))
-    expect(changesets).toHaveLength(1) // first chunk only
+    expect(onChangeset).toHaveBeenCalledTimes(1) // first chunk only
 
     // Before flushing rAF, set new data
     const newData = generateData(50)
     adapter.setBoundedData(newData)
 
     // Should emit fresh changeset for new data
-    expect(changesets).toHaveLength(2)
-    expect(changesets[1].bounded).toBe(true)
-    expect(changesets[1].inserts).toHaveLength(50)
+    expect(onChangeset).toHaveBeenCalledTimes(2)
+    expect(onChangeset.mock.calls[1][0].bounded).toBe(true)
+    expect(onChangeset.mock.calls[1][0].inserts).toHaveLength(50)
 
+    // Cancellation must release scheduled work, not just ignore its output.
+    expect(vi.getTimerCount()).toBe(0)
     // Flush rAF — old chunking should NOT produce more changesets
-    flushRAF()
-    expect(changesets).toHaveLength(2) // no additional changesets
+    vi.advanceTimersToNextFrame()
+    expect(onChangeset).toHaveBeenCalledTimes(2) // no additional changesets
   })
 
   // 7. clearLastData allows same reference to re-ingest
   it("clearLastData resets dedup so same reference can be re-ingested", () => {
-    const changesets: Changeset<PipelineDatum>[] = []
-    const adapter = new DataSourceAdapter<PipelineDatum>((cs) => changesets.push(cs))
+    const onChangeset = vi.fn<(changeset: Changeset<PipelineDatum>) => void>()
+    const adapter = new DataSourceAdapter<PipelineDatum>(onChangeset)
 
     const data = generateData(10)
     adapter.setBoundedData(data)
-    expect(changesets).toHaveLength(1)
+    expect(onChangeset).toHaveBeenCalledTimes(1)
 
     // Clear and re-set same reference
     adapter.clearLastData()
     adapter.setBoundedData(data)
-    expect(changesets).toHaveLength(2) // re-ingested
+    expect(onChangeset).toHaveBeenCalledTimes(2) // re-ingested
   })
 
   // 8. Rapid setBoundedData calls — only last dataset completes chunking
   it("rapid setBoundedData calls: only the last dataset's chunks complete", () => {
-    const changesets: Changeset<PipelineDatum>[] = []
-    const adapter = new DataSourceAdapter<PipelineDatum>((cs) => changesets.push(cs))
+    const onChangeset = vi.fn<(changeset: Changeset<PipelineDatum>) => void>()
+    const adapter = new DataSourceAdapter<PipelineDatum>(onChangeset)
 
     // Fire off 3 large datasets rapidly
     adapter.setBoundedData(generateData(8000))
@@ -222,22 +203,23 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
     adapter.setBoundedData(generateData(6000))
 
     // Each setBoundedData emits one immediate chunk
-    expect(changesets).toHaveLength(3)
+    expect(onChangeset).toHaveBeenCalledTimes(3)
 
+    expect(vi.getTimerCount()).toBe(1)
     // Only the last dataset should continue chunking
-    flushRAF()
-    expect(changesets).toHaveLength(4) // one more chunk from last dataset
-    expect(changesets[3].inserts).toHaveLength(1000) // remaining 1000 of 6000
+    vi.advanceTimersToNextFrame()
+    expect(onChangeset).toHaveBeenCalledTimes(4) // one more chunk from last dataset
+    expect(onChangeset.mock.calls[3][0].inserts).toHaveLength(1000) // remaining 1000 of 6000
 
     // No more chunks
-    flushRAF()
-    expect(changesets).toHaveLength(4)
+    vi.advanceTimersToNextFrame()
+    expect(onChangeset).toHaveBeenCalledTimes(4)
   })
 
   // 9. Rapid push() calls are batched into a single changeset via microtask
   it("rapid push() calls within the same task are batched", async () => {
-    const changesets: Changeset<PipelineDatum>[] = []
-    const adapter = new DataSourceAdapter<PipelineDatum>((cs) => changesets.push(cs))
+    const onChangeset = vi.fn<(changeset: Changeset<PipelineDatum>) => void>()
+    const adapter = new DataSourceAdapter<PipelineDatum>(onChangeset)
 
     // Simulate high-frequency pushes — all within the same synchronous task
     for (let i = 0; i < 1000; i++) {
@@ -245,19 +227,19 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
     }
 
     // Nothing flushed yet synchronously — all buffered
-    expect(changesets).toHaveLength(0)
+    expect(onChangeset).toHaveBeenCalledTimes(0)
 
     // Wait for microtask to flush
     await flushMicrotasks()
-    expect(changesets).toHaveLength(1)
-    expect(changesets[0].inserts).toHaveLength(1000)
-    expect(changesets[0].bounded).toBe(false)
+    expect(onChangeset).toHaveBeenCalledTimes(1)
+    expect(onChangeset.mock.calls[0][0].inserts).toHaveLength(1000)
+    expect(onChangeset.mock.calls[0][0].bounded).toBe(false)
   })
 
   // 10. Mixed push() and pushMany() within same task are coalesced
   it("mixed push() and pushMany() within same task are coalesced", async () => {
-    const changesets: Changeset<PipelineDatum>[] = []
-    const adapter = new DataSourceAdapter<PipelineDatum>((cs) => changesets.push(cs))
+    const onChangeset = vi.fn<(changeset: Changeset<PipelineDatum>) => void>()
+    const adapter = new DataSourceAdapter<PipelineDatum>(onChangeset)
 
     adapter.push({ id: 1, value: 10 })
     adapter.pushMany([
@@ -267,67 +249,67 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
     adapter.push({ id: 4, value: 40 })
 
     await flushMicrotasks()
-    expect(changesets).toHaveLength(1)
-    expect(changesets[0].inserts).toHaveLength(4)
-    expect(changesets[0].inserts.map((d) => d.id)).toEqual([1, 2, 3, 4])
+    expect(onChangeset).toHaveBeenCalledTimes(1)
+    expect(onChangeset.mock.calls[0][0].inserts).toHaveLength(4)
+    expect(onChangeset.mock.calls[0][0].inserts.map((d) => d.id)).toEqual([1, 2, 3, 4])
   })
 
   // 11. clear() discards buffered pushes
   it("clear() discards buffered push data", async () => {
-    const changesets: Changeset<PipelineDatum>[] = []
-    const adapter = new DataSourceAdapter<PipelineDatum>((cs) => changesets.push(cs))
+    const onChangeset = vi.fn<(changeset: Changeset<PipelineDatum>) => void>()
+    const adapter = new DataSourceAdapter<PipelineDatum>(onChangeset)
 
     adapter.push({ id: 1, value: 10 })
     adapter.push({ id: 2, value: 20 })
     adapter.clear()
 
     await flushMicrotasks()
-    expect(changesets).toHaveLength(0)
+    expect(onChangeset).toHaveBeenCalledTimes(0)
   })
 
   // 12. Successive flushes across microtask boundaries produce separate changesets
   it("pushes across separate microtask ticks produce separate changesets", async () => {
-    const changesets: Changeset<PipelineDatum>[] = []
-    const adapter = new DataSourceAdapter<PipelineDatum>((cs) => changesets.push(cs))
+    const onChangeset = vi.fn<(changeset: Changeset<PipelineDatum>) => void>()
+    const adapter = new DataSourceAdapter<PipelineDatum>(onChangeset)
 
     adapter.push({ id: 1, value: 10 })
     await flushMicrotasks() // first flush
-    expect(changesets).toHaveLength(1)
+    expect(onChangeset).toHaveBeenCalledTimes(1)
 
     adapter.push({ id: 2, value: 20 })
     await flushMicrotasks() // second flush
-    expect(changesets).toHaveLength(2)
-    expect(changesets[0].inserts).toHaveLength(1)
-    expect(changesets[1].inserts).toHaveLength(1)
+    expect(onChangeset).toHaveBeenCalledTimes(2)
+    expect(onChangeset.mock.calls[0][0].inserts).toHaveLength(1)
+    expect(onChangeset.mock.calls[1][0].inserts).toHaveLength(1)
   })
 
   // 13. flush() provides synchronous escape hatch
   it("flush() immediately processes buffered pushes synchronously", () => {
-    const changesets: Changeset<PipelineDatum>[] = []
-    const adapter = new DataSourceAdapter<PipelineDatum>((cs) => changesets.push(cs))
+    const onChangeset = vi.fn<(changeset: Changeset<PipelineDatum>) => void>()
+    const adapter = new DataSourceAdapter<PipelineDatum>(onChangeset)
 
     adapter.push({ id: 1, value: 10 })
     adapter.push({ id: 2, value: 20 })
 
     // Nothing flushed yet
-    expect(changesets).toHaveLength(0)
+    expect(onChangeset).toHaveBeenCalledTimes(0)
 
     // Explicit flush
     adapter.flush()
-    expect(changesets).toHaveLength(1)
-    expect(changesets[0].inserts).toHaveLength(2)
-    expect(changesets[0].inserts.map((d) => d.id)).toEqual([1, 2])
+    expect(onChangeset).toHaveBeenCalledTimes(1)
+    expect(onChangeset.mock.calls[0][0].inserts).toHaveLength(2)
+    expect(onChangeset.mock.calls[0][0].inserts.map((d) => d.id)).toEqual([1, 2])
   })
 
   // 14. clearLastData discards buffered pushes
   it("clearLastData discards buffered push data", async () => {
-    const changesets: Changeset<PipelineDatum>[] = []
-    const adapter = new DataSourceAdapter<PipelineDatum>((cs) => changesets.push(cs))
+    const onChangeset = vi.fn<(changeset: Changeset<PipelineDatum>) => void>()
+    const adapter = new DataSourceAdapter<PipelineDatum>(onChangeset)
 
     adapter.push({ id: 1, value: 10 })
     adapter.clearLastData()
 
     await flushMicrotasks()
-    expect(changesets).toHaveLength(0)
+    expect(onChangeset).toHaveBeenCalledTimes(0)
   })
 })

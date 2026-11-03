@@ -4,38 +4,37 @@ import { renderToString } from "react-dom/server"
 import { hydrateRoot } from "react-dom/client"
 import { afterEach, beforeEach, expect, it, vi } from "vitest"
 import { setupCanvasMock } from "../../test-utils/canvasMock"
-import "./layouts/forceLayoutPlugin"
-import StreamNetworkFrame from "./StreamNetworkFrame"
-import { NetworkPipelineStore } from "./NetworkPipelineStore"
+import type { NetworkPipelineStore as NetworkStore } from "./NetworkPipelineStore"
 import type { StreamNetworkFrameHandle } from "./networkTypes"
-import { _resetSharedForceLayoutSessionForTest } from "./layouts/forceLayoutWorkerClient"
-import * as sparseArray from "../charts/shared/sparseArray"
 
-class DeferredWorker {
-  static instances: DeferredWorker[] = []
+const DeferredWorker = vi.fn(class {
   onmessage: ((event: MessageEvent) => void) | null = null
   onerror: ((event: ErrorEvent) => void) | null = null
-  messages: Array<{ requestId: number }> = []
-  terminated = false
-
-  constructor() {
-    DeferredWorker.instances.push(this)
-  }
-  postMessage(request: { requestId: number }): void {
-    this.messages.push(request)
-  }
-  terminate(): void {
-    this.terminated = true
-  }
-}
+  postMessage = vi.fn<(request: { requestId: number }) => void>()
+  terminate = vi.fn()
+})
 
 let restoreCanvas: () => void
-beforeEach(() => {
+let StreamNetworkFrame: typeof import("./StreamNetworkFrame")["default"]
+let NetworkPipelineStore: typeof import("./NetworkPipelineStore")["NetworkPipelineStore"]
+let sparseArray: typeof import("../charts/shared/sparseArray")
+beforeEach(async () => {
+  vi.resetModules()
+  const [frame, store, sparse, registry, force] = await Promise.all([
+    import("./StreamNetworkFrame"),
+    import("./NetworkPipelineStore"),
+    import("../charts/shared/sparseArray"),
+    import("./layouts/registry"),
+    import("./layouts/forceLayoutPlugin")
+  ])
+  StreamNetworkFrame = frame.default
+  NetworkPipelineStore = store.NetworkPipelineStore
+  sparseArray = sparse
+  registry.registerLayoutPlugin("force", force.forceLayoutPlugin)
   restoreCanvas = setupCanvasMock({ stubRaf: "noop" })
-  DeferredWorker.instances = []
+  DeferredWorker.mockClear()
 })
 afterEach(() => {
-  _resetSharedForceLayoutSessionForTest()
   vi.unstubAllGlobals()
   vi.restoreAllMocks()
   restoreCanvas()
@@ -86,53 +85,53 @@ it.each(["worker", "sync", "fallback"] as const)(
     const serverFrame = host.firstElementChild
     const serverSVG = host.querySelector("svg")
     expect(host.querySelectorAll("svg circle").length).toBeGreaterThan(0)
-    const calls: string[] = []
-    const validations: string[] = []
+    const calls = vi.fn<(phase: string) => void>()
+    const validations = vi.fn<(phase: string) => void>()
     const originalFilter = sparseArray.filterSparseArray
     vi.spyOn(sparseArray, "filterSparseArray").mockImplementation(
       function <T extends object>(
         input: readonly (T | null | undefined)[] | undefined | null
       ) {
-        validations.push(phase)
+        validations(phase)
         return originalFilter(input)
       }
     )
     const original = NetworkPipelineStore.prototype.runLayout
     vi.spyOn(NetworkPipelineStore.prototype, "runLayout").mockImplementation(
-      function (this: NetworkPipelineStore, ...args) {
-        calls.push(phase)
+      function (this: NetworkStore, ...args) {
+        calls(phase)
         return original.apply(this, args)
       }
     )
-    const errors: unknown[] = []
+    const onRecoverableError = vi.fn()
     let root: ReturnType<typeof hydrateRoot> | undefined
     try {
       await act(async () => {
         root = hydrateRoot(host, chart, {
-          onRecoverableError: (error) => errors.push(error)
+          onRecoverableError
         })
       })
-      expect(errors).toEqual([])
+      expect(onRecoverableError).not.toHaveBeenCalled()
       expect(host.firstElementChild).toBe(serverFrame)
-      expect(calls).not.toContain("render")
-      expect(validations.length).toBeGreaterThan(0)
-      expect(validations).not.toContain("render")
+      expect(calls).not.toHaveBeenCalledWith("render")
+      expect(validations).toHaveBeenCalled()
+      expect(validations).not.toHaveBeenCalledWith("render")
       if (execution === "worker") {
         await waitFor(() =>
           expect(
-            DeferredWorker.instances.some(
-              (worker) => !worker.terminated && worker.messages.length > 0
+            DeferredWorker.mock.instances.some(
+              (worker) => worker.terminate.mock.calls.length === 0 && worker.postMessage.mock.calls.length > 0
             )
           ).toBe(true)
         )
-        expect(calls).toEqual([])
+        expect(calls).not.toHaveBeenCalled()
         expect(host.querySelector("svg")).toBe(serverSVG)
         expect(host.querySelector("canvas")).toBeNull()
         expect(serverFrame).toHaveAttribute("aria-busy", "true")
-        const worker = DeferredWorker.instances.findLast(
-          (instance) => !instance.terminated
+        const worker = DeferredWorker.mock.instances.findLast(
+          (instance) => instance.terminate.mock.calls.length === 0
         )!
-        const request = worker.messages.at(-1)!
+        const request = worker.postMessage.mock.lastCall![0]
         await act(async () =>
           worker.onmessage?.({
             data: {
@@ -141,17 +140,17 @@ it.each(["worker", "sync", "fallback"] as const)(
             }
           } as MessageEvent)
         )
-        expect(calls).toEqual(["commit"])
+        expect(calls).toHaveBeenCalledExactlyOnceWith("commit")
         expect(ref.current?.getTopology().nodes).toMatchObject([
           { id: "a", x: 80, y: 80 },
           { id: "b", x: 180, y: 120 }
         ])
       } else {
-        expect(calls.length).toBeGreaterThan(0)
+        expect(calls).toHaveBeenCalled()
       }
       expect(host.querySelector("canvas")).not.toBeNull()
       expect(host.firstElementChild).toBe(serverFrame)
-      expect(errors).toEqual([])
+      expect(onRecoverableError).not.toHaveBeenCalled()
     } finally {
       act(() => root?.unmount())
       host.remove()

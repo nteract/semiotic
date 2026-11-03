@@ -8,7 +8,8 @@
  * sceneToSVGShared.tsx so the XY and ordinal serializers agree on geometry.
  */
 
-import * as React from "react"
+import type * as React from "react"
+import { Fragment } from "react"
 import { arc as d3Arc } from "d3-shape"
 
 import type {
@@ -149,14 +150,14 @@ function ordinalSceneNodeToSVGMark(node: OrdinalSceneNode, i: number, idPrefix?:
       if (n.cornerRadii && hasAnyCornerRadius(n.cornerRadii)) {
         const d = perCornerSvgPath(n)
         return (
-          <React.Fragment key={baseKey}>
+          <Fragment key={baseKey}>
             {rectDefs}
             <path
               d={d}
               fill={fillValue}
               {...svgPaintStyle(n.style)}
             />
-          </React.Fragment>
+          </Fragment>
         )
       }
       if (n.roundedTop && n.roundedTop > 0) {
@@ -177,18 +178,18 @@ function ordinalSceneNodeToSVGMark(node: OrdinalSceneNode, i: number, idPrefix?:
             d = `M${x},${y+h} L${x},${y+r} A${r},${r} 0 0 1 ${x+r},${y} L${x+w-r},${y} A${r},${r} 0 0 1 ${x+w},${y+r} L${x+w},${y+h} Z`
         }
         return (
-          <React.Fragment key={baseKey}>
+          <Fragment key={baseKey}>
             {rectDefs}
             <path
               d={d}
               fill={fillValue}
               {...svgPaintStyle(n.style)}
             />
-          </React.Fragment>
+          </Fragment>
         )
       }
       return (
-        <React.Fragment key={baseKey}>
+        <Fragment key={baseKey}>
           {rectDefs}
           <rect
             x={n.x} y={n.y} width={n.w} height={n.h}
@@ -196,7 +197,7 @@ function ordinalSceneNodeToSVGMark(node: OrdinalSceneNode, i: number, idPrefix?:
             {...svgPaintStyle(n.style)}
           />
           {funnelRectLabels(n, baseKey)}
-        </React.Fragment>
+        </Fragment>
       )
     }
     case "point":

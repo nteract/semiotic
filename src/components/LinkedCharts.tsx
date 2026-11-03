@@ -32,6 +32,7 @@ import Legend from "./Legend"
 import { estimateLegendTextWidth, legendDisplayLabel } from "./legendGeometry"
 import type { LegendGroup } from "./types/legendTypes"
 import { useResponsiveSize } from "./stream/useResponsiveSize"
+import { sameCategoryDomain } from "./stream/categoryDomain"
 
 export type LegendInteractionMode = "highlight" | "isolate" | "none"
 
@@ -95,25 +96,7 @@ const useIsomorphicLayoutEffect =
   typeof window === "undefined" ? useEffect : useLayoutEffect
 
 function uniqueCategories(categories: string[]): string[] {
-  const seen = new Set<string>()
-  const unique: string[] = []
-  for (const category of categories) {
-    if (seen.has(category)) continue
-    seen.add(category)
-    unique.push(category)
-  }
-  return unique
-}
-
-function sameCategories(
-  a: ReadonlyArray<string | undefined>,
-  b: ReadonlyArray<string | undefined>
-): boolean {
-  if (a.length !== b.length) return false
-  for (let i = 0; i < a.length; i++) {
-    if (a[i] !== b[i]) return false
-  }
-  return true
+  return Array.from(new Set(categories))
 }
 
 /** Register a chart's current color categories with the nearest LinkedCharts. */
@@ -123,22 +106,34 @@ export function useLinkedChartCategories(
 ): void {
   const registry = useContext(LinkedCategoryRegistryContext)
   const id = useId()
-  const nextCategories = uniqueCategories(categories)
-  const nextColors = nextCategories.map((category) => colorScale?.(category))
-  const stableRegistrationRef = useRef<LinkedCategoryRegistration>({
-    categories: [],
-    colors: []
-  })
+  const stableRegistrationRef = useRef<LinkedCategoryRegistration | null>(null)
+  const previous = stableRegistrationRef.current
+  const nextCategories =
+    previous && sameCategoryDomain(previous.categories, categories)
+      ? previous.categories
+      : uniqueCategories(categories)
+  let nextColors: Array<string | undefined> | undefined =
+    previous?.colors.length === nextCategories.length ? undefined : []
+  // A stable scale can read a changing palette. Compare its current colors,
+  // allocating a replacement only when its output actually changes.
+  for (let i = 0; i < nextCategories.length; i++) {
+    const color = colorScale?.(nextCategories[i])
+    if (!nextColors && color !== previous!.colors[i]) {
+      nextColors = previous!.colors.slice(0, i)
+    }
+    nextColors?.push(color)
+  }
   if (
-    !sameCategories(stableRegistrationRef.current.categories, nextCategories) ||
-    !sameCategories(stableRegistrationRef.current.colors, nextColors)
+    !previous ||
+    nextColors ||
+    !sameCategoryDomain(previous.categories, nextCategories)
   ) {
     stableRegistrationRef.current = {
       categories: nextCategories,
-      colors: nextColors
+      colors: nextColors ?? previous!.colors
     }
   }
-  const stableRegistration = stableRegistrationRef.current
+  const stableRegistration = stableRegistrationRef.current!
 
   useIsomorphicLayoutEffect(() => {
     if (!registry) return
@@ -338,14 +333,7 @@ function LinkedLegend({
   // 30. If the container is narrow enough that the legend genuinely
   // needs to wrap, we grow the SVG height so nothing clips.
   const [containerRef, [measuredWidth]] = useResponsiveSize([0, 0], true, false)
-  const rowCount = useMemo(
-    () =>
-      estimateLegendRowCount(
-        entries.map(([label]) => label),
-        measuredWidth
-      ),
-    [entries, measuredWidth]
-  )
+  const rowCount = estimateLegendRowCount(allCategories, measuredWidth)
   const svgHeight = Math.max(30, rowCount * 22 + 8)
 
   // Empty-state guard lives here, after every hook above, so the hook
@@ -483,8 +471,8 @@ export function LinkedCharts({
       registerCategories: (id, registration) => {
         setRegisteredCategories((prev) => {
           if (
-            sameCategories(prev[id]?.categories ?? [], registration.categories) &&
-            sameCategories(prev[id]?.colors ?? [], registration.colors)
+            sameCategoryDomain(prev[id]?.categories ?? [], registration.categories) &&
+            sameCategoryDomain(prev[id]?.colors ?? [], registration.colors)
           )
             return prev
           return { ...prev, [id]: registration }
@@ -493,8 +481,7 @@ export function LinkedCharts({
       unregisterCategories: (id) => {
         setRegisteredCategories((prev) => {
           if (!Object.prototype.hasOwnProperty.call(prev, id)) return prev
-          const next = { ...prev }
-          delete next[id]
+          const { [id]: _removed, ...next } = prev
           return next
         })
       }

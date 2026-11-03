@@ -7,8 +7,7 @@ import { createMockCanvasContext } from "../../test-utils/canvasMock"
 import { renderOrdinalToStaticSVG } from "../server/renderToStaticSVG"
 import {
   paintSceneWithBackend,
-  renderSceneWithBackend,
-  resetRenderBackendWarningsForTests
+  renderSceneWithBackend
 } from "../stream/renderBackend"
 import type { PointSceneNode, RectSceneNode, SceneRenderBackend } from "../stream/types"
 import { createRoughRenderMode, stableRoughSeed } from "./createRoughRenderMode"
@@ -130,7 +129,6 @@ describe("renderer backend fallback contract", () => {
   })
 
   it("falls back safely and warns once for unsupported scene nodes", () => {
-    resetRenderBackendWarningsForTests()
     const warning = vi.spyOn(console, "warn").mockImplementation(() => undefined)
     const unsupported = { type: "glyph", datum: { id: "g" }, style: {} }
     const backend: SceneRenderBackend<typeof unsupported> = {
@@ -151,7 +149,7 @@ describe("renderer backend fallback contract", () => {
   })
 
   it("preserves scene order across backend and built-in renderer runs", () => {
-    const order: string[] = []
+    const paintMark = vi.fn<(id: string) => void>()
     const context = createMockCanvasContext() as unknown as CanvasRenderingContext2D
     const nodes = ["a", "b", "c"].map((id) => ({
       type: "rect",
@@ -163,7 +161,7 @@ describe("renderer backend fallback contract", () => {
       id: "ordered-backend",
       cacheKey: (node) => node.id,
       drawCanvas: ({ node }) => {
-        order.push(node.id)
+        paintMark(node.id)
         return true
       },
       renderStaticSVG: () => null,
@@ -174,10 +172,13 @@ describe("renderer backend fallback contract", () => {
       nodes,
       renderMode: (datum) => datum?.id === "b" ? undefined : backend,
       pixelRatio: 1,
-      paintBuiltIn: (fallback) => order.push(...fallback.map((node) => node.id)),
+      paintBuiltIn: (fallback) => fallback.forEach((node) => paintMark(node.id)),
     })
 
-    expect(order).toEqual(["a", "b", "c"])
+    expect(paintMark).toHaveBeenCalledTimes(3)
+    expect(paintMark).toHaveBeenNthCalledWith(1, "a")
+    expect(paintMark).toHaveBeenNthCalledWith(2, "b")
+    expect(paintMark).toHaveBeenNthCalledWith(3, "c")
   })
 })
 

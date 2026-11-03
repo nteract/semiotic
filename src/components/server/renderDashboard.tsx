@@ -1,5 +1,4 @@
-import * as React from "react"
-import * as ReactDOMServer from "react-dom/server"
+import { renderToStaticMarkup } from "react-dom/server"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { RenderChartName } from "./renderToStaticSVG"
 import type { FrameType, StaticFrameProps } from "./staticSVGChrome"
@@ -135,7 +134,7 @@ function composeDashboardScoped(
       ? renderers.chart(chart.component, chartProps)
       : chart.frameType
         ? renderers.frame(chart.frameType, chartProps as StaticFrameProps)
-        : ReactDOMServer.renderToStaticMarkup(
+        : renderToStaticMarkup(
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width={cellWidthWithSpan}
@@ -177,7 +176,7 @@ function composeDashboardScoped(
     />
   ))
 
-  return ReactDOMServer.renderToStaticMarkup(
+  return renderToStaticMarkup(
     <svg
       xmlns="http://www.w3.org/2000/svg"
       width={width}

@@ -1,14 +1,15 @@
-import { registerXYPlugin } from "./registry"
+import { ensureXYPlugin } from "./registry"
 import { lineXYPlugin } from "./linePlugin"
 import { areaXYPlugin } from "./areaPlugin"
 import { mixedXYPlugin } from "./mixedPlugin"
 
 /**
  * LineChart can switch chartType between line / area / mixed via `fillArea`.
- * Register the three together so that prop still paints.
+ * Fill missing browser plugins together so that prop still paints, preserving
+ * any explicit registrations made by the embedding app.
  */
-export function registerLineFamilyXYPlugins(): void {
-  registerXYPlugin(lineXYPlugin)
-  registerXYPlugin(areaXYPlugin)
-  registerXYPlugin(mixedXYPlugin)
+export function ensureLineFamilyXYPlugins(): void {
+  ensureXYPlugin(lineXYPlugin)
+  ensureXYPlugin(areaXYPlugin)
+  ensureXYPlugin(mixedXYPlugin)
 }

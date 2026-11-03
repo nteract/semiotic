@@ -1,4 +1,5 @@
-import * as React from "react"
+import type * as React from "react"
+import { useCallback, useMemo } from "react"
 import type {
   ChartObservation,
   OnObservationCallback,
@@ -36,14 +37,14 @@ export function useAnnotationActivationOptions(
   options: AnnotationActivationOptions
 ): AnnotationActivationOptions {
   const pushObservation = useObservationSelector((state) => state.pushObservation)
-  const onObservation = React.useCallback(
+  const onObservation = useCallback(
     (observation: ChartObservation) => {
       options.onObservation?.(observation)
       pushObservation?.(observation)
     },
     [options, pushObservation]
   )
-  return React.useMemo(
+  return useMemo(
     () => ({ ...options, onObservation }),
     [onObservation, options]
   )

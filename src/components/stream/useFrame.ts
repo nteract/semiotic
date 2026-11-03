@@ -10,8 +10,8 @@
  */
 "use client"
 
-import * as React from "react"
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react"
+import type * as React from "react"
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useId } from "react"
 import type { ReactNode } from "react"
 import { flushSync } from "react-dom"
 import { useThemeSelector } from "../store/ThemeStore"
@@ -39,9 +39,9 @@ const useIsomorphicLayoutEffect =
   typeof window === "undefined" ? useEffect : useLayoutEffect
 
 /**
- * The small scheduling surface `useFrame` needs. Keeping this separate from
- * the browser global gives hook tests a deterministic, handle-agnostic seam
- * without coupling the frame lifecycle to a broader scheduler abstraction.
+ * The public scheduling surface `useFrame` accepts. Existing injected
+ * schedulers may invoke callbacks immediately; retain that compatibility
+ * while the browser default defers them to an animation frame.
  */
 export interface FrameScheduler {
   requestAnimationFrame(callback: FrameRequestCallback): number
@@ -50,8 +50,7 @@ export interface FrameScheduler {
 
 const browserFrameScheduler: FrameScheduler = {
   // `requestAnimationFrame` is a Window API. Prefer `window` when it exists
-  // rather than retaining a different test/global host at module evaluation
-  // time; this keeps the browser default and injected schedulers equivalent.
+  // rather than retaining a host at module evaluation time.
   requestAnimationFrame: (callback) => (
     typeof window === "undefined" ? globalThis : window
   ).requestAnimationFrame(callback),
@@ -360,7 +359,7 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
   // ── Stable table id ───────────────────────────────────────────────────
   // useId is stable across renders, hydration-safe, and unique per instance.
   // The `semiotic-table-` prefix gives the SkipToTableLink something readable.
-  const reactId = React.useId()
+  const reactId = useId()
   const tableId = `semiotic-table-${reactId}`
 
   // ── Logical time, visibility, and seeded randomness ──────────────────
@@ -387,8 +386,7 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
   // Owned here so any future tweak to the coalescing semantics (deferred
   // commits, scheduler integration, etc.) is one source of truth.
   // `0` is a valid requestAnimationFrame token, so pending state must use a
-  // distinct sentinel. This also makes coalescing independent of a test
-  // scheduler's choice of handle values.
+  // distinct sentinel, independent of the host's choice of handle values.
   const rafRef = useRef<number | null>(null)
   const frameSchedulerRef = useRef<FrameScheduler>(input.frameScheduler ?? browserFrameScheduler)
   frameSchedulerRef.current = input.frameScheduler ?? browserFrameScheduler
@@ -402,8 +400,8 @@ export function useFrame(input: UseFrameInput): UseFrameResult {
     // callbacks remain free to queue their normal next frame.
     if (rafRef.current !== null || synchronouslyRenderingRef.current) return
     const scheduler = frameSchedulerRef.current
-    // Browsers always invoke rAF asynchronously, but a useful deterministic
-    // test scheduler may flush synchronously. Do not write its already-fired
+    // Browsers always invoke rAF asynchronously, but an injected host may
+    // flush synchronously. Do not write its already-fired
     // handle back into `rafRef` after the callback has cleared it.
     let firedSynchronously = false
     let requestReturned = false

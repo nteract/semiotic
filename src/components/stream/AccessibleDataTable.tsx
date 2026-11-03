@@ -1,5 +1,6 @@
 "use client"
-import * as React from "react"
+import type * as React from "react"
+import { lazy, Suspense, useState } from "react"
 import { AccessibleTableShell } from "./AccessibleTableShell"
 import { useAccessibleTableInteraction } from "./useAccessibleTableInteraction"
 import { SR_ONLY_STYLE } from "./AriaLiveTooltip"
@@ -16,8 +17,8 @@ export { extractAllRows } from "./accessibleDataRows"
 export type { DataRow } from "./accessibleDataRows"
 export { AriaLiveTooltip, SR_ONLY_STYLE } from "./AriaLiveTooltip"
 
-const AccessibleTablePortalImpl = /* @__PURE__ */ React.lazy(() => import("./AccessibleTablePortalImpl"))
-const Content = /* @__PURE__ */ React.lazy(() => import("./AccessibleDataTableContent"))
+const AccessibleTablePortalImpl = /* @__PURE__ */ lazy(() => import("./AccessibleTablePortalImpl"))
+const Content = /* @__PURE__ */ lazy(() => import("./AccessibleDataTableContent"))
 
 /** Relocate the complete interactive accessible-table UI when a chart lives
  * inside a consumer-owned `role="img"`. `accessibleTable={true}` renders the UI
@@ -35,7 +36,7 @@ export function AccessibleTablePortal({
   // identical to SSR even when this optional portal chunk is already cached.
   if (!hydrated) return null
   return (
-    <React.Suspense fallback={null}><AccessibleTablePortalImpl target={accessibleTable.portalTarget}>{children}</AccessibleTablePortalImpl></React.Suspense>
+    <Suspense fallback={null}><AccessibleTablePortalImpl target={accessibleTable.portalTarget}>{children}</AccessibleTablePortalImpl></Suspense>
   )
 }
 
@@ -137,7 +138,6 @@ export function AccessibleDataTableSlot({
   ) : null
 }
 
-
 /**
  * JIT accessible data summary. Renders a lightweight sr-only button by default.
  * On activation (or when ChartContainer's dataSummary action is toggled),
@@ -163,14 +163,13 @@ export function AccessibleDataTable(props: AccessibleDataTableProps) {
       countLabel={countNoun(countDataRows(scene), "element")}
     >
       {interaction.isExpanded && (
-        <React.Suspense fallback={<div role="status">Loading data summary…</div>}>
+        <Suspense fallback={<div role="status">Loading data summary…</div>}>
           <Content {...props} revealRows={interaction.revealRows} />
-        </React.Suspense>
+        </Suspense>
       )}
     </AccessibleTableShell>
   )
 }
-
 
 // ── ScreenReaderSummary ─────────────────────────────────────────────────
 
@@ -195,7 +194,7 @@ export function ScreenReaderSummary({ summary }: { summary?: string }) {
  */
 export function SkipToTableLink({ tableId }: { tableId: string }) {
   // Visible only while focused, driven by state so a re-render cannot hide it.
-  const [focused, setFocused] = React.useState(false)
+  const [focused, setFocused] = useState(false)
   return (
     <a
       href={`#${tableId}`}

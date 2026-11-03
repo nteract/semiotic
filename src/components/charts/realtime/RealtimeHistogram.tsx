@@ -4,7 +4,7 @@ import * as React from "react"
 import { useRef, forwardRef, useCallback, useMemo } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import type { ValueBand } from "../../realtime/types"
-import { registerXYPlugin } from "../../stream/xyPlugins/registry"
+import { ensureXYPlugin } from "../../stream/xyPlugins/registry"
 import { barXYPlugin } from "../../stream/xyPlugins/barPlugin"
 import type {
   ArrowOfTime,
@@ -77,7 +77,7 @@ import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureRealtimeHistogramRegistrations(): void {
-  registerXYPlugin(barXYPlugin)
+  ensureXYPlugin(barXYPlugin)
 }
 
 export type RealtimeHistogramDirection = "up" | "down"
@@ -679,7 +679,7 @@ export const RealtimeHistogram = /* @__PURE__ */ withChartErrorBoundary(/* @__PU
         onObservation,
         forceHoverBehavior: true,
         mobileInteraction: resolved.mobileInteraction,
-        customHoverBehavior: combinedHoverBehavior as (d: Datum | null) => void,
+        customHoverBehavior: combinedHoverBehavior,
         customClickBehavior
       })}
       annotations={annotations}

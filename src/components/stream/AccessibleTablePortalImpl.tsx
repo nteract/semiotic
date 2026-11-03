@@ -1,5 +1,6 @@
 "use client"
-import * as React from "react"
+import type * as React from "react"
+import { useState, useEffect } from "react"
 import { createPortal } from "react-dom"
 import type { AccessibleTablePortalTarget } from "./accessibleTableTypes"
 
@@ -15,13 +16,13 @@ export default function AccessibleTablePortalImpl({
   target: AccessibleTablePortalTarget
   children: React.ReactNode
 }) {
-  const [resolution, setResolution] = React.useState<{
+  const [resolution, setResolution] = useState<{
     requestedTarget: AccessibleTablePortalTarget
     resolved: boolean
     target: Element | null
   }>({ requestedTarget, resolved: false, target: null })
 
-  React.useEffect(() => {
+  useEffect(() => {
     const target = resolveTarget(requestedTarget)
     if (process.env.NODE_ENV !== "production" && target == null && typeof requestedTarget === "string") {
       console.warn(

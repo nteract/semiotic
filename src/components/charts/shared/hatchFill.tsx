@@ -27,7 +27,7 @@ import { fnv1a32 } from "../../utils/hash"
  */
 import * as React from "react"
 import { createHatchPattern, hatchTileGeometry } from "./hatchPattern"
-import { resolveCSSColor } from "../../stream/renderers/resolveCSSColor"
+import { getCSSColorCacheVersion, resolveCSSColor } from "../../stream/renderers/resolveCSSColor"
 
 type AnnotationGradientDirection = "horizontal" | "vertical"
 
@@ -73,15 +73,7 @@ export function isHatchFill(fill: unknown): fill is HatchFill {
  * descriptors dedupe rather than proliferate.
  */
 export function hatchFillKey(h: HatchFill): string {
-  return [
-    "hatch",
-    h.background ?? "transparent",
-    h.stroke ?? "#000",
-    h.lineWidth ?? 1.5,
-    h.spacing ?? 6,
-    h.angle ?? 45,
-    h.lineOpacity ?? 1,
-  ].join("|")
+  return `hatch|${h.background ?? "transparent"}|${h.stroke ?? "#000"}|${h.lineWidth ?? 1.5}|${h.spacing ?? 6}|${h.angle ?? 45}|${h.lineOpacity ?? 1}`
 }
 
 /** Deterministic, SVG-id-safe identifier for a hatch descriptor. */
@@ -92,13 +84,12 @@ export function hatchFillId(prefix: string, h: HatchFill): string {
 // Canvas patterns are cached by (content key + device-pixel-ratio) so a
 // per-frame repaint reuses one pattern rather than rebuilding a tile canvas
 // on every draw. DPR is part of the key because a pattern baked at 1x reads
-// blurry on a 2x context. Mirrors `barFunnelCanvasRenderer`'s cache.
-const _canvasPatternCache = new Map<string, CanvasPattern | null>()
-
-/** Test helper: drop the canvas hatch cache between cases. */
-export function clearHatchCanvasPatternCacheForTests(): void {
-  _canvasPatternCache.clear()
-}
+// blurry on a 2x context. The context owns its patterns so unmounted charts
+// release their tiles, and a theme change discards the previous palette.
+const canvasPatternCache = new WeakMap<CanvasRenderingContext2D, {
+  version: number
+  patterns: Map<string, CanvasPattern>
+}>()
 
 /**
  * Resolve a `HatchFill` descriptor to a `CanvasPattern` for the given
@@ -123,7 +114,16 @@ export function resolveHatchCanvasPattern(
 
   const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1
   const key = `${hatchFillKey(h)}|${background}|${stroke}@${dpr}`
-  const cached = _canvasPatternCache.get(key)
+  const version = getCSSColorCacheVersion()
+  let entry = canvasPatternCache.get(ctx)
+  if (!entry) {
+    entry = { version, patterns: new Map() }
+    canvasPatternCache.set(ctx, entry)
+  } else if (entry.version !== version) {
+    entry.patterns.clear()
+    entry.version = version
+  }
+  const cached = entry.patterns.get(key)
   if (cached !== undefined) return cached
   const result = createHatchPattern(
     {
@@ -136,11 +136,10 @@ export function resolveHatchCanvasPattern(
     },
     ctx,
   )
-  // A real `ctx` is only ever passed on canvas, so `result` is a CanvasPattern
-  // here; the descriptor branch (SSR) can't be reached. Guard anyway to keep
-  // the cache strictly CanvasPattern | null.
+  // Offscreen tile allocation can fail even with a live target context.
+  // Keep that fallback retryable after context/resource recovery.
   const pattern = isHatchFill(result) ? null : result
-  _canvasPatternCache.set(key, pattern)
+  if (pattern) entry.patterns.set(key, pattern)
   return pattern
 }
 

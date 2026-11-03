@@ -1,5 +1,6 @@
 "use client"
-import * as React from "react"
+import type * as React from "react"
+import { useId } from "react"
 import { withDisplayName } from "./charts/shared/withDisplayName"
 
 export interface ContextLayoutProps {
@@ -51,7 +52,7 @@ export const ContextLayout = /* @__PURE__ */ withDisplayName(function ContextLay
   className,
   style,
 }: ContextLayoutProps) {
-  const instanceId = React.useId().replace(/[^a-zA-Z0-9_-]/g, "")
+  const instanceId = useId().replace(/[^a-zA-Z0-9_-]/g, "")
   const responsiveClassName = `semiotic-context-layout-${instanceId}`
   const isHorizontal = position === "left" || position === "right"
   const isReversed = position === "left" || position === "top"

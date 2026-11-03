@@ -4,6 +4,7 @@ import { PipelineStore } from "./PipelineStore"
 import { OrdinalPipelineStore } from "./OrdinalPipelineStore"
 import { DataSourceAdapter } from "./DataSourceAdapter"
 import type { Datum } from "../charts/shared/datumTypes"
+import type { Changeset } from "./types"
 
 const rows = (n: number) =>
   Array.from({ length: n }, (_, x) => ({
@@ -36,7 +37,10 @@ const families = {
     })
 }
 
-afterEach(() => vi.unstubAllGlobals())
+afterEach(() => {
+  vi.unstubAllGlobals()
+  vi.useRealTimers()
+})
 
 for (const [family, create] of Object.entries(families))
   describe(`${family} streaming retention`, () => {
@@ -127,15 +131,7 @@ for (const [family, create] of Object.entries(families))
     )
 
     it("finishes progressive history before applying live retention", async () => {
-      const pending = new Map<number, FrameRequestCallback>()
-      let id = 0
-      vi.stubGlobal("requestAnimationFrame", (fn: FrameRequestCallback) => {
-        pending.set(++id, fn)
-        return id
-      })
-      vi.stubGlobal("cancelAnimationFrame", (key: number) =>
-        pending.delete(key)
-      )
+      vi.useFakeTimers({ toFake: ["requestAnimationFrame", "cancelAnimationFrame"] })
       const store = create({ windowSize: 3 })
       const adapter = new DataSourceAdapter<Datum>((cs) => store.ingest(cs), {
         chunkThreshold: 3,
@@ -146,12 +142,13 @@ for (const [family, create] of Object.entries(families))
       adapter.push({ ...rows(1)[0], x: 10 })
       await Promise.resolve()
       expect(store.getData().map((d) => d.x)).toEqual([8, 9, 10])
-      expect(pending.size).toBe(0)
+      expect(vi.getTimerCount()).toBe(0)
+      vi.advanceTimersToNextFrame()
+      expect(store.getData().map((d) => d.x)).toEqual([8, 9, 10])
     })
 
     it("keeps every progressive bounded row even when the snapshot exceeds the live cap", () => {
-      vi.stubGlobal("requestAnimationFrame", () => 1)
-      vi.stubGlobal("cancelAnimationFrame", vi.fn())
+      vi.useFakeTimers({ toFake: ["requestAnimationFrame", "cancelAnimationFrame"] })
       const store = create({
         windowSize: 2,
         maxCapacity: 3,
@@ -163,6 +160,8 @@ for (const [family, create] of Object.entries(families))
       })
       adapter.setBoundedData(rows(10))
       adapter.flush()
+      expect(vi.getTimerCount()).toBe(0)
+      vi.advanceTimersToNextFrame()
       expect(store.getData()).toEqual(rows(10))
     })
   })
@@ -171,15 +170,13 @@ describe("atomic data replacement", () => {
   it.each(["setBoundedData", "setReplacementData"] as const)(
     "%s discards stale pushes but accepts subsequent pushes",
     async (method) => {
-      const received: string[] = []
-      const adapter = new DataSourceAdapter<{ id: string }>((cs) =>
-        received.push(...cs.inserts.map((d) => d.id))
-      )
+      const received = vi.fn<(changeset: Changeset<{ id: string }>) => void>()
+      const adapter = new DataSourceAdapter<{ id: string }>(received)
       adapter.push({ id: "stale" })
       adapter[method]([{ id: "new" }])
       adapter.push({ id: "live" })
       await Promise.resolve()
-      expect(received).toEqual(["new", "live"])
+      expect(received.mock.calls.flatMap(([cs]) => cs.inserts.map((d) => d.id))).toEqual(["new", "live"])
     }
   )
 

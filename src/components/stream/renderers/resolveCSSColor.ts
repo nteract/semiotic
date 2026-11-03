@@ -15,29 +15,6 @@
 
 import { subscribeToCanvasFontInvalidation } from "../fontLoading"
 
-/**
- * Split a `var(--name, fallback)` string into its property name and fallback.
- * Unlike a regex, this balances parentheses so a *nested* fallback var
- * (`var(--a, var(--b, #fff))`) keeps its inner `var(...)` intact instead of
- * being truncated at the first `)` — the mis-parse that made a canvas stroke
- * fall through to black while the SVG path resolved the fallback to `#fff`.
- */
-function extractVar(value: string): { name: string; fallback?: string } | null {
-  const s = value.trim()
-  if (!s.startsWith("var(") || !s.endsWith(")")) return null
-  const inner = s.slice(4, -1) // strip leading "var(" and the matching ")"
-  const commaIdx = inner.indexOf(",")
-  if (commaIdx === -1) {
-    const name = inner.trim()
-    return name.startsWith("--") ? { name } : null
-  }
-  const name = inner.slice(0, commaIdx).trim()
-  const fallback = inner.slice(commaIdx + 1).trim()
-  return name.startsWith("--")
-    ? { name, fallback: fallback || undefined }
-    : null
-}
-
 interface CacheEntry {
   version: number
   map: Map<string, string>
@@ -45,68 +22,30 @@ interface CacheEntry {
 
 const cache = new WeakMap<HTMLCanvasElement, CacheEntry>()
 let currentVersion = 0
-let observerInstalled = false
-
-// Track installed listeners so the test reset can detach them, preventing
-// observer accumulation across test files.
-let installedObserver: MutationObserver | null = null
-let installedMql: MediaQueryList | null = null
-let installedMqlHandler: ((e: MediaQueryListEvent) => void) | null = null
-let installedFontCleanup: (() => void) | null = null
+// One owner for the document listeners, released by the final subscribing frame.
+let cleanupGlobalObserver: (() => void) | undefined
 type CSSColorInvalidationSubscriber = {
   getElement: () => Element | null
   listener: () => void
 }
 const invalidationSubscribers = new Set<CSSColorInvalidationSubscriber>()
-type LegacyMediaQueryList = MediaQueryList & {
-  addListener?: (listener: (event: MediaQueryListEvent) => void) => void
-  removeListener?: (listener: (event: MediaQueryListEvent) => void) => void
-}
-
-function teardownGlobalObserver(): void {
-  installedObserver?.disconnect()
-  installedObserver = null
-
-  if (installedMql && installedMqlHandler) {
-    if (typeof installedMql.removeEventListener === "function") {
-      installedMql.removeEventListener("change", installedMqlHandler)
-    } else if (
-      typeof (installedMql as LegacyMediaQueryList).removeListener ===
-      "function"
-    ) {
-      ;(installedMql as LegacyMediaQueryList).removeListener(
-        installedMqlHandler
-      )
-    }
-  }
-  installedMql = null
-  installedMqlHandler = null
-
-  installedFontCleanup?.()
-  installedFontCleanup = null
-  observerInstalled = false
-}
-
 function ensureGlobalObserver(): void {
-  if (observerInstalled) return
+  if (cleanupGlobalObserver) return
   // Don't latch the flag in non-DOM environments (SSR/pre-render) — the next
   // call from a real browser context should still get a chance to install.
   if (typeof window === "undefined" || typeof document === "undefined") return
-  observerInstalled = true
 
   const customPropertySignature = (cssText: string | null): string => {
     if (!cssText?.includes("--")) return ""
     const scratch = document.createElement("span").style
     scratch.cssText = cssText
-    const properties = Array.from(scratch)
-      .filter((name) => name.startsWith("--"))
-      .sort()
-    return properties
-      .map(
-        (name) =>
-          `${name}:${scratch.getPropertyValue(name)}!${scratch.getPropertyPriority(name)}`
-      )
-      .join(";")
+    const declarations: string[] = []
+    for (const name of scratch) {
+      if (name.startsWith("--")) {
+        declarations.push(`${name}:${scratch.getPropertyValue(name)}!${scratch.getPropertyPriority(name)}`)
+      }
+    }
+    return declarations.sort().join(";")
   }
 
   const recordAffects = (record: MutationRecord, element: Element): boolean => {
@@ -155,8 +94,9 @@ function ensureGlobalObserver(): void {
     for (const subscriber of affectedSubscribers) subscriber.listener()
   }
 
+  let observer: MutationObserver | undefined
   if (typeof MutationObserver !== "undefined" && document.documentElement) {
-    installedObserver = new MutationObserver((records) => {
+    observer = new MutationObserver((records) => {
       invalidateAndNotify(records)
     })
     // Observe the whole document tree so intermediate-wrapper scoped CSS vars
@@ -164,7 +104,7 @@ function ensureGlobalObserver(): void {
     // invalidate the canvas color cache the same way ThemeProvider / dark-mode
     // class toggles on <html> do. Attribute-only + subtree keeps this cheap —
     // we only re-resolve vars on the next paint, not re-layout.
-    installedObserver.observe(document.documentElement, {
+    observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: [
         "class",
@@ -178,17 +118,18 @@ function ensureGlobalObserver(): void {
     })
   }
 
+  const notify = () => invalidateAndNotify()
+  let cleanupMedia: (() => void) | undefined
   if (typeof window.matchMedia === "function") {
     try {
-      installedMql = window.matchMedia("(prefers-color-scheme: dark)")
-      installedMqlHandler = () => invalidateAndNotify()
-      if (typeof installedMql.addEventListener === "function") {
-        installedMql.addEventListener("change", installedMqlHandler)
-      } else if (
-        typeof (installedMql as LegacyMediaQueryList).addListener === "function"
-      ) {
+      const query = window.matchMedia("(prefers-color-scheme: dark)")
+      if (query.addEventListener) {
+        query.addEventListener("change", notify)
+        cleanupMedia = () => query.removeEventListener("change", notify)
+      } else {
         // Safari 14 fallback
-        ;(installedMql as LegacyMediaQueryList).addListener(installedMqlHandler)
+        query.addListener?.(notify)
+        cleanupMedia = () => query.removeListener?.(notify)
       }
     } catch {
       // matchMedia can throw in older browsers / jsdom — safe to ignore
@@ -199,7 +140,12 @@ function ensureGlobalObserver(): void {
   // has been painted. A web font named by --semiotic-font-family may finish
   // loading after the first frame, so repaint settled canvases when the font
   // set completes a load cycle. SVG/HTML update themselves automatically.
-  installedFontCleanup = subscribeToCanvasFontInvalidation(() => invalidateAndNotify())
+  const cleanupFonts = subscribeToCanvasFontInvalidation(notify)
+  cleanupGlobalObserver = () => {
+    observer?.disconnect()
+    cleanupMedia?.()
+    cleanupFonts()
+  }
 }
 
 /**
@@ -213,6 +159,9 @@ export function subscribeToCSSColorInvalidation(
   listener: () => void
 ): () => void {
   ensureGlobalObserver()
+  // A retained canvas may have changed while it had no subscriber. Those
+  // mutations are intentionally ignored, even while other frames are active.
+  currentVersion++
   const subscriber = { getElement, listener }
   invalidationSubscribers.add(subscriber)
   return () => {
@@ -220,7 +169,8 @@ export function subscribeToCSSColorInvalidation(
       invalidationSubscribers.delete(subscriber) &&
       invalidationSubscribers.size === 0
     ) {
-      teardownGlobalObserver()
+      cleanupGlobalObserver?.()
+      cleanupGlobalObserver = undefined
     }
   }
 }
@@ -230,30 +180,30 @@ export function resolveCSSColor(
   value: string | undefined
 ): string | undefined {
   if (!value) return value
-  const parsed = extractVar(value)
-  if (!parsed) return value
-
-  // A fallback may itself be a `var(...)` (or a nested chain) — resolve it
-  // recursively so `var(--a, var(--b, #fff))` degrades to `#fff` on both the
-  // canvas and SVG backends rather than handing the canvas an unparseable
-  // string (which silently paints black).
-  const resolveFallback = (): string | undefined =>
-    parsed.fallback ? resolveCSSColor(ctx, parsed.fallback) : value
+  const variable = value.trim()
+  if (!variable.startsWith("var(") || !variable.endsWith(")")) return value
 
   const canvas = ctx.canvas
-  if (!canvas) return resolveFallback()
+  let entry = canvas ? cache.get(canvas) : undefined
+  if (entry?.version === currentVersion) {
+    const cached = entry.map.get(value)
+    if (cached !== undefined) return cached
+  }
 
-  let entry = cache.get(canvas)
-  if (!entry || entry.version !== currentVersion) {
+  // Parse only cache misses, without a temporary descriptor for each paint.
+  // Split at the first comma so nested fallback var() expressions stay intact.
+  const inner = variable.slice(4, -1)
+  const comma = inner.indexOf(",")
+  const name = (comma < 0 ? inner : inner.slice(0, comma)).trim()
+  if (!name.startsWith("--")) return value
+  const fallback = comma < 0 ? "" : inner.slice(comma + 1).trim()
+  if (canvas && entry?.version !== currentVersion) {
     entry = { version: currentVersion, map: new Map() }
     cache.set(canvas, entry)
   }
-  const cached = entry.map.get(value)
-  if (cached !== undefined) return cached
-
-  const computed = getComputedStyle(canvas).getPropertyValue(parsed.name).trim()
-  const resolved = computed || resolveFallback() || value
-  entry.map.set(value, resolved)
+  const computed = canvas && getComputedStyle(canvas).getPropertyValue(name).trim()
+  const resolved = computed || (fallback && resolveCSSColor(ctx, fallback)) || value
+  entry?.map.set(value, resolved)
   return resolved
 }
 
@@ -275,20 +225,4 @@ export function clearCSSColorCache(_canvas?: HTMLCanvasElement): void {
  */
 export function getCSSColorCacheVersion(): number {
   return currentVersion
-}
-
-/**
- * Test-only: reset all cache state, including disconnecting any installed
- * observer/matchMedia listeners. Required for test isolation — without it,
- * observers accumulate across files and bump `currentVersion` more than once
- * per real DOM mutation.
- *
- * `currentVersion` is *incremented* (not reset to zero) so any WeakMap entries
- * that survive from a previous test can't accidentally be re-validated by a
- * version collision.
- */
-export function _resetCSSColorCacheForTest(): void {
-  currentVersion++
-  invalidationSubscribers.clear()
-  teardownGlobalObserver()
 }

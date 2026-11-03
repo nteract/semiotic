@@ -32,6 +32,8 @@ import {
   distinctCategories
 } from "./hooks"
 import type { FrameLegendOverrides, LegendInteractionMode, LegendPosition } from "./hooks"
+import type { FrameLegendBehaviorProps } from "./useChartLegend"
+import { sameCategoryDomain } from "../../stream/categoryDomain"
 import { useChartCategoryColors } from "../../CategoryColors"
 import {
   createColorScale,
@@ -158,9 +160,9 @@ export interface ChartSetupResult {
   /** The active cross-chart selection hook (before legend merge) */
   activeSelectionHook: SelectionHookResult | null
   /** Custom hover behavior callback for the frame */
-  customHoverBehavior: (d: Datum | null) => void
+  customHoverBehavior: ReturnType<typeof useChartSelection>["customHoverBehavior"]
   /** Custom click behavior callback for the frame */
-  customClickBehavior: (d: Datum | null) => void
+  customClickBehavior: ReturnType<typeof useChartSelection>["customClickBehavior"]
   /** Resolved touch-first policy for chart wrappers and stream-prop helpers */
   mobileInteraction: ResolvedMobileInteractionConfig
   /** Legend config (or undefined if no legend) */
@@ -172,7 +174,7 @@ export interface ChartSetupResult {
   /** If non-null, the HOC should return this element (loading or empty state) */
   earlyReturn: ReactElement | null
   /** Props to spread into the stream frame for legend behavior */
-  legendBehaviorProps: Record<string, unknown>
+  legendBehaviorProps: FrameLegendBehaviorProps
   /** Crosshair props to spread into StreamXYFrame when linkedHover mode is "x-position" */
   crosshairProps:
     { linkedCrosshairName: string; linkedCrosshairSourceId: string } | undefined
@@ -261,14 +263,9 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
   const [frameCategories, setFrameCategories] = useState<string[]>([])
 
   const onCategoriesChange = useCallback((categories: string[]) => {
-    setFrameCategories((prev) => {
-      if (
-        prev.length === categories.length &&
-        prev.every((v, i) => v === categories[i])
-      )
-        return prev
-      return categories
-    })
+    setFrameCategories((prev) =>
+      sameCategoryDomain(prev, categories) ? prev : categories
+    )
   }, [])
 
   // ── Selection hooks (always called) ────────────────────────────────────
@@ -411,7 +408,7 @@ export function useChartSetup(input: ChartSetupInput): ChartSetupResult {
 
   // ── Legend behavior props (to spread into frame) ───────────────────────
   const legendBehaviorProps = useMemo(() => {
-    const props: Record<string, unknown> = {}
+    const props: FrameLegendBehaviorProps = {}
     if (legend) {
       props.legend = legend
       props.legendPosition = legendPosition

@@ -6,7 +6,7 @@ import type { SemanticInteractionContext } from "../shared/semanticInteractions"
 import * as React from "react"
 import { useMemo } from "react"
 import { orbitLayoutPlugin } from "../../stream/layouts/orbitLayoutPlugin"
-import { registerLayoutPlugin } from "../../stream/layouts/registry"
+import { ensureLayoutPlugin } from "../../stream/layouts/registry"
 import { registerNetworkPerspective } from "../../stream/networkPerspectiveRuntime"
 import StreamNetworkFrame from "../../stream/StreamNetworkFrame"
 import type { StreamNetworkFrameProps } from "../../stream/networkTypes"
@@ -34,7 +34,7 @@ import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureOrbitDiagramRegistrations(): void {
-  registerLayoutPlugin("orbit", orbitLayoutPlugin)
+  ensureLayoutPlugin("orbit", orbitLayoutPlugin)
   registerNetworkPerspective()
 }
 

@@ -5,7 +5,6 @@ import {
 } from "../../../test-utils/canvasMock"
 import { PhysicsPipelineStore } from "../../stream/physics/PhysicsPipelineStore"
 import type { PhysicsBodyState } from "../../stream/physics/PhysicsKernel"
-import { _resetCSSColorCacheForTest } from "../../stream/renderers/resolveCSSColor"
 import {
   applyGauntletEffect,
   buildGauntletPhysics,
@@ -361,8 +360,7 @@ describe("GauntletChart physics primitives", () => {
   ])("resolves $mode theme paint for bodies, monograms, and tethers", ({ tokens, expected }) => {
     const { canvas, ctx, mock } = themedGauntletContext(tokens)
     const ops = recordCanvasOps(mock)
-    const textPaints: string[] = []
-    ctx.fillText = vi.fn(() => textPaints.push(String(ctx.fillStyle)))
+    const textPaint = vi.spyOn(ctx, "fillText").mockImplementation(() => String(ctx.fillStyle))
     const core = gauntletBody("gauntlet-core")
     const positive = gauntletBody("gauntlet-positive", {
       id: "security",
@@ -396,7 +394,8 @@ describe("GauntletChart physics primitives", () => {
         expected.surface,
         expected.text
       ])
-      expect(textPaints).toEqual([expected.surface])
+      expect(textPaint).toHaveReturnedTimes(1)
+      expect(textPaint).toHaveReturnedWith(expected.surface)
       expect(ops.strokeStyles.slice(2)).toEqual([
         expected.tether,
         expected.danger
@@ -404,7 +403,6 @@ describe("GauntletChart physics primitives", () => {
       expect(ops.strokeAlphas.slice(2)).toEqual([0.36, 0.24])
     } finally {
       canvas.remove()
-      _resetCSSColorCacheForTest()
     }
   })
 
@@ -486,7 +484,7 @@ describe("GauntletChart physics primitives", () => {
       stage: "phase-ii",
       viability: 48
     }
-    const poppedIds: string[] = []
+    const popBodies = vi.fn((ids: string[]) => store.remove(ids))
 
     spawnBodiesForGauntletEffect({
       project,
@@ -499,13 +497,13 @@ describe("GauntletChart physics primitives", () => {
         ["supply", { id: "supply", load: 0.9 }],
         ["litigation", { id: "litigation", load: 1.2 }]
       ]),
-      popBodies: (ids) => {
-        poppedIds.push(...ids)
-        return store.remove(ids)
-      }
+      popBodies
     })
 
-    expect(poppedIds).toEqual([projectNegativeId("trial-1", "litigation", 3)])
+    expect(popBodies).toHaveBeenCalledExactlyOnceWith(
+      [projectNegativeId("trial-1", "litigation", 3)],
+      expect.objectContaining({ durationMs: 900, radius: 10 })
+    )
     expect(store.readBodies().map((body) => body.id)).not.toContain(
       projectNegativeId("trial-1", "litigation", 3)
     )

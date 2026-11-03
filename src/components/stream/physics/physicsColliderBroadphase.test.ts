@@ -209,7 +209,7 @@ it.each([false, true])(
 )
 
 it("keeps all filter calls in authored body/collider order, including mutations and sensors", () => {
-  const calls: string[] = []
+  const filterVisited = vi.fn<(collider: string, bodyId: string) => void>()
   const world = new PhysicsKernelWorld({
     gravity: { x: 0, y: 0 }
   })
@@ -219,7 +219,7 @@ it("keeps all filter calls in authored body/collider order, including mutations 
       id: "first",
       shape,
       bodyFilter: (body) => {
-        calls.push(`first:${body.id}`)
+        filterVisited("first", body.id)
         body.x++
         return false
       }
@@ -228,7 +228,7 @@ it("keeps all filter calls in authored body/collider order, including mutations 
       id: "second",
       shape,
       bodyFilter: (body) => {
-        calls.push(`second:${body.id}`)
+        filterVisited("second", body.id)
         return true
       }
     },
@@ -237,7 +237,7 @@ it("keeps all filter calls in authored body/collider order, including mutations 
       sensor: true,
       shape: { ...shape, x: 0, width: 100 },
       bodyFilter: (body) => {
-        calls.push(`sensor:${body.id}`)
+        filterVisited("sensor", body.id)
         return true
       }
     }
@@ -254,7 +254,7 @@ it("keeps all filter calls in authored body/collider order, including mutations 
   try {
     world.step()
     expect(candidates).not.toHaveBeenCalled()
-    expect(calls).toEqual([
+    expect(filterVisited.mock.calls.map(([collider, bodyId]) => `${collider}:${bodyId}`)).toEqual([
       ...Array.from({ length: 7 }, () => [
         "first:a",
         "second:a",

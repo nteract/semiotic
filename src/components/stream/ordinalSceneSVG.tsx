@@ -1,4 +1,5 @@
-import * as React from "react"
+import type * as React from "react"
+import { Fragment } from "react"
 import { isHatchFill, hatchPatternDef } from "../charts/shared/hatchFill"
 import type {
   ConnectorSceneNode,
@@ -40,7 +41,7 @@ function connectorFill(
     ...entries.map(({ node }) => `${node.x2},${node.y2}`)
   ].join(" ")
   const polygon = (
-    <React.Fragment>
+    <Fragment>
       {pattern && <defs>{pattern}</defs>}
       <polygon
         points={points}
@@ -49,7 +50,7 @@ function connectorFill(
         fillOpacity={first.style.fillOpacity ?? 0.3}
         data-semiotic-connector-fill={first.group || "_default"}
       />
-    </React.Fragment>
+    </Fragment>
   )
   return withSceneMarkCursor(
     polygon,
@@ -92,10 +93,10 @@ function groupFallbackConnectorRun(
     for (const entry of group) entry.element = null
   }
   anchor.element = (
-    <React.Fragment key={`ordinal-connector-run-${runIndex}`}>
+    <Fragment key={`ordinal-connector-run-${runIndex}`}>
       {connectorGroups}
       {anchorElement}
-    </React.Fragment>
+    </Fragment>
   )
 }
 

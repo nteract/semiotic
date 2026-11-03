@@ -6,7 +6,6 @@ import {
   withAlpha
 } from "./frameThemeColors"
 import {
-  _resetCSSColorCacheForTest,
   clearCSSColorCache
 } from "./renderers/resolveCSSColor"
 
@@ -36,7 +35,6 @@ describe("createFrameThemeColorCache", () => {
   })
 
   it("reuses resolved colors until the CSS color cache version bumps", () => {
-    _resetCSSColorCacheForTest()
     const el = document.createElement("div")
     el.style.setProperty("--semiotic-primary", "#112233")
     el.style.setProperty("--semiotic-bg", "#fafafa")
@@ -59,7 +57,6 @@ describe("createFrameThemeColorCache", () => {
     expect(third.primary).toBe("#abcdef")
 
     document.body.removeChild(el)
-    _resetCSSColorCacheForTest()
   })
 
   it("resolveFrameThemeColors falls back to light theme on empty styles", () => {

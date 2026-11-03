@@ -1,6 +1,6 @@
 import { staticTitleText } from "./staticTitle"
-import * as React from "react"
-import * as ReactDOMServer from "react-dom/server"
+import type * as React from "react"
+import { renderToStaticMarkup } from "react-dom/server"
 import type { Datum } from "../charts/shared/datumTypes"
 import { ChainReactionOverlay } from "../charts/physics/chainReactionOverlay"
 import {
@@ -14,32 +14,9 @@ import {
 } from "../charts/physics/dependencyMachine"
 import { themeToCSSVariables } from "../store/themeCSSVariables"
 import { buildCompositeEvidence, type EvidenceSink } from "./renderEvidence"
-import type { ServerChartData } from "./serverChartConfigShared"
+import { compositeRows, finiteNumber, readPayload } from "./serverCompositeShared"
 import { chartUID } from "./staticSVGChrome"
 import { resolveTheme, themeStyles } from "./themeResolver"
-
-interface ChainReactionPayload {
-  data: ServerChartData
-  common: Datum
-  rest: Datum
-}
-
-function readPayload(frameProps: Datum): ChainReactionPayload {
-  return frameProps.__composite as ChainReactionPayload
-}
-
-function rows(value: ServerChartData): Datum[] {
-  return Array.isArray(value)
-    ? value.filter(
-        (datum): datum is Datum =>
-          datum != null && typeof datum === "object" && !Array.isArray(datum)
-      )
-    : []
-}
-
-function finiteNumber(value: unknown, fallback: number): number {
-  return typeof value === "number" && Number.isFinite(value) ? value : fallback
-}
 
 function chainDescription(
   machine: ReturnType<typeof compileDependencyMachine>,
@@ -69,7 +46,7 @@ export function renderChainReaction(
   sink?: EvidenceSink
 ): string {
   const { data: input, common, rest } = readPayload(frameProps)
-  const data = rows(input)
+  const data = compositeRows(input)
   const [width, height] = (common.size as [number, number]) ?? [920, 620]
   const title =
     staticTitleText(common.title) || "Dependency chain reaction"
@@ -97,7 +74,7 @@ export function renderChainReaction(
     const description = machine.diagnostics
       .map((diagnostic) => diagnostic.message)
       .join(" ")
-    const svg = ReactDOMServer.renderToStaticMarkup(
+    const svg = renderToStaticMarkup(
       <svg
         xmlns="http://www.w3.org/2000/svg"
         className="chain-reaction-chart"
@@ -166,7 +143,7 @@ export function renderChainReaction(
   const downstreamSet = new Set(amplification?.downstreamTaskIDs ?? [])
   const seed = finiteNumber(rest.seed, 31)
   const description = chainDescription(machine, runtime, common.description)
-  const overlay = ReactDOMServer.renderToStaticMarkup(
+  const overlay = renderToStaticMarkup(
     <ChainReactionOverlay
       machine={machine}
       layout={layout}
@@ -186,7 +163,7 @@ export function renderChainReaction(
   const cssVariables = (
     common.theme === undefined ? {} : themeToCSSVariables(theme)
   ) as React.CSSProperties
-  const svg = ReactDOMServer.renderToStaticMarkup(
+  const svg = renderToStaticMarkup(
     <svg
       xmlns="http://www.w3.org/2000/svg"
       className="chain-reaction-chart"

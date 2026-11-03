@@ -19,7 +19,7 @@ function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: R
 function MultiPointTooltip({ xFormat, yFormat }?: undefined | {xFormat?: (Date | string | value: number) => React.ReactNode; yFormat?: (value: number, group?: string) => React.ReactNode;}): TooltipContentFn
 function QuadrantChart<TDatum extends Datum = Datum>(props: QuadrantChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function Scatterplot<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & ScatterplotProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
-function ScatterplotMatrix<TDatum extends Datum = Datum>(props: ScatterplotMatrixProps<TDatum>): React.JSX.Element
+function ScatterplotMatrix<TDatum extends Datum = Datum>(props: ScatterplotMatrixProps<TDatum>): import("react").JSX.Element
 function StackedAreaChart<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & StackedAreaChartProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function StreamXYFrame(props: React.RefAttributes<import("semiotic-internal/semiotic-realtime-core").StreamXYFrameHandle<import("semiotic-internal/components/stream/networkColorAccessors").Datum>> & import("semiotic-internal/semiotic-realtime-core").StreamXYFrameProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
 function Tooltip(config?: TooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null

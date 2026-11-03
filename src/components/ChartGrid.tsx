@@ -1,5 +1,6 @@
 "use client"
-import * as React from "react"
+import type * as React from "react"
+import { useId, Children, isValidElement, cloneElement } from "react"
 import { withDisplayName } from "./charts/shared/withDisplayName"
 
 export type ChartEmphasis = "primary" | "secondary"
@@ -61,7 +62,7 @@ export const ChartGrid = /* @__PURE__ */ withDisplayName(function ChartGrid({
   className,
   style,
 }: ChartGridProps) {
-  const instanceId = React.useId().replace(/[^a-zA-Z0-9_-]/g, "")
+  const instanceId = useId().replace(/[^a-zA-Z0-9_-]/g, "")
   const responsiveClassName = `semiotic-chart-grid-${instanceId}`
   const numColumns = typeof columns === "number" ? columns : undefined
   const gridTemplateColumns =
@@ -102,8 +103,8 @@ export const ChartGrid = /* @__PURE__ */ withDisplayName(function ChartGrid({
           ...style,
         }}
       >
-        {React.Children.map(children, (child) => {
-          if (!React.isValidElement<{ emphasis?: ChartEmphasis }>(child)) return child
+        {Children.map(children, (child) => {
+          if (!isValidElement<{ emphasis?: ChartEmphasis }>(child)) return child
           const childProps = child.props as Record<string, unknown>
           const injected: Record<string, unknown> = {}
           if (chartDefaults) {
@@ -112,7 +113,7 @@ export const ChartGrid = /* @__PURE__ */ withDisplayName(function ChartGrid({
             }
           }
           const renderedChild = Object.keys(injected).length > 0
-            ? React.cloneElement(child as React.ReactElement<Record<string, unknown>>, injected)
+            ? cloneElement(child as React.ReactElement<Record<string, unknown>>, injected)
             : child
           const emphasis = child.props.emphasis
           if (emphasis === "primary" && (numColumns === undefined || numColumns >= 2)) {

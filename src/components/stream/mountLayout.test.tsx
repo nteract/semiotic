@@ -14,7 +14,6 @@ import { PipelineStore } from "./PipelineStore"
 import { OrdinalPipelineStore } from "./OrdinalPipelineStore"
 import { GeoPipelineStore } from "./GeoPipelineStore"
 import { getLayoutPlugin } from "./layouts/registry"
-import { getXYPlugin, resetXYPluginRegistry } from "./xyPlugins/registry"
 import { PhysicsCustomChart } from "../charts/physics/PhysicsCustomChart"
 import { ThemeProvider } from "../ThemeProvider"
 import type { StreamNetworkFrameHandle } from "./networkTypes"
@@ -692,7 +691,9 @@ describe("mount and resize layout budgets", () => {
   )
 
   it("does not rerun custom XY geometry when its lazy canvas renderers arrive", async () => {
-    resetXYPluginRegistry()
+    vi.resetModules()
+    const { default: FreshStreamXYFrame } = await import("./StreamXYFrame")
+    const { getXYPlugin } = await import("./xyPlugins/registry")
     const scheduler = createFrameScheduler()
     const layout = vi.fn<CustomLayout>((ctx) => ({
       nodes: ctx.data.map((datum) => ({
@@ -705,7 +706,7 @@ describe("mount and resize layout budgets", () => {
       }))
     }))
     render(
-      <StreamXYFrame
+      <FreshStreamXYFrame
         chartType="scatter"
         data={data}
         customLayout={layout}

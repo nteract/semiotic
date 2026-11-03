@@ -24,26 +24,17 @@ export interface PackedBands {
   positions: number[]
 }
 
-function silhouetteAt(samples: readonly SilhouetteSample[], at: number): SilhouetteSample {
-  let lo = 0
-  let hi = samples.length - 1
-  let found = -1
-  while (lo <= hi) {
-    const mid = (lo + hi) >>> 1
-    if (samples[mid].at <= at) { found = mid; lo = mid + 1 }
-    else hi = mid - 1
-  }
-  return found < 0 ? { at, before: 0, after: 0 } : samples[found]
-}
-
 /**
  * Pack ordered bands using their sampled silhouettes. Adjacent clearance is
- * the worst simultaneous `lower.after + upper.before` extent, so peaks that
+ * the worst simultaneous `upper.after + lower.before` extent, so peaks that
  * occur at different positions can nest without overlap.
+ * Samples within each band must be ordered by `at`; the last sample at a
+ * duplicate timestamp supplies the step's extent. Before the first sample,
+ * both extents are zero.
  */
 export function packBandsBySilhouette(
   bands: readonly (readonly SilhouetteSample[])[],
-  gap = 0,
+  gap = 0
 ): PackedBands {
   if (bands.length === 0) return { adjacentClearance: [], positions: [] }
   const adjacentClearance: number[] = []
@@ -51,13 +42,28 @@ export function packBandsBySilhouette(
   for (let i = 0; i < bands.length - 1; i++) {
     const upper = bands[i]
     const lower = bands[i + 1]
-    const times = [...new Set([...upper.map((d) => d.at), ...lower.map((d) => d.at)])]
-      .sort((a, b) => a - b)
     let clearance = 0
-    for (const at of times) {
-      const a = silhouetteAt(upper, at)
-      const b = silhouetteAt(lower, at)
-      clearance = Math.max(clearance, a.after + b.before)
+    let u = 0,
+      l = 0,
+      after = 0,
+      before = 0
+    // ProcessSankey's slotSilhouettes already sorts samples. Merge their steps
+    // once instead of sorting all times again and binary-searching each step.
+    while (u < upper.length || l < lower.length) {
+      let at: number
+      if (
+        l === lower.length ||
+        (u < upper.length && upper[u].at <= lower[l].at)
+      ) {
+        at = upper[u].at
+        after = upper[u++].after
+      } else {
+        at = lower[l].at
+        before = lower[l++].before
+      }
+      while (u < upper.length && upper[u].at === at) after = upper[u++].after
+      while (l < lower.length && lower[l].at === at) before = lower[l++].before
+      clearance = Math.max(clearance, after + before)
     }
     adjacentClearance.push(clearance)
     positions.push(positions[positions.length - 1] + clearance + gap)

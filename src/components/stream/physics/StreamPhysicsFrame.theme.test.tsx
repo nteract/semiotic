@@ -10,7 +10,6 @@ import {
   type CanvasContextMock
 } from "../../../test-utils/canvasMock"
 import { ThemeProvider } from "../../ThemeProvider"
-import { _resetCSSColorCacheForTest } from "../renderers/resolveCSSColor"
 import { createFrameScheduler } from "../test-utils/frameScheduler"
 import { physicsCanvasThemeCSSValue } from "./PhysicsCanvasTheme"
 import StreamPhysicsFrame from "./StreamPhysicsFrame"
@@ -23,18 +22,8 @@ const quietKernel = {
 }
 
 function captureFillRectStyles(ctx: CanvasContextMock) {
-  const styles: string[] = []
-  const original = ctx.fillRect as ((...args: unknown[]) => unknown) | undefined
-  ctx.fillRect = ((...args: unknown[]) => {
-    styles.push(String(ctx.fillStyle))
-    return original?.apply(ctx, args)
-  }) as typeof ctx.fillRect
-  return {
-    styles,
-    restore: () => {
-      ctx.fillRect = original
-    }
-  }
+  const context = ctx as unknown as CanvasRenderingContext2D
+  return vi.spyOn(context, "fillRect").mockImplementation(() => String(context.fillStyle))
 }
 
 function getMockCtx(): CanvasContextMock {
@@ -53,7 +42,6 @@ describe("StreamPhysicsFrame theme repainting", () => {
 
   afterEach(() => {
     cleanupCanvas()
-    _resetCSSColorCacheForTest()
   })
 
   it("keeps scoped fallback tokens aligned across settled SSR and hydration", () => {
@@ -121,7 +109,7 @@ describe("StreamPhysicsFrame theme repainting", () => {
         physicsCanvasThemeCSSValue("text")
       )
 
-      backgroundPaint.styles.length = 0
+      backgroundPaint.mockClear()
       bodyPaint.fillStyles.length = 0
       bodyPaint.strokeStyles.length = 0
       act(() => {
@@ -132,7 +120,7 @@ describe("StreamPhysicsFrame theme repainting", () => {
         act(() => scheduler.flush())
       }
 
-      expect(backgroundPaint.styles).toContain("#101820")
+      expect(backgroundPaint).toHaveReturnedWith("#101820")
       expect(bodyPaint.fillStyles).toContain("#3366ff")
       expect(bodyPaint.strokeStyles).toContain("#eeeeee")
       expect(
@@ -146,7 +134,7 @@ describe("StreamPhysicsFrame theme repainting", () => {
       if (root) act(() => root?.unmount())
       errorSpy.mockRestore()
       getContextSpy.mockRestore()
-      backgroundPaint.restore()
+      backgroundPaint.mockRestore()
       mount.remove()
     }
   })
@@ -264,7 +252,7 @@ describe("StreamPhysicsFrame theme repainting", () => {
       canvas: HTMLCanvasElement
     }
     canvasContext.canvas = container.querySelector("canvas")!
-    capture.styles.length = 0
+    capture.mockClear()
 
     try {
       const requestsBeforeDark = scheduler.requestedHandles.length
@@ -273,18 +261,18 @@ describe("StreamPhysicsFrame theme repainting", () => {
         requestsBeforeDark
       )
       if (scheduler.pendingCount) act(() => scheduler.flush())
-      expect(capture.styles).toContain("#161616")
+      expect(capture).toHaveReturnedWith("#161616")
 
-      capture.styles.length = 0
+      capture.mockClear()
       const requestsBeforeLight = scheduler.requestedHandles.length
       rerender(chart("carbon"))
       expect(scheduler.requestedHandles.length).toBeGreaterThan(
         requestsBeforeLight
       )
       if (scheduler.pendingCount) act(() => scheduler.flush())
-      expect(capture.styles).toContain("#ffffff")
+      expect(capture).toHaveReturnedWith("#ffffff")
     } finally {
-      capture.restore()
+      capture.mockRestore()
     }
   })
 
@@ -308,7 +296,7 @@ describe("StreamPhysicsFrame theme repainting", () => {
       canvas: HTMLCanvasElement
     }
     canvasContext.canvas = container.querySelector("canvas")!
-    capture.styles.length = 0
+    capture.mockClear()
 
     try {
       const requestsBeforeChange = scheduler.requestedHandles.length
@@ -323,9 +311,9 @@ describe("StreamPhysicsFrame theme repainting", () => {
         requestsBeforeChange
       )
       if (scheduler.pendingCount) act(() => scheduler.flush())
-      expect(capture.styles).toContain("#abcdef")
+      expect(capture).toHaveReturnedWith("#abcdef")
     } finally {
-      capture.restore()
+      capture.mockRestore()
     }
   })
 
@@ -341,9 +329,9 @@ describe("StreamPhysicsFrame theme repainting", () => {
         />
       )
 
-      expect(capture.styles).toContain("#abcdef")
+      expect(capture).toHaveReturnedWith("#abcdef")
     } finally {
-      capture.restore()
+      capture.mockRestore()
     }
   })
 })

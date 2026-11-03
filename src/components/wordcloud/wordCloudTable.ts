@@ -1,7 +1,8 @@
 import type {
   WordCloudLayoutOptions,
   WordCloudLayoutResult,
-  WordCloudAccessor
+  WordCloudAccessor,
+  WordCloudOmission
 } from "./types"
 import type { Datum } from "../charts/shared/datumTypes"
 
@@ -22,17 +23,17 @@ export function wordCloudTableScene(
   layout?: WordCloudLayoutResult
 ) {
   if (!layout) return []
-  const outcomes = [
-    ...layout.words.map((word) => ({ ...word, reason: "placed" })),
-    ...layout.omitted
-  ]
-  const rows = outcomes.map((word) => {
+  const createRow = (
+    word: Pick<WordCloudOmission, "id" | "sourceIndex">,
+    reason: WordCloudOmission["reason"] | "placed"
+  ) => {
     const source = options.data[word.sourceIndex]
     const datum =
       source && typeof source === "object" ? source : { input: "Invalid row" }
     const raw = tableValue(source, options.valueAccessor ?? "value")
     const value =
       typeof raw === "number" || typeof raw === "string" ? Number(raw) : NaN
+    const valid = Number.isFinite(value)
     const term = String(tableValue(source, options.textAccessor ?? "text") ?? word.id)
     return {
       type: "text",
@@ -43,13 +44,19 @@ export function wordCloudTableScene(
         tableFields: {
           ...datum,
           term,
-          value: Number.isFinite(value) ? value : "Invalid value",
-          placement: word.reason
+          value: valid ? value : "Invalid value",
+          placement: reason
         }
       },
-      rankValue: Number.isFinite(value) ? value : -Infinity
+      rankValue: valid ? value : -Infinity
     }
-  })
+  }
+  // Build final rows directly; copying every placement just to add a temporary
+  // reason also copied its font and geometry fields, which the table never reads.
+  const rows = layout.words.map((word) => createRow(word, "placed"))
+  for (const omission of layout.omitted) {
+    rows.push(createRow(omission, omission.reason))
+  }
   return rows.sort(
     (a, b) => b.rankValue - a.rankValue || a.sourceIndex - b.sourceIndex
   )

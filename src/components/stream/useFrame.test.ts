@@ -7,11 +7,11 @@
  */
 import * as React from "react"
 import { act, renderHook } from "@testing-library/react"
-import { describe, it, expect, beforeEach, afterEach } from "vitest"
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { useFrame } from "./useFrame"
 import type { FrameMargin, FrameScheduler, UseFrameInput } from "./useFrame"
 import { ThemeProvider, LIGHT_THEME, DARK_THEME, useThemeSelector } from "../store/ThemeStore"
-import { _resetCSSColorCacheForTest, resolveCSSColor } from "./renderers/resolveCSSColor"
+import { resolveCSSColor } from "./renderers/resolveCSSColor"
 import { createFrameScheduler } from "./test-utils/frameScheduler"
 import {
   MIN_TITLE_TOP_MARGIN,
@@ -218,16 +218,14 @@ describe("useFrame — graphics resolution", () => {
   })
 
   it("invokes function-form graphics with current size + margin", () => {
-    let receivedCtx: { size: number[]; margin: FrameMargin } | undefined
-    const fg = (ctx: { size: number[]; margin: FrameMargin }) => {
-      receivedCtx = ctx
-      return React.createElement("g", { id: "fg" })
-    }
+    const fg = vi.fn((_ctx: { size: number[]; margin: FrameMargin }) =>
+      React.createElement("g", { id: "fg" }),
+    )
     renderHook(
       () => useFrame({ ...DEFAULT_INPUT, foregroundGraphics: fg }),
       { wrapper },
     )
-    expect(receivedCtx).toEqual({
+    expect(fg).toHaveBeenCalledExactlyOnceWith({
       size: [800, 600],
       margin: { top: 20, right: 30, bottom: 40, left: 50 },
     })
@@ -368,13 +366,16 @@ describe("useFrame — scheduleRender (rAF coalescing)", () => {
       () => useFrame({ ...DEFAULT_INPUT, frameScheduler: frameScheduler.scheduler }),
       { wrapper },
     )
-    let calls = 0
-    result.current.renderFnRef.current = () => {
-      calls++
-    }
+    const previousRender = vi.fn()
+    const render = vi.fn(() => {
+      expect(result.current.rafRef.current).toBeNull()
+    })
+    result.current.renderFnRef.current = previousRender
     result.current.scheduleRender()
+    result.current.renderFnRef.current = render
     frameScheduler.flush()
-    expect(calls).toBe(1)
+    expect(previousRender).not.toHaveBeenCalled()
+    expect(render).toHaveBeenCalledOnce()
     expect(result.current.rafRef.current).toBeNull()
   })
 
@@ -422,8 +423,8 @@ describe("useFrame — scheduleRender (rAF coalescing)", () => {
     expect(frameScheduler.requestedHandles).toEqual([0, 1])
   })
 
-  it("handles a synchronous test scheduler without leaving a phantom pending token", () => {
-    let calls = 0
+  it("handles a synchronous injected scheduler without leaving a phantom pending token", () => {
+    const render = vi.fn()
     const frameScheduler: FrameScheduler = {
       requestAnimationFrame: (callback) => {
         callback(performance.now())
@@ -435,15 +436,14 @@ describe("useFrame — scheduleRender (rAF coalescing)", () => {
       () => useFrame({ ...DEFAULT_INPUT, frameScheduler }),
       { wrapper },
     )
-    result.current.renderFnRef.current = () => { calls++ }
+    result.current.renderFnRef.current = render
     result.current.scheduleRender()
     result.current.scheduleRender()
-    expect(calls).toBe(2)
+    expect(render).toHaveBeenCalledTimes(2)
     expect(result.current.rafRef.current).toBeNull()
   })
 
   it("does not recurse when a synchronous scheduler render asks for continuation", () => {
-    let calls = 0
     const frameScheduler: FrameScheduler = {
       requestAnimationFrame: (callback) => {
         callback(performance.now())
@@ -455,13 +455,11 @@ describe("useFrame — scheduleRender (rAF coalescing)", () => {
       () => useFrame({ ...DEFAULT_INPUT, frameScheduler }),
       { wrapper },
     )
-    result.current.renderFnRef.current = () => {
-      calls++
-      result.current.scheduleRender()
-    }
+    const render = vi.fn(() => result.current.scheduleRender())
+    result.current.renderFnRef.current = render
 
     result.current.scheduleRender()
-    expect(calls).toBe(1)
+    expect(render).toHaveBeenCalledOnce()
     expect(result.current.rafRef.current).toBeNull()
   })
 
@@ -490,36 +488,18 @@ describe("useFrame — scheduleRender (rAF coalescing)", () => {
 })
 
 describe("useFrame — theme-change effect", () => {
-  // Reuse the rAF mock from the surrounding scope behavior — beforeEach
-  // installs it, afterEach restores. The theme-change effect both mutates
-  // dirtyRef and calls scheduleRender, so we observe both effects.
-  let rafCallbacks: Array<{ id: number; cb: FrameRequestCallback }> = []
-  let nextRafId = 1
-  const originalRAF = global.requestAnimationFrame
-  const originalCAF = global.cancelAnimationFrame
-
   beforeEach(() => {
-    rafCallbacks = []
-    nextRafId = 1
-    global.requestAnimationFrame = ((cb: FrameRequestCallback) => {
-      const id = nextRafId++
-      rafCallbacks.push({ id, cb })
-      return id
-    })
-    global.cancelAnimationFrame = ((id: number) => {
-      rafCallbacks = rafCallbacks.filter((entry) => entry.id !== id)
-    })
+    vi.useFakeTimers({ toFake: ["requestAnimationFrame", "cancelAnimationFrame"] })
   })
 
   afterEach(() => {
-    global.requestAnimationFrame = originalRAF
-    global.cancelAnimationFrame = originalCAF
+    vi.useRealTimers()
   })
 
   it("does NOT install the theme-change effect when themeDirtyRef is not provided", () => {
     renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
     // No theme-change effect = no scheduleRender call from it = no rAF queued.
-    expect(rafCallbacks).toHaveLength(0)
+    expect(vi.getTimerCount()).toBe(0)
   })
 
   it("on mount, sets dirtyRef.current = true and queues a render when themeDirtyRef is provided", () => {
@@ -529,7 +509,7 @@ describe("useFrame — theme-change effect", () => {
       { wrapper },
     )
     expect(dirtyRef.current).toBe(true)
-    expect(rafCallbacks).toHaveLength(1)
+    expect(vi.getTimerCount()).toBe(1)
   })
 
   it("can skip a redundant mount invalidation while retaining theme-change repaint", () => {
@@ -548,11 +528,11 @@ describe("useFrame — theme-change effect", () => {
       { wrapper },
     )
 
-    expect(rafCallbacks).toHaveLength(0)
+    expect(vi.getTimerCount()).toBe(0)
     dirtyRef.current = false
     act(() => result.current.setTheme("dark"))
     expect(dirtyRef.current).toBe(true)
-    expect(rafCallbacks).toHaveLength(1)
+    expect(vi.getTimerCount()).toBe(1)
   })
 
   it("preserves the frame's dirtyRef initial value when the ref already starts true", () => {
@@ -572,12 +552,12 @@ describe("useFrame — theme-change effect", () => {
       () => useFrame({ ...DEFAULT_INPUT, themeDirtyRef: dirtyRef }),
       { wrapper },
     )
-    expect(rafCallbacks).toHaveLength(1) // mount
+    expect(vi.getTimerCount()).toBe(1) // mount
     dirtyRef.current = false // simulate a render-path resetting the flag
-    rafCallbacks = [] // ignore the mount queue
+    act(() => vi.advanceTimersToNextFrame())
     rerender()
     // No new theme-change effect fire, no new rAF queued.
-    expect(rafCallbacks).toHaveLength(0)
+    expect(vi.getTimerCount()).toBe(0)
     expect(dirtyRef.current).toBe(false)
   })
 
@@ -598,15 +578,13 @@ describe("useFrame — theme-change effect", () => {
     const ctx = { canvas } as CanvasRenderingContext2D
     try {
       canvas.style.setProperty("--semiotic-primary", "#111111")
-      _resetCSSColorCacheForTest()
 
       expect(resolveCSSColor(ctx, "var(--semiotic-primary)")).toBe("#111111")
       canvas.style.setProperty("--semiotic-primary", "#222222")
       expect(resolveCSSColor(ctx, "var(--semiotic-primary)")).toBe("#111111")
 
       dirtyRef.current = false
-      result.current.frame.rafRef.current = null
-      rafCallbacks = []
+      act(() => vi.advanceTimersToNextFrame())
 
       act(() => {
         result.current.setTheme("dark")
@@ -614,57 +592,29 @@ describe("useFrame — theme-change effect", () => {
 
       expect(result.current.frame.currentTheme).toEqual(DARK_THEME)
       expect(dirtyRef.current).toBe(true)
-      expect(rafCallbacks).toHaveLength(1)
+      expect(vi.getTimerCount()).toBe(1)
       expect(resolveCSSColor(ctx, "var(--semiotic-primary)")).toBe("#222222")
     } finally {
       canvas.remove()
-      // resolveCSSColor lazily attaches a global MutationObserver/matchMedia
-      // listener via ensureGlobalObserver. Reset the cache + observer here so
-      // they don't leak into later tests in this file or other test files.
-      _resetCSSColorCacheForTest()
     }
   })
 })
 
 describe("useFrame — hover coalescing", () => {
-  let rafCallbacks: Array<{ id: number; cb: FrameRequestCallback }> = []
-  let nextRafId = 1
-  let cancelledIds: number[] = []
-  const originalRAF = global.requestAnimationFrame
-  const originalCAF = global.cancelAnimationFrame
-
   beforeEach(() => {
-    rafCallbacks = []
-    nextRafId = 1
-    cancelledIds = []
-    global.requestAnimationFrame = ((cb: FrameRequestCallback) => {
-      const id = nextRafId++
-      rafCallbacks.push({ id, cb })
-      return id
-    })
-    global.cancelAnimationFrame = ((id: number) => {
-      cancelledIds.push(id)
-      rafCallbacks = rafCallbacks.filter((entry) => entry.id !== id)
-    })
+    vi.useFakeTimers({ toFake: ["requestAnimationFrame", "cancelAnimationFrame"] })
   })
 
   afterEach(() => {
-    global.requestAnimationFrame = originalRAF
-    global.cancelAnimationFrame = originalCAF
+    vi.useRealTimers()
   })
-
-  function flushRafs() {
-    const pending = rafCallbacks.slice()
-    rafCallbacks = []
-    for (const { cb } of pending) cb(performance.now())
-  }
 
   it("coalesces multiple pointermove events into one rAF", () => {
     const { result } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
     result.current.onPointerMove({ clientX: 10, clientY: 20 })
     result.current.onPointerMove({ clientX: 11, clientY: 21 })
     result.current.onPointerMove({ clientX: 12, clientY: 22 })
-    expect(rafCallbacks).toHaveLength(1)
+    expect(vi.getTimerCount()).toBe(1)
   })
 
   it("coalesces pointermove events when an injected scheduler returns zero", () => {
@@ -684,48 +634,47 @@ describe("useFrame — hover coalescing", () => {
 
   it("invokes hoverHandlerRef.current with the LATEST coords on flush", () => {
     const { result } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
-    let lastSeen: { clientX: number; clientY: number } | null = null
-    result.current.hoverHandlerRef.current = (coords) => { lastSeen = coords }
+    const hover = vi.fn()
+    result.current.hoverHandlerRef.current = hover
     result.current.onPointerMove({ clientX: 10, clientY: 20 })
     result.current.onPointerMove({ clientX: 99, clientY: 88 })
-    flushRafs()
-    expect(lastSeen).toEqual({ clientX: 99, clientY: 88 })
+    vi.advanceTimersToNextFrame()
+    expect(hover).toHaveBeenCalledExactlyOnceWith({ clientX: 99, clientY: 88 })
   })
 
   it("does not fire hoverHandlerRef when pointermove was never called", () => {
     const { result } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
-    let calls = 0
-    result.current.hoverHandlerRef.current = () => { calls++ }
-    flushRafs()
-    expect(calls).toBe(0)
+    const hover = vi.fn()
+    result.current.hoverHandlerRef.current = hover
+    vi.advanceTimersToNextFrame()
+    expect(hover).not.toHaveBeenCalled()
   })
 
   it("after flush + frame logic, a subsequent pointermove queues a new rAF", () => {
     const { result } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
     result.current.onPointerMove({ clientX: 1, clientY: 2 })
-    flushRafs()
+    vi.advanceTimersToNextFrame()
     result.current.onPointerMove({ clientX: 3, clientY: 4 })
-    expect(rafCallbacks).toHaveLength(1)
+    expect(vi.getTimerCount()).toBe(1)
   })
 
   it("onPointerLeave cancels any pending pointermove rAF and invokes hoverLeaveRef", () => {
     const { result } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
-    let leaveCalls = 0
-    result.current.hoverLeaveRef.current = () => { leaveCalls++ }
+    const leave = vi.fn()
+    result.current.hoverLeaveRef.current = leave
     result.current.onPointerMove({ clientX: 5, clientY: 6 })
-    expect(rafCallbacks).toHaveLength(1)
-    const queuedId = rafCallbacks[0].id
+    expect(vi.getTimerCount()).toBe(1)
     result.current.onPointerLeave()
-    expect(cancelledIds).toContain(queuedId)
-    expect(leaveCalls).toBe(1)
+    expect(vi.getTimerCount()).toBe(0)
+    expect(leave).toHaveBeenCalledOnce()
   })
 
   it("onPointerLeave with no pending move still invokes hoverLeaveRef", () => {
     const { result } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
-    let leaveCalls = 0
-    result.current.hoverLeaveRef.current = () => { leaveCalls++ }
+    const leave = vi.fn()
+    result.current.hoverLeaveRef.current = leave
     result.current.onPointerLeave()
-    expect(leaveCalls).toBe(1)
+    expect(leave).toHaveBeenCalledOnce()
   })
 
   it("restores touch detail after pointer leave at the final activation position", () => {
@@ -735,12 +684,12 @@ describe("useFrame — hover coalescing", () => {
     result.current.hoverHandlerRef.current = hover
     result.current.hoverLeaveRef.current = leave
     result.current.onPointerMove({ clientX: 5, clientY: 6, pointerType: "touch" })
-    flushRafs()
+    vi.advanceTimersToNextFrame()
     result.current.onPointerLeave()
     hover.mockClear()
     const nativeEvent = Object.assign(new MouseEvent("click"), { pointerType: "touch" })
     result.current.flushPointerMove({ clientX: 20, clientY: 30, nativeEvent })
-    flushRafs()
+    vi.advanceTimersToNextFrame()
     expect(hover).toHaveBeenCalledExactlyOnceWith({ clientX: 20, clientY: 30, pointerType: "touch" })
     leave.mockClear()
     result.current.onPointerLeave({ type: "mouseleave" })
@@ -753,37 +702,43 @@ describe("useFrame — hover coalescing", () => {
 
   it("processes an older hover before activation without replaying it afterward", () => {
     const { result } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
-    const events: string[] = []
-    result.current.hoverHandlerRef.current = () => { events.push("hover") }
-    result.current.hoverLeaveRef.current = () => { events.push("leave") }
+    const hover = vi.fn()
+    const leave = vi.fn()
+    const activate = vi.fn()
+    result.current.hoverHandlerRef.current = hover
+    result.current.hoverLeaveRef.current = leave
     result.current.onPointerMove({ clientX: 5, clientY: 6 })
     result.current.flushPointerMove()
-    events.push("activate")
-    flushRafs()
-    expect(events).toEqual(["hover", "activate"])
+    activate()
+    vi.advanceTimersToNextFrame()
+    expect(hover).toHaveBeenCalledExactlyOnceWith({ clientX: 5, clientY: 6 })
+    expect(hover).toHaveBeenCalledBefore(activate)
+    expect(leave).not.toHaveBeenCalled()
     expect(result.current.pointerStateRef.current.inside).toBe(true)
     result.current.onPointerMove({ clientX: 7, clientY: 8 })
-    flushRafs()
-    expect(events).toEqual(["hover", "activate", "hover"])
+    vi.advanceTimersToNextFrame()
+    expect(hover).toHaveBeenCalledTimes(2)
+    expect(hover).toHaveBeenLastCalledWith({ clientX: 7, clientY: 8 })
+    expect(hover.mock.invocationCallOrder[1]).toBeGreaterThan(activate.mock.invocationCallOrder[0])
+    expect(leave).not.toHaveBeenCalled()
   })
 
   it("after onPointerLeave, the dropped pointermove does NOT fire its handler when flushed", () => {
     const { result } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
-    let hoverCalls = 0
-    result.current.hoverHandlerRef.current = () => { hoverCalls++ }
+    const hover = vi.fn()
+    result.current.hoverHandlerRef.current = hover
     result.current.onPointerMove({ clientX: 5, clientY: 6 })
     result.current.onPointerLeave() // cancels the rAF
-    flushRafs() // any leftovers (should be none)
-    expect(hoverCalls).toBe(0)
+    vi.advanceTimersToNextFrame() // any leftovers (should be none)
+    expect(hover).not.toHaveBeenCalled()
   })
 
   it("cancels pending pointermove rAF on unmount", () => {
     const { result, unmount } = renderHook(() => useFrame(DEFAULT_INPUT), { wrapper })
     result.current.onPointerMove({ clientX: 5, clientY: 6 })
-    expect(rafCallbacks).toHaveLength(1)
-    const queuedId = rafCallbacks[0].id
+    expect(vi.getTimerCount()).toBe(1)
     unmount()
-    expect(cancelledIds).toContain(queuedId)
+    expect(vi.getTimerCount()).toBe(0)
   })
 
   it("onPointerMove and onPointerLeave callback identities are stable across renders", () => {

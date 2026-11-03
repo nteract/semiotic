@@ -2,11 +2,65 @@ import { bench, describe } from "vitest"
 import { bondProcessSankeyNodeData } from "../../src/components/charts/network/processSankey/groupBonding"
 import type { ProcessSankeyNodeData } from "../../src/components/charts/network/processSankey/algorithm"
 import { chordLayoutPlugin } from "../../src/components/stream/layouts/chordLayoutPlugin"
+import { reachableFrom } from "../../src/components/recipes/directedReachability"
+import { packBandsBySilhouette } from "../../src/components/recipes/layout1d"
+import { shortestPath } from "../../src/components/recipes/networkAnalysis"
+import { computeProcessSankeyLayout } from "../../src/components/charts/network/processSankey/layoutOrchestrator"
+import { processOrderingStressFixture } from "../../src/components/charts/network/processSankey/fixtures"
 import type {
   RealtimeNode,
   RealtimeEdge,
   NetworkPipelineConfig
 } from "../../src/components/stream/networkTypes"
+
+describe("ProcessSankey full layout", () => {
+  const { nodes, edges } = processOrderingStressFixture()
+  bench("layout-60-nodes-200-edges", () => {
+    computeProcessSankeyLayout(nodes, edges, {
+      plotH: 800,
+      packing: "off",
+      laneOrder: "crossing-min",
+      lifetimeMode: "full",
+      domain: [0, 100]
+    })
+  }, { time: 1000, iterations: 10, warmupIterations: 3 })
+})
+
+describe("ProcessSankey silhouette packing", () => {
+  for (const samples of [500, 2000]) {
+    const bands = Array.from({ length: 20 }, (_, band) =>
+      Array.from({ length: samples }, (_, i) => ({
+        at: i * 2 + (band % 3),
+        before: 1 + (i % 7),
+        after: 2 + (i % 5)
+      }))
+    )
+    bench(`pack-20-bands-${samples}-samples`, () => {
+      packBandsBySilhouette(bands)
+    })
+  }
+})
+
+describe("Directed graph traversal", () => {
+  const width = 500
+  const first = new Set(Array.from({ length: width }, (_, i) => `a-${i}`))
+  const second = new Set(Array.from({ length: width }, (_, i) => `b-${i}`))
+  const adjacency = new Map<string, Set<string>>([["root", first]])
+  // Every first-layer node reaches every second-layer node: 250k edges should
+  // not require a traversal queue containing 250k duplicate node references.
+  for (const id of first) adjacency.set(id, second)
+  bench("reachable-1001-nodes-250500-edges", () => {
+    reachableFrom(adjacency, "root")
+  })
+})
+
+describe("Network shortest paths", () => {
+  const nodes = Array.from({ length: 20_000 }, (_, i) => ({ id: `node-${i}` }))
+  const edges = nodes.slice(1).map((node, i) => ({ source: nodes[i].id, target: node.id }))
+  bench("shortest-path-20k-nodes", () => {
+    shortestPath(nodes, edges, "node-0", "node-19999")
+  })
+})
 
 describe("ProcessSankey group bonding", () => {
   for (const sampleCount of [500, 2000]) {

@@ -6,7 +6,8 @@
  * SceneToSVG.tsx so existing imports are unaffected.
  */
 
-import * as React from "react"
+import type * as React from "react"
+import { Fragment } from "react"
 import { arc as d3Arc } from "d3-shape"
 
 import type {
@@ -93,11 +94,11 @@ function networkSceneNodeToSVGMark(node: NetworkSceneNode, i: number): React.Rea
         mark = <path d={d} transform={`translate(${n.cx},${n.cy})`} {...paint} />
       }
       return (
-        <React.Fragment key={key}>
+        <Fragment key={key}>
           {hatch && <defs>{hatch}</defs>}
           {n.pathD && perspectiveFacesToSVG(n, paint.fill, token ? "token-rim" : "slab-face")}
           {mark}
-        </React.Fragment>
+        </Fragment>
       )
     }
     case "symbol": {
@@ -119,10 +120,10 @@ function networkSceneNodeToSVGMark(node: NetworkSceneNode, i: number): React.Rea
       // Perspective tokens carry screen-space side walls under the symbol.
       return n.faces?.length
         ? (
-            <React.Fragment key={`net-symbol-${i}`}>
+            <Fragment key={`net-symbol-${i}`}>
               {perspectiveFacesToSVG(n, n.style.fill ? svgFill(n.style.fill) : undefined, "token-rim")}
               {mark}
-            </React.Fragment>
+            </Fragment>
           )
         : mark
     }
@@ -166,7 +167,7 @@ function networkSceneEdgeToSVGMark(edge: NetworkSceneEdge, i: number): React.Rea
       const hatchId = `net-bezier-${i}-hatch`
       const hatch = isHatchFill(e.style.fill) ? hatchPatternDef(e.style.fill, hatchId) : undefined
       return (
-        <React.Fragment key={`net-edge-${i}`}>
+        <Fragment key={`net-edge-${i}`}>
           {hatch && <defs>{hatch}</defs>}
           <path
             d={e.pathD}
@@ -180,7 +181,7 @@ function networkSceneEdgeToSVGMark(edge: NetworkSceneEdge, i: number): React.Rea
             strokeLinecap={e.style.strokeLinecap}
             opacity={e.style.opacity}
           />
-        </React.Fragment>
+        </Fragment>
       )
     }
     case "ribbon": {
@@ -188,7 +189,7 @@ function networkSceneEdgeToSVGMark(edge: NetworkSceneEdge, i: number): React.Rea
       const hatchId = `net-ribbon-${i}-hatch`
       const hatch = isHatchFill(e.style.fill) ? hatchPatternDef(e.style.fill, hatchId) : undefined
       return (
-        <React.Fragment key={`net-edge-${i}`}>
+        <Fragment key={`net-edge-${i}`}>
           {hatch && <defs>{hatch}</defs>}
           <path
             d={e.pathD}
@@ -202,7 +203,7 @@ function networkSceneEdgeToSVGMark(edge: NetworkSceneEdge, i: number): React.Rea
             strokeLinecap={e.style.strokeLinecap}
             opacity={e.style.opacity}
           />
-        </React.Fragment>
+        </Fragment>
       )
     }
     case "curved": {

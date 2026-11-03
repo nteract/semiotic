@@ -178,6 +178,63 @@ describe("LinkedCharts categorical color precedence", () => {
     expectSwatches(container, chartColors())
   })
 
+  it("refreshes legend colors from a stable scale when its palette changes", () => {
+    const colors: Record<string, string> = { consumption: "#112233", production: "#445566" }
+    const colorScale = (category: string) => colors[category]
+    function RegisteringChart({ categories }: { categories: string[] }) {
+      useLinkedChartCategories(categories, colorScale)
+      return null
+    }
+    const tree = (categories: string[]) => (
+      <LinkedCharts><RegisteringChart categories={categories} /></LinkedCharts>
+    )
+    const { container, rerender } = render(tree(["consumption", "production"]))
+    expectSwatches(container, ["#112233", "#445566"])
+
+    // Both fresh equivalent arrays and the same function identity are common
+    // when a chart's stable scale reads its current palette from a ref.
+    rerender(tree(["consumption", "production"]))
+    expectSwatches(container, ["#112233", "#445566"])
+    colors.production = "#778899"
+    rerender(tree(["consumption", "production"]))
+    expectSwatches(container, ["#112233", "#778899"])
+    colors.consumption = "#aabbcc"
+    rerender(tree(["consumption", "production"]))
+    expectSwatches(container, ["#aabbcc", "#778899"])
+
+    rerender(tree([]))
+    expectSwatches(container, [])
+    rerender(tree(["production"]))
+    expectSwatches(container, ["#778899"])
+  })
+
+  it("keeps first-occurrence order for duplicates and unregisters only the removed chart", () => {
+    const colors: Record<string, string> = {
+      consumption: "#112233", production: "#445566", auxiliary: "#778899"
+    }
+    const colorScale = (category: string) => colors[category]
+    function RegisteringChart({ categories }: { categories: string[] }) {
+      useLinkedChartCategories(categories, colorScale)
+      return null
+    }
+    const tree = (categories?: string[]) => (
+      <React.StrictMode>
+        <LinkedCharts>
+          {categories && <RegisteringChart key="first" categories={categories} />}
+          <RegisteringChart key="second" categories={["auxiliary", "production"]} />
+        </LinkedCharts>
+      </React.StrictMode>
+    )
+    const { container, rerender } = render(tree(["production", "consumption", "production"]))
+    expectSwatches(container, ["#445566", "#112233", "#778899"])
+    rerender(tree(["production", "production", "consumption"]))
+    expectSwatches(container, ["#445566", "#112233", "#778899"])
+    rerender(tree(["consumption", "production", "consumption"]))
+    expectSwatches(container, ["#112233", "#445566", "#778899"])
+    rerender(tree())
+    expectSwatches(container, ["#778899", "#445566"])
+  })
+
   it("still shares default colors across charts with reversed category order", () => {
     render(
       <LinkedCharts>

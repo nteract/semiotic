@@ -2,7 +2,7 @@ import type { CoercibleNumber } from "../../stream/accessorUtils"
 import * as React from "react"
 import { useRef, forwardRef, useCallback, useEffect, useMemo, useState } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
-import { registerXYPlugin } from "../../stream/xyPlugins/registry"
+import { ensureXYPlugin } from "../../stream/xyPlugins/registry"
 import { heatmapXYPlugin } from "../../stream/xyPlugins/heatmapPlugin"
 import type {
   ArrowOfTime,
@@ -66,7 +66,7 @@ import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureRealtimeHeatmapRegistrations(): void {
-  registerXYPlugin(heatmapXYPlugin)
+  ensureXYPlugin(heatmapXYPlugin)
 }
 
 export interface RealtimeHeatmapProps<
@@ -519,7 +519,7 @@ export const RealtimeHeatmap = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE
         onObservation,
         forceHoverBehavior: true,
         mobileInteraction: resolved.mobileInteraction,
-        customHoverBehavior: combinedHoverBehavior as (d: Datum | null) => void,
+        customHoverBehavior: combinedHoverBehavior,
         customClickBehavior
       })}
       annotations={annotations}

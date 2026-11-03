@@ -2,13 +2,13 @@
 import { MULTI_AXIS_LINE_CHART_SIZE } from "../shared/chartSizeDefaultsXY"
 import type { Datum } from "../shared/datumTypes"
 import { filterSparseArray } from "../shared/sparseArray"
-import * as React from "react"
-import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle } from "react"
+import type * as React from "react"
+import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle, createElement } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
-import { registerXYPlugin } from "../../stream/xyPlugins/registry"
+import { ensureXYPlugin } from "../../stream/xyPlugins/registry"
 import { lineXYPlugin } from "../../stream/xyPlugins/linePlugin"
 import type { StreamXYFrameProps, StreamXYFrameHandle, CurveType } from "../../stream/types"
-import type { RealtimeFrameHandle } from "../../realtime/types"
+import type { HoverData, RealtimeFrameHandle } from "../../realtime/types"
 import type { BaseChartProps, AxisConfig, ChartAccessor } from "../shared/types"
 import {
   MultiPointTooltip,
@@ -39,7 +39,7 @@ import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureMultiAxisLineChartRegistrations(): void {
-  registerXYPlugin(lineXYPlugin)
+  ensureXYPlugin(lineXYPlugin)
 }
 
 /**
@@ -133,6 +133,15 @@ function unitize(value: number, extent: [number, number]): number {
 
 function invertUnitized(unitized: number, extent: [number, number]): number {
   return extent[0] + unitized * (extent[1] - extent[0])
+}
+
+function sourceMultiAxisDatum(datum: Datum): Datum {
+  const {
+    [MULTI_AXIS_UNITIZED_FIELD]: _unitized,
+    [MULTI_AXIS_SERIES_FIELD]: _series,
+    ...source
+  } = datum
+  return source
 }
 
 /**
@@ -521,18 +530,18 @@ export const MultiAxisLineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__P
 
       const xVal = typeof xAccessor === "function" ? xAccessor(datum) : datum[xAccessor]
 
-      return React.createElement("div", {
+      return createElement("div", {
         style: {
           padding: "6px 10px",
           fontFamily: "var(--semiotic-font-family, sans-serif)",
           fontSize: "var(--semiotic-tooltip-font-size, 13px)",
         }
       },
-        React.createElement("div", {
+        createElement("div", {
           style: { fontWeight: 600, marginBottom: 4, color: seriesColors[seriesIdx] || "inherit" }
         }, seriesName),
-        React.createElement("div", null, `${typeof xAccessor === "string" ? xAccessor : "x"}: `, xFormat ? xFormat(xVal) : String(xVal)),
-        React.createElement("div", null, `${seriesName}: ${fmt(originalVal)}`)
+        createElement("div", null, `${typeof xAccessor === "string" ? xAccessor : "x"}: `, xFormat ? xFormat(xVal) : String(xVal)),
+        createElement("div", null, `${seriesName}: ${fmt(originalVal)}`)
       )
     }
   }, [seriesLabels, seriesColors, extents, isDualAxis, series, xAccessor, xFormat])
@@ -542,36 +551,25 @@ export const MultiAxisLineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__P
   // before either the built-in or a custom multi renderer sees them.
   const mapMultiAxisHover = useCallback((datum: Datum): Datum => {
     const allSeries = Array.isArray(datum.allSeries)
-      ? datum.allSeries as Array<{
-          group: string
-          value: number
-          color: string
-          datum?: Datum
-        }>
+      ? datum.allSeries as NonNullable<HoverData["allSeries"]>
       : []
     const mappedSeries = allSeries.map((hit) => {
       const seriesIndex = seriesLabels.indexOf(hit.group)
       const mappedValue = isDualAxis && seriesIndex >= 0 && extents[seriesIndex]
         ? invertUnitized(hit.value, extents[seriesIndex])
         : hit.value
-      let rawDatum = hit.datum
-      if (rawDatum) {
-        rawDatum = { ...rawDatum }
-        delete rawDatum[MULTI_AXIS_UNITIZED_FIELD]
-        delete rawDatum[MULTI_AXIS_SERIES_FIELD]
+      return {
+        ...hit,
+        value: mappedValue,
+        datum: hit.datum ? sourceMultiAxisDatum(hit.datum) : hit.datum,
       }
-      return { ...hit, value: mappedValue, datum: rawDatum }
     })
     const mappedData = datum.data && typeof datum.data === "object" && !Array.isArray(datum.data)
-      ? { ...datum.data }
+      ? sourceMultiAxisDatum(datum.data)
       : datum.data
-    if (mappedData && typeof mappedData === "object" && !Array.isArray(mappedData)) {
-      delete mappedData[MULTI_AXIS_UNITIZED_FIELD]
-      delete mappedData[MULTI_AXIS_SERIES_FIELD]
-    }
-    const mapped: Datum = { ...datum, data: mappedData, allSeries: mappedSeries }
-    delete mapped[MULTI_AXIS_UNITIZED_FIELD]
-    delete mapped[MULTI_AXIS_SERIES_FIELD]
+    const mapped = sourceMultiAxisDatum(datum)
+    mapped.data = mappedData
+    mapped.allSeries = mappedSeries
     return mapped
   }, [extents, isDualAxis, seriesLabels])
 

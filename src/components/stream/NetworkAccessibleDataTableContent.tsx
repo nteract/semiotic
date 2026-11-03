@@ -1,5 +1,6 @@
 "use client"
-import * as React from "react"
+import type * as React from "react"
+import { useState, useMemo } from "react"
 import { AccessibleTableMoreRows } from "./AccessibleTableMoreRows"
 import { AccessibleDataRowsTable } from "./AccessibleDataRowsTable"
 import {
@@ -21,12 +22,12 @@ export default function NetworkAccessibleDataTableContent({
   revealRows
 }: NetworkAccessibleDataTableProps &
   Pick<ReturnType<typeof useAccessibleTableInteraction>, "revealRows">) {
-  const [visibleNodeCount, setVisibleNodeCount] = React.useState(SAMPLE_SIZE)
-  const [visibleEdgeCount, setVisibleEdgeCount] = React.useState(SAMPLE_SIZE)
+  const [visibleNodeCount, setVisibleNodeCount] = useState(SAMPLE_SIZE)
+  const [visibleEdgeCount, setVisibleEdgeCount] = useState(SAMPLE_SIZE)
   const nodeKey = sceneRevision ?? nodes
   const edgeKey = sceneRevision ?? edges
   // Geometry-only animation replaces scene arrays without changing their data.
-  const model = React.useMemo(
+  const model = useMemo(
     () => buildNetworkTableModel(nodes, edges),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [nodeKey, edgeKey]

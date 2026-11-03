@@ -8,6 +8,8 @@ import type {
   WordCloudPlacedWord
 } from "./types"
 
+// Sharing this hash through the optional normalizer adds shared chunks to
+// ordinary family entries. Keep the wc1 fingerprint algorithm local.
 export function wordCloudFingerprint(value: unknown): string {
   const text = JSON.stringify(value)
   let hash = 2166136261
@@ -17,23 +19,35 @@ export function wordCloudFingerprint(value: unknown): string {
 }
 
 export function wordCloudRandom(seed: number): () => number {
+  // A local generator keeps this optional entry from introducing extra shared
+  // chunks into ordinary chart entries through FrameRuntime or recipes/random.
   let state = seed | 0
   return () => {
-    state += 0x6d2b79f5
+    state = (state + 0x6d2b79f5) | 0
     let value = Math.imul(state ^ (state >>> 15), 1 | state)
     value ^= value + Math.imul(value ^ (value >>> 7), 61 | value)
     return ((value ^ (value >>> 14)) >>> 0) / 4294967296
   }
 }
 
+function fail(message: string): never {
+  throw new WordCloudLayoutError("INVALID_INPUT", message)
+}
+
+function omit(
+  omitted: WordCloudOmission[],
+  sourceIndex: number,
+  reason: WordCloudOmission["reason"],
+  id = `row:${sourceIndex}`
+): void {
+  omitted.push({ id, sourceIndex, reason })
+}
+
 function read<T>(row: Datum, accessor: WordCloudAccessor<T>): unknown {
   try {
     return typeof accessor === "function" ? accessor(row) : row[accessor]
   } catch {
-    throw new WordCloudLayoutError(
-      "INVALID_INPUT",
-      "A WordCloud accessor could not read a source row."
-    )
+    fail("A WordCloud accessor could not read a source row.")
   }
 }
 
@@ -60,9 +74,6 @@ export function normalizeWordCloudInput(options: WordCloudLayoutOptions) {
     maskFit = "contain",
     maskThreshold = 128
   } = options
-  const fail = (message: string): never => {
-    throw new WordCloudLayoutError("INVALID_INPUT", message)
-  }
   if (!Array.isArray(data))
     fail("WordCloud requires an array of aggregated terms.")
   if (
@@ -110,16 +121,17 @@ export function normalizeWordCloudInput(options: WordCloudLayoutOptions) {
     maskThreshold > 255
   )
     fail("maskThreshold must be an integer from 1 to 255.")
-  const angles =
+  const angleInput =
     rotate === "horizontal" ? [0] : rotate === "orthogonal" ? [0, 90] : rotate
   if (
-    !Array.isArray(angles) ||
-    !angles.length ||
-    !angles.every((v) => Number.isFinite(v) && Math.abs(v) <= 360)
+    !Array.isArray(angleInput) ||
+    !angleInput.length ||
+    !angleInput.every((v) => Number.isFinite(v) && Math.abs(v) <= 360)
   )
     fail(
       "rotate must be horizontal, orthogonal, or a nonempty array of finite angles within ±360°."
     )
+  const angles: readonly number[] = angleInput
   const omitted: WordCloudOmission[] = []
   const terms: Array<{
     id: string
@@ -130,18 +142,14 @@ export function normalizeWordCloudInput(options: WordCloudLayoutOptions) {
   const ids = new Set<string>()
   for (let sourceIndex = 0; sourceIndex < data.length; sourceIndex++) {
     const row = data[sourceIndex]
-    const omit = (
-      reason: WordCloudOmission["reason"],
-      id = `row:${sourceIndex}`
-    ) => omitted.push({ id, sourceIndex, reason })
     if (!row || typeof row !== "object") {
-      omit("invalid-row")
+      omit(omitted, sourceIndex, "invalid-row")
       continue
     }
     const text = String(read(row, textAccessor) ?? "").trim()
     const id = String(idAccessor ? (read(row, idAccessor) ?? "") : text)
     if (!text || !id || /[\r\n]/.test(text)) {
-      omit("missing-text", id)
+      omit(omitted, sourceIndex, "missing-text", id)
       continue
     }
     const rawValue = read(row, valueAccessor)
@@ -150,11 +158,11 @@ export function normalizeWordCloudInput(options: WordCloudLayoutOptions) {
         ? Number(rawValue)
         : NaN
     if (!Number.isFinite(value) || value <= 0) {
-      omit("invalid-value", id)
+      omit(omitted, sourceIndex, "invalid-value", id)
       continue
     }
     if (ids.has(id)) {
-      omit("duplicate-id", id)
+      omit(omitted, sourceIndex, "duplicate-id", id)
       continue
     }
     ids.add(id)
@@ -165,14 +173,20 @@ export function normalizeWordCloudInput(options: WordCloudLayoutOptions) {
   )
   const maximum = terms[0]?.value ?? 1
   const random = wordCloudRandom(seed)
-  const words = terms.slice(0, maxWords).map((term) => {
+  const words = []
+  for (let index = 0; index < terms.length; index++) {
+    const term = terms[index]
+    if (index >= maxWords) {
+      omit(omitted, term.sourceIndex, "max-words", term.id)
+      continue
+    }
     const fraction =
       fontSizeScale === "sqrt"
         ? Math.sqrt(term.value / maximum)
         : fontSizeScale === "log"
           ? Math.log1p(term.value) / Math.log1p(maximum)
           : term.value / maximum
-    return {
+    words.push({
       ...term,
       fontFamily,
       fontWeight,
@@ -181,14 +195,8 @@ export function normalizeWordCloudInput(options: WordCloudLayoutOptions) {
         fontSizeRange[0] + fraction * (fontSizeRange[1] - fontSizeRange[0])
       ),
       rotate: angles[Math.floor(random() * angles.length)]
-    }
-  })
-  for (const term of terms.slice(maxWords))
-    omitted.push({
-      id: term.id,
-      sourceIndex: term.sourceIndex,
-      reason: "max-words"
-    })
+    } satisfies PreparedWordCloudTerm)
+  }
   const fontFingerprint = wordCloudFingerprint({
     fontFamily,
     fontWeight,

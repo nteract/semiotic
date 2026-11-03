@@ -3,7 +3,7 @@ import type { Datum } from "../shared/datumTypes"
 import * as React from "react"
 import { useMemo, forwardRef, useRef } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
-import { registerXYPlugin } from "../../stream/xyPlugins/registry"
+import { ensureXYPlugin } from "../../stream/xyPlugins/registry"
 import { scatterXYPlugin } from "../../stream/xyPlugins/pointPlugin"
 import type { StreamXYFrameProps, StreamXYFrameHandle, SceneNode, StreamScales, StreamLayout, DecayConfig, PulseConfig, StalenessConfig } from "../../stream/types"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -30,7 +30,7 @@ import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureConnectedScatterplotRegistrations(): void {
-  registerXYPlugin(scatterXYPlugin)
+  ensureXYPlugin(scatterXYPlugin)
 }
 
 /**

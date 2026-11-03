@@ -6,11 +6,15 @@ import type { HoverData, StreamXYFrameProps } from "../../stream/types"
 import type { Datum } from "../shared/datumTypes"
 import { MultiAxisLineChart } from "./MultiAxisLineChart"
 
-let capturedProps: StreamXYFrameProps | null = null
+const { frameSpy } = vi.hoisted(() => ({ frameSpy: vi.fn<(props: StreamXYFrameProps) => void>() }))
+
+function frameProps(): StreamXYFrameProps {
+  return frameSpy.mock.lastCall![0]
+}
 
 vi.mock("../../stream/StreamXYFrame", () => ({
   default: React.forwardRef((props: StreamXYFrameProps, _ref) => {
-    capturedProps = props
+    frameSpy(props)
     return <div data-testid="stream-xy-frame" />
   }),
 }))
@@ -26,7 +30,7 @@ const series = [
 ]
 
 function multiHover(): HoverData {
-  const transformed = capturedProps?.data as Datum[]
+  const transformed = frameProps().data as Datum[]
   const temperature = transformed.find(row => row.time === 1 && row.__ma_series === "Temperature")!
   const humidity = transformed.find(row => row.time === 1 && row.__ma_series === "Humidity")!
   return {
@@ -44,13 +48,13 @@ function multiHover(): HoverData {
 
 describe("MultiAxisLineChart tooltips", () => {
   beforeEach(() => {
-    capturedProps = null
+    frameSpy.mockClear()
   })
 
   it("honors xFormat in the single tooltip, including React content", () => {
     render(<MultiAxisLineChart data={data} xAccessor="time" series={series}
       xFormat={(value) => <strong>Time {String(value)}</strong>} />)
-    const view = render(<>{capturedProps?.tooltipContent?.(multiHover())}</>)
+    const view = render(<>{frameProps().tooltipContent?.(multiHover())}</>)
     expect(view.container.querySelector("strong")?.textContent).toBe("Time 1")
   })
 
@@ -61,7 +65,7 @@ describe("MultiAxisLineChart tooltips", () => {
         { ...series[0], format: (value) => `${value.toFixed(0)}°` },
         { ...series[1], format: (value) => `${value.toFixed(8)} humidity` }
       ]} />)
-    const view = render(<>{capturedProps?.tooltipContent?.(multiHover())}</>)
+    const view = render(<>{frameProps().tooltipContent?.(multiHover())}</>)
     expect(view.container.textContent).toContain("Time 1")
     expect(view.container.textContent).toContain("72°")
     expect(view.container.textContent).toContain("0.45000000 humidity")
@@ -77,8 +81,8 @@ describe("MultiAxisLineChart tooltips", () => {
       />,
     )
 
-    expect(capturedProps?.tooltipMode).toBe("multi")
-    const content = capturedProps?.tooltipContent?.(multiHover())
+    expect(frameProps().tooltipMode).toBe("multi")
+    const content = frameProps().tooltipContent?.(multiHover())
     const rendered = render(<>{content}</>)
     expect(rendered.container.textContent).toContain("Temperature")
     expect(rendered.container.textContent).toContain("72")
@@ -90,8 +94,8 @@ describe("MultiAxisLineChart tooltips", () => {
     const Wrapped = ({ value }: { value: number }) => <TooltipRoot>{value}</TooltipRoot>
     const content = markTooltipChrome((datum: Datum) => <Wrapped value={datum.allSeries[0].value} />)
     render(<MultiAxisLineChart data={data} xAccessor="time" series={series} tooltip={{ mode: "multi", content }} />)
-    expect(hasOwnTooltipChrome(capturedProps?.tooltipContent)).toBe(true)
-    const view = render(<>{capturedProps?.tooltipContent?.(multiHover())}</>)
+    expect(hasOwnTooltipChrome(frameProps().tooltipContent)).toBe(true)
+    const view = render(<>{frameProps().tooltipContent?.(multiHover())}</>)
     expect(view.container.textContent).toBe("72")
     expect(view.container.querySelectorAll(".semiotic-tooltip")).toHaveLength(1)
   })
@@ -107,7 +111,15 @@ describe("MultiAxisLineChart tooltips", () => {
       />,
     )
 
-    render(<>{capturedProps?.tooltipContent?.(multiHover())}</>)
+    const hover = multiHover()
+    Object.freeze(hover.data)
+    for (const hit of hover.allSeries!) {
+      Object.freeze(hit.datum)
+      Object.freeze(hit)
+    }
+    Object.freeze(hover.allSeries)
+    Object.freeze(hover)
+    render(<>{frameProps().tooltipContent?.(hover)}</>)
     const received = content.mock.calls[0]?.[0]
     expect(received).toBeDefined()
     expect(received).toMatchObject({ time: 1, temperature: 72, humidity: 0.45, xValue: 1 })
@@ -117,5 +129,11 @@ describe("MultiAxisLineChart tooltips", () => {
       { group: "Temperature", value: 72, datum: data[1] },
       { group: "Humidity", value: 0.45, datum: data[1] },
     ])
+    for (const hit of received!.allSeries) {
+      expect(hit.datum).not.toHaveProperty("__ma_unitized")
+      expect(hit.datum).not.toHaveProperty("__ma_series")
+    }
+    expect(hover.data).toHaveProperty("__ma_unitized", 0.72)
+    expect(hover.allSeries![0].datum).toHaveProperty("__ma_series", "Temperature")
   })
 })

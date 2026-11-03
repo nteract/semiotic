@@ -1,4 +1,4 @@
-import * as React from "react"
+import { createElement } from "react"
 import type { ThemeSemanticColors } from "../../stream/types"
 import type {
   CircuitGeometry,
@@ -7,7 +7,7 @@ import type {
   CircuitEdition
 } from "./flowCircuitTypes"
 
-const h = React.createElement
+const h = createElement
 export const circuitColors = {
   observed: "#387e98",
   modeled: "#946344",

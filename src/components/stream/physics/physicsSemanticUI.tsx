@@ -3,7 +3,8 @@
 /**
  * Physics frame semantic items, default tooltip, and accessible data table.
  */
-import * as React from "react"
+import type * as React from "react"
+import { useState, useMemo, useEffect } from "react"
 import { SR_ONLY_STYLE } from "../../screenReaderStyles"
 export { SR_ONLY_STYLE } from "../../screenReaderStyles"
 import { AccessibleTableMoreRows } from "../AccessibleTableMoreRows"
@@ -337,18 +338,18 @@ function PhysicsSemanticDataTable(props: {
   tableId: string
 }): React.ReactElement {
   const { chartTitle, items, tableId } = props
-  const [visibleCount, setVisibleCount] = React.useState(
+  const [visibleCount, setVisibleCount] = useState(
     PHYSICS_TABLE_SAMPLE_SIZE
   )
   const interaction = useAccessibleTableInteraction()
   const { isExpanded, revealRows } = interaction
-  const summary = React.useMemo(
+  const summary = useMemo(
     () => (isExpanded ? semanticItemsSummary(items) : ""),
     [isExpanded, items]
   )
   const regionLabel = `Data summary for ${chartTitle || "physics chart"}`
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isExpanded) setVisibleCount(PHYSICS_TABLE_SAMPLE_SIZE)
   }, [isExpanded])
 

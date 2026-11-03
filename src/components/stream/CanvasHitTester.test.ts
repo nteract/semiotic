@@ -1,9 +1,32 @@
 import { findNearestNode, findAllNodesAtX, clampToSeriesXRange } from "./CanvasHitTester"
-import type { LineSceneNode, AreaSceneNode, PointSceneNode, RectSceneNode } from "./types"
+import type { LineSceneNode, AreaSceneNode, PointSceneNode, RectSceneNode, HeatcellSceneNode } from "./types"
 import { quadtree } from "d3-quadtree"
 import { PipelineSpatialIndex } from "./pipelineSpatialIndex"
 
 describe("CanvasHitTester — findNearestNode", () => {
+  it.each(["rect", "heatcell"] as const)("anchors %s hits at the cell center and includes exact bounds", (type) => {
+    const datum = { id: "cell" }
+    const node: RectSceneNode | HeatcellSceneNode = {
+      type,
+      x: 40,
+      y: 30,
+      w: 20,
+      h: 10,
+      fill: "red",
+      style: { fill: "red" },
+      datum
+    }
+    for (const [x, y] of [[41, 32], [40, 30], [60, 40], [40, 40], [60, 30]]) {
+      const hit = findNearestNode([node], x, y, 0)
+      expect(hit).toMatchObject({ x: 50, y: 35, distance: 0 })
+      expect(hit?.node).toBe(node)
+      expect(hit?.datum).toBe(datum)
+    }
+    for (const [x, y] of [[39.9, 35], [60.1, 35], [50, 29.9], [50, 40.1]]) {
+      expect(findNearestNode([node], x, y)).toBeNull()
+    }
+  })
+
   it("finds nearest point on a sorted line path", () => {
     const line: LineSceneNode = {
       type: "line",

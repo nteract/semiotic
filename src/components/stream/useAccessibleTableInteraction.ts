@@ -1,24 +1,25 @@
 "use client"
 
-import * as React from "react"
+import type * as React from "react"
+import { useEffect, useLayoutEffect, useState, useRef } from "react"
 import { useDataSummary } from "../DataSummaryContext"
 
 const useBrowserLayoutEffect =
-  typeof window === "undefined" ? React.useEffect : React.useLayoutEffect
+  typeof window === "undefined" ? useEffect : useLayoutEffect
 
 /** Shared focus and paging behavior for scene, network, and physics tables. */
 export function useAccessibleTableInteraction() {
-  const [srExpanded, setSrExpanded] = React.useState(false)
-  const [announcement, setAnnouncement] = React.useState("")
+  const [srExpanded, setSrExpanded] = useState(false)
+  const [announcement, setAnnouncement] = useState("")
   const dataSummary = useDataSummary()
   const visible = dataSummary?.visible ?? false
   const isExpanded = srExpanded || visible
-  const containerRef = React.useRef<HTMLDivElement>(null)
-  const triggerRef = React.useRef<HTMLButtonElement>(null)
-  const openerRef = React.useRef<HTMLElement | null>(null)
-  const restoreFocusRef = React.useRef(false)
-  const wasExpandedRef = React.useRef(false)
-  const pageTargetRef = React.useRef<{ table: Element; index: number } | null>(
+  const containerRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const openerRef = useRef<HTMLElement | null>(null)
+  const restoreFocusRef = useRef(false)
+  const wasExpandedRef = useRef(false)
+  const pageTargetRef = useRef<{ table: Element; index: number } | null>(
     null
   )
 

@@ -1,5 +1,6 @@
 "use client"
-import * as React from "react"
+
+import { useMemo } from "react"
 import type { IntentManifest } from "./intentManifest"
 import { summarizeIntentManifest } from "./intentManifest"
 import { ClipboardStatus, useClipboard } from "../useClipboard"
@@ -24,7 +25,7 @@ export function IntentMark({
   showSummary = true,
 }: IntentMarkProps) {
   const { status, copy } = useClipboard()
-  const json = React.useMemo(() => JSON.stringify(manifest, null, 2), [manifest])
+  const json = useMemo(() => JSON.stringify(manifest, null, 2), [manifest])
 
   return (
     <details

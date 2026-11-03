@@ -1,16 +1,17 @@
-import { afterEach, expect, it } from "vitest"
-import { registerServerXYPlugins } from "./registerServerXYPlugins"
-import { registerBuiltInXYPlugins } from "../stream/xyPlugins/registerBuiltIn"
-import {
-  getXYPlugin,
-  resetXYPluginRegistry
-} from "../stream/xyPlugins/registry"
+import { beforeEach, expect, it, vi } from "vitest"
 import type { StreamChartType } from "../stream/types"
 
-afterEach(registerBuiltInXYPlugins)
+let registry: typeof import("../stream/xyPlugins/registry")
+let registerServerXYPlugins: typeof import("./registerServerXYPlugins")["registerServerXYPlugins"]
+let registerBuiltInXYPlugins: typeof import("../stream/xyPlugins/registerBuiltIn")["registerBuiltInXYPlugins"]
+beforeEach(async () => {
+  vi.resetModules()
+  registry = await import("../stream/xyPlugins/registry")
+  ;({ registerServerXYPlugins } = await import("./registerServerXYPlugins"))
+  ;({ registerBuiltInXYPlugins } = await import("../stream/xyPlugins/registerBuiltIn"))
+})
 
 it("registers every built-in scene without canvas painters", () => {
-  resetXYPluginRegistry()
   registerServerXYPlugins()
   for (const type of [
     "line",
@@ -26,17 +27,16 @@ it("registers every built-in scene without canvas painters", () => {
     "candlestick",
     "custom"
   ] as StreamChartType[]) {
-    expect(getXYPlugin(type)?.buildScene).toBeTypeOf("function")
-    expect(getXYPlugin(type)?.canvasRenderers).toEqual([])
+    expect(registry.getXYPlugin(type)?.buildScene).toBeTypeOf("function")
+    expect(registry.getXYPlugin(type)?.canvasRenderers).toEqual([])
   }
 })
 
 it("preserves canvas renderers regardless of registration order", () => {
-  resetXYPluginRegistry()
   registerServerXYPlugins()
   registerBuiltInXYPlugins()
-  const clientPlugin = getXYPlugin("line")
+  const clientPlugin = registry.getXYPlugin("line")
   expect(clientPlugin?.canvasRenderers.length).toBeGreaterThan(0)
   registerServerXYPlugins()
-  expect(getXYPlugin("line")).toBe(clientPlugin)
+  expect(registry.getXYPlugin("line")).toBe(clientPlugin)
 })
