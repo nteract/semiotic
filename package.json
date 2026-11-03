@@ -597,7 +597,7 @@
     "@typescript-eslint/parser": "^8.72.1",
     "@vitejs/plugin-react": "^6.1.1",
     "@vitest/coverage-v8": "4.1.12",
-    "@vitest/ui": "4.1.12",
+    "@vitest/ui": "5.0.5",
     "ajv": "^8.20.0",
     "d3-cloud": "2.0.0",
     "d3-dsv": "^3.0.1",
