@@ -124,7 +124,7 @@ function PhysicsCustomChart<TDatum extends Datum = Datum, TConfig extends object
 function PhysicsPileChart(props: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").UnitPileChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
 function PhysicsSVGOverlay(props: PhysicsSVGOverlayProps): import("react").JSX.Element
 function ProcessFlowChart(props: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").ProcessFlowChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
-function StreamPhysicsFrame(props: React.RefAttributes<import("semiotic-internal/semiotic-experimental").UnstableStreamPhysicsFrameHandle> & import("semiotic-internal/semiotic-experimental").UnstableStreamPhysicsFrameProps): import("react").ReactNode
+function StreamPhysicsFrame(props: React.RefAttributes<import("semiotic-internal/semiotic-experimental").UnstableStreamPhysicsFrameHandle> & import("semiotic-internal/semiotic-experimental").UnstableStreamPhysicsFrameProps): React.ReactNode
 function Tooltip(config?: TooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function TooltipRoot({ chrome, className, style, children, ...rest }: TooltipRootProps): React.JSX.Element
 function UnitPileChart(props: React.RefAttributes<import("semiotic-internal/semiotic-physics").PhysicsFrameHandle> & import("semiotic-internal/semiotic-physics").UnitPileChartProps<import("semiotic-internal/components/stream/networkColorAccessors").Datum>): React.ReactNode
@@ -178,7 +178,7 @@ function crucibleComponentBodyId(componentId: string): string
 function crucibleProductBodyId(productId: string): string
 function crucibleProjectionRows<TDatum extends Datum>(state: CrucibleRunState<TDatum>, spec?: CrucibleProjectionSpec | undefined): CrucibleProjectionRow[]
 function crucibleSemanticKey(value: unknown): string
-function default(props: React.RefAttributes<import("semiotic-internal/semiotic-experimental").UnstableStreamPhysicsFrameHandle> & import("semiotic-internal/semiotic-experimental").UnstableStreamPhysicsFrameProps): import("react").ReactNode
+function default(props: React.RefAttributes<import("semiotic-internal/semiotic-experimental").UnstableStreamPhysicsFrameHandle> & import("semiotic-internal/semiotic-experimental").UnstableStreamPhysicsFrameProps): React.ReactNode
 function deriveMotionVector(previous: MotionPoint, current: MotionPoint, elapsed: number): ResolvedMotionVector
 function describePhysicsStageGeography(geography: PhysicsStageGeography, nouns?: undefined | {charge?: string; apparatus?: string; destination?: string;}): string
 function evaluateCrucibleConservation<TDatum extends Datum>(state: CrucibleRunState<TDatum>, spec?: CrucibleConservationSpec | undefined): CrucibleConservationResult

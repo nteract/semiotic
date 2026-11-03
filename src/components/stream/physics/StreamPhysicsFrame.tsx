@@ -1,5 +1,7 @@
 "use client"
 
+// Retain the released React namespace spelling in this component's inferred declaration.
+import type * as React from "react"
 import {
   forwardRef,
   memo,
