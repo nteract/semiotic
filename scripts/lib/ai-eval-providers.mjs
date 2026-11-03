@@ -24,6 +24,10 @@
  * run gets a real price table, estimated USD, and an enforced `--max-usd`
  * ceiling. Otherwise a run that passed `--max-usd` fails fast, and a run
  * without it records cost as unknown (`null`) as for the other gateways.
+ *
+ * `runcrate` serves open-weight models (DeepSeek, GLM, Kimi, Qwen, gpt-oss) on
+ * the same terms as the other gateways: `/v1/responses`, lab-prefixed model ids,
+ * no price table (cost is `null`), and no `reasoning` field.
  */
 export const AI_EVAL_PROVIDERS = {
   apiroute: {
@@ -141,5 +145,21 @@ export const AI_EVAL_PROVIDERS = {
     // can spend hidden reasoning tokens before the credential-check JSON.
     credentialCheckMaxTokens: 256,
     pricesPerMillion: null
+  },
+  runcrate: {
+    id: "runcrate",
+    label: "Runcrate",
+    apiUrl: "https://api.runcrate.ai/v1/responses",
+    apiKeyEnv: "RUNCRATE_API_KEY",
+    projectEnv: null,
+    keychainService: "semiotic-runcrate-evals",
+    clientVersion: "semiotic-runcrate-eval/1",
+    defaultModels: ["deepseek-ai/DeepSeek-V4.1-Flash"],
+    hasPriceTable: false,
+    priceRevision: null,
+    reportPrefix: "runcrate",
+    requestReasoning: false,
+    credentialCheckMaxTokens: 64,
+    pricesPerMillion: null,
   }
 }

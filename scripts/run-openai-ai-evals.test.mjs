@@ -285,6 +285,55 @@ test("API Route paid queues require explicit spend confirmation", async () => {
   }), /--confirm-spend/)
 })
 
+test("Runcrate validation uses strict schema, lab-prefixed model ID and independent credentials", async () => {
+  const calls = []
+  const chunks = []
+  const fetchImpl = async (url, options) => {
+    calls.push({ url, headers: options.headers, body: JSON.parse(options.body) })
+    return jsonResponse("deepseek-ai/DeepSeek-V4.1-Flash", '{"ok":true}')
+  }
+  await runEvalRun({
+    argv: ["node", "run-openai-ai-evals.mjs", "--provider=runcrate", "--validate-only"],
+    env: { RUNCRATE_API_KEY: "runcrate-test-key", OPENAI_API_KEY: "unrelated-key" },
+    fetchImpl,
+    stdout: { write: (chunk) => chunks.push(String(chunk)) },
+  })
+  assert.equal(calls.length, 1)
+  assert.equal(calls[0].url, "https://api.runcrate.ai/v1/responses")
+  assert.equal(calls[0].headers.Authorization, "Bearer runcrate-test-key")
+  assert.equal(calls[0].headers["OpenAI-Project"], undefined)
+  assert.equal(calls[0].body.model, "deepseek-ai/DeepSeek-V4.1-Flash")
+  assert.equal(calls[0].body.store, false)
+  assert.equal(calls[0].body.reasoning, undefined)
+  assert.equal(calls[0].body.max_output_tokens, 64)
+  assert.equal(calls[0].body.text.format.type, "json_schema")
+  assert.equal(calls[0].body.text.format.strict, true)
+  assert.equal(JSON.parse(chunks.join("")).estimatedUsd, null)
+  assert.equal(chunks.join("").includes("runcrate-test-key"), false)
+  assert.equal(AI_EVAL_PROVIDERS.runcrate.hasPriceTable, false)
+  assert.equal(AI_EVAL_PROVIDERS.runcrate.projectEnv, null)
+})
+
+test("Runcrate does not fall back to OpenAI credentials", async () => {
+  let called = false
+  await assert.rejects(() => runEvalRun({
+    argv: ["node", "run-openai-ai-evals.mjs", "--provider=runcrate", "--validate-only"],
+    env: { OPENAI_API_KEY: "unrelated-key" },
+    fetchImpl: async () => { called = true },
+    stdout: { write: () => {} },
+  }), /RUNCRATE_API_KEY/)
+  assert.equal(called, false)
+})
+
+test("Runcrate paid queues require explicit spend confirmation", async () => {
+  await assert.rejects(() => runEvalRun({
+    argv: ["node", "run-openai-ai-evals.mjs", "--provider=runcrate"],
+    env: { RUNCRATE_API_KEY: "runcrate-test-key" },
+    fetchImpl: async () => { throw new Error("unexpected request") },
+    stdout: { write: () => {} },
+  }), /--confirm-spend/)
+})
+
 test("providers without a price table report unknown (null) cost", () => {
   assert.equal(calculateResponseCost("orcarouter/auto", {}, null), null)
   assert.equal(requestUpperBoundCost("orcarouter/auto", {}, null), null)

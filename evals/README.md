@@ -123,9 +123,27 @@ npm run eval:ai:litellm -- \
   --confirm-spend
 ```
 
+The `runcrate` provider uses [Runcrate](https://runcrate.ai)'s Responses
+endpoint (`https://api.runcrate.ai/v1/responses`) with `RUNCRATE_API_KEY` and
+lab-prefixed open-weight model IDs such as `deepseek-ai/DeepSeek-V4.1-Flash`,
+`zai-org/GLM-5.3`, or `moonshotai/Kimi-K3` (`GET /v1/models` lists them; Kimi K3
+also accepts images). Start with the strict JSON-schema credential check:
+
+```sh
+node scripts/run-openai-ai-evals.mjs --provider=runcrate \
+  --models=deepseek-ai/DeepSeek-V4.1-Flash --validate-only
+```
+
+To run a queue, replace `--validate-only` with `--suites=first-try`,
+`--output-dir=evals/reports/runcrate/trial-a`, and `--confirm-spend`. Pricing is
+unknown to this runner (`null` USD); it cannot enforce a USD spend ceiling for
+Runcrate. See the [API documentation](https://runcrate.ai/docs) for
+authentication and models. This registers an evaluation provider; it does not
+claim results for any chart-generation or grounding benchmark.
+
 Use `--validate-only` first for one minimal request. The live runner always
 requires `--confirm-spend`. Providers with a locked price table also require a
-positive `--max-usd`; the `orcarouter`, `cheaperinference`, and `apiroute` gateways have no
+positive `--max-usd`; the `orcarouter`, `cheaperinference`, `apiroute`, and `runcrate` gateways have no
 price table, so no spend ceiling is enforced and `--max-usd` is optional. The runner never writes the
 credential, project ID, raw prompts, or raw API response bodies to its reports.
 Scoring inputs necessarily retain parsed chart proposals and grounding answer
