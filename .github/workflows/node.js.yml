@@ -275,6 +275,16 @@ jobs:
       - name: Build production library
         run: npm run dist:prod
 
+      - name: Upload entry-graph diagnostics
+        if: always() && hashFiles('dist/entry-graph-report.json') != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: entry-graph-diagnostics
+          path: |
+            dist/entry-graph-report.json
+            dist/bundle-inputs.json
+          retention-days: 14
+
       - name: Check bundle budgets before package tests
         run: npm run check:bundle-budgets
 

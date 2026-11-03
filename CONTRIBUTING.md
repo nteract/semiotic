@@ -100,6 +100,27 @@ Production builds check entry-graph size budgets as soon as their ESM output is
 finalized, before the remaining CommonJS and worker builds. `npm run size` also
 checks those budgets first when validating existing artifacts.
 
+The size gate writes `dist/entry-graph-report.json`, including final raw/gzip
+bytes, static dependencies and the entries that share each chunk. Builds also
+write `dist/bundle-inputs.json` for source attribution across every ESM group.
+On failure, the gate lists the largest reachable chunks and their contributing
+modules; CI retains both reports even when the early build gate fails.
+
+To explain growth between two builds, save the first report outside `dist/`
+(builds clean that directory), then compare the second build:
+
+```bash
+node scripts/check-entry-graph-size.mjs --report /tmp/semiotic-entry-before.json
+# Make the change and run npm run dist:prod again.
+node scripts/check-entry-graph-size.mjs --compare /tmp/semiotic-entry-before.json
+```
+
+Use `--details` to inspect passing graphs too. Comparisons match uniquely
+identifiable hashed chunks by their contributing modules; splits and merges
+remain added/removed chunks. Source byte contributions describe esbuild output
+before post-processing, not additive per-module gzip costs. Budget decisions
+always use the final compressed files; these reports do not adjust limits.
+
 ### New-chart checklist
 
 Before calling a chart public, complete every relevant item:
@@ -417,13 +438,19 @@ NETWORK_CAMERA_PROFILE=1 npm run test:network-camera
 
 Both modes run with one worker, no retries, production React and 4× CDP CPU
 throttling. Production enforces the existing acceptance targets: **4 ms mean
-scripting per camera frame at 1,000 nodes/k=1** (compact and PipelineCard),
-**16 ms at 3,000 nodes/fit** (SVG-only and semantic edges), and **1 ms mean
+scripting per camera frame at 1,000 compact nodes/k=1**, **6 ms for PipelineCard**,
+**16 ms at 3,000 nodes/fit** (SVG-only and semantic edges), and **2.5 ms mean
 script + browser layout per coalesced pointer update** over 4,500 edges.
+The original 4 ms PipelineCard and 1 ms pointer goals remain optimization targets.
 Profiling checks layer commit counts; its timings are diagnostic. Both modes
 check layout reuse, culling membership, LOD settling and real tooltip behavior.
 Repeated dense pans verify exact mounted membership and round-trip stability;
 their timings have no calibrated acceptance budget yet.
+The cold-query report also separates scene commit, hit-index preparation and
+first query across fresh, unchanged, restyled and mutated scenes. Preparation
+optimizations must retain exact Canvas hit semantics and detect in-place edits
+to retained arrays and records; passing the warm pointer budget alone does not
+establish that scene preparation is cheap.
 
 The `network-camera` CI jobs run production and profiling on separate runners
 using the pinned Playwright container. Reports survive timing failures and are

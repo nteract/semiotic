@@ -17,6 +17,9 @@ import { stripPureBareChunkImports } from "./lib/strip-pure-bare-imports.mjs"
 import { serverRuntimeLoadersPlugin } from "./lib/server-runtime-loaders.mjs"
 import { shortenChunkExportsPlugin, shortenBuiltEntryExports } from "./lib/shorten-chunk-exports.mjs"
 import { externalizeSharedClientModulesPlugin } from "./lib/shared-client-modules.mjs"
+import { entryGraphInputsPlugin } from "./lib/entry-graph-analysis.mjs"
+
+const entryGraphInputs = {}
 
 const buildSourceFingerprint = bundleFreshness.sourceFingerprint(
   process.cwd(),
@@ -218,7 +221,8 @@ async function createSharedEsmGroup({
       ...(serverOnly ? [serverRuntimeLoadersPlugin()] : []),
       externalizePerspectivePlacementPlugin(),
       ...(minify && deferIdentifierMinification ? [shortenChunkExportsPlugin()] : []),
-      ...esbuildPlugins
+      ...esbuildPlugins,
+      entryGraphInputsPlugin(entryGraphInputs, groupName)
     ],
     // Public ESM entries retain the package's historical `.module.min.js`
     // names, while private content-hashed chunks use the shorter `.min.js`
@@ -1638,6 +1642,7 @@ async function build() {
 
   // Entry budgets need only the finalized ESM graphs. Fail here instead of
   // finishing the CommonJS/worker builds and reaching a later test-suite gate.
+  writeFileSync("dist/bundle-inputs.json", JSON.stringify(entryGraphInputs, null, 2) + "\n")
   if (minify) {
     execFileSync(process.execPath, ["scripts/check-entry-graph-size.mjs"], {
       stdio: "inherit"

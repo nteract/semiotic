@@ -100,5 +100,16 @@ describe("NetworkPipelineStore update-result reference path", () => {
     expect(exactNoOp.changeSet).toEqual({ kind: "config", keys: [] })
     expect(exactNoOp.changed.size).toBe(0)
     expect(exactNoOp.revisions).toEqual(style.revisions)
+
+    const cleared = store.updateConfigWithResult({ nodeStyle: undefined })
+    expect(cleared.changeSet).toEqual({ kind: "config", keys: ["nodeStyle"] })
+    expect(cleared.changed.has("scene-style")).toBe(true)
+    expect(cleared.changed.has("layout")).toBe(false)
+
+    // An omitted key stays retained; an explicit undefined above clears it.
+    const omitted = store.updateConfigWithResult({})
+    expect(omitted.changeSet).toEqual({ kind: "config", keys: [] })
+    expect(omitted.revisions).toEqual(cleared.revisions)
+    expect(store.updateConfigWithResult({ valueAccessor: "weight", edgeSort: order }).changed.size).toBe(0)
   })
 })

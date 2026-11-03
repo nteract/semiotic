@@ -333,7 +333,8 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
     if (config.layoutSelection === undefined && prev.layoutSelection != null) {
       nextConfig.layoutSelection = prev.layoutSelection
     }
-    const changedConfigKeys = [...new Set([...Object.keys(prev), ...Object.keys(nextConfig)])].filter(
+    // The merged config contains all previous keys, including explicit clears.
+    const changedConfigKeys = Object.keys(nextConfig).filter(
       (key) =>
         prev[key as keyof NetworkPipelineConfig] !==
         nextConfig[key as keyof NetworkPipelineConfig],

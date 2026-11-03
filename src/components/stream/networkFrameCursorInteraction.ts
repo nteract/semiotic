@@ -3,6 +3,7 @@ import type { NetworkViewTransform } from "./networkViewportTypes"
 import type { CursorFrameGeometry } from "./frameCursorInteraction"
 import { resolveNetworkPointerHit } from "./networkFrameInteraction"
 import type { NetworkSceneEdge, NetworkSceneNode } from "./networkTypes"
+import type { RevisionSet } from "./pipelineUpdateContract"
 import {
   buildNetworkRectHitIndex,
   type NetworkRectHitIndex
@@ -39,8 +40,7 @@ const prepared = new WeakMap<
     hits: { edgeIndex?: NetworkEdgeHitIndex; rectIndex?: NetworkRectHitIndex }
     nodes: NetworkSceneNode[]
     edges: NetworkSceneEdge[]
-    geometry: number
-    style: number
+    revisions: RevisionSet
   }
 >()
 
@@ -50,6 +50,7 @@ export function prepareNetworkCustomHits(store: NetworkPipelineStore): void {
     prepared.delete(store)
     return
   }
+  const previous = prepared.get(store)
   const revisions = store.getUpdateSnapshot().revisions
   prepared.set(store, {
     hits: {
@@ -57,12 +58,18 @@ export function prepareNetworkCustomHits(store: NetworkPipelineStore): void {
         result.edgeHitTesting === false
           ? undefined
           : buildNetworkEdgeHitIndex(store.sceneEdges),
-      rectIndex: buildNetworkRectHitIndex(store.sceneNodes)
+      // Restyle callbacks patch Style without repositioning marks (the custom
+      // layout contract). Geometry commits/replaced arrays invalidate reuse;
+      // edge indexes still refresh stroke radii on a style-only change.
+      rectIndex:
+        previous?.nodes === store.sceneNodes &&
+        previous.revisions.sceneGeometry === revisions.sceneGeometry
+          ? previous.hits.rectIndex
+          : buildNetworkRectHitIndex(store.sceneNodes)
     },
     nodes: store.sceneNodes,
     edges: store.sceneEdges,
-    geometry: revisions.sceneGeometry,
-    style: revisions.sceneStyle
+    revisions
   })
 }
 
@@ -72,8 +79,8 @@ export function preparedNetworkCustomHits(store: NetworkPipelineStore) {
   if (!cached) return
   const revisions = store.getUpdateSnapshot().revisions
   if (
-    cached.geometry === revisions.sceneGeometry &&
-    cached.style === revisions.sceneStyle &&
+    cached.revisions.sceneGeometry === revisions.sceneGeometry &&
+    cached.revisions.sceneStyle === revisions.sceneStyle &&
     cached.nodes === store.sceneNodes &&
     cached.edges === store.sceneEdges
   )
