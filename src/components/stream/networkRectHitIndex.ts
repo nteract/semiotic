@@ -18,28 +18,24 @@ export function buildNetworkRectHitIndex(
   // Invalid or imprecise bounds retain the existing live hit-test fallback.
   if (
     !nodes.length ||
-    nodes.some(
-      (node) =>
-        node.type !== "rect" ||
-        ![
-          node.x,
-          node.y,
-          node.w,
-          node.h,
-          node.x + node.w,
-          node.y + node.h
-        ].every(
-          (value) =>
-            Number.isFinite(value) && Math.abs(value) <= Number.MAX_SAFE_INTEGER
-        )
+    !nodes.every(
+      (node): node is NetworkRectNode =>
+        node.type === "rect" &&
+        Math.max(
+          Math.abs(node.x),
+          Math.abs(node.y),
+          Math.abs(node.w),
+          Math.abs(node.h),
+          Math.abs(node.x + node.w),
+          Math.abs(node.y + node.h)
+        ) <= Number.MAX_SAFE_INTEGER
     )
   )
     return
-  const rects = nodes as NetworkRectNode[]
   return {
     nodes,
     root: buildNetworkHitTree(
-      rects.map((node, order) => ({
+      nodes.map((node, order) => ({
         x0: node.x,
         y0: node.y,
         x1: node.x + node.w,
@@ -48,7 +44,7 @@ export function buildNetworkRectHitIndex(
         order
       }))
     ),
-    paintOrder: rects.some((node) => !!node._hitPath)
+    paintOrder: nodes.some((node) => !!node._hitPath)
   }
 }
 

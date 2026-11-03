@@ -13,14 +13,14 @@
  *   node scripts/check-entry-graph-size.mjs --print
  */
 
-import { readFileSync, existsSync } from "node:fs"
+import { readFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
-import { constants as zlibConstants, gzipSync } from "node:zlib"
+import { measureEntryGraphs, compareEntryGraphs, formatEntryGraphDetails } from "./lib/entry-graph-analysis.mjs"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = resolve(__dirname, "..")
-const DIST = join(REPO_ROOT, "dist")
+const DIST = option("--dist") ?? join(REPO_ROOT, "dist")
 const printOnly = process.argv.includes("--print")
 
 /**
@@ -572,36 +572,12 @@ const ENTRY_GRAPHS = [
   { entry: "semiotic-value.module.min.js", label: "value", limitKb: 25 }
 ]
 
-function collectImports(filePath, seen = new Set()) {
-  const abs = resolve(filePath)
-  if (seen.has(abs) || !existsSync(abs)) return seen
-  seen.add(abs)
-  let src
-  try {
-    src = readFileSync(abs, "utf8")
-  } catch {
-    return seen
-  }
-  // ESM static imports: import … from "./chunk-….module.min.js"
-  const re = /from\s*["'](\.?\.?\/[^"']+\.js)["']/g
-  let m
-  while ((m = re.exec(src))) {
-    const rel = m[1]
-    const next = resolve(dirname(abs), rel)
-    collectImports(next, seen)
-  }
-  // Side-effect imports: import "./chunk-….js"
-  const re2 = /import\s*["'](\.?\.?\/[^"']+\.js)["']/g
-  while ((m = re2.exec(src))) {
-    const next = resolve(dirname(abs), m[1])
-    collectImports(next, seen)
-  }
-  return seen
-}
-
-function gzipSize(filePath) {
-  const buf = readFileSync(filePath)
-  return gzipSync(buf, { level: zlibConstants.Z_BEST_COMPRESSION }).length
+function option(name) {
+  const index = process.argv.indexOf(name)
+  if (index < 0) return
+  const value = process.argv[index + 1]
+  if (!value || value.startsWith("--")) throw new Error(`${name} requires a path`)
+  return resolve(value)
 }
 
 function formatKb(bytes) {
@@ -613,66 +589,49 @@ if (!existsSync(DIST)) {
   process.exit(1)
 }
 
-let failed = false
-const rows = []
-
-for (const { entry, label, limitKb } of ENTRY_GRAPHS) {
-  const entryPath = join(DIST, entry)
-  if (!existsSync(entryPath)) {
-    console.warn(`  skip ${label}: ${entry} not found`)
-    continue
-  }
-  const files = collectImports(entryPath)
-  let totalGzip = 0
-  let totalRaw = 0
-  for (const f of files) {
-    const raw = readFileSync(f).length
-    totalRaw += raw
-    totalGzip += gzipSize(f)
-  }
-  const limit = limitKb * 1024
-  const ok = totalGzip <= limit
-  if (!ok) failed = true
-  rows.push({
-    label,
-    entry,
-    files: files.size,
-    totalGzip,
-    totalRaw,
-    limit,
-    ok
-  })
-}
+const metadataPath = join(DIST, "bundle-inputs.json")
+const report = measureEntryGraphs(DIST, ENTRY_GRAPHS,
+  existsSync(metadataPath) ? JSON.parse(readFileSync(metadataPath, "utf8")) : {})
+const baseline = option("--compare")
+const comparison = baseline ? compareEntryGraphs(JSON.parse(readFileSync(baseline, "utf8")), report) : undefined
+const destination = option("--report") ?? join(DIST, "entry-graph-report.json")
+mkdirSync(dirname(destination), { recursive: true })
+// Save the complete evidence before the failure exit, including changes that
+// do not fit in the concise console report. These JSON files are not packaged.
+writeFileSync(destination, JSON.stringify({ ...report, ...(comparison ? { comparison } : {}) }, null, 2) + "\n")
 
 console.log("Chunk-aware entry graph sizes (entry + static ESM imports, gzip):")
 
-function printRows(rowsToPrint) {
-  for (const r of rowsToPrint) {
-    const mark = r.ok ? "✓" : "✗"
+function printRows(rows) {
+  for (const row of rows) {
+    const mark = row.gzipBytes <= row.limit ? "✓" : "✗"
     console.log(
-      `  ${mark} ${r.label.padEnd(10)} ${formatKb(r.totalGzip).padStart(10)} / ${formatKb(r.limit).padStart(10)}  (${r.files} files, raw ${formatKb(r.totalRaw)})`
+      `  ${mark} ${row.label.padEnd(10)} ${formatKb(row.gzipBytes).padStart(10)} / ${formatKb(row.limit).padStart(10)}  (${row.chunks.length} files, raw ${formatKb(row.rawBytes)})`
     )
   }
 }
 
-const passingRows = rows.filter((row) => row.ok)
-const failingRows = rows.filter((row) => !row.ok)
-
+const passing = report.entries.filter((row) => row.gzipBytes <= row.limit)
+const failing = report.entries.filter((row) => row.gzipBytes > row.limit)
 console.log("\nPassing entry graphs:")
-printRows(passingRows)
+printRows(passing)
 console.log("\nFailing entry graphs:")
-if (failingRows.length === 0) console.log("  none")
-else printRows(failingRows)
+if (!failing.length) console.log("  none")
+else printRows(failing)
+for (const { entry, label } of report.missing) console.error(`  ✗ ${label}: missing ${entry}`)
+const details = formatEntryGraphDetails(report, comparison,
+  (process.argv.includes("--details") ? report.entries : failing).map(({ label }) => label))
+if (details) console.log("\n" + details)
+console.log(`\nFull entry-graph report: ${destination}`)
 
 if (printOnly) process.exit(0)
-
-if (failed) {
+if (failing.length || report.missing.length) {
   console.error(
-    "\nOne or more entry graphs exceed their chunk-aware gzip budget.\n" +
+    "\nOne or more entry graphs are missing or exceed their chunk-aware gzip budget.\n" +
       "  Facades alone are ~2 KB; budgets measure the reachable shared-chunk graph.\n" +
+      "  Compare a saved report with --compare <report.json>.\n" +
       "  Raise limits only with a PR note, or split the heavy shared chunk."
   )
   process.exit(1)
 }
-
 console.log("\n✓ all entry graphs within chunk-aware budgets")

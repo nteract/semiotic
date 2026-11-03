@@ -423,7 +423,7 @@
     "size": "npm run check:bundle-budgets && node --test scripts/lib/minify-library-chunk.test.mjs scripts/lib/merge-library-imports.test.mjs scripts/lib/restore-module-initializers.test.mjs scripts/lib/shorten-chunk-exports.test.mjs scripts/lib/strip-pure-bare-imports.test.mjs scripts/lib/server-runtime-loaders.test.mjs scripts/network-zoom-bundle.test.mjs scripts/treeshake-isolation.test.mjs scripts/network-perspective-package.test.mjs",
     "check:network-zoom-bundle": "node --test scripts/network-zoom-bundle.test.mjs",
     "check:treeshake-isolation": "node --test scripts/treeshake-isolation.test.mjs",
-    "check:entry-graph-size": "node scripts/check-entry-graph-size.mjs",
+    "check:entry-graph-size": "node --test scripts/entry-graph-analysis.test.mjs && node scripts/check-entry-graph-size.mjs",
     "check:multi-import-size": "node scripts/check-multi-import-size.mjs",
     "check:bundle-budgets": "npm run check:entry-graph-size && npm run check:multi-import-size",
     "check:pack": "node scripts/smoke-pack.mjs",
