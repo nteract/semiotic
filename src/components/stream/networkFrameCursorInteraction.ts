@@ -3,7 +3,6 @@ import type { NetworkViewTransform } from "./networkViewportTypes"
 import type { CursorFrameGeometry } from "./frameCursorInteraction"
 import { resolveNetworkPointerHit } from "./networkFrameInteraction"
 import type { NetworkSceneEdge, NetworkSceneNode } from "./networkTypes"
-import type { RevisionSet } from "./pipelineUpdateContract"
 import {
   buildNetworkRectHitIndex,
   type NetworkRectHitIndex
@@ -40,7 +39,8 @@ const prepared = new WeakMap<
     hits: { edgeIndex?: NetworkEdgeHitIndex; rectIndex?: NetworkRectHitIndex }
     nodes: NetworkSceneNode[]
     edges: NetworkSceneEdge[]
-    revisions: RevisionSet
+    paint: number
+    version: number
   }
 >()
 
@@ -51,25 +51,25 @@ export function prepareNetworkCustomHits(store: NetworkPipelineStore): void {
     return
   }
   const previous = prepared.get(store)
-  const revisions = store.getUpdateSnapshot().revisions
+  const { sceneNodes: nodes, sceneEdges: edges, sceneVersion } = store
   prepared.set(store, {
     hits: {
       edgeIndex:
         result.edgeHitTesting === false
           ? undefined
-          : buildNetworkEdgeHitIndex(store.sceneEdges),
-      // Restyle callbacks patch Style without repositioning marks (the custom
-      // layout contract). Geometry commits/replaced arrays invalidate reuse;
-      // edge indexes still refresh stroke radii on a style-only change.
+          : buildNetworkEdgeHitIndex(edges),
+      // Scene commits also cover retained-array relayouts/resizes, which need
+      // no config/data invalidation. Restyles preserve committed geometry;
+      // edge indexes still refresh their stroke radii.
       rectIndex:
-        previous?.nodes === store.sceneNodes &&
-        previous.revisions.sceneGeometry === revisions.sceneGeometry
+        previous?.nodes === nodes && previous.version === sceneVersion
           ? previous.hits.rectIndex
-          : buildNetworkRectHitIndex(store.sceneNodes)
+          : buildNetworkRectHitIndex(nodes)
     },
-    nodes: store.sceneNodes,
-    edges: store.sceneEdges,
-    revisions
+    nodes,
+    edges,
+    paint: store.getUpdateSnapshot().revisions.dataPaint,
+    version: sceneVersion
   })
 }
 
@@ -77,10 +77,12 @@ export function prepareNetworkCustomHits(store: NetworkPipelineStore): void {
 export function preparedNetworkCustomHits(store: NetworkPipelineStore) {
   const cached = prepared.get(store)
   if (!cached) return
-  const revisions = store.getUpdateSnapshot().revisions
+  // Network geometry/style invalidations both advance dataPaint. Camera-only
+  // changes leave it unchanged, so pending edits fall back without rescanning
+  // or retaining an entire revision snapshot on each prepared scene.
   if (
-    cached.revisions.sceneGeometry === revisions.sceneGeometry &&
-    cached.revisions.sceneStyle === revisions.sceneStyle &&
+    cached.version === store.sceneVersion &&
+    cached.paint === store.getUpdateSnapshot().revisions.dataPaint &&
     cached.nodes === store.sceneNodes &&
     cached.edges === store.sceneEdges
   )

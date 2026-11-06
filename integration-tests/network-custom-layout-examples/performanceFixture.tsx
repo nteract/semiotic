@@ -2,10 +2,14 @@ import * as React from "react"
 import { ZoomableNetworkCustomChart } from "semiotic/network/zoom"
 import type { ZoomableNetworkCustomChartHandle } from "semiotic/network/zoom"
 import { axisFixedForceLayout, netEnsembleLayout, transitDiagramLayout } from "semiotic/recipes"
-import type { NetworkCustomLayout } from "semiotic/network"
+import { StreamNetworkFrame } from "semiotic/network"
+import type { NetworkCustomLayout, NetworkLayoutResult, StreamNetworkFrameHandle } from "semiotic/network"
 
 declare global {
-  interface Window { networkPerformanceHandle: ZoomableNetworkCustomChartHandle | null }
+  interface Window {
+    networkPerformanceHandle: ZoomableNetworkCustomChartHandle | null
+    networkRetainedHandle: StreamNetworkFrameHandle | null
+  }
 }
 const edges = [{ source: "a", target: "b", label: "A to B", data: { metadata: true }, line: "route" },
   { source: "b", target: "c", label: "B to C", data: { metadata: true }, line: "route" }]
@@ -31,4 +35,82 @@ export function PerformanceFixture() {
       tooltip={(datum) => <span>{String(datum.label ?? datum.id)}</span>}
       title={`${kind} layout`} accessibleTable={false} />
   </>
+}
+
+// The frame exposes relayout(), which the high-level chart handle does not.
+// Retain both the array and rectangle: replacing either would hide stale bounds.
+export function RetainedLayoutFixture() {
+  const [size, setSize] = React.useState<[number, number]>([600, 340])
+  const [clicked, setClicked] = React.useState("none")
+  const [scene] = React.useState(() => {
+    let moved = false
+    const node = {
+      type: "rect" as const,
+      x: 40,
+      y: 40,
+      w: 80,
+      h: 60,
+      id: "retained",
+      datum: { id: "retained", label: "Retained rectangle" },
+      style: { fill: "#358499", cursor: "pointer" }
+    }
+    const result: NetworkLayoutResult = {
+      sceneNodes: [node],
+      sceneEdges: [],
+      edgeHitTesting: false
+    }
+    const layout: NetworkCustomLayout = ({ dimensions }) => {
+      node.x = moved ? 220 : 40
+      node.y = moved ? 160 : 40
+      node.w = dimensions.width - 520
+      node.h = dimensions.height - 280
+      return result
+    }
+    return {
+      layout,
+      move: () => {
+        moved = true
+      }
+    }
+  })
+  const renderAs =
+    new URLSearchParams(location.search).get("renderer") === "svg"
+      ? "svg"
+      : "canvas"
+  return (
+    <>
+      <button
+        onClick={() => {
+          scene.move()
+          window.networkRetainedHandle!.relayout()
+        }}
+      >
+        Relayout retained rectangle
+      </button>
+      <button onClick={() => setSize([800, 440])}>
+        Resize push-mode chart
+      </button>
+      <button onClick={() => setClicked("none")}>Clear last click</button>
+      <output data-testid="retained-click">{clicked}</output>
+      <h2>Retained rectangle hits</h2>
+      <StreamNetworkFrame
+        ref={(handle) => {
+          window.networkRetainedHandle = handle
+        }}
+        chartType="force"
+        size={size}
+        margin={{ left: 0, right: 0, top: 0, bottom: 0 }}
+        initialEdges={edges}
+        customNetworkLayout={scene.layout}
+        renderAs={renderAs}
+        animate={false}
+        enableHover
+        description="Retained rectangles during relayout and resize"
+        tooltipContent={(hover) => <span>{String(hover.data?.label)}</span>}
+        customClickBehavior={(hover) =>
+          setClicked(String(hover?.data?.label ?? "none"))
+        }
+      />
+    </>
+  )
 }

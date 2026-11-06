@@ -1,5 +1,104 @@
 import { test, expect } from "@playwright/test"
 import type { NetworkViewportSnapshot } from "../src/components/stream/networkViewportTypes"
+import type {} from "./network-custom-layout-examples/performanceFixture"
+
+for (const renderer of ["canvas", "svg"]) {
+  test(`${renderer} retained rectangles stay interactive after ref.relayout and push-mode resize`, async ({
+    page
+  }) => {
+    await page.goto(
+      `/network-custom-layout-examples/?retained&renderer=${renderer}`
+    )
+    const frame = page.locator(".stream-network-frame")
+    const tooltip = frame.locator(".stream-network-tooltip")
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            window.networkRetainedHandle?.getCustomLayout()?.sceneNodes?.length
+        )
+      )
+      .toBe(1)
+    const original = await page.evaluateHandle(() => {
+      const nodes = window.networkRetainedHandle!.getCustomLayout()!.sceneNodes!
+      return { nodes, node: nodes[0] }
+    })
+    const hover = async (x: number, y: number) => {
+      await page.getByRole("button", { name: "Clear last click" }).click()
+      await expect(page.getByTestId("retained-click")).toHaveText("none")
+      const box = (await frame.boundingBox())!
+      if (renderer === "canvas") {
+        await expect
+          .poll(() =>
+            frame.locator("canvas").evaluate(
+              (canvas: HTMLCanvasElement, point) => {
+                const bounds = canvas.getBoundingClientRect()
+                const pixel = canvas
+                  .getContext("2d")!
+                  .getImageData(
+                    (point.x * canvas.width) / bounds.width,
+                    (point.y * canvas.height) / bounds.height,
+                    1,
+                    1
+                  ).data
+                return Array.from(pixel)
+              },
+              { x, y }
+            )
+          )
+          .toEqual([53, 132, 153, 255])
+      } else {
+        await expect
+          .poll(async () => {
+            const mark = await frame
+              .locator('svg rect[fill="#358499"]')
+              .boundingBox()
+            return (
+              !!mark &&
+              box.x + x > mark.x &&
+              box.x + x < mark.x + mark.width &&
+              box.y + y > mark.y &&
+              box.y + y < mark.y + mark.height
+            )
+          })
+          .toBe(true)
+      }
+      await page.mouse.move(box.x + x, box.y + y)
+      await expect(tooltip).toHaveText("Retained rectangle")
+      const tip = (await tooltip.boundingBox())!
+      expect(tip.x).toBeGreaterThanOrEqual(box.x)
+      expect(tip.y).toBeGreaterThanOrEqual(box.y)
+      expect(tip.x + tip.width).toBeLessThanOrEqual(box.x + box.width)
+      expect(tip.y + tip.height).toBeLessThanOrEqual(box.y + box.height)
+      await page.mouse.click(box.x + x, box.y + y)
+      await expect(page.getByTestId("retained-click")).toHaveText(
+        "Retained rectangle"
+      )
+    }
+    await hover(80, 70)
+    await page
+      .getByRole("button", { name: "Relayout retained rectangle" })
+      .click()
+    const box = (await frame.boundingBox())!
+    await page.mouse.move(box.x + 80, box.y + 70)
+    await expect(tooltip).toHaveCount(0)
+    await hover(260, 190)
+    await page.getByRole("button", { name: "Resize push-mode chart" }).click()
+    await expect(frame).toHaveCSS("width", "800px")
+    // This lies in the enlarged rectangle, outside its previous bounds.
+    await hover(480, 300)
+    expect(
+      await original.evaluate(({ nodes, node }) => {
+        const current =
+          window.networkRetainedHandle!.getCustomLayout()!.sceneNodes!
+        return current === nodes && current[0] === node
+      })
+    ).toBe(true)
+    await original.dispose()
+    await page.mouse.move(0, 0)
+    await expect(tooltip).toHaveCount(0)
+  })
+}
 
 test("node hover and click hand off to edges at twelve screen pixels through zoom, pan and resize", async ({ page }) => {
   const errors: string[] = []

@@ -49,6 +49,9 @@ describe("committed rectangle hit index", () => {
     store.buildScene([400, 300])
     prepareNetworkCustomHits(store)
     const initial = preparedNetworkCustomHits(store)!
+    // Configuration with no paint effect must not evict prepared geometry.
+    store.updateConfig({ seed: 42 })
+    expect(preparedNetworkCustomHits(store)).toBe(initial)
     prepareNetworkCustomHits(store)
     expect(preparedNetworkCustomHits(store)!.rectIndex).toBe(initial.rectIndex)
     expect(preparedNetworkCustomHits(store)!.edgeIndex).toBe(initial.edgeIndex)
@@ -102,78 +105,88 @@ describe("committed rectangle hit index", () => {
     expect(preparedNetworkCustomHits(store)!.edgeIndex).toBeDefined()
   })
 
-  it("rebuilds after committed in-place layout edits, reordering and record replacement", () => {
-    const nodes = [rect(0), rect(100)]
-    const store = new NetworkPipelineStore({
-      chartType: "force",
-      customNetworkLayout: () => ({
-        sceneNodes: nodes,
-        sceneEdges: [],
-        edgeHitTesting: false
+  it.each(["config", "relayout", "resize"])(
+    "rebuilds retained bounds after %s commits, including in-place edits and reordering",
+    (trigger) => {
+      const nodes = [rect(0), rect(100)]
+      const store = new NetworkPipelineStore({
+        chartType: "force",
+        customNetworkLayout: () => ({
+          sceneNodes: nodes,
+          sceneEdges: [],
+          edgeHitTesting: false
+        })
       })
-    })
-    store.buildScene([400, 300])
-    prepareNetworkCustomHits(store)
-    let revision = 0
-    for (const edit of [
-      () => {
-        nodes[0].x += 40
-      },
-      () => {
-        nodes[0].y += 30
-      },
-      () => {
-        nodes[0].w += 200
-      },
-      () => {
-        nodes[0].h += 100
-      },
-      () => {
-        nodes.reverse()
-      },
-      () => {
-        nodes[0] = { ...nodes[0], datum: { id: "replacement" } }
-      },
-      () => {
-        nodes.push(rect(500))
-      },
-      () => {
-        nodes.pop()
-      }
-    ]) {
-      const before = preparedNetworkCustomHits(store)!.rectIndex
-      edit()
-      store.updateConfig({ layoutConfig: { revision: ++revision } })
       store.buildScene([400, 300])
-      expect(preparedNetworkCustomHits(store)).toBeUndefined()
       prepareNetworkCustomHits(store)
-      const index = preparedNetworkCustomHits(store)!.rectIndex
-      expect(index).not.toBe(before)
-      for (const [x, y] of [
-        [10, 10],
-        [50, 40],
-        [110, 10],
-        [150, 100],
-        [510, 10]
+      let revision = 0
+      for (const edit of [
+        () => {
+          nodes[0].x += 40
+        },
+        () => {
+          nodes[0].y += 30
+        },
+        () => {
+          nodes[0].w += 200
+        },
+        () => {
+          nodes[0].h += 100
+        },
+        () => {
+          nodes.reverse()
+        },
+        () => {
+          nodes[0] = { ...nodes[0], datum: { id: "replacement" } }
+        },
+        () => {
+          nodes.push(rect(500))
+        },
+        () => {
+          nodes.pop()
+        }
       ]) {
-        expect(
-          findNearestNetworkNode(
-            nodes,
-            [],
-            x,
-            y,
-            12,
-            null,
-            0,
-            true,
-            1,
-            undefined,
-            index
-          )
-        ).toEqual(findNearestNetworkNode(nodes, [], x, y))
+        const before = preparedNetworkCustomHits(store)!.rectIndex
+        edit()
+        revision++
+        const size: [number, number] =
+          trigger === "resize"
+            ? [400 + revision * 20, 300 + revision * 10]
+            : [400, 300]
+        if (trigger === "config")
+          store.updateConfig({ layoutConfig: { revision } })
+        if (trigger === "relayout") store.runLayout(size)
+        store.buildScene(size)
+        expect(preparedNetworkCustomHits(store)).toBeUndefined()
+        prepareNetworkCustomHits(store)
+        const index = preparedNetworkCustomHits(store)!.rectIndex
+        expect(index).not.toBe(before)
+        for (const [x, y] of [
+          [10, 10],
+          [50, 40],
+          [110, 10],
+          [150, 100],
+          [510, 10]
+        ]) {
+          expect(
+            findNearestNetworkNode(
+              nodes,
+              [],
+              x,
+              y,
+              12,
+              null,
+              0,
+              true,
+              1,
+              undefined,
+              index
+            )
+          ).toEqual(findNearestNetworkNode(nodes, [], x, y))
+        }
       }
     }
-  })
+  )
 
   it("matches the linear hit test across shuffled, overlapping and coincident rectangles", () => {
     const nodes = Array.from({ length: 3000 }, (_, i) =>
@@ -382,5 +395,8 @@ describe("committed rectangle hit index", () => {
     ).toEqual(store.sceneNodes)
     store.updateConfig({ layoutConfig: { revision: 2 } })
     expect(preparedNetworkCustomHits(store)?.rectIndex).toBeUndefined()
+    prepareNetworkCustomHits(store)
+    store.updateConfig({ nodeStyle: () => ({ fill: "blue" }) })
+    expect(preparedNetworkCustomHits(store)).toBeUndefined()
   })
 })
