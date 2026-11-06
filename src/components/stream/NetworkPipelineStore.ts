@@ -150,8 +150,10 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
   // so a quadtree built from them is exactly as fresh as a linear scan.
   private _nodeQuadtree: Quadtree<NetworkCircleNode> | null = null
   private _maxNodeRadius = 0
-  /** Bumped whenever sceneNodes is rebuilt; keys the quadtree cache. */
-  private _sceneNodesRevision = 0
+  /** Committed geometry revision shared by node hit indexes. Unlike pending
+   *  config/data invalidations, this advances on relayout, resize and projection
+   *  commits even when a layout retains its arrays. Restyles leave it unchanged. */
+  sceneVersion = 0
   private _nodeQuadtreeRevision = -1
 
   // ── Materialized array cache ────────────────────────────────────────────
@@ -854,7 +856,7 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
           // Reuse layout geometry for tween ticks (including the last) and
           // repaints after the projection engine or extras finish loading.
           this.commitCustomScene(this._rawCustomResult, size)
-          this._sceneNodesRevision++
+          this.sceneVersion++
           if (this.hasCustomRestyle) {
             this._baseStyles = snapshotNetworkCustomStyles(this.sceneNodes, this.sceneEdges)
             this.restyleScene(this.config.layoutSelection ?? null)
@@ -885,7 +887,7 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
           this._customRestyleEdge = undefined
           this.hasCustomRestyle = false
           this._baseStyles = new WeakMap()
-          this._sceneNodesRevision++
+          this.sceneVersion++
         }
         return
       }
@@ -897,7 +899,7 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
       this.lastCustomLayoutFailure = null
       // Any successful sceneNodes rebuild invalidates the lazily-built node
       // quadtree. A recovered failure preserves the current quadtree.
-      this._sceneNodesRevision++
+      this.sceneVersion++
       // Stash per-frame restyle callbacks. Their presence opts the chart into
       // the cheap selection path: snapshot each mark's emitted (base) style, then
       // apply the restyle once for the current selection. `restyleScene()` later
@@ -933,7 +935,7 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
     const plugin = getLayoutPlugin(this.config.chartType)
     if (!plugin) {
       warnIfLayoutPluginMissing(this.config.chartType)
-      this._sceneNodesRevision++
+      this.sceneVersion++
       return
     }
 
@@ -959,7 +961,7 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
     this.sceneNodes = projected?.sceneNodes ?? built.sceneNodes
     this.sceneEdges = projected?.sceneEdges ?? built.sceneEdges
     this.labels = projected?.labels ?? built.labels
-    this._sceneNodesRevision++
+    this.sceneVersion++
   }
 
   /** Assign one custom-layout result, projected when a perspective is active. */
@@ -1037,9 +1039,9 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
    * settled graph indexes once and animation frames without a hover pay nothing.
    */
   get nodeQuadtree(): Quadtree<NetworkCircleNode> | null {
-    if (this._nodeQuadtreeRevision !== this._sceneNodesRevision) {
+    if (this._nodeQuadtreeRevision !== this.sceneVersion) {
       this.rebuildNodeQuadtree()
-      this._nodeQuadtreeRevision = this._sceneNodesRevision
+      this._nodeQuadtreeRevision = this.sceneVersion
     }
     return this._nodeQuadtree
   }
@@ -1556,7 +1558,7 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
     this._nodeQuadtree = null
     this._nodesArrCache = null
     this._edgesArrCache = null
-    this._sceneNodesRevision++
+    this.sceneVersion++
     this.tension = 0
     // Monotonic — never reset to 0. A reset could collide with a consumer's
     // last-seen value and skip a render after clear()+reload.

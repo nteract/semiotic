@@ -101,9 +101,9 @@ describe("NetworkPipelineStore — custom-layout restyle pass", () => {
 
   it("restyleScene re-applies styles WITHOUT bumping the scene revision (quadtree stays)", () => {
     const store = buildRestyleStore()
-    const revBefore = (store as unknown as { _sceneNodesRevision: number })._sceneNodesRevision
+    const revBefore = store.sceneVersion
     store.restyleScene({ isActive: true, predicate: (d: Datum) => d.id === "a" })
-    const revAfter = (store as unknown as { _sceneNodesRevision: number })._sceneNodesRevision
+    const revAfter = store.sceneVersion
     expect(revAfter).toBe(revBefore) // positions unchanged → no rebuild
     const byId = new Map(store.sceneNodes.map((n) => [n.id, n]))
     expect(byId.get("a")!.style.opacity).toBe(1)
@@ -141,9 +141,9 @@ describe("NetworkPipelineStore — custom-layout restyle pass", () => {
 
   it("setLayoutSelection updates what the next buildScene reads, without rebuilding", () => {
     const store = buildRestyleStore()
-    const rev = (store as unknown as { _sceneNodesRevision: number })._sceneNodesRevision
+    const rev = store.sceneVersion
     store.setLayoutSelection({ isActive: true, predicate: (d: Datum) => d.id === "a" })
-    expect((store as unknown as { _sceneNodesRevision: number })._sceneNodesRevision).toBe(rev)
+    expect(store.sceneVersion).toBe(rev)
     expect((store as unknown as { config: NetworkPipelineConfig }).config.layoutSelection?.isActive).toBe(true)
   })
 })
