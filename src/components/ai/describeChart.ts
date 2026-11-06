@@ -14,7 +14,9 @@ import {
   roles,
   seriesField,
   article,
+  descriptionNumberFormatter,
   computeStats,
+  resolveChartDimension,
   type MeasureStats
 } from "./chartRoles"
 import { filterAnnotationsByStatus } from "./annotationProvenance"
@@ -482,23 +484,14 @@ export function hasGeneratedAlertAnnotation(props: Datum): boolean {
 /** Build a number formatter — compact (6.5M) for large magnitudes, plain
  *  otherwise. Exported so the navigation tree formats values identically. */
 export function chartValueFormatter(locale = "en"): (n: number) => string {
-  let compact: Intl.NumberFormat, plain: Intl.NumberFormat
-  try {
-    compact = new Intl.NumberFormat(locale, {
-      notation: "compact",
-      maximumFractionDigits: 1
-    })
-    plain = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 })
-  } catch {
-    compact = new Intl.NumberFormat("en", {
-      notation: "compact",
-      maximumFractionDigits: 1
-    })
-    plain = new Intl.NumberFormat("en", { maximumFractionDigits: 2 })
-  }
+  const compact = descriptionNumberFormatter(locale, {
+    notation: "compact",
+    maximumFractionDigits: 1
+  })
+  const plain = descriptionNumberFormatter(locale)
   return (n: number): string => {
     if (!Number.isFinite(n)) return String(n)
-    return Math.abs(n) >= 10000 ? compact.format(n) : plain.format(n)
+    return Math.abs(n) >= 10000 ? compact(n) : plain(n)
   }
 }
 
@@ -598,16 +591,12 @@ function annotationSentence(props: Datum): string | undefined {
   const raw = Array.isArray(props.annotations)
     ? (props.annotations as Datum[])
     : null
-  if (!raw || raw.length === 0) return undefined
-  const items = filterAnnotationsByStatus(
-    raw.filter((a): a is Datum => !!a && typeof a === "object")
-  )
+  if (!raw) return undefined
+  const items = filterAnnotationsByStatus(raw)
   if (items.length === 0) return undefined
 
-  const phrases = items.map(annotationPhrase)
-
-  const shown = phrases.slice(0, 5)
-  const more = phrases.length - shown.length
+  const shown = items.slice(0, 5).map(annotationPhrase)
+  const more = items.length - shown.length
   const list = joinList(shown) + (more > 0 ? `, and ${more} more` : "")
   const n = items.length
   return `The author has marked ${n === 1 ? "one feature" : `${n} features`} on this chart: ${list}.`
@@ -748,15 +737,21 @@ export function describeChart(
     data.length > 0
   ) {
     const getMeasure = aiNumericAccessor(measure, measureFallback)
-    const getDim = resolveRawAccessor(dimension, dimensionFallback)
-    stats = computeStats(data, getMeasure, getDim, fmtNum, {
+    const dim = resolveChartDimension(
+      component,
+      data,
+      resolveRawAccessor(dimension, dimensionFallback),
+      props.xScaleType
+    )
+    stats = computeStats(data, getMeasure, dim.read, fmtNum, {
       aggregate:
         component === "BarChart" ||
         component === "StackedBarChart" ||
         PART_TO_WHOLE.has(component),
       absolute: component === "PieChart" || component === "DonutChart",
-      ordered: XY_FAMILY.has(component) && !SCATTER.has(component) && !series,
-      temporal: props.xScaleType === "time" || props.xScaleType === "utc",
+      continuous: dim.continuous,
+      ordered: dim.continuous && !SCATTER.has(component) && !series,
+      temporal: dim.temporal,
       reverse:
         Array.isArray(props.xExtent) &&
         coerceUtcTimeValue(props.xExtent[0]) >
@@ -892,26 +887,24 @@ function trendSentence(
   // Relative-flatness guard: if the whole series barely moves compared to its
   // own magnitude, call it flat before looking for a "peak" in the noise
   // (otherwise a 100→101→100 wiggle reads as a dramatic peak).
-  if (
+  const relativelyFlat =
     netDirection(stats) === "holds roughly steady" &&
     range / (Math.abs(stats.mean) || 1) < 0.04
-  ) {
-    return `${capitalize(measureName)} ends roughly where it started (${fmtNum(first)} at ${firstLabel} to ${fmtNum(last)} at ${lastLabel}), ranging between ${fmtNum(min)} and ${fmtNum(max)}.`
-  }
-  // Prominence of an interior extremum above/below both endpoints, as a share of range.
-  const peakProminence = (max - Math.max(first, last)) / range
-  const valleyProminence = (Math.min(first, last) - min) / range
 
-  // Peak shape: climbs to an interior high, then comes down.
-  if (peakProminence > 0.15) {
-    return `Overall ${measureName} climbs to a peak of ${fmtNum(max)} (${maxLabel}), then falls to ${fmtNum(last)} (${lastLabel}).`
-  }
-  // Valley shape: drops to an interior low, then recovers.
-  if (valleyProminence > 0.15) {
-    return `Overall ${measureName} drops to a low of ${fmtNum(min)} (${minLabel}), then recovers to ${fmtNum(last)} (${lastLabel}).`
+  if (!relativelyFlat) {
+    // Prominence of an interior extremum above/below both endpoints, as a share of range.
+    const peakProminence = (max - Math.max(first, last)) / range
+    const valleyProminence = (Math.min(first, last) - min) / range
+
+    if (peakProminence > 0.15) {
+      return `Overall ${measureName} climbs to a peak of ${fmtNum(max)} (${maxLabel}), then falls to ${fmtNum(last)} (${lastLabel}).`
+    }
+    if (valleyProminence > 0.15) {
+      return `Overall ${measureName} drops to a low of ${fmtNum(min)} (${minLabel}), then recovers to ${fmtNum(last)} (${lastLabel}).`
+    }
   }
   // Roughly flat net movement.
-  if (Math.abs(delta) / range < 0.05) {
+  if (relativelyFlat || Math.abs(delta) / range < 0.05) {
     return `${capitalize(measureName)} ends roughly where it started (${fmtNum(first)} at ${firstLabel} to ${fmtNum(last)} at ${lastLabel}), ranging between ${fmtNum(min)} and ${fmtNum(max)}.`
   }
   // Monotonic-ish net direction.
@@ -1106,7 +1099,8 @@ function capitalize(s: string): string {
 
 /** Pluralize a count noun for user-facing text ("1 edge", "2 edges"). */
 function plural(n: number, noun: string): string {
-  if (n !== 1 && noun === "body") return "bodies"
-  if (n !== 1 && noun === "category") return "categories"
-  return n === 1 ? noun : `${noun}s`
+  if (n === 1) return noun
+  if (noun === "body") return "bodies"
+  if (noun === "category") return "categories"
+  return `${noun}s`
 }

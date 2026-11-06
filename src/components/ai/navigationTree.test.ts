@@ -129,6 +129,24 @@ describe("buildNavigationTree — part-to-whole & caps & degradation", () => {
 })
 
 describe("buildNavigationTree — network, hierarchy, and geo families", () => {
+  it("infers nodes in endpoint order while counting repeated endpoints and self-links", () => {
+    const tree = buildNavigationTree("SankeyDiagram", {
+      edges: [
+        { source: "b", target: "a", value: 2 },
+        { source: "a", target: "a", value: 3 },
+        { source: "a", target: "c", value: 4 }
+      ]
+    })
+    expect(tree.children?.[0].children?.map(node => node.label)).toEqual([
+      "b: 1 link, 2 total flow.",
+      "a: 4 links, 12 total flow.",
+      "c: 1 link, 4 total flow."
+    ])
+    expect(tree.children?.[0].children?.map(node => node.datum)).toEqual([
+      { id: "b" }, { id: "a" }, { id: "c" }
+    ])
+  })
+
   it("groups network nodes and exposes links as traversable leaves", () => {
     const tree = buildNavigationTree("SankeyDiagram", {
       nodes: [

@@ -2,7 +2,7 @@ import type { Datum } from "../charts/shared/datumTypes"
 import type { AudienceProfile } from "./audienceProfile"
 import { aiNumericValue } from "./aiData"
 import { stringValue } from "./navigationValues"
-import { article, computeStats } from "./chartRoles"
+import { article, computeStats, descriptionNumberFormatter } from "./chartRoles"
 import type { ChartRecipe } from "./chartRecipes"
 import type { DescribeChartResult, DescribeLevel } from "./describeChart"
 import {
@@ -22,26 +22,6 @@ export interface DescribeRecipeChartOptions {
 
 function capitalize(value: string): string {
   return value ? value.charAt(0).toUpperCase() + value.slice(1) : value
-}
-
-function formatters(locale: string) {
-  try {
-    return {
-      number: new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }),
-      percent: new Intl.NumberFormat(locale, {
-        style: "percent",
-        maximumFractionDigits: 1
-      })
-    }
-  } catch {
-    return {
-      number: new Intl.NumberFormat("en", { maximumFractionDigits: 2 }),
-      percent: new Intl.NumberFormat("en", {
-        style: "percent",
-        maximumFractionDigits: 1
-      })
-    }
-  }
 }
 
 function generatedLevels(
@@ -68,14 +48,18 @@ function generatedLevels(
         .join("; ")
     : `${categoryLabel} and ${valueLabel} are mapped through the recipe's declared visual semantics`
 
-  const { number, percent } = formatters(locale)
+  const number = descriptionNumberFormatter(locale)
+  const percent = descriptionNumberFormatter(locale, {
+    style: "percent",
+    maximumFractionDigits: 1
+  })
   const stats =
     categoryField && valueField
       ? computeStats(
           data,
           (datum) => aiNumericValue(datum[valueField]),
           (datum) => stringValue(datum[categoryField], "Uncategorized"),
-          number.format,
+          number,
           { aggregate: true }
         )
       : null
@@ -98,10 +82,10 @@ function generatedLevels(
   return {
     l1: `${article(recipe.name)} ${recipe.name.toLowerCase()} encodes ${categoryLabel} and ${valueLabel}. ${capitalize(encodingText)}.`,
     l2: stats
-      ? `${count} ${count === 1 ? "category totals" : "categories total"} ${number.format(total)}. ` +
+      ? `${count} ${count === 1 ? "category totals" : "categories total"} ${number(total)}. ` +
         (stats.max === 0 && stats.min === 0
           ? "All categories are zero."
-          : `${stats.maxLabels} ${stats.maxCount > 1 ? "tie at" : "accounts for"} ${number.format(stats.max)}${shares ? ` (${percent.format(stats.max / total)}${stats.maxCount > 1 ? " each" : ""})` : ""}${second && stats.maxCount === 1 ? `, followed by ${second.label} at ${number.format(second.value)}` : ""}.`) +
+          : `${stats.maxLabels} ${stats.maxCount > 1 ? "tie at" : "accounts for"} ${number(stats.max)}${shares ? ` (${percent(stats.max / total)}${stats.maxCount > 1 ? " each" : ""})` : ""}${second && stats.maxCount === 1 ? `, followed by ${second.label} at ${number(second.value)}` : ""}.`) +
         (stats.negative
           ? " Negative values are present; shares are undefined."
           : "")
@@ -110,9 +94,9 @@ function generatedLevels(
       ? "Negative values prevent a part-to-whole concentration claim."
       : stats && second && shares
         ? stats.maxCount > 1
-          ? `${stats.maxLabels} tie for the largest share at ${percent.format(stats.max / total)} each.`
+          ? `${stats.maxLabels} tie for the largest share at ${percent(stats.max / total)} each.`
           : topTwoShare > 0.5
-            ? `Most of the total is concentrated in ${stats.maxLabel} and ${second.label}, which together account for ${percent.format(topTwoShare)}.`
+            ? `Most of the total is concentrated in ${stats.maxLabel} and ${second.label}, which together account for ${percent(topTwoShare)}.`
             : `The total is distributed across ${count} categories without the first two forming a majority.`
         : stats && count === 1
           ? `${stats.maxLabel} is the only represented category.`

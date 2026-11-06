@@ -1,6 +1,9 @@
 import type { Datum } from "../charts/shared/datumTypes"
-import { aiScalarLabel } from "./aiData"
-import { coerceUtcTimeValue } from "../charts/shared/temporalStrings"
+import { aiNumericValue, aiScalarLabel } from "./aiData"
+import {
+  parseDateLikeString,
+  coerceUtcTimeValue
+} from "../charts/shared/temporalStrings"
 
 /**
  * Shared chart-family classification + measure/dimension role resolution.
@@ -52,6 +55,18 @@ export function article(noun: string): string {
   return /^[aeiou]/i.test(noun) ? "An" : "A"
 }
 
+/** Built-in and recipe descriptions use the same fallback for invalid locales. */
+export function descriptionNumberFormatter(
+  locale: string,
+  options: Intl.NumberFormatOptions = { maximumFractionDigits: 2 }
+): (value: number) => string {
+  try {
+    return new Intl.NumberFormat(locale, options).format
+  } catch {
+    return new Intl.NumberFormat("en", options).format
+  }
+}
+
 /** The measure (quantitative) and dimension (categorical/ordered) accessors, by family. */
 export function roles(component: string, props: Datum): ChartRoles {
   const funnel = component === "FunnelChart"
@@ -97,6 +112,51 @@ export function seriesField(
     if ((typeof v === "string" && v) || typeof v === "function") return v
   }
   return undefined
+}
+
+/** PipelineStore selects its x parser from the first usable observation.
+ * Keep the description API's authored categorical order when no continuous
+ * values or explicit scale are supplied (for example, Jan/Feb/Mar labels).
+ */
+export function resolveChartDimension(
+  component: string,
+  data: Datum[],
+  read: (d: Datum) => unknown,
+  scaleType?: unknown
+) {
+  let type: "number" | "time" | undefined
+  let categorical = false
+  if (XY_FAMILY.has(component)) {
+    for (const row of data) {
+      const value = read(row)
+      if (value == null || value === "") continue
+      if (
+        (value instanceof Date || typeof value === "string") &&
+        Number.isFinite(dimensionNumber(value, true))
+      )
+        type = "time"
+      else if (Number.isFinite(dimensionNumber(value))) type = "number"
+      if (type) break
+      if (typeof value === "string") categorical = true
+    }
+    if (!type && (!categorical || scaleType)) type = "number"
+  }
+  return {
+    read: type
+      ? (row: Datum) => dimensionNumber(read(row), type === "time")
+      : read,
+    continuous: !!type,
+    temporal: type === "time" || scaleType === "time" || scaleType === "utc"
+  }
+}
+
+/** Renderer coercion for supported scalar values, without invoking user objects. */
+function dimensionNumber(value: unknown, temporal = false): number {
+  if (typeof value === "string")
+    return temporal ? parseDateLikeString(value) : Number(value)
+  return value === null || typeof value === "boolean"
+    ? Number(value)
+    : aiNumericValue(value)
 }
 
 /** Keep intraday instants distinguishable and their timezone explicit. */
@@ -149,6 +209,7 @@ export function computeStats(
     ordered?: boolean
     reverse?: boolean
     temporal?: boolean
+    continuous?: boolean
     group?: (d: Datum) => unknown
   }
 ): MeasureStats | null {
@@ -167,31 +228,22 @@ export function computeStats(
   let first: Sample | undefined,
     last: Sample | undefined,
     second: Sample | undefined
-  let orderedFirst: Sample | undefined, orderedLast: Sample | undefined
   let firstOrder = Infinity,
-    lastOrder = -Infinity,
-    continuous = true
+    lastOrder = -Infinity
   const lows: Sample[] = [],
     highs: Sample[] = []
 
   // Trajectory prose needs endpoints and extrema, not a sorted copy of every
   // row. Match projected x order in one pass; categorical x keeps authored order.
-  const accumulate = (sample: Sample) => {
+  const accumulate = (sample: Sample, order = count) => {
     const m = sample.value
-    if (!first) first = sample
-    last = sample
-    if (options.ordered) {
-      const order =
-        coerceUtcTimeValue(sample.dimension) * (options.reverse ? -1 : 1)
-      if (!Number.isFinite(order)) continuous = false
-      if (order < firstOrder) {
-        firstOrder = order
-        orderedFirst = sample
-      }
-      if (order >= lastOrder) {
-        lastOrder = order
-        orderedLast = sample
-      }
+    if (order < firstOrder) {
+      firstOrder = order
+      first = sample
+    }
+    if (order >= lastOrder) {
+      lastOrder = order
+      last = sample
     }
     if (m < min) {
       min = m
@@ -217,13 +269,16 @@ export function computeStats(
   }
   for (const d of data) {
     const raw = getMeasure(d)
-    if (!Number.isFinite(raw)) {
+    const dimension = getDim(d)
+    if (
+      !Number.isFinite(raw) ||
+      (options.continuous && !Number.isFinite(dimension))
+    ) {
       missing++
       continue
     }
     if (raw < 0) negative++
     const value = options.absolute ? Math.abs(raw) : raw,
-      dimension = getDim(d),
       group = options.group?.(d)
     if (categories) {
       const category = aiScalarLabel(dimension) ?? "—",
@@ -236,7 +291,13 @@ export function computeStats(
       const previous = groups.get(key)
       if (previous) previous.value += value
       else groups.set(key, { value, dimension, group })
-    } else accumulate({ value, dimension, group })
+    } else
+      accumulate(
+        { value, dimension, group },
+        options.ordered
+          ? (dimension as number) * (options.reverse ? -1 : 1)
+          : count
+      )
   }
   if (categories) {
     for (const groups of categories.values()) {
@@ -244,10 +305,6 @@ export function computeStats(
     }
   }
   if (!first || !last) return null
-  if (continuous && orderedFirst && orderedLast) {
-    first = orderedFirst
-    last = orderedLast
-  }
   const label = (sample: Sample) =>
     fmtDim(sample.dimension, fmtNum, options.temporal) +
     (options.group ? ` / ${fmtDim(sample.group, fmtNum)}` : "")

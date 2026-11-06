@@ -35,7 +35,14 @@ describe("public AI malformed dimension labels", () => {
     expect(repairChartConfig("Scatterplot", data).profile.rowCount).toBe(3)
     const props = { data, xAccessor: "x", yAccessor: "y" }
     expect(describeChart("LineChart", props).text).not.toContain("Invalid Date")
-    expect(buildNavigationTree("LineChart", props).label).toContain("3")
+    const tree = buildNavigationTree("LineChart", props)
+    expect(tree.label).toContain("mean of 1.5 across 2 points")
+    expect(tree.label).toContain("1 missing or non-finite value omitted")
+    expect(
+      tree.children
+        ?.filter((node) => node.role === "datum")
+        .map((node) => node.datum)
+    ).toEqual(data.slice(0, 2))
     expect(
       buildReaderGrounding("LineChart", props).description.text
     ).not.toContain("Invalid Date")

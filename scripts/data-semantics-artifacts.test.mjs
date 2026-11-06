@@ -54,13 +54,28 @@ function verify(runtime) {
 }
 
 function verifyDescription(runtime) {
-  const timeline = {
-    xScaleType: "time",
-    data: [3, 1, 2].map(hour => ({ x: `2026-01-01T0${hour}:00:00`, y: hour }))
+  for (const zone of ["", "Z"]) {
+    for (const xScaleType of [undefined, "time"]) {
+      const instant = hour => `2026-01-01T0${hour}:00:00${zone}`
+      const timeline = {
+        xScaleType,
+        data: [3, 1, 2].map(hour => ({ x: instant(hour), y: hour }))
+          .concat({ x: "invalid", y: -100 })
+      }
+      // PipelineStore uses host-local parsing for zoneless datetimes, and UTC
+      // for explicit Z. Descriptions and navigation must name that same instant.
+      const first = new Date(instant(1)).toISOString()
+      const last = new Date(instant(3)).toISOString()
+      const result = runtime.buildReaderGrounding("LineChart", timeline)
+      assert.equal(result.description.levels.l3,
+        `Overall y rises from 1 (${first}) to a peak of 3 (${last}).`)
+      assert.equal(result.structure.children[0].label, `X axis: x, ${first} to ${last}.`)
+      assert.deepEqual(result.structure.children.filter(node => node.role === "datum").map(node => node.label),
+        [3, 1, 2].map(hour => `${new Date(instant(hour)).toISOString()}: ${hour}`))
+      assert.match(result.description.levels.l2, /mean of 2 across 3 points/)
+      assert.match(result.description.levels.l2, /1 missing or non-finite/)
+    }
   }
-  const description = runtime.describeChart("LineChart", timeline)
-  assert.match(description.levels.l3, /rises from 1 \(2026-01-01T01:00:00.000Z\)/)
-  assert.match(description.levels.l3, /3 \(2026-01-01T03:00:00.000Z\)/)
   const grounding = runtime.buildReaderGrounding("PieChart", {
     data: [{ category: "A", value: 100 }, { category: "B", value: -60 }, { category: "C", value: 10 }]
   })

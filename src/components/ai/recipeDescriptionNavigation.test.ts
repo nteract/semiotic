@@ -67,6 +67,12 @@ const props = {
 }
 
 describe("recipe-aware description", () => {
+  it("retains numeric totals and percentage shares when the locale is invalid", () => {
+    const result = describeChart("XYCustomChart", props, { locale: "invalid_locale" })
+    expect(result).toEqual(describeChart("XYCustomChart", props, { locale: "en" }))
+    expect(result.levels.l2).toContain("A accounts for 42 (42%)")
+  })
+
   it("uses the correct article for a recipe name", () => {
     const result = describeChart("XYCustomChart", { ...props, recipe: { ...recipe, name: "Arc matrix" } })
     expect(result.levels.l1).toMatch(/^An arc matrix encodes/)

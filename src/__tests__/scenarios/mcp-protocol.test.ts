@@ -96,13 +96,15 @@ describe("MCP protocol round-trip", () => {
       name: "groundChart",
       arguments: {
         component: "LineChart",
-        props: { data: [{ x: 3, y: 30 }, { x: 1, y: 10 }, { x: 2, y: 20 }] }
+        props: { data: [{ x: 3, y: 30 }, { x: 1, y: 10 }, { x: 2, y: 20 }, { x: "invalid", y: -100 }] }
       }
     })
     expect(result.result.isError).not.toBe(true)
     const grounding = result.result.structuredContent
     expect(grounding.description.levels.l3).toContain("rises from 10 (1) to a peak of 30 (3)")
     expect(grounding.intent.sentence).toContain("rises from 10 (1) to 30 (3)")
+    expect(grounding.description.levels.l2).toContain("mean of 20 across 3 points")
+    expect(grounding.structure.children[0].label).toBe("X axis: x, 1 to 3.")
     expect(result.result.content[0].text).toContain(grounding.description.levels.l3)
   })
 

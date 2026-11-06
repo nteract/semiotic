@@ -3,8 +3,181 @@ import { describeChart } from "./describeChart"
 import { buildReaderGrounding } from "./readerGrounding"
 import { buildNavigationTree } from "./navigationTree"
 import { OrdinalPipelineStore } from "../stream/OrdinalPipelineStore"
+import "../../test-utils/registerBuiltInXYPlugins"
+import { PipelineStore } from "../stream/PipelineStore"
 
 describe("descriptions follow rendered data semantics", () => {
+  it("retains plain and compact number formatting when the locale is invalid", () => {
+    const props = {
+      data: [
+        { x: 1, y: 12.345 },
+        { x: 2, y: 20000 }
+      ]
+    }
+    const result = describeChart("LineChart", props, {
+      locale: "invalid_locale"
+    })
+    expect(result).toEqual(describeChart("LineChart", props, { locale: "en" }))
+    expect(result.levels.l2).toContain("from 12.35 (1) to 20K (2)")
+  })
+
+  it.each(["LineChart", "AreaChart", "MinimapChart", "Scatterplot"])(
+    "%s excludes invalid continuous x values before computing statistics",
+    (component) => {
+      const data = [
+        { x: 3, y: 30 },
+        { x: 1, y: 10 },
+        { x: 2, y: 20 },
+        { x: NaN, y: -100 }
+      ]
+      const result = buildReaderGrounding(component, { data })
+      expect(result.description.levels.l2).toContain("from 10 (1) to 30 (3)")
+      expect(result.description.levels.l2).toContain(
+        "mean of 20 across 3 points"
+      )
+      expect(result.description.levels.l2).toContain("1 missing or non-finite")
+      if (component !== "Scatterplot") {
+        expect(result.description.levels.l3).toContain(
+          "rises from 10 (1) to a peak of 30 (3)"
+        )
+        expect(result.intent?.sentence).toContain("rises from 10 (1) to 30 (3)")
+      }
+      expect(
+        result.structure?.children?.filter((node) => node.role === "datum")
+      ).toHaveLength(3)
+      expect(result.structure?.children?.[0].label).toBe("X axis: x, 1 to 3.")
+      expect(result.text).not.toContain("-100")
+    }
+  )
+
+  it.each([
+    { x: [3, 1, 2, NaN], indices: [1, 2, 0], axis: "1 to 3" },
+    { x: [NaN, "3", "2026-01-01", 1, 2], indices: [3, 4, 1], axis: "1 to 3" },
+    {
+      x: ["bad", "2026-01-03", "3", "2026-01-01", "2026-01-02"],
+      indices: [3, 4, 1],
+      axis: "2026-01-01 to 2026-01-03"
+    },
+    {
+      x: [undefined, null, "", 3, 1, 2],
+      indices: [1, 2, 4, 5, 3],
+      axis: "0 to 3"
+    }
+  ])("matches rendered rows and x bounds for $x", ({ x, indices, axis }) => {
+    const data = x.map((value, i) => ({ x: value, y: i + 1 }))
+    const store = new PipelineStore({
+      chartType: "line",
+      runtimeMode: "bounded",
+      windowSize: 10,
+      windowMode: "sliding",
+      arrowOfTime: "right",
+      extentPadding: 0.05
+    })
+    store.ingest({ inserts: data, bounded: true })
+    store.computeScene({ width: 400, height: 200 })
+    const line = store.scene.find((node) => node.type === "line")
+    expect(line?.datum).toEqual(indices.map((i) => data[i]))
+    const result = buildReaderGrounding("LineChart", { data })
+    expect(result.structure?.children?.[0].label).toBe(`X axis: x, ${axis}.`)
+    expect(
+      result.structure?.children
+        ?.filter((node) => node.role === "datum")
+        .map((node) => node.datum)
+    ).toEqual(data.filter((_row, i) => indices.includes(i)))
+    expect(result.description.levels.l2).toContain(
+      `across ${indices.length} points`
+    )
+  })
+
+  it("keeps ISO category labels in distinct encounter order on ordinal axes", () => {
+    const result = buildNavigationTree("BarChart", {
+      data: ["2026-01-03", "2026-01-01", "2026-01-03"].map((category) => ({
+        category,
+        value: 10
+      }))
+    })
+    expect(result.children?.[0].label).toBe(
+      "Category axis: category, 2026-01-03 to 2026-01-01 (2 categories)."
+    )
+  })
+
+  it("filters invalid x even before the first usable value and across function-defined series", () => {
+    const result = buildReaderGrounding("LineChart", {
+      data: [
+        { t: new Date(NaN), v: -100, s: "A" },
+        { t: "3", v: 30, s: "A" },
+        { t: undefined, v: -200, s: "A" },
+        { t: 1, v: 10, s: "B" },
+        { t: Infinity, v: -300, s: "B" },
+        { t: 2, v: 20, s: "B" },
+        { t: "bad", v: -400, s: "B" }
+      ],
+      xAccessor: (row: { t: unknown }) => row.t,
+      yAccessor: "v",
+      lineBy: "s"
+    })
+    expect(result.description.levels.l2).toContain("mean of 20 across 3 points")
+    expect(result.description.levels.l2).toContain("4 missing or non-finite")
+    expect(result.structure?.children?.[0].label).toBe("X axis: x, 1 to 3.")
+    expect(result.text).not.toMatch(/-100|-200|-300|-400/)
+  })
+
+  it("has no quantitative range when every continuous x is invalid", () => {
+    const result = buildReaderGrounding("LineChart", {
+      data: [
+        { x: NaN, y: 1 },
+        { x: new Date(NaN), y: 2 }
+      ]
+    })
+    expect(result.description.levels.l2).toContain("No finite")
+    expect(result.description.levels.l3).toBeUndefined()
+    expect(result.structure?.children).toEqual([])
+  })
+
+  it.each(["LineChart", "AreaChart", "MinimapChart", "Scatterplot"])(
+    "%s infers unhinted ISO dates for chronological navigation and labels",
+    (component) => {
+      const result = buildReaderGrounding(component, {
+        data: [
+          { x: "invalid", y: -100 },
+          { x: "2026-01-03", y: 30 },
+          { x: "2026-01-01", y: 10 },
+          { x: "2026-01-02", y: 20 }
+        ]
+      })
+      expect(result.structure?.children?.[0].label).toBe(
+        "X axis: x, 2026-01-01 to 2026-01-03."
+      )
+      expect(
+        result.structure?.children
+          ?.filter((node) => node.role === "datum")
+          .map((node) => node.label)
+      ).toEqual(["2026-01-03: 30", "2026-01-01: 10", "2026-01-02: 20"])
+      expect(result.description.levels.l2).toContain(
+        "from 10 (2026-01-01) to 30 (2026-01-03)"
+      )
+    }
+  )
+
+  it("uses the inferred temporal axis for intraday labels with timezone offsets", () => {
+    const props = {
+      data: [
+        { x: "2026-01-01T03:00:00+01:00", y: 20 },
+        { x: "2026-01-01T01:00:00Z", y: 10 }
+      ]
+    }
+    const result = buildReaderGrounding("LineChart", props)
+    expect(result.description.levels.l3).toContain(
+      "rises from 10 (2026-01-01T01:00:00.000Z)"
+    )
+    expect(result.description.levels.l3).toContain(
+      "20 (2026-01-01T02:00:00.000Z)"
+    )
+    expect(result.structure?.children?.[0].label).toBe(
+      "X axis: x, 2026-01-01T01:00:00.000Z to 2026-01-01T02:00:00.000Z."
+    )
+  })
+
   it.each([
     ["AreaChart", "An area chart"],
     ["OrbitDiagram", "An orbit diagram"],
@@ -58,7 +231,8 @@ describe("descriptions follow rendered data semantics", () => {
       data: [
         { t: 2, v: 20 },
         { t: 1, v: 10 },
-        { t: 3, v: 30 }
+        { t: 3, v: 30 },
+        { t: NaN, v: -100 }
       ],
       xAccessor: (d: { t: number }) => d.t,
       yAccessor: (d: { v: number }) => d.v,
