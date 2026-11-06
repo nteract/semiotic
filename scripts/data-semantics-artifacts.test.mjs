@@ -35,6 +35,7 @@ function verify(runtime) {
     type: "date", min: "2020-01-01T00:00:00.000Z", max: "2020-01-01T00:00:00.000Z",
     observedCount: 4, missingCount: 0, excludedCount: 1
   })
+  verifyDescription(runtime)
   if (!runtime.computeAnnotationFreshness) return
   const notes = JSON.parse(JSON.stringify([{
     type: "callout", provenance: { createdAt: "2020-01-01T00:00:00" }, lifecycle: { ttlHint: "P1W" }
@@ -52,8 +53,39 @@ function verify(runtime) {
   assert.equal(annotation.value, Date.UTC(2026, 5, 20))
 }
 
+function verifyDescription(runtime) {
+  for (const zone of ["", "Z"]) {
+    for (const xScaleType of [undefined, "time"]) {
+      const instant = hour => `2026-01-01T0${hour}:00:00${zone}`
+      const timeline = {
+        xScaleType,
+        data: [3, 1, 2].map(hour => ({ x: instant(hour), y: hour }))
+          .concat({ x: "invalid", y: -100 })
+      }
+      // PipelineStore uses host-local parsing for zoneless datetimes, and UTC
+      // for explicit Z. Descriptions and navigation must name that same instant.
+      const first = new Date(instant(1)).toISOString()
+      const last = new Date(instant(3)).toISOString()
+      const result = runtime.buildReaderGrounding("LineChart", timeline)
+      assert.equal(result.description.levels.l3,
+        `Overall y rises from 1 (${first}) to a peak of 3 (${last}).`)
+      assert.equal(result.structure.children[0].label, `X axis: x, ${first} to ${last}.`)
+      assert.deepEqual(result.structure.children.filter(node => node.role === "datum").map(node => node.label),
+        [3, 1, 2].map(hour => `${new Date(instant(hour)).toISOString()}: ${hour}`))
+      assert.match(result.description.levels.l2, /mean of 2 across 3 points/)
+      assert.match(result.description.levels.l2, /1 missing or non-finite/)
+    }
+  }
+  const grounding = runtime.buildReaderGrounding("PieChart", {
+    data: [{ category: "A", value: 100 }, { category: "B", value: -60 }, { category: "C", value: 10 }]
+  })
+  assert.match(grounding.description.levels.l2, /totaling 170/)
+  assert.match(grounding.description.levels.l2, /negative.*absolute/)
+  assert.match(grounding.intent.sentence, /59%/)
+}
+
 for (const [TZ, LANG] of [["UTC", "en_US.UTF-8"], ["America/Los_Angeles", "de_DE.UTF-8"], ["Asia/Tokyo", "ja_JP.UTF-8"]]) {
-  for (const entry of ["semiotic-data", "semiotic-ai", "semiotic-ai-core"]) {
+  for (const entry of ["semiotic-data", "semiotic-ai", "semiotic-ai-core", "semiotic-utils", "semiotic-utils-core"]) {
     for (const format of ["cjs", "esm"]) {
       it(`${entry} ${format}: deterministic data semantics under ${TZ} / ${LANG}`, () => {
         const filename = resolve(root, "dist", `${entry}${format === "esm" ? ".module" : ""}.min.js`)
@@ -64,8 +96,9 @@ for (const [TZ, LANG] of [["UTC", "en_US.UTF-8"], ["America/Los_Angeles", "de_DE
           import assert from "node:assert/strict"
           import { createRequire } from "node:module"
           const runtime = ${load}
+          const verifyDescription = ${verifyDescription.toString()}
           const verify = ${verify.toString()}
-          verify(runtime)
+          ${entry.startsWith("semiotic-utils") ? "verifyDescription" : "verify"}(runtime)
         `], { cwd: root, env: { ...process.env, TZ, LANG, LC_ALL: LANG }, encoding: "utf8", timeout: 20000 })
         assert.equal(result.status, 0, result.stderr || String(result.error))
       })

@@ -31,6 +31,13 @@ const printOnly = process.argv.includes("--print")
  * `scripts/treeshake-isolation.test.mjs`.
  */
 const ENTRY_GRAPHS = [
+  // Description semantics (#1372/#1373): category/stack aggregation, x-ordered
+  // endpoints, missing/signed inputs, ties and intraday labels add ~1 KiB to
+  // root/AI/artifact/utils. Statistics now share one linear accumulator with
+  // recipes; no renderer-family graph grows. Reserve 1 KiB only on those four
+  // complete graphs for this behavior. Named access/evidence consumers also
+  // retain descriptions (29822/45792 gzip bytes); refresh their measured
+  // baseline with the owning generator, preserving variance/isolation limits.
   // Cross-entry provider identity (2026-11-01): WordCloud's independent ESM
   // graph now shares selection, observation, theme and category-color contexts
   // with the primary chart graphs. Separate theme and interaction entries keep
@@ -238,7 +245,7 @@ const ENTRY_GRAPHS = [
   // Feature graph: 387.3 KiB (previous built HEAD: 385.9 KiB).
   // Bumped 393.8→395: shared log-domain repair and heatmap band projection
   // (explicit empty ends, cached numeric keys) measure 394.2 KiB gzip.
-  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 404.3 },
+  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 405.3 },
   // Bumped 150→154: custom-layout painter registration now loads on demand
   // rather than retaining every painter in every chart HOC. The lightweight
   // readiness bridge and fallback paint selection live in the shared XY
@@ -323,7 +330,7 @@ const ENTRY_GRAPHS = [
     // identities. The published contract graph now measures 121.6 KiB gzip.
     // Bumped 122→123: histogram valueBands and annotation labelColor in the
     // chart specs measure 122.2 KiB gzip.
-    limitKb: 126
+    limitKb: 127
   },
   {
     entry: "semiotic-artifact-react.module.min.js",
@@ -530,7 +537,7 @@ const ENTRY_GRAPHS = [
   // User-approved 3.13.2 refresh (2026-10-27): the production AI graph
   // measures 652,373 bytes (637.083 KiB) gzip across 78 files. Allow 637.5 KiB,
   // retaining about 0.4 KiB headroom for the patch's correctness fixes.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 658.4 },
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 659.4 },
   // Bumped 100→101: transitDiagramLayout's public detail modes, source-rooted
   // line derivation, and station-rendering contract extend the curated recipes
   // entry. Linux CI measures 100.3 KiB gzip; retain a reviewable 0.7 KiB
@@ -568,7 +575,7 @@ const ENTRY_GRAPHS = [
   // sidecar. Isolating the neutral utility graph removes unrelated shared
   // contract chunks and returns production to 96.5 KiB, so restore the 110 KiB
   // ceiling rather than retaining transient graph-inflation allowances.
-  { entry: "semiotic-utils.module.min.js", label: "utils", limitKb: 111.0 },
+  { entry: "semiotic-utils.module.min.js", label: "utils", limitKb: 112.0 },
   { entry: "semiotic-value.module.min.js", label: "value", limitKb: 25 }
 ]
 

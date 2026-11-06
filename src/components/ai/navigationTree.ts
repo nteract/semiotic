@@ -14,7 +14,8 @@ import {
   DISTRIBUTION,
   roles,
   seriesField,
-  fmtDim
+  fmtDim,
+  resolveChartDimension
 } from "./chartRoles"
 import { filterAnnotationsByStatus } from "./annotationProvenance"
 import type { ChartRecipe } from "./chartRecipes"
@@ -133,16 +134,7 @@ function buildNetworkNavigationTree(
   const endpoint = (edge: Datum, accessor: unknown) =>
     stringValue(readProp(edge, accessor, ""), "unknown")
 
-  const inferredIds = new Set<string>()
-  for (const edge of edges) {
-    inferredIds.add(endpoint(edge, sourceAccessor))
-    inferredIds.add(endpoint(edge, targetAccessor))
-  }
-  const effectiveNodes =
-    nodes.length > 0 ? nodes : [...inferredIds].map((id) => ({ id }))
   const degrees = new Map<string, { links: number; value: number }>()
-  for (const node of effectiveNodes)
-    degrees.set(nodeId(node), { links: 0, value: 0 })
   for (const edge of edges) {
     const source = endpoint(edge, sourceAccessor)
     const target = endpoint(edge, targetAccessor)
@@ -154,6 +146,9 @@ function buildNetworkNavigationTree(
       degrees.set(id, current)
     }
   }
+  // Degree accumulation already visits each endpoint in encounter order.
+  const effectiveNodes = nodes.length > 0
+    ? nodes : Array.from(degrees.keys(), id => ({ id }))
 
   const kind =
     component === "SankeyDiagram" || component === "ProcessSankey"
@@ -269,9 +264,7 @@ function buildAnnotationBranch(
     ? (props.annotations as Datum[])
     : null
   if (!raw) return null
-  const items = filterAnnotationsByStatus(
-    raw.filter((a): a is Datum => !!a && typeof a === "object")
-  )
+  const items = filterAnnotationsByStatus(raw)
   if (items.length === 0) return null
 
   let counter = 0
@@ -330,41 +323,30 @@ export function buildNavigationTree(
     return buildRecipeNavigationTree(recipe, props, { maxLeaves, locale })
   }
 
-  const rootLabel = describeChart(component, props, { locale }).text || "Chart."
-  const root: NavTreeNode = {
-    id: "root",
-    role: "chart",
-    label: rootLabel,
-    level: 1,
-    children: []
-  }
-
   // Author annotations become a first-class branch in every family, including
   // the topology, hierarchy, and geographic structures built below.
   const annotationBranch = buildAnnotationBranch(props, maxLeaves)
 
-  if (NETWORK_FAMILY.has(component)) {
-    const tree = buildNetworkNavigationTree(component, props, maxLeaves, fmtNum)
-    appendAnnotationBranch(tree, annotationBranch)
-    return tree
-  }
-  if (HIERARCHY_FAMILY.has(component)) {
-    const tree = buildHierarchyNavigationTree(
-      component,
-      props,
-      maxLeaves,
-      fmtNum
-    )
-    appendAnnotationBranch(tree, annotationBranch)
-    return tree
-  }
-  if (GEO_FAMILY.has(component)) {
-    const tree = buildGeoNavigationTree(component, props, maxLeaves, fmtNum)
+  const specializedBuilder = NETWORK_FAMILY.has(component)
+    ? buildNetworkNavigationTree
+    : HIERARCHY_FAMILY.has(component)
+      ? buildHierarchyNavigationTree
+      : GEO_FAMILY.has(component) ? buildGeoNavigationTree : undefined
+  if (specializedBuilder) {
+    const tree = specializedBuilder(component, props, maxLeaves, fmtNum)
     appendAnnotationBranch(tree, annotationBranch)
     return tree
   }
 
-  const data = Array.isArray(props.data) ? (props.data as Datum[]) : null
+  const root: NavTreeNode = {
+    id: "root",
+    role: "chart",
+    label: describeChart(component, props, { locale }).text || "Chart.",
+    level: 1,
+    children: []
+  }
+
+  let data = Array.isArray(props.data) ? (props.data as Datum[]) : null
   const statsFamily = supportsStructuredNavigation(component, props, options)
   if (!data || data.length === 0 || !statsFamily) {
     if (annotationBranch) root.children = [annotationBranch]
@@ -376,21 +358,31 @@ export function buildNavigationTree(
     props
   )
   const getMeasure = aiNumericAccessor(measure, measureFallback)
-  const getDim = resolveRawAccessor(dimension, dimensionFallback)
+  const { read: plottedDimension, continuous, temporal } = resolveChartDimension(
+    component, data, resolveRawAccessor(dimension, dimensionFallback), props.xScaleType
+  )
+  if (continuous) {
+    const valid = (d: Datum) => Number.isFinite(plottedDimension(d))
+    if (data.some(d => !valid(d))) data = data.filter(valid)
+    if (!data.length) {
+      appendAnnotationBranch(root, annotationBranch)
+      return root
+    }
+  }
   // Only string accessors are human-readable labels; a function accessor is
   // truthy but would leak its source into node labels — fall back instead.
   const measureName =
     typeof measure === "string" && measure ? measure : measureFallback
   const dimName =
     typeof dimension === "string" && dimension ? dimension : dimensionFallback
-  const series = seriesField(props)
+  const series = seriesField(props, component)
 
   let counter = 0
   const nextId = (prefix: string) => `${prefix}-${counter++}`
 
   const leafFor = (d: Datum, level: number): NavTreeNode => {
     const m = getMeasure(d)
-    const dimLabel = fmtDim(getDim(d), fmtNum)
+    const dimLabel = fmtDim(plottedDimension(d), fmtNum, temporal)
     return {
       id: nextId("datum"),
       role: "datum",
@@ -422,37 +414,39 @@ export function buildNavigationTree(
       maxM = -Infinity
     let minD = Infinity,
       maxD = -Infinity
-    const dims: unknown[] = []
+    // Continuous dimensions need only extrema. Categorical dimensions retain
+    // distinct encounter order so repeated series read "Jan to Mar", not "Jan to Jan".
+    const seen = continuous ? undefined : new Set<string>()
+    let firstDim: unknown, lastDim: unknown
     let allNumericDim = true
+    let dateDimension = temporal
     for (const d of data) {
       const m = getMeasure(d)
       if (Number.isFinite(m)) {
         if (m < minM) minM = m
         if (m > maxM) maxM = m
       }
-      const dv = getDim(d)
-      dims.push(dv)
-      if (typeof dv === "number" && Number.isFinite(dv)) {
-        if (dv < minD) minD = dv
-        if (dv > maxD) maxD = dv
+      const dv = plottedDimension(d)
+      if (seen) {
+        const key = stringValue(dv)
+        if (!seen.has(key)) {
+          if (!seen.size) firstDim = dv
+          lastDim = dv
+          seen.add(key)
+        }
+      }
+      const numericDimension = dv instanceof Date ? dv.getTime() : dv
+      if (dv instanceof Date) dateDimension = true
+      if (typeof numericDimension === "number" && Number.isFinite(numericDimension)) {
+        if (numericDimension < minD) minD = numericDimension
+        if (numericDimension > maxD) maxD = numericDimension
       } else {
         allNumericDim = false
       }
     }
-    // Distinct dimension values in encounter order, so a multi-series chart
-    // (where x repeats per series) reads "Jan to Mar", not "Jan to Jan".
-    const seen = new Set<string>()
-    const distinct: unknown[] = []
-    for (const dv of dims) {
-      const key = stringValue(dv)
-      if (!seen.has(key)) {
-        seen.add(key)
-        distinct.push(dv)
-      }
-    }
-    const dimDesc = allNumericDim
-      ? `${fmtNum(minD)} to ${fmtNum(maxD)}`
-      : `${fmtDim(distinct[0], fmtNum)} to ${fmtDim(distinct[distinct.length - 1], fmtNum)} (${BAR_FAMILY.has(component) ? `${distinct.length} categories` : `${data.length} points`})`
+    const axisTemporal = allNumericDim ? dateDimension : temporal
+    const dimDesc = `${fmtDim(allNumericDim ? minD : firstDim, fmtNum, axisTemporal)} to ${fmtDim(allNumericDim ? maxD : lastDim, fmtNum, axisTemporal)}` +
+      (allNumericDim ? "" : ` (${BAR_FAMILY.has(component) ? `${seen?.size} categories` : `${data.length} points`})`)
     axisNodes.push({
       id: nextId("axis"),
       role: "axis",
@@ -470,7 +464,7 @@ export function buildNavigationTree(
   }
 
   if (series) {
-    const getSeries = resolveRawAccessor(series, series)
+    const getSeries = resolveRawAccessor(series, "series")
     const groups = new Map<string, Datum[]>()
     for (const d of data) {
       const key = stringValue(getSeries(d))
@@ -511,7 +505,7 @@ export function flattenVisible(
   const out: NavTreeNode[] = []
   const walk = (node: NavTreeNode) => {
     out.push(node)
-    if (node.children && node.children.length > 0 && expanded.has(node.id)) {
+    if (node.children && expanded.has(node.id)) {
       for (const c of node.children) walk(c)
     }
   }
