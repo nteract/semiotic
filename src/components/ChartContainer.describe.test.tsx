@@ -19,6 +19,29 @@ const config = {
 }
 
 describe("ChartContainer describe", () => {
+  it("updates the accessible description using x order instead of row order", () => {
+    const chartConfig = {
+      component: "LineChart",
+      props: { data: [{ x: 3, y: 30 }, { x: 1, y: 10 }, { x: 2, y: 20 }] }
+    }
+    const { rerender } = render(
+      <ChartContainer chartConfig={chartConfig} describe>
+        <div>chart</div>
+      </ChartContainer>
+    )
+    expect(screen.getByRole("note")).toHaveTextContent("rises from 10 (1) to a peak of 30 (3)")
+    rerender(
+      <ChartContainer chartConfig={{
+        ...chartConfig,
+        props: { data: [{ x: 3, y: 10 }, { x: 1, y: 30 }, { x: 2, y: 20 }] }
+      }} describe>
+        <div>chart</div>
+      </ChartContainer>
+    )
+    expect(screen.getByRole("note")).toHaveTextContent("falls from 30 (1) to a low of 10 (3)")
+    expect(screen.getByRole("note")).not.toHaveTextContent("rises")
+  })
+
   it("renders an auto-generated description (role=note) when describe + chartConfig are set", () => {
     render(
       <ChartContainer title="Sales" chartConfig={config} describe>

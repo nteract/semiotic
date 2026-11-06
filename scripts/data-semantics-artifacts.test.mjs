@@ -35,6 +35,7 @@ function verify(runtime) {
     type: "date", min: "2020-01-01T00:00:00.000Z", max: "2020-01-01T00:00:00.000Z",
     observedCount: 4, missingCount: 0, excludedCount: 1
   })
+  verifyDescription(runtime)
   if (!runtime.computeAnnotationFreshness) return
   const notes = JSON.parse(JSON.stringify([{
     type: "callout", provenance: { createdAt: "2020-01-01T00:00:00" }, lifecycle: { ttlHint: "P1W" }
@@ -52,8 +53,24 @@ function verify(runtime) {
   assert.equal(annotation.value, Date.UTC(2026, 5, 20))
 }
 
+function verifyDescription(runtime) {
+  const timeline = {
+    xScaleType: "time",
+    data: [3, 1, 2].map(hour => ({ x: `2026-01-01T0${hour}:00:00`, y: hour }))
+  }
+  const description = runtime.describeChart("LineChart", timeline)
+  assert.match(description.levels.l3, /rises from 1 \(2026-01-01T01:00:00.000Z\)/)
+  assert.match(description.levels.l3, /3 \(2026-01-01T03:00:00.000Z\)/)
+  const grounding = runtime.buildReaderGrounding("PieChart", {
+    data: [{ category: "A", value: 100 }, { category: "B", value: -60 }, { category: "C", value: 10 }]
+  })
+  assert.match(grounding.description.levels.l2, /totaling 170/)
+  assert.match(grounding.description.levels.l2, /negative.*absolute/)
+  assert.match(grounding.intent.sentence, /59%/)
+}
+
 for (const [TZ, LANG] of [["UTC", "en_US.UTF-8"], ["America/Los_Angeles", "de_DE.UTF-8"], ["Asia/Tokyo", "ja_JP.UTF-8"]]) {
-  for (const entry of ["semiotic-data", "semiotic-ai", "semiotic-ai-core"]) {
+  for (const entry of ["semiotic-data", "semiotic-ai", "semiotic-ai-core", "semiotic-utils", "semiotic-utils-core"]) {
     for (const format of ["cjs", "esm"]) {
       it(`${entry} ${format}: deterministic data semantics under ${TZ} / ${LANG}`, () => {
         const filename = resolve(root, "dist", `${entry}${format === "esm" ? ".module" : ""}.min.js`)
@@ -64,8 +81,9 @@ for (const [TZ, LANG] of [["UTC", "en_US.UTF-8"], ["America/Los_Angeles", "de_DE
           import assert from "node:assert/strict"
           import { createRequire } from "node:module"
           const runtime = ${load}
+          const verifyDescription = ${verifyDescription.toString()}
           const verify = ${verify.toString()}
-          verify(runtime)
+          ${entry.startsWith("semiotic-utils") ? "verifyDescription" : "verify"}(runtime)
         `], { cwd: root, env: { ...process.env, TZ, LANG, LC_ALL: LANG }, encoding: "utf8", timeout: 20000 })
         assert.equal(result.status, 0, result.stderr || String(result.error))
       })

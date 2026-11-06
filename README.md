@@ -467,33 +467,33 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { getNetworkPerspectiveSize } from "semiotic/network/perspective/core"` | browser | **1.1 KiB** | — |
 | `import { MotifBraidChart } from "semiotic/atlas"` | browser | **112.5 KiB** | 29.4 KiB |
 | `import { prepareNetworkAtlas } from "semiotic/atlas/core"` | browser | **7.1 KiB** | — |
-| `import { LineChart } from "semiotic"` | browser | **126.4 KiB** | 44.4 KiB |
-| `import { LineChart } from "semiotic/xy"` | browser | **126.2 KiB** | 32.4 KiB |
+| `import { LineChart } from "semiotic"` | browser | **126.6 KiB** | 44.4 KiB |
+| `import { LineChart } from "semiotic/xy"` | browser | **126.3 KiB** | 32.4 KiB |
 | `import { LineChart } from "semiotic/line"` | browser | **126.3 KiB** | 32.5 KiB |
 | `import { BarChart } from "semiotic/ordinal"` | browser | **107.2 KiB** | 14.7 KiB |
-| `import { SankeyDiagram } from "semiotic/network"` | browser | **136.3 KiB** | 6.6 KiB |
-| `import { ZoomableNetworkCustomChart } from "semiotic/network/zoom"` | browser | **115.7 KiB** | 29.4 KiB |
+| `import { SankeyDiagram } from "semiotic/network"` | browser | **136.5 KiB** | 6.6 KiB |
+| `import { ZoomableNetworkCustomChart } from "semiotic/network/zoom"` | browser | **115.8 KiB** | 29.4 KiB |
 | `import { isometricGlyphs } from "semiotic/network/perspective"` | browser | **1.4 KiB** | — |
-| `import { RealtimeLineChart } from "semiotic/realtime"` | browser | **127.4 KiB** | 42.2 KiB |
+| `import { RealtimeLineChart } from "semiotic/realtime"` | browser | **127.5 KiB** | 42.2 KiB |
 | `import { RingBuffer } from "semiotic/realtime/core"` | browser | **0.7 KiB** | 13.6 KiB |
 | `import { useStreamStatus } from "semiotic/realtime/react"` | browser | **0.8 KiB** | — |
 | `import { GaltonBoardChart } from "semiotic/physics"` | browser | **96.2 KiB** | 2.7 KiB |
 | `import { MATTER_PHYSICS_CAPABILITIES } from "semiotic/physics/matter"` | browser | **0.1 KiB** | — |
 | `import { RAPIER_PHYSICS_CAPABILITIES } from "semiotic/physics/rapier"` | browser | **0.2 KiB** | — |
-| `import { renderChart } from "semiotic/server"` | node | **309.7 KiB** | — |
+| `import { renderChart } from "semiotic/server"` | node | **309.4 KiB** | — |
 | `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **128.8 KiB** | — |
-| `import { renderToImage } from "semiotic/server/node"` | node | **310.1 KiB** | 0.6 KiB |
+| `import { renderToImage } from "semiotic/server/node"` | node | **309.8 KiB** | 0.6 KiB |
 | `import { suggestCharts } from "semiotic/ai"` | browser | **32.4 KiB** | 13.6 KiB |
 | `import { suggestCharts } from "semiotic/ai/core"` | browser | **32.2 KiB** | — |
 | `import { buildArtifactContract } from "semiotic/artifact"` | browser | **4.5 KiB** | — |
 | `import { ArtifactInspector } from "semiotic/artifact/react"` | browser | **3.7 KiB** | — |
-| `import { createChartAccessContract } from "semiotic/access"` | browser | **28.0 KiB** | — |
-| `import { toEvidenceEnvelope } from "semiotic/evidence"` | browser | **43.6 KiB** | — |
+| `import { createChartAccessContract } from "semiotic/access"` | browser | **29.1 KiB** | — |
+| `import { toEvidenceEnvelope } from "semiotic/evidence"` | browser | **44.7 KiB** | — |
 | `import { bin } from "semiotic/data"` | browser | **0.9 KiB** | — |
-| `import { ChoroplethMap } from "semiotic/geo"` | browser | **109.3 KiB** | 1.7 KiB |
-| `import { WordCloud } from "semiotic/wordcloud"` | browser | **111.0 KiB** | 39.2 KiB |
+| `import { ChoroplethMap } from "semiotic/geo"` | browser | **109.4 KiB** | 1.7 KiB |
+| `import { WordCloud } from "semiotic/wordcloud"` | browser | **111.2 KiB** | 39.1 KiB |
 | `import { usePretextAnnotations } from "semiotic/text"` | browser | **1.5 KiB** | — |
-| `import { createRoughRenderMode } from "semiotic/rough"` | browser | **3.2 KiB** | — |
+| `import { createRoughRenderMode } from "semiotic/rough"` | browser | **3.1 KiB** | — |
 | `import { resolveThemePreset } from "semiotic/themes"` | browser | **2.6 KiB** | — |
 | `import { resolveThemePreset } from "semiotic/themes/core"` | browser | **2.6 KiB** | — |
 | `import { ThemeProvider } from "semiotic/themes/react"` | browser | **5.7 KiB** | — |
@@ -506,7 +506,7 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { BigNumber } from "semiotic/value"` | browser | **5.9 KiB** | — |
 | `import { DirectManipulationControl } from "semiotic/controls"` | browser | **1.5 KiB** | — |
 
-**Line-boundary interpretation:** the retained named import from `semiotic/line` emits 373.9 KiB raw versus 374.0 KiB from `semiotic/xy`; gzip differs by 0.2 KiB (0.1%). Tree-shaking converges both paths on the same LineChart implementation graph. Treat `semiotic/line` as a narrower API/direct-ESM artifact boundary, not an application-bundle saving. Do not add another per-chart entry until its packed named import beats the family path by both 10 KiB gzip and 7%.
+**Line-boundary interpretation:** the retained named import from `semiotic/line` emits 373.2 KiB raw versus 373.2 KiB from `semiotic/xy`; gzip differs by 0.0 KiB (0.0%). Tree-shaking converges both paths on the same LineChart implementation graph. Treat `semiotic/line` as a narrower API/direct-ESM artifact boundary, not an application-bundle saving. Do not add another per-chart entry until its packed named import beats the family path by both 10 KiB gzip and 7%.
 
 <!-- semiotic-cold-consumer:end -->
 

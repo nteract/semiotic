@@ -124,7 +124,11 @@ const analyze = process.argv.includes("--analyze")
 // bytes (0.5 KiB); no dependency or chart family was added. Real cross-entry
 // hover, provider isolation, and ESM/CJS theme tests cover the correctness cost.
 // Retain <0.25 KiB headroom; cold-consumer and isolation limits are unchanged.
-const MULTI_IMPORT_GZIP_BUDGET = 325.5 * 1024
+// Description correctness (#1372/#1373): this consumer explicitly imports
+// describeChart and retains the aggregation, order, missing/signed-value and
+// tie handling. It measures 334226 bytes across the same 29 files. Budget that
+// ~1 KiB payload with <0.2 KiB headroom; named-chart/isolation limits stay fixed.
+const MULTI_IMPORT_GZIP_BUDGET = 326.5 * 1024
 
 const MULTI_IMPORT_SOURCE = `
 export { LineChart } from "semiotic/xy"

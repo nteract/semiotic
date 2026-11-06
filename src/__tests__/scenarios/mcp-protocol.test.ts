@@ -91,6 +91,21 @@ describe("MCP protocol round-trip", () => {
     proc.kill("SIGTERM")
   })
 
+  it("groundChart reports the x-ordered trend through the shipped server", async () => {
+    const result = await sendRequest(proc, "tools/call", {
+      name: "groundChart",
+      arguments: {
+        component: "LineChart",
+        props: { data: [{ x: 3, y: 30 }, { x: 1, y: 10 }, { x: 2, y: 20 }] }
+      }
+    })
+    expect(result.result.isError).not.toBe(true)
+    const grounding = result.result.structuredContent
+    expect(grounding.description.levels.l3).toContain("rises from 10 (1) to a peak of 30 (3)")
+    expect(grounding.intent.sentence).toContain("rises from 10 (1) to 30 (3)")
+    expect(result.result.content[0].text).toContain(grounding.description.levels.l3)
+  })
+
   it("initialize returns server info and capabilities", async () => {
     // We already initialized in beforeEach, spawn fresh for this test
     const freshProc = spawnServer()

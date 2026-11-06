@@ -67,6 +67,11 @@ const props = {
 }
 
 describe("recipe-aware description", () => {
+  it("uses the correct article for a recipe name", () => {
+    const result = describeChart("XYCustomChart", { ...props, recipe: { ...recipe, name: "Arc matrix" } })
+    expect(result.levels.l1).toMatch(/^An arc matrix encodes/)
+  })
+
   it("uses the visual idiom and produces recipe L1-L4 instead of the raw HOC name", () => {
     const result = describeChart("XYCustomChart", props)
     expect(result.text).not.toContain("xycustom chart chart")
@@ -82,6 +87,66 @@ describe("recipe-aware description", () => {
     expect(
       describeChart("XYCustomChart", props, { includeCaveats: true }).caveats,
     ).toEqual(expect.arrayContaining(["Limited precision", "Misuse: Too many categories"]))
+  })
+
+  it("aggregates categories before identifying their shares", () => {
+    const result = describeChart("XYCustomChart", {
+      ...props,
+      data: [
+        { category: "A", value: 3 },
+        { category: "B", value: 5 },
+        { category: "A", value: 4 }
+      ]
+    })
+    expect(result.levels.l2).toContain("2 categories total 12")
+    expect(result.levels.l2).toContain("A accounts for 7 (58.3%)")
+    expect(result.levels.l3).toContain("A and B")
+  })
+
+  it.each([
+    [100, -60, 10],
+    [10, -10, 5]
+  ])("withholds recipe shares for negative input, including cancellation: %s", (a, b, c) => {
+    const result = describeChart("XYCustomChart", {
+      ...props,
+      data: [
+        { category: "A", value: a },
+        { category: "A", value: b },
+        { category: "B", value: c }
+      ]
+    })
+    expect(result.levels.l2).toContain("Negative values")
+    expect(result.levels.l3).toContain("prevent a part-to-whole concentration claim")
+    expect(result.text).not.toMatch(/\d+%/)
+  })
+
+  it("reports tied shares without picking an arbitrary leading pair", () => {
+    const result = describeChart("XYCustomChart", {
+      ...props,
+      data: ["A", "B", "C"].map(category => ({ category, value: 10 }))
+    })
+    expect(result.levels.l2).toContain("A, B and C tie at 10 (33.3% each)")
+    expect(result.levels.l3).toContain("A, B and C tie for the largest share")
+    expect(result.text).not.toContain("concentrated in A and B")
+  })
+
+  it("does not call exactly half of the total a majority", () => {
+    const result = describeChart("XYCustomChart", {
+      ...props,
+      data: [12, 8, 7, 7, 6].map((value, index) => ({ category: String(index), value }))
+    })
+    expect(result.levels.l2).toContain("5 categories total 40")
+    expect(result.levels.l3).toContain("without the first two forming a majority")
+    expect(result.levels.l3).not.toContain("Most of the total")
+  })
+
+  it("avoids shares and leaders when every category is zero", () => {
+    const result = describeChart("XYCustomChart", {
+      ...props,
+      data: ["A", "B"].map(category => ({ category, value: 0 }))
+    })
+    expect(result.levels.l2).toContain("All categories are zero")
+    expect(result.text).not.toMatch(/accounts for|\d+%/)
   })
 })
 

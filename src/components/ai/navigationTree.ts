@@ -2,6 +2,7 @@ import { readProp, stringValue, finiteValue, slug, interactionCue } from "./navi
 import type { Datum } from "../charts/shared/datumTypes"
 import { resolveRawAccessor } from "../stream/accessorUtils"
 import { aiChartProps, aiNumericAccessor } from "./aiData"
+import { coerceUtcTimeValue } from "../charts/shared/temporalStrings"
 import {
   describeChart,
   chartValueFormatter,
@@ -377,20 +378,21 @@ export function buildNavigationTree(
   )
   const getMeasure = aiNumericAccessor(measure, measureFallback)
   const getDim = resolveRawAccessor(dimension, dimensionFallback)
+  const temporal = props.xScaleType === "time" || props.xScaleType === "utc"
   // Only string accessors are human-readable labels; a function accessor is
   // truthy but would leak its source into node labels — fall back instead.
   const measureName =
     typeof measure === "string" && measure ? measure : measureFallback
   const dimName =
     typeof dimension === "string" && dimension ? dimension : dimensionFallback
-  const series = seriesField(props)
+  const series = seriesField(props, component)
 
   let counter = 0
   const nextId = (prefix: string) => `${prefix}-${counter++}`
 
   const leafFor = (d: Datum, level: number): NavTreeNode => {
     const m = getMeasure(d)
-    const dimLabel = fmtDim(getDim(d), fmtNum)
+    const dimLabel = fmtDim(getDim(d), fmtNum, temporal)
     return {
       id: nextId("datum"),
       role: "datum",
@@ -424,6 +426,7 @@ export function buildNavigationTree(
       maxD = -Infinity
     const dims: unknown[] = []
     let allNumericDim = true
+    let dateDimension = temporal
     for (const d of data) {
       const m = getMeasure(d)
       if (Number.isFinite(m)) {
@@ -432,9 +435,11 @@ export function buildNavigationTree(
       }
       const dv = getDim(d)
       dims.push(dv)
-      if (typeof dv === "number" && Number.isFinite(dv)) {
-        if (dv < minD) minD = dv
-        if (dv > maxD) maxD = dv
+      const numericDimension = temporal || dv instanceof Date ? coerceUtcTimeValue(dv) : dv
+      if (dv instanceof Date) dateDimension = true
+      if (typeof numericDimension === "number" && Number.isFinite(numericDimension)) {
+        if (numericDimension < minD) minD = numericDimension
+        if (numericDimension > maxD) maxD = numericDimension
       } else {
         allNumericDim = false
       }
@@ -451,8 +456,8 @@ export function buildNavigationTree(
       }
     }
     const dimDesc = allNumericDim
-      ? `${fmtNum(minD)} to ${fmtNum(maxD)}`
-      : `${fmtDim(distinct[0], fmtNum)} to ${fmtDim(distinct[distinct.length - 1], fmtNum)} (${BAR_FAMILY.has(component) ? `${distinct.length} categories` : `${data.length} points`})`
+      ? `${fmtDim(minD, fmtNum, dateDimension)} to ${fmtDim(maxD, fmtNum, dateDimension)}`
+      : `${fmtDim(distinct[0], fmtNum, temporal)} to ${fmtDim(distinct[distinct.length - 1], fmtNum, temporal)} (${BAR_FAMILY.has(component) ? `${distinct.length} categories` : `${data.length} points`})`
     axisNodes.push({
       id: nextId("axis"),
       role: "axis",
@@ -470,7 +475,7 @@ export function buildNavigationTree(
   }
 
   if (series) {
-    const getSeries = resolveRawAccessor(series, series)
+    const getSeries = resolveRawAccessor(series, "series")
     const groups = new Map<string, Datum[]>()
     for (const d of data) {
       const key = stringValue(getSeries(d))

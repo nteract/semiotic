@@ -1,6 +1,7 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import { resolveRawAccessor } from "../stream/accessorUtils"
 import { aiChartProps, aiNumericAccessor } from "./aiData"
+import { coerceUtcTimeValue } from "../charts/shared/temporalStrings"
 import type { ChartCapability, ChartFamily } from "./chartCapabilityTypes"
 import type { IntentId } from "./intents"
 import { intentRegistryStore } from "./intentRegistry"
@@ -12,14 +13,19 @@ import {
   DISTRIBUTION,
   roles,
   seriesField,
-  fmtDim
+  article,
+  computeStats,
+  type MeasureStats
 } from "./chartRoles"
 import { filterAnnotationsByStatus } from "./annotationProvenance"
 import type { ChartRecipe } from "./chartRecipes"
 import { describeRecipeChart } from "./describeRecipeChart"
 import { resolveRecipeForChart } from "./recipeSemantics"
 import { describePhysicsSource } from "./describePhysicsSource"
-import { physicsProjectionRows, applyPhysicsLevels } from "./describePhysicsProjection"
+import {
+  physicsProjectionRows,
+  applyPhysicsLevels
+} from "./describePhysicsProjection"
 /**
  * describeChart — generate a layered natural-language description of a chart
  * from its `(component, props)` config, following Lundgard & Satyanarayan's
@@ -136,34 +142,19 @@ export interface DescribeChartOptions {
 // ---------------------------------------------------------------------------
 
 const KIND_PHRASE: Record<string, string> = {
-  LineChart: "line chart",
-  AreaChart: "area chart",
-  StackedAreaChart: "stacked area chart",
-  DifferenceChart: "difference chart",
   Scatterplot: "scatter plot",
-  BubbleChart: "bubble chart",
   ConnectedScatterplot: "connected scatter plot",
-  QuadrantChart: "quadrant chart",
   MultiAxisLineChart: "dual-axis line chart",
-  CandlestickChart: "candlestick chart",
-  BumpChart: "bump chart",
   Heatmap: "heatmap",
   MinimapChart: "line chart",
-  BarChart: "bar chart",
-  StackedBarChart: "stacked bar chart",
-  GroupedBarChart: "grouped bar chart",
   DotPlot: "dot plot",
   Histogram: "histogram",
   BoxPlot: "box plot",
   ViolinPlot: "violin plot",
   RidgelinePlot: "ridgeline plot",
   SwarmPlot: "swarm plot",
-  PieChart: "pie chart",
-  DonutChart: "donut chart",
-  FunnelChart: "funnel chart",
   GaugeChart: "gauge",
   LikertChart: "Likert chart",
-  SwimlaneChart: "swimlane chart",
   ForceDirectedGraph: "network graph",
   SankeyDiagram: "Sankey diagram",
   ProcessSankey: "temporal Sankey diagram",
@@ -181,7 +172,6 @@ const KIND_PHRASE: Record<string, string> = {
   EventDropChart: "event-drop physics chart",
   GaltonBoardChart: "Galton board chart",
   UnitPileChart: "physics pile chart",
-  CollisionSwarmChart: "collision swarm chart",
   PacketFlowChart: "physical flow chart",
   ProcessFlowChart: "process flow physics chart",
   CrucibleChart: "crucible physics chart",
@@ -214,7 +204,8 @@ function humanizeComponent(name: string): string {
 }
 function kindPhrase(component: string): string {
   return Object.prototype.hasOwnProperty.call(KIND_PHRASE, component)
-    ? KIND_PHRASE[component] : `${humanizeComponent(component)} chart`
+    ? KIND_PHRASE[component]
+    : `${humanizeComponent(component).replace(/ chart$/, "")} chart`
 }
 
 // ---------------------------------------------------------------------------
@@ -302,19 +293,21 @@ const ACT_LABEL: Record<CommunicativeAct, string> = {
  * `composes` (highest `weights` entry, default 1), then recurse.
  */
 export function communicativeActForIntent(
-  intent: IntentId,
+  intent: IntentId
 ): CommunicativeAct | undefined {
   const visiting = new Set<IntentId>()
   const resolve = (id: IntentId): CommunicativeAct | undefined => {
     const direct = Object.prototype.hasOwnProperty.call(INTENT_ACT, id)
-      ? INTENT_ACT[id] : undefined
+      ? INTENT_ACT[id]
+      : undefined
     if (direct) return direct
     if (visiting.has(id)) return undefined
     const descriptor = intentRegistryStore().intents.get(id)
     if (!descriptor?.composes?.length) return undefined
     visiting.add(id)
     const ranked = [...descriptor.composes].sort((a, b) => {
-      const weightDelta = (descriptor.weights?.[b] ?? 1) - (descriptor.weights?.[a] ?? 1)
+      const weightDelta =
+        (descriptor.weights?.[b] ?? 1) - (descriptor.weights?.[a] ?? 1)
       // Unknown intents follow the built-ins and retain their authored order.
       const priority = (child: IntentId) => {
         const index = INTENT_TIEBREAK.indexOf(child)
@@ -415,10 +408,17 @@ export function resolveCommunicativeAct(
     // `buildReasons` uses). A weak top score means we're looking at leftover
     // static scorers (a chart's primary intents are often function scorers we
     // can't evaluate here) — the family supplies the fallback intent in that case.
-    if (top && Object.prototype.hasOwnProperty.call(INTENT_ACT, top) && (ctx.intentScores[top] ?? 0) >= 3)
+    if (
+      top &&
+      Object.prototype.hasOwnProperty.call(INTENT_ACT, top) &&
+      (ctx.intentScores[top] ?? 0) >= 3
+    )
       return INTENT_ACT[top]
   }
-  if (ctx?.family && Object.prototype.hasOwnProperty.call(FAMILY_ACT, ctx.family))
+  if (
+    ctx?.family &&
+    Object.prototype.hasOwnProperty.call(FAMILY_ACT, ctx.family)
+  )
     return FAMILY_ACT[ctx.family]
   return componentAct(component)
 }
@@ -503,83 +503,6 @@ export function chartValueFormatter(locale = "en"): (n: number) => string {
 }
 
 // ---------------------------------------------------------------------------
-// Statistics over the measure
-// ---------------------------------------------------------------------------
-
-interface MeasureStats {
-  count: number
-  min: number
-  max: number
-  mean: number
-  minLabel: string
-  maxLabel: string
-  first: number
-  last: number
-  firstLabel: string
-  lastLabel: string
-  /** Index (among finite measures) of min/max — lets us tell interior extrema from endpoints. */
-  minIndex: number
-  maxIndex: number
-}
-
-function computeStats(
-  data: Datum[],
-  getMeasure: (d: Datum) => number,
-  getDim: (d: Datum) => unknown,
-  fmtNum: (n: number) => string
-): MeasureStats | null {
-  let count = 0,
-    sum = 0
-  let min = Infinity,
-    max = -Infinity
-  let minRow: Datum | null = null,
-    maxRow: Datum | null = null
-  let minIndex = 0,
-    maxIndex = 0
-  let firstRow: Datum | null = null,
-    lastRow: Datum | null = null
-  let first = NaN,
-    last = NaN
-  for (const d of data) {
-    const m = getMeasure(d)
-    if (!Number.isFinite(m)) continue
-    if (count === 0) {
-      first = m
-      firstRow = d
-    }
-    last = m
-    lastRow = d
-    if (m < min) {
-      min = m
-      minRow = d
-      minIndex = count
-    }
-    if (m > max) {
-      max = m
-      maxRow = d
-      maxIndex = count
-    }
-    count++
-    sum += m
-  }
-  if (count === 0) return null
-  return {
-    count,
-    min,
-    max,
-    mean: sum / count,
-    minLabel: fmtDim(minRow != null ? getDim(minRow) : null, fmtNum),
-    maxLabel: fmtDim(maxRow != null ? getDim(maxRow) : null, fmtNum),
-    first,
-    last,
-    firstLabel: fmtDim(firstRow != null ? getDim(firstRow) : null, fmtNum),
-    lastLabel: fmtDim(lastRow != null ? getDim(lastRow) : null, fmtNum),
-    minIndex,
-    maxIndex
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
@@ -653,7 +576,8 @@ function annotationQualifier(ann: Datum): string {
 export function annotationPhrase(ann: Datum): string {
   const type = typeof ann.type === "string" ? ann.type : "annotation"
   const baseKind = Object.prototype.hasOwnProperty.call(ANNOTATION_KIND, type)
-    ? ANNOTATION_KIND[type] : "an annotation"
+    ? ANNOTATION_KIND[type]
+    : "an annotation"
   const qualifier = annotationQualifier(ann)
   const kind = qualifier ? qualifier + baseKind.replace(/^an? /, "") : baseKind
   const label =
@@ -732,14 +656,18 @@ export function describeChart(
 
   const fmtNum = chartValueFormatter(options.locale ?? "en")
   const kind = kindPhrase(component)
+  const subject = `${article(kind)} ${kind}`
   const data = Array.isArray(props.data) ? (props.data as Datum[]) : null
-  const series = seriesField(props)
+  const seriesAccessor = seriesField(props, component)
+  const series =
+    typeof seriesAccessor === "function" ? "series" : seriesAccessor
   const physicsProjection = PHYSICS.has(component)
     ? physicsProjectionRows(props, fmtNum)
     : null
-  const sourceProjection = PHYSICS.has(component) && physicsProjection === null
-    ? describePhysicsSource(component, props)
-    : null
+  const sourceProjection =
+    PHYSICS.has(component) && physicsProjection === null
+      ? describePhysicsSource(component, props)
+      : null
 
   const { measure, measureFallback, dimension, dimensionFallback } = roles(
     component,
@@ -757,25 +685,35 @@ export function describeChart(
   const levels: { l1?: string; l2?: string; l3?: string; l4?: string } = {}
   if (PHYSICS.has(component)) {
     applyPhysicsLevels(
-      component, kind,
-      physicsProjection ?? (sourceProjection ? physicsProjectionRows({ projectionRows: sourceProjection.rows }, fmtNum) : null),
-      levels, want, fmtNum, sourceProjection
+      component,
+      kind,
+      physicsProjection ??
+        (sourceProjection
+          ? physicsProjectionRows(
+              { projectionRows: sourceProjection.rows },
+              fmtNum
+            )
+          : null),
+      levels,
+      want,
+      fmtNum,
+      sourceProjection
     )
   }
 
   // ── L1: encoding ───────────────────────────────────────────────────────
   if (want.has("l1") && !PHYSICS.has(component)) {
     if (component === "BumpChart") {
-      levels.l1 = `A ${kind} ranking ${series ?? "series"} by ${measureName} across ${dimensionName}.`
+      levels.l1 = `${subject} ranking ${series ?? "series"} by ${measureName} across ${dimensionName}.`
     } else if (XY_FAMILY.has(component) || BAR_FAMILY.has(component)) {
       levels.l1 =
-        `A ${kind} of ${measureName} by ${dimensionName}` +
+        `${subject} of ${measureName} by ${dimensionName}` +
         (series ? `, split by ${series}.` : ".")
     } else if (PART_TO_WHOLE.has(component)) {
-      levels.l1 = `A ${kind} showing ${measureName} across ${dimensionName} categories.`
+      levels.l1 = `${subject} showing ${measureName} across ${dimensionName} categories.`
     } else if (DISTRIBUTION.has(component)) {
       levels.l1 =
-        `A ${kind} of the distribution of ${measureName}` +
+        `${subject} of the distribution of ${measureName}` +
         (series ? ` by ${series}.` : ".")
     } else if (NETWORK.has(component)) {
       const nNodes = Array.isArray(props.nodes) ? props.nodes.length : undefined
@@ -784,19 +722,21 @@ export function describeChart(
         nNodes != null ? `${nNodes} ${plural(nNodes, "node")}` : null,
         nEdges != null ? `${nEdges} ${plural(nEdges, "edge")}` : null
       ].filter(Boolean)
-      levels.l1 = `A ${kind}${parts.length ? ` with ${parts.join(" and ")}` : ""}.`
+      levels.l1 = `${subject}${parts.length ? ` with ${parts.join(" and ")}` : ""}.`
     } else if (component === "BigNumber") {
       const label = typeof props.label === "string" ? props.label : measureName
       levels.l1 = `A single value${label ? ` for ${label}` : ""}.`
     } else {
-      levels.l1 = `A ${kind}.`
+      levels.l1 = `${subject}.`
     }
   }
 
   // Families where a quantitative measure makes L2/L3 meaningful.
   const statsFamily =
-    XY_FAMILY.has(component) || component === "BumpChart" ||
-    BAR_FAMILY.has(component) || PART_TO_WHOLE.has(component) ||
+    XY_FAMILY.has(component) ||
+    component === "BumpChart" ||
+    BAR_FAMILY.has(component) ||
+    PART_TO_WHOLE.has(component) ||
     DISTRIBUTION.has(component)
 
   // Stats power L2, L3, and the L4 directive; compute once if we have data + a measure.
@@ -809,7 +749,24 @@ export function describeChart(
   ) {
     const getMeasure = aiNumericAccessor(measure, measureFallback)
     const getDim = resolveRawAccessor(dimension, dimensionFallback)
-    stats = computeStats(data, getMeasure, getDim, fmtNum)
+    stats = computeStats(data, getMeasure, getDim, fmtNum, {
+      aggregate:
+        component === "BarChart" ||
+        component === "StackedBarChart" ||
+        PART_TO_WHOLE.has(component),
+      absolute: component === "PieChart" || component === "DonutChart",
+      ordered: XY_FAMILY.has(component) && !SCATTER.has(component) && !series,
+      temporal: props.xScaleType === "time" || props.xScaleType === "utc",
+      reverse:
+        Array.isArray(props.xExtent) &&
+        coerceUtcTimeValue(props.xExtent[0]) >
+          coerceUtcTimeValue(props.xExtent[1]),
+      group:
+        (component === "StackedBarChart" || component === "FunnelChart") &&
+        seriesAccessor
+          ? resolveRawAccessor(seriesAccessor, "series")
+          : undefined
+    })
   }
 
   // ── L2: statistics (only for measure-bearing families) ───────────────────
@@ -818,21 +775,51 @@ export function describeChart(
       levels.l2 = "No data is loaded yet."
     } else if (stats) {
       if (PART_TO_WHOLE.has(component)) {
-        levels.l2 = `${stats.count} segments totaling ${fmtNum(sumOf(stats))}. Largest is ${stats.maxLabel} at ${fmtNum(stats.max)}; smallest is ${stats.minLabel} at ${fmtNum(stats.min)}.`
+        levels.l2 =
+          `${stats.count} ${plural(stats.count, "segment")} totaling ${fmtNum(stats.sum)}. ` +
+          (stats.max === 0 && stats.min === 0
+            ? "All segments are zero."
+            : stats.max === stats.min
+              ? `All segments equal ${fmtNum(stats.max)}.`
+              : `${stats.maxCount === 1 ? "Largest is" : "Tied for largest are"} ${stats.maxLabels} at ${fmtNum(stats.max)}; ${stats.minCount === 1 ? "smallest is" : "tied for smallest are"} ${stats.minLabels} at ${fmtNum(stats.min)}.`)
+        if (stats.negative)
+          levels.l2 +=
+            component === "FunnelChart"
+              ? " Negative values are present; shares are undefined."
+              : ` ${stats.negative} negative input ${plural(stats.negative, "value")} represented by absolute magnitude.`
       } else {
-        levels.l2 = `${measureName} ranges from ${fmtNum(stats.min)} (${stats.minLabel}) to ${fmtNum(stats.max)} (${stats.maxLabel}), with a mean of ${fmtNum(stats.mean)} across ${stats.count} ${plural(stats.count, "point")}.`
+        const noun =
+          component === "StackedBarChart"
+            ? "segment"
+            : component === "BarChart"
+              ? "category"
+              : "point"
+        levels.l2 = `${measureName} ranges from ${fmtNum(stats.min)} (${stats.minLabel}) to ${fmtNum(stats.max)} (${stats.maxLabel}), with a mean of ${fmtNum(stats.mean)} across ${stats.count} ${plural(stats.count, noun)}.`
       }
-    }
+      if (stats.missing)
+        levels.l2 += ` ${stats.missing} missing or non-finite ${plural(stats.missing, "value")} omitted.`
+    } else levels.l2 = `No finite values are available for ${measureName}.`
   }
 
   // ── L3: trend (only meaningful over an ordered dimension) ────────────────
   // Split-series stats pool rows end-to-end, so directional claims would
   // describe the concatenation rather than any real trend. L1 reports the
   // split and L2 the pooled range across series.
-  if (want.has("l3") && stats && !series && XY_FAMILY.has(component)) {
+  if (
+    want.has("l3") &&
+    stats &&
+    !series &&
+    XY_FAMILY.has(component) &&
+    !SCATTER.has(component)
+  ) {
     levels.l3 = trendSentence(stats, measureName, fmtNum)
   } else if (want.has("l3") && stats && !series && BAR_FAMILY.has(component)) {
-    levels.l3 = `The highest ${dimensionName} is ${stats.maxLabel} and the lowest is ${stats.minLabel}.`
+    levels.l3 =
+      stats.max === stats.min
+        ? `All categories equal ${fmtNum(stats.max)}.`
+        : stats.maxCount === 1 && stats.minCount === 1
+          ? `The highest ${dimensionName} is ${stats.maxLabel} and the lowest is ${stats.minLabel}.`
+          : `${stats.maxLabels} ${stats.maxCount === 1 ? "is highest" : "tie for highest"}; ${stats.minLabels} ${stats.minCount === 1 ? "is lowest" : "tie for lowest"}.`
   }
 
   // ── L4: intent / communicative act (the illocutionary sentence) ──────────
@@ -846,7 +833,7 @@ export function describeChart(
       // Multi-series pools `stats` across series, so withhold the per-row
       // directive (e.g. "rises from X to Y") and let l4Sentence fall back to
       // its accurate generic phrasing ("read it for the overall direction").
-      const directiveStats = series ? null : stats
+      const directiveStats = series || SCATTER.has(component) ? null : stats
       levels.l4 = l4Sentence(
         act,
         component,
@@ -876,11 +863,6 @@ export function describeChart(
   return { text, levels, ...(annotations ? { annotations } : {}) }
 }
 
-/** Total of the measure across segments (part-to-whole) — recompute from stats' mean×count. */
-function sumOf(stats: MeasureStats): number {
-  return stats.mean * stats.count
-}
-
 /** Describe the dominant shape of an ordered series: peak/valley shapes take
  *  priority over net direction, since "rose then crashed" is more salient than
  *  "net down". Falls back to monotonic rise/fall and flat. */
@@ -898,33 +880,34 @@ function trendSentence(
     minLabel,
     firstLabel,
     lastLabel,
-    minIndex,
-    maxIndex,
     count
   } = stats
   const range = max - min
   const delta = last - first
+  if (count === 1)
+    return `${capitalize(measureName)} has a single value of ${fmtNum(first)} (${firstLabel}).`
   if (range === 0) {
     return `${capitalize(measureName)} is constant at ${fmtNum(first)} across the series.`
   }
   // Relative-flatness guard: if the whole series barely moves compared to its
   // own magnitude, call it flat before looking for a "peak" in the noise
   // (otherwise a 100→101→100 wiggle reads as a dramatic peak).
-  if (range / (Math.abs(stats.mean) || 1) < 0.04) {
+  if (
+    netDirection(stats) === "holds roughly steady" &&
+    range / (Math.abs(stats.mean) || 1) < 0.04
+  ) {
     return `${capitalize(measureName)} ends roughly where it started (${fmtNum(first)} at ${firstLabel} to ${fmtNum(last)} at ${lastLabel}), ranging between ${fmtNum(min)} and ${fmtNum(max)}.`
   }
-  const maxInterior = maxIndex > 0 && maxIndex < count - 1
-  const minInterior = minIndex > 0 && minIndex < count - 1
   // Prominence of an interior extremum above/below both endpoints, as a share of range.
   const peakProminence = (max - Math.max(first, last)) / range
   const valleyProminence = (Math.min(first, last) - min) / range
 
   // Peak shape: climbs to an interior high, then comes down.
-  if (maxInterior && peakProminence > 0.15) {
+  if (peakProminence > 0.15) {
     return `Overall ${measureName} climbs to a peak of ${fmtNum(max)} (${maxLabel}), then falls to ${fmtNum(last)} (${lastLabel}).`
   }
   // Valley shape: drops to an interior low, then recovers.
-  if (minInterior && valleyProminence > 0.15) {
+  if (valleyProminence > 0.15) {
     return `Overall ${measureName} drops to a low of ${fmtNum(min)} (${minLabel}), then recovers to ${fmtNum(last)} (${lastLabel}).`
   }
   // Roughly flat net movement.
@@ -933,11 +916,11 @@ function trendSentence(
   }
   // Monotonic-ish net direction.
   if (delta > 0) {
-    return maxIndex === count - 1
+    return last === max
       ? `Overall ${measureName} rises from ${fmtNum(first)} (${firstLabel}) to a peak of ${fmtNum(last)} (${lastLabel}).`
       : `Overall ${measureName} rises from ${fmtNum(first)} (${firstLabel}) to ${fmtNum(last)} (${lastLabel}), after peaking at ${fmtNum(max)} (${maxLabel}).`
   }
-  return minIndex === count - 1
+  return last === min
     ? `Overall ${measureName} falls from ${fmtNum(first)} (${firstLabel}) to a low of ${fmtNum(last)} (${lastLabel}).`
     : `Overall ${measureName} falls from ${fmtNum(first)} (${firstLabel}) to ${fmtNum(last)} (${lastLabel}), after dipping to ${fmtNum(min)} (${minLabel}).`
 }
@@ -1044,13 +1027,21 @@ function directiveFor(
     case "tracking":
       return `read it for the trajectory of ${m}, which ${netDirection(stats)} from ${fmtNum(stats.first)} (${stats.firstLabel}) to ${fmtNum(stats.last)} (${stats.lastLabel})`
     case "comparing":
-      return `compare ${m} across ${d}; ${stats.maxLabel} leads at ${fmtNum(stats.max)}`
+      return `compare ${m} across ${d}; ${stats.maxLabels} ${stats.maxCount === 1 ? "leads" : "tie for highest"} at ${fmtNum(stats.max)}`
     case "ranking":
-      return `read it top to bottom by ${m}; ${stats.maxLabel} ranks highest at ${fmtNum(stats.max)}`
+      return `read it top to bottom by ${m}; ${stats.maxLabels} ${stats.maxCount === 1 ? "ranks highest" : "tie for highest"} at ${fmtNum(stats.max)}`
     case "apportioning": {
-      const total = stats.mean * stats.count
+      const total = stats.sum
+      if (stats.max === 0 && stats.min === 0)
+        return "all segments are zero; there is no whole to apportion"
+      if (
+        stats.negative &&
+        component !== "PieChart" &&
+        component !== "DonutChart"
+      )
+        return "negative values are present; shares are undefined"
       const pct = total > 0 ? Math.round((stats.max / total) * 100) : null
-      return `read each ${d}'s share of the ${fmtNum(total)} total; ${stats.maxLabel} is the largest at ${fmtNum(stats.max)}${pct != null ? ` (${pct}%)` : ""}`
+      return `read each ${d}'s share of the ${fmtNum(total)} total; ${stats.maxLabels} ${stats.maxCount === 1 ? "is the largest" : "tie for largest"} at ${fmtNum(stats.max)}${pct != null ? ` (${pct}%${stats.maxCount > 1 ? " each" : ""})` : ""}`
     }
     case "characterizing":
       return `read it for the spread of ${m}, from ${fmtNum(stats.min)} to ${fmtNum(stats.max)}`
@@ -1066,30 +1057,17 @@ function alertingDirective(
   component: string
 ): string {
   if (BAR_FAMILY.has(component) || PART_TO_WHOLE.has(component)) {
-    return `${stats.maxLabel} stands out at ${fmtNum(stats.max)} — check it first`
+    return `${stats.maxLabels} ${stats.maxCount === 1 ? "stands" : "stand"} out at ${fmtNum(stats.max)} — check ${stats.maxCount === 1 ? "it" : "them"} first`
   }
-  const {
-    first,
-    last,
-    min,
-    max,
-    minLabel,
-    maxLabel,
-    lastLabel,
-    minIndex,
-    maxIndex,
-    count
-  } = stats
+  const { first, last, min, max, minLabel, maxLabel, lastLabel } = stats
   const range = max - min
   if (range > 0) {
-    const maxInterior = maxIndex > 0 && maxIndex < count - 1
-    const minInterior = minIndex > 0 && minIndex < count - 1
     const peakProminence = (max - Math.max(first, last)) / range
     const valleyProminence = (Math.min(first, last) - min) / range
-    if (maxInterior && peakProminence > 0.15) {
+    if (peakProminence > 0.15) {
       return `the peak of ${fmtNum(max)} at ${maxLabel} is the point to investigate`
     }
-    if (minInterior && valleyProminence > 0.15) {
+    if (valleyProminence > 0.15) {
       return `the dip to ${fmtNum(min)} at ${minLabel} is the point to investigate`
     }
     if (last >= max)
@@ -1129,5 +1107,6 @@ function capitalize(s: string): string {
 /** Pluralize a count noun for user-facing text ("1 edge", "2 edges"). */
 function plural(n: number, noun: string): string {
   if (n !== 1 && noun === "body") return "bodies"
+  if (n !== 1 && noun === "category") return "categories"
   return n === 1 ? noun : `${noun}s`
 }

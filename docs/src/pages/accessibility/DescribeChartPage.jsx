@@ -235,6 +235,20 @@ levels.l4  // "This is an alerting chart; the peak of 9,100 at March is the poin
 
       <h2 id="coverage">Coverage &amp; honesty</h2>
       <p>
+        Line and area trends follow the x-axis order, including reversed
+        extents. Scatterplots report their range without inventing a trajectory
+        through the points. Bar descriptions use category totals; stacked bars
+        use segment totals, while grouped bars and dot plots describe individual
+        marks. Funnel totals keep stages and their categories separate.
+        Category colors do not create a separate series.
+      </p>
+      <p>
+        Descriptions identify ties and omitted missing values. Pie and donut
+        shares use the absolute magnitudes shown by their slices and disclose
+        negative input; an all-zero pie has no shares. Date labels retain the
+        time and UTC timezone when observations fall within the same day.
+      </p>
+      <p>
         L2/L3 are richest for the families where a quantitative measure over a
         dimension is the point: <strong>XY</strong> (line, area, scatter),{" "}
         <strong>bar</strong>, <strong>part-to-whole</strong> (pie, donut, funnel),
