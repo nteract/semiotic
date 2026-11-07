@@ -363,8 +363,8 @@ npm run check:file-size -- --update-allowlist
 
 ### Cold-consumer bundle ratchet
 
-Each row bundles one public named import from the packed tarball with esbuild code splitting, as an
-application would ship it. `gzipBytes` is the initial load (the entry plus statically imported
+Each row bundles one public named import from the packed tarball with Rolldown (via Vite) code
+splitting, as an application would ship it. `gzipBytes` is the initial load (the entry plus statically imported
 chunks, gzipped per file); `lazyGzipBytes` is code fetched only when a feature needs it. The ratchet
 gates the initial load.
 
@@ -373,6 +373,13 @@ contract drift still fails immediately. Byte measurements use two levels: change
 supported runner variance pass silently; changes outside that variance warn without failing until
 positive growth exceeds four times the metric's runner tolerance. Size improvements warn for a
 baseline refresh but never fail solely for making a consumer bundle smaller.
+
+The docs/package CI lane runs this check immediately after the production build and bundle budgets,
+before MCP preparation, package tests, or the docs build. Local `check:package-contracts` and
+`check:package-contracts:from-dist` also check cold consumers before package tests and API checks.
+For an intentional import-graph change, run `npm run dist:prod && npm run docs:cold-consumer` and
+`npm run docs:readme-dashboard`. Review the baseline JSON, generated README table, and dashboard
+SVG together; the dashboard also reads the cold-consumer baseline.
 
 **Take cold-consumer warnings seriously.** Inspect the affected named import and its reachable graph
 before the warning runway is exhausted. Regenerate the baseline only after deciding the growth is an
