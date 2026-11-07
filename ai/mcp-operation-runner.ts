@@ -65,19 +65,21 @@ export function createMcpOperationRunner(
   limits: McpExecutionLimits = resolveMcpExecutionLimits(),
   launch: typeof fork = fork
 ) {
-  const children = new Set<ChildProcess>()
-  let listening = false
+  // Runner lifetime and child lifetime are independent: closing revokes new
+  // work immediately, while each child retains its slot until exit/close.
+  const children = new Map<ChildProcess, () => void>()
+  let lifecycle: "idle" | "listening" | "closed" = "idle"
   const killAll = () => {
-    for (const child of children) child.kill("SIGKILL")
+    for (const child of children.keys()) child.kill("SIGKILL")
   }
   const stop = () => {
     killAll()
     process.exit(0)
   }
   const close = () => {
-    killAll()
-    if (!listening) return
-    listening = false
+    if (lifecycle === "closed") return
+    lifecycle = "closed"
+    for (const cancel of children.values()) cancel()
     process.removeListener("exit", killAll)
     process.removeListener("SIGTERM", stop)
     process.removeListener("SIGINT", stop)
@@ -87,7 +89,7 @@ export function createMcpOperationRunner(
     job: McpOperationJob,
     signals: Array<AbortSignal | undefined> = []
   ): Promise<T> {
-    if (signals.some((signal) => signal?.aborted)) {
+    if (lifecycle === "closed" || signals.some((signal) => signal?.aborted)) {
       return Promise.reject(
         new McpExecutionError(
           "MCP_RENDER_CANCELLED",
@@ -115,13 +117,12 @@ export function createMcpOperationRunner(
         execArgv: [`--max-old-space-size=${limits.maxHeapMb}`],
         serialization: "advanced"
       })
-      if (!listening) {
-        listening = true
+      if (lifecycle === "idle") {
+        lifecycle = "listening"
         process.once("exit", killAll)
         process.once("SIGTERM", stop)
         process.once("SIGINT", stop)
       }
-      children.add(child)
 
       const finish = (error?: McpExecutionError, result?: T) => {
         if (settled) return
@@ -140,6 +141,7 @@ export function createMcpOperationRunner(
             "Tool execution was canceled."
           )
         )
+      children.set(child, abort)
       const timeout = (label: string) =>
         finish(
           new McpExecutionError(
@@ -243,6 +245,11 @@ export function createMcpOperationRunner(
       child.once("close", reap)
       for (const signal of signals)
         signal?.addEventListener("abort", abort, { once: true })
+      // Launching or registering listeners may synchronously cancel a request.
+      if (lifecycle === "closed" || signals.some((signal) => signal?.aborted)) {
+        abort()
+        return
+      }
       arm()
       child.send(job, (error) => {
         if (error)

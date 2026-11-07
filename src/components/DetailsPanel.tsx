@@ -55,6 +55,10 @@ interface HoverDetailsPanelProps extends Omit<DetailsPanelProps, "trigger" | "ch
   children: (datum: Datum, observation: HoverObservation) => React.ReactNode
 }
 
+type PanelState =
+  | { phase: "closed"; observation: null }
+  | { phase: "opening" | "open" | "closing"; observation: ClickObservation | HoverObservation }
+
 const ANIMATION_DURATION = 200
 const CLICK_TYPES: ChartObservation["type"][] = ["click", "click-end", "activate"]
 const HOVER_TYPES: ChartObservation["type"][] = ["hover", "hover-end"]
@@ -67,14 +71,20 @@ function DetailsPanelComponent(props: DetailsPanelProps | HoverDetailsPanelProps
     observation: directObservation, dismissOnEmpty = true, showClose = true,
     onToggle, ariaLabel = "Chart details", className, style,
   } = props
-  const [selectedObservation, setSelectedObservation] = useState<ClickObservation | HoverObservation | null>(null)
-  const [isOpen, setIsOpen] = useState(false)
-  const [visible, setVisible] = useState(false)
+  const [panel, setPanel] = useState<PanelState>(() => ({ phase: "closed", observation: null }))
+  // Event handlers and timer callbacks must see transitions before React commits.
+  const panelStateRef = useRef(panel)
+  const transition = useCallback((next: PanelState) => {
+    panelStateRef.current = next
+    setPanel(next)
+  }, [])
+  const selectedObservation = panel.observation
+  const isOpen = panel.phase === "opening" || panel.phase === "open"
+  const visible = panel.phase === "open"
   const panelRef = useRef<HTMLDivElement>(null)
   const restoreFocusRef = useRef<HTMLElement | SVGElement | null>(null)
   const focusOnOpenRef = useRef(false)
-  const openRef = useRef(false)
-  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const reducedMotion = useReducedMotion()
 
   const { latest: storeLatest } = useChartObserver({
@@ -84,18 +94,23 @@ function DetailsPanelComponent(props: DetailsPanelProps | HoverDetailsPanelProps
   const handledRef = useRef<{ latest: ChartObservation | null; trigger: string; chartId?: string } | null>(null)
 
   const handleClose = useCallback(() => {
-    if (!openRef.current) return
-    openRef.current = false
+    const current = panelStateRef.current
+    if (current.phase === "closed" || current.phase === "closing") return
     if (panelRef.current?.contains(document.activeElement)) {
       const target = restoreFocusRef.current
       if (target?.isConnected) target.focus({ preventScroll: true })
     }
-    setIsOpen(false)
-    setVisible(false)
-    clearTimeout(timerRef.current)
-    if (reducedMotion) setSelectedObservation(null)
-    else timerRef.current = setTimeout(() => setSelectedObservation(null), ANIMATION_DURATION)
-  }, [reducedMotion])
+    if (timerRef.current !== null) clearTimeout(timerRef.current)
+    const closing: PanelState = reducedMotion
+      ? { phase: "closed", observation: null }
+      : { phase: "closing", observation: current.observation }
+    transition(closing)
+    if (!reducedMotion) timerRef.current = setTimeout(() => {
+      if (panelStateRef.current !== closing) return
+      timerRef.current = null
+      transition({ phase: "closed", observation: null })
+    }, ANIMATION_DURATION)
+  }, [reducedMotion, transition])
 
   useEffect(() => {
     const previous = handledRef.current
@@ -113,19 +128,19 @@ function DetailsPanelComponent(props: DetailsPanelProps | HoverDetailsPanelProps
       const observation = latest.type === "activate"
         ? { ...latest, type: "click" as const, x: 0, y: 0 }
         : latest as ClickObservation | HoverObservation
-      if (!openRef.current) {
+      const current = panelStateRef.current
+      if (current.phase === "closed" || current.phase === "closing") {
         const active = document.activeElement
         restoreFocusRef.current = active instanceof HTMLElement || active instanceof SVGElement ? active : null
         focusOnOpenRef.current = position === "overlay" || (latest.type === "activate" && latest.inputType !== "pointer" && latest.inputType !== "touch")
       }
-      clearTimeout(timerRef.current)
-      openRef.current = true
-      setSelectedObservation(observation)
-      setIsOpen(true)
+      if (timerRef.current !== null) clearTimeout(timerRef.current)
+      timerRef.current = null
+      transition({ phase: current.phase === "open" ? "open" : "opening", observation })
     } else if (dismissOnEmpty && (trigger === "hover" ? latest.type === "hover-end" : latest.type === "click-end")) {
       handleClose()
     }
-  }, [chartId, directObservation, dismissOnEmpty, handleClose, latest, position, trigger])
+  }, [chartId, directObservation, dismissOnEmpty, handleClose, latest, position, transition, trigger])
 
   const content = selectedObservation?.type === "hover" && props.trigger === "hover"
     ? (props.children as HoverDetailsPanelProps["children"])(selectedObservation.datum, selectedObservation)
@@ -142,24 +157,31 @@ function DetailsPanelComponent(props: DetailsPanelProps | HoverDetailsPanelProps
 
   useEffect(() => {
     if (!effectiveOpen) {
-      setVisible(false)
+      const current = panelStateRef.current
+      if (current.phase === "open") transition({ ...current, phase: "opening" })
       return
     }
     if (focusOnOpenRef.current) {
       panelRef.current?.focus({ preventScroll: true })
       focusOnOpenRef.current = false
     }
+    const show = () => {
+      const current = panelStateRef.current
+      if (current.phase === "opening") transition({ ...current, phase: "open" })
+    }
     if (reducedMotion) {
-      setVisible(true)
+      show()
       return
     }
     let frame = requestAnimationFrame(() => {
-      frame = requestAnimationFrame(() => setVisible(true))
+      frame = requestAnimationFrame(show)
     })
     return () => cancelAnimationFrame(frame)
-  }, [effectiveOpen, reducedMotion])
+  }, [effectiveOpen, reducedMotion, transition])
 
-  useEffect(() => () => clearTimeout(timerRef.current), [])
+  useEffect(() => () => {
+    if (timerRef.current !== null) clearTimeout(timerRef.current)
+  }, [])
 
   if (content == null) return null
   const panelStyle = getPanelStyle(position, size, visible && isOpen, !reducedMotion)

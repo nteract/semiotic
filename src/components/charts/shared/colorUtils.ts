@@ -198,7 +198,7 @@ export function distinctCategories(
  * Creates a color scale function from data
  *
  * @param data - Array of data points
- * @param colorBy - Field name to use for coloring
+ * @param colorBy - Field name or accessor to use for coloring
  * @param scheme - Color scheme name or custom palette
  * @returns Color scale function
  *
@@ -210,7 +210,7 @@ export function distinctCategories(
  */
 export function createColorScale(
   data: Array<Datum>,
-  colorBy: string,
+  colorBy: Accessor<string | number>,
   scheme: string | string[] | Record<string, string> = "category10"
 ): (v: string) => string {
   // An explicit `{ category: color }` map wins — look each value up directly,
@@ -222,7 +222,9 @@ export function createColorScale(
 
   // Scale lookups use string keys. Skip sparse/null rows and support even an
   // empty field name while collecting the domain without intermediate arrays.
-  const uniqueValues = distinctCategories(data, (datum) => datum?.[colorBy])
+  const uniqueValues = distinctCategories(data, typeof colorBy === "function"
+    ? (datum) => String(colorBy(datum))
+    : (datum) => datum?.[colorBy])
 
   // Only sequential interpolators need a numeric domain. Categorical palettes
   // share the ordinal constructor and skip the unused numeric scan.

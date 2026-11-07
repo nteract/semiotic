@@ -117,6 +117,23 @@ describe("useColorScale", () => {
     expect(result.current!("B")).toBe("#00ff00")
   })
 
+  it.each(["field", "function"])("preserves provider overrides and first-seen fallback colors with a %s accessor", (kind) => {
+    const colorBy = kind === "field" ? "cat" : (datum: Datum) => datum.cat
+    const { result, rerender } = renderHook(
+      ({ rows }) => useColorScale(rows, colorBy),
+      {
+        initialProps: { rows: [{ cat: "B" }, { cat: "B" }, { cat: "A" }] },
+        wrapper: createWrapper({ categoryColors: { B: "#123456" } })
+      }
+    )
+    expect(result.current!("B")).toBe("#123456")
+    expect(result.current!("A")).toBe("#ff7f0e")
+    expect(result.current!("unknown")).toBe("#999")
+    rerender({ rows: [] })
+    expect(result.current!("B")).toBe("#123456")
+    expect(result.current!("A")).toBe("#999")
+  })
+
   it("returns a color scale function when colorBy is a string", () => {
     const { result } = renderHook(() => useColorScale(data, "cat"), {
       wrapper: createWrapper()

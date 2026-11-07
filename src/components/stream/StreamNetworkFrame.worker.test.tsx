@@ -42,6 +42,40 @@ describe("StreamNetworkFrame worker force layout", () => {
     vi.restoreAllMocks()
   })
 
+  it("publishes clear as ready only after empty topology is committed", async () => {
+    const response = Promise.withResolvers<{ positions: Record<string, { x: number; y: number }> }>()
+    runWorker.mockReturnValue(response.promise)
+    const ref = React.createRef<StreamNetworkFrameHandle>()
+    const ready = vi.fn(() => ref.current!.getTopology())
+    const onLayoutStateChange = (state: string) => {
+      if (state === "ready") ready()
+    }
+    const view = render(<StreamNetworkFrame ref={ref} chartType="force"
+      nodes={[{ id: "a" }, { id: "b" }]} edges={[{ source: "a", target: "b" }]}
+      layoutExecution="worker" animate={false} onLayoutStateChange={onLayoutStateChange} />)
+    await waitFor(() => expect(runWorker).toHaveBeenCalledOnce())
+    act(() => ref.current!.clear())
+    expect(ready).toHaveReturnedWith({ nodes: [], edges: [] })
+    expect(view.container.querySelector('[aria-busy="true"]')).toBeNull()
+    await act(async () => response.resolve({ positions: { a: { x: 90, y: 90 } } }))
+    expect(ref.current!.getTopology()).toEqual({ nodes: [], edges: [] })
+    expect(ready).toHaveBeenCalledOnce()
+  })
+
+  it("does not dispatch a solve cancelled by its pending callback", async () => {
+    const ref = React.createRef<StreamNetworkFrameHandle>()
+    const onLayoutStateChange = vi.fn((state: string) => {
+      if (state === "pending") ref.current!.clear()
+    })
+    render(<StreamNetworkFrame ref={ref} chartType="force"
+      nodes={[{ id: "a" }, { id: "b" }]} edges={[{ source: "a", target: "b" }]}
+      layoutExecution="worker" animate={false} onLayoutStateChange={onLayoutStateChange} />)
+    await act(async () => { await vi.dynamicImportSettled() })
+    expect(runWorker).not.toHaveBeenCalled()
+    expect(ref.current!.getTopology()).toEqual({ nodes: [], edges: [] })
+    expect(onLayoutStateChange).toHaveBeenLastCalledWith("ready")
+  })
+
   it("replaces controlled identities before dispatching the next worker solve", async () => {
     const pending: Array<{ signal: AbortSignal; resolve: (value: { positions: Record<string, { x: number; y: number }> }) => void }> = []
     runWorker.mockImplementation((_request, signal) => new Promise((resolve) => pending.push({ signal, resolve })))

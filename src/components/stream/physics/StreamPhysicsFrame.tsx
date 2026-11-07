@@ -35,7 +35,7 @@ import {
   type PhysicsAnnotationAnchorNode
 } from "./PhysicsSVGOverlay"
 import type { PhysicsBodyState } from "./PhysicsKernel"
-import type { PhysicsWorkerSession } from "./PhysicsWorkerClient"
+import type { PhysicsWorkerExecution } from "./physicsWorkerStartup"
 import {
   PhysicsPipelineStore,
   type PhysicsObservationEvent,
@@ -529,14 +529,8 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
         useSceneRevisionDiagnostics("StreamPhysicsFrame")
       const executionStateKeyRef = useRef("")
       const svgInstanceId = useId().replace(/:/g, "")
-      const workerActiveRef = useRef(false)
-      const workerFailedRef = useRef(false)
-      const workerGenerationRef = useRef(0)
-      const workerPendingRef = useRef(false)
-      const workerRenderRequestedRef = useRef(false)
-      const workerSessionRef = useRef<PhysicsWorkerSession | null>(null)
+      const workerExecutionRef = useRef<PhysicsWorkerExecution>({ phase: "sync" })
       const [hostMutations] = useState(() => new PhysicsWorkerHostMutations())
-      const workerStartingRef = useRef(false)
       const logicalClockRef = useRef<() => number>(frameRuntime.now)
       logicalClockRef.current = frameRuntime.now
       const hydrated = useHydration()
@@ -820,14 +814,11 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
       )
 
       const stopWorker = useCallback(
-        (reason?: string, report = true) => {
-          workerGenerationRef.current += 1
-          workerActiveRef.current = false
-          workerPendingRef.current = false
-          workerRenderRequestedRef.current = false
-          workerStartingRef.current = false
-          workerSessionRef.current?.terminate()
-          workerSessionRef.current = null
+        (reason?: string, report = true, failed = false) => {
+          const previous = workerExecutionRef.current
+          // Revoke ownership before termination rejects pending promises.
+          workerExecutionRef.current = { phase: failed ? "failed" : "sync" }
+          if ("session" in previous) previous.session?.terminate()
           hostMutations.clear()
           if (report) reportExecutionState("sync", reason)
         },
@@ -848,7 +839,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
         if (!isPhysicsWorkerPacingSupported(initialSpawnPacing)) {
           return "spawn pacing is not worker-cloneable"
         }
-        if (workerFailedRef.current) return "worker fallback"
+        if (workerExecutionRef.current.phase === "failed") return "worker fallback"
         return null
       }, [
         augmentedConfig,
@@ -927,9 +918,8 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
 
       const handleWorkerError = useCallback(
         (error: unknown) => {
-          workerFailedRef.current = true
           const message = error instanceof Error ? error.message : String(error)
-          stopWorker(`worker failed: ${message || "unknown error"}`)
+          stopWorker(`worker failed: ${message || "unknown error"}`, true, true)
         },
         [stopWorker]
       )
@@ -939,8 +929,10 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
         if (!store) return false
 
         const choice = workerChoice()
+        const execution = workerExecutionRef.current
+        const ownsWorker = "session" in execution
         if (!choice.useWorker) {
-          if (workerActiveRef.current || workerStartingRef.current) {
+          if (ownsWorker) {
             stopWorker(choice.reason ?? "sync fallback")
           } else {
             reportExecutionState("sync", choice.reason ?? "sync")
@@ -948,27 +940,35 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
           return false
         }
 
-        if (workerActiveRef.current || workerStartingRef.current) return true
+        if (ownsWorker) return true
 
-        workerStartingRef.current = true
-        const generation = workerGenerationRef.current + 1
-        workerGenerationRef.current = generation
+        const starting: Extract<PhysicsWorkerExecution, { phase: "starting" }> = {
+          phase: "starting",
+          session: null
+        }
+        workerExecutionRef.current = starting
+        let owner: PhysicsWorkerExecution = starting
 
         import("./PhysicsWorkerClient")
           .then(({ PhysicsWorkerSession, initializeCurrentPhysicsWorker }) => {
-            if (workerGenerationRef.current !== generation) return null
-            const session = workerSessionRef.current ?? new PhysicsWorkerSession()
-            workerSessionRef.current = session
+            if (workerExecutionRef.current !== starting) return null
+            const session = new PhysicsWorkerSession()
+            starting.session = session
             return initializeCurrentPhysicsWorker(session, store, augmentedConfig ?? {},
-              () => workerGenerationRef.current === generation)
+              () => workerExecutionRef.current === starting)
           })
           .then((frame) => {
-            if (!frame || workerGenerationRef.current !== generation) return
-            workerStartingRef.current = false
-            workerActiveRef.current = true
-            workerFailedRef.current = false
+            if (!frame || workerExecutionRef.current !== starting || !starting.session) return
+            owner = {
+              phase: "active",
+              session: starting.session,
+              pending: null
+            }
+            workerExecutionRef.current = owner
             applyWorkerFrame(frame)
+            if (workerExecutionRef.current !== owner) return
             reportExecutionState("worker", choice.reason ?? "worker")
+            if (workerExecutionRef.current !== owner) return
             paint()
             const latest = storeRef.current?.workerState()
             if (
@@ -983,7 +983,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
             }
           })
           .catch((error) => {
-            if (workerGenerationRef.current !== generation) return
+            if (workerExecutionRef.current !== owner) return
             handleWorkerError(error)
             scheduleRender()
           })
@@ -1003,14 +1003,14 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
 
       const postWorkerCommand = useCallback(
         (command: PhysicsWorkerCommand, notifyTick = true, mutation?: PhysicsWorkerHostMutation, supersedes = false) => {
-          const session = workerSessionRef.current
-          if (!session || !workerActiveRef.current) return
-          const generation = workerGenerationRef.current
+          const execution = workerExecutionRef.current
+          if (execution.phase !== "active") return
+          const { session } = execution
           const token = mutation && hostMutations.track(mutation, supersedes)
           session
             .request(command)
             .then((payload) => {
-              if (workerGenerationRef.current !== generation) return
+              if (workerExecutionRef.current !== execution) return
               hostMutations.acknowledge(token)
               const frame = physicsWorkerPayloadFrame(payload)
               // Imperative tick/settle already deliver observations in the
@@ -1023,7 +1023,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
                 )
             })
             // Replacing a worker rejects its pending commands; only the current one can fail.
-            .catch((error) => { if (workerGenerationRef.current === generation) handleWorkerError(error) })
+            .catch((error) => { if (workerExecutionRef.current === execution) handleWorkerError(error) })
         },
         [finishWorkerFrame, handleWorkerError, hostMutations]
       )
@@ -1078,7 +1078,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
           renderFnRef.current()
           return
         }
-        if (usingWorker && workerStartingRef.current) return
+        if (usingWorker && workerExecutionRef.current.phase === "starting") return
         // Do NOT null lastFrameTime here. Pause/resume/visibility already reset
         // the clock; wiping it on every kick (React re-renders, push, config
         // patches) forces zero-delta ticks and stalls motion under thrash.
@@ -1117,13 +1117,14 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
           }
         }
 
-        if (workerActiveRef.current && workerSessionRef.current) {
-          if (workerPendingRef.current) {
+        const execution = workerExecutionRef.current
+        if (execution.phase === "active") {
+          if (execution.pending) {
             // A media-query change can arrive while the previous worker frame is
             // in flight. Remember the request so entering reduced motion still
             // settles, and leaving it still restarts the RAF path after the worker
             // response lands.
-            workerRenderRequestedRef.current = true
+            execution.pending.renderRequested = true
             return
           }
           let deltaSeconds = 0
@@ -1135,26 +1136,25 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
                 : 0
             lastFrameTimeRef.current = now
           }
-          const session = workerSessionRef.current
-          const generation = workerGenerationRef.current
-          workerPendingRef.current = true
+          const { session } = execution
+          const pending = { renderRequested: false }
+          execution.pending = pending
           const request = reducedMotionForFrame
             ? session.settle()
             : session.tick(deltaSeconds)
           request
             .then((frame) => {
-              workerPendingRef.current = false
-              const renderRequested = workerRenderRequestedRef.current
-              workerRenderRequestedRef.current = false
-              if (workerGenerationRef.current !== generation) return
+              if (workerExecutionRef.current !== execution || execution.pending !== pending) return
+              execution.pending = null
+              const { renderRequested } = pending
               finishWorkerFrame(frame)
               if (renderRequested) requestRender()
             })
             .catch((error) => {
-              workerPendingRef.current = false
-              const renderRequested = workerRenderRequestedRef.current
-              workerRenderRequestedRef.current = false
-              if (workerGenerationRef.current !== generation) return
+              if (workerExecutionRef.current !== execution ||
+                (execution.pending !== null && execution.pending !== pending)) return
+              execution.pending = null
+              const { renderRequested } = pending
               handleWorkerError(error)
 
               runObservedSteps(reducedMotionForFrame ? {} : { deltaSeconds })
@@ -1217,10 +1217,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
         const update = store?.updateConfigWithResult(augmentedConfig ?? {})
         const changed = Boolean(update?.changeSet.keys?.length) ||
           (augmentedConfig?.colliders === undefined && hadConfiguredCollidersRef.current)
-        if (changed) {
-          workerFailedRef.current = false
-          if (workerActiveRef.current || workerStartingRef.current) stopWorker("config changed", false)
-        }
+        if (changed) stopWorker("config changed", false)
         // Frame props describe the complete authored + frame-owned collider
         // set. Clear the world once when the last configured collider source
         // disappears, without revising collider-free worlds on every rerender.
@@ -1238,7 +1235,8 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
       }, [augmentedConfig, stopWorker])
 
       useEffect(() => {
-        workerFailedRef.current = false
+        if (workerExecutionRef.current.phase === "failed")
+          workerExecutionRef.current = { phase: "sync" }
         requestRender()
         // eslint-disable-next-line react-hooks/exhaustive-deps
       }, [hydrated, simulationExecution, workerBodyThreshold])
@@ -1273,7 +1271,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
         storeRef.current!.enqueue(spawns, pacing)
         if (isPhysicsWorkerPacingSupported(pacing))
           postWorkerCommand({ type: "enqueue", spawns, pacing }, true, (store, frame) => { if (replacesPhysicsMirror(frame)) store.enqueue(spawns, pacing) })
-        else if (workerActiveRef.current || workerStartingRef.current) stopWorker("spawn pacing is not worker-cloneable")
+        else if ("session" in workerExecutionRef.current) stopWorker("spawn pacing is not worker-cloneable")
         requestRender()
       }, [postWorkerCommand, requestRender, stopWorker])
       useImperativeHandle(

@@ -309,6 +309,29 @@ HOC charts wrap Stream Frames. Every HOC accepts `frameProps` for advanced pass-
 
 Prefer **subpath imports** in application code (`semiotic/xy`, `semiotic/ordinal`, …) so consumers do not pull the full library. The root `semiotic` entry and `semiotic/ai` are convenience / tooling surfaces.
 
+### Lifecycle ownership
+
+Use a local discriminated union when flags describe mutually exclusive phases.
+Keep independent lifecycles separate: simulation pause/visibility, worker
+execution, pending frames, and host mutation acknowledgements have different
+transition rules. Existing reducers and small ownership guards do not need a
+general state-machine dependency.
+
+| Owner | States and commit boundary |
+| --- | --- |
+| Physics worker run | `sync`, `starting`, `active`, `failed`; the active run owns its pending frame and deferred render request. |
+| Network layout request | A request owns cancellation and publication; publish `ready` only after geometry or an empty topology is committed. |
+| Data ingestion replacement | One replacement owns history chunks, pushes, and its queued flush. Publication is `Idle`, `Publishing`, or `FlushRequested`; a reentrant flush cannot overtake the active callback. |
+| Details panel | `closed`, `opening`, `open`, `closing`; only closing retains content for exit animation, and its timer owns that particular close. |
+| MCP operation runner | `idle`, `listening`, `closed`; shutdown rejects new work immediately, while child process slots remain occupied until exit/close. |
+
+Revoke ownership before aborting or terminating work. A stale completion must
+check its owner before changing pending flags, publishing data, or releasing
+resources. Recheck after consumer callbacks that can synchronously clear,
+replace, or start work. Test those event sequences using existing runtime
+doubles, spies, fake timers, and controllable promises; keep instrumentation out
+of production code.
+
 ## Testing Guidance
 
 - Unit and integration tests live next to source files as `*.test.{ts,tsx,jsx}`.

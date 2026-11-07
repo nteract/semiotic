@@ -103,6 +103,26 @@ describe("DetailsPanel lifecycle and semantics", () => {
     expect(toggled).not.toHaveBeenCalled()
   })
 
+  it("does not reopen from a queued entrance frame after dismissal", () => {
+    vi.useFakeTimers()
+    try {
+      const toggled = vi.fn()
+      const view = render(<DetailsPanel observation={clicked} onToggle={toggled}>{content}</DetailsPanel>)
+      const panel = screen.getByRole("region")
+      expect(panel).toHaveStyle({ opacity: "0" })
+      act(() => vi.advanceTimersToNextFrame())
+      fireEvent.click(screen.getByRole("button", { name: "Close details" }))
+      act(() => vi.advanceTimersToNextFrame())
+      expect(panel).toHaveAttribute("inert")
+      expect(panel).toHaveStyle({ opacity: "0" })
+      act(() => vi.advanceTimersByTime(200))
+      expect(panel).not.toBeInTheDocument()
+      expect(toggled.mock.calls).toEqual([[true], [false]])
+      view.unmount()
+      expect(vi.getTimerCount()).toBe(0)
+    } finally { vi.useRealTimers() }
+  })
+
   it("retains the original click payload and removes reduced-motion transitions", () => {
     const previous = window.matchMedia
     window.matchMedia = vi.fn().mockReturnValue({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() })
