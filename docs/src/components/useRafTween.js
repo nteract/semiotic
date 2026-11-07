@@ -4,13 +4,11 @@ import { useEffect, useRef } from "react"
 export const easeInOut = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2)
 
 /**
- * Token-guarded, interruptible requestAnimationFrame tween — the canonical
- * pattern for re-triggerable animations in the docs demos.
+ * Interruptible requestAnimationFrame tween for the docs demos.
  *
- * Runs an eased 0→1 progress over `duration` ms each time `trigger` changes
- * (the initial mount is skipped). A new trigger (or unmount) bumps an internal
- * token so any in-flight `step` bails on its next frame — rapid re-triggering
- * can never stack loops, and a single loop is always live.
+ * Runs an eased 0→1 progress over `duration` ms each time `trigger` changes.
+ * Initial mount and Strict Mode's effect replay are skipped. Each effect owns its queued
+ * frame; replacement and unmount cancel it and retire any callback in progress.
  *
  * - `onStart()` — optional, runs once synchronously when a tween begins. Return
  *   a context value to thread into every `onFrame` call, or return `false` to
@@ -27,8 +25,8 @@ export const easeInOut = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 
  * })
  */
 export function useRafTween({ trigger, duration = 500, onStart, onFrame, ease = easeInOut }) {
-  const tokenRef = useRef(0)
-  const mountedRef = useRef(false)
+  const previousTrigger = useRef(trigger)
+  const previousDuration = useRef(duration)
   const startRef = useRef(onStart)
   const frameRef = useRef(onFrame)
   const easeRef = useRef(ease)
@@ -38,22 +36,26 @@ export function useRafTween({ trigger, duration = 500, onStart, onFrame, ease = 
 
   useEffect(() => {
     // Skip the initial mount — only actual `trigger` changes animate.
-    if (!mountedRef.current) {
-      mountedRef.current = true
-      return
-    }
+    if (Object.is(previousTrigger.current, trigger) && previousDuration.current === duration) return
+    previousTrigger.current = trigger
+    previousDuration.current = duration
     const ctx = startRef.current ? startRef.current() : undefined
     if (ctx === false) return
-    const token = ++tokenRef.current
+    let active = true
+    let frame = null
     const t0 = performance.now()
     const step = (now) => {
-      if (tokenRef.current !== token) return // superseded by a newer tween / unmount
+      frame = null
+      if (!active) return
       const p = Math.min(1, (now - t0) / duration)
       frameRef.current(easeRef.current(p), ctx)
-      if (p < 1) requestAnimationFrame(step)
+      if (active && p < 1) frame = requestAnimationFrame(step)
     }
-    requestAnimationFrame(step)
-    return () => { tokenRef.current++ }
+    frame = requestAnimationFrame(step)
+    return () => {
+      active = false
+      if (frame !== null) cancelAnimationFrame(frame)
+    }
     // Callbacks are read through refs; only trigger/duration drive re-runs.
 
   }, [trigger, duration])

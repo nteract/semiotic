@@ -16,6 +16,36 @@ describe("RealtimeLineChart — event-time ingestion", () => {
     cleanup()
   })
 
+  it.each([false, true])("keeps clear in a late-data callback as an ingestion barrier (aggregate=%s)", (aggregate) => {
+    const ref = React.createRef<RealtimeLineChartHandle>()
+    const onObservation = vi.fn((observation: ChartObservation) => {
+      if (observation.type === "late-data") ref.current!.clear()
+    })
+    render(<RealtimeLineChart ref={ref} eventTime={{ lateness: 5 }}
+      aggregate={aggregate ? { size: 100 } : undefined} onObservation={onObservation} />)
+    act(() => ref.current!.pushMany([
+      { time: 100, value: 1 }, { time: 110, value: 2 },
+      { time: 50, value: 3 }, { time: 120, value: 4 }
+    ]))
+    act(() => ref.current!.flush())
+    expect(onObservation).toHaveBeenCalledWith(expect.objectContaining({ type: "late-data" }))
+    expect(ref.current!.getData()).toEqual([])
+    act(() => { ref.current!.push({ time: 1, value: 5 }); ref.current!.flush() })
+    expect(ref.current!.getData()).toMatchObject([{ value: 5 }])
+  })
+
+  it.each([false, true])("drops held rows when controlled data is replaced (aggregate=%s)", (aggregate) => {
+    const ref = React.createRef<RealtimeLineChartHandle>()
+    const chart = (data: Datum[]) => <RealtimeLineChart ref={ref} data={data}
+      eventTime={{ lateness: 100 }} aggregate={aggregate ? { size: 10 } : undefined} />
+    const view = render(chart([{ time: 0, value: 1 }]))
+    act(() => ref.current!.push({ time: 50, value: 999 }))
+    view.rerender(chart([{ time: 200, value: 2 }]))
+    act(() => ref.current!.flush())
+    expect(ref.current!.getData()).toMatchObject([{ value: 2 }])
+    expect(ref.current!.getData()).toHaveLength(1)
+  })
+
   it("releases a large grace-window batch without spreading it into function arguments", () => {
     const ref = React.createRef<RealtimeLineChartHandle>()
     render(

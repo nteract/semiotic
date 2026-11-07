@@ -1,5 +1,6 @@
 import React, { lazy, Suspense, useEffect, useMemo, useState } from "react"
 import { useLocation } from "react-router-dom"
+import { useAsyncAction } from "../../hooks/useAsyncAction"
 import ExamplePageLayout from "./ExamplePageLayout"
 import rawSnapshot from "./plane-day/snapshot.json"
 import Itinerary from "./plane-day/Itinerary"
@@ -51,9 +52,12 @@ export default function PlaneDayExamplePage() {
   const [message, setMessage] = useState("")
   const [note, setNote] = useState("")
   const [pattern, setPattern] = useState<Pattern | "all">("all")
-  const [busy, setBusy] = useState(false)
+  const { busy, begin, cancel, finish, isCurrent } = useAsyncAction()
   const [retry, setRetry] = useState(0)
-  useEffect(() => setSaved(loadState(search)), [search])
+  useEffect(() => {
+    cancel()
+    setSaved(loadState(search))
+  }, [search, cancel])
   const state = saved.state
   const selectedDayId = state?.selected.dayId
   const day =
@@ -107,6 +111,7 @@ export default function PlaneDayExamplePage() {
   }, [selectedDayId, saved.issue, loadedDay?.id, retry])
 
   function update(next: PlaneState) {
+    cancel()
     setSaved({ state: next, issue: resolveReference(next.selected, snapshot) })
   }
   function selectDay(nextDay: AircraftDay) {
@@ -142,14 +147,16 @@ export default function PlaneDayExamplePage() {
   }
   async function download(format: "json" | "html") {
     if (!state || !day) return
-    setBusy(true)
+    const owner = begin()
     try {
       const { buildNotePacket } = await import("./plane-day/packet")
+      if (!isCurrent(owner)) return
       const packet = buildNotePacket(snapshot, day, state)
       const body =
         format === "json"
           ? JSON.stringify(packet, null, 2)
           : (await import("./plane-day/export-runtime")).renderFlightHTML(snapshot, day, state)
+      if (!isCurrent(owner)) return
       const url = URL.createObjectURL(
         new Blob([body], { type: format === "json" ? "application/json" : "text/html" }),
       )
@@ -164,25 +171,28 @@ export default function PlaneDayExamplePage() {
           : "Printable day sheet downloaded. Open it in a browser and print.",
       )
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Export unavailable")
+      if (isCurrent(owner)) setMessage(error instanceof Error ? error.message : "Export unavailable")
     } finally {
-      setBusy(false)
+      finish(owner)
     }
   }
   async function importFile(file?: File) {
     if (!file) return
-    setBusy(true)
+    const owner = begin()
     try {
       if (file.size > 2_000_000) throw new Error("This note packet exceeds the 2 MB import limit.")
       const { importNotePacket } = await import("./plane-day/packet")
-      const result = importNotePacket(JSON.parse(await file.text()), snapshot)
+      if (!isCurrent(owner)) return
+      const text = await file.text()
+      if (!isCurrent(owner)) return
+      const result = importNotePacket(JSON.parse(text), snapshot)
       setSaved({ state: result.state, issue: result.issue })
       setLoadedDay(result.day)
       setMessage(result.issue ?? "Imported the same flight and unreviewed reader notes.")
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Import unavailable")
+      if (isCurrent(owner)) setMessage(error instanceof Error ? error.message : "Import unavailable")
     } finally {
-      setBusy(false)
+      finish(owner)
     }
   }
   const cohort = useMemo(

@@ -32,7 +32,37 @@ describe("useOpenMeteoLoader", () => {
   })
 
   afterEach(() => {
+    vi.restoreAllMocks()
     vi.useRealTimers()
+  })
+
+  it("settles the deadline even when the transport ignores abort and rejects its later success", async () => {
+    vi.useFakeTimers()
+    const response = Promise.withResolvers()
+    fetchOpenMeteoExampleData.mockReturnValue(response.promise)
+    const liveMessage = vi.fn(() => "Live data ready")
+    const { result } = renderHook(() => useTestLoader({ requestTimeoutMs: 3000, liveMessage }))
+    let pending
+    act(() => { pending = result.current.loadCurrentData(profile) })
+    await act(async () => vi.advanceTimersByTimeAsync(3000))
+    expect(result.current.isLoading).toBe(false)
+    expect(result.current.view.dataKind).toBe("error")
+    await act(async () => { response.resolve(livePayload); await pending })
+    expect(liveMessage).not.toHaveBeenCalled()
+    expect(result.current.liveData).toBeNull()
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it("retires an unmounted request before a late completion invokes consumer callbacks", async () => {
+    const response = Promise.withResolvers()
+    fetchOpenMeteoExampleData.mockReturnValue(response.promise)
+    const liveMessage = vi.fn(() => "Live data ready")
+    const { result, unmount } = renderHook(() => useTestLoader({ liveMessage }))
+    let pending
+    act(() => { pending = result.current.loadCurrentData(profile) })
+    unmount()
+    await act(async () => { response.resolve(livePayload); await pending })
+    expect(liveMessage).not.toHaveBeenCalled()
   })
 
   it("caches a successful response and uses it as an explicit fallback after a later failure", async () => {

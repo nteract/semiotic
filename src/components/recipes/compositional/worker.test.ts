@@ -1,5 +1,5 @@
 import { fixture } from "./testFixtures"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import {
   createCompositionalWorkerEngine,
   installCompositionalWorker
@@ -156,11 +156,8 @@ describe("compositional worker transaction boundaries", () => {
   it("rejects pending requests when the worker reports an error or a message cannot be read", async () => {
     for (const type of ["error", "messageerror"] as const) {
       const target = new EventTarget()
-      const sent: CompositionalWorkerMessage[] = []
       const host = Object.assign(target, {
-        postMessage: (message: CompositionalWorkerMessage) => {
-          sent.push(message)
-        }
+        postMessage: vi.fn()
       }) as unknown as CompositionalWorkerPort
       const engine = createCompositionalWorkerEngine(host)
       const controller = new CompositionalLayoutController()
@@ -179,6 +176,12 @@ describe("compositional worker transaction boundaries", () => {
       expect(controller.diagnostics[0].message).toContain(
         "REVISION_WORKER_FAILED"
       )
+      const next = engine.layout(request(`after-crash-${type}`))
+      const rejected = expect(next).rejects.toThrow("REVISION_WORKER_FAILED")
+      // A later transport event must not be needed to settle the next caller.
+      target.dispatchEvent(new Event("messageerror"))
+      await rejected
+      expect(host.postMessage).toHaveBeenCalledTimes(1)
       engine.dispose()
     }
   })

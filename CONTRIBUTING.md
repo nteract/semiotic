@@ -324,6 +324,13 @@ general state-machine dependency.
 | Data ingestion replacement | One replacement owns history chunks, pushes, and its queued flush. Publication is `Idle`, `Publishing`, or `FlushRequested`; a reentrant flush cannot overtake the active callback. |
 | Details panel | `closed`, `opening`, `open`, `closing`; only closing retains content for exit animation, and its timer owns that particular close. |
 | MCP operation runner | `idle`, `listening`, `closed`; shutdown rejects new work immediately, while child process slots remain occupied until exit/close. |
+| Compositional solve | The active abort controller owns publication and `updating`. Install or revoke that owner before notifying the old engine; completed solves release it. Worker transport failure closes admission until a new engine is created. |
+| Camera gesture | Pointer ownership, animation, and pending immediate moves defer settling. Destroyed drivers cannot enqueue continuation or a new settle timer from a returning host callback. |
+| Realtime ingestion and EventDrop readouts | Clear, replacement, and unmount retire the publishing batch. Recheck ownership after observations and watermark callbacks before emitting more rows or events. Compare aggregation policy fields structurally rather than serializing dependency keys. |
+| Reference geography | A ready result or import error belongs to one reference name. A different reference renders loading immediately; import errors go through the chart error boundary. |
+| Remote docs data | A deadline publishes fallback/error before aborting transport. Late responses and geolocation callbacks cannot publish after request retirement. |
+| Saved-edition docs actions | Reservoir and flight pages share `useAsyncAction`: navigation cancels the action's publication rights, including uncancellable file reads and cache writes. Only its owner releases `busy`. |
+| Docs tween | Skip initial mount, including Strict Mode effect replay. Each effect cancels its queued frame on replacement/unmount and checks ownership after the frame callback. |
 
 Revoke ownership before aborting or terminating work. A stale completion must
 check its owner before changing pending flags, publishing data, or releasing

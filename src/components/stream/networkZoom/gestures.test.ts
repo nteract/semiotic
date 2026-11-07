@@ -82,6 +82,38 @@ describe("network pointer driver", () => {
       change.mock.calls.filter((call) => call[1].phase === "idle")
     ).toHaveLength(1)
   })
+
+  it("defers a pending settle while a new pointer owns the gesture", () => {
+    driver.panBy(10, 0, "keyboard")
+    vi.advanceTimersToNextFrame()
+    pointer("pointerdown", 1, 100, 100)
+    vi.advanceTimersByTime(200)
+    expect(change).toHaveBeenCalledTimes(1)
+    expect(change).toHaveBeenLastCalledWith(view, {
+      source: "keyboard",
+      phase: "moving"
+    })
+    pointer("pointerup", 1, 100, 100)
+    vi.advanceTimersByTime(80)
+    expect(change).toHaveBeenLastCalledWith(view, {
+      source: "keyboard",
+      phase: "idle"
+    })
+  })
+
+  it.each(["change", "commit"] as const)(
+    "does not schedule a settle after %s destroys the driver",
+    async (callback) => {
+      const handler = callback === "change" ? change : commit
+      handler.mockImplementationOnce(() => driver.destroy())
+      if (callback === "change") {
+        driver.panBy(10, 0)
+        await Promise.resolve()
+      } else driver.jumpTo({ x: 10, y: 0, k: 1 }, "control")
+      expect(handler).toHaveBeenCalledOnce()
+      expect(vi.getTimerCount()).toBe(0)
+    }
+  )
   it.each([
     { direction: -1, ctrlKey: false },
     { direction: 1, ctrlKey: false },

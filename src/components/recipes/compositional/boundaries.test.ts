@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
+import { fixture } from "./testFixtures"
 import { prepareCompositionalGraph } from "./prepare"
 import { routeCompositionalGraph, compositionalLayoutOptions } from "./solve"
 import { traceCompositionalGraph } from "./trace"
@@ -11,7 +12,7 @@ import { validateCompositionalSolution } from "./acceptance"
 import { CompositionalMeasurementTransaction } from "./measurement"
 import { compositionalPath, flattened } from "./routing"
 import { emitCompositionalScene } from "./scene"
-import type { CompositionalGraph, LayoutRequest, NodeConstraint } from "./types"
+import type { CompositionalGraph, LayoutRequest, NodeConstraint, SolvedCompositionalLayout } from "./types"
 
 const local = { kind: "node" as const }
 function request(
@@ -56,6 +57,71 @@ const base = {
 }
 
 describe("compositional boundaries and engine contracts", () => {
+  it.each(["cancel", "replace", "dispose"])(
+    "preserves a solve started by an abort listener during %s",
+    async (action) => {
+      const controller = new CompositionalLayoutController()
+      const first = Promise.withResolvers<SolvedCompositionalLayout>()
+      const latest = Promise.withResolvers<SolvedCompositionalLayout>()
+      const latestRequest = { ...fixture(), requestId: "latest" }
+      const layout = vi.fn(() => latest.promise)
+      let replacement: Promise<boolean> | null = null
+      const onAbort = vi.fn(() => {
+        replacement = controller.solve(latestRequest, {
+          ...compositionalDagEngine,
+          layout
+        })
+      })
+      const pending = controller.solve(fixture(), {
+        ...compositionalDagEngine,
+        layout: vi.fn((_request, signal) => {
+          signal?.addEventListener("abort", onAbort, { once: true })
+          return first.promise
+        })
+      })
+      const supersededLayout = vi.fn(compositionalDagEngine.layout)
+      const superseded =
+        action === "replace"
+          ? controller.solve(
+              { ...fixture(), requestId: "superseded" },
+              { ...compositionalDagEngine, layout: supersededLayout }
+            )
+          : action === "dispose"
+            ? controller.dispose()
+            : controller.cancel()
+      expect(onAbort).toHaveBeenCalledOnce()
+      expect(controller.updating).toBe(true)
+      expect(layout).toHaveBeenCalledOnce()
+      expect(supersededLayout).not.toHaveBeenCalled()
+      first.resolve(routeCompositionalGraph(fixture()))
+      expect(await pending).toBe(false)
+      expect(controller.updating).toBe(true)
+      latest.resolve(routeCompositionalGraph(latestRequest))
+      expect(await replacement).toBe(true)
+      if (superseded) expect(await superseded).toBe(false)
+      expect(controller.solution?.requestId).toBe("latest")
+      expect(controller.diagnostics).toEqual(controller.solution?.diagnostics)
+      expect(controller.updating).toBe(false)
+    }
+  )
+
+  it("releases the accepted request instead of aborting it on the next solve", async () => {
+    const onAbort = vi.fn()
+    const controller = new CompositionalLayoutController()
+    const layout = vi.fn((req: LayoutRequest, signal?: AbortSignal) => {
+      signal?.addEventListener("abort", onAbort, { once: true })
+      return compositionalDagEngine.layout(req, signal)
+    })
+    expect(
+      await controller.solve(fixture(), { ...compositionalDagEngine, layout })
+    ).toBe(true)
+    expect(await controller.solve({ ...fixture(), requestId: "next" })).toBe(
+      true
+    )
+    controller.dispose()
+    expect(onAbort).not.toHaveBeenCalled()
+  })
+
   it("rejects an empty engine response for an isolated node and retains the accepted scene", async () => {
     const r = request({ ...base, nodes: [{ id: "isolated" }], edges: [] })
     const controller = new CompositionalLayoutController()

@@ -54,6 +54,7 @@ export function bindNetworkZoom(element: HTMLElement, host: Host) {
   let tweenEnd = 0
   let source: NetworkZoomSource = "control"
   let moving = false
+  let alive = true
   let suppressClickUntil = 0
   const pointers = new Map<number, { x: number; y: number }>()
   const captures = new Map<number, Element>()
@@ -68,17 +69,20 @@ export function bindNetworkZoom(element: HTMLElement, host: Host) {
     target = null
     tweenView = null
   }
-  const finish = () => {
+  const cancelSettle = () => {
     if (idle !== null) win.clearTimeout(idle)
     idle = null
+  }
+  const finish = () => {
+    cancelSettle()
     if (moving) {
       moving = false
       host.change(host.getZoom(), { source, phase: "idle" })
     }
   }
   const settle = () => {
-    if (idle !== null) win.clearTimeout(idle)
-    if (pointers.size || animation !== null) return
+    cancelSettle()
+    if (!alive || pointers.size || animation !== null || immediate !== null) return
     const delay = host.getOptions().settleDelay
     idle = win.setTimeout(
       finish,
@@ -137,7 +141,7 @@ export function bindNetworkZoom(element: HTMLElement, host: Host) {
    * whether `target` is reached already. */
   const begin = (to: NetworkViewTransform, nextSource: NetworkZoomSource) => {
     cancelAnimation()
-    if (idle !== null) win.clearTimeout(idle)
+    cancelSettle()
     source = nextSource
     if (sameZoom(host.getZoom(), to)) {
       settle()
@@ -199,7 +203,7 @@ export function bindNetworkZoom(element: HTMLElement, host: Host) {
     nextSource: NetworkZoomSource,
     duration?: number
   ) => {
-    if (host.getOptions().locked) return
+    if (!alive || host.getOptions().locked) return
     if (begin(resolve(requested), nextSource)) run(milliseconds(duration))
   }
   /** Apply `requested` now, from inside the host's own commit: no frame and no
@@ -208,7 +212,7 @@ export function bindNetworkZoom(element: HTMLElement, host: Host) {
     requested: NetworkViewTransform,
     nextSource: NetworkZoomSource
   ) => {
-    if (host.getOptions().locked) return
+    if (!alive || host.getOptions().locked) return
     const to = resolve(requested)
     if (!begin(to, nextSource)) return
     moving = true
@@ -321,6 +325,7 @@ export function bindNetworkZoom(element: HTMLElement, host: Host) {
     // synthesized click, even when the pointer never moves.
     if (event.pointerType === "mouse") event.preventDefault()
     cancelAnimation()
+    cancelSettle()
     if (pointers.size === 0) {
       origin = point
       dragged = false
@@ -340,7 +345,7 @@ export function bindNetworkZoom(element: HTMLElement, host: Host) {
       cancel()
       return
     }
-    const before = [...pointers.values()]
+    const before = pointers.size >= 2 ? [...pointers.values()] : null
     const previous = pointers.get(event.pointerId)!
     const point = plotPoint(event)
     pointers.set(event.pointerId, point)
@@ -355,14 +360,14 @@ export function bindNetworkZoom(element: HTMLElement, host: Host) {
     lastTap = null
     let view = target ?? host.getZoom()
     if (
-      pointers.size >= 2 &&
+      before &&
       options.pinchZoom !== false &&
       options.zoomEnabled !== false
     ) {
       const after = [...pointers.values()]
-      const distance = (pts: typeof before) =>
+      const distance = (pts: NonNullable<typeof before>) =>
         Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y)
-      const center = (pts: typeof before) => ({
+      const center = (pts: NonNullable<typeof before>) => ({
         x: (pts[0].x + pts[1].x) / 2,
         y: (pts[0].y + pts[1].y) / 2
       })
@@ -500,8 +505,9 @@ export function bindNetworkZoom(element: HTMLElement, host: Host) {
     panBy,
     cancel,
     destroy: () => {
+      alive = false
       cancelAnimation()
-      if (idle !== null) win.clearTimeout(idle)
+      cancelSettle()
       // Unmount does not notify React or consumers with an artificial idle event.
       moving = false
       cancel()

@@ -1,8 +1,8 @@
 import React from "react"
 import { describe, expect, it, vi } from "vitest"
 import { renderToString } from "react-dom/server"
-import { MemoryRouter } from "react-router-dom"
-import { render, screen, fireEvent } from "@testing-library/react"
+import { MemoryRouter, useNavigate } from "react-router-dom"
+import { act, render, screen, fireEvent, waitFor } from "@testing-library/react"
 import { renderChartWithEvidence } from "semiotic/server"
 import { auditAccessibility } from "semiotic/utils"
 import { fingerprintValue } from "semiotic/artifact"
@@ -286,6 +286,42 @@ describe("E02 renderer, table and packet parity", () => {
 })
 
 describe("E02 ordinary reading experience", () => {
+  it("does not let a pending packet import overwrite router navigation", async () => {
+    const destination = { ...initial, selected: eventReference(snapshot, day, day.flights[2].id) }
+    function Reader() {
+      const navigate = useNavigate()
+      return (
+        <>
+          <button onClick={() => navigate(stateSearch(destination))}>
+            Navigate to saved flight
+          </button>
+          <PlaneDayExamplePage />
+        </>
+      )
+    }
+    render(
+      <MemoryRouter>
+        <Reader />
+      </MemoryRouter>,
+    )
+    const content = Promise.withResolvers<string>()
+    const file = new File([], "notes.json")
+    const text = vi.fn(() => content.promise)
+    Object.defineProperty(file, "text", { value: text })
+    fireEvent.change(screen.getByLabelText("Import note packet"), { target: { files: [file] } })
+    await waitFor(() => expect(text).toHaveBeenCalledOnce())
+    fireEvent.click(screen.getByRole("button", { name: "Navigate to saved flight" }))
+    await act(async () => {
+      content.resolve(JSON.stringify(buildNotePacket(snapshot, day, initial)))
+      await content.promise
+    })
+    expect(screen.getByTestId("pinned-flight").getAttribute("data-event-id")).toBe(
+      destination.selected.eventId,
+    )
+    expect(screen.getByRole("button", { name: "Download note packet" })).toBeEnabled()
+    expect(screen.queryByText("Imported the same flight and unreviewed reader notes.")).toBeNull()
+  })
+
   it("renders the opening and itinerary without JavaScript", () => {
     const html = renderToString(
       <MemoryRouter>

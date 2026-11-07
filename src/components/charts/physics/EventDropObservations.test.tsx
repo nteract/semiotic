@@ -5,6 +5,7 @@ import { setupCanvasMock } from "../../../test-utils/canvasMock"
 import { ObservationProvider } from "../../store/ObservationStore"
 import { useChartObserver } from "../../store/useObservation"
 import { EventDropChart } from "./EventDropChart"
+import type { EventDropChartHandle } from "./useEventDropHandle"
 import type { EventDropLedgerRow } from "./eventDropLedger"
 
 describe("EventDrop observation and readout delivery", () => {
@@ -16,6 +17,78 @@ describe("EventDrop observation and readout delivery", () => {
     cleanup()
     vi.useRealTimers()
   })
+
+  it("does not replay accepted readouts during Strict Mode effect replay", () => {
+    const onObservation = vi.fn()
+    const onWatermarkChange = vi.fn()
+    render(
+      <React.StrictMode>
+        <EventDropChart
+          data={[
+            { id: "one", time: 2 },
+            { id: "two", time: 20 }
+          ]}
+          windows={{ size: 10 }}
+          watermark={{ delay: 5 }}
+          paused
+          onObservation={onObservation}
+          onWatermarkChange={onWatermarkChange}
+        />
+      </React.StrictMode>
+    )
+    expect(
+      onObservation.mock.calls.filter(
+        ([event]) => event.type === "physics-window-open"
+      )
+    ).toHaveLength(2)
+    expect(onWatermarkChange).toHaveBeenCalledExactlyOnceWith(15, -Infinity)
+  })
+
+  it.each(["lifecycle", "watermark"])(
+    "stops old readouts when a %s callback clears the chart",
+    (trigger) => {
+      const ref = React.createRef<EventDropChartHandle>()
+      const retired = vi.fn()
+      const onObservation = vi.fn((event) => {
+        if (retired.mock.calls.length) retired(event)
+        else if (
+          trigger === "lifecycle" &&
+          event.type === "physics-window-open"
+        ) {
+          ref.current!.clear()
+          retired(event)
+        }
+      })
+      const onWatermarkChange = vi.fn().mockImplementationOnce(() => {
+        if (trigger === "watermark") {
+          ref.current!.clear()
+          retired()
+        }
+      })
+      render(
+        <EventDropChart
+          ref={ref}
+          data={[
+            { id: "one", time: 2 },
+            { id: "two", time: 20 }
+          ]}
+          windows={{ size: 10 }}
+          watermark={{ delay: 5 }}
+          paused
+          onObservation={onObservation}
+          onWatermarkChange={onWatermarkChange}
+        />
+      )
+      // The empty replacement has its own initial watermark. Nothing from the
+      // interrupted windows or their watermark (15) may follow the clear.
+      expect(retired.mock.calls.slice(1)).toEqual([
+        [expect.objectContaining({ type: "physics-watermark-advance", to: -5 })]
+      ])
+      expect(ref.current!.getData()).toEqual([])
+      if (trigger === "lifecycle")
+        expect(onWatermarkChange).toHaveBeenCalledExactlyOnceWith(-5, -Infinity)
+    }
+  )
 
   it("publishes successive updates once and immediately delivers changed ledger rows", () => {
     const onObservation = vi.fn()

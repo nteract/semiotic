@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { useAsyncAction } from "../../../hooks/useAsyncAction"
 import bootstrapJSON from "./bootstrap.json"
 import { compareEditions } from "./edition"
 import { checkForUpdate, download, loadSnapshot, saveOffline } from "./host"
@@ -19,11 +20,16 @@ export function useGuideHost() {
   const [state, setState] = useState<GuideState>(bootstrap.guide.state)
   const [error, setError] = useState("")
   const [status, setStatus] = useState("Loading the pinned history for exploration…")
-  const [busy, setBusy] = useState(false)
   const [offer, setOffer] = useState<Offer | null>(null)
   const [savedURL, setSavedURL] = useState("")
   const [attempt, setAttempt] = useState(0)
-  const refreshController = useRef<AbortController | null>(null)
+  const {
+    busy,
+    begin: beginOperation,
+    cancel: stopOperation,
+    finish: finishOperation,
+    isCurrent,
+  } = useAsyncAction()
   useEffect(() => {
     let requested = bootstrap.guide.state
     try {
@@ -35,6 +41,7 @@ export function useGuideHost() {
     const controller = new AbortController()
     loadSnapshot(`/stories/reservoir-guide/${requested.editionId}/snapshot.json`, controller.signal)
       .then((loaded) => {
+        if (controller.signal.aborted) return
         if (
           loaded.editionId !== requested.editionId ||
           (requested.editionId === bootstrap.header.editionId &&
@@ -54,9 +61,9 @@ export function useGuideHost() {
       })
     return () => {
       controller.abort()
-      refreshController.current?.abort()
+      stopOperation()
     }
-  }, [attempt])
+  }, [attempt, stopOperation])
   const header = snapshot ?? bootstrap.header
   const issue =
     error ||
@@ -76,6 +83,7 @@ export function useGuideHost() {
     [snapshot, state, issue],
   )
   const select = useCallback((next: GuideState) => {
+    stopOperation()
     setState(next)
     setError("")
     setSavedURL("")
@@ -84,9 +92,10 @@ export function useGuideHost() {
       "",
       `${window.location.pathname}${stateSearch(next)}${window.location.hash}`,
     )
-  }, [])
+  }, [stopOperation])
   useEffect(() => {
     const pop = () => {
+      stopOperation()
       try {
         setState(readStateSearch(window.location.search, header))
         setError("")
@@ -97,15 +106,18 @@ export function useGuideHost() {
     }
     window.addEventListener("popstate", pop)
     return () => window.removeEventListener("popstate", pop)
-  }, [header])
+  }, [header, stopOperation])
   async function exportView(kind: "html" | "packet" | "offline") {
     if (!snapshot || issue) return
-    setBusy(true)
+    const owner = beginOperation()
     try {
       const { exportSelection } = await import("./export-runtime")
+      if (!isCurrent(owner)) return
       const result = exportSelection(snapshot, state)
       if (kind === "offline") {
-        setSavedURL(await saveOffline(result.html, state, snapshot.fingerprint))
+        const url = await saveOffline(result.html, state, snapshot.fingerprint)
+        if (!isCurrent(owner)) return
+        setSavedURL(url)
         setStatus(
           "This fixed selection is saved on this browser. Its offline address and downloaded HTML do not update themselves.",
         )
@@ -120,20 +132,19 @@ export function useGuideHost() {
         )
       }
     } catch (failure) {
-      setStatus(`Save failed: ${(failure as Error).message}. The current view is retained.`)
+      if (isCurrent(owner))
+        setStatus(`Save failed: ${(failure as Error).message}. The current view is retained.`)
     } finally {
-      setBusy(false)
+      finishOperation(owner)
     }
   }
   async function refresh() {
     if (!snapshot) return
-    setBusy(true)
+    const controller = beginOperation()
     setOffer(null)
-    refreshController.current?.abort()
-    const controller = new AbortController()
-    refreshController.current = controller
     try {
       const next = await checkForUpdate(snapshot, state, controller.signal)
+      if (!isCurrent(controller)) return
       setOffer(next)
       setStatus(
         next
@@ -141,12 +152,12 @@ export function useGuideHost() {
           : "No newer edition is offered. This remains the same historical snapshot.",
       )
     } catch (failure) {
-      if (!controller.signal.aborted)
+      if (isCurrent(controller))
         setStatus(
           `Update check failed: ${(failure as Error).message}. Saved historical edition retained; retrieved ${snapshot.retrievedAt}.`,
         )
     } finally {
-      if (!controller.signal.aborted) setBusy(false)
+      finishOperation(controller)
     }
   }
   function acceptUpdate() {
@@ -164,17 +175,21 @@ export function useGuideHost() {
   }
   async function importPacket(file: File | undefined) {
     if (!file || !snapshot) return
-    setBusy(true)
+    const owner = beginOperation()
     try {
       if (file.size > 2_000_000) throw new Error("Packet exceeds the 2 MB limit")
       const { importGuidePacket } = await import("./packet")
-      const imported = importGuidePacket(JSON.parse(await file.text()), snapshot)
+      if (!isCurrent(owner)) return
+      const text = await file.text()
+      if (!isCurrent(owner)) return
+      const imported = importGuidePacket(JSON.parse(text), snapshot)
       select(imported.state)
       setStatus(imported.issue ?? "Saved packet verified against this pinned edition.")
     } catch (failure) {
-      setStatus(`Import refused: ${(failure as Error).message}. Current selection retained.`)
+      if (isCurrent(owner))
+        setStatus(`Import refused: ${(failure as Error).message}. Current selection retained.`)
     } finally {
-      setBusy(false)
+      finishOperation(owner)
     }
   }
   return {

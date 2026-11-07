@@ -175,14 +175,26 @@ export default function ParisIsometricLandmarksExamplePage() {
   useEffect(() => {
     const requestId = requestVersioner.next()
     const controller = new AbortController()
-    let timedOut = false
     transitionSourceState({
       type: "begin-load",
       requestId,
       message: "Showing the validated " + city.label + " snapshot while DBpedia is checked.",
     })
+    const fallback = (timedOut) => {
+      if (controller.signal.aborted || !requestVersioner.isCurrent(requestId)) return
+      transitionSourceState({
+        type: "set-result",
+        requestId,
+        kind: "snapshot",
+        message: (timedOut
+          ? "DBpedia exceeded the response budget; the validated "
+          : "DBpedia was incomplete or unavailable; the validated ") +
+          city.label + " snapshot remains in view.",
+        provenance: [createDbpediaSnapshotProvenance(city)],
+      })
+    }
     const timeout = window.setTimeout(() => {
-      timedOut = true
+      fallback(true)
       controller.abort()
     }, 9000)
 
@@ -218,26 +230,7 @@ export default function ParisIsometricLandmarksExamplePage() {
           provenance: createDbpediaMixedProvenance(city),
         })
       })
-      .catch((error) => {
-        // Switching cities aborts the previous request. It must not overwrite
-        // the next city's source status with stale closure data.
-        if (!requestVersioner.isCurrent(requestId)) return
-        if (controller.signal.aborted && !timedOut) return
-        transitionSourceState({
-          type: "set-result",
-          requestId,
-          kind: "snapshot",
-          message:
-            error?.name !== "AbortError"
-              ? "DBpedia was incomplete or unavailable; the validated " +
-                city.label +
-                " snapshot remains in view."
-              : "DBpedia exceeded the response budget; the validated " +
-                city.label +
-                " snapshot remains in view.",
-          provenance: [createDbpediaSnapshotProvenance(city)],
-        })
-      })
+      .catch(() => fallback(false))
       .finally(() => window.clearTimeout(timeout))
 
     return () => {

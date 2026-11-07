@@ -73,6 +73,26 @@ describe("ModuleWorkerSession", () => {
     await expect(promise).resolves.toEqual({ doubled: 42 })
   })
 
+  it("does not post a request cancelled by its encoder while a sibling remains active", async () => {
+    const worker = createFakeWorker()
+    const abort = new AbortController()
+    const session = new ModuleWorkerSession<number, number>({
+      name: "Test",
+      createWorker: () => worker,
+      encodeRequest: vi.fn((requestId, request) => {
+        if (request === 2) abort.abort()
+        return { requestId, request }
+      }),
+      parseMessage: (data) => ({ ...parseModuleWorkerErrorField(data), ok: true, payload: 42 })
+    })
+    const sibling = session.request(1)
+    await expect(session.request(2, abort.signal)).rejects.toMatchObject({ name: "AbortError" })
+    expect(worker.postMessage).toHaveBeenCalledExactlyOnceWith({ requestId: 1, request: 1 })
+    worker.onmessage?.call(worker, new MessageEvent("message", { data: { requestId: 1 } }))
+    await expect(sibling).resolves.toBe(42)
+    session.terminate()
+  })
+
   it("rejects on worker error payload", async () => {
     const worker = createFakeWorker()
     const session = new ModuleWorkerSession<unknown, unknown>({

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useReducer, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react"
 import { fetchOpenMeteoExampleData } from "./openMeteoExampleData"
 import { createLiveDataRequestVersioner } from "./liveDataAdapter"
 import {
@@ -69,35 +69,37 @@ export function useOpenMeteoLoader({
   const timeoutTimerRef = useRef(null)
   const dataCacheRef = useRef(new Map())
 
-  useEffect(() => {
-    return () => {
-      requestRef.current?.controller?.abort()
-      clearActiveLoadTimers()
-    }
-  }, [])
-
-  function clearActiveLoadTimers() {
-    if (slowTimerRef.current) {
+  const clearActiveLoadTimers = useCallback(() => {
+    if (slowTimerRef.current !== null) {
       window.clearTimeout(slowTimerRef.current)
       slowTimerRef.current = null
     }
-    if (timeoutTimerRef.current) {
+    if (timeoutTimerRef.current !== null) {
       window.clearTimeout(timeoutTimerRef.current)
       timeoutTimerRef.current = null
     }
-  }
+  }, [])
 
   function isCurrentRequest(requestId) {
     return Boolean(requestRef.current && requestRef.current.requestId === requestId)
   }
 
-  function beginLoad(message) {
-    requestRef.current?.controller.abort()
+  const stopLoad = useCallback(() => {
+    const previous = requestRef.current
+    requestRef.current = null
     clearActiveLoadTimers()
+    previous?.controller.abort()
+    return previous
+  }, [clearActiveLoadTimers])
+
+  useEffect(() => () => { stopLoad() }, [stopLoad])
+
+  function beginLoad(message, nextProfile = profile) {
+    stopLoad()
 
     const nextId = requestVersionerRef.current.next()
     const controller = new AbortController()
-    const nextRequest = { requestId: nextId, controller, timedOut: false }
+    const nextRequest = { requestId: nextId, controller, profile: nextProfile }
     requestRef.current = nextRequest
 
     dispatch({
@@ -113,7 +115,8 @@ export function useOpenMeteoLoader({
     if (Number.isFinite(requestTimeoutMs) && requestTimeoutMs > SLOW_TIMEOUT_MS) {
       timeoutTimerRef.current = window.setTimeout(() => {
         if (!isCurrentRequest(nextId)) return
-        nextRequest.timedOut = true
+        // A deadline is terminal even when a transport cannot honor abort.
+        failLoad(nextRequest)
         nextRequest.controller.abort()
       }, requestTimeoutMs)
     }
@@ -130,15 +133,12 @@ export function useOpenMeteoLoader({
   }
 
   function abortLoad() {
-    const request = requestRef.current
+    const request = stopLoad()
     if (!request) return
-    request.controller.abort()
-    requestRef.current = null
     dispatch({ type: "abort-load", requestId: request.requestId })
-    clearActiveLoadTimers()
   }
 
-  function normalizeLoadContext(existingRequest) {
+  function normalizeLoadContext(existingRequest, nextProfile) {
     if (
       existingRequest?.controller &&
       existingRequest.requestId != null &&
@@ -146,7 +146,7 @@ export function useOpenMeteoLoader({
     ) {
       return existingRequest
     }
-    return beginLoad(loadingMessage)
+    return beginLoad(loadingMessage, nextProfile)
   }
 
   function cacheCurrentData(nextProfile, data) {
@@ -159,8 +159,23 @@ export function useOpenMeteoLoader({
     return key == null ? undefined : dataCacheRef.current.get(key)
   }
 
+  function failLoad(load) {
+    if (!endLoad(load.requestId)) return
+    const cached = readCachedData(load.profile)
+    dispatch({
+      type: "set-result",
+      requestId: load.requestId,
+      kind: cached ? "fallback" : "error",
+      message: cached
+        ? `${failureMessage} Showing the last cached response instead.`
+        : failureMessage,
+    })
+    if (cached) setLiveData(cached)
+  }
+
   async function loadCurrentData(nextProfile, existingLoad) {
-    const load = normalizeLoadContext(existingLoad)
+    const load = normalizeLoadContext(existingLoad, nextProfile)
+    load.profile = nextProfile
     setProfile(nextProfile)
     setLiveData(null)
 
@@ -182,29 +197,8 @@ export function useOpenMeteoLoader({
         message: liveMessage(data),
       })
       setLiveData(data)
-    } catch (error) {
-      const completedRequest = endLoad(load.requestId)
-      if (!completedRequest) return
-      if (error?.name === "AbortError" && !completedRequest.timedOut) return
-
-      const cached = readCachedData(nextProfile)
-      if (cached) {
-        dispatch({
-          type: "set-result",
-          requestId: load.requestId,
-          kind: "fallback",
-          message: `${failureMessage} Showing the last cached response instead.`,
-        })
-        setLiveData(cached)
-        return
-      }
-
-      dispatch({
-        type: "set-result",
-        requestId: load.requestId,
-        kind: "error",
-        message: failureMessage,
-      })
+    } catch {
+      failLoad(load)
     }
   }
 
