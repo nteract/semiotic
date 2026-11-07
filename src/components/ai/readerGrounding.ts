@@ -1,4 +1,6 @@
-import { hierarchyChildren, stringValue } from "./navigationValues"
+import { hierarchyChildren, stringValue, finiteNumberValue as finite } from "./navigationValues"
+import { plural, summarizePhysicsRows } from "./chartRoles"
+import { normalizePhysicsProjectionRows } from "./describePhysicsProjection"
 import { getMinMax } from "../charts/shared/minMax"
 import { aiChartProps, isAIDataRecord } from "./aiData"
 import type { Datum } from "../charts/shared/datumTypes"
@@ -192,32 +194,23 @@ function record(value: unknown): Record<string, unknown> | undefined {
   return isAIDataRecord(value) ? value : undefined
 }
 
-function finite(value: unknown): number | undefined {
-  const n =
-    typeof value === "number"
-      ? value
-      : typeof value === "string" && value.trim()
-        ? Number(value)
-        : NaN
-  return Number.isFinite(n) ? n : undefined
-}
-
 function finiteInteger(value: unknown): number | undefined {
   const n = finite(value)
   return n == null ? undefined : Math.max(0, Math.floor(n))
 }
 
 function firstRecord(...values: unknown[]): Record<string, unknown> | undefined {
-  return values.map(record).find(Boolean)
+  return values.find(isAIDataRecord)
 }
 
 function firstArray(...values: unknown[]): readonly unknown[] | undefined {
-  return values.find(Array.isArray) as readonly unknown[] | undefined
+  return values.find(Array.isArray)
 }
 
-function compactObject<T extends Record<string, unknown>>(value: T): Partial<T> {
-  const result: Partial<T> = {}
-  for (const [key, entry] of Object.entries(value) as Array<[keyof T, T[keyof T]]>) {
+function compactObject<T extends Record<string, unknown>>(value: T): Partial<T>
+function compactObject(value: Record<string, unknown>): Record<string, unknown> {
+  const result: Record<string, unknown> = {}
+  for (const [key, entry] of Object.entries(value)) {
     if (entry !== undefined) result[key] = entry
   }
   return result
@@ -345,15 +338,6 @@ function sourceFacts(
   }
 }
 
-function plural(count: number | undefined, noun: string): string {
-  if (count !== 1 && noun === "body") return "bodies"
-  return count === 1 ? noun : `${noun}s`
-}
-
-function formatRuntimeNumber(value: number): string {
-  return Number.isInteger(value) ? String(value) : String(Math.round(value * 1000) / 1000)
-}
-
 function physicsProjectionRowsFromProps(
   props: Datum,
   physicsProps: Record<string, unknown> | undefined,
@@ -377,36 +361,9 @@ function physicsProjectionRowsFromProps(
 
 function normalizePhysicsAggregates(rows: readonly unknown[] | undefined): PhysicsReaderGroundingAggregates | undefined {
   if (!rows || rows.length === 0) return undefined
-  const normalized = rows
-    .map((row, index): PhysicsReaderGroundingAggregate | undefined => {
-      const d = record(row)
-      if (!d) return undefined
-      const count = finite(d.count ?? d.value ?? d.total ?? d.bodies ?? d.events)
-      if (count == null) return undefined
-      const label = stringValue(d.label ?? d.id ?? d.name, `container ${index + 1}`)
-      const id = d.id == null ? undefined : stringValue(d.id)
-      const secondary = finite(d.secondary ?? d.secondaryCount)
-      const observed = finite(d.observed ?? d.observedCount)
-      return compactObject({
-        id,
-        label,
-        count,
-        secondary,
-        secondaryLabel: typeof d.secondaryLabel === "string" ? d.secondaryLabel : undefined,
-        observed,
-      }) as PhysicsReaderGroundingAggregate
-    })
-    .filter((row): row is PhysicsReaderGroundingAggregate => row != null)
-  if (normalized.length === 0) return undefined
-  const totalCount = normalized.reduce((sum, row) => sum + row.count, 0)
-  const populatedCount = normalized.filter((row) => row.count > 0).length
-  const leader = normalized.slice().sort((a, b) => b.count - a.count)[0]
-  return {
-    rows: normalized,
-    totalCount,
-    populatedCount,
-    ...(leader ? { leader } : {}),
-  }
+  const normalized = normalizePhysicsProjectionRows(rows, stringValue)
+  const { total: totalCount, populated: populatedCount, leader } = summarizePhysicsRows(normalized)
+  return leader ? { rows: normalized, totalCount, populatedCount, leader } : undefined
 }
 
 function normalizeSediment(
@@ -422,24 +379,24 @@ function normalizeSediment(
       const total = finite(d.total)
       const normalized: SedimentRow = {
         label: stringValue(d.label ?? d.id, `sediment ${index + 1}`),
-        count,
+        count
       }
       if (d.id != null) normalized.id = stringValue(d.id)
       if (total != null) normalized.total = total
       return normalized
     })
     .filter((row): row is SedimentRow => row != null)
-
+  const summary = summarizePhysicsRows(rows)
   const bins = finiteInteger(totals?.bins) ?? rows?.length ?? 0
-  const count = finite(totals?.count) ?? rows?.reduce((sum, row) => sum + row.count, 0) ?? 0
-  const total = finite(totals?.total) ?? rows?.reduce((sum, row) => sum + (row.total ?? 0), 0)
-  const leader = rows?.slice().sort((a, b) => b.count - a.count)[0]
+  const count = finite(totals?.count) ?? summary.total
+  const total = finite(totals?.total) ?? summary.secondaryTotal
+  const leader = summary.leader
   if (bins === 0 && count === 0 && !total) return undefined
   return {
     bins,
     count,
-    ...(total != null && total > 0 ? { total } : {}),
-    ...(leader ? { leader } : {}),
+    ...(total > 0 ? { total } : {}),
+    ...(leader ? { leader } : {})
   }
 }
 
@@ -450,9 +407,11 @@ function looksLikePhysicsSnapshot(value: unknown): value is Record<string, unkno
   )
 }
 
-function countSleepingBodies(bodies: readonly unknown[] | undefined): number | undefined {
-  if (!bodies) return undefined
-  return bodies.filter((body) => record(body)?.sleeping === true).length
+function countTrue(rows: readonly unknown[] | undefined, property: string): number | undefined {
+  if (!rows) return undefined
+  let count = 0
+  for (const row of rows) if (record(row)?.[property] === true) count++
+  return count
 }
 
 function countSensors(
@@ -460,7 +419,7 @@ function countSensors(
   config: Record<string, unknown> | undefined,
   world: Record<string, unknown> | undefined
 ): number | undefined {
-  const colliderSensors = colliders?.filter((collider) => record(collider)?.sensor === true).length
+  const colliderSensors = countTrue(colliders, "sensor")
   const observation = record(config?.observation)
   const configuredSensors = record(observation?.sensors)
   const activeSensors = firstArray(world?.activeSensors)
@@ -489,16 +448,16 @@ function buildPhysicsGroundingText(physics: Omit<PhysicsReaderGrounding, "text">
       ? `${sim.queued} queued`
       : undefined,
     sim.seed != null
-      ? `seed ${formatRuntimeNumber(sim.seed)}`
+      ? `seed ${displayFactValue(sim.seed)}`
       : undefined,
     sim.gravity
-      ? `gravity (${formatRuntimeNumber(sim.gravity.x)}, ${formatRuntimeNumber(sim.gravity.y)})`
+      ? `gravity (${displayFactValue(sim.gravity.x)}, ${displayFactValue(sim.gravity.y)})`
       : undefined,
     sim.fixedDt != null
-      ? `fixed step ${formatRuntimeNumber(sim.fixedDt)}s`
+      ? `fixed step ${displayFactValue(sim.fixedDt)}s`
       : undefined,
     sim.timeScale != null
-      ? `${formatRuntimeNumber(sim.timeScale)}x time`
+      ? `${displayFactValue(sim.timeScale)}x time`
       : undefined,
   ].filter(Boolean)
   if (simulationParts.length > 0) {
@@ -522,18 +481,18 @@ function buildPhysicsGroundingText(physics: Omit<PhysicsReaderGrounding, "text">
   if (aggregates) {
     const leader = aggregates.leader
     const leaderText = leader
-      ? ` Largest is ${leader.label} with ${formatRuntimeNumber(leader.count)}.`
+      ? ` Largest is ${leader.label} with ${displayFactValue(leader.count)}.`
       : ""
     parts.push(
-      `Physics aggregates: ${formatRuntimeNumber(aggregates.totalCount)} settled ${plural(aggregates.totalCount, "body")} across ${aggregates.rows.length} ${plural(aggregates.rows.length, "container")}; ${aggregates.populatedCount} populated.${leaderText}`
+      `Physics aggregates: ${displayFactValue(aggregates.totalCount)} settled ${plural(aggregates.totalCount, "body")} across ${aggregates.rows.length} ${plural(aggregates.rows.length, "container")}; ${aggregates.populatedCount} populated.${leaderText}`
     )
   }
 
   const sediment = physics.sediment
   if (sediment) {
-    const totalText = sediment.total != null ? `, value total ${formatRuntimeNumber(sediment.total)}` : ""
+    const totalText = sediment.total != null ? `, value total ${displayFactValue(sediment.total)}` : ""
     const leaderText = sediment.leader
-      ? `; largest sediment bin is ${sediment.leader.label} with ${formatRuntimeNumber(sediment.leader.count)}`
+      ? `; largest sediment bin is ${sediment.leader.label} with ${displayFactValue(sediment.leader.count)}`
       : ""
     parts.push(
       `Physics sediment: ${sediment.count} retained ${plural(sediment.count, "body")} in ${sediment.bins} ${plural(sediment.bins, "bin")}${totalText}${leaderText}.`
@@ -569,8 +528,8 @@ function buildPhysicsGrounding(
     snapshot?.config,
     props.config
   )
-  const world = firstRecord(record(snapshot?.world), record(physicsProps?.world))
-  const kernel = firstRecord(record(config?.kernel), record(world?.options))
+  const world = firstRecord(snapshot?.world, physicsProps?.world)
+  const kernel = firstRecord(config?.kernel, world?.options)
   const bodies = firstArray(world?.bodies)
   const colliders = firstArray(world?.colliders, config?.colliders)
   const queue = firstArray(snapshot?.queue, physicsProps?.queue)
@@ -591,7 +550,7 @@ function buildPhysicsGrounding(
     bodies?.length ??
     finiteInteger(evidence?.bodyCount)
   const sleepingBodies =
-    countSleepingBodies(bodies) ??
+    countTrue(bodies, "sleeping") ??
     finiteInteger(evidence?.sleepingCount)
   const queued = queue?.length
   const state = typeof snapshot?.simulationState === "string"
@@ -629,14 +588,14 @@ function buildPhysicsGrounding(
     queued,
     bodyLimit: finite(config?.bodyLimit),
     eviction: typeof config?.eviction === "string" ? config.eviction : undefined,
-  }) as PhysicsReaderGroundingSimulation
+  })
 
   const geometry = compactObject({
     colliders: colliders?.length,
     sensors: countSensors(colliders, config, world),
     springs: springs?.length,
     activeSensorPairs: activeSensorPairs?.length,
-  }) as PhysicsReaderGroundingGeometry
+  })
 
   const hasGeometry = Object.keys(geometry).length > 0
   const isPhysicsComponent = PHYSICS_COMPONENTS.has(component)

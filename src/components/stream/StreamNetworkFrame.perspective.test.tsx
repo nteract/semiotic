@@ -3,8 +3,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vite
 import { act, fireEvent, render } from "@testing-library/react"
 import StreamNetworkFrame from "./StreamNetworkFrame"
 import { setupCanvasMock } from "../../test-utils/canvasMock"
-import { createFrameScheduler } from "./test-utils/frameScheduler"
-import type { NetworkCircleNode, StreamNetworkFrameHandle } from "./networkTypes"
+import type { NetworkCircleNode, StreamNetworkFrameHandle, StreamNetworkFrameProps } from "./networkTypes"
 import type { NetworkCustomLayout } from "./networkCustomLayout"
 import type { NetworkPerspective } from "./networkPerspective"
 import { registerNetworkPerspective } from "./networkPerspectiveRuntime"
@@ -30,7 +29,7 @@ const layout: NetworkCustomLayout = (ctx) => {
   }
 }
 
-function frame(perspective: NetworkPerspective | undefined, extra: Record<string, unknown> = {}) {
+function frame(perspective: NetworkPerspective | undefined, extra: Partial<StreamNetworkFrameProps> = {}) {
   return (
     <StreamNetworkFrame
       chartType="force"
@@ -50,22 +49,23 @@ describe("StreamNetworkFrame perspective", () => {
   let restoreCanvas: (() => void) | null = null
   beforeAll(() => registerNetworkPerspective())
   beforeEach(() => {
-    restoreCanvas = setupCanvasMock({ stubRaf: "noop" })
+    vi.useFakeTimers()
+    restoreCanvas = setupCanvasMock({ stubRaf: false })
     layoutCalls.mockClear()
   })
   afterEach(() => {
     restoreCanvas?.()
     restoreCanvas = null
+    vi.useRealTimers()
   })
 
   it("hit-tests the projected marks, not their layout positions", async () => {
-    const scheduler = createFrameScheduler(0)
     const ref = React.createRef<StreamNetworkFrameHandle>()
     const customHoverBehavior = vi.fn()
     const { container } = render(
-      React.cloneElement(frame("isometric", { customHoverBehavior, frameScheduler: scheduler.scheduler }), { ref })
+      React.cloneElement(frame("isometric", { customHoverBehavior }), { ref })
     )
-    await act(async () => scheduler.flush())
+    await act(async () => vi.advanceTimersToNextFrame())
     const projected = ref.current!.getCustomLayout()!.sceneNodes as NetworkCircleNode[]
     const b = projected.find((n) => n.id === "b")!
     // Layout placed b at (180, 120); the projection moved it.
@@ -76,35 +76,74 @@ describe("StreamNetworkFrame perspective", () => {
     expect(container.querySelector("canvas")!.getAttribute("aria-label")).toContain("(isometric perspective)")
 
     fireEvent.mouseMove(image, { clientX: b.cx, clientY: b.cy })
-    await act(async () => scheduler.flush())
+    await act(async () => vi.advanceTimersToNextFrame())
     expect(customHoverBehavior.mock.lastCall?.[0]?.data).toMatchObject({ id: "b" })
     expect(customHoverBehavior.mock.lastCall?.[0]?.x).toBeCloseTo(b.cx, 6)
   })
 
   it("keeps an inline config stable across parent renders", async () => {
-    const scheduler = createFrameScheduler(0)
-    const { rerender } = render(frame({ type: "isometric", fit: "contain" }, { frameScheduler: scheduler.scheduler }))
-    await act(async () => scheduler.flush())
+    const { rerender } = render(frame({ type: "isometric", fit: "contain", origin: [0.5, 0.5] }))
+    await act(async () => vi.advanceTimersToNextFrame())
     const calls = layoutCalls.mock.calls.length
-    rerender(frame({ type: "isometric", fit: "contain" }, { frameScheduler: scheduler.scheduler }))
-    await act(async () => scheduler.flush())
+    rerender(frame({ origin: [0.5, 0.5], fit: "contain", type: "isometric" }))
+    await act(async () => vi.advanceTimersToNextFrame())
     expect(layoutCalls.mock.calls.length).toBe(calls)
     // The layout sees the active perspective settings.
     expect(layoutCalls.mock.lastCall?.[0]).toMatchObject({ type: "isometric" })
   })
 
+  it.each(["copied origin", "shared origin", "same object"] as const)(
+    "reprojects a mutated origin on a parent rerender with %s",
+    async (reuse) => {
+      const perspective: NetworkPerspective = {
+        type: "isometric",
+        fit: "none",
+        origin: [0.5, 0.5]
+      }
+      const origin = perspective.origin!
+      const ref = React.createRef<StreamNetworkFrameHandle>()
+      const customHoverBehavior = vi.fn()
+      const { container, rerender } = render(
+        React.cloneElement(frame(perspective, { customHoverBehavior }), { ref })
+      )
+      await act(async () => vi.advanceTimersToNextFrame())
+      const mark = () => ref.current!.getCustomLayout()!.sceneNodes!.find(
+        (node): node is NetworkCircleNode => node.type === "circle" && node.id === "b"
+      )!
+      const { cx: previousX } = mark()
+
+      origin[0] = 0.25
+      const next: NetworkPerspective = reuse === "same object" ? perspective : {
+        ...perspective,
+        origin: reuse === "copied origin" ? [origin[0], origin[1]] : origin
+      }
+      rerender(React.cloneElement(frame(next, { customHoverBehavior }), { ref }))
+      await act(async () => vi.advanceTimersToNextFrame())
+
+      const projected = mark()
+      expect(projected.cx).not.toBeCloseTo(previousX, 6)
+      fireEvent.mouseMove(container.querySelector('[role="img"]')!, {
+        clientX: projected.cx,
+        clientY: projected.cy
+      })
+      await act(async () => vi.advanceTimersToNextFrame())
+      expect(customHoverBehavior.mock.lastCall?.[0]?.data).toMatchObject({ id: "b" })
+      expect(customHoverBehavior.mock.lastCall?.[0]?.x).toBeCloseTo(projected.cx, 6)
+      expect(customHoverBehavior.mock.lastCall?.[0]?.y).toBeCloseTo(projected.cy, 6)
+    }
+  )
+
   it("reprojects when the perspective changes and returns to flat exactly", async () => {
-    const scheduler = createFrameScheduler(0)
     const ref = React.createRef<StreamNetworkFrameHandle>()
-    const { rerender } = render(React.cloneElement(frame("isometric", { frameScheduler: scheduler.scheduler }), { ref }))
-    await act(async () => scheduler.flush())
+    const { rerender } = render(React.cloneElement(frame("isometric"), { ref }))
+    await act(async () => vi.advanceTimersToNextFrame())
     const iso = (ref.current!.getCustomLayout()!.sceneNodes as NetworkCircleNode[]).map((n) => [n.cx, n.cy])
-    rerender(React.cloneElement(frame("military", { frameScheduler: scheduler.scheduler }), { ref }))
-    await act(async () => scheduler.flush())
+    rerender(React.cloneElement(frame("military"), { ref }))
+    await act(async () => vi.advanceTimersToNextFrame())
     const military = (ref.current!.getCustomLayout()!.sceneNodes as NetworkCircleNode[]).map((n) => [n.cx, n.cy])
     expect(military).not.toEqual(iso)
-    rerender(React.cloneElement(frame(undefined, { frameScheduler: scheduler.scheduler }), { ref }))
-    await act(async () => scheduler.flush())
+    rerender(React.cloneElement(frame(undefined), { ref }))
+    await act(async () => vi.advanceTimersToNextFrame())
     const flat = (ref.current!.getCustomLayout()!.sceneNodes as NetworkCircleNode[]).map((n) => [n.cx, n.cy])
     expect(flat).toEqual([[60, 60], [180, 120], [300, 180]])
   })
@@ -135,7 +174,8 @@ describe("NetworkPerspectiveState", () => {
     expect((scene.sceneNodes[0] as NetworkCircleNode).cx).toBeCloseTo(50, 6)
     expect(state.advance(0)).toBe(true)
     state.advance(50)
-    const mid = state.project(config({ type: "isometric", transition: { duration: 100 } }), [200, 200], parts())!
+    // Equivalent authored settings must not restart a half-complete transition.
+    const mid = state.project(config({ transition: { duration: 100 }, type: "isometric" }), [200, 200], parts())!
     expect(state.advance(100)).toBe(true)
     expect(state.transitioning).toBe(false)
     const done = state.project(config({ type: "isometric", transition: { duration: 100 } }), [200, 200], parts())!
@@ -143,6 +183,17 @@ describe("NetworkPerspectiveState", () => {
     const endX = (done.sceneNodes[0] as NetworkCircleNode).cx
     expect(midX).not.toBeCloseTo(50, 3)
     expect(Math.abs(midX - 50)).toBeLessThan(Math.abs(endX - 50) + 1e-6)
+  })
+
+  it("observes nested mutations when a retained perspective is explicitly reprojected", () => {
+    const state = new NetworkPerspectiveState()
+    const perspective: NetworkPerspective = { type: "isometric", fit: "none", origin: [0.5, 0.5] }
+    const first = state.project(config(perspective), [200, 200], parts())!
+    perspective.origin![0] = 0.25
+    const next = state.project(config(perspective), [200, 200], parts())!
+    const fresh = new NetworkPerspectiveState().project(config(perspective), [200, 200], parts())!
+    expect(next.sceneNodes).toEqual(fresh.sceneNodes)
+    expect(next.sceneNodes).not.toEqual(first.sceneNodes)
   })
 
   it("lands reduced-motion tweens immediately", () => {

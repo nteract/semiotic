@@ -4,12 +4,30 @@ import type {
   PhysicsQueuedSpawn
 } from "../../stream/physics/PhysicsPipelineStore"
 import type { PhysicsChartLayout } from "./physicsChartShared"
-import { physicsPhaseDatum, physicsBoardPhase } from "../../stream/physics/physicsBodyTravel"
-import type { EventDropSpawn } from "./eventDropArrival"
+import {
+  physicsPhaseDatum,
+  physicsBoardPhase
+} from "../../stream/physics/physicsBodyTravel"
+import { equalConfig } from "../../stream/shallowEqual"
 
-function placementKey(spawn: PhysicsQueuedSpawn): string {
-  const { datum: _datum, spawnAt: _spawnAt, __eventDropSpawnTime: _pacingTime, ...placement } = spawn as EventDropSpawn
-  return JSON.stringify(placement)
+// Enumerate placement fields once; reconciliation compares without making keys
+// or temporary copies for every retained body. Y has a separate lid policy.
+const placementFields = [
+  "id", "x", "vx", "vy", "angle", "mass", "restitution", "friction",
+  "bodyCollisions", "shape", "fixedPosition", "travel", "springs"
+] as const
+
+/** Datum updates and arrival pacing do not reset an already moving body. */
+function samePlacement(
+  a: PhysicsQueuedSpawn,
+  b: PhysicsQueuedSpawn,
+  ignoreY = false
+): boolean {
+  if (!ignoreY && a.y !== b.y) return false
+  for (const field of placementFields) {
+    if (!equalConfig(a[field], b[field], Infinity)) return false
+  }
+  return true
 }
 
 function boardPlacement(spawn: PhysicsQueuedSpawn): PhysicsQueuedSpawn {
@@ -33,30 +51,32 @@ export function reconcilePhysicsChart(
   const bodies = new Map(snapshot.world.bodies.map((body) => [body.id, body]))
   for (const [id, old] of before) {
     const candidate = after.get(id)
-    const admitted = bodies.has(id) && !bodies.get(id)?.travel
+    if (!candidate) {
+      replaced.add(id)
+      continue
+    }
+    const body = bodies.get(id)
+    const admitted = body && !body.travel
     const oldPlacement = admitted ? boardPlacement(old) : old
-    const nextPlacement = candidate && admitted ? boardPlacement(candidate) : candidate
+    const nextPlacement = admitted ? boardPlacement(candidate) : candidate
     const admissionChanged =
-      candidate &&
       next.metadata?.kind === "event-drop" &&
       (old.datum as { late?: boolean })?.late !==
         (candidate.datum as { late?: boolean })?.late
     // EventDrop can close a lid above an already admitted body. Its snapshot
     // spawn moves below the lid, but the retained body is already there.
     const retainUnderLid =
-      candidate &&
       previous.metadata?.kind === "event-drop" &&
       next.metadata?.kind === "event-drop" &&
-      JSON.stringify(previous.metadata.windowPlot) ===
-        JSON.stringify(next.metadata.windowPlot) &&
+      equalConfig(previous.metadata.windowPlot, next.metadata.windowPlot, 1) &&
       (old.datum as { late?: boolean })?.late === false &&
       (candidate.datum as { late?: boolean })?.late === false &&
-      (bodies.get(id)?.y ?? -Infinity) >= nextPlacement!.y &&
-      placementKey({ ...oldPlacement, y: nextPlacement!.y }) === placementKey(nextPlacement!)
+      body &&
+      body.y >= nextPlacement.y &&
+      samePlacement(oldPlacement, nextPlacement, true)
     if (
-      !candidate ||
       admissionChanged ||
-      (!retainUnderLid && placementKey(oldPlacement) !== placementKey(nextPlacement!))
+      (!retainUnderLid && !samePlacement(oldPlacement, nextPlacement))
     )
       replaced.add(id)
   }
@@ -72,7 +92,11 @@ export function reconcilePhysicsChart(
         ...body,
         datum: physicsPhaseDatum(
           after.get(body.id)?.datum ?? body.datum,
-          body.travel ? "travel" : body.sleeping ? "settled" : physicsBoardPhase(body.datum)
+          body.travel
+            ? "travel"
+            : body.sleeping
+              ? "settled"
+              : physicsBoardPhase(body.datum)
         )
       }))
     },
@@ -105,7 +129,8 @@ export function reconcilePhysicsChart(
   for (const spawn of next.initialSpawns) {
     if (replaced.has(spawn.id) && bodies.has(spawn.id)) {
       const body = bodies.get(spawn.id)!
-      const replacement = { ...spawn, spawnAt: undefined }
+      const { spawnAt: _spawnAt, ...immediate } = spawn
+      let replacement = immediate
       if (spawn.travel) {
         if (body.travel) {
           replacement.travel = {
@@ -118,10 +143,16 @@ export function reconcilePhysicsChart(
         } else {
           // A relayout must not send an admitted body back to its producer.
           const end = spawn.travel.points.at(-1)!
-          replacement.x = end.x
-          replacement.y = end.y
-          delete replacement.travel
-          replacement.datum = physicsPhaseDatum(spawn.datum, physicsBoardPhase(spawn.datum))
+          const { travel: _travel, ...onBoard } = replacement
+          replacement = {
+            ...onBoard,
+            x: end.x,
+            y: end.y,
+            datum: physicsPhaseDatum(
+              spawn.datum,
+              physicsBoardPhase(spawn.datum)
+            )
+          }
         }
       }
       store.enqueue(replacement)
@@ -129,7 +160,7 @@ export function reconcilePhysicsChart(
   }
   const spawns = next.initialSpawns
     .filter((spawn) => !before.has(spawn.id))
-    .map((spawn) => ({ ...spawn, spawnAt: undefined }))
+    .map(({ spawnAt: _spawnAt, ...spawn }) => spawn)
   store.enqueue(
     spawns,
     paceNewBodies && !snapshot.paused ? next.initialSpawnPacing : undefined

@@ -8,7 +8,6 @@ import type {
   DependencyGateOptions,
   DependencyGateSnapshot,
   ServiceLevelCaseInfo,
-  ServiceLevelCaseState,
   ServiceLevelControllerOptions,
   ServiceLevelSnapshot,
   ServiceResourceAssignment,
@@ -188,18 +187,20 @@ export function createServiceLevelController(
       }
     },
     getSnapshot: () => {
-      const values = Array.from(cases.values())
-      const count = (state: ServiceLevelCaseState) => values.filter((value) => value.state === state).length
-      return {
-        total: values.length,
-        waiting: count("waiting"),
-        protected: count("protected"),
-        unhappy: count("unhappy"),
-        resolved: count("resolved"),
-        resolvedUnhappy: count("resolved-unhappy"),
+      const snapshot: ServiceLevelSnapshot = {
+        total: cases.size,
+        waiting: 0,
+        protected: 0,
+        unhappy: 0,
+        resolved: 0,
+        resolvedUnhappy: 0,
         simulatedAt: currentTime,
         metricRevision
       }
+      for (const { state } of cases.values()) {
+        snapshot[state === "resolved-unhappy" ? "resolvedUnhappy" : state]++
+      }
+      return snapshot
     }
   }
 }

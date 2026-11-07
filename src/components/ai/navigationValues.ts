@@ -28,6 +28,11 @@ export function finiteValue(value: unknown): number | undefined {
   return Number.isFinite(number) ? number : undefined
 }
 
+/** Counts and simulation settings accept numeric strings, but never dates. */
+export function finiteNumberValue(value: unknown): number | undefined {
+  if (!(value instanceof Date)) return finiteValue(value)
+}
+
 export function slug(value: unknown): string {
   return (
     (

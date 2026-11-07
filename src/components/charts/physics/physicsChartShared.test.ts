@@ -1,9 +1,23 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import {
   composePhysicsBodyStyle,
+  finiteNumber,
   physicsChartArea,
   styleFromColorAccessor
 } from "./physicsChartShared"
+
+import { PhysicsPipelineStore } from "../../stream/physics/PhysicsPipelineStore"
+
+describe("finiteNumber", () => {
+  it("preserves numeric strings and dates while rejecting missing, non-finite and coercible objects", () => {
+    expect([0, " 12.5 ", "0x10", new Date(1234)].map(finiteNumber)).toEqual([0, 12.5, 16, 1234])
+    const valueOf = vi.fn(() => 7)
+    for (const value of [null, undefined, "", " ", "invalid", Infinity, NaN, new Date(NaN), Symbol("n"), 1n, { valueOf }]) {
+      expect(finiteNumber(value)).toBeNull()
+    }
+    expect(valueOf).not.toHaveBeenCalled()
+  })
+})
 
 describe("physicsChartArea", () => {
   it("preserves the full chart plot geometry", () => {
@@ -60,10 +74,12 @@ describe("styleFromColorAccessor", () => {
       fill: "#authored",
       cursor: "pointer"
     })
+    const store = new PhysicsPipelineStore()
+    store.spawnNow({ id: "body", x: 0, y: 0, shape: { type: "circle", radius: 4 }, datum: { id: "body" } })
     const style = typeof composed === "function"
       ? composed(
-          { datum: { id: "body" } } as never,
-          { selected: false, simulationState: "idle" } as never
+          store.readBodies()[0],
+          { selected: false, simulationState: store.snapshot().simulationState }
         )
       : composed
 

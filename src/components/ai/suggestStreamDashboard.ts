@@ -12,7 +12,7 @@ import {
   normalizeStreamSchema,
   pickMeasureFields,
   pickSplitField,
-  resolveStreamShape
+  isSingleValueStream
 } from "./streamSchema"
 
 export interface StreamDashboardPanel {
@@ -49,7 +49,6 @@ export interface SuggestStreamDashboardOptions {
 
 function defaultStreamIntents(schema: StreamSchema): IntentId[] {
   const intents: IntentId[] = []
-  const shape = resolveStreamShape(schema)
 
   if (hasTimeField(schema)) {
     intents.push("trend", "change-detection")
@@ -62,7 +61,7 @@ function defaultStreamIntents(schema: StreamSchema): IntentId[] {
     intents.push("rank", "compare-categories", "part-to-whole")
   }
 
-  if (shape === "aggregate" && hasNumericValue(schema)) {
+  if (isSingleValueStream(schema)) {
     intents.push("part-to-whole")
   }
 

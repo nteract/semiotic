@@ -205,7 +205,7 @@ export class NetworkPipelineStore extends UpdateResultStoreBase {
     this.edgeTimestamps.delete(key)
   }
 
-  private config: NetworkPipelineConfig
+  protected config: NetworkPipelineConfig
   private tensionConfig: TensionConfig
   protected updateResults = new NetworkPipelineUpdateResults()
 

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { defineChartRecipe } from "./chartRecipes"
 import { auditObservedScene } from "./observedSceneAudit"
 
@@ -123,12 +123,11 @@ describe("auditObservedScene", () => {
   })
 
   it("covers 50,000 copied row marks with a linear field-read budget", () => {
-    let reads = 0
+    const readValue = vi.fn((value: number) => value)
     const rows = Array.from({ length: 50_000 }, (_, index) => ({
       category: `category-${index}`,
       get value() {
-        reads++
-        return index
+        return readValue(index)
       }
     }))
     const scene = rows.map((row, index) => ({
@@ -151,7 +150,23 @@ describe("auditObservedScene", () => {
         (finding) => finding.id === "coverage.input-data"
       )
     ).toMatchObject({ status: "pass", evidence: { represented: 50_000 } })
-    expect(reads).toBeLessThanOrEqual(150_000)
+    expect(readValue.mock.calls.length).toBeLessThanOrEqual(150_000)
+  })
+
+  it("audits geometry beyond the capped overlap sample", () => {
+    const result = audit(Array.from({ length: 501 }, (_, index) => ({
+      type: "rect",
+      id: `sample-${index}`,
+      datum: data[0],
+      x: index === 500 ? 95 : 0,
+      y: 0,
+      w: index === 500 ? 10 : 30,
+      h: 30
+    })))
+    for (const id of ["geometry.bounds", "interaction.target-size"]) {
+      expect(result.observedSceneEvidence.find((finding) => finding.id === id))
+        .toMatchObject({ status: "warn", evidence: { count: 1 } })
+    }
   })
 
   it("measures a 300,000-point path without a spread-argument crash", () => {

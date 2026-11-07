@@ -12,7 +12,6 @@ import {
   type NetworkPerspectiveFrame,
   type ResolvedNetworkPerspective
 } from "./networkPerspective"
-import { networkPerspectiveKey } from "./networkPerspectiveKey"
 import {
   prepareNetworkPerspectiveScene,
   type NetworkPerspectiveScene
@@ -36,7 +35,6 @@ interface Tween {
 }
 
 interface Internal {
-  key: string
   resolved: ResolvedNetworkPerspective | null
   tween?: Tween | null
 }
@@ -70,12 +68,12 @@ function project(
   config: NetworkPipelineConfig,
   size: [number, number],
   parts: NetworkSceneParts,
-  first: boolean
+  first: boolean,
+  perspectiveChanged: boolean
 ): NetworkPerspectiveScene | null {
   const previous = state.internal as Internal | null
-  const key = networkPerspectiveKey(config.perspective)
   let internal = previous
-  if (!previous || previous.key !== key) {
+  if (!previous || perspectiveChanged) {
     const next = resolveNetworkPerspective(config.perspective)
     // Tweens are opt-in on either end; the first build never animates.
     const duration = first ? 0 : transitionDuration(next) || transitionDuration(previous?.resolved ?? null)
@@ -90,7 +88,7 @@ function project(
             progress: 0
           }
         : null
-    internal = { key, resolved: next, tween }
+    internal = { resolved: next, tween }
     state.internal = internal
   }
   const tween = internal!.tween

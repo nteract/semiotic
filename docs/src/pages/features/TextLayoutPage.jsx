@@ -244,7 +244,7 @@ export default function TextLayoutPage() {
         supports <code>label</code>, <code>callout</code>, <code>callout-circle</code>,{" "}
         <code>callout-rect</code>, and <code>bracket</code> notes.
       </p>
-      <CodeBlock code="npm install semiotic @chenglou/pretext@0.0.9" language="bash" />
+      <CodeBlock code="npm install semiotic @chenglou/pretext@1.0.0" language="bash" />
       <CodeBlock code={usage} language="jsx" />
       <p>
         Use <code>autoPlaceAnnotations</code> to let Semiotic choose label and callout offsets using

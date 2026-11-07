@@ -1,7 +1,7 @@
 /**
  * Store-owned perspective state. A thin shell: flat charts never touch the
- * projection engine, and the engine (registered by network chart components
- * or loaded on first use) owns keying, projection and tweens.
+ * projection engine. The store retains applied settings; the engine
+ * (registered by network charts or loaded on first use) projects and tweens.
  */
 import type { NetworkHtmlMark } from "./networkCustomLayout"
 import type {
@@ -10,7 +10,8 @@ import type {
   NetworkSceneEdge,
   NetworkSceneNode
 } from "./networkTypes"
-import type { NetworkPerspectiveFrame } from "./networkPerspective"
+import type { NetworkPerspective, NetworkPerspectiveFrame } from "./networkPerspective"
+import { equalConfig, snapshotConfig } from "./shallowEqual"
 import type { NetworkPerspectiveScene } from "./networkPerspectiveScene"
 import {
   getNetworkPerspectiveEngine,
@@ -38,10 +39,11 @@ export class NetworkPerspectiveState {
   onExtrasReady: (() => void) | null = null
   /** Projection changed since the last build, even if its tween has ended. */
   needsRebuild = false
-  /** Engine-owned bookkeeping (applied key, resolved settings, tween). */
+  /** Engine-owned bookkeeping (resolved settings and tween). */
   internal: { tween?: unknown } | null = null
   /** Scene builds since reset; the first build never animates. */
   private builds = 0
+  private appliedPerspective: NetworkPerspective | null = null
   private warnedFlatDecorations = false
 
   /**
@@ -91,6 +93,7 @@ export class NetworkPerspectiveState {
     this.edgeLift = 0
     this.projectParticle = undefined
     this.internal = null
+    this.appliedPerspective = null
     this.builds = 0
     this.needsRebuild = false
   }
@@ -110,6 +113,11 @@ export class NetworkPerspectiveState {
       loadNetworkPerspectiveEngine().then(() => this.extrasReady(), () => {})
       return null
     }
-    return engine.project(this, config, size, parts, first)
+    const perspective = config.perspective ?? null
+    const changed = !equalConfig(this.appliedPerspective, perspective, Infinity)
+    // Explicit reprojection can mutate a retained config. Snapshot only when
+    // settings change; equivalent inline objects must preserve active tweens.
+    if (changed) this.appliedPerspective = snapshotConfig(perspective)
+    return engine.project(this, config, size, parts, first, changed)
   }
 }

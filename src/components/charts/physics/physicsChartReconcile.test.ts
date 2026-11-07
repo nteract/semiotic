@@ -19,6 +19,18 @@ const build = (
   })
 
 describe("physics chart reconciliation", () => {
+  it("preserves a moving body when equivalent spawn fields arrive in a different key order", () => {
+    const rows = [{ id: "a", value: 3 }]
+    const first = build(rows)
+    const store = new PhysicsPipelineStore(first.config)
+    store.spawnNow(first.initialSpawns[0])
+    store.tick(0.1)
+    const before = store.snapshot()
+    const next = build(rows)
+    next.initialSpawns = next.initialSpawns.map(({ x, y, shape, ...rest }) => ({ y, shape, x, ...rest }))
+    expect(reconcilePhysicsChart(before, first, next).world.bodies).toEqual(before.world.bodies)
+  })
+
   it("keeps pending arrival deadlines and tie order when geometry changes", () => {
     const rows = [
       { id: "a", value: 1 },

@@ -1,6 +1,6 @@
 import * as React from "react"
-import { act, cleanup, render } from "@testing-library/react"
-import { afterEach, expect, it } from "vitest"
+import { act, cleanup, render, renderHook } from "@testing-library/react"
+import { afterEach, expect, it, vi } from "vitest"
 import { renderToString } from "react-dom/server"
 import {
   NetworkZoomProvider,
@@ -13,28 +13,38 @@ afterEach(cleanup)
 
 it("keeps discrete subscribers idle through scale, pan, viewport, start and settle updates at the same level", () => {
   const store = createNetworkZoomStore()
-  const commits = { discrete: 0, live: 0 }
-  function Discrete() {
-    const level = useNetworkLODLevel(200, { breakpoints: [100] })
-    return <output data-testid="level">{level}</output>
-  }
-  function Live() {
-    const lod = useNetworkLOD(200, 100, { breakpoints: [100] })
-    return <output data-testid="live">{JSON.stringify(lod)}</output>
-  }
-  const view = render(
-    <React.StrictMode>
-      <NetworkZoomProvider store={store}>
-        <React.Profiler id="discrete" onRender={() => commits.discrete++}>
-          <Discrete />
-        </React.Profiler>
-        <React.Profiler id="live" onRender={() => commits.live++}>
-          <Live />
-        </React.Profiler>
-      </NetworkZoomProvider>
-    </React.StrictMode>
+  const discreteCommits = vi.fn()
+  const liveCommits = vi.fn()
+  const discrete = renderHook(
+    () => useNetworkLODLevel(200, { breakpoints: [100] }),
+    {
+      wrapper: ({ children }) => (
+        <React.StrictMode>
+          <NetworkZoomProvider store={store}>
+            <React.Profiler id="discrete" onRender={discreteCommits}>
+              {children}
+            </React.Profiler>
+          </NetworkZoomProvider>
+        </React.StrictMode>
+      )
+    }
   )
-  commits.discrete = commits.live = 0
+  const live = renderHook(
+    () => useNetworkLOD(200, 100, { breakpoints: [100] }),
+    {
+      wrapper: ({ children }) => (
+        <React.StrictMode>
+          <NetworkZoomProvider store={store}>
+            <React.Profiler id="live" onRender={liveCommits}>
+              {children}
+            </React.Profiler>
+          </NetworkZoomProvider>
+        </React.StrictMode>
+      )
+    }
+  )
+  discreteCommits.mockClear()
+  liveCommits.mockClear()
   for (let i = 0; i < 50; i++) {
     act(() =>
       store.update({
@@ -44,8 +54,9 @@ it("keeps discrete subscribers idle through scale, pan, viewport, start and sett
       })
     )
   }
-  expect(commits).toEqual({ discrete: 0, live: 50 })
-  expect(JSON.parse(view.getByTestId("live").textContent!)).toMatchObject({
+  expect(discreteCommits).not.toHaveBeenCalled()
+  expect(liveCommits).toHaveBeenCalledTimes(50)
+  expect(live.result.current).toMatchObject({
     width: 200,
     height: 100,
     isInteracting: true
@@ -56,13 +67,15 @@ it("keeps discrete subscribers idle through scale, pan, viewport, start and sett
       settledZoom: store.getSnapshot().zoom
     })
   )
-  expect(commits).toEqual({ discrete: 0, live: 51 })
+  expect(discreteCommits).not.toHaveBeenCalled()
+  expect(liveCommits).toHaveBeenCalledTimes(51)
   act(() => store.update({ zoom: { x: 0, y: 0, k: 0.2 }, isInteracting: true }))
-  expect(view.getByTestId("level").textContent).toBe("0")
-  expect(commits.discrete).toBe(1)
-  view.unmount()
+  expect(discrete.result.current).toBe(0)
+  expect(discreteCommits).toHaveBeenCalledTimes(1)
+  discrete.unmount()
+  live.unmount()
   act(() => store.update({ zoom: { x: 0, y: 0, k: 2 }, isInteracting: false }))
-  expect(commits.discrete).toBe(1)
+  expect(discreteCommits).toHaveBeenCalledTimes(1)
 })
 
 it.each([false, true])(
@@ -74,26 +87,24 @@ it.each([false, true])(
       isInteracting: moving,
       visibleRect: null
     })
-    function Card({
-      width = 200,
-      focused = false,
-      breakpoints = [55, 125, 235]
-    }) {
-      const options = { breakpoints, hysteresis: 8, keepDetail: focused }
-      const level = useNetworkLODLevel(width, options)
-      const live = useNetworkLOD(width, 100, options)
-      return <output>{JSON.stringify([level, live.level])}</output>
-    }
-    const tree = (props = {}) => (
-      <NetworkZoomProvider store={store}>
-        <Card {...props} />
-      </NetworkZoomProvider>
+    const defaults = { width: 200, focused: false, breakpoints: [55, 125, 235] }
+    const view = renderHook(
+      ({ width, focused, breakpoints }) => {
+        const options = { breakpoints, hysteresis: 8, keepDetail: focused }
+        return [
+          useNetworkLODLevel(width, options),
+          useNetworkLOD(width, 100, options).level
+        ]
+      },
+      {
+        initialProps: defaults,
+        wrapper: ({ children }) => (
+          <NetworkZoomProvider store={store}>{children}</NetworkZoomProvider>
+        )
+      }
     )
-    const view = render(tree())
     const levels = (expected: number) =>
-      expect(view.container.textContent).toBe(
-        JSON.stringify([expected, expected])
-      )
+      expect(view.result.current).toEqual([expected, expected])
     levels(moving ? 0 : 2)
     act(() => store.update({ isInteracting: false }))
     levels(2) // A newly mounted card establishes detail without a promotion dead band.
@@ -120,18 +131,24 @@ it.each([false, true])(
     levels(3)
     scale(30, true)
     levels(0)
-    view.rerender(tree({ focused: true }))
+    view.rerender({ ...defaults, focused: true })
     levels(3)
-    view.rerender(tree())
+    view.rerender(defaults)
     levels(0)
     scale(130, false)
     levels(1)
-    view.rerender(tree({ width: 400 }))
+    view.rerender({ ...defaults, width: 400 })
     levels(3)
-    view.rerender(tree({ breakpoints: [125, NaN, 55] }))
+    view.rerender({ ...defaults, breakpoints: [125, NaN, 55] })
     levels(2)
-    view.rerender(tree({ breakpoints: [] }))
+    view.rerender({ ...defaults, breakpoints: [] })
     levels(0)
+    const breakpoints = [300]
+    view.rerender({ ...defaults, breakpoints })
+    levels(0)
+    breakpoints[0] = 100
+    view.rerender({ ...defaults, breakpoints })
+    levels(1)
   }
 )
 

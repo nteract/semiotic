@@ -4,7 +4,7 @@ import {
   FLAT_NETWORK_PERSPECTIVE_FRAME,
   resolveNetworkPerspective
 } from "./networkPerspective"
-import { networkPerspectiveKey } from "./networkPerspectiveKey"
+import { equalConfig, snapshotConfig } from "./shallowEqual"
 import { createNetworkPerspectiveFrame, readPerspectiveAccessor } from "./networkPerspectiveFit"
 
 /** Screen height/width of a projected ground square (the diamond aspect). */
@@ -138,15 +138,13 @@ describe("perspective helpers", () => {
     expect(Number.isNaN(readPerspectiveAccessor("missing", { data: {} }))).toBe(true)
   })
 
-  it("keys configs by value and callbacks by identity", () => {
+  it("compares nested configs structurally and callbacks by identity", () => {
     const fn = () => 1
-    expect(networkPerspectiveKey({ type: "pixel", elevation: fn })).toBe(
-      networkPerspectiveKey({ type: "pixel", elevation: fn })
-    )
-    expect(networkPerspectiveKey({ type: "pixel", elevation: fn })).not.toBe(
-      networkPerspectiveKey({ type: "pixel", elevation: () => 1 })
-    )
-    expect(networkPerspectiveKey("isometric")).toBe("isometric")
-    expect(networkPerspectiveKey(undefined)).toBe("")
+    const config = { type: "pixel", elevation: fn, regions: [{ id: "zone", nodes: ["a"] }] } as const
+    const snapshot = snapshotConfig(config)
+    expect(equalConfig(snapshot, { regions: [{ nodes: ["a"], id: "zone" }], elevation: fn, type: "pixel" }, Infinity)).toBe(true)
+    expect(equalConfig(snapshot, { ...config, elevation: () => 1 }, Infinity)).toBe(false)
+    expect(equalConfig(snapshot, { ...config, elevation: "ƒ1" }, Infinity)).toBe(false)
+    expect(equalConfig(snapshot, { ...config, regions: [{ id: "zone", nodes: ["b"] }] }, Infinity)).toBe(false)
   })
 })
