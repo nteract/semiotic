@@ -1,6 +1,6 @@
 "use client"
 
-import { cloneTheme } from "./cloneTheme"
+import { snapshotConfig as cloneTheme } from "../stream/shallowEqual"
 import { createStore } from "./createStore"
 import { LIGHT_THEME, resolveThemeUpdate } from "./themeCore"
 import type { SemioticTheme, ThemeStoreUpdate } from "./themeCore"

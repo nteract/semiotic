@@ -408,6 +408,20 @@ describe("describeChart — physics settled projection", () => {
     expect(r.levels.l3).toBeUndefined()
   })
 
+  it("omits absent physics counts without dropping an observed zero", () => {
+    const r = describeChart("UnitPileChart", {
+      projectionRows: [
+        { label: "Missing", count: "   " },
+        { label: "Invalid", count: NaN },
+        { label: "Date", count: new Date(0) },
+        { label: "Empty", count: 0 },
+        { label: "Observed", count: "2" }
+      ]
+    })
+    expect(r.levels.l2).toContain("2 units across 2 containers")
+    expect(r.levels.l3).toContain("Observed")
+  })
+
   it("degrades cleanly when a physics chart has not exposed projection rows yet", () => {
     const r = describeChart(
       "UnitPileChart",

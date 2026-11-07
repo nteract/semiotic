@@ -2,7 +2,7 @@
 // Core entry imports under react-server must resolve client-only hooks lazily.
 import React from "react"
 import type { NetworkPerspective, NetworkPerspectiveFrame } from "./networkPerspective"
-import { networkPerspectiveKey } from "./networkPerspectiveKey"
+import { equalConfig } from "./shallowEqual"
 
 /** Identity projection for flat charts (kept local so flat bundles skip the engine). */
 const FLAT: NetworkPerspectiveFrame = {
@@ -64,10 +64,9 @@ export function useNetworkPerspectiveExtrasReady(
 export function useStableNetworkPerspective<T extends NetworkPerspective | undefined>(
   perspective: T
 ): T {
-  const ref = React.useRef<{ key: string; value: T } | null>(null)
-  const key = networkPerspectiveKey(perspective)
-  if (!ref.current || ref.current.key !== key) ref.current = { key, value: perspective }
-  return ref.current.value
+  const ref = React.useRef(perspective)
+  if (!equalConfig(ref.current, perspective, Infinity)) ref.current = perspective
+  return ref.current
 }
 
 /**

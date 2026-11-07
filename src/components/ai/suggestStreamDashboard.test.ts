@@ -20,6 +20,12 @@ const keyedBrandStream: StreamSchema = {
 }
 
 describe("suggestStreamDashboard", () => {
+  it.each([undefined, "aggregate"] as const)("suggests a value panel without intent for a single value (shape: %s)", (shape) => {
+    const result = suggestStreamDashboard({ fields: [{ name: "total", kind: "numeric" }], shape })
+    expect(result.panels.map(({ suggestion }) => suggestion.component)).toContain("BigNumber")
+    expect(result.intentsCovered).toEqual(["part-to-whole"])
+    expect(result.warnings).toEqual([])
+  })
   it("offers unused stretch panels while honoring the allow-list", () => {
     const options = {
       intent: "compare-categories" as const,

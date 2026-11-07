@@ -11,6 +11,7 @@ import {
 } from "react"
 import type { ReactNode } from "react"
 import type { NetworkZoomState } from "./types"
+import { equalConfig } from "../shallowEqual"
 import {
   createNetworkZoomStore,
   type NetworkZoomStore
@@ -60,7 +61,7 @@ export function useNetworkZoom<T>(
   const rendered = useRef<{ value: T } | null>(null)
   const read = useMemo<() => T | NetworkZoomState>(() => {
     if (!selector) return store.getSnapshot
-    let state: NetworkZoomState | undefined
+    let state: NetworkZoomState | null = null
     let value: T
     return () => {
       const next = store.getSnapshot()
@@ -108,6 +109,21 @@ export interface NetworkLODOptions {
   keepDetail?: boolean
 }
 
+function useLODThresholds(breakpoints: readonly number[]): number[] {
+  // Cards commonly supply inline arrays. Compare their entries without
+  // allocating on camera renders; normalize only when their contents change.
+  const cache = useRef<{ input: number[]; thresholds: number[] } | null>(null)
+  const previous = cache.current
+  if (previous && equalConfig(previous.input, breakpoints))
+    return previous.thresholds
+  const next = {
+    input: breakpoints.slice(),
+    thresholds: breakpoints.filter(Number.isFinite).sort((a, b) => a - b)
+  }
+  cache.current = next
+  return next.thresholds
+}
+
 /** Projected size plus a stable LOD. Demotion is immediate; promotion waits
  * until interaction settles. This does not fetch data or choose card markup.
  * Use the returned level/isInteracting to gate cancellable consumer requests. */
@@ -117,16 +133,14 @@ export function useNetworkLOD(
   options: NetworkLODOptions
 ) {
   const size = useNetworkProjectedSize(width, height)
-  const thresholds = options.breakpoints
-    .filter(Number.isFinite)
-    .slice()
-    .sort((a, b) => a - b)
-  const desired = thresholds.filter((value) => size.width >= value).length
+  const thresholds = useLODThresholds(options.breakpoints)
   // A deferred first render is not a real previous detail level. Newly
   // virtualized cards establish their level at the first settle; applying the
   // promotion dead band to the placeholder can leave them behind neighbors.
   const [previous, setPrevious] = useState<number | null>(() =>
-    size.isInteracting ? null : desired
+    size.isInteracting
+      ? null
+      : resolveLevel(null, size.width, false, thresholds, 0)
   )
   const band = Number.isFinite(options.hysteresis)
     ? Math.max(0, options.hysteresis!)
@@ -154,11 +168,11 @@ function resolveLevel(
   band: number,
   keepDetail?: boolean
 ) {
-  const desired = thresholds.filter((value) => width >= value).length
-  let level = Math.min(previous ?? (moving ? 0 : desired), thresholds.length)
+  let level = Math.min(previous ?? 0, thresholds.length)
   while (level > 0 && width < thresholds[level - 1] - band) level--
+  const promotionBand = previous === null ? 0 : band
   if (!moving)
-    while (level < thresholds.length && width >= thresholds[level] + band)
+    while (level < thresholds.length && width >= thresholds[level] + promotionBand)
       level++
   return keepDetail ? thresholds.length : level
 }
@@ -171,17 +185,13 @@ export function useNetworkLODLevel(
   options: NetworkLODOptions
 ): number {
   const store = useContext(NetworkZoomContext)
-  const thresholdsKey = options.breakpoints
-    .filter(Number.isFinite)
-    .sort((a, b) => a - b)
-    .join(",")
+  const thresholds = useLODThresholds(options.breakpoints)
   const band = Number.isFinite(options.hysteresis)
     ? Math.max(0, options.hysteresis!)
     : 8
   const committed = useRef<{ previous: number | null }>({ previous: null })
   const selection = useMemo(() => {
-    const thresholds = thresholdsKey ? thresholdsKey.split(",").map(Number) : []
-    let snapshot: ReturnType<NetworkZoomStore["getSize"]> | undefined
+    let snapshot: ReturnType<NetworkZoomStore["getSize"]> | null = null
     let level = 0
     const result = {
       previous: committed.current.previous,
@@ -204,7 +214,7 @@ export function useNetworkLODLevel(
       }
     }
     return result
-  }, [store, width, thresholdsKey, band, options.keepDetail])
+  }, [store, width, thresholds, band, options.keepDetail])
   const level = useSyncExternalStore(
     store.subscribeSize,
     selection.read,

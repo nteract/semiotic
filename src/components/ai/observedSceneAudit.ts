@@ -85,6 +85,8 @@ export interface ObservedSceneAuditResult {
   manualATChecks: ObservedAuditFinding[]
 }
 
+type ObservedEvidenceFinding = ObservedAuditFinding & { status: "pass" | "warn" | "fail" }
+
 interface SceneNode extends Datum {
   pointId?: string | number
   id?: string | number
@@ -237,7 +239,7 @@ function statusFinding(
   fail: string,
   failStatus: "warn" | "fail" = "warn",
   evidence?: Record<string, unknown>,
-): ObservedAuditFinding {
+): ObservedEvidenceFinding {
   return {
     id,
     category,
@@ -265,29 +267,44 @@ export function auditObservedScene(
   }
   const plotX = plot.x ?? 0
   const plotY = plot.y ?? 0
-  const evidence: ObservedAuditFinding[] = []
+  const evidence: ObservedEvidenceFinding[] = []
   const dataNodes = nodes.filter((node) => nodeDatum(node) != null)
 
-  const invalidGeometry = nodes.filter((node) => {
-    if (typeof node.pathD === "string" && /NaN|Infinity|undefined/.test(node.pathD)) return true
-    return rawGeometryValues(node).some((value) => typeof value !== "number" || !Number.isFinite(value))
-  })
+  const minimumTarget =
+    recipe.audit?.minimumHitTargetSize ??
+    recipe.accessibility.minimumHitTarget ??
+    24
+  let invalidGeometry = 0
+  let zeroArea = 0
+  let outOfBounds = 0
+  let tiny = 0
+  // Overlap sampling is capped below; the other geometry checks cover every mark.
+  const bounded: Bounds[] = []
+  for (const node of nodes) {
+    if ((typeof node.pathD === "string" && /NaN|Infinity|undefined/.test(node.pathD)) ||
+      rawGeometryValues(node).some((value) => !finite(value))) invalidGeometry++
+    const bound = nodeBounds(node)
+    if (!bound) continue
+    if (bounded.length < 500) bounded.push(bound)
+    const stroke = strokeOnly(node)
+    const width = bound.x1 - bound.x0
+    const height = bound.y1 - bound.y0
+    if (stroke ? width <= 0 && height <= 0 : width <= 0 || height <= 0) zeroArea++
+    if (bound.x0 < plotX || bound.y0 < plotY ||
+      bound.x1 > plotX + plot.width || bound.y1 > plotY + plot.height) outOfBounds++
+    if (!stroke && nodeDatum(node) != null && node.interactive !== false &&
+      (width < minimumTarget || height < minimumTarget)) tiny++
+  }
   evidence.push(statusFinding(
     "geometry.finite",
     "geometry",
-    invalidGeometry.length === 0,
+    invalidGeometry === 0,
     "All emitted geometry is finite.",
-    `${invalidGeometry.length} marks contain non-finite geometry.`,
+    `${invalidGeometry} marks contain non-finite geometry.`,
     "fail",
-    { count: invalidGeometry.length },
+    { count: invalidGeometry },
   ))
 
-  const bounds = nodes.map(nodeBounds)
-  const zeroArea = bounds.filter(
-    (bound, index) => bound && (strokeOnly(nodes[index])
-        ? bound.x1 <= bound.x0 && bound.y1 <= bound.y0
-        : bound.x1 <= bound.x0 || bound.y1 <= bound.y0),
-  ).length
   evidence.push(statusFinding(
     "geometry.nonzero-area",
     "geometry",
@@ -298,14 +315,6 @@ export function auditObservedScene(
     { count: zeroArea },
   ))
 
-  const outOfBounds = bounds.filter(
-    (bound) =>
-      bound &&
-      (bound.x0 < plotX ||
-        bound.y0 < plotY ||
-        bound.x1 > plotX + plot.width ||
-        bound.y1 > plotY + plot.height),
-  ).length
   evidence.push(statusFinding(
     "geometry.bounds",
     "geometry",
@@ -316,20 +325,6 @@ export function auditObservedScene(
     { count: outOfBounds },
   ))
 
-  const minimumTarget =
-    recipe.audit?.minimumHitTargetSize ??
-    recipe.accessibility.minimumHitTarget ??
-    24
-  const tiny = bounds.filter((bound, index) => {
-    if (!bound ||
-      strokeOnly(nodes[index]) ||
-      nodeDatum(nodes[index]) == null ||
-      nodes[index].interactive === false
-    ) return false
-    return (
-      bound.x1 - bound.x0 < minimumTarget || bound.y1 - bound.y0 < minimumTarget
-    )
-  }).length
   evidence.push(statusFinding(
     "interaction.target-size",
     "interaction",
@@ -340,15 +335,21 @@ export function auditObservedScene(
     { count: tiny, minimumTarget },
   ))
 
-  const ids = dataNodes.map(nodeId)
-  const missingIds = ids.filter((id) => !id).length
+  let missingIds = 0
+  let unstableIds = 0
+  let nonInteractive = 0
   const seen = new Set<string>()
-  const duplicateIds = ids.filter((id): id is string => {
-    if (!id) return false
-    if (seen.has(id)) return true
-    seen.add(id)
-    return false
-  })
+  const duplicateIds: string[] = []
+  for (const node of dataNodes) {
+    const id = nodeId(node)
+    if (!id) missingIds++
+    else {
+      if (seen.has(id)) duplicateIds.push(id)
+      seen.add(id)
+      if (/^(datum|mark|node|point|rect)-?\d+$/.test(id)) unstableIds++
+    }
+    if (node.interactive === false) nonInteractive++
+  }
   evidence.push(statusFinding(
     "identity.stable-ids",
     "identity",
@@ -367,9 +368,6 @@ export function auditObservedScene(
     "fail",
     { duplicates: [...new Set(duplicateIds)].slice(0, 10) },
   ))
-  const unstableIds = ids.filter(
-    (id) => id && /^(datum|mark|node|point|rect)-?\d+$/.test(id),
-  ).length
   if (unstableIds > 0) {
     evidence.push({
       id: "identity.index-pattern",
@@ -427,7 +425,6 @@ export function auditObservedScene(
     })
   }
 
-  const nonInteractive = dataNodes.filter((node) => node.interactive === false).length
   evidence.push(statusFinding(
     "interaction.hit-targets",
     "interaction",
@@ -603,7 +600,6 @@ export function auditObservedScene(
   ))
 
   let severeOverlaps = 0
-  const bounded = bounds.filter((bound): bound is Bounds => !!bound).slice(0, 500)
   for (let left = 0; left < bounded.length; left += 1) {
     for (let right = left + 1; right < bounded.length; right += 1) {
       if (overlapRatio(bounded[left], bounded[right]) >= 0.8) severeOverlaps += 1
@@ -649,17 +645,17 @@ export function auditObservedScene(
     designContractDeclared: !!recipe.designContract?.whyCustom,
   }
 
-  const all = [...evidence, ...manualATChecks]
-  const failures = evidence.filter((finding) => finding.status === "fail").length
+  const counts = { pass: 0, warn: 0, fail: 0 }
+  for (const { status } of evidence) counts[status]++
   return {
     recipeId: recipe.id,
-    ok: failures === 0,
+    ok: counts.fail === 0,
     summary: {
       marks: nodes.length,
-      passes: all.filter((finding) => finding.status === "pass").length,
-      warnings: all.filter((finding) => finding.status === "warn").length,
-      failures,
-      manual: all.filter((finding) => finding.status === "manual").length,
+      passes: counts.pass,
+      warnings: counts.warn,
+      failures: counts.fail,
+      manual: manualATChecks.length,
     },
     declaredSemantics,
     observedSceneEvidence: evidence,

@@ -8,6 +8,19 @@ const sales = [
 ]
 
 describe("buildReaderGrounding", () => {
+  it("keeps the first tied physics leader and ignores malformed rows without changing labels", () => {
+    const grounding = buildReaderGrounding("PhysicsCustomChart", {
+      projectionRows: [null, { count: "invalid" }, { id: "empty", count: 0 }, { count: 5 }, { id: "tie", count: 5 }],
+      physics: { snapshot: { sediment: [null, { count: 3, total: 2 }, { id: "tie", count: 3, total: 8 }] } }
+    })
+    expect(grounding.physics?.aggregates).toEqual({
+      rows: [{ id: "empty", label: "empty", count: 0 }, { label: "container 3", count: 5 }, { id: "tie", label: "tie", count: 5 }],
+      totalCount: 10,
+      populatedCount: 2,
+      leader: { label: "container 3", count: 5 }
+    })
+    expect(grounding.physics?.sediment).toEqual({ bins: 2, count: 6, total: 10, leader: { label: "sediment 2", count: 3, total: 2 } })
+  })
   it("reports exact source ranges for 300,000 physics rows", () => {
     const grounding = buildReaderGrounding("CollisionSwarmChart", {
       data: Array.from({ length: 300_000 }, (_, index) => ({ x: index - 150_000 })),

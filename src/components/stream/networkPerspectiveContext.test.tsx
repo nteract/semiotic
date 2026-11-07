@@ -1,11 +1,13 @@
-// @vitest-environment node
-import { describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import * as React from "react"
 import * as ReactDOMServer from "react-dom/server"
 import { NetworkPerspectiveLayer } from "./networkPerspectiveContext"
 import { NetworkPerspectiveGround } from "./networkPerspectivePlacement"
 import { buildNetworkPerspectiveFrame } from "./networkPerspective"
 import { NetworkPerspectiveState } from "./networkPerspectiveState"
+import { setupCanvasMock } from "../../test-utils/canvasMock"
+import type { NetworkRectNode } from "./networkTypes"
+import type { Style } from "./types"
 
 const frame = buildNetworkPerspectiveFrame("isometric", [0.8, 0.4, -0.8, 0.4, 100, 20], 0.9)
 
@@ -54,15 +56,18 @@ describe("flat decoration warning", () => {
 
 describe("invisible pieces have no walls", () => {
   const faces = [{ pathD: "M0 0L10 0L10 4L0 4Z", shade: -0.2 }]
-  const rect = (fill: string, extra: Record<string, unknown> = {}) => ({
+  let restoreCanvas: () => void
+  beforeEach(() => { restoreCanvas = setupCanvasMock({ stubRaf: "noop" }) })
+  afterEach(() => restoreCanvas())
+  const rect = (fill: string, extra: Style = {}): NetworkRectNode => ({
     type: "rect" as const, x: 0, y: 0, w: 10, h: 10, pathD: "M0 0L10 0L10 10Z", faces,
-    style: { fill, ...extra }, datum: null
+    style: { fill, ...extra }, datum: { id: "piece" }, id: "piece"
   })
 
   it("SVG skips walls for transparent, none, zero-alpha and zero-opacity fills", async () => {
     const { networkSceneNodeToSVG } = await import("./SceneToSVG")
     const walls = (node: ReturnType<typeof rect>) =>
-      (ReactDOMServer.renderToStaticMarkup(<svg>{networkSceneNodeToSVG(node as never, 0)}</svg>).match(/<path/g) ?? []).length - 1
+      (ReactDOMServer.renderToStaticMarkup(<svg>{networkSceneNodeToSVG(node, 0)}</svg>).match(/<path/g) ?? []).length - 1
     for (const fill of ["transparent", "none", "rgba(0,0,0,0)", "#0000", "#11223300"]) {
       expect(walls(rect(fill)), fill).toBe(0)
     }
@@ -74,24 +79,13 @@ describe("invisible pieces have no walls", () => {
 
   it("canvas skips walls for invisible fills", async () => {
     const { paintPerspectiveFaces } = await import("./renderers/networkPerspectivePaint")
-    const fills: unknown[] = []
-    const ctx = {
-      globalAlpha: 1,
-      _fill: "#000000",
-      get fillStyle() { return this._fill },
-      set fillStyle(v: string) {
-        if (v === "transparent") this._fill = "rgba(0, 0, 0, 0)"
-        else if (/^(#|rgb)/.test(v)) this._fill = v
-      },
-      fill: () => fills.push(ctx._fill)
-    }
-    ;(globalThis as { Path2D?: unknown }).Path2D ??= class { constructor(public d: string) {} }
+    const ctx = document.createElement("canvas").getContext("2d")!
     for (const fill of ["transparent", "none", "rgba(0, 0, 0, 0)"]) {
-      paintPerspectiveFaces(ctx as never, { fill }, faces, "#007bff")
+      paintPerspectiveFaces(ctx, { fill }, faces, "#007bff")
     }
-    paintPerspectiveFaces(ctx as never, { fill: "#123456", fillOpacity: 0 }, faces, "#007bff")
-    expect(fills).toHaveLength(0)
-    paintPerspectiveFaces(ctx as never, { fill: "#123456" }, faces, "#007bff")
-    expect(fills).toHaveLength(1)
+    paintPerspectiveFaces(ctx, { fill: "#123456", fillOpacity: 0 }, faces, "#007bff")
+    expect(ctx.fill).not.toHaveBeenCalled()
+    paintPerspectiveFaces(ctx, { fill: "#123456" }, faces, "#007bff")
+    expect(ctx.fill).toHaveBeenCalledTimes(1)
   })
 })

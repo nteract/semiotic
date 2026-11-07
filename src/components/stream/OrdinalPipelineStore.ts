@@ -74,7 +74,7 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
   private rExtent = new SlidingExtent()
   /** Per-accessor extents for multiAxis mode */
   private rExtents: SlidingExtent[] = []
-  private config: OrdinalPipelineConfig
+  protected config: OrdinalPipelineConfig
   private liveWindow = true
   protected updateResults = new OrdinalPipelineUpdateResults()
 
