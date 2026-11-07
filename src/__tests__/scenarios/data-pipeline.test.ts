@@ -177,8 +177,8 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
     expect(onChangeset).toHaveBeenCalledTimes(2) // no additional changesets
   })
 
-  // 7. clearLastData allows same reference to re-ingest
-  it("clearLastData resets dedup so same reference can be re-ingested", () => {
+  // Clear allows the same reference to be ingested again.
+  it("clear resets dedup so same reference can be re-ingested", () => {
     const onChangeset = vi.fn<(changeset: Changeset<PipelineDatum>) => void>()
     const adapter = new DataSourceAdapter<PipelineDatum>(onChangeset)
 
@@ -187,7 +187,7 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
     expect(onChangeset).toHaveBeenCalledTimes(1)
 
     // Clear and re-set same reference
-    adapter.clearLastData()
+    adapter.clear()
     adapter.setBoundedData(data)
     expect(onChangeset).toHaveBeenCalledTimes(2) // re-ingested
   })
@@ -301,13 +301,12 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
     expect(onChangeset.mock.calls[0][0].inserts.map((d) => d.id)).toEqual([1, 2])
   })
 
-  // 14. clearLastData discards buffered pushes
-  it("clearLastData discards buffered push data", async () => {
+  it("clear discards buffered push data", async () => {
     const onChangeset = vi.fn<(changeset: Changeset<PipelineDatum>) => void>()
     const adapter = new DataSourceAdapter<PipelineDatum>(onChangeset)
 
     adapter.push({ id: 1, value: 10 })
-    adapter.clearLastData()
+    adapter.clear()
 
     await flushMicrotasks()
     expect(onChangeset).toHaveBeenCalledTimes(0)

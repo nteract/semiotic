@@ -482,6 +482,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
   const [layoutState, setLayoutState] = useState<"ready" | "pending" | "error">("ready")
   const layoutPending = layoutState === "pending"
   const layoutRequestRef = useRef<{ controller: AbortController | null } | null>(null)
+  const pendingLayoutRef = useRef(false)
   const cancelLayout = useCallback(() => {
     const previous = layoutRequestRef.current
     layoutRequestRef.current = null
@@ -490,10 +491,13 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
   const onLayoutStateChangeRef = useRef(onLayoutStateChange)
   onLayoutStateChangeRef.current = onLayoutStateChange
   const publishLayoutState = useCallback(
-    (store: NetworkPipelineStore, state: "ready" | "error" = "ready") => {
+    (store: NetworkPipelineStore, state: "ready" | "error" = "ready", request: typeof layoutRequestRef.current = null) => {
+      // Legend callbacks may have started or queued a replacement layout.
+      if (layoutRequestRef.current !== request || pendingLayoutRef.current) return false
       setSceneState(store.layoutVersion)
       setLayoutState(state)
       onLayoutStateChangeRef.current?.(state)
+      return true
     },
     []
   )
@@ -739,8 +743,7 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       if (layoutRequestRef.current !== request) return
       rebuildSceneNow(store, size)
       // Scene/legend and state callbacks can synchronously replace the layout.
-      if (layoutRequestRef.current !== request) return
-      publishLayoutState(store, state)
+      if (!publishLayoutState(store, state, request)) return
       if (layoutRequestRef.current !== request) return
       if (onTopologyChange) {
         const { nodes, edges } = store.getLayoutData()
@@ -798,8 +801,6 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
   // and read-after-write data semantics stay identical to the original API.
   // Only the expensive Sankey/force solve is deferred: a burst of N push()
   // calls commits one net topology layout at the next animation frame.
-  const pendingLayoutRef = useRef(false)
-
   // Clear before running: onTopologyChange can call a getter (which must not
   // recurse) or push another edge (which must remain pending for a new frame).
   const commitLayout = useCallback(
@@ -876,28 +877,29 @@ const StreamNetworkFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
   )
 
   const clearAll = useCallback(() => {
+    const store = storeRef.current
+    if (!store) return
     // A clear is a barrier, not a commit: the scheduled frame must not rebuild
     // geometry for topology that was explicitly discarded.
     pendingLayoutRef.current = false
     cancelLayout()
-    storeRef.current?.clear()
-    emitLegendCategories()
+    store.clear()
     nodeColorMap.current.clear()
     colorIndexRef.current = 0
     // clear() bumps layoutVersion monotonically; sync React state to the new
     // value so the render fires (never force 0 — that can equal the last-seen
     // value and skip the post-clear repaint).
-    setSceneState(storeRef.current?.layoutVersion ?? 0)
+    setSceneState(store.layoutVersion)
     setHoverData(null)
     hoverRef.current = null
     kbFocusIndexRef.current = -1
     focusedNavPointRef.current = null
     neighborIndexRef.current = -1
     dirtyRef.current = true
-    setLayoutState("ready")
-    onLayoutStateChangeRef.current?.("ready")
+    emitLegendCategories()
+    publishLayoutState(store)
     scheduleRender()
-  }, [cancelLayout, emitLegendCategories, scheduleRender, kbFocusIndexRef, focusedNavPointRef, neighborIndexRef, setHoverData])
+  }, [cancelLayout, emitLegendCategories, publishLayoutState, scheduleRender, kbFocusIndexRef, focusedNavPointRef, neighborIndexRef, setHoverData])
 
   const forceRelayout = useCallback(() => {
     const store = storeRef.current

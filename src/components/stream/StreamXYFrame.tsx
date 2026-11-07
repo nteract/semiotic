@@ -615,7 +615,6 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       dirtyRef,
       hydrated,
       wasHydratingFromSSR,
-      cleanup: () => adapterRef.current?.clear(),
       maxDevicePixelRatio,
       // maxDevicePixelRatio is handled as resolution-only dirty by the host —
       // do not put it here or zoom/cap changes would rebuild the scene graph.

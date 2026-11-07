@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, type MutableRefObject } from "react"
+import { useEffect, useMemo, type MutableRefObject } from "react"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { DataSourceAdapter } from "./DataSourceAdapter"
 import type { PipelineStore } from "./PipelineStore"
@@ -24,6 +24,9 @@ export function useStreamingDataHandle<
   scheduleRender,
   invalidateInteraction
 }: StreamingHandleOptions<S>) {
+  // Strict Mode reconnects the same adapter; unmount must cancel delivery
+  // without treating effect replay as a data replacement.
+  useEffect(() => adapterRef.current?.connect(), [adapterRef])
   return useMemo(() => {
     const changed = (rows: Datum[]) => {
       if (rows.length) {

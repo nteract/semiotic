@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest"
 import {
   getColor,
   createColorScale,
+  distinctCategories,
   getSize,
   DEFAULT_COLORS,
   resolveCategoricalPalette,
@@ -173,6 +174,25 @@ describe("createColorScale", () => {
   it("supports an empty field name in direct color-scale calls", () => {
     const scale = createColorScale([{ "": "A" }, { "": "B" }], "", ["#f00", "#00f"])
     expect([scale("A"), scale("B")]).toEqual(["#f00", "#00f"])
+  })
+
+  it("skips sparse rows before calling a category accessor", () => {
+    const rows: Datum[] = new Array(5)
+    rows[1] = { cat: "B" }
+    rows[3] = { cat: "A" }
+    const accessor = vi.fn((datum: Datum) => datum.cat)
+    const scale = createColorScale(rows, accessor, ["#f00", "#00f"])
+    expect([scale("B"), scale("A"), scale("undefined")]).toEqual(["#f00", "#00f", "#999"])
+    expect(accessor.mock.calls).toEqual([[rows[1]], [rows[3]]])
+  })
+
+  it.each(["cat", (datum: Datum) => datum.cat])("collects sparse legend categories with %s", (accessor) => {
+    const rows: Datum[] = new Array(7)
+    rows[1] = { cat: "B" }
+    rows[2] = { cat: null }
+    rows[4] = { cat: "A" }
+    rows[5] = { cat: "B" }
+    expect(distinctCategories(rows, accessor)).toEqual(["B", "A"])
   })
 
   it("handles many categories (more than palette size)", () => {

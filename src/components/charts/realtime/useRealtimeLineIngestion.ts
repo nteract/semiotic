@@ -55,7 +55,10 @@ export function useRealtimeLineIngestion<TDatum extends Datum>(
   const ingestionEpoch = useRef(0)
   const reorderRef = useRef<ReorderBuffer<Datum> | null>(null)
   const idleAt = useRef<number | null>(null)
+  const previousDataRef = useRef(data)
   useLayoutEffect(() => {
+    if (Object.is(previousDataRef.current, data)) return
+    previousDataRef.current = data
     ingestionEpoch.current++
     reorderRef.current?.clear()
     idleAt.current = null
@@ -124,8 +127,8 @@ export function useRealtimeLineIngestion<TDatum extends Datum>(
   const quantiles = !!(percentiles?.length || aggregate?.stat?.startsWith("p"))
   const distinct = !!(aggregate?.distinct || aggregate?.stat === "distinct")
 
-  // (Re)build the accumulator and seed it from any initial `data` array.
-  useLayoutEffect(() => {
+  // One initializer per structural input change; effect replay retains pushes.
+  const initializeAccumulator = useCallback(() => {
     ingestionEpoch.current++
     cancelAggPublish()
     aggDirty.current = false
@@ -149,6 +152,8 @@ export function useRealtimeLineIngestion<TDatum extends Datum>(
       }
     }
     publishAggRows(acc.emit(cfg))
+    // Structural inputs invalidate the initializer; live readout settings stay in refs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     windowKind,
     aggregate?.size,
@@ -166,6 +171,12 @@ export function useRealtimeLineIngestion<TDatum extends Datum>(
     publishAggRows,
     cancelAggPublish
   ])
+  const initializedAccumulator = useRef<typeof initializeAccumulator | null>(null)
+  useLayoutEffect(() => {
+    if (initializedAccumulator.current === initializeAccumulator) return
+    initializedAccumulator.current = initializeAccumulator
+    initializeAccumulator()
+  }, [initializeAccumulator])
 
   useLayoutEffect(() => {
     if (aggEnabled && data == null && accRef.current) {

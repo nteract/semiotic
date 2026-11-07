@@ -188,6 +188,7 @@ export function distinctCategories(
   if (!colorBy || !data || data.length === 0) return []
   const values = new Set<string>()
   for (const datum of data) {
+    if (datum == null) continue
     const value = typeof colorBy === "function" ? colorBy(datum) : datum[colorBy]
     if (value != null) values.add(String(value))
   }

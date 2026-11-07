@@ -37,6 +37,7 @@ export class DataSourceAdapter<T extends object = Datum> {
   // Snapshot chunks and queued pushes belong to the same replacement epoch.
   private ingestion: Ingestion<T> = { history: null, pushes: [], flush: null }
   private delivery = DeliveryPhase.Idle
+  private connected = true
 
   constructor(
     private callback: ChangesetCallback<T>,
@@ -54,9 +55,15 @@ export class DataSourceAdapter<T extends object = Datum> {
     this.chunkSize = normalizeChunkLimit(options.chunkSize, 1)
   }
 
-  /** Forget the snapshot and cancel its pending chunks and queued pushes. */
-  clearLastData(): void {
-    this.clear()
+  /** Effect cleanup retires scheduled work; reconnecting retains queued rows. */
+  connect(): () => void {
+    this.connected = true
+    this.scheduleChunk()
+    this.scheduleFlush()
+    return () => {
+      this.connected = false
+      this.cancelPending(this.ingestion)
+    }
   }
 
   setBoundedData(data: T[]): void {
@@ -75,14 +82,10 @@ export class DataSourceAdapter<T extends object = Datum> {
     this.lastBoundedData = data
     const progressive = data.length > this.chunkThreshold
     const ingestion = this.ingestion
-    const snapshot: NonNullable<Ingestion<T>["history"]> = {
-      data,
-      offset: progressive ? Math.min(data.length, this.chunkSize) : data.length,
-      frame: null
-    }
-    if (snapshot.offset < data.length) ingestion.history = snapshot
+    const offset = progressive ? Math.min(data.length, this.chunkSize) : data.length
+    if (offset < data.length) ingestion.history = { data, offset, frame: null }
     this.publish({
-      inserts: progressive ? data.slice(0, snapshot.offset) : data,
+      inserts: progressive ? data.slice(0, offset) : data,
       bounded: true,
       ...(progressive ? { totalSize: data.length } : {}),
       ...(preserveCategoryOrder ? { preserveCategoryOrder: true } : {})
@@ -91,10 +94,11 @@ export class DataSourceAdapter<T extends object = Datum> {
     this.scheduleChunk()
   }
 
-  private cancelChunk(ingestion: Ingestion<T>): void {
+  private cancelPending(ingestion: Ingestion<T>): void {
     const history = ingestion.history
     if (history?.frame != null) cancelAnimationFrame(history.frame)
     if (history) history.frame = null
+    ingestion.flush = null
   }
 
   private publish(changeset: Changeset<T>): void {
@@ -130,7 +134,7 @@ export class DataSourceAdapter<T extends object = Datum> {
   private scheduleChunk(): void {
     const ingestion = this.ingestion
     const history = ingestion.history
-    if (!history || history.frame !== null) return
+    if (!this.connected || !history || history.frame !== null) return
     history.frame = requestAnimationFrame(() => {
       if (this.ingestion !== ingestion) return
       history.frame = null
@@ -143,7 +147,7 @@ export class DataSourceAdapter<T extends object = Datum> {
     const ingestion = this.ingestion
     // The queued callback owns this batch; a manual flush retires it before
     // another push can schedule work for the same replacement.
-    if (ingestion.flush) return
+    if (!this.connected || !ingestion.pushes.length || ingestion.flush) return
     const pending = () => {
       if (this.ingestion === ingestion && ingestion.flush === pending)
         this.flush()
@@ -163,11 +167,12 @@ export class DataSourceAdapter<T extends object = Datum> {
       if (datum != null && typeof datum === "object")
         this.ingestion.pushes.push(datum)
     }
-    if (this.ingestion.pushes.length > 0) this.scheduleFlush()
+    this.scheduleFlush()
   }
 
   /** Synchronously expose the complete snapshot and all queued live rows. */
   flush(): void {
+    if (!this.connected) return
     // This also covers callbacks from a history rAF or initial replacement,
     // where no flush is running yet. Finish their consumer commit first.
     if (this.delivery !== DeliveryPhase.Idle) {
@@ -175,14 +180,13 @@ export class DataSourceAdapter<T extends object = Datum> {
       return
     }
     const ingestion = this.ingestion
-    ingestion.flush = null
+    this.cancelPending(ingestion)
     if (!ingestion.history && ingestion.pushes.length === 0) return
     this.delivery = DeliveryPhase.Publishing
     try {
-      this.cancelChunk(ingestion)
-      while (this.ingestion === ingestion && ingestion.history)
+      while (this.connected && this.ingestion === ingestion && ingestion.history)
         this.emitChunk()
-      if (this.ingestion !== ingestion || ingestion.pushes.length === 0) return
+      if (!this.connected || this.ingestion !== ingestion || ingestion.pushes.length === 0) return
       const inserts = ingestion.pushes
       ingestion.pushes = []
       ingestion.flush = null
@@ -195,7 +199,7 @@ export class DataSourceAdapter<T extends object = Datum> {
   clear(): void {
     const previous = this.ingestion
     this.ingestion = { history: null, pushes: [], flush: null }
-    this.cancelChunk(previous)
+    this.cancelPending(previous)
     this.lastBoundedData = null
   }
 }

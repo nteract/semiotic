@@ -81,6 +81,14 @@ describe("useColorScale", () => {
     { cat: "C", val: 3 }
   ]
 
+  it("uses function color accessors with sparse arrays", () => {
+    const sparse: Datum[] = new Array(4)
+    sparse[1] = { cat: "B" }
+    sparse[3] = { cat: "A" }
+    const { result } = renderHook(() => useColorScale(sparse, (datum) => datum.cat, ["#f00", "#00f"]))
+    expect([result.current!("B"), result.current!("A")]).toEqual(["#f00", "#00f"])
+  })
+
   it("returns undefined when colorBy is absent", () => {
     const { result } = renderHook(() => useColorScale(data, undefined), {
       wrapper: createWrapper()

@@ -15,6 +15,54 @@ describe("DataSourceAdapter ingestion lifecycle", () => {
     vi.useRealTimers()
   })
 
+  it("retires queued callbacks on disconnect and resumes history before pushes", async () => {
+    const received = vi.fn<ChangesetCallback<Row>>()
+    const adapter = new DataSourceAdapter(received, { chunkThreshold: 0, chunkSize: 1 })
+    const disconnect = adapter.connect()
+    adapter.setBoundedData(rows)
+    adapter.push({ id: 4 })
+    disconnect()
+    await Promise.resolve()
+    vi.advanceTimersToNextFrame()
+    expect(received).toHaveBeenCalledOnce()
+    expect(vi.getTimerCount()).toBe(0)
+    const disconnectAgain = adapter.connect()
+    await Promise.resolve()
+    expect(received.mock.calls.map(([change]) => change.inserts)).toEqual([
+      [rows[0]], [rows[1]], [rows[2]], [{ id: 4 }]
+    ])
+    disconnectAgain()
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it("keeps clear a replacement barrier while disconnected", async () => {
+    const received = vi.fn<ChangesetCallback<Row>>()
+    const adapter = new DataSourceAdapter(received)
+    const disconnect = adapter.connect()
+    adapter.push(rows[0])
+    disconnect()
+    adapter.clear()
+    adapter.connect()
+    await Promise.resolve()
+    expect(received).not.toHaveBeenCalled()
+    adapter.push(rows[1])
+    await Promise.resolve()
+    expect(received).toHaveBeenCalledExactlyOnceWith({ inserts: [rows[1]], bounded: false })
+  })
+
+  it("stops a flush if its consumer disconnects during a history callback", () => {
+    const received = vi.fn<ChangesetCallback<Row>>((change) => {
+      if (change.boundedAppend) disconnect()
+    })
+    const adapter = new DataSourceAdapter(received, { chunkThreshold: 0, chunkSize: 1 })
+    const disconnect = adapter.connect()
+    adapter.setBoundedData(rows)
+    adapter.push({ id: 4 })
+    adapter.flush()
+    expect(received.mock.calls.map(([change]) => change.inserts)).toEqual([[rows[0]], [rows[1]]])
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
   it("clamps chunkSize=0 so progressive ingestion always advances", () => {
     const received = vi.fn<ChangesetCallback<Row>>()
     const adapter = new DataSourceAdapter(received, {

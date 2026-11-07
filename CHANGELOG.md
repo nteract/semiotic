@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Preserve replacement network layouts started by legend-category callbacks during
+  `clear()` or controlled-data removal; keep their pending state until geometry commits.
+- Preserve once-seeded realtime rows and aggregate history through React Strict Mode
+  effect replay, while cancelling queued frame ingestion on unmount.
+- Skip sparse and nullish rows before invoking color accessors for scales and legends.
 - Keep the modern lint/documentation toolchain while resolving the minimatch
   advisory; preserve TypeDoc glob discovery with the patched matcher.
 - Keep pushed `SwarmPlot`, `QuadrantChart`, and `ProportionalSymbolMap` size
