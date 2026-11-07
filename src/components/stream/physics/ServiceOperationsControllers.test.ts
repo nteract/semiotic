@@ -46,20 +46,23 @@ describe("service operations controllers", () => {
       deadlineAccessor: "deadline"
     })
     const context = (elapsed: number) => ({
-      result: {} as never,
+      result: store.tick(0),
       controls: store.controls(),
       dt: 0.1,
       elapsed,
       getRegionState: () => undefined
     })
     controller.tick(context(0))
+    expect(controller.getSnapshot()).toMatchObject({ total: 2, waiting: 2, protected: 0, unhappy: 0, resolved: 0, resolvedUnhappy: 0 })
     expect(controller.protect("protected")).toBe(true)
     controller.tick(context(2.1))
     expect(controller.getCase("late")?.state).toBe("unhappy")
+    expect(controller.getSnapshot()).toMatchObject({ total: 2, waiting: 0, protected: 1, unhappy: 1, resolved: 0, resolvedUnhappy: 0 })
     expect(controller.complete("protected")).toBe(true)
     expect(controller.complete("late")).toBe(true)
     expect(controller.getCase("protected")?.state).toBe("resolved")
     expect(controller.getCase("late")?.state).toBe("resolved-unhappy")
+    expect(controller.getSnapshot()).toMatchObject({ total: 2, waiting: 0, protected: 0, unhappy: 0, resolved: 1, resolvedUnhappy: 1 })
   })
 
   it("holds dependency-bound work until its recovery time", () => {
@@ -74,7 +77,7 @@ describe("service operations controllers", () => {
           ?.requiresRecovery === true
     })
     const context = (elapsed: number) => ({
-      result: {} as never,
+      result: store.tick(0),
       controls: store.controls(),
       dt: 0.1,
       elapsed,

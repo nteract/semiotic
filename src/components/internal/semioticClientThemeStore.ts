@@ -7,5 +7,4 @@ export {
 // Theme providers and frames share comparison code without loading selections.
 export * from "../stream/shallowEqual"
 export { useStableShallow } from "../stream/useStableShallow"
-export * from "../store/cloneTheme"
 export * from "../store/concreteThemeAccessibility"

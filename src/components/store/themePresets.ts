@@ -1,4 +1,4 @@
-import { cloneTheme } from "./cloneTheme"
+import { snapshotConfig as cloneTheme } from "../stream/shallowEqual"
 /**
  * Internal named theme presets for Semiotic charts.
  *

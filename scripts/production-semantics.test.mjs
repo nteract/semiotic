@@ -50,14 +50,17 @@ for (const cjs of [false, true]) {
       read("../../store/createStore", "charts/shared/chartSelectionUtils.ts")?.path,
       cjs ? undefined : "./s.min.js"
     )
-    // The theme boundary shares config comparison without making theme-only
-    // consumers import the selection/observation stores.
+    // Eager frame helpers share comparison without loading selection stores.
     for (const helper of ["shallowEqual", "useStableShallow"]) {
       assert.equal(
         read(`./${helper}`, "stream/StreamXYFrame.tsx")?.path,
         cjs ? undefined : "./t.min.js"
       )
     }
+    assert.equal(
+      read("./colorContrast", "charts/shared/colorPalettes.ts")?.path,
+      cjs ? undefined : "./s.min.js"
+    )
   })
 }
 
@@ -692,6 +695,27 @@ for (const entry of ["./server", "./server/node", "./server/edge"]) {
 }
 
 for (const entry of ["./ai", "./ai/core"]) {
+  for (const target of publicTargets(entry)) {
+    test(`${entry} ${target.conditions} suggests a value tile and gauge for an aggregate without intent`, () => {
+      exercise(target, `
+        const result = api.suggestStreamCharts({ fields: [{ name: "total", kind: "numeric" }], shape: "aggregate" })
+        assert.deepEqual(result.rankingIntents, ["part-to-whole"])
+        assert.deepEqual(result.suggestions.map(({ component, score }) => [component, score]), [["BigNumber", 5], ["GaugeChart", 2.5]])
+        assert.deepEqual(result.warnings, [])
+        assert.ok(!result.excluded.some(({ component }) => component === "BigNumber" || component === "GaugeChart"))
+        for (const schema of [
+          { fields: [{ name: "total", kind: "numeric" }] },
+          { fields: [{ name: "total", kind: "numeric" }], shape: "aggregate" }
+        ]) {
+          const dashboard = api.suggestStreamDashboard(schema)
+          assert.ok(dashboard.panels.some(({ suggestion }) => suggestion.component === "BigNumber"))
+          assert.deepEqual(dashboard.intentsCovered, ["part-to-whole"])
+          assert.deepEqual(dashboard.warnings, [])
+        }
+      `)
+    })
+  }
+
   test(`${entry} suggestCharts consumer preserves temporal suggestions without network renderer initialization`, async () => {
     const filename = resolve(root, pkg.exports[entry].import)
     assert.ok(existsSync(filename), `${filename} is missing; run npm run dist:prod`)

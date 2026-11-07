@@ -338,3 +338,50 @@ export function computeStats(
     lastLabel: label(last)
   }
 }
+
+/** Count nouns shared by chart descriptions and reader grounding. */
+export function plural(count: number, noun: string): string {
+  if (count === 1) return noun
+  if (noun === "body") return "bodies"
+  if (noun === "category") return "categories"
+  return `${noun}s`
+}
+
+/** One pass shared by physics descriptions and reader grounding; ties keep input order. */
+export function summarizePhysicsRows<
+  T extends {
+    count: number
+    secondary?: number
+    total?: number
+    secondaryLabel?: string
+  }
+>(rows: readonly T[] | undefined) {
+  let total = 0
+  let populated = 0
+  let secondaryTotal = 0
+  let secondaryLabel: string | null = null
+  let leader: T | null = null
+  let runnerUp: T | null = null
+  if (rows)
+    for (const row of rows) {
+      total += row.count
+      if (row.count > 0) populated++
+      secondaryTotal += row.secondary ?? row.total ?? 0
+      if (!secondaryLabel && row.secondaryLabel)
+        secondaryLabel = row.secondaryLabel
+      if (!leader || row.count > leader.count) {
+        runnerUp = leader
+        leader = row
+      } else if (!runnerUp || row.count > runnerUp.count) {
+        runnerUp = row
+      }
+    }
+  return {
+    total,
+    populated,
+    secondaryTotal,
+    secondaryLabel,
+    leader,
+    runnerUp: runnerUp && runnerUp.count > 0 ? runnerUp : null
+  }
+}

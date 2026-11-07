@@ -14,6 +14,7 @@ import {
   roles,
   seriesField,
   article,
+  plural,
   descriptionNumberFormatter,
   computeStats,
   resolveChartDimension,
@@ -1095,12 +1096,4 @@ function audienceNudge(
 
 function capitalize(s: string): string {
   return s.length ? s[0].toUpperCase() + s.slice(1) : s
-}
-
-/** Pluralize a count noun for user-facing text ("1 edge", "2 edges"). */
-function plural(n: number, noun: string): string {
-  if (n === 1) return noun
-  if (noun === "body") return "bodies"
-  if (noun === "category") return "categories"
-  return `${noun}s`
 }

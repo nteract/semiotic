@@ -116,7 +116,10 @@ export function buildPhysicsSettledEvidence(
   options: PhysicsSettledEvidenceOptions = {}
 ): PhysicsSettledEvidence {
   const bodies = options.bodies ?? snapshotBodies(snapshot)
-  const sleepingCount = bodies.filter((body) => body.sleeping).length
+  let sleepingCount = 0
+  for (const body of bodies) {
+    if (body.sleeping) sleepingCount++
+  }
   const queuedCount = snapshot.queue.length
   const sedimentedCount = snapshot.sediment.reduce(
     (sum, bin) => sum + bin.count,

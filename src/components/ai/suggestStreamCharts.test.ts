@@ -446,6 +446,14 @@ describe("suggestStreamCharts schema semantics", () => {
     const fields = [{ name: "total", kind: "numeric" as const }]
     const plain = suggestStreamCharts({ fields })
     const aggregate = suggestStreamCharts({ fields, shape: "aggregate" })
+    for (const result of [plain, aggregate]) {
+      expect(result.rankingIntents).toEqual(["part-to-whole"])
+      expect(result.suggestions.map((s) => [s.component, s.score])).toEqual([
+        ["BigNumber", 5], ["GaugeChart", 2.5]
+      ])
+      expect(result.excluded.some((s) => s.component === "BigNumber" || s.component === "GaugeChart")).toBe(false)
+      expect(result.warnings).toEqual([])
+    }
     expect(plain.suggestions.map((s) => [s.component, s.score])).toEqual(
       aggregate.suggestions.map((s) => [s.component, s.score]),
     )

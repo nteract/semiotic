@@ -111,9 +111,11 @@ test("production bundle budgets fail before size tests and package consumer chec
     "npm run check:entry-graph-size",
     "npm run check:multi-import-size"
   ])
-  assert.equal(
-    scripts["check:package-contracts:from-dist"].split(" && ")[0],
-    "npm run size"
+  const packageChecks = scripts["check:package-contracts:from-dist"].split(" && ")
+  assert.ok(packageChecks.includes("npm run size"))
+  assert.ok(
+    packageChecks.indexOf("npm run size") <
+      packageChecks.indexOf("npm run test:production-semantics:from-dist")
   )
   for (const name of ["release:check", "prepublishOnly"]) {
     assert.deepEqual(scripts[name].split(" && ").slice(0, 3), [
@@ -121,6 +123,37 @@ test("production bundle budgets fail before size tests and package consumer chec
       "npm run dist:prod",
       "npm run check:bundle-budgets"
     ])
+  }
+})
+
+test("cold-consumer contracts fail before package tests, API checks, and docs builds", () => {
+  const packageChecks = scripts["check:package-contracts:from-dist"].split(" && ")
+  assert.deepEqual(packageChecks.slice(0, 2), [
+    "npm run check:cold-consumer",
+    "npm run size"
+  ])
+  assert.equal(packageChecks.lastIndexOf("npm run check:cold-consumer"), 0)
+  assert.deepEqual(scripts["check:package-contracts"].split(" && "), [
+    "npm run dist:prod",
+    "npm run check:package-contracts:from-dist",
+    "npm run check:api-surface"
+  ])
+
+  const ci = read(".github/workflows/node.js.yml")
+    .split("  docs-package:")[1]
+    .split("  testing-matrix:")[0]
+  const budget = ci.indexOf("npm run check:bundle-budgets")
+  const coldConsumer = ci.indexOf("npm run check:cold-consumer")
+  assert.ok(coldConsumer > budget)
+  for (const command of [
+    "npm run build:mcp",
+    "npm run check:package-contracts:from-dist",
+    "npm run check:website-build:from-dist"
+  ]) {
+    assert.ok(
+      coldConsumer < ci.indexOf(command),
+      `${command} must follow the cold-consumer check`
+    )
   }
 })
 

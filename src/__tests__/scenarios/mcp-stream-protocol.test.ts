@@ -17,6 +17,35 @@ describe(
       proc.kill("SIGTERM")
     })
 
+    it("returns the value tile and gauge for a single-row aggregate without an intent", async () => {
+      const response = await sendRequest(proc, "tools/call", {
+        name: "suggestStreamCharts",
+        arguments: {
+          schema: { fields: [{ name: "total", kind: "numeric" }], shape: "aggregate" }
+        }
+      })
+      expect(response.result.isError).not.toBe(true)
+      const content = response.result.structuredContent
+      expect(content.rankingIntents).toEqual(["part-to-whole"])
+      expect(content.suggestions).toMatchObject([
+        { component: "BigNumber", score: 5 },
+        { component: "GaugeChart", score: 2.5 }
+      ])
+      expect(content.warnings).toEqual([])
+    })
+
+    it("returns a value dashboard without a shape hint or an intent", async () => {
+      const response = await sendRequest(proc, "tools/call", {
+        name: "suggestStreamDashboard",
+        arguments: { schemas: { fields: [{ name: "total", kind: "numeric" }] } }
+      })
+      expect(response.result.isError).not.toBe(true)
+      const content = response.result.structuredContent
+      expect(content.panels.map((panel: { suggestion: { component: string } }) => panel.suggestion.component)).toContain("BigNumber")
+      expect(content.intentsCovered).toEqual(["part-to-whole"])
+      expect(content.warnings).toEqual([])
+    })
+
     it("recommends stream panels using numeric time roles through MCP", async () => {
       const schema = {
         fields: [

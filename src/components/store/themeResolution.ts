@@ -3,8 +3,8 @@ import { LIGHT_THEME, DARK_THEME, mergeThemeOverrides } from "./themeCore"
 import type { SemioticTheme, SemioticThemeUpdate } from "./themeCore"
 import { themeToCSSVariables } from "./themeCSSVariables"
 
-export { cloneTheme } from "./cloneTheme"
-import { cloneTheme } from "./cloneTheme"
+export { snapshotConfig as cloneTheme } from "../stream/shallowEqual"
+import { snapshotConfig as cloneTheme } from "../stream/shallowEqual"
 
 export function resolveAutoPalette(
   update: SemioticThemeUpdate,

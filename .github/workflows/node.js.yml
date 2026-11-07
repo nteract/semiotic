@@ -285,8 +285,10 @@ jobs:
             dist/bundle-inputs.json
           retention-days: 14
 
-      - name: Check bundle budgets before package tests
-        run: npm run check:bundle-budgets
+      - name: Check bundle budgets and cold consumers before package tests
+        run: |
+          npm run check:bundle-budgets
+          npm run check:cold-consumer
 
       - name: Build MCP server
         run: npm run build:mcp

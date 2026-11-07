@@ -133,7 +133,7 @@ export class PipelineStore extends UpdateResultStoreBase {
     if (Number.isFinite(value) && Number.isFinite(this.getX(d))) this.waterfallCarry += value
   }
 
-  private config: PipelineConfig
+  protected config: PipelineConfig
   private liveWindow = true
   private growingCapacityWarned = false
 

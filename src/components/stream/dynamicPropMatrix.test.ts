@@ -1,5 +1,7 @@
 import "../../test-utils/registerBuiltInXYPlugins"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import type { CustomLayout } from "./customLayout"
+import type { CustomLayoutSelection } from "./customLayoutSelection"
 import type { Datum } from "../charts/shared/datumTypes"
 import { OrdinalPipelineStore } from "./OrdinalPipelineStore"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
@@ -304,7 +306,7 @@ describe("dynamic-prop contract matrix — configuration lifecycle", () => {
   })
 
   it("keeps custom selection styling paint-only and replaces layout callbacks", () => {
-    const firstLayout = vi.fn((ctx: { data: Datum[] }) => ({
+    const firstLayout = vi.fn<CustomLayout>((ctx) => ({
       nodes: ctx.data.map((datum, index) => ({
         type: "point" as const,
         datum,
@@ -314,11 +316,11 @@ describe("dynamic-prop contract matrix — configuration lifecycle", () => {
         r: 4,
         style: { fill: "#2563eb", opacity: 1 },
       })),
-      restyle: (node: { datum: Datum }, selection: { id: string } | null) => ({
-        opacity: selection && node.datum.id !== selection.id ? 0.1 : 1,
+      restyle: (node, selection) => ({
+        opacity: node.type === "point" && node.datum && selection?.isActive && !selection.predicate(node.datum) ? 0.1 : 1,
       }),
     }))
-    const replacementLayout = vi.fn((ctx: { data: Datum[] }) => ({
+    const replacementLayout = vi.fn<CustomLayout>((ctx) => ({
       nodes: ctx.data.map((datum, index) => ({
         type: "point" as const,
         datum,
@@ -331,18 +333,21 @@ describe("dynamic-prop contract matrix — configuration lifecycle", () => {
     }))
     const store = new PipelineStore(makeXYConfig({
       chartType: "custom",
-      customLayout: firstLayout as never,
+      customLayout: firstLayout,
     }))
     seedXY(store)
     expect(firstLayout).toHaveBeenCalledTimes(1)
 
-    store.setLayoutSelection({ id: "a" } as never)
-    store.restyleScene({ id: "a" } as never)
+    const selection: CustomLayoutSelection = {
+      isActive: true, predicate: (datum) => datum.id === "a"
+    }
+    store.setLayoutSelection(selection)
+    store.restyleScene(selection)
     expect(store.scene.find((node) => node.type === "point" && datumId(node.datum) === "b")?.style?.opacity).toBe(0.1)
     expect(store.consumeStylePaintPending()).toBe(true)
     expect(store.consumeStylePaintPending()).toBe(false)
 
-    store.updateConfig({ customLayout: replacementLayout as never })
+    store.updateConfig({ customLayout: replacementLayout })
     store.computeScene(XY_LAYOUT)
     expect(replacementLayout).toHaveBeenCalledTimes(1)
     expect(store.scene.every((node) => node.type !== "point" || node.style.fill === "#dc2626")).toBe(true)

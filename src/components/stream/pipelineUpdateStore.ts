@@ -31,6 +31,7 @@ const stylePaintPending = new WeakMap<object, boolean>()
  */
 export abstract class UpdateResultStoreBase implements UpdateResultStore {
   protected abstract updateResults: PipelineUpdateResultSource
+  protected abstract config: { layoutSelection?: CustomLayoutSelection | null }
 
   getLastUpdateResult(): UpdateResult {
     return this.updateResults.last
@@ -45,9 +46,7 @@ export abstract class UpdateResultStoreBase implements UpdateResultStore {
   }
 
   setLayoutSelection(selection: CustomLayoutSelection | null): void {
-    // Each store keeps its config private; the selection slot is the only
-    // shared field this lifecycle writes.
-    ;(this as unknown as { config: { layoutSelection?: CustomLayoutSelection | null } }).config.layoutSelection = selection
+    this.config.layoutSelection = selection
   }
 
   markStylePaintPending(): void {

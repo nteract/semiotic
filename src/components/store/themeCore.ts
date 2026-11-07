@@ -1,6 +1,6 @@
 import { applyConcreteThemeAccessibility } from "./concreteThemeAccessibility"
 import { contrastRatio } from "../charts/shared/colorContrast"
-import { cloneTheme } from "./cloneTheme"
+import { snapshotConfig as cloneTheme } from "../stream/shallowEqual"
 import type { ThemeSemanticColors } from "../stream/streamThemeTypes"
 import type { AestheticProfile } from "../ai/aestheticProfileTypes"
 

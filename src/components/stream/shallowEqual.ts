@@ -1,44 +1,44 @@
-/** Shared pure equality for frame configs and retained custom-layout inputs. */
-export function shallowEqualTwoLevel(a: unknown, b: unknown): boolean {
-  return equalConfig(a, b, 2)
-}
+/** Frame configs keep array elements reference-based; full geometry configs opt into deep comparison. */
+export { equalConfig as shallowEqualTwoLevel }
 
-/** Compare plain records to the requested depth; arrays retain per-index Object.is. */
-export function equalConfig(a: unknown, b: unknown, depth: number): boolean {
+/** Compare two record levels by default; Infinity also compares nested array values. */
+export function equalConfig(a: unknown, b: unknown, depth = 2): boolean {
   if (Object.is(a, b)) return true
   if (depth === 0) return false
-  if (Array.isArray(a) && Array.isArray(b)) return shallowEqualArray(a, b)
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return false
+    for (let i = 0; i < a.length; i++) {
+      if (!equalConfig(a[i], b[i], depth === Infinity ? Infinity : 0))
+        return false
+    }
+    return true
+  }
   if (!isPlainObject(a) || !isPlainObject(b)) return false
   // Inline frame props pass through this comparison on every render. Enumerate
   // in place instead of allocating key arrays for each nested config record.
   let keys = 0
   for (const k in a) {
-    if (!Object.prototype.hasOwnProperty.call(a, k)) continue
+    if (!Object.prototype.propertyIsEnumerable.call(a, k)) continue
     if (!Object.prototype.propertyIsEnumerable.call(b, k)) return false
     if (!equalConfig(a[k], b[k], depth - 1)) return false
     keys++
   }
   for (const k in b) {
-    if (Object.prototype.hasOwnProperty.call(b, k)) keys--
+    if (Object.prototype.propertyIsEnumerable.call(b, k)) keys--
   }
   return keys === 0
 }
 
-/**
- * Per-index `Object.is` for arrays. Inline array literals (xExtent,
- * yExtent, sizeRange, colorScheme, areaGroups, etc.) shed identity
- * every render the same way inline objects do, and the pipelineConfig
- * memo deps include them, so without array-aware comparison the
- * stabilizer would still let the loop reform on those props. We don't
- * recurse into array elements — the typical shape is arrays of
- * primitives (numbers, strings) where `Object.is` is the right test.
- */
-function shallowEqualArray(a: unknown[], b: unknown[]): boolean {
-  if (a.length !== b.length) return false
-  for (let i = 0; i < a.length; i++) {
-    if (!Object.is(a[i], b[i])) return false
+/** Copy the acyclic plain-data configs used by themes and perspectives, keeping callbacks by identity. */
+export function snapshotConfig<T>(value: T): T
+export function snapshotConfig(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(snapshotConfig)
+  if (value !== null && typeof value === "object") {
+    const copy: Record<string, unknown> = { ...value }
+    for (const key of Object.keys(copy)) copy[key] = snapshotConfig(copy[key])
+    return copy
   }
-  return true
+  return value
 }
 
 /**

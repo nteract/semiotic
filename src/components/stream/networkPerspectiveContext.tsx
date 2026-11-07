@@ -2,7 +2,7 @@
 // Core entry imports under react-server must resolve client-only hooks lazily.
 import React from "react"
 import type { NetworkPerspective, NetworkPerspectiveFrame } from "./networkPerspective"
-import { networkPerspectiveKey } from "./networkPerspectiveKey"
+import { equalConfig, snapshotConfig } from "./shallowEqual"
 
 /** Identity projection for flat charts (kept local so flat bundles skip the engine). */
 const FLAT: NetworkPerspectiveFrame = {
@@ -59,14 +59,16 @@ export function useNetworkPerspectiveExtrasReady(
 /**
  * Keep a `perspective` prop's identity stable while its value (including
  * callback identities) is unchanged, so inline config objects do not
- * rebuild the scene on every parent render.
+ * rebuild the scene on every parent render. Own the returned config so prop
+ * mutations cannot alter the baseline or the frame's retained pipeline config.
  */
 export function useStableNetworkPerspective<T extends NetworkPerspective | undefined>(
   perspective: T
 ): T {
-  const ref = React.useRef<{ key: string; value: T } | null>(null)
-  const key = networkPerspectiveKey(perspective)
-  if (!ref.current || ref.current.key !== key) ref.current = { key, value: perspective }
+  const ref = React.useRef<{ value: T } | null>(null)
+  if (!ref.current || !equalConfig(ref.current.value, perspective, Infinity)) {
+    ref.current = { value: snapshotConfig(perspective) }
+  }
   return ref.current.value
 }
 

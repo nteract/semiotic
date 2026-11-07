@@ -104,12 +104,14 @@ export function buildPhysicsSettledProjection(
     else bodiesByContainer.set(containerId, [body])
   }
 
+  let total = 0
   const rows = containers.map((container) => {
     const containerBodies = bodiesByContainer.get(container.id) ?? []
     const count = Math.max(
       0,
       Math.floor(container.count ?? containerBodies.length)
     )
+    total += count
     const recentBodies = containerBodies
       .slice(Math.max(0, containerBodies.length - recentBodyLimit))
       .map((body) => ({
@@ -132,11 +134,8 @@ export function buildPhysicsSettledProjection(
     }
   })
 
-  const total = rows.reduce((sum, row) => sum + row.count, 0)
-  return rows.map((row) => ({
-    ...row,
-    share: total > 0 ? row.count / total : 0
-  }))
+  for (const row of rows) row.share = total > 0 ? row.count / total : 0
+  return rows
 }
 
 export function buildPhysicsNavigationTree(
@@ -145,8 +144,12 @@ export function buildPhysicsNavigationTree(
 ): NavTreeNode {
   const chartType = options.chartType ?? "Physics chart"
   const chartId = options.chartId ?? "physics"
-  const total = rows.reduce((sum, row) => sum + row.count, 0)
-  const nonEmpty = rows.filter((row) => row.count > 0).length
+  let total = 0
+  let nonEmpty = 0
+  for (const row of rows) {
+    total += row.count
+    if (row.count > 0) nonEmpty++
+  }
   const projectionLabel = options.projectionLabel ?? "settled projection"
   const maxBodies = Math.max(0, options.maxBodiesPerContainer ?? 6)
   let nextId = 0
