@@ -82,15 +82,56 @@ describe("StreamNetworkFrame perspective", () => {
   })
 
   it("keeps an inline config stable across parent renders", async () => {
-    const { rerender } = render(frame({ type: "isometric", fit: "contain" }))
+    const { rerender } = render(frame({ type: "isometric", fit: "contain", origin: [0.5, 0.5] }))
     await act(async () => vi.advanceTimersToNextFrame())
     const calls = layoutCalls.mock.calls.length
-    rerender(frame({ fit: "contain", type: "isometric" }))
+    rerender(frame({ origin: [0.5, 0.5], fit: "contain", type: "isometric" }))
     await act(async () => vi.advanceTimersToNextFrame())
     expect(layoutCalls.mock.calls.length).toBe(calls)
     // The layout sees the active perspective settings.
     expect(layoutCalls.mock.lastCall?.[0]).toMatchObject({ type: "isometric" })
   })
+
+  it.each(["copied origin", "shared origin", "same object"] as const)(
+    "reprojects a mutated origin on a parent rerender with %s",
+    async (reuse) => {
+      const perspective: NetworkPerspective = {
+        type: "isometric",
+        fit: "none",
+        origin: [0.5, 0.5]
+      }
+      const origin = perspective.origin!
+      const ref = React.createRef<StreamNetworkFrameHandle>()
+      const customHoverBehavior = vi.fn()
+      const { container, rerender } = render(
+        React.cloneElement(frame(perspective, { customHoverBehavior }), { ref })
+      )
+      await act(async () => vi.advanceTimersToNextFrame())
+      const mark = () => ref.current!.getCustomLayout()!.sceneNodes!.find(
+        (node): node is NetworkCircleNode => node.type === "circle" && node.id === "b"
+      )!
+      const { cx: previousX } = mark()
+
+      origin[0] = 0.25
+      const next: NetworkPerspective = reuse === "same object" ? perspective : {
+        ...perspective,
+        origin: reuse === "copied origin" ? [origin[0], origin[1]] : origin
+      }
+      rerender(React.cloneElement(frame(next, { customHoverBehavior }), { ref }))
+      await act(async () => vi.advanceTimersToNextFrame())
+
+      const projected = mark()
+      expect(projected.cx).not.toBeCloseTo(previousX, 6)
+      fireEvent.mouseMove(container.querySelector('[role="img"]')!, {
+        clientX: projected.cx,
+        clientY: projected.cy
+      })
+      await act(async () => vi.advanceTimersToNextFrame())
+      expect(customHoverBehavior.mock.lastCall?.[0]?.data).toMatchObject({ id: "b" })
+      expect(customHoverBehavior.mock.lastCall?.[0]?.x).toBeCloseTo(projected.cx, 6)
+      expect(customHoverBehavior.mock.lastCall?.[0]?.y).toBeCloseTo(projected.cy, 6)
+    }
+  )
 
   it("reprojects when the perspective changes and returns to flat exactly", async () => {
     const ref = React.createRef<StreamNetworkFrameHandle>()
