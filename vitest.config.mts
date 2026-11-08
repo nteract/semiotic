@@ -63,7 +63,8 @@ export default defineConfig(({ mode }) => ({
       // bundle. Keep other script TypeScript tests in Vitest; discovery is
       // checked by scripts/vitest-projects.test.mjs before expensive jobs.
       'scripts/**/*.test.mjs',
-      'scripts/release-preflight.test.ts'
+      'scripts/release-preflight.test.ts',
+      'scripts/release-dist-tag.test.ts'
     ],
     coverage: {
       provider: 'v8',

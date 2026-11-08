@@ -35,6 +35,7 @@ if [ -z "$VERSION" ]; then
   error "Unable to get current npm version of this package"
   exit 1
 fi
+node --experimental-strip-types scripts/release-dist-tag.ts "$RELEASE_TAG" < package.json
 npm ci --registry="$PUBLIC_NPM_REGISTRY"
 npm audit --registry="$PUBLIC_NPM_REGISTRY" --audit-level=moderate
 npm run check:mcp-registry-live -- --allow-stale-remote
