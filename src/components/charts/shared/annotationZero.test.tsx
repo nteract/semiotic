@@ -33,6 +33,19 @@ for (const [name, renderRule] of [
     const markup = (annotation: Datum, ctx: AnnotationContext = context) =>
       renderToStaticMarkup(<svg>{renderRule(annotation, 0, ctx)}</svg>)
 
+    it.each(["enclose", "rect-enclose"])("preserves a datum field named type in %s coordinates", (type) => {
+      const annotation = { type, padding: 0, coordinates: points }
+      const expected = markup(annotation)
+      expect(expected).toMatch(/<(circle|rect)\b/)
+      for (const axis of ["x", "y"] as const) {
+        const coordinates = points.map(({ [axis]: value, ...rest }) => ({ ...rest, type: value }))
+        expect(markup(
+          { ...annotation, coordinates },
+          { ...context, [`${axis}Accessor`]: "type" }
+        )).toBe(expected)
+      }
+    })
+
     it("keeps rect-enclose padding of 0", () => {
       const html = markup({ type: "rect-enclose", padding: 0, coordinates: points })
       expect(html).toContain('x="10"')

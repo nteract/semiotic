@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest"
 import {
   CANVAS_NONE_PAINT,
   resolveCurveFactory,
+  resolveEnvelopeCurveFactory,
   resolveCanvasFill,
   resolveCanvasPaint,
   buildLinearFillGradient,
@@ -29,6 +30,8 @@ describe("canvasRenderHelpers", () => {
         "step", "stepBefore", "stepAfter", "basis", "natural",
       ] as const) {
         expect(resolveCurveFactory(token)).toBeTypeOf("function")
+        if (token === "natural") expect(resolveEnvelopeCurveFactory(token)).toBeNull()
+        else expect(resolveEnvelopeCurveFactory(token)).toBe(resolveCurveFactory(token))
       }
     })
   })

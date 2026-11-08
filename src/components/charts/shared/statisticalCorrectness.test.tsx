@@ -42,6 +42,32 @@ for (const [name, render] of [
   ["server", renderStaticAnnotationFallback]
 ] as const) {
   describe(`${name} statistical annotations`, () => {
+    it.each([
+      [undefined, "M0,20L5,40L10,20L10,10L5,30L0,10Z"],
+      ["linear", "M0,20L5,40L10,20L10,10L5,30L0,10Z"],
+      ["natural", "M0,20L5,40L10,20L10,10L5,30L0,10Z"],
+      ["unsupported", "M0,20L5,40L10,20L10,10L5,30L0,10Z"],
+      ["step", "M0,20L2.5,20L2.5,40L7.5,40L7.5,20L10,20L10,10L7.5,10L7.5,30L2.5,30L2.5,10L0,10Z"],
+      ["monotoneX", "M0,20C1.667,30,3.333,40,5,40C6.667,40,8.333,30,10,20L10,10C8.333,20,6.667,30,5,30C3.333,30,1.667,20,0,10Z"],
+    ])("preserves the rendered %s envelope and its bounds", (curve, path) => {
+      const node = render(
+        { type: "envelope", upperAccessor: "upper", lowerAccessor: "lower", label: "Range", fill: "#123456" },
+        0,
+        {
+          ...context,
+          curve,
+          data: [
+            { x: 10, upper: 20, lower: 10 },
+            { x: 0, upper: 20, lower: 10 },
+            { x: 5, upper: 40, lower: 30 },
+          ],
+        }
+      )
+      const svg = renderToStaticMarkup(<svg>{node}</svg>)
+      expect(svg).toContain(`<path d="${path}" fill="#123456" fill-opacity="0.15" stroke="none"`)
+      expect(svg).toContain('<text x="14" y="16" fill="#123456" font-size="11">Range</text>')
+    })
+
     it.each(["linear", "polynomial", "loess"])(
       "fits %s Date trends and filters missing/malformed rows",
       (method) => {
@@ -181,6 +207,12 @@ for (const [name, render] of [
               : [50 + 100 * i, 30 - 10 * i]
           )
         )
+        // Frames without an ordinal domain infer the same displayed order
+        // from the rows and the centered category scale.
+        expect(pointsOf(render({ type: "trend" }, 0, {
+          ...ctx,
+          scales: { x: ctx.scales!.x, y: ctx.scales!.y }
+        }))).toEqual(points)
       }
     )
 

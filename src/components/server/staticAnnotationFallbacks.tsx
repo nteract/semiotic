@@ -3,28 +3,17 @@ import { XHTML_NAMESPACE } from "../shared/svgNamespace"
 import * as React from "react"
 import Annotation from "../Annotation"
 import { packEnclose } from "d3-hierarchy"
-import {
-  area as d3Area,
-  curveBasis,
-  curveCardinal,
-  curveCatmullRom,
-  curveLinear,
-  curveMonotoneX,
-  curveMonotoneY,
-  curveStep,
-  curveStepAfter,
-  curveStepBefore,
-} from "d3-shape"
-import type { CurveFactory } from "d3-shape"
+import { area as d3Area, curveLinear } from "d3-shape"
 import type { AnnotationContext } from "../realtime/types"
 import type { CurveType } from "../stream/types"
+import { resolveEnvelopeCurveFactory } from "../stream/renderers/canvasRenderHelpers"
 import { AnnotationLabel } from "../charts/shared/AnnotationLabel"
 import { annotationActivationProps } from "../charts/shared/annotationActivation"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { SemioticTheme } from "../store/themeCore"
 import { ssrLabelBackground } from "./ssrLabelBackground"
 import { forecastModel } from "../charts/shared/forecastModel"
-import { trendGeometry } from "../charts/shared/statisticalAnnotationGeometry"
+import { trendGeometry, projectAnnotationValue } from "../charts/shared/statisticalAnnotationGeometry"
 import {
   regressionPoints,
   regressionNumber,
@@ -36,28 +25,6 @@ import {
   resolveX,
   resolveY,
 } from "../charts/shared/annotationResolvers"
-import { projectHeatmapBandComputedValue } from "../stream/heatmapBandTicks"
-
-function dataScale(scale: (value: number) => number, value: unknown): number {
-  const px = projectHeatmapBandComputedValue(scale, value)
-  return px == null || !Number.isFinite(px) ? Number.NaN : px
-}
-
-// These are the default rule cases that have no server-specific style or
-// layout concerns. Keeping them separate from the full client dispatcher
-// prevents server rendering from retaining client-only threshold, band, text,
-// and category-highlight branches just to support these shared annotations.
-const CURVE_FACTORIES: Partial<Record<CurveType, CurveFactory>> = {
-  linear: curveLinear,
-  monotoneX: curveMonotoneX,
-  monotoneY: curveMonotoneY,
-  step: curveStep,
-  stepAfter: curveStepAfter,
-  stepBefore: curveStepBefore,
-  basis: curveBasis,
-  cardinal: curveCardinal,
-  catmullRom: curveCatmullRom,
-}
 
 /**
  * Render the built-in annotation types which use only an annotation context.
@@ -79,8 +46,8 @@ export function renderStaticAnnotationFallback(
     case "enclose": {
       const coords = (ann.coordinates || [])
         .map((coordinate: Datum) => ({
-          x: resolveX({ ...coordinate, type: "point" }, context),
-          y: resolveY({ ...coordinate, type: "point" }, context),
+          x: resolveX(coordinate, context),
+          y: resolveY(coordinate, context),
           r: 1,
         }))
         .filter(
@@ -120,8 +87,8 @@ export function renderStaticAnnotationFallback(
     case "rect-enclose": {
       const coords = (ann.coordinates || [])
         .map((coordinate: Datum) => ({
-          x: resolveX({ ...coordinate, type: "point" }, context),
-          y: resolveY({ ...coordinate, type: "point" }, context),
+          x: resolveX(coordinate, context),
+          y: resolveY(coordinate, context),
         }))
         .filter(
           (coordinate: { x: number | null; y: number | null }) =>
@@ -129,8 +96,8 @@ export function renderStaticAnnotationFallback(
         ) as { x: number; y: number }[]
       if (coords.length < 2) return null
       const padding = ann.padding ?? 10
-      const [rawMinX, rawMaxX] = getMinMax(coords.map((coordinate) => coordinate.x))
-      const [rawMinY, rawMaxY] = getMinMax(coords.map((coordinate) => coordinate.y))
+      const [rawMinX, rawMaxX] = getMinMax(coords, (coordinate) => coordinate.x)
+      const [rawMinY, rawMaxY] = getMinMax(coords, (coordinate) => coordinate.y)
       const minX = rawMinX - padding
       const maxX = rawMaxX + padding
       const minY = rawMinY - padding
@@ -248,8 +215,8 @@ export function renderStaticAnnotationFallback(
       const rawX = context.scales?.x ?? context.scales?.time
       const rawY = context.scales?.y ?? context.scales?.value
       if (!rawX || !rawY) return null
-      const scaleX = (value: unknown) => dataScale(rawX, value)
-      const scaleY = (value: unknown) => dataScale(rawY, value)
+      const scaleX = (value: unknown) => projectAnnotationValue(rawX, value)
+      const scaleY = (value: unknown) => projectAnnotationValue(rawY, value)
       const upperAccessor = ann.upperAccessor || "upperBounds"
       const lowerAccessor = ann.lowerAccessor || "lowerBounds"
       const filter = ann.filter as ((datum: Datum) => boolean) | undefined
@@ -260,7 +227,7 @@ export function renderStaticAnnotationFallback(
         })
         .sort((left, right) => (left[xAccessor] as number) - (right[xAccessor] as number))
       if (bounded.length < 2) return null
-      const curve = CURVE_FACTORIES[(context.curve || "linear") as CurveType] || curveLinear
+      const curve = resolveEnvelopeCurveFactory(context.curve as CurveType) ?? curveLinear
       const path = d3Area<Datum>()
         .x((datum) => scaleX(datum[xAccessor]))
         .y0((datum) => scaleY(datum[lowerAccessor]))
@@ -293,7 +260,7 @@ export function renderStaticAnnotationFallback(
       const rawX = context.scales?.x ?? context.scales?.time
       const rawY = context.scales?.y ?? context.scales?.value
       if (!rawX || !rawY) return null
-      const scaleY = (value: unknown) => dataScale(rawY, value)
+      const scaleY = (value: unknown) => projectAnnotationValue(rawY, value)
       const values = data
         .map((datum) => regressionNumber(datum[yAccessor]))
         .filter((value): value is number => value !== null)
@@ -364,8 +331,8 @@ export function renderStaticAnnotationFallback(
       const rawX = context.scales?.x ?? context.scales?.time
       const rawY = context.scales?.y ?? context.scales?.value
       if (!rawX || !rawY) return null
-      const scaleX = (value: unknown) => dataScale(rawX, value)
-      const scaleY = (value: unknown) => dataScale(rawY, value)
+      const scaleX = (value: unknown) => projectAnnotationValue(rawX, value)
+      const scaleY = (value: unknown) => projectAnnotationValue(rawY, value)
       const points = regressionPoints(data.map((d) => [d[xAccessor], d[yAccessor]]))
       const model = forecastModel(points, ann)
       if (!model) return null

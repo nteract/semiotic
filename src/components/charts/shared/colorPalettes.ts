@@ -55,19 +55,16 @@ function toHex(r: number, g: number, b: number): string {
 function rgbInterpolator(stops: string[]): (t: number) => string {
   const rgbStops = stops.map(parseHex)
   const n = rgbStops.length - 1
+  const first = stops[0]
+  const last = stops[n]
   return (t: number) => {
     // A degenerate numeric color domain can yield `NaN` upstream (for
     // example, when every numeric category is 0). Keep the interpolator
     // total rather than indexing the stop array with `NaN`.
-    if (Number.isNaN(t)) t = 0
-    if (t <= 0) {
-      const [r, g, b] = rgbStops[0]
-      return toHex(r, g, b)
-    }
-    if (t >= 1) {
-      const [r, g, b] = rgbStops[n]
-      return toHex(r, g, b)
-    }
+    // Fixed stops already have the output format; boundary samples need no
+    // channel conversion or new string. The first branch also handles NaN.
+    if (!(t > 0)) return first
+    if (t >= 1) return last
     const x = t * n
     const i = Math.floor(x)
     const f = x - i

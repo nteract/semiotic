@@ -97,7 +97,7 @@ import type { UpdateResult } from "./pipelineUpdateContract"
 import { UpdateResultStoreBase } from "./pipelineUpdateStore"
 import { PipelineStoreUpdateResults } from "./pipelineStoreUpdateResults"
 import { PipelineSpatialIndex } from "./pipelineSpatialIndex"
-import { snapXYIntroTargets } from "./pipelineIntroCancellation"
+import { snapSceneTargets } from "./pipelineSceneTargets"
 import { remapXYScene } from "./pipelineSceneResize"
 
 export type { PipelineConfig } from "./pipelineConfig"
@@ -1056,7 +1056,7 @@ export class PipelineStore extends UpdateResultStoreBase {
     this.prevPositionMap.clear()
     this.prevPathMap.clear()
     this.activeTransition = null
-    snapXYIntroTargets(this.scene)
+    snapSceneTargets(this.scene)
     this.exitNodes = []
   }
 

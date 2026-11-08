@@ -222,12 +222,11 @@ npm run check:consumer-compatibility
 npm run release:check
 ```
 
-After finalizing source and documentation edits, refresh generated task packets
-and then the adoption inventory, in that order:
+After finalizing source and documentation edits, refresh generated task packets.
+The command also refreshes the adoption inventory after writing its packet inputs:
 
 ```bash
 npm run docs:ai-tasks
-npm run prepare:adoption-evals
 npm run check:ai-tasks
 npm run check:adoption-evals
 ```

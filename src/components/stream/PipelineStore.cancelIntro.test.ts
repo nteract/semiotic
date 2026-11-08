@@ -13,10 +13,13 @@ import "../../test-utils/provideXYTransitionEngine"
  * from blank after the server already painted the chart.
  */
 import { describe, it, expect } from "vitest"
+import { createElement } from "react"
+import { renderToStaticMarkup } from "react-dom/server"
 import { PipelineStore, type PipelineConfig } from "./PipelineStore"
 import { OrdinalPipelineStore } from "./OrdinalPipelineStore"
 import { NetworkPipelineStore } from "./NetworkPipelineStore"
 import type { OrdinalPipelineConfig } from "./ordinalTypes"
+import { ordinalSceneNodeToSVG } from "./SceneToSVGOrdinal"
 
 function makeXYConfig(overrides: Partial<PipelineConfig> = {}): PipelineConfig {
   return {
@@ -173,6 +176,52 @@ describe("PipelineStore.cancelIntroAnimation", () => {
 })
 
 describe("OrdinalPipelineStore.cancelIntroAnimation", () => {
+  it.each([
+    ["bar", "cancel"], ["bar", "complete"],
+    ["point", "cancel"], ["point", "complete"],
+    ["pie", "cancel"], ["pie", "complete"]
+  ] as const)("renders the unanimated %s result after %s", (chartType, finish) => {
+    const config = makeOrdinalConfig({
+      chartType,
+      projection: chartType === "pie" ? "radial" : "vertical",
+      pieceStyle: () => ({ fill: "#ec4899", opacity: 0.7 })
+    })
+    const rows = [{ region: "AMER", value: 10 }, { region: "EMEA", value: 20 }]
+    const entering = { region: "APAC", value: 30 }
+    const initialRows = finish === "cancel" ? [...rows, entering] : rows
+    const size = { width: 400, height: 200 }
+    const svg = (store: OrdinalPipelineStore) => renderToStaticMarkup(createElement(
+      "svg", null, store.scene.map((node, i) => ordinalSceneNodeToSVG(node, i, "settled"))
+    ))
+    const expected = new OrdinalPipelineStore(config)
+    expected.ingest({ inserts: initialRows, bounded: true })
+    expected.computeScene(size)
+    if (finish === "complete") {
+      expected.ingest({ inserts: [entering], bounded: false })
+      expected.computeScene(size)
+    }
+    const expectedSVG = svg(expected)
+    expect(expectedSVG).toMatch(/<(rect|circle|path)\b/)
+
+    const store = new OrdinalPipelineStore({
+      ...config, transition: { duration: 300, easing: "linear" }, introAnimation: true
+    })
+    store.ingest({ inserts: initialRows, bounded: true })
+    store.computeScene(size)
+    if (finish === "complete") {
+      store.advanceTransition(store.activeTransition!.startTime + 301)
+      store.ingest({ inserts: [entering], bounded: false })
+      store.computeScene(size)
+    }
+    const start = store.activeTransition!.startTime
+    store.advanceTransition(start + 150)
+    expect(svg(store)).not.toBe(expectedSVG)
+    if (finish === "cancel") store.cancelIntroAnimation()
+    else store.advanceTransition(start + 301)
+    expect(store.activeTransition).toBeNull()
+    expect(svg(store)).toBe(expectedSVG)
+  })
+
   it("clears intro state after computeScene installed it", () => {
     const store = new OrdinalPipelineStore(makeOrdinalConfig({
       chartType: "bar",
