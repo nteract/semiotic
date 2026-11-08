@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Keep XY and ordinal scene-store configuration separate from React's memoized
+  props so clearing visual selection does not trigger an unnecessary custom-layout run.
 - Preserve replacement network layouts started by legend-category callbacks during
   `clear()` or controlled-data removal; keep their pending state until geometry commits.
 - Preserve once-seeded realtime rows and aggregate history through React Strict Mode

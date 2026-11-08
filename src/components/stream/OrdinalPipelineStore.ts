@@ -149,7 +149,8 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
   constructor(config: OrdinalPipelineConfig) {
     super()
     validateStreamingWindow(config)
-    this.config = config
+    // Selection and updateConfig mutate store state, never React's memoized input.
+    this.config = { ...config }
     this.buffer = new RingBuffer(config.windowSize)
 
     // Resolve accessors

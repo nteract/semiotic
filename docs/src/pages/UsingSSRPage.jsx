@@ -25,6 +25,95 @@ export default function UsingSSRPage() {
         server rendering API.
       </p>
 
+      <h2 id="runtime-output">Choose a runtime and output</h2>
+      <p>
+        Start with <code>renderChart(component, props, options)</code> for the same
+        high-level props used by React charts. Static rendering requires real data
+        (or nodes/edges/areas for the relevant family); it cannot consume a push ref.
+        Set numeric dimensions for predictable exports.
+      </p>
+      <table className="recipe-customization-table">
+        <thead><tr><th>Runtime / output</th><th>Public entry and API</th><th>Requirements</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Browser, iframe, or edge runtime → SVG</td>
+            <td><code>semiotic/server/edge</code>: <code>renderChart</code>, <code>renderChartWithEvidence</code></td>
+            <td>Synchronous, browser-compatible static markup. No React server shim or Node image codecs.</td>
+          </tr>
+          <tr>
+            <td>Node → SVG</td>
+            <td><code>semiotic/server/edge</code>, <code>semiotic/server/node</code>, or <code>semiotic/server</code></td>
+            <td>The same SVG API; <code>options.precision</code> rounds geometry while preserving text and identifiers.</td>
+          </tr>
+          <tr>
+            <td>Node → PNG / JPEG</td>
+            <td><code>semiotic/server/node</code>: <code>await renderToImage(component, props, options)</code></td>
+            <td>Install the optional <code>sharp</code> dependency. It loads when raster export is called.</td>
+          </tr>
+          <tr>
+            <td>Node → GIF</td>
+            <td><code>semiotic/server/node</code>: <code>renderToAnimatedGif</code> / <code>renderPhysicsToAnimatedGif</code></td>
+            <td>Asynchronous encoding loads optional <code>sharp</code> and <code>gifenc</code>. The edge entry can generate SVG frame sequences.</td>
+          </tr>
+        </tbody>
+      </table>
+      <CodeBlock language="js" code={`import { renderChartWithEvidence } from "semiotic/server/edge"
+
+const props = {
+  data: [{ month: 1, orders: 18 }, { month: 2, orders: 26 }],
+  xAccessor: "month", yAccessor: "orders",
+  width: 640, height: 300,
+  title: "Monthly orders",
+  description: "Orders increased from 18 to 26.",
+  summary: "The second month has eight more orders.",
+  accessibleTable: true,
+  theme: "light"
+}
+const { svg, evidence } = renderChartWithEvidence("LineChart", props, { precision: 3 })
+if (evidence.empty || evidence.markCount === 0) throw new Error("No data marks rendered")
+// Also check the expected domains, annotation counts, accessible name, and warnings.`} />
+      <p>
+        Theme belongs in <code>props.theme</code>; the third argument contains
+        render options such as precision. Evidence reports what was drawn; inspect
+        its expected marks and domains, plus diagnostics and accessibility, before
+        treating an export as correct. See <a href="#render-evidence">render evidence</a>.
+      </p>
+      <p>
+        Area maps need materialized GeoJSON features in <code>areas</code>;
+        supply explicit points/lines for those layers. A synchronous renderer does
+        not fetch a reference name such as <code>"world"</code>. Load your local
+        geography first, or await <code>resolveReferenceGeography</code> from
+        <code> semiotic/geo</code> with its required optional geography package,
+        then pass the resulting features. This applies to both browser and Node exports.
+      </p>
+
+      <h3 id="export-themes">Concrete and adaptive SVG themes</h3>
+      <p>
+        For a fixed report or raster image, supply a concrete theme such as
+        <code> theme: "light"</code>, <code>theme: "dark"</code>, or an explicit
+        theme object with concrete colors. An adaptive
+        <code>{' theme: { mode: "auto" }'}</code> intentionally retains scoped CSS
+        variables and light/dark media rules in the SVG. Its appearance can change
+        in the viewing environment. Do not remove those variables as an export cleanup step.
+        Custom graphics containing application CSS variables still need their own
+        definitions or concrete fallbacks; the server cannot read the page's computed CSS.
+      </p>
+      <h3 id="export-text">Text layout across runtimes</h3>
+      <p>
+        <Link to="/annotations/text-layout"><code>usePretextAnnotations</code></Link>
+        {" "}from <code>semiotic/text</code> is an opt-in browser hook for supported
+        annotation notes. Measurement begins after mount and font loading. SSR,
+        hydration, disabled measurement, missing <code>Intl.Segmenter</code>, and
+        unavailable font/canvas capabilities retain the normal renderer. It is not
+        a synchronous server font-metrics API or a serialized formatter option.
+        For predictable exports, choose available fonts and reserve explicit margins.
+      </p>
+      <p>
+        The <Link to="/custom-charts/overview">composition guide</Link> connects
+        size/tick helpers, annotations, graphics, custom layouts, and the differences
+        between portable configs and React callbacks.
+      </p>
+
       {/* -------------------------------------------------------------- */}
       <h2 id="client-components">Using Semiotic in Next.js App Router</h2>
 
@@ -113,7 +202,7 @@ export default async function Dashboard() {
         code={`// app/dashboard/Chart.tsx — client component
 "use client"
 
-import { BarChart } from "semiotic"
+import { BarChart } from "semiotic/ordinal"
 
 export default function Chart({ data }) {
   return (
@@ -469,8 +558,8 @@ export default async function DashboardPage() {
       <h2 id="static-svg-rendering">Static SVG Rendering on the Server</h2>
 
       <p>
-        Sometimes you need chart output with no browser, no React runtime, and
-        no client JavaScript at all. Common use cases include:
+        Sometimes you need chart output with no browser or client JavaScript.
+        The renderer still uses React to produce static markup. Common use cases include:
       </p>
 
       <ul>
@@ -754,7 +843,8 @@ export async function GET(request: Request) {
           connectors
         </li>
         <li>Axes and tick marks</li>
-        <li>Frame title</li>
+        <li>Legends, supported annotations, and SVG graphics/overlays</li>
+        <li>Frame title and accessible descriptions</li>
         <li>SVG filter definitions (matte, clip paths)</li>
       </ul>
 
@@ -775,12 +865,13 @@ export async function GET(request: Request) {
           regions.
         </li>
         <li>
-          <strong>Canvas rendering</strong> — use SVG-mode props only; canvas
-          marks are skipped.
+          <strong>A live canvas</strong> — retained scene marks are serialized
+          as SVG, including marks that use canvas in the browser.
         </li>
         <li>
-          <strong>Annotations</strong> — annotation layout can depend on DOM
-          measurement; planned for a future release.
+          <strong>DOM measurements and live HTML controls</strong> — built-in
+          annotations, including <code>frame-text</code>, work in static output.
+          Browser-only measurement hooks and interactive controls do not run.
         </li>
         <li>
           <strong>Responsive sizing</strong> — you must provide an explicit{" "}
@@ -802,10 +893,11 @@ export async function GET(request: Request) {
       <h2 id="props-reference">Props</h2>
 
       <p>
-        The server rendering functions accept the same props as their
-        corresponding Frame components. You can pass any prop that{" "}
-        <code>StreamXYFrame</code>, <code>StreamOrdinalFrame</code>, or{" "}
-        <code>StreamNetworkFrame</code> accepts — the data pipeline is identical.
+        <code>renderChart</code> takes high-level chart props. The lower-level
+        <code> renderXYToStaticSVG</code>, <code>renderOrdinalToStaticSVG</code>,
+        and <code>renderNetworkToStaticSVG</code> take the corresponding frame
+        props. Family-specific support follows the renderer's contract; browser
+        event handlers and controls do not become interactive SVG features.
       </p>
 
       <p>
@@ -814,17 +906,17 @@ export async function GET(request: Request) {
 
       <ul>
         <li>
-          <code>size</code> — <strong>required</strong>. There is no DOM to
-          measure, so you must provide explicit dimensions.
+          <code>width</code>/<code>height</code> for high-level charts, or
+          <code> size</code> for frame functions — provide explicit dimensions
+          for predictable output. There is no host DOM to measure.
         </li>
         <li>
           <code>hoverAnnotation</code>, <code>customHoverBehavior</code>,{" "}
           <code>customClickBehavior</code> — ignored (no interaction layer).
         </li>
         <li>
-          <code>canvasLines</code>, <code>canvasPoints</code>,{" "}
-          <code>canvasNodes</code>, etc. — ignored (no canvas element
-          available).
+          Browser canvas flags do not remove marks from the retained scene's
+          SVG export.
         </li>
         <li>
           <code>tooltipContent</code> — ignored (no tooltip layer).

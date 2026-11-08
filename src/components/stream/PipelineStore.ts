@@ -257,7 +257,8 @@ export class PipelineStore extends UpdateResultStoreBase {
   constructor(config: PipelineConfig) {
     super()
     validateStreamingWindow(config)
-    this.config = config
+    // Selection and updateConfig mutate store state, never React's memoized input.
+    this.config = { ...config }
     this.buffer = new RingBuffer(config.windowSize)
 
     // Resolve accessors based on streaming vs bounded mode.

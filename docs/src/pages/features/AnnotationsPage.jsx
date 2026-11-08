@@ -1,5 +1,8 @@
 import React, { useRef, useEffect, useState, useCallback } from "react"
-import { LineChart, BarChart, Scatterplot, StreamXYFrame } from "semiotic"
+import { LineChart, Scatterplot, StreamXYFrame } from "semiotic/xy"
+import { BarChart } from "semiotic/ordinal"
+import CompactCaptionChart from "./CompactCaptionChart"
+import compactCaptionSource from "./CompactCaptionChart.tsx?raw"
 
 import LiveExample from "../../components/LiveExample"
 import StreamingDemo from "../../components/StreamingDemo"
@@ -427,6 +430,27 @@ export default function AnnotationsPage() {
         }}
         hiddenProps={{}}
       />
+
+      <h2 id="compact-caption">A compact legend and caption row</h2>
+      <p>
+        Reserve a bottom margin for a compact row of series keys, latest values,
+        and a caption. These <code>frame-text</code> annotations derive their text
+        from the same data as the lines and anchor to the plot after resizing.
+        Its title and description also label the SVG export; the live chart adds
+        a screen-reader summary and accessible table.
+      </p>
+      <div data-testid="compact-caption-chart">
+        <CompactCaptionChart />
+      </div>
+      <CodeBlock language="tsx" code={compactCaptionSource} />
+      <p>
+        This row is a static reading aid. Positioned text does not provide the
+        focus, toggle, or shared-selection behavior of an
+        <Link to="/features/legends"> interactive legend</Link>.
+        The data and annotations are serializable; React rendering is only needed
+        for the live component. For custom SVG or HTML content instead, use the
+        annotation rules or graphics hooks supported by the chart's frame.
+      </p>
 
       {/* ----------------------------------------------------------------- */}
       {/* Thresholds */}

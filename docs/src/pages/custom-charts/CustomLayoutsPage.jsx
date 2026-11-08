@@ -1,5 +1,8 @@
 import authoredRowAnchorsSource from "./authoredRowAnchors.ts?raw"
-import React, { useMemo, useState, useCallback } from "react"
+import React, { useMemo } from "react"
+import { HtmlMarksDemo, ParallelCoordinatesDemo } from "./SelectionLayoutDemos"
+import selectionLayoutsSource from "./selectionLayouts.tsx?raw"
+import selectionDemosSource from "./SelectionLayoutDemos.tsx?raw"
 import { XYCustomChart } from "../../../../src/components/charts/custom/XYCustomChart"
 import { NetworkCustomChart } from "../../../../src/components/charts/custom/NetworkCustomChart"
 import { OrdinalCustomChart } from "../../../../src/components/charts/custom/OrdinalCustomChart"
@@ -171,216 +174,6 @@ const bulletData = [
   { metric: "New Customers", actual: 540, target: 600, ranges: [400, 550, 700] },
 ]
 
-// Parallel coordinates: a small cars-style dataset. Five fields with very
-// different units (mpg vs hp vs weight) — each axis has its own scale.
-const parallelCarsData = [
-  { name: "compact", mpg: 32, hp: 95, weight: 2200, accel: 16, year: 2018 },
-  { name: "sedan", mpg: 26, hp: 180, weight: 3100, accel: 12, year: 2019 },
-  { name: "suv", mpg: 21, hp: 240, weight: 4200, accel: 10, year: 2020 },
-  { name: "truck", mpg: 17, hp: 310, weight: 5400, accel: 9, year: 2017 },
-  { name: "ev", mpg: 92, hp: 350, weight: 4400, accel: 6, year: 2022 },
-  { name: "sport", mpg: 24, hp: 400, weight: 3200, accel: 5, year: 2021 },
-  { name: "minivan", mpg: 22, hp: 280, weight: 4600, accel: 11, year: 2019 },
-  { name: "hybrid", mpg: 52, hp: 130, weight: 3000, accel: 13, year: 2020 },
-  { name: "wagon", mpg: 28, hp: 195, weight: 3400, accel: 11, year: 2018 },
-  { name: "coupe", mpg: 25, hp: 320, weight: 3300, accel: 7, year: 2021 },
-]
-
-// Parallel-coords demo wrapped to demonstrate hover highlighting.
-// `highlightFn` is the recipe's interactivity hook — pass any predicate
-// and matching rows render at full opacity while others dim. Here a
-// simple useState tracks the hovered row's name; a future
-// `<ParallelCoordinatesBrushes>` overlay (roadmap item) will feed the
-// same hook with per-axis range filters.
-function ParallelCoordinatesDemo() {
-  const [hoveredName, setHoveredName] = useState(null)
-  const onObservation = useCallback((obs) => {
-    if (obs.type === "hover" && obs.datum) {
-      // Hovered datum may be wrapped — grab the user-facing row from `data` if present.
-      const row = obs.datum.data ?? obs.datum
-      setHoveredName(row?.name ?? null)
-    } else if (obs.type === "hover-end") {
-      setHoveredName(null)
-    }
-  }, [])
-  const highlightFn = useMemo(
-    () => (hoveredName ? (d) => d.name === hoveredName : undefined),
-    [hoveredName],
-  )
-
-  return (
-    <>
-      <ChartRecipe
-        recipeId={PARALLEL_COORDINATES_RECIPE_ID}
-        data={parallelCarsData}
-        layoutConfig={{
-          fields: ["mpg", "hp", "weight", "accel", "year"],
-          colorBy: "name",
-          showPoints: true,
-          opacity: 0.7,
-          strokeWidth: 1.5,
-          highlightFn,
-        }}
-        width={760}
-        height={320}
-        margin={{ top: 30, right: 20, bottom: 20, left: 20 }}
-        enableHover
-        onObservation={onObservation}
-      />
-      <div
-        style={{
-          marginTop: 8,
-          fontSize: 12,
-          color: "var(--semiotic-text-secondary, #666)",
-          minHeight: 18,
-        }}
-      >
-        {hoveredName ? `Highlighting: ${hoveredName}` : "Hover any line to highlight."}
-      </div>
-    </>
-  )
-}
-
-// ── HTML marks demo ────────────────────────────────────────────────────────
-// `htmlMarks` (network custom layouts) render rich, framework-positioned DOM
-// nodes in a layer ABOVE the canvas + SVG overlays — the right tool for
-// text-heavy cards that dim on hover, because a real <div> composites an
-// opacity change instead of re-rasterizing text the way an SVG <foreignObject>
-// does. Edges stay on the canvas; one transparent canvas hit-rect per card
-// keeps hover/click authoritative; the hovered id flows back through
-// layoutConfig so each card re-renders dimmed.
-const htmlMarkNodes = [
-  { id: "orders", title: "Orders", meta: "REST · 1.2k rps" },
-  { id: "payments", title: "Payments", meta: "gRPC · 480 rps" },
-  { id: "inventory", title: "Inventory", meta: "queue · 90 rps" },
-  { id: "shipping", title: "Shipping", meta: "batch · hourly" },
-]
-const htmlMarkEdges = [
-  { source: "orders", target: "payments" },
-  { source: "orders", target: "inventory" },
-  { source: "payments", target: "shipping" },
-  { source: "inventory", target: "shipping" },
-]
-
-const HTML_CARD_W = 150
-const HTML_CARD_H = 58
-
-const htmlCardLayout = (ctx) => {
-  const { plot } = ctx.dimensions
-  const { hoveredId } = ctx.config
-  const colW = plot.width / ctx.nodes.length
-  const cy = plot.height / 2
-  const posById = new Map(ctx.nodes.map((node, i) => [node.id, { cx: colW * (i + 0.5), cy }]))
-
-  // Transparent hit-rects: the visible card is an htmlMark; the rect only owns
-  // hit-testing so canvas hover/onObservation stays authoritative.
-  const sceneNodes = ctx.nodes.map((node) => {
-    const p = posById.get(node.id)
-    return {
-      type: "rect",
-      x: p.cx - HTML_CARD_W / 2,
-      y: p.cy - HTML_CARD_H / 2,
-      w: HTML_CARD_W,
-      h: HTML_CARD_H,
-      style: { fill: "rgba(0,0,0,0)", stroke: "none" },
-      datum: node.data ?? node,
-      id: node.id,
-    }
-  })
-
-  const sceneEdges = ctx.edges.map((edge) => {
-    const s = posById.get(edge.source)
-    const t = posById.get(edge.target)
-    return {
-      type: "line",
-      x1: s.cx + HTML_CARD_W / 2,
-      y1: s.cy,
-      x2: t.cx - HTML_CARD_W / 2,
-      y2: t.cy,
-      style: { stroke: "var(--semiotic-border, #cbd5e1)", strokeWidth: 1.5, opacity: 0.8 },
-      datum: edge,
-    }
-  })
-
-  const htmlMarks = ctx.nodes.map((node) => {
-    const p = posById.get(node.id)
-    const data = node.data ?? node
-    const dim = hoveredId != null && hoveredId !== node.id
-    return {
-      id: node.id,
-      x: p.cx - HTML_CARD_W / 2,
-      y: p.cy - HTML_CARD_H / 2,
-      width: HTML_CARD_W,
-      height: HTML_CARD_H,
-      content: (
-        <div
-          style={{
-            boxSizing: "border-box",
-            width: "100%",
-            height: "100%",
-            padding: "8px 12px",
-            borderRadius: 8,
-            border: "1px solid var(--semiotic-border, #cbd5e1)",
-            background: "var(--semiotic-surface, #ffffff)",
-            color: "var(--semiotic-text, #111827)",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
-            // Composite-only: this opacity flip does NOT re-rasterize the text.
-            opacity: dim ? 0.25 : 1,
-            transition: "opacity 140ms ease",
-          }}
-        >
-          <div style={{ fontWeight: 600, fontSize: 14 }}>{data.title ?? node.id}</div>
-          <div style={{ fontSize: 12, color: "var(--semiotic-text-secondary, #6b7280)" }}>
-            {data.meta}
-          </div>
-        </div>
-      ),
-    }
-  })
-
-  return { sceneNodes, sceneEdges, htmlMarks }
-}
-
-function HtmlMarksDemo() {
-  const [hoveredId, setHoveredId] = useState(null)
-  const onObservation = useCallback((obs) => {
-    if (obs.type === "hover" && obs.datum) {
-      const row = obs.datum.data ?? obs.datum
-      setHoveredId(row?.id ?? null)
-    } else if (obs.type === "hover-end") {
-      setHoveredId(null)
-    }
-  }, [])
-
-  return (
-    <>
-      <NetworkCustomChart
-        nodes={htmlMarkNodes}
-        edges={htmlMarkEdges}
-        layout={htmlCardLayout}
-        layoutConfig={{ hoveredId }}
-        width={720}
-        height={200}
-        margin={{ top: 20, right: 24, bottom: 20, left: 24 }}
-        enableHover
-        onObservation={onObservation}
-      />
-      <div
-        style={{
-          marginTop: 8,
-          fontSize: 12,
-          color: "var(--semiotic-text-secondary, #666)",
-          minHeight: 18,
-        }}
-      >
-        {hoveredId
-          ? `Hovering ${hoveredId} — the other cards dim via a composite-only opacity change.`
-          : "Hover a card. Cards are real DOM (htmlMarks); edges paint on the canvas; hit-testing rides transparent canvas rects."}
-      </div>
-    </>
-  )
-}
-
 // ── Page ─────────────────────────────────────────────────────────────────
 
 export default function CustomChartsPage() {
@@ -415,7 +208,7 @@ export default function CustomChartsPage() {
       </section>
 
       <section>
-        <h2>When layouts run</h2>
+        <h2 id="when-layouts-run">When layouts run</h2>
         <p>
           On a client mount with bounded data, the frame ingests the data before its first
           layout. A fixed-size <code>NetworkCustomChart</code> runs its layout once. A
@@ -1108,7 +901,7 @@ import { marimekkoLayout } from "semiotic/recipes"
       </section>
 
       <section>
-        <h2>Parallel coordinates (ordinal)</h2>
+        <h2 id="parallel-coordinates">Parallel coordinates (ordinal)</h2>
         <p>
           One polyline per row, traced across N parallel vertical axes. Each axis represents a
           numeric field with its own independent linear scale, so columns in different units (mpg,
@@ -1117,12 +910,12 @@ import { marimekkoLayout } from "semiotic/recipes"
           inverse correlations (lines crossing). Set <code>colorBy</code> to color groups.
         </p>
         <p>
-          <strong>Interaction:</strong> hover any line to dim its neighbors. The recipe accepts a{" "}
-          <code>highlightFn</code> predicate; the demo wraps the chart in a small component that
-          tracks the hovered row's name and feeds it to the recipe. The same hook is the intended
-          integration point for a future <code>&lt;ParallelCoordinatesBrushes&gt;</code> overlay
-          (drag ranges on each axis to filter rows) and for <code>useBrushSelection</code>-style
-          linked brushing across coordinated charts.
+          <strong>Interaction:</strong> hover a line or point to dim its neighbors.
+          The demo uses a shared selection and a returned <code>restyle</code> callback
+          to update opacity on retained marks. Its stable <code>layoutConfig</code>
+          contains only the fields and geometry settings. <code>highlightFn</code>
+          remains useful when you intentionally want the recipe to rebuild draw order;
+          a style-only hover does not need that work.
         </p>
         <div
           style={{
@@ -1155,30 +948,15 @@ import { marimekkoLayout } from "semiotic/recipes"
   summary="Efficient vehicles generally trade horsepower for lower weight."
   accessibleTable
 />`}</CodeBlock>
-        <CodeBlock language="jsx">{`import { parallelCoordinatesLayout } from "semiotic/recipes"
-
-function ParallelCoords({ cars }) {
-  const [hovered, setHovered] = useState(null)
-  return (
-    <OrdinalCustomChart
-      data={cars}
-      layout={parallelCoordinatesLayout}
-      layoutConfig={{
-        fields: ["mpg", "hp", "weight", "accel", "year"],
-        colorBy: "name",
-        showPoints: true,
-        // Recipes are pure, so hover state lives here in the parent.
-        highlightFn: hovered ? (d) => d.name === hovered : undefined,
-      }}
-      onObservation={(obs) => {
-        if (obs.type === "hover") setHovered(obs.datum?.data?.name ?? obs.datum?.name)
-        else if (obs.type === "hover-end") setHovered(null)
-      }}
-      width={760}
-      height={320}
-    />
-  )
-}`}</CodeBlock>
+        <p>
+          The complete selection examples below use public imports. The ordinal layout
+          returns a style patch; the network cards subscribe to the same selection with
+          <code> useCustomLayoutSelection()</code>.
+        </p>
+        <p><code>selectionLayouts.tsx</code> defines both layouts and the selection-aware card:</p>
+        <CodeBlock language="tsx" code={selectionLayoutsSource} />
+        <p><code>SelectionLayoutDemos.tsx</code> supplies data and connects hover to selection:</p>
+        <CodeBlock language="tsx" code={selectionDemosSource} />
       </section>
 
       <section>
@@ -1352,7 +1130,7 @@ ref.current.update("planning", (d) => ({
       </section>
 
       <section>
-        <h2>HTML marks (rich DOM nodes)</h2>
+        <h2 id="html-marks">HTML marks (rich DOM nodes)</h2>
         <p>
           A network layout can return <code>htmlMarks</code> alongside <code>backgrounds</code> /{" "}
           <code>sceneNodes</code> / <code>sceneEdges</code> / <code>overlays</code>: positioned HTML/React nodes that Semiotic
@@ -1384,38 +1162,14 @@ ref.current.update("planning", (d) => ({
           SVG, HTML, culling and hit testing aligned. External CSS scaling is not supported.
         </p>
         <HtmlMarksDemo />
-        <CodeBlock language="tsx">{`import { NetworkCustomChart } from "semiotic/network"
-import type { NetworkCustomLayout } from "semiotic/network"
-
-const cardLayout: NetworkCustomLayout = (ctx) => {
-  const place = (node) => /* your positions, in plot space */ ({ x, y })
-
-  return {
-    // Transparent canvas rect per node → owns hit-testing (onObservation/onClick).
-    sceneNodes: ctx.nodes.map((node) => {
-      const { x, y } = place(node)
-      return { type: "rect", x, y, w: 150, h: 58,
-               style: { fill: "rgba(0,0,0,0)" }, datum: node.data, id: node.id }
-    }),
-    // SVG edges paint beneath the cards.
-    sceneEdges: edges,
-    // Rich HTML cards, positioned in the SAME plot space, rendered as real DOM.
-    htmlMarks: ctx.nodes.map((node) => {
-      const { x, y } = place(node)
-      return { id: node.id, x, y, width: 150, height: 58,
-               content: <NodeCard {...node.data} /> }  // dims via opacity → composite-only
-    }),
-  }
-}
-
-<NetworkCustomChart nodes={nodes} edges={edges} layout={cardLayout} />`}</CodeBlock>
         <p>
-          The card's <code>content</code> can call <code>useCustomLayoutSelection()</code> to read
-          the shared <Link to="/coordinated-views">selection</Link> and dim itself — that updates
-          the DOM layer <strong>without re-running the layout</strong>, so hover stays cheap even on
-          big graphs (the demo above drives the dim through <code>layoutConfig</code> for brevity,
-          which re-runs the layout each hover — fine at four nodes, but prefer the selection path at
-          scale).
+          Each card calls <code>useCustomLayoutSelection()</code> inside its
+          <code> htmlMarks</code> content. The layout also returns <code>restyle</code>
+          for the invisible hit rectangles and <code>restyleEdge</code> for the canvas
+          edges. Selection updates the DOM and canvas styles without running the layout.
+          See the <a href="#parallel-coordinates">complete source above</a> for the
+          <code> LinkedCharts</code>, <code>linkedHover</code>, and <code>selection</code> wiring.
+          Keep selection in <code>layoutConfig</code> only when it changes geometry.
         </p>
         <p>
           Stable mark IDs and stable descendant component types/keys preserve mounted content across
