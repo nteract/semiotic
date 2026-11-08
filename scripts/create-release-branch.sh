@@ -48,7 +48,7 @@ CURRENT_VERSION="$(node -p "require('./package.json').version")"
 VERSION="$(node -e '
   const current = process.argv[1]
   const bump = process.argv[2]
-  const match = /^(\d+)\.(\d+)\.(\d+)(?:-[0-9A-Za-z.-]+)?$/.exec(current)
+  const match = /^(\d+)\.(\d+)\.(\d+)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/.exec(current)
   if (!match) throw new Error(`Unsupported current version: ${current}`)
   let [, major, minor, patch] = match.map(Number)
   if (bump === "major") { major += 1; minor = 0; patch = 0 }

@@ -114,7 +114,7 @@ const tempDir = mkdtempSync(join(tmpdir(), "semiotic-api-compat-"))
 
 try {
   git(["rev-parse", "--verify", `${against}^{commit}`])
-  const versionMatch = /^v?(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)$/.exec(against)
+  const versionMatch = /^v?(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?)$/.exec(against)
   if (!versionMatch) {
     throw new Error(
       `API compatibility requires a published semver tag, received ${against}`

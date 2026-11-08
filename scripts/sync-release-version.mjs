@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url"
 
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)))
 const requested = process.argv[2]
-if (!requested || !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(requested)) {
+if (!requested || !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/.test(requested)) {
   throw new Error("Usage: node scripts/sync-release-version.mjs <semver>")
 }
 

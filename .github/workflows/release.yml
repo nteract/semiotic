@@ -575,7 +575,7 @@ jobs:
           NOTES_FILE="$(mktemp)"
           awk -v ver="$VERSION" '
             BEGIN { flag = 0 }
-            $0 ~ "^## \\[" ver "\\]" { flag = 1; next }
+            index($0, "## [" ver "]") == 1 { flag = 1; next }
             flag && /^## \[/ { exit }
             flag { print }
           ' CHANGELOG.md > "$NOTES_FILE"

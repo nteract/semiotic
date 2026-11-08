@@ -40,7 +40,7 @@ const version = values.get("--version") ?? rootManifest.version
 const expectedIntegrity = values.get("--expected-integrity")
 const outputArgument = values.get("--output-dir")
 
-if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(version)) {
+if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/.test(version)) {
   throw new Error(`Invalid release version ${JSON.stringify(version)}`)
 }
 if (rootManifest.version !== version) {
