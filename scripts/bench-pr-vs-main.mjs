@@ -78,7 +78,7 @@ function previousReleaseTag() {
   const head = output("git", ["rev-parse", "HEAD"])
   const tags = output("git", ["tag", "--merged", "HEAD", "--sort=-version:refname"])
     .split("\n")
-    .filter((tag) => /^v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(tag))
+    .filter((tag) => /^v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/.test(tag))
   // On an actual release tag, compare that release candidate with its prior
   // tag. On later commits, the latest merged tag is the correct baseline even
   // though package.json still carries the same version until the next bump.

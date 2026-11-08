@@ -17,7 +17,7 @@ function expectEqual(label, actual, expected) {
 
 const pkg = readJson("package.json")
 const version = pkg.version
-if (typeof version !== "string" || !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(version)) {
+if (typeof version !== "string" || !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/.test(version)) {
   throw new Error(`package.json contains an invalid release version: ${JSON.stringify(version)}`)
 }
 
@@ -60,9 +60,11 @@ const changelogHeading = `## [${version}]`
 const changelogLine = readText("CHANGELOG.md")
   .split(/\r?\n/)
   .find((line) => line.startsWith(changelogHeading))
+// Compare the version literally: build metadata contains a regex '+' operator.
+const changelogSuffix = changelogLine?.slice(changelogHeading.length)
 if (
-  changelogLine !== changelogHeading &&
-  !new RegExp(`^## \\[${version.replaceAll(".", "\\.")}\\] - \\d{4}-\\d{2}-\\d{2}$`).test(changelogLine ?? "")
+  changelogSuffix !== "" &&
+  !/^ - \d{4}-\d{2}-\d{2}$/.test(changelogSuffix ?? "")
 ) {
   errors.push(
     `CHANGELOG.md must contain ${JSON.stringify(changelogHeading)} with an optional YYYY-MM-DD suffix`,

@@ -43,6 +43,7 @@ jobs:
 
       - name: Check source policy and repository lints
         run: |
+          npm run test:release-preflight
           npm run check:router-alignment
           npm run check:playwright-alignment
           npm run lint
