@@ -535,6 +535,24 @@ precedence over OIDC and can turn an expired secret into a misleading npm 404.
 Release PRs should update `package.json`, `CHANGELOG.md`, and any generated
 artifacts required by the release checks before tagging.
 
+The [release routing helper](scripts/release-dist-tag.ts) validates the complete
+package version and chooses the npm dist-tag:
+
+| Version | npm dist-tag |
+| --- | --- |
+| Stable, such as `3.14.0` or `3.14.0+build.1` | `latest` |
+| `alpha`, `beta`, or `rc` prerelease, such as `3.14.0-rc.1` | `beta` |
+| `next` prerelease, such as `3.14.0-next.1` | `next` |
+
+The first prerelease identifier must match one of those names exactly;
+unsupported channels (including `nextish`) and malformed versions fail before
+authentication or expensive jobs. Build metadata does not change the channel.
+Both initial tag validation and publish output selection use the workflow
+revision's helper against the selected tag's `package.json`, including manual
+recovery of older tags. Only `latest` enables the stable deployment and Registry
+jobs. This mapping does not add scheduled prereleases or prerelease version
+progression to the release-branch command.
+
 Use `npm run create-release-branch -- <major|minor|patch>` for the maintained
 release flow. It builds the package, MCP server, and docs before refreshing the
 machine and browser baselines. Baseline writes first compare p50 measurements

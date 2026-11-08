@@ -34,6 +34,9 @@ jobs:
         with:
           node-version: 22.x
 
+      - name: Test release routing before expensive jobs
+        run: node --experimental-strip-types --test scripts/release-dist-tag.test.ts
+
       - name: Verify release tag before expensive jobs
         run: |
           if ! echo "$RELEASE_TAG" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$'; then
@@ -43,12 +46,8 @@ jobs:
           git fetch --force origin \
             "+refs/heads/main:refs/remotes/origin/main" \
             "+refs/tags/$RELEASE_TAG:refs/tags/$RELEASE_TAG"
-          VERSION=$(git show "$RELEASE_TAG:package.json" | node -p "JSON.parse(require('fs').readFileSync(0, 'utf8')).version")
-          EXPECTED_TAG="v${VERSION}"
-          if [ "$RELEASE_TAG" != "$EXPECTED_TAG" ]; then
-            echo "Release tag mismatch: expected $EXPECTED_TAG for package.json version $VERSION, got $RELEASE_TAG"
-            exit 1
-          fi
+          git show "refs/tags/$RELEASE_TAG:package.json" | \
+            node --experimental-strip-types scripts/release-dist-tag.ts "$RELEASE_TAG"
           TAGGED_SHA=$(git rev-list -n 1 "$RELEASE_TAG")
           if ! git merge-base --is-ancestor "$TAGGED_SHA" origin/main; then
             echo "Release tag $RELEASE_TAG points to $TAGGED_SHA, which is not merged into origin/main"
@@ -243,6 +242,17 @@ jobs:
           fetch-depth: 0
           ref: ${{ env.RELEASE_TAG }}
 
+      # An older tag may not contain the routing helper. Use the selected
+      # workflow's policy while keeping the tagged package.json authoritative.
+      - name: Checkout release routing tooling
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          path: .release-routing
+          sparse-checkout: scripts/release-dist-tag.ts
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
       - name: Use Node.js
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
@@ -363,12 +373,8 @@ jobs:
       - name: Determine npm dist-tag
         id: dist-tag
         run: |
-          VERSION=$(node -p "require('./package.json').version")
-          if echo "$VERSION" | grep -qE '[-](alpha|beta|rc)'; then
-            echo "tag=beta" >> "$GITHUB_OUTPUT"
-          else
-            echo "tag=latest" >> "$GITHUB_OUTPUT"
-          fi
+          node --experimental-strip-types .release-routing/scripts/release-dist-tag.ts "$RELEASE_TAG" \
+            < package.json >> "$GITHUB_OUTPUT"
 
       # Construct one archive after every build/gate. All subsequent smoke,
       # checksum/SBOM evidence, dry-run, and publication steps use this exact

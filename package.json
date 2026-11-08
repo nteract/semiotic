@@ -529,7 +529,7 @@
     "check:adoption-evals": "node scripts/prepare-adoption-evals.mjs --check",
     "test:adoption-evals": "node --test scripts/prepare-adoption-evals.test.mjs",
     "check:release-preflight": "node --experimental-strip-types scripts/check-release-preflight.ts",
-    "test:release-preflight": "node --experimental-strip-types --test scripts/release-preflight.test.ts",
+    "test:release-preflight": "node --experimental-strip-types --test scripts/release-preflight.test.ts scripts/release-dist-tag.test.ts",
     "check:test-discovery": "node --test scripts/vitest-projects.test.mjs scripts/typedoc-compat.test.mjs"
   },
   "repository": {
