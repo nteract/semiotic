@@ -199,4 +199,36 @@ describe("isolated MCP execution", () => {
       maxHeapMb: 256
     })
   })
+
+  it("closes once, cancels active work, and refuses new work after shutdown", async () => {
+    const launch = vi.fn(childProcess.fork)
+    const value = runner({}, launch)
+    const pending = value.run(job("block"))
+    const cancelled = expect(pending).rejects.toMatchObject({ code: "MCP_RENDER_CANCELLED" })
+    expect(value.active()).toBe(1)
+    value.close()
+    value.close()
+    // The promise settles before the process exits; the child still owns a slot.
+    expect(value.active()).toBe(1)
+    await cancelled
+    await expect(value.run(job("success"))).rejects.toMatchObject({ code: "MCP_RENDER_CANCELLED" })
+    expect(launch).toHaveBeenCalledOnce()
+    await vi.waitFor(() => expect(value.active()).toBe(0))
+    await expect(value.run(job("success"))).rejects.toMatchObject({ code: "MCP_RENDER_CANCELLED" })
+    expect(launch).toHaveBeenCalledOnce()
+  })
+
+  it("honors cancellation during launch before abort listeners are installed", async () => {
+    const controller = new AbortController()
+    const launch = vi.fn(childProcess.fork).mockImplementationOnce((...args) => {
+      const child = childProcess.fork(...args)
+      controller.abort()
+      return child
+    })
+    const value = runner({}, launch)
+    await expect(value.run(job("block"), [controller.signal])).rejects.toMatchObject({
+      code: "MCP_RENDER_CANCELLED"
+    })
+    await vi.waitFor(() => expect(value.active()).toBe(0))
+  })
 })

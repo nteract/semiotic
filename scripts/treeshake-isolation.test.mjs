@@ -85,7 +85,14 @@ async function eagerBundle(exportKey, symbol) {
     }
   }
   const files = [...eager].map((path) => textByPath.get(resolve(root, path)) ?? "")
+  const inputs = new Set()
+  for (const path of eager) {
+    for (const [input, contribution] of Object.entries(outputs[path].inputs)) {
+      if (contribution.bytesInOutput > 0) inputs.add(input)
+    }
+  }
   return {
+    inputs,
     code: files.join("\n"),
     deferredCode: Object.keys(outputs)
       .filter((path) => !eager.has(path))
@@ -189,6 +196,9 @@ const cases = [
     exportKey: "./physics",
     symbol: "GaltonBoardChart",
     absent: ["StreamXYFrame", "PacketFlowChart", "CrucibleChart", "GauntletChart"],
+    // Envelope annotations fall back to linear for natural curves. Sharing
+    // their resolver must not retain the unused curve algorithm here.
+    absentInputs: ["node_modules/d3-shape/src/curve/natural.js"],
     // The shared pipeline store must not pull the EventDrop live runtime or the
     // emitter schedule into charts that never configure them.
     absentText: ["Changing live windows.size", "Missing emitter template", "Live EventDrop requires a finite event time"]
@@ -206,6 +216,7 @@ const cases = [
   {
     exportKey: ".",
     symbol: "LineChart",
+    presentInputs: ["node_modules/d3-shape/src/curve/natural.js"],
     absent: ["BarChart", "SankeyDiagram", "StreamNetworkFrame", "StreamOrdinalFrame", "StreamGeoFrame"]
   },
   {
@@ -224,15 +235,17 @@ const cases = [
   }
 ]
 
-for (const { exportKey, symbol, absent, absentText = [], maxGzipKiB, selfNamed = true } of cases) {
+for (const { exportKey, symbol, absent, absentText = [], absentInputs = [], presentInputs = [], maxGzipKiB, selfNamed = true } of cases) {
   test(`${exportKey === "." ? "semiotic" : `semiotic${exportKey.slice(1)}`} ${symbol} retains no unrelated charts`, async () => {
-    const { code, gzipBytes } = await eagerBundle(exportKey, symbol)
+    const { code, gzipBytes, inputs } = await eagerBundle(exportKey, symbol)
     // Boolean asserts keep a failure message readable instead of dumping the bundle.
     if (selfNamed) assert.ok(new RegExp(`["']${symbol}["']`).test(code), `${symbol} itself should be named in its bundle`)
     const retained = absent.filter((name) => new RegExp(`["']${name}["']`).test(code))
     assert.deepEqual(retained, [], `${symbol} retained unrelated charts: ${retained.join(", ")}`)
     const retainedText = absentText.filter((text) => code.includes(text))
     assert.deepEqual(retainedText, [], `${symbol} retained unrelated runtime code: ${retainedText.join(", ")}`)
+    for (const input of absentInputs) assert.ok(!inputs.has(input), `${symbol} retained unused ${input}`)
+    for (const input of presentInputs) assert.ok(inputs.has(input), `${symbol} dropped supported ${input}`)
     if (maxGzipKiB != null) {
       assert.ok(gzipBytes <= maxGzipKiB * 1024, `${symbol} initial load is ${(gzipBytes / 1024).toFixed(1)} KiB gzip`)
     }

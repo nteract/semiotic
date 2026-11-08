@@ -101,9 +101,9 @@ export function useWasHydratingFromSSR(): boolean {
  * ingested store, and overlay state set by that paint commits before the
  * browser displays the frame.
  *
- * Each frame supplies its own `cleanup` for unmount work that's
- * frame-specific (XY/Ordinal clear the streaming adapter; Geo clears
- * its tile cache). Physics manages worker/store cleanup in its own lifecycle.
+ * Frames can supply `cleanup` for frame-specific unmount work such as Geo's
+ * tile cache. Streaming adapters and physics resources own their reconnectable
+ * effect lifecycles separately.
  */
 export interface HydrationLifecycleOptions {
   hydrated: boolean
@@ -144,8 +144,7 @@ export interface HydrationLifecycleOptions {
   flushRender?: () => void
   /**
    * Optional unmount cleanup. Frame-specific work the hook can't
-   * generalize — e.g. clearing the streaming `DataSourceAdapter`
-   * (XY/Ordinal) or the geo tile cache.
+   * generalize — e.g. clearing the geo tile cache.
    */
   cleanup?: () => void
 }

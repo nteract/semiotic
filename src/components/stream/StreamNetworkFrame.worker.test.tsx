@@ -42,6 +42,85 @@ describe("StreamNetworkFrame worker force layout", () => {
     vi.restoreAllMocks()
   })
 
+  it("publishes clear as ready only after empty topology is committed", async () => {
+    const response = Promise.withResolvers<{ positions: Record<string, { x: number; y: number }> }>()
+    runWorker.mockReturnValue(response.promise)
+    const ref = React.createRef<StreamNetworkFrameHandle>()
+    const ready = vi.fn(() => ref.current!.getTopology())
+    const onLayoutStateChange = (state: string) => {
+      if (state === "ready") ready()
+    }
+    const view = render(<StreamNetworkFrame ref={ref} chartType="force"
+      nodes={[{ id: "a" }, { id: "b" }]} edges={[{ source: "a", target: "b" }]}
+      layoutExecution="worker" animate={false} onLayoutStateChange={onLayoutStateChange} />)
+    await waitFor(() => expect(runWorker).toHaveBeenCalledOnce())
+    act(() => ref.current!.clear())
+    expect(ready).toHaveReturnedWith({ nodes: [], edges: [] })
+    expect(view.container.querySelector('[aria-busy="true"]')).toBeNull()
+    await act(async () => response.resolve({ positions: { a: { x: 90, y: 90 } } }))
+    expect(ref.current!.getTopology()).toEqual({ nodes: [], edges: [] })
+    expect(ready).toHaveBeenCalledOnce()
+  })
+
+  it("does not dispatch a solve cancelled by its pending callback", async () => {
+    const ref = React.createRef<StreamNetworkFrameHandle>()
+    const onLayoutStateChange = vi.fn((state: string) => {
+      if (state === "pending") ref.current!.clear()
+    })
+    render(<StreamNetworkFrame ref={ref} chartType="force"
+      nodes={[{ id: "a" }, { id: "b" }]} edges={[{ source: "a", target: "b" }]}
+      layoutExecution="worker" animate={false} onLayoutStateChange={onLayoutStateChange} />)
+    await act(async () => { await vi.dynamicImportSettled() })
+    expect(runWorker).not.toHaveBeenCalled()
+    expect(ref.current!.getTopology()).toEqual({ nodes: [], edges: [] })
+    expect(onLayoutStateChange).toHaveBeenLastCalledWith("ready")
+  })
+
+  it.each([
+    ["imperative", "pushMany"],
+    ["imperative", "push"],
+    ["controlled", "pushMany"],
+    ["controlled", "push"]
+  ] as const)("keeps replacement work from a %s clear's category callback pending (%s)", async (clear, push) => {
+    const first = Promise.withResolvers<{ positions: Record<string, { x: number; y: number }> }>()
+    const replacement = Promise.withResolvers<{ positions: Record<string, { x: number; y: number }> }>()
+    runWorker.mockReturnValueOnce(first.promise).mockReturnValueOnce(replacement.promise)
+    const ref = React.createRef<StreamNetworkFrameHandle>()
+    const onState = vi.fn()
+    const onCategoriesChange = vi.fn()
+    const chart = (empty: boolean) => <StreamNetworkFrame ref={ref} chartType="force"
+      nodes={empty ? [] : [{ id: "a" }, { id: "b" }]}
+      edges={empty ? [] : [{ source: "a", target: "b" }]}
+      layoutExecution="worker" animate={false} legendCategoryAccessor="id"
+      onCategoriesChange={onCategoriesChange} onLayoutStateChange={onState} />
+    const view = render(chart(false))
+    await waitFor(() => expect(runWorker).toHaveBeenCalledOnce())
+    await act(async () => first.resolve({ positions: { a: { x: 90, y: 90 }, b: { x: 180, y: 90 } } }))
+    expect(onCategoriesChange).toHaveBeenLastCalledWith(["a", "b"])
+    onState.mockClear()
+    onCategoriesChange.mockImplementationOnce((categories) => {
+      expect(categories).toEqual([])
+      const edge = { source: "c", target: "d", value: 1 }
+      if (push === "pushMany") ref.current!.pushMany([edge])
+      else ref.current!.push(edge)
+    })
+
+    if (clear === "imperative") act(() => ref.current!.clear())
+    else view.rerender(chart(true))
+    expect(onState).not.toHaveBeenCalledWith("ready")
+    // A read flushes the queued single-edge path; the batch already dispatched.
+    act(() => expect(ref.current!.getTopology().nodes.map((node) => node.id)).toEqual(["c", "d"]))
+    await waitFor(() => expect(runWorker).toHaveBeenCalledTimes(2))
+    expect(onState).toHaveBeenLastCalledWith("pending")
+    expect(view.container.querySelector('[aria-busy="true"]')).not.toBeNull()
+    await act(async () => replacement.resolve({ positions: { c: { x: 70, y: 90 }, d: { x: 210, y: 90 } } }))
+    expect(onState.mock.calls).toEqual([["pending"], ["ready"]])
+    expect(ref.current!.getTopology().nodes).toMatchObject([
+      { id: "c", x: 70, y: 90 }, { id: "d", x: 210, y: 90 }
+    ])
+    expect(view.container.querySelector('[aria-busy="true"]')).toBeNull()
+  })
+
   it("replaces controlled identities before dispatching the next worker solve", async () => {
     const pending: Array<{ signal: AbortSignal; resolve: (value: { positions: Record<string, { x: number; y: number }> }) => void }> = []
     runWorker.mockImplementation((_request, signal) => new Promise((resolve) => pending.push({ signal, resolve })))

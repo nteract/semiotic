@@ -2,22 +2,28 @@ import type { Changeset } from "./types"
 import type { Datum } from "../charts/shared/datumTypes"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 
-const CHUNK_THRESHOLD = 5000
-const CHUNK_SIZE = 5000
+const DEFAULT_CHUNK_LIMIT = 5000
 
-function normalizeChunkThreshold(value: number | undefined): number {
+function normalizeChunkLimit(value: number | undefined, minimum: number): number {
   if (value === Infinity) return Infinity
   return Number.isFinite(value)
-    ? Math.max(0, Math.floor(value!))
-    : CHUNK_THRESHOLD
-}
-
-function normalizeChunkSize(value: number | undefined): number {
-  if (value === Infinity) return Infinity
-  return Number.isFinite(value) ? Math.max(1, Math.floor(value!)) : CHUNK_SIZE
+    ? Math.max(minimum, Math.floor(value!))
+    : DEFAULT_CHUNK_LIMIT
 }
 
 export type ChangesetCallback<T> = (changeset: Changeset<T>) => void
+
+type Ingestion<T> = {
+  history: { data: T[]; offset: number; frame: number | null } | null
+  pushes: T[]
+  flush: (() => void) | null
+}
+// Compile named internal phases to constants without shipping a lookup table.
+const enum DeliveryPhase {
+  Idle,
+  Publishing,
+  FlushRequested
+}
 
 /**
  * Normalize bounded snapshots, progressive history, and live pushes into changesets.
@@ -26,144 +32,174 @@ export type ChangesetCallback<T> = (changeset: Changeset<T>) => void
  */
 export class DataSourceAdapter<T extends object = Datum> {
   private lastBoundedData: T[] | null = null
-  private chunkTimer: number | null = null
   private chunkThreshold: number
   private chunkSize: number
-  private pendingSnapshot: { data: T[]; offset: number } | null = null
-  private pushBuffer: T[] = []
-  private flushScheduled = false
-  private generation = 0
+  // Snapshot chunks and queued pushes belong to the same replacement epoch.
+  private ingestion: Ingestion<T> = { history: null, pushes: [], flush: null }
+  private delivery = DeliveryPhase.Idle
+  private connected = true
 
   constructor(
     private callback: ChangesetCallback<T>,
     options?: { chunkThreshold?: number; chunkSize?: number }
   ) {
-    this.chunkThreshold = normalizeChunkThreshold(options?.chunkThreshold)
-    this.chunkSize = normalizeChunkSize(options?.chunkSize)
+    this.chunkThreshold = normalizeChunkLimit(options?.chunkThreshold, 0)
+    this.chunkSize = normalizeChunkLimit(options?.chunkSize, 1)
   }
 
   updateChunkOptions(options: {
     chunkThreshold?: number
     chunkSize?: number
   }): void {
-    this.chunkThreshold = normalizeChunkThreshold(options.chunkThreshold)
-    this.chunkSize = normalizeChunkSize(options.chunkSize)
+    this.chunkThreshold = normalizeChunkLimit(options.chunkThreshold, 0)
+    this.chunkSize = normalizeChunkLimit(options.chunkSize, 1)
   }
 
-  /** Forget the snapshot and cancel its pending chunks and queued pushes. */
-  clearLastData(): void {
-    this.clear()
+  /** Effect cleanup retires scheduled work; reconnecting retains queued rows. */
+  connect(): () => void {
+    this.connected = true
+    this.scheduleChunk()
+    this.scheduleFlush()
+    return () => {
+      this.connected = false
+      this.cancelPending(this.ingestion)
+    }
   }
 
   setBoundedData(data: T[]): void {
-    data = filterSparseArray(data) as T[]
+    data = filterSparseArray(data)
     if (this.lastBoundedData === data) return
     this.replace(data, false)
   }
 
   /** Replace aggregate rows while preserving the store's category ordering. */
   setReplacementData(data: T[]): void {
-    this.replace(filterSparseArray(data) as T[], true)
+    this.replace(filterSparseArray(data), true)
   }
 
   private replace(data: T[], preserveCategoryOrder: boolean): void {
     this.clear()
     this.lastBoundedData = data
     const progressive = data.length > this.chunkThreshold
-    const snapshot = {
-      data,
-      offset: progressive ? Math.min(data.length, this.chunkSize) : data.length
-    }
-    if (snapshot.offset < data.length) this.pendingSnapshot = snapshot
-    this.callback({
-      inserts: progressive ? data.slice(0, snapshot.offset) : data,
+    const ingestion = this.ingestion
+    const offset = progressive ? Math.min(data.length, this.chunkSize) : data.length
+    if (offset < data.length) ingestion.history = { data, offset, frame: null }
+    this.publish({
+      inserts: progressive ? data.slice(0, offset) : data,
       bounded: true,
       ...(progressive ? { totalSize: data.length } : {}),
       ...(preserveCategoryOrder ? { preserveCategoryOrder: true } : {})
     })
-    // The callback may synchronously replace or clear this dataset.
-    if (this.pendingSnapshot === snapshot) this.scheduleChunk()
+    // The callback may replace/clear the dataset; schedule only current history.
+    this.scheduleChunk()
   }
 
-  private cancelChunk(): void {
-    if (this.chunkTimer !== null) cancelAnimationFrame(this.chunkTimer)
-    this.chunkTimer = null
+  private cancelPending(ingestion: Ingestion<T>): void {
+    const history = ingestion.history
+    if (history?.frame != null) cancelAnimationFrame(history.frame)
+    if (history) history.frame = null
+    ingestion.flush = null
+  }
+
+  private publish(changeset: Changeset<T>): void {
+    const previous = this.delivery
+    this.delivery = DeliveryPhase.Publishing
+    try {
+      this.callback(changeset)
+    } finally {
+      this.finishDelivery(previous)
+    }
+  }
+
+  private finishDelivery(previous: DeliveryPhase): void {
+    const requested = this.delivery === DeliveryPhase.FlushRequested
+    this.delivery = previous
+    if (requested) this.flush()
   }
 
   private emitChunk(): void {
-    const snapshot = this.pendingSnapshot
-    if (!snapshot) return
-    const start = snapshot.offset
-    snapshot.offset = Math.min(snapshot.data.length, start + this.chunkSize)
-    if (snapshot.offset >= snapshot.data.length) this.pendingSnapshot = null
-    this.callback({
-      inserts: snapshot.data.slice(start, snapshot.offset),
+    const ingestion = this.ingestion
+    const history = ingestion.history
+    if (!history) return
+    const start = history.offset
+    history.offset = Math.min(history.data.length, start + this.chunkSize)
+    if (history.offset >= history.data.length) ingestion.history = null
+    this.publish({
+      inserts: history.data.slice(start, history.offset),
       bounded: false,
       boundedAppend: true
     })
   }
 
   private scheduleChunk(): void {
-    this.cancelChunk()
-    this.chunkTimer = requestAnimationFrame(() => {
-      this.chunkTimer = null
+    const ingestion = this.ingestion
+    const history = ingestion.history
+    if (!this.connected || !history || history.frame !== null) return
+    history.frame = requestAnimationFrame(() => {
+      if (this.ingestion !== ingestion) return
+      history.frame = null
       this.emitChunk()
-      if (this.pendingSnapshot) this.scheduleChunk()
+      this.scheduleChunk()
     })
-  }
-
-  private flushPushBuffer(): void {
-    this.flushScheduled = false
-    if (this.pushBuffer.length === 0) return
-    // Finish history before appending live rows. Otherwise a late history chunk
-    // can evict newer rows or reintroduce data outside a sliding live window.
-    this.flushSnapshot()
-    if (this.pushBuffer.length === 0) return
-    const inserts = this.pushBuffer
-    this.pushBuffer = []
-    this.callback({ inserts, bounded: false })
-  }
-
-  private flushSnapshot(): void {
-    this.cancelChunk()
-    while (this.pendingSnapshot) this.emitChunk()
   }
 
   private scheduleFlush(): void {
-    if (this.flushScheduled) return
-    this.flushScheduled = true
-    const generation = this.generation
-    queueMicrotask(() => {
-      if (generation === this.generation) this.flushPushBuffer()
-    })
+    const ingestion = this.ingestion
+    // The queued callback owns this batch; a manual flush retires it before
+    // another push can schedule work for the same replacement.
+    if (!this.connected || !ingestion.pushes.length || ingestion.flush) return
+    const pending = () => {
+      if (this.ingestion === ingestion && ingestion.flush === pending)
+        this.flush()
+    }
+    ingestion.flush = pending
+    queueMicrotask(pending)
   }
 
   push(datum: T): void {
     if (datum == null || typeof datum !== "object") return
-    this.pushBuffer.push(datum)
+    this.ingestion.pushes.push(datum)
     this.scheduleFlush()
   }
 
   pushMany(data: T[]): void {
     for (const datum of data) {
       if (datum != null && typeof datum === "object")
-        this.pushBuffer.push(datum)
+        this.ingestion.pushes.push(datum)
     }
-    if (this.pushBuffer.length > 0) this.scheduleFlush()
+    this.scheduleFlush()
   }
 
   /** Synchronously expose the complete snapshot and all queued live rows. */
   flush(): void {
-    this.flushSnapshot()
-    this.flushPushBuffer()
+    if (!this.connected) return
+    // This also covers callbacks from a history rAF or initial replacement,
+    // where no flush is running yet. Finish their consumer commit first.
+    if (this.delivery !== DeliveryPhase.Idle) {
+      this.delivery = DeliveryPhase.FlushRequested
+      return
+    }
+    const ingestion = this.ingestion
+    this.cancelPending(ingestion)
+    if (!ingestion.history && ingestion.pushes.length === 0) return
+    this.delivery = DeliveryPhase.Publishing
+    try {
+      while (this.connected && this.ingestion === ingestion && ingestion.history)
+        this.emitChunk()
+      if (!this.connected || this.ingestion !== ingestion || ingestion.pushes.length === 0) return
+      const inserts = ingestion.pushes
+      ingestion.pushes = []
+      ingestion.flush = null
+      this.callback({ inserts, bounded: false })
+    } finally {
+      this.finishDelivery(DeliveryPhase.Idle)
+    }
   }
 
   clear(): void {
-    this.generation++
-    this.cancelChunk()
-    this.pendingSnapshot = null
+    const previous = this.ingestion
+    this.ingestion = { history: null, pushes: [], flush: null }
+    this.cancelPending(previous)
     this.lastBoundedData = null
-    this.pushBuffer = []
-    this.flushScheduled = false
   }
 }

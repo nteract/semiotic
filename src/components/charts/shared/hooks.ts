@@ -110,62 +110,18 @@ export function useColorScale(
   return useMemo(() => {
     if (!colorBy) return undefined
     const providerColors = categoryColors ?? undefined
-    // Resolve effective scheme: explicit prop > theme categorical > "category10"
-    const effectiveScheme: string | string[] | Record<string, string> =
-      colorScheme ??
-      (themeCategorical && themeCategorical.length > 0
-        ? themeCategorical
-        : undefined) ??
-      "category10"
-    // When data is empty (push API mode), return undefined so the pipeline's
-    // STREAMING_PALETTE fallback handles coloring. Building a scale from empty
-    // data creates an ordinal scale with an implicit domain that can intercept
-    // the pipeline's color assignment.
-    if (data.length === 0) {
-      // Still use CategoryColorProvider if available — it has stable colors
-      if (hasOwnEnumerableKey(providerColors)) {
-        // Use effectiveScheme as fallback for categories not in the provider
-        const fallbackScale = createColorScale(
-          [{ _: "a" }],
-          "_",
-          effectiveScheme
-        )
-        return (v: string) =>
-          resolveExplicitColor(providerColors, v) ?? fallbackScale(v)
-      }
-      return undefined
-    }
-    // When colorBy is a function, derive categories from data and build an ordinal scale
-    if (typeof colorBy === "function") {
-      const categories = Array.from(
-        new Set(data.map((d) => String(colorBy(d))))
-      )
-      if (hasOwnEnumerableKey(providerColors)) {
-        // Use CategoryColorProvider colors, with effectiveScheme as fallback for unknown categories
-        const syntheticData = categories.map((c) => ({ _cat: c }))
-        const fallbackScale = createColorScale(
-          syntheticData,
-          "_cat",
-          effectiveScheme
-        )
-        return (v: string) =>
-          resolveExplicitColor(providerColors, v) ?? fallbackScale(v)
-      }
-      // Build a synthetic data array so createColorScale can derive unique values
-      const syntheticData = categories.map((c) => ({ _cat: c }))
-      return createColorScale(syntheticData, "_cat", effectiveScheme)
-    }
-    // If a CategoryColorProvider is present, use its color map as the scale
-    if (hasOwnEnumerableKey(providerColors)) {
-      const fallbackScale = createColorScale(
-        data,
-        colorBy as string,
-        effectiveScheme
-      )
-      return (v: string) =>
-        resolveExplicitColor(providerColors, v) ?? fallbackScale(v)
-    }
-    return createColorScale(data, colorBy as string, effectiveScheme)
+    const hasProviderColors = hasOwnEnumerableKey(providerColors)
+    // Empty push-mode data leaves coloring to the pipeline unless a provider
+    // supplies colors. Seed only that provider's scheme fallback.
+    if (!data.length && !hasProviderColors) return undefined
+    const fallbackScale = createColorScale(
+      data.length ? data : [{ _: "a" }],
+      data.length ? colorBy : "_",
+      colorScheme ?? themeCategorical ?? "category10"
+    )
+    return hasProviderColors
+      ? (value: string) => resolveExplicitColor(providerColors, value) ?? fallbackScale(value)
+      : fallbackScale
   }, [data, colorBy, colorScheme, categoryColors, themeCategorical])
 }
 
@@ -314,11 +270,7 @@ export function useChartSelection({
     const field = seriesField
     return {
       isActive: true,
-      predicate: (d: Datum) => {
-        const val =
-          typeof d[field] === "string" ? d[field] : String(d[field] ?? "")
-        return val === key
-      }
+      predicate: (d: Datum) => String(d[field] ?? "") === key
     }
   }, [hoverHighlight, hoveredSeriesKey, seriesField])
 

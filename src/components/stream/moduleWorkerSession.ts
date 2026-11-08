@@ -196,6 +196,8 @@ export class ModuleWorkerSession<TRequest, TResponse> {
       try {
         const wire = this.options.encodeRequest?.(requestId, request)
           ?? { requestId, request }
+        // A caller's encoder can synchronously abort or close this session.
+        if (!this.pending.has(requestId)) return
         this.worker.postMessage(wire)
       } catch (error) {
         this.pending.delete(requestId)

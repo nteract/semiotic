@@ -66,7 +66,7 @@ import { buildOrdinalCategoryIndex } from "./ordinalDataIndex"
 import { OrdinalPipelineUpdateResults } from "./ordinalPipelineUpdateResults"
 import { syncOrdinalPulseTimestampBuffer } from "./ordinalPulseResources"
 import { buildOrdinalPointSpatialIndex } from "./ordinalSpatialIndex"
-import { snapOrdinalIntroTargets } from "./pipelineIntroCancellation"
+import { snapSceneTargets } from "./pipelineSceneTargets"
 // ── OrdinalPipelineStore ───────────────────────────────────────────────
 
 export class OrdinalPipelineStore extends UpdateResultStoreBase {
@@ -1217,37 +1217,7 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
     }
 
     if (rawT >= 1) {
-      for (const node of this.scene) {
-        if (node._targetOpacity !== undefined) {
-          node.style = { ...(node.style || {}), opacity: node._targetOpacity === 0 ? 0 : node._targetOpacity }
-          node._targetOpacity = undefined
-        }
-        if (node.type === "point") {
-          if (node._targetX === undefined && node._targetR === undefined) continue
-          if (node._targetX !== undefined) { node.x = node._targetX; node.y = node._targetY! }
-          if (node._targetR !== undefined) node.r = node._targetR
-          node._targetX = undefined
-          node._targetY = undefined
-          node._targetR = undefined
-        } else if (node.type === "rect") {
-          if (node._targetX === undefined) continue
-          node.x = node._targetX
-          node.y = node._targetY!
-          node.w = node._targetW!
-          node.h = node._targetH!
-          node._targetX = undefined
-          node._targetY = undefined
-          node._targetW = undefined
-          node._targetH = undefined
-        } else if (node.type === "wedge") {
-          if (node._targetStartAngle !== undefined) {
-            node.startAngle = node._targetStartAngle
-            node.endAngle = node._targetEndAngle!
-            node._targetStartAngle = undefined
-            node._targetEndAngle = undefined
-          }
-        }
-      }
+      snapSceneTargets(this.scene)
       // Remove exit nodes
       if (this.exitNodes.length > 0) {
         const exitSet = new Set(this.exitNodes)
@@ -1275,7 +1245,7 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
   cancelIntroAnimation(): void {
     this.prevPositionMap.clear()
     this.activeTransition = null
-    snapOrdinalIntroTargets(this.scene)
+    snapSceneTargets(this.scene)
     this.exitNodes = []
   }
 

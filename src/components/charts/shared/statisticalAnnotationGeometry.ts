@@ -8,6 +8,13 @@ import {
 } from "./leastSquaresRegression"
 import { loess } from "./loess"
 import { projectHeatmapBandComputedValue } from "../../stream/heatmapBandTicks"
+import { distinctCategories } from "./colorUtils"
+
+/** d3 geometry requires numeric coordinates; unmappable values remain gaps. */
+export function projectAnnotationValue(scale: (value: number) => number, value: unknown): number {
+  const px = projectHeatmapBandComputedValue(scale, value)
+  return px == null || !Number.isFinite(px) ? Number.NaN : px
+}
 
 /** Shared browser/server trend fitting and projection. */
 export function trendGeometry(
@@ -24,22 +31,12 @@ export function trendGeometry(
   const ordinal = context.frameType === "ordinal"
   // Fit ordinal (category, value) pairs; context keys describe screen axes.
   if (ordinal && horizontal) [xKey, yKey] = [yKey, xKey]
-  const sx = (value: unknown) => {
-    const px = projectHeatmapBandComputedValue(scaleX, value)
-    return px == null ? Number.NaN : px
-  }
-  const sy = (value: unknown) => {
-    const px = projectHeatmapBandComputedValue(scaleY, value)
-    return px == null ? Number.NaN : px
-  }
+  const sx = (value: unknown) => projectAnnotationValue(scaleX, value)
+  const sy = (value: unknown) => projectAnnotationValue(scaleY, value)
   const band = horizontal ? sy : sx
   const categories = ordinal
     ? (context.scales?.o?.domain().map(String) ??
-      [
-        ...new Set(
-          data.filter((d) => d[xKey] != null).map((d) => String(d[xKey]))
-        )
-      ].sort((a, b) => band(a) - band(b)))
+      distinctCategories(data, xKey).sort((a, b) => band(a) - band(b)))
     : []
   const indices = new Map(categories.map((category, i) => [category, i]))
   const points = regressionPoints(

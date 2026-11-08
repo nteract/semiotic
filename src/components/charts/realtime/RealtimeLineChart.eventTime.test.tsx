@@ -16,6 +16,60 @@ describe("RealtimeLineChart — event-time ingestion", () => {
     cleanup()
   })
 
+  it.each([
+    [false, undefined], [false, 0], [false, 100],
+    [true, undefined], [true, 0], [true, 100]
+  ] as const)("preserves a parent's once-seeded push through Strict Mode replay (aggregate=%s, lateness=%s)", (aggregate, lateness) => {
+    const ref = React.createRef<RealtimeLineChartHandle>()
+    const points = [{ time: 1, value: 10 }, { time: 2, value: 20 }]
+    function SeededChart() {
+      const seeded = React.useRef(false)
+      React.useLayoutEffect(() => {
+        if (seeded.current) return
+        seeded.current = true
+        ref.current!.pushMany(points)
+      }, [])
+      return <RealtimeLineChart ref={ref}
+        eventTime={lateness === undefined ? undefined : { lateness }}
+        aggregate={aggregate ? { size: 10 } : undefined} />
+    }
+    render(<React.StrictMode><SeededChart /></React.StrictMode>)
+    act(() => ref.current!.flush())
+    if (aggregate) expect(ref.current!.getData()).toMatchObject([{ count: 2, value: 15 }])
+    else expect(ref.current!.getData()).toEqual(points)
+    expect(ref.current!.getData()).toHaveLength(aggregate ? 1 : 2)
+  })
+
+  it.each([false, true])("keeps clear in a late-data callback as an ingestion barrier (aggregate=%s)", (aggregate) => {
+    const ref = React.createRef<RealtimeLineChartHandle>()
+    const onObservation = vi.fn((observation: ChartObservation) => {
+      if (observation.type === "late-data") ref.current!.clear()
+    })
+    render(<RealtimeLineChart ref={ref} eventTime={{ lateness: 5 }}
+      aggregate={aggregate ? { size: 100 } : undefined} onObservation={onObservation} />)
+    act(() => ref.current!.pushMany([
+      { time: 100, value: 1 }, { time: 110, value: 2 },
+      { time: 50, value: 3 }, { time: 120, value: 4 }
+    ]))
+    act(() => ref.current!.flush())
+    expect(onObservation).toHaveBeenCalledWith(expect.objectContaining({ type: "late-data" }))
+    expect(ref.current!.getData()).toEqual([])
+    act(() => { ref.current!.push({ time: 1, value: 5 }); ref.current!.flush() })
+    expect(ref.current!.getData()).toMatchObject([{ value: 5 }])
+  })
+
+  it.each([false, true])("drops held rows when controlled data is replaced (aggregate=%s)", (aggregate) => {
+    const ref = React.createRef<RealtimeLineChartHandle>()
+    const chart = (data: Datum[]) => <RealtimeLineChart ref={ref} data={data}
+      eventTime={{ lateness: 100 }} aggregate={aggregate ? { size: 10 } : undefined} />
+    const view = render(chart([{ time: 0, value: 1 }]))
+    act(() => ref.current!.push({ time: 50, value: 999 }))
+    view.rerender(chart([{ time: 200, value: 2 }]))
+    act(() => ref.current!.flush())
+    expect(ref.current!.getData()).toMatchObject([{ value: 2 }])
+    expect(ref.current!.getData()).toHaveLength(1)
+  })
+
   it("releases a large grace-window batch without spreading it into function arguments", () => {
     const ref = React.createRef<RealtimeLineChartHandle>()
     render(

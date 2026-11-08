@@ -57,7 +57,7 @@ export interface EventDropLedgerSnapshot {
   heldBy?: string
 }
 
-function copyRow(row: EventDropLedgerRow): EventDropLedgerRow {
+export function copyEventDropLedgerRow(row: EventDropLedgerRow): EventDropLedgerRow {
   return {
     ...row,
     bySource: Object.fromEntries(
@@ -130,7 +130,7 @@ export class EventDropLedger {
     return this.frontier
   }
   getLedger(): EventDropLedgerRow[] {
-    return Array.from(this.windows.values(), copyRow).sort(
+    return Array.from(this.windows.values(), copyEventDropLedgerRow).sort(
       (a, b) => a.start - b.start
     )
   }
@@ -147,7 +147,7 @@ export class EventDropLedger {
   /** Worker transport visits only rows changed since the previous frame. */
   drainDelta(): EventDropLedgerSnapshot {
     const rows = Array.from(this.changedWindows ?? [], (id) =>
-      copyRow(this.windows.get(id)!)
+      copyEventDropLedgerRow(this.windows.get(id)!)
     )
     this.changedWindows = new Set()
     return this.state(rows)
@@ -215,7 +215,7 @@ export class EventDropLedger {
     for (const row of snapshot.windows) {
       const previous = this.windows.get(row.windowId)
       if (previous) this.openWindows.delete(previous)
-      const restored = copyRow(row)
+      const restored = copyEventDropLedgerRow(row)
       // Source IDs are arbitrary dictionary keys on full restores and deltas.
       Object.setPrototypeOf(restored.bySource, null)
       this.windows.set(row.windowId, restored)
@@ -289,7 +289,7 @@ export class EventDropLedger {
     this.openWindows.delete(row)
     this.pending.push({
       type: "physics-window-close",
-      ...copyRow(row),
+      ...copyEventDropLedgerRow(row),
       watermark: this.value
     })
   }
@@ -348,7 +348,7 @@ export class EventDropLedger {
         windowId,
         accepted: row.accepted,
         late: row.late,
-        bySource: copyRow(row).bySource,
+        bySource: copyEventDropLedgerRow(row).bySource,
         watermark: this.value,
         retractions: 1
       })

@@ -1,8 +1,10 @@
 import * as React from "react"
-import { act, cleanup, fireEvent, render } from "@testing-library/react"
+import { act, cleanup, fireEvent, render, waitFor } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
 import { createFrameScheduler } from "../test-utils/frameScheduler"
+import { RuntimeWorker } from "../test-utils/physicsRuntimeWorker"
+import { PhysicsWorkerSession } from "./PhysicsWorkerClient"
 import StreamPhysicsFrame, {
   type StreamPhysicsFrameHandle
 } from "./StreamPhysicsFrame"
@@ -51,8 +53,67 @@ describe("frame fixed-step execution", () => {
   afterEach(() => {
     cleanup()
     restoreCanvas()
+    vi.restoreAllMocks()
     vi.unstubAllGlobals()
   })
+
+  it.each(["resolve", "reject"] as const)(
+    "keeps the current worker frame pending when a replaced worker request %ss",
+    async (outcome) => {
+      vi.stubGlobal("Worker", RuntimeWorker)
+      const old = Promise.withResolvers<void>()
+      const current = Promise.withResolvers<void>()
+      const originalTick = PhysicsWorkerSession.prototype.tick
+      const initialize = vi.spyOn(PhysicsWorkerSession.prototype, "initFromSnapshot")
+      const tick = vi.spyOn(PhysicsWorkerSession.prototype, "tick")
+        .mockImplementationOnce(async function (this: PhysicsWorkerSession, delta) {
+          const frame = await originalTick.call(this, delta)
+          await old.promise
+          return frame
+        })
+        .mockImplementationOnce(async function (this: PhysicsWorkerSession, delta) {
+          const frame = await originalTick.call(this, delta)
+          await current.promise
+          return frame
+        })
+      const ref = React.createRef<StreamPhysicsFrameHandle>()
+      const execution = vi.fn()
+      const scheduler = createFrameScheduler()
+      const chart = (timeScale: number) => (
+        <StreamPhysicsFrame ref={ref} size={[200, 120]}
+          config={{ ...config, timeScale }} initialSpawns={initialSpawns}
+          simulationExecution="worker" onSimulationExecutionChange={execution}
+          frameScheduler={scheduler.scheduler} />
+      )
+      const view = render(chart(1))
+      await waitFor(() => expect(execution).toHaveBeenLastCalledWith(
+        expect.objectContaining({ execution: "worker" })
+      ))
+      await act(async () => scheduler.flush(0))
+      expect(tick).toHaveBeenCalledTimes(1)
+      view.rerender(chart(2))
+      await waitFor(() => expect(initialize).toHaveBeenCalledTimes(2))
+      await act(async () => { await initialize.mock.results[1].value })
+      await act(async () => scheduler.flush(10))
+      expect(tick).toHaveBeenCalledTimes(2)
+      await act(async () => {
+        if (outcome === "resolve") old.resolve()
+        else old.reject(new Error("Retired worker failed"))
+      })
+      // Resume requests another render while the current frame is in flight.
+      // A retired completion must neither free that slot nor consume its work.
+      await act(async () => ref.current!.resume())
+      await act(async () => scheduler.flush(20))
+      expect(tick).toHaveBeenCalledTimes(2)
+      await act(async () => current.resolve())
+      await act(async () => scheduler.flush(30))
+      expect(tick).toHaveBeenCalledTimes(3)
+      expect(ref.current!.getStore().runtimeState().paused).toBe(false)
+      expect(execution).toHaveBeenLastCalledWith(
+        expect.objectContaining({ execution: "worker" })
+      )
+    }
+  )
 
   it.each(["reduced", "paused", "step", "settle"])(
     "refreshes keyboard positions and descriptions after a %s bounded run",

@@ -20,6 +20,7 @@ import type { ReorderBuffer } from "../../realtime/ReorderBuffer"
 import type { AggregateConfig, AggregatedRealtimeDatum } from "./aggregate"
 import { createReorderBuffer, type EventTimeConfig } from "./eventTime"
 import { readRealtimeTime } from "./realtimeAccessors"
+import { useStableShallow } from "../../stream/useStableShallow"
 
 type IngestionOptions<TDatum extends Datum> = Pick<
   RealtimeLineChartProps<TDatum>,
@@ -50,6 +51,18 @@ export function useRealtimeLineIngestion<TDatum extends Datum>(
   }: IngestionOptions<TDatum>
 ) {
   const aggEnabled = aggregate != null
+  // Clear, replacement and policy changes retire callbacks from the old batch.
+  const ingestionEpoch = useRef(0)
+  const reorderRef = useRef<ReorderBuffer<Datum> | null>(null)
+  const idleAt = useRef<number | null>(null)
+  const previousDataRef = useRef(data)
+  useLayoutEffect(() => {
+    if (Object.is(previousDataRef.current, data)) return
+    previousDataRef.current = data
+    ingestionEpoch.current++
+    reorderRef.current?.clear()
+    idleAt.current = null
+  }, [data])
   const [aggRows, setAggRows] = useState<AggregatedRealtimeDatum[]>([])
   const accRef = useRef<RealtimeAccumulator | null>(null)
   const aggConfigRef = useRef<AggregateConfig | undefined>(aggregate)
@@ -98,29 +111,25 @@ export function useRealtimeLineIngestion<TDatum extends Datum>(
     })
     if (!fired) aggFrame.current = id
   }, [publishAggRows, readAggRows])
-  useEffect(() => cancelAggPublish, [cancelAggPublish])
+  useEffect(
+    () => () => {
+      ingestionEpoch.current++
+      cancelAggPublish()
+    },
+    [cancelAggPublish]
+  )
 
-  // Identity key for the structural config — rebuilding the accumulator is
-  // only required when the windowing itself changes (not stat/band/sigma,
-  // which are re-derived on emit). Percentiles and distinct own extra
+  // Rebuild only when windowing changes; stat/band/sigma are re-derived
+  // on publication. Percentiles and distinct own extra
   // per-bucket state, so they are structural too.
-  const aggKey = aggEnabled
-    ? [
-        aggregate!.window ?? "tumbling",
-        aggregate!.size,
-        aggregate!.hop ?? "",
-        aggregate!.gap ?? "",
-        aggregate!.retain ?? "",
-        (aggregate!.percentiles ?? []).join(","),
-        aggregate!.percentiles?.length || aggregate!.stat?.startsWith("p")
-          ? "quantiles"
-          : "",
-        aggregate!.distinct || aggregate!.stat === "distinct" ? "1" : "0"
-      ].join("|")
-    : ""
+  const windowKind = aggregate?.window ?? "tumbling"
+  const percentiles = useStableShallow(aggregate?.percentiles)
+  const quantiles = !!(percentiles?.length || aggregate?.stat?.startsWith("p"))
+  const distinct = !!(aggregate?.distinct || aggregate?.stat === "distinct")
 
-  // (Re)build the accumulator and seed it from any initial `data` array.
-  useLayoutEffect(() => {
+  // One initializer per structural input change; effect replay retains pushes.
+  const initializeAccumulator = useCallback(() => {
+    ingestionEpoch.current++
     cancelAggPublish()
     aggDirty.current = false
     if (!aggEnabled) {
@@ -143,8 +152,17 @@ export function useRealtimeLineIngestion<TDatum extends Datum>(
       }
     }
     publishAggRows(acc.emit(cfg))
+    // Structural inputs invalidate the initializer; live readout settings stay in refs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    aggKey,
+    windowKind,
+    aggregate?.size,
+    aggregate?.hop,
+    aggregate?.gap,
+    aggregate?.retain,
+    percentiles,
+    quantiles,
+    distinct,
     aggEnabled,
     data,
     timeAccessor,
@@ -153,6 +171,12 @@ export function useRealtimeLineIngestion<TDatum extends Datum>(
     publishAggRows,
     cancelAggPublish
   ])
+  const initializedAccumulator = useRef<typeof initializeAccumulator | null>(null)
+  useLayoutEffect(() => {
+    if (initializedAccumulator.current === initializeAccumulator) return
+    initializedAccumulator.current = initializeAccumulator
+    initializeAccumulator()
+  }, [initializeAccumulator])
 
   useLayoutEffect(() => {
     if (aggEnabled && data == null && accRef.current) {
@@ -186,7 +210,7 @@ export function useRealtimeLineIngestion<TDatum extends Datum>(
 
   // ── Event-time ingestion (opt-in) ──────────────────────────────────────
   const eventTimeEnabled = eventTime != null
-  const reorderRef = useRef<ReorderBuffer<Datum> | null>(null)
+  const latePolicy = eventTime?.latePolicy ?? "drop"
   const eventTimeRef = useRef<EventTimeConfig | undefined>(eventTime)
   const eventTimeEnabledRef = useRef(eventTimeEnabled)
   const onObservationRef = useRef(onObservation)
@@ -197,11 +221,6 @@ export function useRealtimeLineIngestion<TDatum extends Datum>(
     onObservationRef.current = onObservation
     chartIdRef.current = chartId
   })
-  const idleAt = useRef<number | null>(null)
-
-  const etKey = eventTimeEnabled
-    ? `${eventTime!.lateness}|${eventTime!.latePolicy ?? "drop"}|${eventTime!.maxFutureSkew ?? ""}`
-    : ""
 
   // Route released (in-order) events to the aggregator or the frame.
   const routeReleased = useCallback(
@@ -214,6 +233,7 @@ export function useRealtimeLineIngestion<TDatum extends Datum>(
   )
 
   useLayoutEffect(() => {
+    ingestionEpoch.current++
     idleAt.current = null
     // A live config/accessor transition is an asserted ordering boundary:
     // release the old grace-window tail before installing the new policy.
@@ -233,7 +253,14 @@ export function useRealtimeLineIngestion<TDatum extends Datum>(
     reorderRef.current = createReorderBuffer(eventTimeRef.current!, (d) =>
       Number(readRealtimeTime(d, eventAccessor, "time") ?? NaN)
     )
-  }, [etKey, eventTimeEnabled, routeReleased, timeAccessor])
+  }, [
+    eventTime?.lateness,
+    latePolicy,
+    eventTime?.maxFutureSkew,
+    eventTimeEnabled,
+    routeReleased,
+    timeAccessor
+  ])
 
   // Unified ingest: reorder through the grace window (if enabled), emit
   // late-data observations, then route the released events.
@@ -247,6 +274,7 @@ export function useRealtimeLineIngestion<TDatum extends Datum>(
         return
       }
       const released: Datum[] = []
+      const epoch = ingestionEpoch.current
       for (const p of points) {
         const res = rb.push(p)
         if (
@@ -276,6 +304,7 @@ export function useRealtimeLineIngestion<TDatum extends Datum>(
                 chartType: "RealtimeLineChart",
                 chartId: chartIdRef.current
               })
+              if (ingestionEpoch.current !== epoch) return
             }
           }
         }
@@ -333,6 +362,7 @@ export function useRealtimeLineIngestion<TDatum extends Datum>(
           ? []
           : (frameRef.current?.update(id, updater) ?? []),
       clear: () => {
+        ingestionEpoch.current++
         idleAt.current = null
         cancelAggPublish()
         aggDirty.current = false

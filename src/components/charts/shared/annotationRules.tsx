@@ -4,18 +4,18 @@ import type * as React from "react"
 import { cloneElement } from "react"
 import Annotation from "../../Annotation"
 import { packEnclose } from "d3-hierarchy"
-import { area as d3Area, curveLinear, curveMonotoneX, curveMonotoneY, curveStep, curveStepAfter, curveStepBefore, curveBasis, curveCardinal, curveCatmullRom } from "d3-shape"
-import type { CurveFactory } from "d3-shape"
+import { area as d3Area, curveLinear } from "d3-shape"
 import type { AnnotationContext } from "../../realtime/types"
 import type { CurveType } from "../../stream/types"
+import { resolveEnvelopeCurveFactory } from "../../stream/renderers/canvasRenderHelpers"
 import { forecastModel } from "./forecastModel"
-import { trendGeometry } from "./statisticalAnnotationGeometry"
+import { trendGeometry, projectAnnotationValue } from "./statisticalAnnotationGeometry"
 import {
   regressionPoints,
   regressionNumber,
 } from "./leastSquaresRegression"
 import { resolveX, resolveY, resolveAnchoredPosition, isInBounds } from "./annotationResolvers"
-import { projectHeatmapBandBound, projectHeatmapBandComputedValue } from "../../stream/heatmapBandTicks"
+import { projectHeatmapBandBound } from "../../stream/heatmapBandTicks"
 import type { Datum } from "./datumTypes"
 import { getMinMax } from "./minMax"
 import { annotationActivationProps, type AnnotationActivationOptions } from "./annotationActivation"
@@ -30,26 +30,6 @@ export {
   renderAnnotationPassWithResult,
   type AnnotationRule,
 } from "./annotationDispatch"
-
-// `"natural"` is a valid CurveType but unsupported here — Partial<Record<...>>
-// keeps that an intentional omission rather than a required-but-missing key,
-// while still catching a typo'd key against the real CurveType union.
-function dataScale(scale: (value: number) => number, value: unknown): number {
-  const px = projectHeatmapBandComputedValue(scale, value)
-  return px == null || !Number.isFinite(px) ? Number.NaN : px
-}
-
-const CURVE_FACTORIES: Partial<Record<CurveType, CurveFactory>> = {
-  linear: curveLinear,
-  monotoneX: curveMonotoneX,
-  monotoneY: curveMonotoneY,
-  step: curveStep,
-  stepAfter: curveStepAfter,
-  stepBefore: curveStepBefore,
-  basis: curveBasis,
-  cardinal: curveCardinal,
-  catmullRom: curveCatmullRom,
-}
 
 // ── Default annotation rules factory ──────────────────────────────────
 
@@ -129,8 +109,8 @@ export function createDefaultAnnotationRules(
       case "enclose": {
         const coords = (ann.coordinates || [])
           .map((c: Datum) => ({
-            x: resolveX({ ...c, type: "point" }, context),
-            y: resolveY({ ...c, type: "point" }, context),
+            x: resolveX(c, context),
+            y: resolveY(c, context),
             r: 1
           }))
           .filter(
@@ -171,8 +151,8 @@ export function createDefaultAnnotationRules(
       case "rect-enclose": {
         const coords = (ann.coordinates || [])
           .map((c: Datum) => ({
-            x: resolveX({ ...c, type: "point" }, context),
-            y: resolveY({ ...c, type: "point" }, context)
+            x: resolveX(c, context),
+            y: resolveY(c, context)
           }))
           .filter(
             (c: { x: number | null; y: number | null }) =>
@@ -180,10 +160,8 @@ export function createDefaultAnnotationRules(
           ) as { x: number; y: number }[]
         if (coords.length < 2) return null
         const padding = ann.padding ?? 10
-        const xs = coords.map((c) => c.x)
-        const ys = coords.map((c) => c.y)
-        const [rawMinX, rawMaxX] = getMinMax(xs)
-        const [rawMinY, rawMaxY] = getMinMax(ys)
+        const [rawMinX, rawMaxX] = getMinMax(coords, (c) => c.x)
+        const [rawMinY, rawMaxY] = getMinMax(coords, (c) => c.y)
         const minX = rawMinX - padding
         const maxX = rawMaxX + padding
         const minY = rawMinY - padding
@@ -405,8 +383,8 @@ export function createDefaultAnnotationRules(
         const rawX = context.scales?.x ?? context.scales?.time
         const rawY = context.scales?.y ?? context.scales?.value
         if (!rawX || !rawY) return null
-        const scaleX = (value: unknown) => dataScale(rawX, value)
-        const scaleY = (value: unknown) => dataScale(rawY, value)
+        const scaleX = (value: unknown) => projectAnnotationValue(rawX, value)
+        const scaleY = (value: unknown) => projectAnnotationValue(rawY, value)
 
         const upperAcc = ann.upperAccessor || "upperBounds"
         const lowerAcc = ann.lowerAccessor || "lowerBounds"
@@ -423,7 +401,7 @@ export function createDefaultAnnotationRules(
         if (bounded.length < 2) return null
 
         // Build envelope area using d3-shape area generator with curve interpolation
-        const curveFn = CURVE_FACTORIES[(context.curve || "linear") as CurveType] || curveLinear
+        const curveFn = resolveEnvelopeCurveFactory(context.curve as CurveType) ?? curveLinear
         const envelopeArea = d3Area<Datum>()
           .x((d) => scaleX(d[xAcc]))
           .y0((d) => scaleY(d[lowerAcc]))
@@ -463,7 +441,7 @@ export function createDefaultAnnotationRules(
         const rawX = context.scales?.x ?? context.scales?.time
         const rawY = context.scales?.y ?? context.scales?.value
         if (!rawX || !rawY) return null
-        const scaleY = (value: unknown) => dataScale(rawY, value)
+        const scaleY = (value: unknown) => projectAnnotationValue(rawY, value)
 
         const yValues = data
           .map((d) => regressionNumber(d[yAcc]))
@@ -546,8 +524,8 @@ export function createDefaultAnnotationRules(
         const rawX = context.scales?.x ?? context.scales?.time
         const rawY = context.scales?.y ?? context.scales?.value
         if (!rawX || !rawY) return null
-        const scaleX = (value: unknown) => dataScale(rawX, value)
-        const scaleY = (value: unknown) => dataScale(rawY, value)
+        const scaleX = (value: unknown) => projectAnnotationValue(rawX, value)
+        const scaleY = (value: unknown) => projectAnnotationValue(rawY, value)
 
         const points = regressionPoints(data.map((d) => [d[xAcc], d[yAcc]]))
         const model = forecastModel(points, ann)

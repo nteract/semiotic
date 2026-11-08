@@ -5,6 +5,16 @@ import type {
 import type { PhysicsWorkerSession } from "./PhysicsWorkerClient"
 import type { PhysicsWorkerFrame } from "./PhysicsWorkerProtocol"
 
+/** A run owns its transport and in-flight frame; replacing it revokes both. */
+export type PhysicsWorkerExecution =
+  | { phase: "sync" | "failed" }
+  | { phase: "starting"; session: PhysicsWorkerSession | null }
+  | {
+      phase: "active"
+      session: PhysicsWorkerSession
+      pending: { renderRequested: boolean } | null
+    }
+
 /**
  * Startup is asynchronous: pause, visibility, pushes and restores can happen
  * while the worker initializes. Never overwrite those newer host mutations

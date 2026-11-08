@@ -33,6 +33,7 @@ type FailureEvents = {
  * lifetime. A Worker's `error` or a port's `messageerror` rejects every
  * pending request with `REVISION_WORKER_FAILED`, so a controller keeps its
  * accepted layout instead of waiting for a response that cannot arrive.
+ * Transport failure is terminal; recovery requires a new port and engine.
  */
 export function createCompositionalWorkerEngine(
   port: CompositionalWorkerPort,
@@ -50,7 +51,8 @@ export function createCompositionalWorkerEngine(
     }
   >()
   const usedRequestIds = new Set<string>()
-  let disposed = false
+  // Null accepts requests; an error owns the terminal reason for every caller.
+  let closed: Error | null = null
   const cancelRemote = (requestId: string) => {
     try {
       port.postMessage({ type: "cancel", requestId })
@@ -68,11 +70,14 @@ export function createCompositionalWorkerEngine(
     else entry.reject(new Error(data.message))
   }
   const failAll = (message: string) => {
+    if (closed) return
+    closed = new Error(`REVISION_WORKER_FAILED: ${message}`)
     for (const entry of pending.values()) {
       entry.clean()
-      entry.reject(new Error(`REVISION_WORKER_FAILED: ${message}`))
+      entry.reject(closed)
     }
     pending.clear()
+    usedRequestIds.clear()
   }
   // Ports without these events never deliver them; a port that ignores the
   // event type delivers messages here, which carry no failure type.
@@ -90,8 +95,8 @@ export function createCompositionalWorkerEngine(
     ...engine,
     layout(request, signal) {
       return new Promise((resolve, reject) => {
-        if (disposed || signal?.aborted) {
-          reject(new Error("REVISION_CANCELLED"))
+        if (closed || signal?.aborted) {
+          reject(closed ?? new Error("REVISION_CANCELLED"))
           return
         }
         if (usedRequestIds.has(request.requestId)) {
@@ -125,7 +130,7 @@ export function createCompositionalWorkerEngine(
       })
     },
     dispose() {
-      disposed = true
+      closed = new Error("REVISION_CANCELLED")
       port.removeEventListener("message", onMessage)
       failures.removeEventListener?.("error", onFailure)
       failures.removeEventListener?.("messageerror", onFailure)

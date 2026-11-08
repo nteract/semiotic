@@ -23,6 +23,12 @@ import type { CurveFactory } from "d3-shape"
  * "use linear fallback" sentinel instead of a separate has-curve check.
  */
 export function resolveCurveFactory(curve: CurveType | undefined): CurveFactory | null {
+  return curve === "natural" ? curveNatural : resolveEnvelopeCurveFactory(curve)
+}
+
+/** Envelopes use a linear fallback for natural curves. Keep that algorithm
+ * outside this resolver so annotation-only consumers can discard it. */
+export function resolveEnvelopeCurveFactory(curve: CurveType | undefined): CurveFactory | null {
   switch (curve) {
     case "monotoneX": return curveMonotoneX
     case "monotoneY": return curveMonotoneY
@@ -32,7 +38,6 @@ export function resolveCurveFactory(curve: CurveType | undefined): CurveFactory 
     case "stepBefore": return curveStepBefore
     case "stepAfter": return curveStepAfter
     case "basis": return curveBasis
-    case "natural": return curveNatural
     case "linear":
     case undefined:
       return null

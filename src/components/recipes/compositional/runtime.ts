@@ -111,8 +111,7 @@ export async function layoutCompositionalGraph(
 
 /** One accepted scene transaction; stale success/failure cannot replace newer work. */
 export class CompositionalLayoutController {
-  private generation = 0
-  private abort: AbortController | undefined
+  private active: AbortController | null = null
   private accepted: SolvedCompositionalLayout | undefined
   private currentDiagnostics: readonly Diagnostic[] = []
   get solution(): SolvedCompositionalLayout | undefined {
@@ -127,24 +126,26 @@ export class CompositionalLayoutController {
     request: LayoutRequest,
     engine: AsyncLayoutEngine = compositionalDagEngine
   ): Promise<boolean> {
-    this.abort?.abort()
-    const abort = new AbortController(),
-      generation = ++this.generation
-    this.abort = abort
+    const previous = this.active
+    const abort = new AbortController()
+    this.active = abort
     this.updating = true
+    // Engines may start another solve from their synchronous abort listener.
+    previous?.abort()
+    if (this.active !== abort) return false
     try {
       const result = await layoutCompositionalGraph(
         request,
         engine,
         abort.signal
       )
-      if (generation !== this.generation) return false
+      if (this.active !== abort) return false
       this.currentDiagnostics = result.diagnostics
       if (result.status === "infeasible") return false
       this.accepted = result
       return true
     } catch (error) {
-      if (generation === this.generation)
+      if (this.active === abort)
         this.currentDiagnostics = [
           {
             code: "REVISION_SOLVE_FAILED",
@@ -154,17 +155,21 @@ export class CompositionalLayoutController {
         ]
       return false
     } finally {
-      if (generation === this.generation) this.updating = false
+      if (this.active === abort) {
+        this.active = null
+        this.updating = false
+      }
     }
   }
   cancel(): void {
-    this.generation++
-    this.abort?.abort()
+    const previous = this.active
+    this.active = null
     this.updating = false
+    previous?.abort()
   }
   dispose(): void {
-    this.cancel()
     this.accepted = undefined
     this.currentDiagnostics = []
+    this.cancel()
   }
 }

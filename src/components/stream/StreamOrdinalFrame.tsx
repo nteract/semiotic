@@ -484,7 +484,6 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       dirtyRef,
       hydrated,
       wasHydratingFromSSR,
-      cleanup: () => adapterRef.current?.clear(),
       maxDevicePixelRatio,
       canvasPaintDependencies: [chartType, adjustedWidth, adjustedHeight, showAxes, background, backgroundGraphics, renderMode, scheduleRender],
     })
