@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Keep the compact legend and caption readable in narrow chart containers by
+  separating the caption baseline from the series labels.
 - Keep XY and ordinal scene-store configuration separate from React's memoized
   props so clearing visual selection does not trigger an unnecessary custom-layout run.
 - Preserve replacement network layouts started by legend-category callbacks during

@@ -545,7 +545,12 @@ source marker on each new root bullet, including a continuation line if useful:
 An HTTPS issue/PR, public RFC, or meaningful consumer reference also works:
 `[source: https://example.org/public-context]`. `maintainer` is an honest origin
 statement, not a default to insert automatically. Nested bullets describe their
-parent; they do not supply the parent's attribution.
+parent; they do not supply the parent's attribution. Code spans, fenced or
+indented examples, and HTML comments also cannot supply attribution. Use ATX
+headings (`## [version]`, `### Added`) and Markdown root list items (up to three
+leading spaces); align continuation paragraphs to the item's text. The checker
+rejects unsupported prose/HTML/blockquote blocks in adopted Added sections and
+unclosed fences/comments instead of silently skipping potential entries.
 
 Run `npm run check:changelog-provenance -- --base-ref <explicit-base-sha>` for
 PR changes. Missing refs/history fail with a diagnostic; fetch the base first.
@@ -591,13 +596,17 @@ package version and chooses the npm dist-tag:
 
 | Version | npm dist-tag |
 | --- | --- |
-| Stable, such as `3.14.0` or `3.14.0+build.1` | `latest` |
+| Stable, such as `3.14.0` | `latest` |
 | `alpha`, `beta`, or `rc` prerelease, such as `3.14.0-rc.1` | `beta` |
 | `next` prerelease, such as `3.14.0-next.1` | `next` |
 
 The first prerelease identifier must match one of those names exactly;
 unsupported channels (including `nextish`) and malformed versions fail before
-authentication or expensive jobs. Build metadata does not change the channel.
+authentication or expensive jobs. Build metadata does not change SemVer channel
+classification, and metadata tools preserve it literally. However, **publication
+rejects `+build` versions**: [npm strips build metadata before publishing](https://github.com/npm/cli/blob/v11.6.2/workspaces/libnpmpublish/lib/publish.js),
+which would break the exact version identity shared by the tag, tarball,
+registry, and deployment. Choose a version without build metadata for a release.
 Both initial tag validation and publish output selection use the workflow
 revision's helper against the selected tag's `package.json`, including manual
 recovery of older tags. Only `latest` enables the stable deployment and Registry

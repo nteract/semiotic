@@ -7,51 +7,187 @@ export const adoptionMarker =
   "<!-- added-provenance: v1; released-through: 3.13.3 -->"
 type Entry = { release: string; category: string; line: number; text: string }
 
-// Parse headings and root list items, retaining continuation lines but keeping
-// nested details from supplying provenance for their parent. Ignore fenced code.
+type ListItem = { contentIndent: number }
+type Fence = { delimiter: string; containerIndent: number; line: number }
+
+// This is a source-only parser for the changelog's Markdown block convention,
+// not a Markdown renderer. List indentation is relative to the item's content
+// column (including ordered markers). Unsupported prose fails closed in Added.
 export function parseChangelog(source: string): Entry[] {
   const entries: Entry[] = []
   let release = "",
     category = "",
     entry: Entry | undefined
-  let fence: string | undefined
-  let nested = false
-  for (const [index, line] of source.split(/\r?\n/).entries()) {
-    const delimiter = line.match(/^\s{0,3}(`{3,}|~{3,})/)
-    if (delimiter) {
-      if (!fence) fence = delimiter[1][0]
-      else if (delimiter[1][0] === fence) fence = undefined
-      continue
-    }
-    if (fence) continue
-    const heading = line.match(/^(#{1,6})\s+(.+?)\s*#*$/)
-    if (heading) {
-      entry = undefined
-      if (heading[1].length <= 2) {
-        release = heading[2].match(/^\[([^\]]+)\]/)?.[1] ?? ""
-        category = ""
-      } else if (heading[1].length === 3) category = heading[2]
-      continue
-    }
-    if (/^(?:[-+*]|\d+[.)])\s+/.test(line)) {
-      nested = false
-      entry = {
-        release,
-        category,
-        line: index + 1,
-        text: line.replace(/^(?:[-+*]|\d+[.)])\s+/, "")
+  let fence: Fence | undefined
+  const items: ListItem[] = []
+  let paragraph: "root" | "nested" | undefined
+  let comment = false
+  const fail = (line: number, reason: string) => {
+    throw new Error(`CHANGELOG.md:${line}: ${reason}`)
+  }
+  for (const [index, raw] of source.split(/\r?\n/).entries()) {
+    // Markdown tabs advance to the next four-column stop.
+    let column = 0
+    let line = raw.replace(/[^\t]|\t/g, (character) => {
+      const width = character === "\t" ? 4 - (column % 4) : 1
+      column += width
+      return character === "\t" ? " ".repeat(width) : character
+    })
+    const indent = line.length - line.trimStart().length
+    if (fence) {
+      // A fence inside a list ends with its containing item on dedent, even
+      // without a closing delimiter. It must not swallow the next root bullet.
+      if (line.trim() && indent < fence.containerIndent) fence = undefined
+      else {
+        const close = line
+          .slice(fence.containerIndent)
+          .match(/^ {0,3}(`{3,}|~{3,})[ \t]*$/)
+        if (
+          close &&
+          close[1][0] === fence.delimiter[0] &&
+          close[1].length >= fence.delimiter.length
+        )
+          fence = undefined
+        continue
       }
-      entries.push(entry)
-    } else if (/^\s+(?:[-+*]|\d+[.)])\s/.test(line)) {
-      nested = true
-    } else if (entry && /^ {2}\S/.test(line)) {
-      nested = false
+    }
+    // A block comment outside the list terminates its container, just like a
+    // heading or fence. Do this before discarding its text.
+    if (line.trim() && !comment)
+      while (items.length && indent < items.at(-1)!.contentIndent) items.pop()
+    // Comments are not attribution and cannot introduce headings or list items.
+    line = line.replace(/<!--[\s\S]*?-->/g, "")
+    if (comment) {
+      const end = line.indexOf("-->")
+      if (end < 0) continue
+      line = line.slice(end + 3)
+      comment = false
+    }
+    const start = line.indexOf("<!--")
+    if (start >= 0) {
+      line = line.slice(0, start)
+      comment = true
+    }
+    if (!line.trim()) {
+      paragraph = undefined
+      continue
+    }
+
+    while (items.length && indent < items.at(-1)!.contentIndent) items.pop()
+    const containerIndent = items.at(-1)?.contentIndent ?? 0
+    const relative = line.slice(containerIndent)
+    const opening = relative.match(/^ {0,3}(`{3,}|~{3,})(.*)$/)
+    if (opening && !(opening[1][0] === "`" && opening[2].includes("`"))) {
+      fence = { delimiter: opening[1], containerIndent, line: index + 1 }
+      paragraph = undefined
+      continue
+    }
+    // Indented code cannot provide provenance, including code within a list.
+    if (indent >= containerIndent + 4) {
+      paragraph = undefined
+      continue
+    }
+    const heading = relative.match(/^ {0,3}(#{1,6})(?:[ \t]+(.*?)|$)$/)
+    if (heading) {
+      paragraph = undefined
+      if (items.length) continue // A heading inside a list is only a detail.
+      entry = undefined
+      const title = (heading[2] ?? "").replace(/[ \t]+#+[ \t]*$/, "").trim()
+      if (heading[1].length <= 2) {
+        release = title.match(/^\[([^\]]+)\]/)?.[1] ?? ""
+        category = ""
+      } else if (heading[1].length === 3) category = title
+      continue
+    }
+    // A thematic break terminates the list; it is not an empty Added bullet.
+    if (/^ {0,3}(?:(?:\* *){3,}|(?:- *){3,}|(?:_ *){3,})$/.test(relative)) {
+      if (!items.length) entry = undefined
+      paragraph = undefined
+      continue
+    }
+    const bullet = relative.match(/^( {0,3})([-+*]|\d{1,9}[.)])( +|$)(.*)$/)
+    if (bullet) {
+      const padding = bullet[3].length
+      const contentIndent =
+        containerIndent +
+        bullet[1].length +
+        bullet[2].length +
+        (padding > 0 && padding <= 4 && bullet[4] ? padding : 1)
+      if (!items.length) {
+        entry = { release, category, line: index + 1, text: "" }
+        entries.push(entry)
+      }
+      items.push({ contentIndent })
+      const text = line.slice(contentIndent)
+      const inlineFence = text.match(/^ {0,3}(`{3,}|~{3,})(.*)$/)
+      if (
+        inlineFence &&
+        !(inlineFence[1][0] === "`" && inlineFence[2].includes("`"))
+      ) {
+        fence = {
+          delimiter: inlineFence[1],
+          containerIndent: contentIndent,
+          line: index + 1
+        }
+        paragraph = undefined
+      } else {
+        if (
+          category === "Added" &&
+          eligible(release) &&
+          /^(?:>|<|#{1,6}(?:\s|$)|(?:[-+*]|\d{1,9}[.)])(?:\s|$)|\[[^\]]+\]:)/.test(
+            text
+          )
+        )
+          fail(
+            index + 1,
+            "unsupported list-item block in Added; start with a plain-text description"
+          )
+        paragraph =
+          padding <= 4 ? (items.length === 1 ? "root" : "nested") : undefined
+        if (items.length === 1 && paragraph) entry!.text = text
+      }
+      continue
+    }
+    // Block quotes, HTML, and link definitions may contain example markers.
+    // Require plain paragraph provenance instead of interpreting these blocks.
+    if (/^ {0,3}(?:>|<|\[[^\]]+\]:)/.test(relative)) {
+      if (category === "Added" && eligible(release))
+        fail(
+          index + 1,
+          "unsupported block in Added; use a root bullet with plain-text provenance and fenced code for examples"
+        )
+      paragraph = undefined
+      continue
+    }
+    if (paragraph === "nested") continue // Lazy nested continuation, even after dedent.
+    if (entry && items.length === 1) {
+      entry.text += ` ${relative.trim()}`
+      paragraph = "root"
+    } else if (entry && !items.length && paragraph) {
+      // Lazy continuation of the root paragraph; a nested paragraph must never
+      // supply its parent's source, so only resume when its container was root.
       entry.text += ` ${line.trim()}`
-    } else if (entry && !nested && /^ {2,}\S/.test(line)) {
-      entry.text += ` ${line.trim()}`
+    } else if (
+      !items.length &&
+      eligible(release) &&
+      (category === "Added" || line.trim() === "Added")
+    ) {
+      fail(
+        index + 1,
+        "unsupported content in Added; use root list items under ### Added"
+      )
     }
   }
+  if (fence) fail(fence.line, "unclosed code fence in changelog")
+  if (comment)
+    fail(source.split(/\r?\n/).length, "unclosed HTML comment in changelog")
   return entries
+}
+
+// Code spans are examples, even when they contain a syntactically valid marker.
+// Delimiters must have equal lengths; shorter runs are literal span content.
+function prose(text: string) {
+  return text.replace(/(?<!`)(`+)([\s\S]*?)(?<!`)\1(?!`)/g, "")
 }
 
 function identity(entry: Entry) {
@@ -73,15 +209,23 @@ export function checkProvenance(source: string, base?: string): string[] {
   const errors: string[] = []
   if (!source.split(/\r?\n/).includes(adoptionMarker))
     return ["CHANGELOG.md:1: missing or malformed provenance adoption marker"]
+  let entries: Entry[], previousEntries: Entry[]
+  try {
+    entries = parseChangelog(source)
+    previousEntries = base?.split(/\r?\n/).includes(adoptionMarker)
+      ? parseChangelog(base)
+      : []
+  } catch (error) {
+    return [(error as Error).message]
+  }
   const previous = new Map<string, number>()
   // Only a base which already adopted the convention may exempt unchanged items.
   // This prevents a PR targeting pre-adoption source from bypassing the new rule.
-  if (base?.includes(adoptionMarker))
-    for (const entry of parseChangelog(base)) {
-      if (entry.category === "Added" && eligible(entry.release))
-        previous.set(identity(entry), (previous.get(identity(entry)) ?? 0) + 1)
-    }
-  for (const entry of parseChangelog(source)) {
+  for (const entry of previousEntries) {
+    if (entry.category === "Added" && eligible(entry.release))
+      previous.set(identity(entry), (previous.get(identity(entry)) ?? 0) + 1)
+  }
+  for (const entry of entries) {
     if (entry.category !== "Added" || !eligible(entry.release)) continue
     const key = identity(entry),
       count = previous.get(key) ?? 0
@@ -89,7 +233,8 @@ export function checkProvenance(source: string, base?: string): string[] {
       previous.set(key, count - 1)
       continue
     }
-    const markers = [...entry.text.matchAll(/\[source:\s*([^\]]*)\]/g)]
+    const attribution = prose(entry.text)
+    const markers = [...attribution.matchAll(/\[source:\s*([^\]]*)\]/g)]
     const value = markers[0]?.[1].trim() ?? ""
     const valid =
       /^(?:#[1-9]\d*|https:\/\/\S+|rfcs\/[\w/-]+\.md|maintainer)$/.test(
@@ -97,7 +242,7 @@ export function checkProvenance(source: string, base?: string): string[] {
       ) || /^consumer:\s*\S.{11,}$/.test(value)
     if (
       markers.length !== 1 ||
-      (entry.text.match(/\[source\b/gi)?.length ?? 0) !== 1 ||
+      (attribution.match(/\[source\b/gi)?.length ?? 0) !== 1 ||
       !valid
     )
       errors.push(

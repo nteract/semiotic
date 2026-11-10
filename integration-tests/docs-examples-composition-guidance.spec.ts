@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test"
 import type { Locator, Page } from "@playwright/test"
 
 async function hoverCenter(page: Page, mark: Locator) {
-  await mark.scrollIntoViewIfNeeded()
+  await expect(mark).toBeVisible()
   const box = await mark.boundingBox()
   expect(box).not.toBeNull()
   await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2)
@@ -54,13 +54,18 @@ test("HTML card hover changes selection, keeps geometry, and survives resize", a
   await page.mouse.move(0, 0)
   await expect(tooltip).toHaveCount(0)
   await expect(payments).toHaveCSS("opacity", "1")
-  await page.setViewportSize({ width: 1000, height: 800 })
-  await hoverCenter(page, payments)
-  await expectPlacedTooltip(page, tooltip, "gRPC · 480 rps")
-  await expect(orders).toHaveCSS("opacity", "0.25")
-  await page.mouse.move(0, 0)
-  await expect(tooltip).toHaveCount(0)
-  await expect(orders).toHaveCSS("opacity", "1")
+  for (const width of [1000, 375]) {
+    await page.setViewportSize({ width, height: 800 })
+    // Resize reflows this long page and may cull offscreen HTML marks. Scroll
+    // the persistent chart container before resolving a virtualized card.
+    await demo.scrollIntoViewIfNeeded()
+    await hoverCenter(page, payments)
+    await expectPlacedTooltip(page, tooltip, "gRPC · 480 rps")
+    await expect(orders).toHaveCSS("opacity", "0.25")
+    await page.mouse.move(0, 0)
+    await expect(tooltip).toHaveCount(0)
+    await expect(orders).toHaveCSS("opacity", "1")
+  }
   // Hover a visible edge in the gap between cards, after the responsive resize.
   const inventory = await demo
     .locator('[data-service-card="inventory"]')
@@ -116,7 +121,7 @@ test("parallel-coordinate hover dims other vehicles without moving axes", async 
           ).data[3]
       }, mpg)
   }
-  for (const width of [1280, 1000]) {
+  for (const width of [1280, 1000, 375]) {
     await page.setViewportSize({ width, height: 900 })
     await demo.scrollIntoViewIfNeeded()
     await expect.poll(evAlpha).toBeGreaterThan(200)
@@ -142,10 +147,11 @@ test("the compact text row stays inside the chart and below its plot after resiz
 }, testInfo) => {
   await page.goto("/annotations/overview")
   const chart = page.getByTestId("compact-caption-chart")
-  for (const width of [1280, 1000]) {
+  for (const width of [1280, 1000, 375]) {
     await page.setViewportSize({ width, height: 900 })
     await chart.scrollIntoViewIfNeeded()
     const labels = ["Direct: 34", "Partner: 21", "Week 4 · 55 orders"]
+    const boxes = []
     for (const label of labels) {
       const text = chart.locator("svg text").filter({ hasText: label })
       await expect(text).toBeVisible()
@@ -157,12 +163,24 @@ test("the compact text row stays inside the chart and below its plot after resiz
             return (
               row.left >= svg.left &&
               row.right <= svg.right &&
-              row.top > svg.bottom - 68 &&
+              row.top > svg.bottom - 86 &&
               row.bottom <= svg.bottom
             )
           })
         )
         .toBe(true)
+      boxes.push((await text.boundingBox())!)
+    }
+    for (let i = 0; i < boxes.length; i++) {
+      for (const other of boxes.slice(i + 1)) {
+        const box = boxes[i]
+        expect(
+          box.x + box.width <= other.x ||
+            other.x + other.width <= box.x ||
+            box.y + box.height <= other.y ||
+            other.y + other.height <= box.y
+        ).toBe(true)
+      }
     }
     await chart.screenshot({
       path: testInfo.outputPath(`caption-${width}.png`)
