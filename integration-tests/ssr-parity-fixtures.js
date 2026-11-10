@@ -1,3 +1,28 @@
+// Portable seeds are shared with source-renderer contracts. See
+// consumer-contracts/manifest.json for provenance and behavioral expectations.
+// The Vite adapter converts these static JSON requires into imports.
+const consumerSeed0 = require("../consumer-contracts/fixtures/bar-axis-exact.json")
+const consumerSeed1 = require("../consumer-contracts/fixtures/line-mixed-area.json")
+const consumerSeed2 = require("../consumer-contracts/fixtures/area-semantic-gradient.json")
+const consumerSeed3 = require("../consumer-contracts/fixtures/line-band.json")
+const consumerSeed4 = require("../consumer-contracts/fixtures/pie-start-angle.json")
+const consumerSeed5 = require("../consumer-contracts/fixtures/donut-start-angle.json")
+const consumerSeed6 = require("../consumer-contracts/fixtures/swimlane-value-extent.json")
+const consumerSeed7 = require("../consumer-contracts/fixtures/line-vertical-bands.json")
+const consumerSeed8 = require("../consumer-contracts/fixtures/line-bottom-legend-axis-gutter.json")
+
+const consumerSeeds = {
+  "bar-axis-exact": consumerSeed0,
+  "line-mixed-area": consumerSeed1,
+  "area-semantic-gradient": consumerSeed2,
+  "line-band": consumerSeed3,
+  "pie-start-angle": consumerSeed4,
+  "donut-start-angle": consumerSeed5,
+  "swimlane-value-extent": consumerSeed6,
+  "line-vertical-bands": consumerSeed7,
+  "line-bottom-legend-axis-gutter": consumerSeed8,
+}
+
 // Shared SSR/CSR parity fixtures.
 //
 // The Playwright spec uses these props for `renderChart(component, props)`;
@@ -959,11 +984,6 @@ function makeGeoIsotypeLayout(React, recipes) {
 // ── SSR-fix regression fixtures data ───────────────────────────────────
 // Non-round maxima (47) so axisExtent "nice" vs "exact" produce a visibly
 // different domain + tick set.
-const axisExactBarData = [
-  { region: "AMER", value: 47 },
-  { region: "EMEA", value: 23 },
-  { region: "APAC", value: 31 },
-]
 const axisExactLineData = [
   { x: 3, y: 47 },
   { x: 17, y: 23 },
@@ -978,33 +998,8 @@ const symbolScatterData = [
   { x: 4, y: 9, kind: "Comms" },
   { x: 5, y: 6, kind: "Weather" },
 ]
-// Wide-form composed series melted to long form: one "area" series + one
-// "line" series on a single LineChart (the ComposedChart mixed shape).
-const mixedAreaData = [
-  { step: 1, value: 400, series: "Volume" }, { step: 1, value: 24, series: "Latency" },
-  { step: 2, value: 300, series: "Volume" }, { step: 2, value: 13, series: "Latency" },
-  { step: 3, value: 600, series: "Volume" }, { step: 3, value: 38, series: "Latency" },
-  { step: 4, value: 800, series: "Volume" }, { step: 4, value: 43, series: "Latency" },
-]
 // AreaChart value ramp exercised with a value-anchored semanticGradient.
-const semanticAreaData = [
-  { time: 0, value: 10 }, { time: 1, value: 45 }, { time: 2, value: 62 },
-  { time: 3, value: 80 }, { time: 4, value: 95 },
-]
-// LineChart band: per-series low/high envelope, curved.
-const bandLineData = [
-  { time: 0, value: 10, series: "A", low: 5, high: 15 },
-  { time: 1, value: 25, series: "A", low: 18, high: 32 },
-  { time: 2, value: 18, series: "A", low: 12, high: 24 },
-  { time: 3, value: 30, series: "A", low: 22, high: 38 },
-  { time: 0, value: 15, series: "B", low: 8, high: 22 },
-  { time: 1, value: 12, series: "B", low: 5, high: 20 },
-  { time: 2, value: 28, series: "B", low: 20, high: 35 },
-  { time: 3, value: 20, series: "B", low: 12, high: 28 },
-]
-// Single-lane / single-segment quota exercised against a pinned value axis:
-// the segment (40) is well under the extent max (100) so it must fill ~40%.
-const valueExtentBarData = [{ lane: "capacity", phase: "used", value: 40 }]
+const semanticAreaData = consumerSeeds["area-semantic-gradient"].props.data
 // Range/dumbbell: high/low only (no open/close) → CandlestickChart range mode.
 const rangeData = [
   { t: 1, high: 80, low: 40 },
@@ -1028,12 +1023,6 @@ const rangeMiddleData = [
 const hatchBarData = [
   { lane: "capacity", phase: "used", value: 55 },
   { lane: "capacity", phase: "reserved", value: 25 },
-]
-// A settling series annotated with a vertical band (an era/phase region) and a
-// vertical threshold line + label — the native x-band / x-threshold types.
-const verticalBandData = [
-  { x: 0, y: 12 }, { x: 1, y: 17 }, { x: 2, y: 15 }, { x: 3, y: 8 },
-  { x: 4, y: 3 }, { x: 5, y: 4 }, { x: 6, y: 3 }, { x: 7, y: 4 },
 ]
 // Hierarchy whose leaves carry a categorical `tier`, so `colorBy` must paint
 // distinct tiles and `labelMode:"all"` must label every tier.
@@ -1878,20 +1867,7 @@ function makeSsrParityCases(React, recipes = {}) {
     // (renderChart) path. Structural SSR assertions live in
     // assertSsrFixEvidence() in the spec; the screenshots guard CSR/SSR
     // parity. See project memory: SSR gradientFill/axisExtent/HOC-prop gaps.
-    {
-      // Ordinal axisExtent:"exact" — value-axis domain + ticks pin to data max.
-      id: "bar-axis-exact",
-      component: "BarChart",
-      props: {
-        data: axisExactBarData,
-        categoryAccessor: "region",
-        valueAccessor: "value",
-        axisExtent: "exact",
-        showGrid: true,
-        width: 400,
-        height: 220,
-      },
-    },
+    { id: "bar-axis-exact", ...structuredClone(consumerSeeds["bar-axis-exact"]) },
     {
       // XY axisExtent:"exact" — y-domain + ticks pin to data min/max.
       id: "line-axis-exact",
@@ -1964,123 +1940,12 @@ function makeSsrParityCases(React, recipes = {}) {
         height: 260,
       },
     },
-    {
-      // LineChart mixed line+area: `fillArea:[names]` fills one series while the
-      // other stays a line, `gradientFill` (via frameProps) gradients the area.
-      // SSR dropped fillArea/areaOpacity and drew every series as a bare line.
-      id: "line-mixed-area",
-      component: "LineChart",
-      props: {
-        data: mixedAreaData,
-        xAccessor: "step",
-        yAccessor: "value",
-        lineBy: "series",
-        colorBy: "series",
-        fillArea: ["Volume"],
-        areaOpacity: 0.3,
-        curve: "monotoneX",
-        colorScheme: ["#E04F5F", "#3E8CF9"],
-        frameProps: { gradientFill: true },
-        width: 440,
-        height: 240,
-      },
-    },
-    {
-      // AreaChart value-anchored semanticGradient. SSR dropped it and painted a
-      // flat area; the step curve + y-threshold annotations already worked.
-      id: "area-semantic-gradient",
-      component: "AreaChart",
-      props: {
-        data: semanticAreaData,
-        xAccessor: "time",
-        yAccessor: "value",
-        curve: "step",
-        semanticGradient: [
-          { at: 50, color: "#E5A800" },
-          { at: 75, color: "#FF8000" },
-          { at: 95, color: "#FF7077" },
-        ],
-        yExtent: [0, 100],
-        annotations: [
-          { type: "y-threshold", value: 50, label: "Warning", color: "#E5A800" },
-          { type: "y-threshold", value: 90, label: "Critical", color: "#FF7077" },
-        ],
-        width: 440,
-        height: 260,
-      },
-    },
-    {
-      // LineChart band envelope: SSR dropped `band` entirely, and the ribbon
-      // ignored the line's curve (drew straight edges under a curved line).
-      id: "line-band",
-      component: "LineChart",
-      props: {
-        data: bandLineData,
-        xAccessor: "time",
-        yAccessor: "value",
-        lineBy: "series",
-        colorBy: "series",
-        curve: "monotoneX",
-        lineWidth: 3,
-        band: { y0Accessor: "low", y1Accessor: "high" },
-        width: 440,
-        height: 260,
-      },
-    },
-    {
-      // PieChart startAngle rotation (+ cornerRadius). SSR ignored startAngle
-      // and always began at 12 o'clock.
-      id: "pie-start-angle",
-      component: "PieChart",
-      props: {
-        data: categoryData,
-        categoryAccessor: "region",
-        valueAccessor: "value",
-        colorScheme: ["#6C4EE8", "#0E9AA7", "#C2185B"],
-        startAngle: 45,
-        cornerRadius: 4,
-        width: 320,
-        height: 320,
-      },
-    },
-    {
-      // DonutChart startAngle rotation (+ cornerRadius + innerRadius).
-      id: "donut-start-angle",
-      component: "DonutChart",
-      props: {
-        data: categoryData,
-        categoryAccessor: "region",
-        valueAccessor: "value",
-        colorScheme: ["#6C4EE8", "#0E9AA7", "#C2185B"],
-        startAngle: 90,
-        cornerRadius: 6,
-        innerRadius: 70,
-        showLegend: false,
-        width: 320,
-        height: 320,
-      },
-    },
-    {
-      // SwimlaneChart valueExtent pins the value axis so a segment (40) under
-      // the extent max (100) fills the right fraction, plus roundedTop caps the
-      // outer ends. SSR auto-scaled to the data max (bar filled the whole lane).
-      id: "swimlane-value-extent",
-      component: "SwimlaneChart",
-      props: {
-        data: valueExtentBarData,
-        categoryAccessor: "lane",
-        subcategoryAccessor: "phase",
-        valueAccessor: "value",
-        // The single "used" segment is 40; the pinned [0,100] axis must keep it
-        // at ~40% of the track. Without the fix SSR auto-scaled to 40 (full).
-        valueExtent: [0, 100],
-        trackFill: "#e3e3ea",
-        roundedTop: 6,
-        colorBy: "phase",
-        width: 440,
-        height: 160,
-      },
-    },
+    { id: "line-mixed-area", ...structuredClone(consumerSeeds["line-mixed-area"]) },
+    { id: "area-semantic-gradient", ...structuredClone(consumerSeeds["area-semantic-gradient"]) },
+    { id: "line-band", ...structuredClone(consumerSeeds["line-band"]) },
+    { id: "pie-start-angle", ...structuredClone(consumerSeeds["pie-start-angle"]) },
+    { id: "donut-start-angle", ...structuredClone(consumerSeeds["donut-start-angle"]) },
+    { id: "swimlane-value-extent", ...structuredClone(consumerSeeds["swimlane-value-extent"]) },
     {
       // Treemap colorBy paints leaf tiles by a categorical field, and
       // labelMode:"all" + paddingTop label every hierarchy tier. SSR collapsed
@@ -2219,32 +2084,7 @@ function makeSsrParityCases(React, recipes = {}) {
         },
       },
     },
-    {
-      // Vertical band (an era/phase region) + vertical threshold line & label —
-      // the native `x-band` / `x-threshold` annotation types. Both render on the
-      // canvas (CSR) and serialize to SVG (SSR) through the shared annotation
-      // renderer, so the region fill, the dashed line, and both labels match.
-      // (This is the library-native equivalent of a downstream chart's custom
-      // "vertical bands + annotations" — which used bespoke annotation types +
-      // manual SVG splicing that dropped out in SSR.)
-      id: "line-vertical-bands",
-      component: "LineChart",
-      props: {
-        data: verticalBandData,
-        xAccessor: "x",
-        yAccessor: "y",
-        curve: "monotoneX",
-        annotations: [
-          // Explicit label `color` so the band label matches on both backends
-          // regardless of whether a ThemeProvider set `--semiotic-primary`.
-          { type: "x-band", x0: 0, x1: 3, label: "Catch-up window", color: "#6C4EE8", fill: "#6C4EE8", fillOpacity: 0.15 },
-          { type: "x-threshold", value: 3, label: "Caught up", color: "#DB2777" },
-        ],
-        margin: { top: 40, right: 24, bottom: 30, left: 48 },
-        width: 460,
-        height: 280,
-      },
-    },
+    { id: "line-vertical-bands", ...structuredClone(consumerSeeds["line-vertical-bands"]) },
     {
       // BumpChart ranking lines: each period ranks the four teams and rank is
       // vertical position. Exercises the shared sampled centerline in
@@ -2405,26 +2245,7 @@ function makeSsrParityCases(React, recipes = {}) {
         height: 260,
       },
     },
-    {
-      // Bottom-legend axis gutter on the XY frame (the ordinal frame's copy is
-      // covered by the Likert case below). The legend used to be parked at
-      // `plotBottom + legendDistance` — the same band the tick labels and the
-      // axis title occupy — so it drew straight through the axis chrome.
-      id: "line-bottom-legend-axis-gutter",
-      component: "LineChart",
-      props: {
-        data: groupedXyData,
-        xAccessor: "x",
-        yAccessor: "y",
-        lineBy: "series",
-        colorBy: "series",
-        showLegend: true,
-        legendPosition: "bottom",
-        xLabel: "Week",
-        width: 440,
-        height: 280,
-      },
-    },
+    { id: "line-bottom-legend-axis-gutter", ...structuredClone(consumerSeeds["line-bottom-legend-axis-gutter"]) },
     {
       // Hierarchy tile primitives. Treemap/CirclePack/TreeDiagram share one
       // server nodeStyle composer, which never applied the top-level

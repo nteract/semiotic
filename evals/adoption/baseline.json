@@ -6,7 +6,7 @@
     "packageVersion": "3.13.3",
     "releaseChannel": "development",
     "revisionKind": "sha256-of-inventoried-source-content",
-    "revision": "5038810367a26c162def9b8c0c79800d7bc5ebc1e3b2d31d47c79fb7a5e79c68",
+    "revision": "d39e926e7c7f914ed1b4d30df43dd742c3dd3df25568024baf97496f32ba70fb",
     "packedPackage": "not-assessed",
     "deployedDocumentation": "not-assessed",
     "deployedMCP": "not-assessed"
@@ -220,37 +220,37 @@
     {
       "path": "ai/task-packets/compare-category-totals.json",
       "bytes": 14457,
-      "sha256": "15c0a1d6e45e679f9f7c222929e7ab6be15296dc06d291996742a0db6aef98d0"
+      "sha256": "e93f310e8825ac57d00309806c9345cb89b362914f71d71ca7ebc9de332e92a7"
     },
     {
       "path": "ai/task-packets/compare-category-totals.md",
       "bytes": 9079,
-      "sha256": "2131aad4f20550fa66f51b1c94dc0eb71ac1e4a5db192cecf6e769d5e1845e9c"
+      "sha256": "9d14b5c33203928cf9e9fb5d9754611976e0b16856aeb322e4b59bb479bcf17e"
     },
     {
       "path": "ai/task-packets/correct-published-chart.json",
       "bytes": 28192,
-      "sha256": "931e9831f9bde4405ebac33c54157bd2db5288abff4c4394327bdbe6e9c45886"
+      "sha256": "89ff2d58cfa2136cba5b80157949f5fc0a2ab40741a5ef4867338d7a3d4cc12e"
     },
     {
       "path": "ai/task-packets/correct-published-chart.md",
       "bytes": 22896,
-      "sha256": "1bceb575dc2ed3b0d3d2113c6afe5777b3c59a39260a552963bb33fc2797f126"
+      "sha256": "47348d273b30cee622a077daa856141519a856d5a5c852d616ddd479c259bca3"
     },
     {
       "path": "ai/task-packets/index.json",
       "bytes": 1772,
-      "sha256": "28aab5be8a09a10ee0988fbf7b9c05afe5cbc8fae4e6ef7dd9cfc08263e22bf4"
+      "sha256": "8b045678592b0a3b372ba7329afeb5f66f7eea9c3ebb4988aedda933e4fd45db"
     },
     {
       "path": "ai/task-packets/update-live-chart.json",
       "bytes": 22952,
-      "sha256": "846f6ef9212492f13407062ecf46910ea38dcaef844e93603dda9e6dda6d59ad"
+      "sha256": "de0ddefe602f8bfd02fa20ffe99230baef3c304d1d90efe98da8b87bc3de8333"
     },
     {
       "path": "ai/task-packets/update-live-chart.md",
       "bytes": 17358,
-      "sha256": "651acdda9d637922615345f90f70f26ef07a31c6e4c806ac65feb30136cfd7c3"
+      "sha256": "466c1e7982cd958ae8478089fdf5f4ecf6f98502fb8b2441bf9038df047c4332"
     },
     {
       "path": "ai/tasks/compare-category-totals.json",
@@ -280,32 +280,32 @@
     {
       "path": "docs/public/tasks/compare-category-totals.json",
       "bytes": 14457,
-      "sha256": "15c0a1d6e45e679f9f7c222929e7ab6be15296dc06d291996742a0db6aef98d0"
+      "sha256": "e93f310e8825ac57d00309806c9345cb89b362914f71d71ca7ebc9de332e92a7"
     },
     {
       "path": "docs/public/tasks/compare-category-totals.md",
       "bytes": 9079,
-      "sha256": "2131aad4f20550fa66f51b1c94dc0eb71ac1e4a5db192cecf6e769d5e1845e9c"
+      "sha256": "9d14b5c33203928cf9e9fb5d9754611976e0b16856aeb322e4b59bb479bcf17e"
     },
     {
       "path": "docs/public/tasks/correct-published-chart.json",
       "bytes": 28192,
-      "sha256": "931e9831f9bde4405ebac33c54157bd2db5288abff4c4394327bdbe6e9c45886"
+      "sha256": "89ff2d58cfa2136cba5b80157949f5fc0a2ab40741a5ef4867338d7a3d4cc12e"
     },
     {
       "path": "docs/public/tasks/correct-published-chart.md",
       "bytes": 22896,
-      "sha256": "1bceb575dc2ed3b0d3d2113c6afe5777b3c59a39260a552963bb33fc2797f126"
+      "sha256": "47348d273b30cee622a077daa856141519a856d5a5c852d616ddd479c259bca3"
     },
     {
       "path": "docs/public/tasks/update-live-chart.json",
       "bytes": 22952,
-      "sha256": "846f6ef9212492f13407062ecf46910ea38dcaef844e93603dda9e6dda6d59ad"
+      "sha256": "de0ddefe602f8bfd02fa20ffe99230baef3c304d1d90efe98da8b87bc3de8333"
     },
     {
       "path": "docs/public/tasks/update-live-chart.md",
       "bytes": 17358,
-      "sha256": "651acdda9d637922615345f90f70f26ef07a31c6e4c806ac65feb30136cfd7c3"
+      "sha256": "466c1e7982cd958ae8478089fdf5f4ecf6f98502fb8b2441bf9038df047c4332"
     },
     {
       "path": "evals/adoption/fixtures.json",
@@ -339,8 +339,8 @@
     },
     {
       "path": "package.json",
-      "bytes": 40468,
-      "sha256": "d4f56818f1d740655154332583f31f1e8f68fe7ad6f402849151de0b86651656"
+      "bytes": 40580,
+      "sha256": "9aa6d6dc25c7dc59f7ae0ba909551950ecb249d9f4a415ae985c9df27f83a020"
     },
     {
       "path": "scripts/lib/adoption-evals.mjs",

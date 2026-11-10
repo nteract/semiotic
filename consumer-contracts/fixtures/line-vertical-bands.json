@@ -1,0 +1,67 @@
+{
+  "component": "LineChart",
+  "props": {
+    "data": [
+      {
+        "x": 0,
+        "y": 12
+      },
+      {
+        "x": 1,
+        "y": 17
+      },
+      {
+        "x": 2,
+        "y": 15
+      },
+      {
+        "x": 3,
+        "y": 8
+      },
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 5,
+        "y": 4
+      },
+      {
+        "x": 6,
+        "y": 3
+      },
+      {
+        "x": 7,
+        "y": 4
+      }
+    ],
+    "xAccessor": "x",
+    "yAccessor": "y",
+    "curve": "monotoneX",
+    "annotations": [
+      {
+        "type": "x-band",
+        "x0": 0,
+        "x1": 3,
+        "label": "Catch-up window",
+        "color": "#6C4EE8",
+        "fill": "#6C4EE8",
+        "fillOpacity": 0.15
+      },
+      {
+        "type": "x-threshold",
+        "value": 3,
+        "label": "Caught up",
+        "color": "#DB2777"
+      }
+    ],
+    "margin": {
+      "top": 40,
+      "right": 24,
+      "bottom": 30,
+      "left": 48
+    },
+    "width": 460,
+    "height": 280
+  }
+}

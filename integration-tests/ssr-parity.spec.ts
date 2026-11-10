@@ -1,5 +1,8 @@
 import { test, expect } from "@playwright/test"
 import { createRequire } from "node:module"
+import { JSDOM } from "jsdom"
+import type { ConsumerContract } from "../consumer-contracts/types"
+import { contractFailures } from "../consumer-contracts/assertions"
 import * as React from "react"
 import { waitForChartReady } from "./helpers"
 import { compareCurrentPanels } from "./helpers/ssrParity"
@@ -78,6 +81,13 @@ interface RenderEvidence {
 const MAX_CURRENT_INK_DIFFERENCE = 0.25
 
 const cjsRequire = createRequire(__filename)
+const consumerContracts = new Map(
+  (cjsRequire("../consumer-contracts/manifest.json").contracts as ConsumerContract[])
+    .map(contract => [contract.id, {
+      contract,
+      config: cjsRequire(`../consumer-contracts/${contract.file}`)
+    }])
+)
 
 const { makeSsrParityCases } = cjsRequire("./ssr-parity-fixtures.js") as {
   makeSsrParityCases: (
@@ -93,6 +103,11 @@ const cases: ParityCase[] = [
   ...makeFlowCircuitParityCases(),
   ...makeNetworkPerspectiveParityCases(recipes),
 ]
+for (const id of consumerContracts.keys()) {
+  if (cases.filter(c => c.id === id).length !== 1) {
+    throw new Error(`Consumer contract ${id} must occur exactly once in browser parity`)
+  }
+}
 
 // Lazy-load `renderChartWithEvidence` from the built server bundle via the CJS
 // variant. Playwright's TS loader runs spec files as CJS, and the
@@ -542,6 +557,16 @@ test.describe("SSR / CSR parity", () => {
       }
       const { svg: ssrSvg, evidence } = getRenderChartWithEvidence()(c.component, ssrProps)
       assertCustomRenderEvidence(c.id, evidence, ssrSvg)
+      const consumer = consumerContracts.get(c.id)
+      if (consumer) {
+        expect({ component: c.component, props: c.props }).toEqual(consumer.config)
+        const dom = new JSDOM(ssrSvg)
+        try {
+          expect(contractFailures(consumer.contract, evidence, dom.window.document)).toEqual([])
+        } finally {
+          dom.window.close()
+        }
+      }
       if (c.circuitEvidence) {
         expect(evidence.frameType).toBe("physics")
         expect(evidence.markCount).toBe(c.circuitEvidence.nodeCount)

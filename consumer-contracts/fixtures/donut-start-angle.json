@@ -1,0 +1,32 @@
+{
+  "component": "DonutChart",
+  "props": {
+    "data": [
+      {
+        "region": "AMER",
+        "value": 42
+      },
+      {
+        "region": "EMEA",
+        "value": 33
+      },
+      {
+        "region": "APAC",
+        "value": 51
+      }
+    ],
+    "categoryAccessor": "region",
+    "valueAccessor": "value",
+    "colorScheme": [
+      "#6C4EE8",
+      "#0E9AA7",
+      "#C2185B"
+    ],
+    "startAngle": 90,
+    "cornerRadius": 6,
+    "innerRadius": 70,
+    "showLegend": false,
+    "width": 320,
+    "height": 320
+  }
+}

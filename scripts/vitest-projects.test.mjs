@@ -45,6 +45,11 @@ test("Vitest discovery excludes Node test suites while retaining script unit tes
         spec.moduleId.endsWith("/scripts/network-atlas/acceptance.test.tsx")
       )
     )
+    const corpus = specs.filter((spec) =>
+      spec.moduleId.endsWith("/src/components/server/consumer-contracts.test.tsx")
+    )
+    assert.equal(corpus.length, 1, "Consumer contracts must be discovered exactly once")
+    assert.equal(corpus[0].project.name, "unit")
   } finally {
     await ctx.close()
   }

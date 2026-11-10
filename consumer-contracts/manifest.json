@@ -1,0 +1,532 @@
+{
+  "version": 1,
+  "contracts": [
+    {
+      "id": "bar-axis-exact",
+      "file": "fixtures/bar-axis-exact.json",
+      "attribution": "maintainer-derived from iris-inspired regression",
+      "useCase": "Exact value-axis endpoints for compact regional bars",
+      "sources": [
+        {
+          "path": "integration-tests/ssr-parity-fixtures.js",
+          "reference": "bar-axis-exact"
+        }
+      ],
+      "coveredProps": [
+        "axisExtent",
+        "showGrid"
+      ],
+      "expected": {
+        "evidence": {
+          "annotationCount": 0,
+          "ariaLabel": "ordinal chart, 3 marks",
+          "frameType": "ordinal",
+          "markCountByType": {
+            "rect": 3
+          },
+          "yDomain": [
+            0,
+            47
+          ]
+        },
+        "svg": [
+          {
+            "selector": ".ordinal-axes text",
+            "count": 8,
+            "texts": [
+              "AMER",
+              "EMEA",
+              "APAC",
+              "0",
+              "11.75",
+              "23.5",
+              "35.25",
+              "47"
+            ]
+          },
+          {
+            "selector": ".semiotic-grid",
+            "count": 1
+          }
+        ],
+        "diagnoses": [
+          "warning:MISSING_DESCRIPTION"
+        ],
+        "accessibilityFailures": [
+          "understandable.title-summary-caption",
+          "understandable.explain-purpose"
+        ],
+        "knownLimitations": "Original parity input omits descriptive title/summary text; fallback accessible name is asserted, not treated as complete accessibility."
+      }
+    },
+    {
+      "id": "line-mixed-area",
+      "file": "fixtures/line-mixed-area.json",
+      "attribution": "maintainer-derived from iris-inspired regression",
+      "useCase": "Volume area and latency line in one plot",
+      "sources": [
+        {
+          "path": "integration-tests/ssr-parity-fixtures.js",
+          "reference": "line-mixed-area"
+        },
+        {
+          "path": "src/components/server/ssr-iris-parity.test.tsx",
+          "reference": "LineChart — mixed line+area SSR parity"
+        }
+      ],
+      "coveredProps": [
+        "fillArea",
+        "frameProps.gradientFill"
+      ],
+      "expected": {
+        "evidence": {
+          "annotationCount": 0,
+          "ariaLabel": "xy chart, 2 marks",
+          "frameType": "xy",
+          "markCountByType": {
+            "area": 1,
+            "line": 1
+          },
+          "xDomain": [
+            1,
+            4
+          ],
+          "legendItems": 2
+        },
+        "svg": [
+          {
+            "selector": "linearGradient",
+            "count": 1
+          },
+          {
+            "selector": "path[fill^=\"url(\"]",
+            "count": 1
+          },
+          {
+            "selector": ".semiotic-legend text",
+            "count": 2,
+            "texts": [
+              "Volume",
+              "Latency"
+            ]
+          }
+        ],
+        "diagnoses": [
+          "warning:LOW_ADJACENT_CONTRAST",
+          "warning:MISSING_DESCRIPTION"
+        ],
+        "accessibilityFailures": [
+          "understandable.title-summary-caption",
+          "understandable.explain-purpose"
+        ],
+        "knownLimitations": "Original parity input omits descriptive title/summary text; fallback accessible name is asserted, not treated as complete accessibility. Original series palette also has low adjacent contrast."
+      }
+    },
+    {
+      "id": "area-semantic-gradient",
+      "file": "fixtures/area-semantic-gradient.json",
+      "attribution": "maintainer-derived from iris-inspired regression",
+      "useCase": "Threshold-colored utilization area with warning and critical labels",
+      "sources": [
+        {
+          "path": "integration-tests/ssr-parity-fixtures.js",
+          "reference": "area-semantic-gradient"
+        },
+        {
+          "path": "src/components/server/ssr-iris-parity.test.tsx",
+          "reference": "AreaChart — semanticGradient SSR parity"
+        }
+      ],
+      "coveredProps": [
+        "semanticGradient",
+        "yExtent",
+        "annotations"
+      ],
+      "expected": {
+        "evidence": {
+          "annotationCount": 2,
+          "ariaLabel": "xy chart, 1 marks",
+          "frameType": "xy",
+          "markCountByType": {
+            "area": 1
+          },
+          "yDomain": [
+            0,
+            100
+          ]
+        },
+        "svg": [
+          {
+            "selector": "linearGradient",
+            "count": 1
+          },
+          {
+            "selector": "stop[stop-color=\"#E5A800\"]",
+            "count": 1
+          },
+          {
+            "selector": "stop[stop-color=\"#FF8000\"]",
+            "count": 1
+          },
+          {
+            "selector": "stop[stop-color=\"#FF7077\"]",
+            "count": 1
+          },
+          {
+            "selector": ".semiotic-annotations text",
+            "count": 2,
+            "texts": [
+              "Warning",
+              "Critical"
+            ]
+          }
+        ],
+        "diagnoses": [
+          "warning:MISSING_DESCRIPTION"
+        ],
+        "accessibilityFailures": [
+          "understandable.title-summary-caption",
+          "understandable.explain-purpose"
+        ],
+        "knownLimitations": "Original parity input omits descriptive title/summary text; fallback accessible name is asserted, not treated as complete accessibility."
+      }
+    },
+    {
+      "id": "line-band",
+      "file": "fixtures/line-band.json",
+      "attribution": "maintainer-derived from iris-inspired regression",
+      "useCase": "Two trend series with low/high uncertainty bands",
+      "sources": [
+        {
+          "path": "integration-tests/ssr-parity-fixtures.js",
+          "reference": "line-band"
+        },
+        {
+          "path": "src/components/server/ssr-iris-parity.test.tsx",
+          "reference": "LineChart — band SSR parity"
+        }
+      ],
+      "coveredProps": [
+        "band",
+        "curve"
+      ],
+      "expected": {
+        "evidence": {
+          "annotationCount": 0,
+          "ariaLabel": "xy chart, 4 marks",
+          "frameType": "xy",
+          "markCountByType": {
+            "area": 2,
+            "line": 2
+          },
+          "yDomain": [
+            1.7,
+            41.3
+          ],
+          "legendItems": 2
+        },
+        "svg": [
+          {
+            "selector": "path[fill]:not([fill=\"none\"])",
+            "count": 2,
+            "attributeIncludes": {
+              "d": "C"
+            }
+          },
+          {
+            "selector": ".semiotic-legend text",
+            "count": 2,
+            "texts": [
+              "A",
+              "B"
+            ]
+          }
+        ],
+        "diagnoses": [
+          "warning:MISSING_DESCRIPTION"
+        ],
+        "accessibilityFailures": [
+          "understandable.title-summary-caption",
+          "understandable.explain-purpose"
+        ],
+        "knownLimitations": "Original parity input omits descriptive title/summary text; fallback accessible name is asserted, not treated as complete accessibility."
+      }
+    },
+    {
+      "id": "pie-start-angle",
+      "file": "fixtures/pie-start-angle.json",
+      "attribution": "maintainer-derived from iris-inspired regression",
+      "useCase": "Rotated pie with rounded wedges and readable category legend",
+      "sources": [
+        {
+          "path": "integration-tests/ssr-parity-fixtures.js",
+          "reference": "pie-start-angle"
+        },
+        {
+          "path": "src/components/server/ssr-iris-parity.test.tsx",
+          "reference": "PieChart / DonutChart — startAngle SSR parity"
+        }
+      ],
+      "coveredProps": [
+        "startAngle",
+        "cornerRadius"
+      ],
+      "expected": {
+        "evidence": {
+          "annotationCount": 0,
+          "ariaLabel": "ordinal chart, 3 marks",
+          "frameType": "ordinal",
+          "markCountByType": {
+            "wedge": 3
+          }
+        },
+        "svg": [
+          {
+            "selector": "path[fill]:not([fill=\"none\"])",
+            "count": 3,
+            "attributeIncludes": {
+              "d": "A4,4"
+            }
+          },
+          {
+            "selector": ".semiotic-legend text",
+            "count": 3,
+            "texts": [
+              "AMER",
+              "EMEA",
+              "APAC"
+            ]
+          }
+        ],
+        "startAngle": 45,
+        "diagnoses": [
+          "warning:MISSING_DESCRIPTION"
+        ],
+        "accessibilityFailures": [
+          "understandable.title-summary-caption",
+          "understandable.explain-purpose"
+        ],
+        "knownLimitations": "Original parity input omits descriptive title/summary text; fallback accessible name is asserted, not treated as complete accessibility."
+      }
+    },
+    {
+      "id": "donut-start-angle",
+      "file": "fixtures/donut-start-angle.json",
+      "attribution": "maintainer-derived from iris-inspired regression",
+      "useCase": "Quarter-turn donut with a fixed inner radius and no legend",
+      "sources": [
+        {
+          "path": "integration-tests/ssr-parity-fixtures.js",
+          "reference": "donut-start-angle"
+        },
+        {
+          "path": "src/components/server/ssr-iris-parity.test.tsx",
+          "reference": "PieChart / DonutChart — startAngle SSR parity"
+        }
+      ],
+      "coveredProps": [
+        "startAngle",
+        "cornerRadius",
+        "innerRadius",
+        "showLegend"
+      ],
+      "expected": {
+        "evidence": {
+          "annotationCount": 0,
+          "ariaLabel": "ordinal chart, 3 marks",
+          "frameType": "ordinal",
+          "markCountByType": {
+            "wedge": 3
+          }
+        },
+        "svg": [
+          {
+            "selector": "path[fill]:not([fill=\"none\"])",
+            "count": 3,
+            "attributeIncludes": {
+              "d": "A6,6"
+            }
+          },
+          {
+            "selector": "path[fill]:not([fill=\"none\"])",
+            "count": 3,
+            "attributeIncludes": {
+              "d": "A70,70"
+            }
+          },
+          {
+            "selector": ".semiotic-legend text",
+            "count": 0,
+            "texts": []
+          }
+        ],
+        "startAngle": 90,
+        "diagnoses": [
+          "warning:MISSING_DESCRIPTION"
+        ],
+        "accessibilityFailures": [
+          "understandable.title-summary-caption",
+          "understandable.explain-purpose"
+        ],
+        "knownLimitations": "Original parity input omits descriptive title/summary text; fallback accessible name is asserted, not treated as complete accessibility."
+      }
+    },
+    {
+      "id": "swimlane-value-extent",
+      "file": "fixtures/swimlane-value-extent.json",
+      "attribution": "maintainer-derived from iris-inspired regression",
+      "useCase": "Used capacity stays on a full 0–100 track",
+      "sources": [
+        {
+          "path": "integration-tests/ssr-parity-fixtures.js",
+          "reference": "swimlane-value-extent"
+        },
+        {
+          "path": "src/components/server/ssr-iris-parity.test.tsx",
+          "reference": "SwimlaneChart — valueExtent SSR parity"
+        }
+      ],
+      "coveredProps": [
+        "valueExtent",
+        "trackFill"
+      ],
+      "expected": {
+        "evidence": {
+          "annotationCount": 0,
+          "ariaLabel": "ordinal chart, 2 marks",
+          "frameType": "ordinal",
+          "markCountByType": {
+            "rect": 2
+          },
+          "yDomain": [
+            0,
+            100
+          ]
+        },
+        "svg": [
+          {
+            "selector": "path[fill=\"#e3e3ea\"]",
+            "count": 1
+          },
+          {
+            "selector": ".semiotic-legend text",
+            "count": 1,
+            "texts": [
+              "used"
+            ]
+          }
+        ],
+        "diagnoses": [
+          "warning:MISSING_DESCRIPTION"
+        ],
+        "accessibilityFailures": [
+          "understandable.title-summary-caption",
+          "understandable.explain-purpose"
+        ],
+        "knownLimitations": "Original parity input omits descriptive title/summary text; fallback accessible name is asserted, not treated as complete accessibility."
+      }
+    },
+    {
+      "id": "line-vertical-bands",
+      "file": "fixtures/line-vertical-bands.json",
+      "attribution": "maintainer-derived from iris-inspired regression",
+      "useCase": "Catch-up interval and completion threshold remain labeled",
+      "sources": [
+        {
+          "path": "integration-tests/ssr-parity-fixtures.js",
+          "reference": "line-vertical-bands"
+        },
+        {
+          "path": "src/components/server/ssr-iris-parity.test.tsx",
+          "reference": "LineChart — x-band / x-threshold SSR"
+        }
+      ],
+      "coveredProps": [
+        "annotations"
+      ],
+      "expected": {
+        "evidence": {
+          "annotationCount": 2,
+          "ariaLabel": "xy chart, 1 marks",
+          "frameType": "xy",
+          "markCountByType": {
+            "line": 1
+          },
+          "xDomain": [
+            0,
+            7
+          ]
+        },
+        "svg": [
+          {
+            "selector": ".semiotic-annotations text",
+            "count": 2,
+            "texts": [
+              "Catch-up window",
+              "Caught up"
+            ]
+          },
+          {
+            "selector": ".semiotic-annotations rect",
+            "count": 1
+          }
+        ],
+        "diagnoses": [
+          "warning:MISSING_DESCRIPTION"
+        ],
+        "accessibilityFailures": [
+          "understandable.title-summary-caption",
+          "understandable.explain-purpose"
+        ],
+        "knownLimitations": "Original parity input omits descriptive title/summary text; fallback accessible name is asserted, not treated as complete accessibility."
+      }
+    },
+    {
+      "id": "line-bottom-legend-axis-gutter",
+      "file": "fixtures/line-bottom-legend-axis-gutter.json",
+      "attribution": "maintainer-derived from iris-inspired regression",
+      "useCase": "Bottom series legend clears the labeled horizontal axis",
+      "sources": [
+        {
+          "path": "integration-tests/ssr-parity-fixtures.js",
+          "reference": "line-bottom-legend-axis-gutter"
+        }
+      ],
+      "coveredProps": [
+        "legendPosition",
+        "xLabel",
+        "showLegend"
+      ],
+      "expected": {
+        "evidence": {
+          "annotationCount": 0,
+          "ariaLabel": "xy chart, 2 marks",
+          "frameType": "xy",
+          "markCountByType": {
+            "line": 2
+          },
+          "legendItems": 2
+        },
+        "svg": [
+          {
+            "selector": ".semiotic-legend text",
+            "count": 2,
+            "texts": [
+              "A",
+              "B"
+            ]
+          }
+        ],
+        "legendBelowLabel": "Week",
+        "diagnoses": [
+          "warning:MISSING_DESCRIPTION"
+        ],
+        "accessibilityFailures": [
+          "understandable.title-summary-caption",
+          "understandable.explain-purpose"
+        ],
+        "knownLimitations": "Original parity input omits descriptive title/summary text; fallback accessible name is asserted, not treated as complete accessibility."
+      }
+    }
+  ]
+}
