@@ -22,6 +22,8 @@
  * 5. A `*SceneNodeToSVG` converter has a `case "X":` for a node type no
  *    scene builder ever emits (dead SVG branch — usually means the scene
  *    type was renamed/removed and the SVG side wasn't updated)
+ * 6. Reviewed server-prop coverage is stale/invalid or a new supported prop
+ *    has no explicit classification (behavior runs in the ordinary unit lane)
  *
  * Usage:
  *   node scripts/check-ssr-alignment.js
@@ -34,6 +36,7 @@
 const fs = require("fs")
 const path = require("path")
 const ts = require("typescript")
+const { spawnSync } = require("node:child_process")
 const { readRegistryKeys } = require("./lib/registry-source.cjs")
 
 const ROOT = path.resolve(__dirname, "..")
@@ -172,11 +175,27 @@ for (const hoc of hocsOnDisk) {
   }
 }
 
-// ── 6. Check key prop threading in SSR configs ─────────────────────────
+// ── 6. Reviewed prop coverage and legacy wiring sanity checks ──────────
+
+// This source-only inventory never imports a renderer. Its contract IDs are
+// executed in the ordinary Vitest lane; text mentions below earn no coverage.
+const coverage = spawnSync(
+  process.execPath,
+  ["--import", "tsx", path.join(ROOT, "scripts/check-server-prop-coverage.ts")],
+  { cwd: ROOT, encoding: "utf8" }
+)
+if (coverage.stdout) process.stdout.write(coverage.stdout)
+if (coverage.stderr) process.stderr.write(coverage.stderr)
+if (coverage.status !== 0) {
+  errors.push(
+    `Server prop coverage inventory failed${coverage.error ? `: ${coverage.error.message}` : " (see diagnostics above)"}`
+  )
+}
 
 // Props that should be threaded on the SSR path when they exist on the HOC.
-// Expand this list when a silent SSR drop ships — it is the load-bearing
-// gate against the gradientFill/baseline/symbolBy class of bug.
+// Retain these legacy wiring checks, but add new protection through explicit
+// observable contracts in consumer-contracts/server-props.ts. A substring
+// here cannot prove that a chart actually honors the prop.
 //
 // Family configs live in serverChartConfigs{XY,Ordinal,Network,...}.ts; the
 // registry only re-exports them. Scan family sources + optional extras
@@ -437,7 +456,7 @@ if (errors.length > 0) {
     console.error(`  ✗ ${err}`)
   }
   console.error(`\n${errors.length} issue(s) found.`)
-  console.error("Fix in src/components/server/serverChartConfigs.ts, validationMap.ts, or the reported SceneToSVG family implementation.")
+  console.error("Fix the reported registry/SceneToSVG implementation or coverage metadata (consumer-contracts/README.md).")
   process.exit(1)
 } else {
   console.log("\n✅ SSR alignment check passed")
