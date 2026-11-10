@@ -48,12 +48,21 @@ CURRENT_VERSION="$(node -p "require('./package.json').version")"
 VERSION="$(node -e '
   const current = process.argv[1]
   const bump = process.argv[2]
-  const match = /^(\d+)\.(\d+)\.(\d+)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/.exec(current)
+  const match = /^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/.exec(current)
   if (!match) throw new Error(`Unsupported current version: ${current}`)
-  let [, major, minor, patch] = match.map(Number)
-  if (bump === "major") { major += 1; minor = 0; patch = 0 }
-  if (bump === "minor") { minor += 1; patch = 0 }
-  if (bump === "patch") patch += 1
+  let [major, minor, patch] = match.slice(1, 4).map(Number)
+  const prerelease = match[4] !== undefined
+  // Match npm version: promoting 3.14.0-next.1 with patch/minor yields
+  // 3.14.0, and promoting 4.0.0-rc.1 with major yields 4.0.0.
+  if (bump === "major") {
+    if (!prerelease || minor !== 0 || patch !== 0) major += 1
+    minor = 0; patch = 0
+  }
+  if (bump === "minor") {
+    if (!prerelease || patch !== 0) minor += 1
+    patch = 0
+  }
+  if (bump === "patch" && !prerelease) patch += 1
   process.stdout.write(`${major}.${minor}.${patch}`)
 ' "$CURRENT_VERSION" "$BUMP_TYPE")"
 
@@ -80,6 +89,9 @@ if ! grep -qF "## What's New in $VERSION" README.md; then
   exit 1
 fi
 success "  README.md What's New heading identifies $VERSION"
+
+echo "==> Checking changelog provenance before dependency installation and builds"
+node --experimental-strip-types scripts/check-changelog-provenance.ts
 
 echo "==> Running npm audit (moderate gate)"
 # Block the release on any moderate/high/critical vulnerability. Low-severity

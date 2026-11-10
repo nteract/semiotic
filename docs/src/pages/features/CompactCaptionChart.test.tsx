@@ -19,14 +19,14 @@ describe("compact legend/caption composition", () => {
       expect(text, label).toBeDefined()
       return text!
     })
-    expect(row.map((text) => Number(text.getAttribute("x")))).toEqual([12, 162, 572])
-    expect(row.map((text) => text.getAttribute("text-anchor"))).toEqual(["start", "start", "end"])
-    for (const text of row) {
+    expect(row.map((text) => Number(text.getAttribute("x")))).toEqual([12, 572, 0])
+    expect(row.map((text) => text.getAttribute("text-anchor"))).toEqual(["start", "end", "start"])
+    for (const [index, text] of row.entries()) {
       // Include the renderer's plot translation (including space for the title).
       const transform = text.closest("g[transform]")!.getAttribute("transform")!
       const [, , top] = transform.match(/translate\(([-\d.]+)[ ,]+([-\d.]+)\)/)!
       const y = Number(text.getAttribute("y")) + Number(top)
-      expect(y).toBe(278)
+      expect(y).toBe(index === 2 ? 278 : 260)
       expect(y).toBeLessThan(props.height)
       expect(y).toBeGreaterThan(props.height - props.margin.bottom)
     }

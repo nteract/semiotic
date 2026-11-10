@@ -59,6 +59,15 @@ if (
         `Release tag mismatch: expected v${version} for package.json version ${version}, got ${releaseTag}`
       )
     }
+    // npm's publisher calls semver.clean(), which drops build metadata:
+    // https://github.com/npm/cli/blob/v11.6.2/workspaces/libnpmpublish/lib/publish.js
+    // Channel classification accepts full SemVer, but publication must preserve
+    // the exact version shared by the tag, archive, registry, and deployment.
+    if (version.includes("+")) {
+      throw new Error(
+        `Cannot publish ${version}: npm removes build metadata and would publish ${version.split("+")[0]}; use a release version without build metadata`
+      )
+    }
     // Emit an Actions output only after every validation succeeds.
     console.log(`tag=${distTag}`)
   } catch (error) {

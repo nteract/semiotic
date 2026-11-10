@@ -29,7 +29,7 @@ export const compactCaptionProps: LineChartProps = {
   colorScheme: colors,
   width: 640,
   height: 300,
-  margin: { top: 24, right: 20, bottom: 68, left: 48 },
+  margin: { top: 24, right: 20, bottom: 86, left: 48 },
   showLegend: false,
   title: "Weekly orders by channel",
   description: `Direct and partner orders over four weeks. ${summary}`,
@@ -40,8 +40,8 @@ export const compactCaptionProps: LineChartProps = {
       {
         type: "frame-text",
         text: "●",
-        position: "bottom-left",
-        dx: i * 150,
+        position: i === 0 ? "bottom-left" : "bottom-right",
+        dx: i === 0 ? 0 : -84,
         dy: 46,
         fontSize: 12,
         fill: colors[d.channel as keyof typeof colors],
@@ -49,8 +49,8 @@ export const compactCaptionProps: LineChartProps = {
       {
         type: "frame-text",
         text: `${d.channel}: ${d.orders}`,
-        position: "bottom-left",
-        dx: i * 150 + 12,
+        position: i === 0 ? "bottom-left" : "bottom-right",
+        dx: i === 0 ? 12 : 0,
         dy: 46,
         fontSize: 12,
       },
@@ -58,8 +58,9 @@ export const compactCaptionProps: LineChartProps = {
     {
       type: "frame-text",
       text: `Week ${latestWeek} · ${total} orders`,
-      position: "bottom-right",
-      dy: 46,
+      // Keep the total on a separate baseline so the legend fits narrow hosts.
+      position: "bottom-left",
+      dy: 64,
       fontSize: 12,
     },
   ],

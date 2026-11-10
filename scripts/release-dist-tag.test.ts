@@ -218,6 +218,7 @@ switch (args[0]) {
 for (const recovery of [false, true]) {
   test(`${recovery ? "recovery" : "normal tag"} workflow validates the selected manifest and emits the correct publish tag`, (t) => {
     for (const [version, expected] of supported) {
+      if (version.includes("+")) continue // Classified above; not an exact npm identity.
       for (const phase of ["preflight", "publish"] as const) {
         const result = runWorkflowStep(t, phase, version, { recovery })
         assert.equal(result.status, 0, `${phase}: ${result.stderr}`)
@@ -231,6 +232,22 @@ for (const recovery of [false, true]) {
     }
   })
 }
+
+test("normal and recovery workflows reject npm version normalization before publication", (t) => {
+  for (const [version] of supported.filter(([version]) =>
+    version.includes("+")
+  )) {
+    for (const recovery of [false, true]) {
+      for (const phase of ["preflight", "publish"] as const) {
+        const result = runWorkflowStep(t, phase, version, { recovery })
+        assert.equal(result.status, 1, `${phase}: ${result.stderr}`)
+        assert.match(result.stderr, /npm removes build metadata/)
+        assert.equal(result.output, "")
+        assert.doesNotMatch(result.stdout, /tag=|Verified/)
+      }
+    }
+  }
+})
 
 test("workflow rejects unknown, malformed, or mismatched tagged versions without publish outputs", (t) => {
   for (const [version, releaseTag, error] of [

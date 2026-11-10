@@ -5,10 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+<!-- added-provenance: v1; released-through: 3.13.3 -->
+
 ## [Unreleased]
 
 ### Fixed
 
+- Keep the compact legend and caption readable in narrow chart containers by
+  separating the caption baseline from the series labels.
 - Keep XY and ordinal scene-store configuration separate from React's memoized
   props so clearing visual selection does not trigger an unnecessary custom-layout run.
 - Preserve replacement network layouts started by legend-category callbacks during

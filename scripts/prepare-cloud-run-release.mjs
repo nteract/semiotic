@@ -43,6 +43,9 @@ const outputArgument = values.get("--output-dir")
 if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/.test(version)) {
   throw new Error(`Invalid release version ${JSON.stringify(version)}`)
 }
+if (version.includes("+")) {
+  throw new Error(`Cannot deploy ${version}: npm removes build metadata from published versions`)
+}
 if (rootManifest.version !== version) {
   throw new Error(`Requested ${version}, but package.json identifies ${rootManifest.version}`)
 }

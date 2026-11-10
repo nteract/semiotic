@@ -431,10 +431,10 @@ export default function AnnotationsPage() {
         hiddenProps={{}}
       />
 
-      <h2 id="compact-caption">A compact legend and caption row</h2>
+      <h2 id="compact-caption">A compact legend and caption</h2>
       <p>
-        Reserve a bottom margin for a compact row of series keys, latest values,
-        and a caption. These <code>frame-text</code> annotations derive their text
+        Reserve a bottom margin for series keys and latest values, with the caption
+        on a second line so labels stay separate in narrow containers. These <code>frame-text</code> annotations derive their text
         from the same data as the lines and anchor to the plot after resizing.
         Its title and description also label the SVG export; the live chart adds
         a screen-reader summary and accessible table.
@@ -444,7 +444,7 @@ export default function AnnotationsPage() {
       </div>
       <CodeBlock language="tsx" code={compactCaptionSource} />
       <p>
-        This row is a static reading aid. Positioned text does not provide the
+        These labels are a static reading aid. Positioned text does not provide the
         focus, toggle, or shared-selection behavior of an
         <Link to="/features/legends"> interactive legend</Link>.
         The data and annotations are serializable; React rendering is only needed

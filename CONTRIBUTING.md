@@ -523,7 +523,63 @@ npm run check:docs-routes
 
 Add `npm run website:build` when routes, examples, generated API docs, or public docs pages change.
 
+## Feature demand and changelog provenance
+
+Describe demand in the feature request and PR templates, including composition
+attempted and observable completion or workaround-removal criteria. “Not yet
+attempted” and “no existing workaround” are valid. Public API proposals can use
+[the RFC process](rfcs/README.md).
+
+The `added-provenance: v1` marker in `CHANGELOG.md` adopts provenance for new
+`Added` bullets in Unreleased and releases after 3.13.3. Existing release history
+is grandfathered and must not be rewritten to add attribution. Put exactly one
+source marker on each new root bullet, including a continuation line if useful:
+
+```md
+- Add a capability needed by the linked use case. [source: #123]
+- Implement the accepted proposal. [source: rfcs/001-example.md]
+- Support an export workflow. [source: consumer: public dashboard SVG export workflow]
+- Improve an independently identified capability. [source: maintainer]
+```
+
+An HTTPS issue/PR, public RFC, or meaningful consumer reference also works:
+`[source: https://example.org/public-context]`. `maintainer` is an honest origin
+statement, not a default to insert automatically. Nested bullets describe their
+parent; they do not supply the parent's attribution. Code spans, fenced or
+indented examples, and HTML comments also cannot supply attribution. Use ATX
+headings (`## [version]`, `### Added`) and Markdown root list items (up to three
+leading spaces); align continuation paragraphs to the item's text. The checker
+rejects unsupported prose/HTML/blockquote blocks in adopted Added sections and
+unclosed fences/comments instead of silently skipping potential entries.
+
+Run `npm run check:changelog-provenance -- --base-ref <explicit-base-sha>` for
+PR changes. Missing refs/history fail with a diagnostic; fetch the base first.
+Without `--base-ref`, release validation checks all applicable Added entries
+against the adoption boundary, including entries moved out of Unreleased.
+The source-only checker needs no installed packages, build output, or browser.
+
 ## Publishing Releases
+
+Current release checklist:
+
+1. Update the changelog and versioned metadata. Review new `Added` provenance
+   with [the checker](scripts/check-changelog-provenance.ts).
+2. Run `npm run check:release-preflight` for source/dependency validation before
+   builds; `npm run release:check` also builds and validates artifacts. Neither
+   command commits, pushes, tags, or publishes. Preflight performs a registry audit.
+3. [create-release-branch.sh](scripts/create-release-branch.sh) prepares and
+   validates a release branch, then **commits and pushes it**. Its version
+   synchronization and baseline commands write files; inspect the script before
+   using it. It does not create the release tag.
+4. After the release PR is reviewed and merged, creating a tag triggers
+   [release.yml](.github/workflows/release.yml), which validates tagged source,
+   freezes the artifact, and **publishes to npm** through trusted publishing.
+   Manual recovery targets the existing tag and uses current validation tooling.
+   Tags predating provenance adoption skip only that new check; a missing checker
+   in adopted source fails validation.
+
+These are current mechanics, not an adopted release calendar, response SLA,
+freeze, cooling period, or mandatory consumer-review policy.
 
 Releases are automated through GitHub Actions and npm trusted publishing. The
 `semiotic` package must authorize GitHub Actions for repository
@@ -540,13 +596,17 @@ package version and chooses the npm dist-tag:
 
 | Version | npm dist-tag |
 | --- | --- |
-| Stable, such as `3.14.0` or `3.14.0+build.1` | `latest` |
+| Stable, such as `3.14.0` | `latest` |
 | `alpha`, `beta`, or `rc` prerelease, such as `3.14.0-rc.1` | `beta` |
 | `next` prerelease, such as `3.14.0-next.1` | `next` |
 
 The first prerelease identifier must match one of those names exactly;
 unsupported channels (including `nextish`) and malformed versions fail before
-authentication or expensive jobs. Build metadata does not change the channel.
+authentication or expensive jobs. Build metadata does not change SemVer channel
+classification, and metadata tools preserve it literally. However, **publication
+rejects `+build` versions**: [npm strips build metadata before publishing](https://github.com/npm/cli/blob/v11.6.2/workspaces/libnpmpublish/lib/publish.js),
+which would break the exact version identity shared by the tag, tarball,
+registry, and deployment. Choose a version without build metadata for a release.
 Both initial tag validation and publish output selection use the workflow
 revision's helper against the selected tag's `package.json`, including manual
 recovery of older tags. Only `latest` enables the stable deployment and Registry

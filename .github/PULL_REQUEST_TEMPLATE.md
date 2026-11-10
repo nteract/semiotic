@@ -2,11 +2,15 @@
 
 <!-- What does this PR do? Keep it to 1-3 bullet points. -->
 
+## Demand source
+
+<!-- Link the issue/PR, public RFC, or meaningful consumer/use context. For maintainer-originated work, say so honestly. No private repository link is required. -->
+
 ## Surface and compatibility
 
 <!-- Name the affected components, family subpaths, renderer/runtime paths, and public API or schema changes. Write "None" where applicable. -->
 
-- Components and import paths:
+- Components and affected public/experimental entry paths:
 - Renderers and runtimes:
 - Public API, schema, or generated artifacts:
 

@@ -2,6 +2,7 @@ import assert from "node:assert/strict"
 import { spawnSync } from "node:child_process"
 import {
   copyFileSync,
+  existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -175,8 +176,8 @@ test("build metadata identity and exact changelog headings remain enforced", (t)
   assert.match(check.stderr, /package-lock.json#version must be/)
 })
 
-test("Cloud Run preparation preserves build metadata in the exact dependency and evidence", (t) => {
-  const version = "3.14.0+build.001"
+test("Cloud Run preparation preserves the exact published dependency and evidence", (t) => {
+  const version = "3.14.0"
   const directory = fixture(t, version)
   const bin = join(directory, "bin")
   mkdirSync(bin)
@@ -236,6 +237,20 @@ if (args[0] === "install") {
   assert.equal(evidence.npmIntegrity, "sha512-fixture")
 })
 
+test("Cloud Run refuses build metadata before creating output or calling npm", (t) => {
+  for (const version of versions.filter((version) => version.includes("+"))) {
+    const directory = fixture(t, version)
+    const output = join(directory, "prepared")
+    const result = runScript(directory, "prepare-cloud-run-release.mjs", [
+      "--output-dir",
+      output
+    ])
+    assert.equal(result.status, 1)
+    assert.match(result.stderr, /npm removes build metadata/)
+    assert.equal(existsSync(output), false)
+  }
+})
+
 test("previous-release selectors retain build metadata and reject malformed tags", () => {
   const compatibility = read("scripts/check-api-compatibility.mjs").match(
     / {2}const versionMatch = [\s\S]*? {2}const previousVersion = versionMatch\[1\]/
@@ -280,17 +295,27 @@ test("previous-release selectors retain build metadata and reject malformed tags
   }
 })
 
-test("release-branch calculation accepts a current build version and produces the next stable version", () => {
+test("release-branch calculation agrees with npm version for stable, build, and prerelease versions", (t) => {
   const calculation = read("scripts/create-release-branch.sh").match(
     /VERSION="\$\(node -e '\n([\s\S]*?)\n' "\$CURRENT_VERSION" "\$BUMP_TYPE"\)"/
   )?.[1]
   assert.ok(calculation)
-  for (const version of versions) {
-    for (const [bump, expected] of [
-      ["major", "4.0.0"],
-      ["minor", "3.15.0"],
-      ["patch", "3.14.1"]
-    ]) {
+  const directory = mkdtempSync(join(tmpdir(), "semiotic-npm-version-"))
+  t.after(() => rmSync(directory, { recursive: true, force: true }))
+  for (const version of [...versions, "4.0.0-rc.1", "3.14.2-next.1"]) {
+    for (const bump of ["major", "minor", "patch"]) {
+      writeJson(directory, "package.json", { name: "release-fixture", version })
+      const npm = spawnSync(
+        "npm",
+        ["version", "--no-git-tag-version", "--ignore-scripts", bump],
+        {
+          cwd: directory,
+          encoding: "utf8",
+          timeout: 10_000
+        }
+      )
+      assert.equal(npm.status, 0, npm.stderr)
+      const expected = readJson(directory, "package.json").version
       let actual
       runInNewContext(calculation, {
         process: {
@@ -302,7 +327,7 @@ test("release-branch calculation accepts a current build version and produces th
           }
         }
       })
-      assert.equal(actual, expected)
+      assert.equal(actual, expected, `${version} ${bump}`)
     }
   }
   for (const version of malformed) {

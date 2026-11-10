@@ -31,6 +31,14 @@ jobs:
           node-version: 22.x
           cache: "npm"
 
+      - name: Check new Added entries against the explicit event base
+        env:
+          PROVENANCE_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          test -n "$PROVENANCE_BASE"
+          git fetch --no-tags origin "$PROVENANCE_BASE"
+          node --experimental-strip-types scripts/check-changelog-provenance.ts --base-ref "$PROVENANCE_BASE"
+
       - name: Install dependencies
         run: npm ci
 
