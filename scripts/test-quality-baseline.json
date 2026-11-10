@@ -1,6 +1,7 @@
 {
   "description": "Known mount-only assertion candidates. check:test-quality fails when this set changes; replace candidates with semantic assertions where practical.",
   "candidates": {
+    "integration-tests/docs-examples-composition-guidance.spec.ts :: await expect(text).toBeVisible() :: chart.locator(\"svg text\").filter({ hasText: label })": 1,
     "src/__tests__/scenarios/callback-wiring.test.tsx :: expect(container.firstChild).not.toBeNull() :: direct selector": 1,
     "src/__tests__/scenarios/composition-resilience.test.tsx :: expect(grid).toBeTruthy() :: container.querySelector(\".semiotic-chart-grid.my-grid\") as HTMLElement": 1,
     "src/__tests__/scenarios/coordinated-dashboard.test.tsx :: expect(container.querySelector(\".semiotic-chart-grid\")).toBeTruthy() :: direct selector": 1,
