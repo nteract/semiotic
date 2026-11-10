@@ -1,0 +1,65 @@
+{
+  "component": "LineChart",
+  "props": {
+    "data": [
+      {
+        "step": 1,
+        "value": 400,
+        "series": "Volume"
+      },
+      {
+        "step": 1,
+        "value": 24,
+        "series": "Latency"
+      },
+      {
+        "step": 2,
+        "value": 300,
+        "series": "Volume"
+      },
+      {
+        "step": 2,
+        "value": 13,
+        "series": "Latency"
+      },
+      {
+        "step": 3,
+        "value": 600,
+        "series": "Volume"
+      },
+      {
+        "step": 3,
+        "value": 38,
+        "series": "Latency"
+      },
+      {
+        "step": 4,
+        "value": 800,
+        "series": "Volume"
+      },
+      {
+        "step": 4,
+        "value": 43,
+        "series": "Latency"
+      }
+    ],
+    "xAccessor": "step",
+    "yAccessor": "value",
+    "lineBy": "series",
+    "colorBy": "series",
+    "fillArea": [
+      "Volume"
+    ],
+    "areaOpacity": 0.3,
+    "curve": "monotoneX",
+    "colorScheme": [
+      "#E04F5F",
+      "#3E8CF9"
+    ],
+    "frameProps": {
+      "gradientFill": true
+    },
+    "width": 440,
+    "height": 240
+  }
+}

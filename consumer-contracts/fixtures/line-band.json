@@ -1,0 +1,75 @@
+{
+  "component": "LineChart",
+  "props": {
+    "data": [
+      {
+        "time": 0,
+        "value": 10,
+        "series": "A",
+        "low": 5,
+        "high": 15
+      },
+      {
+        "time": 1,
+        "value": 25,
+        "series": "A",
+        "low": 18,
+        "high": 32
+      },
+      {
+        "time": 2,
+        "value": 18,
+        "series": "A",
+        "low": 12,
+        "high": 24
+      },
+      {
+        "time": 3,
+        "value": 30,
+        "series": "A",
+        "low": 22,
+        "high": 38
+      },
+      {
+        "time": 0,
+        "value": 15,
+        "series": "B",
+        "low": 8,
+        "high": 22
+      },
+      {
+        "time": 1,
+        "value": 12,
+        "series": "B",
+        "low": 5,
+        "high": 20
+      },
+      {
+        "time": 2,
+        "value": 28,
+        "series": "B",
+        "low": 20,
+        "high": 35
+      },
+      {
+        "time": 3,
+        "value": 20,
+        "series": "B",
+        "low": 12,
+        "high": 28
+      }
+    ],
+    "xAccessor": "time",
+    "yAccessor": "value",
+    "lineBy": "series",
+    "colorBy": "series",
+    "curve": "monotoneX",
+    "lineWidth": 3,
+    "band": {
+      "y0Accessor": "low",
+      "y1Accessor": "high"
+    },
+    "width": 440,
+    "height": 260
+  }
+}

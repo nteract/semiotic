@@ -48,6 +48,7 @@ jobs:
           npm audit --registry=https://registry.npmjs.org --audit-level=moderate
           npm run check:ai-tasks
           npm run check:adoption-evals
+          npm run check:consumer-contracts
 
       - name: Check source policy and repository lints
         run: |

@@ -1,0 +1,25 @@
+{
+  "component": "BarChart",
+  "props": {
+    "data": [
+      {
+        "region": "AMER",
+        "value": 47
+      },
+      {
+        "region": "EMEA",
+        "value": 23
+      },
+      {
+        "region": "APAC",
+        "value": 31
+      }
+    ],
+    "categoryAccessor": "region",
+    "valueAccessor": "value",
+    "axisExtent": "exact",
+    "showGrid": true,
+    "width": 400,
+    "height": 220
+  }
+}

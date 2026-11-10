@@ -16,6 +16,10 @@ function ssrParityFixtureEsmPlugin() {
       if (id !== fixturePath) return null
       return code
         .replace(
+          /const (consumerSeed\d+) = require\("(\.\.\/consumer-contracts\/fixtures\/[a-z0-9-]+\.json)"\)/g,
+          'import $1 from "$2"',
+        )
+        .replace(
           `const {
   isotypeInk: GLYPH_INK,
   isotypePaper: GLYPH_PAPER,

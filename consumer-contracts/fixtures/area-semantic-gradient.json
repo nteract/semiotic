@@ -1,0 +1,64 @@
+{
+  "component": "AreaChart",
+  "props": {
+    "data": [
+      {
+        "time": 0,
+        "value": 10
+      },
+      {
+        "time": 1,
+        "value": 45
+      },
+      {
+        "time": 2,
+        "value": 62
+      },
+      {
+        "time": 3,
+        "value": 80
+      },
+      {
+        "time": 4,
+        "value": 95
+      }
+    ],
+    "xAccessor": "time",
+    "yAccessor": "value",
+    "curve": "step",
+    "semanticGradient": [
+      {
+        "at": 50,
+        "color": "#E5A800"
+      },
+      {
+        "at": 75,
+        "color": "#FF8000"
+      },
+      {
+        "at": 95,
+        "color": "#FF7077"
+      }
+    ],
+    "yExtent": [
+      0,
+      100
+    ],
+    "annotations": [
+      {
+        "type": "y-threshold",
+        "value": 50,
+        "label": "Warning",
+        "color": "#E5A800"
+      },
+      {
+        "type": "y-threshold",
+        "value": 90,
+        "label": "Critical",
+        "color": "#FF7077"
+      }
+    ],
+    "width": 440,
+    "height": 260
+  }
+}

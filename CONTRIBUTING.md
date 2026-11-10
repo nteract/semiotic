@@ -53,6 +53,7 @@ src/
 ai/               # schema, MCP server, CLI, prompts, examples, metadata
 docs/             # documentation site source (Vite)
 integration-tests/# Playwright fixtures and specs
+consumer-contracts/# portable regression inputs and observable contracts
 scripts/          # build, release, validation, and generated-doc scripts
 benchmarks/       # vitest bench suites
 ```
@@ -64,6 +65,11 @@ benchmarks/       # vitest bench suites
 3. Run the narrow tests or checks that cover your change.
 4. Run broader release checks for shared behavior, public API changes, SSR, AI contracts, or docs changes.
 5. Open a PR against `main` with the checks you ran.
+
+For consumer-inspired rendering regressions, reuse the
+[consumer contract corpus](consumer-contracts/README.md). It shares portable
+inputs between source-renderer tests and browser parity, with explicit
+provenance and observable expectations.
 
 ## Toolchain
 

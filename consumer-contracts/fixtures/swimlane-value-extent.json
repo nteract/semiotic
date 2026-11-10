@@ -1,0 +1,24 @@
+{
+  "component": "SwimlaneChart",
+  "props": {
+    "data": [
+      {
+        "lane": "capacity",
+        "phase": "used",
+        "value": 40
+      }
+    ],
+    "categoryAccessor": "lane",
+    "subcategoryAccessor": "phase",
+    "valueAccessor": "value",
+    "valueExtent": [
+      0,
+      100
+    ],
+    "trackFill": "#e3e3ea",
+    "roundedTop": 6,
+    "colorBy": "phase",
+    "width": 440,
+    "height": 160
+  }
+}
