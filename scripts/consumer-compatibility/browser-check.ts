@@ -5,6 +5,7 @@ import { extname, resolve, sep } from "node:path"
 import type { Browser } from "playwright-chromium"
 import { assertNoDiagnostics, isExpectedPeerWarning } from "./contracts.ts"
 import type { peerChecks } from "./peers.ts"
+import type { checkEdgeRenderer } from "./edge-renderer.ts"
 
 export async function serveOutput(directory: string) {
   const server = createServer(async (request, response) => {
@@ -170,6 +171,12 @@ export async function checkBrowser(
     await page.evaluate(async (path) => {
       await import(/* @vite-ignore */ path)
     }, surfaceUrl)
+    const edgeRenderer = await page.evaluate(async () => {
+      const state = window as unknown as {
+        __semioticEdgeRendererCheck: () => ReturnType<typeof checkEdgeRenderer>
+      }
+      return state.__semioticEdgeRendererCheck()
+    })
     const peers: Record<string, string> = {}
     const expectedPeerWarnings: string[] = []
     for (const peer of ["matter", "rapier"] as const) {
@@ -193,6 +200,7 @@ export async function checkBrowser(
     return {
       charts: ["LineChart", "BarChart", "ProcessSankey", "UnitPileChart"],
       workers: 3,
+      edgeRenderer,
       peers,
       expectedPeerWarnings
     }

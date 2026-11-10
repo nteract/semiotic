@@ -112,7 +112,8 @@ async function main() {
     writeFileSync(
       join(temp, "surface.mjs"),
       namespaceProbe(entries.browser) +
-        '\nimport { peerChecks } from "./peers.mjs";\nglobalThis.__semioticPeerChecks = peerChecks;\n'
+        '\nimport { peerChecks } from "./peers.mjs";\nglobalThis.__semioticPeerChecks = peerChecks;\n' +
+        '\nimport { checkEdgeRenderer } from "./edge-renderer.mjs";\nglobalThis.__semioticEdgeRendererCheck = () => checkEdgeRenderer(globalThis.__semioticConsumerEntries["semiotic/server/edge"], globalThis.__semioticConsumerEntries["semiotic/geo"]);\n'
     )
     writeFileSync(
       join(temp, "server.mjs"),
@@ -148,6 +149,15 @@ async function main() {
       }
     )
     writeFileSync(join(temp, "peers.mjs"), peers.code)
+    const edge = await transform(
+      readFileSync(join(here, "edge-renderer.ts"), "utf8"),
+      {
+        loader: "ts",
+        format: "esm",
+        target: "es2022"
+      }
+    )
+    writeFileSync(join(temp, "edge-renderer.mjs"), edge.code)
     writeFileSync(join(temp, "index.html"), html("/browser.mjs"))
 
     const browser = await chromium.launch({ headless: true })
@@ -182,7 +192,7 @@ async function main() {
             }
             results.push({ bundler, mode, status: "passed", ...evidence })
             console.log(
-              `✓ ${label}: no unexpected warnings; charts, workers, optional peers, and SSR passed`
+              `✓ ${label}: no unexpected warnings; charts, workers, optional peers, browser edge rendering, and Node SSR passed`
             )
           } catch (error) {
             const message =
