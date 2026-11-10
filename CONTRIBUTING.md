@@ -261,7 +261,20 @@ Every occurrence is recorded in the report; other directives, other packages,
 and all other module diagnostics still fail. The named-import Vite application
 uses code splitting with the default size warning threshold intact.
 The full-engine peer probes run from the library-sized API census, which also
-gets loaded in the browser. Rapier 0.19.3 emits a deprecation warning inside its
+gets loaded in the browser. The census's packed `semiotic/server/edge` namespace
+also executes in Chromium in each bundler/mode: the probe verifies real SVG
+marks and domains, geometry precision, custom React annotations and legends,
+accessible text, and local GeoJSON rendering. Reference geography is checked
+separately: synchronous rendering rejects an unresolved `world-110m` string;
+the probe awaits `semiotic/geo.resolveReferenceGeography` with the installed
+`world-atlas` peer and renders the returned features. Edge rendering does not
+load named geographies synchronously. The report's `edgeRenderer` field records
+these checks separately from live charts, workers, optional peers and Node SSR.
+This probe runs after the census loads and adds no renderer import to the
+ordinary chart application. Consumers supply no Node dependency aliases or
+`react-dom/server` shims.
+
+Rapier 0.19.3 emits a deprecation warning inside its
 own public `init()` implementation, even without Semiotic. The gate records a
 single occurrence of that exact warning only during the Rapier probe and only
 for that version; other console warnings/errors still fail. Revisit this
