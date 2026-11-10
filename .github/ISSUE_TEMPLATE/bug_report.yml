@@ -53,6 +53,7 @@ body:
     id: version
     attributes:
       label: Semiotic version
+      description: Give the installed or pinned version that reproduces the problem.
       placeholder: "3.0.0"
     validations:
       required: true
@@ -107,3 +108,9 @@ body:
         Add screenshots, render evidence, accessibility findings, console
         output, or a minimal repository. Note whether equivalent Canvas, live
         SVG, and static output were checked.
+
+  - type: textarea
+    id: consumer-context
+    attributes:
+      label: Consumer context (optional)
+      description: Describe the application or workflow affected. A public description is enough; do not disclose private code or repository links.

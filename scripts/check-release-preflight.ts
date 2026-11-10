@@ -1,4 +1,5 @@
 import { spawnSync } from "node:child_process"
+import { existsSync, readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -6,6 +7,7 @@ import { fileURLToPath } from "node:url"
 // or browsers are prepared. Keep artifact-dependent checks in release:check.
 export const RELEASE_PREFLIGHT_CHECKS = [
   "check:test-discovery",
+  "check:changelog-provenance",
   "check:ai-tasks",
   "check:adoption-evals",
   "check:release-version-alignment",
@@ -62,6 +64,17 @@ export function runReleasePreflight({
   ]
   const failures: string[] = []
   for (const args of commands) {
+    if (
+      args[1] === "check:changelog-provenance" &&
+      !existsSync(resolve(root, "scripts/check-changelog-provenance.ts")) &&
+      existsSync(resolve(root, "CHANGELOG.md")) &&
+      !readFileSync(resolve(root, "CHANGELOG.md"), "utf8").includes(
+        "added-provenance:"
+      )
+    ) {
+      log("Skipping changelog provenance: tagged source predates adoption.")
+      continue
+    }
     const label = `npm ${args.join(" ")}`
     log(`\n> ${label}`)
     const result = execute("npm", args, {

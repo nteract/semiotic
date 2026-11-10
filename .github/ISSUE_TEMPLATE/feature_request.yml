@@ -14,7 +14,7 @@ body:
     id: use-case
     attributes:
       label: Use case
-      description: What problem does this solve? How would you use it?
+      description: Describe the consumer or use context and the problem this solves. Public descriptions are sufficient; no private repository links or proprietary code are required.
     validations:
       required: true
 
@@ -22,7 +22,15 @@ body:
     id: alternatives
     attributes:
       label: Alternatives considered
-      description: Have you tried any workarounds or alternatives?
+      description: Which high-level props, frameProps, annotations, or custom layouts have you tried? "Not yet attempted" and "no existing workaround" are valid answers.
+
+  - type: textarea
+    id: exit-criterion
+    attributes:
+      label: Observable exit criterion
+      description: What concrete behavior or evidence would show this request is satisfied? If replacing a workaround, when could it be removed?
+    validations:
+      required: true
 
   - type: dropdown
     id: surface

@@ -64,7 +64,8 @@ export default defineConfig(({ mode }) => ({
       // checked by scripts/vitest-projects.test.mjs before expensive jobs.
       'scripts/**/*.test.mjs',
       'scripts/release-preflight.test.ts',
-      'scripts/release-dist-tag.test.ts'
+      'scripts/release-dist-tag.test.ts',
+      'scripts/changelog-provenance.test.ts'
     ],
     coverage: {
       provider: 'v8',

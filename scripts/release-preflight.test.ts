@@ -92,7 +92,8 @@ test("local release and direct publish start with preflight; fast checks include
     "node --experimental-strip-types scripts/check-release-preflight.ts"
   )
   const fast = scripts["check:preflight"].split(" && ")
-  assert.deepEqual(fast.slice(0, 2), [
+  assert.deepEqual(fast.slice(0, 3), [
+    "npm run check:changelog-provenance",
     "npm run check:ai-tasks",
     "npm run check:adoption-evals"
   ])
