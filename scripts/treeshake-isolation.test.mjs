@@ -267,6 +267,24 @@ async function rolldownEagerModules(exportKey, symbol) {
   return modules
 }
 
+test("circle annotations do not eagerly load the D3 hierarchy bundle", async () => {
+  const retainsHierarchy = (modules) => [...modules].some((id) =>
+    id.replaceAll("\\", "/").includes("/node_modules/d3-hierarchy/")
+  )
+  for (const [entry, symbol] of [
+    [".", "LineChart"], ["./xy", "LineChart"], ["./line", "LineChart"],
+    ["./ordinal", "BarChart"], ["./network", "SankeyDiagram"],
+    ["./network/zoom", "ZoomableNetworkCustomChart"], ["./atlas", "MotifBraidChart"],
+    ["./realtime", "RealtimeLineChart"], ["./physics", "GaltonBoardChart"],
+    ["./geo", "ChoroplethMap"], ["./wordcloud", "WordCloud"]
+  ]) {
+    assert.equal(retainsHierarchy(await rolldownEagerModules(entry, symbol)), false,
+      `${entry} ${symbol} eagerly retains d3-hierarchy through shared annotations`)
+  }
+  assert.equal(retainsHierarchy(await rolldownEagerModules("./network", "Treemap")), true,
+    "hierarchy charts must still retain their actual D3 layout")
+})
+
 for (const [exportKey, symbol, lazySources] of builtInBoundaryCases) {
   test(`semiotic${exportKey.slice(1)} ${symbol} loads other built-ins only on demand`, async () => {
     const eagerModules = await rolldownEagerModules(exportKey, symbol)

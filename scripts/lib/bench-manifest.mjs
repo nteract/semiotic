@@ -8,13 +8,13 @@
 import { cpSync, existsSync, readFileSync, rmSync } from "node:fs"
 import { join, resolve } from "node:path"
 
-/** Capture either the current Vitest 5 runner or an older release's runner. */
+/** Node arguments for the current Vitest 5 runner or an older release's runner. */
 export function benchmarkCaptureArgs(root, outputPath) {
   const { version } = JSON.parse(
     readFileSync(join(root, "node_modules/vitest/package.json"), "utf8")
   )
   return [
-    "vitest",
+    join(root, "node_modules/vitest/vitest.mjs"),
     "bench",
     "--run",
     ...(Number(version.split(".")[0]) >= 5

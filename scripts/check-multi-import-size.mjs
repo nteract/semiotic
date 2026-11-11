@@ -138,7 +138,12 @@ const analyze = process.argv.includes("--analyze")
 // validator reads (2026-11-10): this consumer imports semiotic/ai, so the same
 // 29-file union measures 332099 bytes, 464 more. Still 2127 bytes under the
 // figure before the chunk split.
-const MULTI_IMPORT_GZIP_BUDGET = 324.5 * 1024
+// Isolating annotation circle enclosure from d3-hierarchy 3.1.3 restores
+// ordinary charts' lazy layout boundary. This mixed AI/chart consumer already
+// needs the full hierarchy engine, so it also retains the standalone helper:
+// same dependencies and bundler, 332246 -> 332999 bytes (+753 B, 0.23%).
+// Keep ~0.2 KiB headroom; named-import tolerances and isolation stay fixed.
+const MULTI_IMPORT_GZIP_BUDGET = 325.4 * 1024
 
 const MULTI_IMPORT_SOURCE = `
 export { LineChart } from "semiotic/xy"

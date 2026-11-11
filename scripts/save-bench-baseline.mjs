@@ -32,7 +32,7 @@ const baselinePath = outArg
 
 const tmpJson = join(tmpdir(), `semiotic-bench-${Date.now()}.json`)
 console.log(`▶ running benchmarks → ${tmpJson}`)
-execFileSync("npx", benchmarkCaptureArgs(repoRoot, tmpJson), {
+execFileSync(process.execPath, benchmarkCaptureArgs(repoRoot, tmpJson), {
   cwd: repoRoot,
   stdio: "inherit",
 })
