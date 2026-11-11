@@ -1,676 +1,1141 @@
 {
-  "timestamp": "2026-09-04T22:42:44.309Z",
-  "git_commit": "69249a30",
-  "node_version": "v22.22.1",
+  "timestamp": "2026-11-11T23:15:25.804Z",
+  "git_commit": "f1501349d",
+  "node_version": "v22.23.2",
   "benchmarks": {
     "chord-matrix-20-nodes-400ops": {
-      "mean": 0.031494891975308796,
-      "sampleCount": 15876,
+      "mean": 0.03196401246563996,
+      "sampleCount": 15643,
       "unit": "ms"
     },
     "chord-matrix-50-nodes-2500ops": {
-      "mean": 0.2112112500000003,
-      "sampleCount": 2368,
+      "mean": 0.21478713015463768,
+      "sampleCount": 2328,
       "unit": "ms"
     },
     "chord-matrix-100-nodes-10000ops": {
-      "mean": 0.8196824147541009,
-      "sampleCount": 610,
+      "mean": 0.8385686984924619,
+      "sampleCount": 597,
       "unit": "ms"
     },
     "chord-matrix-200-nodes-40000ops": {
-      "mean": 3.3835396891891816,
-      "sampleCount": 148,
+      "mean": 3.5653436737588757,
+      "sampleCount": 141,
       "unit": "ms"
     },
     "chord-matrix-500-nodes-250000ops": {
-      "mean": 25.39436035000001,
+      "mean": 25.531687499999972,
       "sampleCount": 20,
       "unit": "ms"
     },
     "chord-matrix-scaling-20": {
-      "mean": 0.033140366980380656,
-      "sampleCount": 15088,
+      "mean": 0.0339478736506202,
+      "sampleCount": 14729,
       "unit": "ms"
     },
     "chord-matrix-scaling-40": {
-      "mean": 0.13279183112054688,
-      "sampleCount": 3766,
+      "mean": 0.13236118210692663,
+      "sampleCount": 3778,
       "unit": "ms"
     },
     "chord-matrix-scaling-80": {
-      "mean": 0.5201023846153975,
+      "mean": 0.5198660114345168,
       "sampleCount": 962,
       "unit": "ms"
     },
     "chord-matrix-100nodes-sparse-1x": {
-      "mean": 0.8383308375209351,
-      "sampleCount": 597,
+      "mean": 0.8668015667244302,
+      "sampleCount": 577,
       "unit": "ms"
     },
     "chord-matrix-100nodes-medium-3x": {
-      "mean": 0.8252245528052905,
-      "sampleCount": 606,
+      "mean": 0.827858953642376,
+      "sampleCount": 604,
       "unit": "ms"
     },
     "chord-matrix-100nodes-dense-5x": {
-      "mean": 0.9116481293260607,
-      "sampleCount": 549,
+      "mean": 0.943515666037745,
+      "sampleCount": 530,
       "unit": "ms"
     },
     "accessor-100pts-1x-1y-100ops": {
-      "mean": 0.0006237963293343351,
-      "sampleCount": 801544,
+      "mean": 0.0006330057223663805,
+      "sampleCount": 789883,
       "unit": "ms"
     },
     "accessor-1000pts-1x-1y-1000ops": {
-      "mean": 0.007875923288965405,
-      "sampleCount": 63485,
+      "mean": 0.008213980565776843,
+      "sampleCount": 60872,
       "unit": "ms"
     },
     "accessor-1000pts-2x-2y-4000ops": {
-      "mean": 0.03045775939574781,
-      "sampleCount": 16417,
+      "mean": 0.03364329612434579,
+      "sampleCount": 14862,
       "unit": "ms"
     },
     "accessor-1000pts-3x-3y-9000ops": {
-      "mean": 0.06890108543475407,
-      "sampleCount": 7257,
+      "mean": 0.07997817866282873,
+      "sampleCount": 6252,
       "unit": "ms"
     },
     "accessor-5000pts-2x-2y-20000ops": {
-      "mean": 0.1696671645741407,
-      "sampleCount": 2947,
+      "mean": 0.22793959845032008,
+      "sampleCount": 2194,
       "unit": "ms"
     },
     "accessor-2x2-100pts": {
-      "mean": 0.005624784898698803,
-      "sampleCount": 88893,
+      "mean": 0.005410246975698541,
+      "sampleCount": 92418,
       "unit": "ms"
     },
     "accessor-2x2-500pts": {
-      "mean": 0.030029283406403078,
-      "sampleCount": 16651,
+      "mean": 0.02751499708342408,
+      "sampleCount": 18172,
       "unit": "ms"
     },
     "accessor-2x2-1000pts": {
-      "mean": 0.06353897839898491,
-      "sampleCount": 7870,
+      "mean": 0.05507465778168689,
+      "sampleCount": 9079,
       "unit": "ms"
     },
     "accessor-2x2-5000pts": {
-      "mean": 0.3277377667103665,
-      "sampleCount": 1526,
+      "mean": 0.2836291792399268,
+      "sampleCount": 1763,
       "unit": "ms"
     },
     "accessor-1000pts-1x1y": {
-      "mean": 0.01606417262095987,
-      "sampleCount": 31126,
+      "mean": 0.014161931399761643,
+      "sampleCount": 35306,
       "unit": "ms"
     },
     "accessor-1000pts-2x2y": {
-      "mean": 0.06292559061162631,
-      "sampleCount": 7946,
+      "mean": 0.05702676357207845,
+      "sampleCount": 8768,
       "unit": "ms"
     },
     "accessor-1000pts-3x3y": {
-      "mean": 0.14438780219462186,
-      "sampleCount": 3463,
+      "mean": 0.13301644878958002,
+      "sampleCount": 3759,
       "unit": "ms"
     },
     "accessor-1000pts-4x4y": {
-      "mean": 0.2716825247148378,
-      "sampleCount": 1841,
+      "mean": 0.2606449817708034,
+      "sampleCount": 1920,
       "unit": "ms"
     },
     "accessor-1000pts-simple": {
-      "mean": 0.014809291857941918,
-      "sampleCount": 33763,
+      "mean": 0.013220661898460134,
+      "sampleCount": 37820,
       "unit": "ms"
     },
     "accessor-1000pts-complex": {
-      "mean": 0.022636076599210055,
-      "sampleCount": 22089,
+      "mean": 0.02172166584126207,
+      "sampleCount": 23019,
       "unit": "ms"
     },
     "accessor-1000pts-very-complex": {
-      "mean": 0.048061845636287646,
-      "sampleCount": 10404,
+      "mean": 0.04341069065810122,
+      "sampleCount": 11518,
       "unit": "ms"
     },
     "swarmLayout-small-50-120iter": {
-      "mean": 1.5681013855799353,
-      "sampleCount": 319,
+      "mean": 1.5969643025477724,
+      "sampleCount": 314,
       "unit": "ms"
     },
     "swarmLayout-medium-200-120iter": {
-      "mean": 8.261143491803296,
-      "sampleCount": 61,
+      "mean": 8.626749327586225,
+      "sampleCount": 58,
       "unit": "ms"
     },
     "swarmLayout-large-1000-120iter": {
-      "mean": 66.0804917,
+      "mean": 67.15124570000008,
       "sampleCount": 10,
       "unit": "ms"
     },
     "swarmLayout-200pts-30iter": {
-      "mean": 2.174971713043458,
-      "sampleCount": 230,
+      "mean": 2.2380217633928647,
+      "sampleCount": 224,
       "unit": "ms"
     },
     "swarmLayout-200pts-60iter": {
-      "mean": 4.2173112521008305,
-      "sampleCount": 119,
+      "mean": 4.314940767241383,
+      "sampleCount": 116,
       "unit": "ms"
     },
     "swarmLayout-200pts-120iter": {
-      "mean": 8.388699999999988,
-      "sampleCount": 60,
+      "mean": 8.599863000000076,
+      "sampleCount": 59,
       "unit": "ms"
     },
     "swarmLayout-200pts-240iter": {
-      "mean": 16.403387193548305,
-      "sampleCount": 31,
+      "mean": 16.667945833333242,
+      "sampleCount": 30,
       "unit": "ms"
     },
     "force-layout-small-50-500iter": {
-      "mean": 25.828943899999967,
+      "mean": 26.031108300000145,
       "sampleCount": 20,
       "unit": "ms"
     },
     "force-layout-medium-100-500iter": {
-      "mean": 65.02999170000021,
+      "mean": 67.59453319999984,
       "sampleCount": 10,
       "unit": "ms"
     },
     "force-layout-medium-200-500iter": {
-      "mean": 161.5971790000004,
+      "mean": 163.48888349999996,
       "sampleCount": 10,
       "unit": "ms"
     },
     "force-layout-large-500-500iter": {
-      "mean": 575.1699627,
+      "mean": 583.1279415999998,
       "sampleCount": 10,
       "unit": "ms"
     },
     "force-layout-100nodes-100iter": {
-      "mean": 14.389428571428393,
+      "mean": 14.652420085714194,
       "sampleCount": 35,
       "unit": "ms"
     },
     "force-layout-100nodes-250iter": {
-      "mean": 34.62637500000007,
+      "mean": 35.20512513333282,
       "sampleCount": 15,
       "unit": "ms"
     },
     "force-layout-100nodes-500iter": {
-      "mean": 68.02368739999983,
+      "mean": 68.71212059999961,
       "sampleCount": 10,
       "unit": "ms"
     },
     "force-layout-100nodes-1000iter": {
-      "mean": 135.30144179999917,
+      "mean": 136.71056239999996,
       "sampleCount": 10,
       "unit": "ms"
     },
     "force-layout-100nodes-sparse-1.5x-250iter": {
-      "mean": 33.73261926666552,
+      "mean": 34.10142499999977,
       "sampleCount": 15,
       "unit": "ms"
     },
     "force-layout-100nodes-medium-3x-250iter": {
-      "mean": 32.577856749999455,
+      "mean": 33.01605725000013,
       "sampleCount": 16,
       "unit": "ms"
     },
     "force-layout-100nodes-dense-5x-250iter": {
-      "mean": 34.0836027333331,
+      "mean": 34.78680013333287,
       "sampleCount": 15,
       "unit": "ms"
     },
     "nodesEdgesFromHierarchy-small-d3-b3": {
-      "mean": 0.005885185487288143,
-      "sampleCount": 84960,
+      "mean": 0.00584340611450661,
+      "sampleCount": 85567,
       "unit": "ms"
     },
     "nodesEdgesFromHierarchy-medium-d4-b4": {
-      "mean": 0.04213507828431896,
-      "sampleCount": 11867,
+      "mean": 0.04306536026182176,
+      "sampleCount": 11611,
       "unit": "ms"
     },
     "nodesEdgesFromHierarchy-large-d5-b4": {
-      "mean": 0.18316118571428605,
-      "sampleCount": 2730,
+      "mean": 0.19026753691020107,
+      "sampleCount": 2628,
       "unit": "ms"
     },
     "nodesEdgesFromHierarchy-xlarge-d5-b5": {
-      "mean": 0.46242395101664613,
-      "sampleCount": 1082,
+      "mean": 0.4816007006737212,
+      "sampleCount": 1039,
       "unit": "ms"
     },
     "nodesEdgesFromHierarchy-raw-json": {
-      "mean": 0.04232403013373943,
-      "sampleCount": 11814,
+      "mean": 0.04340099635448206,
+      "sampleCount": 11521,
       "unit": "ms"
     },
     "nodesEdgesFromHierarchy-pre-built": {
-      "mean": 0.03765160587349351,
-      "sampleCount": 13280,
+      "mean": 0.037706983032957345,
+      "sampleCount": 13261,
       "unit": "ms"
     },
     "tree-layout": {
-      "mean": 0.030383081788906155,
-      "sampleCount": 16457,
+      "mean": 0.030836576688256907,
+      "sampleCount": 16215,
       "unit": "ms"
     },
     "treemap-layout": {
-      "mean": 0.04070438611202299,
-      "sampleCount": 12284,
+      "mean": 0.041825435048094765,
+      "sampleCount": 11955,
       "unit": "ms"
     },
     "partition-layout": {
-      "mean": 0.0261007778879759,
-      "sampleCount": 19157,
+      "mean": 0.026391317375699955,
+      "sampleCount": 18946,
       "unit": "ms"
     },
     "circlepack-layout": {
-      "mean": 0.09738004479064558,
-      "sampleCount": 5135,
+      "mean": 0.11025266909171827,
+      "sampleCount": 4536,
       "unit": "ms"
     },
     "treemap-small-d3-b3": {
-      "mean": 0.005627977082909336,
-      "sampleCount": 88842,
+      "mean": 0.005721009370706591,
+      "sampleCount": 87400,
       "unit": "ms"
     },
     "partition-small-d3-b3": {
-      "mean": 0.003526678431622079,
-      "sampleCount": 141777,
+      "mean": 0.003407422900524158,
+      "sampleCount": 146739,
       "unit": "ms"
     },
     "treemap-medium-d4-b4": {
-      "mean": 0.041792090103641204,
-      "sampleCount": 11964,
+      "mean": 0.041477368726668185,
+      "sampleCount": 12055,
       "unit": "ms"
     },
     "partition-medium-d4-b4": {
-      "mean": 0.02815246821687554,
-      "sampleCount": 17761,
+      "mean": 0.026519384248204374,
+      "sampleCount": 18855,
       "unit": "ms"
     },
     "treemap-large-d5-b4": {
-      "mean": 0.1863218315946348,
-      "sampleCount": 2684,
+      "mean": 0.18378619845646446,
+      "sampleCount": 2721,
       "unit": "ms"
     },
     "partition-large-d5-b4": {
-      "mean": 0.11618002741634048,
-      "sampleCount": 4304,
+      "mean": 0.11732663749414508,
+      "sampleCount": 4262,
       "unit": "ms"
     },
     "full-pipeline-tree-small": {
-      "mean": 0.0118800306263033,
-      "sampleCount": 42088,
+      "mean": 0.012374056572962663,
+      "sampleCount": 40408,
       "unit": "ms"
     },
     "full-pipeline-treemap-small": {
-      "mean": 0.019081183636081783,
-      "sampleCount": 26204,
+      "mean": 0.01937865591814398,
+      "sampleCount": 25802,
       "unit": "ms"
     },
     "full-pipeline-tree-medium": {
-      "mean": 0.1216262198978378,
-      "sampleCount": 4111,
+      "mean": 0.12494114642677479,
+      "sampleCount": 4002,
       "unit": "ms"
     },
     "full-pipeline-treemap-medium": {
-      "mean": 0.13853988531856098,
-      "sampleCount": 3610,
+      "mean": 0.14267278459343918,
+      "sampleCount": 3505,
       "unit": "ms"
     },
     "full-pipeline-tree-large": {
-      "mean": 0.5379438279569924,
-      "sampleCount": 930,
+      "mean": 0.5571281191537,
+      "sampleCount": 898,
       "unit": "ms"
     },
     "full-pipeline-treemap-large": {
-      "mean": 0.608644420924592,
-      "sampleCount": 822,
+      "mean": 0.6306095188916757,
+      "sampleCount": 794,
+      "unit": "ms"
+    },
+    "retained-10k-edges-unchanged": {
+      "mean": 0.08581583095932571,
+      "sampleCount": 5827,
+      "unit": "ms"
+    },
+    "retained-10k-edges-width-restyle": {
+      "mean": 0.2214450403011556,
+      "sampleCount": 2258,
+      "unit": "ms"
+    },
+    "geo-50k-segments-near-route": {
+      "mean": 0.16146315369712508,
+      "sampleCount": 3097,
+      "unit": "ms"
+    },
+    "geo-50k-segments-outside-map": {
+      "mean": 0.16594948788582992,
+      "sampleCount": 3013,
+      "unit": "ms"
+    },
+    "geo-50k-segments-near-endpoint": {
+      "mean": 0.15934830688336465,
+      "sampleCount": 3138,
+      "unit": "ms"
+    },
+    "count-10k-intervals-1-samples": {
+      "mean": 0.09604906185170983,
+      "sampleCount": 5206,
+      "unit": "ms"
+    },
+    "count-10k-intervals-1000-samples": {
+      "mean": 2.0207167661290253,
+      "sampleCount": 248,
+      "unit": "ms"
+    },
+    "count-10k-intervals-10000-samples": {
+      "mean": 2.0838334500000015,
+      "sampleCount": 240,
       "unit": "ms"
     },
     "csv-parse-1k-rows": {
-      "mean": 0.36852126676492103,
-      "sampleCount": 1357,
+      "mean": 0.3621456584659924,
+      "sampleCount": 1382,
       "unit": "ms"
     },
     "csv-parse-10k-rows": {
-      "mean": 3.5695289574468236,
-      "sampleCount": 141,
+      "mean": 3.624029424460418,
+      "sampleCount": 139,
       "unit": "ms"
     },
     "csv-parse-50k-rows": {
-      "mean": 23.747016954545437,
-      "sampleCount": 22,
+      "mean": 24.167873000000036,
+      "sampleCount": 21,
       "unit": "ms"
     },
     "transform-1k-points": {
-      "mean": 0.044031961870377674,
-      "sampleCount": 11356,
+      "mean": 0.048689207205454284,
+      "sampleCount": 10270,
       "unit": "ms"
     },
     "transform-10k-points": {
-      "mean": 0.43610727462947135,
-      "sampleCount": 1147,
+      "mean": 0.47340975402081775,
+      "sampleCount": 1057,
       "unit": "ms"
     },
     "transform-50k-points": {
-      "mean": 2.2883052283105103,
-      "sampleCount": 219,
+      "mean": 2.4125971105769333,
+      "sampleCount": 208,
       "unit": "ms"
     },
     "project-points-1k": {
-      "mean": 0.005822595775156697,
-      "sampleCount": 85873,
+      "mean": 0.006155383183552434,
+      "sampleCount": 81230,
       "unit": "ms"
     },
     "project-points-10k": {
-      "mean": 0.055090557955045444,
-      "sampleCount": 9076,
+      "mean": 0.06522466905817176,
+      "sampleCount": 7666,
       "unit": "ms"
     },
     "project-points-50k": {
-      "mean": 0.3342648068181901,
-      "sampleCount": 1496,
+      "mean": 0.570408187001131,
+      "sampleCount": 877,
       "unit": "ms"
     },
     "extent-xy-1k": {
-      "mean": 0.0025560787422109726,
-      "sampleCount": 195613,
+      "mean": 0.0015246945339792604,
+      "sampleCount": 327935,
       "unit": "ms"
     },
     "extent-xy-10k": {
-      "mean": 0.024112133047207874,
-      "sampleCount": 20737,
+      "mean": 0.0139316290331577,
+      "sampleCount": 35890,
       "unit": "ms"
     },
     "extent-xy-50k": {
-      "mean": 0.12062781447526873,
-      "sampleCount": 4145,
+      "mean": 0.06955533231325166,
+      "sampleCount": 7189,
       "unit": "ms"
     },
     "full-scatter-pipeline-1k": {
-      "mean": 0.45129741064983997,
-      "sampleCount": 1108,
+      "mean": 0.453802201451917,
+      "sampleCount": 1102,
       "unit": "ms"
     },
     "full-scatter-pipeline-10k": {
-      "mean": 4.556256099999982,
-      "sampleCount": 110,
+      "mean": 4.683383523364357,
+      "sampleCount": 107,
       "unit": "ms"
     },
     "full-scatter-pipeline-50k": {
-      "mean": 29.620604166666453,
+      "mean": 29.675551352941028,
+      "sampleCount": 17,
+      "unit": "ms"
+    },
+    "prepare-1000-vertices-5000-edges-20-bands": {
+      "mean": 7.954348888888893,
+      "sampleCount": 126,
+      "unit": "ms"
+    },
+    "match-1000-vertices-2000-fan-matches": {
+      "mean": 2.5135676180904394,
+      "sampleCount": 398,
+      "unit": "ms"
+    },
+    "prepare-10000-vertices-50000-edges-20-bands": {
+      "mean": 90.55872916666668,
+      "sampleCount": 30,
+      "unit": "ms"
+    },
+    "match-10000-vertices-20000-fan-matches": {
+      "mean": 30.769034181818107,
+      "sampleCount": 33,
+      "unit": "ms"
+    },
+    "match-serial-chain-1000-full": {
+      "mean": 0.6507309141184028,
+      "sampleCount": 1537,
+      "unit": "ms"
+    },
+    "match-serial-chain-10000-full": {
+      "mean": 9.95814068316823,
+      "sampleCount": 101,
+      "unit": "ms"
+    },
+    "match-fan-out-10000-bounded": {
+      "mean": 5.555719922222165,
+      "sampleCount": 180,
+      "unit": "ms"
+    },
+    "match-fan-out-10000-full": {
+      "mean": 6.59402412500009,
+      "sampleCount": 152,
+      "unit": "ms"
+    },
+    "match-fan-in-10000-bounded": {
+      "mean": 13.091095779220787,
+      "sampleCount": 77,
+      "unit": "ms"
+    },
+    "match-fan-in-10000-full": {
+      "mean": 13.781406369862998,
+      "sampleCount": 73,
+      "unit": "ms"
+    },
+    "match-repeated-state-episode-1000-full": {
+      "mean": 0.4278051817793232,
+      "sampleCount": 2338,
+      "unit": "ms"
+    },
+    "match-repeated-state-episode-10000-full": {
+      "mean": 5.517912082417315,
+      "sampleCount": 182,
+      "unit": "ms"
+    },
+    "layout-60-nodes-200-edges": {
+      "mean": 94.8821590909091,
+      "sampleCount": 11,
+      "unit": "ms"
+    },
+    "pack-20-bands-500-samples": {
+      "mean": 0.08905965414069285,
+      "sampleCount": 5615,
+      "unit": "ms"
+    },
+    "pack-20-bands-2000-samples": {
+      "mean": 0.35327143502825215,
+      "sampleCount": 1416,
+      "unit": "ms"
+    },
+    "reachable-1001-nodes-250500-edges": {
+      "mean": 1.5297053914372982,
+      "sampleCount": 327,
+      "unit": "ms"
+    },
+    "shortest-path-20k-nodes": {
+      "mean": 5.124216897959179,
+      "sampleCount": 98,
+      "unit": "ms"
+    },
+    "bond-20-bands-500-samples": {
+      "mean": 8.128017435483917,
+      "sampleCount": 62,
+      "unit": "ms"
+    },
+    "bond-20-bands-2000-samples": {
+      "mean": 35.184705400000105,
+      "sampleCount": 15,
+      "unit": "ms"
+    },
+    "chord-layout-100-nodes": {
+      "mean": 0.7369995125184148,
+      "sampleCount": 679,
+      "unit": "ms"
+    },
+    "chord-scene-100-nodes": {
+      "mean": 0.9776242812500143,
+      "sampleCount": 512,
+      "unit": "ms"
+    },
+    "chord-layout-500-nodes": {
+      "mean": 14.964006088235317,
+      "sampleCount": 34,
+      "unit": "ms"
+    },
+    "chord-scene-500-nodes": {
+      "mean": 5.170228474226778,
+      "sampleCount": 97,
+      "unit": "ms"
+    },
+    "boxplot-10000": {
+      "mean": 1.009875088709678,
+      "sampleCount": 496,
+      "unit": "ms"
+    },
+    "violin-10000": {
+      "mean": 1.158988490740744,
+      "sampleCount": 432,
+      "unit": "ms"
+    },
+    "ridgeline-10000": {
+      "mean": 1.1132147733333384,
+      "sampleCount": 450,
+      "unit": "ms"
+    },
+    "boxplot-100000": {
+      "mean": 14.581395228571402,
+      "sampleCount": 35,
+      "unit": "ms"
+    },
+    "violin-100000": {
+      "mean": 13.087371692307673,
+      "sampleCount": 39,
+      "unit": "ms"
+    },
+    "ridgeline-100000": {
+      "mean": 13.085522461538472,
+      "sampleCount": 39,
+      "unit": "ms"
+    },
+    "connectors-1000-categories-10-series": {
+      "mean": 2.73055641304344,
+      "sampleCount": 184,
+      "unit": "ms"
+    },
+    "queued batch with observations (1000 bodies)": {
+      "mean": 1.100019274725272,
+      "sampleCount": 91,
+      "unit": "ms"
+    },
+    "individual queued arrivals with observations (1000 bodies)": {
+      "mean": 1.2711587468354368,
+      "sampleCount": 79,
+      "unit": "ms"
+    },
+    "queued batch with observations (4000 bodies)": {
+      "mean": 4.960333095238108,
+      "sampleCount": 21,
+      "unit": "ms"
+    },
+    "individual queued arrivals with observations (4000 bodies)": {
+      "mean": 5.741470111111128,
       "sampleCount": 18,
       "unit": "ms"
     },
+    "queued batch with observations (8000 bodies)": {
+      "mean": 9.866420454545462,
+      "sampleCount": 11,
+      "unit": "ms"
+    },
+    "individual queued arrivals with observations (8000 bodies)": {
+      "mean": 12.588533300000005,
+      "sampleCount": 10,
+      "unit": "ms"
+    },
     "kernel-250-bodies-120-steps": {
-      "mean": 29.410417000000052,
+      "mean": 56.606457999999975,
       "sampleCount": 1,
       "unit": "ms"
     },
     "kernel-1000-bodies-120-steps": {
-      "mean": 129.56929100000002,
+      "mean": 261.4901249999999,
       "sampleCount": 1,
       "unit": "ms"
     },
     "kernel-250-bodies-settle-300-step-limit": {
-      "mean": 225.55700000000002,
+      "mean": 229.91274999999996,
       "sampleCount": 1,
       "unit": "ms"
     },
     "kernel-1000-bodies-settle-300-step-limit": {
-      "mean": 1079.598625,
+      "mean": 1256.5367920000003,
       "sampleCount": 1,
       "unit": "ms"
     },
     "physics-sync-250-bodies-60-frames": {
-      "mean": 21.470833000000027,
+      "mean": 40.61354199999994,
       "sampleCount": 1,
       "unit": "ms"
     },
     "physics-sync-1000-bodies-60-frames": {
-      "mean": 350.97462500000006,
+      "mean": 385.73850000000004,
       "sampleCount": 1,
       "unit": "ms"
     },
     "physics-worker-runtime-250-bodies-60-frames": {
-      "mean": 22.088833999999906,
+      "mean": 44.70366600000011,
       "sampleCount": 1,
       "unit": "ms"
     },
     "physics-worker-runtime-1000-bodies-60-frames": {
-      "mean": 367.48791600000004,
+      "mean": 407.0007499999999,
       "sampleCount": 1,
       "unit": "ms"
     },
+    "numeric-profile-100k-without-quartiles": {
+      "mean": 34.324372133333334,
+      "sampleCount": 15,
+      "unit": "ms"
+    },
+    "numeric-profile-100k-with-quartiles": {
+      "mean": 63.012608399999976,
+      "sampleCount": 10,
+      "unit": "ms"
+    },
+    "summary-100k": {
+      "mean": 67.89174580000008,
+      "sampleCount": 10,
+      "unit": "ms"
+    },
+    "sessions-10000-events-retain-Infinity": {
+      "mean": 0.32812026509186043,
+      "sampleCount": 1524,
+      "unit": "ms"
+    },
+    "sessions-10000-events-retain-1000": {
+      "mean": 0.5867238593200366,
+      "sampleCount": 853,
+      "unit": "ms"
+    },
+    "session-20k-events-with-sketches": {
+      "mean": 2.375551322274889,
+      "sampleCount": 211,
+      "unit": "ms"
+    },
+    "tumbling-20k-windows-retain-1000": {
+      "mean": 3.8469287480915852,
+      "sampleCount": 131,
+      "unit": "ms"
+    },
+    "reorder-20k-events-grace-10k": {
+      "mean": 2.8908658959537696,
+      "sampleCount": 173,
+      "unit": "ms"
+    },
+    "digest-3000-quantile-reads": {
+      "mean": 1.1580806550926048,
+      "sampleCount": 432,
+      "unit": "ms"
+    },
+    "hll-3000-add-and-count": {
+      "mean": 0.23129045235892817,
+      "sampleCount": 2162,
+      "unit": "ms"
+    },
+    "emit-100-windows-with-sketches": {
+      "mean": 0.001007309834156931,
+      "sampleCount": 496372,
+      "unit": "ms"
+    },
+    "equal-inline-frame-config": {
+      "mean": 0.0008085626732346011,
+      "sampleCount": 618382,
+      "unit": "ms"
+    },
+    "legend-100k-grouped-100": {
+      "mean": 0.6403559449423714,
+      "sampleCount": 781,
+      "unit": "ms"
+    },
+    "legend-100k-interleaved-10": {
+      "mean": 0.000566043670223474,
+      "sampleCount": 883325,
+      "unit": "ms"
+    },
+    "legend-push-1k-inferred": {
+      "mean": 0.054512820887387736,
+      "sampleCount": 9173,
+      "unit": "ms"
+    },
+    "legend-100k-missing-subset": {
+      "mean": 0.910540396363616,
+      "sampleCount": 550,
+      "unit": "ms"
+    },
+    "legend-100k-late-subset": {
+      "mean": 1.1495037816091633,
+      "sampleCount": 435,
+      "unit": "ms"
+    },
+    "candlestick-10k-ordered-auto-width": {
+      "mean": 0.3233812197802139,
+      "sampleCount": 1547,
+      "unit": "ms"
+    },
+    "candlestick-10k-ordered-fixed-width": {
+      "mean": 0.2122642691001685,
+      "sampleCount": 2356,
+      "unit": "ms"
+    },
+    "candlestick-10k-shuffled-auto-width": {
+      "mean": 1.1669920396270377,
+      "sampleCount": 429,
+      "unit": "ms"
+    },
+    "candlestick-10k-shuffled-fixed-width": {
+      "mean": 0.21602265975820165,
+      "sampleCount": 2316,
+      "unit": "ms"
+    },
     "scatter-1k": {
-      "mean": 0.017793356037151667,
-      "sampleCount": 28101,
+      "mean": 0.04558084576116785,
+      "sampleCount": 10970,
       "unit": "ms"
     },
     "scatter-10k": {
-      "mean": 0.17531875981767073,
-      "sampleCount": 2852,
+      "mean": 0.41788431495404865,
+      "sampleCount": 1197,
       "unit": "ms"
     },
     "scatter-50k": {
-      "mean": 1.7545239894736795,
-      "sampleCount": 1710,
+      "mean": 2.163837457822655,
+      "sampleCount": 1387,
       "unit": "ms"
     },
     "point-paint-10k-batched": {
-      "mean": 0.5411656634199384,
-      "sampleCount": 924,
+      "mean": 1.5811978201892836,
+      "sampleCount": 317,
       "unit": "ms"
     },
     "line-1k-single-series": {
-      "mean": 0.02958632887573875,
-      "sampleCount": 16900,
+      "mean": 0.03506406605889998,
+      "sampleCount": 14260,
       "unit": "ms"
     },
     "line-10k-single-series": {
-      "mean": 0.29417772470587006,
-      "sampleCount": 1700,
+      "mean": 0.31675351678280916,
+      "sampleCount": 1579,
       "unit": "ms"
     },
     "line-10k-across-5-series": {
-      "mean": 0.3103184026054466,
-      "sampleCount": 1612,
+      "mean": 0.35347636819787376,
+      "sampleCount": 1415,
       "unit": "ms"
     },
     "line-10k-across-20-series": {
-      "mean": 0.2962108909952601,
-      "sampleCount": 1688,
+      "mean": 0.3483485835654446,
+      "sampleCount": 1436,
       "unit": "ms"
     },
     "area-1k-single": {
-      "mean": 0.03370672084400034,
-      "sampleCount": 14834,
+      "mean": 0.0399628387148345,
+      "sampleCount": 12512,
       "unit": "ms"
     },
     "area-10k-single": {
-      "mean": 0.32536846909567035,
-      "sampleCount": 1537,
+      "mean": 0.39763821939584965,
+      "sampleCount": 1258,
       "unit": "ms"
     },
     "area-10k-across-5-series": {
-      "mean": 0.36239629565217407,
-      "sampleCount": 1380,
+      "mean": 0.4184886426778642,
+      "sampleCount": 1195,
       "unit": "ms"
     },
     "stacked-area-500x5 (2.5k points)": {
-      "mean": 0.486277271137013,
-      "sampleCount": 1029,
+      "mean": 0.342116532831771,
+      "sampleCount": 1462,
       "unit": "ms"
     },
     "stacked-area-1kx10 (10k points)": {
-      "mean": 1.9313433204633312,
-      "sampleCount": 259,
+      "mean": 1.4715076088234973,
+      "sampleCount": 340,
       "unit": "ms"
     },
     "stacked-area-2kx5 (10k points)": {
-      "mean": 2.27170661538466,
-      "sampleCount": 221,
+      "mean": 1.7166476815068628,
+      "sampleCount": 292,
       "unit": "ms"
     },
     "stacked-area-2kx5-with-points": {
-      "mean": 3.4676726827586113,
-      "sampleCount": 145,
+      "mean": 2.976223970238195,
+      "sampleCount": 168,
       "unit": "ms"
     },
     "stacked-area-1kx10-normalized": {
-      "mean": 2.6102450729167024,
-      "sampleCount": 192,
+      "mean": 1.6600243741720155,
+      "sampleCount": 302,
       "unit": "ms"
     },
     "heatmap-static-1k": {
-      "mean": 0.47103743785308894,
-      "sampleCount": 1062,
+      "mean": 0.5028021376884864,
+      "sampleCount": 995,
       "unit": "ms"
     },
     "heatmap-static-10k": {
-      "mean": 1.6535316303629934,
-      "sampleCount": 303,
+      "mean": 1.739308434027722,
+      "sampleCount": 288,
       "unit": "ms"
     },
     "heatmap-static-50k": {
-      "mean": 8.674808913793045,
-      "sampleCount": 58,
+      "mean": 7.429435749999999,
+      "sampleCount": 68,
       "unit": "ms"
     },
     "heatmap-stream-10k-20x20": {
-      "mean": 0.1739055796244672,
-      "sampleCount": 2876,
+      "mean": 0.08706296517498797,
+      "sampleCount": 5743,
       "unit": "ms"
     },
     "heatmap-stream-50k-20x20": {
-      "mean": 1.042332041666676,
-      "sampleCount": 480,
+      "mean": 0.3968604134920538,
+      "sampleCount": 1260,
       "unit": "ms"
     },
     "heatmap-stream-50k-50x50": {
-      "mean": 1.1945882983293516,
-      "sampleCount": 419,
+      "mean": 0.4736213333333643,
+      "sampleCount": 1056,
       "unit": "ms"
     },
     "heatmap-stream-50k-100x100-mean": {
-      "mean": 1.992206565736897,
-      "sampleCount": 251,
+      "mean": 0.7723650138888717,
+      "sampleCount": 648,
       "unit": "ms"
     },
     "push-1k-into-10k-buffer": {
-      "mean": 0.0070413216448317615,
-      "sampleCount": 71010,
+      "mean": 0.007488867759804804,
+      "sampleCount": 66780,
       "unit": "ms"
     },
     "push-10k-into-10k-buffer (eviction)": {
-      "mean": 0.07861405625393018,
-      "sampleCount": 6364,
+      "mean": 0.07274332135581035,
+      "sampleCount": 6874,
       "unit": "ms"
     },
     "pushMany-10k-batch": {
-      "mean": 0.31885120522623295,
-      "sampleCount": 1569,
+      "mean": 0.3647903165573181,
+      "sampleCount": 1371,
       "unit": "ms"
     },
     "toArray-10k": {
-      "mean": 0.012928803278686314,
-      "sampleCount": 38674,
+      "mean": 0.013107053606993574,
+      "sampleCount": 38148,
       "unit": "ms"
     },
     "toArray-50k": {
-      "mean": 0.09359129721134418,
-      "sampleCount": 5343,
+      "mean": 0.10174060427263158,
+      "sampleCount": 4915,
       "unit": "ms"
     },
     "forEach-10k": {
-      "mean": 0.016232680745382002,
-      "sampleCount": 30803,
+      "mean": 0.016537343740708192,
+      "sampleCount": 30235,
       "unit": "ms"
     },
     "forEach-50k": {
-      "mean": 0.2991819455741122,
-      "sampleCount": 1672,
+      "mean": 0.2969080409495326,
+      "sampleCount": 1685,
       "unit": "ms"
     },
     "iterator-10k": {
-      "mean": 0.04115930400063971,
-      "sampleCount": 12148,
+      "mean": 0.04145136309374547,
+      "sampleCount": 12063,
       "unit": "ms"
     },
     "iterator-50k": {
-      "mean": 0.21426892416452759,
-      "sampleCount": 2334,
+      "mean": 0.20800485399338614,
+      "sampleCount": 2404,
       "unit": "ms"
     },
     "resize-10k-to-20k": {
-      "mean": 0.11331735552532775,
-      "sampleCount": 4416,
+      "mean": 0.11697839508773714,
+      "sampleCount": 4275,
       "unit": "ms"
     },
     "resize-50k-to-100k": {
-      "mean": 0.6686301642189798,
-      "sampleCount": 749,
+      "mean": 0.6994367930068399,
+      "sampleCount": 715,
       "unit": "ms"
     },
     "push-1k-then-build-scatter-scene": {
-      "mean": 0.031173149251852446,
-      "sampleCount": 16040,
+      "mean": 0.054940518404506825,
+      "sampleCount": 9101,
       "unit": "ms"
     },
     "push-10k-then-build-scatter-scene": {
-      "mean": 0.292655186658928,
-      "sampleCount": 1709,
+      "mean": 0.4989196291126745,
+      "sampleCount": 1003,
       "unit": "ms"
     },
     "push-2k-then-build-stacked-area-5-groups": {
-      "mean": 2.2740846772728136,
-      "sampleCount": 220,
+      "mean": 1.9218931724138248,
+      "sampleCount": 261,
       "unit": "ms"
     },
     "push-10k-then-build-line-5-series": {
-      "mean": 0.3835479547546676,
-      "sampleCount": 1304,
+      "mean": 0.489344579256382,
+      "sampleCount": 1022,
       "unit": "ms"
     },
     "steady-state-scatter-10k (push 100 + evict + rebuild)": {
-      "mean": 0.29391370564043223,
-      "sampleCount": 1702,
+      "mean": 0.4948387784370768,
+      "sampleCount": 1011,
       "unit": "ms"
     },
     "steady-state-line-5-series (push 50 + rebuild)": {
-      "mean": 0.37115124109788955,
-      "sampleCount": 1348,
+      "mean": 0.4536242683592557,
+      "sampleCount": 1103,
+      "unit": "ms"
+    },
+    "tooltip-10-fields": {
+      "mean": 0.0005589090789179648,
+      "sampleCount": 894600,
+      "unit": "ms"
+    },
+    "tooltip-100-fields": {
+      "mean": 0.0040160939866835605,
+      "sampleCount": 124507,
+      "unit": "ms"
+    },
+    "loess-1000-bandwidth-0.05": {
+      "mean": 4.192361866666665,
+      "sampleCount": 120,
+      "unit": "ms"
+    },
+    "loess-1000-bandwidth-0.3": {
+      "mean": 25.307097849999984,
+      "sampleCount": 20,
+      "unit": "ms"
+    },
+    "loess-1000-bandwidth-1": {
+      "mean": 83.9837959,
+      "sampleCount": 10,
+      "unit": "ms"
+    },
+    "rollup-100k-10-groups-sum": {
+      "mean": 4.641022046296296,
+      "sampleCount": 108,
+      "unit": "ms"
+    },
+    "rollup-100k-10-groups-mean": {
+      "mean": 4.310798811965829,
+      "sampleCount": 117,
+      "unit": "ms"
+    },
+    "rollup-100k-10-groups-min": {
+      "mean": 4.559228054545466,
+      "sampleCount": 110,
+      "unit": "ms"
+    },
+    "rollup-100k-10-groups-count": {
+      "mean": 2.2105781585902786,
+      "sampleCount": 227,
+      "unit": "ms"
+    },
+    "rollup-100k-1000-groups-sum": {
+      "mean": 6.051497963855449,
+      "sampleCount": 83,
+      "unit": "ms"
+    },
+    "rollup-100k-1000-groups-mean": {
+      "mean": 6.073444361445771,
+      "sampleCount": 83,
+      "unit": "ms"
+    },
+    "rollup-100k-1000-groups-min": {
+      "mean": 6.073486469879535,
+      "sampleCount": 83,
+      "unit": "ms"
+    },
+    "rollup-100k-1000-groups-count": {
+      "mean": 3.5070893916083943,
+      "sampleCount": 143,
       "unit": "ms"
     },
     "10k pushes into 1k-capacity buffer (10x eviction)": {
-      "mean": 0.03038121102199572,
-      "sampleCount": 16458,
+      "mean": 0.03774183967391338,
+      "sampleCount": 13248,
       "unit": "ms"
     },
     "50k pushes into 5k-capacity buffer": {
-      "mean": 0.1564494931163943,
-      "sampleCount": 3196,
+      "mean": 0.18763441988743035,
+      "sampleCount": 2665,
       "unit": "ms"
     },
     "RingBuffer forEach after 10k pushes (iteration cost)": {
-      "mean": 0.05482378686547537,
-      "sampleCount": 9121,
+      "mean": 0.05744821840532978,
+      "sampleCount": 8704,
+      "unit": "ms"
+    },
+    "ingest 1k points + line scene rebuild (1s at 1kHz)": {
+      "mean": 0.5710026529680378,
+      "sampleCount": 876,
+      "unit": "ms"
+    },
+    "ingest 5k points + scatter scene rebuild (5s burst)": {
+      "mean": 2.8105215617977546,
+      "sampleCount": 178,
+      "unit": "ms"
+    },
+    "ingest 100 more points + line scene rebuild (hot path)": {
+      "mean": 1.2352882518518453,
+      "sampleCount": 405,
       "unit": "ms"
     },
     "50k push/evict cycles maintain constant buffer size": {
-      "mean": 0.24150890873973677,
-      "sampleCount": 2071,
+      "mean": 0.260591301719643,
+      "sampleCount": 1919,
+      "unit": "ms"
+    },
+    "intervals-100-items-1-overlap": {
+      "mean": 0.003161596631003849,
+      "sampleCount": 158148,
+      "unit": "ms"
+    },
+    "spans-100-items-1-overlap": {
+      "mean": 0.0017464451441859998,
+      "sampleCount": 286296,
+      "unit": "ms"
+    },
+    "intervals-100-items-32-overlap": {
+      "mean": 0.0058802106525854105,
+      "sampleCount": 85031,
+      "unit": "ms"
+    },
+    "spans-100-items-32-overlap": {
+      "mean": 0.004439594718663067,
+      "sampleCount": 112623,
+      "unit": "ms"
+    },
+    "intervals-100-items-1000-overlap": {
+      "mean": 0.005847774545922949,
+      "sampleCount": 85503,
+      "unit": "ms"
+    },
+    "spans-100-items-1000-overlap": {
+      "mean": 0.004289350216183213,
+      "sampleCount": 116568,
+      "unit": "ms"
+    },
+    "intervals-10000-items-1-overlap": {
+      "mean": 0.2917420997666172,
+      "sampleCount": 1714,
+      "unit": "ms"
+    },
+    "spans-10000-items-1-overlap": {
+      "mean": 0.17305381868511605,
+      "sampleCount": 2890,
+      "unit": "ms"
+    },
+    "intervals-10000-items-32-overlap": {
+      "mean": 0.49074134249263995,
+      "sampleCount": 1019,
+      "unit": "ms"
+    },
+    "spans-10000-items-32-overlap": {
+      "mean": 0.35407147487613966,
+      "sampleCount": 1413,
+      "unit": "ms"
+    },
+    "intervals-10000-items-1000-overlap": {
+      "mean": 0.6834678360655653,
+      "sampleCount": 732,
+      "unit": "ms"
+    },
+    "spans-10000-items-1000-overlap": {
+      "mean": 0.4952272762376333,
+      "sampleCount": 1010,
       "unit": "ms"
     }
   }
