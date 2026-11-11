@@ -1,5 +1,5 @@
 import assert from "node:assert/strict"
-import { mkdtemp, readFile, readdir } from "node:fs/promises"
+import { mkdtemp, readFile, readdir, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -204,6 +204,59 @@ test("an anthropic run records proposals, usage, and release metadata", async ()
   const written = JSON.stringify({ manifest, submission })
   assert.ok(!written.includes("sk-ant-test"))
   assert.ok(!written.includes("Return JSON only"))
+})
+
+test("resuming rejects changed evaluation settings before sending requests", async () => {
+  const outputDirectory = await mkdtemp(join(tmpdir(), "anthropic-resume-"))
+  const argv = [
+    "node",
+    "run",
+    "--provider=anthropic",
+    "--suites=first-try",
+    `--first-try-fixtures=${fixtureId}`,
+    `--output-dir=${outputDirectory}`,
+    "--trial-id=resume",
+    "--max-usd=1",
+    "--confirm-spend"
+  ]
+  const options = {
+    argv,
+    env: { ANTHROPIC_API_KEY: "sk-ant-test" },
+    stdout: capture().stream,
+    stderr: capture().stream
+  }
+  await runEvalRun({
+    ...options,
+    fetchImpl: async () => messagesResponse("claude-opus-5-5", "{}")
+  })
+  const manifestPath = join(outputDirectory, "run-manifest.json")
+  const original = await readJson(manifestPath)
+  let networkCalls = 0
+  const fetchImpl = async () => {
+    networkCalls += 1
+    return messagesResponse("claude-opus-5-5", "{}")
+  }
+  // Identical settings resume without repeating a completed request.
+  await runEvalRun({ ...options, fetchImpl })
+  await assert.rejects(
+    runEvalRun({ ...options, argv: [...argv, "--effort=high"], fetchImpl }),
+    /Existing output directory belongs to another run/
+  )
+  for (const change of [
+    { packageVersion: "0.0.0-old" },
+    { models: ["claude-sonnet-5-5"] },
+    { filters: { ...original.filters, suites: ["grounding"] } },
+    { filters: { ...original.filters, firstTryFixtureIds: ["different-fixture"] } },
+    { fixtureRevisions: { ...original.fixtureRevisions, firstTry: "old" } },
+    { fixtureRevisions: { ...original.fixtureRevisions, grounding: "old" } }
+  ]) {
+    await writeFile(manifestPath, JSON.stringify({ ...original, ...change }))
+    await assert.rejects(
+      runEvalRun({ ...options, fetchImpl }),
+      /Existing output directory belongs to another run/
+    )
+  }
+  assert.equal(networkCalls, 0)
 })
 
 test("the minimal context sends the system prompt and one signature card", async () => {

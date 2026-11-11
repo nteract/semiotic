@@ -782,6 +782,15 @@ export async function runEvalRun({ argv, env, fetchImpl, stdout, stderr = proces
     }
   }
   const packageVersion = (await readJson(join(root, "package.json"))).version
+  const filters = {
+    suites: suites ? [...suites] : null,
+    firstTryFixtureIds: firstTryFixtureIds ? [...firstTryFixtureIds] : null,
+    groundingFixtureIds: groundingFixtureIds ? [...groundingFixtureIds] : null,
+    groundingConditions: groundingConditions ? [...groundingConditions] : null,
+  }
+  const sameSelection = (left, right) =>
+    JSON.stringify(left == null ? null : [...left].sort()) ===
+    JSON.stringify(right == null ? null : [...right].sort())
   const manifestPath = join(outputDirectory, "run-manifest.json")
   const manifest = await existingJson(manifestPath, {
     version: 1,
@@ -800,12 +809,7 @@ export async function runEvalRun({ argv, env, fetchImpl, stdout, stderr = proces
     models,
     trialId,
     firstTryContext,
-    filters: {
-      suites: suites ? [...suites] : null,
-      firstTryFixtureIds: firstTryFixtureIds ? [...firstTryFixtureIds] : null,
-      groundingFixtureIds: groundingFixtureIds ? [...groundingFixtureIds] : null,
-      groundingConditions: groundingConditions ? [...groundingConditions] : null,
-    },
+    filters,
     projectFingerprint: digest(project ?? provider.id).slice(0, 12),
     maxUsd,
     startedAt: new Date().toISOString(),
@@ -819,6 +823,19 @@ export async function runEvalRun({ argv, env, fetchImpl, stdout, stderr = proces
       manifest.priceRevision !== priceRevision ||
       manifest.trialId !== trialId ||
       manifest.firstTryContext !== firstTryContext ||
+      !sameSelection(manifest.models, models) ||
+      (manifest.filters !== undefined &&
+        Object.entries(filters).some(
+          ([key, value]) =>
+            manifest.filters[key] !== undefined &&
+            !sameSelection(manifest.filters[key], value)
+        )) ||
+      (manifest.effort ?? null) !== effort ||
+      (manifest.packageVersion !== undefined &&
+        manifest.packageVersion !== packageVersion) ||
+      (manifest.fixtureRevisions !== undefined &&
+        (manifest.fixtureRevisions.firstTry !== firstTryJobs.fixtureRevision ||
+          manifest.fixtureRevisions.grounding !== groundingJobs.fixtureRevision)) ||
       (manifest.provider ?? "openai") !== provider.id)
   ) {
     throw new Error("Existing output directory belongs to another run")
@@ -826,6 +843,9 @@ export async function runEvalRun({ argv, env, fetchImpl, stdout, stderr = proces
   // Manifests written before the provider field existed resume under the
   // openai provider; persist that default so a later resume stays stable.
   manifest.provider ??= "openai"
+  // Older manifests recorded only some filters; retain the selection used
+  // for this resume so the next invocation can check every dimension.
+  manifest.filters = filters
   const completedRequestKeys = new Set(
     manifest.requests.map(
       ({ model, suite, fixtureId }) => `${model}/${suite}/${fixtureId}`

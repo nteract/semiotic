@@ -10,6 +10,7 @@
  * None of these outputs returns source rows. Code refers to data by name, and
  * the grounding structure keeps announced labels but not the raw datum records.
  */
+import { isDeepStrictEqual } from "node:util"
 import {
   buildReaderGrounding,
   configToJSX,
@@ -117,10 +118,8 @@ export function createChartCode(args: {
   inputProps?: Record<string, unknown>
 }): CreateChartCodeResult | null {
   let config: ReturnType<typeof toConfig>
-  let jsx: string
   try {
     config = toConfig(args.component, args.publicProps, { includeData: false })
-    jsx = configToJSX(config)
   } catch {
     return null
   }
@@ -129,7 +128,8 @@ export function createChartCode(args: {
       (key) =>
         args.props[key] !== undefined &&
         args.props[key] !== null &&
-        !Object.prototype.hasOwnProperty.call(args.publicProps, key) &&
+        (!Object.prototype.hasOwnProperty.call(args.publicProps, key) ||
+          !isDeepStrictEqual(args.props[key], args.publicProps[key])) &&
         !isSensitiveField(key) &&
         IDENTIFIER.test(key)
     )
@@ -142,6 +142,21 @@ export function createChartCode(args: {
           ? "input-props"
           : "derived") as CreateChartBindingSource
     }))
+  // Compaction can retain a presentation bag while dropping nested settings.
+  // Bind the complete original value instead of emitting an incomplete inline
+  // copy. Keep the public config compact and free of source rows.
+  const boundProps = new Set(bindings.map(({ prop }) => prop))
+  let jsx: string
+  try {
+    jsx = configToJSX({
+      ...config,
+      props: Object.fromEntries(
+        Object.entries(config.props).filter(([key]) => !boundProps.has(key))
+      )
+    })
+  } catch {
+    return null
+  }
   const lines = jsx.split("\n")
   lines.splice(1, 0, ...bindings.map(({ prop }) => `  ${prop}={${prop}}`))
   const jsxComponent = /^<([A-Za-z_$][A-Za-z0-9_$.]*)/.exec(lines[0])?.[1]
@@ -357,5 +372,8 @@ export function attachCreateChartOutputs<Result extends ToolResultLike>(
     code = null
     status.code = { included: false, reason: "output-limit" }
   }
-  return build()
+  // Even the summary and attachment-status fields cost bytes. Preserve the
+  // original proven envelope when there is no room for those additions; the
+  // caller still caps that envelope if it was already too large on its own.
+  return fits() ? build() : base
 }

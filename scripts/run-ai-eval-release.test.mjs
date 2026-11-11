@@ -42,7 +42,7 @@ function stubTransport(answer) {
         id: "msg_stub",
         model: `${body.model}-resolved`,
         stop_reason: "end_turn",
-        content: [{ type: "text", text: answer("anthropic", body, calls.length) }],
+        content: [{ type: "text", text: answer("anthropic", body) }],
         usage: { input_tokens: 100, output_tokens: 10 }
       })
     }
@@ -56,7 +56,7 @@ function stubTransport(answer) {
         {
           type: "message",
           content: [
-            { type: "output_text", text: answer("openai", body, calls.length) }
+            { type: "output_text", text: answer("openai", body) }
           ]
         }
       ],
@@ -182,6 +182,50 @@ test("a paid run needs explicit confirmation and one ceiling for the whole run",
     runReleaseEval({ ...base, argv: ["node", "release", "--confirm-spend"] }),
     /positive --max-usd is required/
   )
+})
+
+test("release runs pass the proxy URL and spend ceiling to dynamically priced providers", async () => {
+  const outputDirectory = await mkdtemp(join(tmpdir(), "release-litellm-"))
+  const transport = stubTransport(() => JSON.stringify(referenceProposal))
+  const urls = []
+  const report = await runReleaseEval({
+    argv: [
+      "node",
+      "release",
+      "--providers=litellm",
+      "--litellm-models=proxy-model",
+      "--base-url=https://proxy.example.test",
+      "--trials=1",
+      "--contexts=minimal",
+      "--suites=first-try",
+      `--first-try-fixtures=${fixtureId}`,
+      `--output-dir=${outputDirectory}`,
+      "--max-usd=1",
+      "--confirm-spend"
+    ],
+    env: { LITELLM_API_KEY: "sk-test" },
+    fetchImpl: async (url, options) => {
+      urls.push(url)
+      if (url.endsWith("/model/info")) {
+        return reply({
+          data: [{
+            model_name: "proxy-model",
+            model_info: { input_cost_per_token: 1e-6, output_cost_per_token: 2e-6 }
+          }]
+        })
+      }
+      return transport.fetchImpl("https://api.openai.com/v1/responses", options)
+    },
+    stdout: capture().stream,
+    stderr: capture().stream
+  })
+  assert.deepEqual(urls, [
+    "https://proxy.example.test/model/info",
+    "https://proxy.example.test/v1/responses"
+  ])
+  assert.equal(report.totals.requests, 1)
+  assert.ok(report.totals.estimatedUsd > 0)
+  assert.equal(report.firstTry.byModelAndContext[0].passRate, 1)
 })
 
 test("a stubbed run scores both providers and reports per-fixture variance", async () => {

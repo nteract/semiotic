@@ -95,6 +95,8 @@ Source rows are never returned. The React code refers to data by name
 (`data={data}`) and lists each such prop in `code.bindings`. The grounding
 structure keeps the labels a screen reader would announce, at most
 `MCP_MAX_WIDGET_ROWS` per branch, without the underlying records.
+Presentation objects whose nested settings were removed from public props
+also use bindings, so the React code keeps the original settings.
 
 The image, grounding, and code are additions to a proven render and never fail
 it. `structuredContent.attachments` says which are present and why any is
@@ -108,6 +110,9 @@ missing:
   `MCP_MAX_CREATE_CHART_IMAGE_MS` (default `1500`, never more than
   `MCP_MAX_PNG_CONVERSION_MS`) or the rasterizer rejected the SVG.
 - `disabled`: the operator set `MCP_CREATE_CHART_IMAGE=off`.
+
+If even the attachment status and summary would exceed the limit, the tool
+keeps the original proven result without these optional fields.
 
 ## Release checklist
 

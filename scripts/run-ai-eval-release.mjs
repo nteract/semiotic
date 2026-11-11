@@ -54,6 +54,7 @@ const PASS_THROUGH = [
   "grounding-conditions",
   "concurrency",
   "project",
+  "base-url",
   "keychain-account"
 ]
 
@@ -354,8 +355,13 @@ export async function runReleaseEval({
   // One ceiling for the whole run: each provider run may spend what remains.
   let spentUsd = 0
   for (const [index, run] of plan.runs.entries()) {
-    const hasPriceTable = AI_EVAL_PROVIDERS[run.provider].hasPriceTable
-    if (hasPriceTable && spentUsd >= maxUsd) {
+    const provider = AI_EVAL_PROVIDERS[run.provider]
+    // A proxy discovers its table at startup. Forward a supplied ceiling so
+    // that discovery can enforce it (or reject missing prices) too.
+    const budgeted =
+      provider.hasPriceTable ||
+      (provider.priceSource && maxUsdArgument !== undefined)
+    if (budgeted && spentUsd >= maxUsd) {
       throw new Error(
         `Spend ceiling $${maxUsd.toFixed(2)} reached after ${index} of ${plan.runs.length} provider runs; rerun with a higher --max-usd to continue`
       )
@@ -365,7 +371,7 @@ export async function runReleaseEval({
       argv,
       [
         "--confirm-spend",
-        ...(hasPriceTable ? [`--max-usd=${round(maxUsd - spentUsd)}`] : [])
+        ...(budgeted ? [`--max-usd=${round(maxUsd - spentUsd)}`] : [])
       ],
       context
     )

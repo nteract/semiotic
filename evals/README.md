@@ -64,7 +64,9 @@ export ANTHROPIC_API_KEY=...
 npm run eval:ai:release -- --max-usd=25 --confirm-spend
 ```
 
-Rerunning the same command resumes an interrupted run. Options:
+Rerunning the same command resumes an interrupted run. A directory with
+different recorded models, filters, effort, package version, or fixture
+revisions is rejected; use a new `--output-dir` for that comparison. Options:
 
 - `--providers=openai,anthropic` chooses vendors from
   `scripts/lib/ai-eval-providers.mjs`.
@@ -80,6 +82,8 @@ Rerunning the same command resumes an interrupted run. Options:
   component choice. `skill` is also accepted.
 - `--suites`, `--first-try-fixtures`, `--grounding-fixtures`, and
   `--grounding-conditions` narrow the run.
+- `--base-url` selects a LiteLLM proxy. A supplied `--max-usd` also applies to
+  its discovered prices, sharing the remaining ceiling across provider runs.
 
 Results land in `evals/reports/release-<version>-<date>/`, one directory per
 vendor, trial, and context, each a normal resumable runner directory. The run

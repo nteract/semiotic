@@ -10,6 +10,7 @@ import {
   resolveMcpRenderOutputLimits,
   serializedMcpOutputBytes
 } from "./mcp-render-output-limits"
+import { compactPublicChartProps } from "./mcp-public-chart-props"
 
 const rows = [
   { month: "Jan", revenue: 100, note: "PRIVATE-ROW-A" },
@@ -93,6 +94,38 @@ describe("createChart React code", () => {
     expect(formatCreateChartCode(result!.code)).toContain(
       "this tool does not return it"
     )
+  })
+
+  it("binds partially compacted presentation props without losing their nested settings", () => {
+    const frameProps = {
+      axes: [{ orient: "left", tickValues: [0, 100, 200] }],
+      pointStyle: { fill: "red" },
+      annotations: [{ type: "label", label: "PRIVATE-ANNOTATION" }]
+    }
+    const props = {
+      data: rows,
+      xAccessor: "month",
+      yAccessor: "revenue",
+      margin: { left: 80, bottom: 40 },
+      frameProps
+    }
+    const result = createChartCode({
+      component: "Scatterplot",
+      importPath: "semiotic/xy",
+      props,
+      publicProps: compactPublicChartProps(props),
+      inputData: rows,
+      inputProps: { frameProps }
+    })!
+    expect(result.code.bindings).toEqual([
+      { prop: "data", source: "input-data" },
+      { prop: "frameProps", source: "input-props" }
+    ])
+    expect(result.code.jsx).toContain("  frameProps={frameProps}")
+    expect(result.code.jsx.match(/frameProps=/g)).toHaveLength(1)
+    expect(result.code.jsx).toContain('margin={{"left":80,"bottom":40}}')
+    expect(JSON.stringify(result)).not.toContain("PRIVATE-ANNOTATION")
+    expect(JSON.stringify(result)).not.toContain("PRIVATE-ROW")
   })
 
   it("returns no code for a component without a JSX projection", () => {
@@ -286,5 +319,12 @@ describe("createChart output budget", () => {
       code: { included: false, reason: "unsupported-component" },
       grounding: { included: false, reason: "unavailable" }
     })
+  })
+
+  it("preserves a fitting proven result when even attachment status cannot fit", () => {
+    const maximum = serializedMcpOutputBytes(base)
+    const result = sizeAt(maximum)
+    expect(serializedMcpOutputBytes(result)).toBeLessThanOrEqual(maximum)
+    expect(result).toEqual(base)
   })
 })
