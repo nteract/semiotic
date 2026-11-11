@@ -1,157 +1,6 @@
 import React from "react"
 import { Link } from "react-router-dom"
 
-export function GuidesIndex() {
-  return (
-    <div className="margin-bottom">
-      <div className="subpages">
-        <div className="sub-header">StreamXYFrame</div>
-
-        <PageLink
-          href="/guides/line-chart"
-          title="Line Charts"
-          thumbnail={new URL("../public/assets/img/line-chart.png", import.meta.url)}
-        />
-        <PageLink
-          href="/guides/area-chart"
-          title="Area Charts"
-          thumbnail={new URL("../public/assets/img/area-chart.png", import.meta.url)}
-        />
-        <PageLink
-          href="/guides/scatterplot"
-          title="Scatterplots"
-          thumbnail={new URL("../public/assets/img/scatterplot.png", import.meta.url)}
-        />
-        <PageLink
-          href="/guides/xy-summaries"
-          title="XY Summaries"
-          thumbnail={new URL("../public/assets/img/xy-summary.png", import.meta.url)}
-        />
-        <PageLink
-          href="/guides/xy-brushes"
-          title="XY Brushes"
-          thumbnail={new URL("../public/assets/img/xy-brush.png", import.meta.url)}
-        />
-
-        <div className="sub-header">StreamOrdinalFrame</div>
-
-        <PageLink
-          href="/guides/bar-chart"
-          title="Bar Charts"
-          thumbnail={new URL("../public/assets/img/bar-chart.png", import.meta.url)}
-        />
-        <PageLink
-          href="/guides/pie-chart"
-          title="Pie Charts"
-          thumbnail={new URL("../public/assets/img/pie-chart.png", import.meta.url)}
-        />
-        <PageLink
-          href="/guides/ordinal-summaries"
-          title="Ordinal Summaries"
-          thumbnail={new URL("../public/assets/img/or-summary.png", import.meta.url)}
-        />
-        <PageLink
-          href="/guides/ordinal-brushes"
-          title="Ordinal Brushes"
-          thumbnail={new URL("../public/assets/img/or-brush.png", import.meta.url)}
-        />
-
-        <div className="sub-header">StreamNetworkFrame</div>
-
-        <PageLink
-          href="/guides/force-layouts"
-          title="Force Layouts"
-          thumbnail={new URL("../public/assets/img/force.png", import.meta.url)}
-        />
-        <PageLink
-          href="/guides/path-diagrams"
-          title="Path Diagrams"
-          thumbnail={new URL("../public/assets/img/path.png", import.meta.url)}
-        />
-        <PageLink
-          href="/guides/hierarchical"
-          title="Hierarchical Diagrams"
-          thumbnail={new URL("../public/assets/img/hierarchy.png", import.meta.url)}
-        />
-
-        <div className="sub-header">Higher-Order Components</div>
-
-        <PageLink
-          href="/guides/xy-charts-hoc"
-          title="XY Charts"
-          thumbnail={new URL("../public/assets/img/scatterplot.png", import.meta.url)}
-        />
-        <PageLink
-          href="/guides/ordinal-charts-hoc"
-          title="Ordinal Charts"
-          thumbnail={new URL("../public/assets/img/bar-chart.png", import.meta.url)}
-        />
-        <PageLink
-          href="/guides/network-charts-hoc"
-          title="Network Charts"
-          thumbnail={new URL("../public/assets/img/force.png", import.meta.url)}
-        />
-
-        <div className="sub-header">StreamXYFrame</div>
-
-        <PageLink
-          href="/guides/realtime-frame"
-          title="StreamXYFrame"
-          thumbnail={new URL("../public/assets/img/canvas-interaction.png", import.meta.url)}
-        />
-
-        <div className="sub-header">All Frames</div>
-
-        <PageLink
-          href="/guides/axis"
-          title="Axis"
-          thumbnail={new URL("../public/assets/img/axis-settings.png", import.meta.url)}
-        />
-        <PageLink
-          href="/guides/annotations"
-          title="Annotations"
-          thumbnail={new URL("../public/assets/img/annotations.png", import.meta.url)}
-        />
-        <PageLink
-          href="/guides/tooltips"
-          title="Annotations - Tooltips"
-          thumbnail={new URL("../public/assets/img/tooltips.png", import.meta.url)}
-        />
-        <PageLink
-          href="/guides/highlighting"
-          title="Annotations - Highlighting"
-          thumbnail={new URL("../public/assets/img/highlight.png", import.meta.url)}
-        />
-        <PageLink
-          href="/guides/accessibility"
-          title="Accessibility"
-          thumbnail={new URL("../public/assets/img/accessibility.png", import.meta.url)}
-        />
-        <PageLink
-          href="/guides/small-multiples"
-          title="Linked Charts"
-          thumbnail={new URL("../public/assets/img/facet.png", import.meta.url)}
-        />
-        <PageLink
-          href="/guides/sparklines"
-          title="Sparklines"
-          thumbnail={new URL("../public/assets/img/sparkline.png", import.meta.url)}
-        />
-        <PageLink
-          href="/guides/sketchy-painty-patterns"
-          title="Using Sketchy / Painty / Patterns"
-          thumbnail={new URL("../public/assets/img/pattern.png", import.meta.url)}
-        />
-        <PageLink
-          href="/guides/foreground-background-svg"
-          title="Using Foreground / Background SVG"
-          thumbnail={new URL("../public/assets/img/layers.png", import.meta.url)}
-        />
-      </div>
-    </div>
-  )
-}
-
 export function ExamplesIndex() {
   return (
     <div className="margin-bottom">
@@ -293,6 +142,11 @@ export function RecipesIndex() {
           title="Transit Diagram"
           thumbnail={new URL("../public/assets/img/custom-layout.png", import.meta.url)}
         />
+        <PageLink
+          href="/recipes/word-trails"
+          title="Word Trails"
+          thumbnail={new URL("../public/assets/img/path.png", import.meta.url)}
+        />
 
         <div className="sub-header">Dashboards</div>
 
@@ -355,6 +209,61 @@ export function PlaygroundIndex() {
           thumbnail={new URL("../public/assets/img/bar-chart.png", import.meta.url)}
         />
         <PageLink
+          href="/playground/connected-scatterplot"
+          title="Connected Scatterplot"
+          thumbnail={new URL("../public/assets/img/path.png", import.meta.url)}
+        />
+        <PageLink
+          href="/playground/bubble-chart"
+          title="Bubble Chart"
+          thumbnail={new URL("../public/assets/img/scatterplot.png", import.meta.url)}
+        />
+        <PageLink
+          href="/playground/stacked-area-chart"
+          title="Stacked Area Chart"
+          thumbnail={new URL("../public/assets/img/area-chart.png", import.meta.url)}
+        />
+        <PageLink
+          href="/playground/donut-chart"
+          title="Donut Chart"
+          thumbnail={new URL("../public/assets/img/pie-chart.png", import.meta.url)}
+        />
+        <PageLink
+          href="/playground/treemap"
+          title="Treemap"
+          thumbnail={new URL("../public/assets/img/hierarchy.png", import.meta.url)}
+        />
+        <PageLink
+          href="/playground/circle-pack"
+          title="Circle Pack"
+          thumbnail={new URL("../public/assets/img/hierarchy.png", import.meta.url)}
+        />
+        <PageLink
+          href="/playground/orbit-diagram"
+          title="Orbit Diagram"
+          thumbnail={new URL("../public/assets/img/hierarchy.png", import.meta.url)}
+        />
+        <PageLink
+          href="/playground/choropleth-map"
+          title="Choropleth Map"
+          thumbnail={new URL("../public/assets/img/custom-layout.png", import.meta.url)}
+        />
+        <PageLink
+          href="/playground/distance-cartogram"
+          title="Distance Cartogram"
+          thumbnail={new URL("../public/assets/img/custom-layout.png", import.meta.url)}
+        />
+        <PageLink
+          href="/playground/statistical-annotations"
+          title="Statistical Annotations"
+          thumbnail={new URL("../public/assets/img/annotations.png", import.meta.url)}
+        />
+        <PageLink
+          href="/playground/forecast"
+          title="Forecast"
+          thumbnail={new URL("../public/assets/img/uncertainty-visualization.png", import.meta.url)}
+        />
+        <PageLink
           href="/playground/animation"
           title="Animation"
           thumbnail={new URL("../public/assets/img/bar-chart.png", import.meta.url)}
@@ -368,44 +277,45 @@ export function ApiIndex() {
   return (
     <div className="margin-bottom">
       <div className="subpages">
-        <div className="sub-header">Main Components</div>
+        <div className="sub-header">Reference</div>
 
         <PageLink
-          href="/api/xyframe"
+          href="/api/charts"
+          title="Chart Components"
+          thumbnail={new URL("../public/assets/img/line-chart.png", import.meta.url)}
+        />
+        <PageLink
+          href="/api/typedoc"
+          title="TypeScript API Reference"
+          thumbnail={new URL("../public/assets/img/mark.png", import.meta.url)}
+        />
+
+        <div className="sub-header">Frames</div>
+
+        <PageLink
+          href="/frames/xy-frame"
           title="StreamXYFrame"
           thumbnail={new URL("../public/assets/img/scatterplot.png", import.meta.url)}
         />
         <PageLink
-          href="/api/ordinalframe"
+          href="/frames/ordinal-frame"
           title="StreamOrdinalFrame"
           thumbnail={new URL("../public/assets/img/bar-chart.png", import.meta.url)}
         />
         <PageLink
-          href="/api/networkframe"
+          href="/frames/network-frame"
           title="StreamNetworkFrame"
           thumbnail={new URL("../public/assets/img/force.png", import.meta.url)}
         />
         <PageLink
-          href="/api/responsiveframe"
-          title="ResponsiveFrame"
-          thumbnail={new URL("../public/assets/img/responsive.png", import.meta.url)}
+          href="/frames/geo-frame"
+          title="StreamGeoFrame"
+          thumbnail={new URL("../public/assets/img/custom-layout.png", import.meta.url)}
         />
         <PageLink
-          href="/api/sparkFrame"
-          title="SparkFrame"
-          thumbnail={new URL("../public/assets/img/sparkline.png", import.meta.url)}
-        />
-        <div className="sub-header">Sub-Components</div>
-
-        <PageLink
-          href="/api/mark"
-          title="Mark"
-          thumbnail={new URL("../public/assets/img/mark.png", import.meta.url)}
-        />
-        <PageLink
-          href="/api/dividedline"
-          title="DividedLine"
-          thumbnail={new URL("../public/assets/img/divided-line.png", import.meta.url)}
+          href="/frames/physics-frame"
+          title="StreamPhysicsFrame"
+          thumbnail={new URL("../public/assets/img/swarm.png", import.meta.url)}
         />
       </div>
     </div>

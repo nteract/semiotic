@@ -12,6 +12,7 @@ import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import { resolveAxisFreeMarginDefaults } from "../shared/chartMode"
 import type { LegendPosition } from "../shared/hooks"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
+import { useSelectionAwareFrameStyle } from "../shared/useSelectionAwareFrameStyle"
 import { composeStyleRules, makeNodeRuleContext, type StyleRule } from "../shared/styleRules"
 
 import { warnMissingField } from "../shared/withChartWrapper"
@@ -328,6 +329,13 @@ export const DistanceCartogram = /* @__PURE__ */ withChartErrorBoundary(/* @__PU
     }
     return withPrimitives
   }, [colorBy, setup.colorScale, setup.effectiveSelectionHook, setup.resolvedSelection, pointRadius, stroke, strokeWidth, opacity, styleRules, center, nodeIdAccessor])
+  // `frameProps.pointStyle` takes the place of the point style above. Keep
+  // it selection-aware so linked selection still dims points.
+  const userPointStyle = useSelectionAwareFrameStyle(
+    frameProps.pointStyle,
+    setup.effectiveSelectionHook,
+    setup.resolvedSelection,
+  )
 
   // Build cartogram config
   const cartogramConfig: DistanceCartogramConfig = useMemo(() => ({
@@ -517,6 +525,8 @@ export const DistanceCartogram = /* @__PURE__ */ withChartErrorBoundary(/* @__PU
     ...(className && { className }),
     ...(props.animate != null && { animate: props.animate }),
     ...frameProps,
+    // frameProps precedence: the caller's style still wins; this re-applies it with selection dimming preserved.
+    ...(userPointStyle && { pointStyle: userPointStyle }),
     // frameProps precedence: replace its overlay with the composed cartogram layer afterward.
     foregroundGraphics: overlayGraphics
   }

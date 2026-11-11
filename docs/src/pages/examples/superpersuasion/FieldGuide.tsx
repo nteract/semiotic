@@ -1,8 +1,8 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
-import category from "../../../../public/tasks/compare-category-totals.json"
-import live from "../../../../public/tasks/update-live-chart.json"
-import correction from "../../../../public/tasks/correct-published-chart.json"
+import category from "../../../../../ai/task-packets/compare-category-totals.json"
+import live from "../../../../../ai/task-packets/update-live-chart.json"
+import correction from "../../../../../ai/task-packets/correct-published-chart.json"
 
 const guides = [
   {

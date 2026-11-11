@@ -118,6 +118,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       dynamicColumnWidth,
       bins,
       showOutliers,
+      outlierRadius,
       showIQR,
       amplitude,
       connectorOpacity,
@@ -384,6 +385,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       dynamicColumnWidth,
       bins,
       showOutliers,
+      outlierRadius,
       showIQR,
       amplitude,
       connectorOpacity,
@@ -411,7 +413,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       onLayoutError,
       layoutConfig,
       layoutMargin: margin,
-    }), [chartType, isStreaming, windowSize, maxCapacity, windowMode, extentPadding, projection, effectiveOAccessor, effectiveRAccessor, accessorRevision, colorAccessor, symbolAccessor, symbolMap, stackBy, groupBy, multiAxis, timeAccessor, valueAccessor, rExtent, oExtent, axisExtent, rTickValues, barPadding, roundedTop, gradientFill, trackFill, baselinePadding, innerRadius, cornerRadius, normalize, startAngle, sweepAngle, dynamicColumnWidth, bins, showOutliers, showIQR, amplitude, connectorOpacity, showLabels, connectorAccessor, connectorStyle, dataIdAccessor, oSort, pieceStyle, summaryStyle, colorScheme, currentTheme, barColors, decay, pulse, transition, introEnabled, staleness, frameRuntime.now, frameRuntime.wallNow, customLayout, onLayoutError, layoutConfig, margin])
+    }), [chartType, isStreaming, windowSize, maxCapacity, windowMode, extentPadding, projection, effectiveOAccessor, effectiveRAccessor, accessorRevision, colorAccessor, symbolAccessor, symbolMap, stackBy, groupBy, multiAxis, timeAccessor, valueAccessor, rExtent, oExtent, axisExtent, rTickValues, barPadding, roundedTop, gradientFill, trackFill, baselinePadding, innerRadius, cornerRadius, normalize, startAngle, sweepAngle, dynamicColumnWidth, bins, showOutliers, outlierRadius, showIQR, amplitude, connectorOpacity, showLabels, connectorAccessor, connectorStyle, dataIdAccessor, oSort, pieceStyle, summaryStyle, colorScheme, currentTheme, barColors, decay, pulse, transition, introEnabled, staleness, frameRuntime.now, frameRuntime.wallNow, customLayout, onLayoutError, layoutConfig, margin])
 
     // Stabilize the config reference so inline-object / inline-array
     // props don't shed identity every parent render. See

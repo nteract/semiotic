@@ -213,6 +213,8 @@ one; a valid CLI profile takes precedence over the environment.
 | `MCP_OPERATION_HEAP_MB` | `256` | V8 old-generation heap limit for each tool process. This is not a total RSS or native-memory limit; retain deployment/container memory limits too. |
 | `MCP_MAX_RENDER_WORK_MS` | `2500` | Cumulative rendering-stage budget within one operation. The whole-operation deadline also applies. |
 | `MCP_MAX_PNG_CONVERSION_MS` | `4000` | Cumulative PNG conversion budget, enforced by terminating the isolated process. |
+| `MCP_CREATE_CHART_IMAGE` | on | Set to `off`, `false`, or `0` to omit the PNG image block from public `createChart` results. The result then reports `attachments.image.reason: "disabled"`. |
+| `MCP_MAX_CREATE_CHART_IMAGE_MS` | `1500` | Soft limit for the `createChart` PNG. On expiry the image is omitted and the rest of the result is returned. Never exceeds `MCP_MAX_PNG_CONVERSION_MS`. |
 | `MCP_MAX_INTERACTIVE_SVG_SANITIZE_MS` | `3000` | Cumulative widget SVG sanitization budget, within the whole-operation deadline. |
 | `MCP_MAX_RASTER_PIXELS` | `16777216` | Maximum SVG input pixel area accepted by the PNG rasterizer, before allocating its output image. |
 | `MCP_MAX_ROWS` | `10000` | Maximum combined entries across all nested array-valued tool arguments. HTTP requests over the ceiling get 413; stdio calls receive a JSON-RPC invalid-parameters error before tool schema parsing. |

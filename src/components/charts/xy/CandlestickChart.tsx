@@ -20,6 +20,7 @@ import ChartError from "../shared/ChartError"
 import { warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { useSelectionAwareFrameStyle } from "../shared/useSelectionAwareFrameStyle"
 import { composeStyleRules, makeXYRuleContext, type StyleRule } from "../shared/styleRules"
 import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
@@ -224,6 +225,13 @@ export const CandlestickChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PUR
     ),
     [styleRules, candleRuleContext, activeSelectionHook, resolvedSelection]
   )
+  // `frameProps.pointStyle` takes the place of the candle overlay above.
+  // Keep it selection-aware so linked selection still dims candles.
+  const userPointStyle = useSelectionAwareFrameStyle(
+    frameProps.pointStyle,
+    activeSelectionHook,
+    resolvedSelection,
+  )
 
   // Tooltip: OHLC when present, range when degraded. `ChartAccessor<TDatum,
   // number>` is narrower than TooltipFieldConfig.accessor by parameter
@@ -306,6 +314,8 @@ export const CandlestickChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PUR
     ...(yExtent && { yExtent }),
     ...setup.crosshairProps,
     ...frameProps,
+    // frameProps precedence: the caller's style still wins; this re-applies it with selection dimming preserved.
+    ...(userPointStyle && { pointStyle: userPointStyle }),
   }
 
   if (setup.earlyReturn) return setup.earlyReturn

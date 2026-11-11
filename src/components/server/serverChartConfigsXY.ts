@@ -11,6 +11,7 @@ import { buildXYLineBaseStyle } from "../charts/shared/xyLineStyle"
 import { computeDifferenceSegments } from "../charts/xy/differenceSegments"
 import {
   buildDifferenceAreaStyle,
+  buildDifferencePointStyle,
   buildDifferenceLineStyle,
 } from "../charts/xy/differenceMarkStyle"
 import {
@@ -447,6 +448,16 @@ export const differenceChart: ChartConfig = {
         seriesBColor,
         lineWidth,
         styleRules: rest.styleRules as StyleRule[] | undefined,
+      }),
+      // showPoints draws a dot per source row on each series line, colored by
+      // series, exactly as the HOC does.
+      ...(rest.showPoints && {
+        pointStyle: buildDifferencePointStyle({
+          seriesAColor,
+          seriesBColor,
+          pointRadius: typeof rest.pointRadius === "number" ? rest.pointRadius : 3,
+          styleRules: rest.styleRules as StyleRule[] | undefined,
+        }),
       }),
       curve: rest.curve || "linear",
       ...common,

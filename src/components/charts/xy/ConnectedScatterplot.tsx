@@ -16,6 +16,7 @@ import ChartError from "../shared/ChartError"
 import { warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { DEFAULT_SELECTION_OPACITY } from "../shared/selectionUtils"
+import { useSelectionAwareFrameStyle } from "../shared/useSelectionAwareFrameStyle"
 import { interpolateViridis } from "../shared/colorPalettes"
 import { useChartSetup } from "../shared/useChartSetup"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
@@ -409,6 +410,13 @@ export const ConnectedScatterplot = /* @__PURE__ */ withChartErrorBoundary(/* @_
     effectiveSelectionHook: setup.effectiveSelectionHook,
     resolvedSelection: setup.resolvedSelection,
   })
+  // `frameProps.pointStyle` takes the place of the style above. Keep it
+  // selection-aware so linked selection and legend highlighting still dim.
+  const framePointStyle = useSelectionAwareFrameStyle(
+    frameProps.pointStyle,
+    setup.effectiveSelectionHook,
+    setup.resolvedSelection,
+  )
 
   // ── Tooltip ───────────────────────────────────────────────────────────
 
@@ -503,7 +511,9 @@ export const ConnectedScatterplot = /* @__PURE__ */ withChartErrorBoundary(/* @_
     ...(xExtent && { xExtent }),
     ...(yExtent && { yExtent }),
     ...setup.crosshairProps,
-    ...frameProps
+    ...frameProps,
+    // frameProps precedence: the caller's style still wins; this re-applies it with selection dimming preserved.
+    ...(framePointStyle && { pointStyle: framePointStyle }),
   }
 
   if (error) return <ChartError componentName="ConnectedScatterplot" message={error} width={width} height={height} />

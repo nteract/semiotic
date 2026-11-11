@@ -13,6 +13,7 @@ import { defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
 import { validateArrayData } from "../shared/validateChartData"
 import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
+import { useSelectionAwareFrameStyle } from "../shared/useSelectionAwareFrameStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { resolveOrdinalAxisChrome } from "../../legendLayout"
@@ -302,6 +303,13 @@ export const Histogram = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
     styleRules,
     resolveRuleValue,
   })
+  // `frameProps.summaryStyle` takes the place of the style above. Keep it
+  // selection-aware so linked selection and legend highlighting still dim.
+  const userSummaryStyle = useSelectionAwareFrameStyle(
+    frameProps.summaryStyle,
+    setup.effectiveSelectionHook,
+    setup.resolvedSelection,
+  )
 
   const defaultTooltipContent = useMemo(() => {
     return (d: Datum) => {
@@ -377,6 +385,7 @@ export const Histogram = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
     // frameProps spread last for escape hatch, but pieceStyle excluded to prevent
     // clobbering the HOC's color-resolved, selection-wrapped style function.
     ...Object.fromEntries(Object.entries(frameProps).filter(([k]) => k !== "pieceStyle")),
+    ...(userSummaryStyle && { summaryStyle: userSummaryStyle }),
   }
 
   return <StreamOrdinalFrame ref={frameRef} {...streamProps} />

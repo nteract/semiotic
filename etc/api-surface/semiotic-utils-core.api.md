@@ -120,7 +120,7 @@ function toDataAuditNotifications(result: DataAuditResult, options?: DataAuditNo
 function toEvaluateChartNotifications(findings: readonly EvaluateChartFinding[], max?: number | undefined): EvaluateChartNotification[]
 function toURL(config: ChartConfig, options?: ToURLOptions | undefined): string
 function unwrapDatum<T = Datum>(value: unknown): T | null
-function validateProps(componentName: string, props: Datum): ValidationResult
+function validateProps(componentName: string, props: Datum): ValidationReport
 function valueToAngle(value: number, min: number, max: number, sweepRad: number, offsetRad: number): number
 interface A11yFinding
 interface AccessibilityAuditResult

@@ -268,6 +268,7 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
     sweepAngle: props.sweepAngle,
     bins: props.bins,
     showOutliers: props.showOutliers,
+    outlierRadius: props.outlierRadius,
     showIQR: props.showIQR,
     amplitude: props.amplitude,
     oSort: props.oSort,

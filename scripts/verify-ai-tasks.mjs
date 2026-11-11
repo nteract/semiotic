@@ -5,7 +5,11 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { dirname, relative, resolve, sep } from "node:path"
 import { fileURLToPath } from "node:url"
-import { buildTaskPackets, EVIDENCE_PATH } from "./lib/ai-task-packets.mjs"
+import {
+  buildTaskPackets,
+  EVIDENCE_PATH,
+  taskEvidenceIdentity
+} from "./lib/ai-task-packets.mjs"
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 
@@ -144,6 +148,8 @@ export function verifyTasks() {
       stdio: "inherit"
     })
     const before = buildTaskPackets(root, { verification: null })
+    // Bind the run to everything it executes, not only to the packet identity.
+    const identity = taskEvidenceIdentity(root)
     const unitReport = resolve(temp, "unit.json")
     const browserReport = resolve(temp, "browser.json")
     const targets = (kind) =>
@@ -208,14 +214,10 @@ export function verifyTasks() {
         ...observed
       }
     })
-    const taskRevisions = Object.fromEntries(
-      before.map((task) => [task.id, task.identity.sourceRevision])
-    )
-    const after = buildTaskPackets(root, { verification: null })
+    const taskRevisions = identity.revisions
+    const after = taskEvidenceIdentity(root).revisions
     if (
-      after.some(
-        (task) => task.identity.sourceRevision !== taskRevisions[task.id]
-      )
+      Object.keys(taskRevisions).some((id) => after[id] !== taskRevisions[id])
     )
       throw new Error(
         "Task sources changed during verification. Rerun before recording evidence."
@@ -231,6 +233,10 @@ export function verifyTasks() {
         browser: "Playwright Chromium"
       },
       taskRevisions,
+      // Content digests of what the runs executed beyond each task's own
+      // guidance sources. A later change to either makes this record stale.
+      runtime: identity.runtime,
+      harness: identity.harness,
       runs,
       limits: [
         "No paid model runs or measured adoption improvement.",

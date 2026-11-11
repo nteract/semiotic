@@ -9,7 +9,7 @@ import PageLayout from "../components/PageLayout"
 const bundleSizeRows = Object.freeze([
   {
     "importPath": "semiotic/atlas",
-    "kb": 325,
+    "kb": 330,
     "blurb": "Motif Braid, Dependency Forest, and Flow Circuit readers"
   },
   {
@@ -19,17 +19,17 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/access",
-    "kb": 31,
+    "kb": 32,
     "blurb": "Chart Access Contract factory and first-wave baseline contracts"
   },
   {
     "importPath": "semiotic/evidence",
-    "kb": 48,
+    "kb": 49,
     "blurb": "Chart Evidence Envelope, deterministic hashing, and publication gate"
   },
   {
     "importPath": "semiotic/artifact",
-    "kb": 126,
+    "kb": 128,
     "blurb": "Renderer-independent contracts, claims, time, policy, grounding, and transfer audits"
   },
   {
@@ -39,27 +39,27 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/line",
-    "kb": 151,
+    "kb": 156,
     "blurb": "LineChart only — one-chart micro boundary"
   },
   {
     "importPath": "semiotic/xy",
-    "kb": 188,
+    "kb": 195,
     "blurb": "LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts"
   },
   {
     "importPath": "semiotic/ordinal",
-    "kb": 140,
+    "kb": 142,
     "blurb": "BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts"
   },
   {
     "importPath": "semiotic/network",
-    "kb": 184,
+    "kb": 188,
     "blurb": "ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more"
   },
   {
     "importPath": "semiotic/network/zoom",
-    "kb": 193,
+    "kb": 198,
     "blurb": "Optional virtual network viewport, camera controls and consumer-owned LOD"
   },
   {
@@ -79,22 +79,22 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/geo",
-    "kb": 115,
+    "kb": 117,
     "blurb": "ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap"
   },
   {
     "importPath": "semiotic/wordcloud",
-    "kb": 132,
+    "kb": 131,
     "blurb": "WordCloud, shaped text placement, and portable layouts"
   },
   {
     "importPath": "semiotic/realtime",
-    "kb": 223,
+    "kb": 231,
     "blurb": "RealtimeLineChart, RealtimeHistogram, + 4 streaming charts"
   },
   {
     "importPath": "semiotic/realtime/core",
-    "kb": 221,
+    "kb": 230,
     "blurb": "Streaming chart types, HOCs, and buffer helpers"
   },
   {
@@ -114,17 +114,17 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/server/edge",
-    "kb": 295,
+    "kb": 296,
     "blurb": "renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard"
   },
   {
     "importPath": "semiotic/utils",
-    "kb": 112,
+    "kb": 115,
     "blurb": "ThemeProvider, numeric/accessibility audits, serialization — no chart components"
   },
   {
     "importPath": "semiotic/utils/core",
-    "kb": 103,
+    "kb": 106,
     "blurb": "Pure theme helpers, numeric/accessibility audits, and serialization"
   },
   {
@@ -134,12 +134,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/recipes",
-    "kb": 118,
+    "kb": 119,
     "blurb": "Pure layout functions (waffle, marimekko, flextree, dagre, …)"
   },
   {
     "importPath": "semiotic/recipes/core",
-    "kb": 115,
+    "kb": 116,
     "blurb": "Pure layout functions (waffle, marimekko, flextree, dagre, …)"
   },
   {
@@ -159,7 +159,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/themes/react",
-    "kb": 8,
+    "kb": 9,
     "blurb": "ThemeProvider/useTheme and hooks"
   },
   {
@@ -174,7 +174,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/physics",
-    "kb": 191,
+    "kb": 192,
     "blurb": "GaltonBoardChart, EventDropChart, UnitPileChart, CollisionSwarmChart, PacketFlowChart, PhysicsCustomChart"
   },
   {
@@ -189,12 +189,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/ai",
-    "kb": 696,
+    "kb": 710,
     "blurb": "All schema-backed charts + validation — optimized for LLM code generation"
   },
   {
     "importPath": "semiotic/ai/core",
-    "kb": 148,
+    "kb": 151,
     "blurb": "suggestCharts, auditData, describeChart, repairChartConfig, tool adapters — no chart components"
   },
   {
@@ -214,7 +214,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic",
-    "kb": 439,
+    "kb": 451,
     "blurb": "Full chart API and shared utilities"
   }
 ])
@@ -249,13 +249,15 @@ const installSnippet = `npm install semiotic`
 
 const firstChartSnippet = `import { LineChart } from "semiotic/line"
 
+// LineChart plots numeric x values (numbers or timestamps).
+// For named categories such as "Jan", use BarChart with categoryAccessor.
 const data = [
-  { month: "Jan", sales: 4200 },
-  { month: "Feb", sales: 5100 },
-  { month: "Mar", sales: 6800 },
-  { month: "Apr", sales: 5900 },
-  { month: "May", sales: 7200 },
-  { month: "Jun", sales: 8100 },
+  { month: 1, sales: 4200 },
+  { month: 2, sales: 5100 },
+  { month: 3, sales: 6800 },
+  { month: 4, sales: 5900 },
+  { month: 5, sales: 7200 },
+  { month: 6, sales: 8100 },
 ]
 
 function App() {
@@ -266,6 +268,7 @@ function App() {
       yAccessor="sales"
       xLabel="Month"
       yLabel="Sales ($)"
+      title="Monthly sales"
     />
   )
 }`
@@ -313,7 +316,7 @@ const framePropsSnippet = `// Every Chart accepts a frameProps escape hatch
   yAccessor="sales"
   frameProps={{
     annotations: [
-      { type: "x", month: "Mar", label: "Q1 End" }
+      { type: "x", month: 3, label: "Q1 End" }
     ],
     hoverAnnotation: true,
     size: [800, 400]

@@ -16,7 +16,8 @@ export function rehitGeoFrameCursor(options: CursorFrameGeometry & {
       height: options.height,
       scene: options.store.scene,
       pointQuadtree: options.geometryMoved ? null : options.store.quadtree,
-      maxPointRadius: options.store.maxPointRadius,
+      // Only an index query reads the radius; do not build one for a linear pass.
+      maxPointRadius: options.geometryMoved ? 0 : options.store.maxPointRadius,
       hitCanvasRef: options.hitCanvasRef
     })
     return result.kind === "hit" ? sceneMarkCursor(result.node) : undefined

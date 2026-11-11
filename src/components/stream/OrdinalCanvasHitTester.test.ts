@@ -8,7 +8,7 @@ import type {
   TrapezoidSceneNode
 } from "./ordinalTypes"
 import type { PointSceneNode, RectSceneNode } from "./types"
-import { buildOrdinalPointSpatialIndex } from "./ordinalSpatialIndex"
+import { buildPointSpatialIndex } from "./pointSpatialIndex"
 
 describe("OrdinalCanvasHitTester — findNearestOrdinalNode", () => {
   it("keeps large-point hit geometry identical with and without a quadtree", () => {
@@ -145,7 +145,7 @@ describe("OrdinalCanvasHitTester — findNearestOrdinalNode", () => {
       const active: PointSceneNode = {
         type: "point", x: 0, y: 0, r: 4, style: {}, datum: { id: "active" }
       }
-      const index = buildOrdinalPointSpatialIndex([...decorative, active])
+      const index = buildPointSpatialIndex([...decorative, active])
 
       expect(index.quadtree).toBeNull()
       expect(index.maxRadius).toBe(4)

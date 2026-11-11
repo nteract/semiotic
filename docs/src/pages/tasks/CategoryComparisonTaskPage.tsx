@@ -1,4 +1,4 @@
-import packet from "../../../public/tasks/compare-category-totals.json"
+import packet from "../../../../ai/task-packets/compare-category-totals.json"
 import TaskPage from "./TaskPage"
 import CategoryComparisonExample from "./examples/CategoryComparisonExample"
 

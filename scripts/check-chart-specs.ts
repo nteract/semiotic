@@ -28,16 +28,21 @@ import { readFileSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { isDeepStrictEqual } from "node:util"
-import ts from "typescript"
 import { buildChartSpecArtifacts } from "./lib/chart-spec-artifacts"
+import { loadPublicChartPropTypes } from "./lib/public-chart-prop-types"
 
 import {
-  findUnclassifiedPublicProps,
+  findUndeclaredPublicProps,
+  publicTypesRejectedBySpec,
   serializableRuntimeTypes,
   unsupportedPublicEnumValues
 } from "./lib/public-chart-prop-parity"
 
-import { CHART_SPECS, composeProps } from "../src/components/charts/shared/chartSpecs"
+import {
+  CHART_SPECS,
+  PROP_BAGS,
+  composeProps
+} from "../src/components/charts/shared/chartSpecs"
 import { CHART_DEFINITIONS } from "../src/components/charts/shared/chartDefinitions"
 import { VALIDATION_MAP } from "../src/components/charts/shared/validationMap"
 import { KNOWN_CHART_COMPONENTS } from "../src/components/charts/shared/knownChartComponents"
@@ -82,17 +87,15 @@ const errors: string[] = []
 const fail = (msg: string) => errors.push(msg)
 
 type SpecOnlyClassification = "server-only" | "compatibility"
-type PublicOnlyClassification =
-  "react-only" | "composition-only" | "compatibility"
 interface SpecOnlyException {
   classification: SpecOnlyClassification
   reason: string
 }
 
-interface PublicOnlyException {
-  classification: PublicOnlyClassification
-  reason: string
-}
+// Public React props that stay out of the serialized schema are no longer
+// classified here. They are declared in the chart specs with `omitFromSchema`
+// and a `runtimeOnly` reason (see chartSpecCore.ts), so `validateProps` and
+// this parity check read one declaration; section 3 below verifies it.
 
 interface PublicEnumValueException {
   classification: "compatibility"
@@ -310,12 +313,6 @@ const REQUIREDNESS_EXCEPTIONS: Record<string, Record<string, string>> = {
   }
 }
 
-/** Serializable public React props intentionally excluded from chart specs. */
-const PUBLIC_ONLY_PROP_EXCEPTIONS: Record<
-  string,
-  Record<string, PublicOnlyException>
-> = {}
-
 /**
  * Public React literal values retained only so a 3.x consumer keeps compiling.
  * They are excluded from serialized schemas when the runtime deliberately
@@ -344,329 +341,6 @@ const PUBLIC_ENUM_VALUE_EXCEPTIONS: Record<
     }
   ])
 )
-
-const classifyPublicOnly = (
-  charts: readonly string[],
-  classification: PublicOnlyClassification,
-  reason: string,
-  props: readonly string[]
-) => {
-  for (const chart of charts) {
-    const chartExceptions = (PUBLIC_ONLY_PROP_EXCEPTIONS[chart] ??= {})
-    for (const prop of props) {
-      if (chartExceptions[prop]) {
-        throw new Error(
-          `Duplicate public-only classification for ${chart}.${prop}`
-        )
-      }
-      chartExceptions[prop] = { classification, reason }
-    }
-  }
-}
-
-const ORDINAL_CHARTS = [
-  "BarChart",
-  "StackedBarChart",
-  "GroupedBarChart",
-  "SwarmPlot",
-  "BoxPlot",
-  "Histogram",
-  "ViolinPlot",
-  "RidgelinePlot",
-  "DotPlot",
-  "PieChart",
-  "DonutChart",
-  "GaugeChart",
-  "FunnelChart",
-  "RadarChart",
-  "SwimlaneChart",
-  "LikertChart"
-] as const
-const XY_CHARTS_WITHOUT_MINIMAP = [
-  "LineChart",
-  "BumpChart",
-  "AreaChart",
-  "DifferenceChart",
-  "StackedAreaChart",
-  "Scatterplot",
-  "BubbleChart",
-  "Heatmap",
-  "QuadrantChart",
-  "MultiAxisLineChart",
-  "CandlestickChart",
-  "ConnectedScatterplot",
-  "ScatterplotMatrix",
-  "WaterfallChart"
-] as const
-const XY_CHARTS = [...XY_CHARTS_WITHOUT_MINIMAP, "MinimapChart"] as const
-const NETWORK_CHARTS = [
-  "ForceDirectedGraph",
-  "SankeyDiagram",
-  "ProcessSankey",
-  "ChordDiagram",
-  "TreeDiagram",
-  "Treemap",
-  "CirclePack",
-  "OrbitDiagram"
-] as const
-const GEO_CHARTS = [
-  "ChoroplethMap",
-  "ProportionalSymbolMap",
-  "FlowMap",
-  "DistanceCartogram"
-] as const
-const PHYSICS_BASE_CHARTS = [
-  "GaltonBoardChart",
-  "EventDropChart",
-  "UnitPileChart",
-  "CollisionSwarmChart",
-  "GauntletChart",
-  "CrucibleChart",
-  "ProcessFlowChart"
-] as const
-
-const STORE_COMPOSITION_ONLY =
-  "This prop depends on the live React LinkedCharts/selection store and is not meaningful in a standalone serialized or static render."
-const POINTER_RUNTIME_ONLY =
-  "Browser pointer hit-testing is a React/runtime concern and has no serialized or static-render effect."
-const IMPERATIVE_ID_ONLY =
-  "This accessor targets imperative ref remove()/update() identity; serialized/static configs materialize complete data instead."
-const INHERITED_PHYSICS_COMPAT =
-  "Retained through BaseChartProps compatibility, but the physics HOC has no corresponding axis or transition/highlight semantic."
-
-classifyPublicOnly(
-  [
-    ...ORDINAL_CHARTS,
-    ...XY_CHARTS_WITHOUT_MINIMAP,
-    ...NETWORK_CHARTS,
-    ...GEO_CHARTS,
-    "PacketFlowChart"
-  ],
-  "composition-only",
-  STORE_COMPOSITION_ONLY,
-  ["selection", "linkedHover"]
-)
-
-classifyPublicOnly(
-  [
-    "BoxPlot",
-    "RidgelinePlot",
-    "DotPlot",
-    "PieChart",
-    "DonutChart",
-    "GaugeChart",
-    "FunnelChart",
-    "RadarChart",
-    "LikertChart",
-    ...XY_CHARTS.filter((chart) => chart !== "LineChart" && chart !== "Scatterplot" && chart !== "BubbleChart"),
-    ...NETWORK_CHARTS,
-    ...GEO_CHARTS,
-    ...PHYSICS_BASE_CHARTS,
-    "PacketFlowChart"
-  ],
-  "composition-only",
-  STORE_COMPOSITION_ONLY,
-  ["linkedBrush"]
-)
-
-classifyPublicOnly(
-  [
-    ...ORDINAL_CHARTS,
-    ...XY_CHARTS,
-    ...NETWORK_CHARTS,
-    ...GEO_CHARTS,
-    "PacketFlowChart"
-  ],
-  "react-only",
-  POINTER_RUNTIME_ONLY,
-  ["hoverRadius"]
-)
-
-classifyPublicOnly(
-  [
-    "GaugeChart",
-    ...XY_CHARTS,
-    ...NETWORK_CHARTS,
-    ...GEO_CHARTS,
-    ...PHYSICS_BASE_CHARTS,
-    "PacketFlowChart"
-  ],
-  "react-only",
-  IMPERATIVE_ID_ONLY,
-  ["dataIdAccessor"]
-)
-
-classifyPublicOnly(
-  [
-    ...ORDINAL_CHARTS,
-    "BumpChart",
-    "ScatterplotMatrix",
-    "MinimapChart",
-    ...NETWORK_CHARTS,
-    "ChoroplethMap",
-    "FlowMap",
-    "DistanceCartogram",
-    ...PHYSICS_BASE_CHARTS,
-    "PacketFlowChart"
-  ],
-  "react-only",
-  IMPERATIVE_ID_ONLY,
-  ["pointIdAccessor"]
-)
-
-classifyPublicOnly(
-  PHYSICS_BASE_CHARTS,
-  "compatibility",
-  INHERITED_PHYSICS_COMPAT,
-  ["axisExtent", "animate", "hoverHighlight"]
-)
-
-classifyPublicOnly(
-  ["BigNumber"],
-  "react-only",
-  "React CSSProperties style the value wrapper and are intentionally outside the JSON chart-config contract.",
-  ["style"]
-)
-
-function loadPublicChartPropTypes() {
-  const configPath = ts.findConfigFile(
-    repoRoot,
-    ts.sys.fileExists,
-    "tsconfig.json"
-  )
-  if (!configPath) throw new Error("Unable to locate tsconfig.json")
-  const configFile = ts.readConfigFile(configPath, ts.sys.readFile)
-  if (configFile.error) {
-    throw new Error(
-      ts.flattenDiagnosticMessageText(configFile.error.messageText, "\n")
-    )
-  }
-  const parsed = ts.parseJsonConfigFileContent(
-    configFile.config,
-    ts.sys,
-    repoRoot
-  )
-  const program = ts.createProgram({
-    rootNames: parsed.fileNames,
-    options: parsed.options
-  })
-  const checker = program.getTypeChecker()
-  const declarations = new Map<
-    string,
-    ts.InterfaceDeclaration | ts.TypeAliasDeclaration
-  >()
-
-  for (const sourceFile of program.getSourceFiles()) {
-    if (
-      (!sourceFile.fileName.includes("/src/components/charts/") &&
-        !sourceFile.fileName.includes("/src/components/recipes/atlas/")) ||
-      sourceFile.isDeclarationFile
-    )
-      continue
-    ts.forEachChild(sourceFile, (node) => {
-      if (
-        (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) &&
-        node.name
-      ) {
-        const name = node.name.text
-        if (name.endsWith("Props")) declarations.set(name, node)
-      }
-    })
-  }
-
-  type PublicProp = {
-    optional: boolean
-    runtimeTypes: Set<string>
-    stringLiterals: Set<string>
-    broadString: boolean
-  }
-  const describeType = (input: ts.Type): Omit<PublicProp, "optional"> => {
-    const runtimeTypes = new Set<string>()
-    const stringLiterals = new Set<string>()
-    let broadString = false
-    const visit = (type: ts.Type) => {
-      if (type.isUnion()) {
-        type.types.forEach(visit)
-        return
-      }
-      if (type.isIntersection()) {
-        const primitiveParts = type.types.filter(
-          (part) =>
-            !!(
-              part.flags &
-              (ts.TypeFlags.StringLike |
-                ts.TypeFlags.NumberLike |
-                ts.TypeFlags.BooleanLike)
-            )
-        )
-        if (primitiveParts.length > 0) {
-          primitiveParts.forEach(visit)
-        } else if (
-          checker.getSignaturesOfType(type, ts.SignatureKind.Call).length > 0
-        ) {
-          runtimeTypes.add("function")
-        } else {
-          runtimeTypes.add("object")
-        }
-        return
-      }
-      if (type.flags & ts.TypeFlags.StringLiteral) {
-        runtimeTypes.add("string")
-        stringLiterals.add((type as ts.StringLiteralType).value)
-      } else if (type.flags & ts.TypeFlags.StringLike) {
-        runtimeTypes.add("string")
-        broadString = true
-      } else if (type.flags & ts.TypeFlags.NumberLike) {
-        runtimeTypes.add("number")
-      } else if (type.flags & ts.TypeFlags.BooleanLike) {
-        runtimeTypes.add("boolean")
-      } else if (
-        type.flags &
-        (ts.TypeFlags.Null | ts.TypeFlags.Undefined | ts.TypeFlags.Void)
-      ) {
-        runtimeTypes.add("null")
-      } else if (
-        type.flags &
-        (ts.TypeFlags.Any | ts.TypeFlags.Unknown | ts.TypeFlags.TypeParameter)
-      ) {
-        runtimeTypes.add("unknown")
-      } else if (
-        checker.getSignaturesOfType(type, ts.SignatureKind.Call).length > 0
-      ) {
-        runtimeTypes.add("function")
-      } else if (checker.isArrayType(type) || checker.isTupleType(type)) {
-        runtimeTypes.add("array")
-      } else if (type.flags & ts.TypeFlags.Object) {
-        runtimeTypes.add("object")
-      }
-    }
-    visit(input)
-    return { runtimeTypes, stringLiterals, broadString }
-  }
-
-  const result = new Map<string, Map<string, PublicProp>>()
-  for (const chartName of Object.keys(CHART_SPECS)) {
-    const declaration = declarations.get(`${chartName}Props`)
-    if (!declaration) {
-      fail(`${chartName}: exported public type ${chartName}Props was not found`)
-      continue
-    }
-    const type = checker.getTypeAtLocation(declaration)
-    const properties = new Map<string, PublicProp>()
-    for (const symbol of checker.getPropertiesOfType(type)) {
-      const propType = checker.getTypeOfSymbolAtLocation(
-        symbol,
-        symbol.valueDeclaration ?? declaration
-      )
-      properties.set(symbol.getName(), {
-        optional: (symbol.flags & ts.SymbolFlags.Optional) !== 0,
-        ...describeType(propType)
-      })
-    }
-    result.set(chartName, properties)
-  }
-  return result
-}
 
 // The writer and checker share one complete artifact projection.
 const { files: generatedArtifacts, validationMap: generatedValidationMap } =
@@ -811,7 +485,11 @@ for (const [name, spec] of Object.entries(CHART_SPECS)) {
 // checker (rather than syntax-only interface members), so inherited
 // BaseChartProps and composed aliases are included in the public surface.
 const generatedArtifactErrorCount = errors.length
-const publicPropsByChart = loadPublicChartPropTypes()
+const { props: publicPropsByChart, missing: chartsWithoutPublicType } =
+  loadPublicChartPropTypes(repoRoot, Object.keys(CHART_SPECS))
+for (const chartName of chartsWithoutPublicType) {
+  fail(`${chartName}: exported public type ${chartName}Props was not found`)
+}
 const pushMaterializedInputs = new Set([
   "data",
   "areas",
@@ -833,7 +511,6 @@ for (const [name, spec] of Object.entries(CHART_SPECS)) {
       .map(([propName]) => propName)
   )
   const exceptions = SPEC_ONLY_PROP_EXCEPTIONS[name] ?? {}
-  const publicOnlyExceptions = PUBLIC_ONLY_PROP_EXCEPTIONS[name] ?? {}
   const publicEnumValueExceptions = PUBLIC_ENUM_VALUE_EXCEPTIONS[name] ?? {}
   const requirednessExceptions = REQUIREDNESS_EXCEPTIONS[name] ?? {}
 
@@ -948,28 +625,86 @@ for (const [name, spec] of Object.entries(CHART_SPECS)) {
     }
   }
 
-  for (const propName of findUnclassifiedPublicProps({
+  // The validator knows exactly the composed props, so a public React prop the
+  // spec never declares would be reported to callers as "Unknown prop".
+  for (const propName of findUndeclaredPublicProps({
     publicProps,
-    composedPropNames: new Set(Object.keys(composed)),
-    exceptionPropNames: new Set(Object.keys(publicOnlyExceptions))
+    composedPropNames: new Set(Object.keys(composed))
   })) {
     fail(
-      `${name}.${propName}: serializable public TypeScript prop is absent from chart specs`
+      `${name}.${propName}: public TypeScript prop is absent from chart specs, so validateProps ` +
+        "would reject it as unknown (declare it; use omitFromSchema, plus a runtimeOnly reason " +
+        "for a serializable type, when it must stay out of the serialized schema)"
     )
   }
-  for (const [propName, exception] of Object.entries(publicOnlyExceptions)) {
+
+  // Runtime-only declarations replace the former public-only exception table:
+  // each must still name a real, serializable-looking public prop, carry a
+  // reason, and accept every runtime type the public prop accepts.
+  for (const [propName, prop] of Object.entries(composed)) {
+    const note = prop.runtimeOnly
+    if (!note) continue
     const publicProp = publicProps.get(propName)
-    if (
-      !publicProp ||
-      composed[propName] ||
-      serializableRuntimeTypes(publicProp).length === 0
+    if (!prop.omitFromSchema) {
+      fail(
+        `${name}.${propName}: a ${note.kind} runtimeOnly declaration must also set omitFromSchema`
+      )
+    }
+    if (!note.reason.trim()) {
+      fail(
+        `${name}.${propName}: ${note.kind} runtimeOnly declaration needs a reason`
+      )
+    }
+    if (!publicProp) {
+      fail(
+        `${name}.${propName}: stale ${note.kind} runtimeOnly declaration; ${name}Props no longer ` +
+          "declares the prop (drop the entry, or list it in the chart's omitBagProps)"
+      )
+      continue
+    }
+    if (serializableRuntimeTypes(publicProp).length === 0) {
+      fail(
+        `${name}.${propName}: stale ${note.kind} runtimeOnly declaration; a callback-only prop ` +
+          "needs no serialization reason"
+      )
+    }
+  }
+
+  // A prop omitted from the schema is in the registry only so React usage
+  // validates. Its declared types must admit every runtime type the public
+  // prop accepts, or validateProps rejects a real value (a string
+  // `loadingContent`, say) with a type error.
+  for (const [propName, prop] of Object.entries(composed)) {
+    if (!prop.omitFromSchema) continue
+    const publicProp = publicProps.get(propName)
+    if (!publicProp) continue
+    const declaredTypes = new Set<string>(
+      Array.isArray(prop.type) ? prop.type : [prop.type]
+    )
+    const rejectedTypes = publicTypesRejectedBySpec(publicProp, declaredTypes)
+    if (rejectedTypes.length > 0) {
+      fail(
+        `${name}.${propName}: public TypeScript type ${rejectedTypes.join("|")} is rejected by ` +
+          `the schema-omitted declaration type ${[...declaredTypes].join("|")}, so validateProps ` +
+          "would reject a real React value"
+      )
+    }
+  }
+
+  for (const propName of spec.omitBagProps ?? []) {
+    const fromBag = spec.propBags.some((bagName) =>
+      Object.prototype.hasOwnProperty.call(PROP_BAGS[bagName], propName)
+    )
+    if (!fromBag) {
+      fail(
+        `${name}.${propName}: stale omitBagProps entry; none of the chart's prop bags declares it`
+      )
+    } else if (
+      publicProps.has(propName) &&
+      !Object.prototype.hasOwnProperty.call(spec.ownProps, propName)
     ) {
       fail(
-        `${name}.${propName}: stale ${exception.classification} public-only exception`
-      )
-    } else if (!exception.reason.trim()) {
-      fail(
-        `${name}.${propName}: ${exception.classification} public-only exception needs a reason`
+        `${name}.${propName}: omitBagProps drops a prop that ${name}Props declares`
       )
     }
   }

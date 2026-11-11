@@ -1,4 +1,4 @@
-import type { ChartSpec } from "./chartSpecCore"
+import { REACT_NODE_TYPES, type ChartSpec } from "./chartSpecCore"
 import { STYLE_RULES_PROP_SPEC } from "./styleRulesWireSchema"
 
 const VALUE_BANDS_PROP_SPEC = {
@@ -124,7 +124,7 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
       opacity: { type: "number" },
       gap: { type: "number" },
       legend: {
-        type: ["array", "object"],
+        type: REACT_NODE_TYPES,
         omitFromSchema: true,
         description:
           "Additional React legend content composed after inferred categories."
@@ -280,7 +280,7 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
       opacity: { type: "number" },
       gap: { type: "number" },
       legend: {
-        type: ["array", "object"],
+        type: REACT_NODE_TYPES,
         omitFromSchema: true,
         description:
           "Additional React legend content composed after inferred categories."

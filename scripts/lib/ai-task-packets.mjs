@@ -10,6 +10,58 @@ export const TASK_IDS = [
 ]
 export const GENERATOR = "scripts/generate-ai-task-packets.mjs"
 export const EVIDENCE_PATH = "ai/tasks/verification.json"
+/** The one committed copy. The docs server and build expose it at /tasks/. */
+export const PACKET_DIRECTORY = "ai/task-packets"
+
+// Three scopes with different lifetimes:
+//
+// - Guidance (`identity.sourceRevision`, written into every packet): the task
+//   definition, its declared examples and checks, the task pages and tooling,
+//   and the slice of the public contract the packet copies. A committed packet
+//   changes only when one of these does.
+// - Runtime and harness (below): everything else a recorded test run executed.
+//   They are hashed when evidence is evaluated and are deliberately not written
+//   into the packet, so an unrelated source edit cannot make the committed
+//   files stale. A recorded run that no longer matches them is still reported
+//   as stale; it just stays stale without rewriting the packet on every commit.
+const RUNTIME_ARTIFACTS = [
+  "package.json",
+  "ai/schema.json",
+  "ai/componentMetadata.cjs",
+  "ai/behaviorContracts.cjs",
+  "ai/surface-manifest.json",
+  "package-surface.manifest.json",
+  "ai/mcp-server.ts"
+]
+const HARNESS_SOURCES = [
+  "docs/src/App.jsx",
+  "docs/src/components/PageLayout.jsx",
+  "docs/src/components/CodeBlock.jsx",
+  "vite.shared.mjs",
+  "vite.docs.config.mjs",
+  "package-lock.json",
+  "src/setupTests.ts",
+  "playwright.docs-examples.config.ts",
+  "vitest.config.mts",
+  "scripts/lib/docs-task-packets.mjs"
+]
+const GUIDANCE_TOOLING = [
+  "ai/mcp-task-resources.ts",
+  "ai/mcp-task-resources.test.ts",
+  "scripts/ai-tasks/tsconfig.json",
+  "integration-tests/docs-examples-tasks.spec.ts",
+  "integration-tests/docs-examples-task-live.spec.ts",
+  GENERATOR,
+  "scripts/lib/ai-task-packets.mjs",
+  "scripts/verify-ai-tasks.mjs"
+]
+const CONTRACT_ARTIFACTS = [
+  "package.json",
+  "ai/schema.json",
+  "ai/componentMetadata.cjs",
+  "ai/behaviorContracts.cjs",
+  "package-surface.manifest.json"
+]
 export const digest = (value) =>
   `sha256:${createHash("sha256").update(value).digest("hex")}`
 const json = (value) => JSON.stringify(value, null, 2) + "\n"
@@ -124,6 +176,10 @@ export function evidenceFor(record, id, sourceRevision, checks) {
     observed: {
       verifiedAt: record.verifiedAt,
       environment: record.environment,
+      // What the recorded run executed beyond this packet's own identity.
+      ...(record.runtime && record.harness
+        ? { runtime: record.runtime, harness: record.harness }
+        : {}),
       runs: record.runs,
       record: EVIDENCE_PATH,
       authorship:
@@ -144,7 +200,24 @@ export function assertTaskVersion(packet, installedVersion) {
   }
 }
 
-export function buildTaskPackets(root, { verification } = {}) {
+export function buildTaskPackets(root, options = {}) {
+  return assembleTasks(root, options).packets
+}
+
+/**
+ * The identity a recorded run is bound to: each task's guidance revision plus
+ * the runtime and harness contents that run executed. `verify-ai-tasks.mjs`
+ * stores these; `evidenceFor` compares against them. They are not part of any
+ * generated packet.
+ */
+export function taskEvidenceIdentity(root) {
+  const { evidenceRevisions, runtime, harness } = assembleTasks(root, {
+    verification: null
+  })
+  return { revisions: evidenceRevisions, runtime, harness }
+}
+
+function assembleTasks(root, { verification } = {}) {
   const require = createRequire(resolve(root, "package.json"))
   const metadata = require(resolve(root, "ai/componentMetadata.cjs"))
   const behavior = require(resolve(root, "ai/behaviorContracts.cjs"))
@@ -164,39 +237,19 @@ export function buildTaskPackets(root, { verification } = {}) {
     ...walk(root, "src").filter(
       (path) => /\.[cm]?[jt]sx?$/.test(path) && !/\.test\./.test(path)
     ),
-    "package.json",
-    "ai/schema.json",
-    "ai/componentMetadata.cjs",
-    "ai/behaviorContracts.cjs",
-    "ai/surface-manifest.json",
-    "package-surface.manifest.json",
-    "ai/mcp-server.ts",
-    "ai/mcp-task-resources.ts"
+    ...RUNTIME_ARTIFACTS
   ])
+  const harness = sourceTree(root, HARNESS_SOURCES)
   const taskSources = sourceTree(root, [
-    "ai/mcp-task-resources.test.ts",
     ...walk(root, "docs/src/pages/tasks"),
-    "docs/src/App.jsx",
-    "docs/src/components/PageLayout.jsx",
-    "docs/src/components/CodeBlock.jsx",
-    "vite.shared.mjs",
-    "vite.docs.config.mjs",
-    "package-lock.json",
-    "src/setupTests.ts",
-    "scripts/ai-tasks/tsconfig.json",
-    "integration-tests/docs-examples-tasks.spec.ts",
-    "integration-tests/docs-examples-task-live.spec.ts",
-    "playwright.docs-examples.config.ts",
-    "vitest.config.mts",
-    GENERATOR,
-    "scripts/lib/ai-task-packets.mjs",
-    "scripts/verify-ai-tasks.mjs"
+    ...GUIDANCE_TOOLING
   ])
   const record =
     verification === undefined && existsSync(resolve(root, EVIDENCE_PATH))
       ? JSON.parse(readSource(root, EVIDENCE_PATH))
       : verification
-  return TASK_IDS.map((id) => {
+  const evidenceRevisions = {}
+  const packets = TASK_IDS.map((id) => {
     const definitionPath = `ai/tasks/${id}.json`
     const task = JSON.parse(readSource(root, definitionPath))
     if (
@@ -288,15 +341,45 @@ export function buildTaskPackets(root, { verification } = {}) {
       task.checks.unit,
       task.checks.browser
     ])
+    const dataRequired = behavior.dataRequiredForUsageMode(
+      task.component,
+      task.usageMode
+    )
+    // Exactly the public contract this packet relies on: a change to another
+    // component, prop, or export leaves the packet (and its revision) alone.
+    const contract = {
+      digest: digest(
+        json({
+          package: {
+            name: pkg.name,
+            version: pkg.version,
+            export: pkg.exports[subpath]
+          },
+          surface: surface.entries.find((entry) => entry.subpath === subpath),
+          component: componentMetadata,
+          properties,
+          requiredForStatic: component.parameters.required ?? [],
+          dataRequired,
+          contracts: task.contracts.map((contractId) =>
+            behavior.BEHAVIOR_CONTRACTS.find((item) => item.id === contractId)
+          )
+        })
+      ),
+      artifacts: CONTRACT_ARTIFACTS
+    }
     const sourceRevision = digest(
       json({
-        runtime,
+        contract: contract.digest,
         taskSources,
         declaredSources,
         definition: digest(readSource(root, definitionPath))
       })
     )
-    const evidence = evidenceFor(record, id, sourceRevision, task.checks)
+    const evidenceRevision = digest(
+      json({ sourceRevision, runtime: runtime.digest, harness: harness.digest })
+    )
+    evidenceRevisions[id] = evidenceRevision
+    const evidence = evidenceFor(record, id, evidenceRevision, task.checks)
     return {
       schemaVersion: 1,
       generatedBy: GENERATOR,
@@ -310,7 +393,9 @@ export function buildTaskPackets(root, { verification } = {}) {
         channel: "source",
         sourceRevision,
         revisionKind: "content-digest",
-        runtime,
+        revisionScope:
+          "This task's definition, declared examples and checks, task pages and tooling, and the selected public contract. Runtime and test-harness contents are compared when recorded evidence is evaluated; they are not part of this identifier.",
+        contract,
         taskSources,
         availability:
           "Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks."
@@ -324,10 +409,7 @@ export function buildTaskPackets(root, { verification } = {}) {
         component: task.component,
         importPath: task.importPath,
         usageMode: task.usageMode,
-        dataRequired: behavior.dataRequiredForUsageMode(
-          task.component,
-          task.usageMode
-        ),
+        dataRequired,
         schema: {
           type: "object",
           properties,
@@ -361,6 +443,7 @@ export function buildTaskPackets(root, { verification } = {}) {
       definition: definitionPath
     }
   })
+  return { packets, evidenceRevisions, runtime, harness }
 }
 
 function bullets(items) {
@@ -449,12 +532,10 @@ export function taskOutputs(packets) {
       evidenceStatus: task.evidence.status
     }))
   }
-  for (const prefix of ["ai/task-packets", "docs/public/tasks"]) {
-    outputs.set(`${prefix}/index.json`, json(index))
-    for (const task of packets) {
-      outputs.set(`${prefix}/${task.id}.json`, json(task))
-      outputs.set(`${prefix}/${task.id}.md`, renderTaskMarkdown(task))
-    }
+  outputs.set(`${PACKET_DIRECTORY}/index.json`, json(index))
+  for (const task of packets) {
+    outputs.set(`${PACKET_DIRECTORY}/${task.id}.json`, json(task))
+    outputs.set(`${PACKET_DIRECTORY}/${task.id}.md`, renderTaskMarkdown(task))
   }
   return outputs
 }

@@ -18,6 +18,7 @@ import { test } from "node:test"
 import { fileURLToPath } from "node:url"
 import { createRequire } from "node:module"
 import { gzipSync } from "node:zlib"
+import { pathToFileURL } from "node:url"
 import { build } from "esbuild"
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..")
@@ -185,6 +186,100 @@ test("chart downloads stay outside the initial public entry graphs", async () =>
     }
   }
 })
+
+// Published-chunk boundaries for lazily registered built-ins.
+//
+// A bare frame can load every built-in layout or XY plugin on demand, so that
+// code is always reachable from a chart's bundle. It must be reachable only
+// through the dynamic import: if a layout shares a published file with code a
+// chart needs up front, the application's bundler has to ship the whole file
+// eagerly. `publishedChunkAnchors` in scripts/build.mjs gives each layout and
+// plugin its own chunk; these cases fail when one is added without an anchor,
+// or when a shared helper lands in a layout's chunk and drags it along.
+const layoutSource = (name) => `src/components/stream/layouts/${name}LayoutPlugin.ts`
+const sceneSource = (name) => `src/components/stream/xySceneBuilders/${name}Scene.ts`
+const builtInBoundaryCases = [
+  ["./network", "SankeyDiagram", ["force", "chord", "hierarchy", "orbit"].map(layoutSource)],
+  ["./network", "ForceDirectedGraph", ["sankey", "chord", "hierarchy", "orbit"].map(layoutSource)],
+  ["./network", "ChordDiagram", ["sankey", "force", "hierarchy", "orbit"].map(layoutSource)],
+  ["./network", "Treemap", ["sankey", "force", "chord", "orbit"].map(layoutSource)],
+  ["./network", "OrbitDiagram", ["sankey", "force", "chord"].map(layoutSource)],
+  ["./network", "ProcessSankey", ["sankey", "force", "chord", "hierarchy", "orbit"].map(layoutSource)],
+  ["./xy", "LineChart", ["heatmap", "bar", "candlestick", "waterfall"].map(sceneSource)],
+  ["./xy", "Scatterplot", ["heatmap", "bar", "candlestick", "waterfall", "area", "line"].map(sceneSource)],
+  ["./xy", "Heatmap", ["bar", "candlestick", "waterfall", "area", "line"].map(sceneSource)],
+  ["./xy", "CandlestickChart", ["heatmap", "bar", "waterfall", "area", "line"].map(sceneSource)],
+  ["./xy", "WaterfallChart", ["heatmap", "bar", "candlestick", "area", "line"].map(sceneSource)]
+]
+
+function publishedChunksContaining(sourceModule) {
+  const attribution = JSON.parse(readFileSync(join(root, "dist/bundle-inputs.json"), "utf8"))
+  return Object.entries(attribution)
+    .filter(([, chunk]) => chunk.group === "client-primary" && (chunk.inputs[sourceModule] ?? 0) > 0)
+    .map(([file]) => resolve(root, "dist", file))
+}
+
+// These cases bundle with Rolldown, the bundler Vite applications ship with
+// and the one `npm run check:cold-consumer` measures. esbuild's code
+// splitting assigns chunks by file reachability, so it keeps any module that
+// is both statically and dynamically imported in the initial load no matter
+// how the published files are divided; the esbuild cases above cannot see
+// this boundary.
+const requireFromVite = createRequire(createRequire(import.meta.url).resolve("vite/package.json"))
+async function rolldownEagerModules(exportKey, symbol) {
+  const filename = resolve(root, pkg.exports[exportKey].import)
+  assert.ok(existsSync(filename), `${filename} is missing; run npm run dist:prod`)
+  const { rolldown } = await import(pathToFileURL(requireFromVite.resolve("rolldown")).href)
+  const entryId = "\0semiotic-boundary-entry"
+  const bundle = await rolldown({
+    cwd: root,
+    input: entryId,
+    external: (id) => EXTERNAL.some((name) => (name.endsWith("/*") ? id.startsWith(name.slice(0, -1)) : id === name || id.startsWith(`${name}/`))),
+    platform: "browser",
+    treeshake: true,
+    logLevel: "silent",
+    plugins: [
+      {
+        name: "boundary-entry",
+        resolveId: (id) => (id === entryId ? id : null),
+        load: (id) => (id === entryId ? `export { ${symbol} } from ${JSON.stringify(filename)}` : null)
+      }
+    ]
+  })
+  const { output } = await bundle.generate({ format: "esm", minify: true })
+  await bundle.close()
+  const chunks = output.filter((item) => item.type === "chunk")
+  const byName = new Map(chunks.map((chunk) => [chunk.fileName, chunk]))
+  const eager = new Set()
+  const pending = [chunks.find((chunk) => chunk.isEntry).fileName]
+  while (pending.length > 0) {
+    const name = pending.pop()
+    if (eager.has(name) || !byName.has(name)) continue
+    eager.add(name)
+    pending.push(...byName.get(name).imports)
+  }
+  const modules = new Set()
+  for (const name of eager) {
+    for (const [id, module] of Object.entries(byName.get(name).modules)) {
+      if (module.renderedLength > 0) modules.add(id)
+    }
+  }
+  return modules
+}
+
+for (const [exportKey, symbol, lazySources] of builtInBoundaryCases) {
+  test(`semiotic${exportKey.slice(1)} ${symbol} loads other built-ins only on demand`, async () => {
+    const eagerModules = await rolldownEagerModules(exportKey, symbol)
+    assert.ok(eagerModules.size > 0, `${symbol} produced an empty initial load`)
+    const eagerlyLoaded = []
+    for (const sourceModule of lazySources) {
+      const chunks = publishedChunksContaining(sourceModule)
+      assert.ok(chunks.length > 0, `${sourceModule} is missing from dist/bundle-inputs.json`)
+      if (chunks.some((chunk) => eagerModules.has(chunk))) eagerlyLoaded.push(sourceModule)
+    }
+    assert.deepEqual(eagerlyLoaded, [], `${symbol} eagerly loads ${eagerlyLoaded.join(", ")}`)
+  })
+}
 
 const cases = [
   {

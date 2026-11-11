@@ -208,6 +208,34 @@ describe("prepareChart", () => {
     expect(result.reasons.join(" ")).toMatch(/stackBy/)
   })
 
+  it("states each reason once and returns no JSX for a proposal that failed", () => {
+    const result = prepareChart({
+      component: "BarChart",
+      props: { data: BARS, x: "cat", y: "val", yFormat: "$,.0f", title: "Bars" },
+    })
+    expect(result.ok).toBe(false)
+    // A failed proposal is something to repair, not code to paste.
+    expect(result.jsx).toBeUndefined()
+    expect(result.config).toBeDefined()
+    // diagnoseConfig re-reports validation errors as VALIDATION diagnoses;
+    // the sentence must not appear a second time behind a "VALIDATION:" prefix.
+    expect(result.reasons.filter((reason) => reason.startsWith("VALIDATION:"))).toEqual([])
+    expect(new Set(result.reasons).size).toBe(result.reasons.length)
+    expect(result.validation.errors.every((error) => result.reasons.includes(error))).toBe(true)
+    // The structured form carries the repair, so no caller has to parse prose.
+    expect(
+      result.validation.issues?.find((issue) => issue.path === "x"),
+    ).toMatchObject({
+      code: "UNKNOWN_PROP",
+      suggestion: "categoryAccessor",
+      patch: { op: "rename", from: "x", to: "categoryAccessor" },
+    })
+    const validationDiagnosis = result.diagnostics.find(
+      (diagnosis) => diagnosis.code === "VALIDATION" && diagnosis.validation?.path === "x",
+    )
+    expect(validationDiagnosis?.fix).toBe("Rename `x` to `categoryAccessor`.")
+  })
+
   it("routes a repair when data is supplied and reports the fit verdict", () => {
     const good = prepareChart(GOOD_BAR, { data: BARS })
     expect(good.repair).toBeDefined()

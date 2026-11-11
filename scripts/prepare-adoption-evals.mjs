@@ -5,6 +5,7 @@ import process from "node:process"
 import { fileURLToPath } from "node:url"
 import {
   buildAdoptionArtifacts,
+  buildAdoptionSourceInventory,
   collectStaleAdoptionDiffs,
   jsonText,
   staleAdoptionMessage
@@ -12,8 +13,18 @@ import {
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const args = process.argv.slice(2)
-if (args.some((arg) => arg !== "--check") || args.length > 1) {
-  throw new Error("Usage: node scripts/prepare-adoption-evals.mjs [--check]")
+if (
+  args.some((arg) => arg !== "--check" && arg !== "--inventory") ||
+  args.length > 1
+) {
+  throw new Error(
+    "Usage: node scripts/prepare-adoption-evals.mjs [--check | --inventory]"
+  )
+}
+if (args.includes("--inventory")) {
+  // Volatile by design: printed for a run manifest, never written to the repo.
+  process.stdout.write(jsonText(await buildAdoptionSourceInventory(root)))
+  process.exit(0)
 }
 const artifacts = await buildAdoptionArtifacts(root)
 if (args.includes("--check")) {
@@ -38,5 +49,5 @@ if (args.includes("--check")) {
   }
 }
 console.log(
-  `${args.includes("--check") ? "Checked" : "Prepared"} ${artifacts.jobs.jobs.length} adoption development jobs and source inventory; no model calls or adoption outcomes.`
+  `${args.includes("--check") ? "Checked" : "Prepared"} ${artifacts.jobs.jobs.length} adoption development jobs and the study baseline; no model calls or adoption outcomes.`
 )

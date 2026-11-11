@@ -668,21 +668,6 @@
       "sampleCount": 9121,
       "unit": "ms"
     },
-    "ingest 1k points + computeScene (simulates 1s at 1kHz)": {
-      "mean": 0.35975863021582927,
-      "sampleCount": 1390,
-      "unit": "ms"
-    },
-    "ingest 5k points + computeScene (simulates 5s burst)": {
-      "mean": 1.8009528920863185,
-      "sampleCount": 278,
-      "unit": "ms"
-    },
-    "incremental ingest (100 points) + scene rebuild (hot path)": {
-      "mean": 0.7520856451127889,
-      "sampleCount": 665,
-      "unit": "ms"
-    },
     "50k push/evict cycles maintain constant buffer size": {
       "mean": 0.24150890873973677,
       "sampleCount": 2071,

@@ -81,12 +81,13 @@ test("preflight succeeds only when every registered check succeeds", () => {
 })
 
 test("local release and direct publish start with preflight; fast checks include packet dependents", () => {
-  for (const name of ["release:check", "prepublishOnly"]) {
-    assert.equal(
-      scripts[name].split(" && ")[0],
-      "npm run check:release-preflight"
-    )
-  }
+  assert.equal(
+    scripts["release:check"].split(" && ")[0],
+    "npm run check:release-preflight"
+  )
+  // One gate list: a direct `npm publish` delegates to it instead of keeping a
+  // second chain that can drift.
+  assert.equal(scripts.prepublishOnly, "npm run release:check")
   assert.equal(
     scripts["check:release-preflight"],
     "node --experimental-strip-types scripts/check-release-preflight.ts"
@@ -118,13 +119,11 @@ test("production bundle budgets fail before size tests and package consumer chec
     packageChecks.indexOf("npm run size") <
       packageChecks.indexOf("npm run test:production-semantics:from-dist")
   )
-  for (const name of ["release:check", "prepublishOnly"]) {
-    assert.deepEqual(scripts[name].split(" && ").slice(0, 3), [
-      "npm run check:release-preflight",
-      "npm run dist:prod",
-      "npm run check:bundle-budgets"
-    ])
-  }
+  assert.deepEqual(scripts["release:check"].split(" && ").slice(0, 3), [
+    "npm run check:release-preflight",
+    "npm run dist:prod",
+    "npm run check:bundle-budgets"
+  ])
 })
 
 test("cold-consumer contracts fail before package tests, API checks, and docs builds", () => {
@@ -169,23 +168,36 @@ test("production builds check finalized ESM sizes before building the CommonJS g
 })
 
 test("CI checks bundle budgets immediately after production builds and before expensive work", () => {
-  const ci = read(".github/workflows/node.js.yml")
-    .split("  docs-package:")[1]
-    .split("  testing-matrix:")[0]
+  const workflow = read(".github/workflows/node.js.yml")
+  const ci = workflow.split("  docs-package:")[1].split("  testing-matrix:")[0]
   const release = read(".github/workflows/release.yml")
     .split("  source-preflight:")[1]
     .split("  docs-examples:")[0]
-  for (const [job, budgetCommand, nextCommand] of [
-    [ci, "npm run check:bundle-budgets", "npm run build:mcp"],
-    [release, "npm run check:entry-graph-size", "npm run typescript"]
-  ]) {
-    const build = job.indexOf("npm run dist:prod")
-    const budget = job.indexOf(budgetCommand)
+  {
+    const build = release.indexOf("npm run dist:prod")
+    const budget = release.indexOf("npm run check:entry-graph-size")
     assert.ok(build >= 0)
     assert.ok(budget > build)
-    assert.ok(budget < job.indexOf(nextCommand))
-    assert.doesNotMatch(job.slice(build, budget), /npm run (?!dist:prod)/)
+    assert.ok(budget < release.indexOf("npm run typescript"))
+    assert.doesNotMatch(release.slice(build, budget), /npm run (?!dist:prod)/)
   }
+  // Pull requests build production once. The package lane downloads that
+  // build and checks budgets before anything else that depends on it.
+  const producer = workflow
+    .split("  production-build:")[1]
+    .split("  docs-package:")[0]
+  assert.deepEqual(producer.match(/npm run \S+/g), ["npm run dist:prod"])
+  assert.match(producer, /name: production-dist\n\s+path: dist\/\n/)
+  // The fingerprint that marks the build as matching its checkout is a dotfile.
+  assert.match(producer, /include-hidden-files: true/)
+  assert.equal(workflow.match(/npm run dist:prod/g).length, 1)
+  assert.match(ci, /needs: production-build\n/)
+  const download = ci.indexOf("name: production-dist")
+  const budget = ci.indexOf("npm run check:bundle-budgets")
+  assert.ok(download >= 0)
+  assert.ok(budget > download)
+  assert.ok(budget < ci.indexOf("npm run build:mcp"))
+  assert.doesNotMatch(ci.slice(download, budget), /npm run /)
   // Recovery can target a tag older than the combined budget script.
   assert.doesNotMatch(release, /npm run check:bundle-budgets/)
   assert.match(
@@ -196,6 +208,10 @@ test("CI checks bundle budgets immediately after production builds and before ex
     release.indexOf("npm run check:multi-import-size") < release.indexOf("npm run typescript")
   )
   assert.doesNotMatch(ci + release, /continue-on-error:/)
+  const browsers = workflow.split("\n  e2e:")[1]
+  assert.match(browsers, /needs: \[fast-contracts, production-build\]/)
+  assert.match(browsers, /name: production-dist\n\s+path: dist\n/)
+  assert.doesNotMatch(browsers, /npm run dist(?::prod)?(?:\s|$)/)
 })
 
 test("release gates browsers and publication on current preflight policy against tagged source", () => {

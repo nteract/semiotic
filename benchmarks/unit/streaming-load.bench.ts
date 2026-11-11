@@ -12,6 +12,13 @@ import {
   PipelineStore,
   type PipelineConfig,
 } from "../../src/components/stream/PipelineStore"
+import { registerBuiltInXYPlugins } from "../../src/components/stream/xyPlugins/registerBuiltIn"
+
+// Scene builders are registered by chart components at render time, not at
+// import. A bare PipelineStore without them accepts data and returns an empty
+// scene, which is how these cases once timed ingest alone while claiming to
+// time the rebuild.
+registerBuiltInXYPlugins()
 
 const SCENE_LAYOUT = { width: 600, height: 400 }
 
@@ -50,6 +57,16 @@ function ingestRange(store: PipelineStore, start: number, end: number): void {
   }
 }
 
+/** Rebuild the scene and fail the benchmark if nothing was built. */
+function rebuildScene(store: PipelineStore): void {
+  store.computeScene(SCENE_LAYOUT)
+  if (store.scene.length === 0) {
+    throw new Error(
+      "streaming-load benchmark built an empty scene; it would time ingest only"
+    )
+  }
+}
+
 // ── RingBuffer sustained push ────────────────────────────────────────────
 
 describe("RingBuffer sustained push", () => {
@@ -78,28 +95,30 @@ describe("RingBuffer sustained push", () => {
 // ── PipelineStore sustained ingest + scene rebuild ────────────────────────
 
 describe("PipelineStore sustained streaming", () => {
-  bench("ingest 1k points + computeScene (simulates 1s at 1kHz)", () => {
+  // These three cases were renamed when they began building a real scene:
+  // their earlier names recorded ingest-only timings and are not comparable.
+  bench("ingest 1k points + line scene rebuild (1s at 1kHz)", () => {
     const localStore = makeStreamingStore("line", 2000)
     ingestRange(localStore, 0, 1000)
     // Scene rebuild (the expensive part)
-    localStore.computeScene(SCENE_LAYOUT)
+    rebuildScene(localStore)
   })
 
-  bench("ingest 5k points + computeScene (simulates 5s burst)", () => {
+  bench("ingest 5k points + scatter scene rebuild (5s burst)", () => {
     const localStore = makeStreamingStore("scatter", 5000)
     ingestRange(localStore, 0, 5000)
-    localStore.computeScene(SCENE_LAYOUT)
+    rebuildScene(localStore)
   })
 
-  bench("incremental ingest (100 points) + scene rebuild (hot path)", () => {
+  bench("ingest 100 more points + line scene rebuild (hot path)", () => {
     // Pre-fill the store
     const localStore = makeStreamingStore("line", 2000)
     ingestRange(localStore, 0, 1900)
-    localStore.computeScene(SCENE_LAYOUT)
+    rebuildScene(localStore)
 
     // Measure incremental ingest + rebuild (the per-frame hot path)
     ingestRange(localStore, 1900, 2000)
-    localStore.computeScene(SCENE_LAYOUT)
+    rebuildScene(localStore)
   })
 })
 

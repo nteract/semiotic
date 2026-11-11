@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
-import { readFileSync } from "node:fs"
-import { dirname, resolve } from "node:path"
+import { readdirSync, readFileSync } from "node:fs"
+import { dirname, relative, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import test from "node:test"
 import { BaseSequencer, createVitest } from "vitest/node"
@@ -24,6 +24,41 @@ test("Vitest coverage and UI packages match the locked test runner", () => {
       `${name} runner peer`
     )
   }
+})
+
+test("every Node test suite under scripts/ is run by some npm script", () => {
+  const { scripts } = JSON.parse(readFileSync(resolve(root, "package.json"), "utf8"))
+  // Paths and single-level globs that npm scripts hand to a test runner.
+  const patterns = Object.values(scripts)
+    .flatMap((command) => command.match(/scripts\/[^\s"'&|;]+\.test\.[cm]?[jt]s/g) ?? [])
+    .map(
+      (pattern) =>
+        new RegExp(
+          `^${pattern.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, "[^/]*")}$`
+        )
+    )
+  const walk = (directory) =>
+    readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+      const path = resolve(directory, entry.name)
+      if (entry.isDirectory())
+        return entry.name === "fixtures" || entry.name === "node_modules"
+          ? []
+          : walk(path)
+      return /\.test\.[cm]?[jt]sx?$/.test(entry.name) ? [path] : []
+    })
+  const unrun = walk(resolve(root, "scripts"))
+    .filter((path) =>
+      /(?:\bfrom\s*|\bimport\s*(?:\(\s*)?|\brequire\s*\(\s*)["']node:test["']/.test(
+        readFileSync(path, "utf8")
+      )
+    )
+    .map((path) => relative(root, path).split("\\").join("/"))
+    .filter((path) => !patterns.some((pattern) => pattern.test(path)))
+  assert.deepEqual(
+    unrun,
+    [],
+    "Vitest skips node:test files, so each one must be listed in an npm script (for example test:release-infrastructure)"
+  )
 })
 
 test("Vitest discovery excludes Node test suites while retaining script unit tests", async () => {

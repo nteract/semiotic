@@ -132,6 +132,21 @@ describe("distribution statistics", () => {
     expect(violin.stats).toEqual({ ...box.stats, min: -100, max: 100 })
   })
 
+  it("draws boxplot outliers at the configured radius and falls back to 3px", () => {
+    const radii = (outlierRadius?: number) => {
+      const ctx = makeContext([100, 3, 1, -100, 5, 4, 2])
+      ctx.config.outlierRadius = outlierRadius
+      return buildBoxplotScene(ctx, layout)
+        .filter((node) => node.type === "point")
+        .map((node) => (node as { r: number }).r)
+    }
+    expect(radii()).toEqual([3, 3])
+    expect(radii(7)).toEqual([7, 7])
+    expect(radii(0)).toEqual([0, 0])
+    expect(radii(-2)).toEqual([3, 3])
+    expect(radii(Number.NaN)).toEqual([3, 3])
+  })
+
   it("handles a single observation in a boxplot", () => {
     const [node] = buildBoxplotScene(makeContext([2]), layout)
     if (node.type !== "boxplot") throw new Error("Missing boxplot")

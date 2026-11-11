@@ -24,7 +24,7 @@ try {
         `Task packets are stale; run npm run docs:ai-tasks:\n${stale.join("\n")}`
       )
     console.log(
-      `Task packet gate passed (${packets.length} tasks; source identities and mirrors agree).`
+      `Task packet gate passed (${packets.length} tasks; committed packets match their guidance sources and selected contract).`
     )
   } else {
     for (const [path, content] of outputs) {
@@ -35,6 +35,17 @@ try {
       `Generated ${outputs.size} human and machine task views from ${packets.length} definitions.`
     )
   }
+  // Informational: runtime or harness edits make a recorded run stale without
+  // changing any committed packet, so say when a re-run would refresh it.
+  const notCurrent = packets.filter(
+    (packet) => packet.evidence.status !== "supported-in-scope"
+  )
+  if (notCurrent.length)
+    console.log(
+      `Recorded evidence: ${notCurrent
+        .map((packet) => `${packet.id} ${packet.evidence.status}`)
+        .join(", ")}. npm run verify:ai-tasks re-runs the declared checks against the current sources.`
+    )
 } catch (error) {
   console.error(error.message)
   process.exitCode = 1

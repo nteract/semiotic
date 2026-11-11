@@ -22,6 +22,7 @@ import {
   generateValidationMap,
   generateValidationMapModule
 } from "./chart-specs-generators.mjs"
+import { serializeSchemaFile } from "./schema-file-format.mjs"
 
 /** Generation entry inputs; their transitive imports also affect the outputs. */
 export const CHART_SPEC_INPUTS = [
@@ -127,8 +128,7 @@ export function buildChartSpecArtifacts(repoRoot: string) {
 
   const validationMap = generateValidationMap(CHART_SPECS, composeProps)
   const files: Record<string, string> = {
-    "ai/schema.json":
-      JSON.stringify({ ...existing, tools: nextTools }, null, 2) + "\n",
+    "ai/schema.json": serializeSchemaFile({ ...existing, tools: nextTools }),
     "src/components/charts/shared/validationMap.generated.ts":
       generateValidationMapModule(validationMap, CHART_SPECS, PROP_BAGS),
     "src/components/charts/shared/knownChartComponents.ts":

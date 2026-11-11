@@ -127,6 +127,89 @@ describe("DataSourceAdapter ingestion lifecycle", () => {
     expect(vi.getTimerCount()).toBe(0)
   })
 
+  describe("progressive chunk schedule", () => {
+    const many = (count: number): Row[] =>
+      Array.from({ length: count }, (_, id) => ({ id }))
+
+    function deliver(adapter: DataSourceAdapter<Row>, data: Row[]): void {
+      adapter.setBoundedData(data)
+      // Far more frames than any schedule needs; extra frames deliver nothing.
+      for (let frame = 0; frame < 64; frame++) vi.advanceTimersToNextFrame()
+    }
+
+    function received() {
+      const sizes: number[] = []
+      const ids: number[] = []
+      const callback: ChangesetCallback<Row> = (changeset) => {
+        sizes.push(changeset.inserts.length)
+        for (const row of changeset.inserts) ids.push(row.id)
+      }
+      return { sizes, ids, callback }
+    }
+
+    it.each([
+      [5_001, [5_000, 1]],
+      [12_000, [5_000, 7_000]],
+      [40_000, [5_000, 35_000]],
+      [50_000, [5_000, 15_000, 30_000]],
+      [200_000, [5_000, 15_000, 60_000, 120_000]]
+    ])("delivers %i rows in geometrically growing chunks by default", (count, expected) => {
+      const log = received()
+      deliver(new DataSourceAdapter(log.callback), many(count))
+
+      expect(log.sizes).toEqual(expected)
+      // Every row arrives exactly once, in order.
+      expect(log.ids).toHaveLength(count)
+      expect(log.ids.every((id, index) => id === index)).toBe(true)
+    })
+
+    it("keeps total rebuild work linear in the dataset size", () => {
+      for (const count of [5_001, 9_999, 40_001, 160_001, 640_001, 1_000_000]) {
+        const log = received()
+        deliver(new DataSourceAdapter(log.callback), many(count))
+
+        // A consumer rebuilds everything delivered so far after each chunk.
+        let delivered = 0
+        let rebuiltRows = 0
+        for (const size of log.sizes) {
+          delivered += size
+          rebuiltRows += delivered
+        }
+        expect(delivered).toBe(count)
+        expect(rebuiltRows).toBeLessThanOrEqual(count * 2)
+        // Fixed 5000-row chunks would need count / 5000 deliveries.
+        expect(log.sizes.length).toBeLessThanOrEqual(6)
+      }
+    })
+
+    it("keeps exact fixed-size chunks when chunkSize is explicit", () => {
+      const log = received()
+      deliver(
+        new DataSourceAdapter(log.callback, { chunkSize: 5_000 }),
+        many(22_000)
+      )
+      expect(log.sizes).toEqual([5_000, 5_000, 5_000, 5_000, 2_000])
+    })
+
+    it("returns to the default schedule when an explicit chunkSize is removed", () => {
+      const log = received()
+      const adapter = new DataSourceAdapter(log.callback, { chunkSize: 1_000 })
+      adapter.updateChunkOptions({ chunkSize: undefined })
+      deliver(adapter, many(50_000))
+      expect(log.sizes).toEqual([5_000, 15_000, 30_000])
+    })
+
+    it("flush() completes the default schedule synchronously", () => {
+      const log = received()
+      const adapter = new DataSourceAdapter(log.callback)
+      adapter.setBoundedData(many(200_000))
+      adapter.flush()
+
+      expect(log.sizes).toEqual([5_000, 15_000, 60_000, 120_000])
+      expect(vi.getTimerCount()).toBe(0)
+    })
+  })
+
   it.each(["flush", "frame"] as const)(
     "finishes each %s callback before a reentrant flush publishes later rows",
     (source) => {

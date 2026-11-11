@@ -117,6 +117,26 @@ export interface ChartCapabilities {
   specialFeatures: string[]
 }
 
+/**
+ * Why a public React prop stays out of the serialized chart contract.
+ * - `react-only`: needs a live browser/React runtime (pointer hit-testing,
+ *   imperative ref identity, CSS style objects).
+ * - `composition-only`: depends on a surrounding React store such as
+ *   `LinkedCharts`, so it means nothing in a standalone or static render.
+ * - `compatibility`: inherited through a shared props type so 3.x callers keep
+ *   compiling, but this chart gives it no behavior.
+ */
+export type RuntimeOnlyPropKind =
+  | "react-only"
+  | "composition-only"
+  | "compatibility"
+
+export interface RuntimeOnlyPropNote {
+  kind: RuntimeOnlyPropKind
+  /** Reviewable justification; `check:chart-specs` rejects an empty reason. */
+  reason: string
+}
+
 export interface ChartPropSpec {
   /** Allowed runtime types. May be a single value or a union. */
   type: PropType | PropType[]
@@ -141,6 +161,14 @@ export interface ChartPropSpec {
    * be asked to populate.
    */
   omitFromSchema?: boolean
+  /**
+   * Marks a serializable-looking public React prop that is deliberately kept
+   * out of the wire schema, and says why. It requires `omitFromSchema: true`.
+   * `validateProps` accepts the prop (it is a real prop of the component), and
+   * `check:chart-specs` verifies the chart's public TypeScript type still
+   * declares it, so the entry cannot outlive the prop.
+   */
+  runtimeOnly?: RuntimeOnlyPropNote
 }
 
 export interface ChartSpec {
@@ -164,6 +192,12 @@ export interface ChartSpec {
    * order; chart-specific `ownProps` win on key collision.
    */
   propBags: ReadonlyArray<keyof typeof PROP_BAGS>
+  /**
+   * Bag props this chart's public type leaves out — the registry's mirror of a
+   * TypeScript `Omit<BaseChartProps, …>`. They are removed after the bags merge
+   * and before `ownProps` overlay, so `ownProps` can still redeclare one.
+   */
+  omitBagProps?: readonly string[]
   /** Chart-specific prop spec, overlaid on top of the composed bags. */
   ownProps: Record<string, ChartPropSpec>
   /**
@@ -195,6 +229,77 @@ const legendLayoutSchema = {
     axisGutter: { type: "number", minimum: 0 },
   },
 } as const
+
+// ---------------------------------------------------------------------------
+// Runtime-only public props
+// ---------------------------------------------------------------------------
+//
+// Every prop a chart's public TypeScript type accepts must be declared in its
+// spec, or `validateProps` reports a real React prop as unknown. The props
+// below are part of `BaseChartProps` and are kept out of the serialized schema,
+// so they are declared once here with `omitFromSchema` and a reviewable reason.
+//
+// A reason explains the schema omission only. It is not a claim about static
+// rendering: the static XY renderer reads `hoverRadius`, and the static XY and
+// geo renderers forward `pointIdAccessor`. Server behavior for these props is
+// the server-prop inventory's question (consumer-contracts/README.md).
+
+const STORE_COMPOSITION_ONLY: RuntimeOnlyPropNote = {
+  kind: "composition-only",
+  reason:
+    "Depends on the live React LinkedCharts/selection store, so the serialized schema omits it.",
+}
+const POINTER_RUNTIME_ONLY: RuntimeOnlyPropNote = {
+  kind: "react-only",
+  reason:
+    "Configures browser pointer hit-testing, so the serialized schema omits it.",
+}
+const IMPERATIVE_ID_ONLY: RuntimeOnlyPropNote = {
+  kind: "react-only",
+  reason:
+    "Names the row identity used by imperative ref remove()/update(), so the serialized schema omits it.",
+}
+const INHERITED_PHYSICS_COMPAT: RuntimeOnlyPropNote = {
+  kind: "compatibility",
+  reason:
+    "Retained through BaseChartProps compatibility, but the physics HOC has no corresponding axis or transition/highlight semantic.",
+}
+
+const runtimeOnly = (
+  type: PropType | PropType[],
+  note: RuntimeOnlyPropNote,
+): ChartPropSpec => ({ type, omitFromSchema: true, runtimeOnly: note })
+
+/**
+ * Runtime types of a React node prop. These props are `omitFromSchema`, so the
+ * list exists only for React-side validation and must admit everything
+ * `ReactNode` does: `loadingContent="Loading…"` is as valid as an element.
+ */
+export const REACT_NODE_TYPES: PropType[] = [
+  "boolean",
+  "object",
+  "string",
+  "number",
+  "array",
+]
+
+/** A callback prop: function-only, so it never needs a serialization reason. */
+const CALLBACK_PROP: ChartPropSpec = { type: "function", omitFromSchema: true }
+
+/**
+ * `BaseChartProps` members that exist only in a live React tree. A chart whose
+ * spec declares one of these as a wire prop (for example `linkedBrush` on
+ * brushable charts, `dataIdAccessor` on ordinal charts) overrides the entry
+ * through a later bag or `ownProps`.
+ */
+const baseRuntimeProps: Record<string, ChartPropSpec> = {
+  selection: /* @__PURE__ */ runtimeOnly("object", STORE_COMPOSITION_ONLY),
+  linkedHover: /* @__PURE__ */ runtimeOnly(["boolean", "string", "object"], STORE_COMPOSITION_ONLY),
+  linkedBrush: /* @__PURE__ */ runtimeOnly(["string", "object"], STORE_COMPOSITION_ONLY),
+  hoverRadius: /* @__PURE__ */ runtimeOnly("number", POINTER_RUNTIME_ONLY),
+  pointIdAccessor: /* @__PURE__ */ runtimeOnly(["string", "function"], IMPERATIVE_ID_ONLY),
+  dataIdAccessor: /* @__PURE__ */ runtimeOnly(["string", "function"], IMPERATIVE_ID_ONLY),
+}
 
 const commonProps: Record<string, ChartPropSpec> = {
   mode: {
@@ -256,7 +361,7 @@ const commonProps: Record<string, ChartPropSpec> = {
   },
   // Advanced legend content can contain React nodes or custom group objects;
   // validate it at runtime without asking schema-driven callers to construct it.
-  legend: { type: ["array", "object"], omitFromSchema: true },
+  legend: { type: REACT_NODE_TYPES, omitFromSchema: true },
   showGrid: { type: "boolean", default: false },
   colorBy: { type: ["string", "function"] },
   // Object maps are first-class at runtime (createColorScale); accept them
@@ -295,8 +400,8 @@ const commonProps: Record<string, ChartPropSpec> = {
     description: "Enable mark transitions (boolean or {duration?, easing?, intro?}).",
   },
   loading: { type: "boolean", description: "Show loading skeleton / loadingContent." },
-  loadingContent: { type: ["boolean", "object"], omitFromSchema: true, description: "ReactNode override for loading state; false suppresses." },
-  emptyContent: { type: ["boolean", "object"], omitFromSchema: true, description: "ReactNode when data is empty; false suppresses." },
+  loadingContent: { type: REACT_NODE_TYPES, omitFromSchema: true, description: "ReactNode override for loading state; false suppresses." },
+  emptyContent: { type: REACT_NODE_TYPES, omitFromSchema: true, description: "ReactNode when data is empty; false suppresses." },
   hoverHighlight: { type: ["boolean", "string"], description: "Dim non-hovered series/categories (true or the series-level mode; requires colorBy)." },
   chartId: { type: "string", description: "Stable id for linked selection / observation / nav sync." },
   emphasis: { type: "string", enum: ["primary", "secondary"] as const },
@@ -322,6 +427,7 @@ const commonProps: Record<string, ChartPropSpec> = {
   },
   // `onClick` is a function-only handler; LLMs can't populate it.
   onClick: { type: "function", omitFromSchema: true },
+  ...baseRuntimeProps,
 }
 
 const xyAxisProps: Record<string, ChartPropSpec> = {
@@ -446,8 +552,8 @@ const realtimeProps: Record<string, ChartPropSpec> = {
   linkedHover: { type: ["boolean", "string", "object"] },
   selection: { type: "object" },
   loading: { type: "boolean" },
-  loadingContent: { type: ["boolean", "object"], omitFromSchema: true },
-  emptyContent: { type: ["boolean", "object"], omitFromSchema: true },
+  loadingContent: { type: REACT_NODE_TYPES, omitFromSchema: true },
+  emptyContent: { type: REACT_NODE_TYPES, omitFromSchema: true },
   chartId: { type: "string" },
   emphasis: { type: "string", enum: ["primary", "secondary"] as const },
   pointIdAccessor: { type: ["string", "function"], omitFromSchema: true },
@@ -521,7 +627,7 @@ const physicsProps: Record<string, ChartPropSpec> = {
   annotations: { type: "array" },
   autoPlaceAnnotations: { type: ["boolean", "object"] },
   background: { type: "string" },
-  legend: { type: ["array", "object"], omitFromSchema: true },
+  legend: { type: REACT_NODE_TYPES, omitFromSchema: true },
   legendPosition: { type: "string", enum: ["right", "left", "top", "bottom"] as const },
   legendLayout: { type: "object" },
   selection: { type: "object" },
@@ -533,9 +639,21 @@ const physicsProps: Record<string, ChartPropSpec> = {
       "Observe running/settled pipeline state changes without reaching into frameProps.config."
   },
   loading: { type: "boolean" },
-  loadingContent: { type: ["boolean", "object"], omitFromSchema: true },
-  emptyContent: { type: ["boolean", "object"], omitFromSchema: true },
+  loadingContent: { type: REACT_NODE_TYPES, omitFromSchema: true },
+  emptyContent: { type: REACT_NODE_TYPES, omitFromSchema: true },
   frameProps: { type: "object", omitFromSchema: true },
+  // Physics HOCs extend `BaseChartProps`, so these members type-check on every
+  // one of them. A chart whose public type omits one lists it in
+  // `omitBagProps` (ChainReactionChart does not extend `BaseChartProps`).
+  linkedBrush: /* @__PURE__ */ runtimeOnly(["string", "object"], STORE_COMPOSITION_ONLY),
+  pointIdAccessor: /* @__PURE__ */ runtimeOnly(["string", "function"], IMPERATIVE_ID_ONLY),
+  dataIdAccessor: /* @__PURE__ */ runtimeOnly(["string", "function"], IMPERATIVE_ID_ONLY),
+  axisExtent: /* @__PURE__ */ runtimeOnly("string", INHERITED_PHYSICS_COMPAT),
+  animate: /* @__PURE__ */ runtimeOnly(["boolean", "object"], INHERITED_PHYSICS_COMPAT),
+  hoverHighlight: /* @__PURE__ */ runtimeOnly(["boolean", "string"], INHERITED_PHYSICS_COMPAT),
+  svgAnnotationRules: CALLBACK_PROP,
+  onObservation: CALLBACK_PROP,
+  onClick: CALLBACK_PROP,
 }
 
 /** Props shared by every network-family chart. */
@@ -589,10 +707,27 @@ export const CHART_MODE_ENUM = ["primary", "context", "sparkline", "mobile"] as 
  */
 export function composeProps(spec: ChartSpec): Record<string, ChartPropSpec> {
   const result: Record<string, ChartPropSpec> = {}
+  // Bag-level `runtimeOnly` entries describe React-only members of a shared
+  // props type. They never displace an explicit declaration and are appended
+  // after everything else, so declaring one cannot reorder (or otherwise
+  // change) a chart's serialized schema.
+  const runtimeOnlyFallbacks: Record<string, ChartPropSpec> = {}
   for (const bagName of spec.propBags) {
-    Object.assign(result, PROP_BAGS[bagName])
+    for (const [propName, prop] of Object.entries(PROP_BAGS[bagName])) {
+      if (prop.runtimeOnly) runtimeOnlyFallbacks[propName] = prop
+      else result[propName] = prop
+    }
+  }
+  for (const propName of spec.omitBagProps ?? []) {
+    delete result[propName]
+    delete runtimeOnlyFallbacks[propName]
   }
   Object.assign(result, spec.ownProps)
+  for (const [propName, prop] of Object.entries(runtimeOnlyFallbacks)) {
+    if (!Object.prototype.hasOwnProperty.call(result, propName)) {
+      result[propName] = prop
+    }
+  }
   const size = chartPrimarySize(spec.name)
   if (size) {
     for (const key of ["width", "height"] as const) {

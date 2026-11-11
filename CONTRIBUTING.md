@@ -23,8 +23,15 @@ The package browser suite also requires both builds: its widget regression
 loads the shipped MCP executable during test collection. Local
 `npm run test:dist` starts `serve-examples`, which builds the library and MCP
 artifacts before serving. If reusing an existing server, rebuild with
-`npm run dist && npm run build:mcp` before running Playwright. CI and the Linux
-snapshot bootstrap build production library and MCP artifacts explicitly.
+`npm run dist && npm run build:mcp` before running Playwright. The Linux
+snapshot bootstrap builds production library and MCP artifacts explicitly. Pull
+request CI builds the production library once (`production-build`) and the
+package and browser jobs download that build; the docs example suite runs as
+three Playwright shards.
+
+Visual baselines exist for Linux only (`*-linux.png`). See
+[TESTING_BASELINE.md](TESTING_BASELINE.md) for running the browser suite on
+another platform.
 
 The repo pins the development Node version in `.node-version` and Volta in
 `package.json`. Use that version for the current toolchain; historical story
@@ -99,8 +106,8 @@ Start with the smallest useful check before running the full release suite:
    It reports all failed checks together. The tag workflow runs it before types
    and browser jobs, including when manually recovering an older tag.
 4. **Release gate:** `npm run release:check` only for a release candidate or a
-   shared/public-surface change that needs the complete contract matrix. It and
-   `prepublishOnly` run the release preflight first.
+   shared/public-surface change that needs the complete contract matrix. It
+   runs the release preflight first, and `prepublishOnly` delegates to it.
 
 Production builds check entry-graph size budgets as soon as their ESM output is
 finalized, before the remaining CommonJS and worker builds. `npm run size` also
@@ -413,8 +420,12 @@ npm run check:file-size -- --update-allowlist
 
 Each row bundles one public named import from the packed tarball with Rolldown (via Vite) code
 splitting, as an application would ship it. `gzipBytes` is the initial load (the entry plus statically imported
-chunks, gzipped per file); `lazyGzipBytes` is code fetched only when a feature needs it. The ratchet
-gates the initial load.
+chunks, gzipped per file); `lazyGzipBytes` is code fetched only when a feature needs it.
+
+Two more totals keep growth from hiding behind a lazy boundary. `singleFileGzipBytes` is the same
+import bundled by Rolldown with code splitting off, so it counts everything the import can reach.
+`esbuildGzipBytes` is that single file built by esbuild, the bundler whose splitting keeps these
+modules eager. The ratchet gates the initial load and both totals with the same tolerances.
 
 `npm run check:cold-consumer` keeps package exports and the measurement method exact, so structural
 contract drift still fails immediately. Byte measurements use two levels: changes inside the

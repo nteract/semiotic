@@ -1,14 +1,26 @@
 import React, { useState, useEffect, useRef } from "react"
 import { Link } from "react-router-dom"
 import { StreamXYFrame, StreamOrdinalFrame, ForceDirectedGraph, RealtimeHistogram } from "semiotic"
+import { components as chartCatalog } from "../../ai/surface-manifest.json"
+
+// Counted from the generated component inventory so the hero copy cannot fall
+// behind the catalog. Recipes are layouts for the custom charts, not chart
+// components, so they are left out.
+const chartComponentCount = Object.entries(chartCatalog.categories)
+  .filter(([category]) => category !== "recipe")
+  .reduce((total, [, names]) => total + names.length, 0)
 
 const tierSnippets = {
-  charts: `import { LineChart } from "semiotic"
+  charts: `import { LineChart } from "semiotic/xy"
 
 <LineChart
-  data={salesData}
-  xAccessor="month"
-  yAccessor="revenue"
+  data={[
+    { week: 1, signups: 120 },
+    { week: 2, signups: 180 },
+    { week: 3, signups: 150 },
+  ]}
+  xAccessor="week"
+  yAccessor="signups"
 />`,
   frames: `import { StreamXYFrame } from "semiotic"
 
@@ -21,16 +33,22 @@ const tierSnippets = {
   enableHover={true}
   showAxes={true}
 />`,
-  utilities: `import { Axis, Legend, DividedLine } from "semiotic"
+  custom: `import { XYCustomChart } from "semiotic/xy"
 
-<svg width={500} height={300}>
-  <DividedLine
-    data={lineData}
-    parameters={d => ({ stroke: theme(d.type) })}
-  />
-  <Axis orient="left" scale={yScale} />
-  <Legend categories={categories} />
-</svg>`,
+// One square per ticket, colored by status.
+const grid = (ctx) => ({
+  nodes: ctx.data.map((d, i) => ({
+    type: "rect",
+    x: (i % 10) * 24,
+    y: Math.floor(i / 10) * 24,
+    w: 22,
+    h: 22,
+    style: { fill: ctx.resolveColor(d.status) },
+    datum: d,
+  })),
+})
+
+<XYCustomChart data={tickets} layout={grid} colorBy="status" />`,
 }
 
 const quickStartSteps = [
@@ -43,9 +61,13 @@ const quickStartSteps = [
     number: 2,
     title: "Static data — just pass an array",
     code: `<LineChart
-  data={salesData}
-  xAccessor="month"
-  yAccessor="revenue"
+  data={[
+    { week: 1, signups: 120 },
+    { week: 2, signups: 180 },
+    { week: 3, signups: 150 },
+  ]}
+  xAccessor="week"
+  yAccessor="signups"
 />`,
   },
   {
@@ -936,7 +958,7 @@ export default function Landing() {
         <div style={styles.heroInner}>
           <h1 style={styles.heroHeadline}>Streaming-First Visualization for React</h1>
           <p style={styles.heroSubtitle}>
-            Push data at 60fps with decay, pulse, and staleness encoding, or pass an array for a static chart. Semiotic covers more than 40 chart types, network graphs, coordinated dashboards, and AI-assisted authoring.
+            Push data at 60fps with decay, pulse, and staleness encoding, or pass an array for a static chart. Semiotic covers {chartComponentCount} chart components, network graphs, coordinated dashboards, and AI-assisted authoring.
           </p>
 
           <div style={styles.heroButtons}>
@@ -969,8 +991,8 @@ export default function Landing() {
       <section style={styles.section}>
         <h2 style={styles.sectionTitle}>Choose Your Level of Control</h2>
         <p style={styles.sectionSubtitle}>
-          Start with a chart component. Reach for a Frame or the lower-level utilities when the
-          design calls for them.
+          Start with a chart component. Reach for a Frame or write your own layout when the
+          design calls for it.
         </p>
 
         <div style={styles.tierGrid} className="landing-tier-grid">
@@ -1020,7 +1042,7 @@ export default function Landing() {
             <MiniCodeBlock code={tierSnippets.frames} />
           </div>
 
-          {/* Utilities Tier */}
+          {/* Custom Tier */}
           <div
             style={{
               ...styles.tierCard,
@@ -1033,14 +1055,14 @@ export default function Landing() {
                 background: "var(--tier-utilities)",
               }}
             >
-              Utilities
+              Custom
             </span>
             <h3 style={styles.tierHeading}>Build Your Own</h3>
             <p style={styles.tierDescription}>
-              Use individual components like Axis, Legend, Brush, and DividedLine to build
-              completely custom visualizations.
+              Write a layout function that returns marks. The frame supplies hit testing,
+              tooltips, transitions, theming, and server rendering.
             </p>
-            <MiniCodeBlock code={tierSnippets.utilities} />
+            <MiniCodeBlock code={tierSnippets.custom} />
           </div>
         </div>
       </section>

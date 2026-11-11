@@ -9,15 +9,22 @@
     "packageName": "semiotic",
     "packageVersion": "3.13.3",
     "channel": "source",
-    "sourceRevision": "sha256:8a88d4c70a8b586c391b5b951306dbd281789dfea2e95baf92c79b1662beaab3",
+    "sourceRevision": "sha256:ba804a014c4cf3bac318296de3d2aab45578a567d5252df9713c7095bd84d12e",
     "revisionKind": "content-digest",
-    "runtime": {
-      "digest": "sha256:69e42a0ad7e8b1479b0a9dbcb671d2c4f560708e4c2e13b00e4ed667d149a7c8",
-      "fileCount": 1509
+    "revisionScope": "This task's definition, declared examples and checks, task pages and tooling, and the selected public contract. Runtime and test-harness contents are compared when recorded evidence is evaluated; they are not part of this identifier.",
+    "contract": {
+      "digest": "sha256:28ee97b148d9586d7b92919dab93963b13ff58388d2d79a6b9b7f948557ea5e5",
+      "artifacts": [
+        "package.json",
+        "ai/schema.json",
+        "ai/componentMetadata.cjs",
+        "ai/behaviorContracts.cjs",
+        "package-surface.manifest.json"
+      ]
     },
     "taskSources": {
-      "digest": "sha256:5c1c82ec39bb212f4068ffdc1a97c5b41e90dbe8d827d6ef8540634a928e0d19",
-      "fileCount": 36
+      "digest": "sha256:3c070823036c8505e984abbf792a2e74ce163dc720016423595c64ccfd9fa89b",
+      "fileCount": 28
     },
     "availability": "Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks."
   },

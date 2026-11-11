@@ -85,6 +85,13 @@ export const serverPropContracts: readonly ServerPropContract[] = [
     observable:
       "Clamped, formatted value and range/caption text; needle and scale labels can be absent."
   },
+  ...["AreaChart", "LineChart"].map((component) => ({
+    id: `${component}-cursor-target`,
+    component,
+    props: ["hoverRadius"],
+    observable:
+      "A cursor-styled area emits one invisible hit target twice hoverRadius wide; the default is 60, zero clamps to 1, and an area without a cursor emits none."
+  })),
   {
     id: "line-accessibility",
     component: "LineChart",

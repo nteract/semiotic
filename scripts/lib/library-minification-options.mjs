@@ -9,12 +9,16 @@ export const libraryTerserOptions = {
     drop_console: false,
     pure_funcs: ["console.log", "console.debug"],
     drop_debugger: true,
-    hoist_funs: true,
-    // Start with intact helpers; the chunk minifier also compares function
-    // reduction by compressed size. Semantic and named-import regressions
-    // cover the selected output.
-    reduce_funcs: false,
-    passes: 3
+    // These three settings are the one configuration every chunk is minified
+    // with. `scripts/lib/minify-library-chunk.mjs` records the measurement
+    // that replaced a per-chunk search over seven variants: leaving function
+    // declarations in place, inlining single-use functions, and two compress
+    // passes came closest to that search's gzip output at a seventeenth of its
+    // minification time. Semantic and named-import regression tests cover
+    // this output.
+    hoist_funs: false,
+    reduce_funcs: true,
+    passes: 2
   },
   mangle: {
     properties: false

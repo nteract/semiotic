@@ -43,6 +43,166 @@ describe("validateProps typo-aware suggestions", () => {
   })
 })
 
+describe("validateProps structured issues", () => {
+  const SERIES = [
+    { date: 1, value: 10, region: "east" },
+    { date: 2, value: 12, region: "west" },
+  ]
+
+  it("reports each finding once as a sentence and once as a structured issue", () => {
+    const result = validateProps("LineChart", {
+      data: SERIES,
+      x: "date",
+      y: "value",
+      series: "region",
+      yFormat: "$,.0f",
+    })
+    expect(result.valid).toBe(false)
+    expect(result.errors).toEqual(result.issues.map((issue) => issue.message))
+    expect(new Set(result.errors).size).toBe(result.errors.length)
+    expect(result.issues.map((issue) => [issue.code, issue.path])).toEqual([
+      ["INVALID_PROP_TYPE", "yFormat"],
+      ["UNKNOWN_PROP", "x"],
+      ["UNKNOWN_PROP", "y"],
+      ["UNKNOWN_PROP", "series"],
+    ])
+    // The audit's example produced 2.7 KB of validation text; the accepted-prop
+    // list is no longer repeated per unknown prop.
+    expect(JSON.stringify(result.errors).length).toBeLessThan(500)
+    expect(result.validProps).toBeUndefined()
+  })
+
+  it("maps other libraries' channel names onto the component's own props", () => {
+    const byPath = (component: string, props: Record<string, unknown>) =>
+      Object.fromEntries(
+        validateProps(component, props).issues.map((issue) => [
+          issue.path,
+          issue,
+        ]),
+      )
+
+    const line = byPath("LineChart", { data: SERIES, x: "date", y: "value", series: "region" })
+    expect(line.x).toMatchObject({
+      suggestion: "xAccessor",
+      patch: { op: "rename", from: "x", to: "xAccessor" },
+    })
+    expect(line.y.suggestion).toBe("yAccessor")
+    expect(line.series.suggestion).toBe("lineBy")
+
+    const bars = [{ quarter: "Q1", revenue: 12 }]
+    const bar = byPath("BarChart", { data: bars, x: "quarter", y: "revenue" })
+    expect(bar.x.suggestion).toBe("categoryAccessor")
+    expect(bar.y.suggestion).toBe("valueAccessor")
+
+    const legacy = byPath("BarChart", { data: bars, oAccessor: "quarter", rAccessor: "revenue" })
+    expect(legacy.oAccessor.suggestion).toBe("categoryAccessor")
+    expect(legacy.rAccessor.suggestion).toBe("valueAccessor")
+
+    const realtime = byPath("RealtimeLineChart", { x: "time", y: "value" })
+    expect(realtime.x.suggestion).toBe("timeAccessor")
+    expect(realtime.y.suggestion).toBe("valueAccessor")
+  })
+
+  it("offers a rename only when it cannot clobber or mistype the target", () => {
+    const occupied = validateProps("LineChart", {
+      data: SERIES,
+      x: "date",
+      xAccessor: "date",
+    }).issues.find((issue) => issue.path === "x")
+    expect(occupied?.suggestion).toBe("xAccessor")
+    expect(occupied?.patch).toEqual({ op: "remove", path: "x" })
+
+    const wrongType = validateProps("LineChart", {
+      data: SERIES,
+      x: 3,
+    }).issues.find((issue) => issue.path === "x")
+    expect(wrongType?.suggestion).toBe("xAccessor")
+    expect(wrongType?.patch).toBeUndefined()
+  })
+
+  it("does not match a one-letter prop to an unrelated short prop", () => {
+    const issue = validateProps("GaugeChart", { value: 1, x: 2 }).issues.find(
+      (entry) => entry.path === "x",
+    )
+    expect(issue?.code).toBe("UNKNOWN_PROP")
+    expect(issue?.suggestion).toBeUndefined()
+    expect(issue?.patch).toEqual({ op: "remove", path: "x" })
+  })
+
+  it("lists the accepted props once per result, not once per unknown prop", () => {
+    const result = validateProps("LineChart", {
+      data: SERIES,
+      zzzzNotAProp: true,
+      qqqqAlsoNotAProp: true,
+    })
+    const unknown = result.errors.filter((error) => error.startsWith("Unknown prop"))
+    expect(unknown).toHaveLength(2)
+    expect(unknown.filter((error) => error.includes("Valid props:"))).toHaveLength(1)
+    expect(unknown[1]).toContain("valid props are listed above")
+    expect(result.validProps).toContain("xAccessor")
+    expect(result.validProps).toContain("linkedHover")
+  })
+
+  it("explains a callback prop given a serializable value and offers to drop it", () => {
+    const issue = validateProps("LineChart", {
+      data: SERIES,
+      xFormat: "%b %Y",
+    }).issues.find((entry) => entry.path === "xFormat")
+    expect(issue).toMatchObject({
+      code: "INVALID_PROP_TYPE",
+      actualType: "string",
+      expectedTypes: ["function"],
+      patch: { op: "remove", path: "xFormat" },
+    })
+    expect(issue?.message).toContain('"xFormat" should be function, got string.')
+    expect(issue?.message).toContain("serialized config cannot carry")
+  })
+
+  it("suggests the nearest enum value", () => {
+    const issue = validateProps("LineChart", {
+      data: SERIES,
+      curve: "monotonX",
+    }).issues.find((entry) => entry.path === "curve")
+    expect(issue).toMatchObject({
+      code: "INVALID_PROP_VALUE",
+      suggestion: "monotoneX",
+      patch: { op: "set", path: "curve", value: "monotoneX" },
+    })
+    expect(issue?.allowedValues).toContain("monotoneX")
+  })
+
+  it("suggests the nearest component name", () => {
+    const result = validateProps("LineChrt", {})
+    expect(result.issues).toHaveLength(1)
+    expect(result.issues[0]).toMatchObject({
+      code: "UNKNOWN_COMPONENT",
+      suggestion: "LineChart",
+    })
+  })
+
+  it("accepts React-only interaction props that the wire schema omits", () => {
+    const result = validateProps("BarChart", {
+      data: [{ category: "a", value: 1 }],
+      categoryAccessor: "category",
+      valueAccessor: "value",
+      linkedHover: true,
+      selection: { name: "s" },
+      hoverRadius: 12,
+      loadingContent: "Loading…",
+    })
+    expect(result.errors).toEqual([])
+    expect(result.valid).toBe(true)
+
+    const mistyped = validateProps("BarChart", {
+      data: [{ category: "a", value: 1 }],
+      hoverRadius: "12",
+    })
+    expect(mistyped.issues).toMatchObject([
+      { code: "INVALID_PROP_TYPE", path: "hoverRadius", actualType: "string" },
+    ])
+  })
+})
+
 describe("validateProps chart modes", () => {
   it("accepts the shared mobile mode on regular chart specs", () => {
     const result = validateProps("LineChart", {

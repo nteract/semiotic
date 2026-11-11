@@ -92,16 +92,18 @@ describe("DataSourceAdapter Pipeline Scenarios", () => {
     expect(onChangeset.mock.calls[0][0].inserts).toHaveLength(5000)
     expect(onChangeset.mock.calls[0][0].totalSize).toBe(12000)
 
-    // Flush rAF to get second chunk
+    // Flush rAF to get the second chunk. The default schedule grows
+    // geometrically and never leaves a tail smaller than what is already
+    // delivered, so the remaining 7000 rows arrive together.
     vi.advanceTimersToNextFrame()
     expect(onChangeset).toHaveBeenCalledTimes(2)
     expect(onChangeset.mock.calls[1][0].bounded).toBe(false) // appends, doesn't reset
-    expect(onChangeset.mock.calls[1][0].inserts).toHaveLength(5000)
+    expect(onChangeset.mock.calls[1][0].boundedAppend).toBe(true)
+    expect(onChangeset.mock.calls[1][0].inserts).toHaveLength(7000)
 
-    // Flush again for final chunk
+    // Nothing is left to deliver
     vi.advanceTimersToNextFrame()
-    expect(onChangeset).toHaveBeenCalledTimes(3)
-    expect(onChangeset.mock.calls[2][0].inserts).toHaveLength(2000) // remaining items
+    expect(onChangeset).toHaveBeenCalledTimes(2)
 
     // Total items across all changesets
     const totalItems = onChangeset.mock.calls.reduce((sum, [cs]) => sum + cs.inserts.length, 0)

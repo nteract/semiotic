@@ -4,9 +4,16 @@
  * Unlike `sync-bundle-sizes.mjs`, this module does not quote Semiotic's own
  * first-party artifacts. It packs the package (or accepts one supplied release
  * tarball), extracts that archive into a fresh consumer's node_modules
- * directory, then asks esbuild to bundle a retained named import from each
- * stable public export. That makes package export resolution and consumer-side
- * bundling part of the measurement.
+ * directory, then bundles a retained named import from each stable public
+ * export. That makes package export resolution and consumer-side bundling part
+ * of the measurement.
+ *
+ * Each import is measured three ways. Rolldown with code splitting gives the
+ * eager and on-demand split a Vite application ships. The same Rolldown build
+ * without code splitting, and an esbuild build, each give one file holding
+ * everything the import can reach. Those totals keep growth visible when code
+ * moves behind a lazy boundary, and catch a regression that only one bundler's
+ * tree shaking exposes.
  */
 
 import { execFileSync } from "node:child_process"
@@ -27,6 +34,7 @@ import { isDeepStrictEqual } from "node:util"
 import { constants as zlibConstants, gzipSync } from "node:zlib"
 import { createRequire } from "node:module"
 import { pathToFileURL } from "node:url"
+import * as esbuild from "esbuild"
 import { npmPackArtifactArgs } from "./npm-pack.mjs"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -46,8 +54,9 @@ async function loadRolldown() {
 }
 
 // Version 2 bundles with code splitting and reports the eager (initial-load)
-// graph separately from lazily loaded chunks.
-export const REPORT_SCHEMA_VERSION = 2
+// graph separately from lazily loaded chunks. Version 3 adds single-file
+// totals from Rolldown and from esbuild.
+export const REPORT_SCHEMA_VERSION = 3
 export const README_MARKER_START = "<!-- semiotic-cold-consumer:start -->"
 export const README_MARKER_END = "<!-- semiotic-cold-consumer:end -->"
 
@@ -59,6 +68,21 @@ export const COLD_CONSUMER_SIZE_TOLERANCE = Object.freeze({
   rawBytes: Object.freeze({ minimumBytes: 32, relative: 0.002 }),
   gzipBytes: Object.freeze({ minimumBytes: 16, relative: 0.01 })
 })
+
+// Every gated byte count on a measurement row, with the tolerance it uses.
+// The single-file totals are gated exactly like the eager graph: a lazy
+// boundary can move bytes out of `gzipBytes`, never out of these.
+const SIZE_METRIC_POLICY = Object.freeze({
+  rawBytes: "rawBytes",
+  gzipBytes: "gzipBytes",
+  singleFileRawBytes: "rawBytes",
+  singleFileGzipBytes: "gzipBytes",
+  esbuildRawBytes: "rawBytes",
+  esbuildGzipBytes: "gzipBytes"
+})
+export const COLD_CONSUMER_SIZE_METRICS = Object.freeze(
+  Object.keys(SIZE_METRIC_POLICY)
+)
 
 // Size drift first becomes an actionable warning after leaving the supported
 // runner-variance band. Positive growth becomes blocking only after consuming
@@ -264,6 +288,14 @@ export function reportForMeasurements(packageJson, measurements) {
         treeShaking: true,
         splitting: true
       },
+      secondaryBundler: {
+        name: "esbuild",
+        version: esbuild.version,
+        format: "esm",
+        minify: true,
+        treeShaking: true,
+        splitting: false
+      },
       gzip: {
         algorithm: "gzip",
         level: 9
@@ -271,7 +303,7 @@ export function reportForMeasurements(packageJson, measurements) {
       externalizedRuntimePackages: EXTERNAL_RUNTIME_PACKAGES,
       dependencyResolution:
         "Runtime dependency closure copied from the workspace node_modules into the fresh consumer; CI installs that workspace from the lockfile before this gate.",
-      note: "Each row retains one named import from a public package export, bundled with code splitting and a production process.env.NODE_ENV as a Vite application would ship it. rawBytes and gzipBytes cover the eager graph (the entry plus its statically imported chunks, gzipped per file); lazyRawBytes and lazyGzipBytes cover chunks loaded on demand. The result includes Semiotic and its resolved runtime dependencies, but excludes host React/React DOM peers and optional adapter packages."
+      note: "Each row retains one named import from a public package export, bundled with code splitting and a production process.env.NODE_ENV as a Vite application would ship it. rawBytes and gzipBytes cover the eager graph (the entry plus its statically imported chunks, gzipped per file); lazyRawBytes and lazyGzipBytes cover chunks loaded on demand. singleFileRawBytes and singleFileGzipBytes are the same Rolldown build with code splitting disabled (summed when Rolldown still emits a small helper chunk beside the entry), and esbuildRawBytes and esbuildGzipBytes are a single-file esbuild build of the same entry: each is everything the import can reach, with nothing deferred. The result includes Semiotic and its resolved runtime dependencies, but excludes host React/React DOM peers and optional adapter packages."
     },
     excludedExports: [...EXCLUDED_EXPORTS].sort(),
     measurements
@@ -283,15 +315,15 @@ export function renderReadmeBlock(report) {
     README_MARKER_START,
     "<!-- Auto-generated by `scripts/measure-cold-consumer.mjs`. Do not edit by hand. -->",
     "",
-    "Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → minified/tree-shaken Rolldown (Vite's bundler) ESM build with code splitting and a production `NODE_ENV` → gzip -9 per file. **Initial load** counts the entry and its statically imported chunks; **on demand** counts chunks fetched only when a feature needs them (brushing, marginal graphics, animated transitions, a bare frame's built-in layouts). React/React DOM and optional adapter peers are external; Semiotic and its resolved runtime dependencies are included.",
+    "Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → minified/tree-shaken Rolldown (Vite's bundler) ESM build with code splitting and a production `NODE_ENV` → gzip -9 per file. **Initial load** counts the entry and its statically imported chunks; **on demand** counts chunks fetched only when a feature needs them (brushing, marginal graphics, animated transitions, a bare frame's built-in layouts). **Everything** is the same build with code splitting disabled: the ceiling if every optional feature loads. React/React DOM and optional adapter peers are external; Semiotic and its resolved runtime dependencies are included. The committed baseline also records a single-file esbuild build of each row.",
     "",
-    "| Public named import | Runtime | gzip initial load | gzip on demand |",
-    "|---|---:|---:|---:|"
+    "| Public named import | Runtime | gzip initial load | gzip on demand | gzip everything |",
+    "|---|---:|---:|---:|---:|"
   ]
 
   for (const measurement of report.measurements) {
     lines.push(
-      `| \`import { ${measurement.symbol} } from "${measurement.importPath}"\` | ${measurement.platform} | **${formatKiB(measurement.gzipBytes)} KiB** | ${measurement.lazyGzipBytes > 0 ? `${formatKiB(measurement.lazyGzipBytes)} KiB` : "—"} |`
+      `| \`import { ${measurement.symbol} } from "${measurement.importPath}"\` | ${measurement.platform} | **${formatKiB(measurement.gzipBytes)} KiB** | ${measurement.lazyGzipBytes > 0 ? `${formatKiB(measurement.lazyGzipBytes)} KiB` : "—"} | ${formatKiB(measurement.singleFileGzipBytes)} KiB |`
     )
   }
 
@@ -355,7 +387,7 @@ export function serializeReport(report) {
 }
 
 export function coldConsumerSizeTolerance(metric, baselineBytes) {
-  const policy = COLD_CONSUMER_SIZE_TOLERANCE[metric]
+  const policy = COLD_CONSUMER_SIZE_TOLERANCE[SIZE_METRIC_POLICY[metric]]
   if (!policy) throw new Error(`Unknown cold-consumer size metric ${metric}`)
   if (!Number.isSafeInteger(baselineBytes) || baselineBytes < 1) {
     throw new Error(
@@ -443,7 +475,7 @@ export function compareColdConsumerReports(baseline, current) {
     )
     if (!identityMatches) continue
 
-    for (const metric of ["rawBytes", "gzipBytes"]) {
+    for (const metric of COLD_CONSUMER_SIZE_METRICS) {
       const delta = actual[metric] - expected[metric]
       const classification = classifyColdConsumerSizeDelta(
         metric,
@@ -554,6 +586,7 @@ function validateMethod(value, label, errors) {
         "artifact",
         "resolution",
         "bundler",
+        "secondaryBundler",
         "gzip",
         "externalizedRuntimePackages",
         "dependencyResolution",
@@ -575,6 +608,7 @@ function validateMethod(value, label, errors) {
     validateNonEmptyString(value[field], `${label}.${field}`, errors)
   }
   validateBundler(value.bundler, `${label}.bundler`, errors)
+  validateBundler(value.secondaryBundler, `${label}.secondaryBundler`, errors)
   validateGzip(value.gzip, `${label}.gzip`, errors)
   validateStringArray(
     value.externalizedRuntimePackages,
@@ -636,6 +670,10 @@ function validateMeasurements(value, label, errors) {
           "gzipBytes",
           "lazyRawBytes",
           "lazyGzipBytes",
+          "singleFileRawBytes",
+          "singleFileGzipBytes",
+          "esbuildRawBytes",
+          "esbuildGzipBytes",
           "packedPackageInputFiles"
         ],
         measurementLabel,
@@ -668,6 +706,18 @@ function validateMeasurements(value, label, errors) {
       `${measurementLabel}.gzipBytes`,
       errors
     )
+    for (const field of [
+      "singleFileRawBytes",
+      "singleFileGzipBytes",
+      "esbuildRawBytes",
+      "esbuildGzipBytes"
+    ]) {
+      validateByteCount(
+        measurement[field],
+        `${measurementLabel}.${field}`,
+        errors
+      )
+    }
     for (const field of ["lazyRawBytes", "lazyGzipBytes"]) {
       if (!Number.isSafeInteger(measurement[field]) || measurement[field] < 0) {
         errors.push(`${measurementLabel}.${field} must be a non-negative integer`)
@@ -924,12 +974,7 @@ async function bundleNamedImport({ consumerRoot, entry }) {
   const bundle = await rolldown({
     cwd: consumerRoot,
     input: entryPath,
-    external: (id) =>
-      EXTERNAL_RUNTIME_PACKAGES.some((name) =>
-        name.endsWith("/*")
-          ? id.startsWith(name.slice(0, -1))
-          : id === name || id.startsWith(`${name}/`)
-      ),
+    external: isExternalRuntimePackage,
     platform: entry.platform,
     treeshake: true,
     logLevel: "silent",
@@ -938,8 +983,25 @@ async function bundleNamedImport({ consumerRoot, entry }) {
   // Rolldown code-splits by default: dynamically imported code lands in
   // separate chunks instead of being inlined into the initial bundle.
   const { output } = await bundle.generate({ format: "esm", minify: true })
+  // The same graph as one file: dynamic imports are inlined, so this total
+  // cannot shrink by moving code behind a lazy boundary.
+  const { output: unsplitOutput } = await bundle.generate({
+    format: "esm",
+    minify: true,
+    codeSplitting: false
+  })
   await bundle.close()
   const chunks = output.filter((item) => item.type === "chunk")
+  // Rolldown can still emit a helper chunk of a few hundred bytes next to the
+  // entry (a runtime-selected `import(path)` cannot be inlined). Count every
+  // emitted file so the total stays "everything this import can reach".
+  const unsplit = { rawBytes: 0, gzipBytes: 0 }
+  for (const item of unsplitOutput) {
+    if (item.type !== "chunk") continue
+    const sizes = singleFileSizes(item.code)
+    unsplit.rawBytes += sizes.rawBytes
+    unsplit.gzipBytes += sizes.gzipBytes
+  }
 
   const packageInputs = new Set(
     chunks.flatMap((chunk) => chunk.moduleIds).filter((id) =>
@@ -953,6 +1015,11 @@ async function bundleNamedImport({ consumerRoot, entry }) {
   }
 
   const { eager, lazy } = splitChunkSizes(chunks)
+  const singleFile = await bundleSingleFileWithEsbuild({
+    consumerRoot,
+    entryPath,
+    platform: entry.platform
+  })
   return {
     exportKey: entry.exportKey,
     importPath,
@@ -962,8 +1029,73 @@ async function bundleNamedImport({ consumerRoot, entry }) {
     gzipBytes: eager.gzipBytes,
     lazyRawBytes: lazy.rawBytes,
     lazyGzipBytes: lazy.gzipBytes,
+    singleFileRawBytes: unsplit.rawBytes,
+    singleFileGzipBytes: unsplit.gzipBytes,
+    esbuildRawBytes: singleFile.rawBytes,
+    esbuildGzipBytes: singleFile.gzipBytes,
     packedPackageInputFiles: packageInputs.size
   }
+}
+
+function isExternalRuntimePackage(id) {
+  return EXTERNAL_RUNTIME_PACKAGES.some((name) =>
+    name.endsWith("/*")
+      ? id.startsWith(name.slice(0, -1))
+      : id === name || id.startsWith(`${name}/`)
+  )
+}
+
+/** Raw and gzip size of one emitted file. */
+export function singleFileSizes(code) {
+  const bytes = Buffer.from(code)
+  return {
+    rawBytes: bytes.length,
+    gzipBytes: gzipSync(bytes, { level: zlibConstants.Z_BEST_COMPRESSION })
+      .length
+  }
+}
+
+/**
+ * The second consumer bundler. esbuild inlines dynamic imports when splitting
+ * is off, so its one output file holds everything the named import can reach.
+ */
+async function bundleSingleFileWithEsbuild({
+  consumerRoot,
+  entryPath,
+  platform
+}) {
+  const result = await esbuild.build({
+    absWorkingDir: consumerRoot,
+    entryPoints: [entryPath],
+    bundle: true,
+    write: false,
+    format: "esm",
+    platform,
+    target: "es2020",
+    minify: true,
+    treeShaking: true,
+    splitting: false,
+    logLevel: "silent",
+    define: { "process.env.NODE_ENV": JSON.stringify("production") },
+    plugins: [
+      {
+        name: "cold-consumer-externals",
+        setup(build) {
+          build.onResolve({ filter: /^[^./]/ }, (args) =>
+            isExternalRuntimePackage(args.path)
+              ? { path: args.path, external: true }
+              : null
+          )
+        }
+      }
+    ]
+  })
+  if (result.outputFiles.length !== 1) {
+    throw new Error(
+      `Expected one esbuild output file, found ${result.outputFiles.length}`
+    )
+  }
+  return singleFileSizes(result.outputFiles[0].contents)
 }
 
 /**

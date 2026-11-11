@@ -125,7 +125,7 @@ function useHighContrast(): boolean
 function useReducedMotion(): boolean
 function useResponsiveSize(baseSize: [number, number], responsiveWidth?: boolean | undefined, responsiveHeight?: boolean | undefined, options?: ResponsiveSizeOptions | undefined): [RefObject<HTMLDivElement | null>, [number, number]]
 function useTheme(): SemioticTheme
-function validateProps(componentName: string, props: Datum): ValidationResult
+function validateProps(componentName: string, props: Datum): ValidationReport
 function valueToAngle(value: number, min: number, max: number, sweepRad: number, offsetRad: number): number
 interface A11yFinding
 interface AccessibilityAuditResult

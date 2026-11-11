@@ -24,6 +24,7 @@ import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import { resolveAxisFreeMarginDefaults } from "../shared/chartMode"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
+import { useSelectionAwareFrameStyle } from "../shared/useSelectionAwareFrameStyle"
 import { normalizeLinkedHover, wrapStyleWithSelection } from "../shared/selectionUtils"
 import { useLinkedHover } from "../../store/useSelection"
 import { useObservationSelector } from "../../store/ObservationStore"
@@ -530,18 +531,26 @@ export const FlowMap = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ fo
     // fillOpacity > 0 as "fill area under the line", which is wrong for flows.
   // opacity / strokeOpacity are left to wrapStyleWithSelection so the
   // per-chart `selection.unselectedOpacity` or theme value takes effect.
+  const flowSelectionConfig = useMemo(() => ({
+    ...(setup.resolvedSelection || {}),
+    unselectedStyle: {
+      ...(setup.resolvedSelection?.unselectedStyle || {}),
+      fillOpacity: 0,
+    },
+  }), [setup.resolvedSelection])
   const lineStyleFn = useMemo(() => {
     const withPrimitives = mergeShapeStyle(baseLineStyleFn, { stroke, strokeWidth, opacity }) as (d: Datum) => Style
     if (!setup.effectiveSelectionHook) return withPrimitives
-    const mergedUnselectedStyle = {
-      ...(setup.resolvedSelection?.unselectedStyle || {}),
-      fillOpacity: 0,
-    }
-    return wrapStyleWithSelection(withPrimitives, setup.effectiveSelectionHook, {
-      ...(setup.resolvedSelection || {}),
-      unselectedStyle: mergedUnselectedStyle,
-    }) as (d: Datum) => Style
-  }, [baseLineStyleFn, setup.effectiveSelectionHook, setup.resolvedSelection, stroke, strokeWidth, opacity])
+    return wrapStyleWithSelection(withPrimitives, setup.effectiveSelectionHook, flowSelectionConfig) as (d: Datum) => Style
+  }, [baseLineStyleFn, setup.effectiveSelectionHook, flowSelectionConfig, stroke, strokeWidth, opacity])
+  // `frameProps.lineStyle` takes the place of the flow style above. Keep it
+  // selection-aware, with the same no-fill guard, so linked selection still
+  // dims flows.
+  const userLineStyle = useSelectionAwareFrameStyle(
+    frameProps.lineStyle,
+    setup.effectiveSelectionHook,
+    flowSelectionConfig,
+  )
 
   // Point style — not selection-wrapped because node datums lack flow
   // fields (source/target). Flow lines carry the selection visual signal.
@@ -656,7 +665,9 @@ export const FlowMap = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ fo
     ...(resolved.accessibleTable !== undefined && { accessibleTable: resolved.accessibleTable }),
     ...(className && { className }),
     ...(props.animate != null && { animate: props.animate }),
-    ...frameProps
+    ...frameProps,
+    // frameProps precedence: the caller's style still wins; this re-applies it with selection dimming preserved.
+    ...(userLineStyle && { lineStyle: userLineStyle }),
   }
 
   return (

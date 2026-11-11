@@ -13,6 +13,7 @@ import { useChartMode, DEFAULT_COLOR } from "../shared/hooks"
 import { resolveAxisFreeMarginDefaults } from "../shared/chartMode"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
+import { useSelectionAwareFrameStyle } from "../shared/useSelectionAwareFrameStyle"
 import { composeStyleRules, makeNodeRuleContext, type StyleRule } from "../shared/styleRules"
 
 import { warnMissingField } from "../shared/withChartWrapper"
@@ -292,6 +293,13 @@ export const ProportionalSymbolMap = /* @__PURE__ */ withChartErrorBoundary(/* @
     }
     return withPrimitives
   }, [colorBy, setup.colorScale, setup.effectiveSelectionHook, setup.resolvedSelection, sizeBy, sizeRadius, defaultPointRadius, stroke, strokeWidth, opacity, styleRules])
+  // `frameProps.pointStyle` takes the place of the symbol style above. Keep
+  // it selection-aware so linked selection still dims symbols.
+  const userPointStyle = useSelectionAwareFrameStyle(
+    frameProps.pointStyle,
+    setup.effectiveSelectionHook,
+    setup.resolvedSelection,
+  )
 
   const defaultTooltip = useMemo(() => (d: Datum) => {
     // Try to find a human-readable name for the point
@@ -385,7 +393,9 @@ export const ProportionalSymbolMap = /* @__PURE__ */ withChartErrorBoundary(/* @
     ...(resolved.accessibleTable !== undefined && { accessibleTable: resolved.accessibleTable }),
     ...(className && { className }),
     ...(props.animate != null && { animate: props.animate }),
-    ...frameProps
+    ...frameProps,
+    // frameProps precedence: the caller's style still wins; this re-applies it with selection dimming preserved.
+    ...(userPointStyle && { pointStyle: userPointStyle }),
   }
 
   return (

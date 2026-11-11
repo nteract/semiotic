@@ -6,6 +6,7 @@ import test from "node:test"
 import { fileURLToPath } from "node:url"
 import {
   buildAdoptionArtifacts,
+  buildAdoptionSourceInventory,
   buildJobs,
   collectStaleAdoptionDiffs,
   inventoryPaths,
@@ -153,9 +154,26 @@ test("baseline is deterministic and identifies source content without claiming m
   )
   assert.equal(first.baseline.proposedPilot.runs, 12)
   assert.equal(first.baseline.proposedPilot.maximumInputTokens, 240000)
-  const profile = first.baseline.contextProfiles.historicalLlms
+  // The committed baseline names the source pool; it stores no digest or size
+  // that an unrelated commit could make false.
+  assert.equal(first.baseline.sourceIdentity.revision, "measured-on-demand")
+  assert.deepEqual(first.baseline.sourcePool, inventoryPaths)
+  assert.equal(first.baseline.inventory, undefined)
+  assert.deepEqual(first.baseline.contextProfiles.historicalLlms, [
+    "ai/reference.md",
+    "docs/public/llms.txt"
+  ])
+  assert.ok(!JSON.stringify(first.baseline).includes('"bytes"'))
+
+  const measured = await buildAdoptionSourceInventory(directory)
+  assert.deepEqual(await buildAdoptionSourceInventory(directory), measured)
+  assert.match(measured.sourceIdentity.revision, /^[a-f0-9]{64}$/)
+  assert.deepEqual(
+    measured.inventory.map((entry) => entry.path),
+    inventoryPaths
+  )
   assert.equal(
-    profile.bytes,
+    measured.contextProfiles.historicalLlms.bytes,
     (await readFile(join(directory, "ai/reference.md"))).length +
       (await readFile(join(directory, "docs/public/llms.txt"))).length
   )
@@ -164,16 +182,16 @@ test("baseline is deterministic and identifies source content without claiming m
     join(directory, "ai/system-prompt.md"),
     "Changed instructions: preserve user constraints.\n"
   )
-  const changed = await buildAdoptionArtifacts(directory)
+  // A source edit moves the measured identity and leaves the committed files alone.
+  assert.deepEqual(await buildAdoptionArtifacts(directory), first)
+  const changed = await buildAdoptionSourceInventory(directory)
   assert.notEqual(
-    changed.baseline.sourceIdentity.revision,
-    first.baseline.sourceIdentity.revision
+    changed.sourceIdentity.revision,
+    measured.sourceIdentity.revision
   )
   assert.notEqual(
-    changed.baseline.contextProfiles.candidateFixedPackets["update-live-chart"]
-      .bytes,
-    first.baseline.contextProfiles.candidateFixedPackets["update-live-chart"]
-      .bytes
+    changed.contextProfiles.candidateFixedPackets["update-live-chart"].bytes,
+    measured.contextProfiles.candidateFixedPackets["update-live-chart"].bytes
   )
 })
 
@@ -221,6 +239,22 @@ test("check reports the generated baseline diff instead of only the stale path",
     join(directory, "ai/system-prompt.md"),
     "Changed instructions: preserve user constraints.\n"
   )
+  assert.deepEqual(
+    collectStaleAdoptionDiffs(await buildAdoptionArtifacts(directory), {
+      jobs: jsonText(artifacts.jobs),
+      baseline: jsonText(artifacts.baseline)
+    }),
+    [],
+    "editing a source file must not make the committed baseline stale"
+  )
+
+  await writeFile(
+    join(directory, "evals/adoption/study-plan.json"),
+    jsonText({
+      ...plan,
+      proposedPilot: { ...plan.proposedPilot, repetitions: 2 }
+    })
+  )
   const changed = await buildAdoptionArtifacts(directory)
   const stale = collectStaleAdoptionDiffs(changed, {
     jobs: jsonText(artifacts.jobs),
@@ -232,12 +266,10 @@ test("check reports the generated baseline diff instead of only the stale path",
   )
   assert.match(
     stale[0].diff,
-    /- {4}"revision": "[a-f0-9]{64}",\n\+ {4}"revision": "[a-f0-9]{64}",\n/
+    /- {4}"repetitions": 1,\n\+ {4}"repetitions": 2,\n/
   )
-  assert.match(
-    stale[0].diff,
-    /- {6}"bytes": \d+,\n- {6}"sha256": "[a-f0-9]{64}"\n\+ {6}"bytes": \d+,\n\+ {6}"sha256": "[a-f0-9]{64}"\n/
-  )
+  assert.match(stale[0].diff, /\n- {4}"runs": 12,\n/)
+  assert.match(stale[0].diff, /\n\+ {4}"runs": 24,\n/)
   const message = staleAdoptionMessage(stale)
   assert.match(
     message,
@@ -260,7 +292,7 @@ test("inventory refuses missing task sources and incompatible schema versions", 
     join(directory, "ai/schema.json"),
     jsonText({ version: "3.9.2" })
   )
-  await rm(join(directory, "docs/public/tasks/correct-published-chart.md"))
+  await rm(join(directory, "ai/task-packets/correct-published-chart.md"))
   await assert.rejects(
     () => buildAdoptionArtifacts(directory),
     /correct-published-chart.md/

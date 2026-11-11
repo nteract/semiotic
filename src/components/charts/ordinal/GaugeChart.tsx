@@ -14,6 +14,7 @@ import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
 import { renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
+import { useSelectionAwareFrameStyle } from "../shared/useSelectionAwareFrameStyle"
 import { sweepToAngles } from "../shared/radialGeometry"
 import { useChartMode, useChartSelection } from "../shared/hooks"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -290,6 +291,13 @@ export const GaugeChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */
     () => wrapStyleWithSelection(pieceStyleWithPrimitives, activeSelectionHook, resolvedSelection),
     [pieceStyleWithPrimitives, activeSelectionHook, resolvedSelection],
   )
+  // `frameProps.pieceStyle` takes the place of the arc style above. Keep it
+  // selection-aware so linked selection still dims arcs.
+  const userPieceStyle = useSelectionAwareFrameStyle(
+    frameProps.pieceStyle,
+    activeSelectionHook,
+    resolvedSelection,
+  )
 
   // ── Center content ──────────────────────────────────────────────────────
   // - primary: value in the hub, min–max range beneath it
@@ -546,6 +554,8 @@ export const GaugeChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */
     ...(className && { className }),
     ...(props.animate != null && { animate: props.animate }),
     ...frameProps,
+    // frameProps precedence: the caller's style still wins; this re-applies it with selection dimming preserved.
+    ...(userPieceStyle && { pieceStyle: userPieceStyle }),
   }
 
   const frame = <StreamOrdinalFrame ref={frameRef} {...streamProps} />

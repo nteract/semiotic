@@ -313,6 +313,8 @@ export interface OrdinalPipelineConfig {
   // Summary config
   bins?: number
   showOutliers?: boolean
+  /** Box plot outlier point radius in pixels. Default: 3. */
+  outlierRadius?: number
   showIQR?: boolean
   amplitude?: number
 
@@ -449,6 +451,8 @@ export interface StreamOrdinalFrameProps<T = Datum> {
   // Summary config
   bins?: number
   showOutliers?: boolean
+  /** Box plot outlier point radius in pixels. Default: 3. */
+  outlierRadius?: number
   showIQR?: boolean
   amplitude?: number
   connectorOpacity?: number

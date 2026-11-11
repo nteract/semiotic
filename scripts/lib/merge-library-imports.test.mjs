@@ -46,8 +46,7 @@ test("merged imports preserve live bindings, namespaces, getters and module effe
   const result = await minifyLibraryChunk(merged, {
     format: "esm",
     filename,
-    options,
-    allowFunctionReduction: true
+    options
   })
   await writeFile(filename, result.code)
   const api = await import(pathToFileURL(filename))

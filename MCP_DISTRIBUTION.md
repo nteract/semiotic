@@ -79,6 +79,36 @@ Any future assistant-directory listing should be recorded here with the exact
 submission owner, public card URL, accepted version, and last verification
 date before it appears in talk or adoption material.
 
+## What the public `createChart` returns in each host
+
+Hosts differ in what they show from a tool result, so a proven `createChart`
+result carries the chart in every form a host might use:
+
+| Host shows | What it gets |
+| --- | --- |
+| App widgets (`ui://` resources) | The interactive preview: sanitized SVG, a bounded data preview, and render evidence in `_meta`. |
+| Image content | A PNG of that same sanitized SVG, as an `image` content block. |
+| Text content only | A summary line, a reading guide (the reader-grounding prose), and React code. |
+| Structured content | `status`, public props, the evidence envelope and gate, plus `code`, `config`, `grounding`, and `attachments`. |
+
+Source rows are never returned. The React code refers to data by name
+(`data={data}`) and lists each such prop in `code.bindings`. The grounding
+structure keeps the labels a screen reader would announce, at most
+`MCP_MAX_WIDGET_ROWS` per branch, without the underlying records.
+
+The image, grounding, and code are additions to a proven render and never fail
+it. `structuredContent.attachments` says which are present and why any is
+missing:
+
+- `output-limit`: the addition would not fit `MCP_MAX_WIDGET_OUTPUT_BYTES` or
+  `MCP_MAX_TOOL_OUTPUT_BYTES`. The image is dropped first, then the grounding
+  structure, then the grounding prose, then the code.
+- `renderer-unavailable`: the optional `sharp` dependency is not installed.
+- `timeout` or `conversion-failed`: PNG conversion did not finish within
+  `MCP_MAX_CREATE_CHART_IMAGE_MS` (default `1500`, never more than
+  `MCP_MAX_PNG_CONVERSION_MS`) or the rasterizer rejected the SVG.
+- `disabled`: the operator set `MCP_CREATE_CHART_IMAGE=off`.
+
 ## Release checklist
 
 1. Keep `package.json#version`, `server.json#version`, and the npm package entry
@@ -89,3 +119,6 @@ date before it appears in talk or adoption material.
 5. Inspect the Registry summary attached to the workflow run.
 6. Re-audit secondary cards only when there is a maintained update path; remove
    broken links instead of preserving directory count.
+7. After a stable deploy, call `createChart` once and read
+   `structuredContent.attachments.image`. `renderer-unavailable` there means
+   the deployed image was built without the optional `sharp` dependency.

@@ -1,6 +1,7 @@
 import type { ChartSpec } from "./chartSpecCore"
 import {
-  ORIENTATION_ENUM
+  ORIENTATION_ENUM,
+  REACT_NODE_TYPES
 } from "./chartSpecCore"
 
 export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
@@ -32,7 +33,7 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
       iterations: { type: "number", default: 300, description: "Force simulation iterations" },
       forceStrength: { type: "number", default: 0.1 },
       layoutExecution: { type: "string", enum: ["auto", "worker", "sync"] as const, default: "auto", description: "Force layout execution: auto, worker, or sync" },
-      layoutLoadingContent: { type: ["boolean", "object"], omitFromSchema: true, description: "Content rendered while a worker layout is pending; false suppresses it." },
+      layoutLoadingContent: { type: REACT_NODE_TYPES, omitFromSchema: true, description: "Content rendered while a worker layout is pending; false suppresses it." },
       onLayoutStateChange: { type: "function", omitFromSchema: true },
       showLabels: { type: "boolean", default: false },
     },
@@ -294,7 +295,7 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
       revolutionStyle: { type: "string", enum: ["locked", "decay", "alternate"] as const, default: "locked" },
       // `foregroundGraphics` is a render-on-top escape hatch (StreamFrame
       // pass-through), runtime-only.
-      foregroundGraphics: { type: "object", omitFromSchema: true },
+      foregroundGraphics: { type: REACT_NODE_TYPES, omitFromSchema: true },
     },
     capabilities: {
       renderModes: ["hybrid"],

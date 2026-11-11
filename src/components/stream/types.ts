@@ -662,7 +662,7 @@ export interface StreamXYFrameProps<T = Datum>
   // ── Chunking (progressive ingestion) ────────────
   /** Datasets larger than this are chunked for progressive rendering (default 5000) */
   chunkThreshold?: number
-  /** Number of items per progressive chunk (default 5000) */
+  /** Rows per progressive chunk. Omit for the default schedule (5000 first, then each chunk quadruples the rows delivered, so total rebuild work stays linear); an explicit size keeps fixed chunks, each of which rebuilds the whole scene. */
   chunkSize?: number
 
   // ── Accessors ────────────────────────────────────

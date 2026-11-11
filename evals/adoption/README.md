@@ -1,7 +1,7 @@
 # Appropriate adoption development study
 
 This is **offline evaluation groundwork**, with 24 public development prompts,
-a review rubric, and a reproducible source inventory. It has not run an agent,
+a review rubric, and a reproducible, on-demand source inventory. It has not run an agent,
 measured adoption, established skill activation quality, or exercised the task
 examples. These are scenario definitions; a future runner must materialize and
 hash the starting applications and artifacts they describe. The generated
@@ -10,14 +10,18 @@ baseline records those outcomes as unmeasured.
 ```sh
 node scripts/prepare-adoption-evals.mjs
 node scripts/prepare-adoption-evals.mjs --check
+node scripts/prepare-adoption-evals.mjs --inventory
 node --test scripts/prepare-adoption-evals.test.mjs
 ```
 
 Generate the three task packets first. These commands use Node's built-in
 modules and local source files; they do not import the package through `dist`,
-contact a provider, or authorize paid work. `--check` detects stale source,
-schema, skill, fixture, or packet references without rewriting the baseline, and
-prints a unified diff of each stale generated file.
+contact a provider, or authorize paid work. `--check` detects a stale fixture,
+study plan, or job list without rewriting the baseline, and prints a unified
+diff of each stale generated file. It also fails when a file in the source pool
+is missing or disagrees with the package version. `--inventory` prints the
+content identity and byte sizes of that pool for the current checkout; it
+writes nothing.
 
 `fixtures.json` owns prompts and the **scorer-only** expected decisions, success
 criteria, and limits. `jobs.json` is generated from an explicit allowlist of
@@ -41,9 +45,10 @@ treatment; replace it if it becomes optimization material.
 
 Keep the package implementation, models, project state, source pool, and budgets
 fixed. Compare the current workflow with a compact orientation and one task
-packet. The baseline measures UTF-8 source bytes for the historical `llms` and
-`skill` bundles and the candidate fixed packets. It does not estimate billed
-tokens or demonstrate on-demand retrieval. The historical first-try runner
+packet. The baseline names the files in the historical `llms` and `skill`
+bundles and the candidate fixed packets; `--inventory` measures their UTF-8
+source bytes. Neither estimates billed tokens or demonstrates on-demand
+retrieval. The historical first-try runner
 preloads the full reference and uses single-response calls; a tool-using
 retrieval experiment needs an appropriate session harness.
 
@@ -86,11 +91,16 @@ Do not retain private chain-of-thought, credentials, or unrelated user data.
 
 ## Maintenance and identity
 
-The baseline identifies the current **source checkout content** using the
-package version and a SHA-256 of its ordered path/byte/hash inventory. This
-content identity detects local edits and remains stable across commits with
-identical files. It is not an npm tarball identity or evidence of a deployment.
-Packed-package, site, and MCP availability remain independently unassessed.
+The committed baseline names the source pool and stores no digest of it. The
+pool includes the README, the reference, and the schema, which change with most
+commits; a stored digest would describe an earlier checkout by the time anyone
+read it, and keeping it current meant regenerating this file on nearly every
+change. `--inventory` identifies the current **source checkout content** on
+demand, using the package version and a SHA-256 of the ordered path/byte/hash
+inventory. Save that output with each run manifest: it is the record of what the
+run actually read. It is not an npm tarball identity or evidence of a
+deployment. Packed-package, site, and MCP availability remain independently
+unassessed.
 
 Semiotic maintainers own the task fit and evidence wording. Regenerate after
 intentional source changes and review the diff; changes to fixtures require a

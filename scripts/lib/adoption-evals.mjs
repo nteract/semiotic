@@ -36,9 +36,7 @@ export const inventoryPaths = [
   ...taskIds.flatMap((id) => [
     `ai/tasks/${id}.json`,
     `ai/task-packets/${id}.json`,
-    `ai/task-packets/${id}.md`,
-    `docs/public/tasks/${id}.json`,
-    `docs/public/tasks/${id}.md`
+    `ai/task-packets/${id}.md`
   ])
 ].sort()
 
@@ -199,7 +197,19 @@ export function buildJobs(fixtures) {
   }
 }
 
-export async function buildAdoptionArtifacts(root) {
+const profilePaths = {
+  historicalLlms: ["ai/reference.md", "docs/public/llms.txt"],
+  historicalSkill: ["ai/reference.md", "agent-skill/semiotic-charts/SKILL.md"],
+  candidateFixedPackets: Object.fromEntries(
+    taskIds.map((id) => [
+      id,
+      ["ai/system-prompt.md", `ai/task-packets/${id}.md`]
+    ])
+  )
+}
+const INVENTORY_COMMAND = "node scripts/prepare-adoption-evals.mjs --inventory"
+
+async function readSourcePool(root) {
   const source = new Map(
     await Promise.all(
       inventoryPaths.map(async (path) => {
@@ -215,9 +225,6 @@ export async function buildAdoptionArtifacts(root) {
     )
   )
   const readJson = (path) => JSON.parse(source.get(path).toString("utf8"))
-  const fixtures = readJson("evals/adoption/fixtures.json")
-  const plan = readJson("evals/adoption/study-plan.json")
-  const groupCounts = validateFixtures(fixtures, plan)
   const packageVersion = readJson("package.json").version
   for (const [path, version] of [
     ["ai/schema.json", readJson("ai/schema.json").version],
@@ -231,6 +238,16 @@ export async function buildAdoptionArtifacts(root) {
       throw new Error(`${path} version differs from package.json`)
     }
   }
+  return { source, readJson, packageVersion }
+}
+
+/**
+ * The content identity of the source pool a trial would read, measured now.
+ * It changes with almost every commit, so it is printed on demand and kept
+ * with each run's manifest instead of being committed beside the study plan.
+ */
+export async function buildAdoptionSourceInventory(root) {
+  const { source, packageVersion } = await readSourcePool(root)
   const inventory = inventoryPaths.map((path) => ({
     path,
     bytes: source.get(path).byteLength,
@@ -244,12 +261,38 @@ export async function buildAdoptionArtifacts(root) {
     ),
     measurement: "UTF-8 source bytes; not token usage or billed cost"
   })
-  const compactProfiles = Object.fromEntries(
-    taskIds.map((id) => [
-      id,
-      profile(["ai/system-prompt.md", `docs/public/tasks/${id}.md`])
-    ])
-  )
+  return {
+    version: 1,
+    generatedBy: "scripts/prepare-adoption-evals.mjs",
+    scope:
+      "Content identity and sizes of the adoption source pool in this checkout at the time of the command; not a model run or an adoption result.",
+    sourceIdentity: {
+      packageVersion,
+      releaseChannel: "development",
+      revisionKind: "sha256-of-inventoried-source-content",
+      revision: digest(jsonText(inventory)),
+      packedPackage: "not-assessed",
+      deployedDocumentation: "not-assessed",
+      deployedMCP: "not-assessed"
+    },
+    contextProfiles: {
+      historicalLlms: profile(profilePaths.historicalLlms),
+      historicalSkill: profile(profilePaths.historicalSkill),
+      candidateFixedPackets: Object.fromEntries(
+        Object.entries(profilePaths.candidateFixedPackets).map(
+          ([id, paths]) => [id, profile(paths)]
+        )
+      )
+    },
+    inventory
+  }
+}
+
+export async function buildAdoptionArtifacts(root) {
+  const { readJson } = await readSourcePool(root)
+  const fixtures = readJson("evals/adoption/fixtures.json")
+  const plan = readJson("evals/adoption/study-plan.json")
+  const groupCounts = validateFixtures(fixtures, plan)
   const proposedRuns =
     plan.proposedPilot.tasks *
     plan.proposedPilot.conditions *
@@ -259,12 +302,16 @@ export async function buildAdoptionArtifacts(root) {
     version: 1,
     generatedBy: "scripts/prepare-adoption-evals.mjs",
     scope:
-      "Offline source inventory and development-fixture validation; no agent adoption experiment was run.",
+      "Offline development-fixture validation and study plan; no agent adoption experiment was run. The source pool is named here and measured on demand.",
     sourceIdentity: {
-      packageVersion,
       releaseChannel: "development",
       revisionKind: "sha256-of-inventoried-source-content",
-      revision: digest(jsonText(inventory)),
+      // Not stored: the pool changes with almost every commit, and a stored
+      // digest would describe an earlier checkout by the time anyone read it.
+      revision: "measured-on-demand",
+      measuredBy: INVENTORY_COMMAND,
+      retention:
+        "Record the command's output with each run manifest; it identifies the source contents that run actually read.",
       packedPackage: "not-assessed",
       deployedDocumentation: "not-assessed",
       deployedMCP: "not-assessed"
@@ -307,19 +354,15 @@ export async function buildAdoptionArtifacts(root) {
       }
     ],
     contextProfiles: {
-      historicalLlms: profile(["ai/reference.md", "docs/public/llms.txt"]),
-      historicalSkill: profile([
-        "ai/reference.md",
-        "agent-skill/semiotic-charts/SKILL.md"
-      ]),
-      candidateFixedPackets: compactProfiles,
+      ...profilePaths,
+      measuredBy: INVENTORY_COMMAND,
       interpretation:
-        "These are source-size measurements. Candidate packets are fixed bundles, not evidence of interactive retrieval quality."
+        "Each profile is a fixed bundle of source files. The inventory command reports their UTF-8 byte sizes for the current contents; neither the bundle nor its size is evidence of interactive retrieval quality."
     },
     taskRoutes: taskIds.map((id) => ({
       taskId: id,
       route: `/tasks/${id}`,
-      packet: `docs/public/tasks/${id}.json`
+      packet: `ai/task-packets/${id}.json`
     })),
     execution: {
       mode: "offline-static-validation",
@@ -343,7 +386,7 @@ export async function buildAdoptionArtifacts(root) {
       maximumSerialWallSeconds:
         proposedRuns * plan.proposedPilot.maxWallSecondsPerRun
     },
-    inventory
+    sourcePool: inventoryPaths
   }
   return { jobs: buildJobs(fixtures), baseline }
 }

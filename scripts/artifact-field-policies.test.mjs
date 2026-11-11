@@ -83,11 +83,8 @@ test("ships generated references and gates contract checks in package lifecycles
     assert.ok(packageJson.files.includes(packagedFile), packagedFile)
   }
 
-  for (const lifecycle of [
-    "check:preflight",
-    "release:check",
-    "prepublishOnly"
-  ]) {
+  assert.equal(packageJson.scripts.prepublishOnly, "npm run release:check")
+  for (const lifecycle of ["check:preflight", "release:check"]) {
     assert.match(
       packageJson.scripts[lifecycle],
       /npm run check:artifact-contract/,
@@ -95,7 +92,7 @@ test("ships generated references and gates contract checks in package lifecycles
     )
   }
   assert.equal(packageJson.scripts["pretest:coverage"], "npm run dist:prod")
-  for (const lifecycle of ["release:check", "prepublishOnly"]) {
+  for (const lifecycle of ["release:check"]) {
     const script = packageJson.scripts[lifecycle]
     const coverageIndex = script.indexOf("npm run test:coverage")
     const cliIndex = script.indexOf("npm run test:artifact-cli:from-dist")

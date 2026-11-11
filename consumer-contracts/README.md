@@ -94,6 +94,11 @@ Frame overrides intentionally win over mode-resolved axis defaults. Gauge
 range. These are specific output expectations, not a requirement that every
 prop change the full SVG string.
 
+`hoverRadius` on `AreaChart` and `LineChart` is also under contract: a
+cursor-styled area emits one invisible hit target twice `hoverRadius` wide, so
+the server fallback matches the hydrated canvas. The default is 60, zero clamps
+to 1, and an area without a cursor emits no target.
+
 Classifications are per component and path:
 
 - `server-behavior-tested`: linked to an executable observable contract.
@@ -109,8 +114,25 @@ performance budget or unsupported-prop allowlist. **Do not add paths to it or
 regenerate it from a newer catalog.** Remove a path when classifying it or
 removing it from the canonical surface. New supported paths fail until they
 have a behavior contract or a justified exclusion; losing a reviewed contract
-also fails. The default report shows the gaps per component. To inspect every
-path and its classification:
+also fails.
+
+The inventory was amended once, on adoption day, with maintainer approval. The
+chart specs did not yet declare 295 (chart, prop) pairs that were already part
+of the public React types: `selection`, `linkedHover`, `linkedBrush`,
+`hoverRadius`, `pointIdAccessor`, `dataIdAccessor`, the `axisExtent`, `animate`,
+and `hoverHighlight` members physics charts inherit, and chart-specific
+callbacks and function props. The validator fix declared them the same day so
+`validateProps` would stop rejecting real props, which made them visible here.
+Two of them (`hoverRadius` on `AreaChart` and `LineChart`) received the contract
+above; the other 293 joined this file as the same kind of unclassified debt.
+They are not reviewed exclusions. In particular, static XY and geo renders
+forward `pointIdAccessor`, yet a `pointId`-anchored `callout`, `label`, or `text`
+annotation on a `Scatterplot` or `LineChart` does not render through
+`renderChart` today, with or without the accessor. The rule above applies to
+every later change.
+
+The default report shows the gaps per component. To inspect every path and its
+classification:
 
 ```sh
 node --import tsx scripts/check-server-prop-coverage.ts --json

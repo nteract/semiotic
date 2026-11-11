@@ -4,9 +4,11 @@ The three definitions in this directory own task intent, fit, example references
 expected outcomes, repairs and maintenance context. They do not duplicate the
 component prop catalog. `scripts/generate-ai-task-packets.mjs` reads the current
 schema, component metadata, behavior contracts and package manifests to produce
-matching Markdown and JSON in `ai/task-packets/` and `docs/public/tasks/`.
+matching Markdown and JSON in `ai/task-packets/`. That directory is the only
+committed copy: the docs server and build expose the same files at `/tasks/`
+(`scripts/lib/docs-task-packets.mjs`).
 
-The React task pages use those packets. Node verification code stays outside the
+The React task pages import those packets. Node verification code stays outside the
 browser examples. The package includes generated packets for offline retrieval;
 source definitions and verification tooling remain repository authoring inputs.
 
@@ -25,12 +27,26 @@ the source contents. It refuses to record if those contents changed during the
 run. Temporary reports are removed; the retained record includes environment,
 commands and passed counts. It does not run paid models or publish anything.
 
-Source identities are content digests of runtime inputs, dependency lock,
-schema/manifest files, examples, task hosts, tests and verification tooling.
-They are not Git commit IDs. Committing an unchanged generated packet therefore
-does not make it stale. An affected source change moves its recorded evidence
-to `stale` on regeneration, until the relevant checks run again. The generator
-does not manufacture a successful result merely because expected test files exist.
+Two content digests are involved, and neither is a Git commit ID.
+
+- A packet's **source revision** covers what the packet says: the task
+  definition, its declared examples and checks, the task pages and tooling, and
+  the part of the public contract the packet copies (the selected props, the
+  component metadata, the referenced behavior contracts, and the package
+  export). The committed packet changes only when one of these does, so an
+  unrelated source edit, dependency bump, or new docs route no longer makes it
+  stale.
+- A recorded run is bound to more than that: the same revision plus the runtime
+  source, schemas and manifests, the dependency lock, and the docs and test
+  harness it executed. That evidence identity is computed whenever packets are
+  generated or checked and is stored only in `verification.json`.
+
+A change to anything a run executed therefore still moves its evidence to
+`stale`, until the checks run again. While evidence is already `stale` or
+`proposed`, such a change leaves the packet files byte-identical. The first
+runtime change after a fresh `verify:ai-tasks` does rewrite them once, from
+`supported-in-scope` to `stale`. The generator does not manufacture a successful
+result merely because expected test files exist.
 
 Evidence states describe the fixture and environment: `proposed`,
 `supported-in-scope`, or `stale`. Source tests cannot establish deployed package
@@ -46,11 +62,11 @@ installed-release migration. Older consumers should inspect their installed
 schema and retrieve matching guidance; version equality alone does not prove
 that a source checkout, website and tool service have identical contents.
 
-The task freshness check runs in both `release:check` and `prepublishOnly`, so a
-direct publish also refuses outdated packets. Regenerate after the final source
-edits, rerun `verify:ai-tasks` to refresh observed evidence, then regenerate the
-dependent adoption inventory. Changing a lifecycle script also changes the
-source identity because `package.json` is one of the inputs.
+The task freshness check runs in `release:check`, and `prepublishOnly` delegates
+to `release:check`, so a direct publish also refuses outdated packets. Rerun
+`verify:ai-tasks` after the final source edits to refresh observed evidence.
+Changing a lifecycle script invalidates a recorded run, because `package.json`
+is one of the things it executed, but it does not change a packet.
 
 The source-path audit covers POSIX and Windows absolute paths, drive-relative
 paths, traversal with either separator, and file or directory symlinks leaving
