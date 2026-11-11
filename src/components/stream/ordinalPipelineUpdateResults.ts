@@ -124,6 +124,7 @@ export const ORDINAL_CONFIG_PATCH_DEPENDENCIES: Readonly<
   sweepAngle: /* @__PURE__ */ dependency("preserve", LAYOUT),
   trackFill: /* @__PURE__ */ dependency("preserve", LAYOUT),
   showOutliers: /* @__PURE__ */ dependency("preserve", LAYOUT),
+  outlierRadius: /* @__PURE__ */ dependency("preserve", LAYOUT),
   showIQR: /* @__PURE__ */ dependency("preserve", LAYOUT),
   amplitude: /* @__PURE__ */ dependency("preserve", LAYOUT),
   connectorOpacity: /* @__PURE__ */ dependency("preserve", LAYOUT),

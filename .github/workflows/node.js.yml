@@ -260,11 +260,50 @@ jobs:
           done
           echo "All declaration files present"
 
-  # Own the one expensive production build and reuse it for every minified
-  # package, docs, size, and packed-consumer check in this lane.
+  # Share the production build across package/docs checks and browser jobs.
+  production-build:
+    name: Production library (Node 22)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Use Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22.x
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production library
+        run: npm run dist:prod
+
+      - name: Upload entry-graph diagnostics
+        if: always() && hashFiles('dist/entry-graph-report.json') != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: entry-graph-diagnostics
+          path: |
+            dist/entry-graph-report.json
+            dist/bundle-inputs.json
+          retention-days: 14
+
+      - name: Upload production library
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: production-dist
+          path: dist/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
   docs-package:
     name: Docs and production package checks (Node 22)
     runs-on: ubuntu-latest
+    needs: production-build
 
     steps:
       - name: Checkout source code
@@ -282,18 +321,11 @@ jobs:
       - name: Check committed MCP bundle
         run: npm run check:mcp-bundle
 
-      - name: Build production library
-        run: npm run dist:prod
-
-      - name: Upload entry-graph diagnostics
-        if: always() && hashFiles('dist/entry-graph-report.json') != ''
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+      - name: Download production library
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
-          name: entry-graph-diagnostics
-          path: |
-            dist/entry-graph-report.json
-            dist/bundle-inputs.json
-          retention-days: 14
+          name: production-dist
+          path: dist
 
       - name: Check bundle budgets and cold consumers before package tests
         run: |
@@ -501,9 +533,13 @@ jobs:
   # independent Chromium job so a slow or failed docs route neither obscures
   # nor delays completion of the three-browser visual E2E matrix.
   docs-examples:
-    name: Docs examples (Chromium)
+    name: Docs examples shard ${{ matrix.shard }}/3 (Chromium)
     runs-on: ubuntu-latest
     needs: fast-contracts
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     container: mcr.microsoft.com/playwright:v1.64.1-noble
     env:
       HOME: /root
@@ -525,7 +561,7 @@ jobs:
       # The pinned Playwright image supplies browsers and OS dependencies.
       # Reinstalling them adds an unnecessary APT mirror dependency.
       - name: Run docs example source tests
-        run: npm run test:examples:source
+        run: npm run test:examples:source -- --shard=${{ matrix.shard }}/3
 
       # The contract test validates this complete local-only capture before it
       # writes the JSON. Retain it for review, but do not compare it against a
@@ -536,7 +572,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: docs-example-local-contract-evidence
+          name: docs-example-local-contract-evidence-${{ matrix.shard }}
           path: test-results/**/docs-example-local-contract-evidence.v2.json
           if-no-files-found: warn
           retention-days: 14
@@ -545,7 +581,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: playwright-report-docs-examples
+          name: playwright-report-docs-examples-${{ matrix.shard }}
           path: |
             test-results/
             integration-tests/test-results/
@@ -553,7 +589,7 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
-    needs: fast-contracts
+    needs: [fast-contracts, production-build]
     strategy:
       fail-fast: false
       matrix:
@@ -591,8 +627,11 @@ jobs:
 
       # Use the browsers and OS dependencies baked into the pinned image;
       # an APT-backed reinstall can fail during an Ubuntu mirror sync.
-      - name: Build production library for behavioral tests
-        run: npm run dist:prod
+      - name: Download production library for behavioral tests
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: production-dist
+          path: dist
 
       - name: Build MCP artifacts for widget tests
         run: npm run build:mcp

@@ -1,4 +1,4 @@
-import type { ChartSpec } from "./chartSpecCore"
+import { REACT_NODE_TYPES, type ChartSpec } from "./chartSpecCore"
 import {
   CRUCIBLE_EVENTS_SCHEMA,
   CRUCIBLE_OUTLETS_SCHEMA,
@@ -356,6 +356,13 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
     ],
     propBags: ["physics"],
     ownProps: {
+      // Callback props: real GauntletChartProps members that no serialized
+      // config can carry.
+      coreBody: { type: "function", omitFromSchema: true },
+      outcome: { type: "function", omitFromSchema: true },
+      viability: { type: "function", omitFromSchema: true },
+      projectPlacement: { type: "function", omitFromSchema: true },
+      onStateChange: { type: "function", omitFromSchema: true },
       idAccessor: { type: ["string", "function"], default: "id" },
       labelAccessor: { type: ["string", "function"] },
       positiveAccessor: { type: ["string", "function"] },
@@ -467,6 +474,8 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       "initialStateAccessor"
     ],
     propBags: ["physics"],
+    // CrucibleChartProps is `Omit<BaseChartProps, … | "onClick" | …>`.
+    omitBagProps: ["onClick"],
     ownProps: {
       description: {
         type: "string",
@@ -641,8 +650,8 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
         description:
           "Show a loading state instead of starting the authored run."
       },
-      loadingContent: { type: ["boolean", "object"], omitFromSchema: true },
-      emptyContent: { type: ["boolean", "object"], omitFromSchema: true },
+      loadingContent: { type: REACT_NODE_TYPES, omitFromSchema: true },
+      emptyContent: { type: REACT_NODE_TYPES, omitFromSchema: true },
       onStateChange: { type: "function", omitFromSchema: true },
       onCrucibleObservation: { type: "function", omitFromSchema: true },
       onDiagnostic: { type: "function", omitFromSchema: true },
@@ -685,6 +694,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
     ],
     propBags: ["physics"],
     ownProps: {
+      onCapacityChange: { type: "function", omitFromSchema: true },
       stages: {
         type: "array",
         description:
@@ -800,6 +810,8 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
     ],
     propBags: ["common"],
     ownProps: {
+      onSimulationStateChange: { type: "function", omitFromSchema: true },
+      svgAnnotationRules: { type: "function", omitFromSchema: true },
       size: { type: "array", description: "[width, height] in pixels" },
       background: { type: "string" },
       legendLayout: { type: "object" },
@@ -972,6 +984,19 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
       "milestoneAccessor"
     ],
     propBags: ["physics"],
+    // ChainReactionChartProps does not extend BaseChartProps, so it has none of
+    // the inherited members the physics bag declares for the other HOCs.
+    omitBagProps: [
+      "linkedBrush",
+      "pointIdAccessor",
+      "dataIdAccessor",
+      "axisExtent",
+      "animate",
+      "hoverHighlight",
+      "svgAnnotationRules",
+      "onObservation",
+      "onClick"
+    ],
     ownProps: {
       ...CHAIN_REACTION_ACCESSOR_PROPS,
       mode: {

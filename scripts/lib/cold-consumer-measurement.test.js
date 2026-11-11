@@ -2,6 +2,7 @@
 import { readFileSync } from "node:fs"
 import { describe, expect, it } from "vitest"
 import {
+  COLD_CONSUMER_SIZE_METRICS,
   EXCLUDED_EXPORTS,
   NAMED_IMPORT_CASES,
   README_MARKER_END,
@@ -14,6 +15,7 @@ import {
   renderReadmeBlock,
   replaceMarkerBlock,
   reportForMeasurements,
+  singleFileSizes,
   splitChunkSizes,
   stableModuleExportKeys,
   validateColdConsumerReport,
@@ -73,6 +75,7 @@ describe("cold-consumer named import manifest", () => {
       expect(block).toContain("0.5 KiB")
       expect(block).toContain("gzip initial load")
       expect(block).toContain("code splitting")
+      expect(block).toContain("gzip everything")
     }
   )
 
@@ -90,7 +93,7 @@ describe("cold-consumer named import manifest", () => {
 
   it("reports lazily loaded chunks separately from the initial load", () => {
     const block = renderReadmeBlock(sampleReport())
-    expect(block).toMatch(/\*\*0\.5 KiB\*\* \| 0\.1 KiB \|/)
+    expect(block).toMatch(/\*\*0\.5 KiB\*\* \| 0\.1 KiB \| 0\.6 KiB \|/)
     const report = sampleReport()
     report.measurements[0].lazyGzipBytes = -1
     expect(validateColdConsumerReport(report, "baseline")).toContain(
@@ -108,6 +111,10 @@ describe("cold-consumer named import manifest", () => {
       gzipBytes: index === 0 ? 142504 : 142349,
       lazyRawBytes: 0,
       lazyGzipBytes: 0,
+      singleFileRawBytes: 431129,
+      singleFileGzipBytes: 142504,
+      esbuildRawBytes: 431129,
+      esbuildGzipBytes: 142504,
       packedPackageInputFiles: 50 - index
     }))
     const block = renderReadmeBlock(
@@ -302,8 +309,82 @@ describe("cold-consumer named import manifest", () => {
       compareColdConsumerReports(baseline, methodChanged).structuralErrors
     ).toContain("measurement method differs")
     expect(validateColdConsumerReport(wrongSchema, "baseline")).toContain(
-      "baseline.schemaVersion must be 2"
+      "baseline.schemaVersion must be 3"
     )
+  })
+
+  it("gates the single-file totals from both bundlers like the eager graph", () => {
+    expect(COLD_CONSUMER_SIZE_METRICS).toEqual([
+      "rawBytes",
+      "gzipBytes",
+      "singleFileRawBytes",
+      "singleFileGzipBytes",
+      "esbuildRawBytes",
+      "esbuildGzipBytes"
+    ])
+    // Same tolerance policy as the corresponding eager metric.
+    for (const [metric, twin] of [
+      ["singleFileRawBytes", "rawBytes"],
+      ["esbuildRawBytes", "rawBytes"],
+      ["singleFileGzipBytes", "gzipBytes"],
+      ["esbuildGzipBytes", "gzipBytes"]
+    ]) {
+      expect(coldConsumerSizeTolerance(metric, 293604)).toBe(
+        coldConsumerSizeTolerance(twin, 293604)
+      )
+    }
+    expect(() => coldConsumerSizeTolerance("lazyGzipBytes", 100)).toThrow(
+      "Unknown cold-consumer size metric"
+    )
+
+    // Moving code behind a lazy boundary shrinks the eager graph but not the
+    // one-file totals: growth there must still block.
+    const baseline = sampleReport()
+    for (const metric of ["singleFileGzipBytes", "esbuildGzipBytes"]) {
+      const current = copy(baseline)
+      const row = current.measurements[0]
+      row.gzipBytes -= 100
+      row.lazyGzipBytes += 400
+      const tolerance = coldConsumerSizeTolerance(metric, row[metric])
+      row[metric] += tolerance * 4 + 1
+      const comparison = compareColdConsumerReports(baseline, current)
+      expect(comparison.blocking).toBe(true)
+      expect(comparison.sizeFailures).toEqual([
+        expect.objectContaining({ metric, severity: "failure" })
+      ])
+    }
+  })
+
+  it("requires the single-file totals and the second bundler in a baseline", () => {
+    const missingTotal = sampleReport()
+    delete missingTotal.measurements[0].esbuildGzipBytes
+    expect(
+      validateColdConsumerReport(missingTotal, "baseline").join("\n")
+    ).toContain("baseline.measurements[0] is missing esbuildGzipBytes")
+
+    const zeroTotal = sampleReport()
+    zeroTotal.measurements[0].singleFileGzipBytes = 0
+    expect(validateColdConsumerReport(zeroTotal, "baseline")).toContain(
+      "baseline.measurements[0].singleFileGzipBytes must be a positive integer"
+    )
+
+    const report = sampleReport()
+    expect(report.method.secondaryBundler).toMatchObject({
+      name: "esbuild",
+      splitting: false
+    })
+    const otherVersion = copy(report)
+    otherVersion.method.secondaryBundler.version = "different"
+    expect(
+      compareColdConsumerReports(report, otherVersion).structuralErrors
+    ).toContain("measurement method differs")
+  })
+
+  it("measures one emitted file", () => {
+    const sizes = singleFileSizes("x".repeat(100))
+    expect(sizes.rawBytes).toBe(100)
+    expect(sizes.gzipBytes).toBeGreaterThan(0)
+    expect(sizes.gzipBytes).toBeLessThan(100)
   })
 
   it("rejects zero-byte reports instead of granting them an allowance", () => {
@@ -362,6 +443,10 @@ function sampleReport(exportKey = ".") {
       gzipBytes: 512,
       lazyRawBytes: 256,
       lazyGzipBytes: 128,
+      singleFileRawBytes: 1280,
+      singleFileGzipBytes: 640,
+      esbuildRawBytes: 1300,
+      esbuildGzipBytes: 650,
       packedPackageInputFiles: 1
     }
   ])

@@ -65,7 +65,7 @@ import { UpdateResultStoreBase, type UpdateResult } from "./pipelineUpdateStore"
 import { buildOrdinalCategoryIndex } from "./ordinalDataIndex"
 import { OrdinalPipelineUpdateResults } from "./ordinalPipelineUpdateResults"
 import { syncOrdinalPulseTimestampBuffer } from "./ordinalPulseResources"
-import { buildOrdinalPointSpatialIndex } from "./ordinalSpatialIndex"
+import { LazyPointIndex, buildPointSpatialIndex } from "./pointSpatialIndex"
 import { snapSceneTargets } from "./pipelineSceneTargets"
 // ── OrdinalPipelineStore ───────────────────────────────────────────────
 
@@ -136,10 +136,8 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
   private _dataVersion = 0
   /** Materialized source data, cached for pulse/decay animation frames. */
   private _bufferArrayCache: { version: number; data: Datum[] } | null = null
-  // Spatial index for point hit testing (built when point count exceeds threshold)
-  private _pointQuadtree: Quadtree<PointSceneNode> | null = null
-  /** Largest visual point radius in the current scene. */
-  private _maxPointRadius = 0
+  // Point hit-test index for large swarms, built on first read (see LazyPointIndex).
+  private pointIndex = new LazyPointIndex(() => buildPointSpatialIndex(this.scene))
   /** Cached datum→index map for applyDecay/applyPulse. Keyed by `_dataVersion`. */
   private _datumIndexCache: { version: number; map: Map<Datum, number> } | null = null
   /** Cached category→indices map for applyPulse wedge path. Keyed by `_dataVersion`. */
@@ -341,6 +339,7 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
       this.scales = null
       this.multiScales = []
       this.scene = []
+      this.pointIndex.clear()
       this.columns = {}
       this.customLayoutOverlays = null
       this.lastCustomLayoutResult = null
@@ -465,7 +464,7 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
         // Do not retain a built-in scene if a newly-installed custom layout
         // fails before producing its first output.
         this.scene = []
-        this.rebuildPointQuadtree()
+        this.pointIndex.clear()
       }
       return
     }
@@ -476,7 +475,7 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
       this.snapshotPositions()
     }
     this.scene = nextScene
-    this.rebuildPointQuadtree()
+    this.pointIndex.invalidate()
 
     // Apply decay/pulse to discrete scene nodes
     if (this.config.decay) {
@@ -820,25 +819,18 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
   }
 
   /**
-   * Build (or clear) a quadtree spatial index for point scene nodes.
-   * Useful for swarm plots — other ordinal types (bar/wedge/box/violin) are
-   * not indexed because they're typically few in number or already O(1) hit
-   * tests via bbox checks.
+   * Quadtree for point hit testing (swarm plots), built on demand; null below
+   * the size threshold, and while a transition moves the marks so hit tests
+   * scan their current positions. Bars, wedges, boxes, and violins are few or
+   * already O(1) via bbox checks, so they are never indexed.
    */
-  private rebuildPointQuadtree(): void {
-    const index = buildOrdinalPointSpatialIndex(this.scene)
-    this._pointQuadtree = index.quadtree
-    this._maxPointRadius = index.maxRadius
-  }
-
-  /** Quadtree spatial index for point hit testing, or null when below threshold. */
   get pointQuadtree(): Quadtree<PointSceneNode> | null {
-    return this._pointQuadtree
+    return this.activeTransition ? null : this.pointIndex.resolve().quadtree
   }
 
-  /** Largest visual point radius in the current scene. */
+  /** Largest visual point radius in the indexed scene (pairs with `pointQuadtree`). */
   get maxPointRadius(): number {
-    return this._maxPointRadius
+    return (this.activeTransition ? this.pointIndex.last : this.pointIndex.resolve()).maxRadius
   }
 
   private applyDecay(nodes: OrdinalSceneNode[], data: Datum[]): void {
@@ -1370,8 +1362,7 @@ export class OrdinalPipelineStore extends UpdateResultStoreBase {
     this._customRestyle = undefined
     this.hasCustomRestyle = false
     this._baseStyles = new WeakMap()
-    this._pointQuadtree = null
-    this._maxPointRadius = 0
+    this.pointIndex.clear()
     // The categorical color cache must reset too, or a clear()+reload assigns
     // colors from a polluted palette index (drift) and reappearing categories
     // keep stale colors — unlike a freshly-mounted chart. Mirrors the reset in

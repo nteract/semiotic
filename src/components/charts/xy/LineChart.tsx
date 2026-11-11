@@ -20,6 +20,7 @@ import { validateArrayData } from "../shared/validateChartData"
 import { useChartSetup } from "../shared/useChartSetup"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import { useXYPointStyle } from "../shared/useXYPointStyle"
+import { useSelectionAwareXYFrameStyles } from "../shared/useSelectionAwareFrameStyle"
 import { useXYLineStyle } from "../shared/useXYLineStyle"
 import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
@@ -790,6 +791,7 @@ export const LineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
     effectiveSelectionHook,
     resolvedSelection,
   })
+  const frameStyles = useSelectionAwareXYFrameStyles(frameProps, effectiveSelectionHook, resolvedSelection, selectionDatumWithParent)
 
   // Determine chart type for StreamXYFrame
   const chartType = Array.isArray(fillArea) ? "mixed" as const : fillArea ? "area" as const : "line" as const
@@ -974,7 +976,9 @@ export const LineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
     }),
     ...crosshairFrameProps,
     ...brushStreamProps,
-    ...framePropsWithoutLegend
+    ...framePropsWithoutLegend,
+    // frameProps precedence: the caller's style still wins; this re-applies it with selection dimming preserved.
+    ...frameStyles,
   }
 
   // ── Loading / empty / validation guards (deferred to after all hooks) ──

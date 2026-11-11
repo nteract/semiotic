@@ -96,7 +96,7 @@ import {
 import type { UpdateResult } from "./pipelineUpdateContract"
 import { UpdateResultStoreBase } from "./pipelineUpdateStore"
 import { PipelineStoreUpdateResults } from "./pipelineStoreUpdateResults"
-import { PipelineSpatialIndex } from "./pipelineSpatialIndex"
+import { LazyPointIndex, buildXYPointSpatialIndex } from "./pointSpatialIndex"
 import { snapSceneTargets } from "./pipelineSceneTargets"
 import { remapXYScene } from "./pipelineSceneResize"
 
@@ -251,8 +251,8 @@ export class PipelineStore extends UpdateResultStoreBase {
   private _warnedNonPositiveLogX = false
   private _warnedNonPositiveLogY = false
 
-  // ── Quadtree spatial index for O(log n) point hit testing ──────────
-  private spatialIndex = new PipelineSpatialIndex()
+  // Quadtree for O(log n) point hit testing, built on first read (see LazyPointIndex).
+  private spatialIndex = new LazyPointIndex(() => buildXYPointSpatialIndex(this.config.chartType, this.scene))
 
   constructor(config: PipelineConfig) {
     super()
@@ -546,7 +546,7 @@ export class PipelineStore extends UpdateResultStoreBase {
     ) {
       this.scales = remapXYScene(this.scene, this.scales, this.lastLayout, layout)
       this.lastLayout = { width: layout.width, height: layout.height }
-      this.spatialIndex.rebuild(config.chartType, this.scene)
+      this.spatialIndex.invalidate()
       this.version++
       return
     }
@@ -693,7 +693,7 @@ export class PipelineStore extends UpdateResultStoreBase {
         // ever produces output. Do not leave the built-in scene visible and
         // accidentally report it as a custom-layout recovery.
         this.scene = []
-        this.spatialIndex.rebuild(this.config.chartType, this.scene)
+        this.spatialIndex.clear()
       }
       this.needsFullRebuild = true
       return
@@ -733,19 +733,20 @@ export class PipelineStore extends UpdateResultStoreBase {
       this.startTransition()
     }
 
-    // Build quadtree spatial index for dense point scenes
-    this.spatialIndex.rebuild(this.config.chartType, this.scene)
+    // Point geometry changed; the next hit test rebuilds the spatial index.
+    this.spatialIndex.invalidate()
 
     this.needsFullRebuild = false
     this.lastLayout = { width: layout.width, height: layout.height }
     this.version++
   }
 
-  /** Get the retained point-scene spatial index, if available. */
-  get quadtree() { return this.spatialIndex.quadtree }
+  /** Point-scene spatial index, built on demand. Null while a transition moves
+   * the marks, so hit tests scan their current positions instead. */
+  get quadtree() { return this.activeTransition ? null : this.spatialIndex.resolve().quadtree }
 
-  /** Largest visual point radius in the current scene. */
-  get maxPointRadius(): number { return this.spatialIndex.maxPointRadius }
+  /** Largest visual point radius in the indexed scene (pairs with `quadtree`). */
+  get maxPointRadius(): number { return (this.activeTransition ? this.spatialIndex.last : this.spatialIndex.resolve()).maxRadius }
 
   private buildSceneNodes(layout: StreamLayout, data: Datum[]): SceneNode[] {
     const { config, scales } = this

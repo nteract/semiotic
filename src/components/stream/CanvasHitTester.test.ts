@@ -1,7 +1,7 @@
 import { findNearestNode, findAllNodesAtX, clampToSeriesXRange } from "./CanvasHitTester"
 import type { LineSceneNode, AreaSceneNode, PointSceneNode, RectSceneNode, HeatcellSceneNode } from "./types"
 import { quadtree } from "d3-quadtree"
-import { PipelineSpatialIndex } from "./pipelineSpatialIndex"
+import { buildXYPointSpatialIndex } from "./pointSpatialIndex"
 
 describe("CanvasHitTester — findNearestNode", () => {
   it.each(["rect", "heatcell"] as const)("anchors %s hits at the cell center and includes exact bounds", (type) => {
@@ -107,11 +107,10 @@ describe("CanvasHitTester — findNearestNode", () => {
     const active: PointSceneNode = {
       type: "point", x: 0, y: 0, r: 4, style: {}, datum: { id: "active" }
     }
-    const index = new PipelineSpatialIndex()
-    index.rebuild("custom", [...decorative, active])
+    const index = buildXYPointSpatialIndex("custom", [...decorative, active])
 
     expect(index.quadtree).toBeNull()
-    expect(index.maxPointRadius).toBe(4)
+    expect(index.maxRadius).toBe(4)
   })
 
   it("respects maxDistance threshold", () => {

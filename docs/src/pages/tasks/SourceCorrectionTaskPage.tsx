@@ -1,4 +1,4 @@
-import packet from "../../../public/tasks/correct-published-chart.json"
+import packet from "../../../../ai/task-packets/correct-published-chart.json"
 import TaskPage from "./TaskPage"
 import SourceCorrectionExample from "./examples/SourceCorrectionExample"
 

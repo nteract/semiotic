@@ -1,4 +1,4 @@
-import type { ChartSpec } from "./chartSpecCore"
+import { REACT_NODE_TYPES, type ChartSpec } from "./chartSpecCore"
 import { BIG_NUMBER_SIZES } from "./chartSizeDefaultsValue"
 
 export const VALUE_CHART_SPECS: Record<string, ChartSpec> = {
@@ -27,8 +27,8 @@ export const VALUE_CHART_SPECS: Record<string, ChartSpec> = {
       description: { type: "string", description: "Override the auto-generated accessible label sentence." },
       summary: { type: "string", description: "Screen-reader-only supplement appended after the accessible label." },
       loading: { type: "boolean", description: "Show the loading skeleton overlay." },
-      loadingContent: { type: ["boolean", "object"], omitFromSchema: true, description: "ReactNode override for loading state; false suppresses it." },
-      emptyContent: { type: ["boolean", "object"], omitFromSchema: true, description: "ReactNode shown when value is null, undefined, or NaN; false suppresses it." },
+      loadingContent: { type: REACT_NODE_TYPES, omitFromSchema: true, description: "ReactNode override for loading state; false suppresses it." },
+      emptyContent: { type: REACT_NODE_TYPES, omitFromSchema: true, description: "ReactNode shown when value is null, undefined, or NaN; false suppresses it." },
       value: { type: "number", description: "The focal number this card exists to display" },
       label: { type: "string", description: "Top-line descriptor rendered above the value" },
       caption: { type: "string", description: "Secondary descriptor, smaller, below the label" },
@@ -54,7 +54,7 @@ export const VALUE_CHART_SPECS: Record<string, ChartSpec> = {
           'Force sentiment; "auto" infers from direction + delta sign'
       },
       thresholds: { type: "array", description: "Threshold zones: [{ at, level, color?, label? }] ordered ascending by `at`. Resolved by highest `at` ≤ value. `level` maps to a semantic CSS variable (--semiotic-{success|warning|danger|info})." },
-      chartSlot: { type: ["string", "number", "array", "object", "function"], omitFromSchema: true, description: "Square chart to render beside the value — e.g. a DonutChart / PieChart / Scatterplot / Treemap. ReactNode or (ctx) => ReactNode; the function form receives the resolved level / color / sentiment / pushBuffer." },
+      chartSlot: { type: ["string", "number", "boolean", "array", "object", "function"], omitFromSchema: true, description: "Square chart to render beside the value — e.g. a DonutChart / PieChart / Scatterplot / Treemap. ReactNode or (ctx) => ReactNode; the function form receives the resolved level / color / sentiment / pushBuffer." },
       chartSize: { type: "number", description: "Pixel size reserved for chartSlot (rendered as a square). Mode-keyed defaults: 44 (tile) / 80 (presentation) — sparkline scale; pass a larger value for a hero anchor." },
       windowSize: { type: "number", default: 60, description: "Cap on the trend buffer when fed via push API" },
       mode: { type: "string", enum: ["tile", "presentation", "inline", "thumbnail"] as const, default: "tile", description: "Layout mode — chrome envelope around the value" },
@@ -72,15 +72,24 @@ export const VALUE_CHART_SPECS: Record<string, ChartSpec> = {
       },
       stalenessThreshold: { type: "number", description: "Mark stale (dimmed) when no push occurs for this many ms" },
       staleLabel: { type: "string", default: "stale" },
-      headerSlot: { type: ["string", "number", "array", "object", "function"], omitFromSchema: true, description: "Replace the entire header (label + caption) slot" },
-      valueSlot: { type: ["string", "number", "array", "object", "function"], omitFromSchema: true, description: "Replace the focal value slot" },
-      deltaSlot: { type: ["string", "number", "array", "object", "function"], omitFromSchema: true, description: "Replace the delta / comparison / target row" },
-      trendSlot: { type: ["string", "number", "array", "object", "function"], omitFromSchema: true, description:
+      headerSlot: { type: ["string", "number", "boolean", "array", "object", "function"], omitFromSchema: true, description: "Replace the entire header (label + caption) slot" },
+      valueSlot: { type: ["string", "number", "boolean", "array", "object", "function"], omitFromSchema: true, description: "Replace the focal value slot" },
+      deltaSlot: { type: ["string", "number", "boolean", "array", "object", "function"], omitFromSchema: true, description: "Replace the delta / comparison / target row" },
+      trendSlot: { type: ["string", "number", "boolean", "array", "object", "function"], omitFromSchema: true, description:
           'Wide / rectangular chart embedded beneath the value — e.g. a LineChart / AreaChart in mode="sparkline". ReactNode or (ctx) => ReactNode; the function form receives the resolved level / color / sentiment / pushBuffer.'
       },
-      footerSlot: { type: ["string", "number", "array", "object", "function"], omitFromSchema: true, description: "Free-form footer below the trend" },
+      footerSlot: { type: ["string", "number", "boolean", "array", "object", "function"], omitFromSchema: true, description: "Free-form footer below the trend" },
       onClick: { type: "function", omitFromSchema: true },
       onObservation: { type: "function", omitFromSchema: true },
+      style: {
+        type: "object",
+        omitFromSchema: true,
+        runtimeOnly: {
+          kind: "react-only",
+          reason:
+            "React CSSProperties style the value wrapper and are intentionally outside the JSON chart-config contract.",
+        },
+      },
     },
     capabilities: {
       renderModes: ["svg"],

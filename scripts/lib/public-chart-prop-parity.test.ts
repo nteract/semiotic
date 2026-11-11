@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
-  findUnclassifiedPublicProps,
+  findUndeclaredPublicProps,
+  publicTypesRejectedBySpec,
   unsupportedPublicEnumValues,
   type PublicPropRuntimeShape
 } from "./public-chart-prop-parity"
@@ -16,7 +17,7 @@ const shape = (
 })
 
 describe("public chart prop parity", () => {
-  it("reports a newly added serializable prop unless this chart classifies it", () => {
+  it("reports every public prop the spec does not declare, callbacks included", () => {
     const publicProps = new Map([
       ["data", shape(["array"])],
       ["onHover", shape(["function", "null"])],
@@ -24,20 +25,33 @@ describe("public chart prop parity", () => {
     ])
 
     expect(
-      findUnclassifiedPublicProps({
+      findUndeclaredPublicProps({
         publicProps,
-        composedPropNames: new Set(["data"]),
-        exceptionPropNames: new Set()
+        composedPropNames: new Set(["data"])
       })
-    ).toEqual(["newSerializableOption"])
+    ).toEqual(["onHover", "newSerializableOption"])
 
     expect(
-      findUnclassifiedPublicProps({
+      findUndeclaredPublicProps({
         publicProps,
-        composedPropNames: new Set(["data"]),
-        exceptionPropNames: new Set(["newSerializableOption"])
+        composedPropNames: new Set(["data", "onHover", "newSerializableOption"])
       })
     ).toEqual([])
+  })
+
+  it("reports public runtime types a runtime-only declaration would reject", () => {
+    const linkedHover = shape(["boolean", "string", "object", "null"])
+    expect(
+      publicTypesRejectedBySpec(linkedHover, new Set(["boolean", "object"]))
+    ).toEqual(["string"])
+    expect(
+      publicTypesRejectedBySpec(
+        linkedHover,
+        new Set(["boolean", "string", "object"])
+      )
+    ).toEqual([])
+    // A generic or `any` member has no runtime category to compare.
+    expect(publicTypesRejectedBySpec(shape(["unknown"]), new Set(["string"]))).toEqual([])
   })
 
   it("reports public literal values rejected by a narrower schema enum", () => {

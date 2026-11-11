@@ -8,13 +8,13 @@
 - [Complete a Task](/tasks): Check category values, maintain a live chart, or correct a published claim
 - [Source Task Packets](/tasks/index.json): Generated task guidance with selected schemas, repairs, source identity and evidence limits; installed and deployed parity require separate checks
 - [Choose a Chart](/choose): Profile a dataset and rank charts by fit and communicative act
-- [Charts](/charts): All chart types with live examples, prop tables, and grounding panels
-- [Frames](/frames): StreamXYFrame, StreamOrdinalFrame, StreamNetworkFrame — full control API
-- [Features](/features): Axes, tooltips, interaction, responsive, composition, accessibility
+- [Charts](/api/charts): Chart components by family; each chart in the catalog below has its own page with live examples, prop tables, and grounding panels
+- [Frames](/frames/xy-frame): StreamXYFrame, with sibling pages for StreamOrdinalFrame, StreamNetworkFrame, StreamGeoFrame, and StreamPhysicsFrame — full control API
+- [Features](/features/axes): Axes, tooltips, interaction, responsive, composition, accessibility
 - [Artifact Contracts](/artifacts/overview): Optional sidecars for purpose, claims, evidence, time, correction, policy evaluation, and transfer
 - [Theming](/theming/theme-provider): ThemeProvider, presets, semantic colors, serialization
 - [Cookbook](/cookbook): Advanced patterns and recipes
-- [Playground](/playground): Interactive, shareable prop exploration for every chart type
+- [Playground](/playground): Interactive, shareable prop exploration in 20 playgrounds covering selected charts and features (not every chart type has one)
 
 ## Charts — XY
 
@@ -131,5 +131,5 @@
 - [Cookbook — Radar](/cookbook/radar-plot): Radar/spider charts
 - [Cookbook — Timeline](/cookbook/timeline): Timeline visualizations
 - [Cookbook — Marginal Graphics](/cookbook/marginal-graphics): Distribution plots in scatter margins
-- [Custom Charts](/features/custom-charts): XY/Ordinal/Network custom layouts and semiotic/recipes
-- [Vega-Lite Translator](/intelligence/vega-lite): Convert Vega-Lite specs to Semiotic
+- [Custom Charts](/custom-charts/overview): XY/Ordinal/Network custom layouts and semiotic/recipes
+- [Vega-Lite Translator](/interoperability/vega-lite): Convert Vega-Lite specs to Semiotic

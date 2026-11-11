@@ -5,15 +5,27 @@ import { Routes, Route, Outlet, Link, Navigate, useLocation } from "react-router
 import Sidebar, { SidebarToggle } from "./components/Sidebar"
 import { useScrollRestoration } from "./useScrollRestoration"
 
-// Index page components
-import { ExamplesIndex, ApiIndex, RecipesIndex, PlaygroundIndex } from "./IndexPages"
-
 // RealtimeSankey has been merged into the SankeyDiagram page
 // MatrixCookbookPage removed — matrix recipe no longer supported
 
 import { useDocsTheme } from "./hooks/useDocsTheme"
-import { EXAMPLE_DEFINITIONS } from "./pages/examples/exampleDefinitions"
+// The shell needs only each example's route path and page module. Importing
+// the full registry here would put every example's title, description, and
+// contract in the first load of every docs page, so that registry now loads
+// with the example routes. The local name stays EXAMPLE_DEFINITIONS because
+// scripts/check-docs-example-integrity.mjs matches the route expression below.
+import { EXAMPLE_ROUTE_DEFINITIONS as EXAMPLE_DEFINITIONS } from "./pages/examples/exampleRouteDefinitions"
 import ThemeToggle from "./components/ThemeToggle"
+
+// Index page components. They render only on /api, /cookbook, /recipes, and
+// /playground, and Vite inlines their small thumbnails into whichever chunk
+// imports them, so they load with those routes instead of with the shell.
+const lazyIndexPage = (name) =>
+  lazy(() => import("./IndexPages").then((module) => ({ default: module[name] })))
+const ExamplesIndex = lazyIndexPage("ExamplesIndex")
+const ApiIndex = lazyIndexPage("ApiIndex")
+const RecipesIndex = lazyIndexPage("RecipesIndex")
+const PlaygroundIndex = lazyIndexPage("PlaygroundIndex")
 
 const Landing = lazy(() => import("./Landing"))
 const ChartsApiPage = lazy(() => import("./pages/api/ChartsApiPage"))
@@ -442,8 +454,10 @@ const EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE = Object.freeze({
   "EqualPlacesAtlasExamplePage.jsx": EqualPlacesAtlasExamplePage,
 })
 
-// ExampleDefinition owns route paths and source-file identity. The lazy
-// component imports stay explicit so Vite keeps the same code-splitting graph.
+// ExampleDefinition owns route paths and source-file identity; the route table
+// imported above carries just those two fields (a unit test keeps the two in
+// step). The lazy component imports stay explicit so Vite keeps the same
+// code-splitting graph.
 const EXAMPLE_ROUTES = EXAMPLE_DEFINITIONS.map((definition) => ({
   path: definition.path.slice(1),
   Component: EXAMPLE_PAGE_COMPONENTS_BY_SOURCE_FILE[definition.sourceFile],

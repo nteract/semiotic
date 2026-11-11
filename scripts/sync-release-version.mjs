@@ -3,6 +3,7 @@
 import { readFileSync, writeFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { fileURLToPath } from "node:url"
+import { serializeSchemaFile } from "./lib/schema-file-format.mjs"
 
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)))
 const requested = process.argv[2]
@@ -28,7 +29,8 @@ if (pkg.version !== requested || lock.version !== requested || lock.packages?.["
 
 const schema = readJson("ai/schema.json")
 schema.version = requested
-writeJson("ai/schema.json", schema)
+// The schema is published as-is and has its own compact on-disk format.
+writeFileSync(resolve(root, "ai/schema.json"), serializeSchemaFile(schema))
 
 const server = readJson("server.json")
 server.version = requested

@@ -51,6 +51,15 @@ therefore fails without writing into the worktree. Snapshot creation is kept
 behind the explicit bootstrap command so every new visual contract can be
 reviewed before it is committed.
 
+The only platform baselines are the Linux set (`*-linux.png`), rendered in the
+pinned Playwright container that CI uses. There are no macOS baselines, so on a
+Mac every platform-specific screenshot assertion fails as a missing snapshot.
+For behavior coverage on a Mac, skip the comparisons with
+`npx playwright test --ignore-snapshots`. For visual comparison, use the Docker
+commands or the CI artifact procedure below. Do not run
+`test:visual:bootstrap` or `test:visual:update` outside Linux: they would write
+`*-darwin.png` files that nothing reads.
+
 Representative coverage:
 
 | Area                          | Coverage                                                           |
@@ -62,36 +71,59 @@ Representative coverage:
 | SSR parity                    | Server SVG and client canvas baselines for representative charts   |
 | Page/load checks              | Browser smoke coverage and error detection                         |
 
-Snapshot baselines are platform-specific. When a new baseline family is
-introduced, CI can produce Linux artifacts that maintainers can review and
-commit.
+Snapshot baselines are platform-specific, and only Linux ones exist. A change
+that alters rendering fails the Ubuntu E2E job against the committed image. The
+job passes again only after the Linux baseline is regenerated and committed, so
+every visual change appears as an image diff in the pull request.
+
+Regenerate baselines in the pinned container. This needs a running
+Docker-compatible runtime:
+
+```sh
+# One spec, all three browsers, overwriting existing baselines
+npm run test:visual:update:docker -- integration-tests/xy-frame.spec.ts
+
+# The whole suite
+npm run test:visual:update:docker -- integration-tests
+
+# Only create baselines that do not exist yet
+npm run test:visual:bootstrap:docker -- integration-tests/xy-frame.spec.ts
+```
+
+With no spec argument the Docker commands run two default specs, not the whole
+suite. Review the changed images with `git diff --stat -- integration-tests`
+and an image diff viewer before committing them.
 
 ### Refresh Linux Playwright baselines without Docker
 
 macOS cannot faithfully create the Linux browser raster baselines. Docker is not
 required, though: when an Ubuntu E2E run fails only because an intentional
-visual change made a Linux snapshot stale, download that run's
-`playwright-report` artifact locally and promote its exact `*-actual.png`
-captures.
+visual change made a Linux snapshot stale, download that run's report artifacts
+locally and promote their exact `*-actual.png` captures. Each browser job that
+fails uploads its own artifact: `playwright-report-chromium`,
+`playwright-report-firefox`, and `playwright-report-webkit`.
 
 ```sh
 # Use the failed Semiotic workflow run ID, not a docs-only or CodeQL run.
 RUN_ID=GITHUB_ACTIONS_RUN_ID
 ARTIFACT_DIR="$(mktemp -d)"
 
-gh run download "$RUN_ID" --name playwright-report --dir "$ARTIFACT_DIR"
+gh run download "$RUN_ID" --dir "$ARTIFACT_DIR" \
+  --name playwright-report-chromium \
+  --name playwright-report-firefox \
+  --name playwright-report-webkit
 ```
 
-Review the expected, actual, and diff images in `$ARTIFACT_DIR/test-results/`
-first. For the SSR geo trio, promote only the Linux actual images that
-correspond to the intended change:
+Each artifact lands in its own directory under `$ARTIFACT_DIR`. Review the
+expected, actual, and diff images there first. For the SSR geo trio, promote
+only the Linux actual images that correspond to the intended change:
 
 ```sh
 SNAPSHOTS=integration-tests/ssr-parity.spec.ts-snapshots
 
 for browser in chromium firefox webkit; do
   for chart in choropleth proportional-symbol geo-annotation; do
-    actual="$(find "$ARTIFACT_DIR/test-results" -type f \
+    actual="$(find "$ARTIFACT_DIR" -type f \
       -path "*SSR-baseline*${chart}-${browser}*/ssr-${chart}-actual.png" \
       -print -quit)"
     test -n "$actual"
@@ -102,7 +134,7 @@ done
 git diff --stat -- "$SNAPSHOTS"
 ```
 
-Do not copy macOS `*-darwin.png` files into Linux paths and do not promote an
+Do not copy an image rendered on macOS into a Linux path and do not promote an
 artifact containing unrelated failures. Commit the reviewed Linux images, then
 let the normal Ubuntu E2E run re-verify them. This procedure is also suitable
 for another narrowly scoped SSR or visual snapshot family: adjust the filename
@@ -149,7 +181,8 @@ Treat this section as a map of the testing posture rather than a replacement for
   non-streaming HOCs.
 - Playwright helpers should target stable chart readiness signals rather than
   timing assumptions.
-- Snapshot baselines vary by operating system and browser.
+- Snapshot baselines vary by operating system and browser. The repository
+  tracks the Linux set only.
 
 ## Common Commands
 
@@ -182,6 +215,7 @@ npm run lint
 ## Operational Notes
 
 1. Snapshot baselines are OS-specific. macOS and Linux render slightly
-   differently, so snapshot artifacts should be reviewed before being committed.
+   differently, so only Linux baselines exist, and they should be reviewed
+   before being committed.
 2. Test counts change as coverage grows. Prefer command output over stale count
    claims.

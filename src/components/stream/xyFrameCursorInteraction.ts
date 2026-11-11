@@ -20,7 +20,8 @@ export function rehitXYFrameCursor(options: CursorFrameGeometry & {
       y,
       getPointerHitRadius(options.hoverRadius, current.pointerType),
       options.geometryMoved ? null : store.quadtree,
-      store.maxPointRadius
+      // Only an index query reads the radius; do not build one for a linear pass.
+      options.geometryMoved ? 0 : store.maxPointRadius
     )
     return sceneMarkCursor(hit?.node)
   })

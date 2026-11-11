@@ -128,7 +128,17 @@ const analyze = process.argv.includes("--analyze")
 // describeChart and retains the aggregation, order, missing/signed-value and
 // tie handling. It measures 334226 bytes across the same 29 files. Budget that
 // ~1 KiB payload with <0.2 KiB headroom; named-chart/isolation limits stay fixed.
-const MULTI_IMPORT_GZIP_BUDGET = 326.5 * 1024
+// Separate published chunks per network layout and XY plugin (2026-11-10,
+// publishedChunkAnchors in scripts/build.mjs): the same 29-file consumer union
+// measures 331635 bytes, down from 334226, because layouts and
+// plugins it does not render stay out of its initial load. The single Terser
+// configuration adopted in the same change costs it nothing measurable.
+// Lower the budget with the saving and keep about 0.2 KiB headroom.
+// Structured validation issues and the React-only prop declarations the
+// validator reads (2026-11-10): this consumer imports semiotic/ai, so the same
+// 29-file union measures 332099 bytes, 464 more. Still 2127 bytes under the
+// figure before the chunk split.
+const MULTI_IMPORT_GZIP_BUDGET = 324.5 * 1024
 
 const MULTI_IMPORT_SOURCE = `
 export { LineChart } from "semiotic/xy"

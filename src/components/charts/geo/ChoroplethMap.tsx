@@ -17,6 +17,7 @@ import {
 import { resolveAxisFreeMarginDefaults } from "../shared/chartMode"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
+import { useSelectionAwareFrameStyle } from "../shared/useSelectionAwareFrameStyle"
 import { composeStyleRules, type StyleRule } from "../shared/styleRules"
 import ChartError from "../shared/ChartError"
 import { renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
@@ -54,7 +55,7 @@ export interface ChoroplethMapProps<
    * areas="world-110m"                  // bundled world borders
    * areas={features}                     // GeoJSON.Feature[]
    * areas={featureCollection.features}   // FeatureCollection → unwrap to .features
-   * areas={mergeData(world, rows, { featureKey: "iso", dataKey: "iso" })}
+   * areas={mergeData(world, rows, { featureKey: "properties.name", dataKey: "country" })}
    * ```
    */
   areas: AreasProp
@@ -146,7 +147,9 @@ export interface ChoroplethMapProps<
  *     let cancelled = false
  *     resolveReferenceGeography("world-110m").then(world => {
  *       if (cancelled) return
- *       setAreas(mergeData(world, gdpRows, { featureKey: "iso_a3", dataKey: "iso" }))
+ *       // Bundled world features carry `id` (ISO 3166-1 numeric) and
+ *       // `properties.name`; `featureKey` is a path from the feature root.
+ *       setAreas(mergeData(world, gdpRows, { featureKey: "properties.name", dataKey: "country" }))
  *     })
  *     return () => { cancelled = true }
  *   }, [gdpRows])
@@ -380,6 +383,14 @@ export const ChoroplethMap = /* @__PURE__ */ withChartErrorBoundary(function Cho
     opacity,
     styleRules
   ])
+  // `frameProps.areaStyle` takes the place of the region style above. Keep
+  // it selection-aware so linked selection still dims regions.
+  const userAreaStyle = useSelectionAwareFrameStyle(
+    frameProps.areaStyle,
+    effectiveSelectionHook,
+    resolvedSelection,
+    { selectionDatum: flattenFeatureProperties },
+  )
 
   // Default tooltip — check both nested properties and flattened fields
   // (StreamGeoFrame flattens feature.properties onto the hover object)
@@ -550,7 +561,9 @@ export const ChoroplethMap = /* @__PURE__ */ withChartErrorBoundary(function Cho
     }),
     ...(className && { className }),
     ...(props.animate != null && { animate: props.animate }),
-    ...frameProps
+    ...frameProps,
+    // frameProps precedence: the caller's style still wins; this re-applies it with selection dimming preserved.
+    ...(userAreaStyle && { areaStyle: userAreaStyle }),
   }
 
   // ── Loading / empty guards (deferred to after all hooks) ───────────────

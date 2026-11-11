@@ -4,7 +4,7 @@
 > edit by hand — re-run `npm run docs:capabilities` after adding a
 > chart and commit the output.
 
-Last regen: 2026-10-31 · 63 charts indexed.
+Last regen: 2026-11-10 · 63 charts indexed.
 
 **Column key**
 

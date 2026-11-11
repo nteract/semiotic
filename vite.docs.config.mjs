@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url"
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 import { docsEntryContract } from "./scripts/check-docs-entry-contract.mjs"
+import { docsTaskPackets } from "./scripts/lib/docs-task-packets.mjs"
 import { browserProcessDefines, semioticSourceAliases } from "./vite.shared.mjs"
 
 const repoRoot = dirname(fileURLToPath(import.meta.url))
@@ -92,6 +93,8 @@ export default defineConfig(({ mode }) => ({
     }),
     docsEntryContract({ entryPath: docsEntryPath }),
     copyDocsPublicAssets(),
+    // Task packets have one committed copy (ai/task-packets); expose it at /tasks/.
+    docsTaskPackets({ root: repoRoot, outDir }),
   ],
   resolve: {
     alias: semioticSourceAliases(repoRoot),

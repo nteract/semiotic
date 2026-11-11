@@ -4,10 +4,7 @@ import { gzipSync } from "node:zlib"
 import { minify } from "terser"
 import { build } from "esbuild"
 import { rollup } from "rollup"
-import {
-  libraryCompressionCandidates,
-  minifyLibraryChunk
-} from "./minify-library-chunk.mjs"
+import { minifyLibraryChunk } from "./minify-library-chunk.mjs"
 import { libraryTerserOptions as options } from "./library-minification-options.mjs"
 import { chunkLoadEffect } from "./strip-pure-bare-imports.mjs"
 import { cleanPureAnnotations } from "./clean-pure-annotations.mjs"
@@ -90,9 +87,8 @@ test("folded and returned calls do not leave invalid Rollup purity hints", async
   }
 })
 
-for (const allowFunctionReduction of [false, true]) {
-  test(`compressed ESM preserves exports, initialization, closures and live bindings (function reduction: ${allowFunctionReduction})`, async () => {
-    const source = `
+test("compressed ESM preserves exports, initialization, closures and live bindings", async () => {
+  const source = `
     export let calls = 0
     export const initial = readValue(3)
     export function readValue(value) { calls++; return scale(value) }
@@ -102,38 +98,36 @@ for (const allowFunctionReduction of [false, true]) {
     export class Item { constructor(value) { this.value = value } }
     export function makeItem(value) { return new Item(value) }
   `
-    const result = await minifyLibraryChunk(source, {
-      format: "esm",
-      filename: "fixture.js",
-      options,
-      allowFunctionReduction
-    })
-    const reference = await minify(source, { module: true, ...options })
-    assert.ok(
-      gzipSync(result.code, { level: 9 }).length <=
-        gzipSync(reference.code, { level: 9 }).length
-    )
-    const original = await import(
-      `data:text/javascript,${encodeURIComponent(source)}#original-${allowFunctionReduction}`
-    )
-    const compact = await import(
-      `data:text/javascript,${encodeURIComponent(result.code)}#compact-${allowFunctionReduction}`
-    )
-    assert.deepEqual(Object.keys(compact), Object.keys(original))
-    for (const module of [original, compact]) {
-      assert.equal(module.initial, 21)
-      assert.equal(module.calls, 1)
-      assert.equal(module.readValue(4), 28)
-      assert.equal(module.calls, 2)
-      assert.equal(module.sameFunction, module.readValue)
-      const counter = module.counter(5)
-      assert.deepEqual([counter(), counter()], [6, 7])
-      const item = module.makeItem(9)
-      assert.ok(item instanceof module.Item)
-      assert.equal(item.value, 9)
-    }
+  const result = await minifyLibraryChunk(source, {
+    format: "esm",
+    filename: "fixture.js",
+    options
   })
-}
+  const reference = await minify(source, { module: true, ...options })
+  assert.ok(
+    gzipSync(result.code, { level: 9 }).length <=
+      gzipSync(reference.code, { level: 9 }).length
+  )
+  const original = await import(
+    `data:text/javascript,${encodeURIComponent(source)}#original`
+  )
+  const compact = await import(
+    `data:text/javascript,${encodeURIComponent(result.code)}#compact`
+  )
+  assert.deepEqual(Object.keys(compact), Object.keys(original))
+  for (const module of [original, compact]) {
+    assert.equal(module.initial, 21)
+    assert.equal(module.calls, 1)
+    assert.equal(module.readValue(4), 28)
+    assert.equal(module.calls, 2)
+    assert.equal(module.sameFunction, module.readValue)
+    const counter = module.counter(5)
+    assert.deepEqual([counter(), counter()], [6, 7])
+    const item = module.makeItem(9)
+    assert.ok(item instanceof module.Item)
+    assert.equal(item.value, 9)
+  }
+})
 
 test("preserves purity annotations for downstream named-import tree shaking", async () => {
   const source = `
@@ -181,7 +175,7 @@ test("preserves purity annotations for downstream named-import tree shaking", as
   assert.equal(new exports.Required().value(), 42)
 })
 
-test("all production candidates preserve initializer order and variable scope", async () => {
+test("the production configuration preserves initializer order and variable scope", async () => {
   const source = `
     export function exercise() {
       const order = []
@@ -215,29 +209,21 @@ test("all production candidates preserve initializer order and variable scope", 
     tdz: true
   }
   assert.deepEqual(original.exercise(), expected)
-  const candidates = await Promise.all(
-    libraryCompressionCandidates.map((compression) =>
-      minify(source, {
-        module: true,
-        ...options,
-        compress: { ...options.compress, ...compression }
-      })
-    )
-  )
-  candidates.push(
+  const candidates = [
+    await minify(source, { module: true, ...options }),
     await minifyLibraryChunk(source, {
       format: "esm",
       filename: "scope.js",
       options
     })
-  )
+  ]
   for (const compact of candidates) {
     const module = await load(compact.code)
     assert.deepEqual(module.exercise(), expected)
   }
 })
 
-test("all production candidates preserve NaN comparisons, getters, and coercion order", async () => {
+test("the production configuration preserves NaN comparisons, getters, and coercion order", async () => {
   const source = `
     export function guards(value, bound) {
       return [!(value > bound), !(value >= bound), !(value < bound), !(value <= bound)]
@@ -248,22 +234,14 @@ test("all production candidates preserve NaN comparisons, getters, and coercion 
   const load = (code) =>
     import(`data:text/javascript,${encodeURIComponent(code)}`)
   const original = await load(source)
-  const candidates = await Promise.all(
-    libraryCompressionCandidates.map((compression) =>
-      minify(source, {
-        module: true,
-        ...options,
-        compress: { ...options.compress, ...compression }
-      })
-    )
-  )
-  candidates.push(
+  const candidates = [
+    await minify(source, { module: true, ...options }),
     await minifyLibraryChunk(source, {
       format: "esm",
       filename: "semantics.js",
       options
     })
-  )
+  ]
   for (const candidate of candidates) {
     const compact = await load(candidate.code)
     for (const [value, bound] of [
@@ -305,7 +283,7 @@ test("all production candidates preserve NaN comparisons, getters, and coercion 
   }
 })
 
-test("all production candidates preserve matchesThreshold source semantics", async () => {
+test("the production configuration preserves matchesThreshold source semantics", async () => {
   const result = await build({
     entryPoints: ["src/components/charts/shared/styleRules.ts"],
     bundle: true,
@@ -317,22 +295,14 @@ test("all production candidates preserve matchesThreshold source semantics", asy
   const load = (code) =>
     import(`data:text/javascript,${encodeURIComponent(code)}`)
   const original = await load(source)
-  const candidates = await Promise.all(
-    libraryCompressionCandidates.map((compression) =>
-      minify(source, {
-        module: true,
-        ...options,
-        compress: { ...options.compress, ...compression }
-      })
-    )
-  )
-  candidates.push(
+  const candidates = [
+    await minify(source, { module: true, ...options }),
     await minifyLibraryChunk(source, {
       format: "esm",
       filename: "thresholds.js",
       options
     })
-  )
+  ]
   const thresholds = [
     { gt: NaN },
     { gt: "abc" },

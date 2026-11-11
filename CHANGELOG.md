@@ -9,8 +9,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `validateProps` returns structured `issues` beside its `errors` strings: a stable
+  code, the prop path, actual and expected types, a suggestion, and a `patch` when the
+  repair is unambiguous. `validProps` lists accepted props once per result, and
+  `diagnoseConfig` attaches the same structure to each `VALIDATION` diagnosis as
+  `validation`. Unknown props resolve names from other libraries (`x` to `xAccessor`,
+  `series` to `lineBy`). `ValidationIssue`, `ValidationIssueCode`, `ValidationPatch`,
+  `ValidationReport`, and `DiagnosisValidationDetail` are exported from `semiotic/ai`
+  and `semiotic/ai/core`. [source: maintainer]
+- Public MCP `createChart` returns a PNG image, React code, and a reading guide in
+  `content`, and `code`, `config`, `grounding`, and `attachments` in
+  `structuredContent`, so hosts without app-widget support show the chart. Source rows
+  are never returned, and the additions are dropped whole at the response limit.
+  `MCP_CREATE_CHART_IMAGE` and `MCP_MAX_CREATE_CHART_IMAGE_MS` control the image.
+  [source: maintainer]
+
+### Changed
+
+- `prepareChart` returns `jsx` only when `ok` is true and states each reason once;
+  validation errors are no longer repeated as `VALIDATION:` lines.
+- Large `data` arrays load in geometrically growing chunks when `chunkSize` is omitted:
+  5,000 rows first, then each delivery quadruples the rows loaded, so total rebuild
+  work is linear. An explicit `chunkSize` keeps fixed-size chunks.
+- XY, ordinal, and geo charts build their point hit-test index on the first hit test
+  after a scene change instead of on every rebuild.
+- Each built-in network layout and XY plugin ships in its own published chunk. Bundled
+  network charts load about 15–17 kB gzip less up front and scatter-family charts about
+  9 kB less; whole facades loaded without bundling are 0.2–2.6% larger.
+- Production builds minify each chunk once. Unbundled ESM files are about 0.3% larger;
+  bundled applications are unchanged.
+- The `semiotic/server/node` CommonJS file re-exports `semiotic/server` instead of
+  duplicating it, and `ai/schema.json` is written one component per line (about 1 MB
+  smaller, same content).
+
 ### Fixed
 
+- `validateProps`, `diagnoseConfig`, and `semiotic-ai --doctor` no longer report real
+  React props as unknown or mistyped: `linkedHover`, `selection`, `hoverRadius`,
+  `linkedBrush`, id accessors, callback props, and ReactNode content given as a string.
+- `BoxPlot` honors `outlierRadius` in React and `renderChart`; the prop was declared
+  and ignored on both paths.
+- A style function passed through `frameProps` (`pointStyle`, `lineStyle`, `areaStyle`,
+  `summaryStyle`, `nodeStyle`, `edgeStyle`, Gauge `pieceStyle`) keeps selection,
+  linked-hover, and legend dimming instead of disabling it.
+- `RadarChart` applies `frameProps.connectorStyle` in React and `renderChart` instead
+  of dropping it.
+- `renderChart` honors props the React components already honored: ChordDiagram
+  `sourceAccessor`/`targetAccessor` (renamed fields no longer render empty),
+  `nodeIdAccessor`, `sortGroups`, and `nodeLabel`; top-level `stroke`, `strokeWidth`,
+  and `opacity` on the four geo charts and FlowMap `pointRadius`; bar-family
+  `baselinePadding`; BoxPlot `categoryPadding`; SwimlaneChart `rTickValues`;
+  TreeDiagram `nodeSize`; and DifferenceChart `showPoints`/`pointRadius`.
+- Scatterplot hit testing after an animated transition no longer uses an index built
+  from pre-transition positions, and `DistanceCartogram` hit testing indexes the
+  transformed positions.
 - Keep the compact legend and caption readable in narrow chart containers by
   separating the caption baseline from the series labels.
 - Keep XY and ordinal scene-store configuration separate from React's memoized
@@ -30,6 +84,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Avoid React update loops when live physics charts repaint unchanged semantic
   navigation state; cover worker execution, snapshot restore, and keyboard focus
   without ignoring browser console errors (#1655).
+
+### Docs
+
+- The README opens with install and a complete, runnable line chart, and every Quick
+  Example is a complete component.
+- The landing and index pages no longer advertise removed exports or link to missing
+  routes, and chart counts come from the surface manifest.
+- Getting Started and landing-page line chart samples used month-name x values, which
+  draw nothing; they now use numeric x. The `ChoroplethMap` JSDoc example joined on a
+  key the bundled world features do not have.
+- The docs first-load script drops from 168.9 to 122.6 kB gzip and has a budget.
+
+### Tooling
+
+- `npm run eval:ai:release` runs both eval suites against OpenAI and Anthropic with
+  repeated trials and writes a per-release report. `--dry-run` prints request counts
+  and a cost estimate without a network call.
+- Task packets and the adoption baseline no longer go stale on unrelated commits;
+  recorded evidence is still invalidated by any runtime or harness change.
+  `ai/task-packets/` is the single committed copy, and the docs build publishes it at
+  `/tasks/`.
+- Pull-request CI builds production once and shares it across jobs, and the docs
+  example suite runs in three shards.
+- macOS visual baselines are removed. Linux baselines are the only visual contract,
+  checked in CI or with the Docker commands.
+- The cold-consumer baseline records single-file totals from two bundlers and gates
+  them, so growth cannot hide behind a lazy boundary.
+- `bench:scene-work`, `bench:spatial-index`, and `bench:frame-interval` measure scene
+  rebuilds and browser frame intervals. The streaming benchmark registers the XY
+  plugins and fails on an empty scene.
+- The server prop inventory tests `hoverRadius` on `AreaChart` and `LineChart` (the
+  static cursor hit target is twice the radius wide). The 293 other React-surface
+  props the validator fix declared join its adoption inventory as unclassified debt.
+- `prepublishOnly` runs `release:check`.
 
 ## [3.13.3] - 2026-10-29
 

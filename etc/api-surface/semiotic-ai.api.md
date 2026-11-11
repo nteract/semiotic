@@ -374,7 +374,7 @@ function validateArtifactCollection(value: unknown): ArtifactCollectionValidatio
 function validateArtifactContract(value: unknown): ArtifactContractValidation
 function validateArtifactPacket(value: unknown): ArtifactPacketValidation
 function validateChartRecipe<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>>(recipe: ChartRecipe<TDatum, TConfig>): void
-function validateProps(componentName: string, props: Datum): ValidationResult
+function validateProps(componentName: string, props: Datum): ValidationReport
 function withCurrentProvenance<T extends object>(annotation: T, rest?: (Omit<AnnotationProvenance, "createdAt"> & {createdAt?: string;}) | undefined): Annotated<T>
 function withProvenance<T extends object>(annotation: T, blocks: {provenance?: AnnotationProvenance; lifecycle?: AnnotationLifecycle;}): Annotated<T>
 function zoomMobileRange(value: [number, number], domain: [number, number], direction: "in" | "out", step?: number | undefined, minSpan?: number | undefined): [number, number]
@@ -756,6 +756,8 @@ interface UseMobileRangeControlsOptions
 interface UseMobileRangeControlsResult
 interface UseNavigationSyncOptions
 interface UseNavigationSyncResult
+interface ValidationIssue
+interface ValidationReport extends ValidationResult
 interface ValidationResult
 interface ValueFingerprint extends CanonicalJsonResult
 interface VariantDiscoveryContext
@@ -1674,6 +1676,7 @@ interface-member Diagnosis::property::message = required message: string
 interface-member Diagnosis::property::role = optional role: string | undefined
 interface-member Diagnosis::property::rows = optional rows: readonly number[] | undefined
 interface-member Diagnosis::property::severity = required severity: "error" | "warning"
+interface-member Diagnosis::property::validation = optional validation: DiagnosisValidationDetail | undefined
 interface-member DiagnosisResult::property::diagnoses = required diagnoses: Diagnosis[]
 interface-member DiagnosisResult::property::ok = required ok: boolean
 interface-member EffectiveScale::property::cardinalityBand = optional cardinalityBand: CardinalityBand | undefined
@@ -2893,8 +2896,19 @@ interface-member UseNavigationSyncResult::property::handleObservation = required
 interface-member UseNavigationSyncResult::property::onActiveChange = required onActiveChange: (node: NavTreeNode) => void
 interface-member UseNavigationSyncResult::property::onObservation = required onObservation: (observation: ChartObservation) => void
 interface-member UseNavigationSyncResult::property::selection = required selection: {name: string;}
+interface-member ValidationIssue::property::actualType = optional actualType: string | undefined
+interface-member ValidationIssue::property::allowedValues = optional allowedValues: string[] | undefined
+interface-member ValidationIssue::property::code = required code: ValidationIssueCode
+interface-member ValidationIssue::property::expectedTypes = optional expectedTypes: PropType[] | undefined
+interface-member ValidationIssue::property::message = required message: string
+interface-member ValidationIssue::property::patch = optional patch: ValidationPatch | undefined
+interface-member ValidationIssue::property::path = optional path: string | undefined
+interface-member ValidationIssue::property::suggestion = optional suggestion: string | undefined
+interface-member ValidationReport::property::issues = required issues: ValidationIssue[]
 interface-member ValidationResult::property::errors = required errors: string[]
+interface-member ValidationResult::property::issues = optional issues: ValidationIssue[] | undefined
 interface-member ValidationResult::property::valid = required valid: boolean
+interface-member ValidationResult::property::validProps = optional validProps: string[] | undefined
 interface-member ValueFingerprint::property::algorithm = required algorithm: "sha256"
 interface-member ValueFingerprint::property::digest = required digest: string
 interface-member ValueFingerprint::property::fingerprint = required fingerprint: string
@@ -3071,6 +3085,7 @@ type DataQualityStatus = "error" | "fail" | "pass" | "warn"
 type DataSemanticType = "boolean" | "geographic" | "identifier" | "nominal" | "ordinal" | "quantitative" | "temporal" | "unknown"
 type DescribeLevel = "l1" | "l2" | "l3" | "l4"
 type DescriptionStrategy<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>> = (context: RecipeStrategyContext<TDatum, TConfig>) => RecipeDescription
+type DiagnosisValidationDetail = Omit<ValidationIssue, "message">
 type EncodingChannel = "angle" | "area" | "color" | "connection" | "count" | "label" | "length" | "motion" | "order" | "position" | "shape" | "size" | "texture" | string
 type EvaluateChartSeverity = "error" | "manual" | "warning"
 type EvaluateChartStage = "accessibility" | "data" | "deception" | "render" | "validation"
@@ -3158,6 +3173,8 @@ type TokenSemantics = "decorative" | "hypothetical-case" | "observed-unit" | "po
 type TokenTaskIntent = "decide" | "editorial-engagement" | "estimate probability" | "frequency-reasoning" | "measure" | "memory" | "precise-comparison" | "probability-estimation" | "public-explanation" | "remember" | "risk-communication" | "support-decision" | "understand risk"
 type TokenType = "dot" | "glyph" | "icon"
 type TransformationKind = "aggregation" | "binning" | "filter" | "forecasting" | "join" | "normalization" | "other" | "simulation" | "smoothing"
+type ValidationIssueCode = "INVALID_DATA" | "MISSING_REQUIRED_PROP" /** The value's runtime type is not one the prop accepts. */ | "INVALID_PROP_TYPE" /** The type is right but the value is not (enum, range, tuple shape). */ | "INVALID_PROP_VALUE" /** The prop is not part of the component's public surface. */ | "UNKNOWN_COMPONENT" /** A statically required prop is missing. */ | "UNKNOWN_NESTED_KEY" /** The prop exists elsewhere but this component does not support it. */ | "UNKNOWN_PROP" /** A key inside a structured prop (`frameProps.axes[0]`, `legendLayout`) is unknown. */ | "UNSUPPORTED_PROP" /** The data shape or an accessor does not match the data. */
+type ValidationPatch = {op: "remove"; path: string;} | {op: "rename"; from: string; to: string;} | {op: "set"; path: string; value: string;}
 type VariantProposalSource = "heuristic" | "manual" | "model"
 type VariantRejectionReason = string
 type VisualHierarchyStatus = "manual" | "pass" | "warn"

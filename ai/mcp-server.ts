@@ -72,7 +72,16 @@ import * as path from "path"
 import * as http from "http"
 import { McpStartupOptionsError, resolveMcpServerOptions } from "./mcp-server-options"
 import { compactPublicChartProps } from "./mcp-public-chart-props"
-import { capMcpToolResult } from "./mcp-tool-output-limits"
+import {
+  attachCreateChartOutputs,
+  createChartCode,
+  createChartGrounding,
+  type CreateChartImage
+} from "./mcp-create-chart-output"
+import {
+  capMcpToolResult,
+  resolveMcpToolOutputLimit
+} from "./mcp-tool-output-limits"
 import { handleMcpHttpRequest } from "./mcp-http-response"
 import { createMcpHttpAccessPolicy } from "./mcp-http-access"
 import { isAuthorizedRequest } from "./mcp-http-auth"
@@ -332,6 +341,9 @@ const MCP_APP_MIME_TYPE = "text/html;profile=mcp-app"
 const DEFAULT_MCP_SUPPORTED_PROTOCOL_VERSION = "2024-11-05"
 const DEFAULT_MCP_MAX_RENDER_WORK_MS = 2500
 const DEFAULT_MCP_MAX_PNG_CONVERSION_MS = 4000
+// createChart attaches a PNG as a convenience. It gets a shorter budget than
+// an explicit PNG render, and running out of it drops the image, not the call.
+const DEFAULT_MCP_MAX_CREATE_CHART_IMAGE_MS = 1500
 const DEFAULT_MCP_MAX_INTERACTIVE_SVG_SANITIZE_MS = 3000
 // The HTTP transport must never use console directly for request logging:
 // user bodies, headers, and Error objects can carry chart data or credentials.
@@ -1662,15 +1674,7 @@ async function renderChartHandler(
         "PNG conversion",
         limits.maxPngConversionMs,
         signal,
-        async () => {
-          const sharpMod = await (Function(
-            'return import("sharp")'
-          )() as Promise<any>)
-          const sharpFn = sharpMod.default || sharpMod
-          return sharpFn(Buffer.from(svg), {
-            limitInputPixels: parsePositiveInteger(process.env.MCP_MAX_RASTER_PIXELS, 16_777_216)
-          }).png().toBuffer()
-        }
+        () => svgToPngBuffer(svg)
       )
       const base64 = pngBuffer.toString("base64")
       return capRenderChartResult({
@@ -1717,6 +1721,84 @@ async function renderChartHandler(
       ...(evidenceBlock ? [evidenceBlock] : [])
     ]
   })
+}
+
+/** Rasterize SVG through the optional `sharp` dependency. Throws when it is absent. */
+async function svgToPngBuffer(svg: string): Promise<Buffer> {
+  const sharpMod = await (Function('return import("sharp")')() as Promise<any>)
+  const sharpFn = sharpMod.default || sharpMod
+  return sharpFn(Buffer.from(svg), {
+    limitInputPixels: parsePositiveInteger(
+      process.env.MCP_MAX_RASTER_PIXELS,
+      16_777_216
+    )
+  })
+    .png()
+    .toBuffer()
+}
+
+/**
+ * Best-effort PNG of the proven, sanitized SVG for hosts without widget
+ * support. Every failure degrades to "no image": a missing optional
+ * dependency, a conversion error, or the soft time budget. The parent still
+ * enforces the PNG stage limit as a hard stop.
+ */
+async function createChartImage(
+  svg: string,
+  context: RenderContext
+): Promise<CreateChartImage> {
+  if (/^(0|false|off)$/i.test(process.env.MCP_CREATE_CHART_IMAGE ?? "")) {
+    return { included: false, reason: "disabled" }
+  }
+  if (!svg) return { included: false, reason: "no-svg" }
+  const limits = context.limits ?? resolveMcpRenderExecutionLimits()
+  const softLimitMs = Math.min(
+    limits.maxPngConversionMs,
+    parsePositiveInteger(
+      process.env.MCP_MAX_CREATE_CHART_IMAGE_MS,
+      DEFAULT_MCP_MAX_CREATE_CHART_IMAGE_MS
+    )
+  )
+  let timer: ReturnType<typeof setTimeout> | undefined
+  try {
+    return await runRenderStep(
+      "PNG conversion",
+      limits.maxPngConversionMs,
+      context.signal,
+      () =>
+        Promise.race<CreateChartImage>([
+          svgToPngBuffer(svg).then((png) => ({
+            included: true as const,
+            mimeType: "image/png" as const,
+            data: png.toString("base64"),
+            bytes: png.byteLength
+          })),
+          new Promise<CreateChartImage>((resolve) => {
+            timer = setTimeout(
+              () => resolve({ included: false, reason: "timeout" }),
+              softLimitMs
+            )
+          })
+        ])
+    )
+  } catch (err) {
+    if (isRenderExecutionError(err)) {
+      return {
+        included: false,
+        reason: err.code === "MCP_RENDER_TIMEOUT" ? "timeout" : "cancelled"
+      }
+    }
+    const code = (err as { code?: string } | null)?.code
+    return {
+      included: false,
+      reason:
+        code === "MODULE_NOT_FOUND" || code === "ERR_MODULE_NOT_FOUND"
+          ? "renderer-unavailable"
+          : "conversion-failed"
+    }
+  } finally {
+    if (timer) clearTimeout(timer)
+  }
 }
 
 async function renderInteractiveChart(
@@ -2957,6 +3039,7 @@ async function createChartResult(
   }
   const output = rendered.structuredContent ?? {}
   const chartId = (props as { chartId?: unknown }).chartId
+  const outputLimits = resolveMcpRenderOutputLimits()
   const evidenceEnvelope = toEvidenceEnvelope(selected.component, props, {
     chartId: typeof chartId === "string" ? chartId : undefined,
     sourceId: "mcp-create-chart",
@@ -2964,7 +3047,10 @@ async function createChartResult(
     privacyScope: {
       mcpResponse: [
         "public chart config without source rows",
-        "render evidence and mark counts"
+        "render evidence and mark counts",
+        "React code that refers to data by name",
+        `reader grounding with at most ${outputLimits.maxWidgetRows} datum labels per branch and no source rows`,
+        "PNG image of the sanitized SVG"
       ]
     }
   })
@@ -2994,7 +3080,7 @@ async function createChartResult(
       })
     }
   }
-  return {
+  const proven: ToolResult = {
     ...rendered,
     structuredContent: profileResult({
       status: "render-proven",
@@ -3008,6 +3094,43 @@ async function createChartResult(
       evidenceGate: gate
     })
   }
+  // Hosts without app-widget support see only `content`. Give them the chart
+  // as an image, the code to reproduce it, and the grounding a reader needs.
+  // These are additions to a proven render; none of them may fail it.
+  const optional = <T>(build: () => T): T | null => {
+    try {
+      return build()
+    } catch {
+      return null
+    }
+  }
+  const sanitizedSvg =
+    typeof rendered._meta?.svg === "string" ? rendered._meta.svg : ""
+  return attachCreateChartOutputs(
+    proven,
+    {
+      summary: [
+        `Rendered ${chartTitleFromProps(selected.component, props)} (${selected.component}); the render passed the evidence gate.`,
+        "Hosts with app-widget support show an interactive preview.",
+        "A PNG image, a reading guide, and React code follow when available."
+      ].join(" "),
+      code: optional(() =>
+        createChartCode({
+          component: selected.component,
+          importPath: metadataForComponent(selected.component).importPath,
+          props,
+          publicProps,
+          inputData: args.data,
+          inputProps: args.props
+        })
+      ),
+      grounding: optional(() =>
+        createChartGrounding(selected.component, props, outputLimits)
+      ),
+      image: await createChartImage(sanitizedSvg, context)
+    },
+    Math.min(outputLimits.maxWidgetOutputBytes, resolveMcpToolOutputLimit())
+  )
 }
 
 /** Cap the final public envelope, including suggestions/evidence added after rendering. */
@@ -3886,7 +4009,7 @@ function createServer(
       {
         title: "Create and prove a chart",
         description:
-          "Select, validate, diagnose, render, and prove a static-data Semiotic chart. This is the default public workflow.",
+          "Select, validate, diagnose, render, and prove a static-data Semiotic chart. This is the default public workflow. A proven result returns a PNG image, React code, and a reading guide in content, an interactive preview for hosts with app widgets, and the same code, config, and reader grounding in structuredContent. Source rows are never returned; the code refers to them by name.",
         inputSchema: {
           data: z.array(unknownRecordInput).min(1),
           intent: z.union([z.string(), z.array(z.string())]).optional(),
@@ -3918,6 +4041,52 @@ function createServer(
           component: z.string().optional(),
           evidenceEnvelope: unknownRecordInput.optional(),
           evidenceGate: unknownRecordInput.optional(),
+          code: z
+            .object({
+              language: z.literal("tsx"),
+              import: z.string(),
+              jsx: z.string(),
+              bindings: z.array(
+                z.object({
+                  prop: z.string(),
+                  source: z.enum(["input-data", "input-props", "derived"])
+                })
+              )
+            })
+            .optional()
+            .describe(
+              "React code for a proven chart. Props listed in bindings are referenced by name, not inlined."
+            ),
+          config: unknownRecordInput
+            .optional()
+            .describe("Serializable chart config without source rows."),
+          grounding: unknownRecordInput
+            .optional()
+            .describe(
+              "Reader grounding: description, intent, and a bounded navigation structure without source rows."
+            ),
+          attachments: z
+            .object({
+              image: z.object({
+                included: z.boolean(),
+                reason: z.string().optional(),
+                mimeType: z.literal("image/png").optional(),
+                bytes: z.number().optional()
+              }),
+              code: z.object({
+                included: z.boolean(),
+                reason: z.string().optional()
+              }),
+              grounding: z.object({
+                included: z.boolean(),
+                reason: z.string().optional(),
+                structure: z.enum(["bounded", "omitted"]).optional()
+              })
+            })
+            .optional()
+            .describe(
+              "Which optional outputs a proven result carries, and why any is absent."
+            ),
           surfaceVersion: z.string()
         },
         annotations: READ_ONLY_TOOL_ANNOTATIONS,

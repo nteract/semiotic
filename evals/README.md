@@ -36,6 +36,92 @@ to the schemas in each suite and can be scored with
 Each suite's generated `jobs.json` is the uncontaminated provider run queue;
 golden proposals and scoring expectations stay in `fixtures.json`.
 
+## A release run in one command
+
+`npm run eval:ai:release` runs both suites against two vendors, three times,
+and writes one report that can be compared from release to release. Start with
+a dry run. It prints the plan, the request count, and cost figures; it reads no
+credential and makes no network call:
+
+```sh
+npm run eval:ai:release -- --dry-run
+```
+
+By default that plans 2,328 requests: the three `openai` default models and the
+one `anthropic` default model, three trials each, 150 grounding requests per
+trial, and the 22 first-try jobs once per context. The dry run prints two cost
+figures. `estimatedUsd` is a rough planning number. `upperBoundUsd` is what the
+spend ceiling reserves if every request used its whole output budget at its
+highest input rate; a real run costs far less.
+
+The paid run needs the built library for scoring, credentials for each vendor,
+an explicit confirmation, and one spend ceiling for the whole run:
+
+```sh
+npm run dist
+export OPENAI_API_KEY=... OPENAI_PROJECT_ID=proj_...
+export ANTHROPIC_API_KEY=...
+npm run eval:ai:release -- --max-usd=25 --confirm-spend
+```
+
+Rerunning the same command resumes an interrupted run. A directory with
+different recorded models, filters, effort, package version, or fixture
+revisions is rejected; use a new `--output-dir` for that comparison. Options:
+
+- `--providers=openai,anthropic` chooses vendors from
+  `scripts/lib/ai-eval-providers.mjs`.
+- `--openai-models=...` and `--anthropic-models=...` replace a vendor's default
+  models, for example
+  `--anthropic-models=claude-opus-5-5,claude-sonnet-5-5,claude-haiku-5-5`.
+- `--trials=3` sets how many times every request is repeated.
+- `--contexts=llms,minimal` chooses what the first-try suite is given. `llms` is
+  the full reference (`ai/reference.md` and `llms.txt`, about 54k tokens).
+  `minimal` is `ai/system-prompt.md` plus the signature card of the fixture's
+  reference component, about 5k tokens. Because the card names the component,
+  `minimal` measures prop-level correctness after a component is chosen, not
+  component choice. `skill` is also accepted.
+- `--suites`, `--first-try-fixtures`, `--grounding-fixtures`, and
+  `--grounding-conditions` narrow the run.
+- `--base-url` selects a LiteLLM proxy. A supplied `--max-usd` also applies to
+  its discovered prices, sharing the remaining ceiling across provider runs.
+
+Results land in `evals/reports/release-<version>-<date>/`, one directory per
+vendor, trial, and context, each a normal resumable runner directory. The run
+ends by writing `release-report.json`, which records:
+
+- the package version, date, fixture revisions, and for each vendor the price
+  revision, the model ids requested, and the model ids the vendor reported
+  serving;
+- for each model and context (first-try) or condition (grounding), the pass
+  rate of every trial, their mean, minimum, maximum, and standard deviation;
+- for every fixture, how many trials passed, the variance of that outcome, and
+  whether it is unstable (passed in some trials and failed in others).
+
+The `anthropic` provider speaks the Messages API through
+`scripts/lib/ai-eval-anthropic-messages.mjs`; every other provider speaks the
+Responses API. Three differences affect how its numbers compare:
+
+- Current Claude models cannot all switch thinking off, so requests set
+  `effort` (default `low`, `--effort` to change) where the `openai` provider
+  sends `reasoning: none`.
+- The first-try suite asks for free-form JSON. The Messages API has no JSON
+  mode for an open-ended object, so the adapter removes one enclosing Markdown
+  code fence from a reply and repairs nothing else.
+- Refusal fallbacks are left off, so a result always comes from the model the
+  report names.
+
+It reads `ANTHROPIC_API_KEY`, or an OAuth access token from
+`ANTHROPIC_AUTH_TOKEN` (for example
+`ant auth print-credentials --access-token`), or a Keychain item for the
+`semiotic-anthropic-evals` service. To run it alone:
+
+```sh
+npm run eval:ai:anthropic -- --validate-only
+npm run eval:ai:anthropic -- --max-usd=10 --confirm-spend
+```
+
+## Provider runners
+
 The OpenAI compatibility runner reads `OPENAI_API_KEY` or a macOS Keychain
 generic-password item, sends only the inputs allowed by each job, disables
 response storage, and maintains a resumable usage/cost manifest:
@@ -141,6 +227,8 @@ Runcrate. See the [API documentation](https://runcrate.ai/docs) for
 authentication and models. This registers an evaluation provider; it does not
 claim results for any chart-generation or grounding benchmark.
 
+Add `--dry-run` to any runner command to print its request counts and cost
+figures without reading a credential or sending a request.
 Use `--validate-only` first for one minimal request. The live runner always
 requires `--confirm-spend`. Providers with a locked price table also require a
 positive `--max-usd`; the `orcarouter`, `cheaperinference`, `apiroute`, and `runcrate` gateways have no

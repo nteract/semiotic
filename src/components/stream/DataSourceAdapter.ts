@@ -3,12 +3,19 @@ import type { Datum } from "../charts/shared/datumTypes"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 
 const DEFAULT_CHUNK_LIMIT = 5000
+// Each default chunk multiplies the rows delivered so far by this factor.
+const CHUNK_GROWTH = 4
 
 function normalizeChunkLimit(value: number | undefined, minimum: number): number {
   if (value === Infinity) return Infinity
   return Number.isFinite(value)
     ? Math.max(minimum, Math.floor(value!))
     : DEFAULT_CHUNK_LIMIT
+}
+
+/** A caller-chosen chunk size (anything `normalizeChunkLimit` would honor). */
+function isExplicitChunkSize(value: number | undefined): boolean {
+  return value === Infinity || Number.isFinite(value)
 }
 
 export type ChangesetCallback<T> = (changeset: Changeset<T>) => void
@@ -29,11 +36,26 @@ const enum DeliveryPhase {
  * Normalize bounded snapshots, progressive history, and live pushes into changesets.
  * Replacement is atomic: queued work from the previous dataset is discarded.
  * Live pushes are microtask-batched and follow all chunks of the current history.
+ *
+ * Progressive history: a dataset larger than `chunkThreshold` is delivered as a
+ * first chunk now and the rest on later animation frames, so the first paint
+ * stays fast. The consumer rebuilds its whole scene after every chunk, so the
+ * schedule decides the total work:
+ *
+ * - Default (`chunkSize` omitted): the first chunk has 5000 rows and each later
+ *   chunk quadruples the rows delivered so far, finishing early instead of
+ *   leaving a tail smaller than what is already delivered (200,000 rows arrive
+ *   as 5k, 20k, 80k, 200k). Total rebuild work is linear: at most twice one
+ *   pass, and under 1.7x beyond 10,000 rows.
+ * - Explicit `chunkSize`: every chunk has exactly that many rows. Total rebuild
+ *   work then grows with the square of the row count; use it only when a fixed
+ *   per-frame row count matters more than load time.
  */
 export class DataSourceAdapter<T extends object = Datum> {
   private lastBoundedData: T[] | null = null
-  private chunkThreshold: number
-  private chunkSize: number
+  private chunkThreshold = DEFAULT_CHUNK_LIMIT
+  private chunkSize = DEFAULT_CHUNK_LIMIT
+  private fixedChunks = false
   // Snapshot chunks and queued pushes belong to the same replacement epoch.
   private ingestion: Ingestion<T> = { history: null, pushes: [], flush: null }
   private delivery = DeliveryPhase.Idle
@@ -43,8 +65,7 @@ export class DataSourceAdapter<T extends object = Datum> {
     private callback: ChangesetCallback<T>,
     options?: { chunkThreshold?: number; chunkSize?: number }
   ) {
-    this.chunkThreshold = normalizeChunkLimit(options?.chunkThreshold, 0)
-    this.chunkSize = normalizeChunkLimit(options?.chunkSize, 1)
+    this.updateChunkOptions(options ?? {})
   }
 
   updateChunkOptions(options: {
@@ -53,6 +74,16 @@ export class DataSourceAdapter<T extends object = Datum> {
   }): void {
     this.chunkThreshold = normalizeChunkLimit(options.chunkThreshold, 0)
     this.chunkSize = normalizeChunkLimit(options.chunkSize, 1)
+    this.fixedChunks = isExplicitChunkSize(options.chunkSize)
+  }
+
+  /** Rows delivered once the next history chunk lands. */
+  private nextOffset(delivered: number, total: number): number {
+    if (this.fixedChunks) return Math.min(total, delivered + this.chunkSize)
+    const next = delivered * CHUNK_GROWTH
+    // A tail smaller than the rows already delivered is not worth its own
+    // full rebuild: finish in this chunk instead.
+    return next * 2 >= total ? total : next
   }
 
   /** Effect cleanup retires scheduled work; reconnecting retains queued rows. */
@@ -122,7 +153,7 @@ export class DataSourceAdapter<T extends object = Datum> {
     const history = ingestion.history
     if (!history) return
     const start = history.offset
-    history.offset = Math.min(history.data.length, start + this.chunkSize)
+    history.offset = this.nextOffset(start, history.data.length)
     if (history.offset >= history.data.length) ingestion.history = null
     this.publish({
       inserts: history.data.slice(start, history.offset),

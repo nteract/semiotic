@@ -19,7 +19,8 @@ export function rehitOrdinalFrameCursor(options: CursorFrameGeometry & {
       hoverRadius: options.hoverRadius,
       scene: options.store.scene,
       pointQuadtree: options.geometryMoved ? null : options.store.pointQuadtree,
-      maxPointRadius: options.store.maxPointRadius
+      // Only an index query reads the radius; do not build one for a linear pass.
+      maxPointRadius: options.geometryMoved ? 0 : options.store.maxPointRadius
     })
     return result.kind === "hit" ? sceneMarkCursor(result.hit.node) : undefined
   })

@@ -310,6 +310,41 @@ function accessibility(context: Context) {
   expect(onClick).not.toHaveBeenCalled()
 }
 
+function cursorTarget({ contract }: Context) {
+  const props: Record<string, unknown> = {
+    data: [
+      { x: 1, y: 3 },
+      { x: 2, y: 9 },
+      { x: 3, y: 5 },
+      { x: 4, y: 7 }
+    ],
+    xAccessor: "x",
+    yAccessor: "y",
+    ...(contract.component === "LineChart" ? { fillArea: true } : {}),
+    frameProps: { areaStyle: () => ({ fill: "#888", cursor: "pointer" }) }
+  }
+  const targets = (input: Record<string, unknown>) => [
+    ...render(contract.component, input).doc.querySelectorAll(
+      '[data-semiotic-cursor-hit-target="area-top-path"]'
+    )
+  ]
+  const width = (hoverRadius?: number) => {
+    const found = targets(
+      hoverRadius === undefined ? props : { ...props, hoverRadius }
+    )
+    expect(
+      found,
+      "a cursor-styled area must emit one hit target"
+    ).toHaveLength(1)
+    return Number(found[0].getAttribute("stroke-width"))
+  }
+  expect(width(), "the default hit target is 60px wide").toBe(60)
+  expect(width(12), "hoverRadius must set the hit target width").toBe(24)
+  expect(width(0), "a zero radius clamps to a 1px target").toBe(1)
+  // Without a cursor style there is no hit target for hoverRadius to size.
+  expect(targets({ ...props, frameProps: {}, hoverRadius: 12 })).toHaveLength(0)
+}
+
 // Source inventory parses these keys without loading React, Vitest, or a renderer.
 // The test runner also checks exact agreement before executing every contract.
 export const serverPropAssertions: Record<string, (context: Context) => void> =
@@ -327,5 +362,7 @@ export const serverPropAssertions: Record<string, (context: Context) => void> =
     "SwimlaneChart-axes": axes,
     "ordinal-labels": ordinalLabels,
     "gauge-readout": gauge,
-    "line-accessibility": accessibility
+    "line-accessibility": accessibility,
+    "AreaChart-cursor-target": cursorTarget,
+    "LineChart-cursor-target": cursorTarget
   }

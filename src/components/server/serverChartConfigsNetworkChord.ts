@@ -18,6 +18,21 @@ import {
 } from "./serverChartConfigShared"
 import { resolveTheme } from "./themeResolver"
 
+/**
+ * Frame props the ChordDiagram HOC forwards unchanged. Each key is set only
+ * when the caller supplied it, so the frame's own defaults still apply.
+ */
+function chordFrameAccessors(rest: Datum): Datum {
+  const nodeIDAccessor = rest.nodeIdAccessor ?? rest.nodeIDAccessor
+  return {
+    ...(nodeIDAccessor != null && { nodeIDAccessor }),
+    ...(rest.sourceAccessor != null && { sourceAccessor: rest.sourceAccessor }),
+    ...(rest.targetAccessor != null && { targetAccessor: rest.targetAccessor }),
+    ...(rest.sortGroups != null && { sortGroups: rest.sortGroups }),
+    ...(rest.nodeLabel != null && { nodeLabel: rest.nodeLabel }),
+  }
+}
+
 export const chordDiagram: ChartConfig = {
   frameType: "network",
   layout: { margin: (_props, resolved) => resolveAxisFreeMarginDefaults(resolved, networkFrameDefaultMargin("chord")) },
@@ -43,6 +58,9 @@ export const chordDiagram: ChartConfig = {
         chartType: "chord",
         nodes: rest.nodes,
         edges: rest.edges,
+        // The HOC forwards its endpoint accessors, group order, and label to
+        // the frame; without them a chord with renamed fields renders empty.
+        ...chordFrameAccessors(rest),
         valueAccessor: rest.valueAccessor,
         padAngle: rest.padAngle,
         groupWidth: rest.groupWidth,
@@ -136,6 +154,7 @@ export const chordDiagram: ChartConfig = {
       chartType: "chord",
       nodes: rest.nodes,
       edges: rest.edges,
+      ...chordFrameAccessors(rest),
       valueAccessor: rest.valueAccessor,
       padAngle: rest.padAngle,
       groupWidth: rest.groupWidth,

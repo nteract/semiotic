@@ -37,6 +37,7 @@ import type { LegendGroup } from "../../types/legendTypes"
 import { computeDifferenceSegments } from "./differenceSegments"
 import { normalizeGradient, type GradientInput } from "../shared/gradient"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { useSelectionAwareXYFrameStyles } from "../shared/useSelectionAwareFrameStyle"
 import { type StyleRule } from "../shared/styleRules"
 import {
   buildDifferenceAreaStyle,
@@ -577,6 +578,7 @@ export const DifferenceChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE
     ),
     [areaStyle, lineStyle, pointStyle, setup.effectiveSelectionHook, setup.resolvedSelection]
   )
+  const frameStyles = useSelectionAwareXYFrameStyles(frameProps, setup.effectiveSelectionHook, setup.resolvedSelection)
 
   // ── Tooltip ─────────────────────────────────────────────────────────
   const defaultTooltipContent = useCallback(
@@ -779,7 +781,9 @@ export const DifferenceChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE
     ...(xExtent && { xExtent }),
     ...(yExtent && { yExtent }),
     ...setup.crosshairProps,
-    ...frameProps
+    ...frameProps,
+    // frameProps precedence: the caller's style still wins; this re-applies it with selection dimming preserved.
+    ...frameStyles,
   }
 
   return (

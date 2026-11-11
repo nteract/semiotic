@@ -217,10 +217,12 @@ test("PR and release gates remain blocking, with the release checking its exact 
     /npm run check:consumer-compatibility -- --latest/
   )
   const pkg = JSON.parse(read("package.json"))
-  for (const name of ["release:check", "prepublishOnly"])
-    assert.ok(
-      pkg.scripts[name].includes("npm run check:consumer-compatibility")
+  assert.ok(
+    pkg.scripts["release:check"].includes(
+      "npm run check:consumer-compatibility"
     )
+  )
+  assert.equal(pkg.scripts.prepublishOnly, "npm run release:check")
 })
 
 test("Rapier's upstream init warning exception is limited to its probe, version and exact message", () => {

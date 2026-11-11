@@ -28,8 +28,57 @@
  * `runcrate` serves open-weight models (DeepSeek, GLM, Kimi, Qwen, gpt-oss) on
  * the same terms as the other gateways: `/v1/responses`, lab-prefixed model ids,
  * no price table (cost is `null`), and no `reasoning` field.
+ *
+ * `anthropic` is the one provider that is not Responses-compatible. Its
+ * `api: "anthropic-messages"` field selects the wire adapter in
+ * `scripts/lib/ai-eval-anthropic-messages.mjs`, which translates the same
+ * request shapes to `POST /v1/messages`. It has a locked price table, so runs
+ * record estimated USD and require `--max-usd`. Credentials come from
+ * `ANTHROPIC_API_KEY`, or an OAuth access token in `ANTHROPIC_AUTH_TOKEN`.
+ * Thinking cannot be switched off on every current Claude model, so requests
+ * set `effort` instead of a reasoning switch; `--effort` overrides the default.
+ * Prices are per million tokens for prompts up to 100K tokens (every job here
+ * is smaller); cache writes are billed at 1.25x input.
  */
 export const AI_EVAL_PROVIDERS = {
+  anthropic: {
+    id: "anthropic",
+    label: "Anthropic",
+    api: "anthropic-messages",
+    apiUrl: "https://api.anthropic.com/v1/messages",
+    apiKeyEnv: "ANTHROPIC_API_KEY",
+    authTokenEnv: "ANTHROPIC_AUTH_TOKEN",
+    projectEnv: null,
+    keychainService: "semiotic-anthropic-evals",
+    clientVersion: "semiotic-anthropic-eval/1",
+    defaultModels: ["claude-opus-5-5"],
+    hasPriceTable: true,
+    priceRevision: "anthropic-standard-2026-11-03",
+    reportPrefix: "anthropic-claude",
+    requestReasoning: false,
+    effort: "low",
+    credentialCheckMaxTokens: 32,
+    pricesPerMillion: {
+      "claude-opus-5-5": {
+        input: 4,
+        cachedInput: 0.2,
+        cacheWriteInput: 5,
+        output: 20,
+      },
+      "claude-sonnet-5-5": {
+        input: 2,
+        cachedInput: 0.1,
+        cacheWriteInput: 2.5,
+        output: 10,
+      },
+      "claude-haiku-5-5": {
+        input: 0.1,
+        cachedInput: 0.01,
+        cacheWriteInput: 0.125,
+        output: 0.5,
+      },
+    },
+  },
   apiroute: {
     id: "apiroute",
     label: "API Route",

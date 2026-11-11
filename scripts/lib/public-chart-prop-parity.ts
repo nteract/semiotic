@@ -19,27 +19,42 @@ export function serializableRuntimeTypes(
 }
 
 /**
- * Find serializable public props that have neither a chart-spec declaration
- * nor a chart-scoped, classified exclusion. Keeping the exception set scoped
- * to one chart prevents an exemption for (say) a React-only `style` prop from
- * masking a later `style` omission on an unrelated chart.
+ * Find public props the chart spec does not declare at all.
+ *
+ * `validateProps` only knows the props a spec composes, so an undeclared
+ * public prop — a callback as much as a serializable option — is reported to
+ * callers as "Unknown prop". Every member of the chart's public TypeScript
+ * type therefore needs a declaration; one that must stay out of the serialized
+ * schema is declared with `omitFromSchema` (plus a `runtimeOnly` reason when
+ * its type looks serializable).
  */
-export function findUnclassifiedPublicProps({
+export function findUndeclaredPublicProps({
   publicProps,
-  composedPropNames,
-  exceptionPropNames
+  composedPropNames
 }: {
   publicProps: ReadonlyMap<string, PublicPropRuntimeShape>
   composedPropNames: ReadonlySet<string>
-  exceptionPropNames: ReadonlySet<string>
 }): string[] {
   const missing: string[] = []
-  for (const [propName, publicProp] of publicProps) {
-    if (composedPropNames.has(propName)) continue
-    if (serializableRuntimeTypes(publicProp).length === 0) continue
-    if (!exceptionPropNames.has(propName)) missing.push(propName)
+  for (const propName of publicProps.keys()) {
+    if (!composedPropNames.has(propName)) missing.push(propName)
   }
   return missing
+}
+
+/**
+ * Public runtime types a spec declaration would reject. Checker-unknown and
+ * nullish branches are ignored: `validateProps` skips null/undefined values,
+ * and an `any`/generic member has no runtime category to compare.
+ */
+export function publicTypesRejectedBySpec(
+  prop: PublicPropRuntimeShape,
+  specTypes: ReadonlySet<string>
+): string[] {
+  return [...prop.runtimeTypes].filter(
+    (typeName) =>
+      typeName !== "null" && typeName !== "unknown" && !specTypes.has(typeName)
+  )
 }
 
 /** Public string literals that a schema enum would reject. */

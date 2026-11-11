@@ -12,7 +12,7 @@ The article has three working exhibits:
   several acceptable decisions goes to “Judgment required”; it is never divided
   into invented probabilities. Group filters, individual tracing and an exact
   table preserve the original prompts, constraints and accepted alternatives.
-- `FieldGuide` reads the actual generated files in `docs/public/tasks/`. Its
+- `FieldGuide` reads the actual generated files in `ai/task-packets/`. Its
   download and plain-text links point to those same records. The displayed check
   status follows the packet; the article does not manufacture a verification
   result. Regenerate and reverify through the task tooling when inputs change.

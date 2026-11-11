@@ -127,14 +127,7 @@ function baseBuildOptions({ minify, serverOnly, clientOnly, entryNames, format, 
     pure: ["console.log", "console.debug"],
     plugins: [
       ...(minify && format === "esm"
-        ? [minifyLibraryPlugin({
-            format,
-            options: terserOptions,
-            mergeImports,
-            // Named-import and cold-entry budgets both guard the selected
-            // output; compare function reduction for client chunks as well.
-            allowFunctionReduction: true
-          })]
+        ? [minifyLibraryPlugin({ format, options: terserOptions, mergeImports })]
         : []),
       useClientDirectivePlugin({ clientOnly, entryNames })
     ],
@@ -1047,6 +1040,128 @@ function writeClientPassThroughFacades() {
   console.log("\u2705 client pass-through facades created")
 }
 
+/**
+ * Private entry points that only shape the published chunks.
+ *
+ * esbuild puts every module reachable from the same set of entry points into
+ * one chunk. The built-in network layouts all had the same set, and so did
+ * most XY plugins, so each group was published as a single file. A chart
+ * imports that file statically for its own layout, while a bare frame's lazy
+ * "register every built-in" import needs all of it. An application bundler
+ * cannot split one module between its eager and lazy output, so a
+ * `SankeyDiagram` consumer shipped the force, chord, hierarchy and orbit
+ * layouts in its initial load, and a `Scatterplot` consumer shipped the
+ * heatmap, bar, candlestick and waterfall scene builders.
+ *
+ * Giving each of those modules its own entry point gives it a distinct
+ * reachability set, and therefore its own chunk, without changing runtime
+ * code or a public export. The anchor entry files only re-export from the
+ * shared chunks and are deleted once the group is built.
+ *
+ * Measured 2026-11-10 (Rolldown consumer, eager gzip, published files before
+ * and after; "source" is the same import bundled from src/):
+ *
+ *   SankeyDiagram       139,703 -> 124,890 B  (source 124,407)
+ *   ForceDirectedGraph  139,640 -> 122,284    (source 121,989)
+ *   ProcessSankey       168,779 -> 146,174    (source 146,272)
+ *   Scatterplot         136,095 -> 126,895    (source 126,681)
+ *   CandlestickChart    131,241 -> 121,805    (source 121,724)
+ *   LineChart           129,185 -> 129,240    (source 129,167; unaffected)
+ *
+ * The cost falls on consumers that load a whole facade without bundling:
+ * more, smaller files compress less well together. `semiotic/xy` grew from
+ * 170.5 to 175.0 KiB gzip (55 to 78 files), `semiotic/network` from 174.7 to
+ * 178.3 (47 to 59) and the root facade from 407.3 to 415.2 (79 to 111).
+ * Removing an entry from this list trades that back.
+ *
+ * The two helper anchors exist because a shared helper that only one anchored
+ * module imports lands in that module's chunk: every network chart uses
+ * `networkUtils`, which only the orbit layout imported among the layouts, so
+ * all of them loaded the orbit layout; `ribbonGeometry` did the same to
+ * ProcessSankey with the sankey layout. `scripts/treeshake-isolation.test.mjs`
+ * fails when another such coincidence appears, and when a new layout or
+ * plugin is added without an anchor.
+ */
+const publishedChunkAnchors = Object.freeze({
+  "semiotic-anchor-layout-sankey": "src/components/stream/layouts/sankeyLayoutPlugin.ts",
+  "semiotic-anchor-layout-force": "src/components/stream/layouts/forceLayoutPlugin.ts",
+  "semiotic-anchor-layout-chord": "src/components/stream/layouts/chordLayoutPlugin.ts",
+  "semiotic-anchor-layout-hierarchy": "src/components/stream/layouts/hierarchyLayoutPlugin.ts",
+  "semiotic-anchor-layout-orbit": "src/components/stream/layouts/orbitLayoutPlugin.ts",
+  "semiotic-anchor-helper-network-utils": "src/components/charts/shared/networkUtils.ts",
+  "semiotic-anchor-helper-ribbon-geometry": "src/components/geometry/ribbonGeometry.ts",
+  "semiotic-anchor-xy-line": "src/components/stream/xyPlugins/linePlugin.ts",
+  "semiotic-anchor-xy-area": "src/components/stream/xyPlugins/areaPlugin.ts",
+  "semiotic-anchor-xy-mixed": "src/components/stream/xyPlugins/mixedPlugin.ts",
+  "semiotic-anchor-xy-stacked-area": "src/components/stream/xyPlugins/stackedAreaPlugin.ts",
+  "semiotic-anchor-xy-point": "src/components/stream/xyPlugins/pointPlugin.ts",
+  "semiotic-anchor-xy-heatmap": "src/components/stream/xyPlugins/heatmapPlugin.ts",
+  "semiotic-anchor-xy-bar": "src/components/stream/xyPlugins/barPlugin.ts",
+  "semiotic-anchor-xy-swarm": "src/components/stream/xyPlugins/swarmPlugin.ts",
+  "semiotic-anchor-xy-waterfall": "src/components/stream/xyPlugins/waterfallPlugin.ts",
+  "semiotic-anchor-xy-candlestick": "src/components/stream/xyPlugins/candlestickPlugin.ts"
+})
+
+/** Delete the anchor entry files, after proving each is only a re-export. */
+function removePublishedChunkAnchors() {
+  for (const [name, input] of Object.entries(publishedChunkAnchors)) {
+    const file = `dist/${name}.module.min.js`
+    if (!existsSync(file)) {
+      throw new Error(`Chunk anchor ${name} was not emitted`)
+    }
+    const source = ts.createSourceFile(
+      file,
+      readFileSync(file, "utf8"),
+      ts.ScriptTarget.Latest,
+      false,
+      ts.ScriptKind.JS
+    )
+    for (const statement of source.statements) {
+      const isDirective =
+        ts.isExpressionStatement(statement) &&
+        ts.isStringLiteral(statement.expression)
+      // `export { a } from "./chunk"` when minified; an import followed by
+      // `export { a }` otherwise. A declaration of any kind is real code.
+      const isReExport =
+        ts.isExportDeclaration(statement) || ts.isImportDeclaration(statement)
+      if (!isDirective && !isReExport) {
+        // The anchored module is reachable from no public entry, so its code
+        // lives in the anchor file. Deleting it would drop that code.
+        throw new Error(
+          `Chunk anchor ${name} holds code of its own; ${input} must also be ` +
+            "reachable from a public entry"
+        )
+      }
+    }
+    rmSync(file)
+    // Development builds also write a source map beside each entry.
+    rmSync(`${file}.map`, { force: true })
+    delete entryGraphInputs[`${name}.module.min.js`]
+  }
+  console.log(
+    `\u2705 ${Object.keys(publishedChunkAnchors).length} chunk anchors applied and removed`
+  )
+}
+
+/**
+ * `semiotic/server` and `semiotic/server/node` export the same renderer
+ * (`scripts/lib/server-node-facade.test.js` holds their API snapshots equal).
+ * Bundled separately, the two CommonJS files were byte-identical at about
+ * 1 MB each; ESM already re-exports one from the other. Publish one copy.
+ */
+const serverNodeCjsFacade = {
+  name: "semiotic-server-node",
+  target: "server"
+}
+
+function writeServerNodeCjsFacade() {
+  writeFileSync(
+    `dist/${serverNodeCjsFacade.name}.min.js`,
+    `module.exports=require("./${serverNodeCjsFacade.target}.min.js");\n`
+  )
+  console.log("\u2705 semiotic-server-node CJS facade created")
+}
+
 function writeNodeExperimentalFacade() {
   writeFileSync(
     "dist/semiotic-experimental-node.module.min.js",
@@ -1485,6 +1600,9 @@ async function build() {
   // with frame providers without making recipes load theme/selection-store code.
   primaryClientEntries["semiotic-client-selection"] =
     "src/components/stream/customLayoutSelection.tsx"
+  // Entry points that only separate lazily needed modules into their own
+  // published chunks; removed again right after this group is built.
+  Object.assign(primaryClientEntries, publishedChunkAnchors)
   // Pure artifact tables and hash helpers follow their actual consumers.
   // Additional private entries here create unnecessary gzip/chunk boundaries;
   // purity annotations preserve downstream named-import tree shaking.
@@ -1531,6 +1649,7 @@ async function build() {
     esbuildPlugins: [externalizeSharedClientModulesPlugin(false)],
     analyze
   })
+  removePublishedChunkAnchors()
   writeSharedClientSymbolFacade("semiotic-ai.module.min.js", "useSelection", "semiotic-atlas-selection.module.min.js")
   await createSharedEsmGroup({
     entries: { "semiotic-atlas": clientEntries["semiotic-atlas"] },
@@ -1676,8 +1795,9 @@ async function build() {
     // The text hook must not make other CJS charts require its optional
     // Pretext peer.
     (bundle) =>
-      standaloneClientCjsNames.has(bundle.name) ||
-      (!bundle.clientOnly && !isolatedClientCjsNames.has(bundle.name))
+      bundle.name !== serverNodeCjsFacade.name &&
+      (standaloneClientCjsNames.has(bundle.name) ||
+        (!bundle.clientOnly && !isolatedClientCjsNames.has(bundle.name)))
   )
   await createCjsBundle({
     input: "src/components/stream/customLayoutSelection.tsx",
@@ -1746,6 +1866,7 @@ async function build() {
     `Bundling ${standaloneCjsBundles.length} standalone CJS entry points with concurrency ${bundleConcurrency}`
   )
   await createCjsBundlesWithConcurrency(standaloneCjsBundles, bundleConcurrency)
+  writeServerNodeCjsFacade()
 
   await createForceLayoutWorkerBundle({ minify })
   await createPhysicsWorkerBundle({ minify })

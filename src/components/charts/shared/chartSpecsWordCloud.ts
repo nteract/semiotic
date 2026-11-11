@@ -184,7 +184,7 @@ export const WORDCLOUD_CHART_SPECS: Record<string, ChartSpec> = {
       responsiveWidth: { type: "boolean" },
       responsiveHeight: { type: "boolean" },
       tooltip: {
-        type: ["function", "object", "boolean"],
+        type: ["function", "object", "boolean", "string"],
         omitFromSchema: true
       },
       selection: { type: "object", omitFromSchema: true },

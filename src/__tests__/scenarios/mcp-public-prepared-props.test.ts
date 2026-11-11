@@ -72,12 +72,22 @@ it("applies the widget byte limit to the final public envelope after rendering s
     arguments: args
   })
   expect(result.isError).not.toBe(true)
-  const inner = {
+  // The image, code, and grounding are optional and are shed before the cap
+  // applies, so measure the required envelope a proven render always carries.
+  const {
+    code: _code,
+    config: _config,
+    grounding: _grounding,
+    ...requiredContent
+  } = result.structuredContent
+  const required = {
     ...result,
-    structuredContent: result.structuredContent.render
+    content: [result.content[0]],
+    structuredContent: requiredContent
   }
+  const inner = { ...required, structuredContent: requiredContent.render }
   const innerBytes = Buffer.byteLength(JSON.stringify(inner))
-  const finalBytes = Buffer.byteLength(JSON.stringify(result))
+  const finalBytes = Buffer.byteLength(JSON.stringify(required))
   expect(finalBytes).toBeGreaterThan(innerBytes + 1000)
   const limit = Math.floor((innerBytes + finalBytes) / 2)
   const capped = await server({ MCP_MAX_WIDGET_OUTPUT_BYTES: String(limit) })

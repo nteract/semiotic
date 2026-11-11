@@ -216,13 +216,46 @@ export function generateValidationMapModule(
     if (!entry) {
       throw new Error(`Missing validation entry for ChartSpec ${name}`)
     }
+    const omittedBagProps = [...(spec.omitBagProps ?? [])]
     const encodedEntry = [
       entry.required,
       entry.dataShape,
       entry.dataAccessors,
       spec.propBags,
       encodeProps(spec.ownProps),
+      ...(omittedBagProps.length > 0 ? [omittedBagProps] : []),
     ]
+    // The emitted decoder rebuilds each chart from bags, omissions, and own
+    // props. Prove here that it reproduces the composed registry entry, so a
+    // future composition rule cannot make the runtime map disagree silently.
+    const decoded = Object.assign(
+      {},
+      ...spec.propBags.map((propBag) => propBags[propBag]),
+    )
+    for (const propName of omittedBagProps) delete decoded[propName]
+    Object.assign(decoded, spec.ownProps)
+    const decodedShape = Object.fromEntries(
+      Object.entries(decoded).map(([propName, propSpec]) => [
+        propName,
+        propSpec.enum
+          ? { type: propSpec.type, enum: [...propSpec.enum] }
+          : { type: propSpec.type },
+      ]),
+    )
+    for (const propName of new Set([
+      ...Object.keys(decodedShape),
+      ...Object.keys(entry.props),
+    ])) {
+      if (
+        JSON.stringify(decodedShape[propName]) !==
+        JSON.stringify(entry.props[propName])
+      ) {
+        throw new Error(
+          `${name}.${propName}: the encoded validation map would decode to a ` +
+            "different prop than composeProps() produces",
+        )
+      }
+    }
     return `  /* ${name} */ ${JSON.stringify(encodedEntry)}`
   })
   return `/**
@@ -239,7 +272,8 @@ type EncodedComponent = readonly [
   DataShape,
   readonly string[],
   readonly string[],
-  Readonly<Record<string, EncodedProp>>
+  Readonly<Record<string, EncodedProp>>,
+  (readonly string[])?
 ]
 
 const PROP_TYPES = ${JSON.stringify(propTypes)} as const
@@ -268,28 +302,35 @@ function decodeProp(encoded: EncodedProp): PropDef {
 function createValidationMap(): Record<string, ComponentSpec> {
   return Object.fromEntries(
     (ENCODED_VALIDATION_MAP as readonly EncodedComponent[]).map(
-      ([required, dataShape, dataAccessors, propBags, ownProps], index) => [
-        KNOWN_CHART_COMPONENTS[index],
-        {
-          required: [...required],
-          dataShape,
-          dataAccessors: [...dataAccessors],
-          props: Object.fromEntries(
-            Object.entries(
-              Object.assign(
-                {},
-                ...propBags.map(
-                  (propBag) =>
-                    ENCODED_PROP_BAGS[
-                      propBag as keyof typeof ENCODED_PROP_BAGS
-                    ]
-                ),
-                ownProps
-              ) as Record<string, EncodedProp>
-            ).map(([propName, encoded]) => [propName, decodeProp(encoded)])
+      (
+        [required, dataShape, dataAccessors, propBags, ownProps, omitted],
+        index
+      ) => {
+        const encodedProps = Object.assign(
+          {},
+          ...propBags.map(
+            (propBag) =>
+              ENCODED_PROP_BAGS[propBag as keyof typeof ENCODED_PROP_BAGS]
           )
-        }
-      ]
+        ) as Record<string, EncodedProp>
+        // Bag props the chart's public type omits (ChartSpec.omitBagProps).
+        for (const propName of omitted ?? []) delete encodedProps[propName]
+        Object.assign(encodedProps, ownProps)
+        return [
+          KNOWN_CHART_COMPONENTS[index],
+          {
+            required: [...required],
+            dataShape,
+            dataAccessors: [...dataAccessors],
+            props: Object.fromEntries(
+              Object.entries(encodedProps).map(([propName, encoded]) => [
+                propName,
+                decodeProp(encoded)
+              ])
+            )
+          }
+        ]
+      }
     )
   )
 }

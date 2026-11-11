@@ -172,9 +172,16 @@ export interface PrepareChartResult {
   props: Datum
   /** The serializable, validated config — present whenever the component is known. */
   config?: ChartConfig
-  /** JSX string for the validated config (only when a config could be built). */
+  /**
+   * JSX string for the config. Present only when `ok` is true: a proposal that
+   * failed the gate is something to repair, not code to paste.
+   */
   jsx?: string
-  /** Structural validation: required props, types, enums, accessor/data shape. */
+  /**
+   * Structural validation: required props, types, enums, accessor/data shape.
+   * `validation.issues` carries each finding's code, prop path, and suggestion
+   * or patch, so a repair step does not have to parse `reasons`.
+   */
   validation: ValidationResult
   /** Anti-pattern diagnostics (empty data, misleading design, contrast, …). */
   diagnostics: Diagnosis[]
@@ -184,13 +191,16 @@ export interface PrepareChartResult {
   evidence?: RenderEvidence
   /** Rendered SVG when a renderer ran. */
   svg?: string
-  /** Human-readable reasons the proposal is not `ok` (empty when `ok`). */
+  /**
+   * Human-readable reasons the proposal is not `ok` (empty when `ok`), each
+   * stated once: a validation error is not repeated as a `VALIDATION:` line.
+   */
   reasons: string[]
   /** Nonblocking renderer warning codes, retained even when `ok` is true. */
   warnings?: readonly string[]
 }
 
-const NO_VALIDATION: ValidationResult = { valid: false, errors: [] }
+const NO_VALIDATION: ValidationResult = { valid: false, errors: [], issues: [] }
 
 /** Re-run only the inexpensive configuration diagnosis after props change. */
 export function refreshChartDiagnostics(
@@ -221,7 +231,9 @@ export function prepareChart(
     )
   }
 
-  const validation = known ? validateProps(component, props) : { ...NO_VALIDATION }
+  const validation: ValidationResult = known
+    ? validateProps(component, props)
+    : { ...NO_VALIDATION }
   if (!validation.valid) {
     for (const err of validation.errors) reasons.push(err)
   }
@@ -231,7 +243,13 @@ export function prepareChart(
   const errorDiagnostics = diagnostics.filter((d) => d.severity === "error")
   const treatErrorsAsBlocking = options.treatErrorsAsBlocking !== false
   if (treatErrorsAsBlocking) {
-    for (const d of errorDiagnostics) reasons.push(`${d.code}: ${d.message}`)
+    // diagnoseConfig re-reports every validation error as a `VALIDATION`
+    // diagnosis. The sentence is already in `reasons`; say it once.
+    const validationErrors = new Set(validation.errors)
+    for (const d of errorDiagnostics) {
+      if (d.code === "VALIDATION" && validationErrors.has(d.message)) continue
+      reasons.push(`${d.code}: ${d.message}`)
+    }
   }
 
   // Repair routing: fit check + ranked alternatives. Needs the data to profile.
@@ -252,14 +270,11 @@ export function prepareChart(
     }
   }
 
-  // Build the config + JSX only when the component is known (toConfig throws on
-  // an unknown component — the registry is the gate).
-  let config: ChartConfig | undefined
-  let jsx: string | undefined
-  if (known) {
-    config = toConfig(component, props)
-    jsx = configToJSX(config)
-  }
+  // Build the config only when the component is known (toConfig throws on an
+  // unknown component — the registry is the gate). JSX waits for the verdict.
+  const config: ChartConfig | undefined = known
+    ? toConfig(component, props)
+    : undefined
 
   // Prove it paints, if a renderer was injected.
   let evidence: RenderEvidence | undefined
@@ -317,7 +332,8 @@ export function prepareChart(
     component,
     props,
     config,
-    jsx,
+    // A proposal that failed the gate is not code to paste.
+    jsx: ok && config ? configToJSX(config) : undefined,
     validation,
     diagnostics,
     repair,

@@ -26,6 +26,8 @@ import { useChartMode, resolveDefaultFill } from "../shared/hooks"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import { useNetworkChartSetup } from "../shared/useNetworkChartSetup"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
+import type { FrameStyleSelectionWrapper } from "../shared/frameStyleProps"
+import { useSelectionAwareFrameStyle } from "../shared/useSelectionAwareFrameStyle"
 import { composeStyleRules, makeNodeRuleContext, type StyleRule } from "../shared/styleRules"
 import ChartError from "../shared/ChartError"
 import { validateNetworkData } from "../shared/validateChartData"
@@ -305,6 +307,21 @@ export const SankeyDiagram = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__
     ),
     [edgeStyleWithoutSelection, setup.effectiveSelectionHook, setup.resolvedSelection],
   )
+  // Styles passed through `frameProps` take the place of the ones above.
+  // Keep them selection-aware so linked selection and legend highlighting
+  // still dim the marks that do not match.
+  const userNodeStyle = useSelectionAwareFrameStyle(
+    frameProps.nodeStyle,
+    setup.effectiveSelectionHook,
+    setup.resolvedSelection,
+    { wrap: wrapNetworkNodeStyleWithSelection as FrameStyleSelectionWrapper },
+  )
+  const userEdgeStyle = useSelectionAwareFrameStyle(
+    frameProps.edgeStyle,
+    setup.effectiveSelectionHook,
+    setup.resolvedSelection,
+    { wrap: wrapNetworkEdgeStyleWithSelection as FrameStyleSelectionWrapper },
+  )
 
   // Node label accessor
   const nodeLabelFn = useMemo(() => {
@@ -387,6 +404,8 @@ export const SankeyDiagram = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__
       {...(props.animate != null && { animate: props.animate })}
       perspective={props.perspective}
       {...frameProps}
+      {...(userNodeStyle && { nodeStyle: userNodeStyle })}
+      {...(userEdgeStyle && { edgeStyle: userEdgeStyle })}
     />
   )
 }), "SankeyDiagram", SANKEY_DIAGRAM_SIZE) as unknown as {

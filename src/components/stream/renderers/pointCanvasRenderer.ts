@@ -19,6 +19,13 @@ const MAX_POINTS_PER_BATCH = 2_048
  * Opaque same-style points that are contiguous in data order share one path.
  * Translucent points, hatches/patterns, and pulses stay per-mark so overlap
  * compositing and z-order match the unbatched painter.
+ *
+ * The batched path is not pixel-identical to per-mark drawing (measured in
+ * Chromium, CPU and GPU raster): a multi-arc path is rasterized as a general
+ * path, so edge antialiasing differs from a lone arc even when points do not
+ * touch, and a batch fills every circle before stroking any, so the outline of
+ * a covered stroked point stays visible. Removing or changing batching
+ * therefore changes rendered pixels and needs regenerated visual baselines.
  */
 export const pointCanvasRenderer: StreamRendererFn = (
   ctx,

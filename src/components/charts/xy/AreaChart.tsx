@@ -21,6 +21,7 @@ import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useAreaSeriesSetup } from "../shared/useAreaSeriesSetup"
 import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
+import { useSelectionAwareFrameStyle } from "../shared/useSelectionAwareFrameStyle"
 import { accessorName } from "../shared/tooltipUtils"
 import { useSeriesFeatures } from "../shared/useSeriesFeatures"
 import type { ForecastConfig, AnomalyConfig } from "../shared/statisticalOverlays"
@@ -524,6 +525,18 @@ export const AreaChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
     styleRules,
     ruleContext: areaRuleContext,
   })
+  // Styles passed through `frameProps` take the place of the series style
+  // above. Keep them selection-aware so linked selection still dims.
+  const userLineStyle = useSelectionAwareFrameStyle(
+    frameProps.lineStyle,
+    setup.effectiveSelectionHook,
+    setup.resolvedSelection,
+  )
+  const userAreaStyle = useSelectionAwareFrameStyle(
+    frameProps.areaStyle,
+    setup.effectiveSelectionHook,
+    setup.resolvedSelection,
+  )
 
   // Validate data (after all hooks)
   const validationError = validateArrayData({
@@ -582,7 +595,10 @@ export const AreaChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
     ...(xExtent && { xExtent }),
     ...(yExtent && { yExtent }),
     ...setup.crosshairProps,
-    ...frameProps
+    ...frameProps,
+    // frameProps precedence: the caller's style still wins; this re-applies it with selection dimming preserved.
+    ...(userLineStyle && { lineStyle: userLineStyle }),
+    ...(userAreaStyle && { areaStyle: userAreaStyle }),
   }
 
   // ── Loading / empty guards (deferred to after all hooks) ───────────────

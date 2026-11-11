@@ -583,6 +583,7 @@ interface-member StreamOrdinalFrameProps::property::onBrush = optional onBrush: 
 interface-member StreamOrdinalFrameProps::property::onCategoriesChange = optional onCategoriesChange: ((categories: string[]) => void) | undefined
 interface-member StreamOrdinalFrameProps::property::onLayoutError = optional onLayoutError: ((diagnostic: import("./customLayoutFailure").CustomLayoutFailureDiagnostic) => void) | undefined
 interface-member StreamOrdinalFrameProps::property::onObservation = optional onObservation: ((observation: import("../semiotic-ai-observations").ChartObservation) => void) | undefined
+interface-member StreamOrdinalFrameProps::property::outlierRadius = optional outlierRadius: number | undefined
 interface-member StreamOrdinalFrameProps::property::paused = optional paused: boolean | undefined
 interface-member StreamOrdinalFrameProps::property::pieceStyle = optional pieceStyle: ((d: Datum, category?: string) => Style) | undefined
 interface-member StreamOrdinalFrameProps::property::projection = optional projection: "horizontal" | "radial" | "vertical" | undefined

@@ -5,7 +5,7 @@ import { buildGeoScales } from "./geoScales"
 import { geoPath as d3GeoPath } from "d3-geo"
 import type { GeoProjection, GeoPath, GeoPermissibleObjects } from "d3-geo"
 import type { ZoomTransform } from "d3-zoom"
-import { quadtree as d3Quadtree, type Quadtree } from "d3-quadtree"
+import type { Quadtree } from "d3-quadtree"
 import type {
   GeoPipelineConfig,
   GeoScales,
@@ -55,6 +55,7 @@ import {
 import { GeoPipelineUpdateResults } from "./geoPipelineUpdateResults"
 import { UpdateResultStoreBase, type UpdateResult } from "./pipelineUpdateStore"
 import { buildBuiltInGeoScene } from "./geoSceneBuilder"
+import { LazyPointIndex, buildPointSpatialIndex } from "./pointSpatialIndex"
 import {
   normalizeGeoPipelineConfigUpdate,
   normalizeInitialGeoPipelineConfig
@@ -63,10 +64,6 @@ import {
 // ── GeoPipelineStore ─────────────────────────────────────────────────
 
 const DEFAULT_STREAM_WINDOW_SIZE = 500
-
-// Module constant rather than a static class field: the es2020 build lowers
-// static fields to a post-class assignment that bundlers must retain.
-const QUADTREE_THRESHOLD = 500
 
 export class GeoPipelineStore extends UpdateResultStoreBase {
   config: GeoPipelineConfig
@@ -92,11 +89,9 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
    *  it to retain the previous scene and projection state without mutating it. */
   private _customLayoutFailedThisBuild = false
 
-  // Spatial index for point hit testing (built when point count exceeds threshold)
-  private _quadtree: Quadtree<PointSceneNode> | null = null
-  /** Largest visual point radius in the current scene; used to widen quadtree
-   *  hit-test radius when points are larger than the default maxDistance. */
-  private _maxPointRadius = 0
+  // Point hit-test index, built on first read (see LazyPointIndex). Its largest
+  // radius widens the quadtree query when points exceed the default maxDistance.
+  private pointIndex = new LazyPointIndex(() => buildPointSpatialIndex(this.scene))
 
   // Internal state
   private projection: GeoProjection | null = null
@@ -473,8 +468,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
     this._hasRenderedOnce = false
     this.activeTransition = null
     this.prevPositions = null
-    this._quadtree = null
-    this._maxPointRadius = 0
+    this.pointIndex.clear()
     this.customLayoutOverlays = null
     this.lastCustomLayoutResult = null
     this.lastCustomLayoutFailure = null
@@ -513,12 +507,12 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
       if (this.lastCustomLayoutFailure?.preservedLastGoodScene) rollback()
       else {
         this.scene = []
-        this.rebuildQuadtree()
+        this.pointIndex.clear()
       }
       return false
     }
     this.scene = nextScene
-    this.rebuildQuadtree()
+    this.pointIndex.invalidate()
     return true
   }
 
@@ -838,48 +832,18 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
   }
 
   /**
-   * Build (or clear) the quadtree spatial index for point scene nodes.
-   * Only built when the point count exceeds QUADTREE_THRESHOLD; below that
-   * a linear scan is faster than indexing overhead. Also tracks the largest
-   * point radius so the hit tester can widen its query when symbols are big.
+   * Quadtree for point hit testing, built on demand: zooming, panning, and
+   * rotating reproject every frame, and only a hit test needs the index. Null
+   * below the size threshold (a linear scan is faster), and while a transition
+   * moves the points so hit tests scan their current positions.
    */
-  private rebuildQuadtree(): void {
-    let maxR = 0
-    let pointCount = 0
-    for (const node of this.scene) {
-      if (node.type === "point" && node.interactive !== false) {
-        pointCount++
-        if (node.r > maxR) maxR = node.r
-      }
-    }
-    this._maxPointRadius = maxR
-
-    if (pointCount <= QUADTREE_THRESHOLD) {
-      this._quadtree = null
-      return
-    }
-
-    const points: PointSceneNode[] = new Array(pointCount)
-    let i = 0
-    for (const node of this.scene) {
-      if (node.type === "point" && node.interactive !== false) {
-        points[i++] = node
-      }
-    }
-    this._quadtree = d3Quadtree<PointSceneNode>()
-      .x((n) => n.x)
-      .y((n) => n.y)
-      .addAll(points)
-  }
-
-  /** Quadtree spatial index for point hit testing, or null when below threshold. */
   get quadtree(): Quadtree<PointSceneNode> | null {
-    return this._quadtree
+    return this.activeTransition ? null : this.pointIndex.resolve().quadtree
   }
 
-  /** Largest visual point radius in the current scene. */
+  /** Largest visual point radius in the indexed scene (pairs with `quadtree`). */
   get maxPointRadius(): number {
-    return this._maxPointRadius
+    return (this.activeTransition ? this.pointIndex.last : this.pointIndex.resolve()).maxRadius
   }
 
   private buildSceneNodes(layout: StreamLayout): GeoSceneNode[] {

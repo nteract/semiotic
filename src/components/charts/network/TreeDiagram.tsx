@@ -23,6 +23,8 @@ import { normalizeTooltip, type TooltipProp } from "../../Tooltip/Tooltip"
 import type { LegendInteractionMode, LegendPosition } from "../shared/hooks"
 import { useNetworkChartSetup } from "../shared/useNetworkChartSetup"
 import { mergeShapeStyle } from "../shared/mergeShapeStyle"
+import type { FrameStyleSelectionWrapper } from "../shared/frameStyleProps"
+import { useSelectionAwareFrameStyle } from "../shared/useSelectionAwareFrameStyle"
 import ChartError from "../shared/ChartError"
 import { validateObjectData } from "../shared/validateChartData"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
@@ -261,6 +263,21 @@ export const TreeDiagram = /* @__PURE__ */ withChartErrorBoundary(function TreeD
     ),
     [edgeStyleFn, setup.effectiveSelectionHook, setup.resolvedSelection],
   )
+  // Styles passed through `frameProps` take the place of the ones above.
+  // Keep them selection-aware so linked selection and legend highlighting
+  // still dim the marks that do not match.
+  const userNodeStyle = useSelectionAwareFrameStyle(
+    frameProps.nodeStyle,
+    setup.effectiveSelectionHook,
+    setup.resolvedSelection,
+    { wrap: wrapNetworkNodeStyleWithSelection as FrameStyleSelectionWrapper },
+  )
+  const userEdgeStyle = useSelectionAwareFrameStyle(
+    frameProps.edgeStyle,
+    setup.effectiveSelectionHook,
+    setup.resolvedSelection,
+    { wrap: wrapNetworkEdgeStyleWithSelection as FrameStyleSelectionWrapper },
+  )
 
   // Validate
   const error = validateObjectData({ componentName: "TreeDiagram", data })
@@ -319,6 +336,8 @@ export const TreeDiagram = /* @__PURE__ */ withChartErrorBoundary(function TreeD
       {...(props.animate != null && { animate: props.animate })}
       perspective={props.perspective}
       {...frameProps}
+      {...(userNodeStyle && { nodeStyle: userNodeStyle })}
+      {...(userEdgeStyle && { edgeStyle: userEdgeStyle })}
     />
   )
 }, "TreeDiagram", TREE_DIAGRAM_SIZE)

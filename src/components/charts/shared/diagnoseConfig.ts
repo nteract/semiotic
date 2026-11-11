@@ -8,6 +8,7 @@ import type { Diagnosis, DiagnosisResult } from "./diagnoseTypes"
  */
 
 import { VALIDATION_MAP, validateProps } from "./validateProps"
+import type { ValidationIssue } from "./validateProps"
 import { diagnoseTokenEncoding } from "../../recipes/tokenEncoding"
 import { contrastRatio } from "./colorContrast"
 import {
@@ -39,7 +40,11 @@ import { auditData } from "../../data/auditData"
 import { isDataRecord, sampledFields } from "./dataRecords"
 
 export { contrastRatio } from "./colorContrast"
-export type { Diagnosis, DiagnosisResult } from "./diagnoseTypes"
+export type {
+  Diagnosis,
+  DiagnosisResult,
+  DiagnosisValidationDetail,
+} from "./diagnoseTypes"
 
 // Named color schemes that resolve to a palette (colorUtils.COLOR_SCHEMES).
 // A string `colorScheme` outside this set silently falls back to the default
@@ -597,21 +602,38 @@ function propsForValidation(props: Datum): Datum {
   return validationProps
 }
 
-function validationFix(componentName: string, error: string): string {
-  const unknownProp = error.match(/^Unknown prop "([^"]+)"/)
-  if (unknownProp) {
-    return `Remove \`${unknownProp[1]}\` or replace it with a documented ${componentName} prop.`
+/** Turn a structured validation issue into the one-line repair instruction. */
+function validationFix(componentName: string, issue: ValidationIssue): string {
+  const { patch, path, suggestion } = issue
+  if (issue.code === "UNKNOWN_PROP") {
+    if (patch?.op === "rename") {
+      return `Rename \`${patch.from}\` to \`${patch.to}\`.`
+    }
+    if (suggestion) {
+      return patch?.op === "remove"
+        ? `Remove \`${path}\`; \`${suggestion}\` is already set.`
+        : `Use \`${suggestion}\` if \`${path}\` was meant to name a data field; otherwise remove \`${path}\`.`
+    }
+    return `Remove \`${path}\` or replace it with a documented ${componentName} prop.`
   }
-  const missingProp =
-    error.match(/^"([^"]+)" is required for .+\.$/i) ??
-    error.match(/(?:Missing|required) prop "?([^". ]+)/i)
+  if (issue.code === "MISSING_REQUIRED_PROP") {
+    return `Add the required \`${path}\` prop using the ${componentName} schema and example.`
+  }
+  if (issue.code === "UNKNOWN_COMPONENT") {
+    return suggestion
+      ? `Use \`${suggestion}\`, or choose another component returned by getSchema().`
+      : "Choose a component returned by getSchema() or check the component name for a typo."
+  }
+  if (issue.code === "INVALID_PROP_TYPE" && patch?.op === "remove") {
+    return `Remove \`${path}\` from a serialized config; in React code, pass it a function.`
+  }
+  if (patch?.op === "remove") return `Remove \`${path}\`.`
+  if (patch?.op === "set") return `Set \`${path}\` to "${patch.value}".`
+  const missingProp = issue.message.match(/(?:Missing|required) prop "?([^". ]+)/i)
   if (missingProp) {
     return `Add the required \`${missingProp[1]}\` prop using the ${componentName} schema and example.`
   }
-  if (error.startsWith("Unknown component")) {
-    return "Choose a component returned by getSchema() or check the component name for a typo."
-  }
-  return `Correct this ${componentName} prop configuration to match its schema: ${error}`
+  return `Correct this ${componentName} prop configuration to match its schema: ${issue.message}`
 }
 
 function checkBigNumberChartOnlyProps(props: Datum, out: Diagnosis[]): void {
@@ -645,10 +667,8 @@ export function diagnoseConfig(
   // not enter the serialized chart schema. Diagnose their JavaScript configs
   // without pretending that the schema can validate arbitrary layout code.
   const custom = /^(XY|Ordinal|Network|Physics|Geo)CustomChart$/.test(componentName)
-  const errors: string[] = custom
-    ? []
-    : validateProps(componentName, propsForValidation(props)).errors
   if (custom) {
+    const errors: string[] = []
     if (typeof props.layout !== "function") {
       errors.push("Provide a layout function.")
     }
@@ -658,22 +678,29 @@ export function diagnoseConfig(
         errors.push(`Provide an array for ${field}.`)
       }
     }
-  }
-
-  for (const err of errors) {
-    if (
-      componentName === "BigNumber" &&
-      props.accessibleTable !== undefined &&
-      err.startsWith('Unknown prop "accessibleTable"')
-    ) {
-      continue
+    for (const err of errors) {
+      diagnoses.push({ severity: "error", code: "VALIDATION", message: err, fix: err })
     }
-    diagnoses.push({
-      severity: "error",
-      code: "VALIDATION",
-      message: err,
-      fix: custom ? err : validationFix(componentName, err),
-    })
+  } else {
+    const { issues } = validateProps(componentName, propsForValidation(props))
+    for (const issue of issues) {
+      if (
+        componentName === "BigNumber" &&
+        props.accessibleTable !== undefined &&
+        issue.code === "UNKNOWN_PROP" &&
+        issue.path === "accessibleTable"
+      ) {
+        continue
+      }
+      const { message, ...validation } = issue
+      diagnoses.push({
+        severity: "error",
+        code: "VALIDATION",
+        message,
+        fix: validationFix(componentName, issue),
+        validation,
+      })
+    }
   }
 
   if (componentName === "BigNumber") {

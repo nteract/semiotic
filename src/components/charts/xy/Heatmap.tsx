@@ -24,6 +24,7 @@ import { validateArrayData } from "../shared/validateChartData"
 import { useResolvedSelection } from "../shared/useResolvedSelection"
 import { getMinMax } from "../shared/minMax"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
+import { useSelectionAwareFrameStyle } from "../shared/useSelectionAwareFrameStyle"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import { composeStyleRules, type StyleRule } from "../shared/styleRules"
 import { makeHeatmapRuleContext } from "../shared/heatmapStyleRules"
@@ -426,6 +427,13 @@ export const Heatmap = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ fo
     () => wrapStyleWithSelection(ruledCellStyle, activeSelectionHook, resolvedSelection),
     [activeSelectionHook, ruledCellStyle, resolvedSelection],
   )
+  // `frameProps.areaStyle` takes the place of the cell style above. Keep it
+  // selection-aware so linked selection still dims cells.
+  const userCellStyle = useSelectionAwareFrameStyle(
+    frameProps.areaStyle,
+    activeSelectionHook,
+    resolvedSelection,
+  )
 
   // showValues is handled natively by the canvas renderer and SSR SVG path.
   // No SVG summaryRenderMode overlay needed — the previous `summaryStyle` /
@@ -531,7 +539,9 @@ export const Heatmap = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ fo
     ...(xExtent && { xExtent }),
     ...(yExtent && { yExtent }),
     ...crosshairFrameProps,
-    ...frameProps
+    ...frameProps,
+    // frameProps precedence: the caller's style still wins; this re-applies it with selection dimming preserved.
+    ...(userCellStyle && { areaStyle: userCellStyle }),
   }
 
   // ── Loading / empty guards (deferred to after all hooks) ───────────────

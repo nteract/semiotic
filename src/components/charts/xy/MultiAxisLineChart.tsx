@@ -28,6 +28,7 @@ import { useChartSetup } from "../shared/useChartSetup"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import { useXYLineStyle } from "../shared/useXYLineStyle"
+import { useSelectionAwareFrameStyle } from "../shared/useSelectionAwareFrameStyle"
 import { type StyleRule } from "../shared/styleRules"
 import {
   MULTI_AXIS_SERIES_FIELD,
@@ -512,6 +513,13 @@ export const MultiAxisLineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__P
     styleRules,
     ruleContext,
   })
+  // `frameProps.lineStyle` takes the place of the style above. Keep it
+  // selection-aware so linked selection and legend highlighting still dim.
+  const userLineStyle = useSelectionAwareFrameStyle(
+    frameProps.lineStyle,
+    setup.effectiveSelectionHook,
+    setup.resolvedSelection,
+  )
 
   // ── Tooltip ───────────────────────────────────────────────────────────
   const defaultTooltipContent = useMemo(() => {
@@ -669,6 +677,8 @@ export const MultiAxisLineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__P
     }),
     ...setup.crosshairProps,
     ...frameProps,
+    // frameProps precedence: the caller's style still wins; this re-applies it with selection dimming preserved.
+    ...(userLineStyle && { lineStyle: userLineStyle }),
     // frameProps precedence: callers own the final frame configuration; the
     // derived legend is appended only when this HOC explicitly requested it.
     ...(legendLayout && { legendLayout }),

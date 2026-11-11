@@ -20,6 +20,7 @@ import { useChartSetup } from "../shared/useChartSetup"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import { useXYPointStyle } from "../shared/useXYPointStyle"
+import { useSelectionAwareFrameStyle } from "../shared/useSelectionAwareFrameStyle"
 import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
 import { DEFAULT_QUADRANTS } from "./QuadrantChart.defaults"
 import { useSizeEncoding } from "../shared/useSizeEncoding"
@@ -381,6 +382,13 @@ export const QuadrantChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__
     effectiveSelectionHook: setup.effectiveSelectionHook,
     resolvedSelection: setup.resolvedSelection,
   })
+  // `frameProps.pointStyle` takes the place of the style above. Keep it
+  // selection-aware so linked selection and legend highlighting still dim.
+  const framePointStyle = useSelectionAwareFrameStyle(
+    frameProps.pointStyle,
+    setup.effectiveSelectionHook,
+    setup.resolvedSelection,
+  )
 
   // Default tooltip
   // Auto-detect a title field: first string-valued field not used as an accessor
@@ -663,6 +671,8 @@ export const QuadrantChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__
     canvasPreRenderers: mergedPreRenderers,
     ...setup.crosshairProps,
     ...frameProps,
+    // frameProps precedence: the caller's style still wins; this re-applies it with selection dimming preserved.
+    ...(framePointStyle && { pointStyle: framePointStyle }),
     // frameProps precedence: override pre-renderers so quadrant renderers cannot be clobbered.
     ...(mergedPreRenderers.length > 0 && { canvasPreRenderers: mergedPreRenderers }),
     svgPreRenderers,

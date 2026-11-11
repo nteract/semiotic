@@ -20,6 +20,7 @@ import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useAreaSeriesSetup } from "../shared/useAreaSeriesSetup"
 import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
+import { useSelectionAwareFrameStyle } from "../shared/useSelectionAwareFrameStyle"
 import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
@@ -407,6 +408,18 @@ export const StackedAreaChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PUR
     styleRules,
     ruleContext: areaRuleContext,
   })
+  // Styles passed through `frameProps` take the place of the series style
+  // above. Keep them selection-aware so linked selection still dims.
+  const userLineStyle = useSelectionAwareFrameStyle(
+    frameProps.lineStyle,
+    setup.effectiveSelectionHook,
+    setup.resolvedSelection,
+  )
+  const userAreaStyle = useSelectionAwareFrameStyle(
+    frameProps.areaStyle,
+    setup.effectiveSelectionHook,
+    setup.resolvedSelection,
+  )
 
   // Validate data (after all hooks)
   const validationError = validateArrayData({
@@ -461,7 +474,10 @@ export const StackedAreaChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PUR
     ...(xExtent && { xExtent }),
     ...(yExtent && { yExtent }),
     ...setup.crosshairProps,
-    ...frameProps
+    ...frameProps,
+    // frameProps precedence: the caller's style still wins; this re-applies it with selection dimming preserved.
+    ...(userLineStyle && { lineStyle: userLineStyle }),
+    ...(userAreaStyle && { areaStyle: userAreaStyle }),
   }
 
   if (setup.earlyReturn) return setup.earlyReturn

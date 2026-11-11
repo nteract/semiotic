@@ -2,7 +2,8 @@ import type { ChartSpec } from "./chartSpecCore"
 import {
   LEGEND_POSITION_ENUM,
   CURVE_ENUM,
-  CHART_MODE_ENUM
+  CHART_MODE_ENUM,
+  REACT_NODE_TYPES
 } from "./chartSpecCore"
 import { DEFAULT_QUADRANTS } from "../xy/QuadrantChart.defaults"
 import { STYLE_RULES_PROP_SPEC } from "./styleRulesWireSchema"
@@ -90,7 +91,7 @@ export const XY_CHART_SPECS: Record<string, ChartSpec> = {
       showAxes: { type: "boolean", description: "Show the rank and x axes. Defaults to the chart mode; an explicit value wins, and matching responsiveRules win over it." },
       styleRules: STYLE_RULES_PROP_SPEC,
       labelStyle: { type: ["object", "function"], omitFromSchema: true },
-      legend: { type: ["array", "object"], omitFromSchema: true },
+      legend: { type: REACT_NODE_TYPES, omitFromSchema: true },
       legendInteraction: { type: "string", enum: ["highlight", "isolate", "none"] as const, default: "none" },
       legendPosition: { type: "string", enum: LEGEND_POSITION_ENUM, default: "right" },
       hoverHighlight: { type: ["boolean", "string"], enum: ["series"] as const, default: true },
@@ -578,6 +579,8 @@ export const XY_CHART_SPECS: Record<string, ChartSpec> = {
     dataShape: "array",
     dataAccessors: [],
     propBags: ["common"],
+    // MinimapChartProps is `Omit<BaseChartProps, … | "selection" | "linkedHover">`.
+    omitBagProps: ["selection", "linkedHover"],
     ownProps: {
       data: { type: "array" },
       xAccessor: { type: ["string", "function"], default: "x" },

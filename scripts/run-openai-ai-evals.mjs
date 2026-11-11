@@ -15,6 +15,11 @@
  * can be enforced. The self-hosted `litellm` gateway takes its URL from
  * `--base-url` or LITELLM_BASE_URL and builds its price table from the proxy's
  * `/model/info`, so its runs get estimated USD and a `--max-usd` ceiling too.
+ * The `anthropic` provider is the one non-Responses provider: the same request
+ * shapes are translated to the Messages API by
+ * `scripts/lib/ai-eval-anthropic-messages.mjs`.
+ * `--dry-run` prints the request counts and the spend upper bound for a
+ * selection without reading a credential or making a network call.
  * Reports contain scored content, hashes, and token usage, but never
  * credentials, project IDs, prompts, or raw response bodies.
  */
@@ -26,10 +31,13 @@ import {
   rename,
   writeFile,
 } from "node:fs/promises"
+import { createRequire } from "node:module"
 import { dirname, join, resolve } from "node:path"
 import process from "node:process"
 import { setTimeout as delay } from "node:timers/promises"
 import { fileURLToPath } from "node:url"
+import { anthropicMessagesWire } from "./lib/ai-eval-anthropic-messages.mjs"
+import { componentSignatureCard } from "./lib/ai-eval-component-card.mjs"
 import { AI_EVAL_PROVIDERS } from "./lib/ai-eval-providers.mjs"
 import { sanitizedApiError } from "./lib/api-key-redaction.mjs"
 import {
@@ -59,6 +67,32 @@ const argSet = (argv, name) => {
 const readJson = async (path) => JSON.parse(await readFile(path, "utf8"))
 const safeModelName = (model) => model.replace(/[^a-zA-Z0-9._-]/g, "-")
 const roundCost = (value) => Number(value.toFixed(8))
+
+/**
+ * How a provider's HTTP API is spoken. Every job is built in the Responses
+ * shape; a wire encodes it for the provider and decodes the reply back.
+ */
+const openaiResponsesWire = {
+  id: "openai-responses",
+  headers: ({ apiKey, idempotencyKey }) => ({
+    Authorization: `Bearer ${apiKey}`,
+    "Content-Type": "application/json",
+    "Idempotency-Key": idempotencyKey,
+  }),
+  encode: (body) => body,
+  decode: (response) => response,
+  retryable: (status) =>
+    status === 429 || (status >= 500 && status <= 504),
+  budgetRequest: (body) => body,
+}
+
+export const FIRST_TRY_CONTEXTS = {
+  // The full reference: about 54k tokens.
+  llms: ["ai/reference.md", "docs/public/llms.txt"],
+  skill: ["ai/reference.md", "agent-skill/semiotic-charts/SKILL.md"],
+  // The system prompt plus one component's signature card: about 5k tokens.
+  minimal: ["ai/system-prompt.md"],
+}
 
 export function validateFilterValues(name, values, knownValues) {
   if (!values) return
@@ -116,6 +150,45 @@ export function requestUpperBoundCost(
       Math.max(rates.input, rates.cachedInput, rates.cacheWriteInput) +
       (request.max_output_tokens ?? 0) *
         Math.max(rates.output, rates.reasoningOutput ?? rates.output)) /
+      1_000_000
+  )
+}
+
+/**
+ * A planning estimate for one request, used only by `--dry-run`: about four
+ * characters per token, 1,500 tokens per image, and half of the job's output
+ * budget. The shared instructions are billed at the cache-read rate when
+ * `instructionsCached` says an earlier request already sent the same text,
+ * and at the higher of the input and cache-write rates otherwise. It is a
+ * rough figure; the spend ceiling uses `requestUpperBoundCost` instead.
+ */
+export function requestEstimatedCost(
+  model,
+  request,
+  prices = defaultOpenAIPrices,
+  { instructionsCached = false } = {}
+) {
+  if (!prices) return null
+  const rates = prices[model]
+  if (!rates) throw new Error(`No price table for ${model}`)
+  let imageCount = 0
+  const { instructions = "", ...rest } = request
+  const text = JSON.stringify(rest, (key, value) => {
+    if (key === "image_url") {
+      imageCount += 1
+      return ""
+    }
+    return value
+  })
+  const instructionTokens = Math.ceil(instructions.length / 4)
+  const otherTokens = Math.ceil(text.length / 4) + imageCount * 1_500
+  return roundCost(
+    (instructionTokens *
+      (instructionsCached
+        ? rates.cachedInput
+        : Math.max(rates.input, rates.cacheWriteInput)) +
+      otherTokens * rates.input +
+      0.5 * (request.max_output_tokens ?? 0) * rates.output) /
       1_000_000
   )
 }
@@ -215,6 +288,35 @@ function keychainApiKey(service, account, apiKeyEnv = "OPENAI_API_KEY", env = pr
   }
 }
 
+/**
+ * Resolve the provider credential and how it is presented. A provider with an
+ * `authTokenEnv` (Anthropic) accepts an OAuth access token as a bearer
+ * credential when no API key is set in the environment.
+ */
+function resolveCredential(provider, { keychainService, keychainAccount, env }) {
+  const authToken = provider.authTokenEnv
+    ? env[provider.authTokenEnv]?.trim()
+    : null
+  if (authToken && !env[provider.apiKeyEnv]) {
+    return { apiKey: authToken, scheme: "bearer" }
+  }
+  return {
+    apiKey: keychainApiKey(
+      keychainService,
+      keychainAccount,
+      provider.apiKeyEnv,
+      env
+    ),
+    scheme: "api-key",
+  }
+}
+
+function wireFor(provider, { effort, credentialScheme } = {}) {
+  return provider.api === "anthropic-messages"
+    ? anthropicMessagesWire({ effort, credentialScheme })
+    : openaiResponsesWire
+}
+
 async function atomicWriteJson(path, value) {
   await mkdir(dirname(path), { recursive: true })
   const temporaryPath = `${path}.tmp`
@@ -239,6 +341,7 @@ async function apiRequest({
   idempotencyKey,
   retries = 6,
   fetchImpl = globalThis.fetch,
+  wire = openaiResponsesWire,
 }) {
   for (let attempt = 0; attempt <= retries; attempt += 1) {
     const startedAt = Date.now()
@@ -246,12 +349,8 @@ async function apiRequest({
     try {
       response = await fetchImpl(apiUrl, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-          "Idempotency-Key": idempotencyKey,
-        },
-        body: JSON.stringify(body),
+        headers: wire.headers({ apiKey, idempotencyKey }),
+        body: JSON.stringify(wire.encode(body)),
         signal: globalThis.AbortSignal.timeout(180_000),
       })
     } catch (error) {
@@ -261,14 +360,12 @@ async function apiRequest({
     }
     if (response.ok) {
       return {
-        response: await response.json(),
+        response: wire.decode(await response.json(), body),
         latencyMs: Date.now() - startedAt,
       }
     }
     const errorText = await response.text()
-    const retryable =
-      response.status === 429 ||
-      (response.status >= 500 && response.status <= 504)
+    const retryable = wire.retryable(response.status)
     if (!retryable || attempt === retries) {
       throw new Error(
         `${apiErrorPrefix} ${response.status}: ${sanitizedApiError(
@@ -425,7 +522,7 @@ async function loadContext(paths) {
   return sections.join("\n\n")
 }
 
-async function validateOnly({ apiKey, apiUrl, apiErrorPrefix, project, model, prices, requestReasoning, credentialCheckMaxTokens = 32, fetchImpl = globalThis.fetch, stdout = process.stdout }) {
+async function validateOnly({ apiKey, apiUrl, apiErrorPrefix, project, model, prices, requestReasoning, credentialCheckMaxTokens = 32, fetchImpl = globalThis.fetch, stdout = process.stdout, wire = openaiResponsesWire }) {
   const body = {
     model,
     store: false,
@@ -455,6 +552,7 @@ async function validateOnly({ apiKey, apiUrl, apiErrorPrefix, project, model, pr
       `semiotic-evals/credential-check/${project}/${model}`
     ),
     fetchImpl,
+    wire,
   })
   const rawOutput = extractOutputText(response)
   const parsed = JSON.parse(rawOutput)
@@ -513,6 +611,10 @@ export async function runEvalRun({ argv, env, fetchImpl, stdout, stderr = proces
       )
   )
   const validate = hasArg(argv, "validate-only")
+  // A dry run builds every request to count it and bound its cost. It reads
+  // no credential, sends nothing, and writes nothing.
+  const dryRun = hasArg(argv, "dry-run")
+  const effort = argValue(argv, "effort") ?? provider.effort ?? null
   if (models.length === 0) {
     throw new Error(`${provider.label} has no default models; pass --models`)
   }
@@ -521,7 +623,8 @@ export async function runEvalRun({ argv, env, fetchImpl, stdout, stderr = proces
   let priceRevision = provider.priceRevision
   let hasPriceTable = provider.hasPriceTable === true
   let apiKey = null
-  if (provider.priceSource === "litellm-model-info") {
+  let credentialScheme = "api-key"
+  if (provider.priceSource === "litellm-model-info" && !dryRun) {
     const proxyRoot = liteLLMProxyRoot(
       argValue(argv, "base-url") ??
         env[provider.baseUrlEnv] ??
@@ -565,7 +668,7 @@ export async function runEvalRun({ argv, env, fetchImpl, stdout, stderr = proces
       )
     }
   }
-  if (provider.projectEnv && !project) {
+  if (provider.projectEnv && !project && !dryRun) {
     throw new Error("--project or OPENAI_PROJECT_ID is required")
   }
   if (prices && models.some((model) => !prices[model])) {
@@ -573,7 +676,7 @@ export async function runEvalRun({ argv, env, fetchImpl, stdout, stderr = proces
       `Models must have a locked price table: ${Object.keys(prices).join(", ")}`
     )
   }
-  if (!validate) {
+  if (!validate && !dryRun) {
     if (!hasArg(argv, "confirm-spend")) {
       throw new Error(
         "Paid evaluation requires --confirm-spend"
@@ -593,14 +696,18 @@ export async function runEvalRun({ argv, env, fetchImpl, stdout, stderr = proces
     }
   }
 
-  apiKey ??= keychainApiKey(
-    keychainService,
-    keychainAccount,
-    provider.apiKeyEnv,
-    env,
-  )
-  if (!apiKey) throw new Error(`${provider.apiKeyEnv} was empty`)
-  if (validate) {
+  if (!dryRun && !apiKey) {
+    const credential = resolveCredential(provider, {
+      keychainService,
+      keychainAccount,
+      env,
+    })
+    apiKey = credential.apiKey
+    credentialScheme = credential.scheme
+    if (!apiKey) throw new Error(`${provider.apiKeyEnv} was empty`)
+  }
+  const wire = wireFor(provider, { effort, credentialScheme })
+  if (validate && !dryRun) {
     await validateOnly({
       apiKey,
       apiUrl,
@@ -612,6 +719,7 @@ export async function runEvalRun({ argv, env, fetchImpl, stdout, stderr = proces
       credentialCheckMaxTokens: provider.credentialCheckMaxTokens,
       fetchImpl,
       stdout,
+      wire,
     })
     return
   }
@@ -619,12 +727,13 @@ export async function runEvalRun({ argv, env, fetchImpl, stdout, stderr = proces
   const firstTryJobs = await readJson(
     join(root, "evals/first-try/jobs.json")
   )
-  const firstTryContextPaths = {
-    llms: ["ai/reference.md", "docs/public/llms.txt"],
-    skill: ["ai/reference.md", "agent-skill/semiotic-charts/SKILL.md"],
-  }
+  const firstTryContextPaths = FIRST_TRY_CONTEXTS
   if (!firstTryContextPaths[firstTryContext]) {
-    throw new Error("--first-try-context must be llms or skill")
+    throw new Error(
+      `--first-try-context must be one of: ${Object.keys(
+        firstTryContextPaths
+      ).join(", ")}`
+    )
   }
   const groundingJobs = await readJson(
     join(root, "evals/grounding/jobs.json")
@@ -650,21 +759,57 @@ export async function runEvalRun({ argv, env, fetchImpl, stdout, stderr = proces
     new Set(groundingJobs.jobs.map(({ condition }) => condition))
   )
   const contextText = await loadContext(firstTryContextPaths[firstTryContext])
+  // The minimal context adds the signature card of each fixture's reference
+  // component. That discloses the component, so this condition measures
+  // prop-level correctness after selection, not component choice.
+  let contextFor = () => contextText
+  if (firstTryContext === "minimal") {
+    const schema = await readJson(join(root, "ai/schema.json"))
+    const { metadataForComponent } = createRequire(import.meta.url)(
+      "../ai/componentMetadata.cjs"
+    )
+    const fixtures = await readJson(join(root, "evals/first-try/fixtures.json"))
+    const referenceComponents = new Map(
+      fixtures.fixtures.map(({ id, proposal }) => [id, proposal?.component])
+    )
+    contextFor = (job) => {
+      const component = referenceComponents.get(job.fixtureId)
+      return `${contextText}\n\n# Component signature\n${componentSignatureCard(
+        schema,
+        component,
+        { importPath: metadataForComponent(component).importPath }
+      )}`
+    }
+  }
+  const packageVersion = (await readJson(join(root, "package.json"))).version
+  const filters = {
+    suites: suites ? [...suites] : null,
+    firstTryFixtureIds: firstTryFixtureIds ? [...firstTryFixtureIds] : null,
+    groundingFixtureIds: groundingFixtureIds ? [...groundingFixtureIds] : null,
+    groundingConditions: groundingConditions ? [...groundingConditions] : null,
+  }
+  const sameSelection = (left, right) =>
+    JSON.stringify(left == null ? null : [...left].sort()) ===
+    JSON.stringify(right == null ? null : [...right].sort())
   const manifestPath = join(outputDirectory, "run-manifest.json")
   const manifest = await existingJson(manifestPath, {
     version: 1,
     provider: provider.id,
     clientVersion: provider.clientVersion,
+    // Identify the release and fixtures a result belongs to, so reports can
+    // be tracked per release.
+    packageVersion,
+    fixtureRevisions: {
+      firstTry: firstTryJobs.fixtureRevision,
+      grounding: groundingJobs.fixtureRevision,
+    },
+    date: new Date().toISOString().slice(0, 10),
+    ...(effort ? { effort } : {}),
     priceRevision,
     models,
     trialId,
     firstTryContext,
-    filters: {
-      suites: suites ? [...suites] : null,
-      firstTryFixtureIds: firstTryFixtureIds ? [...firstTryFixtureIds] : null,
-      groundingFixtureIds: groundingFixtureIds ? [...groundingFixtureIds] : null,
-      groundingConditions: groundingConditions ? [...groundingConditions] : null,
-    },
+    filters,
     projectFingerprint: digest(project ?? provider.id).slice(0, 12),
     maxUsd,
     startedAt: new Date().toISOString(),
@@ -672,17 +817,35 @@ export async function runEvalRun({ argv, env, fetchImpl, stdout, stderr = proces
     requests: [],
   })
   if (
-    manifest.projectFingerprint !== digest(project ?? provider.id).slice(0, 12) ||
-    manifest.priceRevision !== priceRevision ||
-    manifest.trialId !== trialId
-    || manifest.firstTryContext !== firstTryContext
-    || (manifest.provider ?? "openai") !== provider.id
+    !dryRun &&
+    (manifest.projectFingerprint !==
+      digest(project ?? provider.id).slice(0, 12) ||
+      manifest.priceRevision !== priceRevision ||
+      manifest.trialId !== trialId ||
+      manifest.firstTryContext !== firstTryContext ||
+      !sameSelection(manifest.models, models) ||
+      (manifest.filters !== undefined &&
+        Object.entries(filters).some(
+          ([key, value]) =>
+            manifest.filters[key] !== undefined &&
+            !sameSelection(manifest.filters[key], value)
+        )) ||
+      (manifest.effort ?? null) !== effort ||
+      (manifest.packageVersion !== undefined &&
+        manifest.packageVersion !== packageVersion) ||
+      (manifest.fixtureRevisions !== undefined &&
+        (manifest.fixtureRevisions.firstTry !== firstTryJobs.fixtureRevision ||
+          manifest.fixtureRevisions.grounding !== groundingJobs.fixtureRevision)) ||
+      (manifest.provider ?? "openai") !== provider.id)
   ) {
     throw new Error("Existing output directory belongs to another run")
   }
   // Manifests written before the provider field existed resume under the
   // openai provider; persist that default so a later resume stays stable.
   manifest.provider ??= "openai"
+  // Older manifests recorded only some filters; retain the selection used
+  // for this resume so the next invocation can check every dimension.
+  manifest.filters = filters
   const completedRequestKeys = new Set(
     manifest.requests.map(
       ({ model, suite, fixtureId }) => `${model}/${suite}/${fixtureId}`
@@ -705,7 +868,13 @@ export async function runEvalRun({ argv, env, fetchImpl, stdout, stderr = proces
           firstTryJobs.fixtureRevision,
           provider.clientVersion,
         ),
-        context: firstTryContextPaths[firstTryContext],
+        context:
+          firstTryContext === "minimal"
+            ? [
+                ...firstTryContextPaths.minimal,
+                "ai/schema.json#reference-component-signature",
+              ]
+            : firstTryContextPaths[firstTryContext],
       },
       results: [],
     })
@@ -748,25 +917,88 @@ export async function runEvalRun({ argv, env, fetchImpl, stdout, stderr = proces
     }
   }
 
+  const requestBody = async (candidate) =>
+    candidate.suite === "first-try"
+      ? firstTryRequest(
+          candidate.model,
+          candidate.job,
+          contextFor(candidate.job),
+          provider.requestReasoning,
+        )
+      : await groundingRequest(
+          candidate.model,
+          candidate.job,
+          provider.requestReasoning,
+        )
+  const upperBoundFor = (candidate, body) =>
+    requestUpperBoundCost(candidate.model, wire.budgetRequest(body), prices)
+
+  if (dryRun) {
+    const count = (key) => {
+      const totals = {}
+      for (const candidate of pending) {
+        totals[candidate[key]] = (totals[candidate[key]] ?? 0) + 1
+      }
+      return totals
+    }
+    let upperBoundUsd = 0
+    let estimatedUsd = 0
+    // Requests with identical instructions share a cached prefix once the
+    // first concurrent batch has been sent.
+    const sharedInstructions = new Map()
+    for (const candidate of pending) {
+      const body = await requestBody(candidate)
+      upperBoundUsd += upperBoundFor(candidate, body) ?? 0
+      const shared = body.instructions
+        ? `${candidate.model}\u0000${digest(body.instructions)}`
+        : null
+      const earlier = shared ? (sharedInstructions.get(shared) ?? 0) : 0
+      if (shared) sharedInstructions.set(shared, earlier + 1)
+      estimatedUsd +=
+        requestEstimatedCost(candidate.model, body, prices, {
+          instructionsCached: earlier >= concurrency,
+        }) ?? 0
+    }
+    stdout.write(
+      `${JSON.stringify(
+        {
+          dryRun: true,
+          provider: provider.id,
+          models,
+          trialId,
+          firstTryContext,
+          packageVersion,
+          fixtureRevisions: {
+            firstTry: firstTryJobs.fixtureRevision,
+            grounding: groundingJobs.fixtureRevision,
+          },
+          ...(effort ? { effort } : {}),
+          requests: {
+            total: pending.length,
+            bySuite: count("suite"),
+            byModel: count("model"),
+          },
+          priceRevision,
+          // A rough planning estimate, and the bound the spend ceiling
+          // reserves: every request at its highest input rate with its whole
+          // output budget used. Null when prices are unknown.
+          estimatedUsd: prices ? roundCost(estimatedUsd) : null,
+          upperBoundUsd: prices ? roundCost(upperBoundUsd) : null,
+        },
+        null,
+        2
+      )}\n`
+    )
+    return
+  }
+
   let completedThisRun = 0
   for (let offset = 0; offset < pending.length; ) {
     const candidates = pending.slice(offset, offset + concurrency)
     const prepared = []
     for (const candidate of candidates) {
-      const body =
-        candidate.suite === "first-try"
-          ? firstTryRequest(
-              candidate.model,
-              candidate.job,
-              contextText,
-              provider.requestReasoning,
-            )
-          : await groundingRequest(
-              candidate.model,
-              candidate.job,
-              provider.requestReasoning,
-            )
-      const upperBound = requestUpperBoundCost(candidate.model, body, prices)
+      const body = await requestBody(candidate)
+      const upperBound = upperBoundFor(candidate, body)
       if (prices && spentUsd + upperBound > maxUsd) {
         if (prepared.length === 0) {
           throw new Error(
@@ -803,6 +1035,7 @@ export async function runEvalRun({ argv, env, fetchImpl, stdout, stderr = proces
           body: candidate.body,
           idempotencyKey,
           fetchImpl,
+          wire,
         })
         const rawOutput = extractOutputText(response)
         return {
@@ -861,6 +1094,12 @@ export async function runEvalRun({ argv, env, fetchImpl, stdout, stderr = proces
   manifest.completedAt = new Date().toISOString()
   manifest.estimatedUsd = hasPriceTable ? roundCost(spentUsd) : null
   manifest.requestCount = manifest.requests.length
+  // The model ids the provider reported serving, beside the ids requested.
+  manifest.resolvedModels = [
+    ...new Set(
+      manifest.requests.map(({ resolvedModel }) => resolvedModel).filter(Boolean)
+    ),
+  ].sort()
   await atomicWriteJson(manifestPath, manifest)
   stdout.write(
     `${JSON.stringify(

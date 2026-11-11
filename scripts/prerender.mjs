@@ -39,7 +39,7 @@ const ROUTE_DOCS_MANIFEST = "llms-routes.json"
 // here inherit the shell's generic description/og tags. Listing top-level
 // sections meaningfully helps indexing — every chart page should not ship
 // the same description as the landing page.
-const taskIndex = JSON.parse(readFileSync(resolve(__dirname, "../docs/public/tasks/index.json"), "utf8"))
+const taskIndex = JSON.parse(readFileSync(resolve(__dirname, "../ai/task-packets/index.json"), "utf8"))
 const ROUTE_META = {
   ...Object.fromEntries(taskIndex.tasks.map((task) => [task.route.slice(1), {
     title: `${task.title} — Semiotic`, description: task.summary,

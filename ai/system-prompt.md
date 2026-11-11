@@ -24,6 +24,9 @@ request.
    `semiotic/line`; otherwise use its family subpath.
 4. Validate with `prepareChart`, `diagnoseConfig`, or `evaluateChart`, or
    `npx -p semiotic semiotic-ai --doctor`; repair reported contract failures.
+   Each validation finding is structured (`validation.issues`, or `validation`
+   on a `VALIDATION` diagnosis): apply its `patch` or `suggestion` (for example
+   rename `x` to `xAccessor`) instead of guessing from the sentence.
 5. When a renderer is available, require non-empty render evidence and run the
    accessibility audit before presenting the result.
 

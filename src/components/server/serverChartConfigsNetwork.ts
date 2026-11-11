@@ -531,6 +531,8 @@ export const treeDiagram: ChartConfig = {
         ? rest.nodeLabel || rest.nodeIdAccessor
         : undefined,
       ...hierarchyFrameProps(data, colorBy, colorScheme, common, rest),
+      // nodeSize sets the tree's node radius, as it does on the HOC.
+      ...(rest.nodeSize != null && { nodeSize: rest.nodeSize }),
       nodeStyle: composeHierarchyNodeStyle(
         baseNodeStyle,
         colorBy,

@@ -22,8 +22,13 @@ import {
   GENERATOR,
   readSource,
   TASK_IDS,
+  taskEvidenceIdentity,
   taskOutputs
 } from "./lib/ai-task-packets.mjs"
+import {
+  docsTaskPackets,
+  listTaskPacketFiles
+} from "./lib/docs-task-packets.mjs"
 import { normalizeTaskRunReport } from "./verify-ai-tasks.mjs"
 
 const repository = resolve(dirname(fileURLToPath(import.meta.url)), "..")
@@ -45,6 +50,7 @@ const fixtureInputs = [
   "vitest.config.mts",
   GENERATOR,
   "scripts/lib/ai-task-packets.mjs",
+  "scripts/lib/docs-task-packets.mjs",
   "scripts/verify-ai-tasks.mjs",
   "docs/src/App.jsx",
   "docs/src/components/PageLayout.jsx",
@@ -78,7 +84,8 @@ function changeJSON(root, path, change) {
   put(root, path, JSON.stringify(value, null, 2) + "\n")
 }
 
-function verification(packets) {
+function verification(root, packets = buildTaskPackets(root)) {
+  const identity = taskEvidenceIdentity(root)
   const targets = (kind) =>
     [...new Set(packets.map((packet) => packet.evidence.checks[kind]))].sort()
   return {
@@ -91,9 +98,9 @@ function verification(packets) {
       architecture: "x64",
       browser: "Playwright Chromium"
     },
-    taskRevisions: Object.fromEntries(
-      packets.map((packet) => [packet.id, packet.identity.sourceRevision])
-    ),
+    taskRevisions: identity.revisions,
+    runtime: identity.runtime,
+    harness: identity.harness,
     runs: ["unit", "browser"].map((kind) => ({
       kind,
       targets: targets(kind),
@@ -107,7 +114,7 @@ function verification(packets) {
   }
 }
 
-test("task packets preserve exact authored sources and deterministic human/machine mirrors", (t) => {
+test("task packets preserve exact authored sources in one deterministic human/machine copy", (t) => {
   const root = fixture(t)
   const packets = buildTaskPackets(root)
   assert.deepEqual(
@@ -116,14 +123,9 @@ test("task packets preserve exact authored sources and deterministic human/machi
   )
   const outputs = taskOutputs(packets)
   assert.deepEqual(outputs, taskOutputs(buildTaskPackets(root)))
-  assert.equal(outputs.size, 14)
+  assert.equal(outputs.size, 7)
   for (const [path, content] of outputs) {
-    if (path.startsWith("ai/task-packets/")) {
-      assert.equal(
-        content,
-        outputs.get(path.replace("ai/task-packets/", "docs/public/tasks/"))
-      )
-    }
+    assert.ok(path.startsWith("ai/task-packets/"), path)
     put(root, path, content)
   }
   assert.deepEqual(compareOutputs(root, outputs), [])
@@ -145,32 +147,44 @@ test("task packets preserve exact authored sources and deterministic human/machi
       .dataRequired,
     true
   )
-  const damagedPath = "docs/public/tasks/update-live-chart.md"
+  const damagedPath = "ai/task-packets/update-live-chart.md"
   put(root, damagedPath, "outdated guidance\n")
   assert.deepEqual(compareOutputs(root, outputs), [damagedPath])
   assert.equal(readSource(root, damagedPath), "outdated guidance\n")
 })
 
-for (const [label, path] of [
-  ["runtime behavior", "src/runtime.ts"],
-  ["shared fixture", "docs/src/pages/tasks/examples/live-chart.ts"],
-  ["browser assertions", "integration-tests/docs-examples-task-live.spec.ts"],
-  ["generation logic", "scripts/lib/ai-task-packets.mjs"],
-  ["verification runner", "scripts/verify-ai-tasks.mjs"],
-  ["task page host", "docs/src/pages/tasks/TaskPage.tsx"],
-  ["route registration", "docs/src/App.jsx"],
-  ["shared page layout", "docs/src/components/PageLayout.jsx"],
-  ["code presentation", "docs/src/components/CodeBlock.jsx"],
-  ["source import aliases", "vite.shared.mjs"],
-  ["docs Vite configuration", "vite.docs.config.mjs"],
-  ["installed dependency lock", "package-lock.json"],
-  ["test environment setup", "src/setupTests.ts"],
-  ["task TypeScript configuration", "scripts/ai-tasks/tsconfig.json"]
+// `guidance` sources are part of the packet identity. The rest are what a
+// recorded run executed: they invalidate that run without rewriting the packet.
+for (const [label, path, scope] of [
+  ["runtime behavior", "src/runtime.ts", "runtime"],
+  ["dependency manifest", "package.json", "runtime"],
+  ["shared fixture", "docs/src/pages/tasks/examples/live-chart.ts", "guidance"],
+  [
+    "browser assertions",
+    "integration-tests/docs-examples-task-live.spec.ts",
+    "guidance"
+  ],
+  ["generation logic", "scripts/lib/ai-task-packets.mjs", "guidance"],
+  ["verification runner", "scripts/verify-ai-tasks.mjs", "guidance"],
+  ["task page host", "docs/src/pages/tasks/TaskPage.tsx", "guidance"],
+  ["route registration", "docs/src/App.jsx", "harness"],
+  ["shared page layout", "docs/src/components/PageLayout.jsx", "harness"],
+  ["code presentation", "docs/src/components/CodeBlock.jsx", "harness"],
+  ["source import aliases", "vite.shared.mjs", "harness"],
+  ["docs Vite configuration", "vite.docs.config.mjs", "harness"],
+  ["served packet route", "scripts/lib/docs-task-packets.mjs", "harness"],
+  ["installed dependency lock", "package-lock.json", "harness"],
+  ["test environment setup", "src/setupTests.ts", "harness"],
+  [
+    "task TypeScript configuration",
+    "scripts/ai-tasks/tsconfig.json",
+    "guidance"
+  ]
 ]) {
   test(`changing ${label} invalidates recorded execution instead of retaining a success claim`, (t) => {
     const root = fixture(t)
     const before = buildTaskPackets(root)
-    const record = verification(before)
+    const record = verification(root, before)
     assert.ok(
       buildTaskPackets(root, { verification: record }).every(
         (packet) => packet.evidence.status === "supported-in-scope"
@@ -180,6 +194,11 @@ for (const [label, path] of [
       changeJSON(root, path, (lock) => {
         lock.packages["node_modules/react"].version =
           "0.0.0-source-drift-fixture"
+      })
+    } else if (path === "package.json") {
+      // A lifecycle script is not part of any packet's selected contract.
+      changeJSON(root, path, (pkg) => {
+        pkg.scripts["source-drift-fixture"] = "true"
       })
     } else if (path.endsWith("tsconfig.json")) {
       changeJSON(root, path, (config) => {
@@ -200,12 +219,155 @@ for (const [label, path] of [
           packet.evidence.observed === null
       )
     )
-    assert.notEqual(
-      after[0].identity.sourceRevision,
-      before[0].identity.sourceRevision
-    )
+    if (scope === "guidance") {
+      assert.notEqual(
+        after[0].identity.sourceRevision,
+        before[0].identity.sourceRevision
+      )
+    } else {
+      // The claim is withdrawn, but the packet's own identity is untouched.
+      assert.deepEqual(
+        after.map((packet) => packet.identity),
+        before.map((packet) => packet.identity)
+      )
+    }
   })
 }
+
+test("runtime and harness edits leave committed packets byte-identical once evidence is not current", (t) => {
+  const root = fixture(t)
+  for (const record of [null, { schemaVersion: 1, taskRevisions: {} }]) {
+    put(root, "src/runtime.ts", "export const retainedRecordLimit = 4\n")
+    const before = taskOutputs(buildTaskPackets(root, { verification: record }))
+    put(root, "src/runtime.ts", "export const retainedRecordLimit = 5\n")
+    put(root, "src/another-module.ts", "export const added = true\n")
+    changeJSON(root, "package-lock.json", (lock) => {
+      lock.packages["node_modules/react"].version = `0.0.0-${record ? "b" : "a"}`
+    })
+    put(
+      root,
+      "docs/src/App.jsx",
+      readSource(root, "docs/src/App.jsx") + "\n// Unrelated route.\n"
+    )
+    assert.deepEqual(
+      taskOutputs(buildTaskPackets(root, { verification: record })),
+      before
+    )
+  }
+})
+
+test("only the public contract a packet copies can change its identity", (t) => {
+  const root = fixture(t)
+  const before = buildTaskPackets(root)
+  const live = (packets) =>
+    packets.find((packet) => packet.id === "update-live-chart")
+  const totals = (packets) =>
+    packets.find((packet) => packet.id === "compare-category-totals")
+  // A property the BarChart task does not select, and a component no task uses.
+  changeJSON(root, "ai/schema.json", (schema) => {
+    const list = Array.isArray(schema) ? schema : schema.tools ?? schema.components
+    const bar = list.find(
+      (entry) => (entry.name ?? entry.function?.name) === "BarChart"
+    )
+    const parameters = bar.parameters ?? bar.function.parameters
+    parameters.properties.unselectedFixtureProp = { type: "string" }
+    list.push({
+      ...structuredClone(bar),
+      ...(bar.function
+        ? { function: { ...structuredClone(bar.function), name: "FixtureChart" } }
+        : { name: "FixtureChart" })
+    })
+  })
+  const unrelated = buildTaskPackets(root)
+  assert.deepEqual(
+    unrelated.map((packet) => packet.identity.sourceRevision),
+    before.map((packet) => packet.identity.sourceRevision)
+  )
+  // A selected property changes that task alone.
+  changeJSON(root, "ai/schema.json", (schema) => {
+    const list = Array.isArray(schema) ? schema : schema.tools ?? schema.components
+    const bar = list.find(
+      (entry) => (entry.name ?? entry.function?.name) === "BarChart"
+    )
+    const parameters = bar.parameters ?? bar.function.parameters
+    parameters.properties.valueAccessor.description =
+      "Changed contract wording."
+  })
+  const selected = buildTaskPackets(root)
+  assert.notEqual(
+    totals(selected).identity.sourceRevision,
+    totals(before).identity.sourceRevision
+  )
+  assert.equal(
+    live(selected).identity.sourceRevision,
+    live(before).identity.sourceRevision
+  )
+})
+
+test("the docs server and build expose the single committed copy at /tasks/", (t) => {
+  const root = fixture(t)
+  for (const [path, content] of taskOutputs(buildTaskPackets(root)))
+    put(root, path, content)
+  put(root, "ai/task-packets/.DS_Store", "ignored")
+  put(root, "ai/task-packets/Not A Packet.txt", "ignored")
+  assert.deepEqual(listTaskPacketFiles(root), [
+    "compare-category-totals.json",
+    "compare-category-totals.md",
+    "correct-published-chart.json",
+    "correct-published-chart.md",
+    "index.json",
+    "update-live-chart.json",
+    "update-live-chart.md"
+  ])
+  const outDir = resolve(root, "docs/build")
+  const plugin = docsTaskPackets({ root, outDir })
+  plugin.closeBundle()
+  for (const name of listTaskPacketFiles(root))
+    assert.equal(
+      readFileSync(resolve(outDir, "tasks", name), "utf8"),
+      readSource(root, `ai/task-packets/${name}`)
+    )
+  let handler
+  plugin.configureServer({ middlewares: { use: (fn) => (handler = fn) } })
+  const request = (url, method = "GET") => {
+    const response = { headers: {}, body: undefined, statusCode: undefined }
+    let passed = false
+    handler(
+      { url, method },
+      {
+        setHeader: (name, value) => (response.headers[name] = value),
+        end: (body) => (response.body = body),
+        set statusCode(value) {
+          response.statusCode = value
+        }
+      },
+      () => (passed = true)
+    )
+    return { ...response, passed }
+  }
+  const served = request("/tasks/update-live-chart.md?download=1")
+  assert.equal(served.statusCode, 200)
+  assert.match(served.headers["Content-Type"], /^text\/markdown/)
+  assert.equal(
+    served.body.toString("utf8"),
+    readSource(root, "ai/task-packets/update-live-chart.md")
+  )
+  assert.match(
+    request("/tasks/index.json").headers["Content-Type"],
+    /^application\/json/
+  )
+  // Page routes, unknown names, traversal, and writes fall through to Vite.
+  for (const [url, method] of [
+    ["/tasks/update-live-chart"],
+    ["/tasks/missing.json"],
+    ["/tasks/../package.json"],
+    ["/tasks/%2e%2e/package.json"],
+    ["/tasks/Not A Packet.txt"],
+    ["/other/index.json"],
+    ["/tasks/index.json", "POST"]
+  ])
+    assert.equal(request(url, method).passed, true, url)
+})
 
 for (const kind of ["example", "unit", "browser"]) {
   test(`a declared ${kind} outside the conventional folders still invalidates its task evidence`, (t) => {
@@ -222,7 +384,7 @@ for (const kind of ["example", "unit", "browser"]) {
       else task.checks[kind] = path
     })
     const before = buildTaskPackets(root)
-    const record = verification(before)
+    const record = verification(root, before)
     put(root, path, "export const expected = 19\n")
     const after = buildTaskPackets(root, { verification: record }).find(
       (packet) => packet.id === "update-live-chart"
@@ -358,12 +520,13 @@ test("source paths keep file and directory symlinks inside the checkout", (t) =>
 
 test("release and direct publish check generated task freshness", () => {
   const { scripts } = JSON.parse(readSource(repository, "package.json"))
-  for (const lifecycle of ["release:check", "prepublishOnly"]) {
-    assert.ok(
-      scripts[lifecycle].split(" && ").includes("npm run check:ai-tasks"),
-      `${lifecycle} must refuse stale task packets`
-    )
-  }
+  assert.ok(
+    scripts["release:check"].split(" && ").includes("npm run check:ai-tasks"),
+    "release:check must refuse stale task packets"
+  )
+  // A direct `npm publish` runs the same gate list instead of a second,
+  // hand-maintained copy of it.
+  assert.equal(scripts.prepublishOnly, "npm run release:check")
 })
 
 for (const [path, change] of [
@@ -408,21 +571,27 @@ test("installed-version comparison rejects mismatches and keeps the packed/deplo
 })
 
 test("verification must match the task revision, include real passing counts and name its environment", (t) => {
-  const packets = buildTaskPackets(fixture(t))
+  const root = fixture(t)
+  const packets = buildTaskPackets(root)
   const packet = packets[0]
-  const record = verification(packets)
+  const record = verification(root, packets)
+  const revision = taskEvidenceIdentity(root).revisions[packet.id]
+  assert.equal(
+    evidenceFor(record, packet.id, revision, packet.evidence.checks).status,
+    "supported-in-scope"
+  )
+  assert.notEqual(
+    revision,
+    packet.identity.sourceRevision,
+    "a recorded run is bound to more than the packet identity"
+  )
   assert.equal(
     evidenceFor(record, packet.id, "sha256:changed", packet.evidence.checks)
       .status,
     "stale"
   )
   assert.equal(
-    evidenceFor(
-      null,
-      packet.id,
-      packet.identity.sourceRevision,
-      packet.evidence.checks
-    ).status,
+    evidenceFor(null, packet.id, revision, packet.evidence.checks).status,
     "proposed"
   )
   for (const change of [
@@ -474,12 +643,7 @@ test("verification must match the task revision, include real passing counts and
     change(invalid)
     assert.throws(
       () =>
-        evidenceFor(
-          invalid,
-          packet.id,
-          packet.identity.sourceRevision,
-          packet.evidence.checks
-        ),
+        evidenceFor(invalid, packet.id, revision, packet.evidence.checks),
       /verification|environment|run|command/i
     )
   }
@@ -734,7 +898,7 @@ test("CLI generation is reproducible and --check detects drift without overwriti
   const generated = run()
   assert.equal(generated.status, 0, generated.stderr)
   assert.equal(run("--check").status, 0)
-  const path = "docs/public/tasks/update-live-chart.md"
+  const path = "ai/task-packets/update-live-chart.md"
   const original = readFileSync(resolve(root, path), "utf8")
   const repeated = run()
   assert.equal(repeated.status, 0, repeated.stderr)

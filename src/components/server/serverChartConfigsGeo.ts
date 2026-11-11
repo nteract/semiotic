@@ -4,7 +4,8 @@ import { createColorScale, getColor, getSize, DEFAULT_COLOR } from "../charts/sh
 import { getMinMax } from "../charts/shared/minMax"
 import { filterSparseArray } from "../charts/shared/sparseArray"
 import { GEO_BACKGROUND_AREA_STYLE } from "../charts/shared/geoStyleDefaults"
-import { type ChartConfig } from "./serverChartConfigShared"
+import { type ChartConfig, primitiveStyleOverrides } from "./serverChartConfigShared"
+import { mergeShapeStyle } from "../charts/shared/mergeShapeStyle"
 import { composeStyleRules, makeNodeRuleContext, type StyleRule } from "../charts/shared/styleRules"
 import { buildFlowMapLineStyle } from "../charts/geo/flowMapLineStyle"
 import { getSequentialInterpolator } from "../charts/shared/colorPalettes"
@@ -151,7 +152,8 @@ export const choroplethMap: ChartConfig = {
     return {
       areas: rest.areas,
       projection: rest.projection || "equalEarth",
-      areaStyle,
+      // Top-level stroke/strokeWidth/opacity apply last, as on the HOC.
+      areaStyle: mergeShapeStyle(areaStyle as (d: Datum) => Datum, primitiveStyleOverrides(rest)),
       valueAccessor: rest.valueAccessor,
       colorScheme: scheme,
       graticule: rest.graticule,
@@ -192,7 +194,8 @@ export const proportionalSymbolMap: ChartConfig = {
       yAccessor: rest.yAccessor || "lat",
       areas: rest.areas,
       areaStyle: rest.areaStyle || GEO_BACKGROUND_AREA_STYLE,
-      pointStyle,
+      // Top-level stroke/strokeWidth/opacity apply last, as on the HOC.
+      pointStyle: mergeShapeStyle(pointStyle as (d: Datum) => Datum, primitiveStyleOverrides(rest)),
       sizeBy: rest.sizeBy,
       colorBy,
       colorScheme,
@@ -254,7 +257,8 @@ export const distanceCartogram: ChartConfig = {
       lines: rest.lines,
       xAccessor: rest.xAccessor || "lon",
       yAccessor: rest.yAccessor || "lat",
-      pointStyle,
+      // Top-level stroke/strokeWidth/opacity apply last, as on the HOC.
+      pointStyle: mergeShapeStyle(pointStyle, primitiveStyleOverrides(rest)),
       colorBy,
       colorScheme,
       projection: rest.projection || "mercator",
@@ -369,6 +373,9 @@ export const flowMap: ChartConfig = {
     const [widthMin, widthMax] = rest.edgeWidthRange ?? [1, 8]
     const edgeOpacity = rest.edgeOpacity ?? 0.6
     const edgeLinecap = rest.edgeLinecap ?? "round"
+    // An explicit pointRadius sizes the endpoint dots, as on the HOC. The
+    // unset default stays at this path's established 4.
+    const flowPointRadius = typeof rest.pointRadius === "number" ? rest.pointRadius : 4
 
     return {
       lines,
@@ -384,16 +391,24 @@ export const flowMap: ChartConfig = {
       graticule: rest.graticule,
       fitPadding: rest.fitPadding,
       colorScheme,
-      lineStyle: buildFlowMapLineStyle({
-        valueAccessor,
-        valueDomain,
-        edgeWidthRange: [widthMin, widthMax],
-        resolveStroke: resolveEdgeColor,
-        edgeOpacity,
-        edgeLinecap,
-        styleRules: rest.styleRules as StyleRule[] | undefined,
-      }),
-      pointStyle: () => ({ fill: "#333", r: 4, fillOpacity: 0.8 }),
+      // Top-level stroke/strokeWidth/opacity apply last to flows and
+      // endpoint dots, as on the HOC.
+      lineStyle: mergeShapeStyle(
+        buildFlowMapLineStyle({
+          valueAccessor,
+          valueDomain,
+          edgeWidthRange: [widthMin, widthMax],
+          resolveStroke: resolveEdgeColor,
+          edgeOpacity,
+          edgeLinecap,
+          styleRules: rest.styleRules as StyleRule[] | undefined,
+        }) as (d: Datum) => Datum,
+        primitiveStyleOverrides(rest)
+      ),
+      pointStyle: mergeShapeStyle(
+        () => ({ fill: "#333", r: flowPointRadius, fillOpacity: 0.8 }),
+        primitiveStyleOverrides(rest)
+      ),
       ...common,
     }
   },

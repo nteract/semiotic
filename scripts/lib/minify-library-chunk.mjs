@@ -1,76 +1,46 @@
-import { gzipSync, constants } from "node:zlib"
 import { minify } from "terser"
 import { cleanPureAnnotations } from "./clean-pure-annotations.mjs"
-import { chunkLoadEffect } from "./strip-pure-bare-imports.mjs"
-import { restoreModuleInitializers } from "./restore-module-initializers.mjs"
 import { mergeLibraryImports } from "./merge-library-imports.mjs"
 
-export const libraryCompressionCandidates = [
-  { hoist_funs: true },
-  { hoist_funs: false },
-  { hoist_funs: true, hoist_vars: true },
-  { hoist_funs: false, hoist_vars: true },
-  { hoist_funs: true, reduce_funcs: true },
-  { hoist_funs: false, reduce_funcs: true },
-  { hoist_funs: false, reduce_funcs: true, passes: 2 }
-]
-
-// Terser optimizes JavaScript length. Published chunks are transferred
-// separately, where declaration ordering also affects
-// gzip's dictionary. Compare equivalent compression strategies per chunk.
-// Reparse the best output once: optimizations exposed by printing/annotation
-// cleanup are not always reached by Terser's passes over the same AST.
-export async function minifyLibraryChunk(
-  code,
-  { format, filename, options, allowFunctionReduction = false }
-) {
-  let best
-  for (let round = 0; round < 2; round++) {
-    const input = best?.code ?? code
-    const inputMap = best?.map
-    const preserveInert =
-      round > 0 && format === "esm" && chunkLoadEffect(input, filename) === null
-    for (const compression of libraryCompressionCandidates) {
-      // Callers can opt out when downstream import unions grow: function
-      // cloning can shrink one chunk while widening a consumer's bundle.
-      if (compression.reduce_funcs && !allowFunctionReduction) continue
-      const result = await minify(
-        { [filename]: input },
-        {
-          ...(format === "esm" ? { module: true } : { toplevel: true }),
-          ...options,
-          compress: { ...options.compress, ...compression },
-          ...(inputMap
-            ? { sourceMap: { ...options.sourceMap, content: inputMap } }
-            : {})
-        }
-      )
-      if (!result.code) throw new Error(`Empty minified chunk: ${filename}`)
-      // Module initializers need hints for named-import tree shaking. Terser
-      // already optimized function bodies; retaining JSX hints there adds
-      // transfer bytes without helping discard unused module exports.
-      if (format === "esm" && compression.hoist_vars)
-        result.code = restoreModuleInitializers(result.code)
-      result.code = cleanPureAnnotations(result.code, {
-        functionBodyAnnotations: false
-      })
-      if (preserveInert && chunkLoadEffect(result.code, filename)) continue
-      const bytes = gzipSync(result.code, {
-        level: constants.Z_BEST_COMPRESSION
-      }).length
-      if (!best || bytes < best.bytes) best = { ...result, bytes }
+// One Terser run per chunk with the shared library options.
+//
+// Through 3.13.3 this module tried seven compression variants over two rounds
+// (14 Terser runs per chunk, serially) and kept the smallest gzip result.
+// Measured on the 210 ESM chunks of one production build (Node 22.23.2,
+// Terser 5.51.2, Apple M5 Max, 2026-11-10):
+//
+//   - An application that bundles Semiotic is unaffected, because its own
+//     minifier rewrites the chunks anyway. Across the 43 cold-consumer named
+//     imports the eager gzip total moved 2,294,900 -> 2,295,727 B (+0.04%).
+//   - A consumer that loads the published files without bundling downloads
+//     0.33% more: 2,817,422 -> 2,826,609 B summed over every published ESM
+//     file, with whole-entry graphs between +0.1% (server) and +0.9% (utils).
+//   - The production build fell from 368 s to 41-45 s (two runs).
+//
+// The configuration in `library-minification-options.mjs` is the variant that
+// came closest to the search when applied to every chunk on its own (the
+// other six ranged from +0.37% to +0.92%). A second run over its own output
+// recovers only 0.06% for twice the minification time, so each chunk is
+// minified once.
+export async function minifyLibraryChunk(code, { format, filename, options }) {
+  const result = await minify(
+    { [filename]: code },
+    {
+      ...(format === "esm" ? { module: true } : { toplevel: true }),
+      ...options
     }
+  )
+  if (!result.code) throw new Error(`Empty minified chunk: ${filename}`)
+  // Module initializers need hints for named-import tree shaking. Terser
+  // already optimized function bodies; retaining JSX hints there adds
+  // transfer bytes without helping discard unused module exports.
+  return {
+    code: cleanPureAnnotations(result.code, { functionBodyAnnotations: false }),
+    map: result.map
   }
-  if (!best) throw new Error(`No inert minification candidate: ${filename}`)
-  return { code: best.code, map: best.map }
 }
 
-export function minifyLibraryPlugin({
-  format,
-  options,
-  allowFunctionReduction,
-  mergeImports = false
-}) {
+export function minifyLibraryPlugin({ format, options, mergeImports = false }) {
   return {
     name: "minify-library-chunk",
     async renderChunk(code, info) {
@@ -80,8 +50,7 @@ export function minifyLibraryPlugin({
       return minifyLibraryChunk(code, {
         format,
         filename: info.path,
-        options,
-        allowFunctionReduction
+        options
       })
     }
   }

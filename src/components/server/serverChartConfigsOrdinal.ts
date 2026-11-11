@@ -19,6 +19,7 @@ import {
   mergeServerRegressionAnnotation
 } from "./serverChartConfigShared"
 import { normalizeGradient } from "../charts/shared/gradient"
+import { overlayFrameStyle } from "../charts/shared/frameStyleProps"
 export { likertChart } from "./serverOrdinalLikert"
 export { gaugeChart } from "./serverOrdinalGauge"
 
@@ -237,6 +238,7 @@ export const barChart: ChartConfig = {
       colorScheme,
       barPadding: rest.barPadding,
       ...(rest.roundedTop != null && { roundedTop: rest.roundedTop }),
+      ...(rest.baselinePadding != null && { baselinePadding: rest.baselinePadding }),
       ...common,
       ...(annotations && { annotations }),
       gradientFill: normalizeBarGradientFill(common.gradientFill),
@@ -263,6 +265,7 @@ export const stackedBarChart: ChartConfig = {
       oSort: rest.sort ?? false,
       barPadding: rest.barPadding,
       ...(rest.roundedTop != null && { roundedTop: rest.roundedTop }),
+      ...(rest.baselinePadding != null && { baselinePadding: rest.baselinePadding }),
       ...common,
       gradientFill: normalizeBarGradientFill(common.gradientFill),
       pieceStyle: buildBarPieceStyle(
@@ -294,6 +297,7 @@ export const groupedBarChart: ChartConfig = {
       oSort: rest.sort ?? false,
       barPadding: rest.barPadding,
       ...(rest.roundedTop != null && { roundedTop: rest.roundedTop }),
+      ...(rest.baselinePadding != null && { baselinePadding: rest.baselinePadding }),
       ...common,
       gradientFill: normalizeBarGradientFill(common.gradientFill),
       pieceStyle: buildBarPieceStyle(
@@ -454,6 +458,8 @@ export const boxPlot: ChartConfig = {
     // Preserve explicit false; the pipeline shows outliers by default.
     ...(rest.showOutliers != null && { showOutliers: rest.showOutliers }),
     ...(rest.outlierRadius != null && { outlierRadius: rest.outlierRadius }),
+    // The HOC maps categoryPadding onto the frame's barPadding.
+    ...(rest.categoryPadding != null && { barPadding: rest.categoryPadding }),
     ...common,
     summaryStyle: buildBoxPlotSummaryStyle(
       data,
@@ -580,11 +586,16 @@ export const radarChart: ChartConfig = {
       colorAccessor: colorKey,
       colorScheme,
       connectorAccessor: seriesAccessor,
-      connectorStyle,
       pieceStyle,
       rExtent: rest.valueExtent || [0],
       oLabel: "",
       ...common,
+      // Layer `frameProps.connectorStyle` over the series outline, as the HOC
+      // does, instead of letting the `...common` spread replace it.
+      connectorStyle: overlayFrameStyle(
+        connectorStyle,
+        common.connectorStyle as Datum | ((d: Datum) => Datum) | undefined
+      ),
       ...(rest.categoryFormat && { oFormat: rest.categoryFormat }),
       showLegend: common.showLegend ?? Boolean(colorKey)
     }
@@ -612,6 +623,8 @@ export const swimlaneChart: ChartConfig = {
       ...(rest.valueExtent && { rExtent: rest.valueExtent }),
       // roundedTop rounds the outer ends of each lane (mirrors SwimlaneChart.tsx).
       ...(rest.roundedTop != null && { roundedTop: rest.roundedTop }),
+      // rTickValues pins the value-axis ticks, as it does on the HOC.
+      ...(rest.rTickValues != null && { rTickValues: rest.rTickValues }),
       ...common,
       gradientFill: normalizeBarGradientFill(common.gradientFill),
       pieceStyle: buildBarPieceStyle(

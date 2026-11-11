@@ -13,6 +13,7 @@ import { type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
 import { validateArrayData } from "../shared/validateChartData"
 import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
+import { useSelectionAwareFrameStyle } from "../shared/useSelectionAwareFrameStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { resolveOrdinalAxisChrome } from "../../legendLayout"
@@ -34,6 +35,7 @@ export interface BoxPlotProps<TDatum extends Datum = Datum> extends BaseChartPro
   /** Ordered summary styling; fieldless thresholds use each category's median. Statistical fields include `n`, `min`, `q1`, `median`, `q3`, `max`, and `mean`. */
   styleRules?: StyleRule[]
   showOutliers?: boolean
+  /** Outlier point radius in pixels. @default 3 */
   outlierRadius?: number
   categoryPadding?: number
   enableHover?: boolean
@@ -110,7 +112,7 @@ export const BoxPlot = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ fo
     categoryAccessor = "category", valueAccessor = "value",
     orientation = "vertical", valueFormat,
     colorBy, colorScheme, styleRules,
-    showOutliers = true, outlierRadius: _outlierRadius = 3, categoryPadding = 20,
+    showOutliers = true, outlierRadius, categoryPadding = 20,
     tooltip, annotations, valueExtent, frameProps = {}, selection, linkedHover,
     onObservation, onClick, hoverHighlight, chartId,
     loading, loadingContent, emptyContent,
@@ -177,7 +179,7 @@ export const BoxPlot = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ fo
     colorBy,
     colorScale: setup.colorScale,
     color: colorProp, themeCategorical, colorScheme, categoryIndexMap,
-    userPieceStyle: undefined,                  // BoxPlot doesn't expose summaryStyle through frameProps
+    userPieceStyle: undefined,                  // Boxes are summary marks; see userSummaryStyle below
     stroke, strokeWidth, opacity,
     effectiveSelectionHook: setup.effectiveSelectionHook,
     resolvedSelection: setup.resolvedSelection,
@@ -186,6 +188,13 @@ export const BoxPlot = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ fo
     styleRules,
     resolveRuleValue,
   })
+  // `frameProps.summaryStyle` takes the place of the style above. Keep it
+  // selection-aware so linked selection and legend highlighting still dim.
+  const userSummaryStyle = useSelectionAwareFrameStyle(
+    frameProps.summaryStyle,
+    setup.effectiveSelectionHook,
+    setup.resolvedSelection,
+  )
 
   const defaultTooltipContent = useMemo(() => buildStatsTooltip(), [])
 
@@ -210,6 +219,7 @@ export const BoxPlot = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ fo
     projection: orientation === "horizontal" ? "horizontal" : "vertical",
     summaryStyle,
     showOutliers,
+    ...(outlierRadius !== undefined && { outlierRadius }),
     size: [width, height],
     responsiveWidth: props.responsiveWidth,
     responsiveHeight: props.responsiveHeight,
@@ -238,6 +248,7 @@ export const BoxPlot = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ fo
     // frameProps spread last for escape hatch, but pieceStyle excluded to prevent
     // clobbering the HOC's color-resolved, selection-wrapped style function.
     ...Object.fromEntries(Object.entries(frameProps).filter(([k]) => k !== "pieceStyle")),
+    ...(userSummaryStyle && { summaryStyle: userSummaryStyle }),
   }
 
   return <StreamOrdinalFrame ref={frameRef} {...streamProps} />

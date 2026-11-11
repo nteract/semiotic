@@ -15,6 +15,7 @@ import { buildOrdinalTooltip } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { validateArrayData } from "../shared/validateChartData"
 import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
+import { overlayFrameStyle } from "../shared/frameStyleProps"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { resolveOrdinalAxisChrome } from "../../legendLayout"
@@ -236,7 +237,7 @@ export const RadarChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */
   })
   if (error) return <ChartError componentName="RadarChart" message={error} width={width} height={height} />
 
-  const connectorStyle = (d: Datum): Style => {
+  const seriesOutlineStyle = (d: Datum): Style => {
     const piece = typeof pieceStyle === "function" ? pieceStyle(d) : {}
     const fill = typeof piece.fill === "string" ? piece.fill : undefined
     return {
@@ -247,6 +248,13 @@ export const RadarChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */
       opacity: 0.7,
     }
   }
+  // `frameProps.connectorStyle` layers over the series outline. It is kept out
+  // of the trailing frameProps spread so it cannot replace the outline's
+  // series color, and it used to be dropped there instead of applied.
+  const connectorStyle = overlayFrameStyle(
+    seriesOutlineStyle,
+    frameProps.connectorStyle,
+  ) as (d: Datum) => Style
 
   const streamProps: StreamOrdinalFrameProps = {
     chartType: "point",

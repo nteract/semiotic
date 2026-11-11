@@ -48,6 +48,7 @@ function fixture(t, version) {
     "scripts/sync-release-version.mjs",
     "scripts/prepare-cloud-run-release.mjs",
     "scripts/lib/cloud-run-manifest.mjs",
+    "scripts/lib/schema-file-format.mjs",
     "deploy/cloud-run/package.json",
     "deploy/cloud-run/.gcloudignore"
   ]) {

@@ -418,7 +418,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       // cannot serialize it; `centerContent` and backgroundColor are likewise
       // kept out of the tool definition.
       valueFormat: { type: "function", omitFromSchema: true },
-      centerContent: { type: ["object", "string", "number", "function"], omitFromSchema: true },
+      centerContent: { type: ["boolean", "object", "string", "number", "function"], omitFromSchema: true },
       centerLabel: { type: "string", description: "Caption drawn as SVG text beneath the center value (for example a unit or metric name)." },
       showScaleLabels: { type: "boolean", description: "Show the min, max, and threshold scale labels. Defaults to true, and false in context and sparkline modes." },
       backgroundColor: { type: "string", omitFromSchema: true },

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom"
 import PageLayout from "../../components/PageLayout"
-import index from "../../../public/tasks/index.json"
+import index from "../../../../ai/task-packets/index.json"
 import "./tasks.css"
 
 export default function TasksPage() {

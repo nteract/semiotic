@@ -30,6 +30,13 @@ export function buildBoxplotScene(ctx: OrdinalSceneContext, _layout: OrdinalLayo
   const nodes: OrdinalSceneNode[] = []
   const isVertical = projection === "vertical"
   const showOutliers = config.showOutliers !== false
+  // A missing, negative, or non-finite radius keeps the 3px default.
+  const outlierRadius =
+    typeof config.outlierRadius === "number" &&
+    Number.isFinite(config.outlierRadius) &&
+    config.outlierRadius >= 0
+      ? config.outlierRadius
+      : 3
 
   for (const col of ctx.orderedColumns) {
     const values = col.pieceData
@@ -95,7 +102,7 @@ export function buildBoxplotScene(ctx: OrdinalSceneContext, _layout: OrdinalLayo
           type: "point",
           x: o.px,
           y: o.py,
-          r: 3,
+          r: outlierRadius,
           // Outlier fill: box fill > theme secondary > hardcoded #999.
           style: {
             fill: style.fill || ctx.config.themeSemantic?.secondary || "#999",

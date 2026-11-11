@@ -2,10 +2,17 @@
 // Re-exported by `semiotic/ai` to keep the chart catalog focused.
 
 export { validateProps } from "./charts/shared/validateProps"
-export type { ValidationResult } from "./charts/shared/validateProps"
+export type {
+  ValidationResult,
+  ValidationReport,
+  ValidationIssue,
+  ValidationIssueCode,
+  ValidationPatch
+} from "./charts/shared/validateProps"
 
 export { diagnoseConfig } from "./charts/shared/diagnoseConfig"
 export type { Diagnosis, DiagnosisResult } from "./charts/shared/diagnoseConfig"
+export type { DiagnosisValidationDetail } from "./charts/shared/diagnoseTypes"
 export {
   diagnoseTokenEncoding,
   normalizeTokenEncoding,

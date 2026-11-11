@@ -167,7 +167,8 @@ test("publish gates exclude PR-only baselines", () => {
     )
   }
 
-  for (const scriptName of ["release:check", "prepublishOnly"]) {
+  assert.equal(packageJson.scripts.prepublishOnly, "npm run release:check")
+  for (const scriptName of ["release:check"]) {
     for (const baselineCommand of baselineCommands) {
       assert.doesNotMatch(
         packageJson.scripts[scriptName],
@@ -490,7 +491,8 @@ test("release typechecks prepare self-imports before browser work in clean PR an
   const root = new URL("../", import.meta.url)
   const { scripts } = JSON.parse(readFileSync(new URL("package.json", root), "utf8"))
   assert.equal(scripts["pretypescript:tests"], "npm run build:declarations")
-  for (const name of ["release:check", "prepublishOnly"]) {
+  assert.equal(scripts.prepublishOnly, "npm run release:check")
+  for (const name of ["release:check"]) {
     const commands = scripts[name].split(" && ")
     assert.ok(commands.indexOf("npm run typescript:tests") >= 0)
     assert.ok(commands.indexOf("npm run typescript:tests") < commands.indexOf("npm run test:examples:source"))

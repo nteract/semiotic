@@ -31,7 +31,7 @@ describe("ProcessSankey layout quality product (M10)", () => {
     { label: "equal endpoints", domain: ["2026-01-01T12:30", "2026-01-01T13:30+01:00"] }
   ])("accepts $label domains through public config diagnostics", ({ domain }) => {
     const props = { domain, edges: [] }
-    expect(validateProps("ProcessSankey", props)).toEqual({ valid: true, errors: [] })
+    expect(validateProps("ProcessSankey", props)).toEqual({ valid: true, errors: [], issues: [] })
     expect(diagnoseProcessSankeyProps(props)).toEqual([])
     expect(diagnoseConfig("ProcessSankey", props).diagnoses)
       .not.toContainEqual(expect.objectContaining({ code: "PROCESS_SANKEY_BAD_DOMAIN" }))

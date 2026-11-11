@@ -11,6 +11,47 @@
 
 A React data visualization library designed for AI-assisted development and streaming data. 
 
+## Install
+
+```bash
+npm install semiotic
+```
+
+Requires React 18.1+ or React 19.
+
+## First Chart
+
+```jsx
+import { LineChart } from "semiotic/xy"
+
+const signups = [
+  { week: 1, signups: 120 },
+  { week: 2, signups: 180 },
+  { week: 3, signups: 150 },
+  { week: 4, signups: 240 },
+  { week: 5, signups: 310 },
+]
+
+export default function SignupsChart() {
+  return (
+    <LineChart
+      data={signups}
+      xAccessor="week"
+      yAccessor="signups"
+      xLabel="Week"
+      yLabel="Signups"
+      title="Weekly signups"
+    />
+  )
+}
+```
+
+`xAccessor` and `yAccessor` name the fields to plot, and `title` gives the
+chart its accessible name. `LineChart` needs numeric x values (numbers or
+timestamps); for named categories such as month names, use `BarChart` with
+`categoryAccessor`. More complete examples follow under
+[Quick Examples](#quick-examples).
+
 Start with a small chart component. Add network graphs, streaming data and
 coordinated views when the task needs them. Structured schemas, diagnostics
 and rendering evidence help coding assistants implement, check and repair
@@ -25,6 +66,331 @@ evidence scope; source availability does not establish installed or deployed par
 <!-- semiotic-readme-dashboard:start -->
 <img src="./docs/public/assets/img/semiotic-release-dashboard.svg" alt="Semiotic release dashboard showing chart count, bundle sizes, capability coverage, chart families, and documentation growth" width="100%">
 <!-- semiotic-readme-dashboard:end -->
+
+## Quick Examples
+
+Each example is a complete component. Examples that use one chart family
+import from that family's entry; the coordination examples import from
+`semiotic`, which exports `LinkedCharts` and `ChartContainer` alongside the
+charts.
+
+### Standard Charts
+
+Line, bar, scatter, and area charts share the same accessor-driven API:
+
+```jsx
+import { LineChart } from "semiotic/xy"
+import { BarChart } from "semiotic/ordinal"
+
+const revenue = [
+  { month: 1, revenue: 4200 },
+  { month: 2, revenue: 5100 },
+  { month: 3, revenue: 6800 },
+  { month: 4, revenue: 5900 },
+]
+
+const departments = [
+  { department: "Design", region: "East", sales: 12 },
+  { department: "Sales", region: "West", sales: 30 },
+  { department: "Support", region: "East", sales: 18 },
+]
+
+export function StandardCharts() {
+  return (
+    <>
+      <LineChart
+        data={revenue}
+        xAccessor="month" yAccessor="revenue"
+        curve="monotoneX" showPoints
+        title="Monthly revenue"
+      />
+      <BarChart
+        data={departments}
+        categoryAccessor="department" valueAccessor="sales"
+        orientation="horizontal" colorBy="region"
+        title="Sales by department"
+      />
+    </>
+  )
+}
+```
+
+### Coordinated Dashboard
+
+Hover one chart and highlight the same data in another through a shared selection:
+
+```jsx
+import { LinkedCharts, Scatterplot, BarChart } from "semiotic"
+
+const people = [
+  { age: 31, income: 52, region: "East" },
+  { age: 44, income: 78, region: "West" },
+  { age: 38, income: 61, region: "East" },
+  { age: 52, income: 90, region: "West" },
+]
+
+const totals = [
+  { region: "East", total: 113 },
+  { region: "West", total: 168 },
+]
+
+export function RegionDashboard() {
+  return (
+    <LinkedCharts>
+      <Scatterplot
+        data={people} xAccessor="age" yAccessor="income" colorBy="region"
+        linkedHover={{ name: "hl", fields: ["region"] }}
+        selection={{ name: "hl" }}
+        title="Income by age"
+      />
+      <BarChart
+        data={totals} categoryAccessor="region" valueAccessor="total"
+        selection={{ name: "hl" }}
+        title="Total income by region"
+      />
+    </LinkedCharts>
+  )
+}
+```
+
+### Streaming Metrics with Decay
+
+Live data fades old points, flashes new ones, flags stale feeds. Omit `data`
+and push through a ref from an effect, an event handler, or a socket callback:
+
+```jsx
+import { useEffect, useRef } from "react"
+import { RealtimeLineChart } from "semiotic/realtime"
+
+export function CpuMonitor() {
+  const chartRef = useRef(null)
+
+  useEffect(() => {
+    // Replace the timer with your metrics source.
+    const timer = setInterval(() => {
+      chartRef.current?.push({ time: Date.now(), value: 40 + Math.random() * 20 })
+    }, 250)
+    return () => clearInterval(timer)
+  }, [])
+
+  return (
+    <RealtimeLineChart
+      ref={chartRef}
+      timeAccessor="time"
+      valueAccessor="value"
+      decay={{ type: "exponential", halfLife: 100 }}
+      staleness={{ threshold: 5000, showBadge: true }}
+      title="CPU load"
+    />
+  )
+}
+```
+
+### Network Graphs
+
+Force-directed graphs and Sankey diagrams — same API as LineChart:
+
+```jsx
+import { ForceDirectedGraph, SankeyDiagram } from "semiotic/network"
+
+const people = [
+  { id: "Ada", team: "Platform" },
+  { id: "Lin", team: "Design" },
+  { id: "Sam", team: "Platform" },
+]
+
+const friendships = [
+  { source: "Ada", target: "Lin" },
+  { source: "Lin", target: "Sam" },
+]
+
+const budgetFlows = [
+  { from: "Budget", to: "Design", amount: 40 },
+  { from: "Budget", to: "Engineering", amount: 60 },
+  { from: "Engineering", to: "Platform", amount: 35 },
+]
+
+export function Networks() {
+  return (
+    <>
+      <ForceDirectedGraph
+        nodes={people} edges={friendships}
+        colorBy="team" nodeSize={8} showLabels
+        title="Who works with whom"
+      />
+      <SankeyDiagram
+        edges={budgetFlows}
+        sourceAccessor="from" targetAccessor="to" valueAccessor="amount"
+        title="Where the budget goes"
+      />
+    </>
+  )
+}
+```
+
+### Geographic Visualization
+
+Choropleth maps, flow maps, and distance cartograms with canvas rendering,
+zoom/pan, tile basemaps, and animated particles. This example joins your rows
+to the bundled `world-110m` geography, which needs the optional `world-atlas`
+peer dependency (`npm install world-atlas`):
+
+```jsx
+import { useEffect, useState } from "react"
+import { ChoroplethMap, mergeData, resolveReferenceGeography } from "semiotic/geo"
+
+const gdpByCountry = [
+  { country: "United States of America", gdp: 27.4 },
+  { country: "China", gdp: 17.8 },
+  { country: "Germany", gdp: 4.5 },
+]
+
+export function WorldGdpMap() {
+  const [areas, setAreas] = useState([])
+
+  useEffect(() => {
+    let cancelled = false
+    resolveReferenceGeography("world-110m").then((world) => {
+      if (cancelled) return
+      setAreas(
+        mergeData(world, gdpByCountry, { featureKey: "properties.name", dataKey: "country" })
+      )
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  return (
+    <ChoroplethMap
+      areas={areas}
+      valueAccessor={(feature) => feature.properties.gdp}
+      colorScheme="viridis" projection="equalEarth" zoomable tooltip
+      title="GDP by country"
+    />
+  )
+}
+```
+
+`FlowMap` and `DistanceCartogram` follow the same accessor pattern. In this
+sketch `airports`, `routes`, and `cities` stand for your own arrays:
+
+```jsx
+import { FlowMap, DistanceCartogram } from "semiotic/geo"
+
+<FlowMap
+  nodes={airports} flows={routes} valueAccessor="passengers"
+  showParticles particleStyle={{ color: "source", speedMultiplier: 1.5 }}
+/>
+
+<DistanceCartogram
+  points={cities} center="rome" costAccessor="travelDays"
+  showRings costLabel="days" lines={routes}
+/>
+```
+
+### Streaming System Monitor
+
+Live service topology with threshold alerting and click-to-inspect:
+
+```jsx
+import { useEffect, useRef } from "react"
+import { StreamNetworkFrame, ChartContainer, DetailsPanel, LinkedCharts } from "semiotic"
+
+export function SystemMonitor() {
+  const chartRef = useRef(null)
+
+  useEffect(() => {
+    // Replace the timer with your request stream.
+    const timer = setInterval(() => {
+      chartRef.current?.push({ source: "API", target: "Orders", value: 15 })
+    }, 500)
+    return () => clearInterval(timer)
+  }, [])
+
+  return (
+    <LinkedCharts>
+      <ChartContainer title="System Monitor" status="live"
+        detailsPanel={
+          <DetailsPanel position="right" trigger="click">
+            {(datum) => <div>{datum.id}: {datum.value} req/s</div>}
+          </DetailsPanel>
+        }>
+        <StreamNetworkFrame ref={chartRef} chartType="sankey"
+          showParticles particleStyle={{ proportionalSpeed: true }}
+          thresholds={{ metric: n => n.value, warning: 100, critical: 250 }}
+        />
+      </ChartContainer>
+    </LinkedCharts>
+  )
+}
+```
+
+## All Chart Components
+
+| Category | Components |
+|---|---|
+| **XY** | `LineChart` `AreaChart` `DifferenceChart` `StackedAreaChart` `BumpChart` `Scatterplot` `ConnectedScatterplot` `BubbleChart` `Heatmap` `QuadrantChart` `MultiAxisLineChart` `MinimapChart` `CandlestickChart` `WaterfallChart` `ScatterplotMatrix` |
+| **Categorical** | `BarChart` `StackedBarChart` `GroupedBarChart` `LikertChart` `SwimlaneChart` `FunnelChart` `SwarmPlot` `BoxPlot` `Histogram` `ViolinPlot` `RidgelinePlot` `DotPlot` `PieChart` `DonutChart` `GaugeChart` `RadarChart` |
+| **Network** | `ForceDirectedGraph` `ChordDiagram` `SankeyDiagram` `ProcessSankey` `TreeDiagram` `Treemap` `CirclePack` `OrbitDiagram` |
+| **Geo** (`semiotic/geo`) | `ChoroplethMap` `ProportionalSymbolMap` `FlowMap` `DistanceCartogram` |
+| **Realtime** | `RealtimeLineChart` `RealtimeHistogram` `TemporalHistogram` `RealtimeSwarmChart` `RealtimeWaterfallChart` `RealtimeHeatmap` |
+| **Physics** (`semiotic/physics`) | `GaltonBoardChart` `EventDropChart` `UnitPileChart` `CollisionSwarmChart` `GauntletChart` `CrucibleChart` `ProcessFlowChart` `PacketFlowChart` `ChainReactionChart` |
+| **Value and text** | `BigNumber` (`semiotic/value`) `WordCloud` (`semiotic/wordcloud`) |
+| **Custom layouts** | `XYCustomChart` `OrdinalCustomChart` `NetworkCustomChart` `GeoCustomChart` (`semiotic/geo`) `PhysicsCustomChart` (`semiotic/physics`) |
+| **Coordination** | `LinkedCharts` |
+| **Layout** | `ChartGrid` `ContextLayout` `CategoryColorProvider` |
+| **Frames** | `StreamXYFrame` `StreamOrdinalFrame` `StreamNetworkFrame` `StreamGeoFrame` (`semiotic/geo`) `StreamPhysicsFrame` (`semiotic/physics`) |
+
+### Vega-Lite Translation
+
+Paste a Vega-Lite spec, get a Semiotic chart:
+
+```jsx
+import { fromVegaLite } from "semiotic/data"
+import { configToJSX, fromConfig } from "semiotic"
+
+const config = fromVegaLite({
+  mark: "bar",
+  data: { values: [{ a: "A", b: 28 }, { a: "B", b: 55 }] },
+  encoding: {
+    x: { field: "a", type: "nominal" },
+    y: { field: "b", type: "quantitative" },
+  },
+})
+
+// Render directly
+const { componentName, props } = fromConfig(config)
+// → componentName: "BarChart", props: { data, categoryAccessor: "a", valueAccessor: "b" }
+
+// Or generate JSX code
+configToJSX(config)
+// → <BarChart data={[...]} categoryAccessor="a" valueAccessor="b" />
+```
+
+Supports bar, line, area, point, rect, arc, tick marks with encoding translation
+for color, size, aggregation, and binning.
+
+### Conversation Arc Telemetry
+
+Capture and replay the path an AI-assisted chart session took:
+
+```ts
+import {
+  createLocalStorageConversationArcSink,
+  enableConversationArc,
+  getConversationArcStore,
+  loadConversationArc,
+  registerConversationArcSink,
+} from "semiotic/ai"
+
+const sink = createLocalStorageConversationArcSink({ key: "my-app:arc" })
+registerConversationArcSink(sink)
+enableConversationArc({ sessionId: "session-abc" })
+
+getConversationArcStore().record({ type: "chart-rendered", component: "LineChart" })
+loadConversationArc(sink.load(), { enabled: false })
+```
 
 ## What's New in 3.13.3
 
@@ -187,205 +553,6 @@ Semiotic is for projects that outgrow those libraries — when you need
 network graphs alongside time series, streaming data alongside static
 snapshots, or coordinated views across chart types.
 
-## Install
-
-```bash
-npm install semiotic
-```
-
-Requires React 18.1+ or React 19.
-
-## Quick Examples
-
-### Coordinated Dashboard
-
-Hover one chart and highlight the same data in another through a shared selection:
-
-```jsx
-import { LinkedCharts, Scatterplot, BarChart } from "semiotic"
-
-<LinkedCharts>
-  <Scatterplot
-    data={data} xAccessor="age" yAccessor="income" colorBy="region"
-    linkedHover={{ name: "hl", fields: ["region"] }}
-    selection={{ name: "hl" }}
-  />
-  <BarChart
-    data={summary} categoryAccessor="region" valueAccessor="total"
-    selection={{ name: "hl" }}
-  />
-</LinkedCharts>
-```
-
-### Streaming Metrics with Decay
-
-Live data fades old points, flashes new ones, flags stale feeds:
-
-```jsx
-import { RealtimeLineChart } from "semiotic"
-
-const chartRef = useRef()
-chartRef.current.push({ time: Date.now(), value: cpuLoad })
-
-<RealtimeLineChart
-  ref={chartRef}
-  timeAccessor="time"
-  valueAccessor="value"
-  decay={{ type: "exponential", halfLife: 100 }}
-  staleness={{ threshold: 5000, showBadge: true }}
-/>
-```
-
-### Network Graphs
-
-Force-directed graphs and Sankey diagrams — same API as LineChart:
-
-```jsx
-import { ForceDirectedGraph, SankeyDiagram } from "semiotic"
-
-<ForceDirectedGraph
-  nodes={people} edges={friendships}
-  colorBy="team" nodeSize={8} showLabels
-/>
-
-<SankeyDiagram
-  edges={budgetFlows}
-  sourceAccessor="from" targetAccessor="to" valueAccessor="amount"
-/>
-```
-
-### Geographic Visualization
-
-Choropleth maps, flow maps, and distance cartograms with canvas rendering,
-zoom/pan, tile basemaps, and animated particles:
-
-```jsx
-import { ChoroplethMap, FlowMap, DistanceCartogram } from "semiotic/geo"
-
-<ChoroplethMap
-  areas={geoJsonFeatures} valueAccessor="gdp"
-  colorScheme="viridis" projection="equalEarth" zoomable tooltip
-/>
-
-<FlowMap
-  nodes={airports} flows={routes} valueAccessor="passengers"
-  showParticles particleStyle={{ color: "source", speedMultiplier: 1.5 }}
-/>
-
-<DistanceCartogram
-  points={cities} center="rome" costAccessor="travelDays"
-  showRings costLabel="days" lines={routes}
-/>
-```
-
-### Streaming System Monitor
-
-Live service topology with threshold alerting and click-to-inspect:
-
-```jsx
-import { StreamNetworkFrame, ChartContainer, DetailsPanel, LinkedCharts } from "semiotic"
-
-const chartRef = useRef()
-chartRef.current.push({ source: "API", target: "Orders", value: 15 })
-
-<LinkedCharts>
-  <ChartContainer title="System Monitor" status="live"
-    detailsPanel={
-      <DetailsPanel position="right" trigger="click">
-        {(datum) => <div>{datum.id}: {datum.value} req/s</div>}
-      </DetailsPanel>
-    }>
-    <StreamNetworkFrame ref={chartRef} chartType="sankey"
-      showParticles particleStyle={{ proportionalSpeed: true }}
-      thresholds={{ metric: n => n.value, warning: 100, critical: 250 }}
-    />
-  </ChartContainer>
-</LinkedCharts>
-```
-
-### Standard Charts
-
-Line, bar, scatter, and area charts share the same accessor-driven API:
-
-```jsx
-import { LineChart, BarChart } from "semiotic"
-
-<LineChart
-  data={salesData}
-  xAccessor="month" yAccessor="revenue"
-  curve="monotoneX" showPoints
-/>
-
-<BarChart
-  data={categoryData}
-  categoryAccessor="department" valueAccessor="sales"
-  orientation="horizontal" colorBy="region"
-/>
-```
-
-## All Chart Components
-
-| Category | Components |
-|---|---|
-| **XY** | `LineChart` `AreaChart` `DifferenceChart` `StackedAreaChart` `Scatterplot` `ConnectedScatterplot` `BubbleChart` `Heatmap` `QuadrantChart` `MultiAxisLineChart` `MinimapChart` `CandlestickChart` `ScatterplotMatrix` |
-| **Categorical** | `BarChart` `StackedBarChart` `GroupedBarChart` `LikertChart` `SwimlaneChart` `FunnelChart` `SwarmPlot` `BoxPlot` `Histogram` `ViolinPlot` `RidgelinePlot` `DotPlot` `PieChart` `DonutChart` `GaugeChart` |
-| **Network** | `ForceDirectedGraph` `ChordDiagram` `SankeyDiagram` `ProcessSankey` `TreeDiagram` `Treemap` `CirclePack` `OrbitDiagram` |
-| **Geo** | `ChoroplethMap` `ProportionalSymbolMap` `FlowMap` `DistanceCartogram` |
-| **Realtime** | `RealtimeLineChart` `RealtimeHistogram` `RealtimeSwarmChart` `RealtimeWaterfallChart` `RealtimeHeatmap` |
-| **Coordination** | `LinkedCharts` |
-| **Layout** | `ChartGrid` `ContextLayout` `CategoryColorProvider` |
-| **Frames** | `StreamXYFrame` `StreamOrdinalFrame` `StreamNetworkFrame` `StreamGeoFrame` |
-
-### Vega-Lite Translation
-
-Paste a Vega-Lite spec, get a Semiotic chart:
-
-```jsx
-import { fromVegaLite } from "semiotic/data"
-import { configToJSX, fromConfig } from "semiotic"
-
-const config = fromVegaLite({
-  mark: "bar",
-  data: { values: [{ a: "A", b: 28 }, { a: "B", b: 55 }] },
-  encoding: {
-    x: { field: "a", type: "nominal" },
-    y: { field: "b", type: "quantitative" },
-  },
-})
-
-// Render directly
-const { componentName, props } = fromConfig(config)
-// → componentName: "BarChart", props: { data, categoryAccessor: "a", valueAccessor: "b" }
-
-// Or generate JSX code
-configToJSX(config)
-// → <BarChart data={[...]} categoryAccessor="a" valueAccessor="b" />
-```
-
-Supports bar, line, area, point, rect, arc, tick marks with encoding translation
-for color, size, aggregation, and binning.
-
-### Conversation Arc Telemetry
-
-Capture and replay the path an AI-assisted chart session took:
-
-```ts
-import {
-  createLocalStorageConversationArcSink,
-  enableConversationArc,
-  getConversationArcStore,
-  loadConversationArc,
-  registerConversationArcSink,
-} from "semiotic/ai"
-
-const sink = createLocalStorageConversationArcSink({ key: "my-app:arc" })
-registerConversationArcSink(sink)
-enableConversationArc({ sessionId: "session-abc" })
-
-getConversationArcStore().record({ type: "chart-rendered", component: "LineChart" })
-loadConversationArc(sink.load(), { enabled: false })
-```
-
 ## Bundle Sizes
 
 Semiotic ships 42 stable JavaScript entry points (41 subpaths plus the root). **Don't import from `"semiotic"` unless you need everything** — use the smallest sub-path that matches your charts or tooling.
@@ -399,48 +566,48 @@ The numbers below are **first-party artifact cost**: the gzip size of Semiotic's
 
 | Entry Point | gzip | What's inside |
 |---|---|---|
-| `semiotic/atlas` | **325 KB** | Motif Braid, Dependency Forest, and Flow Circuit readers |
+| `semiotic/atlas` | **330 KB** | Motif Braid, Dependency Forest, and Flow Circuit readers |
 | `semiotic/atlas/core` | **15 KB** | Network Atlas preparation, projections, and evidence queries |
-| `semiotic/access` | **31 KB** | Chart Access Contract factory and first-wave baseline contracts |
-| `semiotic/evidence` | **48 KB** | Chart Evidence Envelope, deterministic hashing, and publication gate |
-| `semiotic/artifact` | **126 KB** | Renderer-independent contracts, claims, time, policy, grounding, and transfer audits |
+| `semiotic/access` | **32 KB** | Chart Access Contract factory and first-wave baseline contracts |
+| `semiotic/evidence` | **49 KB** | Chart Evidence Envelope, deterministic hashing, and publication gate |
+| `semiotic/artifact` | **128 KB** | Renderer-independent contracts, claims, time, policy, grounding, and transfer audits |
 | `semiotic/artifact/react` | **4 KB** | Accessible progressive disclosure for artifact contracts and policy evaluations |
-| `semiotic/line` | **151 KB** | LineChart only — one-chart micro boundary |
-| `semiotic/xy` | **188 KB** | LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts |
-| `semiotic/ordinal` | **140 KB** | BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts |
-| `semiotic/network` | **184 KB** | ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more |
-| `semiotic/network/zoom` | **193 KB** | Optional virtual network viewport, camera controls and consumer-owned LOD |
+| `semiotic/line` | **156 KB** | LineChart only — one-chart micro boundary |
+| `semiotic/xy` | **195 KB** | LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts |
+| `semiotic/ordinal` | **142 KB** | BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts |
+| `semiotic/network` | **188 KB** | ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more |
+| `semiotic/network/zoom` | **198 KB** | Optional virtual network viewport, camera controls and consumer-owned LOD |
 | `semiotic/network/perspective` | **2 KB** | Isometric pictograms and an accessible perspective toggle (the prop ships in ./network) |
 | `semiotic/network/perspective/core` | **3 KB** | Projection sizing, resolution, and SVG placement helpers |
 | `semiotic/vite` | **1 KB** | Build plugin for unused Semiotic worker assets |
-| `semiotic/geo` | **115 KB** | ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap |
-| `semiotic/wordcloud` | **132 KB** | WordCloud, shaped text placement, and portable layouts |
-| `semiotic/realtime` | **223 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
-| `semiotic/realtime/core` | **221 KB** | Streaming chart types, HOCs, and buffer helpers |
+| `semiotic/geo` | **117 KB** | ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap |
+| `semiotic/wordcloud` | **131 KB** | WordCloud, shaped text placement, and portable layouts |
+| `semiotic/realtime` | **231 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
+| `semiotic/realtime/core` | **230 KB** | Streaming chart types, HOCs, and buffer helpers |
 | `semiotic/realtime/react` | **7 KB** | Stream status and synced push hooks |
 | `semiotic/server` | **290 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
 | `semiotic/server/node` | **290 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
-| `semiotic/server/edge` | **295 KB** | renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard |
-| `semiotic/utils` | **112 KB** | ThemeProvider, numeric/accessibility audits, serialization — no chart components |
-| `semiotic/utils/core` | **103 KB** | Pure theme helpers, numeric/accessibility audits, and serialization |
+| `semiotic/server/edge` | **296 KB** | renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard |
+| `semiotic/utils` | **115 KB** | ThemeProvider, numeric/accessibility audits, serialization — no chart components |
+| `semiotic/utils/core` | **106 KB** | Pure theme helpers, numeric/accessibility audits, and serialization |
 | `semiotic/utils/react` | **9 KB** | ThemeProvider, useTheme, useReducedMotion, useHighContrast, useStreamStatus |
-| `semiotic/recipes` | **118 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
-| `semiotic/recipes/core` | **115 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
+| `semiotic/recipes` | **119 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
+| `semiotic/recipes/core` | **116 KB** | Pure layout functions (waffle, marimekko, flextree, dagre, …) |
 | `semiotic/recipes/react` | **3 KB** | Glyph and React layout-selection helpers |
 | `semiotic/themes` | **13 KB** | Theme presets only (tufte, carbon, etc.) |
 | `semiotic/themes/core` | **13 KB** | Theme presets and token helpers |
-| `semiotic/themes/react` | **8 KB** | ThemeProvider/useTheme and hooks |
+| `semiotic/themes/react` | **9 KB** | ThemeProvider/useTheme and hooks |
 | `semiotic/data` | **5 KB** | bin, rollup, groupBy, pivot, fromVegaLite |
 | `semiotic/value` | **6 KB** | BigNumber — focal-value KPI / scorecard (SingleValueFrame POC) |
-| `semiotic/physics` | **191 KB** | GaltonBoardChart, EventDropChart, UnitPileChart, CollisionSwarmChart, PacketFlowChart, PhysicsCustomChart |
+| `semiotic/physics` | **192 KB** | GaltonBoardChart, EventDropChart, UnitPileChart, CollisionSwarmChart, PacketFlowChart, PhysicsCustomChart |
 | `semiotic/physics/matter` | **1 KB** | Matter.js migration helpers + optional peer guard (no chart components) |
 | `semiotic/physics/rapier` | **1 KB** | Rapier peer guard + adapter decision metadata (no chart components) |
-| `semiotic/ai` | **696 KB** | All schema-backed charts + validation — optimized for LLM code generation |
-| `semiotic/ai/core` | **148 KB** | suggestCharts, auditData, describeChart, repairChartConfig, tool adapters — no chart components |
+| `semiotic/ai` | **710 KB** | All schema-backed charts + validation — optimized for LLM code generation |
+| `semiotic/ai/core` | **151 KB** | suggestCharts, auditData, describeChart, repairChartConfig, tool adapters — no chart components |
 | `semiotic/controls` | **19 KB** | DirectManipulationControl, CircularBrush, LinearBrush, MobileStandardControls, auditVisualizationControls — no frame renderer |
 | `semiotic/rough` | **3 KB** | Optional deterministic Rough.js paint backend — exact Semiotic geometry remains authoritative |
 | `semiotic/text` | **2 KB** | Optional Pretext annotation hook — peer package excluded |
-| `semiotic` | **439 KB** | Full chart API and shared utilities |
+| `semiotic` | **451 KB** | Full chart API and shared utilities |
 
 <!-- semiotic-bundle-sizes:end -->
 
@@ -459,54 +626,54 @@ after a production build with `npm run docs:cold-consumer`.
 <!-- semiotic-cold-consumer:start -->
 <!-- Auto-generated by `scripts/measure-cold-consumer.mjs`. Do not edit by hand. -->
 
-Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → minified/tree-shaken Rolldown (Vite's bundler) ESM build with code splitting and a production `NODE_ENV` → gzip -9 per file. **Initial load** counts the entry and its statically imported chunks; **on demand** counts chunks fetched only when a feature needs them (brushing, marginal graphics, animated transitions, a bare frame's built-in layouts). React/React DOM and optional adapter peers are external; Semiotic and its resolved runtime dependencies are included.
+Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → minified/tree-shaken Rolldown (Vite's bundler) ESM build with code splitting and a production `NODE_ENV` → gzip -9 per file. **Initial load** counts the entry and its statically imported chunks; **on demand** counts chunks fetched only when a feature needs them (brushing, marginal graphics, animated transitions, a bare frame's built-in layouts). **Everything** is the same build with code splitting disabled: the ceiling if every optional feature loads. React/React DOM and optional adapter peers are external; Semiotic and its resolved runtime dependencies are included. The committed baseline also records a single-file esbuild build of each row.
 
-| Public named import | Runtime | gzip initial load | gzip on demand |
-|---|---:|---:|---:|
-| `import { semioticVite } from "semiotic/vite"` | node | **0.6 KiB** | — |
-| `import { getNetworkPerspectiveSize } from "semiotic/network/perspective/core"` | browser | **1.1 KiB** | — |
-| `import { MotifBraidChart } from "semiotic/atlas"` | browser | **112.5 KiB** | 29.4 KiB |
-| `import { prepareNetworkAtlas } from "semiotic/atlas/core"` | browser | **7.1 KiB** | — |
-| `import { LineChart } from "semiotic"` | browser | **126.4 KiB** | 44.3 KiB |
-| `import { LineChart } from "semiotic/xy"` | browser | **126.1 KiB** | 32.4 KiB |
-| `import { LineChart } from "semiotic/line"` | browser | **126.2 KiB** | 32.5 KiB |
-| `import { BarChart } from "semiotic/ordinal"` | browser | **107.2 KiB** | 14.7 KiB |
-| `import { SankeyDiagram } from "semiotic/network"` | browser | **136.3 KiB** | 6.7 KiB |
-| `import { ZoomableNetworkCustomChart } from "semiotic/network/zoom"` | browser | **115.8 KiB** | 29.4 KiB |
-| `import { isometricGlyphs } from "semiotic/network/perspective"` | browser | **1.4 KiB** | — |
-| `import { RealtimeLineChart } from "semiotic/realtime"` | browser | **127.5 KiB** | 42.0 KiB |
-| `import { RingBuffer } from "semiotic/realtime/core"` | browser | **0.7 KiB** | 13.5 KiB |
-| `import { useStreamStatus } from "semiotic/realtime/react"` | browser | **0.8 KiB** | — |
-| `import { GaltonBoardChart } from "semiotic/physics"` | browser | **97.3 KiB** | 2.7 KiB |
-| `import { MATTER_PHYSICS_CAPABILITIES } from "semiotic/physics/matter"` | browser | **0.1 KiB** | — |
-| `import { RAPIER_PHYSICS_CAPABILITIES } from "semiotic/physics/rapier"` | browser | **0.2 KiB** | — |
-| `import { renderChart } from "semiotic/server"` | node | **309.1 KiB** | — |
-| `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **128.6 KiB** | — |
-| `import { renderToImage } from "semiotic/server/node"` | node | **309.5 KiB** | 0.6 KiB |
-| `import { suggestCharts } from "semiotic/ai"` | browser | **32.4 KiB** | 13.5 KiB |
-| `import { suggestCharts } from "semiotic/ai/core"` | browser | **32.2 KiB** | — |
-| `import { buildArtifactContract } from "semiotic/artifact"` | browser | **4.5 KiB** | — |
-| `import { ArtifactInspector } from "semiotic/artifact/react"` | browser | **3.7 KiB** | — |
-| `import { createChartAccessContract } from "semiotic/access"` | browser | **29.3 KiB** | — |
-| `import { toEvidenceEnvelope } from "semiotic/evidence"` | browser | **44.7 KiB** | — |
-| `import { bin } from "semiotic/data"` | browser | **0.9 KiB** | — |
-| `import { ChoroplethMap } from "semiotic/geo"` | browser | **109.3 KiB** | 1.7 KiB |
-| `import { WordCloud } from "semiotic/wordcloud"` | browser | **111.0 KiB** | 39.1 KiB |
-| `import { usePretextAnnotations } from "semiotic/text"` | browser | **1.5 KiB** | — |
-| `import { createRoughRenderMode } from "semiotic/rough"` | browser | **3.1 KiB** | — |
-| `import { resolveThemePreset } from "semiotic/themes"` | browser | **2.6 KiB** | — |
-| `import { resolveThemePreset } from "semiotic/themes/core"` | browser | **2.6 KiB** | — |
-| `import { ThemeProvider } from "semiotic/themes/react"` | browser | **5.7 KiB** | — |
-| `import { validateProps } from "semiotic/utils"` | browser | **10.3 KiB** | — |
-| `import { smartTickFormat } from "semiotic/utils/core"` | browser | **1.1 KiB** | — |
-| `import { useReducedMotion } from "semiotic/utils/react"` | browser | **0.3 KiB** | — |
-| `import { waffleLayout } from "semiotic/recipes"` | browser | **1.6 KiB** | — |
-| `import { waffleLayout } from "semiotic/recipes/core"` | browser | **1.6 KiB** | — |
-| `import { Glyph } from "semiotic/recipes/react"` | browser | **0.8 KiB** | — |
-| `import { BigNumber } from "semiotic/value"` | browser | **5.9 KiB** | — |
-| `import { DirectManipulationControl } from "semiotic/controls"` | browser | **1.5 KiB** | — |
+| Public named import | Runtime | gzip initial load | gzip on demand | gzip everything |
+|---|---:|---:|---:|---:|
+| `import { semioticVite } from "semiotic/vite"` | node | **0.6 KiB** | — | 0.6 KiB |
+| `import { getNetworkPerspectiveSize } from "semiotic/network/perspective/core"` | browser | **1.1 KiB** | — | 1.1 KiB |
+| `import { MotifBraidChart } from "semiotic/atlas"` | browser | **112.6 KiB** | 29.6 KiB | 138.8 KiB |
+| `import { prepareNetworkAtlas } from "semiotic/atlas/core"` | browser | **7.1 KiB** | — | 7.1 KiB |
+| `import { LineChart } from "semiotic"` | browser | **126.8 KiB** | 44.4 KiB | 154.4 KiB |
+| `import { LineChart } from "semiotic/xy"` | browser | **126.6 KiB** | 32.5 KiB | 154.5 KiB |
+| `import { LineChart } from "semiotic/line"` | browser | **126.6 KiB** | 32.6 KiB | 154.2 KiB |
+| `import { BarChart } from "semiotic/ordinal"` | browser | **107.2 KiB** | 14.7 KiB | 122.0 KiB |
+| `import { SankeyDiagram } from "semiotic/network"` | browser | **122.3 KiB** | 22.4 KiB | 140.5 KiB |
+| `import { ZoomableNetworkCustomChart } from "semiotic/network/zoom"` | browser | **115.9 KiB** | 29.5 KiB | 141.9 KiB |
+| `import { isometricGlyphs } from "semiotic/network/perspective"` | browser | **1.4 KiB** | — | 1.4 KiB |
+| `import { RealtimeLineChart } from "semiotic/realtime"` | browser | **126.9 KiB** | 43.2 KiB | 154.4 KiB |
+| `import { RingBuffer } from "semiotic/realtime/core"` | browser | **0.7 KiB** | 13.5 KiB | 0.7 KiB |
+| `import { useStreamStatus } from "semiotic/realtime/react"` | browser | **0.8 KiB** | — | 0.8 KiB |
+| `import { GaltonBoardChart } from "semiotic/physics"` | browser | **97.0 KiB** | 2.7 KiB | 99.4 KiB |
+| `import { MATTER_PHYSICS_CAPABILITIES } from "semiotic/physics/matter"` | browser | **0.1 KiB** | — | 0.1 KiB |
+| `import { RAPIER_PHYSICS_CAPABILITIES } from "semiotic/physics/rapier"` | browser | **0.2 KiB** | — | 0.2 KiB |
+| `import { renderChart } from "semiotic/server"` | node | **309.3 KiB** | — | 309.3 KiB |
+| `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **128.6 KiB** | — | 128.6 KiB |
+| `import { renderToImage } from "semiotic/server/node"` | node | **309.7 KiB** | 0.6 KiB | 310.3 KiB |
+| `import { suggestCharts } from "semiotic/ai"` | browser | **32.7 KiB** | 13.5 KiB | 33.9 KiB |
+| `import { suggestCharts } from "semiotic/ai/core"` | browser | **32.4 KiB** | — | 32.4 KiB |
+| `import { buildArtifactContract } from "semiotic/artifact"` | browser | **4.5 KiB** | — | 4.5 KiB |
+| `import { ArtifactInspector } from "semiotic/artifact/react"` | browser | **3.7 KiB** | — | 3.7 KiB |
+| `import { createChartAccessContract } from "semiotic/access"` | browser | **29.3 KiB** | — | 29.3 KiB |
+| `import { toEvidenceEnvelope } from "semiotic/evidence"` | browser | **44.8 KiB** | — | 44.8 KiB |
+| `import { bin } from "semiotic/data"` | browser | **0.9 KiB** | — | 0.9 KiB |
+| `import { ChoroplethMap } from "semiotic/geo"` | browser | **109.8 KiB** | 1.7 KiB | 110.7 KiB |
+| `import { WordCloud } from "semiotic/wordcloud"` | browser | **111.0 KiB** | 39.1 KiB | 145.3 KiB |
+| `import { usePretextAnnotations } from "semiotic/text"` | browser | **1.5 KiB** | — | 1.5 KiB |
+| `import { createRoughRenderMode } from "semiotic/rough"` | browser | **3.1 KiB** | — | 3.1 KiB |
+| `import { resolveThemePreset } from "semiotic/themes"` | browser | **2.6 KiB** | — | 2.6 KiB |
+| `import { resolveThemePreset } from "semiotic/themes/core"` | browser | **2.6 KiB** | — | 2.6 KiB |
+| `import { ThemeProvider } from "semiotic/themes/react"` | browser | **5.7 KiB** | — | 5.7 KiB |
+| `import { validateProps } from "semiotic/utils"` | browser | **11.4 KiB** | — | 11.4 KiB |
+| `import { smartTickFormat } from "semiotic/utils/core"` | browser | **1.0 KiB** | — | 1.0 KiB |
+| `import { useReducedMotion } from "semiotic/utils/react"` | browser | **0.3 KiB** | — | 0.3 KiB |
+| `import { waffleLayout } from "semiotic/recipes"` | browser | **1.6 KiB** | — | 1.6 KiB |
+| `import { waffleLayout } from "semiotic/recipes/core"` | browser | **1.6 KiB** | — | 1.6 KiB |
+| `import { Glyph } from "semiotic/recipes/react"` | browser | **0.8 KiB** | — | 0.8 KiB |
+| `import { BigNumber } from "semiotic/value"` | browser | **5.9 KiB** | — | 5.9 KiB |
+| `import { DirectManipulationControl } from "semiotic/controls"` | browser | **1.5 KiB** | — | 1.5 KiB |
 
-**Line-boundary interpretation:** the retained named import from `semiotic/line` emits 372.7 KiB raw versus 372.7 KiB from `semiotic/xy`; gzip differs by 0.0 KiB (0.0%). Tree-shaking converges both paths on the same LineChart implementation graph. Treat `semiotic/line` as a narrower API/direct-ESM artifact boundary, not an application-bundle saving. Do not add another per-chart entry until its packed named import beats the family path by both 10 KiB gzip and 7%.
+**Line-boundary interpretation:** the retained named import from `semiotic/line` emits 373.5 KiB raw versus 373.6 KiB from `semiotic/xy`; gzip differs by 0.0 KiB (0.0%). Tree-shaking converges both paths on the same LineChart implementation graph. Treat `semiotic/line` as a narrower API/direct-ESM artifact boundary, not an application-bundle saving. Do not add another per-chart entry until its packed named import beats the family path by both 10 KiB gzip and 7%.
 
 <!-- semiotic-cold-consumer:end -->
 

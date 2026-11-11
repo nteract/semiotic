@@ -25,6 +25,7 @@ import { useXYBrush } from "../shared/useXYBrush"
 import { useChartSetup } from "../shared/useChartSetup"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import { useXYPointStyle } from "../shared/useXYPointStyle"
+import { useSelectionAwareFrameStyle } from "../shared/useSelectionAwareFrameStyle"
 import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
 import { useSizeEncoding } from "../shared/useSizeEncoding"
 import { buildRegressionAnnotation, type RegressionProp } from "../shared/regressionUtils"
@@ -342,6 +343,13 @@ export const Scatterplot = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ *
     effectiveSelectionHook: setup.effectiveSelectionHook,
     resolvedSelection: setup.resolvedSelection,
   })
+  // `frameProps.pointStyle` takes the place of the style above. Keep it
+  // selection-aware so linked selection and legend highlighting still dim.
+  const framePointStyle = useSelectionAwareFrameStyle(
+    frameProps.pointStyle,
+    setup.effectiveSelectionHook,
+    setup.resolvedSelection,
+  )
 
   // ── Statistical features (forecast + anomaly overlays) ────────────────
   // Shared hook with LineChart/AreaChart — produces post-forecast
@@ -451,7 +459,9 @@ export const Scatterplot = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ *
     ...(yExtent && { yExtent }),
     ...brushStreamProps,
     ...setup.crosshairProps,
-    ...frameProps
+    ...frameProps,
+    // frameProps precedence: the caller's style still wins; this re-applies it with selection dimming preserved.
+    ...(framePointStyle && { pointStyle: framePointStyle }),
   }
 
   return <StreamXYFrame ref={frameRef} {...streamProps} />

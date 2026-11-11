@@ -17,7 +17,7 @@
  * and `check:llms`.
  */
 
-import { existsSync, readFileSync, writeFileSync } from "node:fs"
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { CHART_SPECS } from "../src/components/charts/shared/chartSpecs.ts"
@@ -29,8 +29,16 @@ const repoRoot = resolve(__dirname, "..")
 const outPath = join(repoRoot, "docs/public/llms.txt")
 const chartsDir = join(repoRoot, "docs/src/pages/charts")
 
+const playgroundDir = join(repoRoot, "docs/src/pages/playground")
+
 const kebab = (name) => name.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase()
 const hasPage = (name) => existsSync(join(chartsDir, `${name}Page.jsx`))
+
+// Playgrounds exist for some charts and a few cross-chart features, not for
+// every chart. Count the pages so the index states what is actually there.
+const playgroundCount = readdirSync(playgroundDir).filter((name) =>
+  /Playground\.(?:jsx|tsx)$/.test(name),
+).length
 
 // ── Generated: the chart catalog, grouped by family ────────────────────────
 
@@ -88,13 +96,13 @@ const DOCS = `## Docs
 - [Complete a Task](/tasks): Check category values, maintain a live chart, or correct a published claim
 - [Source Task Packets](/tasks/index.json): Generated task guidance with selected schemas, repairs, source identity and evidence limits; installed and deployed parity require separate checks
 - [Choose a Chart](/choose): Profile a dataset and rank charts by fit and communicative act
-- [Charts](/charts): All chart types with live examples, prop tables, and grounding panels
-- [Frames](/frames): StreamXYFrame, StreamOrdinalFrame, StreamNetworkFrame — full control API
-- [Features](/features): Axes, tooltips, interaction, responsive, composition, accessibility
+- [Charts](/api/charts): Chart components by family; each chart in the catalog below has its own page with live examples, prop tables, and grounding panels
+- [Frames](/frames/xy-frame): StreamXYFrame, with sibling pages for StreamOrdinalFrame, StreamNetworkFrame, StreamGeoFrame, and StreamPhysicsFrame — full control API
+- [Features](/features/axes): Axes, tooltips, interaction, responsive, composition, accessibility
 - [Artifact Contracts](/artifacts/overview): Optional sidecars for purpose, claims, evidence, time, correction, policy evaluation, and transfer
 - [Theming](/theming/theme-provider): ThemeProvider, presets, semantic colors, serialization
 - [Cookbook](/cookbook): Advanced patterns and recipes
-- [Playground](/playground): Interactive, shareable prop exploration for every chart type`
+- [Playground](/playground): Interactive, shareable prop exploration in ${playgroundCount} playgrounds covering selected charts and features (not every chart type has one)`
 
 const INTELLIGENCE = `## Intelligence (AI surface)
 
@@ -131,8 +139,8 @@ const OPTIONAL = `## Optional
 - [Cookbook — Radar](/cookbook/radar-plot): Radar/spider charts
 - [Cookbook — Timeline](/cookbook/timeline): Timeline visualizations
 - [Cookbook — Marginal Graphics](/cookbook/marginal-graphics): Distribution plots in scatter margins
-- [Custom Charts](/features/custom-charts): XY/Ordinal/Network custom layouts and semiotic/recipes
-- [Vega-Lite Translator](/intelligence/vega-lite): Convert Vega-Lite specs to Semiotic`
+- [Custom Charts](/custom-charts/overview): XY/Ordinal/Network custom layouts and semiotic/recipes
+- [Vega-Lite Translator](/interoperability/vega-lite): Convert Vega-Lite specs to Semiotic`
 
 function render() {
   return [INTRO, DOCS, chartCatalog(), INTELLIGENCE, FEATURES, AI_INTEGRATION, OPTIONAL].join("\n\n") + "\n"
