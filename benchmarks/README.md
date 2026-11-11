@@ -12,6 +12,13 @@ Two kinds of measurement live here.
 `CONTRIBUTING.md` ("Benchmark baselines") documents the `unit/` gate. This file documents
 `harness/`.
 
+Unit cases import `bench` from `setup/bench.ts`. It registers Vitest 5 context
+benchmarks while supporting Vitest 4 in older release checkouts, where the
+comparison gate overlays the same cases and fixtures. Capture scripts select
+the runner's JSON format and normalize both to milliseconds and sample counts.
+The adapter preserves the previous default sampling and warm-up settings;
+individual cases can still override them.
+
 ## The harness
 
 The harness answers one question: when data, size, or the pointer changes, how long is the

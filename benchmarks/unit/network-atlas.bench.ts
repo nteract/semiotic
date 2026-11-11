@@ -1,4 +1,4 @@
-import { bench, describe } from "vitest"
+import { bench, describe } from "../setup/bench"
 import { prepareNetworkAtlas } from "../../src/components/recipes/atlas/prepare"
 import { matchMotifs } from "../../src/components/recipes/atlas/motifs"
 import { atlasWorkload } from "../setup/network-atlas-workloads"

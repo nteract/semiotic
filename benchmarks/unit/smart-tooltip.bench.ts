@@ -1,4 +1,4 @@
-import { bench, describe } from "vitest"
+import { bench, describe } from "../setup/bench"
 import { smartTooltipEntries } from "../../src/components/charts/shared/smartTooltip"
 
 describe("Smart tooltip field selection", () => {

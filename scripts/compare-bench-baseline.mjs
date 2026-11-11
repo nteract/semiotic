@@ -5,11 +5,12 @@
  * Fail on large absolute and relative regressions, either individually or
  * across a group of benchmarks. Smaller slowdowns remain visible as warnings.
  */
-import { execSync } from "node:child_process"
+import { execFileSync } from "node:child_process"
 import { readFileSync, existsSync, rmSync } from "node:fs"
 import { join, dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { tmpdir } from "node:os"
+import { benchmarkCaptureArgs } from "./lib/bench-manifest.mjs"
 import {
   collectCapturedBenchmarks,
   collectVitestBenchmarks,
@@ -80,7 +81,7 @@ if (currentPath) {
   }
 } else {
   const tmpJson = join(tmpdir(), `semiotic-bench-${Date.now()}.json`)
-  execSync(`npx vitest bench --run --outputJson="${tmpJson}"`, {
+  execFileSync("npx", benchmarkCaptureArgs(repoRoot, tmpJson), {
     cwd: repoRoot,
     stdio: "inherit",
   })

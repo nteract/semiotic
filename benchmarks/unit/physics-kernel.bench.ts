@@ -1,5 +1,5 @@
 import { createRequire } from "node:module"
-import { bench, describe, type BenchOptions } from "vitest"
+import { bench, describe, type BenchOptions } from "../setup/bench"
 import {
   PhysicsKernelWorld,
   type PhysicsColliderSpec

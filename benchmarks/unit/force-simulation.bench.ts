@@ -8,7 +8,7 @@
  * These are critical bottlenecks that dominate rendering time for large datasets.
  */
 
-import { describe, bench } from 'vitest'
+import { describe, bench } from "../setup/bench"
 import { forceSimulation, forceX, forceY, forceCollide, forceLink, forceManyBody } from 'd3-force'
 import { generateSwarmData, generateNetworkData } from '../setup/data-generators'
 
@@ -19,7 +19,7 @@ describe('swarmLayout Performance', () => {
     { name: 'large-1000', categoryCount: 20, pointsPerCategory: 50, totalPoints: 1000 },
   ]
 
-  for (const { name, categoryCount, pointsPerCategory, totalPoints } of testSizes) {
+  for (const { name, categoryCount, pointsPerCategory } of testSizes) {
     const columns = generateSwarmData(categoryCount, pointsPerCategory)
 
     bench(`swarmLayout-${name}-120iter`, () => {

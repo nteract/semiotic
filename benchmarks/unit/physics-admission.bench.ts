@@ -1,4 +1,4 @@
-import { bench, describe } from "vitest"
+import { bench, describe } from "../setup/bench"
 import { PhysicsPipelineStore } from "../../src/components/stream/physics/PhysicsPipelineStore"
 
 // Include observations: this used to copy the entire growing world per spawn.

@@ -9,7 +9,7 @@
  * These benchmarks exercise the real production code paths, not simplified proxies.
  */
 
-import { describe, bench } from 'vitest'
+import { describe, bench } from "../setup/bench"
 import { generateScatterData, generateXYData } from '../setup/data-generators'
 import { buildPointScene } from '../../src/components/stream/xySceneBuilders/pointScene'
 import { buildCandlestickScene } from '../../src/components/stream/xySceneBuilders/candlestickScene'

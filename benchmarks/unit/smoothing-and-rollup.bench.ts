@@ -1,4 +1,4 @@
-import { bench, describe } from "vitest"
+import { bench, describe } from "../setup/bench"
 import { loess } from "../../src/components/charts/shared/loess"
 import { rollup } from "../../src/components/data/transforms"
 

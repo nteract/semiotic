@@ -1,4 +1,4 @@
-import { bench, describe } from "vitest"
+import { bench, describe } from "../setup/bench"
 import { findNearestGeoNode } from "../../src/components/stream/GeoCanvasHitTester"
 import type { GeoLineSceneNode } from "../../src/components/stream/geoTypes"
 import { buildNetworkEdgeHitIndex } from "../../src/components/stream/networkEdgeHitIndex"

@@ -6,7 +6,7 @@ import assert from "node:assert/strict"
 import { existsSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { tmpdir } from "node:os"
-import { overlayBenchmarkManifest } from "./lib/bench-manifest.mjs"
+import { benchmarkCaptureArgs, overlayBenchmarkManifest } from "./lib/bench-manifest.mjs"
 
 const tempRoots = []
 
@@ -25,6 +25,28 @@ function write(root, relativePath, contents = "") {
 afterEach(() => {
   while (tempRoots.length > 0) {
     rmSync(tempRoots.pop(), { recursive: true, force: true })
+  }
+})
+
+describe("benchmark capture commands", () => {
+  for (const [version, reportArgs] of [
+    ["4.1.12", ["--outputJson=/tmp/bench results.json"]],
+    ["5.1.0", ["--reporter=json", "--outputFile=/tmp/bench results.json"]]
+  ]) {
+    it(`uses the installed ${version} runner's report format`, () => {
+      const root = tempRoot("semiotic-bench-command-")
+      write(
+        root,
+        "node_modules/vitest/package.json",
+        JSON.stringify({ version })
+      )
+      assert.deepEqual(benchmarkCaptureArgs(root, "/tmp/bench results.json"), [
+        "vitest",
+        "bench",
+        "--run",
+        ...reportArgs
+      ])
+    })
   }
 })
 

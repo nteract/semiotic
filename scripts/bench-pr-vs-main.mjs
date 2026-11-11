@@ -29,7 +29,7 @@ import {
   collectVitestBenchmarks,
   printBenchmarkValidationErrors,
 } from "./lib/bench-results.mjs"
-import { overlayBenchmarkManifest } from "./lib/bench-manifest.mjs"
+import { benchmarkCaptureArgs, overlayBenchmarkManifest } from "./lib/bench-manifest.mjs"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, "..")
@@ -98,7 +98,7 @@ const baselineLabel = `${baselineRef} runtime`
 function captureBench(cwd, outputPath) {
   // `npx vitest bench` works from any directory that has its own
   // `node_modules/vitest`. The baseline worktree gets that via `npm ci`.
-  run("npx", ["vitest", "bench", "--run", `--outputJson=${outputPath}`], { cwd })
+  run("npx", benchmarkCaptureArgs(cwd, outputPath), { cwd })
 }
 
 function normalize(rawJsonPath, label) {

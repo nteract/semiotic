@@ -1,4 +1,4 @@
-import { bench, describe } from "vitest"
+import { bench, describe } from "../setup/bench"
 import { bondProcessSankeyNodeData } from "../../src/components/charts/network/processSankey/groupBonding"
 import type { ProcessSankeyNodeData } from "../../src/components/charts/network/processSankey/algorithm"
 import { chordLayoutPlugin } from "../../src/components/stream/layouts/chordLayoutPlugin"

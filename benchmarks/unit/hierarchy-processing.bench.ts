@@ -8,7 +8,7 @@
  * These run on every render of hierarchy-based NetworkFrame components.
  */
 
-import { describe, bench } from 'vitest'
+import { describe, bench } from "../setup/bench"
 import { hierarchy, tree, treemap, partition, pack } from 'd3-hierarchy'
 import { generateHierarchyData } from '../setup/data-generators'
 
@@ -69,7 +69,7 @@ describe('nodesEdgesFromHierarchy - Size Scaling', () => {
     const data = generateHierarchyData(depth, branching)
 
     bench(`nodesEdgesFromHierarchy-${name}-d${depth}-b${branching}`, () => {
-      const { nodes, edges } = nodesEdgesFromHierarchy(data)
+      const { nodes } = nodesEdgesFromHierarchy(data)
 
       if (nodes.length === 0) {
         throw new Error('Expected non-empty nodes array')
@@ -97,7 +97,7 @@ describe('d3-hierarchy Layout Performance', () => {
   const data = generateHierarchyData(4, 4)
   const size: [number, number] = [700, 700]
 
-  const root = hierarchy(data)
+  const _root = hierarchy(data)
     .sum((d: any) => d.value || 0)
     .sort((a, b) => (b.value || 0) - (a.value || 0))
 
@@ -179,7 +179,7 @@ describe('Full Hierarchy Pipeline (parse + layout + flatten)', () => {
       tree<any>().size(size)(root)
 
       // Step 2: Flatten to nodes/edges
-      const { nodes, edges } = nodesEdgesFromHierarchy(root)
+      const { nodes } = nodesEdgesFromHierarchy(root)
 
       if (nodes.length === 0) {
         throw new Error('Expected non-empty result')
@@ -192,7 +192,7 @@ describe('Full Hierarchy Pipeline (parse + layout + flatten)', () => {
         .sort((a, b) => (b.value || 0) - (a.value || 0))
       treemap<any>().size(size).padding(2)(root)
 
-      const { nodes, edges } = nodesEdgesFromHierarchy(root)
+      const { nodes } = nodesEdgesFromHierarchy(root)
 
       if (nodes.length === 0) {
         throw new Error('Expected non-empty result')
