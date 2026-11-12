@@ -146,6 +146,58 @@ mapping), and `roundedTop` forwarding and must fail the relevant observable.
 Existing iris, portable consumer, registry, and scene serializer checks remain
 in place. No SVG or visual baselines are replaced by this coverage inventory.
 
+## SVG structure and references
+
+The [SVG structure suite](../src/components/server/svgStructure.test.tsx) derives
+XY and ordinal variants from this corpus and adds typed network/geo cases in
+[shared fixtures](../src/test-utils/svgStructureFixtures.tsx). The
+[browser portability suite](../integration-tests/static-svg-portability.spec.ts)
+uses the same inputs against the built package. These tests cover:
+
+- Axes, grid lines, and annotations in plot coordinates; grid behind marks/axes;
+  legends outside the plot; meaningful labels and actual data marks.
+- Enabled and disabled axes/grid independently, omitted/empty annotations,
+  and disabled legends. Network and geo cases have no Cartesian axes/grid.
+- XY gradient paint and plot clipping, with annotations and legends outside
+  the clipped marks.
+- Two chart viewports in one document or dashboard: unique IDs and local
+  `url(#...)`, `href`, `xlink:href`, and ARIA references, including references
+  on the root SVG and in authored styles. Custom XML overlays declare any
+  namespaces they use, such as `xmlnsXlink` for legacy XLink attributes.
+
+Assertions use each chart's SVG root and existing group classes such as
+`.semiotic-annotations`, `.semiotic-legend`, `.semiotic-grid`, `.stream-axes`,
+and `.ordinal-axes`. These are tested output conventions for these scenes,
+not a new promise that every observed selector or nested element is public API.
+Generated ID prefixes are opaque. Controlled mutations prove that missing
+content, dangling references, duplicate IDs, and cross-chart references fail;
+coordinated prefix changes alone pass.
+
+For composition, prefer supported chart props (`annotations`, `legend`,
+`showLegend`, and family-specific axis/grid controls), `frameProps`, annotation
+rules, and foreground/background graphics. See the
+[composition guide](https://semiotic.nteract.io/custom-charts/overview) and
+[server rendering guide](https://semiotic.nteract.io/using-ssr).
+Use `renderDashboard` for repeated chart cells, or distinct `chartId` values
+when embedding identical standalone renders in the same document. Static
+output is deterministic: copying the same SVG twice also copies its IDs.
+Do not select global `#axes`/`#annotations` or remove IDs to normalize exports;
+renaming IDs requires updating their references together.
+
+Tooltips belong to live browser tests. The existing BumpChart and network
+tooltip suites hover real marks and edges, assert useful content and
+`data-placement="placed"`, check bounds after resize or camera changes, and
+verify dismissal. They do not make tooltip child markup a composition API.
+
+```sh
+npx vitest run src/components/server/svgStructure.test.tsx src/components/server/svgIdentifiers.test.tsx src/components/server/svgPortability.test.tsx
+npx playwright test integration-tests/static-svg-portability.spec.ts integration-tests/bump-tooltip.spec.ts integration-tests/tooltip-chrome.spec.ts --project=chromium
+```
+
+Use the normal integration build/server setup and Linux snapshot guidance in
+[CONTRIBUTING.md](../CONTRIBUTING.md). No new visual baseline is needed for the
+structure assertions.
+
 ## Contributing a case
 
 1. Start with a concrete public regression or consumer use case. Use synthetic

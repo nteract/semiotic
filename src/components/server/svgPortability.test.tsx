@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest"
 import sharp from "sharp"
 import { renderChart, renderDashboard } from "./renderToStaticSVG"
 import { generateFrameSequence } from "./animatedGif"
+import { parseSvg, svgReferenceFailures } from "../../test-utils/svgStructure"
 
 const bars = {
   data: [
@@ -17,9 +18,9 @@ const bars = {
 }
 
 function parse(svg: string) {
-  const document = new DOMParser().parseFromString(svg, "image/svg+xml")
-  expect(document.querySelector("parsererror")).toBeNull()
-  return document
+  const root = parseSvg(svg)
+  expect(svgReferenceFailures([root, ...root.querySelectorAll("svg")])).toEqual([])
+  return root.ownerDocument
 }
 
 describe("standalone SVG portability", () => {

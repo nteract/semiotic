@@ -19,6 +19,7 @@ for (const multi of [false, true]) {
     const checkSurface = async (owned: boolean) => {
       const bounds = await hoverAlpha()
       await expect(tooltip).toHaveText("Alpha: 90")
+      await expect(tooltip).toHaveAttribute("data-placement", "placed")
       await expect(frame.locator(".semiotic-tooltip")).toHaveCount(1)
       if (owned) {
         await expect(frame.locator(".semiotic-tooltip")).toHaveCSS(
