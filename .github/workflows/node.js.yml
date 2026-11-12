@@ -250,6 +250,14 @@ jobs:
       - name: Check TypeDoc validation policy
         run: npm run check:typedoc
 
+      - name: Upload public signature type inventory
+        if: always() && hashFiles('dist/public-signature-types.json') != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: public-signature-types
+          path: dist/public-signature-types.json
+          retention-days: 14
+
       - name: Verify TypeScript declarations
         run: |
           for f in dist/semiotic.d.ts dist/semiotic-xy.d.ts dist/semiotic-ordinal.d.ts dist/semiotic-network.d.ts dist/semiotic-geo.d.ts dist/semiotic-realtime.d.ts dist/semiotic-ai.d.ts dist/semiotic-data.d.ts dist/semiotic-server.d.ts dist/semiotic-themes.d.ts; do

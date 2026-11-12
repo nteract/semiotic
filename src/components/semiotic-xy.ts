@@ -94,6 +94,8 @@ export type {
 export type {
   StreamXYFrameProps,
   StreamXYFrameHandle,
+  FrameGraphicsContext,
+  FrameGraphicsProp,
   InteractiveGraphicsContext,
   InteractiveGraphicsProp
 } from "./stream/types"

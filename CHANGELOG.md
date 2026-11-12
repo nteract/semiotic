@@ -46,6 +46,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Export `FrameGraphicsContext` and `FrameGraphicsProp` as types from the XY,
+  ordinal, network, and geo entries so reusable overlay callbacks can use public
+  imports. The physics entry exports its existing size-and-margin `FrameGraphicsProp`.
 - `validateProps`, `diagnoseConfig`, and `semiotic-ai --doctor` no longer report real
   React props as unknown or mistyped: `linkedHover`, `selection`, `hoverRadius`,
   `linkedBrush`, id accessors, callback props, and ReactNode content given as a string.

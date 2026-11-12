@@ -62,6 +62,7 @@ interface CustomLayoutFailureDiagnostic
 interface CustomLayoutSelection
 interface CustomTooltipConfig
 interface DifferenceChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig
+interface FrameGraphicsContext<S = StreamScales>
 interface GlyphDef
 interface GlyphPart
 interface GlyphSceneNode
@@ -293,6 +294,9 @@ interface-member DifferenceChartProps::property::windowSize = optional windowSiz
 interface-member DifferenceChartProps::property::xAccessor = optional xAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member DifferenceChartProps::property::xExtent = optional xExtent: [number | undefined, number | undefined] | [number] | undefined
 interface-member DifferenceChartProps::property::yExtent = optional yExtent: [number | undefined, number | undefined] | [number] | undefined
+interface-member FrameGraphicsContext::property::margin = required margin: {top: number; right: number; bottom: number; left: number;}
+interface-member FrameGraphicsContext::property::scales = required scales: S | null
+interface-member FrameGraphicsContext::property::size = required size: number[]
 interface-member GlyphDef::property::anchor = optional anchor: [number, number] | undefined
 interface-member GlyphDef::property::parts = required parts: GlyphPart[]
 interface-member GlyphDef::property::viewBox = optional viewBox: [number, number] | undefined
@@ -865,6 +869,7 @@ type CrosshairPositionInput = Omit<CrosshairPosition, "sourceId"> & {sourceId?: 
 type CustomLayout<C extends object = Record<string, unknown>> = (ctx: LayoutContext<C>) => LayoutResult
 type CustomLayoutFailureRecovery = "empty-scene" | "preserved-last-good-scene"
 type CustomLayoutFamily = "geo" | "network" | "ordinal" | "xy"
+type FrameGraphicsProp<S = StreamScales> = ((ctx: FrameGraphicsContext<S>) => ReactNode) | ReactNode
 type FrameTextAnnotation = ({label: number | string; text?: number | string;} | {text: number | string; label?: number | string;}) & FrameTextAnnotationBase
 type FrameTextPosition = (typeof FRAME_TEXT_POSITIONS)[number]
 type InteractiveGraphicsProp<S = StreamScales> = ((ctx: InteractiveGraphicsContext<S>) => ReactNode) | ReactNode

@@ -1,0 +1,146 @@
+{
+  "schemaVersion": 1,
+  "types": [
+    {
+      "id": "dist/components/stream/types.d.ts#FrameGraphicsContext",
+      "classification": "author-facing",
+      "reason": "Authors name the resolved size, margin and scale context for reusable foreground/background callbacks.",
+      "requiredImports": [
+        { "specifier": "semiotic/xy", "name": "FrameGraphicsContext" },
+        { "specifier": "semiotic/ordinal", "name": "FrameGraphicsContext" },
+        { "specifier": "semiotic/network", "name": "FrameGraphicsContext" },
+        { "specifier": "semiotic/geo", "name": "FrameGraphicsContext" }
+      ]
+    },
+    {
+      "id": "dist/components/stream/types.d.ts#FrameGraphicsProp",
+      "classification": "author-facing",
+      "reason": "Authors pass reusable SVG graphics or callbacks through the four scale-aware frame families.",
+      "requiredImports": [
+        { "specifier": "semiotic/xy", "name": "FrameGraphicsProp" },
+        { "specifier": "semiotic/ordinal", "name": "FrameGraphicsProp" },
+        { "specifier": "semiotic/network", "name": "FrameGraphicsProp" },
+        { "specifier": "semiotic/geo", "name": "FrameGraphicsProp" }
+      ]
+    },
+    {
+      "id": "dist/components/stream/useFrame.d.ts#FrameGraphicsProp",
+      "classification": "author-facing",
+      "reason": "Physics foreground/background callbacks accept size and margin without scales; preserve that distinct signature.",
+      "requiredImports": [
+        { "specifier": "semiotic/physics", "name": "FrameGraphicsProp" }
+      ]
+    },
+    {
+      "id": "dist/components/stream/types.d.ts#InteractiveGraphicsContext",
+      "classification": "author-facing",
+      "reason": "Interactive SVG authors map pointer events to plot coordinates in XY and ordinal controls.",
+      "requiredImports": [
+        { "specifier": "semiotic/xy", "name": "InteractiveGraphicsContext" },
+        {
+          "specifier": "semiotic/ordinal",
+          "name": "InteractiveGraphicsContext"
+        }
+      ]
+    },
+    {
+      "id": "dist/components/stream/types.d.ts#InteractiveGraphicsProp",
+      "classification": "author-facing",
+      "reason": "Reusable interactive overlays use the public XY and ordinal callback-or-node union.",
+      "requiredImports": [
+        { "specifier": "semiotic/xy", "name": "InteractiveGraphicsProp" },
+        { "specifier": "semiotic/ordinal", "name": "InteractiveGraphicsProp" }
+      ]
+    },
+    {
+      "id": "dist/components/realtime/types.d.ts#AnnotationContext",
+      "classification": "author-facing",
+      "reason": "Annotation rule authors need the existing named context for projection and scale access.",
+      "requiredImports": [
+        { "specifier": "semiotic", "name": "AnnotationContext" }
+      ]
+    },
+    {
+      "id": "dist/components/realtime/types.d.ts#HoverData",
+      "classification": "author-facing",
+      "reason": "Frame tooltip callbacks use the existing named hover envelope with screen coordinates and raw data.",
+      "requiredImports": [{ "specifier": "semiotic", "name": "HoverData" }]
+    },
+    {
+      "id": "dist/components/stream/networkCustomLayout.d.ts#NetworkCustomLayout",
+      "classification": "author-facing",
+      "reason": "Custom layout authors implement this generic callback through the network family or recipe kit.",
+      "requiredImports": [
+        { "specifier": "semiotic/network", "name": "NetworkCustomLayout" },
+        { "specifier": "semiotic/recipes/core", "name": "NetworkCustomLayout" }
+      ]
+    },
+    {
+      "id": "dist/components/stream/networkCustomLayout.d.ts#NetworkLayoutContext",
+      "classification": "author-facing",
+      "reason": "Layout authors name their generic configuration and input context rather than copying its shape.",
+      "requiredImports": [
+        { "specifier": "semiotic/network", "name": "NetworkLayoutContext" },
+        { "specifier": "semiotic/recipes/core", "name": "NetworkLayoutContext" }
+      ]
+    },
+    {
+      "id": "dist/components/stream/networkCustomLayout.d.ts#NetworkLayoutResult",
+      "classification": "author-facing",
+      "reason": "Custom layout output names the scene, overlays and restyling callbacks supplied by authors.",
+      "requiredImports": [
+        { "specifier": "semiotic/network", "name": "NetworkLayoutResult" },
+        { "specifier": "semiotic/recipes/core", "name": "NetworkLayoutResult" }
+      ]
+    },
+    {
+      "id": "dist/components/stream/networkSceneTypes.d.ts#NetworkSceneNode",
+      "classification": "author-facing",
+      "reason": "Custom layout authors construct the supported network scene-node union directly.",
+      "requiredImports": [
+        { "specifier": "semiotic/network", "name": "NetworkSceneNode" }
+      ]
+    },
+    {
+      "id": "dist/components/stream/networkSceneTypes.d.ts#NetworkSceneEdge",
+      "classification": "author-facing",
+      "reason": "Custom layout authors construct the supported network scene-edge union directly.",
+      "requiredImports": [
+        { "specifier": "semiotic/network", "name": "NetworkSceneEdge" }
+      ]
+    },
+    {
+      "id": "dist/components/recipes/transitDiagramTypes.d.ts#TransitDiagramConfig",
+      "classification": "author-facing",
+      "reason": "Transit recipe options are already public; preserve both the core and convenience import paths.",
+      "requiredImports": [
+        {
+          "specifier": "semiotic/recipes/core",
+          "name": "TransitDiagramConfig"
+        },
+        { "specifier": "semiotic/recipes", "name": "TransitDiagramConfig" }
+      ]
+    },
+    {
+      "id": "dist/components/recipes/transitDiagramTypes.d.ts#TransitDiagramStationRenderInfo",
+      "classification": "author-facing",
+      "reason": "Authors implement station rendering callbacks against the existing public recipe input.",
+      "requiredImports": [
+        {
+          "specifier": "semiotic/recipes/core",
+          "name": "TransitDiagramStationRenderInfo"
+        }
+      ]
+    },
+    {
+      "id": "dist/components/stream/networkTypes.d.ts#RealtimeNode",
+      "classification": "internal",
+      "reason": "Normalized retained input includes transition bookkeeping. Helpers can use NetworkLayoutContext['nodes'][number]; authors emit NetworkSceneNode instead."
+    },
+    {
+      "id": "dist/components/stream/networkTypes.d.ts#RealtimeEdge",
+      "classification": "internal",
+      "reason": "Normalized retained input includes layout caches and transition bookkeeping. Use NetworkLayoutContext['edges'][number] for helpers and emit NetworkSceneEdge."
+    }
+  ]
+}

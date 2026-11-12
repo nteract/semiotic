@@ -59,6 +59,7 @@ interface CustomLayoutFailureDiagnostic
 interface CustomLayoutSelection
 interface CustomTooltipConfig
 interface DonutChartProps<TDatum extends Datum = Datum> extends BaseChartProps
+interface FrameGraphicsContext<S = StreamScales>
 interface FunnelChartProps<TDatum extends Datum = Datum> extends BaseChartProps
 interface GaugeChartProps extends BaseChartProps
 interface GaugeThreshold
@@ -188,6 +189,9 @@ interface-member DonutChartProps::property::styleRules = optional styleRules: St
 interface-member DonutChartProps::property::tooltip = optional tooltip: TooltipProp | undefined
 interface-member DonutChartProps::property::valueAccessor = optional valueAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member DonutChartProps::property::valueFormat = optional valueFormat: ((d: number | string) => string) | undefined
+interface-member FrameGraphicsContext::property::margin = required margin: {top: number; right: number; bottom: number; left: number;}
+interface-member FrameGraphicsContext::property::scales = required scales: S | null
+interface-member FrameGraphicsContext::property::size = required size: number[]
 interface-member FunnelChartProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member FunnelChartProps::property::categoryAccessor = optional categoryAccessor: ChartAccessor<TDatum, string> | undefined
 interface-member FunnelChartProps::property::categoryFormat = optional categoryFormat: CategoryFormatFn | undefined
@@ -718,6 +722,7 @@ interface-member TooltipRootProps::property::chrome = optional chrome: TooltipCh
 type AnnotationLabelBackground = "box" | "halo" | "none" | AnnotationLabelBackgroundConfig | boolean
 type CustomLayoutFailureRecovery = "empty-scene" | "preserved-last-good-scene"
 type CustomLayoutFamily = "geo" | "network" | "ordinal" | "xy"
+type FrameGraphicsProp<S = StreamScales> = ((ctx: FrameGraphicsContext<S>) => ReactNode) | ReactNode
 type FrameTextAnnotation = ({label: number | string; text?: number | string;} | {text: number | string; label?: number | string;}) & FrameTextAnnotationBase
 type FrameTextPosition = (typeof FRAME_TEXT_POSITIONS)[number]
 type InteractiveGraphicsProp<S = StreamScales> = ((ctx: InteractiveGraphicsContext<S>) => ReactNode) | ReactNode

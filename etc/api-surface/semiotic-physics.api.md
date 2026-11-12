@@ -2756,6 +2756,7 @@ type DependencyReplayEvent = {type: "dependency-delivered"; edgeID: string; at: 
 type DependencyTaskStatus = "blocked" | "done" | "in-progress" | "waiting"
 type EventDropArrival = "drop" | {mode: "travel"; /** Present recorded history immediately (default), or travel every row. */ history?: "present" | "travel"; /** Travel milliseconds, independent of timeUnit. Defaults to 800. */ durationMs?: number; /** Speed ceiling: the longest path sets one shared chart-wide duration. */ speedPxPerSec?: number; path?: "connector" | "straight" | ((from: PhysicsTravelPoint, to: PhysicsTravelPoint) => PhysicsTravelPoint[]);}
 type EventDropWatermark = ((latestEventTime: number) => number) | EventDropWatermarkOptions
+type FrameGraphicsProp = ((ctx: {size: number[]; margin: FrameMargin;}) => ReactNode) | ReactNode
 type FrameTextAnnotation = ({label: number | string; text?: number | string;} | {text: number | string; label?: number | string;}) & FrameTextAnnotationBase
 type FrameTextPosition = (typeof FRAME_TEXT_POSITIONS)[number]
 type GauntletPopSpec = readonly string[] | {candidates?: readonly string[]; count?: number; ids?: readonly string[];}

@@ -1109,6 +1109,10 @@ try {
         devDependencies: {
           "@types/react": sourcePackage.devDependencies["@types/react"],
           "@types/react-dom": sourcePackage.devDependencies["@types/react-dom"],
+          // Composition callbacks expose external D3 scales/projections. Supply
+          // their typings explicitly so skipLibCheck cannot turn them into any.
+          "@types/d3-scale": sourcePackage.devDependencies["@types/d3-scale"],
+          "@types/d3-geo": sourcePackage.devDependencies["@types/d3-geo"],
           typescript: sourcePackage.devDependencies.typescript
         }
       },

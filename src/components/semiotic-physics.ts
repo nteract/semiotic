@@ -624,3 +624,6 @@ export type {
 } from "./charts/physics/eventDropSources"
 export type { PhysicsCanvasTheme } from "./stream/physics/PhysicsCanvasTheme"
 export type { GlyphDef, GlyphPart } from "./stream/glyphDef"
+// Physics overlays receive size and margin; scale-aware frame types live in the
+// corresponding XY/ordinal/network/geo entries.
+export type { FrameGraphicsProp } from "./stream/useFrame"
