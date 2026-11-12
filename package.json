@@ -538,7 +538,9 @@
     "check:changelog-provenance": "node --experimental-strip-types scripts/check-changelog-provenance.ts",
     "check:release-preflight": "node --experimental-strip-types scripts/check-release-preflight.ts",
     "test:release-preflight": "node --experimental-strip-types --test scripts/release-preflight.test.ts scripts/release-dist-tag.test.ts scripts/release-version.test.mjs scripts/changelog-provenance.test.ts",
-    "check:test-discovery": "node --test scripts/vitest-projects.test.mjs scripts/typedoc-compat.test.mjs"
+    "check:test-discovery": "node --test scripts/vitest-projects.test.mjs scripts/typedoc-compat.test.mjs",
+    "test:ssr-comparison": "node --import tsx --test scripts/ssr-comparison/*.test.ts",
+    "report:ssr-comparison": "node --import tsx scripts/compare-ssr.ts"
   },
   "repository": {
     "type": "git",

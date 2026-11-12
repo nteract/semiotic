@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "../..",
+    "noEmit": true,
+    "allowJs": true,
+    "target": "ES2022",
+    "types": ["node"]
+  },
+  "include": ["./*.ts", "../compare-ssr.ts"],
+  "exclude": []
+}

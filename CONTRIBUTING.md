@@ -380,6 +380,65 @@ This declaration-dependent check belongs after declaration generation, not in
 source-only release preflight. Add reviewed types deliberately with a consumer
 example and a reason; do not export every transitive helper to clear the report.
 
+### Release-to-release SSR evidence
+
+`npm run report:ssr-comparison` compares the nine portable consumer fixtures
+against two actual package artifacts. Prepare the current production build once,
+then select a baseline explicitly:
+
+```sh
+npm run dist:prod
+npm run report:ssr-comparison -- --previous 3.13.3 --current .
+# Reuse saved archives for a local or identical-artifact comparison:
+npm run report:ssr-comparison -- --previous /tmp/previous.tgz --current /tmp/current.tgz --out-dir test-results/ssr-local
+```
+
+`--previous` requires an exact published version or local `.tgz`; `--current`
+accepts a built package directory (default `.`) or `.tgz`. Packing uses
+`--ignore-scripts` and does not rebuild. `--registry` (or
+`SEMIOTIC_NPM_REGISTRY`) overrides the public npm registry explicitly. Registry
+errors, missing artifacts and identity/integrity mismatches are errors, never
+rendering differences. No git tag is treated as proof of publication.
+
+Each side installs into a separate temporary consumer with runtime dependencies
+and React pinned from the checkout's lockfile. The resolved dependency trees
+must agree; an incompatible baseline fails explicitly. Child Node processes
+import only their installed artifact, with production mode, UTC, and a fixed
+locale. Their runtime versions and resolved renderer paths are recorded. Every
+supported fixture renders twice to detect remaining nondeterminism.
+
+The report records artifact versions, archive SHA-256/SHA-512 integrity,
+published `gitHead` when supplied, local checkout commit/dirty state when known,
+tooling identity, fixture input hashes, runtime locks, and comparison settings.
+Artifact declarations and schemas identify absent components/props, including
+nested `frameProps`. Such previous-version cases are **unsupported**, with a
+reason; unresolved capability metadata is an error. Render evidence is compared
+when both releases supply it, otherwise its absence is explicit. Current
+contract expectations are not imposed on the old release.
+
+Normalization sorts attributes, preserves child/paint order and all text, and
+rewrites known generated `semiotic-*` document scopes together with local URL,
+CSS, href and accessibility references. Authored IDs and target suffixes remain.
+XML parsing and reference validation happen before and after rewriting. Geometry
+is exact by default; optional `--precision 0..8` reuses the SVG exporter's
+geometry-only rounding, never rounds labels/data indiscriminately. Evidence
+values are exact; only derived `sceneHash`/`sceneHashVersion` fields are excluded
+from comparison and retained in the raw evidence files.
+
+`test-results/ssr-comparison/report.md` and `report.json` link the raw/normalized
+SVG pairs and evidence. Archives and runtime locks are retained for reproduction.
+`--fixtures id,id` selects a subset; unknown/empty selections fail. Output
+differences are informational (exit 0), while execution failures, nondeterminism
+and invalid SVG fail (exit 1). A changed rendering needs review; this report
+neither accepts baselines nor authorizes breaking declared contracts.
+
+The manual **SSR release evidence** workflow builds once and uploads results
+with `if: always()`. It is separate from publishing and older-tag recovery, so
+older releases need not contain this tooling. Unit/normalizer/local-artifact
+tests run via `npm run test:ssr-comparison` in the existing contract lane; they
+need no production build or registry. Type-check the tooling with
+`npx tsc -p scripts/ssr-comparison/tsconfig.json`.
+
 ## Architecture
 
 Semiotic has three main user-facing layers:
