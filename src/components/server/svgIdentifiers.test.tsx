@@ -16,22 +16,11 @@ import { NetworkCustomChart } from "../charts/custom/NetworkCustomChart"
 import { processChrome } from "../recipes/processChrome"
 import { renderedSceneHash } from "../evidence/renderedSceneHash"
 import { applySvgTheme } from "../../../ai/svg-theme"
+import { svgReferenceFailures } from "../../test-utils/svgStructure"
 
 function checkReferences(svg: SVGElement) {
+  expect(svgReferenceFailures([svg])).toEqual([])
   const ids = new Set([...svg.querySelectorAll("[id]")].map((node) => node.id))
-  expect(ids.size).toBe(svg.querySelectorAll("[id]").length)
-  for (const node of svg.querySelectorAll("*")) {
-    for (const attribute of node.attributes) {
-      for (const match of attribute.value.matchAll(/url\(#([^)]+)\)/g))
-        expect(ids.has(match[1])).toBe(true)
-      if (attribute.name === "href" && attribute.value.startsWith("#"))
-        expect(ids.has(attribute.value.slice(1))).toBe(true)
-      if (/^aria-(labelledby|describedby)$/.test(attribute.name)) {
-        for (const id of attribute.value.split(/\s+/))
-          expect(ids.has(id)).toBe(true)
-      }
-    }
-  }
   return ids
 }
 

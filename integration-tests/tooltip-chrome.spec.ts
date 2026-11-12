@@ -19,6 +19,7 @@ for (const raw of [false, true]) {
         await page.mouse.move(bounds.x + x, bounds.y + y)
         await expect(page.getByTestId("zoom-hover")).toHaveText(label)
         await expect(tooltip).toHaveText(label)
+        await expect(tooltip).toHaveAttribute("data-placement", "placed")
         // A rendered root that declares its chrome replaces Semiotic's surface.
         await expect(frame.locator(".semiotic-tooltip")).toHaveCount(
           mode === "rendered" ? 0 : 1

@@ -3,6 +3,8 @@ import AxeBuilder from "@axe-core/playwright"
 import { createRequire } from "node:module"
 import { execFileSync } from "node:child_process"
 import { createElement } from "react"
+import { svgReferenceFailures, svgStructureFailures } from "../src/test-utils/svgStructure"
+import { structureProps, svgStructureFixtures } from "../src/test-utils/svgStructureFixtures"
 
 // Exercise the published entry points after the normal integration build.
 const requirePackage = createRequire(__filename)
@@ -12,6 +14,25 @@ const data = [
   { x: 0, y: 2 },
   { x: 1, y: 5 }
 ]
+
+for (const fixture of svgStructureFixtures) {
+  test(`${fixture.family} dashboard preserves scoped structure and references`, async ({ page }) => {
+    const chart = { component: fixture.component, props: structureProps(fixture) }
+    await page.setContent(`<main>${renderDashboard([chart, chart], { width: 1100 })}</main>`)
+    const roots = page.locator(`.stream-${fixture.family}-frame`)
+    await expect(roots).toHaveCount(2)
+    expect(await roots.evaluateAll(svgReferenceFailures)).toEqual([])
+    for (const root of await roots.all()) {
+      expect(await root.evaluate(svgStructureFailures, fixture)).toEqual([])
+      // In a browser these groups must also have measurable painted content.
+      for (const selector of [".semiotic-annotations", ".semiotic-legend"]) {
+        const bounds = await root.locator(selector).boundingBox()
+        expect(bounds?.width).toBeGreaterThan(0)
+        expect(bounds?.height).toBeGreaterThan(0)
+      }
+    }
+  })
+}
 
 test("exported custom SVG styles paint each chart's local gradient", async ({
   page
@@ -47,6 +68,7 @@ test("exported custom SVG styles paint each chart's local gradient", async ({
     })
   )
   await page.setContent(`<main>${svgs.join("")}</main>`)
+  expect(await page.locator("main > svg").evaluateAll(svgReferenceFailures)).toEqual([])
   const samples = await page.evaluate(async (markup) => {
     const roots = [...document.querySelectorAll("main > svg")]
     return Promise.all(
@@ -146,6 +168,7 @@ test("default SVG identifiers remain distinct across ESM and CJS server entry po
   )
   expect(new Set(hashes).size).toBe(1)
   await page.setContent(`<main>${svgs.join("")}</main>`)
+  expect(await page.locator("main > svg").evaluateAll(svgReferenceFailures)).toEqual([])
   const ids = await page
     .locator("[id]")
     .evaluateAll((nodes) => nodes.map((node) => node.id))
@@ -174,6 +197,7 @@ test("repeated inline exports retain local references and accessible names", asy
     height: 320
   })
   await page.setContent(`<main>${a}${b}</main>`)
+  expect(await page.locator("main > svg").evaluateAll(svgReferenceFailures)).toEqual([])
   await expect(page.getByRole("img", { name: "Red sales" })).toBeVisible()
   await expect(page.getByRole("img", { name: "Blue sales" })).toBeVisible()
   const references = await page.evaluate(() => {
@@ -181,15 +205,6 @@ test("repeated inline exports retain local references and accessible names", asy
     const ids = [...document.querySelectorAll("[id]")].map((node) => node.id)
     return {
       unique: new Set(ids).size === ids.length,
-      local: roots.every((root) =>
-        [...root.querySelectorAll("*")].every((node) =>
-          [...node.attributes].every((attribute) =>
-            [...attribute.value.matchAll(/url\(#([^)]+)\)/g)].every((match) =>
-              root.contains(document.getElementById(match[1]))
-            )
-          )
-        )
-      ),
       widths: roots.map(
         (root) =>
           root
@@ -199,7 +214,6 @@ test("repeated inline exports retain local references and accessible names", asy
     }
   })
   expect(references.unique).toBe(true)
-  expect(references.local).toBe(true)
   expect(references.widths[0]).toBeGreaterThan(0)
   expect(references.widths[1]).toBeGreaterThan(references.widths[0])
   const audit = await new AxeBuilder({ page })
