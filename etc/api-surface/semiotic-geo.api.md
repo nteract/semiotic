@@ -47,6 +47,7 @@ interface CustomTooltipConfig
 interface DistanceCartogramConfig
 interface DistanceCartogramProps<TDatum extends Datum = Datum> extends BaseChartProps
 interface FlowMapProps<TDatum extends Datum = Datum> extends BaseChartProps
+interface FrameGraphicsContext<S = StreamScales>
 interface GeoAreaHitTargetProps
 interface GeoAreaSceneNode
 interface GeoCustomChartProps<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>> extends BaseChartProps
@@ -207,6 +208,9 @@ interface-member FlowMapProps::property::xAccessor = optional xAccessor: ChartAc
 interface-member FlowMapProps::property::yAccessor = optional yAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member FlowMapProps::property::zoomExtent = optional zoomExtent: [number, number] | undefined
 interface-member FlowMapProps::property::zoomable = optional zoomable: boolean | undefined
+interface-member FrameGraphicsContext::property::margin = required margin: {top: number; right: number; bottom: number; left: number;}
+interface-member FrameGraphicsContext::property::scales = required scales: S | null
+interface-member FrameGraphicsContext::property::size = required size: number[]
 interface-member GeoAreaHitTargetProps::property::bounds = required bounds: [[number, number], [number, number]]
 interface-member GeoAreaHitTargetProps::property::centroid = required centroid: [number, number]
 interface-member GeoAreaHitTargetProps::property::cursor = optional cursor: import("csstype").Property.Cursor | undefined
@@ -648,6 +652,7 @@ interface-member TooltipRootProps::property::chrome = optional chrome: TooltipCh
 type AreasProp = GeoJSON.Feature[] | ReferenceGeography
 type CustomLayoutFailureRecovery = "empty-scene" | "preserved-last-good-scene"
 type CustomLayoutFamily = "geo" | "network" | "ordinal" | "xy"
+type FrameGraphicsProp<S = StreamScales> = ((ctx: FrameGraphicsContext<S>) => ReactNode) | ReactNode
 type FrameTextAnnotation = ({label: number | string; text?: number | string;} | {text: number | string; label?: number | string;}) & FrameTextAnnotationBase
 type FrameTextPosition = (typeof FRAME_TEXT_POSITIONS)[number]
 type GeoCustomLayout<C extends object = Record<string, unknown>> = (ctx: GeoLayoutContext<C>) => GeoLayoutResult

@@ -110,7 +110,7 @@ export type { NetworkPerspectiveProps } from "./charts/shared/networkPerspective
 export { glyphPlacement, glyphExtent } from "./stream/glyphDef"
 export type { GlyphDef, GlyphPart } from "./stream/glyphDef"
 export type { NetworkGlyphNode } from "./stream/networkTypes"
-export type { SceneAccessibilityMetadata, Style } from "./stream/types"
+export type { FrameGraphicsContext, FrameGraphicsProp, SceneAccessibilityMetadata, Style } from "./stream/types"
 export type {
   CategoricalLegendConfig,
   GradientLegendConfig,

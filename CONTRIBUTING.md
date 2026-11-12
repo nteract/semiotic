@@ -320,6 +320,66 @@ which still calls the `matchOne` method removed in minimatch 11. The adapter
 uses the patched matcher's public partial-match API without modifying installed
 packages. Its file-discovery regressions run with `node --test scripts/typedoc-compat.test.mjs`.
 
+### Public signature type audit
+
+`npm run check:api-surface` builds declarations, runs the signature-type audit,
+then verifies the existing API snapshots. The audit follows the bound
+TypeScript declaration graph from every JavaScript package entry with a types
+target, including experimental entries. It resolves imports/re-exports,
+overloads, callback signatures, generic arguments and constraints, recursive
+types, and namespace exports. Transparent type aliases also supply importable
+names; specialized generic aliases do not name every instantiation of their
+underlying type. Private class members are excluded. External definitions
+(React, GeoJSON, DOM, and other dependencies) are recorded as boundaries;
+package-owned arguments to external generic types are still inspected.
+
+The generated `dist/public-signature-types.json` contains every reachable named
+type, its declaring file/line, public import paths, direct reference sites, and
+review classification. Names containing a dot represent namespace-qualified
+access, such as `import("package").layouts.Input`. The report is retained as a
+CI artifact and excluded by the npm package's existing file allowlist.
+
+The reviewed set lives in
+[scripts/public-signature-types.json](scripts/public-signature-types.json).
+Only its `author-facing` import requirements block regressions. `internal`
+entries need an explicit reason; remaining package types without public imports
+are reported as `unreviewed`, not automatically classified as defects. A useful
+inferred structural type does not require a new export. Reviews fail if their
+declaration disappears, their metadata is invalid, or a required family/core
+import is lost, even when another public path survives. API snapshots and
+release compatibility checks continue to protect the broader public surface.
+
+The initial composition audit confirmed missing `FrameGraphicsContext` and
+`FrameGraphicsProp` exports in `semiotic/xy`, `semiotic/ordinal`,
+`semiotic/network`, and `semiotic/geo`. These are type-only exports of the
+existing scale-aware callbacks. The related physics path exports its own
+existing `FrameGraphicsProp`, whose callback receives size and margin without
+scales. The network scene/layout types, interactive-graphics types, annotation
+and hover contexts, and `TransitDiagramConfig` were already public and now have
+reviewed import coverage. Normalized `RealtimeNode`/`RealtimeEdge` inputs include
+store bookkeeping; helpers can name their shapes through
+`NetworkLayoutContext["nodes"][number]` and `["edges"][number]`, while authors
+construct the public scene-node/edge types as layout results.
+
+[The packed composition fixture](scripts/fixtures/packed-typescript-consumer/src/composition-types.tsx)
+implements these callbacks and layouts using public imports, including recipe
+station rendering and generic ordinal interactive graphics. `check:pack`
+compiles it with NodeNext against an installed tarball; no source aliases or
+deep `semiotic/dist/*` imports are used. The consumer installs React and D3
+scale/projection typings explicitly, since those external definitions are not
+package-owned. Invalid-input assertions guard against silently losing callback
+types to `any`. To inspect the audit locally:
+
+```sh
+npm run build:declarations
+npm run check:public-signature-types
+node --import tsx scripts/check-public-signature-types.ts --json
+```
+
+This declaration-dependent check belongs after declaration generation, not in
+source-only release preflight. Add reviewed types deliberately with a consumer
+example and a reason; do not export every transitive helper to clear the report.
+
 ## Architecture
 
 Semiotic has three main user-facing layers:

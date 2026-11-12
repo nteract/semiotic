@@ -64,6 +64,7 @@ interface CustomLayoutFailureDiagnostic
 interface CustomLayoutSelection
 interface CustomTooltipConfig
 interface ForceDirectedGraphProps<TNode extends Datum = Datum, TEdge extends Datum = Datum> extends BaseChartProps
+interface FrameGraphicsContext<S = StreamScales>
 interface GlyphDef
 interface GlyphPart
 interface GradientLegendConfig
@@ -222,6 +223,9 @@ interface-member ForceDirectedGraphProps::property::sourceAccessor = optional so
 interface-member ForceDirectedGraphProps::property::styleRules = optional styleRules: StyleRule[] | undefined
 interface-member ForceDirectedGraphProps::property::targetAccessor = optional targetAccessor: ChartAccessor<TEdge, string> | undefined
 interface-member ForceDirectedGraphProps::property::tooltip = optional tooltip: TooltipProp | undefined
+interface-member FrameGraphicsContext::property::margin = required margin: {top: number; right: number; bottom: number; left: number;}
+interface-member FrameGraphicsContext::property::scales = required scales: S | null
+interface-member FrameGraphicsContext::property::size = required size: number[]
 interface-member GlyphDef::property::anchor = optional anchor: [number, number] | undefined
 interface-member GlyphDef::property::parts = required parts: GlyphPart[]
 interface-member GlyphDef::property::viewBox = optional viewBox: [number, number] | undefined
@@ -867,6 +871,7 @@ interface-member UseSelectionActionsResult::property::selectPoints = required se
 type CustomLayoutFailureRecovery = "empty-scene" | "preserved-last-good-scene"
 type CustomLayoutFamily = "geo" | "network" | "ordinal" | "xy"
 type ForceLayoutStatus = "error" | "pending" | "ready"
+type FrameGraphicsProp<S = StreamScales> = ((ctx: FrameGraphicsContext<S>) => ReactNode) | ReactNode
 type FrameTextAnnotation = ({label: number | string; text?: number | string;} | {text: number | string; label?: number | string;}) & FrameTextAnnotationBase
 type FrameTextPosition = (typeof FRAME_TEXT_POSITIONS)[number]
 type LegendValue = CategoricalLegendConfig | GradientLegendValue | ReactNode
