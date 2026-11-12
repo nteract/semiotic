@@ -251,6 +251,75 @@ describe("SVG assertions reject controlled regressions", () => {
     expect(svgReferenceFailures([root])).toEqual([])
   })
 
+  it.each([
+    [String.raw`#paint\.a`, "paint.a"],
+    [String.raw`#paint\2e a`, "paint.a"],
+    [String.raw`\23 paint\00002Ea`, "paint.a"],
+    ["#paint\\2e\r\na", "paint.a"],
+    [String.raw`#paint\(a\)`, "paint(a)"],
+    [String.raw`#paint\1f3a8 `, "paint🎨"],
+    [String.raw`#paint\0 `, "paint\ufffd"],
+    [String.raw`#paint\d800 `, "paint\ufffd"],
+    [String.raw`#paint\110000 `, "paint\ufffd"]
+  ])("validates escaped local URL %s across CSS surfaces", (fragment, id) => {
+    for (const quote of ["", "'", '"']) {
+      for (const source of ["fill", "style", "stylesheet"]) {
+        const root = parseSvg(
+          '<svg xmlns="http://www.w3.org/2000/svg"><svg><defs><linearGradient/></defs><rect/><style/></svg><svg><defs/></svg></svg>'
+        )
+        const charts = [...root.children]
+        const target = charts[0].querySelector("linearGradient")!
+        target.id = id
+        const url = `url(${quote}${fragment}${quote})`
+        if (source === "stylesheet")
+          charts[0].querySelector("style")!.textContent =
+            `rect { fill: ${url} }`
+        else
+          charts[0]
+            .querySelector("rect")!
+            .setAttribute(source, source === "style" ? `fill: ${url}` : url)
+
+        expect(svgReferenceFailures(charts)).toEqual([])
+        target.remove()
+        expect(svgReferenceFailures(charts)).toEqual([
+          `Chart 0: unresolved ${source} #${id}`
+        ])
+        charts[1].querySelector("defs")!.append(target)
+        expect(svgReferenceFailures(charts)).toEqual([
+          `Chart 0: cross-chart ${source} #${id}`
+        ])
+      }
+    }
+  })
+
+  it("checks escaped references emitted by the identifier rewriter", () => {
+    const root = parseSvg(
+      scopeSvgIdentifiers(
+        '<svg xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="paint.a"/></defs><rect fill="url(#paint.a)" style="stroke: url(\'#paint.a\')"/><style>rect { fill: url("#paint.a") }</style></svg>',
+        "scoped"
+      )
+    )
+    expect(root.querySelector("rect")!.getAttribute("fill")).toBe(
+      String.raw`url(#scoped-paint\.a)`
+    )
+    expect(svgReferenceFailures([root])).toEqual([])
+    root.querySelector("linearGradient")!.remove()
+    expect(svgReferenceFailures([root])).toEqual([
+      "Chart 0: unresolved fill #scoped-paint.a",
+      "Chart 0: unresolved style #scoped-paint.a",
+      "Chart 0: unresolved stylesheet #scoped-paint.a"
+    ])
+  })
+
+  it("ignores escaped lookalikes in comments, strings and external URLs", () => {
+    const root = parseSvg(
+      '<svg xmlns="http://www.w3.org/2000/svg"><style/></svg>'
+    )
+    root.querySelector("style")!.textContent =
+      String.raw`/* url(#missing\.a) */ rect { content: 'url(#missing\.a)'; fill: url(other.svg#missing\.a) }`
+    expect(svgReferenceFailures([root])).toEqual([])
+  })
+
   it("rejects malformed SVG and a non-SVG root", () => {
     expect(() => parseSvg("<svg><path>")).toThrow("Invalid SVG")
     expect(() => parseSvg("<html/>")).toThrow("Invalid SVG")

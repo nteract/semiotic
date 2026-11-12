@@ -46,13 +46,13 @@ test("exported custom SVG styles paint each chart's local gradient", async ({
       centerContent: createElement(
         "g",
         null,
-        createElement("style", null, "#shape { fill: url('#paint') }"),
+        createElement("style", null, "#shape { fill: url('#paint.a') }"),
         createElement(
           "defs",
           null,
           createElement(
             "linearGradient",
-            { id: "paint" },
+            { id: "paint.a" },
             createElement("stop", { offset: 0, stopColor: color }),
             createElement("stop", { offset: 1, stopColor: color })
           )
@@ -74,7 +74,7 @@ test("exported custom SVG styles paint each chart's local gradient", async ({
     return Promise.all(
       roots.map(async (root, index) => {
         const rect = root.querySelector('[id$="-shape"]')!
-        const gradient = root.querySelector('[id$="-paint"]')!
+        const gradient = root.querySelector('[id$="-paint.a"]')!
         const bounds = root.getBoundingClientRect()
         const mark = rect.getBoundingClientRect()
         const image = new Image()
@@ -111,6 +111,19 @@ test("exported custom SVG styles paint each chart's local gradient", async ({
         Math.abs(channel - expected[index][component])
       ).toBeLessThanOrEqual(1)
     )
+  )
+  // The exporter escapes the dot in each scoped CSS URL. Removing its target
+  // must still fail the same validator when it runs inside a real browser.
+  const removed = await page.locator("main > svg linearGradient").evaluateAll(nodes =>
+    nodes.map(node => {
+      const id = node.id
+      node.remove()
+      return id
+    })
+  )
+  expect(removed).toHaveLength(2)
+  expect(await page.locator("main > svg").evaluateAll(svgReferenceFailures)).toEqual(
+    removed.map((id, index) => `Chart ${index}: unresolved stylesheet #${id}`)
   )
 })
 

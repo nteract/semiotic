@@ -32,13 +32,30 @@ export function svgReferenceFailures(roots: Element[]): string[] {
         failures.push(`Chart ${index}: cross-chart ${source} #${id}`)
     }
     const cssReferences = (css: string, source: string) => {
-      // Skip comments and strings, but recognize quoted and unquoted local URLs.
+      // Skip comments and strings, but consume CSS escapes inside URL tokens.
       // External resources and color hashes are not document ID references.
       const tokens =
-        /\/\*[\s\S]*?\*\/|url\(\s*(?:"([^"\\]*)"|'([^'\\]*)'|([^\s)'"\\]+))\s*\)|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/gi
+        /\/\*[\s\S]*?\*\/|(?<![\w-])url\(\s*(?:"((?:\\[\s\S]|[^"\\])*)"|'((?:\\[\s\S]|[^'\\])*)'|((?:\\(?:[\da-fA-F]{1,6}(?:\r\n|[\t\n\f\r ])?|[^\n\r\f])|[^\s()'"\\])+))\s*\)|"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*'|\\[\s\S]/gi
       for (const match of css.matchAll(tokens)) {
         const url = match[1] ?? match[2] ?? match[3]
-        if (url?.startsWith("#")) reference(url.slice(1), source)
+        const fragment = url?.replace(
+          /\\(?:([\da-fA-F]{1,6})(?:\r\n|[\t\n\f\r ])?|(\r\n|[\n\r\f])|([\s\S]))/g,
+          (
+            _escape,
+            hex: string | undefined,
+            continuation: string | undefined,
+            literal: string
+          ) => {
+            if (!hex) return continuation ? "" : literal
+            const code = parseInt(hex, 16)
+            return code > 0 &&
+              code <= 0x10ffff &&
+              !(code >= 0xd800 && code <= 0xdfff)
+              ? String.fromCodePoint(code)
+              : "\ufffd"
+          }
+        )
+        if (fragment?.startsWith("#")) reference(fragment.slice(1), source)
       }
     }
     // Include the root itself: accessible name IDREFs live on <svg>.
