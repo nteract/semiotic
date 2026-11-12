@@ -1,4 +1,4 @@
-import { bench, describe } from "vitest"
+import { bench, describe } from "../setup/bench"
 import { WindowAccumulator } from "../../src/components/realtime/WindowAccumulator"
 import { ReorderBuffer } from "../../src/components/realtime/ReorderBuffer"
 import { TDigest } from "../../src/components/realtime/TDigest"

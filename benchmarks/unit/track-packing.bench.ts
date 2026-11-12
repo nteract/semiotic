@@ -1,4 +1,4 @@
-import { bench, describe } from "vitest"
+import { bench, describe } from "../setup/bench"
 import { packIntervals } from "../../src/components/recipes/intervals"
 import { packSpanLevels } from "../../src/components/recipes/sequenceLayout"
 

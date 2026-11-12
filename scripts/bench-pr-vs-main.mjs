@@ -10,11 +10,11 @@
  * apples-to-apples.
  *
  * Flow:
- *   1. Run `npx vitest bench` on the candidate → raw Vitest JSON
+ *   1. Run the candidate's installed Vitest CLI → raw Vitest JSON
  *   2. `git worktree add` the requested baseline ref into a fresh dir
  *   3. `npm ci` in the worktree (fast with warm npm cache on CI)
  *   4. Overlay the candidate's `benchmarks/` manifest into the worktree
- *   5. Run `npx vitest bench` there → raw vitest JSON for baseline runtime
+ *   5. Run the installed Vitest CLI there → raw Vitest JSON for baseline runtime
  *   6. Normalize and validate both, then hand them to compare-bench-baseline.mjs
  *
  * The orchestrator runs from the candidate checkout and never assumes its
@@ -29,7 +29,7 @@ import {
   collectVitestBenchmarks,
   printBenchmarkValidationErrors,
 } from "./lib/bench-results.mjs"
-import { overlayBenchmarkManifest } from "./lib/bench-manifest.mjs"
+import { benchmarkCaptureArgs, overlayBenchmarkManifest } from "./lib/bench-manifest.mjs"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, "..")
@@ -96,9 +96,9 @@ const currentLabel = args.includes("--previous-tag") ? `v${packageVersion} candi
 const baselineLabel = `${baselineRef} runtime`
 
 function captureBench(cwd, outputPath) {
-  // `npx vitest bench` works from any directory that has its own
-  // `node_modules/vitest`. The baseline worktree gets that via `npm ci`.
-  run("npx", ["vitest", "bench", "--run", `--outputJson=${outputPath}`], { cwd })
+  // Use each checkout's installed CLI through Node, avoiding Windows npm shims.
+  // The baseline worktree gets its own `node_modules/vitest` via `npm ci`.
+  run(process.execPath, benchmarkCaptureArgs(cwd, outputPath), { cwd })
 }
 
 function normalize(rawJsonPath, label) {

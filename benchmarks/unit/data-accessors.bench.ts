@@ -8,7 +8,7 @@
  * Can quickly become expensive with multiple accessor combinations
  */
 
-import { describe, bench } from 'vitest'
+import { describe, bench } from "../setup/bench"
 import { generateXYData } from '../setup/data-generators'
 
 /**

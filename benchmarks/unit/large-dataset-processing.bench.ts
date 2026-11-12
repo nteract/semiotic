@@ -10,7 +10,7 @@
  * - Extent calculation over large arrays
  */
 
-import { describe, bench } from 'vitest'
+import { describe, bench } from "../setup/bench"
 import { generateScatterData } from '../setup/data-generators'
 import seedrandom from 'seedrandom'
 

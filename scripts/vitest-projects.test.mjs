@@ -170,11 +170,22 @@ test("heavy physics simulations run serially without losing or duplicating shard
   }
 })
 
-test("benchmarks retain one project and run each benchmark file once", async () => {
-  const ctx = await createVitest("benchmark", { root, config, watch: false })
+test("benchmarks run in one project and run each benchmark file once", async () => {
+  const ctx = await createVitest("test", {
+    root,
+    config,
+    watch: false,
+    benchmarkOnly: true
+  })
   try {
     const specs = await ctx.globTestSpecifications()
-    assert.equal(ctx.projects.length, 1)
+    assert.equal(new Set(specs.map((spec) => spec.project)).size, 1)
+    assert(specs.every((spec) => spec.project.config.benchmark.enabled))
+    const expected = readdirSync(resolve(root, "benchmarks/unit"))
+      .filter((file) => file.endsWith(".bench.ts"))
+      .map((file) => resolve(root, "benchmarks/unit", file))
+      .sort()
+    assert.deepEqual(specs.map((spec) => spec.moduleId).sort(), expected)
     assert(specs.length > 0)
     assert.equal(new Set(specs.map((spec) => spec.moduleId)).size, specs.length)
     assert(specs.every((spec) => spec.moduleId.endsWith(".bench.ts")))

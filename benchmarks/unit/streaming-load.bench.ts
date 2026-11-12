@@ -6,7 +6,7 @@
  * real-world streaming rates without memory leaks or frame budget overruns.
  */
 
-import { describe, bench } from "vitest"
+import { describe, bench } from "../setup/bench"
 import { RingBuffer } from "../../src/components/realtime/RingBuffer"
 import {
   PipelineStore,
@@ -87,8 +87,8 @@ describe("RingBuffer sustained push", () => {
   bench("RingBuffer forEach after 10k pushes (iteration cost)", () => {
     const buf = new RingBuffer<{ x: number; y: number; time: number }>(5000)
     for (let i = 0; i < 10_000; i++) buf.push(makeDatum(i))
-    let sum = 0
-    buf.forEach(d => { sum += d.y })
+    let _sum = 0
+    buf.forEach(d => { _sum += d.y })
   })
 })
 

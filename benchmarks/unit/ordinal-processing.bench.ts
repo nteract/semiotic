@@ -1,4 +1,4 @@
-import { bench, describe } from "vitest"
+import { bench, describe } from "../setup/bench"
 import { scaleBand, scaleLinear } from "d3-scale"
 import { buildConnectors } from "../../src/components/stream/ordinalSceneBuilders/connectorScene"
 import {

@@ -9,6 +9,7 @@ logs
 build
 coverage
 /vitest-reports/
+/.vitest/
 .vscode
 *.sublime-project
 *.sublime-workspace

@@ -1,4 +1,4 @@
-import { bench, describe, type BenchOptions } from "vitest"
+import { bench, describe, type BenchOptions } from "../setup/bench"
 import { mulberry32 } from "../../src/components/recipes/random"
 import {
   PhysicsPipelineStore,

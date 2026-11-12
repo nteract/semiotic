@@ -14,7 +14,7 @@ const physicsSimulationTests = [
   'docs/src/pages/examples/emitterPlaygroundModel.test.ts'
 ]
 
-export default defineConfig(({ mode }) => ({
+export default defineConfig({
   resolve: {
     // Exercise the package's public import paths against current source rather
     // than an optional, ignored, and potentially stale local dist build.
@@ -29,8 +29,9 @@ export default defineConfig(({ mode }) => ({
     // Give them a bounded timeout and an exclusive, serial worker group so
     // other files cannot consume their timeout. Ordinary unit limits stay put.
     // Both projects still contribute to the same coverage map and shards.
-    // Benchmarks retain their existing single-project configuration.
-    projects: mode === 'benchmark' ? undefined : [
+    // Vitest 5 creates benchmark variants of these projects. Only the unit
+    // project owns benchmarks, so the physics variant excludes every file.
+    projects: [
       {
         extends: true,
         test: {
@@ -43,6 +44,7 @@ export default defineConfig(({ mode }) => ({
         extends: true,
         test: {
           name: 'physics-simulations',
+          benchmark: { exclude: ['**/*'] },
           include: physicsSimulationTests,
           fileParallelism: false,
           testTimeout: 60_000,
@@ -82,9 +84,7 @@ export default defineConfig(({ mode }) => ({
         'dist/**',
         'integration-tests/**',
         'codemod/**',
-        // Vitest matches coverage include globs against a filename substring;
-        // without this exclusion, `docs/src/components/**` also matches the
-        // production root pattern above.
+        // Keep documentation outside the production coverage denominator.
         'docs/**',
       ],
       thresholds: isCoverageShard ? undefined : {
@@ -111,4 +111,4 @@ export default defineConfig(({ mode }) => ({
       exclude: ['node_modules', 'dist']
     }
   }
-}))
+})

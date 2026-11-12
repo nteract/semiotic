@@ -3,7 +3,7 @@ import { annotationNote } from "../../text/annotationTextLayout"
 import type * as React from "react"
 import { cloneElement } from "react"
 import Annotation from "../../Annotation"
-import { packEnclose } from "d3-hierarchy"
+import { packEnclose } from "../../../vendor/d3-pack-enclose"
 import { area as d3Area, curveLinear } from "d3-shape"
 import type { AnnotationContext } from "../../realtime/types"
 import type { CurveType } from "../../stream/types"
@@ -119,6 +119,7 @@ export function createDefaultAnnotationRules(
           ) as { x: number; y: number; r: number }[]
         if (coords.length < 2) return null
         const enclosure = packEnclose(coords)
+        if (!enclosure) return null
         const padding = ann.padding ?? 10
         return (
           <g key={`ann-${index}`}>

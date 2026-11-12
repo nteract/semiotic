@@ -1,4 +1,4 @@
-import { bench, describe } from "vitest"
+import { bench, describe } from "../setup/bench"
 import { activeCountOverDomain } from "../../src/components/recipes/intervals"
 
 describe("Interval concurrency counts", () => {

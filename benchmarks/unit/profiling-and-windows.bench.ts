@@ -1,4 +1,4 @@
-import { bench, describe } from "vitest"
+import { bench, describe } from "../setup/bench"
 import { profileNumericFields } from "../../src/components/data/numericFieldProfiler"
 import { summarizeData } from "../../src/components/data/DataSummarizer"
 import { WindowAccumulator } from "../../src/components/realtime/WindowAccumulator"

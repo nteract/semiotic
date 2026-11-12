@@ -26,7 +26,84 @@ function rawBenchmark(entry) {
   }
 }
 
+function rawBenchmarkV5(
+  tasks = [{ name: "example", latency: { mean: 1.25, samplesCount: 42 } }]
+) {
+  return {
+    success: true,
+    testResults: [
+      {
+        name: "benchmarks/unit/example.bench.ts",
+        status: "passed",
+        assertionResults: [
+          {
+            title: "example",
+            fullName: "suite example",
+            status: "passed",
+            benchmarks: [{ name: "example", tasks }]
+          }
+        ]
+      }
+    ]
+  }
+}
+
 describe("benchmark result validation", () => {
+  it("normalizes Vitest 5 latency statistics to the existing millisecond capture", () => {
+    const raw = rawBenchmarkV5()
+    raw.testResults[0].assertionResults.push({
+      title: "optional engine",
+      status: "pending",
+      benchmarks: []
+    })
+    const result = collectVitestBenchmarks(raw)
+    assert.deepEqual(result.errors, [])
+    assert.deepEqual(result.benchmarks.example, {
+      mean: 1.25,
+      sampleCount: 42,
+      unit: "ms"
+    })
+  })
+
+  it("rejects failed, missing, empty, and duplicate Vitest 5 results", () => {
+    for (const mutate of [
+      (raw) => {
+        raw.success = false
+      },
+      (raw) => {
+        raw.testResults[0].status = "failed"
+      },
+      (raw) => {
+        raw.testResults[0].assertionResults[0].status = "failed"
+      },
+      (raw) => {
+        raw.testResults[0].assertionResults[0].benchmarks = []
+      },
+      (raw) => {
+        raw.testResults[0].assertionResults[0].benchmarks[0].tasks = []
+      },
+      (raw) => {
+        delete raw.testResults[0].assertionResults[0].benchmarks[0].tasks
+      },
+      (raw) => {
+        raw.testResults[0].assertionResults[0].benchmarks[0].tasks[0].latency.samplesCount = 0
+      },
+      (raw) => {
+        raw.testResults[0].assertionResults[0].benchmarks[0].tasks[0].latency.mean = 0
+      },
+      (raw) => {
+        raw.testResults[0].assertionResults.push(
+          raw.testResults[0].assertionResults[0]
+        )
+      }
+    ]) {
+      const raw = rawBenchmarkV5()
+      mutate(raw)
+      assert(collectVitestBenchmarks(raw).errors.length > 0)
+    }
+  })
+
+
   it("normalizes a timed Vitest benchmark with its sample count", () => {
     const result = collectVitestBenchmarks(rawBenchmark({
       name: "example",
@@ -128,6 +205,11 @@ function comparePairs(t, pairs, rawCurrent = false) {
 }
 
 describe("benchmark comparison gate", () => {
+  it("compares raw Vitest 5 output with an existing normalized baseline", (t) => {
+    const result = compare(t, capture({ example: 1.25 }), rawBenchmarkV5())
+    assert.equal(result.status, 0, result.output)
+  })
+
   for (const rawCurrent of [false, true]) {
     it(`keeps the reported millisecond slowdowns visible without failing (${rawCurrent ? "Vitest" : "normalized"})`, (t) => {
       const pairs = [

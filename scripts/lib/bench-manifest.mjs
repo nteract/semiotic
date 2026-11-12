@@ -5,8 +5,23 @@
  * copy they still exercise the target checkout's `src/` while declaring the
  * exact same benchmark names and fixtures as the caller.
  */
-import { cpSync, existsSync, rmSync } from "node:fs"
+import { cpSync, existsSync, readFileSync, rmSync } from "node:fs"
 import { join, resolve } from "node:path"
+
+/** Node arguments for the current Vitest 5 runner or an older release's runner. */
+export function benchmarkCaptureArgs(root, outputPath) {
+  const { version } = JSON.parse(
+    readFileSync(join(root, "node_modules/vitest/package.json"), "utf8")
+  )
+  return [
+    join(root, "node_modules/vitest/vitest.mjs"),
+    "bench",
+    "--run",
+    ...(Number(version.split(".")[0]) >= 5
+      ? ["--reporter=json", `--outputFile=${outputPath}`]
+      : [`--outputJson=${outputPath}`])
+  ]
+}
 
 export function overlayBenchmarkManifest(sourceRoot, targetRoot) {
   const source = join(resolve(sourceRoot), "benchmarks")

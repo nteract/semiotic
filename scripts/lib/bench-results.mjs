@@ -1,9 +1,9 @@
 /**
  * Validation and normalization for Vitest benchmark output.
  *
- * Vitest omits the raw `samples` array from JSON reports by default, but
- * retains `sampleCount`. Validate that count rather than the (intentionally
- * empty) array so a failed/empty benchmark cannot become a baseline hole.
+ * Vitest 4 retains `sampleCount`; Vitest 5 reports `latency.samplesCount`.
+ * Validate that count rather than the optional raw samples array so a
+ * failed/empty benchmark cannot become a baseline hole.
  */
 
 function isRecord(value) {
@@ -44,12 +44,64 @@ function validateEntry(name, entry, source, errors) {
 }
 
 /**
- * Normalize a Vitest `--outputJson` report and reject any partial result.
+ * Normalize Vitest 4 `--outputJson` or Vitest 5 JSON reporter output.
+ * Keep both formats for comparisons against older release checkouts.
  */
 export function collectVitestBenchmarks(raw, label = "Vitest benchmark output") {
   const errors = []
   const benchmarks = Object.create(null)
   const names = new Set()
+
+  if (isRecord(raw) && Array.isArray(raw.testResults)) {
+    if (raw.success !== true)
+      errors.push(`${label}: benchmark run did not succeed`)
+    raw = {
+      files: raw.testResults.map((file) => {
+        const source = `${label} > ${file?.name ?? "unknown file"}`
+        if (
+          !isRecord(file) ||
+          file.status !== "passed" ||
+          !Array.isArray(file.assertionResults)
+        ) {
+          errors.push(`${source}: failed or incomplete benchmark file`)
+          return { filepath: file?.name, groups: [] }
+        }
+        return {
+          filepath: file.name,
+          groups: file.assertionResults.flatMap((test) => {
+            // Optional engine benchmarks intentionally skip when not installed.
+            if (
+              test?.status === "skipped" ||
+              test?.status === "pending" ||
+              test?.status === "todo"
+            )
+              return []
+            if (
+              !isRecord(test) ||
+              test.status !== "passed" ||
+              !Array.isArray(test.benchmarks) ||
+              test.benchmarks.length === 0
+            ) {
+              errors.push(
+                `${source} > ${test?.title ?? "unknown test"}: failed or empty benchmark test`
+              )
+              return []
+            }
+            return test.benchmarks.map((group) => ({
+              fullName: test.fullName,
+              benchmarks: Array.isArray(group?.tasks)
+                ? group.tasks.map((task) => ({
+                    name: task?.name,
+                    mean: task?.latency?.mean,
+                    sampleCount: task?.latency?.samplesCount
+                  }))
+                : undefined
+            }))
+          })
+        }
+      })
+    }
+  }
 
   if (!isRecord(raw) || !Array.isArray(raw.files)) {
     return {

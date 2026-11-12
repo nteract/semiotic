@@ -7,7 +7,7 @@
  * For n nodes, creates n² matrix cells (e.g., 500 nodes = 250,000 cells)
  */
 
-import { describe, bench } from 'vitest'
+import { describe, bench } from "../setup/bench"
 import { generateNetworkData } from '../setup/data-generators'
 
 /**

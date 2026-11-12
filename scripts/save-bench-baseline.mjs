@@ -8,11 +8,12 @@
  * for `npm run bench:compare:committed` on comparable local hardware.
  * CI does not read this file: `bench:pr-vs-main` measures origin/main afresh.
  */
-import { execSync } from "node:child_process"
+import { execFileSync, execSync } from "node:child_process"
 import { writeFileSync, readFileSync, rmSync } from "node:fs"
 import { join, dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { tmpdir } from "node:os"
+import { benchmarkCaptureArgs } from "./lib/bench-manifest.mjs"
 import {
   collectVitestBenchmarks,
   printBenchmarkValidationErrors,
@@ -31,7 +32,7 @@ const baselinePath = outArg
 
 const tmpJson = join(tmpdir(), `semiotic-bench-${Date.now()}.json`)
 console.log(`▶ running benchmarks → ${tmpJson}`)
-execSync(`npx vitest bench --run --outputJson="${tmpJson}"`, {
+execFileSync(process.execPath, benchmarkCaptureArgs(repoRoot, tmpJson), {
   cwd: repoRoot,
   stdio: "inherit",
 })
