@@ -29,7 +29,7 @@ import {
   snapshotLines
 } from "./lib/api-compatibility.mjs"
 import { createDeclarationAssignability } from "./lib/declaration-assignability.mjs"
-import { npmPackArtifactArgs } from "./lib/npm-pack.mjs"
+import { packNpmArtifact } from "./lib/npm-pack.mjs"
 
 const repoRoot = resolve(fileURLToPath(new URL("..", import.meta.url)))
 const args = process.argv.slice(2)
@@ -128,53 +128,15 @@ try {
   mkdirSync(archiveDir, { recursive: true })
   mkdirSync(extractionDir, { recursive: true })
 
-  const packed = spawnSync(
-    "npm",
-    npmPackArtifactArgs([
-      `semiotic@${previousVersion}`,
-      "--ignore-scripts",
-      "--json",
-      "--pack-destination",
-      archiveDir,
-      "--registry",
-      registry
-    ]),
-    {
-      cwd: repoRoot,
-      encoding: "utf8",
-      timeout: 120_000,
-      maxBuffer: 16 * 1024 * 1024
-    }
-  )
-  if (packed.status !== 0) {
-    process.stderr.write(packed.stderr || packed.stdout)
-    throw new Error(
-      `Could not download authoritative semiotic@${previousVersion} package`
-    )
-  }
-  let packResult
-  try {
-    packResult = JSON.parse(packed.stdout)
-  } catch (error) {
-    throw new Error(`Could not parse npm pack output: ${error.message}`)
-  }
-  const reportedFilename = packResult?.[0]?.filename
-  const archiveNames = readdirSync(archiveDir)
-    .filter((name) => name.endsWith(".tgz"))
-    .sort()
-  if (archiveNames.length !== 1) {
-    throw new Error(
-      `npm pack expected one .tgz archive in ${archiveDir}; found ${archiveNames.length}`
-    )
-  }
-  if (reportedFilename && reportedFilename !== archiveNames[0]) {
-    throw new Error(
-      `npm pack reported ${reportedFilename}, but wrote ${archiveNames[0]}`
-    )
-  }
+  const archive = packNpmArtifact({
+    packageSpec: `semiotic@${previousVersion}`,
+    cwd: repoRoot,
+    destination: archiveDir,
+    registry
+  })
   execFileSync("tar", [
     "-xzf",
-    join(archiveDir, archiveNames[0]),
+    archive,
     "-C",
     extractionDir
   ])

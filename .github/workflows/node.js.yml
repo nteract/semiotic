@@ -234,6 +234,9 @@ jobs:
       - name: Test release infrastructure helpers
         run: npm run test:release-infrastructure
 
+      - name: Test SSR comparison tooling with local artifacts
+        run: npm run test:ssr-comparison
+
       - name: Check Atlas acceptance fixtures and documentation types
         run: |
           npm run check:network-atlas-fixtures

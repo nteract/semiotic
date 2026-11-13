@@ -65,6 +65,7 @@ export default defineConfig({
       // bundle. Keep other script TypeScript tests in Vitest; discovery is
       // checked by scripts/vitest-projects.test.mjs before expensive jobs.
       'scripts/**/*.test.mjs',
+      'scripts/ssr-comparison/*.test.ts',
       'scripts/release-preflight.test.ts',
       'scripts/release-dist-tag.test.ts',
       'scripts/changelog-provenance.test.ts'
