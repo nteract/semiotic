@@ -295,7 +295,11 @@ const ENTRY_GRAPHS = [
   // against clean main with the same production toolchain. Allocate 0.6 KiB
   // to these corrections, retaining ~0.15 KiB headroom. No new dependency or
   // entry-graph reachability; family-entry budgets remain unchanged.
-  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 417.7 },
+  // #1364: Date-preserving config/selection metadata, strict restoration,
+  // omission reports, and UTF-8 URL transport add 940 B gzip
+  // (427,567 → 428,507 B). Allocate 0.9 KiB while retaining the narrow guard band;
+  // no chart-family graph or dependency is added.
+  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 418.6 },
   // Bumped 150→154: custom-layout painter registration now loads on demand
   // rather than retaining every painter in every chart HOC. The lightweight
   // readiness bridge and fallback paint selection live in the shared XY
@@ -590,7 +594,9 @@ const ENTRY_GRAPHS = [
   // #1461 shares the container chunk with the root: 688,685 → 689,334 B
   // (+649 B gzip). The matching 0.6 KiB allocation retains ~0.12 KiB
   // headroom without widening family budgets or the dependency graph.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 673.3 },
+  // #1364 shares the root's serialization implementation: +936 B gzip
+  // (689,334 → 690,270 B), with the matching 0.9 KiB allocation.
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 674.2 },
   // Bumped 100→101: transitDiagramLayout's public detail modes, source-rooted
   // line derivation, and station-rendering contract extend the curated recipes
   // entry. Linux CI measures 100.3 KiB gzip; retain a reviewable 0.7 KiB
@@ -628,7 +634,10 @@ const ENTRY_GRAPHS = [
   // sidecar. Isolating the neutral utility graph removes unrelated shared
   // contract chunks and returns production to 96.5 KiB, so restore the 110 KiB
   // ceiling rather than retaining transient graph-inflation allowances.
-  { entry: "semiotic-utils.module.min.js", label: "utils", limitKb: 114.5 },
+  // #1364 exposes the same Date-preserving serializers through utils/core;
+  // the utils facade adds 951 B gzip (117,086 → 118,037 B) without retaining
+  // chart families. The 0.9 KiB allocation keeps ~0.13 KiB headroom.
+  { entry: "semiotic-utils.module.min.js", label: "utils", limitKb: 115.4 },
   { entry: "semiotic-value.module.min.js", label: "value", limitKb: 25 }
 ]
 

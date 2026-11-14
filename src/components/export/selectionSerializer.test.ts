@@ -10,6 +10,59 @@ import {
 } from "./selectionSerializer"
 
 describe("selection serialization", () => {
+  it.each([NaN, Infinity, undefined, BigInt(1), new Date(NaN), () => 1])(
+    "rejects unsupported point values rather than changing their membership (%s)",
+    (value) => {
+      const selection: Selection = {
+        name: "points",
+        resolution: "union",
+        clauses: new Map([
+          [
+            "writer",
+            {
+              clientId: "writer",
+              type: "point",
+              fields: {
+                x: { type: "point", values: new Set([value]) }
+              }
+            }
+          ]
+        ])
+      }
+      expect(() =>
+        serializeSelections(new Map([["points", selection]]))
+      ).toThrow("unsupported JSON values")
+    }
+  )
+
+  it("copies finite interval bounds and rejects non-finite ranges", () => {
+    const range: [number, number] = [0, 10]
+    const selection: Selection = {
+      name: "range",
+      resolution: "union",
+      clauses: new Map([
+        [
+          "writer",
+          {
+            clientId: "writer",
+            type: "interval",
+            fields: { x: { type: "interval", range } }
+          }
+        ]
+      ])
+    }
+    const serialized = serializeSelections(new Map([["range", selection]]))
+    range[0] = 3
+    expect(serialized.range.clauses[0].fields.x).toEqual({
+      type: "interval",
+      range: [0, 10]
+    })
+    range[1] = Infinity
+    expect(() => serializeSelections(new Map([["range", selection]]))).toThrow(
+      "unsupported JSON values"
+    )
+  })
+
   it("retains crossfilter intersection and missing-value exclusion after JSON round-trip", () => {
     const selection: Selection = {
       name: "dashboard",

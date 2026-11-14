@@ -435,6 +435,25 @@ const code = configToJSX(config)
       {/* ----------------------------------------------------------------- */}
       <h2 id="what-gets-serialized">What Gets Serialized</h2>
 
+      <p>
+        Valid <code>Date</code> values are stored as ISO strings with explicit
+        <code> datePaths</code> metadata. Keep that metadata with the config:
+        <code> fromConfig()</code> restores Dates, and <code>configToJSX()</code>
+        emits <code>new Date(...)</code>. Ordinary ISO-looking strings remain
+        strings. URLs may include a fragment, or carry the config in a hash query.
+      </p>
+      <p>
+        Inspect <code>omittedPaths</code> and <code>warnings</code> before sharing
+        a config. Unsupported values such as invalid Dates, <code>NaN</code>,
+        <code> undefined</code>, BigInts, and cycles cause their containing
+        top-level prop to be omitted. For example, a missing value inside
+        <code> data</code> can exclude the entire dataset; normalize it explicitly
+        (such as using <code>null</code>) before exporting. The same report is
+        returned by <code>fromConfig()</code>. Portable recipes reject unsupported
+        props. <code>copyConfig()</code> expects an already serialized config
+        produced by <code>toConfig()</code>.
+      </p>
+
       <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 24 }}>
         <thead>
           <tr style={{ borderBottom: "2px solid var(--surface-3, #ddd)" }}>
@@ -529,7 +548,10 @@ const chartProps = {
         When using <Link to="/features/small-multiples">LinkedCharts</Link>, you
         can capture the current brush/selection state alongside the chart config.
         The <code>serializeSelections</code> function converts the internal
-        Map/Set structures to JSON-safe objects.
+        Map/Set structures to JSON-safe objects. Date-valued point selections
+        carry explicit paths too, so <code>deserializeSelections()</code> restores
+        Date membership after a JSON or URL round trip. Unsupported non-JSON
+        selection values throw an error instead of changing silently.
       </p>
 
       <CodeBlock
