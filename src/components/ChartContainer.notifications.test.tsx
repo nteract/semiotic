@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest"
-import { render, screen, fireEvent } from "@testing-library/react"
+import { act, render, screen, fireEvent } from "@testing-library/react"
 import * as React from "react"
 import { ChartContainer, type ChartNotification } from "./ChartContainer"
 
@@ -50,6 +50,35 @@ function getToggle() {
 }
 
 describe("ChartContainer notifications", () => {
+  it("focuses the named popover, advances after dismissal, and restores focus when the header disappears", () => {
+    const { container } = renderContainer(NOTIFICATIONS.slice(0, 2))
+    fireEvent.click(getToggle())
+    const dialog = screen.getByRole("dialog", { name: "Chart notifications" })
+    expect(dialog).toHaveFocus()
+    expect(getToggle()).toHaveAttribute("aria-controls", dialog.id)
+    const first = screen.getByRole("button", { name: "Dismiss notification: Truncated axis" })
+    act(() => first.focus())
+    fireEvent.click(first)
+    const next = screen.getByRole("button", { name: "Dismiss notification: Loaded title" })
+    expect(next).toHaveFocus()
+    fireEvent.click(next)
+    expect(screen.queryByRole("dialog")).toBeNull()
+    expect(container.querySelector(".semiotic-chart-container")).toHaveFocus()
+  })
+
+  it("returns focus to the bell when only a nondismissible card remains", () => {
+    renderContainer([NOTIFICATIONS[0], { message: "Required notice", dismissible: false }])
+    fireEvent.click(getToggle())
+    const dismiss = screen.getByRole("button", { name: "Dismiss notification: Truncated axis" })
+    act(() => dismiss.focus())
+    fireEvent.click(dismiss)
+    expect(getToggle()).toHaveFocus()
+    expect(screen.getByRole("dialog")).toHaveTextContent("Required notice")
+    fireEvent.keyDown(getToggle(), { key: "Escape" })
+    expect(screen.queryByRole("dialog")).toBeNull()
+    expect(getToggle()).toHaveFocus()
+  })
+
   it("renders a toggle with the count and most-severe level, popover closed by default", () => {
     renderContainer(NOTIFICATIONS)
     const toggle = getToggle()

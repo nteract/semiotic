@@ -46,6 +46,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `ChartContainer` preserves pushed data and its DOM handle when summary actions
+  toggle, scopes fullscreen and mobile styles to the owning container, restores
+  notification focus after dismissal, and reports toolbar export failures with
+  a retry action. `MobileChartContainer` also shares styles and isolates its
+  details-sheet breakpoint from sibling containers. (#1461)
 - Export `FrameGraphicsContext` and `FrameGraphicsProp` as types from the XY,
   ordinal, network, and geo entries so reusable overlay callbacks can use public
   imports. The physics entry exports its existing size-and-margin `FrameGraphicsProp`.

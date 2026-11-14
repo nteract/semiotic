@@ -391,6 +391,14 @@ const dataByYear = {
         is actually rendering. Click the bar-chart icon in the toolbar below.
       </p>
 
+      <p>
+        You can toggle toolbar actions without remounting the chart or losing
+        pushed data. Fullscreen applies to the selected container, and each
+        container uses its own mobile breakpoint. Export failures appear beside
+        the toolbar button with a retry action; calls to <code>ref.current.export()</code>
+        reject so your application can handle the error.
+      </p>
+
       <div style={{ maxWidth: 620, marginBottom: 24 }}>
         <ThemeProvider theme={siteTheme}>
           <ChartContainer

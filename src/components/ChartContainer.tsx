@@ -14,6 +14,14 @@ import {
 import { exportChart } from "./export/exportChart"
 import { copyConfig as copyConfigFn } from "./export/chartConfig"
 import { ChartCopyAction } from "./chartContainerCopyAction"
+import {
+  ChartNotificationBell,
+  type VisibleNotification
+} from "./chartContainerNotifications"
+import {
+  useChartContainerStyles,
+  chartActionButtonStyle as actionButtonStyle
+} from "./chartContainerStyles"
 import type { ChartConfig, CopyFormat } from "./export/chartConfig"
 import { ChartErrorBoundary } from "./ChartErrorBoundary"
 import { DataSummaryProvider, useDataSummaryToggle } from "./DataSummaryContext"
@@ -275,323 +283,6 @@ function DataSummaryButton() {
   )
 }
 
-const NOTIFICATION_LEVEL_COLORS: Record<ChartNotificationLevel, string> = {
-  info: "var(--semiotic-info, #2563eb)",
-  success: "var(--semiotic-success, #16a34a)",
-  warning: "var(--semiotic-warning, #d97706)",
-  error: "var(--semiotic-error, var(--semiotic-danger, #dc2626))",
-  neutral: "var(--semiotic-text-secondary, #6b7280)",
-}
-
-/** Higher = more severe. The bell adopts the icon + color of the most severe
- *  currently-visible notification. */
-const NOTIFICATION_LEVEL_SEVERITY: Record<ChartNotificationLevel, number> = {
-  error: 4,
-  warning: 3,
-  info: 2,
-  success: 1,
-  neutral: 0,
-}
-
-/** The glyph shown on the bell, chosen by the most severe visible level so the
- *  toolbar icon telegraphs severity at a glance. Uses `currentColor` so the
- *  caller can tint it with the level color. */
-function NotificationLevelIcon({ level }: { level: ChartNotificationLevel }) {
-  const common = {
-    width: 15,
-    height: 15,
-    viewBox: "0 0 16 16",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: 1.5,
-    strokeLinecap: "round" as const,
-    strokeLinejoin: "round" as const,
-    "aria-hidden": true,
-  }
-  switch (level) {
-    case "error":
-    case "warning":
-      // Warning triangle — color separates error (red) from warning (amber).
-      return (
-        <svg {...common}>
-          <path d="M8 1.8 15 14H1L8 1.8Z" />
-          <path d="M8 6.4v3.4" />
-          <circle cx="8" cy="11.8" r="0.5" fill="currentColor" stroke="none" />
-        </svg>
-      )
-    case "success":
-      return (
-        <svg {...common}>
-          <circle cx="8" cy="8" r="6.4" />
-          <path d="M5 8.2 7 10.2 11 5.8" />
-        </svg>
-      )
-    case "info":
-      return (
-        <svg {...common}>
-          <circle cx="8" cy="8" r="6.4" />
-          <path d="M8 7.4V11" />
-          <circle cx="8" cy="5" r="0.5" fill="currentColor" stroke="none" />
-        </svg>
-      )
-    case "neutral":
-    default:
-      // Bell — the neutral, conventional notification glyph.
-      return (
-        <svg {...common}>
-          <path d="M8 2a3.5 3.5 0 0 0-3.5 3.5c0 4-1.5 5-1.5 5h10s-1.5-1-1.5-5A3.5 3.5 0 0 0 8 2Z" />
-          <path d="M6.5 13a1.5 1.5 0 0 0 3 0" />
-        </svg>
-      )
-  }
-}
-
-/**
- * A single notification card, as rendered inside the popover, with its class
- * hooks, dismiss affordance, and level styling.
- */
-function NotificationCard({
-  notification,
-  level,
-  onDismiss,
-}: {
-  notification: ChartNotification
-  level: ChartNotificationLevel
-  onDismiss?: () => void
-}) {
-  const color = NOTIFICATION_LEVEL_COLORS[level] ?? NOTIFICATION_LEVEL_COLORS.info
-  const dismissible = notification.dismissible !== false
-  return (
-    <div
-      className={`semiotic-chart-notification semiotic-chart-notification--${level}`}
-      style={{
-        display: "flex",
-        alignItems: "flex-start",
-        gap: 8,
-        padding: "6px 10px",
-        borderRadius: 4,
-        borderLeft: `3px solid ${color}`,
-        background: "var(--semiotic-surface, rgba(127, 127, 127, 0.08))",
-      }}
-    >
-      <div style={{ flex: 1, minWidth: 0 }}>
-        {notification.source && (
-          <div
-            className="semiotic-chart-notification-source"
-            style={{
-              fontSize: 9,
-              fontWeight: 700,
-              letterSpacing: "0.06em",
-              textTransform: "uppercase",
-              color: "var(--semiotic-text-secondary, #666)",
-            }}
-          >
-            {notification.source}
-          </div>
-        )}
-        {notification.title && (
-          <div
-            className="semiotic-chart-notification-title"
-            style={{ fontSize: 12, fontWeight: 600, color }}
-          >
-            {notification.title}
-          </div>
-        )}
-        <div
-          className="semiotic-chart-notification-message"
-          style={{
-            fontSize: 12,
-            lineHeight: 1.45,
-            color: "var(--semiotic-text, #333)",
-          }}
-        >
-          {notification.message}
-        </div>
-      </div>
-      {dismissible && (
-        <button
-          className="semiotic-chart-notification-dismiss"
-          aria-label={
-            notification.title
-              ? `Dismiss notification: ${notification.title}`
-              : "Dismiss notification"
-          }
-          title="Dismiss"
-          onClick={onDismiss}
-          style={{
-            ...actionButtonStyle,
-            width: 18,
-            height: 18,
-            fontSize: 13,
-            lineHeight: 1,
-            flex: "none",
-          }}
-        >
-          ×
-        </button>
-      )}
-    </div>
-  )
-}
-
-/** A notification paired with the resolved key + level the bell renders with.
- *  Computed once by the container so `hasHeader` and the bell agree on the
- *  visible set (dismissal state lives in the container, above the bell). */
-interface VisibleNotification {
-  notification: ChartNotification
-  index: number
-  key: string
-  level: ChartNotificationLevel
-}
-
-/**
- * The notifications affordance: a compact toolbar bell carrying a count badge
- * and the icon + color of the most severe visible notification. Clicking it
- * opens a popover with the full notification cards — an overlay, so arriving or
- * dismissing notices never reflows the chart body (no layout swirl).
- *
- * Presentational: the container owns dismissal state and passes the already-
- * filtered `visible` set, so the header can hide itself once every notification
- * has been dismissed. Also renders a screen-reader-only live region that
- * announces the current count + most-severe level, so streamed notifications
- * are still voiced while the popover is collapsed.
- */
-function ChartNotificationBell({
-  visible,
-  onDismiss,
-}: {
-  visible: VisibleNotification[]
-  onDismiss: (entry: VisibleNotification) => void
-}) {
-  const [open, setOpen] = useState(false)
-  const wrapperRef = useRef<HTMLDivElement>(null)
-  const buttonRef = useRef<HTMLButtonElement>(null)
-
-  // Collapse the popover once nothing is left to show.
-  useEffect(() => {
-    if (visible.length === 0 && open) setOpen(false)
-  }, [visible.length, open])
-
-  // Dismiss on outside click / Escape, returning focus to the toggle.
-  useEffect(() => {
-    if (!open) return
-    const onDocPointer = (e: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        setOpen(false)
-      }
-    }
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setOpen(false)
-        buttonRef.current?.focus()
-      }
-    }
-    document.addEventListener("mousedown", onDocPointer)
-    document.addEventListener("keydown", onKeyDown)
-    return () => {
-      document.removeEventListener("mousedown", onDocPointer)
-      document.removeEventListener("keydown", onKeyDown)
-    }
-  }, [open])
-
-  if (visible.length === 0) return null
-
-  const mostSevere = visible.reduce<ChartNotificationLevel>(
-    (acc, v) =>
-      NOTIFICATION_LEVEL_SEVERITY[v.level] > NOTIFICATION_LEVEL_SEVERITY[acc]
-        ? v.level
-        : acc,
-    visible[0].level
-  )
-  const color =
-    NOTIFICATION_LEVEL_COLORS[mostSevere] ?? NOTIFICATION_LEVEL_COLORS.info
-  const count = visible.length
-  const summary = `${count} chart notification${
-    count === 1 ? "" : "s"
-  }, most severe: ${mostSevere}`
-
-  return (
-    <div
-      ref={wrapperRef}
-      className="semiotic-chart-notifications"
-      style={{ position: "relative", display: "inline-flex" }}
-    >
-      <span style={SR_ONLY} role="status" aria-live="polite">
-        {summary}
-      </span>
-      <button
-        ref={buttonRef}
-        className="semiotic-chart-action semiotic-chart-notifications-toggle"
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        aria-label={`${summary}. ${open ? "Hide" : "Show"} notifications`}
-        title={summary}
-        onClick={() => setOpen((o) => !o)}
-        style={{ ...actionButtonStyle, color, position: "relative" }}
-      >
-        <NotificationLevelIcon level={mostSevere} />
-        <span
-          className="semiotic-chart-notifications-badge"
-          aria-hidden="true"
-          style={{
-            position: "absolute",
-            top: -3,
-            right: -3,
-            minWidth: 15,
-            height: 15,
-            padding: "0 3px",
-            boxSizing: "border-box",
-            borderRadius: 8,
-            background: color,
-            color: "#fff",
-            fontSize: 9,
-            fontWeight: 700,
-            lineHeight: "15px",
-            textAlign: "center",
-          }}
-        >
-          {count > 99 ? "99+" : count}
-        </span>
-      </button>
-      {open && (
-        <div
-          className="semiotic-chart-notifications-popover"
-          role="dialog"
-          aria-label="Chart notifications"
-          style={{
-            position: "absolute",
-            top: "calc(100% + 6px)",
-            right: 0,
-            zIndex: 20,
-            width: 320,
-            maxWidth: "min(360px, 90vw)",
-            maxHeight: 320,
-            overflowY: "auto",
-            display: "flex",
-            flexDirection: "column",
-            gap: 6,
-            padding: 10,
-            textAlign: "left",
-            background: "var(--semiotic-bg, #fff)",
-            border: "1px solid var(--semiotic-border, #e0e0e0)",
-            borderRadius: 6,
-            boxShadow: "0 6px 24px rgba(0, 0, 0, 0.16)",
-          }}
-        >
-          {visible.map((entry) => (
-            <NotificationCard
-              key={entry.key}
-              notification={entry.notification}
-              level={entry.level}
-              onDismiss={() => onDismiss(entry)}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
 const STATUS_COLORS = {
   live: { bg: "#22c55e", color: "#fff" },
   stale: { bg: "#ef4444", color: "#fff" },
@@ -683,6 +374,7 @@ export const ChartContainer = /* @__PURE__ */ forwardRef<
   const containerRef = useRef<HTMLDivElement>(null)
   const chartBodyRef = useRef<HTMLDivElement>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [exportError, setExportError] = useState("")
 
   const automaticDataAuditNotifications = useChartContainerDataAudit(
     chartConfig,
@@ -798,10 +490,11 @@ export const ChartContainer = /* @__PURE__ */ forwardRef<
 
   const toggleFullscreen = useCallback(() => {
     if (!containerRef.current) return
-    if (!document.fullscreenElement) {
-      containerRef.current.requestFullscreen().catch(() => {})
+    const element = containerRef.current
+    if (element.ownerDocument.fullscreenElement === element) {
+      void element.ownerDocument.exitFullscreen?.().catch(() => {})
     } else {
-      document.exitFullscreen().catch(() => {})
+      void element.requestFullscreen?.().catch(() => {})
     }
   }, [])
 
@@ -818,11 +511,13 @@ export const ChartContainer = /* @__PURE__ */ forwardRef<
   }, [chartConfig, copyConfigFormat])
 
   useEffect(() => {
+    const ownerDocument = containerRef.current!.ownerDocument
     const handleChange = () => {
-      setIsFullscreen(!!document.fullscreenElement)
+      setIsFullscreen(ownerDocument.fullscreenElement === containerRef.current)
     }
-    document.addEventListener("fullscreenchange", handleChange)
-    return () => document.removeEventListener("fullscreenchange", handleChange)
+    handleChange()
+    ownerDocument.addEventListener("fullscreenchange", handleChange)
+    return () => ownerDocument.removeEventListener("fullscreenchange", handleChange)
   }, [])
 
   useImperativeHandle(
@@ -831,7 +526,9 @@ export const ChartContainer = /* @__PURE__ */ forwardRef<
       export: handleExport,
       toggleFullscreen,
       copyConfig: handleCopyConfig,
-      element: containerRef.current,
+      get element() {
+        return containerRef.current
+      },
     }),
     [handleExport, toggleFullscreen, handleCopyConfig]
   )
@@ -840,6 +537,10 @@ export const ChartContainer = /* @__PURE__ */ forwardRef<
     mobile === true ? {} : mobile && typeof mobile === "object" ? mobile : null
   const mobileEnabled = !!mobile
   const mobileBreakpoint = mobileOptions?.breakpoint ?? 480
+  const containerStyles = useChartContainerStyles({
+    containerRef,
+    breakpoint: mobileEnabled ? mobileBreakpoint : undefined
+  })
   const mobileChartMode = mobileOptions?.chartMode === undefined ? "mobile" : mobileOptions.chartMode
   const mobileSemantics = mobileOptions?.semantics
   const mobileInteractionSource = mobileOptions?.mobileInteraction ?? (mobileEnabled ? true : undefined)
@@ -972,59 +673,17 @@ export const ChartContainer = /* @__PURE__ */ forwardRef<
     childrenWithMobileProps
   )
 
-  const wrapper = (node: React.ReactNode) =>
-    showDataSummary ? <DataSummaryProvider>{node}</DataSummaryProvider> : node
-
-  return wrapper(
-    <>
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `@keyframes semiotic-skeleton-pulse {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-@media (max-width: ${mobileBreakpoint}px) {
-  .semiotic-chart-container[data-semiotic-mobile="true"] .semiotic-chart-header {
-    padding: 10px 12px !important;
-    gap: 10px !important;
-  }
-  .semiotic-chart-container[data-semiotic-mobile="true"] .semiotic-chart-title-area {
-    flex-basis: 100% !important;
-  }
-  .semiotic-chart-container[data-semiotic-mobile="true"] .semiotic-chart-toolbar {
-    width: 100% !important;
-    margin-left: 0 !important;
-    justify-content: flex-start !important;
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch;
-  }
-  .semiotic-chart-container[data-semiotic-mobile="true"][data-semiotic-mobile-hide-toolbar="true"] .semiotic-chart-toolbar {
-    display: none !important;
-  }
-  .semiotic-chart-container[data-semiotic-mobile="true"] .semiotic-chart-action {
-    min-width: 32px !important;
-    min-height: 32px !important;
-  }
-  .semiotic-chart-container[data-semiotic-mobile="true"] .semiotic-chart-mobile-summary {
-    display: block !important;
-  }
-  .semiotic-chart-container[data-semiotic-mobile="true"] .semiotic-chart-mobile-standard-controls {
-    display: block !important;
-  }
-  .semiotic-chart-container[data-semiotic-mobile="true"][data-semiotic-mobile-scroll="true"] .semiotic-chart-body {
-    overflow-x: auto !important;
-    justify-content: flex-start !important;
-    -webkit-overflow-scrolling: touch;
-  }
-}`,
-        }}
-      />
+  return (
+    <DataSummaryProvider enabled={showDataSummary}>
+      {containerStyles}
       <div
         ref={containerRef}
+        tabIndex={-1}
         className={
           "semiotic-chart-container" + (className ? ` ${className}` : "")
         }
         data-semiotic-mobile={mobileEnabled ? "true" : undefined}
+        data-semiotic-mobile-breakpoint={mobileEnabled ? mobileBreakpoint : undefined}
         data-semiotic-mobile-scroll={mobileAllowScroll ? "true" : undefined}
         data-semiotic-mobile-hide-toolbar={mobileHideToolbar ? "true" : undefined}
         style={{
@@ -1102,30 +761,44 @@ export const ChartContainer = /* @__PURE__ */ forwardRef<
                 <ChartNotificationBell
                   visible={visibleNotifications}
                   onDismiss={handleNotificationDismiss}
+                  fallbackFocusRef={containerRef}
                 />
               )}
               {showExport && (
-                <button
-                  className="semiotic-chart-action"
-                  onClick={() => handleExport()}
-                  title="Export chart"
-                  aria-label="Export chart"
-                  style={actionButtonStyle}
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 14 14"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                <>
+                  <button
+                    className="semiotic-chart-action"
+                    style={actionButtonStyle}
+                    title={exportError ? "Retry chart export" : "Export chart"}
+                    aria-label={exportError ? "Retry chart export" : "Export chart"}
+                    onClick={() => {
+                      setExportError("")
+                      void handleExport().catch((error) => setExportError(
+                        (error instanceof Error && error.message) || "Unable to download the chart."
+                      ))
+                    }}
                   >
-                    <path d="M7 2v8M3.5 7L7 10.5 10.5 7" />
-                    <path d="M2 12h10" />
-                  </svg>
-                </button>
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 14 14"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M7 2v8M3.5 7L7 10.5 10.5 7" />
+                      <path d="M2 12h10" />
+                    </svg>
+                  </button>
+                  {exportError && (
+                    <span role="alert" style={{ fontSize: 12 }}>
+                      Export failed: {exportError}
+                    </span>
+                  )}
+                </>
               )}
               {showDataSummary && <DataSummaryButton />}
               {showFullscreen && (
@@ -1279,20 +952,6 @@ export const ChartContainer = /* @__PURE__ */ forwardRef<
         </div>
 
       </div>
-    </>
+    </DataSummaryProvider>
   )
 })
-
-const actionButtonStyle: React.CSSProperties = {
-  width: 24,
-  height: 24,
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  border: "none",
-  background: "transparent",
-  cursor: "pointer",
-  borderRadius: 4,
-  color: "var(--semiotic-text-secondary, #666)",
-  padding: 0,
-}
