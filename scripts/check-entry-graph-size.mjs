@@ -289,7 +289,13 @@ const ENTRY_GRAPHS = [
   // accounting, which excludes external dependencies. It removes the eager
   // D3 hierarchy import from ordinary consumers; cold-consumer tolerances and
   // the new hierarchy-isolation regression remain unchanged.
-  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 417.1 },
+  // #1461: container state ownership, notification focus, export feedback,
+  // and shared/scoped styles (including MobileChartContainer) add 647 B gzip
+  // (426,920 → 427,567 B), measured
+  // against clean main with the same production toolchain. Allocate 0.6 KiB
+  // to these corrections, retaining ~0.15 KiB headroom. No new dependency or
+  // entry-graph reachability; family-entry budgets remain unchanged.
+  { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 417.7 },
   // Bumped 150→154: custom-layout painter registration now loads on demand
   // rather than retaining every painter in every chart HOC. The lightweight
   // readiness bridge and fallback paint selection live in the shared XY
@@ -581,7 +587,10 @@ const ENTRY_GRAPHS = [
   // User-approved 3.13.2 refresh (2026-10-27): the production AI graph
   // measures 652,373 bytes (637.083 KiB) gzip across 78 files. Allow 637.5 KiB,
   // retaining about 0.4 KiB headroom for the patch's correctness fixes.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 672.7 },
+  // #1461 shares the container chunk with the root: 688,685 → 689,334 B
+  // (+649 B gzip). The matching 0.6 KiB allocation retains ~0.12 KiB
+  // headroom without widening family budgets or the dependency graph.
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 673.3 },
   // Bumped 100→101: transitDiagramLayout's public detail modes, source-rooted
   // line derivation, and station-rendering contract extend the curated recipes
   // entry. Linux CI measures 100.3 KiB gzip; retain a reviewable 0.7 KiB

@@ -1,6 +1,12 @@
 "use client"
 import type * as React from "react"
-import { createContext, useState, useCallback, useMemo, useContext } from "react"
+import {
+  createContext,
+  useState,
+  useCallback,
+  useMemo,
+  useContext
+} from "react"
 
 interface DataSummaryState {
   /** When true, AccessibleDataTable renders visibly instead of sr-only */
@@ -9,14 +15,25 @@ interface DataSummaryState {
   toggle: () => void
 }
 
-const DataSummaryContext = /* @__PURE__ */ createContext<DataSummaryState | null>(null)
+const DataSummaryContext =
+  /* @__PURE__ */ createContext<DataSummaryState | null>(null)
 
-export function DataSummaryProvider({ children }: { children: React.ReactNode }) {
+export function DataSummaryProvider({
+  children,
+  enabled = true
+}: {
+  children: React.ReactNode
+  enabled?: boolean
+}) {
+  const parent = useContext(DataSummaryContext)
   const [visible, setVisible] = useState(false)
-  const toggle = useCallback(() => setVisible(v => !v), [])
-  const value = useMemo(() => ({ visible, setVisible, toggle }), [visible, toggle])
+  const toggle = useCallback(() => setVisible((v) => !v), [])
+  const value = useMemo(
+    () => ({ visible, setVisible, toggle }),
+    [visible, toggle]
+  )
   return (
-    <DataSummaryContext.Provider value={value}>
+    <DataSummaryContext.Provider value={enabled ? value : parent}>
       {children}
     </DataSummaryContext.Provider>
   )
