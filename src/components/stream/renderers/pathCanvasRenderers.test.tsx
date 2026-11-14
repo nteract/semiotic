@@ -61,7 +61,7 @@ describe("symbol canvas paths", () => {
     "matches SVG for fractional sizes in %s",
     (family) => {
       const ctx = makeContext()
-      const nodes = [4.01, 4.49, 8.49, 8.01].map((size) => makeSymbol({ size }))
+      const nodes = [4.01, 4.49, 8.49, 8.01, 0.25, 0.81].map((size) => makeSymbol({ size }))
       const networkNodes: NetworkSymbolNode[] = nodes.map((n) => ({
         ...n,
         cx: n.x,
@@ -88,6 +88,8 @@ describe("symbol canvas paths", () => {
       ).toEqual(paths)
       expect(paths[0]).not.toBe(paths[1])
       expect(paths[2]).not.toBe(paths[3])
+      expect(paths[4]).toBe("M-0.25,-0.25h0.5v0.5h-0.5Z")
+      expect(paths[5]).toBe("M-0.45,-0.45h0.9v0.9h-0.9Z")
     }
   )
 

@@ -87,12 +87,12 @@ export function symbolPathString(
   const type = Object.prototype.hasOwnProperty.call(D3_SYMBOLS, name)
     ? D3_SYMBOLS[name]
     : symbolCircle
-  return d3Symbol(type, Math.max(1, size))() ?? ""
+  return d3Symbol(type, Math.max(0, size))() ?? ""
 }
 
 /** Effective radius of a glyph with the given d3-symbol `size` (used for hit testing). */
 export function symbolRadius(size: number): number {
-  return Math.sqrt(Math.max(1, size) / Math.PI)
+  return Math.sqrt(Math.max(0, size) / Math.PI)
 }
 
 const EXTENT_CACHE = new Map<string, number>()
