@@ -1,8 +1,15 @@
+import { encodeConfigURL, decodeConfigURL } from "./configUrl"
 import {
   KNOWN_CHART_COMPONENTS,
   isKnownChartComponent
 } from "../charts/shared/knownChartComponents"
 import type { SerializedSelections } from "./selectionSerializer"
+import {
+  encodeDates,
+  restoreDates,
+  cloneConfigValue as deepClone,
+  datePropToJSX
+} from "./configDates"
 import type { Datum } from "../charts/shared/datumTypes"
 import { isChartDataProp } from "../charts/shared/chartDataProps"
 import {
@@ -33,6 +40,10 @@ export interface ChartConfig {
   component: string
   /** Serializable props only — functions and React elements stripped */
   props: Datum
+  /** Paths within props whose ISO strings must be restored as Dates. */
+  datePaths?: string[][]
+  /** Source paths omitted because they are excluded or cannot survive JSON. */
+  omittedPaths?: string[]
   /** Config schema version */
   version: string
   /** ISO 8601 timestamp */
@@ -80,6 +91,8 @@ export interface ToConfigOptions {
 }
 
 export interface FromConfigResult {
+  omittedPaths?: string[]
+  warnings?: string[]
   componentName: string
   props: Datum
   artifactContract?: PortableArtifactContract
@@ -159,11 +172,6 @@ function shouldExcludeDataProp(key: string, value: unknown): boolean {
   return true
 }
 
-const deepClone: <T>(obj: T) => T =
-  typeof structuredClone === "function"
-    ? structuredClone
-    : <T>(obj: T): T => JSON.parse(JSON.stringify(obj)) as T
-
 // ── toConfig ────────────────────────────────────────────────────────────
 
 export function toConfig(
@@ -190,34 +198,22 @@ export function toConfig(
     )
   }
 
-  const includeData = options?.includeData !== false
-  const serializedProps: Datum = {}
-
-  for (const [key, value] of Object.entries(props)) {
-    if (value === undefined || value === null) continue
-    if (ALWAYS_EXCLUDE.has(key)) continue
-    if (!includeData && shouldExcludeDataProp(key, value)) continue
-    if (typeof value === "function") continue
-    if (nonJsonValuePaths(value).length > 0) continue
-
-    // The strict JSON check above makes this clone stable across URL and file
-    // boundaries. A whole top-level prop is omitted when any nested value
-    // would otherwise be normalized or lost.
-    try {
-      setOwnValue(serializedProps, key, deepClone(value))
-    } catch {
-      // Non-cloneable value — skip rather than fail the whole toConfig call.
-    }
-  }
+  const { props: serializedProps, ...metadata } = serializableProps(
+    props,
+    options?.includeData !== false,
+    false
+  )
 
   const createdAt = new Date().toISOString()
   const binding = {
+    ...metadata,
     version: CONFIG_VERSION,
     createdAt,
     ...(options?.selections ? { selections: options.selections } : {})
   }
   return {
     component: componentName,
+    ...metadata,
     props: serializedProps,
     version: CONFIG_VERSION,
     createdAt,
@@ -235,28 +231,52 @@ export function toConfig(
 function serializableProps(
   props: Datum,
   includeData: boolean,
-  strict: boolean
-): Datum {
+  strict: boolean,
+  recipe = false
+): Pick<ChartConfig, "props" | "datePaths" | "omittedPaths" | "warnings"> {
   const serialized: Datum = {}
+  const datePaths: string[][] = []
+  const omittedPaths: string[] = []
   for (const [key, value] of Object.entries(props)) {
     if (value === undefined || value === null) continue
-    if (ALWAYS_EXCLUDE.has(key) || key === "recipeId") continue
-    if (!includeData && shouldExcludeDataProp(key, value)) continue
-    if (typeof value === "function") {
-      if (strict) {
-        throw new Error(`Portable recipe prop "${key}" is not JSON-safe.`)
-      }
+    if (
+      ALWAYS_EXCLUDE.has(key) ||
+      (recipe && key === "recipeId") ||
+      (!includeData && shouldExcludeDataProp(key, value))
+    ) {
+      omittedPaths.push(`props.${key}`)
       continue
     }
-    if (nonJsonValuePaths(value).length > 0) {
-      if (strict) {
-        throw new Error(`Portable recipe prop "${key}" is not JSON-safe.`)
-      }
+    let encoded: ReturnType<typeof encodeDates>
+    try {
+      encoded = encodeDates(value)
+    } catch {
+      encoded = { value, datePaths: [] }
+    }
+    const invalid = nonJsonValuePaths(encoded.value, `props.${key}`)
+    if (invalid.length > 0) {
+      if (strict)
+        throw new Error(
+          `Portable recipe prop "${key}" is not JSON-safe: ${invalid.join(", ")}.`
+        )
+      omittedPaths.push(...new Set([`props.${key}`, ...invalid]))
       continue
     }
-    setOwnValue(serialized, key, deepClone(value))
+    setOwnValue(serialized, key, deepClone(encoded.value))
+    datePaths.push(...encoded.datePaths.map((path) => [key, ...path]))
   }
-  return serialized
+  return {
+    props: serialized,
+    ...(datePaths.length ? { datePaths } : {}),
+    ...(omittedPaths.length
+      ? {
+          omittedPaths,
+          warnings: [
+            `Chart props were omitted from the config at: ${omittedPaths.join(", ")}. Preserve these values separately or provide JSON-safe values.`
+          ]
+        }
+      : {})
+  }
 }
 
 function recipeToConfig(
@@ -274,10 +294,11 @@ function recipeToConfig(
       `Portable recipe "${recipe.id}" has non-JSON definition values at: ${definitionIncompatiblePaths.join(", ")}.`
     )
   }
-  const serializedProps = serializableProps(
+  const { props: serializedProps, ...metadata } = serializableProps(
     props,
     includeData,
-    recipe.portability === "portable"
+    recipe.portability === "portable",
+    true
   )
   const intents = recipe.intents
     .map(recipeIntentId)
@@ -350,6 +371,7 @@ function recipeToConfig(
       )
     }
     const binding = {
+      ...metadata,
       version: CONFIG_VERSION,
       createdAt,
       recipeId: recipe.id,
@@ -359,6 +381,7 @@ function recipeToConfig(
     }
     return {
       component: "ChartRecipe",
+      ...metadata,
       recipeId: recipe.id,
       portable: true,
       props: serializedProps,
@@ -379,9 +402,11 @@ function recipeToConfig(
   const reason =
     "Recipe contains or may depend on non-serializable local layout callbacks."
   const warnings = [
-    "This config is inspectable but cannot be rendered remotely by CLI or MCP."
+    "This config is inspectable but cannot be rendered remotely by CLI or MCP.",
+    ...(metadata.warnings ?? [])
   ]
   const binding = {
+    ...metadata,
     version: CONFIG_VERSION,
     createdAt,
     recipeId: recipe.id,
@@ -393,6 +418,7 @@ function recipeToConfig(
   }
   return {
     component: "ChartRecipe",
+    ...metadata,
     recipeId: recipe.id,
     portable: false,
     reason,
@@ -464,6 +490,19 @@ function assertChartConfig(value: unknown): asserts value is ChartConfig {
   if (value.selections !== undefined && !isPlainRecord(value.selections)) {
     throw new Error("Invalid chart config: selections must be a plain object")
   }
+  if (value.datePaths !== undefined)
+    restoreDates(value.props, value.datePaths as string[][])
+  for (const key of ["omittedPaths", "warnings"] as const) {
+    if (
+      value[key] !== undefined &&
+      (!Array.isArray(value[key]) ||
+        value[key].some((item) => typeof item !== "string"))
+    ) {
+      throw new Error(
+        `Invalid chart config: ${key} must be an array of strings`
+      )
+    }
+  }
   if (value.manifest !== undefined) {
     if (!isPlainRecord(value.manifest)) {
       throw new Error("Invalid chart config: manifest must be a plain object")
@@ -510,6 +549,10 @@ function assertChartConfig(value: unknown): asserts value is ChartConfig {
 
 export function fromConfig(config: ChartConfig): FromConfigResult {
   assertChartConfig(config)
+  const report = {
+    ...(config.omittedPaths ? { omittedPaths: [...config.omittedPaths] } : {}),
+    ...(config.warnings ? { warnings: [...config.warnings] } : {})
+  }
 
   if (
     config.component === "ChartRecipe" ||
@@ -580,8 +623,9 @@ export function fromConfig(config: ChartConfig): FromConfigResult {
     }
     return {
       componentName: "ChartRecipe",
+      ...report,
       props: {
-        ...deepClone(config.props),
+        ...restoreDates(config.props, config.datePaths),
         recipeId: config.recipeId
       },
       ...restoredArtifactFields(config)
@@ -596,7 +640,8 @@ export function fromConfig(config: ChartConfig): FromConfigResult {
 
   return {
     componentName: config.component,
-    props: deepClone(config.props),
+    ...report,
+    props: restoreDates(config.props, config.datePaths),
     ...restoredArtifactFields(config)
   }
 }
@@ -605,34 +650,11 @@ export function fromConfig(config: ChartConfig): FromConfigResult {
 
 export function toURL(config: ChartConfig, options: ToURLOptions = {}): string {
   assertChartConfig(config)
-  const json = JSON.stringify(config)
-  const encoded = btoa(unescape(encodeURIComponent(json)))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "")
-  const query = `sc=${encoded}`
-  if (
-    options.maxLength !== undefined &&
-    query.length > Math.max(0, Math.floor(options.maxLength))
-  ) {
-    throw new RangeError(
-      `Serialized chart config is ${query.length} characters; the declared URL limit is ${options.maxLength}. Use a file or sidecar export instead.`
-    )
-  }
-  return query
+  return encodeConfigURL(config, options.maxLength)
 }
 
 export function fromURL(urlString: string): ChartConfig {
-  const params = new URLSearchParams(
-    urlString.includes("?") ? urlString.split("?")[1] : urlString
-  )
-  const encoded = params.get("sc")
-  if (!encoded) {
-    throw new Error("No chart config found in URL (missing 'sc' parameter)")
-  }
-  const padded = encoded.replace(/-/g, "+").replace(/_/g, "/")
-  const json = decodeURIComponent(escape(atob(padded)))
-  const parsed: unknown = JSON.parse(json)
+  const parsed = decodeConfigURL(urlString)
   assertChartConfig(parsed)
   return parsed
 }
@@ -643,6 +665,7 @@ export async function copyConfig(
   config: ChartConfig,
   format: CopyFormat = "json"
 ): Promise<void> {
+  assertChartConfig(config)
   const text =
     format === "jsx" ? configToJSX(config) : JSON.stringify(config, null, 2)
 
@@ -659,7 +682,7 @@ export async function copyConfig(
 
 export function configToJSX(config: ChartConfig): string {
   assertChartConfig(config)
-  const { props } = config
+  const props = restoreDates(config.props, config.datePaths)
   const component =
     config.component === "LocalChartRecipe" ? "ChartRecipe" : config.component
   if (component !== "ChartRecipe" && !isKnownChartComponent(component)) {
@@ -672,6 +695,18 @@ export function configToJSX(config: ChartConfig): string {
   }
 
   for (const [key, value] of Object.entries(props)) {
+    if (config.datePaths?.some((path) => path[0] === key)) {
+      const expression = datePropToJSX(value)
+        .replace(/</g, "\\u003c")
+        .replace(/\u2028/g, "\\u2028")
+        .replace(/\u2029/g, "\\u2029")
+      lines.push(
+        /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(key)
+          ? `  ${key}={${expression}}`
+          : `  {...{[${jsxJson(key)}]: ${expression}}}`
+      )
+      continue
+    }
     if (!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(key)) {
       const property: Record<string, unknown> = {}
       Object.defineProperty(property, key, {
@@ -727,15 +762,20 @@ export function configToJSXWithReport(
   const omittedPaths = [
     ...(config.artifactContract ? ["artifactContract"] : []),
     ...(config.artifactTransfer ? ["artifactTransfer"] : []),
-    ...(config.selections ? ["selections"] : [])
+    ...(config.selections ? ["selections"] : []),
+    ...(config.omittedPaths ? ["omittedPaths"] : []),
+    ...(config.warnings ? ["warnings"] : [])
   ]
   return {
     jsx: configToJSX(config),
     omittedPaths,
-    warnings: omittedPaths.length
-      ? [
-          "JSX represents the chart props only. Preserve the reported top-level fields as a separate artifact packet."
-        ]
-      : []
+    warnings: [
+      ...(config.warnings ?? []),
+      ...(omittedPaths.length
+        ? [
+            "JSX represents the chart props only. Preserve the reported top-level fields as a separate artifact packet."
+          ]
+        : [])
+    ]
   }
 }

@@ -46,6 +46,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Config exports preserve valid Dates through JSON, URLs, generated JSX, and
+  selection state. Unsupported values now have explicit omission reports,
+  fragment-bearing URLs decode correctly, and artifact integrity covers the
+  Date metadata and omission report. (#1364)
 - `ChartContainer` preserves pushed data and its DOM handle when summary actions
   toggle, scopes fullscreen and mobile styles to the owning container, restores
   notification focus after dismissal, and reports toolbar export failures with

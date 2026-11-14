@@ -246,7 +246,7 @@ describe("toConfig", () => {
 
   it("excludes non-JSON props before they can change in a URL round trip", () => {
     const values = [
-      new Date("2026-09-03T00:00:00Z"),
+      new Date(NaN),
       Number.NaN,
       Number.POSITIVE_INFINITY,
       -0,

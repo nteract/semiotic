@@ -1,4 +1,5 @@
 import type { Datum } from "../charts/shared/datumTypes"
+import { restoreDates } from "./configDates"
 import { CHART_DATA_PROPS as DATA_PROPS } from "../charts/shared/chartDataProps"
 import {
   ARTIFACT_CONTRACT_VERSION,
@@ -31,6 +32,8 @@ export type ChartArtifactBindingContext = Pick<
   | "reason"
   | "warnings"
   | "selections"
+  | "datePaths"
+  | "omittedPaths"
 >
 
 function compareArtifactIdentity(
@@ -146,6 +149,15 @@ function transferFingerprintValue(
     ...(context.warnings !== undefined ? { warnings: context.warnings } : {}),
     ...(context.selections !== undefined
       ? { selections: context.selections }
+      : {}),
+    ...(context.datePaths !== undefined
+      ? { datePaths: context.datePaths }
+      : {}),
+    ...(context.omittedPaths !== undefined
+      ? {
+          serializedOmittedPaths: context.omittedPaths,
+          serializedWarnings: context.warnings
+        }
       : {}),
     artifactContract,
     status: transfer.status,
@@ -285,10 +297,13 @@ export function artifactConfigFields(
     sourceProps,
     identityComponent
   )
-  const changedPaths = changedPropPaths(sourceProps, serializedProps)
+  const restoredProps = context.datePaths
+    ? restoreDates(serializedProps, context.datePaths)
+    : serializedProps
+  const changedPaths = changedPropPaths(sourceProps, restoredProps)
   const serializedIdentity = compareArtifactIdentity(
     contract,
-    serializedProps,
+    restoredProps,
     identityComponent
   )
   if (sourceIdentity.mismatchPaths.length > 0) {
@@ -524,7 +539,9 @@ export function restoredArtifactFields(
   ) {
     const identity = compareArtifactIdentity(
       serialized.contract as ArtifactContract,
-      config.props,
+      config.datePaths
+        ? restoreDates(config.props, config.datePaths)
+        : config.props,
       config.recipeId ?? config.component
     )
     const unexplainedMismatches = identity.mismatchPaths.filter(

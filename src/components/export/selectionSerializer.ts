@@ -3,11 +3,13 @@ import type {
   SelectionClause,
   FieldSelection
 } from "../store/SelectionStore"
+import { encodeDates, restoreDates, cloneConfigValue } from "./configDates"
+import { nonJsonValuePaths } from "../artifact/jsonCompatibility"
 
 // ── Serialized types (JSON-safe) ────────────────────────────────────────
 
 export type SerializedFieldSelection =
-  | { type: "point"; values: unknown[] }
+  | { type: "point"; values: unknown[]; datePaths?: string[][] }
   | { type: "interval"; range: [number, number] }
 
 export interface SerializedSelection {
@@ -40,9 +42,18 @@ export function serializeSelections(
 
       for (const [fieldName, constraint] of Object.entries(clause.fields)) {
         if (constraint.type === "point") {
-          fields[fieldName] = { type: "point", values: Array.from(constraint.values) }
+          const encoded = encodeDates(Array.from(constraint.values))
+          requireJsonSelection(encoded.value)
+          fields[fieldName] = {
+            type: "point",
+            values: cloneConfigValue(encoded.value) as unknown[],
+            ...(encoded.datePaths.length
+              ? { datePaths: encoded.datePaths }
+              : {})
+          }
         } else {
-          fields[fieldName] = { type: "interval", range: constraint.range }
+          requireJsonSelection(constraint.range)
+          fields[fieldName] = { type: "interval", range: [...constraint.range] }
         }
       }
 
@@ -64,6 +75,7 @@ export function serializeSelections(
 export function deserializeSelections(
   serialized: SerializedSelections
 ): Map<string, Selection> {
+  requireJsonSelection(serialized)
   const result = new Map<string, Selection>()
 
   for (const [name, sSel] of Object.entries(serialized)) {
@@ -74,9 +86,17 @@ export function deserializeSelections(
 
       for (const [fieldName, sConstraint] of Object.entries(sClause.fields)) {
         if (sConstraint.type === "point") {
-          fields[fieldName] = { type: "point", values: new Set(sConstraint.values) }
+          fields[fieldName] = {
+            type: "point",
+            values: new Set(
+              restoreDates(sConstraint.values, sConstraint.datePaths)
+            )
+          }
         } else {
-          fields[fieldName] = { type: "interval", range: sConstraint.range }
+          fields[fieldName] = {
+            type: "interval",
+            range: [...sConstraint.range]
+          }
         }
       }
 
@@ -91,4 +111,12 @@ export function deserializeSelections(
   }
 
   return result
+}
+
+function requireJsonSelection(value: unknown): void {
+  const invalid = nonJsonValuePaths(value)
+  if (invalid.length)
+    throw new TypeError(
+      `Selection contains unsupported JSON values at: ${invalid.join(", ")}.`
+    )
 }
