@@ -46,6 +46,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `packedClusterMatrix` retains unlisted categories in partial row/column orders,
+  treats non-finite sizes as the domain minimum, and fits glyphs to actual cell
+  occupancy without changing relative sizes across cells. A final clearance
+  check prevents residual overlaps after packing, including narrow plots and
+  pointy symbols; fractional resize and size changes invalidate cached geometry.
+  (#1403)
 - Config exports preserve valid Dates through JSON, URLs, generated JSX, and
   selection state. Unsupported values now have explicit omission reports,
   fragment-bearing URLs decode correctly, and artifact integrity covers the

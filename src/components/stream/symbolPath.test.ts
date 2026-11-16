@@ -2,6 +2,13 @@ import { describe, expect, it } from "vitest"
 import { symbolExtent, symbolPathString, symbolRadius } from "./symbolPath"
 
 describe("symbolPathString", () => {
+  it("preserves subpixel area instead of imposing a one-pixel minimum", () => {
+    expect(symbolPathString("square", 0.25)).toBe("M-0.25,-0.25h0.5v0.5h-0.5Z")
+    expect(symbolRadius(0.25)).toBeCloseTo(Math.sqrt(0.25 / Math.PI), 12)
+    expect(symbolExtent("triangle", 0.25)).toBeCloseTo(0.439, 12)
+    expect(symbolRadius(0)).toBe(0)
+    expect(symbolExtent("square", 0)).toBe(0)
+  })
   it("falls back to a circle for inherited object-property names", () => {
     const circle = symbolPathString("circle", 64)
 

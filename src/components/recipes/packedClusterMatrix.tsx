@@ -5,11 +5,12 @@ import type { NetworkCustomLayout } from "../stream/networkCustomLayout"
 import type { NetworkSceneNode, NetworkSymbolNode } from "../stream/networkTypes"
 import type { NetworkSymbolName } from "../stream/symbolPath"
 import { SYMBOL_SEQUENCE, symbolExtent, symbolPathString } from "../stream/symbolPath"
-import { makeShade, readField, groupBy, dimFor, signatureKey, LayoutCache } from "./recipeUtils"
+import { makeShade, readField, dimFor, signatureKey, LayoutCache } from "./recipeUtils"
 import { roundedEnclosure, bandLabel, markCallout } from "./recipeChrome"
 import type { MarkCalloutProps } from "./recipeChrome"
 import type { Datum } from "../charts/shared/datumTypes"
 import { NetworkPerspectiveBillboard, NetworkPerspectiveGround } from "../stream/networkPerspectivePlacement"
+import { buildGeometry, type Geom } from "./packedClusterMatrixGeometry"
 import { packedMatrixPerspectiveBounds } from "./packedClusterMatrixPerspective"
 
 /**
@@ -37,9 +38,9 @@ export interface PackedClusterMatrixConfig {
   markerAccessor?: string
 
   // ── Ordering ──────────────────────────────────────────────────────────────
-  /** Explicit column order; otherwise columns sort by count, largest first. */
+  /** Column order prefix; unlisted columns follow by count, largest first. */
   columnOrder?: string[]
-  /** Explicit row order **bottom→top**; otherwise rows sort by count, largest at bottom. */
+  /** Row order prefix **bottom→top**; unlisted rows follow by count, largest first. */
   rowOrder?: string[]
 
   // ── Shape mapping ───────────────────────────────────────────────────────────
@@ -69,8 +70,8 @@ export interface PackedClusterMatrixConfig {
   sizeRange?: [number, number]
   /** Size value domain. @default data extent */
   sizeDomain?: [number, number]
-  /** Cap total glyph area at this fraction of the plot; radii scale down to fit
-   *  (keeps clusters packable / non-overlapping on smaller canvases). @default 0.4 */
+  /** Cap padded glyph extent area in each cell at this fraction; all radii scale
+   *  together to fit the densest cell, preserving size comparisons. @default 0.4 */
   maxAreaFraction?: number
 
   // ── Shade scale ─────────────────────────────────────────────────────────────
@@ -88,10 +89,12 @@ export interface PackedClusterMatrixConfig {
    *  each column stacks its own rows independently (cell height ∝ that column's
    *  count; rows do NOT align). @default "banded" */
   rowMode?: "banded" | "stacked"
-  /** `"proportional"` (mosaic: cell area ∝ count) or `"uniform"` grid. @default "proportional" */
+  /** `"proportional"` sizes columns/rows by counts; banded cell area reflects
+   *  marginal counts, stacked cells use within-column counts (before gaps).
+   *  `"uniform"` gives equal column/row spans. @default "proportional" */
   cellSizing?: "proportional" | "uniform"
-  /** Exponent applied to counts when sizing columns/cells. `1` = strict area ∝
-   *  count; `<1` softens the range so small columns stay legible. @default 1 */
+  /** Exponent applied to counts when sizing columns/rows. `1` = proportional
+   *  spans; `<1` softens the range so small columns stay legible. @default 1 */
   proportionExponent?: number
   /** Gap between columns in px. @default 16 */
   columnGap?: number
@@ -177,24 +180,9 @@ interface RawMark {
   iconShape: NetworkSymbolName | null
 }
 
-interface EnclosureRect {
-  x: number
-  y: number
-  w: number
-  h: number
-}
-
-interface Geom {
-  positions: Map<string, { px: number; py: number }>
-  /** Rounded enclosures to draw (per-cell in `stacked`, per-band in `banded`). */
-  enclosures: EnclosureRect[]
-  colBands: { col: string; x: number; w: number }[]
-  rowLabelY: Map<string, number>
-}
-
 // Geometry cache keyed by a content signature of layout-affecting inputs only
-// (NOT color/shade/symbol/highlight) — so interaction and a returning resize
-// reuse the packing instead of re-running the force sim. Bounded.
+// (NOT color/shade/highlight) — so interaction and a returning resize reuse
+// the packing. Shape extents participate through the per-mark fingerprint.
 const GEOM_CACHE = /* @__PURE__ */ new LayoutCache<Geom>(12)
 
 /** Coerce a value to a number, parsing dates (ISO strings / `Date`) to ms. */
@@ -213,27 +201,19 @@ function clamp(v: number, lo: number, hi: number): number {
   return v < lo ? lo : v > hi ? hi : v
 }
 
-/** Small deterministic PRNG so the force packing is stable across renders. */
-function lcg(seed: number): () => number {
-  let s = (seed >>> 0) || 1
-  return () => {
-    s = (Math.imul(s, 1664525) + 1013904223) >>> 0
-    return s / 4294967296
-  }
-}
-
 /**
  * `packedClusterMatrix` — a reusable network layout that arranges a flat set of
  * records into a **matrix of densely-packed clusters**: one column per value of
  * `columnAccessor`, cells stacked within a column per value of `rowAccessor`,
  * each cell a beeswarm of variable-radius glyphs. In `"proportional"` sizing the
- * column widths and cell heights track counts (a mosaic), so a cell's area is
- * proportional to its record count and packing density stays roughly uniform.
+ * column widths and row heights track counts. Aligned banded cells reflect
+ * marginal counts, not individual cell counts; stacked cells use within-column
+ * counts. A shared glyph scale fits the densest cell without changing size ratios.
  *
  * Each record renders as a **four-channel glyph**: shape (`symbolAccessor`),
  * hue (`colorAccessor`), size (`sizeAccessor`, area-encoded), and lightness
- * shade (`shadeAccessor`). Packing is deterministic (seeded `d3-force`) and the
- * geometry is cached, so hover/selection/filter re-runs re-style without
+ * shade (`shadeAccessor`). Packing uses a deterministic jittered grid and
+ * spatial-hash relaxation. Geometry is cached, so hover/selection/filter re-runs re-style without
  * re-packing. Built to recreate small-multiples beeswarm graphics (e.g. Nadieh
  * Bremer's "Satellites in Space").
  *
@@ -335,6 +315,7 @@ export const packedClusterMatrix: NetworkCustomLayout<PackedClusterMatrixConfig>
     dmax = 1
   }
   const radiusOf = (v: number): number => {
+    if (!Number.isFinite(v)) v = dmin
     if (dmax <= dmin) return (rMin + rMax) / 2
     const t = Math.sqrt(clamp((v - dmin) / (dmax - dmin), 0, 1))
     return rMin + t * (rMax - rMin)
@@ -395,38 +376,16 @@ export const packedClusterMatrix: NetworkCustomLayout<PackedClusterMatrixConfig>
   // The base shape: a circle in icon mode, otherwise the symbol encoding.
   const baseShapeFor = (m: RawMark): NetworkSymbolName => (iconAcc ? "circle" : symbolFor(m.symVal))
 
-  // Per-mark draw area + collision radius. `packR` is the glyph's true
-  // circumradius (a triangle/star reaches past a circle of the same area), so
-  // packing by it keeps pointy shapes from visually overlapping.
-  //
-  // Area cap: if the glyphs would need more than `maxAreaFraction` of the plot,
-  // scale every radius down by one shared factor so they fit at a packable
-  // density. This preserves the size *encoding* (relative sizes are untouched)
-  // while guaranteeing the clusters can pack without overlap on any canvas —
-  // exactly what a designer does by sizing marks to the available space.
-  const maxAreaFraction = cfg.maxAreaFraction ?? 0.4
-  let totalExtentArea = 0
-  const baseR: number[] = new Array(raw.length)
-  const baseExtent: number[] = new Array(raw.length)
-  for (let i = 0; i < raw.length; i++) {
-    const m = raw[i]
+  // Use true circumradii so pointy symbols participate in the same density
+  // and separation checks as circles. Actual cell occupancy sets the fit.
+  const maxAreaFraction = Number.isFinite(cfg.maxAreaFraction)
+    ? clamp(cfg.maxAreaFraction!, 0, 1) : 0.4
+  for (const m of raw) {
     const r = radiusOf(m.sizeVal)
-    baseR[i] = r
     m.baseShape = baseShapeFor(m)
     m.iconShape = iconFor(m.iconVal)
-    const ext = symbolExtent(m.baseShape, Math.PI * r * r)
-    baseExtent[i] = ext
-    totalExtentArea += Math.PI * ext * ext
-  }
-  const areaCap = maxAreaFraction * innerW * innerH
-  // Scale by the glyphs' true extent (a star/chevron reaches past its circle
-  // radius) so the packable area — not just the nominal circle area — fits.
-  const areaScale = totalExtentArea > areaCap ? Math.sqrt(areaCap / totalExtentArea) : 1
-  for (let i = 0; i < raw.length; i++) {
-    const m = raw[i]
-    const rv = baseR[i] * areaScale
-    m.size = Math.PI * rv * rv
-    m.packR = baseExtent[i] * areaScale // extent scales linearly with radius
+    m.size = Math.PI * r * r
+    m.packR = symbolExtent(m.baseShape, m.size)
   }
 
   // ── Resolve orders ────────────────────────────────────────────────────────
@@ -436,21 +395,20 @@ export const packedClusterMatrix: NetworkCustomLayout<PackedClusterMatrixConfig>
     colCounts.set(m.col, (colCounts.get(m.col) ?? 0) + 1)
     rowCounts.set(m.row, (rowCounts.get(m.row) ?? 0) + 1)
   }
-  const columnOrder =
-    cfg.columnOrder?.filter((c) => colCounts.has(c)) ??
-    [...colCounts.keys()].sort((a, b) => (colCounts.get(b) ?? 0) - (colCounts.get(a) ?? 0))
-  const rowOrder =
-    cfg.rowOrder?.filter((r) => rowCounts.has(r)) ??
-    [...rowCounts.keys()].sort((a, b) => (rowCounts.get(b) ?? 0) - (rowCounts.get(a) ?? 0))
+  const ordered = (counts: Map<string, number>, hint: string[] = []) =>
+    [...new Set([...hint.filter(k => counts.has(k)),
+      ...[...counts.keys()].sort((a, b) => counts.get(b)! - counts.get(a)!)])]
+  const columnOrder = ordered(colCounts, cfg.columnOrder)
+  const rowOrder = ordered(rowCounts, cfg.rowOrder)
 
   // ── Geometry (cached) ───────────────────────────────────────────────────────
   // Sign by layout-affecting inputs only (plus a per-mark fingerprint) — never by
   // `ctx.nodes` array identity, which is fresh every buildScene. See LayoutCache.
   const sig = signatureKey([
-    Math.round(plot.x),
-    Math.round(plot.y),
-    Math.round(plot.width),
-    Math.round(plot.height),
+    plot.x,
+    plot.y,
+    plot.width,
+    plot.height,
     headerH,
     labelW,
     footerH,
@@ -466,8 +424,8 @@ export const packedClusterMatrix: NetworkCustomLayout<PackedClusterMatrixConfig>
     dmin,
     dmax,
     maxAreaFraction,
-    columnOrder.join(","),
-    rowOrder.join(","),
+    JSON.stringify(columnOrder),
+    JSON.stringify(rowOrder),
     raw.length,
     fingerprint(raw),
   ])
@@ -487,8 +445,13 @@ export const packedClusterMatrix: NetworkCustomLayout<PackedClusterMatrixConfig>
       rowGap,
       packPadding,
       iterations,
+      maxAreaFraction,
     })
   )
+  for (const m of raw) {
+    m.size *= geom.scale * geom.scale
+    m.packR *= geom.scale
+  }
 
   // ── Emit glyphs (re-styled every call; cheap) ────────────────────────────────
   // A glyph stays lit only if it matches the highlight AND the shared selection;
@@ -545,7 +508,7 @@ export const packedClusterMatrix: NetworkCustomLayout<PackedClusterMatrixConfig>
       iconMarks.push({ x: g.px, y: g.py, size: iconSize, shape: m.iconShape, opacity })
     }
     if (m.marker && opacity > dimOpacity + 0.001) {
-      markerDots.push({ x: g.px, y: g.py, r: Math.max(1, Math.sqrt(m.size / Math.PI) * 0.4) })
+      markerDots.push({ x: g.px, y: g.py, r: Math.sqrt(m.size / Math.PI) * 0.4 })
     }
   }
 
@@ -633,290 +596,11 @@ export const packedClusterMatrix: NetworkCustomLayout<PackedClusterMatrixConfig>
   return { sceneNodes, overlays, perspective: "manual", ...bounds }
 }
 
-// ── Geometry builder (cache-miss path) ──────────────────────────────────────────
-
-interface BuildOpts {
-  columnOrder: string[]
-  rowOrder: string[]
-  innerX: number
-  innerY: number
-  innerW: number
-  innerH: number
-  rowMode: "banded" | "stacked"
-  cellSizing: "proportional" | "uniform"
-  proportionExponent: number
-  columnGap: number
-  rowGap: number
-  packPadding: number
-  iterations: number
-}
-
-const ENCLOSURE_PAD = 4
-
-function buildGeometry(raw: RawMark[], o: BuildOpts): Geom {
-  const byCol = new Map<string, RawMark[]>()
-  for (const m of raw) {
-    let arr = byCol.get(m.col)
-    if (!arr) {
-      arr = []
-      byCol.set(m.col, arr)
-    }
-    arr.push(m)
-  }
-
-  const cols = o.columnOrder.filter((c) => byCol.has(c))
-  const colGapTotal = o.columnGap * Math.max(0, cols.length - 1)
-  const usableW = Math.max(1, o.innerW - colGapTotal)
-  const e = o.proportionExponent
-  const colWeights = cols.map((c) => Math.pow(byCol.get(c)!.length, e))
-  const colWeightSum = colWeights.reduce((s, w) => s + w, 0) || 1
-  const colW = (ci: number) =>
-    o.cellSizing === "uniform" ? usableW / cols.length : (colWeights[ci] / colWeightSum) * usableW
-
-  const positions = new Map<string, { px: number; py: number }>()
-  const colBands: { col: string; x: number; w: number }[] = []
-  let xCursor = o.innerX
-  for (let ci = 0; ci < cols.length; ci++) {
-    colBands.push({ col: cols[ci], x: xCursor, w: colW(ci) })
-    xCursor += colW(ci) + o.columnGap
-  }
-
-  let seed = 1
-  // Track each row's mark-bbox so we can draw enclosures and align labels.
-  const rowBBox = new Map<string, { minX: number; minY: number; maxX: number; maxY: number }>()
-  const cellBBoxes: EnclosureRect[] = []
-  const grow = (row: string, x: number, y: number, r: number) => {
-    let b = rowBBox.get(row)
-    if (!b) {
-      b = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity }
-      rowBBox.set(row, b)
-    }
-    if (x - r < b.minX) b.minX = x - r
-    if (x + r > b.maxX) b.maxX = x + r
-    if (y - r < b.minY) b.minY = y - r
-    if (y + r > b.maxY) b.maxY = y + r
-  }
-
-  const packInto = (marks: RawMark[], x: number, y: number, w: number, h: number, row: string): EnclosureRect | null => {
-    const packMarks = marks.map((m) => ({ id: m.id, r: m.packR }))
-    const pos = packCell(packMarks, x, y, w, h, o.packPadding, o.iterations, seed++)
-    let minX = Infinity
-    let minY = Infinity
-    let maxX = -Infinity
-    let maxY = -Infinity
-    for (const pm of packMarks) {
-      const p = pos.get(pm.id)!
-      positions.set(pm.id, { px: p.px, py: p.py })
-      grow(row, p.px, p.py, pm.r)
-      if (p.px - pm.r < minX) minX = p.px - pm.r
-      if (p.px + pm.r > maxX) maxX = p.px + pm.r
-      if (p.py - pm.r < minY) minY = p.py - pm.r
-      if (p.py + pm.r > maxY) maxY = p.py + pm.r
-    }
-    if (!Number.isFinite(minX)) return null
-    return { x: minX - ENCLOSURE_PAD, y: minY - ENCLOSURE_PAD, w: maxX - minX + ENCLOSURE_PAD * 2, h: maxY - minY + ENCLOSURE_PAD * 2 }
-  }
-
-  if (o.rowMode === "banded") {
-    // Global, bottom-anchored row bands: every column shares one y-range per row,
-    // so row labels align and each band gets one enclosure spanning the columns.
-    // A column only occupies bands it has data in, so columns vary in height.
-    const rowCountsG = new Map<string, number>()
-    for (const m of raw) rowCountsG.set(m.row, (rowCountsG.get(m.row) ?? 0) + 1)
-    const rows = o.rowOrder.filter((r) => rowCountsG.has(r))
-    const rowGapTotal = o.rowGap * Math.max(0, rows.length - 1)
-    const usableH = Math.max(1, o.innerH - rowGapTotal)
-    const rowWeights = rows.map((r) => Math.pow(rowCountsG.get(r)!, e))
-    const rowWeightSum = rowWeights.reduce((s, w) => s + w, 0) || 1
-
-    const bandY = new Map<string, { y: number; h: number }>()
-    let yCursor = o.innerY + o.innerH // bottom → top
-    for (let ri = 0; ri < rows.length; ri++) {
-      const bandH = o.cellSizing === "uniform" ? usableH / rows.length : (rowWeights[ri] / rowWeightSum) * usableH
-      const y = yCursor - bandH
-      bandY.set(rows[ri], { y, h: bandH })
-      yCursor = y - o.rowGap
-    }
-
-    cols.forEach((col, ci) => {
-      const byRow = groupBy(byCol.get(col)!, (m) => m.row)
-      for (const row of rows) {
-        const rowMarks = byRow.get(row)
-        const band = bandY.get(row)
-        if (!rowMarks || !band) continue
-        packInto(rowMarks, colBands[ci].x, band.y, colBands[ci].w, band.h, row)
-      }
-    })
-
-    const enclosures: EnclosureRect[] = []
-    const rowLabelY = new Map<string, number>()
-    for (const row of rows) {
-      const band = bandY.get(row)!
-      rowLabelY.set(row, band.y + band.h / 2)
-      const b = rowBBox.get(row)
-      if (b && Number.isFinite(b.minX)) {
-        enclosures.push({ x: b.minX - ENCLOSURE_PAD, y: b.minY - ENCLOSURE_PAD, w: b.maxX - b.minX + ENCLOSURE_PAD * 2, h: b.maxY - b.minY + ENCLOSURE_PAD * 2 })
-      }
-    }
-    return { positions, enclosures, colBands, rowLabelY }
-  }
-
-  // stacked: each column stacks its own rows (cell height ∝ that column's count).
-  const rowYAccum = new Map<string, { sum: number; n: number }>()
-  cols.forEach((col, ci) => {
-    const byRow = groupBy(byCol.get(col)!, (m) => m.row)
-    const rowsHere = o.rowOrder.filter((r) => byRow.has(r))
-    const rowGapTotal = o.rowGap * Math.max(0, rowsHere.length - 1)
-    const usableColH = Math.max(1, o.innerH - rowGapTotal)
-    const rowWeights = rowsHere.map((r) => Math.pow(byRow.get(r)!.length, e))
-    const rowWeightSum = rowWeights.reduce((s, w) => s + w, 0) || 1
-
-    let yCursor = o.innerY + o.innerH
-    rowsHere.forEach((row, ri) => {
-      const cellH =
-        o.cellSizing === "uniform" ? usableColH / rowsHere.length : (rowWeights[ri] / rowWeightSum) * usableColH
-      const cellY = yCursor - cellH
-      const box = packInto(byRow.get(row)!, colBands[ci].x, cellY, colBands[ci].w, cellH, row)
-      if (box) {
-        cellBBoxes.push(box)
-        const acc = rowYAccum.get(row) ?? { sum: 0, n: 0 }
-        acc.sum += box.y + box.h / 2
-        acc.n += 1
-        rowYAccum.set(row, acc)
-      }
-      yCursor = cellY - o.rowGap
-    })
-  })
-
-  const rowLabelY = new Map<string, number>()
-  for (const [r, a] of rowYAccum) rowLabelY.set(r, a.sum / a.n)
-  return { positions, enclosures: cellBBoxes, colBands, rowLabelY }
-}
-
-/**
- * Seeded, deterministic packing of variable-radius circles within a cell rect.
- *
- * A jittered grid sized to the cell aspect seeds the marks near-uniformly (so
- * they start close to non-overlapping at a comfortable density), then a few
- * spatial-hash relaxation passes push apart any overlaps and clamp to the cell.
- *
- * Deliberately self-contained (no `d3-force` / `d3-quadtree`): the hot loop must
- * not cross module boundaries, because the docs bundle disables scope hoisting
- * and a cross-module tight loop deoptimizes badly (≈25× slower). Native `Map`
- * + arithmetic keeps it fast in any build.
- */
-function packCell(
-  marks: { id: string; r: number }[],
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  padding: number,
-  iterations: number,
-  seed: number
-): Map<string, { px: number; py: number }> {
-  const cx = x + w / 2
-  const cy = y + h / 2
-  const out = new Map<string, { px: number; py: number }>()
-  const n = marks.length
-  if (n === 0) return out
-  if (n === 1) {
-    out.set(marks[0].id, { px: cx, py: cy })
-    return out
-  }
-
-  const rng = lcg(seed)
-  const R = new Float64Array(n)
-  let maxR = 0
-  for (let i = 0; i < n; i++) {
-    R[i] = marks[i].r + padding
-    if (R[i] > maxR) maxR = R[i]
-  }
-
-  // Jittered grid seed sized to the cell aspect ratio.
-  const cols = Math.max(1, Math.round(Math.sqrt((n * w) / Math.max(1, h))))
-  const px = new Float64Array(n)
-  const py = new Float64Array(n)
-  const gw = w / cols
-  const gh = h / Math.ceil(n / cols)
-  for (let i = 0; i < n; i++) {
-    const gx = i % cols
-    const gy = Math.floor(i / cols)
-    px[i] = x + (gx + 0.3 + rng() * 0.4) * gw
-    py[i] = y + (gy + 0.3 + rng() * 0.4) * gh
-  }
-
-  // Spatial-hash relaxation. A near-uniform seed needs only light cleanup, so a
-  // small fixed pass count fully separates at the capped density.
-  const passes = Math.max(0, Math.min(iterations, 14))
-  const cellSz = Math.max(1, maxR * 2)
-  const buckets = new Map<number, number[]>()
-  const cwid = Math.max(1, Math.ceil(w / cellSz) + 3)
-  const bucketKey = (gx: number, gy: number): number => (gy + 1) * cwid + (gx + 1)
-  for (let pass = 0; pass < passes; pass++) {
-    buckets.clear()
-    for (let i = 0; i < n; i++) {
-      const k = bucketKey(Math.floor((px[i] - x) / cellSz), Math.floor((py[i] - y) / cellSz))
-      const arr = buckets.get(k)
-      if (arr) arr.push(i)
-      else buckets.set(k, [i])
-    }
-    for (let i = 0; i < n; i++) {
-      const gx = Math.floor((px[i] - x) / cellSz)
-      const gy = Math.floor((py[i] - y) / cellSz)
-      for (let dx = -1; dx <= 1; dx++) {
-        for (let dy = -1; dy <= 1; dy++) {
-          const arr = buckets.get(bucketKey(gx + dx, gy + dy))
-          if (!arr) continue
-          for (let a = 0; a < arr.length; a++) {
-            const j = arr[a]
-            if (j <= i) continue
-            let ddx = px[j] - px[i]
-            let ddy = py[j] - py[i]
-            const rr = R[i] + R[j]
-            const d2 = ddx * ddx + ddy * ddy
-            if (d2 >= rr * rr) continue
-            if (d2 > 1e-9) {
-              const d = Math.sqrt(d2)
-              const shift = (rr - d) / 2
-              ddx /= d
-              ddy /= d
-              px[i] -= ddx * shift
-              py[i] -= ddy * shift
-              px[j] += ddx * shift
-              py[j] += ddy * shift
-            } else {
-              // Coincident: nudge apart deterministically.
-              const ang = i * 2.39996323
-              px[i] += Math.cos(ang) * R[i]
-              py[i] += Math.sin(ang) * R[i]
-            }
-          }
-        }
-      }
-    }
-    for (let i = 0; i < n; i++) {
-      const r = R[i]
-      const loX = x + r
-      const hiX = x + w - r
-      const loY = y + r
-      const hiY = y + h - r
-      px[i] = hiX > loX ? clamp(px[i], loX, hiX) : cx
-      py[i] = hiY > loY ? clamp(py[i], loY, hiY) : cy
-    }
-  }
-
-  for (let i = 0; i < n; i++) out.set(marks[i].id, { px: px[i], py: py[i] })
-  return out
-}
-
 /** FNV-1a fingerprint of the inputs that affect packing geometry. */
 function fingerprint(raw: RawMark[]): string {
   let h = 2166136261 >>> 0
   for (const m of raw) {
-    h = fnv1a32(m.row, fnv1a32(m.col, fnv1a32(m.id, h)))
-    h ^= Math.round(m.packR * 8)
-    h = Math.imul(h, 16777619)
+    h = fnv1a32(JSON.stringify([m.id, m.col, m.row, m.packR]), h)
   }
   return (h >>> 0).toString(36)
 }

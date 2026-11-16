@@ -112,12 +112,16 @@ export default function SatellitesInSpacePage() {
         widths track region counts, softened by <code>proportionExponent</code> so small regions like
         Japan stay legible. (<code>rowMode: "stacked"</code> instead sizes each column&rsquo;s cells by
         its own counts — closer to the source&rsquo;s organic mosaic, at the cost of aligned labels.)
+        Banded cell area reflects the row and column totals, rather than the count in that individual
+        cell. Explicit column and row orders pin categories first; unlisted categories follow by count.
       </p>
       <p>
         Packing is <strong>deterministic and self-contained</strong> — a seeded jittered-grid seed
         plus a few spatial-hash relaxation passes (no <code>d3-force</code> in the hot loop, which
         keeps it fast even in non-scope-hoisted bundles). A <code>maxAreaFraction</code> cap scales
-        every radius down to a packable density so clusters never overlap, on any canvas size. The
+        every radius by one shared factor determined by the densest cell, including collision padding.
+        A final clearance check handles residual overlaps and narrow cells while preserving relative
+        glyph sizes across the matrix. Non-finite size values use the size-domain minimum. The
         geometry is <strong>cached by a content signature</strong> of the layout-affecting inputs, so
         hovering the legend, isolating a category, or returning from full screen re-styles the marks
         without re-packing — only a genuine data or dimension change re-packs.
