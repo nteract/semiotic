@@ -51,6 +51,9 @@ expectEqual("package-surface.manifest.json#package.version", packageSurface.pack
 const coldConsumer = readJson("benchmarks/setup/cold-consumer-imports.json")
 expectEqual("benchmarks/setup/cold-consumer-imports.json#package.version", coldConsumer.package?.version, version)
 
+const d3Packaging = readJson("benchmarks/setup/d3-packaging.json")
+expectEqual("benchmarks/setup/d3-packaging.json#package", d3Packaging.package, version)
+
 const readmeHeading = `## What's New in ${version}`
 if (!readText("README.md").split(/\r?\n/).includes(readmeHeading)) {
   errors.push(`README.md must contain the exact heading ${JSON.stringify(readmeHeading)}`)

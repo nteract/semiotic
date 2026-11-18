@@ -7,13 +7,13 @@
   "route": "/tasks/compare-category-totals",
   "identity": {
     "packageName": "semiotic",
-    "packageVersion": "3.13.3",
+    "packageVersion": "3.14.0",
     "channel": "source",
-    "sourceRevision": "sha256:7f70cb07770ff5bfdf6f8adb46fefd4fd78cbf760b84ec0a9e61f88d3a1f649d",
+    "sourceRevision": "sha256:dd1696edc436933deb30b7709f0adde96460fc71963984f608465cee5a298ec3",
     "revisionKind": "content-digest",
     "revisionScope": "This task's definition, declared examples and checks, task pages and tooling, and the selected public contract. Runtime and test-harness contents are compared when recorded evidence is evaluated; they are not part of this identifier.",
     "contract": {
-      "digest": "sha256:16b37ff21660a1ed0cac05eaab769546c73a908a6e1446befde426b6750ab742",
+      "digest": "sha256:64754d57badef2f5ae93bf528875850ed5f318e14e9ed905c64b5141560dc0fb",
       "artifacts": [
         "package.json",
         "ai/schema.json",

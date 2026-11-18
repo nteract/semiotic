@@ -42,6 +42,11 @@ if [ -n "$(git status --porcelain)" ]; then
   exit 1
 fi
 
+if [ -z "${SEMIOTIC_D3_TOOLCHAIN_ROOT:-}" ]; then
+  error "Set SEMIOTIC_D3_TOOLCHAIN_ROOT to a directory with webpack and Next installed at the versions in benchmarks/setup/d3-packaging.json."
+  exit 1
+fi
+
 git pull --ff-only
 
 CURRENT_VERSION="$(node -p "require('./package.json').version")"
@@ -141,6 +146,9 @@ npm run docs:package-surface
 npm run docs:bundle-sizes
 npm run docs:ai-instructions
 npm run docs:cold-consumer
+npm run measure:d3-packaging -- \
+  --toolchain-root "$SEMIOTIC_D3_TOOLCHAIN_ROOT" \
+  --write benchmarks/setup/d3-packaging.json
 npm run docs:readme-dashboard
 npm run docs:api-surface
 npm run prepare:adoption-evals

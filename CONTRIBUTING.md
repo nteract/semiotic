@@ -763,8 +763,11 @@ jobs. This mapping does not add scheduled prereleases or prerelease version
 progression to the release-branch command.
 
 Use `npm run create-release-branch -- <major|minor|patch>` for the maintained
-release flow. It builds the package, MCP server, and docs before refreshing the
-machine and browser baselines. Baseline writes first compare p50 measurements
+release flow. Set `SEMIOTIC_D3_TOOLCHAIN_ROOT` to a separate directory with the
+webpack and Next versions recorded in `benchmarks/setup/d3-packaging.json`
+installed. The release command uses that toolchain to regenerate D3 packaging
+evidence for the new version. It builds the package, MCP server, and docs before
+refreshing the machine and browser baselines. Baseline writes first compare p50 measurements
 with the previous committed evidence and refuse to overwrite it on a measured
 regression; static snapshot drift is printed and committed for PR review. Use
 `compare:machine-baseline` or `compare:browser-baseline` for a read-only preview,

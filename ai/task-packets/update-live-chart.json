@@ -7,13 +7,13 @@
   "route": "/tasks/update-live-chart",
   "identity": {
     "packageName": "semiotic",
-    "packageVersion": "3.13.3",
+    "packageVersion": "3.14.0",
     "channel": "source",
-    "sourceRevision": "sha256:ba804a014c4cf3bac318296de3d2aab45578a567d5252df9713c7095bd84d12e",
+    "sourceRevision": "sha256:75b6a06b2cebdd1e11ba611aab048501349364b0e96d963b02d6ca945da19c7b",
     "revisionKind": "content-digest",
     "revisionScope": "This task's definition, declared examples and checks, task pages and tooling, and the selected public contract. Runtime and test-harness contents are compared when recorded evidence is evaluated; they are not part of this identifier.",
     "contract": {
-      "digest": "sha256:28ee97b148d9586d7b92919dab93963b13ff58388d2d79a6b9b7f948557ea5e5",
+      "digest": "sha256:4ae1e1c136cb1903c00dc2230047de2ea4eccf976f005c1ed05fcebf08a6a78e",
       "artifacts": [
         "package.json",
         "ai/schema.json",

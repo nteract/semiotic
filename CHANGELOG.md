@@ -9,8 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.14.0] - 2026-11-18
+
 ### Added
 
+- `WordCloud` and `prepareWordCloudLayout` in `semiotic/wordcloud`, with seeded
+  placement, SVG-path and image masks, grouped hulls, linked selection, tooltips,
+  and spatial keyboard navigation. React prepares layouts after fonts load;
+  server and MCP rendering use a matching prepared layout. Layout results record
+  placed words and reasons for omissions. [source: maintainer]
+- `StreamNetworkFrame` supports `renderAs="svg"` and spatial keyboard navigation,
+  sharing the retained network scene and interaction behavior with canvas.
+  [source: maintainer]
+- `useSelection` and `useLinkedHover` accept `enabled: false` to release their
+  owned selection clause and pause updates. [source: maintainer]
 - `validateProps` returns structured `issues` beside its `errors` strings: a stable
   code, the prop path, actual and expected types, a suggestion, and a `patch` when the
   repair is unambiguous. `validProps` lists accepted props once per result, and
@@ -51,6 +63,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Linked selections release stale clauses when their name, fields, or enabled
+  state changes, while cleanup from an older writer preserves its replacement.
+  Hover and tooltip state clear when marks disappear or interaction is disabled.
+- Chart descriptions and navigation report invalid numeric axes without
+  inventing comparable values, and order line endpoints by the x accessor.
 - `packedClusterMatrix` retains unlisted categories in partial row/column orders,
   treats non-finite sizes as the domain minimum, and fits glyphs to actual cell
   occupancy without changing relative sizes across cells. A final clearance
@@ -121,6 +138,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Tooling
 
+- `report:ssr-comparison` compares exact releases or local package archives and
+  records rendering evidence, normalized SVG changes, and artifact provenance.
 - `npm run eval:ai:release` runs both eval suites against OpenAI and Anthropic with
   repeated trials and writes a per-release report. `--dry-run` prints request counts
   and a cost estimate without a network call.
