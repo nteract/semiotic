@@ -2,6 +2,8 @@ import { TextEncoder, TextDecoder } from "util"
 Object.assign(global, { TextEncoder, TextDecoder })
 
 import { renderChart } from "./renderToStaticSVG"
+import { AXIS_TICK_CHROME, DEFAULT_LEGEND_DISTANCE } from "../legendLayout"
+import { DEFAULT_LEGEND_ROW_HEIGHT } from "../legendGeometry"
 
 function getLegendTranslate(svg: string): { tx: number; ty: number } | null {
   const match = svg.match(/class="semiotic-legend"[^>]*transform="translate\(([\d.]+),([\d.]+)\)"/)
@@ -179,5 +181,36 @@ describe("Server legend positioning", () => {
         expect(pos!.tx).toBeLessThan(500)
       }
     })
+  })
+})
+
+// The 80px bottom-legend floor is a default. A caller-pinned bottom margin
+// leaves only the legend's measured band, as in the React charts.
+describe("bottom legend floor", () => {
+  const props = (margin: Record<string, number>) => ({
+    data: lineData,
+    xAccessor: "x",
+    yAccessor: "y",
+    lineBy: "series",
+    colorBy: "series",
+    showLegend: true,
+    legendPosition: "bottom" as const,
+    width: 600,
+    height: 300,
+    margin,
+  })
+
+  it("puts the legend flush with the bottom under a caller-pinned bottom margin", () => {
+    const legend = getLegendTranslate(
+      renderChart("LineChart", props({ top: 10, right: 20, bottom: 20, left: 50 }))
+    )
+    expect(legend?.ty).toBe(300 - DEFAULT_LEGEND_ROW_HEIGHT)
+  })
+
+  it("keeps the 80px floor when the caller leaves the bottom margin to the chart", () => {
+    const legend = getLegendTranslate(
+      renderChart("LineChart", props({ top: 10, right: 20, left: 50 }))
+    )
+    expect(legend?.ty).toBe(300 - 80 + AXIS_TICK_CHROME + DEFAULT_LEGEND_DISTANCE)
   })
 })

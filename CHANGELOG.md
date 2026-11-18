@@ -43,6 +43,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The `semiotic/server/node` CommonJS file re-exports `semiotic/server` instead of
   duplicating it, and `ai/schema.json` is written one component per line (about 1 MB
   smaller, same content).
+- A numeric bottom `margin` replaces the 80px floor that chart components keep under a
+  bottom legend, in the browser and in `renderChart`. The legend's measured band (its
+  rows, `legendDistance` and the bottom axis's tick labels) still applies, so a one-row
+  legend under a time axis takes 54px with no empty space below it. Charts with an
+  omitted or `"auto"` bottom margin, and `ProcessSankey`, keep the 80px floor.
 
 ### Fixed
 

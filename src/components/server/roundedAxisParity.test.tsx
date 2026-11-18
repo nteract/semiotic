@@ -169,7 +169,9 @@ describe("rounded axis renderer parity", () => {
       const { svg, evidence } = renderChartWithEvidence("LineChart", props)
       expect(evidence.yDomain).toEqual(expected)
       expect(evidence.markCount).toBeGreaterThan(0)
-      expect(evidence.plot?.height).toBe(rows === 1 ? 90 : 72)
+      // The caller pins the bottom margin, so one legend row reserves only its
+      // measured band (22px row, 10px gap, 22px tick chrome): 180 - 10 - 54.
+      expect(evidence.plot?.height).toBe(rows === 1 ? 116 : 72)
       expect(labels(svgRoot(svg))).toEqual(labels(view.container))
       expect(labels(view.container)).toEqual(
         rows === 1 ? ["0", "1000", "2000", "3000"] : ["0", "2000", "4000"]
