@@ -81,6 +81,7 @@ function fixture(t, version) {
   ]) {
     writeJson(directory, path, { package: { version } })
   }
+  writeJson(directory, "benchmarks/setup/d3-packaging.json", { package: version })
   writeFileSync(join(directory, "README.md"), `## What's New in ${version}\n`)
   writeFileSync(
     join(directory, "CHANGELOG.md"),
@@ -146,6 +147,17 @@ test("downstream guards reject malformed build metadata before synchronization",
     }
     assert.deepEqual(readJson(directory, "ai/schema.json"), before)
   }
+})
+
+test("source version validation rejects stale D3 measurement evidence", (t) => {
+  const directory = fixture(t, "3.14.0")
+  writeJson(directory, "benchmarks/setup/d3-packaging.json", { package: "3.13.3" })
+  const sync = runScript(directory, "sync-release-version.mjs", ["3.14.0"])
+  assert.equal(sync.status, 0, sync.stderr)
+  assert.equal(readJson(directory, "benchmarks/setup/d3-packaging.json").package, "3.13.3")
+  const check = runScript(directory, "check-release-version-alignment.mjs")
+  assert.equal(check.status, 1)
+  assert.match(check.stderr, /d3-packaging.json#package must be "3\.14\.0"/)
 })
 
 test("build metadata identity and exact changelog headings remain enforced", (t) => {

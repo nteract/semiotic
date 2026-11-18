@@ -9,7 +9,7 @@ import PageLayout from "../components/PageLayout"
 const bundleSizeRows = Object.freeze([
   {
     "importPath": "semiotic/atlas",
-    "kb": 330,
+    "kb": 331,
     "blurb": "Motif Braid, Dependency Forest, and Flow Circuit readers"
   },
   {
@@ -39,27 +39,27 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/line",
-    "kb": 156,
+    "kb": 157,
     "blurb": "LineChart only — one-chart micro boundary"
   },
   {
     "importPath": "semiotic/xy",
-    "kb": 195,
+    "kb": 196,
     "blurb": "LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts"
   },
   {
     "importPath": "semiotic/ordinal",
-    "kb": 142,
+    "kb": 143,
     "blurb": "BarChart, PieChart, BoxPlot, Histogram, + 11 more categorical charts"
   },
   {
     "importPath": "semiotic/network",
-    "kb": 188,
+    "kb": 189,
     "blurb": "ForceDirectedGraph, SankeyDiagram, ProcessSankey, Treemap, + 4 more"
   },
   {
     "importPath": "semiotic/network/zoom",
-    "kb": 198,
+    "kb": 199,
     "blurb": "Optional virtual network viewport, camera controls and consumer-owned LOD"
   },
   {
@@ -79,22 +79,22 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/geo",
-    "kb": 117,
+    "kb": 118,
     "blurb": "ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap"
   },
   {
     "importPath": "semiotic/wordcloud",
-    "kb": 131,
+    "kb": 132,
     "blurb": "WordCloud, shaped text placement, and portable layouts"
   },
   {
     "importPath": "semiotic/realtime",
-    "kb": 231,
+    "kb": 232,
     "blurb": "RealtimeLineChart, RealtimeHistogram, + 4 streaming charts"
   },
   {
     "importPath": "semiotic/realtime/core",
-    "kb": 230,
+    "kb": 231,
     "blurb": "Streaming chart types, HOCs, and buffer helpers"
   },
   {
@@ -104,27 +104,27 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/server",
-    "kb": 290,
+    "kb": 291,
     "blurb": "renderChart, renderDashboard, renderToImage, renderToAnimatedGif"
   },
   {
     "importPath": "semiotic/server/node",
-    "kb": 290,
+    "kb": 291,
     "blurb": "renderChart, renderDashboard, renderToImage, renderToAnimatedGif"
   },
   {
     "importPath": "semiotic/server/edge",
-    "kb": 296,
+    "kb": 297,
     "blurb": "renderChart, renderChartWithEvidence, renderToStaticSVG, renderDashboard"
   },
   {
     "importPath": "semiotic/utils",
-    "kb": 115,
+    "kb": 116,
     "blurb": "ThemeProvider, numeric/accessibility audits, serialization — no chart components"
   },
   {
     "importPath": "semiotic/utils/core",
-    "kb": 106,
+    "kb": 107,
     "blurb": "Pure theme helpers, numeric/accessibility audits, and serialization"
   },
   {
@@ -174,7 +174,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/physics",
-    "kb": 192,
+    "kb": 193,
     "blurb": "GaltonBoardChart, EventDropChart, UnitPileChart, CollisionSwarmChart, PacketFlowChart, PhysicsCustomChart"
   },
   {
@@ -189,12 +189,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/ai",
-    "kb": 710,
+    "kb": 712,
     "blurb": "All schema-backed charts + validation — optimized for LLM code generation"
   },
   {
     "importPath": "semiotic/ai/core",
-    "kb": 151,
+    "kb": 152,
     "blurb": "suggestCharts, auditData, describeChart, repairChartConfig, tool adapters — no chart components"
   },
   {
@@ -214,7 +214,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic",
-    "kb": 451,
+    "kb": 453,
     "blurb": "Full chart API and shared utilities"
   }
 ])
