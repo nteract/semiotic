@@ -16,6 +16,7 @@ import type {
 import { composeLegendConfigs } from "../../types/legendTypes"
 import {
   clampLegendReservation,
+  hocBottomLegendFloor,
   reserveLegendMargin,
   resolveHiddenAxisMargins,
   type AxisChromeInput
@@ -226,7 +227,8 @@ export function useChartLegendAndMargin({
     // reservation composes with that baseline on every side instead of making
     // callers choose between their own padding and Semiotic's measured legend
     // requirement. `"auto"`, null, and omitted sides still begin at the
-    // chart-mode default.
+    // chart-mode default. A numeric bottom side also replaces the 80px
+    // bottom-legend floor, so a bottom legend sits on its measured band.
     if (legend) {
       // When callers do not describe their axes, retain the historic
       // conservative bottom-axis fallback. Otherwise hand all four sides to
@@ -255,7 +257,12 @@ export function useChartLegendAndMargin({
         size: [chartWidth ?? 600, chartHeight ?? 400],
         hasTitle,
         legendLayout: resolvedLegendLayout,
-        minimumMargin: legendPosition === "bottom" ? 80 : legendPosition === "top" ? 50 : 0,
+        minimumMargin:
+          legendPosition === "bottom"
+            ? hocBottomLegendFloor(typeof userSides.bottom === "number")
+            : legendPosition === "top"
+              ? 50
+              : 0,
         axisChrome: measuredAxisChrome,
       })
       if (chartWidth != null && chartHeight != null) {

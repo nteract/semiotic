@@ -77,9 +77,11 @@ test("rounded axes follow final legend layout and preserve hover after resizing"
   await page.getByRole("button", { name: "Resize rounded charts" }).click()
   await expect(ticks(chart)).toHaveText(["0", "1000", "2000", "3000"])
   await expect(server).toHaveAttribute("data-domain", "[0,3000]")
-  await expect(server).toHaveAttribute("data-plot-height", "90")
-  await expectMarkAt(chart, 709, 10 + 90 * (1 - 2100 / 3000))
-  await hover(page, chart, 709, 10 + 90 * (1 - 2100 / 3000))
+  // The explicit bottom margin uses the measured 54px band once the legend
+  // fits on one row: 22px row + 10px gap + 22px tick labels.
+  await expect(server).toHaveAttribute("data-plot-height", "116")
+  await expectMarkAt(chart, 709, 10 + 116 * (1 - 2100 / 3000))
+  await hover(page, chart, 709, 10 + 116 * (1 - 2100 / 3000))
   await expect(
     chart.locator(".stream-frame-tooltip, .stream-ordinal-tooltip")
   ).toContainText("2100")
@@ -87,7 +89,7 @@ test("rounded axes follow final legend layout and preserve hover after resizing"
     left: 40,
     right: 10,
     top: 10,
-    bottom: 80
+    bottom: 54
   })
   await page.mouse.move(1, 1)
   await expect(

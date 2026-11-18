@@ -55,6 +55,19 @@ export type {
 } from "./legendGeometry"
 
 export const DEFAULT_LEGEND_DISTANCE = 10
+
+/** The band chart HOCs keep under a bottom legend when the caller leaves that margin to them. */
+export const HOC_BOTTOM_LEGEND_MARGIN = 80
+
+/**
+ * The floor a chart HOC applies to a bottom legend's margin before the
+ * legend's measured band (its rows, `legendDistance` and the axis chrome).
+ * A caller that pins a numeric bottom margin replaces the 80px floor, so the
+ * legend sits on its measured band with no empty space under it.
+ */
+export function hocBottomLegendFloor(callerPinnedBottom: boolean): number {
+  return callerPinnedBottom ? 0 : HOC_BOTTOM_LEGEND_MARGIN
+}
 // Legend focus rings are drawn at x/y=-2 with a 2px stroke. Three pixels keep
 // the outer stroke inside the SVG when a side legend is placed at an edge.
 export const DEFAULT_LEGEND_EDGE_GUTTER = 3

@@ -262,8 +262,10 @@ describe("ChoroplethMap", () => {
           </Wrapper>
         )
 
+        // A pinned bottom replaces the 80px bottom-legend floor, so top and
+        // bottom both reserve the measured 46px legend plus its 10px gap.
         expect(lastGeoFrameProps.margin[legendPosition]).toBe(
-          { right: 113, left: 113, top: 56, bottom: 80 }[legendPosition]
+          { right: 113, left: 113, top: 56, bottom: 56 }[legendPosition]
         )
       }
     )

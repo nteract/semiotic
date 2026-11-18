@@ -11,6 +11,9 @@ import type { FrameLegendOverrides } from "./hooks"
 import { createLegend } from "./legendUtils"
 import { getColor, STREAMING_PALETTE } from "./colorUtils"
 import type { Datum } from "./datumTypes"
+import type { PartialMargin } from "../../types/marginType"
+import { AXIS_TICK_CHROME, DEFAULT_LEGEND_DISTANCE } from "../../legendLayout"
+import { DEFAULT_LEGEND_ROW_HEIGHT } from "../../legendGeometry"
 
 /**
  * Tests for `useChartLegend.ts` — the legend construction + margin
@@ -567,6 +570,42 @@ describe("useChartLegendAndMargin", () => {
     )
 
     expect(result.current.margin.bottom).toBe(116)
+  })
+
+  // The 80px bottom-legend floor is a default. A caller that pins its bottom
+  // margin gets the legend's measured band, so no empty space sits under it.
+  describe("bottom legend floor", () => {
+    const colorScale = () => "#f00"
+    const oneRowBand = DEFAULT_LEGEND_ROW_HEIGHT + DEFAULT_LEGEND_DISTANCE + AXIS_TICK_CHROME
+    const bottomFor = (userMargin: PartialMargin | undefined) =>
+      renderHook(() =>
+        useChartLegendAndMargin({
+          data,
+          colorBy: "cat",
+          colorScale,
+          showLegend: true,
+          legendPosition: "bottom",
+          userMargin,
+          chartWidth: 600,
+          chartHeight: 300,
+          axisChrome: { hasAxis: true, hasAxisLabel: false }
+        })
+      ).result.current.margin.bottom
+
+    it("keeps the 80px floor when the caller leaves the bottom margin to the chart", () => {
+      expect(bottomFor(undefined)).toBe(80)
+      expect(bottomFor({ bottom: "auto" })).toBe(80)
+    })
+
+    it("reserves only the measured legend band under a caller-pinned bottom margin", () => {
+      expect(oneRowBand).toBeLessThan(80)
+      expect(bottomFor({ bottom: 20 })).toBe(oneRowBand)
+      expect(bottomFor(20)).toBe(oneRowBand)
+    })
+
+    it("keeps a caller bottom margin larger than the legend band", () => {
+      expect(bottomFor({ bottom: 120 })).toBe(120)
+    })
   })
 
   it("keeps a titled top legend below the title band", () => {

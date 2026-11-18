@@ -61,6 +61,8 @@ import { isStaticAxisLandmark } from "./staticXYAxisTicks"
 import { generateXYTicks, axisTicksNeedRotation } from "../stream/xyAxisTicks"
 import {
   clampLegendReservation,
+  HOC_BOTTOM_LEGEND_MARGIN,
+  hocBottomLegendFloor,
   resolveLegendDistance,
   resolveLegendSideGutter,
   type AxisChromeInput
@@ -173,20 +175,25 @@ const HOC_LEGEND_MARGIN: Record<LegendPosition, number> = {
   right: 110,
   left: 110,
   top: 50,
-  bottom: 80
+  bottom: HOC_BOTTOM_LEGEND_MARGIN
 }
 
 /**
  * The client HOCs reserve a minimum legend gutter before layout. The static
  * frame API uses the same content measurement, while renderChart() marks HOC
  * requests so both paths retain their compatibility floor. Caller-supplied
- * numeric sides are minima and therefore compose with this requirement.
+ * numeric sides are minima and therefore compose with this requirement,
+ * except that a caller-pinned bottom replaces the bottom floor (see
+ * `hocBottomLegendFloor`).
  */
 export function hocLegendMarginMinimum(
   props: ThemeAwareProps,
   position: LegendPosition
 ): number | undefined {
   if (!props.__autoLegendMargin) return undefined
+  if (position === "bottom") {
+    return hocBottomLegendFloor(props.__explicitMarginSides?.includes("bottom") === true)
+  }
   return HOC_LEGEND_MARGIN[position]
 }
 
