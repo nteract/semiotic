@@ -7,13 +7,13 @@
   "route": "/tasks/compare-category-totals",
   "identity": {
     "packageName": "semiotic",
-    "packageVersion": "3.14.0",
+    "packageVersion": "3.14.1",
     "channel": "source",
-    "sourceRevision": "sha256:dd1696edc436933deb30b7709f0adde96460fc71963984f608465cee5a298ec3",
+    "sourceRevision": "sha256:42acc5914aa02b81dd74852486f14ee407cb423f56932fade9b35e27afefb8a8",
     "revisionKind": "content-digest",
     "revisionScope": "This task's definition, declared examples and checks, task pages and tooling, and the selected public contract. Runtime and test-harness contents are compared when recorded evidence is evaluated; they are not part of this identifier.",
     "contract": {
-      "digest": "sha256:64754d57badef2f5ae93bf528875850ed5f318e14e9ed905c64b5141560dc0fb",
+      "digest": "sha256:1012a5274138658cce9d8d070947cb2bb1b668f4539e276f297548d1749b2b13",
       "artifacts": [
         "package.json",
         "ai/schema.json",
@@ -202,8 +202,62 @@
     "claimId": "task.compare-category-totals",
     "statement": "Compare three totals in React, inspect their exact values, and verify the server-rendered bar geometry.",
     "owner": "Semiotic repository maintainers",
-    "status": "stale",
-    "observed": null,
+    "status": "supported-in-scope",
+    "observed": {
+      "verifiedAt": "2026-11-19T21:43:15.980Z",
+      "environment": {
+        "node": "v22.23.2",
+        "platform": "darwin",
+        "architecture": "arm64",
+        "browser": "Playwright Chromium"
+      },
+      "runtime": {
+        "digest": "sha256:5e851c736f2fd373f232686ad5aa79fa8b00ffe6266652445f5f4cccb693ff6e",
+        "fileCount": 1524
+      },
+      "harness": {
+        "digest": "sha256:acdb4ff3e31197059c1113897147528fabf10409377b136a5a1e90b54f48ef56",
+        "fileCount": 10
+      },
+      "runs": [
+        {
+          "kind": "unit",
+          "targets": [
+            "docs/src/pages/tasks/examples/category-comparison.test.ts",
+            "docs/src/pages/tasks/examples/live-chart.test.tsx",
+            "docs/src/pages/tasks/examples/source-correction.test.ts"
+          ],
+          "name": "Task source units",
+          "command": "node node_modules/vitest/vitest.mjs run ./docs/src/pages/tasks/examples/category-comparison.test.ts ./docs/src/pages/tasks/examples/live-chart.test.tsx ./docs/src/pages/tasks/examples/source-correction.test.ts --reporter=default --reporter=json --outputFile=<temporary-report-directory>/unit.json --allowOnly=false",
+          "exitCode": 0,
+          "passed": 14,
+          "skipped": 0,
+          "passedByFile": {
+            "docs/src/pages/tasks/examples/category-comparison.test.ts": 4,
+            "docs/src/pages/tasks/examples/live-chart.test.tsx": 5,
+            "docs/src/pages/tasks/examples/source-correction.test.ts": 5
+          }
+        },
+        {
+          "kind": "browser",
+          "targets": [
+            "integration-tests/docs-examples-task-live.spec.ts",
+            "integration-tests/docs-examples-tasks.spec.ts"
+          ],
+          "name": "Task browser behavior",
+          "command": "node node_modules/@playwright/test/cli.js test --config playwright.docs-examples.config.ts ./integration-tests/docs-examples-task-live.spec.ts ./integration-tests/docs-examples-tasks.spec.ts --reporter=list,json --forbid-only",
+          "exitCode": 0,
+          "passed": 6,
+          "skipped": 0,
+          "passedByFile": {
+            "integration-tests/docs-examples-task-live.spec.ts": 2,
+            "integration-tests/docs-examples-tasks.spec.ts": 4
+          }
+        }
+      ],
+      "record": "ai/tasks/verification.json",
+      "authorship": "Agent-observed execution of repository tests; independent review is not recorded."
+    },
     "validity": "Only the content digests and environment recorded here; not a release range or an adoption result.",
     "invalidation": "Changes to runtime source, schemas, manifests, task examples, tests, verification tooling or this task definition invalidate the recorded result.",
     "commands": [

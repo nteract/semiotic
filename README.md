@@ -392,17 +392,15 @@ getConversationArcStore().record({ type: "chart-rendered", component: "LineChart
 loadConversationArc(sink.load(), { enabled: false })
 ```
 
-## What's New in 3.14.0
+## What's New in 3.14.1
 
-3.14.0 adds `WordCloud` through `semiotic/wordcloud`, with seeded placement,
-shape masks, linked selection, and portable layouts for server rendering.
-Structured validation reports offer actionable prop repairs, and MCP chart
-responses include images for clients without widget support. Network and XY
-charts load less code up front, while large datasets load in growing chunks.
-This release also preserves Dates in exported configs and fixes selection
-lifecycle, chart-container controls, packed matrices, and bottom legend spacing.
+3.14.1 adds forecast boundary styling, computed anomaly flags for custom
+tooltips, and controlled XY and histogram brushes with end-of-selection
+callbacks. Brush keyboard controls keep chart focus and hover in place, and
+ordinal category ticks now respect `showCategoryTicks` in both browser and
+server rendering.
 
-See [the changelog](CHANGELOG.md#3140---2026-11-18) for the complete fixes and additions.
+See [the changelog](CHANGELOG.md#3141---2026-11-19) for the complete fixes and additions.
 
 ## Why Semiotic
 
@@ -608,7 +606,7 @@ The numbers below are **first-party artifact cost**: the gzip size of Semiotic's
 | `semiotic/controls` | **19 KB** | DirectManipulationControl, CircularBrush, LinearBrush, MobileStandardControls, auditVisualizationControls — no frame renderer |
 | `semiotic/rough` | **3 KB** | Optional deterministic Rough.js paint backend — exact Semiotic geometry remains authoritative |
 | `semiotic/text` | **2 KB** | Optional Pretext annotation hook — peer package excluded |
-| `semiotic` | **454 KB** | Full chart API and shared utilities |
+| `semiotic` | **455 KB** | Full chart API and shared utilities |
 
 <!-- semiotic-bundle-sizes:end -->
 
