@@ -532,6 +532,7 @@ export const LikertChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ *
     rLabel: valueLabel || (isDiverging ? undefined : "Percentage"),
     rFormat,
     ...(categoryFormat && { oFormat: categoryFormat }),
+    showCategoryTicks: props.showCategoryTicks,
     showGrid,
     ...effectiveLegendProps,
     ...(title && { title }),

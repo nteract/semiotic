@@ -94,7 +94,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/realtime/core",
-    "kb": 231,
+    "kb": 232,
     "blurb": "Streaming chart types, HOCs, and buffer helpers"
   },
   {

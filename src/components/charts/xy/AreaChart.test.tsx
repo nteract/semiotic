@@ -1,9 +1,8 @@
-import type { Datum } from "../shared/datumTypes"
 import type { CapturedXYFrameProps } from "../../../test-utils/capturedFrameProps"
 import type { StreamXYFrameHandle } from "../../stream/types"
 import { vi } from "vitest"
 import React from "react"
-import { render, waitFor } from "@testing-library/react"
+import { render } from "@testing-library/react"
 import { AreaChart } from "./AreaChart"
 import { TooltipProvider } from "../../store/TooltipStore"
 
@@ -41,24 +40,6 @@ describe("AreaChart", () => {
 
   beforeEach(() => {
     lastXYFrameProps = {} as CapturedXYFrameProps
-  })
-
-  it.each(["coordinates", "points"])("forecasts nested %s rows before resolving callback accessors", async (lineDataAccessor) => {
-    const parent = { label: "A", [lineDataAccessor]: Array.from({ length: 5 }, (_, t) => ({ t, value: 10 + 5 * t })) }
-    const { container } = render(<AreaChart data={[parent]} lineDataAccessor={lineDataAccessor} areaBy="label"
-      xAccessor={(d: Datum) => d.t} yAccessor={(d: Datum) => d.value} forecast={{ trainEnd: 3, steps: 2 }} />)
-    await waitFor(() => expect(lastXYFrameProps.xAccessor).toBe("__semiotic_resolvedX"))
-    expect(container.querySelector('[role="alert"]')).toBeNull()
-    const future = (lastXYFrameProps.data as Datum[]).filter((d) => d.__forecastUpper != null)
-    expect(future.map((d) => [d.__semiotic_resolvedX, d.__semiotic_resolvedY])).toEqual([[5, 35], [6, 40]])
-    expect(future.every((d) => d.label === "A")).toBe(true)
-  })
-
-  it.each(["coordinates", "points"])("validates nested %s measurements with default accessors", (lineDataAccessor) => {
-    const rows = [{ x: 1, y: 2 }, { x: 2, y: 3 }]
-    const { container } = render(<AreaChart data={[{ label: "A", [lineDataAccessor]: rows }]} lineDataAccessor={lineDataAccessor} areaBy="label" />)
-    expect(container.querySelector('[role="alert"]')).toBeNull()
-    expect(lastXYFrameProps.data).toEqual(rows.map((d) => ({ ...d, label: "A" })))
   })
 
   it("handles empty data gracefully", () => {

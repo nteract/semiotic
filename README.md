@@ -584,7 +584,7 @@ The numbers below are **first-party artifact cost**: the gzip size of Semiotic's
 | `semiotic/geo` | **118 KB** | ChoroplethMap, FlowMap, DistanceCartogram, ProportionalSymbolMap |
 | `semiotic/wordcloud` | **132 KB** | WordCloud, shaped text placement, and portable layouts |
 | `semiotic/realtime` | **233 KB** | RealtimeLineChart, RealtimeHistogram, + 4 streaming charts |
-| `semiotic/realtime/core` | **231 KB** | Streaming chart types, HOCs, and buffer helpers |
+| `semiotic/realtime/core` | **232 KB** | Streaming chart types, HOCs, and buffer helpers |
 | `semiotic/realtime/react` | **7 KB** | Stream status and synced push hooks |
 | `semiotic/server` | **291 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |
 | `semiotic/server/node` | **291 KB** | renderChart, renderDashboard, renderToImage, renderToAnimatedGif |

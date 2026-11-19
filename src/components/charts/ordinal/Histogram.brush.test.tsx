@@ -1,7 +1,7 @@
 import React from "react"
 import { act, fireEvent, render, waitFor } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { Histogram, type HistogramProps } from "./Histogram"
+import { Histogram } from "./Histogram"
 import { TooltipProvider } from "../../store/TooltipStore"
 import { setupCanvasMock } from "../../../test-utils/canvasMock"
 
@@ -11,13 +11,13 @@ const plotProps = {
   data,
   categoryAccessor: "category",
   valueAccessor: "value",
-  valueExtent: [0, 40],
+  valueExtent: [0, 40] as [number, number],
   width: 400,
   height: 200,
   margin: { top: 0, right: 0, bottom: 0, left: 0 },
-  frameProps: { showAxes: false },
+  showAxes: false,
   showGrid: false,
-} satisfies HistogramProps<(typeof data)[number]>
+}
 
 const selectionOf = (container: HTMLElement) => {
   const rect = container.querySelector(".brush-g .selection") as SVGRectElement | null

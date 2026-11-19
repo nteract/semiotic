@@ -24,16 +24,14 @@ export function pixelRange(
   const a = projectHeatmapBandDataValue(scale, range[0])
   const b = projectHeatmapBandDataValue(scale, range[1])
   if (a == null || b == null) return null
-  const low = Math.max(0, Math.min(size, Math.min(a, b)))
-  const high = Math.max(0, Math.min(size, Math.max(a, b)))
-  return low < high ? [low, high] : null
+  return [Math.max(0, Math.min(a, b)), Math.min(size, Math.max(a, b))]
 }
 
 /** The data range ascending pixels cover; a vertical axis has its minimum at the bottom. */
 export function rangeOf(scale: BrushAxisScale, [low, high]: readonly [number, number], vertical: boolean): [number, number] {
   return vertical
-    ? [Number(invertHeatmapBandValue(scale, high)), Number(invertHeatmapBandValue(scale, low))]
-    : [Number(invertHeatmapBandValue(scale, low)), Number(invertHeatmapBandValue(scale, high))]
+    ? [invertHeatmapBandValue(scale, high), invertHeatmapBandValue(scale, low)]
+    : [invertHeatmapBandValue(scale, low), invertHeatmapBandValue(scale, high)]
 }
 
 /** Whether a finished selection reaches the start / end of its axis; both when cleared. */

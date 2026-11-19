@@ -190,7 +190,6 @@ export const lineChart: ChartConfig = {
     // the client HOC's useSeriesFeatures + gap/direct-label paths.
     const series = prepareLineSeriesForSsr({
       data,
-      lineDataAccessor: rest.lineDataAccessor || "coordinates",
       xAccessor: rest.xAccessor || "x",
       yAccessor: rest.yAccessor || "y",
       lineBy: rest.lineBy as string | ((d: Datum) => unknown) | undefined,
@@ -199,11 +198,11 @@ export const lineChart: ChartConfig = {
       color: typeof rest.color === "string" ? rest.color : undefined,
       forecast: rest.forecast as ForecastConfig | undefined,
       anomaly: rest.anomaly as AnomalyConfig | undefined,
-      gapStrategy: rest.gapStrategy || "break",
+      gapStrategy: rest.gapStrategy as "break" | "interpolate" | "zero" | undefined,
       directLabel: rest.directLabel as boolean | { position?: "start" | "end"; fontSize?: number } | undefined,
       annotations: common.annotations as Datum[] | undefined,
       themeCategorical,
-      baseLineStyle: baseLineStyle ? (row, group) => baseLineStyle(row.parentLine || row, group) : undefined,
+      baseLineStyle,
     })
 
     const pointStyle = common.pointStyle || buildShowPointsStyle(
@@ -334,7 +333,7 @@ export const areaChart: ChartConfig = {
     const effectiveColorBy = colorBy || rest.areaBy
     const safeData = Array.isArray(data) ? filterSparseArray(data) : []
     const series = prepareLineSeriesForSsr({
-      data: prepareAreaSeriesData({ data, safeData, areaBy: rest.areaBy, lineDataAccessor: rest.lineDataAccessor || "coordinates" }),
+      data: safeData,
       xAccessor: rest.xAccessor || "x",
       yAccessor: rest.yAccessor || "y",
       lineBy: rest.areaBy as string | ((d: Datum) => unknown) | undefined,

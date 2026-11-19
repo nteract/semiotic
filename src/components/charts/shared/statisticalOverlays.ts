@@ -295,12 +295,8 @@ export function markAnomalies(
 export function buildAnomalyOverlay(
   rows: Datum[],
   yAccessor: string,
-  config: AnomalyConfig,
-  groupBy?: string | ((d: Datum) => unknown),
+  config: AnomalyConfig
 ): ForecastResult {
-  if (groupBy && rows.length) {
-    return buildGroupedOverlay(rows, groupBy, (group) => buildAnomalyOverlay(group, yAccessor, config), true)
-  }
   return {
     processedData: markAnomalies(rows, yAccessor, config),
     annotations: buildAnomalyAnnotations(config),
@@ -588,43 +584,6 @@ function isPrecomputedMode(config: ForecastConfig): boolean {
     config.upperBounds || config.lowerBounds)
 }
 
-/** Scope annotations to authored series; anomaly-only results retain input order. */
-function buildGroupedOverlay(
-  data: Datum[],
-  groupBy: string | ((d: Datum) => unknown),
-  build: (rows: Datum[]) => ForecastResult,
-  preserveOrder = false,
-): ForecastResult {
-  const readGroup = typeof groupBy === "function" ? groupBy : (d: Datum) => d[groupBy]
-  const groups = new Map<unknown, Datum[]>()
-  for (const row of data) {
-    const key = readGroup(row)
-    const group = groups.get(key)
-    if (group) group.push(row)
-    else groups.set(key, [row])
-  }
-  const processedData: Datum[] = []
-  const annotations: Datum[] = []
-  const marked = preserveOrder ? new Map<Datum, Datum>() : undefined
-  for (const [key, rows] of groups) {
-    const result = build(rows)
-    if (marked) rows.forEach((row, i) => marked.set(row, result.processedData[i]))
-    else for (const row of result.processedData) processedData.push(row)
-    for (const ann of result.annotations) {
-      if (ann.type === "x-threshold") {
-        if (!annotations.some((existing) => existing.type === "x-threshold")) annotations.push(ann)
-      } else {
-        const priorFilter = ann.filter as ((d: Datum) => boolean) | undefined
-        annotations.push({ ...ann, filter: (d: Datum) => {
-          const value = readGroup(d)
-          return (value === key || Object.is(value, key)) && (!priorFilter || priorFilter(d))
-        } })
-      }
-    }
-  }
-  return { processedData: marked ? data.map((row) => marked.get(row)!) : processedData, annotations }
-}
-
 export function buildForecast(
   data: Datum[],
   xAccessor: string,
@@ -634,8 +593,32 @@ export function buildForecast(
 ): ForecastResult {
   const groupBy = forecastConfig._groupBy
   if (groupBy && data.length) {
-    return buildGroupedOverlay(data, groupBy, (rows) =>
-      buildForecast(rows, xAccessor, yAccessor, { ...forecastConfig, _groupBy: undefined }, anomalyConfig))
+    const readGroup = typeof groupBy === "function" ? groupBy : (d: Datum) => d[groupBy]
+    const groups = new Map<unknown, Datum[]>()
+    for (const row of data) {
+      const key = readGroup(row)
+      const group = groups.get(key)
+      if (group) group.push(row)
+      else groups.set(key, [row])
+    }
+    const processedData: Datum[] = []
+    const annotations: Datum[] = []
+    for (const [key, rows] of groups) {
+      const result = buildForecast(rows, xAccessor, yAccessor, { ...forecastConfig, _groupBy: undefined }, anomalyConfig)
+      for (const row of result.processedData) processedData.push(row)
+      for (const ann of result.annotations) {
+        if (ann.type === "x-threshold") {
+          if (!annotations.some((existing) => existing.type === "x-threshold")) annotations.push(ann)
+        } else {
+          const priorFilter = ann.filter as ((d: Datum) => boolean) | undefined
+          annotations.push({ ...ann, filter: (d: Datum) => {
+            const value = readGroup(d)
+            return (value === key || Object.is(value, key)) && (!priorFilter || priorFilter(d))
+          } })
+        }
+      }
+    }
+    return { processedData, annotations }
   }
   if (isPrecomputedMode(forecastConfig)) {
     return buildPrecomputed(data, xAccessor, yAccessor, forecastConfig, anomalyConfig)

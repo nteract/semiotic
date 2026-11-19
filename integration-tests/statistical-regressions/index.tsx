@@ -5,7 +5,6 @@ import { BarChart } from "../../dist/ordinal.module.min.js"
 import type { RealtimeFrameHandle } from "../../src/components/realtime/types"
 import type { StreamXYFrameHandle } from "../../src/components/stream/types"
 import type { Datum } from "../../src/components/charts/shared/datumTypes"
-import { AnomalyRegressions } from "./AnomalyRegressions"
 
 const epoch = Date.UTC(2026, 0, 1),
   day = 86400000
@@ -155,9 +154,7 @@ function OrdinalTrends() {
   )
 }
 createRoot(document.getElementById("root")!).render(
-  new URLSearchParams(location.search).get("family") === "anomaly" ? (
-    <AnomalyRegressions />
-  ) : new URLSearchParams(location.search).get("family") === "ordinal" ? (
+  new URLSearchParams(location.search).get("family") === "ordinal" ? (
     <OrdinalTrends />
   ) : (
     <App />

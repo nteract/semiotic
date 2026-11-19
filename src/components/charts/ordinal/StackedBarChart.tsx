@@ -278,6 +278,7 @@ export const StackedBarChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE
     rLabel: valueLabel,
     rFormat: valueFormat,
     ...(categoryFormat && { oFormat: categoryFormat }),
+    showCategoryTicks: props.showCategoryTicks,
     showGrid,
     ...effectiveLegendProps,
     ...buildBaseMetadataProps({ title, description, summary, accessibleTable, className, animate: props.animate, maxDevicePixelRatio: props.maxDevicePixelRatio, axisExtent: props.axisExtent, autoPlaceAnnotations: props.autoPlaceAnnotations }),

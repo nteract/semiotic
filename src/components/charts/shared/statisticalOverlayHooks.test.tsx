@@ -119,17 +119,6 @@ for (const [path, render] of [
   describe(`${path} anomaly dots and the row mark`, () => {
     const cases: Array<[string, () => { processedData: Datum[]; annotations: Datum[] }]> = [
       ["anomaly alone", () => buildAnomalyOverlay(wave, "y", { threshold: 2 })],
-      ...(["zero", "break", "interpolate"] as const).map((gapStrategy): [string, () => { processedData: Datum[]; annotations: Datum[] }] => [
-        `post-${gapStrategy} rows`,
-        () => {
-          const data: Datum[] = gapStrategy === "zero"
-            ? [10, 10, 10, 10, null].map((y, x) => ({ x, y }))
-            : [...[0, 0, 0, 0, 10].map((y, x) => ({ x, y })), { x: null, y: 1000 }]
-          const result = prepareLineSeriesForSsr({ data, gapStrategy, anomaly: { threshold: 1.5 } })
-          expect(result.data.filter((row) => row[ANOMALY_FIELD]).map((row) => row.x)).toEqual([4])
-          return { processedData: result.data, annotations: result.annotations }
-        },
-      ]),
       ["a computed forecast", () => buildForecast(wave, "x", "y", { trainEnd: 30, steps: 8 }, { threshold: 2 })],
       [
         "a pre-computed forecast",
