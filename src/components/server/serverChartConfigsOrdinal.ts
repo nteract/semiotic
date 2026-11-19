@@ -705,6 +705,8 @@ export const funnelChart: ChartConfig = {
       // `showAxes` contract still takes precedence for compact/static use.
       // Horizontal funnels never draw axes.
       showAxes: isVertical && common.showAxes !== false,
+      // As in the browser, a vertical funnel always labels its steps.
+      showCategoryTicks: isVertical && common.showAxes !== false,
       showGrid: isVertical,
       // A one-series funnel is monocolor; per-step palette
       // cycling is a frame fallback, not FunnelChart's HOC contract.

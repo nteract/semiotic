@@ -143,7 +143,12 @@ const analyze = process.argv.includes("--analyze")
 // needs the full hierarchy engine, so it also retains the standalone helper:
 // same dependencies and bundler, 332246 -> 332999 bytes (+753 B, 0.23%).
 // Keep ~0.2 KiB headroom; named-import tolerances and isolation stay fixed.
-const MULTI_IMPORT_GZIP_BUDGET = 325.4 * 1024
+// Requested dependency patches and restored regression fixes (2026-11-19):
+// with the same updated dependencies, 877ddbd28 measures 334405 bytes and
+// the restored fixes measure 334474 bytes (+69), both across 29 files.
+// Tree-shaking isolation checks pass. Keep less than 0.2 KiB headroom above
+// the corrected graph, following the approved budget refresh.
+const MULTI_IMPORT_GZIP_BUDGET = 326.8 * 1024
 
 const MULTI_IMPORT_SOURCE = `
 export { LineChart } from "semiotic/xy"

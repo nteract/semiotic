@@ -59,8 +59,11 @@ test("opt-in gestures stay small and published zoom entries reuse the canonical 
   // the exported fit/center helpers and the useNetworkZoom selector. This cap
   // includes the wrapper, geometry, controls and LOD, and deliberately
   // excludes the existing chart.
+  // The requested D3 patch releases (2026-11-19) measure 7195 gzip bytes
+  // on this fixture. The approved budget refresh keeps under 0.1 KiB of
+  // headroom; gesture isolation, chart reuse and the driver cap still apply.
   assert.ok(
-    gzip(zoom) - gzip(base) < 7 * 1024,
+    gzip(zoom) - gzip(base) < 7.1 * 1024,
     `Optional runtime: ${gzip(zoom) - gzip(base)} gzip bytes`
   )
   assert.ok(

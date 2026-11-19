@@ -251,6 +251,7 @@ export const DotPlot = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ fo
     rLabel: valueLabel,
     rFormat: valueFormat,
     ...(categoryFormat && { oFormat: categoryFormat }),
+    showCategoryTicks: props.showCategoryTicks,
     showGrid,
     oSort: sort,
     ...setup.legendBehaviorProps,

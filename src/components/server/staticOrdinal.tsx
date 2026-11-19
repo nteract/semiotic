@@ -89,7 +89,9 @@ export function generateOrdinalAxesSVG(
       ? leftSideLegendGutter
       : (margin?.left ?? props.margin?.left ?? 40)
 
-  const categoryTicks = Object.values(columns).map((col, index) => ({
+  // `showCategoryTicks: false` drops the category ticks and labels, as the
+  // browser overlay does; the axis line stays.
+  const categoryTicks = props.showCategoryTicks === false ? [] : Object.values(columns).map((col, index) => ({
     pixel: col.middle,
     label: catFormat ? catFormat(col.name, index) : col.name
   }))

@@ -175,6 +175,7 @@ const COMMON_FRAME_PROP_KEYS = [
   "yFormat",
   "categoryFormat",
   "valueFormat",
+  "showCategoryTicks",
   "tickFormatTime",
   "tickFormatValue",
   "xScaleType",

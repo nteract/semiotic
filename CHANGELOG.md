@@ -45,6 +45,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   types. Both brushes stay browser-only.
   [source: consumer: themed LineChart wrapper that commits a controlled time-range brush on release]
 
+### Fixed
+
+- A key the frame brush handles (arrows, Shift+arrows, Escape) no longer also
+  moves the chart's keyboard focus and hover: on `LineChart`,
+  `StackedAreaChart`, `Scatterplot` and other XY brushes, and on the
+  value-axis brush of `Histogram` and the other ordinal charts, the brush
+  keeps the key. Keys pressed on the chart itself still navigate it.
+  [source: consumer: design-system LineChart and histogram wrappers with keyboard brushing]
+- `showCategoryTicks: false` hides the category axis's ticks and labels in
+  `renderChart` (`semiotic/server` and `semiotic/server/edge`) as it does in
+  the browser, on every ordinal chart with a category axis. In the browser,
+  `StackedBarChart`, `GroupedBarChart`, `DotPlot` and `LikertChart` now pass
+  it to their frame too: they had shrunk the margin for it but still drew the
+  labels. A vertical `FunnelChart` keeps labelling its steps on both paths.
+  [source: consumer: design-system histogram wrapper rendered server-side for design files]
+
 ## [3.14.0] - 2026-11-18
 
 ### Added

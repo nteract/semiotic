@@ -507,6 +507,8 @@ const ENTRY_GRAPHS = [
   // Bumped 261.5→262.5: static value-banded histogram bars, standalone-safe
   // (var()-free) annotation label paints, and the shared hatch tile measure
   // 261.8 KiB gzip.
+  // Static ordinal axes honour showCategoryTicks: 296,645 → 296,672 B gzip
+  // (+27 B); 289.7 → 289.8 KiB is the smallest step that covers it.
   // Approved regression fixes (2026-11-19): restored nested line/area
   // preparation, default gap breaks and post-gap anomaly marking measure
   // 289.9 KiB in CI. Reserve 0.2 KiB above that measured graph.

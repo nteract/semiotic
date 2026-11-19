@@ -31,10 +31,13 @@ export function useBrushAccessibility({
   const descriptionId = useId().replace(/:/g, "")
   const actionRef = useRef(onAction)
   actionRef.current = onAction
+  // A key in the brush's map belongs to the brush: it stops here, so the
+  // frame's keyboard navigation and hover around it never see it.
   const onKeyDown = useCallback((event: React.KeyboardEvent<SVGSVGElement>) => {
     const action = actionForKey(event)
     if (!action) return
     event.preventDefault()
+    event.stopPropagation()
     actionRef.current?.(action)
   }, [])
 
