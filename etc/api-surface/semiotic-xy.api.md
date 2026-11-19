@@ -116,6 +116,9 @@ interface TooltipField
 interface TooltipRootProps extends React.HTMLAttributes<HTMLDivElement>
 interface UseLinkedCrosshairResult
 interface WaterfallChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig
+interface XYBrushEndMeta
+interface XYBrushExtent
+interface XYBrushExtentInput
 interface XYCustomChartProps<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>> extends BaseChartProps, AxisConfig
 interface-member AreaChartProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member AreaChartProps::property::anomaly = optional anomaly: AnomalyConfig | undefined
@@ -430,6 +433,7 @@ interface-member LineChartProps::property::anomaly = optional anomaly: AnomalyCo
 interface-member LineChartProps::property::areaOpacity = optional areaOpacity: number | undefined
 interface-member LineChartProps::property::band = optional band: BandConfig<TDatum> | BandConfig<TDatum>[] | undefined
 interface-member LineChartProps::property::brush = optional brush: boolean | undefined
+interface-member LineChartProps::property::brushExtent = optional brushExtent: XYBrushExtentInput | null | undefined
 interface-member LineChartProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
 interface-member LineChartProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
 interface-member LineChartProps::property::curve = optional curve: "basis" | "cardinal" | "catmullRom" | "linear" | "monotoneX" | "monotoneY" | "step" | "stepAfter" | "stepBefore" | undefined
@@ -448,6 +452,7 @@ interface-member LineChartProps::property::lineDataAccessor = optional lineDataA
 interface-member LineChartProps::property::lineGradient = optional lineGradient: ColorGradientInput | undefined
 interface-member LineChartProps::property::lineWidth = optional lineWidth: number | undefined
 interface-member LineChartProps::property::onBrush = optional onBrush: ((extent: {x: [number, number]; y: [number, number];} | null) => void) | undefined
+interface-member LineChartProps::property::onBrushEnd = optional onBrushEnd: ((extent: XYBrushExtent | null, meta: XYBrushEndMeta) => void) | undefined
 interface-member LineChartProps::property::pointIdAccessor = optional pointIdAccessor: ChartAccessor<TDatum, string> | undefined
 interface-member LineChartProps::property::pointRadius = optional pointRadius: number | undefined
 interface-member LineChartProps::property::showGrid = optional showGrid: boolean | undefined
@@ -603,6 +608,8 @@ interface-member StackedAreaChartProps::property::annotations = optional annotat
 interface-member StackedAreaChartProps::property::areaBy = optional areaBy: ChartAccessor<TDatum, string> | undefined
 interface-member StackedAreaChartProps::property::areaOpacity = optional areaOpacity: number | undefined
 interface-member StackedAreaChartProps::property::baseline = optional baseline: "diverging" | "silhouette" | "wiggle" | "zero" | undefined
+interface-member StackedAreaChartProps::property::brush = optional brush: boolean | undefined
+interface-member StackedAreaChartProps::property::brushExtent = optional brushExtent: XYBrushExtentInput | null | undefined
 interface-member StackedAreaChartProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
 interface-member StackedAreaChartProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
 interface-member StackedAreaChartProps::property::curve = optional curve: "basis" | "cardinal" | "catmullRom" | "linear" | "monotoneX" | "monotoneY" | "step" | "stepAfter" | "stepBefore" | undefined
@@ -614,6 +621,8 @@ interface-member StackedAreaChartProps::property::legendPosition = optional lege
 interface-member StackedAreaChartProps::property::lineDataAccessor = optional lineDataAccessor: string | undefined
 interface-member StackedAreaChartProps::property::lineWidth = optional lineWidth: number | undefined
 interface-member StackedAreaChartProps::property::normalize = optional normalize: boolean | undefined
+interface-member StackedAreaChartProps::property::onBrush = optional onBrush: ((extent: {x: [number, number]; y: [number, number];} | null) => void) | undefined
+interface-member StackedAreaChartProps::property::onBrushEnd = optional onBrushEnd: ((extent: XYBrushExtent | null, meta: XYBrushEndMeta) => void) | undefined
 interface-member StackedAreaChartProps::property::pointRadius = optional pointRadius: number | undefined
 interface-member StackedAreaChartProps::property::showGrid = optional showGrid: boolean | undefined
 interface-member StackedAreaChartProps::property::showLegend = optional showLegend: boolean | undefined
@@ -657,6 +666,7 @@ interface-member StreamXYFrameProps::property::binSize = optional binSize: numbe
 interface-member StreamXYFrameProps::property::boundsAccessor = optional boundsAccessor: ((d: T) => number) | string | undefined
 interface-member StreamXYFrameProps::property::boundsStyle = optional boundsStyle: ((d: T, group?: string) => Style) | Style | undefined
 interface-member StreamXYFrameProps::property::brush = optional brush: undefined | {dimension?: "x" | "xy" | "y"; snap?: "bin" | "continuous"; binBoundaries?: number[]; snapDuring?: boolean;}
+interface-member StreamXYFrameProps::property::brushExtent = optional brushExtent: XYBrushExtentInput | null | undefined
 interface-member StreamXYFrameProps::property::candlestickStyle = optional candlestickStyle: CandlestickStyle | undefined
 interface-member StreamXYFrameProps::property::canvasPreRenderers = optional canvasPreRenderers: CanvasRendererFn[] | undefined
 interface-member StreamXYFrameProps::property::capacity = optional capacity: number | undefined
@@ -715,6 +725,7 @@ interface-member StreamXYFrameProps::property::maxCapacity = optional maxCapacit
 interface-member StreamXYFrameProps::property::maxDevicePixelRatio = optional maxDevicePixelRatio: number | undefined
 interface-member StreamXYFrameProps::property::normalize = optional normalize: boolean | undefined
 interface-member StreamXYFrameProps::property::onBrush = optional onBrush: ((extent: {x: [number, number]; y: [number, number];} | null) => void) | undefined
+interface-member StreamXYFrameProps::property::onBrushEnd = optional onBrushEnd: ((extent: XYBrushExtent | null, meta: XYBrushEndMeta) => void) | undefined
 interface-member StreamXYFrameProps::property::onCategoriesChange = optional onCategoriesChange: ((categories: string[]) => void) | undefined
 interface-member StreamXYFrameProps::property::onColorDomainChange = optional onColorDomainChange: ((domain: [number, number] | null) => void) | undefined
 interface-member StreamXYFrameProps::property::onLayoutError = optional onLayoutError: ((diagnostic: import("./customLayoutFailure").CustomLayoutFailureDiagnostic) => void) | undefined
@@ -849,6 +860,13 @@ interface-member WaterfallChartProps::property::xExtent = optional xExtent: [num
 interface-member WaterfallChartProps::property::xScaleType = optional xScaleType: "linear" | "log" | "time" | undefined
 interface-member WaterfallChartProps::property::yAccessor = optional yAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member WaterfallChartProps::property::yExtent = optional yExtent: [number | undefined, number | undefined] | [number] | undefined
+interface-member XYBrushEndMeta::property::atDomainEnd = required atDomainEnd: boolean
+interface-member XYBrushEndMeta::property::atDomainStart = required atDomainStart: boolean
+interface-member XYBrushEndMeta::property::source = required source: "keyboard" | "pointer"
+interface-member XYBrushExtent::property::x = required x: [number, number]
+interface-member XYBrushExtent::property::y = required y: [number, number]
+interface-member XYBrushExtentInput::property::x = optional x: readonly [number, number] | undefined
+interface-member XYBrushExtentInput::property::y = optional y: readonly [number, number] | undefined
 interface-member XYCustomChartProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member XYCustomChartProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
 interface-member XYCustomChartProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined

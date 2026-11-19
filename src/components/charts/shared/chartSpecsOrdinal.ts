@@ -208,6 +208,8 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       styleRules: STYLE_RULES_PROP_SPEC,
       brush: { type: "boolean", description: "Enable a value-axis brush overlay for range selection." },
       onBrush: { type: "function", omitFromSchema: true },
+      brushExtent: { type: ["object", "null"], description: "Controlled brush selection { r: [min, max] }; null clears it." },
+      onBrushEnd: { type: "function", omitFromSchema: true },
       linkedBrush: { type: ["string", "object"], description: "LinkedCharts brush channel name, or { name, rField? }." },
     },
     capabilities: {

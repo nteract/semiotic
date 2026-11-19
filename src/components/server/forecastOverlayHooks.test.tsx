@@ -81,33 +81,6 @@ for (const [entry, renderer] of [
   })
 
   describe(`${entry} computed anomaly marks`, () => {
-    it("marks nested area coordinates before building the overlay", () => {
-      const svg = renderer.renderChart("AreaChart", {
-        data: [{ label: "Measurements", coordinates: flat }], areaBy: "label",
-        xAccessor: (d: Datum) => d.x, yAccessor: (d: Datum) => d.y,
-        anomaly: { threshold: 2, anomalyColor: "#AA0011" }, ...size,
-      })
-      expect(dotsFilled(svg, "#AA0011")).toHaveLength(1)
-    })
-
-    it.each(["coordinates", "points"])("marks nested %s after zero filling", (lineDataAccessor) => {
-      const coordinates = [10, 10, 10, 10, null].map((y, x) => ({ x, y }))
-      const parent = { label: "Measurements", [lineDataAccessor]: coordinates }
-      const props = {
-        data: [parent], lineDataAccessor, lineBy: (d: Datum) => d.label,
-        xAccessor: (d: Datum) => d.x, yAccessor: (d: Datum) => d.y,
-        gapStrategy: "zero" as const, anomaly: { threshold: 1.5, anomalyColor: "#AA0011" },
-      }
-      const rows = prepareLineSeriesForSsr(props).data
-      const marked = rows.filter((row) => row[ANOMALY_FIELD])
-      expect(marked).toHaveLength(1)
-      expect(marked[0]).toMatchObject({ x: 4, __semiotic_resolvedY: 0 })
-      expect(marked[0].parentLine).toBe(parent)
-      const svg = renderer.renderChart("LineChart", { ...props, ...size })
-      expect(dotsFilled(svg, "#AA0011")).toHaveLength(1)
-      expect(coordinates[4].y).toBeNull()
-    })
-
     it.each([
       ["LineChart", {}],
       ["LineChart", { forecast: { trainEnd: 20, steps: 5 } }],

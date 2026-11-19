@@ -8,12 +8,16 @@ import { normalizeLinkedBrush } from "./selectionUtils"
 import { useBrushSelection } from "../../store/useSelection"
 import type { ChartAccessor, LinkedBrushProp } from "./types"
 import type { Datum } from "./datumTypes"
+import type { XYBrushEndMeta, XYBrushExtent, XYBrushExtentInput } from "../../stream/xyBrushTypes"
 
-export type XYBrushExtent = { x: [number, number]; y: [number, number] }
+export type { XYBrushExtent }
 
 export interface XYBrushInput<TDatum extends Datum = Datum> {
   brush?: boolean
   onBrush?: (extent: XYBrushExtent | null) => void
+  /** Controlled selection, passed to the frame brush; a controlled move publishes nothing. */
+  brushExtent?: XYBrushExtentInput | null
+  onBrushEnd?: (extent: XYBrushExtent | null, meta: XYBrushEndMeta) => void
   linkedBrush?: LinkedBrushProp
   xAccessor?: ChartAccessor<TDatum, unknown>
   yAccessor?: ChartAccessor<TDatum, unknown>
@@ -25,12 +29,16 @@ export interface XYBrushResult {
   brushStreamProps: {
     brush: { dimension: "x" | "y" | "xy" }
     onBrush: (extent: XYBrushExtent | null) => void
+    brushExtent: XYBrushExtentInput | null | undefined
+    onBrushEnd: ((extent: XYBrushExtent | null, meta: XYBrushEndMeta) => void) | undefined
   } | Record<string, never>
 }
 
 export function useXYBrush<TDatum extends Datum = Datum>({
   brush,
   onBrush: onBrushProp,
+  brushExtent,
+  onBrushEnd,
   linkedBrush,
   xAccessor,
   yAccessor,
@@ -83,5 +91,5 @@ export function useXYBrush<TDatum extends Datum = Datum>({
   )
 
   if (!enabled) return { brushStreamProps: {} }
-  return { brushStreamProps: { brush: { dimension: brushDimension }, onBrush } }
+  return { brushStreamProps: { brush: { dimension: brushDimension }, onBrush, brushExtent, onBrushEnd } }
 }

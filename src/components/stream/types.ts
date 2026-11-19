@@ -20,6 +20,7 @@ import type { ColorGradientInput, GradientConfig, GradientInput } from "../chart
 import type { CoercibleNumber } from "./accessorUtils"
 import type { AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import type { SymbolName } from "./symbolPath"
+import type { XYBrushEndMeta, XYBrushExtent, XYBrushExtentInput } from "./xyBrushTypes"
 import type { GlyphDef } from "./glyphDef"
 import type { SceneRenderMode } from "./sceneRenderBackendTypes"
 import type { StreamSemanticInteractionProps } from "./streamSemanticTypes"
@@ -886,6 +887,10 @@ export interface StreamXYFrameProps<T = Datum>
   }
   /** Callback when brush selection changes. Called with data-space extent, or null when cleared. */
   onBrush?: (extent: { x: [number, number]; y: [number, number] } | null) => void
+  /** Controlled brush selection in the shape `onBrush` reports; `null` clears it. Unset: uncontrolled. */
+  brushExtent?: XYBrushExtentInput | null
+  /** Called once per brush release, keyboard step or reset that changed the selection. */
+  onBrushEnd?: (extent: XYBrushExtent | null, meta: XYBrushEndMeta) => void
 
   // ── Point identification (for point-anchored annotations) ──
   /**

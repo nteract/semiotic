@@ -20,7 +20,7 @@ import type {
   StreamXYFrameHandle,
   StreamXYFrameProps
 } from "./types"
-import { XYBrushOverlayLazy } from "./XYBrushOverlayLazy"
+import { XYBrushOverlayLazy, brushTouchAction } from "./XYBrushOverlayLazy"
 import { FrameInteractiveLayer } from "./FrameInteractiveLayer"
 import { DataSourceAdapter } from "./DataSourceAdapter"
 import { resolveThemeSemanticColors } from "../store/themeCore"
@@ -88,13 +88,6 @@ const DEFAULT_MARGIN = AXIS_FRAME_DEFAULT_MARGIN
 
 // Theme colors live in frameThemeColors.ts (shared across Stream Frames).
 const LIGHT_THEME = LIGHT_FRAME_THEME
-
-function brushTouchAction(brush: StreamXYFrameProps["brush"]): React.CSSProperties["touchAction"] | undefined {
-  if (!brush) return undefined
-  if (brush.dimension === "x") return "pan-y"
-  if (brush.dimension === "y") return "pan-x"
-  return "none"
-}
 
 // ── StreamXYFrame ──────────────────────────────────────────────────────
 
@@ -209,6 +202,8 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       categoryAccessor,
       brush,
       onBrush,
+      brushExtent,
+      onBrushEnd,
       decay,
       pulse,
       transition: transitionProp,
@@ -1488,6 +1483,8 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
             binBoundaries={brush?.binBoundaries ?? (chartType === "bar" ? storeRef.current?.getBinBoundaries() : undefined)}
             snapDuring={brush?.snapDuring}
             streaming={runtimeMode === "streaming"}
+            extent={brushExtent}
+            onBrushEnd={onBrushEnd}
           />
         )}
 

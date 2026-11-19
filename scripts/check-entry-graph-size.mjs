@@ -299,11 +299,9 @@ const ENTRY_GRAPHS = [
   // omission reports, and UTF-8 URL transport add 940 B gzip
   // (427,567 → 428,507 B). Allocate 0.9 KiB while retaining the narrow guard band;
   // no chart-family graph or dependency is added.
-  // User-approved anomaly-overlay refresh (2026-11-19, 39c8a33ba): marking
-  // final gap-processed coordinates and preserving nested parent/group data
-  // measures root 428747 B, XY 181065 B, line 136048 B, server 296920 B,
-  // and AI 690512 B gzip with Node 22.23.2 and unchanged dependencies.
-  // These five limits retain 0.1–0.2 KiB above the measured correctness cost.
+  // Controlled XY brush (brushExtent, onBrushEnd) and StackedAreaChart's
+  // brush wiring: 428,598 → 428,789 B gzip (+191 B). 418.6 → 418.8 KiB is
+  // the smallest step that covers it.
   { entry: "semiotic.module.min.js", label: "semiotic", limitKb: 418.8 },
   // Bumped 150→154: custom-layout painter registration now loads on demand
   // rather than retaining every painter in every chart HOC. The lightweight
@@ -330,7 +328,9 @@ const ENTRY_GRAPHS = [
   // Lowered 165→163.5 (2026-09-30): the XY transition engine loads on demand
   // (only `animate`/`transition` charts fetch it); measures 162.3 KiB gzip.
   // Feature graph: 164.6 KiB (previous built HEAD: 163.2 KiB).
-  { entry: "xy.module.min.js", label: "xy", limitKb: 177.0 },
+  // Controlled XY brush and StackedAreaChart's brush wiring:
+  // 180,921 → 181,109 B gzip (+188 B); 176.7 → 176.9 KiB covers it.
+  { entry: "xy.module.min.js", label: "xy", limitKb: 176.9 },
   // One-chart micro boundary: LineChart registers only its line/area/mixed
   // renderer family. Keep the budget narrow so unrelated HOCs or direct
   // StreamXYFrame consumers cannot quietly rejoin this graph.
@@ -345,7 +345,9 @@ const ENTRY_GRAPHS = [
   // Lowered 124→122 (2026-09-30): on-demand transitions measure 121.0 KiB gzip.
   // Feature graph: 123.3 KiB (previous built HEAD: 121.9 KiB).
   // Combined line-gap, navigation, and touch fixes measure 124.23 KiB.
-  { entry: "semiotic-line.module.min.js", label: "line", limitKb: 133.0 },
+  // Controlled XY brush (frame overlay props and LineChart pass-through):
+  // 135,949 → 135,996 B gzip (+47 B); 132.8 → 132.9 KiB covers it.
+  { entry: "semiotic-line.module.min.js", label: "line", limitKb: 132.9 },
   // The opt-in text adapter stays isolated. This budgets Semiotic's code;
   // @chenglou/pretext remains an external optional peer, like React.
   { entry: "semiotic-text.module.min.js", label: "text (adapter)", limitKb: 2 },
@@ -502,7 +504,7 @@ const ENTRY_GRAPHS = [
   // Bumped 261.5→262.5: static value-banded histogram bars, standalone-safe
   // (var()-free) annotation label paints, and the shared hatch tile measure
   // 261.8 KiB gzip.
-  { entry: "server.module.min.js", label: "server", limitKb: 290.1 },
+  { entry: "server.module.min.js", label: "server", limitKb: 289.7 },
   // Bumped 450→460: the public numeric audit + chart contract evaluator adds
   // ~5–6 KB gzip to the AI graph; ChartContainer loads the same code lazily.
   // Bumped 460→462 (3.8.6): BumpChart (+ its ribbon geometry) joins the AI graph.
@@ -601,7 +603,9 @@ const ENTRY_GRAPHS = [
   // headroom without widening family budgets or the dependency graph.
   // #1364 shares the root's serialization implementation: +936 B gzip
   // (689,334 → 690,270 B), with the matching 0.9 KiB allocation.
-  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 674.5 },
+  // Controlled XY brush, StackedAreaChart's brush and their validation
+  // entries: 690,369 → 690,572 B gzip (+203 B); 674.2 → 674.4 KiB covers it.
+  { entry: "semiotic-ai.module.min.js", label: "ai", limitKb: 674.4 },
   // Bumped 100→101: transitDiagramLayout's public detail modes, source-rooted
   // line derivation, and station-rendering contract extend the curated recipes
   // entry. Linux CI measures 100.3 KiB gzip; retain a reviewable 0.7 KiB

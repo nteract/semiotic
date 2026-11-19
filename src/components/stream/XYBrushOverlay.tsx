@@ -14,17 +14,24 @@
  *     snap during drag (the "brush" event).
  *   - Streaming tracking guards against y-only dimension (no x-domain to track).
  *   - isProgrammaticMoveRef prevents re-entrant brush events from .move() calls.
+ *   - A controlled `extent` moves the brush whenever it, the scales or the plot
+ *     change, and again after each gesture or keyboard step (so the caller's
+ *     value wins), but never mid-drag. Programmatic moves report nothing.
+ *   - `onBrushEnd` fires once per pointer release, keyboard step or reset that
+ *     changed the selection.
  *
  * Consumed by: StreamXYFrame (rendered when brush prop is set).
  */
 import * as React from "react"
-import { useRef, useEffect, useMemo } from "react"
+import { useRef, useEffect, useMemo, useState } from "react"
 import { select as d3Select } from "d3-selection"
 import { brush as d3Brush, brushX as d3BrushX, brushY as d3BrushY, type BrushBehavior, type D3BrushEvent } from "d3-brush"
 import type { StreamScales } from "./types"
 import { useBrushAccessibility, type BrushKeyboardAction } from "./brushAccessibility"
 import { applyBrushSelectionStyle } from "./brushTheme"
 import { invertHeatmapBandValue, projectHeatmapBandDataValue } from "./heatmapBandTicks"
+import type { XYBrushEndMeta, XYBrushExtent, XYBrushExtentInput } from "./xyBrushTypes"
+import { axisEndMeta, pixelRange, rangeOf, sameRange } from "./brushControl"
 
 export interface XYBrushOverlayProps {
   width: number
@@ -42,7 +49,14 @@ export interface XYBrushOverlayProps {
   /** When true, snap during drag (not just on release). Default false. */
   snapDuring?: boolean
   streaming?: boolean
+  /** Controlled selection: the brush moves to it, `null` clears it. Unset leaves the brush uncontrolled. */
+  extent?: XYBrushExtentInput | null
+  /** Called once per pointer release, keyboard step or reset that changed the selection. */
+  onBrushEnd?: (extent: XYBrushExtent | null, meta: XYBrushEndMeta) => void
 }
+
+type Dimension = XYBrushOverlayProps["dimension"]
+type BrushSelection = [number, number] | [[number, number], [number, number]]
 
 function dataEndpoint(
   scale: { (value: number): number; invert: (pixel: number) => number; domain: () => unknown[] },
@@ -106,6 +120,56 @@ function snapRangeToBinBoundaries(range: [number, number], boundaries: number[])
   return [floorBinBoundary(range[0], boundaries), ceilBinBoundary(range[1], boundaries)]
 }
 
+/** The d3 brush selection that draws `extent`; `null` when its brushed axis is missing or unplaceable. */
+function selectionOf(
+  s: StreamScales,
+  extent: XYBrushExtentInput,
+  dimension: Dimension,
+  width: number,
+  height: number
+): BrushSelection | null {
+  const x = pixelRange(s.x, extent.x, width)
+  const y = pixelRange(s.y, extent.y, height)
+  if (!x || !y || (dimension !== "y" && !extent.x) || (dimension !== "x" && !extent.y)) return null
+  return dimension === "x" ? x : dimension === "y" ? y : [[x[0], y[0]], [x[1], y[1]]]
+}
+
+/** The data extent a d3 brush selection covers; the unbrushed axis spans the plot. */
+function extentOf(
+  s: StreamScales,
+  selection: BrushSelection,
+  dimension: Dimension,
+  width: number,
+  height: number
+): XYBrushExtent {
+  const [[px0, py0], [px1, py1]] = dimension === "x"
+    ? [[(selection as [number, number])[0], 0], [(selection as [number, number])[1], height]]
+    : dimension === "y"
+      ? [[0, (selection as [number, number])[0]], [width, (selection as [number, number])[1]]]
+      : selection as [[number, number], [number, number]]
+  return { x: rangeOf(s.x, [px0, px1], false), y: rangeOf(s.y, [py0, py1], true) }
+}
+
+/** Whether a selection reaches the start / end of the brushed axis (x, or y for a y brush). */
+function endMeta(
+  source: XYBrushEndMeta["source"],
+  selection: BrushSelection | null,
+  dimension: Dimension,
+  width: number,
+  height: number
+): XYBrushEndMeta {
+  if (!selection || dimension !== "xy") {
+    return axisEndMeta(source, selection as [number, number] | null, dimension === "y" ? height : width, dimension === "y")
+  }
+  const [[left], [right]] = selection as [[number, number], [number, number]]
+  return axisEndMeta(source, [left, right], width, false)
+}
+
+function sameExtent(a: XYBrushExtent | null, b: XYBrushExtent | null): boolean {
+  if (!a || !b) return a === b
+  return sameRange(a.x, b.x) && sameRange(a.y, b.y)
+}
+
 export function XYBrushOverlay({
   width,
   height,
@@ -119,7 +183,9 @@ export function XYBrushOverlay({
   snap,
   binBoundaries,
   snapDuring,
-  streaming
+  streaming,
+  extent: controlledExtent,
+  onBrushEnd
 }: XYBrushOverlayProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   // d3-brush's `BrushBehavior` is generic over the datum bound to the
@@ -129,6 +195,16 @@ export function XYBrushOverlay({
 
   const onBrushRef = useRef(onBrush)
   onBrushRef.current = onBrush
+  const onBrushEndRef = useRef(onBrushEnd)
+  onBrushEndRef.current = onBrushEnd
+  const controlledExtentRef = useRef(controlledExtent)
+  controlledExtentRef.current = controlledExtent
+  const controlled = controlledExtent !== undefined
+  // The selection when the current pointer gesture began; null between gestures.
+  const gestureRef = useRef<{ from: XYBrushExtent | null } | null>(null)
+  // Bumped after a gesture or keyboard step so a controlled brush re-syncs to
+  // the caller's value in the same render as any update the change caused.
+  const [syncTick, setSyncTick] = useState(0)
   const scalesRef = useRef(scales)
   scalesRef.current = scales
   // Defensively sort binBoundaries — binary search requires ascending order
@@ -147,18 +223,21 @@ export function XYBrushOverlay({
     const brush = brushRef.current
     if (!s || !brush || !svgRef.current) return
     const g = d3Select(svgRef.current).select<SVGGElement>(".brush-g")
+    const previous = activeBrushExtentRef.current
     if (action.type === "clear") {
       isProgrammaticMoveRef.current = true
       g.call(brush.move, null)
       isProgrammaticMoveRef.current = false
       activeBrushExtentRef.current = null
       onBrushRef.current(null)
+      if (previous) onBrushEndRef.current?.(null, endMeta("keyboard", null, dimension, width, height))
+      if (controlledExtentRef.current !== undefined) setSyncTick((tick) => tick + 1)
       return
     }
 
     const xDomain: [number, number] = [dataEndpoint(s.x, 0), dataEndpoint(s.x, 1)]
     const yDomain: [number, number] = [dataEndpoint(s.y, 0), dataEndpoint(s.y, 1)]
-    const existing = activeBrushExtentRef.current
+    const existing = previous
     let xRange: [number, number] = existing?.x ?? [
       xDomain[0] + (xDomain[1] - xDomain[0]) * 0.4,
       xDomain[0] + (xDomain[1] - xDomain[0]) * 0.6,
@@ -174,22 +253,17 @@ export function XYBrushOverlay({
     if ((horizontal && dimension === "y") || (!horizontal && dimension === "x")) return
 
     const extent = { x: xRange, y: yRange }
-    const x0 = projectHeatmapBandDataValue(s.x, xRange[0])
-    const x1 = projectHeatmapBandDataValue(s.x, xRange[1])
-    const y0 = projectHeatmapBandDataValue(s.y, yRange[0])
-    const y1 = projectHeatmapBandDataValue(s.y, yRange[1])
-    if (x0 == null || x1 == null || y0 == null || y1 == null) return
+    const selection = selectionOf(s, extent, dimension, width, height)
+    if (!selection) return
     isProgrammaticMoveRef.current = true
-    if (dimension === "x") {
-      g.call(brush.move, [x0, x1])
-    } else if (dimension === "y") {
-      g.call(brush.move, [y1, y0])
-    } else {
-      g.call(brush.move, [[x0, y1], [x1, y0]])
-    }
+    g.call(brush.move, selection)
     isProgrammaticMoveRef.current = false
     activeBrushExtentRef.current = extent
     onBrushRef.current(extent)
+    if (!sameExtent(previous, extent)) {
+      onBrushEndRef.current?.(extent, endMeta("keyboard", selection, dimension, width, height))
+    }
+    if (controlledExtentRef.current !== undefined) setSyncTick((tick) => tick + 1)
   }
   const brushA11y = useBrushAccessibility({
     label: dimension === "xy" ? "Two-dimensional data range brush" : `${dimension.toUpperCase()} data range brush`,
@@ -212,6 +286,20 @@ export function XYBrushOverlay({
 
     brushFn.extent([[0, 0], [width, height]])
 
+    brushFn.on("start", () => {
+      if (!isProgrammaticMoveRef.current) gestureRef.current = { from: activeBrushExtentRef.current }
+    })
+
+    /** The end of a pointer gesture: report a changed selection, then let a controlled brush re-sync. */
+    const finishGesture = (extent: XYBrushExtent | null, selection: BrushSelection | null) => {
+      const gesture = gestureRef.current
+      gestureRef.current = null
+      if (gesture && !sameExtent(gesture.from, extent)) {
+        onBrushEndRef.current?.(extent, endMeta("pointer", selection, dimension, width, height))
+      }
+      if (controlledExtentRef.current !== undefined) setSyncTick((tick) => tick + 1)
+    }
+
     brushFn.on("brush end", (event: D3BrushEvent<unknown>) => {
       if (isProgrammaticMoveRef.current) return
 
@@ -221,25 +309,14 @@ export function XYBrushOverlay({
       if (!event.selection) {
         activeBrushExtentRef.current = null
         onBrushRef.current(null)
+        if (event.type === "end") finishGesture(null, null)
         return
       }
 
-      let xRange: [number, number]
-      let yRange: [number, number]
-
-      if (dimension === "x") {
-        const [px0, px1] = event.selection as [number, number]
-        xRange = [invertHeatmapBandValue(s.x, px0), invertHeatmapBandValue(s.x, px1)]
-        yRange = [invertHeatmapBandValue(s.y, height), invertHeatmapBandValue(s.y, 0)]
-      } else if (dimension === "y") {
-        const [py0, py1] = event.selection as [number, number]
-        xRange = [invertHeatmapBandValue(s.x, 0), invertHeatmapBandValue(s.x, width)]
-        yRange = [invertHeatmapBandValue(s.y, py1), invertHeatmapBandValue(s.y, py0)]
-      } else {
-        const [[px0, py0], [px1, py1]] = event.selection as [[number, number], [number, number]]
-        xRange = [invertHeatmapBandValue(s.x, px0), invertHeatmapBandValue(s.x, px1)]
-        yRange = [invertHeatmapBandValue(s.y, py1), invertHeatmapBandValue(s.y, py0)]
-      }
+      let selection = event.selection as BrushSelection
+      const covered = extentOf(s, selection, dimension, width, height)
+      let xRange = covered.x
+      const yRange = covered.y
 
       // Snap to bin boundaries: on "end" always, on "brush" only when snapDuring is true
       const shouldSnap = snap === "bin" && dimension !== "y" &&
@@ -261,10 +338,12 @@ export function XYBrushOverlay({
         if (snappedPx0 != null && snappedPx1 != null) {
           isProgrammaticMoveRef.current = true
           if (dimension === "x") {
-            g.call(brushFn.move, [snappedPx0, snappedPx1])
+            selection = [snappedPx0, snappedPx1]
+            g.call(brushFn.move, selection)
           } else if (dimension === "xy") {
             const sel = event.selection as [[number, number], [number, number]]
-            g.call(brushFn.move, [[snappedPx0, sel[0][1]], [snappedPx1, sel[1][1]]])
+            selection = [[snappedPx0, sel[0][1]], [snappedPx1, sel[1][1]]]
+            g.call(brushFn.move, selection)
           }
           isProgrammaticMoveRef.current = false
         }
@@ -273,6 +352,7 @@ export function XYBrushOverlay({
       const extent = { x: xRange, y: yRange }
       activeBrushExtentRef.current = extent
       onBrushRef.current(extent)
+      if (event.type === "end") finishGesture(extent, selection)
     })
 
     g.call(brushFn)
@@ -281,10 +361,26 @@ export function XYBrushOverlay({
     applyBrushSelectionStyle(g.select(".selection"), 0.15)
 
     return () => {
-      brushFn.on("brush end", null)
+      brushFn.on("start brush end", null)
       brushRef.current = null
     }
   }, [width, height, dimension, snap, binSize, snapDuring])
+
+  // Controlled selection: move the brush to the caller's extent (or clear it),
+  // never mid-drag, without reporting the move.
+  const [cx0, cx1] = controlledExtent?.x ?? []
+  const [cy0, cy1] = controlledExtent?.y ?? []
+  const cleared = controlledExtent === null
+  useEffect(() => {
+    const brush = brushRef.current
+    const target = controlledExtentRef.current
+    if (target === undefined || !scales || !brush || !svgRef.current || gestureRef.current) return
+    const selection = target ? selectionOf(scales, target, dimension, width, height) : null
+    isProgrammaticMoveRef.current = true
+    d3Select(svgRef.current).select<SVGGElement>(".brush-g").call(brush.move, selection)
+    isProgrammaticMoveRef.current = false
+    activeBrushExtentRef.current = selection ? extentOf(scales, selection, dimension, width, height) : null
+  }, [controlled, cleared, cx0, cx1, cy0, cy1, scales, syncTick, width, height, dimension, snap, binSize, snapDuring])
 
   // Streaming brush tracking: reposition brush as scale domain shifts
   useEffect(() => {

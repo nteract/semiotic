@@ -190,6 +190,8 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
       suspendWhenHidden = true,
       brush,
       onBrush: onBrushProp,
+      brushExtent,
+      onBrushEnd,
       accessibleTable = true,
       description,
       summary,
@@ -1129,6 +1131,8 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
             margin={margin}
             scales={currentScales}
             onBrush={onBrushProp || (() => {})}
+            extent={brushExtent}
+            onBrushEnd={onBrushEnd}
           />
         )}
 

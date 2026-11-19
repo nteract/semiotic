@@ -24,6 +24,7 @@ import type {
 import type { AnimateProp } from "./pipelineTransitionUtils"
 import type { LegendLayout, LegendValue } from "../types/legendTypes"
 import type { Datum } from "../charts/shared/datumTypes"
+import type { OrdinalBrushEndMeta, OrdinalBrushExtent, OrdinalBrushExtentInput } from "./ordinalBrushTypes"
 import type { OnObservationCallback } from "../store/ObservationStore"
 import type {
   SemanticClickBehavior,
@@ -600,6 +601,10 @@ export interface StreamOrdinalFrameProps<T = Datum> {
   }
   /** Callback when brush selection changes. Extent is in data coordinates, or null when cleared. */
   onBrush?: (extent: { r: [number, number] } | null) => void
+  /** Controlled brush selection `{ r: [min, max] }`; `null` clears it. Unset: uncontrolled. */
+  brushExtent?: OrdinalBrushExtentInput | null
+  /** Called once per brush release, keyboard step or reset that changed the selection. */
+  onBrushEnd?: (extent: OrdinalBrushExtent | null, meta: OrdinalBrushEndMeta) => void
 
   // Realtime encoding
   decay?: DecayConfig

@@ -82,6 +82,9 @@ interface LegendLayout
 interface LikertChartProps<TDatum extends Datum = Datum> extends BaseChartProps
 interface MultiLineTooltipConfig extends TooltipConfig
 interface MultiTooltipConfig
+interface OrdinalBrushEndMeta
+interface OrdinalBrushExtent
+interface OrdinalBrushExtentInput
 interface OrdinalCustomChartProps<TDatum extends Datum = Datum, TConfig extends object = Record<string, unknown>> extends BaseChartProps
 interface OrdinalLayoutContext<C extends object = Record<string, unknown>>
 interface OrdinalLayoutResult
@@ -386,6 +389,11 @@ interface-member MultiLineTooltipConfig::property::showLabels = optional showLab
 interface-member MultiTooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
 interface-member MultiTooltipConfig::property::content = optional content: ((data: Record<string, unknown>) => React.ReactNode) | undefined
 interface-member MultiTooltipConfig::property::mode = required mode: "multi"
+interface-member OrdinalBrushEndMeta::property::atDomainEnd = required atDomainEnd: boolean
+interface-member OrdinalBrushEndMeta::property::atDomainStart = required atDomainStart: boolean
+interface-member OrdinalBrushEndMeta::property::source = required source: "keyboard" | "pointer"
+interface-member OrdinalBrushExtent::property::r = required r: [number, number]
+interface-member OrdinalBrushExtentInput::property::r = required r: readonly [number, number]
 interface-member OrdinalCustomChartProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member OrdinalCustomChartProps::property::categoryAccessor = optional categoryAccessor: ((d: Datum) => string) | string | undefined
 interface-member OrdinalCustomChartProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
@@ -529,6 +537,7 @@ interface-member StreamOrdinalFrameProps::property::barPadding = optional barPad
 interface-member StreamOrdinalFrameProps::property::baselinePadding = optional baselinePadding: boolean | undefined
 interface-member StreamOrdinalFrameProps::property::bins = optional bins: number | undefined
 interface-member StreamOrdinalFrameProps::property::brush = optional brush: "r" | boolean | undefined | {dimension?: "r";}
+interface-member StreamOrdinalFrameProps::property::brushExtent = optional brushExtent: OrdinalBrushExtentInput | null | undefined
 interface-member StreamOrdinalFrameProps::property::categoryAccessor = optional categoryAccessor: ((d: T) => string) | string | undefined
 interface-member StreamOrdinalFrameProps::property::categoryFormat = optional categoryFormat: ((d: string, index?: number) => string | ReactNode) | undefined
 interface-member StreamOrdinalFrameProps::property::categoryLabel = optional categoryLabel: string | undefined
@@ -584,6 +593,7 @@ interface-member StreamOrdinalFrameProps::property::oLabel = optional oLabel: st
 interface-member StreamOrdinalFrameProps::property::oSort = optional oSort: "asc" | "auto" | "desc" | ((a: string, b: string) => number) | boolean | undefined
 interface-member StreamOrdinalFrameProps::property::onAnnotationActivate = optional onAnnotationActivate: OnAnnotationActivateCallback | undefined
 interface-member StreamOrdinalFrameProps::property::onBrush = optional onBrush: ((extent: {r: [number, number];} | null) => void) | undefined
+interface-member StreamOrdinalFrameProps::property::onBrushEnd = optional onBrushEnd: ((extent: OrdinalBrushExtent | null, meta: OrdinalBrushEndMeta) => void) | undefined
 interface-member StreamOrdinalFrameProps::property::onCategoriesChange = optional onCategoriesChange: ((categories: string[]) => void) | undefined
 interface-member StreamOrdinalFrameProps::property::onLayoutError = optional onLayoutError: ((diagnostic: import("./customLayoutFailure").CustomLayoutFailureDiagnostic) => void) | undefined
 interface-member StreamOrdinalFrameProps::property::onObservation = optional onObservation: ((observation: import("../semiotic-ai-observations").ChartObservation) => void) | undefined
