@@ -24,6 +24,7 @@ import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
 import { useSelectionAwareFrameStyle } from "../shared/useSelectionAwareFrameStyle"
 import { accessorName } from "../shared/tooltipUtils"
 import { useSeriesFeatures } from "../shared/useSeriesFeatures"
+import { prepareAreaSeriesData } from "../shared/areaSeriesData"
 import type { ForecastConfig, AnomalyConfig } from "../shared/statisticalOverlays"
 import {
   normalizeColorGradient,
@@ -446,8 +447,9 @@ export const AreaChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
   )
 
   // ── Dev-mode warnings ─────────────────────────────────────────────────
-  warnMissingField("AreaChart", safeData, "xAccessor", xAccessor)
-  warnMissingField("AreaChart", safeData, "yAccessor", yAccessor)
+  const warningData = safeData[0]?.[lineDataAccessor] || safeData
+  warnMissingField("AreaChart", warningData, "xAccessor", xAccessor)
+  warnMissingField("AreaChart", warningData, "yAccessor", yAccessor)
 
   // ── Shared setup (color, legend, selection, loading/empty) ────────────
   const setup = useChartSetup({
@@ -485,6 +487,10 @@ export const AreaChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
   // ── Statistical features (forecast + anomaly overlays) ────────────────
   // Same hook LineChart uses — produces post-forecast effective data
   // (tagged future points appended) + envelope/anomaly annotations.
+  const featureData = useMemo(
+    () => prepareAreaSeriesData({ data, safeData, areaBy, lineDataAccessor }),
+    [data, safeData, areaBy, lineDataAccessor],
+  )
   const {
     effectiveData: featureEffectiveData,
     statisticalAnnotations,
@@ -492,10 +498,10 @@ export const AreaChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
     xAccessorKey,
     yAccessorKey,
   } = useSeriesFeatures({
-    data: safeData as Datum[],
+    data: featureData as Datum[],
     xAccessor, yAccessor,
     forecast, anomaly,
-    groupBy: areaBy,
+    groupBy: forecast ? areaBy : undefined,
   })
   const seriesXAccessor = hasForecast ? xAccessorKey : xAccessor
   const seriesYAccessor = hasForecast ? yAccessorKey : yAccessor
@@ -541,7 +547,7 @@ export const AreaChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
   // Validate data (after all hooks)
   const validationError = validateArrayData({
     componentName: "AreaChart",
-    data: data,
+    data: data == null ? data : warningData,
     accessors: {
       xAccessor,
       yAccessor,

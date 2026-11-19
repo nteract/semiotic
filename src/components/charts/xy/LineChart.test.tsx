@@ -47,6 +47,17 @@ describe("LineChart", () => {
     lastXYFrameProps = {} as CapturedXYFrameProps
   })
 
+  it.each(["coordinates", "points"])("forecasts nested %s rows before resolving callback accessors", async (lineDataAccessor) => {
+    const parent = { label: "A", [lineDataAccessor]: Array.from({ length: 5 }, (_, t) => ({ t, value: 10 + 5 * t })) }
+    const { container } = render(<LineChart data={[parent]} lineDataAccessor={lineDataAccessor} lineBy="label"
+      xAccessor={(d: Datum) => d.t} yAccessor={(d: Datum) => d.value} forecast={{ trainEnd: 3, steps: 2 }} />)
+    await waitFor(() => expect(lastXYFrameProps.xAccessor).toBe("__semiotic_resolvedX"))
+    expect(container.querySelector('[role="alert"]')).toBeNull()
+    const future = (lastXYFrameProps.data as Datum[]).filter((d) => d.__forecastUpper != null)
+    expect(future.map((d) => [d.__semiotic_resolvedX, d.__semiotic_resolvedY])).toEqual([[5, 35], [6, 40]])
+    expect(future.every((d) => d.label === "A")).toBe(true)
+  })
+
   it("handles empty data gracefully", () => {
     const { container } = render(
       <TooltipProvider>

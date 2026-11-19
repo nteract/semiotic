@@ -35,7 +35,8 @@ export interface SeriesFeaturesOptions {
   /** When the consuming HOC supports grouped series (e.g. LineChart's
    *  `lineBy`), pass the grouping field name so the overlay pipeline
    *  can do group-aware boundary duplication. Required when the same
-   *  data array carries multiple metric series interleaved by x. */
+   *  data array carries multiple metric series interleaved by x. Also scopes
+   *  anomaly-only processing when it follows a grouped forecast. */
   groupBy?: Accessor<string> | undefined
 }
 
@@ -135,7 +136,7 @@ export function useSeriesFeatures(
           groupBy ? { ...forecast, _groupBy: groupBy } : forecast,
           anomaly
         )
-      : buildAnomalyOverlayLazy(overlayData, yAccessorKey, anomaly!)
+      : buildAnomalyOverlayLazy(overlayData, yAccessorKey, anomaly!, groupBy)
     work
       .then((result) => {
         if (!cancelled)
