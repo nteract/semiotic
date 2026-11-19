@@ -330,7 +330,10 @@ const ENTRY_GRAPHS = [
   // Feature graph: 164.6 KiB (previous built HEAD: 163.2 KiB).
   // Controlled XY brush and StackedAreaChart's brush wiring:
   // 180,921 → 181,109 B gzip (+188 B); 176.7 → 176.9 KiB covers it.
-  { entry: "xy.module.min.js", label: "xy", limitKb: 176.9 },
+  // Approved regression fixes (2026-11-19): nested-series normalization,
+  // post-gap anomaly marking and controlled-brush corrections measure
+  // 177.0 KiB in CI. Reserve 0.2 KiB above that measured graph.
+  { entry: "xy.module.min.js", label: "xy", limitKb: 177.2 },
   // One-chart micro boundary: LineChart registers only its line/area/mixed
   // renderer family. Keep the budget narrow so unrelated HOCs or direct
   // StreamXYFrame consumers cannot quietly rejoin this graph.
@@ -504,7 +507,10 @@ const ENTRY_GRAPHS = [
   // Bumped 261.5→262.5: static value-banded histogram bars, standalone-safe
   // (var()-free) annotation label paints, and the shared hatch tile measure
   // 261.8 KiB gzip.
-  { entry: "server.module.min.js", label: "server", limitKb: 289.7 },
+  // Approved regression fixes (2026-11-19): restored nested line/area
+  // preparation, default gap breaks and post-gap anomaly marking measure
+  // 289.9 KiB in CI. Reserve 0.2 KiB above that measured graph.
+  { entry: "server.module.min.js", label: "server", limitKb: 290.1 },
   // Bumped 450→460: the public numeric audit + chart contract evaluator adds
   // ~5–6 KB gzip to the AI graph; ChartContainer loads the same code lazily.
   // Bumped 460→462 (3.8.6): BumpChart (+ its ribbon geometry) joins the AI graph.
