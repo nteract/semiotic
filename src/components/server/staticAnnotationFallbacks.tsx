@@ -15,8 +15,9 @@ import { ssrLabelBackground } from "./ssrLabelBackground"
 import { forecastModel } from "../charts/shared/forecastModel"
 import { trendGeometry, projectAnnotationValue } from "../charts/shared/statisticalAnnotationGeometry"
 import {
+  anomalyBand,
+  isAnomalous,
   regressionPoints,
-  regressionNumber,
 } from "../charts/shared/leastSquaresRegression"
 import { getMinMax } from "../charts/shared/minMax"
 import {
@@ -262,25 +263,15 @@ export function renderStaticAnnotationFallback(
       const rawY = context.scales?.y ?? context.scales?.value
       if (!rawX || !rawY) return null
       const scaleY = (value: unknown) => projectAnnotationValue(rawY, value)
-      const values = data
-        .map((datum) => regressionNumber(datum[yAccessor]))
-        .filter((value): value is number => value !== null)
-      if (values.length < 2) return null
-      const mean = values.reduce((sum, value) => sum + value, 0) / values.length
-      const variance = values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / values.length
-      const standardDeviation = Math.sqrt(variance)
-      const threshold = ann.threshold ?? 2
-      const upper = mean + threshold * standardDeviation
-      const lower = mean - threshold * standardDeviation
-      const upperPixel = scaleY(upper)
-      const lowerPixel = scaleY(lower)
+      const band = anomalyBand(data.map((datum) => datum[yAccessor]), ann.threshold ?? 2)
+      if (!band) return null
+      const upperPixel = scaleY(band.upper)
+      const lowerPixel = scaleY(band.lower)
       const fill = ann.fill || "#6366f1"
       const anomalyColor = ann.anomalyColor || "#ef4444"
       const radius = ann.anomalyRadius ?? 6
-      const outliers = data.filter((datum) => {
-        const value = regressionNumber(datum[yAccessor])
-        return value != null && Math.abs(value - mean) > threshold * standardDeviation
-      })
+      // The rows the overlay pipeline marks with `ANOMALY_FIELD`
+      const outliers = data.filter((datum) => isAnomalous(datum[yAccessor], band))
       return (
         <g key={`ann-${index}`}>
           {ann.showBand !== false && (

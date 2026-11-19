@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `ForecastConfig` options for the auto-mode boundary line at `trainEnd`:
+  `boundaryColor`, `boundaryDasharray`, `boundaryLabel` (`false` keeps the line
+  without a label) and `showBoundary: false` to omit it, and for its label,
+  `boundaryLabelColor` and `boundaryLabelBackground` (an annotation
+  `labelBackground`, such as `{ type: "box", fill }`). The defaults keep
+  today's `#94a3b8` dashed line labeled "Train / Forecast" in the line's color
+  on a halo, and the browser, `semiotic/server` and `semiotic/server/edge` draw
+  it the same way.
+  [source: consumer: themed LineChart wrapper whose dark and brand themes restyle every forecast overlay]
+- The `anomaly` overlay sets `ANOMALY_FIELD` (`"__anomaly"`) to `true` on each
+  row it draws a dot for, on `LineChart`, `AreaChart`, `Scatterplot` and
+  `ConnectedScatterplot` in the browser and in `renderChart`, so a tooltip's
+  hover datum and `allSeries[i].datum` say whether the point is a computed
+  outlier. The dots and the mark share one rule.
+  [source: consumer: custom multi tooltip that flags computed anomalies]
+- `semiotic/xy` and `semiotic/line` export the row field names the overlays
+  write: `FORECAST_SEGMENT_FIELD`, `ANOMALY_FIELD`, `RESOLVED_X_FIELD` and
+  `RESOLVED_Y_FIELD`, and the `ForecastSegment` type.
+  [source: consumer: custom multi tooltip that flags computed anomalies]
+
 ## [3.14.0] - 2026-11-18
 
 ### Added

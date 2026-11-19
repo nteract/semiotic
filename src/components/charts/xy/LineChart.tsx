@@ -29,6 +29,7 @@ import type { AnomalyConfig, ForecastConfig } from "../shared/statisticalOverlay
 import { normalizeColorGradient, type ColorGradientInput } from "../shared/gradient"
 import { createSegmentLineStyleLazy, SEGMENT_FIELD } from "../shared/statisticalOverlaysLazy"
 import { useSeriesFeatures } from "../shared/useSeriesFeatures"
+import { normalizeLineChartData } from "../shared/lineChartData"
 import { forecastYExtent } from "../shared/forecastExtent"
 import { useXYBrush } from "../shared/useXYBrush"
 import {
@@ -47,10 +48,6 @@ function ensureLineChartRegistrations(): void {
   ensureLineFamilyXYPlugins()
 }
 
-// Line-object input needs a group key after its coordinate arrays are
-// flattened for StreamXYFrame. Keep the field internal so parent metadata can
-// remain the source of truth for string and function `lineBy` accessors.
-const LINE_OBJECT_SERIES_FIELD = "__lineObjectSeries"
 const pointColorDatum = (datum: Datum) => datum.parentLine || datum
 
 /**
@@ -502,11 +499,13 @@ export const LineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
   warnMissingField("LineChart", warningData, "xAccessor", inputXAccessor)
   warnMissingField("LineChart", warningData, "yAccessor", inputYAccessor)
 
-  // ── Statistical overlay processing ────────────────────────────────────
-  // Lifted to `useSeriesFeatures` — owns the function-accessor bake,
-  // lazy module load, state management, and stale-clear-on-config-
-  // removal. Any series-shaped XY HOC can adopt the same surface by
-  // calling this hook.
+  const { rows: normalizedData, groupAccessor: lineGroupAccessor, isLineObjectFormat } = useMemo(
+    () => normalizeLineChartData(safeData as Datum[], lineDataAccessor, lineBy),
+    [safeData, lineDataAccessor, lineBy],
+  )
+
+  // Forecasts add rows before gap handling. Anomalies are computed below,
+  // after the final coordinate values and row membership are known.
   const {
     effectiveData,
     statisticalAnnotations,
@@ -514,39 +513,25 @@ export const LineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
     xAccessorKey,
     yAccessorKey,
   } = useSeriesFeatures({
-    data: safeData as Datum[],
+    data: normalizedData,
     xAccessor: inputXAccessor,
     yAccessor: inputYAccessor,
     forecast,
-    anomaly,
-    groupBy: lineBy,
+    groupBy: lineGroupAccessor,
   })
   const xAccessor = hasForecast ? xAccessorKey : inputXAccessor
   const yAccessor = hasForecast ? yAccessorKey : inputYAccessor
 
-  // When both lineBy and forecast are present, we need a compound group that
-  // splits lines by BOTH the user's grouping field AND the forecast segment.
-  // This ensures training/observed/forecast segments become separate lines
-  // (each with distinct dash patterns) while colorBy still maps to the metric.
-  const COMPOUND_GROUP = "__compoundGroup"
-  const needsCompoundGroup = !!(forecast && lineBy)
-  const effectiveGroupAccessor = needsCompoundGroup
-    ? COMPOUND_GROUP
-    : forecast ? SEGMENT_FIELD : lineBy
-
-  // Stamp compound group field onto data when both lineBy and forecast are active
-  const compoundData = useMemo(() => {
-    if (!needsCompoundGroup) return effectiveData
-    const lineByAcc = typeof lineBy === "function" ? lineBy : (d: Datum) => d[lineBy as string]
-    return (effectiveData as Datum[]).map(d => {
-      const copy: Datum = { ...d }
-      copy[COMPOUND_GROUP] = `${lineByAcc(d)}__${d[SEGMENT_FIELD] || "observed"}`
-      return copy
-    })
-  }, [effectiveData, needsCompoundGroup, lineBy])
-
-  // Use compoundData instead of effectiveData for downstream processing
-  const chartData = needsCompoundGroup ? compoundData : effectiveData
+  // Keep authored series distinct across forecast segments without copying
+  // every row solely to store the compound group key.
+  const needsCompoundGroup = !!(forecast && lineGroupAccessor)
+  const effectiveGroupAccessor = useMemo(() => {
+    if (!forecast) return lineGroupAccessor
+    if (!lineGroupAccessor) return SEGMENT_FIELD
+    const readGroup = typeof lineGroupAccessor === "function" ? lineGroupAccessor : (d: Datum) => d[lineGroupAccessor]
+    return (d: Datum) => `${readGroup(d)}__${d[SEGMENT_FIELD] || "observed"}`
+  }, [forecast, lineGroupAccessor])
+  const chartData = effectiveData
   const effectiveColorBy = colorBy || lineBy
 
   // ── Envelope-aware y extent ──────────────────────────────────────────
@@ -566,63 +551,21 @@ export const LineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
 
   // ── Core chart logic ───────────────────────────────────────────────────
 
-  // Check if data is in line objects format (has lineDataAccessor field)
-  const isLineObjectFormat = chartData[0]?.[lineDataAccessor] !== undefined
+  const frameGroupAccessor = effectiveGroupAccessor
 
-  // StreamXYFrame consumes flat points, while line-object input carries its
-  // series identity on the parent object. Normalize that identity onto a
-  // dedicated point field so default, string, and function `lineBy` forms all
-  // survive flattening. Ordinary point-row input keeps its public accessor.
-  const frameGroupAccessor = isLineObjectFormat
-    ? LINE_OBJECT_SERIES_FIELD
-    : effectiveGroupAccessor
-
-  // Transform data to line format if needed
   const lineData = useMemo(() => {
-    if (isLineObjectFormat) {
-      return (chartData as Datum[]).map((line, lineIndex) => {
-        const parentGroup = typeof lineBy === "function"
-          ? lineBy(line)
-          : typeof lineBy === "string"
-            ? line[lineBy]
-            : undefined
-        // A parent with no explicit group is still one distinct series. The
-        // index is stable for the input order and never leaks into user data.
-        const group = parentGroup == null ? `line-${lineIndex}` : String(parentGroup)
-        const coordinates = Array.isArray(line[lineDataAccessor])
-          ? line[lineDataAccessor] as Datum[]
-          : []
-
-        return {
-          ...line,
-          [LINE_OBJECT_SERIES_FIELD]: group,
-          [lineDataAccessor]: coordinates.map((coordinate) => ({
-            ...coordinate,
-            [LINE_OBJECT_SERIES_FIELD]: group,
-            // Lets colors, point styles, tooltips, and callbacks resolve
-            // parent-level metadata without spreading the full parent object
-            // (and its coordinates array) onto every point.
-            parentLine: line,
-            ...(typeof lineBy === "string" && line[lineBy] !== undefined
-              ? { [lineBy]: line[lineBy] }
-              : {}),
-          })),
-        }
-      })
-    }
-
     if (effectiveGroupAccessor) {
       return groupLineChartRows(chartData as Datum[], {
         lineDataAccessor,
         groupAccessor: effectiveGroupAccessor,
-        lineBy,
+        lineBy: lineGroupAccessor,
         segmentField: needsCompoundGroup ? SEGMENT_FIELD : undefined,
       })
     }
 
     // Single line - wrap in line object
     return [{ [lineDataAccessor]: chartData }]
-  }, [isLineObjectFormat, effectiveGroupAccessor, lineDataAccessor, chartData, lineBy, needsCompoundGroup])
+  }, [effectiveGroupAccessor, lineDataAccessor, chartData, lineGroupAccessor, needsCompoundGroup])
 
   // Apply gap strategy to line data. "break" segments carry index-based
   // frame group keys (no marker field on the data); `seriesOfLine` records
@@ -669,7 +612,7 @@ export const LineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
   // synthesis path.
   const setup = useChartSetup({
     responsive: props,
-    data: effectiveData as Datum[],
+    data: isLineObjectFormat ? safeData : effectiveData,
     rawData: data,
     colorBy: effectiveColorBy,
     colorScheme,
@@ -851,7 +794,7 @@ export const LineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
   // When data is in line objects format, validate against the coordinates
   // inside the first line object rather than the top-level line objects
   const validationData = isLineObjectFormat
-    ? (effectiveData[0]?.[lineDataAccessor] || [])
+    ? (safeData[0]?.[lineDataAccessor] || [])
     : data
   const validationError = validateArrayData({
     componentName: "LineChart",
@@ -901,6 +844,21 @@ export const LineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
     }
   }, [gapProcessedLineData, lineDataAccessor, isLineObjectFormat, frameGroupAccessor, chartData, hasGaps, segments])
 
+  const { effectiveData: markedData, statisticalAnnotations: anomalyAnnotations } = useSeriesFeatures({
+    data: flattenedData,
+    xAccessor,
+    yAccessor: frameYAccessor,
+    anomaly,
+    // Forecast bands are per authored series, not per forecast/gap segment.
+    groupBy: forecast ? lineGroupAccessor : undefined,
+  })
+  const markedGroupAccessor = useMemo(() => {
+    if (!segmentGroupAccessor || markedData === flattenedData) return segmentGroupAccessor
+    // Overlay rows are copies, so transfer the gap segment identity by index.
+    const keys = new WeakMap(markedData.map((row, i) => [row, segmentGroupAccessor(flattenedData[i])]))
+    return (row: Datum) => keys.get(row) ?? ""
+  }, [markedData, flattenedData, segmentGroupAccessor])
+
   const frameLineStyle = useMemo(() => withSegmentSeriesStyle(lineStyle, segments), [lineStyle, segments])
 
   // Build StreamXYFrame props
@@ -909,7 +867,7 @@ export const LineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
     chartType,
     ...(Array.isArray(fillArea) && { areaGroups: segmentAreaGroups(fillArea, segments) }),
     ...(normalizedLineGradient && { lineGradient: normalizedLineGradient }),
-    ...(data != null && { data: flattenedData }),
+    ...(data != null && { data: markedData }),
     xAccessor,
     yAccessor: frameYAccessor,
     xScaleType,
@@ -924,7 +882,7 @@ export const LineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
     ...((yExtent && (yExtent[0] != null || yExtent[1] != null))
       ? { yExtent }
       : envelopeYExtent ? { yExtent: envelopeYExtent } : {}),
-    groupAccessor: segmentGroupAccessor ?? (frameGroupAccessor || undefined),
+    groupAccessor: markedGroupAccessor ?? (frameGroupAccessor || undefined),
     ...(band && { band: band as StreamXYFrameProps["band"] }),
     curve,
     lineStyle: frameLineStyle,
@@ -971,8 +929,8 @@ export const LineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
       customClickBehavior,
     }),
     ...(pointIdAccessor && { pointIdAccessor }),
-    ...((annotations?.length || statisticalAnnotations.length || directLabelAnnotations.length) && {
-      annotations: [...(annotations || []), ...statisticalAnnotations, ...directLabelAnnotations],
+    ...((annotations?.length || statisticalAnnotations.length || anomalyAnnotations.length || directLabelAnnotations.length) && {
+      annotations: [...(annotations || []), ...statisticalAnnotations, ...anomalyAnnotations, ...directLabelAnnotations],
     }),
     ...crosshairFrameProps,
     ...brushStreamProps,

@@ -1,3 +1,4 @@
+import type { AnnotationLabelBackground } from "./AnnotationLabel"
 import type { Datum } from "./datumTypes"
 import { getMax, getMinMax } from "./minMax"
 /**
@@ -16,10 +17,22 @@ import { getMax, getMinMax } from "./minMax"
 
 import { darkenColor, lightenColor } from "./colorManipulation"
 import { forecastModel } from "./forecastModel"
-import { regressionNumber, regressionPoints } from "./leastSquaresRegression"
+import {
+  anomalyBand,
+  isAnomalous,
+  regressionNumber,
+  regressionPoints,
+} from "./leastSquaresRegression"
 
 // ── Config types ───────────────────────────────────────────────────────
 
+/**
+ * Flags the values more than `threshold` population standard deviations from
+ * the mean of the rows the chart draws (each `lineBy` series on its own when
+ * `forecast` is also set), and shades that band. Each flagged row carries
+ * `ANOMALY_FIELD` (`"__anomaly"`) set to `true`, so the tooltip's hover datum
+ * and other callbacks receive the verdict; other rows have no such field.
+ */
 export interface AnomalyConfig {
   /** Standard deviation multiplier for anomaly bounds. Default: 2 */
   threshold?: number
@@ -49,6 +62,28 @@ export interface ForecastConfig {
   bandwidth?: number
   /** Confidence level for prediction interval (0-1). Default: 0.95 */
   confidence?: number
+  /**
+   * Draw the vertical boundary line at `trainEnd` (auto mode only).
+   * Default: true
+   */
+  showBoundary?: boolean
+  /** Boundary line color, also used for its label. Default: "#94a3b8" */
+  boundaryColor?: string
+  /** Dash pattern for the boundary line. Default: "4,2" */
+  boundaryDasharray?: string
+  /**
+   * Boundary label text. `false` (or `""`) draws the line without a label.
+   * Default: "Train / Forecast"
+   */
+  boundaryLabel?: string | false
+  /** Boundary label text color. Default: `boundaryColor` */
+  boundaryLabelColor?: string
+  /**
+   * Backdrop behind the boundary label, as an annotation's `labelBackground`
+   * (`"halo"`, `"box"`, `"none"`, or a config with its `fill`).
+   * Default: a halo in the plot background
+   */
+  boundaryLabelBackground?: AnnotationLabelBackground
 
   // ── Pre-computed mode (field accessors) ─────────────────────
   /** Field or function marking training data points */
@@ -140,9 +175,18 @@ export interface ForecastConfig {
   label?: string
 }
 
-/** Internal segment marker added to each datum */
+/**
+ * Segment marker added to each datum. Public as `FORECAST_SEGMENT_FIELD`
+ * (`statisticalOverlaysLazy` holds the copy the entries export).
+ */
 export const SEGMENT_FIELD = "__forecastSegment" as const
 export type SegmentType = "training" | "training-base" | "observed" | "forecast"
+
+/**
+ * Set to `true` on each row the `anomaly` overlay flags. Public as
+ * `ANOMALY_FIELD` (`statisticalOverlaysLazy` holds the copy the entries export).
+ */
+export const ANOMALY_FIELD = "__anomaly" as const
 
 /** Internal per-point opacity stamped by the uncertainty ramp. */
 export const FORECAST_OPACITY_FIELD = "__forecastOpacity" as const
@@ -228,6 +272,39 @@ export function buildAnomalyAnnotations(
       label: config.label,
     },
   ]
+}
+
+/**
+ * `rows` with `ANOMALY_FIELD` set on each row the `anomaly-band` annotation
+ * draws a dot for: the same rule (`anomalyBand`) over the same rows. Flagged
+ * rows are copies; the others are the input rows.
+ */
+export function markAnomalies(
+  rows: Datum[],
+  yAccessor: string,
+  config: AnomalyConfig
+): Datum[] {
+  const band = anomalyBand(rows.map((d) => d[yAccessor]), config.threshold ?? 2)
+  if (!band) return rows
+  return rows.map((d) =>
+    isAnomalous(d[yAccessor], band) ? { ...d, [ANOMALY_FIELD]: true } : d
+  )
+}
+
+/** The `anomaly` overlay without a forecast: the marked rows and the band. */
+export function buildAnomalyOverlay(
+  rows: Datum[],
+  yAccessor: string,
+  config: AnomalyConfig,
+  groupBy?: string | ((d: Datum) => unknown),
+): ForecastResult {
+  if (groupBy && rows.length) {
+    return buildGroupedOverlay(rows, groupBy, (group) => buildAnomalyOverlay(group, yAccessor, config), true)
+  }
+  return {
+    processedData: markAnomalies(rows, yAccessor, config),
+    annotations: buildAnomalyAnnotations(config),
+  }
 }
 
 // ── Pre-computed mode ──────────────────────────────────────────────────
@@ -370,7 +447,10 @@ function buildPrecomputed(
   // Mean ± threshold × population standard deviation over the rendered data.
   if (anomalyConfig) annotations.push(...buildAnomalyAnnotations(anomalyConfig))
 
-  return { processedData, annotations }
+  return {
+    processedData: anomalyConfig ? markAnomalies(processedData, yAccessor, anomalyConfig) : processedData,
+    annotations,
+  }
 }
 
 // ── Auto mode (computed regression) ────────────────────────────────────
@@ -453,14 +533,19 @@ function buildAutoForecast(
   }
 
   // Boundary line at trainEnd
-  annotations.push({
-    type: "x-threshold",
-    x: trainEnd,
-    color: "#94a3b8",
-    strokeWidth: 1,
-    strokeDasharray: "4,2",
-    label: "Train / Forecast",
-  })
+  if (config.showBoundary !== false) {
+    const boundaryLabel = config.boundaryLabel ?? "Train / Forecast"
+    annotations.push({
+      type: "x-threshold",
+      x: trainEnd,
+      color: config.boundaryColor ?? "#94a3b8",
+      strokeWidth: 1,
+      strokeDasharray: config.boundaryDasharray ?? "4,2",
+      label: boundaryLabel || undefined,
+      labelColor: config.boundaryLabelColor,
+      labelBackground: config.boundaryLabelBackground,
+    })
+  }
 
   // Mean ± threshold × population standard deviation over the rendered data.
   if (anomalyConfig) annotations.push(...buildAnomalyAnnotations(anomalyConfig))
@@ -485,7 +570,10 @@ function buildAutoForecast(
     processedData.push(...forecastPoints)
   }
 
-  return { processedData, annotations }
+  return {
+    processedData: anomalyConfig ? markAnomalies(processedData, yAccessor, anomalyConfig) : processedData,
+    annotations,
+  }
 }
 
 // ── Public entry point ─────────────────────────────────────────────────
@@ -500,6 +588,43 @@ function isPrecomputedMode(config: ForecastConfig): boolean {
     config.upperBounds || config.lowerBounds)
 }
 
+/** Scope annotations to authored series; anomaly-only results retain input order. */
+function buildGroupedOverlay(
+  data: Datum[],
+  groupBy: string | ((d: Datum) => unknown),
+  build: (rows: Datum[]) => ForecastResult,
+  preserveOrder = false,
+): ForecastResult {
+  const readGroup = typeof groupBy === "function" ? groupBy : (d: Datum) => d[groupBy]
+  const groups = new Map<unknown, Datum[]>()
+  for (const row of data) {
+    const key = readGroup(row)
+    const group = groups.get(key)
+    if (group) group.push(row)
+    else groups.set(key, [row])
+  }
+  const processedData: Datum[] = []
+  const annotations: Datum[] = []
+  const marked = preserveOrder ? new Map<Datum, Datum>() : undefined
+  for (const [key, rows] of groups) {
+    const result = build(rows)
+    if (marked) rows.forEach((row, i) => marked.set(row, result.processedData[i]))
+    else for (const row of result.processedData) processedData.push(row)
+    for (const ann of result.annotations) {
+      if (ann.type === "x-threshold") {
+        if (!annotations.some((existing) => existing.type === "x-threshold")) annotations.push(ann)
+      } else {
+        const priorFilter = ann.filter as ((d: Datum) => boolean) | undefined
+        annotations.push({ ...ann, filter: (d: Datum) => {
+          const value = readGroup(d)
+          return (value === key || Object.is(value, key)) && (!priorFilter || priorFilter(d))
+        } })
+      }
+    }
+  }
+  return { processedData: marked ? data.map((row) => marked.get(row)!) : processedData, annotations }
+}
+
 export function buildForecast(
   data: Datum[],
   xAccessor: string,
@@ -509,32 +634,8 @@ export function buildForecast(
 ): ForecastResult {
   const groupBy = forecastConfig._groupBy
   if (groupBy && data.length) {
-    const readGroup = typeof groupBy === "function" ? groupBy : (d: Datum) => d[groupBy]
-    const groups = new Map<unknown, Datum[]>()
-    for (const row of data) {
-      const key = readGroup(row)
-      const group = groups.get(key)
-      if (group) group.push(row)
-      else groups.set(key, [row])
-    }
-    const processedData: Datum[] = []
-    const annotations: Datum[] = []
-    for (const [key, rows] of groups) {
-      const result = buildForecast(rows, xAccessor, yAccessor, { ...forecastConfig, _groupBy: undefined }, anomalyConfig)
-      for (const row of result.processedData) processedData.push(row)
-      for (const ann of result.annotations) {
-        if (ann.type === "x-threshold") {
-          if (!annotations.some((existing) => existing.type === "x-threshold")) annotations.push(ann)
-        } else {
-          const priorFilter = ann.filter as ((d: Datum) => boolean) | undefined
-          annotations.push({ ...ann, filter: (d: Datum) => {
-            const value = readGroup(d)
-            return (value === key || Object.is(value, key)) && (!priorFilter || priorFilter(d))
-          } })
-        }
-      }
-    }
-    return { processedData, annotations }
+    return buildGroupedOverlay(data, groupBy, (rows) =>
+      buildForecast(rows, xAccessor, yAccessor, { ...forecastConfig, _groupBy: undefined }, anomalyConfig))
   }
   if (isPrecomputedMode(forecastConfig)) {
     return buildPrecomputed(data, xAccessor, yAccessor, forecastConfig, anomalyConfig)

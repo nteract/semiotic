@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react"
+import { Link } from "react-router-dom"
 import { Scatterplot, StreamXYFrame, LineChart } from "semiotic"
 import PageLayout from "../../components/PageLayout"
 import PropControls from "../../components/PropControls"
@@ -697,6 +698,21 @@ export default function StatisticalAnnotationsPlayground() {
         In pre-computed mode, the line is styled by segment: <em>training</em>{" "}
         (dashed, no bounds), <em>observed</em> (solid, with model bounds and
         anomaly flags), and <em>forecast</em> (dotted, with widening bounds).
+      </p>
+      <p>
+        Auto mode draws a boundary line at <code>trainEnd</code>; set{" "}
+        <code>boundaryColor</code>, <code>boundaryDasharray</code> and{" "}
+        <code>boundaryLabel</code> on <code>forecast</code> to restyle or relabel
+        it, <code>boundaryLabelColor</code> and{" "}
+        <code>boundaryLabelBackground</code> to give its label its own color and
+        backdrop, <code>boundaryLabel: false</code> to drop its label, or{" "}
+        <code>showBoundary: false</code> to drop it. The <code>anomaly</code> prop
+        sets <code>ANOMALY_FIELD</code> (<code>"__anomaly"</code>) to{" "}
+        <code>true</code> on each row it draws a dot for, so a tooltip's hover
+        datum and <code>allSeries[i].datum</code> carry the verdict; an{" "}
+        <code>anomaly-band</code> annotation written by hand, as in the streaming
+        example above, draws the same dots without marking rows. See{" "}
+        <Link to="/playground/forecast#row-fields">reading the overlays in a tooltip</Link>.
       </p>
 
       {/* Dataset picker */}

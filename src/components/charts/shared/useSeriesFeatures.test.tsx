@@ -8,9 +8,10 @@ import { buildForecastLazy } from "./statisticalOverlaysLazy"
 import type { Datum } from "./datumTypes"
 import type { ForecastResult } from "./statisticalOverlays"
 
-vi.mock("./statisticalOverlaysLazy", () => ({
+vi.mock("./statisticalOverlaysLazy", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./statisticalOverlaysLazy")>()),
   buildForecastLazy: vi.fn(),
-  buildAnomalyAnnotationsLazy: vi.fn()
+  buildAnomalyOverlayLazy: vi.fn()
 }))
 
 function deferred() {

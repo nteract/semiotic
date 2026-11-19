@@ -86,6 +86,14 @@ const forecastControls = [
     default: "8,4", options: ["8,4", "6,3", "12,4", "4,4", "none"] },
   { name: "forecastDasharray", type: "select", label: "Forecast Dash", group: "Forecast",
     default: "4,4", options: ["4,4", "3,3", "6,2", "2,6", "none"] },
+  { name: "showBoundary", type: "boolean", label: "Show Boundary (auto)", group: "Boundary",
+    default: true },
+  { name: "boundaryColor", type: "color", label: "Boundary Color", group: "Boundary",
+    default: "#94a3b8" },
+  { name: "boundaryDasharray", type: "select", label: "Boundary Dash", group: "Boundary",
+    default: "4,2", options: ["4,2", "2,2", "8,4"] },
+  { name: "boundaryLabel", type: "string", label: "Boundary Label (empty hides it)", group: "Boundary",
+    default: "Train / Forecast" },
 ]
 
 const anomalyControls = [
@@ -175,6 +183,14 @@ function generateCode(values, datasetLabel, isPrecomputed) {
     if (values.bandOpacity !== 0.15) forecastProps.push(`bandOpacity: ${values.bandOpacity}`)
     if (values.trainDasharray !== "8,4") forecastProps.push(`trainDasharray: "${values.trainDasharray}"`)
     if (values.forecastDasharray !== "4,4") forecastProps.push(`forecastDasharray: "${values.forecastDasharray}"`)
+    if (!values.showBoundary) {
+      forecastProps.push(`showBoundary: false`)
+    } else {
+      if (values.boundaryColor !== "#94a3b8") forecastProps.push(`boundaryColor: "${values.boundaryColor}"`)
+      if (values.boundaryDasharray !== "4,2") forecastProps.push(`boundaryDasharray: "${values.boundaryDasharray}"`)
+      if (values.boundaryLabel === "") forecastProps.push(`boundaryLabel: false`)
+      else if (values.boundaryLabel !== "Train / Forecast") forecastProps.push(`boundaryLabel: ${JSON.stringify(values.boundaryLabel)}`)
+    }
 
     code += `  forecast={{\n`
     code += forecastProps.map(p => `    ${p},`).join("\n") + "\n"
@@ -202,6 +218,23 @@ function generateCode(values, datasetLabel, isPrecomputed) {
   code += `/>`
   return code
 }
+
+const rowFieldsCode = `import { LineChart, ANOMALY_FIELD, FORECAST_SEGMENT_FIELD } from "semiotic/xy"
+
+<LineChart
+  data={data}
+  xAccessor="time"
+  yAccessor="value"
+  forecast={{ trainEnd: 70 }}
+  anomaly={{ threshold: 2 }}
+  tooltip={{
+    mode: "multi",
+    content: ({ allSeries }) => {
+      const row = allSeries[0].datum
+      return row[ANOMALY_FIELD] ? "Anomaly" : row[FORECAST_SEGMENT_FIELD]
+    },
+  }}
+/>`
 
 // ---------------------------------------------------------------------------
 // Component
@@ -283,6 +316,10 @@ export default function ForecastPlayground() {
         bandOpacity: values.bandOpacity,
         trainDasharray: values.trainDasharray === "none" ? undefined : values.trainDasharray,
         forecastDasharray: values.forecastDasharray === "none" ? undefined : values.forecastDasharray,
+        showBoundary: values.showBoundary,
+        boundaryColor: values.boundaryColor,
+        boundaryDasharray: values.boundaryDasharray,
+        boundaryLabel: values.boundaryLabel === "" ? false : values.boundaryLabel,
       }
 
   const anomalyConfig = !isPrecomputed && values.enableAnomaly ? {
@@ -318,6 +355,33 @@ export default function ForecastPlayground() {
         envelope follows per-point upper/lower bounds (non-rectilinear), and
         anomalous points are flagged via an <code>isAnomaly</code> field.
       </p>
+      <p>
+        In auto mode a dashed boundary line marks <code>trainEnd</code>.{" "}
+        <code>boundaryColor</code>, <code>boundaryDasharray</code> and{" "}
+        <code>boundaryLabel</code> restyle and relabel it;{" "}
+        <code>boundaryLabel: false</code> keeps the line without a label, and{" "}
+        <code>showBoundary: false</code> removes it. The label takes the line's
+        color unless <code>boundaryLabelColor</code> sets its own, and sits on a
+        halo in the plot background unless <code>boundaryLabelBackground</code>{" "}
+        sets another backdrop (<code>"box"</code>, <code>"none"</code>, or a
+        config such as <code>{"{ type: \"box\", fill }"}</code>), so a faint
+        line can keep a readable label. The browser and{" "}
+        <code>renderChart</code> draw it the same way.
+      </p>
+      <h2 id="row-fields">Reading the overlays in a tooltip</h2>
+      <p>
+        Every row the chart draws carries its segment in{" "}
+        <code>FORECAST_SEGMENT_FIELD</code> (<code>"training"</code>,{" "}
+        <code>"training-base"</code>, <code>"observed"</code> or{" "}
+        <code>"forecast"</code>), and each row the <code>anomaly</code> overlay
+        flags carries <code>ANOMALY_FIELD</code> set to <code>true</code>: the
+        same rows it draws a dot for. With function accessors, the rows also hold
+        the resolved values in <code>RESOLVED_X_FIELD</code> and{" "}
+        <code>RESOLVED_Y_FIELD</code>, which is the only place a computed forecast
+        row has its x and y. All four are exported from <code>semiotic/xy</code>{" "}
+        and <code>semiotic/line</code>.
+      </p>
+      <CodeBlock code={rowFieldsCode} language="jsx" />
 
       {/* Dataset picker */}
       <div className="playground-dataset-picker">
