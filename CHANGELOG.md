@@ -30,6 +30,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   write: `FORECAST_SEGMENT_FIELD`, `ANOMALY_FIELD`, `RESOLVED_X_FIELD` and
   `RESOLVED_Y_FIELD`, and the `ForecastSegment` type.
   [source: consumer: custom multi tooltip that flags computed anomalies]
+- A controlled XY brush: `brushExtent` on `StreamXYFrame`, `LineChart` and
+  `StackedAreaChart` takes the shape `onBrush` reports (`{ x: [start, end] }`
+  for an x brush), `null` clears it, and leaving it unset keeps today's
+  uncontrolled brush. `onBrushEnd(extent, { source, atDomainStart, atDomainEnd })`
+  fires once per pointer release, keyboard step or reset that changed the
+  selection. `StackedAreaChart` gains `brush`, `onBrush` and `linkedBrush`, as
+  on `LineChart`. `semiotic/xy` and `semiotic/line` export the `XYBrushExtent`,
+  `XYBrushExtentInput` and `XYBrushEndMeta` types. The value-axis brush on
+  `StreamOrdinalFrame` and `Histogram` takes the same `brushExtent`
+  (`{ r: [min, max] }`, `null` clears it) and `onBrushEnd`, with `atDomainStart`
+  / `atDomainEnd` on the value axis, and `semiotic/ordinal` exports the
+  `OrdinalBrushExtent`, `OrdinalBrushExtentInput` and `OrdinalBrushEndMeta`
+  types. Both brushes stay browser-only.
+  [source: consumer: themed LineChart wrapper that commits a controlled time-range brush on release]
 
 ## [3.14.0] - 2026-11-18
 

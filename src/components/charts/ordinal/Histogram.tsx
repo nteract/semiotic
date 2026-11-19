@@ -19,6 +19,7 @@ import { useChartSetup } from "../shared/useChartSetup"
 import { resolveOrdinalAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useOrdinalBrush } from "../shared/useOrdinalBrush"
+import type { OrdinalBrushEndMeta, OrdinalBrushExtent, OrdinalBrushExtentInput } from "../../stream/ordinalBrushTypes"
 import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
 import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
@@ -100,6 +101,10 @@ export interface HistogramProps<TDatum extends Datum = Datum> extends BaseChartP
   brush?: boolean
   /** Callback when brush selection changes */
   onBrush?: (extent: { r: [number, number] } | null) => void
+  /** Controlled brush selection `{ r: [min, max] }`; `null` clears it. Unset: uncontrolled. */
+  brushExtent?: OrdinalBrushExtentInput | null
+  /** Called once per brush release, keyboard step or reset that changed the selection. */
+  onBrushEnd?: (extent: OrdinalBrushExtent | null, meta: OrdinalBrushEndMeta) => void
   /** LinkedCharts brush integration */
   linkedBrush?: string | { name: string; rField?: string }
   /** Custom formatter for category tick labels */
@@ -207,7 +212,7 @@ export const Histogram = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
     categoryPadding = resolved.mode === "sparkline" ? 0 : 20,
     tooltip, annotations,
     valueExtent,
-    brush: brushProp, onBrush: onBrushProp, linkedBrush,
+    brush: brushProp, onBrush: onBrushProp, linkedBrush, brushExtent, onBrushEnd,
     frameProps = {}, selection, linkedHover,
     onObservation, onClick, hoverHighlight, chartId,
     loading, loadingContent, emptyContent,
@@ -263,7 +268,7 @@ export const Histogram = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
     }),
   })
 
-  const ordinalBrush = useOrdinalBrush({ brushProp, onBrushProp, linkedBrush, valueAccessor })
+  const ordinalBrush = useOrdinalBrush({ brushProp, onBrushProp, linkedBrush, valueAccessor, brushExtent, onBrushEnd })
 
   // Compute global value extent across all categories so bins are shared
   const rExtent = useMemo(() => {

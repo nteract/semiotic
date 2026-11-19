@@ -182,7 +182,7 @@ export function prepareLineSeriesForSsr(input: LineSeriesSsrInput): LineSeriesSs
   let lineBy = input.lineBy
   let colorBy = input.colorBy || lineBy
   let rows = Array.isArray(input.data)
-    ? filterSparseArray(input.data).filter((d): d is Datum => !!d && typeof d === "object")
+    ? filterSparseArray<Datum>(input.data)
     : []
 
   if (input.lineDataAccessor) {
@@ -281,8 +281,8 @@ export function prepareLineSeriesForSsr(input: LineSeriesSsrInput): LineSeriesSs
 
   return {
     data: rows,
-    xAccessor: typeof xAccessor === "function" ? xKey : xAccessor,
-    yAccessor: typeof yAccessor === "function" ? yKey : yAccessor,
+    xAccessor: xKey,
+    yAccessor: yKey,
     groupAccessor,
     colorAccessor: colorBy as string | ((d: Datum) => unknown) | undefined,
     annotations,

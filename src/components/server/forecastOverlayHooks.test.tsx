@@ -30,6 +30,43 @@ for (const [entry, renderer] of [
   ["semiotic/server", server],
   ["semiotic/server/edge", edge],
 ] as const) {
+  describe(`${entry} nested series and default gaps`, () => {
+    it.each(["coordinates", "points"])("renders nested %s without statistical overlays", (lineDataAccessor) => {
+      const data = ["A", "B"].map((label, i) => ({
+        label, [lineDataAccessor]: [{ x: 0, y: 10 + i }, { x: 1, y: 20 + i }],
+      }))
+      const { svg, evidence } = renderer.renderChartWithEvidence("LineChart", {
+        data, lineDataAccessor, lineBy: (d: Datum) => d.label,
+        colorScheme: { A: "#123456", B: "#654321" }, ...size,
+      })
+      expect(evidence.status).toBe("ok")
+      expect(evidence.markCountByType.line).toBe(2)
+      expect(svg).toContain('stroke="#123456"')
+      expect(svg).toContain('stroke="#654321"')
+    })
+
+    it("breaks missing values by default without a baseline dip", () => {
+      const { evidence } = renderer.renderChartWithEvidence("LineChart", {
+        data: [10, 11, null, 12, 13].map((y, x) => ({ x, y })), ...size,
+      })
+      expect(evidence.markCountByType.line).toBe(2)
+      expect(evidence.yDomain![0]).toBeGreaterThan(0)
+    })
+
+    it.each(["LineChart", "AreaChart"])("forecasts nested %s coordinates through callback accessors", (component) => {
+      const { svg, evidence } = renderer.renderChartWithEvidence(component, {
+        data: [{ label: "A", points: Array.from({ length: 5 }, (_, t) => ({ t, value: 10 + 5 * t })) }],
+        lineDataAccessor: "points", lineBy: "label", areaBy: "label",
+        xAccessor: (d: Datum) => d.t, yAccessor: (d: Datum) => d.value,
+        forecast: { trainEnd: 3, steps: 2 }, ...size,
+      })
+      expect(evidence.status).toBe("ok")
+      expect(evidence.xDomain![1]).toBeGreaterThanOrEqual(6)
+      expect(evidence.yDomain![1]).toBeGreaterThanOrEqual(40)
+      expect(svg).not.toContain("NaN")
+    })
+  })
+
   describe(`${entry} forecast boundary options`, () => {
     const render = (forecast: Record<string, unknown>) =>
       renderer.renderChart("LineChart", { data: wave, xAccessor: "x", yAccessor: "y", ...size, forecast })

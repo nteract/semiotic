@@ -10,6 +10,15 @@
 import type * as React from "react"
 import { useState, useEffect } from "react"
 import type { XYBrushOverlayProps } from "./XYBrushOverlay"
+import type { StreamXYFrameProps } from "./types"
+
+/** The frame's touch-action under a brush: a 1D brush leaves the other axis to page scrolling. */
+export function brushTouchAction(brush: StreamXYFrameProps["brush"]): React.CSSProperties["touchAction"] | undefined {
+  if (!brush) return undefined
+  if (brush.dimension === "x") return "pan-y"
+  if (brush.dimension === "y") return "pan-x"
+  return "none"
+}
 
 type BrushComponent = React.ComponentType<XYBrushOverlayProps>
 

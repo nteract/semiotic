@@ -1312,6 +1312,7 @@ interface-member HeatmapProps::property::yLabel = optional yLabel: string | unde
 interface-member HistogramProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member HistogramProps::property::bins = optional bins: number | undefined
 interface-member HistogramProps::property::brush = optional brush: boolean | undefined
+interface-member HistogramProps::property::brushExtent = optional brushExtent: OrdinalBrushExtentInput | null | undefined
 interface-member HistogramProps::property::categoryAccessor = optional categoryAccessor: ChartAccessor<TDatum, string> | undefined
 interface-member HistogramProps::property::categoryFormat = optional categoryFormat: CategoryFormatFn | undefined
 interface-member HistogramProps::property::categoryLabel = optional categoryLabel: string | undefined
@@ -1325,6 +1326,7 @@ interface-member HistogramProps::property::legendInteraction = optional legendIn
 interface-member HistogramProps::property::legendPosition = optional legendPosition: LegendPosition | undefined
 interface-member HistogramProps::property::linkedBrush = optional linkedBrush: string | undefined | {name: string; rField?: string;}
 interface-member HistogramProps::property::onBrush = optional onBrush: ((extent: {r: [number, number];} | null) => void) | undefined
+interface-member HistogramProps::property::onBrushEnd = optional onBrushEnd: ((extent: OrdinalBrushExtent | null, meta: OrdinalBrushEndMeta) => void) | undefined
 interface-member HistogramProps::property::relative = optional relative: boolean | undefined
 interface-member HistogramProps::property::showCategoryTicks = optional showCategoryTicks: boolean | undefined
 interface-member HistogramProps::property::showGrid = optional showGrid: boolean | undefined
@@ -1429,6 +1431,7 @@ interface-member LineChartProps::property::anomaly = optional anomaly: AnomalyCo
 interface-member LineChartProps::property::areaOpacity = optional areaOpacity: number | undefined
 interface-member LineChartProps::property::band = optional band: BandConfig<TDatum> | BandConfig<TDatum>[] | undefined
 interface-member LineChartProps::property::brush = optional brush: boolean | undefined
+interface-member LineChartProps::property::brushExtent = optional brushExtent: XYBrushExtentInput | null | undefined
 interface-member LineChartProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
 interface-member LineChartProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
 interface-member LineChartProps::property::curve = optional curve: "basis" | "cardinal" | "catmullRom" | "linear" | "monotoneX" | "monotoneY" | "step" | "stepAfter" | "stepBefore" | undefined
@@ -1447,6 +1450,7 @@ interface-member LineChartProps::property::lineDataAccessor = optional lineDataA
 interface-member LineChartProps::property::lineGradient = optional lineGradient: ColorGradientInput | undefined
 interface-member LineChartProps::property::lineWidth = optional lineWidth: number | undefined
 interface-member LineChartProps::property::onBrush = optional onBrush: ((extent: {x: [number, number]; y: [number, number];} | null) => void) | undefined
+interface-member LineChartProps::property::onBrushEnd = optional onBrushEnd: ((extent: XYBrushExtent | null, meta: XYBrushEndMeta) => void) | undefined
 interface-member LineChartProps::property::pointIdAccessor = optional pointIdAccessor: ChartAccessor<TDatum, string> | undefined
 interface-member LineChartProps::property::pointRadius = optional pointRadius: number | undefined
 interface-member LineChartProps::property::showGrid = optional showGrid: boolean | undefined
@@ -2491,6 +2495,8 @@ interface-member StackedAreaChartProps::property::annotations = optional annotat
 interface-member StackedAreaChartProps::property::areaBy = optional areaBy: ChartAccessor<TDatum, string> | undefined
 interface-member StackedAreaChartProps::property::areaOpacity = optional areaOpacity: number | undefined
 interface-member StackedAreaChartProps::property::baseline = optional baseline: "diverging" | "silhouette" | "wiggle" | "zero" | undefined
+interface-member StackedAreaChartProps::property::brush = optional brush: boolean | undefined
+interface-member StackedAreaChartProps::property::brushExtent = optional brushExtent: XYBrushExtentInput | null | undefined
 interface-member StackedAreaChartProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
 interface-member StackedAreaChartProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
 interface-member StackedAreaChartProps::property::curve = optional curve: "basis" | "cardinal" | "catmullRom" | "linear" | "monotoneX" | "monotoneY" | "step" | "stepAfter" | "stepBefore" | undefined
@@ -2502,6 +2508,8 @@ interface-member StackedAreaChartProps::property::legendPosition = optional lege
 interface-member StackedAreaChartProps::property::lineDataAccessor = optional lineDataAccessor: string | undefined
 interface-member StackedAreaChartProps::property::lineWidth = optional lineWidth: number | undefined
 interface-member StackedAreaChartProps::property::normalize = optional normalize: boolean | undefined
+interface-member StackedAreaChartProps::property::onBrush = optional onBrush: ((extent: {x: [number, number]; y: [number, number];} | null) => void) | undefined
+interface-member StackedAreaChartProps::property::onBrushEnd = optional onBrushEnd: ((extent: XYBrushExtent | null, meta: XYBrushEndMeta) => void) | undefined
 interface-member StackedAreaChartProps::property::pointRadius = optional pointRadius: number | undefined
 interface-member StackedAreaChartProps::property::showGrid = optional showGrid: boolean | undefined
 interface-member StackedAreaChartProps::property::showLegend = optional showLegend: boolean | undefined
@@ -2686,6 +2694,7 @@ interface-member StreamOrdinalFrameProps::property::barPadding = optional barPad
 interface-member StreamOrdinalFrameProps::property::baselinePadding = optional baselinePadding: boolean | undefined
 interface-member StreamOrdinalFrameProps::property::bins = optional bins: number | undefined
 interface-member StreamOrdinalFrameProps::property::brush = optional brush: "r" | boolean | undefined | {dimension?: "r";}
+interface-member StreamOrdinalFrameProps::property::brushExtent = optional brushExtent: OrdinalBrushExtentInput | null | undefined
 interface-member StreamOrdinalFrameProps::property::categoryAccessor = optional categoryAccessor: ((d: T) => string) | string | undefined
 interface-member StreamOrdinalFrameProps::property::categoryFormat = optional categoryFormat: ((d: string, index?: number) => string | ReactNode) | undefined
 interface-member StreamOrdinalFrameProps::property::categoryLabel = optional categoryLabel: string | undefined
@@ -2741,6 +2750,7 @@ interface-member StreamOrdinalFrameProps::property::oLabel = optional oLabel: st
 interface-member StreamOrdinalFrameProps::property::oSort = optional oSort: "asc" | "auto" | "desc" | ((a: string, b: string) => number) | boolean | undefined
 interface-member StreamOrdinalFrameProps::property::onAnnotationActivate = optional onAnnotationActivate: OnAnnotationActivateCallback | undefined
 interface-member StreamOrdinalFrameProps::property::onBrush = optional onBrush: ((extent: {r: [number, number];} | null) => void) | undefined
+interface-member StreamOrdinalFrameProps::property::onBrushEnd = optional onBrushEnd: ((extent: OrdinalBrushExtent | null, meta: OrdinalBrushEndMeta) => void) | undefined
 interface-member StreamOrdinalFrameProps::property::onCategoriesChange = optional onCategoriesChange: ((categories: string[]) => void) | undefined
 interface-member StreamOrdinalFrameProps::property::onLayoutError = optional onLayoutError: ((diagnostic: import("./customLayoutFailure").CustomLayoutFailureDiagnostic) => void) | undefined
 interface-member StreamOrdinalFrameProps::property::onObservation = optional onObservation: ((observation: import("../semiotic-ai-observations").ChartObservation) => void) | undefined
@@ -2822,6 +2832,7 @@ interface-member StreamXYFrameProps::property::binSize = optional binSize: numbe
 interface-member StreamXYFrameProps::property::boundsAccessor = optional boundsAccessor: ((d: T) => number) | string | undefined
 interface-member StreamXYFrameProps::property::boundsStyle = optional boundsStyle: ((d: T, group?: string) => Style) | Style | undefined
 interface-member StreamXYFrameProps::property::brush = optional brush: undefined | {dimension?: "x" | "xy" | "y"; snap?: "bin" | "continuous"; binBoundaries?: number[]; snapDuring?: boolean;}
+interface-member StreamXYFrameProps::property::brushExtent = optional brushExtent: XYBrushExtentInput | null | undefined
 interface-member StreamXYFrameProps::property::candlestickStyle = optional candlestickStyle: CandlestickStyle | undefined
 interface-member StreamXYFrameProps::property::canvasPreRenderers = optional canvasPreRenderers: CanvasRendererFn[] | undefined
 interface-member StreamXYFrameProps::property::capacity = optional capacity: number | undefined
@@ -2880,6 +2891,7 @@ interface-member StreamXYFrameProps::property::maxCapacity = optional maxCapacit
 interface-member StreamXYFrameProps::property::maxDevicePixelRatio = optional maxDevicePixelRatio: number | undefined
 interface-member StreamXYFrameProps::property::normalize = optional normalize: boolean | undefined
 interface-member StreamXYFrameProps::property::onBrush = optional onBrush: ((extent: {x: [number, number]; y: [number, number];} | null) => void) | undefined
+interface-member StreamXYFrameProps::property::onBrushEnd = optional onBrushEnd: ((extent: XYBrushExtent | null, meta: XYBrushEndMeta) => void) | undefined
 interface-member StreamXYFrameProps::property::onCategoriesChange = optional onCategoriesChange: ((categories: string[]) => void) | undefined
 interface-member StreamXYFrameProps::property::onColorDomainChange = optional onColorDomainChange: ((domain: [number, number] | null) => void) | undefined
 interface-member StreamXYFrameProps::property::onLayoutError = optional onLayoutError: ((diagnostic: import("./customLayoutFailure").CustomLayoutFailureDiagnostic) => void) | undefined

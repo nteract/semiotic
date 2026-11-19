@@ -131,6 +131,62 @@ export const serverPropExclusions: readonly ServerPropExclusion[] = [
     status: "intentionally-client-only",
     reason:
       "React empty-state content belongs to the live frame wrapper; static output uses its empty SVG and evidence contract."
+  },
+  {
+    component: "LineChart",
+    prop: "brushExtent",
+    status: "intentionally-client-only",
+    reason:
+      "The brush is a pointer and keyboard overlay on a mounted frame; static SVG draws no brush, so there is no selection to place (src/components/server/brushStatic.test.tsx pins the unchanged SVG)."
+  },
+  {
+    component: "LineChart",
+    prop: "onBrushEnd",
+    status: "runtime-callback-only",
+    reason:
+      "A brush callback fires on a pointer or keyboard change to a mounted brush and cannot execute in a serialized static render."
+  },
+  {
+    component: "StackedAreaChart",
+    prop: "brush",
+    status: "intentionally-client-only",
+    reason:
+      "The brush is a pointer and keyboard overlay on a mounted frame; static SVG draws no brush, so there is no selection to place (src/components/server/brushStatic.test.tsx pins the unchanged SVG)."
+  },
+  {
+    component: "StackedAreaChart",
+    prop: "onBrush",
+    status: "runtime-callback-only",
+    reason:
+      "A brush callback fires on a pointer or keyboard change to a mounted brush and cannot execute in a serialized static render."
+  },
+  {
+    component: "StackedAreaChart",
+    prop: "brushExtent",
+    status: "intentionally-client-only",
+    reason:
+      "The brush is a pointer and keyboard overlay on a mounted frame; static SVG draws no brush, so there is no selection to place (src/components/server/brushStatic.test.tsx pins the unchanged SVG)."
+  },
+  {
+    component: "StackedAreaChart",
+    prop: "onBrushEnd",
+    status: "runtime-callback-only",
+    reason:
+      "A brush callback fires on a pointer or keyboard change to a mounted brush and cannot execute in a serialized static render."
+  },
+  {
+    component: "Histogram",
+    prop: "brushExtent",
+    status: "intentionally-client-only",
+    reason:
+      "The brush is a pointer and keyboard overlay on a mounted frame; static SVG draws no brush, so there is no selection to place (src/components/server/brushStatic.test.tsx pins the unchanged SVG)."
+  },
+  {
+    component: "Histogram",
+    prop: "onBrushEnd",
+    status: "runtime-callback-only",
+    reason:
+      "A brush callback fires on a pointer or keyboard change to a mounted brush and cannot execute in a serialized static render."
   }
 ]
 

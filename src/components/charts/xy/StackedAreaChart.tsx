@@ -22,6 +22,8 @@ import { useAreaSeriesSetup } from "../shared/useAreaSeriesSetup"
 import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
 import { useSelectionAwareFrameStyle } from "../shared/useSelectionAwareFrameStyle"
 import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
+import { useXYBrush } from "../shared/useXYBrush"
+import type { XYBrushEndMeta, XYBrushExtent, XYBrushExtentInput } from "../../stream/xyBrushTypes"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
 function ensureStackedAreaChartRegistrations(): void {
@@ -230,6 +232,15 @@ export interface StackedAreaChartProps<TDatum extends Datum = Datum> extends Bas
    */
   yExtent?: [number | undefined, number | undefined] | [number]
 
+  /** Enable an x-axis brush overlay. Also enabled when `linkedBrush` is set. */
+  brush?: boolean
+  /** Callback with `{ x, y }` extents, or null when the brush clears. */
+  onBrush?: (extent: { x: [number, number]; y: [number, number] } | null) => void
+  /** Controlled brush selection, e.g. `{ x: [start, end] }`; `null` clears it. Unset: uncontrolled. */
+  brushExtent?: XYBrushExtentInput | null
+  /** Called once per brush release, keyboard step or reset that changed the selection. */
+  onBrushEnd?: (extent: XYBrushExtent | null, meta: XYBrushEndMeta) => void
+
   /**
    * Additional StreamXYFrame props for advanced customization
    * For full control, consider using StreamXYFrame directly
@@ -328,6 +339,11 @@ export const StackedAreaChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PUR
     frameProps = {},
     selection,
     linkedHover,
+    linkedBrush,
+    brush,
+    onBrush,
+    brushExtent,
+    onBrushEnd,
     onObservation,
     onClick,
     hoverHighlight,
@@ -431,6 +447,17 @@ export const StackedAreaChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PUR
     },
   })
 
+  const { brushStreamProps } = useXYBrush({
+    brush,
+    onBrush,
+    brushExtent,
+    onBrushEnd,
+    linkedBrush,
+    xAccessor,
+    yAccessor,
+    defaultDimension: "x",
+  })
+
   // Build StreamXYFrame props
   const streamProps: StreamXYFrameProps = {
     chartType: "stackedarea",
@@ -474,6 +501,7 @@ export const StackedAreaChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PUR
     ...(xExtent && { xExtent }),
     ...(yExtent && { yExtent }),
     ...setup.crosshairProps,
+    ...brushStreamProps,
     ...frameProps,
     // frameProps precedence: the caller's style still wins; this re-applies it with selection dimming preserved.
     ...(userLineStyle && { lineStyle: userLineStyle }),

@@ -330,6 +330,56 @@ function BrushExample() {
         language="jsx"
       />
 
+      <h3 id="controlled-brush">Controlled brush on LineChart, StackedAreaChart and Histogram</h3>
+      <p>
+        <code>brush</code> on <code>LineChart</code> and{" "}
+        <code>StackedAreaChart</code> draws an x-axis brush whose selection
+        reaches you through <code>onBrush</code> on every move. Pass{" "}
+        <code>brushExtent</code> to control it: the brush moves to{" "}
+        <code>{"{ x: [start, end] }"}</code> (the shape <code>onBrush</code>{" "}
+        reports; an axis the brush doesn't move can be left out),{" "}
+        <code>null</code> clears it, and leaving it unset keeps the brush
+        uncontrolled. A controlled brush returns to your value after a drag or
+        key you don't accept, and moving it this way calls neither callback.{" "}
+        <code>onBrushEnd(extent, {"{ source, atDomainStart, atDomainEnd }"})</code>{" "}
+        fires once per pointer release, keyboard step, or reset that changed the
+        selection, which is where to commit a range or record it. Like{" "}
+        <code>StreamXYFrame</code>'s <code>brushExtent</code> and{" "}
+        <code>onBrushEnd</code>, the brush is browser-only:{" "}
+        <code>renderChart</code> ignores these props.
+      </p>
+      <p>
+        <code>Histogram</code>'s value-axis brush (and{" "}
+        <code>StreamOrdinalFrame</code>'s) works the same way in the shape its{" "}
+        <code>onBrush</code> reports: <code>{"brushExtent={{ r: [min, max] }}"}</code>{" "}
+        moves it, <code>null</code> clears it (say, when a filter elsewhere is
+        cleared), and <code>onBrushEnd</code>'s <code>atDomainStart</code> /{" "}
+        <code>atDomainEnd</code> say whether the range reaches the value
+        axis's minimum / maximum.
+      </p>
+
+      <CodeBlock
+        code={`import { useState } from "react"
+import { LineChart } from "semiotic/xy"
+
+function ControlledBrush({ data, onCommit }) {
+  const [range, setRange] = useState({ x: [10, 20] })
+  return (
+    <LineChart
+      data={data}
+      xAccessor="time"
+      yAccessor="value"
+      brush
+      brushExtent={range}
+      onBrush={setRange}
+      onBrushEnd={(extent, { atDomainStart, atDomainEnd }) =>
+        onCommit(extent && [atDomainStart ? null : extent.x[0], atDomainEnd ? null : extent.x[1]])}
+    />
+  )
+}`}
+        language="jsx"
+      />
+
       <h3 id="minimap">MinimapChart</h3>
       <p>
         <code>MinimapChart</code> automates the common pattern of a main

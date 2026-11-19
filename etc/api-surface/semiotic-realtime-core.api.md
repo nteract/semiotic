@@ -845,6 +845,7 @@ interface-member StreamXYFrameProps::property::binSize = optional binSize: numbe
 interface-member StreamXYFrameProps::property::boundsAccessor = optional boundsAccessor: ((d: T) => number) | string | undefined
 interface-member StreamXYFrameProps::property::boundsStyle = optional boundsStyle: ((d: T, group?: string) => Style) | Style | undefined
 interface-member StreamXYFrameProps::property::brush = optional brush: undefined | {dimension?: "x" | "xy" | "y"; snap?: "bin" | "continuous"; binBoundaries?: number[]; snapDuring?: boolean;}
+interface-member StreamXYFrameProps::property::brushExtent = optional brushExtent: XYBrushExtentInput | null | undefined
 interface-member StreamXYFrameProps::property::candlestickStyle = optional candlestickStyle: CandlestickStyle | undefined
 interface-member StreamXYFrameProps::property::canvasPreRenderers = optional canvasPreRenderers: CanvasRendererFn[] | undefined
 interface-member StreamXYFrameProps::property::capacity = optional capacity: number | undefined
@@ -903,6 +904,7 @@ interface-member StreamXYFrameProps::property::maxCapacity = optional maxCapacit
 interface-member StreamXYFrameProps::property::maxDevicePixelRatio = optional maxDevicePixelRatio: number | undefined
 interface-member StreamXYFrameProps::property::normalize = optional normalize: boolean | undefined
 interface-member StreamXYFrameProps::property::onBrush = optional onBrush: ((extent: {x: [number, number]; y: [number, number];} | null) => void) | undefined
+interface-member StreamXYFrameProps::property::onBrushEnd = optional onBrushEnd: ((extent: XYBrushExtent | null, meta: XYBrushEndMeta) => void) | undefined
 interface-member StreamXYFrameProps::property::onCategoriesChange = optional onCategoriesChange: ((categories: string[]) => void) | undefined
 interface-member StreamXYFrameProps::property::onColorDomainChange = optional onColorDomainChange: ((domain: [number, number] | null) => void) | undefined
 interface-member StreamXYFrameProps::property::onLayoutError = optional onLayoutError: ((diagnostic: import("./customLayoutFailure").CustomLayoutFailureDiagnostic) => void) | undefined

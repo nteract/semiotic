@@ -40,6 +40,7 @@ import {
   withSegmentSeriesTooltip,
 } from "./lineGapStrategy"
 import type { LegendValue } from "../../types/legendTypes"
+import type { XYBrushEndMeta, XYBrushExtent, XYBrushExtentInput } from "../../stream/xyBrushTypes"
 import { composeLegendConfigs } from "../../types/legendTypes"
 import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
@@ -194,6 +195,10 @@ export interface LineChartProps<TDatum extends Datum = Datum> extends BaseChartP
   brush?: boolean
   /** Callback with `{ x, y }` extents, or null when the brush clears. */
   onBrush?: (extent: { x: [number, number]; y: [number, number] } | null) => void
+  /** Controlled brush selection, e.g. `{ x: [start, end] }`; `null` clears it. Unset: uncontrolled. */
+  brushExtent?: XYBrushExtentInput | null
+  /** Called once per brush release, keyboard step or reset that changed the selection. */
+  onBrushEnd?: (extent: XYBrushExtent | null, meta: XYBrushEndMeta) => void
 
   /**
    * Show grid lines
@@ -456,6 +461,8 @@ export const LineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
     linkedBrush,
     brush,
     onBrush,
+    brushExtent,
+    onBrushEnd,
     onObservation,
     onClick,
     hoverHighlight,
@@ -811,6 +818,8 @@ export const LineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
   const { brushStreamProps } = useXYBrush({
     brush,
     onBrush,
+    brushExtent,
+    onBrushEnd,
     linkedBrush,
     xAccessor,
     yAccessor: frameYAccessor,
@@ -825,13 +834,9 @@ export const LineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
 
     const pointKeys = segments ? new WeakMap<Datum, string>() : undefined
     const flat = gapProcessedLineData.flatMap((line: Datum) => {
-      const coords: Datum[] = line[lineDataAccessor] || []
-      const points = frameGroupAccessor && typeof frameGroupAccessor === "string"
-        ? coords.map((c: Datum) => ({
-            ...c,
-            [frameGroupAccessor]: c[frameGroupAccessor] ?? line[frameGroupAccessor],
-          }))
-        : coords
+      // Normalized rows already carry their series identity. Keep those
+      // objects intact until anomaly marking needs to copy a flagged row.
+      const points: Datum[] = line[lineDataAccessor] || []
       const key = segments?.keyOf.get(line)
       if (pointKeys && key !== undefined) {
         for (const point of points) pointKeys.set(point, key)

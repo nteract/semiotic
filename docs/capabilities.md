@@ -4,7 +4,7 @@
 > edit by hand — re-run `npm run docs:capabilities` after adding a
 > chart and commit the output.
 
-Last regen: 2026-11-10 · 63 charts indexed.
+Last regen: 2026-11-19 · 63 charts indexed.
 
 **Column key**
 
@@ -33,7 +33,7 @@ Last regen: 2026-11-10 · 63 charts indexed.
 | **QuadrantChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `quadrants` |
 | **Scatterplot** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `regression-overlay` `forecast` `anomaly` `series-features` `brush` |
 | **ScatterplotMatrix** | ✓ | — | — | — | ✓ | categorical | plugin | `matrix` `brush` `composite-delegates-interaction` `composite-static` |
-| **StackedAreaChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `stack` `streamgraph` |
+| **StackedAreaChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `stack` `streamgraph` `brush` |
 | **WaterfallChart** | ✓ | ✓ | ✓ | ✓ | ✓ | categorical | plugin | `waterfall` |
 
 ## Ordinal

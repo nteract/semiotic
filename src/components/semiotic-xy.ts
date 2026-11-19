@@ -110,6 +110,7 @@ export type {
 
 // Chart prop types
 export type { LineChartProps } from "./charts/xy/LineChart"
+export type { XYBrushEndMeta, XYBrushExtent, XYBrushExtentInput } from "./stream/xyBrushTypes"
 
 // Row fields the `forecast` and `anomaly` overlays write on the rows they draw,
 // which a custom tooltip or callback reads from its datum.

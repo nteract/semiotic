@@ -43,6 +43,8 @@ export const XY_CHART_SPECS: Record<string, ChartSpec> = {
       brush: { type: "boolean", description: "Enable an x-axis brush overlay for range selection." },
       linkedBrush: { type: ["string", "object"], description: "LinkedCharts brush channel name, or { name, xField?, yField? }." },
       onBrush: { type: "function", omitFromSchema: true },
+      brushExtent: { type: ["object", "null"], description: "Controlled brush selection { x?, y? }; null clears it." },
+      onBrushEnd: { type: "function", omitFromSchema: true },
     },
     capabilities: {
       renderModes: ["hybrid"],
@@ -221,13 +223,18 @@ export const XY_CHART_SPECS: Record<string, ChartSpec> = {
       pointIdAccessor: { type: ["string", "function"], description: "Stable ID for point annotations, push-mode remove()/update(), and identity-keyed area path transitions." },
       xExtent: { type: "array", description: "Fixed x domain `[min, max]`; either bound may be omitted." },
       yExtent: { type: "array", description: "Fixed y domain `[min, max]`; either bound may be omitted." },
+      brush: { type: "boolean", description: "Enable an x-axis brush overlay for range selection." },
+      linkedBrush: { type: ["string", "object"], description: "LinkedCharts brush channel name, or { name, xField?, yField? }." },
+      onBrush: { type: "function", omitFromSchema: true },
+      brushExtent: { type: ["object", "null"], description: "Controlled brush selection { x?, y? }; null clears it." },
+      onBrushEnd: { type: "function", omitFromSchema: true },
     },
     capabilities: {
       renderModes: ["hybrid"],
       supportsLegend: true, supportsSelection: true, supportsLinkedHover: true,
       supportsPush: true, supportsSSR: true,
       colorModel: "categorical", layoutMode: "plugin",
-      specialFeatures: ["stack", "streamgraph"],
+      specialFeatures: ["stack", "streamgraph", "brush"],
     },
   },
 

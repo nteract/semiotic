@@ -10,11 +10,15 @@ const RESOLVED_X_FIELD: "__semiotic_resolvedX"
 const RESOLVED_Y_FIELD: "__semiotic_resolvedY"
 function LineChart<TDatum extends Datum = Datum>(props: LineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 interface LineChartProps<TDatum extends Datum = Datum> extends BaseChartProps, AxisConfig
+interface XYBrushEndMeta
+interface XYBrushExtent
+interface XYBrushExtentInput
 interface-member LineChartProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member LineChartProps::property::anomaly = optional anomaly: AnomalyConfig | undefined
 interface-member LineChartProps::property::areaOpacity = optional areaOpacity: number | undefined
 interface-member LineChartProps::property::band = optional band: BandConfig<TDatum> | BandConfig<TDatum>[] | undefined
 interface-member LineChartProps::property::brush = optional brush: boolean | undefined
+interface-member LineChartProps::property::brushExtent = optional brushExtent: XYBrushExtentInput | null | undefined
 interface-member LineChartProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
 interface-member LineChartProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
 interface-member LineChartProps::property::curve = optional curve: "basis" | "cardinal" | "catmullRom" | "linear" | "monotoneX" | "monotoneY" | "step" | "stepAfter" | "stepBefore" | undefined
@@ -33,6 +37,7 @@ interface-member LineChartProps::property::lineDataAccessor = optional lineDataA
 interface-member LineChartProps::property::lineGradient = optional lineGradient: ColorGradientInput | undefined
 interface-member LineChartProps::property::lineWidth = optional lineWidth: number | undefined
 interface-member LineChartProps::property::onBrush = optional onBrush: ((extent: {x: [number, number]; y: [number, number];} | null) => void) | undefined
+interface-member LineChartProps::property::onBrushEnd = optional onBrushEnd: ((extent: XYBrushExtent | null, meta: XYBrushEndMeta) => void) | undefined
 interface-member LineChartProps::property::pointIdAccessor = optional pointIdAccessor: ChartAccessor<TDatum, string> | undefined
 interface-member LineChartProps::property::pointRadius = optional pointRadius: number | undefined
 interface-member LineChartProps::property::showGrid = optional showGrid: boolean | undefined
@@ -46,5 +51,12 @@ interface-member LineChartProps::property::xScaleType = optional xScaleType: "li
 interface-member LineChartProps::property::yAccessor = optional yAccessor: ChartAccessor<TDatum, number> | undefined
 interface-member LineChartProps::property::yExtent = optional yExtent: [number | undefined, number | undefined] | [number] | undefined
 interface-member LineChartProps::property::yScaleType = optional yScaleType: "linear" | "log" | "symlog" | undefined
+interface-member XYBrushEndMeta::property::atDomainEnd = required atDomainEnd: boolean
+interface-member XYBrushEndMeta::property::atDomainStart = required atDomainStart: boolean
+interface-member XYBrushEndMeta::property::source = required source: "keyboard" | "pointer"
+interface-member XYBrushExtent::property::x = required x: [number, number]
+interface-member XYBrushExtent::property::y = required y: [number, number]
+interface-member XYBrushExtentInput::property::x = optional x: readonly [number, number] | undefined
+interface-member XYBrushExtentInput::property::y = optional y: readonly [number, number] | undefined
 type ForecastSegment = "forecast" | "observed" | "training" | "training-base"
 ```

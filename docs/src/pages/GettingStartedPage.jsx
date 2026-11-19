@@ -39,12 +39,12 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/line",
-    "kb": 157,
+    "kb": 158,
     "blurb": "LineChart only — one-chart micro boundary"
   },
   {
     "importPath": "semiotic/xy",
-    "kb": 196,
+    "kb": 197,
     "blurb": "LineChart, AreaChart, Scatterplot, Heatmap, + 8 more XY charts"
   },
   {
@@ -89,7 +89,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/realtime",
-    "kb": 232,
+    "kb": 233,
     "blurb": "RealtimeLineChart, RealtimeHistogram, + 4 streaming charts"
   },
   {
@@ -189,7 +189,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic/ai",
-    "kb": 712,
+    "kb": 713,
     "blurb": "All schema-backed charts + validation — optimized for LLM code generation"
   },
   {
