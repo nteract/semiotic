@@ -164,3 +164,41 @@ export function confidenceZScore(confidence: number): number {
         ? 1.645
         : 1.0
 }
+
+/**
+ * The `anomaly` overlay's rule: mean ± threshold × population standard
+ * deviation over the finite values (strings and Dates coerce as in
+ * `regressionNumber`). The renderers draw this band and the overlay pipeline
+ * marks the same outliers on the rows, so both read it from here.
+ */
+export interface AnomalyBand {
+  mean: number
+  lower: number
+  upper: number
+  /** threshold × population standard deviation */
+  deviation: number
+}
+
+/** The band over `values`; `null` with fewer than two finite values. */
+export function anomalyBand(
+  values: ReadonlyArray<unknown>,
+  threshold: number
+): AnomalyBand | null {
+  const finite: number[] = []
+  for (const value of values) {
+    const number = regressionNumber(value)
+    if (number !== null) finite.push(number)
+  }
+  if (finite.length < 2) return null
+  const mean = finite.reduce((sum, v) => sum + v, 0) / finite.length
+  const variance =
+    finite.reduce((sum, v) => sum + (v - mean) ** 2, 0) / finite.length
+  const deviation = threshold * Math.sqrt(variance)
+  return { mean, lower: mean - deviation, upper: mean + deviation, deviation }
+}
+
+/** Whether `value` falls outside `band` (a missing value never does). */
+export function isAnomalous(value: unknown, band: AnomalyBand): boolean {
+  const number = regressionNumber(value)
+  return number !== null && Math.abs(number - band.mean) > band.deviation
+}

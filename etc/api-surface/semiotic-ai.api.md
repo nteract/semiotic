@@ -1782,6 +1782,11 @@ interface-member ForecastConfig::property::anomalyRadius = optional anomalyRadiu
 interface-member ForecastConfig::property::anomalyStyle = optional anomalyStyle: ((datum: Datum) => Datum) | Datum | undefined
 interface-member ForecastConfig::property::bandOpacity = optional bandOpacity: number | undefined
 interface-member ForecastConfig::property::bandwidth = optional bandwidth: number | undefined
+interface-member ForecastConfig::property::boundaryColor = optional boundaryColor: string | undefined
+interface-member ForecastConfig::property::boundaryDasharray = optional boundaryDasharray: string | undefined
+interface-member ForecastConfig::property::boundaryLabel = optional boundaryLabel: false | string | undefined
+interface-member ForecastConfig::property::boundaryLabelBackground = optional boundaryLabelBackground: AnnotationLabelBackground | undefined
+interface-member ForecastConfig::property::boundaryLabelColor = optional boundaryLabelColor: string | undefined
 interface-member ForecastConfig::property::color = optional color: string | undefined
 interface-member ForecastConfig::property::confidence = optional confidence: number | undefined
 interface-member ForecastConfig::property::confidenceAccessor = optional confidenceAccessor: ((d: Datum) => number) | string | undefined
@@ -1793,6 +1798,7 @@ interface-member ForecastConfig::property::isTraining = optional isTraining: ((d
 interface-member ForecastConfig::property::label = optional label: string | undefined
 interface-member ForecastConfig::property::lowerBounds = optional lowerBounds: ((d: Datum) => number) | string | undefined
 interface-member ForecastConfig::property::method = optional method: "linear" | "loess" | undefined
+interface-member ForecastConfig::property::showBoundary = optional showBoundary: boolean | undefined
 interface-member ForecastConfig::property::steps = optional steps: number | undefined
 interface-member ForecastConfig::property::trainDasharray = optional trainDasharray: string | undefined
 interface-member ForecastConfig::property::trainEnd = optional trainEnd: number | undefined

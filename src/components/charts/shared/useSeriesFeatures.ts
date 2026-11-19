@@ -10,15 +10,14 @@ import type {
 } from "./statisticalOverlays"
 import {
   buildForecastLazy,
-  buildAnomalyAnnotationsLazy
+  buildAnomalyOverlayLazy,
+  RESOLVED_X_FIELD as RESOLVED_X_KEY,
+  RESOLVED_Y_FIELD as RESOLVED_Y_KEY
 } from "./statisticalOverlaysLazy"
 
 import { useStableShallow } from "../../stream/useStableShallow"
 
 const EMPTY_ANNOTATIONS: Datum[] = []
-
-const RESOLVED_X_KEY = "__semiotic_resolvedX"
-const RESOLVED_Y_KEY = "__semiotic_resolvedY"
 
 export interface SeriesFeaturesOptions {
   /** Sparse-filtered chart data (the HOC's `safeData`). */
@@ -42,7 +41,8 @@ export interface SeriesFeaturesOptions {
 
 export interface SeriesFeaturesResult {
   /** Data to forward to the frame. When forecast adds future points,
-   *  this is the augmented set; otherwise the original `data`. */
+   *  this is the augmented set; with `anomaly`, each flagged row is a
+   *  copy carrying `ANOMALY_FIELD`; otherwise the original `data`. */
   effectiveData: Datum[]
   /** Annotations the chart should merge into its own annotations
    *  array (envelope, anomaly band, anomaly dots). Empty when
@@ -135,10 +135,7 @@ export function useSeriesFeatures(
           groupBy ? { ...forecast, _groupBy: groupBy } : forecast,
           anomaly
         )
-      : buildAnomalyAnnotationsLazy(anomaly!).then((annotations) => ({
-          processedData: overlayData,
-          annotations
-        }))
+      : buildAnomalyOverlayLazy(overlayData, yAccessorKey, anomaly!)
     work
       .then((result) => {
         if (!cancelled)

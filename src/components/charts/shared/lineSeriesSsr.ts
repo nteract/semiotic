@@ -13,7 +13,7 @@
 import { directLabelAnnotations } from "./directLabels"
 import type { Datum } from "./datumTypes"
 import {
-  buildAnomalyAnnotations,
+  buildAnomalyOverlay,
   buildForecast,
   createSegmentLineStyle,
   SEGMENT_FIELD,
@@ -246,7 +246,9 @@ export function prepareLineSeriesForSsr(input: LineSeriesSsrInput): LineSeriesSs
       lineStyle = (d) => segmentStyle(d)
     }
   } else if (input.anomaly) {
-    annotations.push(...buildAnomalyAnnotations(input.anomaly))
+    const result = buildAnomalyOverlay(rows, yKey, input.anomaly)
+    rows = result.processedData
+    annotations.push(...result.annotations)
   }
 
   // ── Gap strategy ───────────────────────────────────────────────────

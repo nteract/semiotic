@@ -11,8 +11,9 @@ import { resolveEnvelopeCurveFactory } from "../../stream/renderers/canvasRender
 import { forecastModel } from "./forecastModel"
 import { trendGeometry, projectAnnotationValue } from "./statisticalAnnotationGeometry"
 import {
+  anomalyBand,
+  isAnomalous,
   regressionPoints,
-  regressionNumber,
 } from "./leastSquaresRegression"
 import { resolveX, resolveY, resolveAnchoredPosition, isInBounds } from "./annotationResolvers"
 import { projectHeatmapBandBound } from "../../stream/heatmapBandTicks"
@@ -444,19 +445,8 @@ export function createDefaultAnnotationRules(
         if (!rawX || !rawY) return null
         const scaleY = (value: unknown) => projectAnnotationValue(rawY, value)
 
-        const yValues = data
-          .map((d) => regressionNumber(d[yAcc]))
-          .filter((v): v is number => v !== null)
-        if (yValues.length < 2) return null
-
-        const mean = yValues.reduce((s, v) => s + v, 0) / yValues.length
-        const variance =
-          yValues.reduce((s, v) => s + (v - mean) ** 2, 0) / yValues.length
-        const stddev = Math.sqrt(variance)
-        const threshold = ann.threshold ?? 2
-
-        const upper = mean + threshold * stddev
-        const lower = mean - threshold * stddev
+        const band = anomalyBand(data.map((d) => d[yAcc]), ann.threshold ?? 2)
+        if (!band) return null
         const showBand = ann.showBand !== false
 
         const bandFill = ann.fill || "#6366f1"
@@ -464,14 +454,11 @@ export function createDefaultAnnotationRules(
         const anomalyColor = ann.anomalyColor || "#ef4444"
         const anomalyRadius = ann.anomalyRadius ?? 6
 
-        const y0px = scaleY(upper)
-        const y1px = scaleY(lower)
+        const y0px = scaleY(band.upper)
+        const y1px = scaleY(band.lower)
 
-        // Find outlier points
-        const outliers = data.filter((d) => {
-          const v = regressionNumber(d[yAcc])
-          return v != null && Math.abs(v - mean) > threshold * stddev
-        })
+        // The rows the overlay pipeline marks with `ANOMALY_FIELD`
+        const outliers = data.filter((d) => isAnomalous(d[yAcc], band))
 
         return (
           <g key={`ann-${index}`}>
