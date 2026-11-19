@@ -214,7 +214,7 @@ const bundleSizeRows = Object.freeze([
   },
   {
     "importPath": "semiotic",
-    "kb": 453,
+    "kb": 454,
     "blurb": "Full chart API and shared utilities"
   }
 ])
