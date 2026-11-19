@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import { act, fireEvent, render } from "@testing-library/react"
-import { scaleLinear } from "d3-scale"
+import { scaleLinear, scaleTime } from "d3-scale"
 import { describe, expect, it, vi } from "vitest"
 import { XYBrushOverlay, type XYBrushOverlayProps } from "./XYBrushOverlay"
 import type { XYBrushExtentInput } from "./xyBrushTypes"
@@ -168,5 +168,42 @@ describe("onBrushEnd", () => {
     const { region, onBrushEnd } = setup({ dimension: "y", extent: { y: [0.05, 0.45] } })
     act(() => { fireEvent.keyDown(region(), { key: "ArrowDown" }) })
     expect(onBrushEnd.mock.lastCall?.[1]).toEqual({ source: "keyboard", atDomainStart: true, atDomainEnd: false })
+  })
+})
+
+
+describe("controlled brush clipping and time values", () => {
+  it.each([[120, 150], [-20, -10], [100, 120], [30, 30]])("clears an empty plot intersection %j", (start, end) => {
+    const { selection, onBrush, onBrushEnd } = setup({ extent: { x: [start, end] } })
+    expect(selection()).toBeNull()
+    expect(onBrush).not.toHaveBeenCalled()
+    expect(onBrushEnd).not.toHaveBeenCalled()
+  })
+
+  it("clears a selection moved off-screen by a domain update", () => {
+    const { rerender, selection } = setup({ extent: { x: [20, 50] } })
+    expect(selection()).toEqual([60, 150])
+    rerender(<XYBrushOverlay {...baseProps} scales={{ ...scales, x: scaleLinear().domain([60, 100]).range([0, 300]) }} extent={{ x: [20, 50] }} />)
+    expect(selection()).toBeNull()
+  })
+
+  const epoch = Date.UTC(2026, 0, 1)
+  const day = 86400000
+  const timeScales = {
+    ...scales,
+    x: scaleTime().domain([new Date(epoch), new Date(epoch + 100 * day)]).range([0, 300]),
+  } as unknown as NonNullable<XYBrushOverlayProps["scales"]>
+
+  it("steps numerically from a controlled time extent", () => {
+    const { region, onBrush, onBrushEnd } = setup({ scales: timeScales, extent: { x: [epoch + 20 * day, epoch + 40 * day] } })
+    fireEvent.keyDown(region(), { key: "ArrowRight" })
+    expect(onBrush).toHaveBeenLastCalledWith({ x: [epoch + 25 * day, epoch + 45 * day], y: [0, 1] })
+    expect(onBrushEnd).toHaveBeenCalledTimes(1)
+  })
+
+  it("does not report an unchanged time selection on release", () => {
+    const { drag, onBrushEnd } = setup({ scales: timeScales, extent: { x: [epoch + 20 * day, epoch + 50 * day] } })
+    drag(60, 150)
+    expect(onBrushEnd).not.toHaveBeenCalled()
   })
 })

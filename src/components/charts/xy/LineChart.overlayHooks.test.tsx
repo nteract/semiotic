@@ -111,6 +111,80 @@ describe("LineChart computed anomalies on the hover datum (browser)", () => {
   beforeEach(() => { restore = setupCanvasMock() })
   afterEach(() => restore())
 
+  it.each(["field", "callback"])("marks zero-filled gaps using %s accessors", async (accessors) => {
+    const data = [10, 10, 10, 10, null].map((y, x) => ({ x, y }))
+    const tooltip = vi.fn(() => <span>gap</span>)
+    const { container, hoverAt } = renderChart({
+      data,
+      xAccessor: accessors === "callback" ? (d: Datum) => d.x : "x",
+      yAccessor: accessors === "callback" ? (d: Datum) => d.y : "y",
+      xExtent: [0, 5],
+      yExtent: [-5, 15],
+      gapStrategy: "zero",
+      anomaly: { threshold: 1.5 },
+      showPoints: true,
+      tooltip,
+    })
+    await waitFor(() => expect(container.querySelectorAll("circle")).toHaveLength(1))
+    await hoverAt(320, 150)
+    expect(tooltip).toHaveBeenLastCalledWith(expect.objectContaining({ x: 4, [ANOMALY_FIELD]: true }))
+    expect(data[4].y).toBeNull()
+    expect(data.some((row) => ANOMALY_FIELD in row)).toBe(false)
+  })
+
+  it.each(["break", "interpolate"] as const)("marks the final rows after %s removes a missing x", async (gapStrategy) => {
+    const data = [0, 0, 0, 0, 10].map((y, x) => ({ x, y }))
+    const tooltip = vi.fn(() => <span>spike</span>)
+    const { container, hoverAt } = renderChart({
+      data: [...data, { x: null, y: 1000 }],
+      xExtent: [0, 5], yExtent: [0, 20], gapStrategy,
+      anomaly: { threshold: 1.5 }, showPoints: true, tooltip,
+    })
+    await waitFor(() => expect(container.querySelectorAll("circle")).toHaveLength(1))
+    await hoverAt(320, 100)
+    expect(tooltip).toHaveBeenLastCalledWith(expect.objectContaining({ x: 4, [ANOMALY_FIELD]: true }))
+  })
+
+  it.each(["coordinates", "points"])("marks nested %s and preserves parent/group metadata", async (lineDataAccessor) => {
+    const parent = { label: "Measurements", [lineDataAccessor]: wave }
+    const content = vi.fn((hover: Datum) => <span>{hover.allSeries?.length}</span>)
+    const { container, hoverAt } = renderChart({
+      data: [parent], lineDataAccessor,
+      lineBy: (d: Datum) => d.label,
+      xAccessor: (d: Datum) => d.x,
+      yAccessor: (d: Datum) => d.y,
+      anomaly: { threshold: 2 },
+      tooltip: { mode: "multi", content },
+    })
+    await waitFor(() => expect(container.querySelectorAll("circle")).toHaveLength(1))
+    await hoverAt(170)
+    const [entry] = content.mock.lastCall![0].allSeries
+    expect(entry.group).toBe("Measurements")
+    expect(entry.datum).toMatchObject({ x: 17, [ANOMALY_FIELD]: true })
+    expect(entry.datum.parentLine).toBe(parent)
+    expect(wave.some((row) => ANOMALY_FIELD in row)).toBe(false)
+  })
+
+  it.each([false, true])("keeps forecast anomaly bands per series after zero filling (nested: %s)", async (nested) => {
+    const parents = [10, 100].map((level) => ({
+      series: String(level),
+      coordinates: [level, level, level, level, null].map((y, x) => ({ x, y, future: false })),
+    }))
+    const data = nested ? parents : parents.flatMap((p) => p.coordinates.map((d) => ({ ...d, series: p.series })))
+    const content = vi.fn((hover: Datum) => <span>{hover.allSeries?.length}</span>)
+    const { container, hoverAt } = renderChart({
+      data, lineBy: "series", gapStrategy: "zero",
+      xExtent: [0, 5], yExtent: [-10, 110],
+      forecast: { isForecast: "future" }, anomaly: { threshold: 1.5 },
+      tooltip: { mode: "multi", content },
+    })
+    await waitFor(() => expect(container.querySelectorAll("circle")).toHaveLength(2))
+    await hoverAt(320)
+    const flagged = content.mock.lastCall![0].allSeries.map((entry: Datum) => entry.datum)
+    expect(flagged).toHaveLength(2)
+    expect(flagged.every((row: Datum) => row[ANOMALY_FIELD] === true && row.y === 0)).toBe(true)
+  })
+
   it("marks the flagged row in a multi tooltip's allSeries", async () => {
     const content = vi.fn((hover: Datum) => <span>{hover.allSeries?.length}</span>)
     const { container, hoverAt } = renderChart({

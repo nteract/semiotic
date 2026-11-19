@@ -23,6 +23,8 @@ import {
 import { createColorScale, DEFAULT_COLOR } from "./colorUtils"
 import { filterSparseArray } from "./sparseArray"
 import { forecastYExtent } from "./forecastExtent"
+import { normalizeLineChartData } from "./lineChartData"
+import type { Accessor } from "./types"
 
 const RESOLVED_X_KEY = "__semiotic_resolvedX"
 const RESOLVED_Y_KEY = "__semiotic_resolvedY"
@@ -33,6 +35,7 @@ export interface LineSeriesSsrInput {
   xAccessor?: string | ((d: Datum) => unknown)
   yAccessor?: string | ((d: Datum) => unknown)
   lineBy?: string | ((d: Datum) => unknown)
+  lineDataAccessor?: string
   colorBy?: string | ((d: Datum) => unknown)
   colorScheme?: unknown
   color?: string
@@ -104,6 +107,7 @@ function applyGapStrategy(
   yKey: string,
   groupKey: string | undefined,
 ): { rows: Datum[]; groupKey: string | undefined } {
+  if (!rows.some((row) => isGap(row, xKey, yKey))) return { rows, groupKey }
   // Group by groupKey (or single series).
   const groups = new Map<string, Datum[]>()
   for (const d of rows) {
@@ -112,50 +116,25 @@ function applyGapStrategy(
     groups.get(key)!.push(d)
   }
 
-  // Preserve input order (matches client LineChart gapStrategy behavior,
-  // which never sorts by x — it assumes rows already arrive in series order).
-
-  if (gapStrategy === "interpolate") {
-    const out: Datum[] = []
-    for (const [, pts] of groups) {
-      for (const d of pts) {
-        if (!isGap(d, xKey, yKey)) out.push(d)
-      }
-    }
-    return { rows: out, groupKey }
-  }
-
-  if (gapStrategy === "zero") {
-    const out: Datum[] = []
-    for (const [, pts] of groups) {
-      for (const d of pts) {
-        if (isGap(d, xKey, yKey)) out.push({ ...d, [yKey]: 0 })
-        else out.push(d)
-      }
-    }
-    return { rows: out, groupKey }
-  }
-
-  // break — split into segments with unique group keys
+  // Process each series in input order, retaining the original segment keys.
   const out: Datum[] = []
-  const gapGroupKey = "_gapSegment"
-  for (const [gKey, pts] of groups) {
-    let segIdx = 0
-    let segment: Datum[] = []
-    const flush = () => {
-      if (segment.length === 0) return
-      const segKey = gKey === "__single" ? `__seg${segIdx}` : `${gKey}__seg${segIdx}`
-      for (const d of segment) {
-        out.push({ ...d, [gapGroupKey]: segKey })
+  const gapGroupKey = gapStrategy === "break" ? "_gapSegment" : groupKey
+  for (const [key, points] of groups) {
+    let segmentIndex = 0
+    let inSegment = false
+    for (const row of points) {
+      if (isGap(row, xKey, yKey)) {
+        if (gapStrategy === "zero") out.push({ ...row, [yKey]: 0 })
+        if (inSegment) segmentIndex++
+        inSegment = false
+      } else {
+        out.push(gapStrategy === "break" ? {
+          ...row,
+          _gapSegment: `${key === "__single" ? "" : key}__seg${segmentIndex}`,
+        } : row)
+        inSegment = true
       }
-      segment = []
-      segIdx++
     }
-    for (const d of pts) {
-      if (isGap(d, xKey, yKey)) flush()
-      else segment.push(d)
-    }
-    flush()
   }
   return { rows: out, groupKey: gapGroupKey }
 }
@@ -200,11 +179,24 @@ function buildDirectLabelAnnotations(
 export function prepareLineSeriesForSsr(input: LineSeriesSsrInput): LineSeriesSsrResult {
   const xAccessor = input.xAccessor || "x"
   const yAccessor = input.yAccessor || "y"
-  const lineBy = input.lineBy
-  const colorBy = input.colorBy || lineBy
+  let lineBy = input.lineBy
+  let colorBy = input.colorBy || lineBy
   let rows = Array.isArray(input.data)
-    ? filterSparseArray(input.data).filter((d): d is Datum => !!d && typeof d === "object")
+    ? filterSparseArray<Datum>(input.data)
     : []
+
+  if (input.lineDataAccessor) {
+    const normalized = normalizeLineChartData(rows, input.lineDataAccessor, lineBy as Accessor<string> | undefined)
+    rows = normalized.rows
+    lineBy = normalized.groupAccessor
+    if (normalized.isLineObjectFormat && colorBy) {
+      const parentColorBy = colorBy
+      colorBy = (row) => {
+        const parent = row.parentLine || row
+        return typeof parentColorBy === "function" ? parentColorBy(parent) : parent[parentColorBy]
+      }
+    }
+  }
 
   const baked = bakeAccessors(rows, xAccessor as string | ((d: Datum) => unknown), yAccessor as string | ((d: Datum) => unknown))
   rows = baked.rows
@@ -223,7 +215,7 @@ export function prepareLineSeriesForSsr(input: LineSeriesSsrInput): LineSeriesSs
       lineBy && (typeof lineBy === "string" || typeof lineBy === "function")
         ? { ...input.forecast, _groupBy: lineBy }
         : input.forecast
-    const result = buildForecast(rows, xKey, yKey, enriched, input.anomaly)
+    const result = buildForecast(rows, xKey, yKey, enriched)
     rows = result.processedData
     annotations.push(...result.annotations)
     yExtent = forecastYExtent(rows, yKey, input.forecast)
@@ -245,10 +237,6 @@ export function prepareLineSeriesForSsr(input: LineSeriesSsrInput): LineSeriesSs
       )
       lineStyle = (d) => segmentStyle(d)
     }
-  } else if (input.anomaly) {
-    const result = buildAnomalyOverlay(rows, yKey, input.anomaly)
-    rows = result.processedData
-    annotations.push(...result.annotations)
   }
 
   // ── Gap strategy ───────────────────────────────────────────────────
@@ -266,6 +254,12 @@ export function prepareLineSeriesForSsr(input: LineSeriesSsrInput): LineSeriesSs
     const gapped = applyGapStrategy(rows, input.gapStrategy, xKey, yKey, groupKey)
     rows = gapped.rows
     if (gapped.groupKey) groupAccessor = gapped.groupKey
+  }
+
+  if (input.anomaly) {
+    const result = buildAnomalyOverlay(rows, yKey, input.anomaly, input.forecast ? lineBy : undefined)
+    rows = result.processedData
+    annotations.push(...result.annotations)
   }
 
   // ── Direct labels ──────────────────────────────────────────────────
@@ -287,8 +281,8 @@ export function prepareLineSeriesForSsr(input: LineSeriesSsrInput): LineSeriesSs
 
   return {
     data: rows,
-    xAccessor: typeof xAccessor === "function" ? xKey : xAccessor,
-    yAccessor: typeof yAccessor === "function" ? yKey : yAccessor,
+    xAccessor: xKey,
+    yAccessor: yKey,
     groupAccessor,
     colorAccessor: colorBy as string | ((d: Datum) => unknown) | undefined,
     annotations,

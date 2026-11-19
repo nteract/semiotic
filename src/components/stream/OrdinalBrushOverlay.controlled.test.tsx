@@ -180,3 +180,16 @@ describe("ordinal onBrushEnd", () => {
     expect(onBrush.mock.lastCall?.[0].r[1]).toBeCloseTo(45)
   })
 })
+
+
+describe("ordinal brush plot intersections", () => {
+  it.each([horizontal, vertical])("clears off-screen and empty extents for $projection", (scales) => {
+    const { rerender, selection, onBrush, onBrushEnd } = setup({ scales, extent: { r: [20, 50] } })
+    for (const r of [[120, 150], [-20, -10], [100, 120], [30, 30]] as [number, number][]) {
+      rerender(<OrdinalBrushOverlay {...baseProps} scales={scales} extent={{ r }} onBrush={onBrush} onBrushEnd={onBrushEnd} />)
+      expect(selection()).toBeNull()
+    }
+    expect(onBrush).not.toHaveBeenCalled()
+    expect(onBrushEnd).not.toHaveBeenCalled()
+  })
+})
