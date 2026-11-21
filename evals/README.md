@@ -227,11 +227,29 @@ Runcrate. See the [API documentation](https://runcrate.ai/docs) for
 authentication and models. This registers an evaluation provider; it does not
 claim results for any chart-generation or grounding benchmark.
 
+The `aigrow` provider uses [AIGROW](https://aigrow.gg/ai-api)'s Responses
+endpoint (`https://aigrow.gg/v1/responses`) with `AIGROW_API_KEY` and bare GPT
+model IDs such as `gpt-6.2-sol` or `gpt-6.1-sol` (the public
+`GET https://aigrow.gg/v1/models` lists them with per-token prices). Start with
+the strict JSON-schema credential check:
+
+```sh
+node scripts/run-openai-ai-evals.mjs --provider=aigrow \
+  --models=gpt-6.2-sol --validate-only
+```
+
+To run a queue, replace `--validate-only` with `--suites=first-try`,
+`--output-dir=evals/reports/aigrow/trial-a`, and `--confirm-spend`. Pricing is
+unknown to this runner (`null` USD); it cannot enforce a USD spend ceiling for
+AIGROW. See the [API guide](https://aigrow.gg/ai-api/guide) for authentication
+and models. This registers an evaluation provider; it does not claim results
+for any chart-generation or grounding benchmark.
+
 Add `--dry-run` to any runner command to print its request counts and cost
 figures without reading a credential or sending a request.
 Use `--validate-only` first for one minimal request. The live runner always
 requires `--confirm-spend`. Providers with a locked price table also require a
-positive `--max-usd`; the `orcarouter`, `cheaperinference`, `apiroute`, and `runcrate` gateways have no
+positive `--max-usd`; the `orcarouter`, `cheaperinference`, `apiroute`, `runcrate`, and `aigrow` gateways have no
 price table, so no spend ceiling is enforced and `--max-usd` is optional. The runner never writes the
 credential, project ID, raw prompts, or raw API response bodies to its reports.
 Scoring inputs necessarily retain parsed chart proposals and grounding answer
