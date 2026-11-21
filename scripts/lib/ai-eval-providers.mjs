@@ -29,6 +29,11 @@
  * the same terms as the other gateways: `/v1/responses`, lab-prefixed model ids,
  * no price table (cost is `null`), and no `reasoning` field.
  *
+ * `aigrow` is a prepaid gateway on the same terms: `/v1/responses`, bare model
+ * ids, no price table (cost is `null`), and no `reasoning` field. Its Responses
+ * endpoint serves the GPT models (`gpt-6.2-sol`, `gpt-6.1-sol` and others listed
+ * by the public `GET /v1/models`).
+ *
  * `anthropic` is the one provider that is not Responses-compatible. Its
  * `api: "anthropic-messages"` field selects the wire adapter in
  * `scripts/lib/ai-eval-anthropic-messages.mjs`, which translates the same
@@ -207,6 +212,22 @@ export const AI_EVAL_PROVIDERS = {
     hasPriceTable: false,
     priceRevision: null,
     reportPrefix: "runcrate",
+    requestReasoning: false,
+    credentialCheckMaxTokens: 64,
+    pricesPerMillion: null,
+  },
+  aigrow: {
+    id: "aigrow",
+    label: "AIGROW",
+    apiUrl: "https://aigrow.gg/v1/responses",
+    apiKeyEnv: "AIGROW_API_KEY",
+    projectEnv: null,
+    keychainService: "semiotic-aigrow-evals",
+    clientVersion: "semiotic-aigrow-eval/1",
+    defaultModels: ["gpt-6.2-sol"],
+    hasPriceTable: false,
+    priceRevision: null,
+    reportPrefix: "aigrow",
     requestReasoning: false,
     credentialCheckMaxTokens: 64,
     pricesPerMillion: null,

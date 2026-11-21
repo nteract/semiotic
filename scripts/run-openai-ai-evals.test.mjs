@@ -334,6 +334,55 @@ test("Runcrate paid queues require explicit spend confirmation", async () => {
   }), /--confirm-spend/)
 })
 
+test("AIGROW validation uses strict schema, bare model ID and independent credentials", async () => {
+  const calls = []
+  const chunks = []
+  const fetchImpl = async (url, options) => {
+    calls.push({ url, headers: options.headers, body: JSON.parse(options.body) })
+    return jsonResponse("gpt-6.2-sol", '{"ok":true}')
+  }
+  await runEvalRun({
+    argv: ["node", "run-openai-ai-evals.mjs", "--provider=aigrow", "--validate-only"],
+    env: { AIGROW_API_KEY: "aigrow-test-key", OPENAI_API_KEY: "unrelated-key" },
+    fetchImpl,
+    stdout: { write: (chunk) => chunks.push(String(chunk)) },
+  })
+  assert.equal(calls.length, 1)
+  assert.equal(calls[0].url, "https://aigrow.gg/v1/responses")
+  assert.equal(calls[0].headers.Authorization, "Bearer aigrow-test-key")
+  assert.equal(calls[0].headers["OpenAI-Project"], undefined)
+  assert.equal(calls[0].body.model, "gpt-6.2-sol")
+  assert.equal(calls[0].body.store, false)
+  assert.equal(calls[0].body.reasoning, undefined)
+  assert.equal(calls[0].body.max_output_tokens, 64)
+  assert.equal(calls[0].body.text.format.type, "json_schema")
+  assert.equal(calls[0].body.text.format.strict, true)
+  assert.equal(JSON.parse(chunks.join("")).estimatedUsd, null)
+  assert.equal(chunks.join("").includes("aigrow-test-key"), false)
+  assert.equal(AI_EVAL_PROVIDERS.aigrow.hasPriceTable, false)
+  assert.equal(AI_EVAL_PROVIDERS.aigrow.projectEnv, null)
+})
+
+test("AIGROW does not fall back to OpenAI credentials", async () => {
+  let called = false
+  await assert.rejects(() => runEvalRun({
+    argv: ["node", "run-openai-ai-evals.mjs", "--provider=aigrow", "--validate-only"],
+    env: { OPENAI_API_KEY: "unrelated-key" },
+    fetchImpl: async () => { called = true },
+    stdout: { write: () => {} },
+  }), /AIGROW_API_KEY/)
+  assert.equal(called, false)
+})
+
+test("AIGROW paid queues require explicit spend confirmation", async () => {
+  await assert.rejects(() => runEvalRun({
+    argv: ["node", "run-openai-ai-evals.mjs", "--provider=aigrow"],
+    env: { AIGROW_API_KEY: "aigrow-test-key" },
+    fetchImpl: async () => { throw new Error("unexpected request") },
+    stdout: { write: () => {} },
+  }), /--confirm-spend/)
+})
+
 test("providers without a price table report unknown (null) cost", () => {
   assert.equal(calculateResponseCost("orcarouter/auto", {}, null), null)
   assert.equal(requestUpperBoundCost("orcarouter/auto", {}, null), null)
