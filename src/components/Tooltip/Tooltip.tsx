@@ -119,10 +119,7 @@ function formatValue(value: unknown, format?: (value: unknown) => string): strin
     return ""
   }
 
-  if (typeof value === "number") {
-    if (!Number.isFinite(value)) return String(value)
-    return formatTooltipNumber(value)
-  }
+  if (typeof value === "number") return formatTooltipNumber(value)
 
   // Format dates
   if (value instanceof Date) {
@@ -331,8 +328,7 @@ export function MultiLineTooltip(config: MultiLineTooltipConfig = {}) {
       })
     }
 
-    // Safety check: ensure lines is an array
-    if (!Array.isArray(lines) || lines.length === 0) {
+    if (lines.length === 0) {
       return null
     }
 
@@ -382,6 +378,8 @@ export function MultiLineTooltip(config: MultiLineTooltipConfig = {}) {
  */
 export interface MultiTooltipConfig {
   mode: "multi"
+  /** Read observed rows at a shared x (default), or interpolate each curve at the pointer. */
+  sampling?: "sample" | "interpolate"
   /** Custom content owns the surface when set to "none". */
   chrome?: "default" | "none"
   /**
@@ -483,45 +481,20 @@ export function resolveMultiCapableTooltip(input: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   tooltipContent: (d: any) => React.ReactNode
   tooltipMode?: "multi"
+  tooltipSampling?: MultiTooltipConfig["sampling"]
 } {
-  const {
-    tooltip,
-    defaultTooltipContent,
-    multiDefaultContent = MultiPointTooltip(),
-    customFunctionContext = "datum",
-  } = input
-  const sharedTooltip = tooltip as TooltipProp | undefined
+  const tooltip = input.tooltip as TooltipProp | undefined
+  const config = isMultiTooltipConfig(tooltip) ? tooltip : undefined
+  if (tooltip !== "multi" && !config) return resolveTooltipContent(input)
 
-  if (tooltip === false) {
-    return { tooltipContent: () => null }
-  }
-
-  if (isMultiTooltip(sharedTooltip)) {
-    const custom =
-      isMultiTooltipConfig(sharedTooltip) && typeof sharedTooltip.content === "function"
-        ? normalizeTooltip(sharedTooltip.chrome === undefined ? sharedTooltip.content : { content: sharedTooltip.content, chrome: sharedTooltip.chrome })
-        : undefined
-    const chrome = isMultiTooltipConfig(sharedTooltip) ? sharedTooltip.chrome : undefined
-    const defaultContent = chrome === undefined ? multiDefaultContent : (datum: Datum) => {
-      const content = multiDefaultContent(datum)
-      return hasTooltipContent(content)
-        ? <TooltipChromeScope chrome={chrome}>{content}</TooltipChromeScope>
-        : null
+  const { chrome, sampling, content } = config ?? {}
+  const multiDefaultContent = input.multiDefaultContent ?? MultiPointTooltip()
+  const tooltipContent = typeof content === "function" ? normalizeCustomContent(content, chrome)
+    : chrome === undefined ? multiDefaultContent : (datum: Datum) => {
+      const result = multiDefaultContent(datum)
+      return hasTooltipContent(result) ? <TooltipChromeScope chrome={chrome}>{result}</TooltipChromeScope> : null
     }
-    return {
-      tooltipContent: (custom as false | undefined) || defaultContent,
-      tooltipMode: "multi",
-    }
-  }
-
-  if (customFunctionContext === "hover" && typeof tooltip === "function") {
-    return { tooltipContent: tooltip }
-  }
-
-  const normalized = normalizeTooltip(sharedTooltip)
-  return {
-    tooltipContent: (normalized as false | undefined) || defaultTooltipContent,
-  }
+  return { tooltipMode: "multi", tooltipContent, ...(sampling && { tooltipSampling: sampling }) }
 }
 
 /**
@@ -557,28 +530,37 @@ export function resolveTooltipContent(input: {
   }
 }
 
+/** Consumer formatters may omit a value or throw. Keep the chart's own default for that field. */
+export function formatWithFallback<T>(
+  value: T,
+  format?: (value: T) => React.ReactNode,
+  fallback: (value: T) => React.ReactNode = formatValue
+): React.ReactNode {
+  if (format) {
+    try {
+      const result = format(value)
+      if (result != null) return result
+    } catch {
+      // A malformed datum may be outside the formatter's domain.
+    }
+  }
+  return fallback(value)
+}
+
 /**
  * Multi-point tooltip: shows all series values at the hovered X position
  * with color swatches (legend-style). Used when tooltipMode="multi".
  */
 export function MultiPointTooltip({
   xFormat,
-  yFormat
+  yFormat,
+  ungroupedLabel
 }: {
   xFormat?: (value: number | Date | string) => React.ReactNode
   yFormat?: (value: number, group?: string) => React.ReactNode
+  /** Label shown for a series without a group key. */
+  ungroupedLabel?: string
 } = {}): TooltipContentFn {
-  function formatted<T>(value: T, format?: (value: T) => React.ReactNode): React.ReactNode {
-    if (format) {
-      try {
-        const content = format(value)
-        if (content != null) return content
-      } catch {
-        // Match field tooltips: a failed formatter uses the rounded default.
-      }
-    }
-    return formatValue(value)
-  }
   return (d: Datum) => {
     const allSeries = d.allSeries as Array<{ group: string; value: number; color: string; datum?: Datum }> | undefined
     if (!allSeries || allSeries.length === 0) {
@@ -588,7 +570,7 @@ export function MultiPointTooltip({
       const val = d.data?.value ?? d.data?.y
       return (
         <TooltipRoot>
-          <div>{formatted(val, yFormat)}</div>
+          <div>{formatWithFallback(val, yFormat)}</div>
         </TooltipRoot>
       )
     }
@@ -601,19 +583,39 @@ export function MultiPointTooltip({
       <TooltipRoot>
         {headerValue != null && (
           <div style={{ fontWeight: 600, marginBottom: 4, fontSize: "0.9em", borderBottom: "1px solid var(--semiotic-border, #eee)", paddingBottom: 4 }}>
-            {formatted(headerValue, xFormat)}
+            {formatWithFallback(headerValue, xFormat)}
           </div>
         )}
         {allSeries.map((s, i) => (
           <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, padding: "1px 0" }}>
             <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: s.color, flexShrink: 0 }} />
-            <span style={{ flex: 1, fontSize: "0.85em" }}>{s.group}</span>
-            <span style={{ fontWeight: 500, fontSize: "0.85em" }}>{formatted(s.value, yFormat && ((value) => yFormat(value, s.group)))}</span>
+            <span style={{ flex: 1, fontSize: "0.85em" }}>{s.group || ungroupedLabel}</span>
+            <span style={{ fontWeight: 500, fontSize: "0.85em" }}>{formatWithFallback(s.value, yFormat && ((value) => yFormat(value, s.group)))}</span>
           </div>
         ))}
       </TooltipRoot>
     )
   }
+}
+
+function normalizeCustomContent(userFn: TooltipContentFn, chrome: MultiTooltipConfig["chrome"]): TooltipContentFn {
+  const normalized = (hoverData: Datum) => {
+    const datum = normalizeTooltipDatum(hoverData)
+    if (!datum) return null
+    const result = userFn(datum)
+    if (!hasTooltipContent(result)) return null
+    // A custom renderer can own its chrome either with TooltipRoot, the
+    // explicit data marker, an inline background, or a renderer/component
+    // ownsChrome flag. Preserve that element directly; wrapping it here
+    // would create the same double-box artifact FlippingTooltip avoids.
+    if (chrome === undefined && (hasOwnTooltipChrome(userFn) || hasOwnTooltipChrome(result))) return result
+    return (
+      <TooltipRoot chrome={chrome}>
+        {result}
+      </TooltipRoot>
+    )
+  }
+  return chrome === undefined && hasOwnTooltipChrome(userFn) ? markTooltipChrome(normalized) : normalized
 }
 
 let warnedMultiContent = false
@@ -646,23 +648,7 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
     //    We wrap all results in the standard tooltip chrome.
     const userFn = typeof tooltip === "function" ? tooltip : tooltip.content!
     const chrome = typeof tooltip === "function" ? undefined : tooltip.chrome
-    const normalized = (hoverData: Datum) => {
-      const datum = normalizeTooltipDatum(hoverData)
-      if (!datum) return null
-      const result = userFn(datum)
-      if (!hasTooltipContent(result)) return null
-      // A custom renderer can own its chrome either with TooltipRoot, the
-      // explicit data marker, an inline background, or a renderer/component
-      // ownsChrome flag. Preserve that element directly; wrapping it here
-      // would create the same double-box artifact FlippingTooltip avoids.
-      if (chrome === undefined && (hasOwnTooltipChrome(userFn) || hasOwnTooltipChrome(result))) return result
-      return (
-        <TooltipRoot chrome={chrome}>
-          {result}
-        </TooltipRoot>
-      )
-    }
-    return chrome === undefined && hasOwnTooltipChrome(userFn) ? markTooltipChrome(normalized) : normalized
+    return normalizeCustomContent(userFn, chrome)
   }
 
   if (tooltip === false || tooltip === undefined) {
@@ -676,49 +662,28 @@ export function normalizeTooltip(tooltip: TooltipProp | undefined): false | Tool
   // same useful single-datum fallback as the string form below. A
   // MultiPointTooltip cannot render meaningful rows without `allSeries`,
   // which single-mode ordinal/network/geo/physics frames do not provide.
-  if (isMultiTooltipConfig(tooltip)) {
-    if (typeof tooltip.content === "function") {
+  const multiConfig = isMultiTooltipConfig(tooltip) ? tooltip : undefined
+  if (multiConfig || tooltip === "multi") {
+    if (typeof multiConfig?.content === "function") {
       if (!warnedMultiContent && process.env.NODE_ENV !== "production") {
         warnedMultiContent = true
         console.warn(
           '[semiotic] tooltip={{ mode: "multi", content }} reached a chart without multi-series hover. content receives one datum and no allSeries.',
         )
       }
-      return normalizeTooltip(tooltip.chrome === undefined ? tooltip.content : { content: tooltip.content, chrome: tooltip.chrome })
+      return normalizeCustomContent(multiConfig.content, multiConfig.chrome)
     }
     if (process.env.NODE_ENV !== "production") {
-      console.warn(
-        '[semiotic] tooltip={{ mode: "multi" }} reached normalizeTooltip without a chart that wires tooltipMode. Use a line/area-family chart with multi support, or pass frameProps.tooltipMode: "multi" to StreamXYFrame.',
-      )
+      console.warn(multiConfig
+        ? '[semiotic] tooltip={{ mode: "multi" }} reached normalizeTooltip without a chart that wires tooltipMode. Use a line/area-family chart with multi support, or pass frameProps.tooltipMode: "multi" to StreamXYFrame.'
+        : '[semiotic] tooltip="multi" reached normalizeTooltip on a single-tooltip chart. Rendering multi-field content as a backward-compatible fallback.')
     }
-    const singleFallback = MultiLineTooltip({ chrome: tooltip.chrome })
-    return normalizeTooltip((datum: Datum) => singleFallback(datum))
+    return normalizeCustomContent(MultiLineTooltip({ chrome: multiConfig?.chrome }), undefined)
   }
 
   // Config object with fields/title — convert to a tooltip function
   if (typeof tooltip === "object" && tooltip !== null && ("fields" in tooltip || "title" in tooltip || "chrome" in tooltip)) {
-    const config = tooltip as TooltipConfig
-    const configuredTooltip = Tooltip(config)
-    // Declarative configs follow the same raw-datum contract as callback
-    // tooltips. Reuse the function normalizer so Stream Frame HoverData is
-    // unwrapped consistently across XY, ordinal, network, geo, physics, and
-    // realtime wrappers.
-    return normalizeTooltip((datum: Datum) => configuredTooltip(datum))
-  }
-
-  // `tooltip="multi"` is only wired when the HOC sets tooltipMode:"multi"
-  // (Line/Area/StackedArea/Difference). If normalizeTooltip still sees the
-  // string, the chart does not support multi mode — return a multi-series
-  // content function so callers still get a useful multi tooltip, and warn
-  // in development when a chart does not declare multi-tooltip mode.
-  if (tooltip === "multi") {
-    if (process.env.NODE_ENV !== "production") {
-      console.warn(
-        '[semiotic] tooltip="multi" reached normalizeTooltip on a single-tooltip chart. Rendering multi-field content as a backward-compatible fallback.',
-      )
-    }
-    const singleFallback = MultiLineTooltip()
-    return normalizeTooltip((datum: Datum) => singleFallback(datum))
+    return normalizeCustomContent(Tooltip(tooltip as TooltipConfig), undefined)
   }
 
   // Should not reach here but return a generic tooltip

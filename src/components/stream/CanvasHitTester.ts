@@ -54,8 +54,14 @@ export interface XHitResult {
   x: number
   y: number
   y0?: number
+  sampleValue?: number
+  sourceX?: number
   group?: string
   color?: string
+}
+
+function markHit(node: SceneNode, x: number, y: number, distance: number, datum = node.datum): HitResult {
+  return { node, datum, x, y, distance }
 }
 
 /**
@@ -90,7 +96,7 @@ export function findNearestNode(
   if (pointQuadtree) {
     const hit = findHitPointInQuadtree(pointQuadtree, px, py, maxDistance, maxPointRadius)
     if (hit && hit.node.interactive !== false) {
-      best = { node: hit.node, datum: hit.node.datum, x: hit.node.x, y: hit.node.y, distance: hit.distance }
+      best = markHit(hit.node, hit.node.x, hit.node.y, hit.distance)
     }
   }
 
@@ -102,10 +108,10 @@ export function findNearestNode(
         if (node.interactive === false) break
         // Quadtree visit was authoritative — skip redundant linear scan.
         if (pointQuadtree) break
-        result = hitTestPoint(node, px, py, maxDistance)
+        result = hitTestRoundMark(node, px, py, node.r, maxDistance)
         break
       case "symbol":
-        result = hitTestSymbol(node, px, py, maxDistance)
+        result = hitTestRoundMark(node, px, py, symbolRadius(node.size), maxDistance)
         break
       case "glyph":
         result = hitTestGlyph(node, px, py, maxDistance)
@@ -161,131 +167,127 @@ function interpolatePathAtX(path: [number, number][], px: number, maxXDistance: 
   if (px < firstX || px > lastX) return null
 
   const idx = binarySearchPath(path, px)
-  if (idx < 0) return null
-  if (Math.abs(path[idx][0] - px) > maxXDistance) return null
-
-  // Find the bracketing segment: try idx-1→idx and idx→idx+1
-  // Pick the one where px falls between the two x values
-  let lo = idx
-  let hi = idx
-  if (idx > 0 && path[idx][0] >= px) {
-    lo = idx - 1
-    hi = idx
-  } else if (idx < path.length - 1) {
-    lo = idx
-    hi = idx + 1
-  }
-
-  const [x0, y0] = path[lo]
-  const [x1, y1] = path[hi]
-  if (x1 === x0) return y0
-
-  const t = Math.max(0, Math.min(1, (px - x0) / (x1 - x0)))
-  return y0 + t * (y1 - y0)
+  const [x, y] = path[idx]
+  if (Math.abs(x - px) > maxXDistance) return null
+  if (x === px) return y
+  // The range check guarantees a bracketing neighbor when x differs.
+  const [otherX, otherY] = path[x < px ? idx + 1 : idx - 1]
+  return y + (px - x) / (otherX - x) * (otherY - y)
 }
 
-/**
- * Clamp a plot-space x into the rendered x range of the hoverable series:
- * the union of every line path and interactive area top path, sampled the
- * same way `findAllNodesAtX` samples them. Multi-series hover calls this so
- * padded or explicit `xExtent` space reads the first or last sample instead
- * of finding nothing. Returns `px` unchanged when no series has two points.
- */
+function isHoverSeries(node: SceneNode, includeBands: boolean): node is (LineSceneNode | AreaSceneNode) & { datum: Datum[] } {
+  return !!node.datum && (node.type === "line" || (node.type === "area" && node.interactive !== false &&
+    (includeBands || !node._isBand))) && seriesPath(node).length > 0
+}
+
+/** Standalone ribbons supply samples. Overlaid ribbons enrich their parent series. */
+function onlyBands(scene: SceneNode[]) {
+  return !scene.some(node => isHoverSeries(node, false))
+}
+
+function seriesPath(node: LineSceneNode | AreaSceneNode) {
+  return node.type === "line" ? node.path : node.topPath
+}
+
+/** Clamp interpolation to the range of the rendered curves, including in x-extent padding. */
 export function clampToSeriesXRange(scene: SceneNode[], px: number): number {
   let min = Infinity
   let max = -Infinity
+  const includeBands = onlyBands(scene)
   for (const node of scene) {
-    let lookup: [number, number][] | undefined
-    if (node.type === "line") {
-      const lineNode = node as LineSceneNode
-      if (lineNode.path.length >= 2) lookup = getCurveSampledPath(lineNode.path, lineNode.curve)
-    } else if (node.type === "area") {
-      const areaNode = node as AreaSceneNode
-      if (areaNode.interactive !== false && areaNode.topPath.length >= 2) {
-        lookup = getCurveSampledPath(areaNode.topPath, areaNode.curve)
-      }
-    }
-    if (!lookup || lookup.length === 0) continue
-    const first = lookup[0][0]
-    const last = lookup[lookup.length - 1][0]
-    min = Math.min(min, first, last)
-    max = Math.max(max, first, last)
+    if (!isHoverSeries(node, includeBands)) continue
+    const path = seriesPath(node)
+    if (path.length < 2) continue
+    const lookup = getCurveSampledPath(path, node.curve)
+    if (!lookup.length) continue
+    min = Math.min(min, lookup[0][0])
+    max = Math.max(max, lookup[lookup.length - 1][0])
   }
-  if (min > max) return px
-  return Math.min(max, Math.max(min, px))
+  return min > max ? px : Math.min(max, Math.max(min, px))
 }
 
-/**
- * Find all line/area nodes at a given X pixel coordinate.
- * For each node, interpolates the Y value at px using the path data.
- * Used for multi-point tooltip (show all series values at the hovered X).
- */
+function preferSource(candidate: number | undefined, previous: number | undefined, target: number) {
+  if (candidate === undefined || !Number.isFinite(candidate)) return false
+  if (previous === undefined || !Number.isFinite(previous)) return true
+  const distance = Math.abs(candidate - target) - Math.abs(previous - target)
+  return distance < 0 || (distance === 0 && candidate < previous)
+}
+
+/** Look up curve values at px, or collect observed rows at one nearest sample across all paths. */
 export function findAllNodesAtX(
   scene: SceneNode[],
   px: number,
-  maxXDistance: number = 30
+  maxXDistance = 30,
+  sampling: "interpolate" | "sample" = "interpolate",
+  getX?: (datum: Datum) => number,
+  targetX = px,
 ): XHitResult[] {
   const results: XHitResult[] = []
-
+  let nearestX = Infinity
+  let nearestSource: number | undefined
+  let nearestDistance = Infinity
+  const includeBands = onlyBands(scene)
   for (const node of scene) {
-    if (node.type === "line") {
-      const lineNode = node as LineSceneNode
-      if (lineNode.path.length < 2) continue
-      // For non-linear curves the canvas renderer draws cubic-bezier
-      // segments between data samples; linear-interpolating between
-      // raw samples drops the dot off the visible curve. Use a dense
-      // polyline that lies on the rendered curve instead.
-      const lookupPath = getCurveSampledPath(lineNode.path, lineNode.curve)
-      const interpY = interpolatePathAtX(lookupPath, px, maxXDistance)
-      if (interpY === null) continue
-      // Datum index still keys into `path` (the raw data samples) —
-      // each sample maps 1:1 with `lineNode.datum[i]`. The dense
-      // curve polyline doesn't carry datum indices, only pixel
-      // coordinates.
-      const idx = binarySearchPath(lineNode.path, px)
-      const datum = Array.isArray(lineNode.datum) && lineNode.datum[idx] ? lineNode.datum[idx] : lineNode.datum
-      results.push({ node, datum, x: lineNode.path[idx][0], y: interpY, group: lineNode.group, color: lineNode.style.stroke })
-    } else if (node.type === "area") {
-      const areaNode = node as AreaSceneNode
-      if (areaNode.interactive === false) continue
-      if (areaNode.topPath.length < 2) continue
-      // Areas use the same curve for both the top and bottom edges,
-      // so sample both against the configured curve. The
-      // stacked-area family in particular relies on the bottom edge
-      // tracking the layer below it.
-      const topLookup = getCurveSampledPath(areaNode.topPath, areaNode.curve)
-      const bottomLookup = getCurveSampledPath(areaNode.bottomPath, areaNode.curve)
-      const interpY = interpolatePathAtX(topLookup, px, maxXDistance)
-      if (interpY === null) continue
-      const interpY0 = interpolatePathAtX(bottomLookup, px, maxXDistance)
-      const idx = binarySearchPath(areaNode.topPath, px)
-      const datum = Array.isArray(areaNode.datum) && areaNode.datum[idx] ? areaNode.datum[idx] : areaNode.datum
-      const areaColor = typeof areaNode.style.stroke === "string" ? areaNode.style.stroke : typeof areaNode.style.fill === "string" ? areaNode.style.fill : undefined
-      results.push({ node, datum, x: areaNode.topPath[idx][0], y: interpY, y0: interpY0 ?? undefined, group: areaNode.group, color: areaColor })
+    if (!isHoverSeries(node, includeBands)) continue
+    const area = node.type === "area" ? node : undefined
+    const path = seriesPath(node)
+    let idx = binarySearchPath(path, px)
+    const x = path[idx][0]
+    let sourceX: number | undefined
+    let y: number | null
+    let y0: number | undefined
+    let sampleValue: number | undefined
+    if (sampling === "sample") {
+      const distance = Math.abs(x - px)
+      // Break ties toward the left independently of series order.
+      if (distance > nearestDistance || (distance === nearestDistance && x > nearestX)) continue
+      if (getX) {
+        // Clamping can project several source samples to the same pixel.
+        while (idx > 0 && path[idx - 1][0] === x) idx--
+        sourceX = node.datum[idx] && getX(node.datum[idx])
+        for (let i = idx + 1; i < path.length && path[i][0] === x; i++) {
+          const candidate = node.datum[i] && getX(node.datum[i])
+          if (preferSource(candidate, sourceX, targetX)) {
+            idx = i
+            sourceX = candidate
+          }
+        }
+        if (!Number.isFinite(sourceX)) sourceX = undefined
+        if (x === nearestX && sourceX !== nearestSource && !preferSource(sourceX, nearestSource, targetX)) continue
+      }
+      if (!node.datum[idx]) continue
+      if (x !== nearestX || sourceX !== nearestSource) results.length = 0
+      nearestSource = sourceX
+      nearestX = x
+      nearestDistance = distance
+      y = path[idx][1]
+      sampleValue = node.rawValues?.[idx]
+      y0 = area?.bottomPath[idx]?.[1]
+    } else {
+      if (path.length < 2) continue
+      const interpolate = (edge: [number, number][]) =>
+        interpolatePathAtX(getCurveSampledPath(edge, node.curve), px, maxXDistance)
+      y = interpolate(path)
+      if (y === null) continue
+      if (area) y0 = interpolate(area.bottomPath) ?? undefined
     }
+    const color = node.style.stroke ?? area?.style.fill
+    results.push({
+      node, datum: node.datum[idx] ?? node.datum, x, y, y0, sampleValue, sourceX,
+      group: node.group,
+      color: typeof color === "string" ? color : undefined,
+    })
   }
-
   return results
 }
 
-function hitTestPoint(node: PointSceneNode, px: number, py: number, maxDistance: number = 30): HitResult | null {
-  const dx = px - node.x
-  const dy = py - node.y
-  const dist = Math.sqrt(dx * dx + dy * dy)
-  const hitR = getHitRadius(node.r, maxDistance)
-  if (dist > hitR) return null
-  return { node, datum: node.datum, x: node.x, y: node.y, distance: dist }
-}
-
-/** Treat a glyph as a circle of its effective radius — the nearest mark within
- *  tolerance wins, the natural read for a dense beeswarm. */
-function hitTestSymbol(node: SymbolSceneNode, px: number, py: number, maxDistance: number = 30): HitResult | null {
-  const dx = px - node.x
-  const dy = py - node.y
-  const dist = Math.sqrt(dx * dx + dy * dy)
-  const hitR = getHitRadius(symbolRadius(node.size), maxDistance)
-  if (dist > hitR) return null
-  return { node, datum: node.datum, x: node.x, y: node.y, distance: dist }
+function hitTestRoundMark(
+  node: PointSceneNode | SymbolSceneNode | GlyphSceneNode,
+  px: number, py: number, radius: number, maxDistance: number,
+  x = node.x, y = node.y
+): HitResult | null {
+  const distance = Math.hypot(px - x, py - y)
+  return distance > getHitRadius(radius, maxDistance) ? null : markHit(node, x, y, distance)
 }
 
 /** A composite glyph hit-tests as a circle over its drawn bounds — centered on
@@ -294,58 +296,41 @@ function hitTestSymbol(node: SymbolSceneNode, px: number, py: number, maxDistanc
 function hitTestGlyph(node: GlyphSceneNode, px: number, py: number, maxDistance: number = 30): HitResult | null {
   if (node.datum == null) return null
   const geometry = glyphHitGeometry(node.glyph, node.size)
-  const cx = node.x + geometry.centerDx
-  const cy = node.y + geometry.centerDy
-  const dx = px - cx
-  const dy = py - cy
-  const dist = Math.sqrt(dx * dx + dy * dy)
-  const hitR = getHitRadius(geometry.radius, maxDistance)
-  if (dist > hitR) return null
-  return { node, datum: node.datum, x: cx, y: cy, distance: dist }
+  return hitTestRoundMark(node, px, py, geometry.radius, maxDistance,
+    node.x + geometry.centerDx, node.y + geometry.centerDy)
 }
 
-function hitTestLine(node: LineSceneNode, px: number, py: number, maxDistance: number = 30): HitResult | null {
-  if (node.path.length === 0) return null
-
-  // Binary search for nearest x in the path
-  const idx = binarySearchPath(node.path, px)
-  if (idx < 0) return null
-
-  const [nx, ny] = node.path[idx]
-
-  // Also check perpendicular distance to the segment around the nearest point
-  // for more accurate hit testing on non-horizontal lines
-  let dist: number
-  if (node.path.length > 1) {
-    // Check segments adjacent to the found index
-    let minSegDist = Infinity
-    const startSeg = Math.max(0, idx - 1)
-    const endSeg = Math.min(node.path.length - 2, idx)
-    for (let i = startSeg; i <= endSeg; i++) {
-      const [ax, ay] = node.path[i]
-      const [bx, by] = node.path[i + 1]
-      const segDist = pointToSegmentDistance(px, py, ax, ay, bx, by)
-      if (segDist < minSegDist) minSegDist = segDist
-    }
-    dist = minSegDist
+/** Both line strokes and area edges use the adjacent segments for distance,
+ * while retaining the source vertex for the public hover datum. */
+function hitTestSeriesPath(
+  node: LineSceneNode | AreaSceneNode,
+  path: [number, number][], hitPath: [number, number][],
+  px: number, py: number, tolerance: number
+): HitResult | null {
+  const hitIdx = binarySearchPath(hitPath, px)
+  if (hitIdx < 0) return null
+  let distance = Infinity
+  if (hitPath.length === 1) {
+    distance = Math.hypot(px - hitPath[0][0], py - hitPath[0][1])
   } else {
-    const ddx = px - nx
-    const ddy = py - ny
-    dist = Math.sqrt(ddx * ddx + ddy * ddy)
+    const start = Math.max(0, hitIdx - 1)
+    const end = Math.min(hitIdx, hitPath.length - 2)
+    for (let i = start; i <= end; i++) {
+      const [ax, ay] = hitPath[i]
+      const [bx, by] = hitPath[i + 1]
+      distance = Math.min(distance, pointToSegmentDistance(px, py, ax, ay, bx, by))
+    }
   }
+  if (distance > tolerance) return null
+  const idx = path === hitPath ? hitIdx : binarySearchPath(path, px)
+  const [x, y] = path[idx]
+  return markHit(node, x, y, distance, node.datum?.[idx] ?? node.datum)
+}
 
-  // Use the larger of stroke-based tolerance and caller's maxDistance
+function hitTestLine(node: LineSceneNode, px: number, py: number, maxDistance: number): HitResult | null {
   const style = node.style as { strokeWidth?: number; lineWidth?: number }
   const strokeWidth = style.strokeWidth ?? style.lineWidth ?? 1
-  const tolerance = Math.max(5, strokeWidth / 2 + 2, maxDistance)
-  if (dist > tolerance) return null
-
-  // For line data, the datum is the array; return the index as well
-  const datum = Array.isArray(node.datum) && node.datum[idx]
-    ? node.datum[idx]
-    : node.datum
-
-  return { node, datum, x: nx, y: ny, distance: dist }
+  return hitTestSeriesPath(node, node.path, node.path, px, py, Math.max(5, strokeWidth / 2 + 2, maxDistance))
 }
 
 function hitTestRect(
@@ -355,7 +340,7 @@ function hitTestRect(
 ): HitResult | null {
   const r = sharedHitTestRect(px, py, node)
   if (r.hit) {
-    return { node, datum: node.datum, x: r.cx, y: r.cy, distance: 0 }
+    return markHit(node, r.cx, r.cy, 0)
   }
   return null
 }
@@ -373,7 +358,7 @@ function hitTestCandlestick(node: CandlestickSceneNode, px: number, py: number):
     const cy = bodyTop + bodyHeight / 2
     const dx = px - node.x
     const dy = py - cy
-    return { node, datum: node.datum, x: node.x, y: cy, distance: Math.sqrt(dx * dx + dy * dy) }
+    return markHit(node, node.x, cy, Math.hypot(dx, dy))
   }
   return null
 }
@@ -400,60 +385,29 @@ function hitTestAreaPath(
       // Normal offsets give the two boundaries different x coordinates. Use
       // their paired centers to retain the nearest sample's datum identity.
       const idx = binarySearchPath(node.topPath, px, node.bottomPath)
-      const datum = Array.isArray(node.datum) ? (node.datum[idx] ?? node.datum)
-        : node.datum
-      return { node, datum, x: px, y: py, distance: 0 }
+      const datum = node.datum?.[idx] ?? node.datum
+      return markHit(node, px, py, 0, datum)
     }
   }
 
   // Follow the rendered top edge, including curve interpolation, while
   // retaining the nearest raw sample for datum/tooltip identity.
   const hitPath = getCurveSampledPath(node.topPath, node.curve)
-  const hitIdx = binarySearchPath(hitPath, px)
-  const idx = binarySearchPath(node.topPath, px)
-  if (hitIdx < 0 || idx < 0) return null
-
-  let dist: number
-  if (hitPath.length > 1) {
-    let minSegDist = Infinity
-    const startSeg = Math.max(0, hitIdx - 1)
-    const endSeg = Math.min(hitPath.length - 2, hitIdx)
-    for (let i = startSeg; i <= endSeg; i++) {
-      const [ax, ay] = hitPath[i]
-      const [bx, by] = hitPath[i + 1]
-      minSegDist = Math.min(
-        minSegDist,
-        pointToSegmentDistance(px, py, ax, ay, bx, by)
-      )
-    }
-    dist = minSegDist
-  } else {
-    const dx = px - hitPath[0][0]
-    const dy = py - hitPath[0][1]
-    dist = Math.sqrt(dx * dx + dy * dy)
-  }
-  if (dist > maxDistance) return null
-
-  const [nx, ny] = node.topPath[idx]
-
-  // Extract the specific data point at the hit index (like hitTestLine does)
-  const datum = Array.isArray(node.datum) && node.datum[idx]
-    ? node.datum[idx]
-    : node.datum
-
-  return { node: node as SceneNode, datum, x: nx, y: ny, distance: dist }
+  return hitTestSeriesPath(node, node.topPath, hitPath, px, py, maxDistance)
 }
 
 /**
  * Binary search for the nearest point by x-coordinate in a sorted path.
  */
 function binarySearchPath(path: [number, number][], targetX: number, paired?: [number, number][]): number {
-  if (path.length === 0) return -1
+  return nearestSortedIndex(path.length, targetX, i =>
+    paired ? (path[i][0] + paired[i][0]) / 2 : path[i][0])
+}
 
-  const x = (i: number) => paired ? (path[i][0] + paired[i][0]) / 2 : path[i][0]
+function nearestSortedIndex(length: number, targetX: number, x: (i: number) => number): number {
+  if (!length) return -1
   let lo = 0
-  let hi = path.length - 1
-
+  let hi = length - 1
   while (lo < hi) {
     const mid = (lo + hi) >> 1
     if (x(mid) < targetX) lo = mid + 1
@@ -478,25 +432,5 @@ export function findNearestIndex(
   targetTime: number,
   getTime: (d: Datum) => number
 ): number {
-  if (buf.size === 0) return -1
-
-  let lo = 0
-  let hi = buf.size - 1
-
-  while (lo < hi) {
-    const mid = (lo + hi) >> 1
-    const t = getTime(buf.get(mid)!)
-    if (t < targetTime) lo = mid + 1
-    else hi = mid
-  }
-
-  if (lo > 0) {
-    const tLo = getTime(buf.get(lo)!)
-    const tPrev = getTime(buf.get(lo - 1)!)
-    if (Math.abs(tPrev - targetTime) <= Math.abs(tLo - targetTime)) {
-      return lo - 1
-    }
-  }
-
-  return lo
+  return nearestSortedIndex(buf.size, targetTime, i => getTime(buf.get(i)!))
 }

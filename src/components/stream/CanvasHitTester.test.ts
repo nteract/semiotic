@@ -458,6 +458,17 @@ describe("findAllNodesAtX", () => {
     group: "Area C",
   }
 
+  it("breaks shared-sample ties to the left in either series order and skips exiting paths", () => {
+    const at = (x: number): LineSceneNode => ({ ...lineA, path: [[x, 0]], datum: [{ x }] })
+    const left = at(10)
+    const right = at(20)
+    const exit = { ...at(15), datum: null }
+    for (const scene of [[left, exit, right], [right, exit, left]]) {
+      expect(findAllNodesAtX(scene, 15, 30, "sample").map(h => h.datum)).toEqual([{ x: 10 }])
+      expect(findAllNodesAtX(scene, 16, 30, "sample").map(h => h.datum)).toEqual([{ x: 20 }])
+    }
+  })
+
   it("returns all line nodes at a given X pixel", () => {
     const results = findAllNodesAtX([lineA, lineB], 50, 30)
     expect(results).toHaveLength(2)

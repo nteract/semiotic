@@ -20,7 +20,7 @@ function LineChart<TDatum extends Datum = Datum>(props: LineChartProps<TDatum> &
 function MinimapChart<TDatum extends Datum = Datum>(props: MinimapChartProps<TDatum>): React.JSX.Element
 function MultiAxisLineChart<TDatum extends Datum = Datum>(props: MultiAxisLineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
-function MultiPointTooltip({ xFormat, yFormat }?: undefined | {xFormat?: (Date | string | value: number) => React.ReactNode; yFormat?: (value: number, group?: string) => React.ReactNode;}): TooltipContentFn
+function MultiPointTooltip({ xFormat, yFormat, ungroupedLabel }?: undefined | {xFormat?: (Date | string | value: number) => React.ReactNode; yFormat?: (value: number, group?: string) => React.ReactNode; ungroupedLabel?: string;}): TooltipContentFn
 function QuadrantChart<TDatum extends Datum = Datum>(props: QuadrantChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function Scatterplot<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & ScatterplotProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function ScatterplotMatrix<TDatum extends Datum = Datum>(props: ScatterplotMatrixProps<TDatum>): import("react").JSX.Element
@@ -489,6 +489,7 @@ interface-member MultiLineTooltipConfig::property::showLabels = optional showLab
 interface-member MultiTooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
 interface-member MultiTooltipConfig::property::content = optional content: ((data: Record<string, unknown>) => React.ReactNode) | undefined
 interface-member MultiTooltipConfig::property::mode = required mode: "multi"
+interface-member MultiTooltipConfig::property::sampling = optional sampling: "interpolate" | "sample" | undefined
 interface-member QuadrantChartProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member QuadrantChartProps::property::centerlineStyle = optional centerlineStyle: CenterlineStyle | undefined
 interface-member QuadrantChartProps::property::colorBy = optional colorBy: ChartAccessor<TDatum, string> | undefined
@@ -723,6 +724,7 @@ interface-member StreamXYFrameProps::property::margin = optional margin: undefin
 interface-member StreamXYFrameProps::property::marginalGraphics = optional marginalGraphics: MarginalGraphicsConfig | undefined
 interface-member StreamXYFrameProps::property::maxCapacity = optional maxCapacity: number | undefined
 interface-member StreamXYFrameProps::property::maxDevicePixelRatio = optional maxDevicePixelRatio: number | undefined
+interface-member StreamXYFrameProps::property::multiHoverScene = optional multiHoverScene: ((scene: SceneNode[], scales: StreamScales, "interpolate" | sampling?: "sample") => SceneNode[]) | undefined
 interface-member StreamXYFrameProps::property::normalize = optional normalize: boolean | undefined
 interface-member StreamXYFrameProps::property::onBrush = optional onBrush: ((extent: {x: [number, number]; y: [number, number];} | null) => void) | undefined
 interface-member StreamXYFrameProps::property::onBrushEnd = optional onBrushEnd: ((extent: XYBrushExtent | null, meta: XYBrushEndMeta) => void) | undefined
@@ -763,6 +765,7 @@ interface-member StreamXYFrameProps::property::timeAccessor = optional timeAcces
 interface-member StreamXYFrameProps::property::title = optional title: ReactNode
 interface-member StreamXYFrameProps::property::tooltipContent = optional tooltipContent: ((d: HoverData) => ReactNode) | undefined
 interface-member StreamXYFrameProps::property::tooltipMode = optional tooltipMode: "multi" | "single" | undefined
+interface-member StreamXYFrameProps::property::tooltipSampling = optional tooltipSampling: "interpolate" | "sample" | undefined
 interface-member StreamXYFrameProps::property::transition = optional transition: TransitionConfig | undefined
 interface-member StreamXYFrameProps::property::valueAccessor = optional valueAccessor: ((d: T) => number) | string | undefined
 interface-member StreamXYFrameProps::property::waterfallStyle = optional waterfallStyle: WaterfallStyle | undefined

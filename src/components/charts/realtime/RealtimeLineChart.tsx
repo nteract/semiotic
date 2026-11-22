@@ -294,25 +294,15 @@ export const RealtimeLineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PU
     groupAccessor: seriesKey,
     groupLabel: "series"
   })
-  const multiPointTooltip = MultiPointTooltip()
   const tooltipProps = resolveMultiCapableTooltip({
     tooltip,
     defaultTooltipContent,
     customFunctionContext: "hover",
     // RealtimeLineChart currently has one value channel. Give its otherwise
     // unnamed line a useful label while retaining the shared multi renderer.
-    multiDefaultContent: (hover: Datum) =>
-      multiPointTooltip({
-        ...hover,
-        allSeries: Array.isArray(hover.allSeries)
-          ? hover.allSeries.map((hit: Record<string, unknown>) => ({
-              ...hit,
-              group:
-                hit.group ||
-                (typeof valueAccessor === "string" ? valueAccessor : "value")
-            }))
-          : hover.allSeries
-      })
+    multiDefaultContent: MultiPointTooltip({
+      ungroupedLabel: typeof valueAccessor === "string" ? valueAccessor : "value"
+    })
   })
   const resolvedTooltip = tooltipContent ?? tooltipProps.tooltipContent
 
@@ -477,6 +467,7 @@ export const RealtimeLineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PU
       hoverAnnotation={enableHover}
       tooltipContent={resolvedTooltip}
       tooltipMode={tooltipProps.tooltipMode}
+      tooltipSampling={tooltipProps.tooltipSampling}
       {...buildCustomBehaviorProps({
         linkedHover,
         selection,

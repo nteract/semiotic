@@ -474,7 +474,7 @@ const examples = [
       yAccessor: "value",
       lineBy: "series",
       colorBy: "series",
-      tooltip: "multi",
+      tooltip: { mode: "multi", sampling: "interpolate" },
       ...multiTooltipFormats,
       curve: "monotoneX",
       width: 400,
@@ -492,7 +492,7 @@ const examples = [
       yAccessor: "y",
       areaBy: "series",
       colorBy: "series",
-      tooltip: "multi",
+      tooltip: { mode: "multi", sampling: "interpolate" },
       ...multiTooltipFormats,
       curve: "monotoneX",
       width: 400,
@@ -510,7 +510,7 @@ const examples = [
       yAccessor: "value",
       areaBy: "series",
       colorBy: "series",
-      tooltip: "multi",
+      tooltip: { mode: "multi", sampling: "interpolate" },
       ...multiTooltipFormats,
       width: 400,
       height: 300,
@@ -677,6 +677,25 @@ const examples = [
         { type: "label", x: 50, y: 50, label: "Center B" },
         { type: "label", x: 78, y: 52, label: "Edge" },
       ],
+    })
+  }),
+  TestCase({
+    title: "Sparse series multi tooltip",
+    testId: "xy-sparse-multi-tooltip",
+    children: React.createElement(LineChart, {
+      data: [
+        { t: 0, series: "A", v: 0 }, { t: 10, series: "A", v: 100 },
+        { t: 0, series: "B", v: 0 }, { t: 5, series: "B", v: 40 }, { t: 10, series: "B", v: 80 }
+      ],
+      xAccessor: "t", yAccessor: "v", lineBy: "series",
+      xExtent: [0, 10], yExtent: [0, 100], curve: "linear",
+      width: 400, responsiveWidth: true, height: 300, margin: { top: 30, bottom: 30, left: 40, right: 40 },
+      showLegend: false,
+      tooltip: {
+        mode: "multi",
+        content: ({ xValue, allSeries }) => React.createElement("div", null,
+          [xValue, ...allSeries.map(({ group, value, datum }) => `${group} ${value} at ${datum.t}`)].join(" | "))
+      }
     })
   })
 ]

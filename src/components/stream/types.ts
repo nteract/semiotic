@@ -193,6 +193,8 @@ export interface AreaSceneNode {
   bottomPath: [number, number][]
   /** @internal Bump ribbons own their filled region; ordinary areas retain top-edge interaction. */
   _hitArea?: boolean
+  /** @internal Band values belong to the source series's datum. */
+  _isBand?: boolean
   /** Raw y-values corresponding to each top-path point (for threshold coloring) */
   rawValues?: number[]
   /** Threshold-based colors for the area's top-edge stroke */
@@ -872,6 +874,10 @@ export interface StreamXYFrameProps<T = Datum>
   hoverRadius?: number
   /** Tooltip mode: "single" (default) shows one datum, "multi" shows all series at the hovered X. */
   tooltipMode?: "single" | "multi"
+  /** Line/area multi-hover reads the nearest shared sample by default. */
+  tooltipSampling?: "sample" | "interpolate"
+  /** @internal Source series for charts whose rendered areas include synthetic vertices. */
+  multiHoverScene?: (scene: SceneNode[], scales: StreamScales, sampling?: "sample" | "interpolate") => SceneNode[]
 
   // ── Brush ─────────────────────────────────────────
   /** Brush configuration — when provided, an SVG brush overlay is rendered */

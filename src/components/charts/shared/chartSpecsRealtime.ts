@@ -1,4 +1,4 @@
-import { ANNOTATION_LAYOUT_DESCRIPTION, REACT_NODE_TYPES, type ChartSpec } from "./chartSpecCore"
+import { ANNOTATION_LAYOUT_DESCRIPTION, PROP_BAGS, REACT_NODE_TYPES, type ChartSpec } from "./chartSpecCore"
 import { STYLE_RULES_PROP_SPEC } from "./styleRulesWireSchema"
 
 const VALUE_BANDS_PROP_SPEC = {
@@ -18,11 +18,7 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: [],
     propBags: ["realtime"],
     ownProps: {
-      tooltip: {
-        type: ["boolean", "string", "function", "object"],
-        description:
-          'Tooltip boolean, "multi" / { mode: "multi", content? } for every series at the hovered x (snapping to the first/last sample outside the data), content function, or config. { content, chrome: "none" } declares consumer chrome; content receives authored data (bin data for histograms) with xValue/allSeries when present.'
-      },
+      tooltip: PROP_BAGS.common.tooltip,
       styleRules: STYLE_RULES_PROP_SPEC,
       stroke: { type: "string" },
       strokeWidth: { type: "number" },

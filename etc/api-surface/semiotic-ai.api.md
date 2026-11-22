@@ -809,7 +809,7 @@ interface-member AccessibleNavTreeProps::property::className = optional classNam
 interface-member AccessibleNavTreeProps::property::label = optional label: string | undefined
 interface-member AccessibleNavTreeProps::property::onActiveChange = optional onActiveChange: ((node: NavTreeNode) => void) | undefined
 interface-member AccessibleNavTreeProps::property::onAnnotationActivate = optional onAnnotationActivate: OnAnnotationActivateCallback | undefined
-interface-member AccessibleNavTreeProps::property::onObservation = optional onObservation: ((observation: import("./semiotic-ai-observations").ChartObservation) => void) | undefined
+interface-member AccessibleNavTreeProps::property::onObservation = optional onObservation: ((observation: import("./semiotic").ChartObservation) => void) | undefined
 interface-member AccessibleNavTreeProps::property::tree = required tree: NavTreeNode
 interface-member AccessibleNavTreeProps::property::visible = optional visible: boolean | undefined
 interface-member AccountabilityContract::property::actions = optional actions: ActionRecord[] | undefined
@@ -3035,7 +3035,7 @@ interface-member WordCloudProps::property::maxDevicePixelRatio = optional maxDev
 interface-member WordCloudProps::property::onClick = optional onClick: ((datum: Datum, point: {x: number; y: number;}) => void) | undefined
 interface-member WordCloudProps::property::onLayout = optional onLayout: ((layout: WordCloudLayoutResult) => void) | undefined
 interface-member WordCloudProps::property::onLayoutError = optional onLayoutError: ((error: WordCloudLayoutError) => void) | undefined
-interface-member WordCloudProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic-ai-observations").ChartObservation) => void) | undefined
+interface-member WordCloudProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic").ChartObservation) => void) | undefined
 interface-member WordCloudProps::property::renderAs = optional renderAs: "canvas" | "svg" | undefined
 interface-member WordCloudProps::property::responsiveHeight = optional responsiveHeight: boolean | undefined
 interface-member WordCloudProps::property::responsiveWidth = optional responsiveWidth: boolean | undefined

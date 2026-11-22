@@ -3,6 +3,7 @@ import { act, fireEvent, render } from "@testing-library/react"
 import { scaleLinear, scaleTime } from "d3-scale"
 import { describe, expect, it, vi } from "vitest"
 import { XYBrushOverlay, type XYBrushOverlayProps } from "./XYBrushOverlay"
+import { XYBrushOverlayLazy } from "./XYBrushOverlayLazy"
 import type { XYBrushExtentInput } from "./xyBrushTypes"
 
 // 300px over x ∈ [0, 100] (3px per unit); 200px over y ∈ [0, 1].
@@ -58,6 +59,20 @@ function pointer(container: HTMLElement) {
 }
 
 describe("controlled XY brush extent", () => {
+  it("makes the brush keyboard-accessible once its scales are ready", async () => {
+    const onBrush = vi.fn()
+    const view = (ready: boolean) => (
+      <XYBrushOverlayLazy {...baseProps} scales={ready ? baseProps.scales : null} onBrush={onBrush} />
+    )
+    const { findByRole, queryByRole, rerender } = render(view(true))
+    await findByRole("region")
+    rerender(view(false))
+    expect(queryByRole("region")).toBeNull()
+    rerender(view(true))
+    fireEvent.keyDown(await findByRole("region"), { key: "ArrowRight" })
+    expect(onBrush).toHaveBeenCalledTimes(1)
+  })
+
   it("moves to the caller's extent and clears on null, reporting neither", () => {
     const { rerender, selection, onBrush, onBrushEnd } = setup({ extent: { x: [20, 50] } })
     expect(selection()).toEqual([60, 150])

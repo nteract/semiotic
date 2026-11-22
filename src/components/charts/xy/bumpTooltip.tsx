@@ -1,9 +1,10 @@
+import { buildLineNode } from "../../stream/SceneGraph"
+import { cacheMultiHoverScene } from "../../stream/xyMultiHover"
 import * as React from "react"
 import { useCallback, useMemo } from "react"
 import {
   TooltipRoot,
   hasOwnTooltipChrome,
-  isMultiTooltip,
   isMultiTooltipConfig,
   markTooltipChrome,
   normalizeTooltip,
@@ -19,6 +20,20 @@ interface BumpTooltipOptions {
   xValues: unknown[]
   xFormat?: AxisConfig["xFormat"]
   yFormat?: AxisConfig["yFormat"]
+}
+
+export function createBumpHoverScene() {
+  return cacheMultiHoverScene((scene, scales, sampling) => scene.flatMap(node => {
+    if (node.type !== "area" || !node.datum) return []
+    const stroke = typeof node.style.fill === "string" ? node.style.fill : node.style.stroke
+    if (sampling === "interpolate") {
+      const path = node.topPath.map(([x, y], i): [number, number] => [
+        (x + node.bottomPath[i][0]) / 2, (y + node.bottomPath[i][1]) / 2,
+      ])
+      return [{ type: "line" as const, path, datum: node.datum, group: node.group, style: { stroke } }]
+    }
+    return [buildLineNode(Array.from(new Set(node.datum)), scales, d => d.x, d => d.y, { stroke }, node.group)]
+  }))
 }
 
 /**
@@ -41,7 +56,8 @@ export function useBumpTooltip<TDatum extends Datum>({
     return yFormat ? yFormat(value) : value.toLocaleString()
   }, [yFormat])
 
-  const multiTooltip = isMultiTooltip(tooltip)
+  const config = isMultiTooltipConfig(tooltip) ? tooltip : undefined
+  const multiTooltip = tooltip === "multi" || !!config
   const normalizedTooltip = useMemo(
     () => multiTooltip ? undefined : normalizeTooltip(tooltip),
     [multiTooltip, tooltip],
@@ -86,12 +102,12 @@ export function useBumpTooltip<TDatum extends Datum>({
     const internal = (hover?.data ?? hover) as RankedBumpDatum<TDatum> | undefined
     const mappedHover: Datum = {
       ...(internal?.__bumpRaw ?? {}),
-      xValue: internal?.__bumpXValue ?? hover.xValue,
+      xValue: hits[0]?.datum?.__bumpXValue ?? internal?.__bumpXValue ?? hover.xValue,
       allSeries: mappedHits,
     }
 
-    if (isMultiTooltipConfig(tooltip) && typeof tooltip.content === "function") {
-      return tooltip.content(mappedHover)
+    if (typeof config?.content === "function") {
+      return config.content(mappedHover)
     }
 
     const xIndex = hover.xValue ?? internal?.x
@@ -112,7 +128,7 @@ export function useBumpTooltip<TDatum extends Datum>({
         ))}
       </TooltipRoot>
     )
-  }, [formatValue, formatX, tooltip])
+  }, [config, formatValue, formatX])
 
   const resolvedTooltip = useMemo<TooltipProp>(() => {
     if (tooltip === false) return false
@@ -120,13 +136,13 @@ export function useBumpTooltip<TDatum extends Datum>({
     // the consumer renderer even when its returned component is unmarked.
     const content = multiTooltip ? multiTooltipContent : singleTooltipContent
     const ownsChrome = multiTooltip
-      ? isMultiTooltipConfig(tooltip) && hasOwnTooltipChrome(tooltip.content)
+      ? hasOwnTooltipChrome(config?.content)
       : hasOwnTooltipChrome(normalizedTooltip)
     const adaptedContent = ownsChrome ? markTooltipChrome(content) : content
     return multiTooltip
-      ? { mode: "multi", content: adaptedContent, chrome: isMultiTooltipConfig(tooltip) ? tooltip.chrome : undefined }
+      ? { ...config, mode: "multi", content: adaptedContent }
       : adaptedContent
-  }, [multiTooltip, multiTooltipContent, normalizedTooltip, singleTooltipContent, tooltip])
+  }, [config, multiTooltip, multiTooltipContent, normalizedTooltip, singleTooltipContent, tooltip])
 
   return { tooltip: resolvedTooltip, formatX }
 }

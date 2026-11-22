@@ -31,7 +31,6 @@ import { SceneRevisionDiagnosticsObserver, useSceneRevisionDiagnostics } from ".
 import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
 import { useConfigSync, useLayoutSelectionSync } from "./streamStoreSync"
-import { findNearestNode } from "./CanvasHitTester"
 import { attachMultiHover } from "./xyMultiHover"
 import { enrichDatumWithBand } from "./xySceneBuilders/ribbonScene"
 import { useStalenessCheck } from "./useStalenessCheck"
@@ -79,7 +78,7 @@ import { normalizeColorGradient, normalizeGradient } from "../charts/shared/grad
 import { normalizeXYData } from "./normalizeXYData"
 import { sceneHasAuthoredCursor, sceneMarkCursor, setCanvasMarkCursor, useCanvasMarkCursorCleanup } from "./sceneCursor"
 import { shouldHandleFramePointer } from "./frameCursorInteraction"
-import { rehitXYFrameCursor } from "./xyFrameCursorInteraction"
+import { hitXYFramePoint, rehitXYFrameCursor, xyPlotPosition } from "./xyFrameCursorInteraction"
 import { AXIS_FRAME_DEFAULT_MARGIN } from "./frameDefaultMargins"
 import { xyFrameLegendOptions } from "./frameLegendOptions"
 import { withDisplayName } from "../charts/shared/withDisplayName"
@@ -629,26 +628,29 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       pointerStateRef
     } = frame
 
+    const clearHover = () => {
+      if (!hoverRef.current) return
+      hoverRef.current = null
+      hoveredNodeRef.current = null
+      setHoverPoint(null)
+      customHoverBehavior?.(null)
+      scheduleRender()
+    }
+
+    const pointerHoverData = (datum: Datum, x: number, y: number, store: PipelineStore) => {
+      const scale = store.scales?.x
+      const domainX = typeof scale?.invert === "function" ? invertHeatmapBandValue(scale, x) : undefined
+      const xValue = chartType === "bar" ? resolveHistogramHoverXValue(datum, domainX) : domainX
+      return buildHoverData(datum, x, y, xValue != null ? { xValue, xPx: x } : undefined)
+    }
+
     hoverHandlerRef.current = (e: HoverPointerCoords, refresh = false) => {
       const canvas = canvasRef.current
       if (!canvas) return
-      const rect = canvas.getBoundingClientRect()
-
-      const chartX = e.clientX - rect.left - margin.left
-      const chartY = e.clientY - rect.top - margin.top
-
-      if (chartX < 0 || chartX > adjustedWidth || chartY < 0 || chartY > adjustedHeight) {
+      const point = xyPlotPosition(canvas, e, margin, adjustedWidth, adjustedHeight)
+      if (!point) {
         setCanvasMarkCursor(canvas)
-        if (!effectiveHoverAnnotation) return
-        if (hoverRef.current) {
-          hoverRef.current = null
-          hoveredNodeRef.current = null
-          setHoverPoint(null)
-          // Hover paint lives on the interaction canvas / tooltip — do not
-          // dirty the retained scene (avoids replaying transitions on move).
-          customHoverBehavior?.(null)
-          scheduleRender()
-        }
+        if (effectiveHoverAnnotation) clearHover()
         return
       }
 
@@ -660,23 +662,13 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
 
       // Hit test against scene graph — use quadtree for O(log n) point lookup when available
       const hitRadius = getPointerHitRadius(hoverRadius, e.pointerType)
-      const hit = findNearestNode(store.scene, chartX, chartY, hitRadius, store.quadtree, store.maxPointRadius)
+      const hit = hitXYFramePoint(store, point, hitRadius)
       setCanvasMarkCursor(canvas, sceneMarkCursor(hit?.node))
       if (!effectiveHoverAnnotation) return
       const isMulti = tooltipMode === "multi"
 
-      const clearHover = () => {
-        if (hoverRef.current) {
-          hoverRef.current = null
-          hoveredNodeRef.current = null
-          setHoverPoint(null)
-          if (customHoverBehavior) customHoverBehavior(null)
-          scheduleRender()
-        }
-      }
-
       // Without a hit, only multi-tooltip (hover-anywhere) mode has anything
-      // to show — interpolated series values at the cursor's x. Otherwise
+      // to show — series values across the plot. Otherwise
       // there's nothing under the cursor and we clear.
       if (!hit && !isMulti) {
         clearHover()
@@ -688,8 +680,8 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       // sample whenever findNearestNode succeeds, producing a visible jump as
       // the cursor passes data points. The real hit's `node` is still used
       // below for highlight tracking.
-      const posX = isMulti || !hit ? chartX : hit.x
-      const posY = isMulti || !hit ? chartY : hit.y
+      const posX = isMulti || !hit ? point.x : hit.x
+      const posY = isMulti || !hit ? point.y : hit.y
 
       // Band enrichment: when band(s) are configured, evaluate accessors
       // on the hovered datum and attach `datum.band` / `datum.bands` so
@@ -699,32 +691,15 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       const hitDatum = hit?.datum
         ? enrichDatumWithBand(hit.datum, store.resolvedRibbons)
         : {}
-      const xScale = store.scales?.x
-      const invertedX = xScale && typeof xScale.invert === "function"
-        ? invertHeatmapBandValue(xScale, posX)
-        : undefined
-      const xValue = chartType === "bar"
-        ? resolveHistogramHoverXValue(hitDatum, invertedX)
-        : invertedX
-      let hover: HoverData = buildHoverData(
-        hitDatum,
-        posX,
-        posY,
-        xValue != null ? { xValue, xPx: posX } : undefined
-      )
+      let hover = pointerHoverData(hitDatum, posX, posY, store)
 
       // Multi-tooltip mode: attach every series value at this x. Padding
       // outside the data snaps to the first/last sample. The theme primary is
       // cached from the render loop so rows without a color of their own
       // don't re-read computed styles on every pointermove.
       if (isMulti) {
-        hover = attachMultiHover(hover, store, posX, {
-          chartType,
-          xAccessor,
-          fallbackColor: themePrimaryRef.current,
-          maxXDistance: Math.max(hitRadius, adjustedWidth),
-          hasHit: !!hit,
-        })
+        hover = attachMultiHover(hover, store, props, themePrimaryRef.current,
+          Math.max(hitRadius, adjustedWidth), hit?.x)
       }
 
       // Hover-anywhere with no real hit and no series to read is nothing to
@@ -746,13 +721,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
 
     hoverLeaveRef.current = () => {
       setCanvasMarkCursor(canvasRef.current)
-      if (hoverRef.current) {
-        hoverRef.current = null
-        hoveredNodeRef.current = null
-        setHoverPoint(null)
-        customHoverBehavior?.(null)
-        scheduleRender()
-      }
+      clearHover()
     }
 
     useCanvasMarkCursorCleanup(canvasRef)
@@ -768,32 +737,17 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       flushPointerMove(e)
       const canvas = canvasRef.current
       if (!canvas) return
-      const rect = canvas.getBoundingClientRect()
-      const chartX = e.clientX - rect.left - margin.left
-      const chartY = e.clientY - rect.top - margin.top
-      if (chartX < 0 || chartX > adjustedWidth || chartY < 0 || chartY > adjustedHeight) {
+      const point = xyPlotPosition(canvas, e, margin, adjustedWidth, adjustedHeight)
+      if (!point) {
         customClickBehavior(null)
         return
       }
       const store = storeRef.current
       if (!store || store.scene.length === 0) { customClickBehavior(null); return }
       const hitRadius = getPointerHitRadius(hoverRadius, lastPointerTypeRef.current)
-      const hit = findNearestNode(store.scene, chartX, chartY, hitRadius, store.quadtree, store.maxPointRadius)
+      const hit = hitXYFramePoint(store, point, hitRadius)
       if (!hit) { customClickBehavior(null); return }
-      const rawDatum = hit.datum || {}
-      const xScale = store.scales?.x
-      const invertedX = xScale && typeof xScale.invert === "function"
-        ? invertHeatmapBandValue(xScale, hit.x)
-        : undefined
-      const xValue = chartType === "bar"
-        ? resolveHistogramHoverXValue(rawDatum, invertedX)
-        : invertedX
-      customClickBehavior(buildHoverData(
-        rawDatum,
-        hit.x,
-        hit.y,
-        xValue != null ? { xValue, xPx: hit.x } : undefined
-      ), {
+      customClickBehavior(pointerHoverData(hit.datum || {}, hit.x, hit.y, store), {
         type: "activate",
         inputType: observationInputType(lastPointerTypeRef.current)
       })
@@ -825,13 +779,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
                 }
               }
               return tooltipMode === "multi"
-                ? attachMultiHover(hover, store, hover.x, {
-                    chartType,
-                    xAccessor,
-                    fallbackColor: themePrimaryRef.current,
-                    maxXDistance: adjustedWidth,
-                    hasHit: true,
-                  })
+                ? attachMultiHover(hover, store, props, themePrimaryRef.current, adjustedWidth, hover.x)
                 : hover
             }
           : undefined

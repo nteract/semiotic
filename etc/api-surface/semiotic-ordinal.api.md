@@ -389,6 +389,7 @@ interface-member MultiLineTooltipConfig::property::showLabels = optional showLab
 interface-member MultiTooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
 interface-member MultiTooltipConfig::property::content = optional content: ((data: Record<string, unknown>) => React.ReactNode) | undefined
 interface-member MultiTooltipConfig::property::mode = required mode: "multi"
+interface-member MultiTooltipConfig::property::sampling = optional sampling: "interpolate" | "sample" | undefined
 interface-member OrdinalBrushEndMeta::property::atDomainEnd = required atDomainEnd: boolean
 interface-member OrdinalBrushEndMeta::property::atDomainStart = required atDomainStart: boolean
 interface-member OrdinalBrushEndMeta::property::source = required source: "keyboard" | "pointer"
@@ -526,7 +527,7 @@ interface-member StreamOrdinalFrameProps::property::accessibleTable = optional a
 interface-member StreamOrdinalFrameProps::property::accessorRevision = optional accessorRevision: number | undefined
 interface-member StreamOrdinalFrameProps::property::amplitude = optional amplitude: number | undefined
 interface-member StreamOrdinalFrameProps::property::animate = optional animate: AnimateProp | undefined
-interface-member StreamOrdinalFrameProps::property::annotationObservationCallback = optional annotationObservationCallback: ((observation: import("../semiotic-ai-observations").ChartObservation) => void) | undefined
+interface-member StreamOrdinalFrameProps::property::annotationObservationCallback = optional annotationObservationCallback: ((observation: import("../semiotic").ChartObservation) => void) | undefined
 interface-member StreamOrdinalFrameProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member StreamOrdinalFrameProps::property::autoPlaceAnnotations = optional autoPlaceAnnotations: AutoPlaceAnnotations | undefined
 interface-member StreamOrdinalFrameProps::property::axisExtent = optional axisExtent: import("../charts/shared/axisExtent").AxisExtentMode | undefined
@@ -596,7 +597,7 @@ interface-member StreamOrdinalFrameProps::property::onBrush = optional onBrush: 
 interface-member StreamOrdinalFrameProps::property::onBrushEnd = optional onBrushEnd: ((extent: OrdinalBrushExtent | null, meta: OrdinalBrushEndMeta) => void) | undefined
 interface-member StreamOrdinalFrameProps::property::onCategoriesChange = optional onCategoriesChange: ((categories: string[]) => void) | undefined
 interface-member StreamOrdinalFrameProps::property::onLayoutError = optional onLayoutError: ((diagnostic: import("./customLayoutFailure").CustomLayoutFailureDiagnostic) => void) | undefined
-interface-member StreamOrdinalFrameProps::property::onObservation = optional onObservation: ((observation: import("../semiotic-ai-observations").ChartObservation) => void) | undefined
+interface-member StreamOrdinalFrameProps::property::onObservation = optional onObservation: ((observation: import("../semiotic").ChartObservation) => void) | undefined
 interface-member StreamOrdinalFrameProps::property::outlierRadius = optional outlierRadius: number | undefined
 interface-member StreamOrdinalFrameProps::property::paused = optional paused: boolean | undefined
 interface-member StreamOrdinalFrameProps::property::pieceStyle = optional pieceStyle: ((d: Datum, category?: string) => Style) | undefined

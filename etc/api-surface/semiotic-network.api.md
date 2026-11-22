@@ -151,7 +151,7 @@ interface-member ChordDiagramProps::property::nodeIdAccessor = optional nodeIdAc
 interface-member ChordDiagramProps::property::nodeLabel = optional nodeLabel: ChartAccessor<TNode, string> | undefined
 interface-member ChordDiagramProps::property::nodes = optional nodes: TNode[] | undefined
 interface-member ChordDiagramProps::property::padAngle = optional padAngle: number | undefined
-interface-member ChordDiagramProps::property::perspective = optional perspective: import("../../semiotic-network").NetworkPerspective | undefined
+interface-member ChordDiagramProps::property::perspective = optional perspective: import("../../semiotic").NetworkPerspective | undefined
 interface-member ChordDiagramProps::property::showLabels = optional showLabels: boolean | undefined
 interface-member ChordDiagramProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member ChordDiagramProps::property::sortGroups = optional sortGroups: ((a: number, b: number) => number) | undefined
@@ -173,7 +173,7 @@ interface-member CirclePackProps::property::legendPosition = optional legendPosi
 interface-member CirclePackProps::property::nodeIdAccessor = optional nodeIdAccessor: ChartAccessor<TNode, string> | undefined
 interface-member CirclePackProps::property::nodeLabel = optional nodeLabel: ChartAccessor<TNode, string> | undefined
 interface-member CirclePackProps::property::padding = optional padding: number | undefined
-interface-member CirclePackProps::property::perspective = optional perspective: import("../../semiotic-network").NetworkPerspective | undefined
+interface-member CirclePackProps::property::perspective = optional perspective: import("../../semiotic").NetworkPerspective | undefined
 interface-member CirclePackProps::property::showLabels = optional showLabels: boolean | undefined
 interface-member CirclePackProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member CirclePackProps::property::styleRules = optional styleRules: StyleRule[] | undefined
@@ -216,7 +216,7 @@ interface-member ForceDirectedGraphProps::property::nodeStroke = optional nodeSt
 interface-member ForceDirectedGraphProps::property::nodeStrokeWidth = optional nodeStrokeWidth: number | undefined
 interface-member ForceDirectedGraphProps::property::nodes = optional nodes: TNode[] | undefined
 interface-member ForceDirectedGraphProps::property::onLayoutStateChange = optional onLayoutStateChange: (("error" | "ready" | state: "pending") => void) | undefined
-interface-member ForceDirectedGraphProps::property::perspective = optional perspective: import("../../semiotic-network").NetworkPerspective | undefined
+interface-member ForceDirectedGraphProps::property::perspective = optional perspective: import("../../semiotic").NetworkPerspective | undefined
 interface-member ForceDirectedGraphProps::property::showLabels = optional showLabels: boolean | undefined
 interface-member ForceDirectedGraphProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member ForceDirectedGraphProps::property::sourceAccessor = optional sourceAccessor: ChartAccessor<TEdge, string> | undefined
@@ -277,6 +277,7 @@ interface-member MultiLineTooltipConfig::property::showLabels = optional showLab
 interface-member MultiTooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
 interface-member MultiTooltipConfig::property::content = optional content: ((data: Record<string, unknown>) => React.ReactNode) | undefined
 interface-member MultiTooltipConfig::property::mode = required mode: "multi"
+interface-member MultiTooltipConfig::property::sampling = optional sampling: "interpolate" | "sample" | undefined
 interface-member NetworkCustomChartProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member NetworkCustomChartProps::property::autoPlaceAnnotations = optional autoPlaceAnnotations: import("../../semiotic-recipes-core").AutoPlaceAnnotations | undefined
 interface-member NetworkCustomChartProps::property::colorBy = optional colorBy: ChartAccessor<TNode, number | string> | undefined
@@ -289,7 +290,7 @@ interface-member NetworkCustomChartProps::property::layoutConfig = optional layo
 interface-member NetworkCustomChartProps::property::nodeIDAccessor = optional nodeIDAccessor: ((d: Datum) => string) | string | undefined
 interface-member NetworkCustomChartProps::property::nodes = optional nodes: TNode[] | undefined
 interface-member NetworkCustomChartProps::property::onLayoutError = optional onLayoutError: ((diagnostic: import("../../semiotic-geo").CustomLayoutFailureDiagnostic) => void) | undefined
-interface-member NetworkCustomChartProps::property::perspective = optional perspective: import("../../semiotic-network").NetworkPerspective | undefined
+interface-member NetworkCustomChartProps::property::perspective = optional perspective: import("../../semiotic").NetworkPerspective | undefined
 interface-member NetworkCustomChartProps::property::recipe = optional recipe: ChartRecipe<TNode, TConfig> | undefined
 interface-member NetworkCustomChartProps::property::recipeId = optional recipeId: string | undefined
 interface-member NetworkCustomChartProps::property::sourceAccessor = optional sourceAccessor: ((d: Datum) => string) | string | undefined
@@ -508,7 +509,7 @@ interface-member OrbitDiagramProps::property::nodeIdAccessor = optional nodeIdAc
 interface-member OrbitDiagramProps::property::nodeRadius = optional nodeRadius: ((node: Datum) => number) | number | undefined
 interface-member OrbitDiagramProps::property::orbitMode = optional orbitMode: OrbitMode | undefined
 interface-member OrbitDiagramProps::property::orbitSize = optional orbitSize: ((node: Datum) => number) | number | undefined
-interface-member OrbitDiagramProps::property::perspective = optional perspective: import("../../semiotic-network").NetworkPerspective | undefined
+interface-member OrbitDiagramProps::property::perspective = optional perspective: import("../../semiotic").NetworkPerspective | undefined
 interface-member OrbitDiagramProps::property::revolution = optional revolution: ((node: Datum) => number) | undefined
 interface-member OrbitDiagramProps::property::revolutionStyle = optional revolutionStyle: "alternate" | "decay" | "locked" | undefined
 interface-member OrbitDiagramProps::property::showLabels = optional showLabels: boolean | undefined
@@ -557,7 +558,7 @@ interface-member ProcessSankeyProps::property::orientation = optional orientatio
 interface-member ProcessSankeyProps::property::packing = optional packing: "off" | "reuse" | undefined
 interface-member ProcessSankeyProps::property::pairing = optional pairing: "temporal" | "value" | undefined
 interface-member ProcessSankeyProps::property::particleStyle = optional particleStyle: ParticleStyle | undefined
-interface-member ProcessSankeyProps::property::perspective = optional perspective: import("../../semiotic-network").NetworkPerspective | undefined
+interface-member ProcessSankeyProps::property::perspective = optional perspective: import("../../semiotic").NetworkPerspective | undefined
 interface-member ProcessSankeyProps::property::ribbonLane = optional ribbonLane: "both" | "source" | "target" | undefined
 interface-member ProcessSankeyProps::property::ribbonMinRun = optional ribbonMinRun: "auto" | number | undefined
 interface-member ProcessSankeyProps::property::selection = optional selection: SelectionConfig | undefined
@@ -633,7 +634,7 @@ interface-member SankeyDiagramProps::property::nodePaddingRatio = optional nodeP
 interface-member SankeyDiagramProps::property::nodeWidth = optional nodeWidth: number | undefined
 interface-member SankeyDiagramProps::property::nodes = optional nodes: TNode[] | undefined
 interface-member SankeyDiagramProps::property::orientation = optional orientation: "horizontal" | "vertical" | undefined
-interface-member SankeyDiagramProps::property::perspective = optional perspective: import("../../semiotic-network").NetworkPerspective | undefined
+interface-member SankeyDiagramProps::property::perspective = optional perspective: import("../../semiotic").NetworkPerspective | undefined
 interface-member SankeyDiagramProps::property::showLabels = optional showLabels: boolean | undefined
 interface-member SankeyDiagramProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member SankeyDiagramProps::property::sourceAccessor = optional sourceAccessor: ChartAccessor<TEdge, string> | undefined
@@ -835,7 +836,7 @@ interface-member TreeDiagramProps::property::nodeIdAccessor = optional nodeIdAcc
 interface-member TreeDiagramProps::property::nodeLabel = optional nodeLabel: ChartAccessor<TNode, string> | undefined
 interface-member TreeDiagramProps::property::nodeSize = optional nodeSize: number | undefined
 interface-member TreeDiagramProps::property::orientation = optional orientation: "horizontal" | "radial" | "vertical" | undefined
-interface-member TreeDiagramProps::property::perspective = optional perspective: import("../../semiotic-network").NetworkPerspective | undefined
+interface-member TreeDiagramProps::property::perspective = optional perspective: import("../../semiotic").NetworkPerspective | undefined
 interface-member TreeDiagramProps::property::showLabels = optional showLabels: boolean | undefined
 interface-member TreeDiagramProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member TreeDiagramProps::property::styleRules = optional styleRules: StyleRule[] | undefined
@@ -856,7 +857,7 @@ interface-member TreemapProps::property::nodeLabel = optional nodeLabel: ChartAc
 interface-member TreemapProps::property::nodeStyle = optional nodeStyle: ((d: Datum) => NetworkMarkStyle) | undefined
 interface-member TreemapProps::property::padding = optional padding: number | undefined
 interface-member TreemapProps::property::paddingTop = optional paddingTop: number | undefined
-interface-member TreemapProps::property::perspective = optional perspective: import("../../semiotic-network").NetworkPerspective | undefined
+interface-member TreemapProps::property::perspective = optional perspective: import("../../semiotic").NetworkPerspective | undefined
 interface-member TreemapProps::property::showLabels = optional showLabels: boolean | undefined
 interface-member TreemapProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member TreemapProps::property::styleRules = optional styleRules: StyleRule[] | undefined

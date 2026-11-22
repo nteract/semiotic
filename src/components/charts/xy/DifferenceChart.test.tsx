@@ -1,5 +1,8 @@
+import { scaleLinear } from "d3-scale"
+import { buildLineNode } from "../../stream/SceneGraph"
+import { findAllNodesAtX } from "../../stream/CanvasHitTester"
 import type { CapturedXYFrameProps } from "../../../test-utils/capturedFrameProps"
-import type { StreamXYFrameHandle } from "../../stream/types"
+import type { SceneNode, StreamXYFrameHandle } from "../../stream/types"
 import { vi } from "vitest"
 import React from "react"
 import { render, waitFor } from "@testing-library/react"
@@ -435,6 +438,23 @@ describe("DifferenceChart", () => {
     // None of the line groups should be in areaGroups
     expect(areaSegments).not.toContain("line-A")
     expect(areaSegments).not.toContain("line-B")
+  })
+
+  it.each([true, false])("uses only observed A/B vertices for multi hover with showLines=%s", showLines => {
+    const data = [{ x: 0, a: 5, b: 10 }, { x: 10, a: 15, b: 8 }]
+    render(<DifferenceChart data={data} showLines={showLines} tooltip="multi" />)
+    const scales = { x: scaleLinear(), y: scaleLinear() }
+    const rendered: SceneNode[] = [
+      { type: "area", group: "seg-0-B", topPath: [[4.2, 9.2]], bottomPath: [[4.2, 9.2]], style: {}, datum: [{}] },
+      ...(showLines ? ["line-A", "line-B"].map(group =>
+        buildLineNode(lastXYFrameProps.data.filter(row => row.__diffSegment === group),
+          scales, d => d.__x, d => d.__y, {}, group)) : [])
+    ]
+    const lines = lastXYFrameProps.multiHoverScene!(rendered, scales)
+    const hits = findAllNodesAtX(lines, 4.2, Infinity, "sample")
+    expect(hits.map(hit => [hit.group, hit.x, hit.sampleValue, hit.datum?.__sourceDatum])).toEqual([
+      ["line-A", 0, 5, data[0]], ["line-B", 0, 10, data[0]],
+    ])
   })
 
   it("omits overlay lines when showLines is false", () => {

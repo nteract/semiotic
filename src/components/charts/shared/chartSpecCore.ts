@@ -376,7 +376,7 @@ const commonProps: Record<string, ChartPropSpec> = {
   tooltip: {
     type: ["boolean", "function", "object", "string"],
     description:
-      'Tooltip: true/false, "multi", { mode: "multi", content?, chrome? }, a custom function, { content, chrome: "none" | "default" }, or { fields, title, chrome? } config. chrome: "none" leaves visual chrome to consumer content without mutating the renderer; otherwise inherits theme.tooltip.chrome. Multi mode shows every series at the hovered x, snapping to the first/last sample in x-extent padding; custom multi content receives allSeries/xValue.',
+      'Tooltip boolean, content function, or config ({ fields, title, chrome? } or { content, chrome? }). Line/area "multi" returns xValue and allSeries at the nearest sampled x, omitting missing series. Use { mode: "multi", sampling: "interpolate", content? } for curve values. chrome: "none" declares consumer chrome.',
   },
   annotations: { type: "array" },
   autoPlaceAnnotations: {

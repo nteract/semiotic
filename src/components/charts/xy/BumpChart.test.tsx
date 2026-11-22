@@ -1,6 +1,7 @@
 import * as React from "react"
 import { render, screen } from "@testing-library/react"
 import { scaleLinear } from "d3-scale"
+import { findAllNodesAtX } from "../../stream/CanvasHitTester"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { XYCustomChartProps } from "../custom/XYCustomChart"
 import type { Datum } from "../shared/datumTypes"
@@ -375,6 +376,24 @@ describe("BumpChart", () => {
     )
     const ribbonResult = capturedProps?.layout(layoutContext())
     const ribbonAreas = ribbonResult?.nodes?.filter(node => node.type === "area") ?? []
+    const project = capturedProps!.frameProps!.multiHoverScene!
+    const scales = layoutContext().scales
+    const hoverLines = project(ribbonAreas, scales, "sample")
+    const hits = findAllNodesAtX(hoverLines, 140, Infinity, "sample")
+    expect(hits).toHaveLength(3)
+    for (const hit of hits) {
+      expect(hit.x).toBe(0)
+      expect(hit.datum?.__bumpXValue).toBe(2022)
+    }
+    const interpolated = project(ribbonAreas, scales, "interpolate")
+    const rising = ribbonAreas.find(area => area.datum?.[0].y !== area.datum?.at(-1)?.y)!
+    const vertex = 3
+    const x = (rising.topPath[vertex][0] + rising.bottomPath[vertex][0]) / 2
+    const centerY = (rising.topPath[vertex][1] + rising.bottomPath[vertex][1]) / 2
+    const hit = findAllNodesAtX(interpolated, x, Infinity, "interpolate").find(row => row.group === rising.group)
+    const straight = findAllNodesAtX(hoverLines, x, Infinity, "interpolate").find(row => row.group === rising.group)
+    expect(hit?.y).toBeCloseTo(centerY)
+    expect(straight?.y).not.toBeCloseTo(centerY)
     const ribbonWidthAtStart = Math.hypot(
       ribbonAreas[0].topPath[0][0] - ribbonAreas[0].bottomPath[0][0],
       ribbonAreas[0].topPath[0][1] - ribbonAreas[0].bottomPath[0][1],

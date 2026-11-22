@@ -13,7 +13,7 @@ import { useChartMode, useThemeCategorical } from "../shared/hooks"
 import type { LegendValue } from "../../types/legendTypes"
 import type { LegendInteractionMode, LegendPosition } from "../shared/useChartLegend"
 import { useTheme } from "../../store/useTheme"
-import { useBumpTooltip } from "./bumpTooltip"
+import { createBumpHoverScene, useBumpTooltip } from "./bumpTooltip"
 import { bumpLayout, type BumpLayoutConfig } from "./bumpLayout"
 import { resolveBumpLabelLayout, resolveBumpLabelSpace } from "./bumpLabelMargins"
 import { normalizePartialMargin, type MarginType } from "../../types/marginType"
@@ -284,6 +284,7 @@ export const BumpChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
     labelPriorityAccessor, maxLabels, labelLayout.startLabelOffset, labelSpace.budget, labelFontSize,
   ])
 
+  const multiHoverScene = useMemo(createBumpHoverScene, [])
   const { tooltip: resolvedTooltip, formatX } = useBumpTooltip<TDatum>({
     tooltip,
     xValues: ranked.xValues,
@@ -373,6 +374,7 @@ export const BumpChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
       xLabel={props.xLabel}
       yLabel={props.yLabel ?? "Rank"}
       frameProps={{
+        multiHoverScene,
         axes,
         axisExtent: "exact",
         ...restFrameProps,

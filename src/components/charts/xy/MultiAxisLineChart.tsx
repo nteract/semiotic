@@ -103,15 +103,18 @@ export interface MultiAxisLineChartProps<TDatum extends Datum = Datum> extends B
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
+function axisValue<TDatum extends Datum>(datum: TDatum, accessor: ChartAccessor<TDatum, number>): number {
+  return typeof accessor === "function" ? accessor(datum) : datum[accessor]
+}
+
 function computeExtent<TDatum extends Datum>(
   data: TDatum[],
   accessor: ChartAccessor<TDatum, number>
 ): [number, number] {
   let min = Infinity
   let max = -Infinity
-  const fn = typeof accessor === "function" ? accessor : (d: Datum) => d[accessor]
   for (const d of data) {
-    const v = fn(d)
+    const v = axisValue(d, accessor)
     if (v != null && isFinite(v)) {
       if (v < min) min = v
       if (v > max) max = v
@@ -205,46 +208,33 @@ export const MultiAxisLineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__P
       (seriesRef.current ?? []).filter(
         (s): s is MultiAxisSeriesConfig<TDatum> => s != null && typeof s === "object",
       )
+    const project = (raw: TDatum, series: MultiAxisSeriesConfig<TDatum>[], emit: (row: Datum) => void) => {
+      for (let i = 0; i < series.length && i < 2; i++) {
+        const s = series[i]
+        const extent = s.extent || extentsRef.current[i]
+        if (!extent) continue
+        const value = axisValue(raw, s.yAccessor)
+        if (value == null || !isFinite(value)) continue
+        emit({
+          ...raw,
+          [MULTI_AXIS_UNITIZED_FIELD]: unitize(value, extent),
+          [MULTI_AXIS_SERIES_FIELD]: s.label || `Series ${i + 1}`
+        })
+      }
+    }
     return {
       push: (point) => {
-        if (!frameRef.current) return
-        const safeSeriesProp = getSafeSeries()
-        const raw = point as Datum
-        // Transform point into unitized series points
-        for (let i = 0; i < safeSeriesProp.length && i < 2; i++) {
-          const s = safeSeriesProp[i]
-          const extent = s.extent || extentsRef.current[i]
-          if (!extent) continue
-          const fn = typeof s.yAccessor === "function" ? s.yAccessor : (d: Datum) => d[s.yAccessor as string]
-          const val = fn(raw)
-          if (val == null || !isFinite(val)) continue
-          frameRef.current.push({
-            ...raw,
-            [MULTI_AXIS_UNITIZED_FIELD]: unitize(val, extent),
-            [MULTI_AXIS_SERIES_FIELD]: s.label || `Series ${i + 1}`
-          })
-        }
+        const frame = frameRef.current
+        if (frame) project(point as TDatum, getSafeSeries(), row => frame.push(row))
       },
       pushMany: (points) => {
-        if (!frameRef.current) return
-        const safeSeriesProp = getSafeSeries()
+        const frame = frameRef.current
+        if (!frame) return
+        const series = getSafeSeries()
         const transformed: Datum[] = []
-        for (const raw of points as Datum[]) {
-          for (let i = 0; i < safeSeriesProp.length && i < 2; i++) {
-            const s = safeSeriesProp[i]
-            const extent = s.extent || extentsRef.current[i]
-            if (!extent) continue
-            const fn = typeof s.yAccessor === "function" ? s.yAccessor : (d: Datum) => d[s.yAccessor as string]
-            const val = fn(raw)
-            if (val == null || !isFinite(val)) continue
-            transformed.push({
-              ...raw,
-              [MULTI_AXIS_UNITIZED_FIELD]: unitize(val, extent),
-              [MULTI_AXIS_SERIES_FIELD]: s.label || `Series ${i + 1}`
-            })
-          }
-        }
-        frameRef.current.pushMany(transformed)
+        const append = (row: Datum) => { transformed.push(row) }
+        for (const raw of points as TDatum[]) project(raw, series, append)
+        frame.pushMany(transformed)
       },
       remove: (id) => frameRef.current?.remove(id) ?? [],
       update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
@@ -368,35 +358,14 @@ export const MultiAxisLineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__P
     )
     extentsRef.current = exts
 
-    if (!isDualAxis) {
-      // Fallback: no unitization, just group by series
-      const result: Datum[] = []
-      for (const d of safeData) {
-        for (let i = 0; i < series.length; i++) {
-          const s = series[i]
-          const fn = typeof s.yAccessor === "function" ? s.yAccessor : (datum: Datum) => datum[s.yAccessor as string]
-          const val = fn(d)
-          if (val == null) continue
-          result.push({
-            ...d,
-            [MULTI_AXIS_UNITIZED_FIELD]: val,
-            [MULTI_AXIS_SERIES_FIELD]: seriesLabels[i]
-          })
-        }
-      }
-      return { unitizedData: result, extents: exts }
-    }
-
     const result: Datum[] = []
     for (const d of safeData) {
-      for (let i = 0; i < 2; i++) {
-        const s = series[i]
-        const fn = typeof s.yAccessor === "function" ? s.yAccessor : (datum: Datum) => datum[s.yAccessor as string]
-        const val = fn(d)
-        if (val == null) continue
+      for (let i = 0; i < series.length; i++) {
+        const value = axisValue(d, series[i].yAccessor)
+        if (value == null) continue
         result.push({
           ...d,
-          [MULTI_AXIS_UNITIZED_FIELD]: unitize(val, exts[i]),
+          [MULTI_AXIS_UNITIZED_FIELD]: isDualAxis ? unitize(value, exts[i]) : value,
           [MULTI_AXIS_SERIES_FIELD]: seriesLabels[i]
         })
       }
@@ -553,7 +522,7 @@ export const MultiAxisLineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__P
     }
   }, [seriesLabels, seriesColors, extents, isDualAxis, series, xAccessor, xFormat])
 
-  // StreamXYFrame interpolates multi-series values in the shared unitized
+  // StreamXYFrame reports multi-series values in the shared unitized
   // coordinate system. Translate them back to each axis's original units
   // before either the built-in or a custom multi renderer sees them.
   const mapMultiAxisHover = useCallback((datum: Datum): Datum => {
@@ -562,13 +531,18 @@ export const MultiAxisLineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__P
       : []
     const mappedSeries = allSeries.map((hit) => {
       const seriesIndex = seriesLabels.indexOf(hit.group)
-      const mappedValue = isDualAxis && seriesIndex >= 0 && extents[seriesIndex]
-        ? invertUnitized(hit.value, extents[seriesIndex])
-        : hit.value
+      const source = hit.datum && sourceMultiAxisDatum(hit.datum)
+      let mappedValue = hit.value
+      if (isDualAxis && seriesIndex >= 0 && extents[seriesIndex]) {
+        const accessor = series[seriesIndex].yAccessor
+        mappedValue = source && hit.value === hit.datum[MULTI_AXIS_UNITIZED_FIELD]
+          ? axisValue(source as TDatum, accessor)
+          : invertUnitized(hit.value, extents[seriesIndex])
+      }
       return {
         ...hit,
         value: mappedValue,
-        datum: hit.datum ? sourceMultiAxisDatum(hit.datum) : hit.datum,
+        datum: source,
       }
     })
     const mappedData = datum.data && typeof datum.data === "object" && !Array.isArray(datum.data)
@@ -578,7 +552,7 @@ export const MultiAxisLineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__P
     mapped.data = mappedData
     mapped.allSeries = mappedSeries
     return mapped
-  }, [extents, isDualAxis, seriesLabels])
+  }, [extents, isDualAxis, series, seriesLabels])
 
   const builtInMultiTooltip = useMemo(() => MultiPointTooltip({
     xFormat,
@@ -595,7 +569,7 @@ export const MultiAxisLineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__P
     }
     const content = (datum: Datum) => tooltip.content!(mapMultiAxisHover(datum))
     return {
-      mode: "multi",
+      ...tooltip,
       content: hasOwnTooltipChrome(tooltip.content) ? markTooltipChrome(content) : content,
     }
   }, [mapMultiAxisHover, tooltip])

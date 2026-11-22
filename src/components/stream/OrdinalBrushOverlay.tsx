@@ -21,7 +21,7 @@
  * Wired by: useOrdinalBrush hook in HOC charts.
  */
 import * as React from "react"
-import { useRef, useEffect, useState } from "react"
+import { useRef, useLayoutEffect, useEffect, useState } from "react"
 import { select as d3Select } from "d3-selection"
 import { brushX as d3BrushX, brushY as d3BrushY, type BrushBehavior, type D3BrushEvent } from "d3-brush"
 import type { OrdinalScales } from "./ordinalTypes"
@@ -137,7 +137,7 @@ export function OrdinalBrushOverlay({
     onAction: handleKeyboardAction,
   })
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!svgRef.current) return
 
     const g = d3Select(svgRef.current).select<SVGGElement>(".brush-g")
