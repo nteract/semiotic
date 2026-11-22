@@ -23,7 +23,7 @@
  * Consumed by: StreamXYFrame (rendered when brush prop is set).
  */
 import * as React from "react"
-import { useRef, useEffect, useMemo, useState } from "react"
+import { useRef, useLayoutEffect, useEffect, useMemo, useState } from "react"
 import { select as d3Select } from "d3-selection"
 import { brush as d3Brush, brushX as d3BrushX, brushY as d3BrushY, type BrushBehavior, type D3BrushEvent } from "d3-brush"
 import type { StreamScales } from "./types"
@@ -270,7 +270,7 @@ export function XYBrushOverlay({
     onAction: handleKeyboardAction,
   })
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!svgRef.current) return
 
     // Type the brush group selection as `SVGGElement` so the

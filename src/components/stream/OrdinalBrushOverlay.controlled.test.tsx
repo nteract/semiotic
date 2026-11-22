@@ -3,6 +3,7 @@ import { act, fireEvent, render } from "@testing-library/react"
 import { scaleBand, scaleLinear } from "d3-scale"
 import { describe, expect, it, vi } from "vitest"
 import { OrdinalBrushOverlay, type OrdinalBrushOverlayProps } from "./OrdinalBrushOverlay"
+import { OrdinalBrushOverlayLazy } from "./OrdinalBrushOverlayLazy"
 import type { OrdinalScales } from "./ordinalTypes"
 import type { OrdinalBrushExtentInput } from "./ordinalBrushTypes"
 
@@ -73,6 +74,20 @@ function setup(props: Partial<OrdinalBrushOverlayProps> = {}) {
 }
 
 describe("controlled ordinal brush extent", () => {
+  it("makes the brush keyboard-accessible once its scales are ready", async () => {
+    const onBrush = vi.fn()
+    const view = (ready: boolean) => (
+      <OrdinalBrushOverlayLazy {...baseProps} scales={ready ? baseProps.scales : null} onBrush={onBrush} />
+    )
+    const { findByRole, queryByRole, rerender } = render(view(true))
+    await findByRole("region")
+    rerender(view(false))
+    expect(queryByRole("region")).toBeNull()
+    rerender(view(true))
+    fireEvent.keyDown(await findByRole("region"), { key: "ArrowRight" })
+    expect(onBrush).toHaveBeenCalledTimes(1)
+  })
+
   it("moves to the caller's extent and clears on null, reporting neither", () => {
     const { rerender, selection, onBrush, onBrushEnd } = setup({ extent: { r: [20, 50] } })
     expect(selection()).toEqual([60, 150])

@@ -44,6 +44,6 @@ export function OrdinalBrushOverlayLazy(props: OrdinalBrushOverlayProps) {
     }
   }, [Comp])
 
-  if (!Comp) return null
+  if (!Comp || !props.scales) return null
   return <Comp {...props} />
 }
