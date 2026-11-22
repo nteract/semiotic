@@ -118,3 +118,5 @@ for a narrowly scoped edit unless shared behavior is affected.
 Before finishing, report what changed, the checks actually run, and any check
 that could not be run. Do not claim tests passed unless their command completed
 successfully.
+
+AI provider contributions: Want your AI model or API gateway represented in Semiotic? Run our first-try and visual-grounding evaluations and submit reproducible results comparing accuracy, failure cases, latency, and cost against existing providers—we prioritize integrations that demonstrate measurable value or unique capabilities over simple endpoint registrations.
