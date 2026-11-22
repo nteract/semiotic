@@ -9,6 +9,8 @@ import {
   annotationPhrase
 } from "./describeChart"
 import {
+  NETWORK_FAMILY,
+  capitalize,
   XY_FAMILY,
   BAR_FAMILY,
   PART_TO_WHOLE,
@@ -65,12 +67,6 @@ export interface BuildNavigationTreeOptions {
   recipe?: ChartRecipe
 }
 
-const NETWORK_FAMILY = new Set([
-  "ForceDirectedGraph",
-  "SankeyDiagram",
-  "ProcessSankey",
-  "ChordDiagram"
-])
 const HIERARCHY_FAMILY = new Set([
   "TreeDiagram",
   "Treemap",
@@ -98,18 +94,17 @@ export function supportsStructuredNavigation(
     NETWORK_FAMILY.has(component) ||
     HIERARCHY_FAMILY.has(component) ||
     GEO_FAMILY.has(component) ||
+    supportsStatisticalNavigation(component)
+  )
+}
+
+function supportsStatisticalNavigation(component: string): boolean {
+  return (
     XY_FAMILY.has(component) ||
     BAR_FAMILY.has(component) ||
     PART_TO_WHOLE.has(component) ||
     DISTRIBUTION.has(component)
   )
-}
-
-function appendAnnotationBranch(
-  root: NavTreeNode,
-  branch: NavTreeNode | null
-): void {
-  if (branch) root.children?.push(branch)
 }
 
 function buildNetworkNavigationTree(
@@ -118,7 +113,6 @@ function buildNetworkNavigationTree(
   maxLeaves: number,
   fmtNum: (n: number) => string
 ): NavTreeNode {
-  props = aiChartProps(props)
   const nodes = Array.isArray(props.nodes) ? (props.nodes as Datum[]) : []
   const edges = Array.isArray(props.edges)
     ? (props.edges as Datum[])
@@ -241,13 +235,6 @@ function buildNetworkNavigationTree(
   return root
 }
 
-// Families + role resolution (XY_FAMILY/BAR_FAMILY/PART_TO_WHOLE/DISTRIBUTION,
-// roles, seriesField, fmtDim) are shared with describeChart via ./chartRoles.
-
-function capitalize(s: string): string {
-  return s ? s.charAt(0).toUpperCase() + s.slice(1) : s
-}
-
 /**
  * Build the "Annotations" branch — a grouped node whose children announce each
  * author-placed note, so a screen-reader user *encounters* author intent during
@@ -263,12 +250,11 @@ function buildAnnotationBranch(
   const items = visibleChartAnnotations(props.annotations)
   if (items.length === 0) return null
 
-  let counter = 0
-  const children: NavTreeNode[] = items.slice(0, maxLeaves).map((a) => {
+  const children: NavTreeNode[] = items.slice(0, maxLeaves).map((a, index) => {
     const status = a.lifecycle?.status as string | undefined
     const statusSuffix = status && status !== "accepted" ? ` (${status})` : ""
     return {
-      id: `annotation-${counter++}`,
+      id: `annotation-${index}`,
       role: "annotation",
       level: 3,
       label: `${capitalize(annotationPhrase(a, !!props.autoPlaceAnnotations?.audience))}${statusSuffix}.`,
@@ -277,7 +263,7 @@ function buildAnnotationBranch(
   })
   if (items.length > maxLeaves) {
     children.push({
-      id: `annotation-${counter++}`,
+      id: `annotation-${children.length}`,
       role: "annotation",
       level: 3,
       label: `…and ${items.length - maxLeaves} more annotations.`
@@ -309,7 +295,7 @@ export function buildNavigationTree(
   props: Datum,
   options: BuildNavigationTreeOptions = {}
 ): NavTreeNode {
-  props = aiChartProps(props)
+  props = aiChartProps(props, component)
   const locale = options.locale ?? "en"
   const maxLeaves = Math.max(1, options.maxLeaves ?? 200)
   const fmtNum = chartValueFormatter(locale)
@@ -319,21 +305,24 @@ export function buildNavigationTree(
     return buildRecipeNavigationTree(recipe, props, { maxLeaves, locale })
   }
 
-  // Author annotations become a first-class branch in every family, including
-  // the topology, hierarchy, and geographic structures built below.
-  const annotationBranch = buildAnnotationBranch(props, maxLeaves)
-
-  const specializedBuilder = NETWORK_FAMILY.has(component)
+  const build = NETWORK_FAMILY.has(component)
     ? buildNetworkNavigationTree
     : HIERARCHY_FAMILY.has(component)
       ? buildHierarchyNavigationTree
-      : GEO_FAMILY.has(component) ? buildGeoNavigationTree : undefined
-  if (specializedBuilder) {
-    const tree = specializedBuilder(component, props, maxLeaves, fmtNum)
-    appendAnnotationBranch(tree, annotationBranch)
-    return tree
-  }
+      : GEO_FAMILY.has(component) ? buildGeoNavigationTree : buildStatisticalNavigationTree
+  const root = build(component, props, maxLeaves, fmtNum, locale)
+  const annotations = buildAnnotationBranch(props, maxLeaves)
+  if (annotations) root.children?.push(annotations)
+  return root
+}
 
+function buildStatisticalNavigationTree(
+  component: string,
+  props: Datum,
+  maxLeaves: number,
+  fmtNum: (n: number) => string,
+  locale: string
+): NavTreeNode {
   const root: NavTreeNode = {
     id: "root",
     role: "chart",
@@ -343,11 +332,7 @@ export function buildNavigationTree(
   }
 
   let data = Array.isArray(props.data) ? (props.data as Datum[]) : null
-  const statsFamily = supportsStructuredNavigation(component, props, options)
-  if (!data || data.length === 0 || !statsFamily) {
-    if (annotationBranch) root.children = [annotationBranch]
-    return root
-  }
+  if (!data?.length || !supportsStatisticalNavigation(component)) return root
 
   const { measure, measureFallback, dimension, dimensionFallback } = roles(
     component,
@@ -360,10 +345,7 @@ export function buildNavigationTree(
   if (continuous) {
     const valid = (d: Datum) => Number.isFinite(plottedDimension(d))
     if (data.some(d => !valid(d))) data = data.filter(valid)
-    if (!data.length) {
-      appendAnnotationBranch(root, annotationBranch)
-      return root
-    }
+    if (!data.length) return root
   }
   // Only string accessors are human-readable labels; a function accessor is
   // truthy but would leak its source into node labels — fall back instead.
@@ -487,8 +469,6 @@ export function buildNavigationTree(
   } else {
     root.children = [...axisNodes, ...leaves(data, 2)]
   }
-  if (annotationBranch) root.children.push(annotationBranch)
-
   return root
 }
 

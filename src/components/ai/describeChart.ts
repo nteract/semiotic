@@ -1,13 +1,15 @@
 import { fullAudienceNoteText, visibleChartAnnotations } from "../charts/shared/annotationAudienceText"
 import type { Datum } from "../charts/shared/datumTypes"
 import { resolveRawAccessor } from "../stream/accessorUtils"
-import { aiChartProps, aiNumericAccessor } from "./aiData"
+import { aiChartProps, aiNumericAccessor, isPhysicsChart } from "./aiData"
 import { coerceUtcTimeValue } from "../charts/shared/temporalStrings"
 import type { ChartCapability, ChartFamily } from "./chartCapabilityTypes"
 import type { IntentId } from "./intents"
 import { intentRegistryStore } from "./intentRegistry"
 import type { AudienceProfile } from "./audienceProfile"
 import {
+  NETWORK_FAMILY,
+  capitalize,
   XY_FAMILY,
   BAR_FAMILY,
   PART_TO_WHOLE,
@@ -181,27 +183,6 @@ const KIND_PHRASE: Record<string, string> = {
   PhysicsCustomChart: "custom physics chart"
 }
 
-// XY_FAMILY / BAR_FAMILY / PART_TO_WHOLE / DISTRIBUTION + roles/seriesField/fmtDim
-// are shared with navigationTree via ./chartRoles. NETWORK is description-only.
-const NETWORK = new Set([
-  "ForceDirectedGraph",
-  "SankeyDiagram",
-  "ProcessSankey",
-  "ChordDiagram"
-])
-const PHYSICS = new Set([
-  "StreamPhysicsFrame",
-  "EventDropChart",
-  "GaltonBoardChart",
-  "UnitPileChart",
-  "CollisionSwarmChart",
-  "PacketFlowChart",
-  "ProcessFlowChart",
-  "GauntletChart",
-  "CrucibleChart",
-  "PhysicsCustomChart"
-])
-
 function humanizeComponent(name: string): string {
   return name.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase()
 }
@@ -365,7 +346,7 @@ function componentAct(component: string): CommunicativeAct | undefined {
   if (BAR_FAMILY.has(component)) return "comparing"
   if (DISTRIBUTION.has(component)) return "characterizing"
   if (XY_FAMILY.has(component)) return "tracking"
-  if (NETWORK.has(component)) return "tracing"
+  if (NETWORK_FAMILY.has(component)) return "tracing"
   if (component === "BigNumber") return "presenting"
   return undefined
 }
@@ -598,7 +579,7 @@ export function describeChart(
   props: Datum,
   options: DescribeChartOptions = {}
 ): DescribeChartResult {
-  props = aiChartProps(props)
+  props = aiChartProps(props, component)
   const explicitLevels = options.levels !== undefined
   const want = new Set<DescribeLevel>(options.levels ?? ["l1", "l2", "l3"])
   // L4 is opt-in: auto-append when intent context is supplied and `levels`
@@ -641,11 +622,11 @@ export function describeChart(
   const seriesAccessor = seriesField(props, component)
   const series =
     typeof seriesAccessor === "function" ? "series" : seriesAccessor
-  const physicsProjection = PHYSICS.has(component)
+  const physicsProjection = isPhysicsChart(component)
     ? physicsProjectionRows(props, fmtNum)
     : null
   const sourceProjection =
-    PHYSICS.has(component) && physicsProjection === null
+    isPhysicsChart(component) && physicsProjection === null
       ? describePhysicsSource(component, props)
       : null
 
@@ -663,7 +644,7 @@ export function describeChart(
     typeof dimension === "string" && dimension ? dimension : dimensionFallback
 
   const levels: { l1?: string; l2?: string; l3?: string; l4?: string } = {}
-  if (PHYSICS.has(component)) {
+  if (isPhysicsChart(component)) {
     applyPhysicsLevels(
       component,
       kind,
@@ -682,7 +663,7 @@ export function describeChart(
   }
 
   // ── L1: encoding ───────────────────────────────────────────────────────
-  if (want.has("l1") && !PHYSICS.has(component)) {
+  if (want.has("l1") && !isPhysicsChart(component)) {
     if (component === "BumpChart") {
       levels.l1 = `${subject} ranking ${series ?? "series"} by ${measureName} across ${dimensionName}.`
     } else if (XY_FAMILY.has(component) || BAR_FAMILY.has(component)) {
@@ -695,7 +676,7 @@ export function describeChart(
       levels.l1 =
         `${subject} of the distribution of ${measureName}` +
         (series ? ` by ${series}.` : ".")
-    } else if (NETWORK.has(component)) {
+    } else if (NETWORK_FAMILY.has(component)) {
       const nNodes = Array.isArray(props.nodes) ? props.nodes.length : undefined
       const nEdges = Array.isArray(props.edges) ? props.edges.length : undefined
       const parts = [
@@ -1082,8 +1063,4 @@ function audienceNudge(
     return ` This ${kindPhrase(component)} may be unfamiliar${audience.name ? ` to ${audience.name.toLowerCase()} readers` : ""} — lean on this description.`
   }
   return ""
-}
-
-function capitalize(s: string): string {
-  return s.length ? s[0].toUpperCase() + s.slice(1) : s
 }

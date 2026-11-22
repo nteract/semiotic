@@ -2,7 +2,7 @@ import type { Datum } from "../charts/shared/datumTypes"
 import type { AudienceProfile } from "./audienceProfile"
 import { aiNumericValue } from "./aiData"
 import { stringValue } from "./navigationValues"
-import { article, computeStats, descriptionNumberFormatter } from "./chartRoles"
+import { article, capitalize, computeStats, descriptionNumberFormatter } from "./chartRoles"
 import type { ChartRecipe } from "./chartRecipes"
 import type { DescribeChartResult, DescribeLevel } from "./describeChart"
 import {
@@ -18,10 +18,6 @@ export interface DescribeRecipeChartOptions {
   locale?: string
   audience?: AudienceProfile
   includeCaveats?: boolean
-}
-
-function capitalize(value: string): string {
-  return value ? value.charAt(0).toUpperCase() + value.slice(1) : value
 }
 
 function generatedLevels(

@@ -1,8 +1,24 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import { isDataRecord as isAIDataRecord } from "../charts/shared/dataRecords"
 import { resolveRawAccessor } from "../stream/accessorUtils"
+import { withFrameAnnotationProps } from "../charts/shared/frameAnnotationProps"
 
 export { isAIDataRecord }
+
+export const GROUNDED_PHYSICS_CHARTS = new Set([
+  "StreamPhysicsFrame",
+  "EventDropChart",
+  "GaltonBoardChart",
+  "UnitPileChart",
+  "CollisionSwarmChart",
+  "PacketFlowChart",
+  "ProcessFlowChart",
+  "PhysicsCustomChart",
+])
+
+export function isPhysicsChart(component: string): boolean {
+  return GROUNDED_PHYSICS_CHARTS.has(component) || component === "GauntletChart" || component === "CrucibleChart"
+}
 
 /** AI summaries retain valid row objects and omit absent/non-record rows. */
 export function aiDataRows(value: unknown): Datum[] {
@@ -13,8 +29,8 @@ export function aiDataRows(value: unknown): Datum[] {
 }
 
 /** Preserve props and datum identity when the input already contains records. */
-export function aiChartProps(props: Datum): Datum {
-  let result = props
+export function aiChartProps(props: Datum, component: string): Datum {
+  let result = withFrameAnnotationProps(props, props.frameProps, isPhysicsChart(component))
   for (const key of [
     "data",
     "nodes",
@@ -27,9 +43,10 @@ export function aiChartProps(props: Datum): Datum {
     "projectionRows",
     "annotations"
   ]) {
-    if (!Array.isArray(props[key])) continue
-    const rows = aiDataRows(props[key])
-    if (rows !== props[key]) {
+    const input = result[key]
+    if (!Array.isArray(input)) continue
+    const rows = aiDataRows(input)
+    if (rows !== input) {
       if (result === props) result = { ...props }
       result[key] = rows
     }

@@ -2,7 +2,7 @@ import { hierarchyChildren, stringValue, finiteNumberValue as finite } from "./n
 import { plural, summarizePhysicsRows } from "./chartRoles"
 import { normalizePhysicsProjectionRows } from "./describePhysicsProjection"
 import { getMinMax } from "../charts/shared/minMax"
-import { aiChartProps, isAIDataRecord } from "./aiData"
+import { GROUNDED_PHYSICS_CHARTS, aiChartProps, isAIDataRecord } from "./aiData"
 import type { Datum } from "../charts/shared/datumTypes"
 import {
   describeChart,
@@ -179,17 +179,6 @@ export interface ChartReaderGroundingFacts {
   text: string
 }
 
-const PHYSICS_COMPONENTS = new Set([
-  "StreamPhysicsFrame",
-  "EventDropChart",
-  "GaltonBoardChart",
-  "UnitPileChart",
-  "CollisionSwarmChart",
-  "PacketFlowChart",
-  "ProcessFlowChart",
-  "PhysicsCustomChart",
-])
-
 function record(value: unknown): Record<string, unknown> | undefined {
   return isAIDataRecord(value) ? value : undefined
 }
@@ -311,7 +300,7 @@ function sourceFacts(
     }
   }
 
-  if (PHYSICS_COMPONENTS.has(component) && Array.isArray(props.data)) {
+  if (GROUNDED_PHYSICS_CHARTS.has(component) && Array.isArray(props.data)) {
     const rows = props.data as Record<string, unknown>[]
     statements.push(`${rows.length} observed source row${rows.length === 1 ? "" : "s"} are supplied.`)
     const accessor =
@@ -598,7 +587,7 @@ function buildPhysicsGrounding(
   })
 
   const hasGeometry = Object.keys(geometry).length > 0
-  const isPhysicsComponent = PHYSICS_COMPONENTS.has(component)
+  const isPhysicsComponent = GROUNDED_PHYSICS_CHARTS.has(component)
   const hasRuntimeSignal =
     Object.keys(simulation).length > 0 ||
     hasGeometry ||
@@ -644,7 +633,7 @@ export function buildReaderGrounding(
   props: Datum,
   options: ChartReaderGroundingOptions = {}
 ): ChartReaderGrounding {
-  props = aiChartProps(props)
+  props = aiChartProps(props, component)
   const { capability, audience, locale } = options
   const levels = options.levels ?? ["l1", "l2", "l3"]
   const includeStructure = options.includeStructure !== false

@@ -1,5 +1,5 @@
 import * as React from "react"
-import { render, waitFor } from "@testing-library/react"
+import { render, waitFor, within } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
 import { Scatterplot } from "semiotic/xy"
 import { ThemeProvider } from "../ThemeProvider"
@@ -7,6 +7,7 @@ import { renderChartWithEvidence } from "../server/renderToStaticSVG"
 import type { AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import { describeChart } from "../ai/describeChart"
 import { buildNavigationTree } from "../ai/navigationTree"
+import { buildReaderGrounding } from "../ai/readerGrounding"
 
 const full = "The last week includes provisional readings."
 const note = {
@@ -64,6 +65,66 @@ describe("annotation policy on a public chart", () => {
     expect(describeChart("Scatterplot", config).annotations).toContain(full)
     const branch = buildNavigationTree("Scatterplot", config).children?.find(node => node.id === "annotations")
     expect(branch?.children?.[0].label).toContain(full)
+  })
+
+  const frameNote = {
+    ...note,
+    label: "Replacement note",
+    audienceText: { long: "An editorial correction replaced the first reading.", short: "Corrected" },
+  }
+  it.each([
+    {
+      name: "an audience in frameProps", frameProps: { autoPlaceAnnotations: { audience: expert } },
+      visual: "Provisional", reading: full
+    },
+    {
+      name: "a disabled frame override", autoPlaceAnnotations: { audience: expert },
+      frameProps: { autoPlaceAnnotations: false }, visual: note.label, reading: note.label
+    },
+    {
+      name: "notes and audience in frameProps", frameProps: { annotations: [frameNote], autoPlaceAnnotations: { audience: expert } },
+      visual: "Corrected", reading: frameNote.audienceText.long
+    },
+    {
+      name: "frame notes with a chart-level audience", autoPlaceAnnotations: { audience: expert },
+      frameProps: { annotations: [frameNote] }, visual: "Corrected", reading: frameNote.audienceText.long
+    }
+  ])("uses the rendered reading for $name in prose and navigation", async ({ frameProps, autoPlaceAnnotations, visual, reading }) => {
+    const config = { ...props, annotations: [note], autoPlaceAnnotations, frameProps }
+    const { container } = render(<Scatterplot {...config} />)
+    const { svg } = renderChartWithEvidence("Scatterplot", config)
+    const exported = new DOMParser().parseFromString(svg, "image/svg+xml")
+    expect(await within(container).findByText(visual, { selector: "svg text" })).toBeVisible()
+    expect(exported.querySelector(".semiotic-annotations text")?.textContent).toBe(visual)
+    expect(describeChart("Scatterplot", config).annotations).toContain(`labeled "${reading}"`)
+    const branch = buildNavigationTree("Scatterplot", config).children?.find(node => node.id === "annotations")
+    expect(branch?.children?.[0].label).toContain(`labeled "${reading}"`)
+    expect(buildReaderGrounding("Scatterplot", config).description.annotations).toContain(reading)
+  })
+
+  it("keeps a frame override that clears chart notes, including generated regression notes", () => {
+    const config = { ...props, regression: true, frameProps: { annotations: [], autoPlaceAnnotations: { audience: expert } } }
+    expect(renderChartWithEvidence("Scatterplot", config).evidence.annotationCount).toBe(0)
+    expect(describeChart("Scatterplot", config).annotations).toBeUndefined()
+    expect(buildNavigationTree("Scatterplot", config).children?.some(n => n.id === "annotations")).toBe(false)
+  })
+
+  it("respects the physics charts' top-level annotation precedence and falls back to frame props", () => {
+    const config = {
+      data: [{ id: "a", value: 1 }, { id: "b", value: 2 }], valueAccessor: "value", bins: 3,
+      frameProps: { annotations: [frameNote], autoPlaceAnnotations: { audience: expert } }
+    }
+    for (const [chartProps, visual, reading] of [
+      [config, frameNote.audienceText.short, frameNote.audienceText.long],
+      [{ ...config, annotations: [note], autoPlaceAnnotations: false }, note.label, note.label]
+    ] as const) {
+      const { svg } = renderChartWithEvidence("GaltonBoardChart", chartProps)
+      const doc = new DOMParser().parseFromString(svg, "image/svg+xml")
+      expect(doc.querySelector(".semiotic-annotations text")?.textContent).toBe(visual)
+      expect(describeChart("GaltonBoardChart", chartProps).annotations).toContain(reading)
+      const branch = buildNavigationTree("GaltonBoardChart", chartProps).children?.find(n => n.id === "annotations")
+      expect(branch?.children?.[0].label).toContain(reading)
+    }
   })
 
   it("uses mobile cohesion ahead of the theme, while letting a note override both", () => {

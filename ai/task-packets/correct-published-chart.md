@@ -539,7 +539,7 @@ npx vitest run docs/src/pages/tasks/examples/source-correction.test.ts
 npx playwright test --config playwright.docs-examples.config.ts integration-tests/docs-examples-tasks.spec.ts
 ```
 
-Recorded execution: 2026-11-22T14:40:35.015Z. Agent-observed execution of repository tests; independent review is not recorded.
+Recorded execution: 2026-11-22T15:08:20.010Z. Agent-observed execution of repository tests; independent review is not recorded.
 
 Not assessed:
 
