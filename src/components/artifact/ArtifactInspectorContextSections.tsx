@@ -1,41 +1,53 @@
-import type { ReactEventHandler } from "react"
+import {
+  InspectorDisclosure,
+  renderInspectorField,
+  mapInspectorRows,
+  recordId,
+  type DisclosureOptions
+} from "./ArtifactInspectorElements"
 import type { ArtifactContract } from "./types"
 import type { ArtifactInspectorEvaluation } from "./artifactInspectorSummary"
 
-interface DisclosureSectionProps {
+interface DisclosureSectionProps extends DisclosureOptions {
   contract: ArtifactContract
-  open: boolean | undefined
-  onToggle: ReactEventHandler<HTMLDetailsElement> | undefined
 }
 
 interface TimeSectionProps extends DisclosureSectionProps {
   fallbackLabel: string
 }
 
+const timestamps = [
+  ["observedAt", "Observed"],
+  ["ingestedAt", "Ingested"],
+  ["processedAt", "Processed"],
+  ["publishedAt", "Published"],
+  ["snapshotAt", "Snapshot"]
+] as const
+
 export function ArtifactInspectorTimeSection({
   contract,
   fallbackLabel,
-  open,
-  onToggle
+  ...disclosure
 }: TimeSectionProps) {
   const time = contract.time
   return (
-    <details open={open} onToggle={onToggle}>
-      <summary>Time and as-of state</summary>
+    <InspectorDisclosure
+      {...disclosure}
+      section="time"
+      label="Time and as-of state"
+    >
       {time ? (
         <>
           <dl>
-            <div>
-              <dt>Presentation</dt>
-              <dd>
-                {time.presentation?.label ??
-                  time.presentation?.state ??
-                  "Unknown — no presentation state is declared"}
-              </dd>
-            </div>
-            <div>
-              <dt>Event time</dt>
-              <dd>
+            {renderInspectorField(
+              "Presentation",
+              time.presentation?.label ??
+                time.presentation?.state ??
+                "Unknown — no presentation state is declared"
+            )}
+            {renderInspectorField(
+              "Event time",
+              <>
                 {time.eventTime?.value ??
                   time.eventTime?.field ??
                   "Unknown — no event-time value or field is declared"}
@@ -45,60 +57,35 @@ export function ArtifactInspectorTimeSection({
                 {time.eventTime?.granularity
                   ? ` · ${time.eventTime.granularity}`
                   : ""}
-              </dd>
-            </div>
-            <div>
-              <dt>Window</dt>
-              <dd>
-                {time.window
-                  ? `${time.window.start} through ${time.window.end} · ${time.window.status}`
-                  : "Unknown — no reporting window is declared"}
-              </dd>
-            </div>
-            <div>
-              <dt>Observed</dt>
-              <dd>{time.observedAt ?? "Unknown"}</dd>
-            </div>
-            <div>
-              <dt>Ingested</dt>
-              <dd>{time.ingestedAt ?? "Unknown"}</dd>
-            </div>
-            <div>
-              <dt>Processed</dt>
-              <dd>{time.processedAt ?? "Unknown"}</dd>
-            </div>
-            <div>
-              <dt>Published</dt>
-              <dd>{time.publishedAt ?? "Unknown"}</dd>
-            </div>
-            <div>
-              <dt>Snapshot</dt>
-              <dd>{time.snapshotAt ?? "Unknown"}</dd>
-            </div>
-            <div>
-              <dt>Freshness</dt>
-              <dd>
-                {time.freshness
-                  ? `${time.freshness.status}${time.freshness.basis ? ` · ${time.freshness.basis}` : ""}`
-                  : "Unknown — no freshness check is declared"}
-              </dd>
-            </div>
-            <div>
-              <dt>Completeness</dt>
-              <dd>
-                {time.completeness
-                  ? `${time.completeness.status}${time.completeness.basis ? ` · ${time.completeness.basis}` : ""}`
-                  : "Unknown — no completeness state is declared"}
-              </dd>
-            </div>
-            <div>
-              <dt>Watermark</dt>
-              <dd>
-                {time.watermark
-                  ? `${time.watermark.value}${time.watermark.allowedLateness ? ` · allowed lateness ${time.watermark.allowedLateness}` : ""}`
-                  : "Not declared"}
-              </dd>
-            </div>
+              </>
+            )}
+            {renderInspectorField(
+              "Window",
+              time.window
+                ? `${time.window.start} through ${time.window.end} · ${time.window.status}`
+                : "Unknown — no reporting window is declared"
+            )}
+            {timestamps.map(([key, label]) =>
+              renderInspectorField(label, time[key] ?? "Unknown")
+            )}
+            {renderInspectorField(
+              "Freshness",
+              time.freshness
+                ? `${time.freshness.status}${time.freshness.basis ? ` · ${time.freshness.basis}` : ""}`
+                : "Unknown — no freshness check is declared"
+            )}
+            {renderInspectorField(
+              "Completeness",
+              time.completeness
+                ? `${time.completeness.status}${time.completeness.basis ? ` · ${time.completeness.basis}` : ""}`
+                : "Unknown — no completeness state is declared"
+            )}
+            {renderInspectorField(
+              "Watermark",
+              time.watermark
+                ? `${time.watermark.value}${time.watermark.allowedLateness ? ` · allowed lateness ${time.watermark.allowedLateness}` : ""}`
+                : "Not declared"
+            )}
           </dl>
           {time.sources?.length ? (
             <>
@@ -106,8 +93,8 @@ export function ArtifactInspectorTimeSection({
                 <strong>Source clocks</strong>
               </p>
               <ul>
-                {time.sources.map((source) => (
-                  <li key={source.id}>
+                {mapInspectorRows(time.sources, recordId, (source, key) => (
+                  <li key={key}>
                     <strong>{source.label ?? source.id}</strong> · {source.kind}
                     {source.observedAt ? ` · ${source.observedAt}` : ""} ·
                     freshness {source.freshness ?? "unknown"} · completeness{" "}
@@ -121,18 +108,20 @@ export function ArtifactInspectorTimeSection({
       ) : (
         <p>{fallbackLabel}.</p>
       )}
-    </details>
+    </InspectorDisclosure>
   )
 }
 
 export function ArtifactInspectorHistorySection({
   contract,
-  open,
-  onToggle
+  ...disclosure
 }: DisclosureSectionProps) {
   return (
-    <details open={open} onToggle={onToggle}>
-      <summary>Corrections and history</summary>
+    <InspectorDisclosure
+      {...disclosure}
+      section="history"
+      label="Corrections and history"
+    >
       {contract.time?.revision ? (
         <p>
           Revision state: <strong>{contract.time.revision.status}</strong>
@@ -148,16 +137,21 @@ export function ArtifactInspectorHistorySection({
       )}
       {contract.contestability?.corrections?.length ? (
         <ul>
-          {contract.contestability.corrections.map((correction) => (
-            <li key={correction.id}>
-              <strong>{correction.id}</strong> · {correction.reason} · affected{" "}
-              {correction.affectedClaimIds.join(", ") || "no named claims"}
-              {correction.replacementClaimIds?.length
-                ? ` · replacements ${correction.replacementClaimIds.join(", ")}`
-                : ""}
-              {correction.createdAt ? ` · ${correction.createdAt}` : ""}
-            </li>
-          ))}
+          {mapInspectorRows(
+            contract.contestability.corrections,
+            recordId,
+            (correction, key) => (
+              <li key={key}>
+                <strong>{correction.id}</strong> · {correction.reason} ·
+                affected{" "}
+                {correction.affectedClaimIds.join(", ") || "no named claims"}
+                {correction.replacementClaimIds?.length
+                  ? ` · replacements ${correction.replacementClaimIds.join(", ")}`
+                  : ""}
+                {correction.createdAt ? ` · ${correction.createdAt}` : ""}
+              </li>
+            )
+          )}
         </ul>
       ) : (
         <p>No correction history is declared.</p>
@@ -168,12 +162,16 @@ export function ArtifactInspectorHistorySection({
             <strong>Challenges</strong>
           </p>
           <ul>
-            {contract.contestability.challenges.map((challenge) => (
-              <li key={challenge.id}>
-                <strong>{challenge.status}</strong> · claim {challenge.claimId}{" "}
-                · {challenge.reason}
-              </li>
-            ))}
+            {mapInspectorRows(
+              contract.contestability.challenges,
+              recordId,
+              (challenge, key) => (
+                <li key={key}>
+                  <strong>{challenge.status}</strong> · claim{" "}
+                  {challenge.claimId} · {challenge.reason}
+                </li>
+              )
+            )}
           </ul>
         </>
       ) : null}
@@ -183,14 +181,18 @@ export function ArtifactInspectorHistorySection({
             <strong>Reviews</strong>
           </p>
           <ul>
-            {contract.accountability.reviews.map((review) => (
-              <li key={review.id}>
-                <strong>{review.status}</strong>
-                {review.reviewer?.name ? ` · ${review.reviewer.name}` : ""}
-                {review.reviewedAt ? ` · ${review.reviewedAt}` : ""}
-                {review.rationale ? ` · ${review.rationale}` : ""}
-              </li>
-            ))}
+            {mapInspectorRows(
+              contract.accountability.reviews,
+              recordId,
+              (review, key) => (
+                <li key={key}>
+                  <strong>{review.status}</strong>
+                  {review.reviewer?.name ? ` · ${review.reviewer.name}` : ""}
+                  {review.reviewedAt ? ` · ${review.reviewedAt}` : ""}
+                  {review.rationale ? ` · ${review.rationale}` : ""}
+                </li>
+              )
+            )}
           </ul>
         </>
       ) : null}
@@ -200,19 +202,24 @@ export function ArtifactInspectorHistorySection({
             <strong>Recorded actions</strong>
           </p>
           <ul>
-            {contract.accountability.actions.map((action) => (
-              <li key={action.id}>
-                <strong>{action.status ?? "recorded"}</strong> · {action.action}
-                {action.claimIds.length
-                  ? ` · claims ${action.claimIds.join(", ")}`
-                  : ""}
-                {action.actedAt ? ` · ${action.actedAt}` : ""}
-              </li>
-            ))}
+            {mapInspectorRows(
+              contract.accountability.actions,
+              recordId,
+              (action, key) => (
+                <li key={key}>
+                  <strong>{action.status ?? "recorded"}</strong> ·{" "}
+                  {action.action}
+                  {action.claimIds.length
+                    ? ` · claims ${action.claimIds.join(", ")}`
+                    : ""}
+                  {action.actedAt ? ` · ${action.actedAt}` : ""}
+                </li>
+              )
+            )}
           </ul>
         </>
       ) : null}
-    </details>
+    </InspectorDisclosure>
   )
 }
 
@@ -223,36 +230,37 @@ interface AlternativesSectionProps extends DisclosureSectionProps {
 export function ArtifactInspectorAlternativesSection({
   contract,
   evaluation,
-  open,
-  onToggle
+  ...disclosure
 }: AlternativesSectionProps) {
   return (
-    <details open={open} onToggle={onToggle}>
-      <summary>Alternative views</summary>
+    <InspectorDisclosure
+      {...disclosure}
+      section="alternatives"
+      label="Alternative views"
+    >
       <dl>
-        <div>
-          <dt>Selected form</dt>
-          <dd>
-            {contract.form?.chartFamily ??
-              "Unknown — no chart family is declared"}
-          </dd>
-        </div>
-        <div>
-          <dt>Why this form</dt>
-          <dd>
-            {contract.form?.whyThisForm ??
-              "Unknown — no representation rationale is declared"}
-          </dd>
-        </div>
+        {renderInspectorField(
+          "Selected form",
+          contract.form?.chartFamily ?? "Unknown — no chart family is declared"
+        )}
+        {renderInspectorField(
+          "Why this form",
+          contract.form?.whyThisForm ??
+            "Unknown — no representation rationale is declared"
+        )}
       </dl>
       {contract.contestability?.alternativeViews?.length ? (
         <ul>
-          {contract.contestability.alternativeViews.map((view) => (
-            <li key={view.id}>
-              <strong>{view.label}</strong>
-              {view.rationale ? ` · ${view.rationale}` : ""}
-            </li>
-          ))}
+          {mapInspectorRows(
+            contract.contestability.alternativeViews,
+            recordId,
+            (view, key) => (
+              <li key={key}>
+                <strong>{view.label}</strong>
+                {view.rationale ? ` · ${view.rationale}` : ""}
+              </li>
+            )
+          )}
         </ul>
       ) : (
         <p>No named alternative views are declared.</p>
@@ -263,14 +271,18 @@ export function ArtifactInspectorAlternativesSection({
             <strong>Evaluation alternatives</strong>
           </p>
           <ul>
-            {evaluation.alternatives.map((alternative) => (
-              <li key={alternative.id}>
-                <strong>{alternative.label}</strong>
-                {alternative.reasons?.length
-                  ? ` · ${alternative.reasons.join(" ")}`
-                  : ""}
-              </li>
-            ))}
+            {mapInspectorRows(
+              evaluation.alternatives,
+              recordId,
+              (alternative, key) => (
+                <li key={key}>
+                  <strong>{alternative.label}</strong>
+                  {alternative.reasons?.length
+                    ? ` · ${alternative.reasons.join(" ")}`
+                    : ""}
+                </li>
+              )
+            )}
           </ul>
         </>
       ) : null}
@@ -280,15 +292,23 @@ export function ArtifactInspectorAlternativesSection({
             <strong>Considered but not selected</strong>
           </p>
           <ul>
-            {contract.form.rejectedAlternatives.map((alternative) => (
-              <li key={`${alternative.representation}:${alternative.reason}`}>
-                <strong>{alternative.representation}</strong> ·{" "}
-                {alternative.reason}
-              </li>
-            ))}
+            {mapInspectorRows(
+              contract.form.rejectedAlternatives,
+              (alternative) =>
+                JSON.stringify([
+                  alternative.representation,
+                  alternative.reason
+                ]),
+              (alternative, key) => (
+                <li key={key}>
+                  <strong>{alternative.representation}</strong> ·{" "}
+                  {alternative.reason}
+                </li>
+              )
+            )}
           </ul>
         </>
       ) : null}
-    </details>
+    </InspectorDisclosure>
   )
 }

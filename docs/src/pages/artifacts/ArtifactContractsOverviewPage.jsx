@@ -428,7 +428,10 @@ export default function ArtifactContractsOverviewPage() {
           The React entry keeps the core contract utilities renderer-independent. Its concise
           summary exposes status, time, claims, evidence, policy, and review signals before native
           disclosure controls reveal as-of details, correction history, alternatives, and stable
-          JSON.
+          JSON. Readers can open and close each section independently. To control the
+          open sections from a parent, pass <code>expandedSections</code> and update it
+          in <code>onDisclosureChange(section, expanded)</code>. Pass a new contract or
+          evaluation object when its contents change so the summary and JSON refresh.
         </p>
         <div className="artifact-overview-inspector-grid">
           <CodeBlock

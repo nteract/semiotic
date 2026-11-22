@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `ArtifactInspector` respects parent-controlled disclosure state and keeps
+  records with duplicate IDs visible as the inspected contract changes.
+  [source: #1537]
 - Line and area multi-series tooltips snap the crosshair and rows to one
   observed x. Sparse series appear only where they have a rendered sample.
   Set `tooltip={{ mode: "multi", sampling: "interpolate" }}` to read values

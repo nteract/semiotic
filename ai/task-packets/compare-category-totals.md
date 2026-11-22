@@ -124,7 +124,7 @@ npx vitest run docs/src/pages/tasks/examples/category-comparison.test.ts
 npx playwright test --config playwright.docs-examples.config.ts integration-tests/docs-examples-tasks.spec.ts
 ```
 
-Recorded execution: 2026-11-22T21:43:05.791Z. Agent-observed execution of repository tests; independent review is not recorded.
+Recorded execution: 2026-11-22T23:29:34.191Z. Agent-observed execution of repository tests; independent review is not recorded.
 
 Not assessed:
 
