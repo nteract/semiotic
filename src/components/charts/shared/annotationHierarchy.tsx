@@ -63,10 +63,6 @@ const COHESION_LAYER_CSS =
   "fill:var(--semiotic-annotation-color,var(--semiotic-text-secondary,#666));" +
   "font-style:italic}"
 
-function isDeferred(annotation: Datum): boolean {
-  return annotation?._annotationDeferred === true
-}
-
 function cohesionMode(annotation: Datum): "blended" | "layer" | null {
   return annotation?.cohesion === "blended" || annotation?.cohesion === "layer"
     ? annotation.cohesion
@@ -116,27 +112,28 @@ function inferredOpacity(readingOrder: number): number {
 export function applyAnnotationEmphasis(
   pairs: ReadonlyArray<AnnotationRenderPair>
 ): React.ReactNode[] {
-  const ranked = pairs.map((p, i) => ({
-    p,
-    i,
-    emphasis: explicitEmphasis(p.annotation),
-    confidence: provenanceConfidence(p.annotation),
-    readingOrder: null as number | null,
-    rank: DEFAULT_EMPHASIS_RANK,
-  }))
+  let anyDeferred = false
+  let anyLayerCohesion = false
+  const ranked = pairs.map(({ annotation, node }, i) => {
+    const emphasis = explicitEmphasis(annotation)
+    const deferred = annotation?._annotationDeferred === true
+    const cohesion = cohesionMode(annotation)
+    if (deferred) anyDeferred = true
+    if (cohesion === "layer") anyLayerCohesion = true
+    return {
+      node, i, emphasis, deferred, cohesion,
+      confidence: provenanceConfidence(annotation),
+      readingOrder: null as number | null,
+      rank: emphasis ? EMPHASIS_RANK[emphasis] : DEFAULT_EMPHASIS_RANK,
+    }
+  })
 
-  const anyHierarchySignal = ranked.some(
-    (r) => r.emphasis != null || r.confidence != null
-  )
-  const anyDeferred = pairs.some((p) => isDeferred(p.annotation))
-  const anyCohesion = pairs.some((p) => cohesionMode(p.annotation) != null)
-  const anyLayerCohesion = pairs.some((p) => cohesionMode(p.annotation) === "layer")
-  // Zero-overhead path: no hierarchy signal, nothing deferred, no cohesion mode.
-  if (!anyHierarchySignal && !anyDeferred && !anyCohesion) return pairs.map((p) => p.node)
+  if (ranked.every(r => !r.emphasis && r.confidence == null && !r.cohesion && !r.deferred)) {
+    return ranked.map(r => r.node)
+  }
 
   const inferredReading = ranked
     .filter((r) => r.emphasis == null && r.confidence != null)
-    .slice()
     .sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0) || a.i - b.i)
 
   inferredReading.forEach((r, readingOrder) => {
@@ -146,18 +143,13 @@ export function applyAnnotationEmphasis(
     r.rank = INFERRED_EMPHASIS_RANK - readingOrder / Math.max(1, inferredReading.length)
   })
 
-  for (const r of ranked) {
-    if (r.emphasis) r.rank = EMPHASIS_RANK[r.emphasis]
-  }
-
   const rendered = ranked
     .sort((a, b) => a.rank - b.rank || a.i - b.i)
     .map((r) => {
-      const { p, i, emphasis, readingOrder } = r
-      const deferred = isDeferred(p.annotation)
+      const { i, emphasis, readingOrder, cohesion, deferred } = r
 
-      let node: React.ReactNode = p.node
-      if (emphasis === "primary" || emphasis === "secondary" || readingOrder != null) {
+      let node = r.node
+      if (emphasis || readingOrder != null) {
         const isInferred = emphasis == null && readingOrder != null
         const className = isInferred
           ? "annotation-emphasis annotation-emphasis--inferred"
@@ -180,7 +172,7 @@ export function applyAnnotationEmphasis(
                 }
               : {})}
           >
-            {p.node}
+            {node}
           </g>
         )
       }
@@ -188,7 +180,6 @@ export function applyAnnotationEmphasis(
       // M5 cohesion: tag the note so it reads as part of the chart (`blended`,
       // the default look — class hook only) or as a distinct editorial layer
       // (`layer` — recolored italic via COHESION_LAYER_CSS).
-      const cohesion = cohesionMode(p.annotation)
       if (cohesion) {
         node = (
           <g key={`annotation-cohesion-${i}`} className={`annotation-cohesion--${cohesion}`}>

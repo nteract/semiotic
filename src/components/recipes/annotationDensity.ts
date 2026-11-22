@@ -66,10 +66,6 @@ export interface AnnotationDensityResult {
   budget: number
 }
 
-function isNote(a: Datum): boolean {
-  return isNoteAnnotation(a)
-}
-
 /** Notes that are never shed by the budget: `primary` emphasis and M6
  *  `defensive` (traveling caveat) notes. */
 function isFloor(a: Datum): boolean {
@@ -127,37 +123,26 @@ export function annotationDensity(options: AnnotationDensityOptions): Annotation
   const minVisible = Math.max(0, options.minVisible ?? DEFAULT_MIN_VISIBLE)
   const budget = annotationBudget(width, height, options)
 
-  // Tag each annotation with its author index so we can restore order.
-  const indexed = annotations.map((annotation, index) => ({ annotation, index, note: isNote(annotation) }))
-  const noteEntries = indexed.filter((e) => e.note)
-
-  // Nothing to manage: no notes, or the budget covers them all.
-  if (noteEntries.length === 0 || noteEntries.length <= budget) {
+  // Keep original indices so equally ranked notes and repeated records retain author order.
+  const candidates: number[] = []
+  let protectedCount = 0
+  annotations.forEach((note, index) => {
+    if (!isNoteAnnotation(note)) return
+    if (isFloor(note)) protectedCount++
+    else candidates.push(index)
+  })
+  if (protectedCount + candidates.length <= budget) {
     return { visible: annotations.slice(), deferred: [], budget }
   }
 
-  // The floor — never shed: `primary` emphasis, plus M6 `defensive` notes
-  // (traveling caveats that must survive into every export).
-  const forced = noteEntries.filter((e) => isFloor(e.annotation))
-  const rest = noteEntries
-    .filter((e) => !isFloor(e.annotation))
-    .sort((a, b) => priority(b.annotation) - priority(a.annotation) || a.index - b.index)
-
-  const slots = Math.max(0, budget - forced.length)
-  const neededForMin = Math.max(0, minVisible - forced.length)
-  const keepCount = Math.min(rest.length, Math.max(slots, neededForMin))
-
-  const keptIndices = new Set<number>([
-    ...forced.map((e) => e.index),
-    ...rest.slice(0, keepCount).map((e) => e.index),
-  ])
-
+  candidates.sort((a, b) => priority(annotations[b]) - priority(annotations[a]) || a - b)
+  const available = Math.max(0, Math.max(budget, minVisible) - protectedCount)
+  const shed = new Set(candidates.slice(available))
   const visible: Datum[] = []
   const deferred: Datum[] = []
-  for (const { annotation, index, note } of indexed) {
-    if (!note || keptIndices.has(index)) visible.push(annotation)
-    else deferred.push(annotation)
-  }
-
+  annotations.forEach((note, index) => {
+    if (shed.has(index)) deferred.push(note)
+    else visible.push(note)
+  })
   return { visible, deferred, budget }
 }

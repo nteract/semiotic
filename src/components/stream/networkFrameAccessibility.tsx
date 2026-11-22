@@ -1,4 +1,5 @@
 import * as React from "react"
+import { withAudienceNoteDescriptions } from "../charts/shared/annotationAudienceText"
 import { AccessibleTablePortal, ScreenReaderSummary } from "./AccessibleDataTable"
 import { NetworkAccessibleDataTableSlot } from "./NetworkAccessibleDataTableSlot"
 import type { NetworkPipelineStore } from "./NetworkPipelineStore"
@@ -11,7 +12,7 @@ export function networkFrameAccessibility(
   tableId: string,
   sceneRevision?: number
 ) {
-  const { accessibleTable = true, summary, title } = props
+  const { accessibleTable = true, summary, title, annotations, autoPlaceAnnotations } = props
   return (
     <>
       {accessibleTable && (
@@ -26,7 +27,7 @@ export function networkFrameAccessibility(
           />
         </AccessibleTablePortal>
       )}
-      <ScreenReaderSummary summary={summary} />
+      <ScreenReaderSummary summary={withAudienceNoteDescriptions(summary, annotations, autoPlaceAnnotations)} />
     </>
   )
 }

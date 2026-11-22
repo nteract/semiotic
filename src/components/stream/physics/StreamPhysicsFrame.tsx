@@ -1,5 +1,6 @@
 "use client"
 
+import { withAudienceNoteDescriptions } from "../../charts/shared/annotationAudienceText"
 // Retain the released React namespace spelling in this component's inferred declaration.
 import type * as React from "react"
 import {
@@ -1523,7 +1524,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
             }}
           >
             {table}
-            <ScreenReaderSummary summary={summary} />
+            <ScreenReaderSummary summary={withAudienceNoteDescriptions(summary, annotations, autoPlaceAnnotations)} />
             <div role="img" aria-label={ariaLabel}>
               {element}
             </div>
@@ -1555,7 +1556,7 @@ export const StreamPhysicsFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ *
             />
           )}
           {table}
-          <ScreenReaderSummary summary={summary} />
+          <ScreenReaderSummary summary={withAudienceNoteDescriptions(summary, annotations, autoPlaceAnnotations)} />
           {renderPhysicsAnnouncements(
             allSemanticItems,
             focusedSemanticItem,

@@ -47,6 +47,7 @@ describe("designTokensToTheme", () => {
         selection: "#abcdef",
         selectionOpacity: 0
       },
+      annotationCohesion: "layer" as const,
       tooltip: { chrome: "none" as const, fontSize: "18px" },
       accessibility: { colorBlindSafe: true, highContrast: false }
     }

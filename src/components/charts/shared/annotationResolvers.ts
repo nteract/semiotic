@@ -12,32 +12,25 @@ import { projectHeatmapBandValue } from "../../stream/heatmapBandTicks"
  */
 import type { AnnotationContext } from "../../realtime/types"
 
-export function resolveX(
+/** Project the explicit axis field first, then the chart's named accessor. */
+export function resolveAnnotationCoordinate(
   ann: Datum,
-  context: AnnotationContext
+  axis: "x" | "y",
+  scale: ((value: number) => number) | undefined,
+  accessor: string | undefined,
+  pixelFallback = false
 ): number | null {
-  const scaleX = context.scales?.x ?? context.scales?.time
-  if (!scaleX) return null
-
-  if (ann.x != null) return projectHeatmapBandValue(scaleX, ann.x)
-  if (context.xAccessor && ann[context.xAccessor] != null) {
-    return projectHeatmapBandValue(scaleX, ann[context.xAccessor])
-  }
-  return null
+  if (!scale) return pixelFallback && typeof ann[axis] === "number" ? ann[axis] : null
+  const value = ann[axis] ?? (accessor ? ann[accessor] : undefined)
+  return value == null ? null : projectHeatmapBandValue(scale, value)
 }
 
-export function resolveY(
-  ann: Datum,
-  context: AnnotationContext
-): number | null {
-  const scaleY = context.scales?.y ?? context.scales?.value
-  if (!scaleY) return null
+export function resolveX(ann: Datum, context: AnnotationContext): number | null {
+  return resolveAnnotationCoordinate(ann, "x", context.scales?.x ?? context.scales?.time, context.xAccessor)
+}
 
-  if (ann.y != null) return projectHeatmapBandValue(scaleY, ann.y)
-  if (context.yAccessor && ann[context.yAccessor] != null) {
-    return projectHeatmapBandValue(scaleY, ann[context.yAccessor])
-  }
-  return null
+export function resolveY(ann: Datum, context: AnnotationContext): number | null {
+  return resolveAnnotationCoordinate(ann, "y", context.scales?.y ?? context.scales?.value, context.yAccessor)
 }
 
 /**

@@ -340,6 +340,7 @@ export function designTokensToTheme(
   const diverging = nativeString("diverging")
   const selection = nativeString("selection.color")
   const selectionOpacity = byPath.get("semiotic.selection.opacity")?.value
+  const annotationCohesion = nativeString("annotation-cohesion")
   const borderRadius = nativeString("border-radius")
   const nativeGroup = (name: string): boolean =>
     !!tokens.semiotic &&
@@ -499,6 +500,7 @@ export function designTokensToTheme(
       ...(tickSize != null ? { tickSize } : {}),
       ...(labelSize != null ? { labelSize } : {})
     },
+    ...(annotationCohesion === "layer" || annotationCohesion === "blended" ? { annotationCohesion } : {}),
     ...(aesthetics ? { aesthetics } : {}),
     ...(nativeGroup("tooltip") ? { tooltip } : {}),
     ...(nativeGroup("accessibility") ? { accessibility } : {}),

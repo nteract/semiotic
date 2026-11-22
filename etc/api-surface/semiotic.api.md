@@ -2434,6 +2434,7 @@ interface-member SelectionConfig::property::unselectedOpacity = optional unselec
 interface-member SelectionConfig::property::unselectedStyle = optional unselectedStyle: Datum | undefined
 interface-member SemioticTheme::property::accessibility = optional accessibility: undefined | {colorBlindSafe?: boolean; highContrast?: boolean;}
 interface-member SemioticTheme::property::aesthetics = optional aesthetics: AestheticProfile | undefined
+interface-member SemioticTheme::property::annotationCohesion = optional annotationCohesion: AnnotationCohesion | undefined
 interface-member SemioticTheme::property::borderRadius = optional borderRadius: string | undefined
 interface-member SemioticTheme::property::colors = required colors: {primary: string; secondary?: string; categorical: string[]; sequential: string; diverging?: string; background: string; surface?: string; text: string; textSecondary: string; grid: string; border: string; cellBorder?: string; focus?: string; selection?: string; selectionOpacity?: number; annotation?: string; success?: string; danger?: string; warning?: string; error?: string; info?: string;}
 interface-member SemioticTheme::property::mode = required mode: "auto" | "dark" | "light"

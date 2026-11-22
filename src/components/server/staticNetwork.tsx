@@ -1,3 +1,4 @@
+import { withAudienceNoteDescriptions } from "../charts/shared/annotationAudienceText"
 import { resolveStalenessOverride } from "../stream/stalenessBands"
 import { staticTitleText } from "./staticTitle"
 import type { Datum, DatumValue } from "../charts/shared/datumTypes"
@@ -132,6 +133,7 @@ function networkAnnotationData(nodes: NetworkSceneNode[]): Datum[] {
 }
 
 export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwareProps, sink?: EvidenceSink): string {
+  const description = withAudienceNoteDescriptions(props.description, props.annotations, props.autoPlaceAnnotations)
   const theme = resolveTheme(props.theme)
   const chartType: NetworkChartType = props.chartType || "force"
   const size: [number, number] = props.size || [500, 500]
@@ -215,7 +217,7 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
         ...renderedNodes.map(({ node }) => ({ type: `node:${node.type ?? "node"}` })),
         ...renderedEdges.map(({ node }) => ({ type: `edge:${node.type ?? "edge"}` })),
       ],
-      title: props.title, description: props.description,
+      title: props.title, description,
       annotations: props.annotations,
       annotationRender,
       nodeCount: renderedNodes.length,
@@ -226,7 +228,7 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
       wrapSVG(<NetworkViewGroup view={props.viewTransform} width={innerWidth} height={innerHeight}>{content}</NetworkViewGroup>, {
         width: size[0], height: size[1],
         className: `stream-network-frame${props.className ? ` ${props.className}` : ""}`,
-        title: props.title, description: props.description, background: props.background,
+        title: props.title, description, background: props.background,
         theme, innerTransform: `translate(${margin.left},${margin.top})`,
         innerWidth, innerHeight,
         legend: networkLegendOut,

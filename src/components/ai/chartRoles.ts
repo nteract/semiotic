@@ -16,6 +16,13 @@ import {
  * Pure and dependency-light.
  */
 
+export const NETWORK_FAMILY = new Set([
+  "ForceDirectedGraph",
+  "SankeyDiagram",
+  "ProcessSankey",
+  "ChordDiagram"
+])
+
 export const XY_FAMILY = new Set([
   "LineChart",
   "AreaChart",
@@ -48,6 +55,10 @@ export interface ChartRoles {
   measureFallback: string
   dimension?: string
   dimensionFallback: string
+}
+
+export function capitalize(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
 /** Shared by built-in and recipe introductions read aloud by assistive tech. */

@@ -283,6 +283,9 @@ export const REACT_NODE_TYPES: PropType[] = [
   "array",
 ]
 
+export const ANNOTATION_LAYOUT_DESCRIPTION =
+  "Places notes without manual offsets. cohesion overrides theme.annotationCohesion, and individual notes can override both. audience.familiarity selects each note's audienceText.long (mean ≤2) or audienceText.short (mean ≥4). Active mobile text takes precedence."
+
 /** A callback prop: function-only, so it never needs a serialization reason. */
 const CALLBACK_PROP: ChartPropSpec = { type: "function", omitFromSchema: true }
 
@@ -383,7 +386,7 @@ const commonProps: Record<string, ChartPropSpec> = {
   autoPlaceAnnotations: {
     type: ["boolean", "object"],
     default: false,
-    description: "Opt-in annotation placement pass. Chooses dx/dy for note-like annotations without manual offsets and avoids note/mark/edge overlaps where possible.",
+    description: ANNOTATION_LAYOUT_DESCRIPTION,
   },
   responsiveRules: { type: "array", description: "Semantic responsive transforms applied before chart-mode defaults." },
   mobileSemantics: { type: "object", description: "Phone/mobile contract consumed by audits, recipes, adapters, and agents." },
@@ -539,7 +542,7 @@ const realtimeProps: Record<string, ChartPropSpec> = {
   tooltipContent: { type: "function", omitFromSchema: true },
   onHover: { type: "function", omitFromSchema: true },
   annotations: { type: "array" },
-  autoPlaceAnnotations: { type: ["boolean", "object"], description: "Opt-in annotation placement pass for note-like annotations without manual offsets." },
+  autoPlaceAnnotations: { type: ["boolean", "object"], description: ANNOTATION_LAYOUT_DESCRIPTION },
   responsiveRules: { type: "array", description: "Semantic responsive transforms applied before chart-mode defaults." },
   mobileSemantics: { type: "object", description: "Phone/mobile contract consumed by audits, recipes, adapters, and agents." },
   mobileInteraction: { type: ["boolean", "object"], description: "Touch-first interaction policy for phone-sized chart slots." },
@@ -625,7 +628,7 @@ const physicsProps: Record<string, ChartPropSpec> = {
   paused: { type: "boolean", description: "Pause the simulation at mount or on prop update." },
   tooltip: { type: ["boolean", "string", "function", "object"], description: 'Tooltip content function/config ({ content, chrome: "none" } for consumer chrome), true for the default body tooltip, or false to hide tooltips while hover observations and selection continue. "multi" falls back to the single-datum tooltip.' },
   annotations: { type: "array" },
-  autoPlaceAnnotations: { type: ["boolean", "object"] },
+  autoPlaceAnnotations: { type: ["boolean", "object"], description: ANNOTATION_LAYOUT_DESCRIPTION },
   background: { type: "string" },
   legend: { type: REACT_NODE_TYPES, omitFromSchema: true },
   legendPosition: { type: "string", enum: ["right", "left", "top", "bottom"] as const },

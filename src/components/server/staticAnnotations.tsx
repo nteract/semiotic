@@ -1,3 +1,4 @@
+import { assertSafeThemeCSS } from "../store/safeThemeCSS"
 import type { LabelMeasurer } from "../text/labelMeasurement"
 import { renderDirectLabels } from "../charts/shared/DirectLabelLayer"
 import type { LabelLayoutEvidence } from "../text/labelPlacement"
@@ -16,9 +17,9 @@ import * as React from "react"
 import Annotation from "../Annotation"
 import type { SemioticTheme } from "../store/themeCore"
 import { renderAnnotationPassWithResult } from "../charts/shared/annotationDispatch"
-import { resolveAnchoredPosition } from "../charts/shared/annotationResolvers"
+import { resolveAnchoredPosition, resolveAnnotationCoordinate } from "../charts/shared/annotationResolvers"
 import type { AnnotationContext } from "../realtime/types"
-import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
+import { prepareFrameAnnotations, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import { AnnotationLabel } from "../charts/shared/AnnotationLabel"
 import { resolveAnnotationBandFill } from "../charts/shared/annotationBandFill"
 import { filterAnnotationsByStatus } from "../charts/shared/annotationStatusFilter"
@@ -143,40 +144,11 @@ function resolveCoords(
     if (projected) return { x: projected[0], y: projected[1] }
   }
 
-  return { x: resolveXPixel(ann, scales, xAccessor), y: resolveYPixel(ann, scales, yAccessor) }
-}
-
-function resolveXPixel(
-  ann: Datum,
-  scales: AnnotationScales,
-  xAccessor?: string
-): number | null {
-  if (scales.x) {
-    if (ann.x != null) return projectHeatmapBandValue(scales.x, ann.x)
-    if (xAccessor && ann[xAccessor] != null) {
-      return projectHeatmapBandValue(scales.x, ann[xAccessor])
-    }
-    return null
+  // Network and pre-projected coordinates pass through in pixels when there is no scale.
+  return {
+    x: resolveAnnotationCoordinate(ann, "x", scales.x, xAccessor, true),
+    y: resolveAnnotationCoordinate(ann, "y", scales.y, yAccessor, true),
   }
-  // Pixel passthrough for frames without a continuous x scale (e.g. network).
-  if (typeof ann.x === "number") return ann.x
-  return null
-}
-
-function resolveYPixel(
-  ann: Datum,
-  scales: AnnotationScales,
-  yAccessor?: string
-): number | null {
-  if (scales.y) {
-    if (ann.y != null) return projectHeatmapBandValue(scales.y, ann.y)
-    if (yAccessor && ann[yAccessor] != null) {
-      return projectHeatmapBandValue(scales.y, ann[yAccessor])
-    }
-    return null
-  }
-  if (typeof ann.y === "number") return ann.y
-  return null
 }
 
 /**
@@ -283,13 +255,9 @@ export function renderStaticAnnotations(config: StaticAnnotationConfig): React.R
       config.svgAnnotationRules!(ann, i, annotationContext) ?? fallback } : {})
   })
 
-  const layoutAnnotations = config.autoPlaceAnnotations
-    ? annotationLayout({
-        annotations,
-        context: annotationContext,
-        ...(typeof config.autoPlaceAnnotations === "object" ? config.autoPlaceAnnotations : {}),
-      })
-    : annotations
+  const layoutAnnotations = prepareFrameAnnotations(
+    annotations, annotationContext, config.autoPlaceAnnotations, config.theme.annotationCohesion
+  )
 
   // Shared dispatch with the client SVG overlays: custom rules first, then
   // theme-aware static handlers, then the context-only fallback for trend,
@@ -331,7 +299,15 @@ export function renderStaticAnnotations(config: StaticAnnotationConfig): React.R
     unrenderedTypes,
   })
   const pfx = config.idPrefix ? `${config.idPrefix}-` : ""
-  return elements.length > 0 ? <g id={`${pfx}annotations`} className="semiotic-annotations">{elements}</g> : null
+  if (!elements.length) return null
+  let style: React.CSSProperties | undefined
+  if (config.theme.annotationCohesion && config.theme.mode !== "auto" &&
+    pass.renderedAnnotations.some(note => note.cohesion === "layer")) {
+    const color = config.theme.colors.annotation ?? config.theme.colors.textSecondary
+    assertSafeThemeCSS(color, "annotation color")
+    style = { "--semiotic-annotation-color": color } as React.CSSProperties
+  }
+  return <g id={`${pfx}annotations`} className="semiotic-annotations" style={style}>{elements}</g>
 }
 
 function renderAnnotation(
@@ -522,39 +498,20 @@ function renderAnnotation(
       const color = resolveAnnotationColor(ann, theme)
       const opacity = ann.opacity ?? 0.1
       const label = ann.label
-      // Horizontal ordinal: highlight across Y band
-      if (config.projection === "horizontal") {
-        return (
-          <g key={`ann-cathighlight-${index}`}>
-            <rect
-              x={0} y={oVal} width={layout.width} height={bandwidth}
-              fill={color} opacity={opacity}
-            />
-            {label && (
-              <AnnotationLabel
-                x={12} y={oVal + bandwidth / 2}
-                dominantBaseline="middle"
-                fill={color}
-                fontSize={theme.typography.tickSize}
-                fontWeight="bold"
-                fontFamily={theme.typography.fontFamily}
-                text={label}
-                background={ssrLabelBackground(ann, theme, "none")}
-              />
-            )}
-          </g>
-        )
-      }
+      const horizontal = config.projection === "horizontal"
       return (
         <g key={`ann-cathighlight-${index}`}>
           <rect
-            x={oVal} y={0} width={bandwidth} height={layout.height}
+            x={horizontal ? 0 : oVal} y={horizontal ? oVal : 0}
+            width={horizontal ? layout.width : bandwidth} height={horizontal ? bandwidth : layout.height}
             fill={color} opacity={opacity}
           />
           {label && (
             <AnnotationLabel
-              x={oVal + bandwidth / 2} y={TOP_LABEL_BASELINE}
-              textAnchor="middle"
+              x={horizontal ? 12 : oVal + bandwidth / 2}
+              y={horizontal ? oVal + bandwidth / 2 : TOP_LABEL_BASELINE}
+              dominantBaseline={horizontal ? "middle" : undefined}
+              textAnchor={horizontal ? undefined : "middle"}
               fill={color}
               fontSize={theme.typography.tickSize}
               fontWeight="bold"

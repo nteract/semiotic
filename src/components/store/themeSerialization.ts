@@ -66,6 +66,9 @@ export function themeToTokens(theme: SemioticTheme): Datum {
         $value: `${theme.typography.titleSize}px`,
         $type: "dimension"
       },
+      ...(theme.annotationCohesion != null
+        ? { "annotation-cohesion": { $value: theme.annotationCohesion, $type: "string" } }
+        : {}),
       ...(theme.borderRadius != null
         ? {
             "border-radius": { $value: theme.borderRadius, $type: "dimension" }

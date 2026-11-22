@@ -1,4 +1,5 @@
 "use client"
+import { useThemeSelector } from "../store/ThemeStore"
 import type { Datum } from "../charts/shared/datumTypes"
 import * as React from "react"
 import { useMemo, useRef, useId } from "react"
@@ -13,7 +14,7 @@ import {
   useAnnotationActivationOptions,
   type OnAnnotationActivateCallback
 } from "../charts/shared/annotationActivation"
-import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
+import { prepareFrameAnnotations, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import { filterAnnotationsByStatus } from "../charts/shared/annotationStatusFilter"
 import type { AxisExtentMode } from "../charts/shared/axisExtent"
 import { ordinalValueTicks } from "./ordinalAxisTicks"
@@ -252,6 +253,7 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
     canvasObscuresUnderlay = true,
     children
   } = props
+  const themeCohesion = useThemeSelector(state => state.theme.annotationCohesion)
   const annotationActivation = useAnnotationActivationOptions({
     onAnnotationActivate,
     onObservation,
@@ -381,18 +383,12 @@ export function OrdinalSVGOverlay(props: OrdinalSVGOverlayProps) {
       stickyPositionCache: stickyPositionCacheRef.current
     }
 
-    const layoutAnnotations = autoPlaceAnnotations
-      ? annotationLayout({
-          annotations: visibleAnnotations,
-          context,
-          ...(typeof autoPlaceAnnotations === "object" ? autoPlaceAnnotations : {}),
-        })
-      : visibleAnnotations
+    const layoutAnnotations = prepareFrameAnnotations(visibleAnnotations, context, autoPlaceAnnotations, themeCohesion)
 
     // Dispatch → drop empty renders → apply emphasis hierarchy (shared with the
     // XY overlay). Falsy-node filtering matches the prior `.filter(Boolean)`.
     return renderAnnotationPass(layoutAnnotations, defaultRules, svgAnnotationRules, context)
-  }, [annotations, autoPlaceAnnotations, svgAnnotationRules, width, height, scales, annXAccessor, annYAccessor, annotationData, annotationActivation])
+  }, [annotations, autoPlaceAnnotations, themeCohesion, svgAnnotationRules, width, height, scales, annXAccessor, annYAccessor, annotationData, annotationActivation])
 
   const hasContent = showAxes || title || description || legend || foregroundGraphics || (renderedAnnotations && renderedAnnotations.length > 0) || showGrid || children
   const generatedId = useId()

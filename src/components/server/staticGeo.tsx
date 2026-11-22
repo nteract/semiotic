@@ -1,3 +1,4 @@
+import { withAudienceNoteDescriptions } from "../charts/shared/annotationAudienceText"
 import { staticTitleText } from "./staticTitle"
 import type { Datum } from "../charts/shared/datumTypes"
 import { filterSparseArray } from "../charts/shared/sparseArray"
@@ -31,6 +32,7 @@ import { collectGeoAnnotationAnchors } from "../stream/geoAnnotationAnchors"
 import { DistanceCartogramOverlay } from "../charts/geo/cartogramOverlay"
 
 export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sink?: EvidenceSink): string {
+  const description = withAudienceNoteDescriptions(props.description, props.annotations, props.autoPlaceAnnotations)
   const theme = resolveTheme(props.theme)
   const defaultMargin = { top: 10, right: 10, bottom: 10, left: 10 }
   const size: [number, number] = props.size || [props.width || 600, props.height || 400]
@@ -192,7 +194,7 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
       frameType: "geo",
       width: size[0], height: size[1],
       marks: renderedScene.map(entry => entry.node),
-      title: props.title, description: props.description,
+      title: props.title, description,
       annotations: props.annotations,
       annotationRender,
       legendItems: geoLegendCategories.length > 0
@@ -219,7 +221,7 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
     wrapSVG(content, {
       width: size[0], height: size[1],
       className: `stream-geo-frame${props.className ? ` ${props.className}` : ""}`,
-      title: props.title, description: props.description, background: props.background,
+      title: props.title, description, background: props.background,
       theme, innerTransform: `translate(${margin.left ?? 0},${margin.top ?? 0})`,
       innerWidth: width, innerHeight: height,
       legend: geoLegend,

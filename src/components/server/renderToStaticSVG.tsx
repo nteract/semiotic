@@ -4,6 +4,7 @@ import { resolveThemePreset } from "../store/themePresets"
 import { resolveHiddenAxisMargins } from "../legendLayout"
 import { scopeSvgIdentifiers } from "../shared/svgIdentifiers"
 import type { Datum } from "../charts/shared/datumTypes"
+import { withFrameAnnotationProps } from "../charts/shared/frameAnnotationProps"
 import { escapeXmlAttribute, insertSvgRootContent } from "../shared/svgRoot"
 import { renderedSvgDimensions } from "./svgSizing"
 import {
@@ -74,44 +75,31 @@ export function renderToStaticSVG(
   props: StaticFrameProps
 ): string {
   return renderWithSvgIdPrefix(props, (prefix) =>
-    renderFrameToStaticSVG(frameType, { ...props, _idPrefix: prefix }, prefix)
+    scopeSvgIdentifiers(renderStaticFrame(frameType, { ...props, _idPrefix: prefix }), prefix)
   )
 }
 
-function renderFrameToStaticSVG(
+function renderStaticFrame(
   frameType: FrameType,
   props: StaticFrameProps,
-  prefix: string
+  sink?: EvidenceSink
 ): string {
-  let svg: string
   switch (frameType) {
     case "xy":
-      svg = renderStreamXYFrame(props as StreamXYFrameProps & ThemeAwareProps)
-      break
+      return renderStreamXYFrame(props as StreamXYFrameProps & ThemeAwareProps, sink)
     case "ordinal":
-      svg = renderOrdinalFrame(
-        props as StreamOrdinalFrameProps & ThemeAwareProps
-      )
-      break
+      return renderOrdinalFrame(props as StreamOrdinalFrameProps & ThemeAwareProps, sink)
     case "network":
-      svg = renderNetworkFrame(
-        props as StreamNetworkFrameProps & ThemeAwareProps
-      )
-      break
+      return renderNetworkFrame(props as StreamNetworkFrameProps & ThemeAwareProps, sink)
     case "geo":
-      svg = renderGeoFrame(props as StreamGeoFrameProps & ThemeAwareProps)
-      break
+      return renderGeoFrame(props as StreamGeoFrameProps & ThemeAwareProps, sink)
     case "physics":
-      svg = renderPhysicsFrame(
-        props as StaticPhysicsFrameProps & ThemeAwareProps
-      )
-      break
+      return renderPhysicsFrame(props as StaticPhysicsFrameProps & ThemeAwareProps, sink)
     default:
       throw new Error(
         `Unknown frame type: ${frameType}. Must be "xy", "ordinal", "network", "geo", or "physics".`
       )
   }
-  return scopeSvgIdentifiers(svg, prefix)
 }
 
 export function renderXYToStaticSVG(
@@ -484,57 +472,24 @@ function renderChartScoped(
     _idPrefix: rest._idPrefix
   }
 
-  const frameProps2 = config.buildProps(
-    data,
-    colorBy,
-    colorScheme,
-    common,
-    rest
-  )
+  const built = config.buildProps(data, colorBy, colorScheme, common, rest)
+  // Composite renderers resolve their own constituent frames. On a single
+  // frame the escape hatch is applied after any chart-generated annotations.
+  const frameProps = config.renderStatic
+    ? built
+    : withFrameAnnotationProps(built, rest.frameProps, config.frameType === "physics")
 
-  // Dispatch to a chart-owned composite renderer when one exists. This is
-  // still the renderChart registry path (and therefore still evidence-backed),
-  // but it avoids pretending a multi-scene HOC is one Stream Frame.
   let svg: string
   if (config.renderStatic) {
-    svg = config.renderStatic(frameProps2, sink)
+    svg = config.renderStatic(frameProps, sink)
   } else {
-    switch (config.frameType) {
-      case "xy":
-        svg = renderStreamXYFrame(
-          frameProps2 as StreamXYFrameProps & ThemeAwareProps,
-          sink
-        )
-        break
-      case "ordinal":
-        svg = renderOrdinalFrame(
-          frameProps2 as StreamOrdinalFrameProps & ThemeAwareProps,
-          sink
-        )
-        break
-      case "network":
-        svg = renderNetworkFrame(
-          frameProps2 as StreamNetworkFrameProps & ThemeAwareProps,
-          sink
-        )
-        break
-      case "geo":
-        svg = renderGeoFrame(
-          frameProps2 as StreamGeoFrameProps & ThemeAwareProps,
-          sink
-        )
-        break
-      case "physics":
-        svg = renderPhysicsFrame({
-          ...frameProps2 as StaticPhysicsFrameProps,
-          physicsTheme: (framePropsOverrides as Datum).theme,
-          frameBodyStyle: (framePropsOverrides as Datum).bodyStyle
-        }, sink)
-        break
-    }
+    const staticProps = config.frameType === "physics"
+      ? { ...frameProps, physicsTheme: framePropsOverrides.theme, frameBodyStyle: framePropsOverrides.bodyStyle }
+      : frameProps
+    svg = renderStaticFrame(config.frameType, staticProps as StaticFrameProps, sink)
   }
 
-  const overlay = config.renderOverlay?.(frameProps2, {
+  const overlay = config.renderOverlay?.(frameProps, {
     theme: resolveTheme(theme)
   })
   if (overlay != null) {
@@ -550,7 +505,7 @@ function renderChartScoped(
 
   return {
     svg: serializeSvgPrecision(scopeSvgIdentifiers(svg, prefix), options?.precision),
-    frameType: (config.resolveFrameType?.(frameProps2) ?? config.frameType) as RenderEvidence["frameType"]
+    frameType: (config.resolveFrameType?.(frameProps) ?? config.frameType) as RenderEvidence["frameType"]
   }
 }
 

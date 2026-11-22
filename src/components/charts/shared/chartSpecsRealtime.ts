@@ -1,4 +1,4 @@
-import { REACT_NODE_TYPES, type ChartSpec } from "./chartSpecCore"
+import { ANNOTATION_LAYOUT_DESCRIPTION, REACT_NODE_TYPES, type ChartSpec } from "./chartSpecCore"
 import { STYLE_RULES_PROP_SPEC } from "./styleRulesWireSchema"
 
 const VALUE_BANDS_PROP_SPEC = {
@@ -253,8 +253,7 @@ export const REALTIME_CHART_SPECS: Record<string, ChartSpec> = {
       annotations: { type: "array" },
       autoPlaceAnnotations: {
         type: ["boolean", "object"],
-        description:
-          "Opt-in annotation placement pass for note-like annotations without manual offsets."
+        description: ANNOTATION_LAYOUT_DESCRIPTION
       },
       responsiveRules: {
         type: "array",

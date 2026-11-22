@@ -1,4 +1,5 @@
 "use client"
+import { useThemeSelector } from "../store/ThemeStore"
 import type { Datum } from "../charts/shared/datumTypes"
 
 import { useId, useMemo } from "react"
@@ -11,7 +12,7 @@ import {
   createDefaultAnnotationRules,
   renderAnnotationPass,
 } from "../charts/shared/annotationRules"
-import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
+import { prepareFrameAnnotations, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import { filterAnnotationsByStatus } from "../charts/shared/annotationStatusFilter"
 import type { AnnotationContext } from "../realtime/types"
 import { networkLabelToSVG } from "./SceneToSVGNetwork"
@@ -127,6 +128,7 @@ export const NetworkSVGOverlay = /* @__PURE__ */ withDisplayName(function Networ
     svgAnnotationRules,
     annotationFrame: _annotationFrame
   } = props
+  const themeCohesion = useThemeSelector(state => state.theme.annotationCohesion)
   const annotationActivation = useAnnotationActivationOptions({
     onAnnotationActivate,
     onObservation,
@@ -149,13 +151,8 @@ export const NetworkSVGOverlay = /* @__PURE__ */ withDisplayName(function Networ
   const layoutAnnotations = useMemo(() => {
     if (!annotations) return annotations
     const visible = filterAnnotationsByStatus(annotations)
-    if (!autoPlaceAnnotations) return visible
-    return annotationLayout({
-      annotations: visible,
-      context: annotationContext,
-      ...(typeof autoPlaceAnnotations === "object" ? autoPlaceAnnotations : {}),
-    })
-  }, [annotations, autoPlaceAnnotations, annotationContext])
+    return prepareFrameAnnotations(visible, annotationContext, autoPlaceAnnotations, themeCohesion)
+  }, [annotations, autoPlaceAnnotations, annotationContext, themeCohesion])
 
   // Build the default network annotation rules once, then run the shared
   // dispatch/filter/emphasis pass — the same path the XY and ordinal overlays

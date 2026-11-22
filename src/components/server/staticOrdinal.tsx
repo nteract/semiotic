@@ -1,3 +1,4 @@
+import { withAudienceNoteDescriptions } from "../charts/shared/annotationAudienceText"
 import { staticTitleText } from "./staticTitle"
 import { renderSvgCenterContent } from "../charts/shared/radialCenterContent"
 import { XHTML_NAMESPACE } from "../shared/svgNamespace"
@@ -196,6 +197,7 @@ export function generateOrdinalAxesSVG(
 }
 
 export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwareProps, sink?: EvidenceSink): string {
+  const description = withAudienceNoteDescriptions(props.description, props.annotations, props.autoPlaceAnnotations)
   const theme = resolveTheme(props.theme)
   const defaultMargin = ordinalFrameDefaultMargin(props.chartType)
   const size = props.size || [500, 400]
@@ -346,7 +348,7 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
         frameType: "ordinal",
         width: size[0], height: size[1],
         marks: [],
-        title: props.title, description: props.description,
+        title: props.title, description,
         annotations: props.annotations,
         annotationRender,
         extraWarnings: store.scales ? [] : ["NO_SCALES"],
@@ -367,7 +369,7 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
       wrapSVG(emptyContent, {
         width: size[0], height: size[1],
         className: `stream-ordinal-frame${props.className ? ` ${props.className}` : ""}`,
-        title: props.title, description: props.description, background: props.background,
+        title: props.title, description, background: props.background,
         theme, innerTransform: `translate(${margin.left},${margin.top})`,
         innerWidth: width, innerHeight: height,
         legend,
@@ -470,7 +472,7 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
       frameType: "ordinal",
       width: size[0], height: size[1],
       marks: renderedScene.map(entry => entry.node),
-      title: props.title, description: props.description,
+      title: props.title, description,
       annotations: props.annotations,
       annotationRender,
       yDomain: numericDomain(store.scales.r?.domain?.()),
@@ -540,7 +542,7 @@ export function renderOrdinalFrame(props: StreamOrdinalFrameProps & ThemeAwarePr
     wrapSVG(content, {
       width: size[0], height: size[1],
       className: `stream-ordinal-frame${props.className ? ` ${props.className}` : ""}`,
-      title: props.title, description: props.description, background: props.background,
+      title: props.title, description, background: props.background,
       theme,
       innerTransform: isRadial
         ? `translate(${margin.left + width / 2},${margin.top + height / 2})`

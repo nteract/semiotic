@@ -1,4 +1,5 @@
 "use client"
+import { useThemeSelector } from "../store/ThemeStore"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { OnObservationCallback } from "../store/ObservationStore"
 import {
@@ -15,7 +16,7 @@ import {
   renderAnnotationPass
 } from "../charts/shared/annotationRules"
 import {
-  annotationLayout,
+  prepareFrameAnnotations,
   type AutoPlaceAnnotations
 } from "../recipes/annotationLayout"
 import { filterAnnotationsByStatus } from "../charts/shared/annotationStatusFilter"
@@ -111,6 +112,7 @@ export function GeoSVGOverlay(props: GeoSVGOverlayProps) {
     pointNodes,
     geoProjection,
   } = props
+  const themeCohesion = useThemeSelector(state => state.theme.annotationCohesion)
   const annotationActivation = useAnnotationActivationOptions({
     onAnnotationActivate,
     onObservation,
@@ -160,15 +162,7 @@ export function GeoSVGOverlay(props: GeoSVGOverlayProps) {
       pointNodes,
       stickyPositionCache: stickyStateRef.current[1]
     }
-    const layoutAnnotations = autoPlaceAnnotations
-      ? annotationLayout({
-          annotations: projectedAnnotations,
-          context,
-          ...(typeof autoPlaceAnnotations === "object"
-            ? autoPlaceAnnotations
-            : {})
-        })
-      : projectedAnnotations
+    const layoutAnnotations = prepareFrameAnnotations(projectedAnnotations, context, autoPlaceAnnotations, themeCohesion)
 
     return renderAnnotationPass(
       layoutAnnotations,
@@ -176,7 +170,7 @@ export function GeoSVGOverlay(props: GeoSVGOverlayProps) {
       svgAnnotationRules,
       context
     )
-  }, [annotations, autoPlaceAnnotations, svgAnnotationRules, width, height, pointNodes, annotationActivation, geoProjection])
+  }, [annotations, autoPlaceAnnotations, themeCohesion, svgAnnotationRules, width, height, pointNodes, annotationActivation, geoProjection])
 
   const hasContent =
     showAxes ||

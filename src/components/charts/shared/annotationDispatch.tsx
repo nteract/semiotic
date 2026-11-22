@@ -48,13 +48,7 @@ export function renderAnnotationPassWithResult(
 ): { nodes: React.ReactNode[]; renderedAnnotations: Datum[] } {
   const pairs: AnnotationRenderPair[] = []
   annotations.forEach((annotation, i) => {
-    let node: React.ReactNode
-    if (userRule) {
-      const userResult = userRule(annotation, i, context)
-      node = userResult !== null && userResult !== undefined ? userResult : defaultRule(annotation, i, context)
-    } else {
-      node = defaultRule(annotation, i, context)
-    }
+    const node = userRule?.(annotation, i, context) ?? defaultRule(annotation, i, context)
     if (node) pairs.push({ node, annotation })
   })
   return {
