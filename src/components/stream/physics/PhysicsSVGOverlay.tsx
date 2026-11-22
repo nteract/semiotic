@@ -5,6 +5,7 @@
  * Mirrors NetworkSVGOverlay: no axes/grid (physics is pixel-space), but
  * honors the same annotation + auto-place + legend contracts as other frames.
  */
+import { useThemeSelector } from "../../store/ThemeStore"
 import type { Datum } from "../../charts/shared/datumTypes"
 
 import { useMemo } from "react"
@@ -17,7 +18,7 @@ import {
   renderAnnotationPass
 } from "../../charts/shared/annotationRules"
 import {
-  annotationLayout,
+  prepareFrameAnnotations,
   type AutoPlaceAnnotations
 } from "../../recipes/annotationLayout"
 import type { AnnotationContext } from "../../realtime/types"
@@ -96,6 +97,7 @@ export function PhysicsSVGOverlay(props: PhysicsSVGOverlayProps) {
     svgAnnotationRules,
     children
   } = props
+  const themeCohesion = useThemeSelector(state => state.theme.annotationCohesion)
   const annotationActivation = useAnnotationActivationOptions({
     onAnnotationActivate,
     onObservation,
@@ -119,13 +121,8 @@ export function PhysicsSVGOverlay(props: PhysicsSVGOverlayProps) {
   )
 
   const layoutAnnotations = useMemo(() => {
-    if (!normalized || !autoPlaceAnnotations) return normalized
-    return annotationLayout({
-      annotations: normalized,
-      context: annotationContext,
-      ...(typeof autoPlaceAnnotations === "object" ? autoPlaceAnnotations : {})
-    })
-  }, [annotationContext, autoPlaceAnnotations, normalized])
+    return normalized && prepareFrameAnnotations(normalized, annotationContext, autoPlaceAnnotations, themeCohesion)
+  }, [annotationContext, autoPlaceAnnotations, normalized, themeCohesion])
 
   const defaultAnnotationRules = useMemo(
     () => createDefaultAnnotationRules("network", annotationActivation),

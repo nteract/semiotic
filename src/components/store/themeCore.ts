@@ -2,6 +2,7 @@ import { applyConcreteThemeAccessibility } from "./concreteThemeAccessibility"
 import { contrastRatio } from "../charts/shared/colorContrast"
 import { snapshotConfig as cloneTheme } from "../stream/shallowEqual"
 import type { ThemeSemanticColors } from "../stream/streamThemeTypes"
+import type { AnnotationCohesion } from "../recipes/annotationLayout"
 import type { AestheticProfile } from "../ai/aestheticProfileTypes"
 
 // React-free theme contracts, presets, and resolution helpers. Keep this
@@ -74,6 +75,8 @@ export interface SemioticTheme {
     fontSize?: string
     shadow?: string
   }
+  /** Default visual treatment for notes. Chart and per-note cohesion take precedence. */
+  annotationCohesion?: AnnotationCohesion
   borderRadius?: string
   accessibility?: {
     /** Auto-swap to color-blind safe palette when true */

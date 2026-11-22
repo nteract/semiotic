@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Themes can set `annotationCohesion` to `"layer"` or `"blended"` for live charts and static SVG. Chart and note overrides take precedence. [source: #1221]
+- Notes can supply `audienceText.long` and `audienceText.short` for readers with different levels of familiarity. Accessible descriptions retain the full text when a chart shows a shorter label. [source: #1222]
+
 ## [3.14.1] - 2026-11-19
 
 ### Added

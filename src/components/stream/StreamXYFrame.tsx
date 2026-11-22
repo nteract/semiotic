@@ -1,4 +1,5 @@
 "use client"
+import { withAudienceNoteDescriptions } from "../charts/shared/annotationAudienceText"
 import type { Datum } from "../charts/shared/datumTypes"
 import type * as React from "react"
 import {
@@ -1257,7 +1258,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
           }}
         >
           <AccessibleDataTableSlot accessibleTable={accessibleTable} scene={scene} chartType={chartType + " chart"} tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />
-          <ScreenReaderSummary summary={summary} />
+          <ScreenReaderSummary summary={withAudienceNoteDescriptions(summary, annotations, autoPlaceAnnotations)} />
           <div role="img" aria-label={chartAriaLabel} aria-describedby={directLabelDescriptionId}>
           <svg role="presentation"
             xmlns="http://www.w3.org/2000/svg"
@@ -1371,7 +1372,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
           />
         )}
         <AccessibleDataTableSlot accessibleTable={accessibleTable} sceneRevision={storeRef.current?.getUpdateSnapshot().revisions.accessibility} scene={storeRef.current?.scene ?? []} chartType={chartType + " chart"} tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />
-        <ScreenReaderSummary summary={summary} />
+        <ScreenReaderSummary summary={withAudienceNoteDescriptions(summary, annotations, autoPlaceAnnotations)} />
         {/* Live region MUST live outside the role="img" wrapper — AT treats the
             image as atomic and never announces content nested inside it. */}
         <AriaLiveTooltip active={kbFocusIndexRef.current >= 0} hoverPoint={hoverPoint} />

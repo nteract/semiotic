@@ -1,5 +1,6 @@
 import type { AnnotationContext } from "../realtime/types"
 import type { Datum } from "../charts/shared/datumTypes"
+import { audienceNoteText } from "../charts/shared/annotationAudienceText"
 import { resolveAnchoredPosition } from "../charts/shared/annotationResolvers"
 import { isNoteAnnotation } from "../charts/shared/annotationTypes"
 import {
@@ -75,8 +76,8 @@ export interface AnnotationLayoutConfig {
   /**
    * M6 — audience adaptation. An `AudienceProfile` (structurally, anything with
    * a `familiarity` map) biases annotation *amount*: a low-familiarity audience
-   * keeps more notes (orienting context), an expert audience fewer. It scales
-   * the `density` budget, so it only takes effect when `density` is engaged.
+   * keeps more notes when density is enabled. Mean familiarity of 2 or less
+   * selects audienceText.long on a note, and 4 or more selects audienceText.short.
    */
   audience?: AnnotationAudience
 }
@@ -164,23 +165,16 @@ function aggregateFamiliarity(audience: AnnotationAudience | undefined): number 
   return values.reduce((sum, v) => sum + v, 0) / values.length
 }
 
-/** Map aggregate familiarity to a density-budget multiplier: a low-familiarity
- *  audience keeps more orienting notes (×1.5), an expert audience fewer (×0.6). */
-function audienceBudgetFactor(audience: AnnotationAudience | undefined): number {
-  if (!audience) return 1
-  const fam = aggregateFamiliarity(audience)
-  if (fam <= 2) return 1.5
-  if (fam >= 4) return 0.6
-  return 1
+function audienceTextVariant(audience: AnnotationAudience | undefined): "long" | "short" | undefined {
+  const familiarity = aggregateFamiliarity(audience)
+  if (familiarity <= 2) return "long"
+  if (familiarity >= 4) return "short"
+  return undefined
 }
 
 const SOURCE_LABELS: Record<string, string> = {
   ai: "AI",
-  agent: "agent",
-  watcher: "watcher",
-  system: "system",
   import: "imported",
-  computed: "computed",
   user: "you",
 }
 
@@ -216,21 +210,19 @@ function applyVisibleProvenance(a: Datum): Datum {
  *  their own. A per-annotation `cohesion` always wins; the renderer reads the
  *  resolved value to apply the visual treatment. */
 function applyCohesion(annotations: Datum[], cohesion: AnnotationCohesion): Datum[] {
-  let changed = false
-  const next = annotations.map((a) => {
-    if (!isPlaceableAnnotation(a)) return a
+  return annotations.map((a) => {
+    if (!isNoteAnnotation(a)) return a
     if (a.cohesion === "blended" || a.cohesion === "layer") return a
-    changed = true
     return { ...a, cohesion }
   })
-  return changed ? next : annotations
 }
 
-function applyMobileAnnotationCopy(a: Datum): Datum {
-  if (!isPlaceableAnnotation(a)) return a
+function applyAnnotationCopy(a: Datum, mobile: boolean, variant?: "long" | "short"): Datum {
+  if (!isNoteAnnotation(a)) return a
   const mobileText = typeof a.mobileText === "string" ? a.mobileText : undefined
   const shortText = typeof a.shortText === "string" ? a.shortText : undefined
-  const replacement = mobileText ?? shortText
+  const mobileCopy = mobile ? mobileText ?? shortText : undefined
+  const replacement = mobileCopy || (variant && audienceNoteText(a, variant))
   if (!replacement) return a
   if (typeof a.label === "string" || a.label == null) return { ...a, label: replacement }
   return a
@@ -245,10 +237,6 @@ function applyRedundantCue(a: Datum): Datum {
   const dy = typeof a.dy === "number" ? a.dy : 0
   if (Math.hypot(dx, dy) < REDUNDANT_CUE_MIN_OFFSET) return a
   return { ...a, _redundantConnector: true }
-}
-
-function isPlaceableAnnotation(a: Datum): boolean {
-  return isNoteAnnotation(a)
 }
 
 function estimateNoteSize(a: Datum): { width: number; height: number } {
@@ -281,20 +269,12 @@ function noteBox(anchorX: number, anchorY: number, dx: number, dy: number, size:
   const ny = anchorY + dy
   const horizontal = Math.abs(dx) > Math.abs(dy)
 
-  if (horizontal) {
-    return {
-      x: dx >= 0 ? nx + 4 : nx - size.width - 4,
-      y: dy < 0 ? ny - size.height : ny,
-      width: size.width,
-      height: size.height,
-    }
-  }
-
+  const xGap = horizontal ? 4 : 0
+  const yGap = horizontal ? 0 : 4
   return {
-    x: dx >= 0 ? nx : nx - size.width,
-    y: dy < 0 ? ny - size.height - 4 : ny + 4,
-    width: size.width,
-    height: size.height,
+    x: dx >= 0 ? nx + xGap : nx - size.width - xGap,
+    y: dy < 0 ? ny - size.height - yGap : ny + yGap,
+    ...size
   }
 }
 
@@ -322,21 +302,15 @@ function outOfBoundsArea(box: Box, width: number, height: number, edgePadding: n
 }
 
 function candidateOffsets(distance: number): Candidate[] {
-  const near = distance
-  const far = distance * 1.6
+  const diagonals = (offset: number) => [
+    { dx: offset, dy: -offset }, { dx: -offset, dy: -offset },
+    { dx: offset, dy: offset }, { dx: -offset, dy: offset },
+  ]
   return [
-    { dx: near, dy: -near },
-    { dx: -near, dy: -near },
-    { dx: near, dy: near },
-    { dx: -near, dy: near },
-    { dx: near, dy: 0 },
-    { dx: -near, dy: 0 },
-    { dx: 0, dy: -near },
-    { dx: 0, dy: near },
-    { dx: far, dy: -far },
-    { dx: -far, dy: -far },
-    { dx: far, dy: far },
-    { dx: -far, dy: far },
+    ...diagonals(distance),
+    { dx: distance, dy: 0 }, { dx: -distance, dy: 0 },
+    { dx: 0, dy: -distance }, { dx: 0, dy: distance },
+    ...diagonals(distance * 1.6),
   ]
 }
 
@@ -430,10 +404,11 @@ export function annotationLayout(options: AnnotationLayoutOptions): Datum[] {
   const mobileConfig = typeof mobile === "object" ? mobile : {}
   const mobileBreakpoint = mobileConfig.breakpoint ?? DEFAULT_RESPONSIVE_MIN_WIDTH
   const mobileActive = !!mobile && width <= mobileBreakpoint
-  const annotations =
-    mobileActive && mobileConfig.preferShortText !== false
-      ? inputAnnotations.map(applyMobileAnnotationCopy)
-      : inputAnnotations
+  const variant = audienceTextVariant(audience)
+  const mobileCopy = mobileActive && mobileConfig.preferShortText !== false
+  const annotations = mobileCopy || variant
+    ? inputAnnotations.map(a => applyAnnotationCopy(a, mobileCopy, variant))
+    : inputAnnotations
   const effectiveDensity = mobileActive && !density
     ? {
         maxAnnotations: mobileConfig.maxAnnotations ?? (mobileConfig.strategy === "callout-list" ? 1 : 2),
@@ -449,19 +424,17 @@ export function annotationLayout(options: AnnotationLayoutOptions): Datum[] {
   const effectiveCohesion = mobileActive && !cohesion ? mobileConfig.cohesion : cohesion
   if (annotations.length === 0 || width <= 0 || height <= 0) return annotations.slice()
 
+  const candidates = candidateOffsets(defaultOffset)
   const placedBoxes: Box[] = []
   const pointBoxes = pointObstacleBoxes(context, markPadding)
-  let changed = false
+  const positioned = annotations.map((input, index): Datum => {
+    const annotation = input?.defensive === true ? applyVisibleProvenance(input) : input
+    if (!isNoteAnnotation(annotation)) return annotation
 
-  const output = annotations.map((annotation, index) => {
-    if (!isPlaceableAnnotation(annotation)) return annotation
-
-    const anchor = resolveAnchor(annotation, index, context)
+    const anchor = resolveAnchor(input, index, context)
     if (!anchor) return annotation
 
-    const size = estimateNoteSize(
-      annotation.defensive === true ? applyVisibleProvenance(annotation) : annotation
-    )
+    const size = estimateNoteSize(annotation)
     if (preserveManualOffsets && hasManualOffset(annotation)) {
       const fallback = rendererOffset(annotation)
       const dx = typeof annotation.dx === "number" ? annotation.dx : fallback.dx
@@ -472,7 +445,7 @@ export function annotationLayout(options: AnnotationLayoutOptions): Datum[] {
 
     let best: Candidate | null = null
     let bestScore = Infinity
-    for (const candidate of candidateOffsets(defaultOffset)) {
+    for (const candidate of candidates) {
       const box = noteBox(anchor.x, anchor.y, candidate.dx, candidate.dy, size)
       const score = scoreCandidate(
         box,
@@ -500,7 +473,6 @@ export function annotationLayout(options: AnnotationLayoutOptions): Datum[] {
       routeLongConnectors && dist >= connectorThreshold && annotation.type !== "text" && annotation.type !== "widget"
         ? { ...(annotation.connector || { end: "arrow" }), type: "curve" }
         : annotation.connector
-    changed = true
     return {
       ...annotation,
       dx: best.dx,
@@ -508,36 +480,7 @@ export function annotationLayout(options: AnnotationLayoutOptions): Datum[] {
       ...(connector ? { connector } : {}),
     }
   })
-
-  const placedRaw = changed ? output : annotations.slice()
-
-  // M4 — redundant-cue default. Runs after placement so it sees the final
-  // offsets. Adds a leader-line flag to colored `text` notes that would
-  // otherwise rely on color alone (see `redundantCues`).
-  let placed = placedRaw
-  if (redundantCues) {
-    let cued = false
-    const next = placedRaw.map((a) => {
-      const enriched = applyRedundantCue(a)
-      if (enriched !== a) cued = true
-      return enriched
-    })
-    placed = cued ? next : placedRaw
-  }
-
-  // M6 — defensive/traveling notes carry their provenance *visibly* (source +
-  // confidence baked into the label) so a screenshot stripped of metadata still
-  // shows who made the note and how sure they were.
-  {
-    let stamped = false
-    const next = placed.map((a) => {
-      if (a?.defensive !== true) return a
-      const enriched = applyVisibleProvenance(a)
-      if (enriched !== a) stamped = true
-      return enriched
-    })
-    placed = stamped ? next : placed
-  }
+  const placed = redundantCues ? positioned.map(applyRedundantCue) : positioned
 
   // ── Shedding — density (M3, by count) + responsive (M5, by importance) ──
   // Both run after placement (they need to know what landed) and pool their
@@ -548,7 +491,7 @@ export function annotationLayout(options: AnnotationLayoutOptions): Datum[] {
     const densityConfig = typeof effectiveDensity === "object" ? effectiveDensity : {}
     // M6 — audience biases amount by scaling the budget: a low-familiarity
     // audience keeps more orienting notes, an expert audience fewer.
-    const factor = audienceBudgetFactor(audience)
+    const factor = variant === "long" ? 1.5 : variant === "short" ? 0.6 : 1
     const scaledConfig =
       factor === 1
         ? densityConfig
@@ -575,17 +518,8 @@ export function annotationLayout(options: AnnotationLayoutOptions): Datum[] {
         : DEFAULT_RESPONSIVE_MIN_WIDTH
     if (width <= minWidth) {
       for (const a of placed) {
-        if (isPlaceableAnnotation(a) && a.emphasis === "secondary") toShed.add(a)
+        if (isNoteAnnotation(a) && a.emphasis === "secondary" && a.defensive !== true) toShed.add(a)
       }
-    }
-  }
-
-  // M6 — a defensive note is never shed by any pass (the traveling-caveat
-  // guarantee). annotationDensity already floors it; this also covers the
-  // responsive pass and any future shed source.
-  if (toShed.size > 0) {
-    for (const a of placed) {
-      if (a?.defensive === true) toShed.delete(a)
     }
   }
 
@@ -603,4 +537,17 @@ export function annotationLayout(options: AnnotationLayoutOptions): Datum[] {
   }
 
   return effectiveCohesion ? applyCohesion(result, effectiveCohesion) : result
+}
+
+/** Resolve the frame's annotation policy without opting a themed chart into placement. */
+export function prepareFrameAnnotations(
+  annotations: Datum[],
+  context: AnnotationContext,
+  autoPlace: AutoPlaceAnnotations | undefined,
+  themeCohesion: AnnotationCohesion | undefined
+): Datum[] {
+  const placed = autoPlace
+    ? annotationLayout({ ...(typeof autoPlace === "object" ? autoPlace : {}), annotations, context })
+    : annotations
+  return themeCohesion ? applyCohesion(placed, themeCohesion) : placed
 }

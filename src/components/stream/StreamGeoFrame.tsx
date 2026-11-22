@@ -1,4 +1,5 @@
 "use client"
+import { withAudienceNoteDescriptions } from "../charts/shared/annotationAudienceText"
 import { useSSRStoreCommit } from "./useSSRStoreCommit"
 import * as React from "react"
 import { forwardRef, memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
@@ -1194,7 +1195,7 @@ const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
             tableId={tableId}
             chartTitle={typeof title === "string" ? title : undefined}
           />
-          <ScreenReaderSummary summary={summary} />
+          <ScreenReaderSummary summary={withAudienceNoteDescriptions(summary, annotations, autoPlaceAnnotations)} />
           <div
             role="img"
             aria-label={
@@ -1311,7 +1312,7 @@ const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
           tableId={tableId}
           chartTitle={typeof title === "string" ? title : undefined}
         />
-        <ScreenReaderSummary summary={summary} />
+        <ScreenReaderSummary summary={withAudienceNoteDescriptions(summary, annotations, autoPlaceAnnotations)} />
         {/* Live region MUST live outside the role="img" wrapper — AT treats the
         image as atomic and never announces content nested inside it. */}
         <AriaLiveTooltip

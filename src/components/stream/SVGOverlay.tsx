@@ -21,7 +21,7 @@ import {
 } from "../legendLayout"
 import { MarginalGraphicsLazy as MarginalGraphics, normalizeMarginalConfig } from "./MarginalGraphicsLazy"
 import { createDefaultAnnotationRules, renderAnnotationPass } from "../charts/shared/annotationRules"
-import { annotationLayout, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
+import { prepareFrameAnnotations, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import { filterAnnotationsByStatus } from "../charts/shared/annotationStatusFilter"
 import { useCrosshairPosition, useCrosshairActions } from "../store/LinkedCrosshairStore"
 import { isTimeLandmark } from "./hitTestUtils"
@@ -289,6 +289,7 @@ export function SVGOverlay(props: SVGOverlayProps) {
   }
 
   const directLabelTheme = useThemeSelector((state) => state.theme)
+  const themeCohesion = directLabelTheme.annotationCohesion
   const hasDirectLabels = Boolean(annotations?.some((a) => a._directLabel || a._directLabelRequest))
   const labelMeasurer = useLabelMeasurer(hasDirectLabels)
   const expandedAnnotations = useMemo(() => hasDirectLabels
@@ -328,18 +329,12 @@ export function SVGOverlay(props: SVGOverlayProps) {
       stickyPositionCache: stickyPositionCacheRef.current
     }
 
-    const layoutAnnotations = autoPlaceAnnotations
-      ? annotationLayout({
-          annotations: visibleAnnotations,
-          context,
-          ...(typeof autoPlaceAnnotations === "object" ? autoPlaceAnnotations : {}),
-        })
-      : visibleAnnotations
+    const layoutAnnotations = prepareFrameAnnotations(visibleAnnotations, context, autoPlaceAnnotations, themeCohesion)
 
     // Dispatch → drop empty renders → apply emphasis hierarchy (shared with the
     // ordinal overlay). Falsy-node filtering matches the prior `.filter(Boolean)`.
     return renderAnnotationPass(layoutAnnotations, defaultRules, svgAnnotationRules, context)
-  }, [annotations, autoPlaceAnnotations, svgAnnotationRules, width, height, annXAccessor, annYAccessor, annotationData, scales, pointNodes, annCurve, annotationActivation])
+  }, [annotations, autoPlaceAnnotations, themeCohesion, svgAnnotationRules, width, height, annXAccessor, annYAccessor, annotationData, scales, pointNodes, annCurve, annotationActivation])
 
   // Linked crosshair from coordinate-based hover sync
   const crosshairPos = useCrosshairPosition(linkedCrosshairName)

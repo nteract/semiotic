@@ -32,7 +32,7 @@ export function annotationType(annotation: Datum): string {
 }
 
 export function isNoteAnnotation(annotation: Datum): boolean {
-  return !!annotation && typeof annotation === "object" && NOTE_TYPE_SET.has(annotationType(annotation))
+  return typeof annotation === "object" && NOTE_TYPE_SET.has(annotation?.type)
 }
 
 export function annotationDisablesConnector(annotation: Datum): boolean {

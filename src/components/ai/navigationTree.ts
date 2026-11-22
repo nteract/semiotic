@@ -1,3 +1,4 @@
+import { visibleChartAnnotations } from "../charts/shared/annotationAudienceText"
 import { readProp, stringValue, finiteValue, slug, interactionCue } from "./navigationValues"
 import type { Datum } from "../charts/shared/datumTypes"
 import { resolveRawAccessor } from "../stream/accessorUtils"
@@ -17,7 +18,6 @@ import {
   fmtDim,
   resolveChartDimension
 } from "./chartRoles"
-import { filterAnnotationsByStatus } from "./annotationProvenance"
 import type { ChartRecipe } from "./chartRecipes"
 import { buildRecipeNavigationTree } from "./recipeNavigation"
 import { resolveRecipeForChart } from "./recipeSemantics"
@@ -260,11 +260,7 @@ function buildAnnotationBranch(
   props: Datum,
   maxLeaves: number
 ): NavTreeNode | null {
-  const raw = Array.isArray(props.annotations)
-    ? (props.annotations as Datum[])
-    : null
-  if (!raw) return null
-  const items = filterAnnotationsByStatus(raw)
+  const items = visibleChartAnnotations(props.annotations)
   if (items.length === 0) return null
 
   let counter = 0
@@ -275,7 +271,7 @@ function buildAnnotationBranch(
       id: `annotation-${counter++}`,
       role: "annotation",
       level: 3,
-      label: `${capitalize(annotationPhrase(a))}${statusSuffix}.`,
+      label: `${capitalize(annotationPhrase(a, !!props.autoPlaceAnnotations?.audience))}${statusSuffix}.`,
       datum: a
     }
   })

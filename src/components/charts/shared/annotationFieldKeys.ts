@@ -12,7 +12,7 @@ export const KNOWN_ANNOTATION_FIELDS = [
   "type", "id", "stableId", "provenance", "lifecycle", "status", "emphasis", "rank", "priority",
   "x", "y", "x0", "x1", "y0", "y1", "dx", "dy", "nx", "ny", "px", "py", "coordinates", "points",
   "pointId", "nodeId", "category", "field", "value", "threshold", "anchor", "position",
-  "label", "title", "text", "note", "content", "shortText", "mobileText", "wrap",
+  "label", "title", "text", "note", "content", "shortText", "mobileText", "audienceText", "wrap",
   "labelPosition", "labelBackground", "labelColor", "textAnchor", "dominantBaseline",
   "fontSize", "fontWeight", "fontStyle", "fontFamily", "letterSpacing", "titleFontWeight",
   "color", "fill", "fillOpacity", "opacity", "stroke", "strokeWidth", "strokeDasharray", "strokeColor",

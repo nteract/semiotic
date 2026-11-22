@@ -1,3 +1,4 @@
+import { withAudienceNoteDescriptions } from "../charts/shared/annotationAudienceText"
 import * as React from "react"
 import { physicsSVGRootId } from "../stream/physics/PhysicsSettledSVGElement"
 import { staticTitleText } from "./staticTitle"
@@ -47,6 +48,7 @@ export function renderPhysicsFrame(
   sink?: EvidenceSink
 ): string {
   const size = props.size ?? [props.width ?? 600, props.height ?? 400]
+  const description = withAudienceNoteDescriptions(props.description, props.annotations, props.autoPlaceAnnotations)
   const theme = resolveTheme(props.theme)
   // Static chrome uses concrete paint attributes. Apply the frame palette to
   // its resolved theme as well as the root CSS variables, retaining typography
@@ -111,6 +113,7 @@ export function renderPhysicsFrame(
   }
   const result = renderPhysicsSettledSVG(store, {
     ...props,
+    description,
     title: staticTitleText(props.title) || undefined,
     width: size[0],
     height: size[1],
@@ -172,7 +175,7 @@ export function renderPhysicsFrame(
       height: size[1],
       marks: result.scene.sceneNodes,
       title: props.title,
-      description: props.description,
+      description,
       annotations: props.annotations,
       annotationRender,
       extraWarnings: [

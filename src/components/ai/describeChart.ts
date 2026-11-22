@@ -1,3 +1,4 @@
+import { fullAudienceNoteText, visibleChartAnnotations } from "../charts/shared/annotationAudienceText"
 import type { Datum } from "../charts/shared/datumTypes"
 import { resolveRawAccessor } from "../stream/accessorUtils"
 import { aiChartProps, aiNumericAccessor } from "./aiData"
@@ -20,7 +21,6 @@ import {
   resolveChartDimension,
   type MeasureStats
 } from "./chartRoles"
-import { filterAnnotationsByStatus } from "./annotationProvenance"
 import type { ChartRecipe } from "./chartRecipes"
 import { describeRecipeChart } from "./describeRecipeChart"
 import { resolveRecipeForChart } from "./recipeSemantics"
@@ -534,8 +534,7 @@ const ANNOTATION_KIND: Record<string, string> = {
 }
 
 function joinList(items: string[]): string {
-  if (items.length <= 1) return items[0] ?? ""
-  if (items.length === 2) return `${items[0]} and ${items[1]}`
+  if (items.length <= 2) return items.join(" and ")
   return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`
 }
 
@@ -544,15 +543,9 @@ function joinList(items: string[]): string {
  *  the provenance the annotation carries. Returns a phrase that *replaces* the
  *  kind's leading article ("a callout" → "an AI-suggested callout"). */
 function annotationQualifier(ann: Datum): string {
-  const prov =
-    ann.provenance && typeof ann.provenance === "object"
-      ? (ann.provenance as {
-          authorKind?: string
-          source?: string
-          basis?: string
-        })
-      : null
-  const who = prov?.authorKind ?? prov?.source ?? prov?.basis
+  const prov = ann.provenance
+  if (!prov || typeof prov !== "object") return ""
+  const who = prov.authorKind ?? prov.source ?? prov.basis
   if (who === "watcher") return "a watcher-flagged "
   if (who === "agent" || who === "ai" || who === "llm-inference")
     return "an AI-suggested "
@@ -567,19 +560,20 @@ function annotationQualifier(ann: Datum): string {
  * speak the same language. Editorial status is *not* included here (it would
  * change the prose sentence); callers that want it append it themselves.
  */
-export function annotationPhrase(ann: Datum): string {
+export function annotationPhrase(ann: Datum, audienceText = false): string {
   const type = typeof ann.type === "string" ? ann.type : "annotation"
   const baseKind = Object.prototype.hasOwnProperty.call(ANNOTATION_KIND, type)
     ? ANNOTATION_KIND[type]
     : "an annotation"
   const qualifier = annotationQualifier(ann)
   const kind = qualifier ? qualifier + baseKind.replace(/^an? /, "") : baseKind
-  const label =
+  const defaultLabel =
     typeof ann.label === "string"
       ? ann.label
       : typeof ann.title === "string"
         ? ann.title
         : undefined
+  const label = (audienceText ? fullAudienceNoteText(ann) : undefined) ?? defaultLabel
   return label ? `${kind} labeled "${label}"` : kind
 }
 
@@ -589,14 +583,10 @@ export function annotationPhrase(ann: Datum): string {
  * remainder into "and N more" so a heavily-annotated chart stays readable.
  */
 function annotationSentence(props: Datum): string | undefined {
-  const raw = Array.isArray(props.annotations)
-    ? (props.annotations as Datum[])
-    : null
-  if (!raw) return undefined
-  const items = filterAnnotationsByStatus(raw)
+  const items = visibleChartAnnotations(props.annotations)
   if (items.length === 0) return undefined
 
-  const shown = items.slice(0, 5).map(annotationPhrase)
+  const shown = items.slice(0, 5).map(a => annotationPhrase(a, !!props.autoPlaceAnnotations?.audience))
   const more = items.length - shown.length
   const list = joinList(shown) + (more > 0 ? `, and ${more} more` : "")
   const n = items.length

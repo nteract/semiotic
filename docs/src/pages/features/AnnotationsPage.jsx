@@ -999,6 +999,14 @@ export default function AnnotationsPage() {
         every note in the editorial layer.
       </p>
 
+      <p>
+        Set <code>{`theme={{ annotationCohesion: "layer" }}`}</code> on
+        <code> ThemeProvider</code> to style notes across charts, including notes
+        with manual positions. Pass the same theme to the static renderer.
+        Chart and mobile cohesion settings override the theme. A note’s own
+        <code> cohesion</code> takes precedence over each of these settings.
+      </p>
+
       <LiveExample
         frameProps={{
           data: scatterData,
@@ -1028,6 +1036,18 @@ export default function AnnotationsPage() {
       {/* Audience & Defensive Annotations */}
       {/* ----------------------------------------------------------------- */}
       <h2 id="defensive">Audience &amp; Defensive Annotations</h2>
+
+      <p>
+        A note can offer two readings of the same event. For example, set
+        <code>{` audienceText: { long: "The dashed line marks the first forecast week.", short: "Forecast begins" }`}</code>.
+        With <code>autoPlaceAnnotations.audience</code>, a mean familiarity
+        of 2 or lower selects the long version and 4 or higher selects the short
+        version. Intermediate scores and missing variants use the authored
+        <code> label</code>. At phone widths, an active mobile policy first
+        tries <code>mobileText</code>, then <code>shortText</code>, unless
+        <code> preferShortText</code> is false. Screen readers retain the
+        long version, or the original label when only a short version exists.
+      </p>
 
       <p>
         Charts travel. They get screenshotted, pasted into decks, and circulated

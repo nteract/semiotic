@@ -106,17 +106,14 @@ function bracketPath(
   depth: number,
   isVertical: boolean
 ): string {
+  const point = (along: number, across: number) =>
+    isVertical ? `${across},${along}` : `${along},${across}`
+  const end = point(span, 0)
   if (type === "curly") {
-    if (isVertical) {
-      return `M0,0 C${depth * 0.6},0 ${depth * 0.4},${span / 2} ${depth},${span / 2} C${depth * 0.4},${span / 2} ${depth * 0.6},${span} 0,${span}`
-    }
-    return `M0,0 C0,${depth * 0.6} ${span / 2},${depth * 0.4} ${span / 2},${depth} C${span / 2},${depth * 0.4} ${span},${depth * 0.6} ${span},0`
+    const shoulder = point(span / 2, depth * 0.4)
+    return `M0,0 C${point(0, depth * 0.6)} ${shoulder} ${point(span / 2, depth)} C${shoulder} ${point(span, depth * 0.6)} ${end}`
   }
-  // square bracket
-  if (isVertical) {
-    return `M0,0 L${depth},0 L${depth},${span} L0,${span}`
-  }
-  return `M0,0 L0,${depth} L${span},${depth} L${span},0`
+  return `M0,0 L${point(0, depth)} L${point(span, depth)} L${end}`
 }
 
 function renderNote(
@@ -125,7 +122,7 @@ function renderNote(
   dy: number,
   color?: string
 ) {
-  if (!note) return <g className="annotation-note" />
+  if (!note?.label && !note?.title) return <g className="annotation-note" />
   const {
     label,
     title,
@@ -134,8 +131,6 @@ function renderNote(
     wrap = 120,
     noWrap
   } = note
-
-  if (!label && !title) return <g className="annotation-note" />
 
   let orientation = explicitOrientation
   if (!orientation) {
@@ -166,12 +161,10 @@ function renderNote(
   const lineHeight = layout?.lineHeight ?? 16
   const labelPad = 2
   const padding = 4
-  const titleLines =
-    layout?.titleLines ??
-    (title ? (noWrap ? [title] : wrapAnnotationText(title, wrap, 8)) : [])
-  const labelLines =
-    layout?.labelLines ??
-    (label ? (noWrap ? [label] : wrapAnnotationText(label, wrap, 8)) : [])
+  const fallbackLines = (text?: string) =>
+    noWrap && text ? [text] : wrapAnnotationText(text, wrap, 8)
+  const titleLines = layout?.titleLines ?? fallbackLines(title)
+  const labelLines = layout?.labelLines ?? fallbackLines(label)
   const totalLines = titleLines.length + labelLines.length
   // For leftRight orientation, offset text horizontally away from the note-line
   const textX = vertical ? (textAnchor === "end" ? -padding : padding) : 0
@@ -259,15 +252,12 @@ function renderNote(
   }
 
   let noteLine = null
-  if ((title || label) && (dx !== 0 || dy !== 0)) {
+  if (dx !== 0 || dy !== 0) {
     const length = horizontal
       ? layout
         ? layout.width
         : Math.min(wrap, 120)
-      : (titleLines.length +
-          labelLines.length +
-          (labelLines.length > 0 ? 1 : 0)) *
-        lineHeight
+      : (totalLines + (labelLines.length > 0 ? 1 : 0)) * lineHeight
     const alignment = horizontal ? textAnchor : align
     const start =
       alignment === "end" || alignment === "bottom"
@@ -632,9 +622,6 @@ export default function SemioticAnnotation(props: AnnotationProps) {
   const { noteData } = props
   const { screenCoordinates } = noteData
 
-  const annotationType =
-    typeof noteData.type === "string" ? noteData.type : "label"
-
   const eventListeners = noteData.eventListeners || noteData.events || {}
 
   if (noteData.coordinates && screenCoordinates) {
@@ -655,7 +642,6 @@ export default function SemioticAnnotation(props: AnnotationProps) {
           key={`multi-annotation-${i}`}
           {...subjectNote}
           events={eventListeners}
-          type={annotationType}
         />
       )
     })
@@ -672,7 +658,6 @@ export default function SemioticAnnotation(props: AnnotationProps) {
       key={annotationKey}
       events={eventListeners}
       {...noteData}
-      type={annotationType}
     />
   )
 }

@@ -1,3 +1,4 @@
+import { withAudienceNoteDescriptions } from "../charts/shared/annotationAudienceText"
 import { staticTitleText } from "./staticTitle"
 import { filterAnnotationsByStatus } from "../charts/shared/annotationStatusFilter"
 import { directLabelDescription } from "../charts/shared/directLabels"
@@ -208,7 +209,8 @@ export function renderStreamXYFrame(props: StreamXYFrameProps & ThemeAwareProps,
   )
 
   const labelDescription = directLabelDescription(props.annotations)
-  const description = labelDescription ? `${props.description || props.title || "Line chart."}${labelDescription}` : props.description
+  const chartDescription = labelDescription ? `${props.description || props.title || "Line chart."}${labelDescription}` : props.description
+  const description = withAudienceNoteDescriptions(chartDescription, props.annotations, props.autoPlaceAnnotations)
 
   if (!store.scales) {
     let annotationRender: StaticAnnotationRenderResult | undefined

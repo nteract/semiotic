@@ -284,6 +284,34 @@ describe("annotationLayout", () => {
   const audienceNotes = (): Datum[] =>
     Array.from({ length: 8 }, (_, i) => ({ type: "label", x: 50, y: 50, label: `n${i}` }))
 
+  it.each([
+    [2, false, "Detailed explanation"], [3, false, "Default label"], [4, false, "Brief"],
+    [2, true, "Phone"], [4, true, "Phone"], [4, { preferShortText: false }, "Brief"]
+  ] as const)("resolves familiarity %s and mobile policy %j", (familiarity, mobile, expected) => {
+    const note = Object.freeze({
+      type: "callout", x: 25, y: 40, label: "Default label", shortText: "Phone",
+      audienceText: { long: "Detailed explanation", short: "Brief" }
+    })
+    const [placed] = annotationLayout({
+      annotations: [note], context: context(), audience: { familiarity: { LineChart: familiarity } }, mobile
+    })
+    expect(placed.label).toBe(expected)
+  })
+
+  it("falls back to authored labels and preserves structured content", () => {
+    const label = { content: "Custom label" }
+    const notes = [
+      { type: "text", x: 1, y: 2, label: "Original", audienceText: { long: "More" } },
+      { type: "text", x: 1, y: 2, label, audienceText: { short: "Brief" } },
+      { type: "y-threshold", value: 1, label: "Limit", audienceText: { short: "Brief" } }
+    ]
+    const labels = (audience?: { familiarity: Record<string, number> }) => annotationLayout({
+      annotations: notes, context: context(), audience
+    }).map(note => note.label)
+    expect(labels({ familiarity: { LineChart: 5 } })).toEqual(["Original", label, "Limit"])
+    expect(labels()).toEqual(["Original", label, "Limit"])
+  })
+
   it("keeps fewer notes for an expert audience", () => {
     const expert = annotationLayout({
       annotations: audienceNotes(),
@@ -306,7 +334,7 @@ describe("annotationLayout", () => {
     expect(novice).toHaveLength(6)
   })
 
-  it("ignores audience when density is not engaged", () => {
+  it("keeps the note count when density is not engaged", () => {
     const placed = annotationLayout({
       annotations: audienceNotes(),
       context: context({ width: 600, height: 400 }),

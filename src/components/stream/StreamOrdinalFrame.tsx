@@ -18,6 +18,7 @@
  * frame owns rendering, interaction, and accessibility.
  */
 "use client"
+import { withAudienceNoteDescriptions } from "../charts/shared/annotationAudienceText"
 import * as React from "react"
 import { RadialCenterContent } from "../charts/shared/radialCenterContent"
 import { forwardRef, memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
@@ -914,7 +915,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
           }}
         >
           <AccessibleDataTableSlot accessibleTable={accessibleTable} scene={scene} chartType={chartType + " chart"} tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />
-          <ScreenReaderSummary summary={summary} />
+          <ScreenReaderSummary summary={withAudienceNoteDescriptions(summary, annotations, autoPlaceAnnotations)} />
           <div
               role="img"
               aria-label={
@@ -1028,7 +1029,7 @@ const StreamOrdinalFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
         />
       )}
       <AccessibleDataTableSlot accessibleTable={accessibleTable} sceneRevision={storeRef.current?.getUpdateSnapshot().revisions.accessibility} scene={storeRef.current?.scene ?? []} chartType={chartType + " chart"} tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />
-        <ScreenReaderSummary summary={summary} />
+        <ScreenReaderSummary summary={withAudienceNoteDescriptions(summary, annotations, autoPlaceAnnotations)} />
         {/* Live region MUST live outside the role="img" wrapper — AT treats the
             image as atomic and never announces content nested inside it. */}
         <AriaLiveTooltip active={kbFocusIndexRef.current >= 0} hoverPoint={hoverPoint} scene={storeRef.current?.scene} />
