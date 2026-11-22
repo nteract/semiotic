@@ -1,8 +1,11 @@
-import type {
-  ComponentPropsWithoutRef,
-  ElementType,
-  SyntheticEvent
-} from "react"
+import { useMemo } from "react"
+import {
+  InspectorDisclosure,
+  renderInspectorField,
+  mapInspectorRows,
+  recordId
+} from "./ArtifactInspectorElements"
+import type { ComponentPropsWithoutRef, ElementType } from "react"
 import type {
   ArtifactContract,
   Claim,
@@ -42,9 +45,9 @@ export interface ArtifactInspectorProps extends Omit<
   title?: string
   /** Heading depth used when embedding the inspector in a page. */
   headingLevel?: 2 | 3 | 4 | 5 | 6
-  /** Controlled native disclosure state. Omit to let each `details` element manage itself. */
+  /** Sections held open by the host. Omit to let readers toggle each section independently. */
   expandedSections?: ReadonlyArray<ArtifactInspectorSection>
-  /** Observe disclosure changes for analytics or controlled hosts. */
+  /** Reports a native toggle, or requests a change to a controlled section. */
   onDisclosureChange?: (
     section: ArtifactInspectorSection,
     expanded: boolean
@@ -59,9 +62,9 @@ function evidenceLabel(evidence: EvidenceRef): string {
   return evidence.label ?? evidence.source?.name ?? evidence.id
 }
 
-function statusCounts(
+function obligationSummary(
   obligations: ReadonlyArray<ObligationResult>
-): Array<[ObligationStatus, number]> {
+): string {
   const order: ObligationStatus[] = [
     "fail",
     "warn",
@@ -70,37 +73,37 @@ function statusCounts(
     "pass",
     "not-applicable"
   ]
-  return order.flatMap((status) => {
-    const count = obligations.filter((item) => item.status === status).length
-    return count > 0 ? [[status, count] as [ObligationStatus, number]] : []
-  })
+  const counts = new Map<ObligationStatus, number>()
+  for (const { status } of obligations)
+    counts.set(status, (counts.get(status) ?? 0) + 1)
+  return (
+    order
+      .filter((status) => counts.has(status))
+      .map((status) => `${counts.get(status)} ${status}`)
+      .join(" · ") || "No obligations reported"
+  )
 }
 
 function canonicalJsonValue(
   value: unknown,
   ancestors = new Set<object>()
 ): unknown {
-  if (value === null || typeof value !== "object") {
-    return typeof value === "bigint" ? value.toString() : value
-  }
+  if (typeof value === "bigint") return String(value)
+  if (typeof value === "function") return undefined
+  if (value === null || typeof value !== "object") return value
   if (ancestors.has(value)) return "[Circular]"
   ancestors.add(value)
-  try {
-    if (Array.isArray(value)) {
-      return value.map((item) => canonicalJsonValue(item, ancestors))
-    }
-    return Object.fromEntries(
-      Object.entries(value as Record<string, unknown>)
-        .filter(
-          ([, item]) =>
-            !["undefined", "function", "symbol"].includes(typeof item)
-        )
-        .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
-        .map(([key, item]) => [key, canonicalJsonValue(item, ancestors)])
-    )
-  } finally {
-    ancestors.delete(value)
-  }
+  const visit = (item: unknown) => canonicalJsonValue(item, ancestors)
+  const object = value as Record<string, unknown>
+  const result = Array.isArray(value)
+    ? value.map(visit)
+    : Object.fromEntries(
+        Object.keys(object)
+          .sort()
+          .map((key) => [key, visit(object[key])])
+      )
+  ancestors.delete(value)
+  return result
 }
 
 function machineReadableText(
@@ -126,13 +129,6 @@ function machineReadableText(
   return JSON.stringify(canonicalJsonValue(payload), null, 2)
 }
 
-function isSectionOpen(
-  sections: ReadonlyArray<ArtifactInspectorSection> | undefined,
-  section: ArtifactInspectorSection
-): boolean | undefined {
-  return sections ? sections.includes(section) : undefined
-}
-
 /**
  * Accessible, progressively disclosed view of an artifact contract.
  *
@@ -150,18 +146,19 @@ export function ArtifactInspector({
   className,
   ...sectionProps
 }: ArtifactInspectorProps) {
-  const summary = summarizeArtifactInspection(contract, evaluation)
+  const { summary, machineText, policyText } = useMemo(
+    () => ({
+      summary: summarizeArtifactInspection(contract, evaluation),
+      machineText: machineReadableText(contract, evaluation),
+      policyText: evaluation && obligationSummary(evaluation.obligations)
+    }),
+    [contract, evaluation]
+  )
+  const disclosure = { expandedSections, onDisclosureChange }
   const Heading = `h${headingLevel}` as ElementType
   const classes = ["semiotic-artifact-inspector", className]
     .filter(Boolean)
     .join(" ")
-  const toggleHandler = (section: ArtifactInspectorSection) =>
-    onDisclosureChange
-      ? (event: SyntheticEvent<HTMLDetailsElement>) => {
-          if (event.target !== event.currentTarget) return
-          onDisclosureChange(section, event.currentTarget.open)
-        }
-      : undefined
   const reviewLabel =
     summary.review.status === "required"
       ? `${summary.review.count} manual review item${summary.review.count === 1 ? "" : "s"}`
@@ -188,87 +185,69 @@ export function ArtifactInspector({
       </header>
 
       <dl className="semiotic-artifact-inspector__summary">
-        <div data-signal="status">
-          <dt>Status</dt>
-          <dd>{summary.outcome}</dd>
-        </div>
-        <div data-signal="time" data-state={summary.time.status}>
-          <dt>Time</dt>
-          <dd>
-            {summary.time.label} ({summary.time.status})
-          </dd>
-        </div>
-        <div data-signal="claims">
-          <dt>Claims</dt>
-          <dd>
-            {summary.claims.supported} supported · {summary.claims.unresolved}{" "}
-            unresolved · {summary.claims.total} total
-          </dd>
-        </div>
-        <div data-signal="evidence">
-          <dt>Evidence</dt>
-          <dd>
-            {summary.evidence.referenced} referenced ·{" "}
-            {summary.evidence.unreferenced} unreferenced ·{" "}
-            {summary.evidence.missingReferences} missing reference
-            {summary.evidence.missingReferences === 1 ? "" : "s"}
-          </dd>
-        </div>
-        <div data-signal="policy" data-state={summary.policy.status}>
-          <dt>Policy</dt>
-          <dd>{summary.policy.label}</dd>
-        </div>
-        <div data-signal="review" data-state={summary.review.status}>
-          <dt>Review</dt>
-          <dd>{reviewLabel}</dd>
-        </div>
+        {renderInspectorField("Status", summary.outcome, "status")}
+        {renderInspectorField(
+          "Time",
+          `${summary.time.label} (${summary.time.status})`,
+          "time",
+          summary.time.status
+        )}
+        {renderInspectorField(
+          "Claims",
+          `${summary.claims.supported} supported · ${summary.claims.unresolved} unresolved · ${summary.claims.total} total`,
+          "claims"
+        )}
+        {renderInspectorField(
+          "Evidence",
+          `${summary.evidence.referenced} referenced · ${summary.evidence.unreferenced} unreferenced · ${summary.evidence.missingReferences} missing reference${summary.evidence.missingReferences === 1 ? "" : "s"}`,
+          "evidence"
+        )}
+        {renderInspectorField(
+          "Policy",
+          summary.policy.label,
+          "policy",
+          summary.policy.status
+        )}
+        {renderInspectorField(
+          "Review",
+          reviewLabel,
+          "review",
+          summary.review.status
+        )}
       </dl>
 
-      <details
+      <InspectorDisclosure
         className="semiotic-artifact-inspector__details"
-        open={isSectionOpen(expandedSections, "details")}
-        onToggle={toggleHandler("details")}
+        {...disclosure}
+        section="details"
+        label="Inspect claims, evidence, policy, and machine-readable detail"
       >
-        <summary>
-          Inspect claims, evidence, policy, and machine-readable detail
-        </summary>
-
-        <details
-          open={isSectionOpen(expandedSections, "claims")}
-          onToggle={toggleHandler("claims")}
+        <InspectorDisclosure
+          {...disclosure}
+          section="claims"
+          label={`Claims (${contract.claims.length})`}
         >
-          <summary>Claims ({contract.claims.length})</summary>
           {contract.claims.length > 0 ? (
             <ol>
-              {contract.claims.map((claim) => (
-                <li key={claim.id} data-status={claim.status}>
+              {mapInspectorRows(contract.claims, recordId, (claim, key) => (
+                <li key={key} data-status={claim.status}>
                   <strong>{claimLabel(claim)}</strong>
                   <dl>
-                    <div>
-                      <dt>Status</dt>
-                      <dd>{claim.status}</dd>
-                    </div>
-                    <div>
-                      <dt>Kind</dt>
-                      <dd>{claim.kind}</dd>
-                    </div>
-                    <div>
-                      <dt>Evidence</dt>
-                      <dd>
-                        {claim.evidenceIds.length > 0
-                          ? claim.evidenceIds.join(", ")
-                          : "Unknown — no evidence reference is declared"}
-                      </dd>
-                    </div>
-                    {claim.uncertainty ? (
-                      <div>
-                        <dt>Uncertainty</dt>
-                        <dd>
-                          {claim.uncertainty.description ??
-                            claim.uncertainty.kind}
-                        </dd>
-                      </div>
-                    ) : null}
+                    {renderInspectorField("Status", claim.status)}
+                    {renderInspectorField("Kind", claim.kind)}
+                    {renderInspectorField(
+                      "Evidence",
+                      claim.evidenceIds.length > 0
+                        ? claim.evidenceIds.join(", ")
+                        : "Unknown — no evidence reference is declared"
+                    )}
+                    {claim.uncertainty
+                      ? renderInspectorField(
+                          "Uncertainty",
+                          claim.uncertainty.description ??
+                            claim.uncertainty.kind
+                        )
+                      : null}
                   </dl>
                 </li>
               ))}
@@ -276,95 +255,85 @@ export function ArtifactInspector({
           ) : (
             <p>Unknown — no claims are declared.</p>
           )}
-        </details>
+        </InspectorDisclosure>
 
         <ArtifactInspectorTimeSection
           contract={contract}
           fallbackLabel={summary.time.label}
-          open={isSectionOpen(expandedSections, "time")}
-          onToggle={toggleHandler("time")}
+          {...disclosure}
         />
 
-        <ArtifactInspectorHistorySection
-          contract={contract}
-          open={isSectionOpen(expandedSections, "history")}
-          onToggle={toggleHandler("history")}
-        />
+        <ArtifactInspectorHistorySection contract={contract} {...disclosure} />
 
         <ArtifactInspectorAlternativesSection
           contract={contract}
           evaluation={evaluation}
-          open={isSectionOpen(expandedSections, "alternatives")}
-          onToggle={toggleHandler("alternatives")}
+          {...disclosure}
         />
 
-        <details
-          open={isSectionOpen(expandedSections, "evidence")}
-          onToggle={toggleHandler("evidence")}
+        <InspectorDisclosure
+          {...disclosure}
+          section="evidence"
+          label={`Evidence (${contract.evidence.length})`}
         >
-          <summary>Evidence ({contract.evidence.length})</summary>
           {contract.evidence.length > 0 ? (
             <ul>
-              {contract.evidence.map((evidence) => (
-                <li key={evidence.id}>
-                  <strong>{evidenceLabel(evidence)}</strong>
-                  <dl>
-                    <div>
-                      <dt>Identifier</dt>
-                      <dd>{evidence.id}</dd>
-                    </div>
-                    <div>
-                      <dt>Role</dt>
-                      <dd>{evidence.role}</dd>
-                    </div>
-                    <div>
-                      <dt>Source</dt>
-                      <dd>
-                        {evidence.source?.uri ??
+              {mapInspectorRows(
+                contract.evidence,
+                recordId,
+                (evidence, key) => (
+                  <li key={key}>
+                    <strong>{evidenceLabel(evidence)}</strong>
+                    <dl>
+                      {renderInspectorField("Identifier", evidence.id)}
+                      {renderInspectorField("Role", evidence.role)}
+                      {renderInspectorField(
+                        "Source",
+                        evidence.source?.uri ??
                           evidence.source?.name ??
-                          "Unknown — no source is declared"}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>Fingerprint</dt>
-                      <dd>
-                        {evidence.fingerprint ??
-                          "Unknown — no fingerprint is declared"}
-                      </dd>
-                    </div>
-                  </dl>
-                </li>
-              ))}
+                          "Unknown — no source is declared"
+                      )}
+                      {renderInspectorField(
+                        "Fingerprint",
+                        evidence.fingerprint ??
+                          "Unknown — no fingerprint is declared"
+                      )}
+                    </dl>
+                  </li>
+                )
+              )}
             </ul>
           ) : (
             <p>Unknown — no evidence records are declared.</p>
           )}
-        </details>
+        </InspectorDisclosure>
 
-        <details
-          open={isSectionOpen(expandedSections, "policy")}
-          onToggle={toggleHandler("policy")}
+        <InspectorDisclosure
+          {...disclosure}
+          section="policy"
+          label="Policy and review"
         >
-          <summary>Policy and review</summary>
           {evaluation ? (
             <>
               <p>
                 {evaluation.policy.id}@{evaluation.policy.version} ·{" "}
-                {statusCounts(evaluation.obligations)
-                  .map(([status, count]) => `${count} ${status}`)
-                  .join(" · ") || "No obligations reported"}
+                {policyText}
               </p>
               {evaluation.obligations.length > 0 ? (
                 <ul>
-                  {evaluation.obligations.map((obligation) => (
-                    <li key={obligation.id} data-status={obligation.status}>
-                      <strong>{obligation.status}</strong> ·{" "}
-                      {obligation.message}
-                      {obligation.repair ? (
-                        <span> Suggested repair: {obligation.repair}</span>
-                      ) : null}
-                    </li>
-                  ))}
+                  {mapInspectorRows(
+                    evaluation.obligations,
+                    recordId,
+                    (obligation, key) => (
+                      <li key={key} data-status={obligation.status}>
+                        <strong>{obligation.status}</strong> ·{" "}
+                        {obligation.message}
+                        {obligation.repair ? (
+                          <span> Suggested repair: {obligation.repair}</span>
+                        ) : null}
+                      </li>
+                    )
+                  )}
                 </ul>
               ) : null}
             </>
@@ -395,18 +364,18 @@ export function ArtifactInspector({
           ) : (
             <p>No unknown signals were reported.</p>
           )}
-        </details>
+        </InspectorDisclosure>
 
-        <details
-          open={isSectionOpen(expandedSections, "machine")}
-          onToggle={toggleHandler("machine")}
+        <InspectorDisclosure
+          {...disclosure}
+          section="machine"
+          label="Machine-readable JSON"
         >
-          <summary>Machine-readable JSON</summary>
           <pre aria-label="Machine-readable artifact inspection" tabIndex={0}>
-            <code>{machineReadableText(contract, evaluation)}</code>
+            <code>{machineText}</code>
           </pre>
-        </details>
-      </details>
+        </InspectorDisclosure>
+      </InspectorDisclosure>
     </section>
   )
 }

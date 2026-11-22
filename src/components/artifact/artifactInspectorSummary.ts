@@ -54,16 +54,6 @@ export interface ArtifactInspectionSummary {
   }
 }
 
-const RESOLVED_CLAIM_STATUSES = new Set([
-  "supported",
-  "superseded",
-  "retracted"
-])
-
-function unique(values: ReadonlyArray<string>): string[] {
-  return [...new Set(values.filter(Boolean))]
-}
-
 function outcomeLabel(outcome: ArtifactInspectorOutcome): string {
   if (outcome === "acceptable") return "Acceptable under the active policy"
   if (outcome === "conditional") return "Conditional — follow-up is required"
@@ -116,36 +106,36 @@ export function summarizeArtifactInspection(
   contract: ArtifactContract,
   evaluation?: ArtifactInspectorEvaluation
 ): ArtifactInspectionSummary {
-  const activeClaims = contract.claims.filter(
-    ({ status }) => status !== "superseded" && status !== "retracted"
-  )
-  const referencedEvidenceIds = new Set(
-    contract.claims.flatMap(({ evidenceIds }) => evidenceIds)
-  )
-  const knownEvidenceIds = new Set(contract.evidence.map(({ id }) => id))
-  const manualItems = unique([
-    ...(contract.reception?.manualChecks ?? []),
-    ...Object.entries(contract.fieldStatus ?? {}).flatMap(([path, field]) =>
-      field.status === "manual"
-        ? [field.reason ?? `${path} requires manual review`]
-        : []
-    ),
-    ...(evaluation?.manualChecks ?? []),
-    ...(evaluation?.obligations.flatMap((obligation) =>
-      obligation.status === "manual" ? [obligation.message] : []
-    ) ?? [])
-  ])
-  const unknownItems = unique([
-    ...Object.entries(contract.fieldStatus ?? {}).flatMap(([path, field]) =>
-      field.status === "unknown" ? [field.reason ?? `${path} is unknown`] : []
-    ),
-    ...(evaluation?.obligations.flatMap((obligation) =>
-      obligation.status === "unknown" ? [obligation.message] : []
-    ) ?? []),
-    ...contract.claims.flatMap((claim) =>
-      claim.status === "unknown" ? [`Claim ${claim.id} has unknown status`] : []
-    )
-  ])
+  const manual = new Set(contract.reception?.manualChecks)
+  const unknown = new Set<string>()
+  for (const [path, field] of Object.entries(contract.fieldStatus ?? {})) {
+    if (field.status === "manual") manual.add(field.reason ?? `${path} requires manual review`)
+    if (field.status === "unknown") unknown.add(field.reason ?? `${path} is unknown`)
+  }
+  for (const item of evaluation?.manualChecks ?? []) manual.add(item)
+  for (const { status, message } of evaluation?.obligations ?? []) {
+    if (status === "manual") manual.add(message)
+    if (status === "unknown") unknown.add(message)
+  }
+
+  const referencedIds = new Set<string>()
+  let active = 0
+  let supported = 0
+  for (const { id, status, evidenceIds } of contract.claims) {
+    if (status !== "superseded" && status !== "retracted") active++
+    if (status === "supported") supported++
+    if (status === "unknown") unknown.add(`Claim ${id} has unknown status`)
+    for (const ref of evidenceIds) referencedIds.add(ref)
+  }
+  const missing = new Set(referencedIds)
+  let referenced = 0
+  for (const { id } of contract.evidence) {
+    if (referencedIds.has(id)) referenced++
+    missing.delete(id)
+  }
+  const manualItems = [...manual].filter(Boolean)
+  const unknownItems = [...unknown].filter(Boolean)
+  if (!evaluation) unknownItems.push("Policy evaluation has not been supplied")
   const outcome = evaluation?.status ?? "unknown"
 
   return {
@@ -154,24 +144,15 @@ export function summarizeArtifactInspection(
     time: timeSummary(contract),
     claims: {
       total: contract.claims.length,
-      active: activeClaims.length,
-      supported: activeClaims.filter(({ status }) => status === "supported")
-        .length,
-      unresolved: activeClaims.filter(
-        ({ status }) => !RESOLVED_CLAIM_STATUSES.has(status)
-      ).length
+      active,
+      supported,
+      unresolved: active - supported
     },
     evidence: {
       total: contract.evidence.length,
-      referenced: contract.evidence.filter(({ id }) =>
-        referencedEvidenceIds.has(id)
-      ).length,
-      unreferenced: contract.evidence.filter(
-        ({ id }) => !referencedEvidenceIds.has(id)
-      ).length,
-      missingReferences: [...referencedEvidenceIds].filter(
-        (id) => !knownEvidenceIds.has(id)
-      ).length
+      referenced,
+      unreferenced: contract.evidence.length - referenced,
+      missingReferences: missing.size
     },
     policy: evaluation
       ? {
@@ -186,10 +167,8 @@ export function summarizeArtifactInspection(
       items: manualItems
     },
     unknowns: {
-      count: unknownItems.length + (evaluation ? 0 : 1),
-      items: evaluation
-        ? unknownItems
-        : [...unknownItems, "Policy evaluation has not been supplied"]
+      count: unknownItems.length,
+      items: unknownItems
     }
   }
 }

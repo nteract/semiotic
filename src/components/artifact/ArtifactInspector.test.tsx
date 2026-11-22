@@ -1,4 +1,11 @@
-import { fireEvent, render, screen, within } from "@testing-library/react"
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within
+} from "@testing-library/react"
+import { renderToString } from "react-dom/server"
 import { describe, expect, expectTypeOf, it, vi } from "vitest"
 import type { ArtifactContract } from "./types"
 import type { ArtifactEvaluation } from "./evaluateArtifactTypes"
@@ -172,6 +179,39 @@ describe("ArtifactInspector", () => {
     ])
   })
 
+  it("counts duplicate evidence rows and distinct missing references across active and retired claims", () => {
+    const [claim] = contract.claims
+    const [evidence, other] = contract.evidence
+    const summary = summarizeArtifactInspection({
+      ...contract,
+      evidence: [evidence, evidence, other],
+      claims: [
+        {
+          ...claim,
+          status: "retracted",
+          evidenceIds: [evidence.id, "missing"]
+        },
+        { ...claim, status: "superseded", evidenceIds: ["missing"] },
+        { ...claim, status: "unknown", evidenceIds: [] }
+      ]
+    })
+    expect(summary.claims).toEqual({
+      total: 3,
+      active: 1,
+      supported: 0,
+      unresolved: 1
+    })
+    expect(summary.evidence).toEqual({
+      total: 3,
+      referenced: 2,
+      unreferenced: 1,
+      missingReferences: 1
+    })
+    expect(summary.unknowns.items).toContain(
+      `Claim ${claim.id} has unknown status`
+    )
+  })
+
   it("uses native progressive disclosure and exposes each signal accessibly", () => {
     const onDisclosureChange = vi.fn()
     const { container } = render(
@@ -245,6 +285,163 @@ describe("ArtifactInspector", () => {
     rootDetails.open = false
     fireEvent(rootDetails, new Event("toggle"))
     expect(onDisclosureChange).toHaveBeenCalledWith("details", false)
+    expect(rootDetails.open).toBe(true)
+  })
+
+  it("keeps a controlled section in its requested state until the host accepts the change", () => {
+    const change = vi.fn()
+    const view = (openClaims: boolean) => (
+      <ArtifactInspector
+        contract={contract}
+        onDisclosureChange={change}
+        expandedSections={openClaims ? ["details", "claims"] : ["details"]}
+      />
+    )
+    const { rerender } = render(view(false))
+    const summary = screen.getByText("Claims (2)")
+    const details = summary.closest("details")!
+    fireEvent.click(summary)
+    expect(details.open).toBe(false)
+    expect(change.mock.calls).toEqual([["claims", true]])
+    rerender(view(true))
+    expect(details.open).toBe(true)
+    fireEvent(details, new Event("toggle"))
+    expect(change).toHaveBeenCalledTimes(1)
+    fireEvent.click(summary)
+    expect(details.open).toBe(true)
+    expect(change.mock.calls).toEqual([
+      ["claims", true],
+      ["claims", false]
+    ])
+    rerender(view(false))
+    expect(details.open).toBe(false)
+  })
+
+  it("renders the controlled state on the server and hydrates without reporting prop changes", () => {
+    const change = vi.fn()
+    const view = (
+      <ArtifactInspector
+        contract={contract}
+        expandedSections={["details", "history"]}
+        onDisclosureChange={change}
+      />
+    )
+    const container = document.createElement("div")
+    container.innerHTML = renderToString(view)
+    const summary = within(container).getByText("Corrections and history")
+    expect(summary.closest("details")!.open).toBe(true)
+    const hydrated = render(view, { hydrate: true, container })
+    fireEvent(summary.closest("details")!, new Event("toggle"))
+    expect(change).not.toHaveBeenCalled()
+    fireEvent.click(summary)
+    expect(change.mock.calls).toEqual([["history", false]])
+    expect(summary.closest("details")!.open).toBe(true)
+    hydrated.unmount()
+  })
+
+  it("preserves a native disclosure across unrelated renders and reports only its own toggles", async () => {
+    const change = vi.fn()
+    const view = (title: string) => (
+      <ArtifactInspector
+        contract={contract}
+        title={title}
+        onDisclosureChange={change}
+      />
+    )
+    const { rerender } = render(view("First"))
+    fireEvent.click(screen.getByText(/Inspect claims, evidence/))
+    await waitFor(() => expect(change.mock.calls).toEqual([["details", true]]))
+    const summary = screen.getByText("Corrections and history")
+    fireEvent.click(summary)
+    await waitFor(() =>
+      expect(change.mock.calls).toEqual([
+        ["details", true],
+        ["history", true]
+      ])
+    )
+    rerender(view("Updated"))
+    expect(summary.closest("details")!.open).toBe(true)
+    fireEvent.click(summary)
+    await waitFor(() =>
+      expect(change).toHaveBeenLastCalledWith("history", false)
+    )
+  })
+
+  it("retains duplicate records and unique row identity when another record is inserted", () => {
+    const first = contract.claims[0]
+    const second = { ...first, text: "Duplicate claim" }
+    const warn = vi.spyOn(console, "error").mockImplementation(() => {})
+    try {
+      const view = (claims: ArtifactContract["claims"]) => (
+        <ArtifactInspector
+          contract={{ ...contract, claims }}
+          expandedSections={["details", "claims"]}
+        />
+      )
+      const { rerender } = render(view([first, second, contract.claims[1]]))
+      const uniqueRow = screen.getByText(contract.claims[1].text!).closest("li")
+      rerender(
+        view([
+          { ...first, id: "0:" + first.id, text: "Inserted claim" },
+          first,
+          second,
+          contract.claims[1]
+        ])
+      )
+      expect(screen.getByText(contract.claims[1].text!).closest("li")).toBe(
+        uniqueRow
+      )
+      rerender(view([first, contract.claims[1]]))
+      expect(screen.queryByText("Duplicate claim")).toBeNull()
+      expect(screen.getAllByText(first.text!)).toHaveLength(1)
+      expect(warn.mock.calls.flat().join(" ")).not.toMatch(
+        /same key|unique .*key/i
+      )
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
+  it("reuses inspection work across presentation changes and refreshes it for new inputs", () => {
+    const read = vi.fn(() => contract.fieldStatus)
+    const observed = {
+      ...contract,
+      get fieldStatus() {
+        return read()
+      }
+    }
+    const { rerender } = render(
+      <ArtifactInspector contract={observed} evaluation={evaluation} />
+    )
+    const reads = read.mock.calls.length
+    expect(reads).toBeGreaterThan(0)
+    rerender(
+      <ArtifactInspector
+        contract={observed}
+        evaluation={evaluation}
+        title="Updated"
+        expandedSections={["machine"]}
+      />
+    )
+    expect(read).toHaveBeenCalledTimes(reads)
+    const text = () =>
+      JSON.parse(
+        screen.getByLabelText("Machine-readable artifact inspection")
+          .textContent!
+      )
+    rerender(
+      <ArtifactInspector
+        contract={observed}
+        evaluation={{ ...evaluation, status: "refuse" }}
+      />
+    )
+    expect(text().evaluation.status).toBe("refuse")
+    expect(screen.getByRole("status")).toHaveTextContent("Refused")
+    rerender(<ArtifactInspector contract={{ ...contract, claims: [] }} />)
+    expect(text().contract.claims).toEqual([])
+    expect(
+      screen.getByText("0 supported · 0 unresolved · 0 total")
+    ).toBeInTheDocument()
   })
 
   it("states missing evaluation and contract fields as unknown", () => {
@@ -284,6 +481,24 @@ describe("ArtifactInspector", () => {
     expect(
       screen.getByText("Manual review state is unknown.")
     ).toBeInTheDocument()
+  })
+
+  it("serializes shared objects, circular data, and bigint without invoking embedded callbacks", () => {
+    const toJSON = vi.fn(() => "overridden")
+    const shared = { count: BigInt(12), toJSON, omitted: undefined }
+    const extra: Record<string, unknown> = { left: shared, right: shared }
+    extra.self = extra
+    const extended = { ...contract, extra }
+    render(<ArtifactInspector contract={extended} />)
+    const text = screen.getByLabelText(
+      "Machine-readable artifact inspection"
+    ).textContent!
+    expect(JSON.parse(text).contract.extra).toEqual({
+      left: { count: "12" },
+      right: { count: "12" },
+      self: "[Circular]"
+    })
+    expect(toJSON).not.toHaveBeenCalled()
   })
 
   it("serializes semantically equal contracts with stable key ordering", () => {
