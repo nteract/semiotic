@@ -55,6 +55,7 @@ export interface XHitResult {
   y: number
   y0?: number
   sampleValue?: number
+  sourceX?: number
   group?: string
   color?: string
 }
@@ -205,35 +206,61 @@ export function clampToSeriesXRange(scene: SceneNode[], px: number): number {
   return min > max ? px : Math.min(max, Math.max(min, px))
 }
 
+function preferSource(candidate: number | undefined, previous: number | undefined, target: number) {
+  if (candidate === undefined || !Number.isFinite(candidate)) return false
+  if (previous === undefined || !Number.isFinite(previous)) return true
+  const distance = Math.abs(candidate - target) - Math.abs(previous - target)
+  return distance < 0 || (distance === 0 && candidate < previous)
+}
+
 /** Look up curve values at px, or collect observed rows at one nearest sample across all paths. */
 export function findAllNodesAtX(
   scene: SceneNode[],
   px: number,
   maxXDistance = 30,
-  sampling: "interpolate" | "sample" = "interpolate"
+  sampling: "interpolate" | "sample" = "interpolate",
+  getX?: (datum: Datum) => number,
+  targetX = px,
 ): XHitResult[] {
   const results: XHitResult[] = []
   let nearestX = Infinity
+  let nearestSource: number | undefined
   let nearestDistance = Infinity
   const includeBands = onlyBands(scene)
   for (const node of scene) {
     if (!isHoverSeries(node, includeBands)) continue
     const area = node.type === "area" ? node : undefined
     const path = seriesPath(node)
-    const idx = binarySearchPath(path, px)
-    const [x, sampleY] = path[idx]
-    const datum = node.datum[idx]
-    let y: number | null = sampleY
+    let idx = binarySearchPath(path, px)
+    const x = path[idx][0]
+    let sourceX: number | undefined
+    let y: number | null
     let y0: number | undefined
     let sampleValue: number | undefined
     if (sampling === "sample") {
-      if (!datum) continue
       const distance = Math.abs(x - px)
       // Break ties toward the left independently of series order.
       if (distance > nearestDistance || (distance === nearestDistance && x > nearestX)) continue
-      if (x !== nearestX) results.length = 0
+      if (getX) {
+        // Clamping can project several source samples to the same pixel.
+        while (idx > 0 && path[idx - 1][0] === x) idx--
+        sourceX = node.datum[idx] && getX(node.datum[idx])
+        for (let i = idx + 1; i < path.length && path[i][0] === x; i++) {
+          const candidate = node.datum[i] && getX(node.datum[i])
+          if (preferSource(candidate, sourceX, targetX)) {
+            idx = i
+            sourceX = candidate
+          }
+        }
+        if (!Number.isFinite(sourceX)) sourceX = undefined
+        if (x === nearestX && sourceX !== nearestSource && !preferSource(sourceX, nearestSource, targetX)) continue
+      }
+      if (!node.datum[idx]) continue
+      if (x !== nearestX || sourceX !== nearestSource) results.length = 0
+      nearestSource = sourceX
       nearestX = x
       nearestDistance = distance
+      y = path[idx][1]
       sampleValue = node.rawValues?.[idx]
       y0 = area?.bottomPath[idx]?.[1]
     } else {
@@ -246,7 +273,7 @@ export function findAllNodesAtX(
     }
     const color = node.style.stroke ?? area?.style.fill
     results.push({
-      node, datum: datum ?? node.datum, x, y, y0, sampleValue,
+      node, datum: node.datum[idx] ?? node.datum, x, y, y0, sampleValue, sourceX,
       group: node.group,
       color: typeof color === "string" ? color : undefined,
     })

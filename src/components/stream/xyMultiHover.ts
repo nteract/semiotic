@@ -9,16 +9,18 @@ import { UNGROUPED_SERIES_KEY } from "./pipelineStyleResolvers"
 import { enrichDatumWithBand } from "./xySceneBuilders/ribbonScene"
 import { getXYPlugin } from "./xyPlugins/registry"
 
-/** Project custom chart paths once per scene and scale pair (including resize). */
+/** Reuse projected paths until the geometry, scale, or sampling mode changes. */
 export function cacheMultiHoverScene(
   build: NonNullable<StreamXYFrameProps["multiHoverScene"]>
 ): NonNullable<StreamXYFrameProps["multiHoverScene"]> {
   let previousScene: SceneNode[] | undefined
   let previousScales: StreamScales | undefined
+  let previousSampling: StreamXYFrameProps["tooltipSampling"]
   let series: SceneNode[]
-  return (scene, scales) => {
-    if (scene !== previousScene || scales !== previousScales) {
-      series = build(scene, scales)
+  return (scene, scales, sampling) => {
+    if (scene !== previousScene || scales !== previousScales || sampling !== previousSampling) {
+      series = build(scene, scales, sampling)
+      previousSampling = sampling
       previousScene = scene
       previousScales = scales
     }
@@ -47,23 +49,27 @@ export function attachMultiHover(
   const hasHit = hitX !== undefined
   const pluginHover = getXYPlugin(chartType)?.multiHover
   if (pluginHover) return pluginHover(hover, store, px, { hasHit, fallbackColor })
-  const scene = multiHoverScene?.(store.scene, scales) ?? store.scene
+  const scene = multiHoverScene?.(store.scene, scales, tooltipSampling) ?? store.scene
   let lookupX = tooltipSampling === "sample" ? px : clampToSeriesXRange(scene, px)
-  const hits = findAllNodesAtX(scene, lookupX, maxXDistance, tooltipSampling)
+  const getX = store.getXAccessor()
+  const invertX = (x: number) => scales.x.invert?.(x) ?? x
+  const hits = findAllNodesAtX(scene, lookupX, maxXDistance, tooltipSampling, getX, +invertX(px))
   if (hits.length === 0) return hover
 
   if (tooltipSampling === "sample") lookupX = hits[0].x
-  let xValue: HoverData["xValue"] = scales.x.invert?.(lookupX) ?? lookupX
+  let xValue: HoverData["xValue"] = invertX(lookupX)
   // Preserve the exact source x (including milliseconds) across a scale round trip.
-  if (hits[0].sampleValue !== undefined && hits[0].datum) {
-    const sampleX = store.getXAccessor()(hits[0].datum)
-    if (scales.x(sampleX) === lookupX) xValue = xValue instanceof Date ? new Date(sampleX) : sampleX
+  const sampleX = hits[0].sourceX
+  if (sampleX !== undefined && scales.x(sampleX) === lookupX) {
+    xValue = xValue instanceof Date ? new Date(sampleX) : sampleX
   }
   let data = hover.data
   if (!hasHit) {
     data = { xValue }
     if (typeof xAccessor === "string") data[xAccessor] = xValue
-  } else if (tooltipSampling === "sample" && hitX !== lookupX) {
+  } else if (tooltipSampling === "sample" && (
+    hitX !== lookupX || (data && sampleX !== undefined && getX(data) !== sampleX)
+  )) {
     data = enrichDatumWithBand(hits[0].datum, store.resolvedRibbons)
   }
 

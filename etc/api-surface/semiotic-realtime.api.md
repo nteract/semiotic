@@ -926,7 +926,7 @@ interface-member StreamXYFrameProps::property::margin = optional margin: undefin
 interface-member StreamXYFrameProps::property::marginalGraphics = optional marginalGraphics: MarginalGraphicsConfig | undefined
 interface-member StreamXYFrameProps::property::maxCapacity = optional maxCapacity: number | undefined
 interface-member StreamXYFrameProps::property::maxDevicePixelRatio = optional maxDevicePixelRatio: number | undefined
-interface-member StreamXYFrameProps::property::multiHoverScene = optional multiHoverScene: ((scene: SceneNode[], scales: StreamScales) => SceneNode[]) | undefined
+interface-member StreamXYFrameProps::property::multiHoverScene = optional multiHoverScene: ((scene: SceneNode[], scales: StreamScales, "interpolate" | sampling?: "sample") => SceneNode[]) | undefined
 interface-member StreamXYFrameProps::property::normalize = optional normalize: boolean | undefined
 interface-member StreamXYFrameProps::property::onBrush = optional onBrush: ((extent: {x: [number, number]; y: [number, number];} | null) => void) | undefined
 interface-member StreamXYFrameProps::property::onBrushEnd = optional onBrushEnd: ((extent: XYBrushExtent | null, meta: XYBrushEndMeta) => void) | undefined

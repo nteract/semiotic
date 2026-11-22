@@ -877,7 +877,7 @@ export interface StreamXYFrameProps<T = Datum>
   /** Line/area multi-hover reads the nearest shared sample by default. */
   tooltipSampling?: "sample" | "interpolate"
   /** @internal Source series for charts whose rendered areas include synthetic vertices. */
-  multiHoverScene?: (scene: SceneNode[], scales: StreamScales) => SceneNode[]
+  multiHoverScene?: (scene: SceneNode[], scales: StreamScales, sampling?: "sample" | "interpolate") => SceneNode[]
 
   // ── Brush ─────────────────────────────────────────
   /** Brush configuration — when provided, an SVG brush overlay is rendered */

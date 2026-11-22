@@ -23,11 +23,16 @@ interface BumpTooltipOptions {
 }
 
 export function createBumpHoverScene() {
-  return cacheMultiHoverScene((scene, scales) => scene.flatMap(node => {
+  return cacheMultiHoverScene((scene, scales, sampling) => scene.flatMap(node => {
     if (node.type !== "area" || !node.datum) return []
-    const rows = Array.from(new Set(node.datum))
     const stroke = typeof node.style.fill === "string" ? node.style.fill : node.style.stroke
-    return [buildLineNode(rows, scales, d => d.x, d => d.y, { stroke }, node.group)]
+    if (sampling === "interpolate") {
+      const path = node.topPath.map(([x, y], i): [number, number] => [
+        (x + node.bottomPath[i][0]) / 2, (y + node.bottomPath[i][1]) / 2,
+      ])
+      return [{ type: "line" as const, path, datum: node.datum, group: node.group, style: { stroke } }]
+    }
+    return [buildLineNode(Array.from(new Set(node.datum)), scales, d => d.x, d => d.y, { stroke }, node.group)]
   }))
 }
 

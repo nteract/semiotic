@@ -1,4 +1,3 @@
-import { seriesSelectionDatum } from "../../store/selectionProvenance"
 import type { Datum } from "../../charts/shared/datumTypes"
 /**
  * Line scene builder — produces LineSceneNode[] from grouped data.
@@ -11,7 +10,7 @@ import type { Datum } from "../../charts/shared/datumTypes"
  * Consumed by: PipelineStore.buildSceneNodes (chartType "line")
  */
 import type { SceneNode } from "../types"
-import { buildLineNode } from "../SceneGraph"
+import { buildLineGroup } from "./seriesGroup"
 import type { XYSceneContext } from "./types"
 import { buildRibbonScene } from "./ribbonScene"
 import { emitPointNodes } from "./emitPointNodes"
@@ -43,24 +42,9 @@ export function buildLineScene(ctx: XYSceneContext, data: Datum[]): SceneNode[] 
     }))
 
   for (const g of groups) {
-    const style = ctx.resolveLineStyle(g.key, seriesSelectionDatum(g.data))
-    const lineNode = buildLineNode(
-      g.data,
-      ctx.scales,
-      ctx.getX,
-      ctx.getY,
-      style,
-      g.key,
-      ctx.getPointId
-    )
+    const lineNode = buildLineGroup(ctx, g)
     if (colorThresholds && colorThresholds.length > 0) {
       lineNode.colorThresholds = colorThresholds
-    }
-    if (ctx.config.curve && ctx.config.curve !== "linear") {
-      lineNode.curve = ctx.config.curve
-    }
-    if (ctx.config.lineGradient) {
-      lineNode.strokeGradient = ctx.config.lineGradient
     }
     nodes.push(lineNode)
   }

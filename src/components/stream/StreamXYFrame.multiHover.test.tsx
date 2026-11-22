@@ -83,6 +83,20 @@ describe("StreamXYFrame multi hover at the data edges", () => {
     }
   })
 
+  it.each(["line", "area"] as const)("keeps distinct source x values apart at a clamped %s edge", async chartType => {
+    const data = [
+      { series: "A", x: 0.5, y: 5 }, { series: "A", x: 10, y: 6 },
+      { series: "B", x: 1, y: 15 }, { series: "B", x: 10, y: 16 },
+      { series: "C", x: 0.5, y: 20 }, { series: "C", x: 1, y: 25 }, { series: "C", x: 10, y: 26 },
+    ]
+    const { hoverAt } = await renderFrame({ chartType, data, xScaleType: "log", xExtent: [1, 10] })
+    const hover = hoverAt(0, 83)
+    expect(hover?.xValue).toBe(1)
+    expect(hover?.data?.x).toBe(1)
+    expect(hover?.allSeries?.map(hit => hit.datum)).toEqual([data[2], data[5]])
+    expect(rows(hover)).toEqual([["B", 15], ["C", 25]])
+  })
+
   it("reads the exact source values for a singleton with callback accessors", async () => {
     const data = [{ t: 0.1, v: 0.013 }]
     const { hoverAt } = await renderFrame({ data, xAccessor: d => d.t, yAccessor: d => d.v, xExtent: [0, 3] })

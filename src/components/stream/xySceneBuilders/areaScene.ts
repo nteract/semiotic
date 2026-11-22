@@ -1,4 +1,3 @@
-import { seriesSelectionDatum } from "../../store/selectionProvenance"
 import type { Datum } from "../../charts/shared/datumTypes"
 /**
  * Area and stacked area scene builders.
@@ -10,10 +9,10 @@ import type { Datum } from "../../charts/shared/datumTypes"
  * Consumed by: PipelineStore.buildSceneNodes (chartTypes "area", "stackedarea")
  */
 import type { SceneNode } from "../types"
-import { buildAreaNode, buildStackedAreaNodes } from "../SceneGraph"
+import { buildStackedAreaNodes } from "../SceneGraph"
 import type { XYSceneContext } from "./types"
 import { emitPointNodes } from "./emitPointNodes"
-import { resolveAreaGradient, resolveAreaGradientSpan } from "./areaGradient"
+import { buildAreaGroup } from "./seriesGroup"
 import { buildRibbonScene } from "./ribbonScene"
 
 export function buildAreaScene(ctx: XYSceneContext, data: Datum[]): SceneNode[] {
@@ -74,38 +73,8 @@ export function buildAreaScene(ctx: XYSceneContext, data: Datum[]): SceneNode[] 
       })()
     : undefined
 
-  const y0Get = ctx.getY0
-    ? (d: Datum): number => {
-        const value = ctx.getY0!(d)
-        return value == null ? baseline : value
-      }
-    : undefined
-
   for (const g of groups) {
-    const style = ctx.resolveAreaStyle(g.key, seriesSelectionDatum(g.data))
-    const node = buildAreaNode(
-      g.data,
-      ctx.scales,
-      ctx.getX,
-      ctx.getY,
-      baseline,
-      style,
-      g.key,
-      y0Get,
-      ctx.getPointId
-    )
-    const fillGradient = resolveAreaGradient(ctx.config.gradientFill)
-    if (fillGradient) {
-      node.fillGradient = fillGradient
-      const span = resolveAreaGradientSpan(fillGradient, ctx.scales.y)
-      if (span) node.fillGradientSpan = span
-    }
-    if (ctx.config.curve && ctx.config.curve !== "linear") {
-      node.curve = ctx.config.curve
-    }
-    if (ctx.config.lineGradient) {
-      node.strokeGradient = ctx.config.lineGradient
-    }
+    const node = buildAreaGroup(ctx, g, baseline)
     if (semanticLineThresholds && semanticLineThresholds.length > 0) {
       node.colorThresholds = semanticLineThresholds
       node.strokeColorBands = semanticStrokeBands
