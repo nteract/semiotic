@@ -16,6 +16,7 @@ import {
 } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import { ensureXYPlugin } from "../../stream/xyPlugins/registry"
+import { buildOverlayLineRows, differenceHoverScene } from "./differenceSeries"
 import { mixedXYPlugin } from "../../stream/xyPlugins/mixedPlugin"
 import type {
   StreamXYFrameProps,
@@ -159,49 +160,8 @@ function toNumber(v: unknown): number {
   return NaN
 }
 
-/** A vertex on one of the two continuous overlay lines. */
-interface LineRow {
-  __x: number
-  __y: number
-  /** Either `"line-A"` or `"line-B"`. Acts as the line group key. */
-  __diffSegment: string
-  /** Retained on line vertices so selection can match area and line marks. */
-  __diffWinner: "A" | "B"
-  /** Original source row for field-based styleRules. */
-  __sourceDatum?: Datum
-}
-
-/**
- * Build the parallel line-data rows so we can render the two original
- * series as continuous lines on top of the difference fill in the same
- * frame. Returning two groups (`"line-A"` and `"line-B"`) keyed by
- * `__diffSegment` lets the mixed scene builder pick them up as line
- * groups while the segment groups go to the area builder.
- */
-function buildOverlayLineRows<TDatum extends Datum>(
-  raw: TDatum[],
-  getX: (d: TDatum) => number,
-  getA: (d: TDatum) => number,
-  getB: (d: TDatum) => number
-): LineRow[] {
-  if (!raw.length) return []
-  // Filter non-finite-x rows BEFORE sorting (see segment-builder
-  // comment for rationale — `Array.sort` treats NaN-comparator
-  // returns as 0, leaving finite rows out of order).
-  const sorted = raw
-    .filter((d) => Number.isFinite(getX(d)))
-    .sort((p, q) => getX(p) - getX(q))
-  const out: LineRow[] = []
-  for (const d of sorted) {
-    const x = getX(d),
-      a = getA(d),
-      b = getB(d)
-    if (Number.isFinite(a))
-      out.push({ __x: x, __y: a, __diffSegment: "line-A", __diffWinner: "A", __sourceDatum: d })
-    if (Number.isFinite(b))
-      out.push({ __x: x, __y: b, __diffSegment: "line-B", __diffWinner: "B", __sourceDatum: d })
-  }
-  return out
+function useNumberAccessor<TDatum extends Datum>(accessor: ChartAccessor<TDatum, number>) {
+  return useMemo(() => (d: TDatum) => toNumber(typeof accessor === "function" ? accessor(d) : d[accessor]), [accessor])
 }
 
 /**
@@ -328,27 +288,9 @@ export const DifferenceChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE
   // upstream type coercion) survive the `Number.isFinite` guards in
   // segment computation. The raw-field cast still trips on object types
   // it can't coerce — those produce `NaN` and the row is dropped cleanly.
-  const getX = useMemo(
-    () =>
-      typeof xAccessor === "function"
-        ? (d: TDatum) => toNumber(xAccessor(d))
-        : (d: TDatum) => toNumber(d[xAccessor as string]),
-    [xAccessor]
-  )
-  const getA = useMemo(
-    () =>
-      typeof seriesAAccessor === "function"
-        ? (d: TDatum) => toNumber(seriesAAccessor(d))
-        : (d: TDatum) => toNumber(d[seriesAAccessor as string]),
-    [seriesAAccessor]
-  )
-  const getB = useMemo(
-    () =>
-      typeof seriesBAccessor === "function"
-        ? (d: TDatum) => toNumber(seriesBAccessor(d))
-        : (d: TDatum) => toNumber(d[seriesBAccessor as string]),
-    [seriesBAccessor]
-  )
+  const getX = useNumberAccessor(xAccessor)
+  const getA = useNumberAccessor(seriesAAccessor)
+  const getB = useNumberAccessor(seriesBAccessor)
 
   // ── Push-mode raw data state ────────────────────────────────────────
   // The HOC owns a copy of the raw rows so push/pushMany/clear can
@@ -378,17 +320,15 @@ export const DifferenceChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE
     () => computeDifferenceSegments(safeData, getX, getA, getB),
     [safeData, getX, getA, getB]
   )
-  const overlayLines = useMemo(
-    () => (showLines ? buildOverlayLineRows(safeData, getX, getA, getB) : []),
-    [showLines, safeData, getX, getA, getB]
-  )
+  const getLineRows = useCallback(() => buildOverlayLineRows(safeData, getX, getA, getB),
+    [safeData, getX, getA, getB])
+  const multiHoverScene = useMemo(() =>
+    differenceHoverScene(showLines, getLineRows, seriesAColor, seriesBColor, curve),
+    [showLines, getLineRows, seriesAColor, seriesBColor, curve])
 
-  // Combined data — areas + lines in the same flat array. The mixed
-  // scene builder partitions them by group key via `areaGroups`.
-  const combined = useMemo(
-    () => [...segmented, ...overlayLines] as Datum[],
-    [segmented, overlayLines]
-  )
+  // The mixed scene paints each segment as an area and the two source series as lines.
+  const combined = useMemo(() => showLines ? [...segmented, ...getLineRows()] : segmented,
+    [segmented, showLines, getLineRows])
 
   // Array of area-group keys (each `seg-N-A`/`seg-N-B`). Line groups
   // (`line-A`/`line-B`) are NOT in this list so they render as lines.
@@ -533,49 +473,15 @@ export const DifferenceChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE
       yLabel
     })
   })
-  // ── Style resolvers ─────────────────────────────────────────────────
-  const areaStyle = useMemo(
-    () => buildDifferenceAreaStyle({
-      seriesAColor,
-      seriesBColor,
-      areaOpacity,
-      styleRules
-    }),
-    [seriesAColor, seriesBColor, areaOpacity, styleRules]
-  )
-  const lineStyle = useMemo(
-    () => buildDifferenceLineStyle({
-      seriesAColor,
-      seriesBColor,
-      lineWidth,
-      styleRules
-    }),
-    [seriesAColor, seriesBColor, lineWidth, styleRules]
-  )
-  const pointStyle = useMemo(
-    () => buildDifferencePointStyle({
-      seriesAColor,
-      seriesBColor,
-      pointRadius,
-      styleRules
-    }),
-    [seriesAColor, seriesBColor, pointRadius, styleRules]
-  )
-
-  // DifferenceChart renders synthesized area and line rows, so the generic
-  // behavior props can publish linked hover but cannot dim these marks on
-  // their own. Keep the derived `__diffWinner` field on every mark type and
-  // apply the same selection wrapper used by the rest of the XY family.
-  const [selectedAreaStyle, selectedLineStyle, selectedPointStyle] = useMemo(
-    () => [areaStyle, lineStyle, pointStyle].map((style) =>
-      wrapStyleWithSelection(
-        style,
-        setup.effectiveSelectionHook,
-        setup.resolvedSelection
-      )
-    ),
-    [areaStyle, lineStyle, pointStyle, setup.effectiveSelectionHook, setup.resolvedSelection]
-  )
+  // Fill segments, source lines and points share winner colors and selection.
+  const [selectedAreaStyle, selectedLineStyle, selectedPointStyle] = useMemo(() => {
+    const options = { seriesAColor, seriesBColor, areaOpacity, lineWidth, pointRadius, styleRules }
+    return [
+      buildDifferenceAreaStyle(options),
+      buildDifferenceLineStyle(options),
+      buildDifferencePointStyle(options)
+    ].map(style => wrapStyleWithSelection(style, setup.effectiveSelectionHook, setup.resolvedSelection))
+  }, [seriesAColor, seriesBColor, areaOpacity, lineWidth, pointRadius, styleRules, setup.effectiveSelectionHook, setup.resolvedSelection])
   const frameStyles = useSelectionAwareXYFrameStyles(frameProps, setup.effectiveSelectionHook, setup.resolvedSelection)
 
   // ── Tooltip ─────────────────────────────────────────────────────────
@@ -586,26 +492,16 @@ export const DifferenceChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE
       //      `__valB` baked in.
       //   2. Line hover — `hover.data` is a LineRow (no `__valA`/`__valB`);
       //      we look up the source row by x to recover both values.
-      //   3. Multi-tooltip hover (tooltip="multi") — the cursor sits on
-      //      an interpolated x, so `hover.allSeries` carries the
-      //      interpolated `line-A` / `line-B` values and `hover.xValue`
-      //      carries the data-space x. Prefer those when present; the
-      //      interpolated x rarely matches a raw data row by `===`.
+      //   3. Multi hover provides both series at the selected x, including
+      //      curve estimates when the caller opts into interpolation.
       const hd = hover.data as Datum | undefined
-      const allSeries = hover.allSeries as
-        Array<{ group?: string; value?: number }> | undefined
-      const xVal: number | undefined =
-        (hover.xValue as number | undefined) ?? (hd?.__x as number | undefined)
-      let aVal: number | undefined = hd?.__valA as number | undefined
-      let bVal: number | undefined = hd?.__valB as number | undefined
-      if (allSeries && allSeries.length > 0) {
-        const aSeries = allSeries.find((s) => s.group === "line-A")
-        const bSeries = allSeries.find((s) => s.group === "line-B")
-        if (aSeries?.value != null && Number.isFinite(aSeries.value))
-          aVal = aSeries.value
-        if (bSeries?.value != null && Number.isFinite(bSeries.value))
-          bVal = bSeries.value
+      const xVal = (hover.xValue ?? hd?.__x) as number | undefined
+      const seriesValue = (group: string, fallback: number | undefined) => {
+        const value = hover.allSeries?.find(row => row.group === group)?.value
+        return value !== undefined && Number.isFinite(value) ? value : fallback
       }
+      let aVal = seriesValue("line-A", hd?.__valA)
+      let bVal = seriesValue("line-B", hd?.__valB)
       if (xVal != null && (aVal == null || bVal == null)) {
         const source = safeData.find((d) => getX(d) === xVal)
         if (source) {
@@ -634,34 +530,12 @@ export const DifferenceChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE
           {fmtX && (
             <div style={{ fontWeight: 600, marginBottom: 4 }}>{fmtX}</div>
           )}
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <span
-              style={{
-                width: 10,
-                height: 10,
-                background: seriesAColor,
-                display: "inline-block",
-                borderRadius: 2
-              }}
-            />
-            <span>
-              {seriesALabel}: {fmt(aVal)}
-            </span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <span
-              style={{
-                width: 10,
-                height: 10,
-                background: seriesBColor,
-                display: "inline-block",
-                borderRadius: 2
-              }}
-            />
-            <span>
-              {seriesBLabel}: {fmt(bVal)}
-            </span>
-          </div>
+          {([[seriesALabel, seriesAColor, aVal], [seriesBLabel, seriesBColor, bVal]] as const).map(([label, color, value], i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ width: 10, height: 10, background: color, display: "inline-block", borderRadius: 2 }} />
+              <span>{label}: {fmt(value)}</span>
+            </div>
+          ))}
           {aVal != null &&
             bVal != null &&
             Number.isFinite(aVal) &&
@@ -687,10 +561,10 @@ export const DifferenceChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE
   )
 
   // `tooltip="multi"` / `{ mode: "multi", content? }` opts into hover-anywhere
-  // along the x-axis with interpolated series values — same shape
+  // along the x-axis with shared series values — same shape
   // LineChart/AreaChart use. The difference-aware default handles both
   // single-point and multi shapes (it reads `hover.allSeries` when present).
-  const { tooltipContent, tooltipMode } = useMemo(
+  const tooltipProps = useMemo(
     () =>
       resolveMultiCapableTooltip({
         tooltip,
@@ -757,8 +631,8 @@ export const DifferenceChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE
       axisExtent: props.axisExtent,
       autoPlaceAnnotations: props.autoPlaceAnnotations
     }),
-    tooltipContent,
-    ...(tooltipMode === "multi" && { tooltipMode: "multi" as const }),
+    ...tooltipProps,
+    multiHoverScene,
     ...buildCustomBehaviorProps({
       linkedHover,
       selection,

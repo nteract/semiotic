@@ -225,11 +225,10 @@ export default function StackedAreaChartPage() {
 
       <h3 id="multi-tooltip">Hover-Anywhere Multi Tooltip</h3>
       <p>
-        Pass <code>tooltip="multi"</code> when readers need to compare every
-        stack at the same x position. The tooltip follows the cursor across the
-        rendered x range and lists each stack's individual contribution, not the
-        cumulative stack height. In x-extent padding before or after the data,
-        the crosshair and values snap to the first or last sample.
+        Set <code>tooltip="multi"</code> to snap the crosshair to the nearest sampled x.
+        Only series with a rendered sample there appear in the tooltip. Each layer reports its contribution to the stack.
+        To read estimates along the curves between samples, use{" "}
+        <code>{'tooltip={{ mode: "multi", sampling: "interpolate" }}'}</code>.
       </p>
 
       <LiveExample

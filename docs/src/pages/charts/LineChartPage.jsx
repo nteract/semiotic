@@ -997,10 +997,10 @@ export default function LineChartPage() {
       {/* Hover Highlight */}
       <h3 id="multi-tooltip">Hover-Anywhere Multi Tooltip</h3>
       <p>
-        Set <code>tooltip="multi"</code> to show all series values at the hovered x position with
-        color swatches. The tooltip follows the cursor across the rendered x range, so readers can
-        compare series between sampled points as well as directly over them. In x-extent padding
-        before or after the data, the crosshair and values snap to the first or last sample.
+        Set <code>tooltip="multi"</code> to snap the crosshair to the nearest sampled x.
+        Only series with a rendered sample there appear in the tooltip.
+        To read estimates along the curves between samples, use{" "}
+        <code>{'tooltip={{ mode: "multi", sampling: "interpolate" }}'}</code>.
       </p>
 
       <LiveExample

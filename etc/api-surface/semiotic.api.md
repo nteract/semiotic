@@ -83,7 +83,7 @@ function MobileChartContainer({ children, controls, mobile, breakpoint, chartMod
 function MobileStandardControls({ controls, targetSize, compact, className, style, ariaLabel, brush, zoom, legend, }: MobileStandardControlsProps): React.JSX.Element | null
 function MultiAxisLineChart<TDatum extends Datum = Datum>(props: MultiAxisLineChartProps<TDatum> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
-function MultiPointTooltip({ xFormat, yFormat }?: undefined | {xFormat?: (Date | string | value: number) => React.ReactNode; yFormat?: (value: number, group?: string) => React.ReactNode;}): TooltipContentFn
+function MultiPointTooltip({ xFormat, yFormat, ungroupedLabel }?: undefined | {xFormat?: (Date | string | value: number) => React.ReactNode; yFormat?: (value: number, group?: string) => React.ReactNode; ungroupedLabel?: string;}): TooltipContentFn
 function NetworkCustomChart<TNode extends Datum = Datum, TEdge extends Datum = Datum, TConfig extends object = Record<string, unknown>>(props: NetworkCustomChartProps<TNode, TEdge, TConfig> & React.RefAttributes<RealtimeFrameHandle<Datum, Datum>>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function NetworkPerspectiveBillboard({ x, y, z, onGround, children }: {x: number; y: number; z?: NetworkPerspectiveHeight; onGround?: boolean; children?: React.ReactNode;}): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
 function NetworkPerspectiveGround({ z, children }: {z?: NetworkPerspectiveHeight; children?: React.ReactNode;}): React.ReactElement<unknown, React.JSXElementConstructor<any> | string>
@@ -178,7 +178,7 @@ function registerBuiltInXYPlugins(): void
 function resolveMotionAccessor<TDatum, TValue>(accessor: MotionEncodingAccessor<TDatum, TValue> | undefined, datum: TDatum, index: number): TValue | undefined
 function resolveMotionAge(options: ResolveMotionAgeOptions): ResolvedMotionAge
 function resolveMotionVector(velocityX: number, velocityY: number): ResolvedMotionVector
-function resolveMultiCapableTooltip(input: {tooltip: TooltipPropWithHoverCallback | undefined; defaultTooltipContent: (d: any) => React.ReactNode; multiDefaultContent?: (d: any) => React.ReactNode; customFunctionContext?: "datum" | "hover";}): {tooltipContent: (d: any) => React.ReactNode; tooltipMode?: "multi";}
+function resolveMultiCapableTooltip(input: {tooltip: TooltipPropWithHoverCallback | undefined; defaultTooltipContent: (d: any) => React.ReactNode; multiDefaultContent?: (d: any) => React.ReactNode; customFunctionContext?: "datum" | "hover";}): {tooltipContent: (d: any) => React.ReactNode; tooltipMode?: "multi"; tooltipSampling?: MultiTooltipConfig["sampling"];}
 function resolveResponsiveRules<TProps extends Record<string, unknown>>(props: TProps, context: ResponsiveRuleContext, rules?: readonly ResponsiveRule<TProps>[] | undefined): ResponsiveRuleResult<TProps>
 function resolveStyleRules(datum: Datum, rules: readonly StyleRule[] | undefined, ctx: StyleRuleContext): StyleRuleStyle
 function resolveSvgFill(fill: CanvasPattern | HatchFill | null | string | undefined, idBase: string, fallback?: string | undefined): {fill: string; def?: React.ReactElement;}
@@ -454,7 +454,7 @@ interface-member AccessibleNavTreeProps::property::className = optional classNam
 interface-member AccessibleNavTreeProps::property::label = optional label: string | undefined
 interface-member AccessibleNavTreeProps::property::onActiveChange = optional onActiveChange: ((node: NavTreeNode) => void) | undefined
 interface-member AccessibleNavTreeProps::property::onAnnotationActivate = optional onAnnotationActivate: OnAnnotationActivateCallback | undefined
-interface-member AccessibleNavTreeProps::property::onObservation = optional onObservation: ((observation: import("./semiotic-ai-observations").ChartObservation) => void) | undefined
+interface-member AccessibleNavTreeProps::property::onObservation = optional onObservation: ((observation: import("./semiotic").ChartObservation) => void) | undefined
 interface-member AccessibleNavTreeProps::property::tree = required tree: NavTreeNode
 interface-member AccessibleNavTreeProps::property::visible = optional visible: boolean | undefined
 interface-member ActivateObservation::property::datum = required datum: Datum
@@ -641,7 +641,7 @@ interface-member BaseChartProps::property::mobileInteraction = optional mobileIn
 interface-member BaseChartProps::property::mobileSemantics = optional mobileSemantics: MobileVisualizationContract | undefined
 interface-member BaseChartProps::property::mode = optional mode: ChartMode | undefined
 interface-member BaseChartProps::property::onClick = optional onClick: ((datum: Datum, event: {x: number; y: number;}) => void) | undefined
-interface-member BaseChartProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic-ai-observations").ChartObservation) => void) | undefined
+interface-member BaseChartProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic").ChartObservation) => void) | undefined
 interface-member BaseChartProps::property::opacity = optional opacity: number | undefined
 interface-member BaseChartProps::property::pointIdAccessor = optional pointIdAccessor: ((d: Datum) => string) | string | undefined
 interface-member BaseChartProps::property::responsiveHeight = optional responsiveHeight: boolean | undefined
@@ -858,7 +858,7 @@ interface-member ChordDiagramProps::property::nodeIdAccessor = optional nodeIdAc
 interface-member ChordDiagramProps::property::nodeLabel = optional nodeLabel: ChartAccessor<TNode, string> | undefined
 interface-member ChordDiagramProps::property::nodes = optional nodes: TNode[] | undefined
 interface-member ChordDiagramProps::property::padAngle = optional padAngle: number | undefined
-interface-member ChordDiagramProps::property::perspective = optional perspective: import("../../semiotic-network").NetworkPerspective | undefined
+interface-member ChordDiagramProps::property::perspective = optional perspective: import("../../semiotic").NetworkPerspective | undefined
 interface-member ChordDiagramProps::property::showLabels = optional showLabels: boolean | undefined
 interface-member ChordDiagramProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member ChordDiagramProps::property::sortGroups = optional sortGroups: ((a: number, b: number) => number) | undefined
@@ -880,7 +880,7 @@ interface-member CirclePackProps::property::legendPosition = optional legendPosi
 interface-member CirclePackProps::property::nodeIdAccessor = optional nodeIdAccessor: ChartAccessor<TNode, string> | undefined
 interface-member CirclePackProps::property::nodeLabel = optional nodeLabel: ChartAccessor<TNode, string> | undefined
 interface-member CirclePackProps::property::padding = optional padding: number | undefined
-interface-member CirclePackProps::property::perspective = optional perspective: import("../../semiotic-network").NetworkPerspective | undefined
+interface-member CirclePackProps::property::perspective = optional perspective: import("../../semiotic").NetworkPerspective | undefined
 interface-member CirclePackProps::property::showLabels = optional showLabels: boolean | undefined
 interface-member CirclePackProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member CirclePackProps::property::styleRules = optional styleRules: StyleRule[] | undefined
@@ -1169,7 +1169,7 @@ interface-member ForceDirectedGraphProps::property::nodeStroke = optional nodeSt
 interface-member ForceDirectedGraphProps::property::nodeStrokeWidth = optional nodeStrokeWidth: number | undefined
 interface-member ForceDirectedGraphProps::property::nodes = optional nodes: TNode[] | undefined
 interface-member ForceDirectedGraphProps::property::onLayoutStateChange = optional onLayoutStateChange: (("error" | "ready" | state: "pending") => void) | undefined
-interface-member ForceDirectedGraphProps::property::perspective = optional perspective: import("../../semiotic-network").NetworkPerspective | undefined
+interface-member ForceDirectedGraphProps::property::perspective = optional perspective: import("../../semiotic").NetworkPerspective | undefined
 interface-member ForceDirectedGraphProps::property::showLabels = optional showLabels: boolean | undefined
 interface-member ForceDirectedGraphProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member ForceDirectedGraphProps::property::sourceAccessor = optional sourceAccessor: ChartAccessor<TEdge, string> | undefined
@@ -1505,7 +1505,7 @@ interface-member MinimapChartProps::property::lineWidth = optional lineWidth: nu
 interface-member MinimapChartProps::property::minimap = optional minimap: MinimapConfig | undefined
 interface-member MinimapChartProps::property::onBrush = optional onBrush: ((extent: [number, number] | null) => void) | undefined
 interface-member MinimapChartProps::property::onBrushEnd = optional onBrushEnd: ((extent: [number, number] | null, meta: MinimapBrushEndMeta) => void) | undefined
-interface-member MinimapChartProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic-ai-observations").ChartObservation) => void) | undefined
+interface-member MinimapChartProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic").ChartObservation) => void) | undefined
 interface-member MinimapChartProps::property::pointRadius = optional pointRadius: number | undefined
 interface-member MinimapChartProps::property::renderBefore = optional renderBefore: boolean | undefined
 interface-member MinimapChartProps::property::showGrid = optional showGrid: boolean | undefined
@@ -1676,6 +1676,7 @@ interface-member MultiLineTooltipConfig::property::showLabels = optional showLab
 interface-member MultiTooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
 interface-member MultiTooltipConfig::property::content = optional content: ((data: Record<string, unknown>) => React.ReactNode) | undefined
 interface-member MultiTooltipConfig::property::mode = required mode: "multi"
+interface-member MultiTooltipConfig::property::sampling = optional sampling: "interpolate" | "sample" | undefined
 interface-member NavTreeNode::property::children = optional children: NavTreeNode[] | undefined
 interface-member NavTreeNode::property::datum = optional datum: Datum | null | undefined
 interface-member NavTreeNode::property::id = required id: string
@@ -1769,7 +1770,7 @@ interface-member OrbitDiagramProps::property::nodeIdAccessor = optional nodeIdAc
 interface-member OrbitDiagramProps::property::nodeRadius = optional nodeRadius: ((node: Datum) => number) | number | undefined
 interface-member OrbitDiagramProps::property::orbitMode = optional orbitMode: OrbitMode | undefined
 interface-member OrbitDiagramProps::property::orbitSize = optional orbitSize: ((node: Datum) => number) | number | undefined
-interface-member OrbitDiagramProps::property::perspective = optional perspective: import("../../semiotic-network").NetworkPerspective | undefined
+interface-member OrbitDiagramProps::property::perspective = optional perspective: import("../../semiotic").NetworkPerspective | undefined
 interface-member OrbitDiagramProps::property::revolution = optional revolution: ((node: Datum) => number) | undefined
 interface-member OrbitDiagramProps::property::revolutionStyle = optional revolutionStyle: "alternate" | "decay" | "locked" | undefined
 interface-member OrbitDiagramProps::property::showLabels = optional showLabels: boolean | undefined
@@ -1847,7 +1848,7 @@ interface-member ProcessSankeyProps::property::orientation = optional orientatio
 interface-member ProcessSankeyProps::property::packing = optional packing: "off" | "reuse" | undefined
 interface-member ProcessSankeyProps::property::pairing = optional pairing: "temporal" | "value" | undefined
 interface-member ProcessSankeyProps::property::particleStyle = optional particleStyle: ParticleStyle | undefined
-interface-member ProcessSankeyProps::property::perspective = optional perspective: import("../../semiotic-network").NetworkPerspective | undefined
+interface-member ProcessSankeyProps::property::perspective = optional perspective: import("../../semiotic").NetworkPerspective | undefined
 interface-member ProcessSankeyProps::property::ribbonLane = optional ribbonLane: "both" | "source" | "target" | undefined
 interface-member ProcessSankeyProps::property::ribbonMinRun = optional ribbonMinRun: "auto" | number | undefined
 interface-member ProcessSankeyProps::property::selection = optional selection: SelectionConfig | undefined
@@ -1985,7 +1986,7 @@ interface-member RealtimeHeatmapProps::property::mobileInteraction = optional mo
 interface-member RealtimeHeatmapProps::property::mobileSemantics = optional mobileSemantics: MobileVisualizationContract | undefined
 interface-member RealtimeHeatmapProps::property::mode = optional mode: ChartMode | undefined
 interface-member RealtimeHeatmapProps::property::onHover = optional onHover: ((d: HoverData | null) => void) | undefined
-interface-member RealtimeHeatmapProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic-ai-observations").ChartObservation) => void) | undefined
+interface-member RealtimeHeatmapProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic").ChartObservation) => void) | undefined
 interface-member RealtimeHeatmapProps::property::pointIdAccessor = optional pointIdAccessor: RealtimePointIdAccessor<TDatum> | undefined
 interface-member RealtimeHeatmapProps::property::pulse = optional pulse: PulseConfig | undefined
 interface-member RealtimeHeatmapProps::property::responsiveHeight = optional responsiveHeight: boolean | undefined
@@ -2052,7 +2053,7 @@ interface-member RealtimeHistogramProps::property::mobileSemantics = optional mo
 interface-member RealtimeHistogramProps::property::mode = optional mode: ChartMode | undefined
 interface-member RealtimeHistogramProps::property::onBrush = optional onBrush: ((extent: {x: [number, number]; y: [number, number];} | null) => void) | undefined
 interface-member RealtimeHistogramProps::property::onHover = optional onHover: ((d: HoverData | null) => void) | undefined
-interface-member RealtimeHistogramProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic-ai-observations").ChartObservation) => void) | undefined
+interface-member RealtimeHistogramProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic").ChartObservation) => void) | undefined
 interface-member RealtimeHistogramProps::property::opacity = optional opacity: number | undefined
 interface-member RealtimeHistogramProps::property::pointIdAccessor = optional pointIdAccessor: RealtimePointIdAccessor<TDatum> | undefined
 interface-member RealtimeHistogramProps::property::pulse = optional pulse: PulseConfig | undefined
@@ -2116,7 +2117,7 @@ interface-member RealtimeLineChartProps::property::mobileInteraction = optional 
 interface-member RealtimeLineChartProps::property::mobileSemantics = optional mobileSemantics: MobileVisualizationContract | undefined
 interface-member RealtimeLineChartProps::property::mode = optional mode: ChartMode | undefined
 interface-member RealtimeLineChartProps::property::onHover = optional onHover: ((d: HoverData | null) => void) | undefined
-interface-member RealtimeLineChartProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic-ai-observations").ChartObservation) => void) | undefined
+interface-member RealtimeLineChartProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic").ChartObservation) => void) | undefined
 interface-member RealtimeLineChartProps::property::opacity = optional opacity: number | undefined
 interface-member RealtimeLineChartProps::property::pointIdAccessor = optional pointIdAccessor: RealtimePointIdAccessor<TDatum> | undefined
 interface-member RealtimeLineChartProps::property::pulse = optional pulse: PulseConfig | undefined
@@ -2178,7 +2179,7 @@ interface-member RealtimeSwarmChartProps::property::mobileInteraction = optional
 interface-member RealtimeSwarmChartProps::property::mobileSemantics = optional mobileSemantics: MobileVisualizationContract | undefined
 interface-member RealtimeSwarmChartProps::property::mode = optional mode: ChartMode | undefined
 interface-member RealtimeSwarmChartProps::property::onHover = optional onHover: ((d: HoverData | null) => void) | undefined
-interface-member RealtimeSwarmChartProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic-ai-observations").ChartObservation) => void) | undefined
+interface-member RealtimeSwarmChartProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic").ChartObservation) => void) | undefined
 interface-member RealtimeSwarmChartProps::property::opacity = optional opacity: number | undefined
 interface-member RealtimeSwarmChartProps::property::pointIdAccessor = optional pointIdAccessor: RealtimePointIdAccessor<TDatum> | undefined
 interface-member RealtimeSwarmChartProps::property::pointStyle = optional pointStyle: ((datum: TDatum) => Style & {r?: number;}) | undefined
@@ -2243,7 +2244,7 @@ interface-member RealtimeWaterfallChartProps::property::mobileSemantics = option
 interface-member RealtimeWaterfallChartProps::property::mode = optional mode: ChartMode | undefined
 interface-member RealtimeWaterfallChartProps::property::negativeColor = optional negativeColor: string | undefined
 interface-member RealtimeWaterfallChartProps::property::onHover = optional onHover: ((d: HoverData | null) => void) | undefined
-interface-member RealtimeWaterfallChartProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic-ai-observations").ChartObservation) => void) | undefined
+interface-member RealtimeWaterfallChartProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic").ChartObservation) => void) | undefined
 interface-member RealtimeWaterfallChartProps::property::opacity = optional opacity: number | undefined
 interface-member RealtimeWaterfallChartProps::property::pointIdAccessor = optional pointIdAccessor: RealtimePointIdAccessor<TDatum> | undefined
 interface-member RealtimeWaterfallChartProps::property::positiveColor = optional positiveColor: string | undefined
@@ -2358,7 +2359,7 @@ interface-member SankeyDiagramProps::property::nodePaddingRatio = optional nodeP
 interface-member SankeyDiagramProps::property::nodeWidth = optional nodeWidth: number | undefined
 interface-member SankeyDiagramProps::property::nodes = optional nodes: TNode[] | undefined
 interface-member SankeyDiagramProps::property::orientation = optional orientation: "horizontal" | "vertical" | undefined
-interface-member SankeyDiagramProps::property::perspective = optional perspective: import("../../semiotic-network").NetworkPerspective | undefined
+interface-member SankeyDiagramProps::property::perspective = optional perspective: import("../../semiotic").NetworkPerspective | undefined
 interface-member SankeyDiagramProps::property::showLabels = optional showLabels: boolean | undefined
 interface-member SankeyDiagramProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member SankeyDiagramProps::property::sourceAccessor = optional sourceAccessor: ChartAccessor<TEdge, string> | undefined
@@ -2684,7 +2685,7 @@ interface-member StreamOrdinalFrameProps::property::accessibleTable = optional a
 interface-member StreamOrdinalFrameProps::property::accessorRevision = optional accessorRevision: number | undefined
 interface-member StreamOrdinalFrameProps::property::amplitude = optional amplitude: number | undefined
 interface-member StreamOrdinalFrameProps::property::animate = optional animate: AnimateProp | undefined
-interface-member StreamOrdinalFrameProps::property::annotationObservationCallback = optional annotationObservationCallback: ((observation: import("../semiotic-ai-observations").ChartObservation) => void) | undefined
+interface-member StreamOrdinalFrameProps::property::annotationObservationCallback = optional annotationObservationCallback: ((observation: import("../semiotic").ChartObservation) => void) | undefined
 interface-member StreamOrdinalFrameProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member StreamOrdinalFrameProps::property::autoPlaceAnnotations = optional autoPlaceAnnotations: AutoPlaceAnnotations | undefined
 interface-member StreamOrdinalFrameProps::property::axisExtent = optional axisExtent: import("../charts/shared/axisExtent").AxisExtentMode | undefined
@@ -2754,7 +2755,7 @@ interface-member StreamOrdinalFrameProps::property::onBrush = optional onBrush: 
 interface-member StreamOrdinalFrameProps::property::onBrushEnd = optional onBrushEnd: ((extent: OrdinalBrushExtent | null, meta: OrdinalBrushEndMeta) => void) | undefined
 interface-member StreamOrdinalFrameProps::property::onCategoriesChange = optional onCategoriesChange: ((categories: string[]) => void) | undefined
 interface-member StreamOrdinalFrameProps::property::onLayoutError = optional onLayoutError: ((diagnostic: import("./customLayoutFailure").CustomLayoutFailureDiagnostic) => void) | undefined
-interface-member StreamOrdinalFrameProps::property::onObservation = optional onObservation: ((observation: import("../semiotic-ai-observations").ChartObservation) => void) | undefined
+interface-member StreamOrdinalFrameProps::property::onObservation = optional onObservation: ((observation: import("../semiotic").ChartObservation) => void) | undefined
 interface-member StreamOrdinalFrameProps::property::outlierRadius = optional outlierRadius: number | undefined
 interface-member StreamOrdinalFrameProps::property::paused = optional paused: boolean | undefined
 interface-member StreamOrdinalFrameProps::property::pieceStyle = optional pieceStyle: ((d: Datum, category?: string) => Style) | undefined
@@ -2890,6 +2891,7 @@ interface-member StreamXYFrameProps::property::margin = optional margin: undefin
 interface-member StreamXYFrameProps::property::marginalGraphics = optional marginalGraphics: MarginalGraphicsConfig | undefined
 interface-member StreamXYFrameProps::property::maxCapacity = optional maxCapacity: number | undefined
 interface-member StreamXYFrameProps::property::maxDevicePixelRatio = optional maxDevicePixelRatio: number | undefined
+interface-member StreamXYFrameProps::property::multiHoverScene = optional multiHoverScene: ((scene: SceneNode[], scales: StreamScales) => SceneNode[]) | undefined
 interface-member StreamXYFrameProps::property::normalize = optional normalize: boolean | undefined
 interface-member StreamXYFrameProps::property::onBrush = optional onBrush: ((extent: {x: [number, number]; y: [number, number];} | null) => void) | undefined
 interface-member StreamXYFrameProps::property::onBrushEnd = optional onBrushEnd: ((extent: XYBrushExtent | null, meta: XYBrushEndMeta) => void) | undefined
@@ -2930,6 +2932,7 @@ interface-member StreamXYFrameProps::property::timeAccessor = optional timeAcces
 interface-member StreamXYFrameProps::property::title = optional title: ReactNode
 interface-member StreamXYFrameProps::property::tooltipContent = optional tooltipContent: ((d: HoverData) => ReactNode) | undefined
 interface-member StreamXYFrameProps::property::tooltipMode = optional tooltipMode: "multi" | "single" | undefined
+interface-member StreamXYFrameProps::property::tooltipSampling = optional tooltipSampling: "interpolate" | "sample" | undefined
 interface-member StreamXYFrameProps::property::transition = optional transition: TransitionConfig | undefined
 interface-member StreamXYFrameProps::property::valueAccessor = optional valueAccessor: ((d: T) => number) | string | undefined
 interface-member StreamXYFrameProps::property::waterfallStyle = optional waterfallStyle: WaterfallStyle | undefined
@@ -3104,7 +3107,7 @@ interface-member TreeDiagramProps::property::nodeIdAccessor = optional nodeIdAcc
 interface-member TreeDiagramProps::property::nodeLabel = optional nodeLabel: ChartAccessor<TNode, string> | undefined
 interface-member TreeDiagramProps::property::nodeSize = optional nodeSize: number | undefined
 interface-member TreeDiagramProps::property::orientation = optional orientation: "horizontal" | "radial" | "vertical" | undefined
-interface-member TreeDiagramProps::property::perspective = optional perspective: import("../../semiotic-network").NetworkPerspective | undefined
+interface-member TreeDiagramProps::property::perspective = optional perspective: import("../../semiotic").NetworkPerspective | undefined
 interface-member TreeDiagramProps::property::showLabels = optional showLabels: boolean | undefined
 interface-member TreeDiagramProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member TreeDiagramProps::property::styleRules = optional styleRules: StyleRule[] | undefined
@@ -3125,7 +3128,7 @@ interface-member TreemapProps::property::nodeLabel = optional nodeLabel: ChartAc
 interface-member TreemapProps::property::nodeStyle = optional nodeStyle: ((d: Datum) => NetworkMarkStyle) | undefined
 interface-member TreemapProps::property::padding = optional padding: number | undefined
 interface-member TreemapProps::property::paddingTop = optional paddingTop: number | undefined
-interface-member TreemapProps::property::perspective = optional perspective: import("../../semiotic-network").NetworkPerspective | undefined
+interface-member TreemapProps::property::perspective = optional perspective: import("../../semiotic").NetworkPerspective | undefined
 interface-member TreemapProps::property::showLabels = optional showLabels: boolean | undefined
 interface-member TreemapProps::property::showLegend = optional showLegend: boolean | undefined
 interface-member TreemapProps::property::styleRules = optional styleRules: StyleRule[] | undefined

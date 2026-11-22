@@ -206,9 +206,9 @@ export interface StackedAreaChartProps<TDatum extends Datum = Datum> extends Bas
    * Tooltip configuration.
    *
    * Pass `"multi"` to enable hover-anywhere mode: hovering at any x along the
-   * chart surfaces a single tooltip listing every stacked series at that x,
-   * with values interpolated between rendered path samples. Stacked series
-   * report band height rather than the cumulative stack top. Without `"multi"`,
+   * chart lists the layers present at the nearest rendered sample. Pass
+   * `{ mode: "multi", sampling: "interpolate" }` to read between samples. Layers
+   * report their individual contributions. Without `"multi"`,
    * the tooltip only appears within `hoverRadius` of an explicit data point.
    */
   tooltip?: TooltipProp

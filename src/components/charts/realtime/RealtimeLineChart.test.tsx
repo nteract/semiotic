@@ -145,14 +145,17 @@ describe("RealtimeLineChart", () => {
     expect(getByText("Series")).toBeTruthy()
   })
 
-  it("labels its single multi-tooltip row with the value accessor", async () => {
+  it.each([
+    ["sample", "10"],
+    ["interpolate", "15"],
+  ] as const)("labels its %s multi-tooltip value in the accessor's units", async (sampling, expected) => {
     const { container } = render(
       <TooltipProvider>
         <RealtimeLineChart
           data={[{ time: 0, value: 10 }, { time: 10, value: 20 }]}
           timeAccessor="time"
           valueAccessor="value"
-          tooltip="multi"
+          tooltip={sampling === "sample" ? "multi" : { mode: "multi", sampling }}
           width={200}
           height={100}
           margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
@@ -165,6 +168,6 @@ describe("RealtimeLineChart", () => {
     await act(async () => { await Promise.resolve() })
     const labels = Array.from(container.querySelectorAll(".stream-frame-tooltip span"))
       .map(span => span.textContent)
-    expect(labels).toEqual(["", "value", "15"])
+    expect(labels).toEqual(["", "value", expected])
   })
 })

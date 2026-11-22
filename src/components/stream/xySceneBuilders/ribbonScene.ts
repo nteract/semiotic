@@ -118,6 +118,7 @@ export function buildRibbonForGroup(
     style: pickStyle(ctx, ribbon, group, seriesSelectionDatum(data)),
     datum,
     group,
+    _isBand: true,
     interactive: ribbon.interactive
   }
 }
@@ -151,12 +152,7 @@ export function buildAggregateRibbons(
   data: Datum[],
   ribbons: ResolvedRibbon[]
 ): AreaSceneNode[] {
-  const nodes: AreaSceneNode[] = []
-  for (const r of ribbons) {
-    const node = buildRibbonForGroup(ctx, data, "__ribbon_aggregate", r)
-    if (node) nodes.push(node)
-  }
-  return nodes
+  return buildPerSeriesRibbons(ctx, data, "__ribbon_aggregate", ribbons)
 }
 
 /**
@@ -173,6 +169,19 @@ export function buildPerSeriesRibbons(
   for (const r of ribbons) {
     const node = buildRibbonForGroup(ctx, data, group, r)
     if (node) nodes.push(node)
+  }
+  return nodes
+}
+
+/** Paint aggregate ribbons first, then each series' ribbons, under the data marks. */
+export function buildRibbonScene(
+  ctx: XYSceneContext, data: Datum[], groups: ReturnType<XYSceneContext["groupData"]>
+): AreaSceneNode[] {
+  if (!ctx.ribbons?.length) return []
+  const { aggregate, perSeries } = partitionRibbons(ctx.ribbons)
+  const nodes = buildAggregateRibbons(ctx, data, aggregate)
+  if (perSeries.length) {
+    for (const group of groups) nodes.push(...buildPerSeriesRibbons(ctx, group.data, group.key, perSeries))
   }
   return nodes
 }

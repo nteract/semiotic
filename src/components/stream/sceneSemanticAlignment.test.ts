@@ -115,6 +115,7 @@ describe.each(builders)("%s semantic vertex alignment", (_label, build) => {
       for (const row of expected) {
         expect(findNearestNode(scene, scales.x(row.x), row.y)?.datum).toBe(row)
         expect(findAllNodesAtX(scene, scales.x(row.x))[0]?.datum).toBe(row)
+        expect(findAllNodesAtX(scene, scales.x(row.x), 30, "sample")[0]?.datum).toBe(row)
       }
       expect(rows).toEqual(before)
     }

@@ -1,6 +1,6 @@
 import { formatTooltipNumber } from "../../Tooltip/formatTooltipNumber"
 import * as React from "react"
-import { defaultTooltipStyle } from "../../Tooltip/Tooltip"
+import { defaultTooltipStyle, formatWithFallback } from "../../Tooltip/Tooltip"
 import { formatTooltipDate } from "../../Tooltip/formatTooltipDate"
 import type { HoverData } from "../../realtime/types"
 import type { Datum } from "./datumTypes"
@@ -66,13 +66,7 @@ function applyFormat(
   value: TooltipValue,
   fmt?: TooltipFormatter
 ): React.ReactNode {
-  if (!fmt) return formatVal(value)
-  try {
-    const out = fmt(value)
-    return out == null ? formatVal(value) : out
-  } catch {
-    return formatVal(value)
-  }
+  return formatWithFallback(value, fmt, formatVal)
 }
 
 export function resolveValue(d: Datum, acc: TooltipAccessor): TooltipValue {
@@ -106,28 +100,14 @@ export function bandTooltipFields(
   if (!band) return []
   // Public API accepts BandConfig | BandConfig[]; normalize to array.
   const list = Array.isArray(band) ? band : [band]
-  const fields: TooltipFieldConfig[] = []
-  list.forEach((b, i) => {
-    const y0Label = typeof b?.y0Accessor === "string" ? b.y0Accessor : "low"
-    const y1Label = typeof b?.y1Accessor === "string" ? b.y1Accessor : "high"
-    // Read from the enriched `bands[i]` array (StreamXYFrame attaches
-    // it to every hover datum). Falls back to `band` (single-band
-    // shorthand) for index 0 so the row still renders if only the
-    // single-band field made it through.
-    fields.push({
-      label: y0Label,
-      accessor: (d: Datum) =>
-        d.bands?.[i]?.y0 ?? (i === 0 ? d.band?.y0 : undefined),
+  return list.flatMap((band, i) => {
+    const field = (key: "y0" | "y1", label: string, accessor?: TooltipAccessor): TooltipFieldConfig => ({
+      label: typeof accessor === "string" ? accessor : label,
+      accessor: d => d.bands?.[i]?.[key] ?? (i === 0 ? d.band?.[key] : undefined),
       format: valueFormat
     })
-    fields.push({
-      label: y1Label,
-      accessor: (d: Datum) =>
-        d.bands?.[i]?.y1 ?? (i === 0 ? d.band?.y1 : undefined),
-      format: valueFormat
-    })
+    return [field("y0", "low", band?.y0Accessor), field("y1", "high", band?.y1Accessor)]
   })
-  return fields
 }
 
 /**

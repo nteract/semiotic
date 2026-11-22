@@ -48,7 +48,7 @@ describe("StreamXYFrame multi hover at the data edges", () => {
   afterEach(() => restore())
 
   it("interpolates inside the data and snaps to the last sample in the padding", async () => {
-    const { hoverAt } = await renderFrame()
+    const { hoverAt } = await renderFrame({ tooltipSampling: "interpolate" })
 
     const inside = hoverAt(55)
     expect(rows(inside)).toEqual([["A", 5.5], ["B", 11]])
@@ -67,6 +67,48 @@ describe("StreamXYFrame multi hover at the data edges", () => {
     expect(padding?.x).toBe(180)
     expect(padding?.data).toEqual({ xValue: padding?.xValue, x: padding?.xValue })
     expect(padding?.xValue).toBeCloseTo(11)
+  })
+
+  it.each(["line", "area"] as const)("aligns sparse %s rows, values and crosshair at one sample", async chartType => {
+    const data = [...series("A", [0, 10], 10), ...series("B", [0, 5, 10], 8)]
+    const { hoverAt } = await renderFrame({ chartType, data, curve: "basis", yExtent: [0, 100] })
+    for (const [px, x] of [[24.5, 0], [25, 0], [35.8, 5], [41.5, 5], [92, 10]]) {
+      const hover = hoverAt(px)
+      expect(hover?.xValue).toBe(x)
+      expect(hover?.xPx).toBe(x * 10)
+      const observed = data.filter(row => row.x === x)
+      expect(hover?.allSeries?.map(({ group, value, datum }) => [group, value, datum])).toEqual(
+        observed.map(row => [row.series, row.y, row])
+      )
+    }
+  })
+
+  it("reads the exact source values for a singleton with callback accessors", async () => {
+    const data = [{ t: 0.1, v: 0.013 }]
+    const { hoverAt } = await renderFrame({ data, xAccessor: d => d.t, yAccessor: d => d.v, xExtent: [0, 3] })
+    const hover = hoverAt(120)
+    expect(hover?.xValue).toBe(data[0].t)
+    expect(hover?.allSeries).toMatchObject([{ value: data[0].v, datum: data[0] }])
+  })
+
+  it("preserves time-scale dates and enriches each row once for an interactive band", async () => {
+    const time = new Date("2026-03-17T10:00:00.001Z")
+    const later = new Date(+time + 100)
+    const data = [time, later].map((t, i) => ({ t, y: 10 + i, lo: 4, hi: 20 }))
+    const { hoverAt } = await renderFrame({ data, xAccessor: "t", xScaleType: "time",
+      xExtent: [+time, +later], band: { y0Accessor: "lo", y1Accessor: "hi", interactive: true } })
+    const hover = hoverAt(84)
+    expect(hover?.xValue).toEqual(time)
+    expect(hover?.allSeries).toHaveLength(1)
+    expect(hover?.allSeries?.[0]).toMatchObject({ value: 10, datum: { ...data[0], band: { y0: 4, y1: 20 } } })
+  })
+
+  it("keeps normalized stack contributions at the selected sample", async () => {
+    const { hoverAt } = await renderFrame({ chartType: "stackedarea", normalize: true, yExtent: [0, 1],
+      data: [...series("A", [1, 5], 1), ...series("B", [1, 5], 3)] })
+    const hover = hoverAt(42)
+    expect(hover?.xValue).toBe(5)
+    expect(hover?.allSeries?.map(d => d.value)).toEqual([0.25, 0.75])
   })
 
   it("snaps to the first sample before the data", async () => {

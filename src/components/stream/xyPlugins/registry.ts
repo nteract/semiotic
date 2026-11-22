@@ -26,7 +26,7 @@ export type XYSceneBuilder = (
 
 /**
  * Chart-specific multi-series hover (for example every bar in a histogram
- * column). When present it replaces the frame's line/area interpolation.
+ * column). When present it replaces the frame's line/area lookup.
  */
 export type XYMultiHover = (
   hover: HoverData,

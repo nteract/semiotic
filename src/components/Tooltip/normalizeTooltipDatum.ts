@@ -48,13 +48,13 @@ export function normalizeTooltipDatum(hoverData: Datum): Datum | null {
   // hit whose datum is the user's own object — even one that happens to
   // carry an incidental `.data` field — lacks those layout fields and is
   // passed through untouched.
+  if (!datum) return null
   const isNodeWrapper =
     hoverData?.nodeOrEdge === "node" &&
-    typeof datum?.x0 === "number" &&
-    typeof datum?.x1 === "number"
+    typeof datum.x0 === "number" &&
+    typeof datum.x1 === "number"
   const isEdgeWrapper =
-    hoverData?.nodeOrEdge === "edge" && typeof datum?.sankeyWidth === "number"
-  if (!datum) return null
+    hoverData?.nodeOrEdge === "edge" && typeof datum.sankeyWidth === "number"
   if (
     (isNodeWrapper || isEdgeWrapper) &&
     datum.data &&
@@ -62,19 +62,8 @@ export function normalizeTooltipDatum(hoverData: Datum): Datum | null {
   ) {
     datum = datum.data
   }
-  if (!datum) return null
-  // Multi-tooltip mode (`tooltip="multi"`) puts the per-series values on
-  // the hover ROOT as `allSeries`, alongside the data-space `xValue` of
-  // the cursor — not inside `.data`. Unwrapping to `.data` above would
-  // therefore discard exactly the fields a multi-series tooltip needs
-  // (and `allSeries !== undefined` is itself one of the markers that
-  // *enables* the unwrap, so its presence triggered the step that
-  // dropped it). Re-attach them onto a shallow copy so a user function
-  // can read `datum.allSeries` the way `MultiPointTooltip` — which is
-  // wired as `tooltipContent` directly and never passes through here —
-  // always could. Copy rather than mutate: `datum` is the caller's own
-  // data row. Real datum fields win, so a data row that legitimately
-  // carries an `xValue` column is not overwritten by the cursor's.
+  // Multi hover keeps its rows and selected x on the wrapper. Copy them onto
+  // the callback datum, preserving authored fields and selection provenance.
   if (
     looksLikeHoverWrapper &&
     (hoverData.allSeries !== undefined || hoverData.xValue !== undefined)
@@ -83,17 +72,10 @@ export function normalizeTooltipDatum(hoverData: Datum): Datum | null {
       { ...datum },
       getSelectionProvenance(datum)
     )
-    if (
-      hoverData.allSeries !== undefined &&
-      withHoverContext.allSeries === undefined
-    ) {
-      withHoverContext.allSeries = hoverData.allSeries
-    }
-    if (
-      hoverData.xValue !== undefined &&
-      withHoverContext.xValue === undefined
-    ) {
-      withHoverContext.xValue = hoverData.xValue
+    for (const key of ["allSeries", "xValue"]) {
+      if (hoverData[key] !== undefined && withHoverContext[key] === undefined) {
+        withHoverContext[key] = hoverData[key]
+      }
     }
     datum = withHoverContext
   }

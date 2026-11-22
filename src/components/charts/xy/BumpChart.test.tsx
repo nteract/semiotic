@@ -1,6 +1,7 @@
 import * as React from "react"
 import { render, screen } from "@testing-library/react"
 import { scaleLinear } from "d3-scale"
+import { findAllNodesAtX } from "../../stream/CanvasHitTester"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { XYCustomChartProps } from "../custom/XYCustomChart"
 import type { Datum } from "../shared/datumTypes"
@@ -375,6 +376,13 @@ describe("BumpChart", () => {
     )
     const ribbonResult = capturedProps?.layout(layoutContext())
     const ribbonAreas = ribbonResult?.nodes?.filter(node => node.type === "area") ?? []
+    const hoverLines = capturedProps!.frameProps!.multiHoverScene!(ribbonAreas, layoutContext().scales)
+    const hits = findAllNodesAtX(hoverLines, 140, Infinity, "sample")
+    expect(hits).toHaveLength(3)
+    for (const hit of hits) {
+      expect(hit.x).toBe(0)
+      expect(hit.datum?.__bumpXValue).toBe(2022)
+    }
     const ribbonWidthAtStart = Math.hypot(
       ribbonAreas[0].topPath[0][0] - ribbonAreas[0].bottomPath[0][0],
       ribbonAreas[0].topPath[0][1] - ribbonAreas[0].bottomPath[0][1],

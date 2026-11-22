@@ -42,7 +42,7 @@ const HIGH_CONTRAST_THEME: SemioticTheme
 const LIGHT_THEME: SemioticTheme
 const THEME_PRESETS: Record<string, SemioticTheme> & {light: SemioticTheme; dark: SemioticTheme; "high-contrast": SemioticTheme; pastels: SemioticTheme; "pastels-dark": SemioticTheme; "bi-tool": SemioticTheme; "bi-tool-dark": SemioticTheme; italian: SemioticTheme; "italian-dark": SemioticTheme; tufte: SemioticTheme; "tufte-dark": SemioticTheme; journalist: SemioticTheme; "journalist-dark": SemioticTheme; playful: SemioticTheme; "playful-dark": SemioticTheme; carbon: SemioticTheme; "carbon-dark": SemioticTheme;}
 function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
-function MultiPointTooltip({ xFormat, yFormat }?: undefined | {xFormat?: (Date | string | value: number) => React.ReactNode; yFormat?: (value: number, group?: string) => React.ReactNode;}): TooltipContentFn
+function MultiPointTooltip({ xFormat, yFormat, ungroupedLabel }?: undefined | {xFormat?: (Date | string | value: number) => React.ReactNode; yFormat?: (value: number, group?: string) => React.ReactNode; ungroupedLabel?: string;}): TooltipContentFn
 function Tooltip(config?: TooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
 function TooltipRoot({ chrome, className, style, children, ...rest }: TooltipRootProps): React.JSX.Element
 function accessibilityCaveats(result: AccessibilityAuditResult, { onlyCritical }?: undefined | {onlyCritical?: boolean;}): string[]
@@ -101,7 +101,7 @@ function resolveChartSize(chart: "AreaChart" | "BarChart" | "BoxPlot" | "BubbleC
 function resolveChartSize(chart: "BigNumber", props?: BigNumberSizeOptions | undefined): BigNumberSize
 function resolveChartSize(chart: "WordCloud", props?: WordCloudSizeOptions | undefined): ChartSize
 function resolveCommunicativeAct(component: string, context: ChartCapability | DescribeCapabilityContext | undefined): CommunicativeAct | undefined
-function resolveMultiCapableTooltip(input: {tooltip: TooltipPropWithHoverCallback | undefined; defaultTooltipContent: (d: any) => React.ReactNode; multiDefaultContent?: (d: any) => React.ReactNode; customFunctionContext?: "datum" | "hover";}): {tooltipContent: (d: any) => React.ReactNode; tooltipMode?: "multi";}
+function resolveMultiCapableTooltip(input: {tooltip: TooltipPropWithHoverCallback | undefined; defaultTooltipContent: (d: any) => React.ReactNode; multiDefaultContent?: (d: any) => React.ReactNode; customFunctionContext?: "datum" | "hover";}): {tooltipContent: (d: any) => React.ReactNode; tooltipMode?: "multi"; tooltipSampling?: MultiTooltipConfig["sampling"];}
 function resolveResponsiveDimension(value: number, min?: number | undefined, max?: number | undefined, step?: number | undefined): number
 function resolveResponsiveRules<TProps extends Record<string, unknown>>(props: TProps, context: ResponsiveRuleContext, rules?: readonly ResponsiveRule<TProps>[] | undefined): ResponsiveRuleResult<TProps>
 function resolveStyleRules(datum: Datum, rules: readonly StyleRule[] | undefined, ctx: StyleRuleContext): StyleRuleStyle
@@ -487,6 +487,7 @@ interface-member MultiLineTooltipConfig::property::showLabels = optional showLab
 interface-member MultiTooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
 interface-member MultiTooltipConfig::property::content = optional content: ((data: Record<string, unknown>) => React.ReactNode) | undefined
 interface-member MultiTooltipConfig::property::mode = required mode: "multi"
+interface-member MultiTooltipConfig::property::sampling = optional sampling: "interpolate" | "sample" | undefined
 interface-member NavTreeNode::property::children = optional children: NavTreeNode[] | undefined
 interface-member NavTreeNode::property::datum = optional datum: Datum | null | undefined
 interface-member NavTreeNode::property::id = required id: string

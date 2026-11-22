@@ -22,7 +22,7 @@ export function drawCrosshair(
 
   const allSeries = hover.allSeries
   const isMulti = allSeries && allSeries.length > 0
-  const xPx = hover.xPx ?? hover.x
+  const xPx = isMulti ? hover.xPx ?? hover.x : hover.x
 
   ctx.save()
   const crossStyle = typeof config.crosshair === "object" ? config.crosshair : {}
@@ -36,47 +36,33 @@ export function drawCrosshair(
 
   if (crosshairStrokeWidth > 0) {
     ctx.lineWidth = crosshairStrokeWidth
-    // Vertical crosshair line (always)
-    ctx.beginPath()
-    ctx.moveTo(isMulti ? xPx : hover.x, 0)
-    ctx.lineTo(isMulti ? xPx : hover.x, height)
-    ctx.stroke()
-
-    // Horizontal crosshair line (single-point mode only)
-    if (!isMulti) {
+    const strokeLine = (x1: number, y1: number, x2: number, y2: number) => {
       ctx.beginPath()
-      ctx.moveTo(0, hover.y)
-      ctx.lineTo(width, hover.y)
+      ctx.moveTo(x1, y1)
+      ctx.lineTo(x2, y2)
       ctx.stroke()
     }
+    strokeLine(xPx, 0, xPx, height)
+    if (!isMulti) strokeLine(0, hover.y, width, hover.y)
   }
 
   ctx.restore()
 
+  ctx.lineWidth = 2
+  ctx.strokeStyle = theme.pointRing
+  const drawDot = (y: number, color: string) => {
+    ctx.beginPath()
+    ctx.arc(xPx, y, 4, 0, Math.PI * 2)
+    ctx.fillStyle = color
+    ctx.fill()
+    ctx.stroke()
+  }
   if (isMulti) {
-    // Multi-point mode: draw a dot on each series at its interpolated Y
-    ctx.lineWidth = 2
-    ctx.strokeStyle = theme.pointRing
-    for (const s of allSeries) {
-      if (s.valuePx == null) continue
-      ctx.beginPath()
-      ctx.arc(xPx, s.valuePx, 4, 0, Math.PI * 2)
-      ctx.fillStyle = s.color || theme.primary
-      ctx.fill()
-      ctx.stroke()
+    for (const row of allSeries) {
+      if (row.valuePx != null) drawDot(row.valuePx, row.color || theme.primary)
     }
   } else {
-    // Single-point mode: one dot at the hovered datum.
-    // `theme.primary` already resolves from `--semiotic-primary`.
-    const pointColor =
-      config.pointColor || resolveNodeColor(hoveredNode) || theme.primary
-    ctx.beginPath()
-    ctx.arc(hover.x, hover.y, 4, 0, Math.PI * 2)
-    ctx.fillStyle = pointColor
-    ctx.fill()
-    ctx.strokeStyle = theme.pointRing
-    ctx.lineWidth = 2
-    ctx.stroke()
+    drawDot(hover.y, config.pointColor || resolveNodeColor(hoveredNode) || theme.primary)
   }
 }
 

@@ -79,7 +79,7 @@ class-member WindowAccumulator::method::push = required push(time: number, value
 class-member WindowAccumulator::method::setRetention = required setRetention(retain: number): void
 const DEFAULT_LIFECYCLE_THRESHOLDS: Required<LifecycleBandThresholds>
 function MultiLineTooltip(config?: MultiLineTooltipConfig | undefined): (data: Record<string, unknown>) => React.JSX.Element | null
-function MultiPointTooltip({ xFormat, yFormat }?: undefined | {xFormat?: (Date | string | value: number) => React.ReactNode; yFormat?: (value: number, group?: string) => React.ReactNode;}): TooltipContentFn
+function MultiPointTooltip({ xFormat, yFormat, ungroupedLabel }?: undefined | {xFormat?: (Date | string | value: number) => React.ReactNode; yFormat?: (value: number, group?: string) => React.ReactNode; ungroupedLabel?: string;}): TooltipContentFn
 function RealtimeHeatmap<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & RealtimeHeatmapProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function RealtimeHeatmap<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<TDatum, TDatum>> & RealtimeHeatmapProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
 function RealtimeHistogram<TDatum extends Datum = Datum>(props: React.RefAttributes<RealtimeFrameHandle<Datum, Datum>> & RealtimeHistogramProps<TDatum>): React.ReactElement<unknown, React.JSXElementConstructor<any> | string> | null
@@ -355,6 +355,7 @@ interface-member MultiLineTooltipConfig::property::showLabels = optional showLab
 interface-member MultiTooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
 interface-member MultiTooltipConfig::property::content = optional content: ((data: Record<string, unknown>) => React.ReactNode) | undefined
 interface-member MultiTooltipConfig::property::mode = required mode: "multi"
+interface-member MultiTooltipConfig::property::sampling = optional sampling: "interpolate" | "sample" | undefined
 interface-member PulseConfig::property::color = optional color: string | undefined
 interface-member PulseConfig::property::duration = optional duration: number | undefined
 interface-member PulseConfig::property::glowRadius = optional glowRadius: number | undefined
@@ -403,7 +404,7 @@ interface-member RealtimeHeatmapProps::property::mobileInteraction = optional mo
 interface-member RealtimeHeatmapProps::property::mobileSemantics = optional mobileSemantics: MobileVisualizationContract | undefined
 interface-member RealtimeHeatmapProps::property::mode = optional mode: ChartMode | undefined
 interface-member RealtimeHeatmapProps::property::onHover = optional onHover: ((d: HoverData | null) => void) | undefined
-interface-member RealtimeHeatmapProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic-ai-observations").ChartObservation) => void) | undefined
+interface-member RealtimeHeatmapProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic").ChartObservation) => void) | undefined
 interface-member RealtimeHeatmapProps::property::pointIdAccessor = optional pointIdAccessor: RealtimePointIdAccessor<TDatum> | undefined
 interface-member RealtimeHeatmapProps::property::pulse = optional pulse: PulseConfig | undefined
 interface-member RealtimeHeatmapProps::property::responsiveHeight = optional responsiveHeight: boolean | undefined
@@ -470,7 +471,7 @@ interface-member RealtimeHistogramProps::property::mobileSemantics = optional mo
 interface-member RealtimeHistogramProps::property::mode = optional mode: ChartMode | undefined
 interface-member RealtimeHistogramProps::property::onBrush = optional onBrush: ((extent: {x: [number, number]; y: [number, number];} | null) => void) | undefined
 interface-member RealtimeHistogramProps::property::onHover = optional onHover: ((d: HoverData | null) => void) | undefined
-interface-member RealtimeHistogramProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic-ai-observations").ChartObservation) => void) | undefined
+interface-member RealtimeHistogramProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic").ChartObservation) => void) | undefined
 interface-member RealtimeHistogramProps::property::opacity = optional opacity: number | undefined
 interface-member RealtimeHistogramProps::property::pointIdAccessor = optional pointIdAccessor: RealtimePointIdAccessor<TDatum> | undefined
 interface-member RealtimeHistogramProps::property::pulse = optional pulse: PulseConfig | undefined
@@ -534,7 +535,7 @@ interface-member RealtimeLineChartProps::property::mobileInteraction = optional 
 interface-member RealtimeLineChartProps::property::mobileSemantics = optional mobileSemantics: MobileVisualizationContract | undefined
 interface-member RealtimeLineChartProps::property::mode = optional mode: ChartMode | undefined
 interface-member RealtimeLineChartProps::property::onHover = optional onHover: ((d: HoverData | null) => void) | undefined
-interface-member RealtimeLineChartProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic-ai-observations").ChartObservation) => void) | undefined
+interface-member RealtimeLineChartProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic").ChartObservation) => void) | undefined
 interface-member RealtimeLineChartProps::property::opacity = optional opacity: number | undefined
 interface-member RealtimeLineChartProps::property::pointIdAccessor = optional pointIdAccessor: RealtimePointIdAccessor<TDatum> | undefined
 interface-member RealtimeLineChartProps::property::pulse = optional pulse: PulseConfig | undefined
@@ -596,7 +597,7 @@ interface-member RealtimeSwarmChartProps::property::mobileInteraction = optional
 interface-member RealtimeSwarmChartProps::property::mobileSemantics = optional mobileSemantics: MobileVisualizationContract | undefined
 interface-member RealtimeSwarmChartProps::property::mode = optional mode: ChartMode | undefined
 interface-member RealtimeSwarmChartProps::property::onHover = optional onHover: ((d: HoverData | null) => void) | undefined
-interface-member RealtimeSwarmChartProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic-ai-observations").ChartObservation) => void) | undefined
+interface-member RealtimeSwarmChartProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic").ChartObservation) => void) | undefined
 interface-member RealtimeSwarmChartProps::property::opacity = optional opacity: number | undefined
 interface-member RealtimeSwarmChartProps::property::pointIdAccessor = optional pointIdAccessor: RealtimePointIdAccessor<TDatum> | undefined
 interface-member RealtimeSwarmChartProps::property::pointStyle = optional pointStyle: ((datum: TDatum) => Style & {r?: number;}) | undefined
@@ -661,7 +662,7 @@ interface-member RealtimeWaterfallChartProps::property::mobileSemantics = option
 interface-member RealtimeWaterfallChartProps::property::mode = optional mode: ChartMode | undefined
 interface-member RealtimeWaterfallChartProps::property::negativeColor = optional negativeColor: string | undefined
 interface-member RealtimeWaterfallChartProps::property::onHover = optional onHover: ((d: HoverData | null) => void) | undefined
-interface-member RealtimeWaterfallChartProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic-ai-observations").ChartObservation) => void) | undefined
+interface-member RealtimeWaterfallChartProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic").ChartObservation) => void) | undefined
 interface-member RealtimeWaterfallChartProps::property::opacity = optional opacity: number | undefined
 interface-member RealtimeWaterfallChartProps::property::pointIdAccessor = optional pointIdAccessor: RealtimePointIdAccessor<TDatum> | undefined
 interface-member RealtimeWaterfallChartProps::property::positiveColor = optional positiveColor: string | undefined
@@ -925,6 +926,7 @@ interface-member StreamXYFrameProps::property::margin = optional margin: undefin
 interface-member StreamXYFrameProps::property::marginalGraphics = optional marginalGraphics: MarginalGraphicsConfig | undefined
 interface-member StreamXYFrameProps::property::maxCapacity = optional maxCapacity: number | undefined
 interface-member StreamXYFrameProps::property::maxDevicePixelRatio = optional maxDevicePixelRatio: number | undefined
+interface-member StreamXYFrameProps::property::multiHoverScene = optional multiHoverScene: ((scene: SceneNode[], scales: StreamScales) => SceneNode[]) | undefined
 interface-member StreamXYFrameProps::property::normalize = optional normalize: boolean | undefined
 interface-member StreamXYFrameProps::property::onBrush = optional onBrush: ((extent: {x: [number, number]; y: [number, number];} | null) => void) | undefined
 interface-member StreamXYFrameProps::property::onBrushEnd = optional onBrushEnd: ((extent: XYBrushExtent | null, meta: XYBrushEndMeta) => void) | undefined
@@ -965,6 +967,7 @@ interface-member StreamXYFrameProps::property::timeAccessor = optional timeAcces
 interface-member StreamXYFrameProps::property::title = optional title: ReactNode
 interface-member StreamXYFrameProps::property::tooltipContent = optional tooltipContent: ((d: HoverData) => ReactNode) | undefined
 interface-member StreamXYFrameProps::property::tooltipMode = optional tooltipMode: "multi" | "single" | undefined
+interface-member StreamXYFrameProps::property::tooltipSampling = optional tooltipSampling: "interpolate" | "sample" | undefined
 interface-member StreamXYFrameProps::property::transition = optional transition: TransitionConfig | undefined
 interface-member StreamXYFrameProps::property::valueAccessor = optional valueAccessor: ((d: T) => number) | string | undefined
 interface-member StreamXYFrameProps::property::waterfallStyle = optional waterfallStyle: WaterfallStyle | undefined

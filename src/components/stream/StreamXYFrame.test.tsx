@@ -578,8 +578,8 @@ describe("StreamXYFrame", () => {
 
       expect(hoverSpy).toHaveBeenCalled()
       const hover = hoverSpy.mock.calls.at(-1)?.[0]
-      expect(hover.xValue).toBeCloseTo(5)
-      expect(hover.data.x).toBeCloseTo(5)
+      expect(hover.xValue).toBe(0)
+      expect(hover.data.x).toBe(0)
       expect(hover.allSeries).toHaveLength(2)
 
       const valuesByGroup = Object.fromEntries(

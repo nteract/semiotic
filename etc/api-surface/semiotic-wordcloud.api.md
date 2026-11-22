@@ -102,7 +102,7 @@ interface-member WordCloudProps::property::maxDevicePixelRatio = optional maxDev
 interface-member WordCloudProps::property::onClick = optional onClick: ((datum: Datum, point: {x: number; y: number;}) => void) | undefined
 interface-member WordCloudProps::property::onLayout = optional onLayout: ((layout: WordCloudLayoutResult) => void) | undefined
 interface-member WordCloudProps::property::onLayoutError = optional onLayoutError: ((error: WordCloudLayoutError) => void) | undefined
-interface-member WordCloudProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic-ai-observations").ChartObservation) => void) | undefined
+interface-member WordCloudProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic").ChartObservation) => void) | undefined
 interface-member WordCloudProps::property::renderAs = optional renderAs: "canvas" | "svg" | undefined
 interface-member WordCloudProps::property::responsiveHeight = optional responsiveHeight: boolean | undefined
 interface-member WordCloudProps::property::responsiveWidth = optional responsiveWidth: boolean | undefined

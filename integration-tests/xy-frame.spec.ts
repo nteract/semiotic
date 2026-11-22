@@ -16,7 +16,7 @@ async function hoverAndScreenshotMultiTooltip(
   if (!box) throw new Error("canvas bounding box unavailable")
 
   // Hover near the middle of the rendered x range, away from the explicit
-  // sample points. `tooltip="multi"` should still resolve every series at
+  // sample points. Explicit interpolation should resolve every series at
   // the cursor's x position.
   await page.mouse.move(box.x + box.width * 0.52, box.y + box.height * 0.5)
   await waitForRafs(page, 6)
@@ -489,6 +489,41 @@ test.describe("XY Charts - Interaction states", () => {
     await expect(testCase).toHaveScreenshot("xy-legend-isolate.png", {
       maxDiffPixels: 200,
     })
+  })
+
+  test("sparse multi tooltip snaps all rows to the same observed x", async ({ page }) => {
+    const id = "xy-sparse-multi-tooltip"
+    await waitForChartReady(page, id)
+    const chart = page.getByTestId(id)
+    const tooltip = chart.locator(".stream-frame-tooltip")
+    const margins = { left: 40, right: 40, top: 30, bottom: 30 }
+    const canvas = chart.locator("canvas").first()
+    for (const width of [400, 320]) {
+      await chart.evaluate((el, w) => { el.style.width = w + "px" }, width)
+      await chart.scrollIntoViewIfNeeded()
+      await expect.poll(() => canvas.evaluate(el => el.getBoundingClientRect().width)).toBe(width)
+      const box = await canvas.boundingBox()
+      if (!box) throw new Error("canvas bounding box unavailable")
+      for (const [x, y, text] of [
+        [2.45, 24.5, "0 | A 0 at 0 | B 0 at 0"],
+        [3.58, 35.8, "5 | B 40 at 5"],
+        [5, 40, "5 | B 40 at 5"],
+        [9, 80, "10 | A 100 at 10 | B 80 at 10"],
+      ] as const) {
+        await page.mouse.move(box.x + margins.left + x * (box.width - 80) / 10,
+          box.y + margins.top + (100 - y) * (box.height - 60) / 100)
+        await expect(tooltip).toHaveText(text)
+        await expectTooltipWithinPlot(chart, margins)
+      }
+      await chart.locator("h2").hover()
+      await expect(tooltip).not.toBeVisible() // test-quality-gate: allow-mount-only — dismissal after leaving the plot
+    }
+    const frame = chart.locator(".stream-xy-frame")
+    await frame.focus()
+    await frame.press("ArrowRight")
+    await expect(tooltip).toHaveText("0 | A 0 at 0 | B 0 at 0")
+    await frame.press("Escape")
+    await expect(tooltip).toHaveCount(0)
   })
 
   for (const { testId, name, snapshot } of [

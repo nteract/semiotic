@@ -13,7 +13,7 @@ import type { Datum } from "../../charts/shared/datumTypes"
 import type { SceneNode } from "../types"
 import { buildLineNode } from "../SceneGraph"
 import type { XYSceneContext } from "./types"
-import { buildAggregateRibbons, buildPerSeriesRibbons, partitionRibbons } from "./ribbonScene"
+import { buildRibbonScene } from "./ribbonScene"
 import { emitPointNodes } from "./emitPointNodes"
 
 interface ColorThresholdAnnotation extends Datum {
@@ -31,7 +31,7 @@ function isColorThresholdAnnotation(annotation: Datum): annotation is ColorThres
 
 export function buildLineScene(ctx: XYSceneContext, data: Datum[]): SceneNode[] {
   const groups = ctx.groupData(data)
-  const nodes: SceneNode[] = []
+  const nodes: SceneNode[] = buildRibbonScene(ctx, data, groups)
 
   // Extract color thresholds from annotations (if any)
   const colorThresholds = ctx.config.annotations
@@ -41,22 +41,6 @@ export function buildLineScene(ctx: XYSceneContext, data: Datum[]): SceneNode[] 
       color: a.color,
       thresholdType: a.thresholdType || "greater"
     }))
-
-  // Ribbons (bounds + band) paint first so they sit underneath the lines.
-  // The PipelineStore composes both public envelope APIs into a single
-  // resolvedRibbons array; scene-level dispatch only needs to know
-  // whether each ribbon is per-series or aggregate.
-  if (ctx.ribbons && ctx.ribbons.length > 0) {
-    const { perSeries, aggregate } = partitionRibbons(ctx.ribbons)
-    if (aggregate.length > 0) {
-      nodes.push(...buildAggregateRibbons(ctx, data, aggregate))
-    }
-    if (perSeries.length > 0) {
-      for (const g of groups) {
-        nodes.push(...buildPerSeriesRibbons(ctx, g.data, g.key, perSeries))
-      }
-    }
-  }
 
   for (const g of groups) {
     const style = ctx.resolveLineStyle(g.key, seriesSelectionDatum(g.data))

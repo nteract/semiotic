@@ -97,19 +97,15 @@ describe("LineChart: lineDataAccessor + tooltip=\"multi\"", () => {
     // control-flow analysis; retain its declared nullable HoverData shape.
     const hover = lastHover as HoverData | null
     if (!hover) throw new Error("Expected a multi-series hover payload")
-    expect(hover.allSeries).toBeDefined()
-    expect((hover.allSeries as unknown[]).length).toBe(2)
-
-    const valuesByGroup = Object.fromEntries(
-      (hover.allSeries as Array<{ group: string; value: number }>).map(
-        (s) => [s.group, s.value]
-      )
-    )
-    expect(valuesByGroup.A).toBeCloseTo(20)
-    expect(valuesByGroup.B).toBeCloseTo(10)
+    expect(hover.xValue).toBe(0)
+    expect(hover.allSeries).toHaveLength(2)
+    expect(hover.allSeries).toEqual(expect.arrayContaining([
+      expect.objectContaining({ group: "A", value: 10, datum: expect.objectContaining({ x: 0, y: 10 }) }),
+      expect.objectContaining({ group: "B", value: 5, datum: expect.objectContaining({ x: 0, y: 5 }) }),
+    ]))
   })
 
-  it("renders a custom multi tooltip's series rows on hover via tooltip={{ mode: 'multi', content }}", async () => {
+  it("renders interpolated rows in a custom tooltip when requested", async () => {
     // Regression (reported downstream by Iris): with multi mode a *custom*
     // tooltip function used to receive a datum with no `allSeries`, because
     // `normalizeTooltip` unwrapped the hover root down to `.data`. First-class
@@ -130,6 +126,7 @@ describe("LineChart: lineDataAccessor + tooltip=\"multi\"", () => {
         lineBy="series"
         tooltip={{
           mode: "multi",
+          sampling: "interpolate",
           content: (d: Record<string, unknown>) => {
             const all = d.allSeries as Array<{ group: string; value: number }> | undefined
             if (!all) return <div data-testid="rows">NO_SERIES</div>

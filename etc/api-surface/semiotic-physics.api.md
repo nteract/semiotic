@@ -1624,6 +1624,7 @@ interface-member MultiLineTooltipConfig::property::showLabels = optional showLab
 interface-member MultiTooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined
 interface-member MultiTooltipConfig::property::content = optional content: ((data: Record<string, unknown>) => React.ReactNode) | undefined
 interface-member MultiTooltipConfig::property::mode = required mode: "multi"
+interface-member MultiTooltipConfig::property::sampling = optional sampling: "interpolate" | "sample" | undefined
 interface-member PacketFlowChartProps::property::colorBy = optional colorBy: ChartAccessor<TLink, string> | undefined
 interface-member PacketFlowChartProps::property::coordinateMode = optional coordinateMode: PhysicalFlowCoordinateMode | undefined
 interface-member PacketFlowChartProps::property::data = optional data: TLink[] | undefined
@@ -2062,7 +2063,7 @@ interface-member PhysicsSVGOverlayProps::property::legendLayout = optional legen
 interface-member PhysicsSVGOverlayProps::property::legendPosition = optional legendPosition: "bottom" | "left" | "right" | "top" | undefined
 interface-member PhysicsSVGOverlayProps::property::margin = required margin: {top: number; right: number; bottom: number; left: number;}
 interface-member PhysicsSVGOverlayProps::property::onAnnotationActivate = optional onAnnotationActivate: OnAnnotationActivateCallback | undefined
-interface-member PhysicsSVGOverlayProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic-ai-observations").ChartObservation) => void) | undefined
+interface-member PhysicsSVGOverlayProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic").ChartObservation) => void) | undefined
 interface-member PhysicsSVGOverlayProps::property::pointNodes = optional pointNodes: PhysicsAnnotationAnchorNode[] | undefined
 interface-member PhysicsSVGOverlayProps::property::svgAnnotationRules = optional svgAnnotationRules: ((annotation: Datum, index: number, context: AnnotationContext) => ReactNode) | undefined
 interface-member PhysicsSVGOverlayProps::property::title = optional title: ReactNode
@@ -2566,7 +2567,7 @@ interface-member StreamPhysicsFrameProps::property::onBodyHover = optional onBod
 interface-member StreamPhysicsFrameProps::property::onBodyPointerDown = optional onBodyPointerDown: ((body: PhysicsBodyState | null, event: React.PointerEvent<HTMLCanvasElement>) => void) | undefined
 interface-member StreamPhysicsFrameProps::property::onClick = optional onClick: ((datum: Datum | null, event: {x: number; y: number; body: PhysicsBodyState | null;}) => void) | undefined
 interface-member StreamPhysicsFrameProps::property::onFrame = optional onFrame: ((store: PhysicsPipelineStore) => void) | undefined
-interface-member StreamPhysicsFrameProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic-ai-observations").ChartObservation) => void) | undefined
+interface-member StreamPhysicsFrameProps::property::onObservation = optional onObservation: ((observation: import("../../semiotic").ChartObservation) => void) | undefined
 interface-member StreamPhysicsFrameProps::property::onRegionEvent = optional onRegionEvent: ((event: StreamPhysicsRegionEvent) => void) | undefined
 interface-member StreamPhysicsFrameProps::property::onSemanticItemActivate = optional onSemanticItemActivate: ((item: PhysicsSemanticItem) => void) | undefined
 interface-member StreamPhysicsFrameProps::property::onSemanticItemFocus = optional onSemanticItemFocus: ((item: PhysicsSemanticItem | null) => void) | undefined
