@@ -495,10 +495,8 @@ export const DifferenceChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE
   const effectiveFrameLegend = Object.hasOwn(frameProps, "legend")
     ? frameProps
     : {
-        ...frameProps,
-        /* Frame props take precedence; this fallback composes after the spread
-         * only when the caller did not provide a legend. */
-        legend: customLegend
+        legend: customLegend,
+        ...frameProps
       }
   const setup = useChartSetup({
     responsive: props,
@@ -702,11 +700,6 @@ export const DifferenceChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE
     [tooltip, defaultTooltipContent]
   )
 
-  // Loading / empty state — returned only after every hook above has run, so
-  // the hook count is identical whether or not data is present. Mounting empty
-  // (loading skeleton) and then streaming in data must not change the number of
-  // hooks between renders, or React throws "Rendered more hooks than during the
-  // previous render."
   // Normalize once (memoized by the raw prop), before the early returns
   // (rules-of-hooks). Default is an opaque-top → faint-bottom fill; the memo
   // keeps a stable identity so a `true`/legacy input can't force a rebuild.
@@ -782,7 +775,6 @@ export const DifferenceChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE
     ...(yExtent && { yExtent }),
     ...setup.crosshairProps,
     ...frameProps,
-    // frameProps precedence: the caller's style still wins; this re-applies it with selection dimming preserved.
     ...frameStyles,
   }
 

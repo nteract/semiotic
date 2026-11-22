@@ -52,9 +52,7 @@ function makeProfile(overrides: Partial<ChartDataProfile> = {}): ChartDataProfil
   }
 }
 
-// ---------------------------------------------------------------------------
 // Classification
-// ---------------------------------------------------------------------------
 
 describe("classification", () => {
   it("classifies rows into bands using defaults", () => {
@@ -103,9 +101,7 @@ describe("classification", () => {
   })
 })
 
-// ---------------------------------------------------------------------------
 // Row resolution
-// ---------------------------------------------------------------------------
 
 describe("resolveRowsToNumber", () => {
   it("uses declared number directly", () => {
@@ -122,9 +118,7 @@ describe("resolveRowsToNumber", () => {
   })
 })
 
-// ---------------------------------------------------------------------------
 // Effective scale
-// ---------------------------------------------------------------------------
 
 describe("computeEffectiveScale", () => {
   it("uses measured profile when nothing declared", () => {
@@ -162,9 +156,7 @@ describe("computeEffectiveScale", () => {
   })
 })
 
-// ---------------------------------------------------------------------------
 // applyScaleBias
-// ---------------------------------------------------------------------------
 
 describe("applyScaleBias", () => {
   it("is a no-op when capability has no scaleFit and no per-chart override", () => {
@@ -248,9 +240,7 @@ describe("applyScaleBias", () => {
   })
 })
 
-// ---------------------------------------------------------------------------
 // scaleHints (declarative sugar)
-// ---------------------------------------------------------------------------
 
 describe("scaleHints", () => {
   it("rewards rows inside the sweet spot", () => {
@@ -295,9 +285,7 @@ describe("scaleHints", () => {
   })
 })
 
-// ---------------------------------------------------------------------------
 // Integration with suggestCharts
-// ---------------------------------------------------------------------------
 
 describe("scale-aware suggestCharts integration", () => {
   // A tabular dataset: 10 rows, simple x/y.

@@ -3,9 +3,7 @@ import { Link } from "react-router-dom"
 import PageLayout from "../components/PageLayout"
 import CodeBlock from "../components/CodeBlock"
 
-// ---------------------------------------------------------------------------
 // Migrating from Semiotic 1.x / 2.x to Semiotic 3
-// ---------------------------------------------------------------------------
 
 const installSnippet = `# React 18.1+ or 19 — Semiotic v3's peer-dep range is ^18.1.0 || ^19.0.0
 npm install semiotic@latest react@^18.1.0 react-dom@^18.1.0

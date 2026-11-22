@@ -384,9 +384,6 @@ describe("DifferenceChart", () => {
           />
         </TooltipProvider>
       )
-      // The frame must actually render with the data — if a hooks-count error
-      // fired, the chart's error boundary would swallow the render and the
-      // frame would never receive the data.
       expect(lastXYFrameProps.chartType).toBe("mixed")
       const hookErr = errSpy.mock.calls.some(
         (c) =>

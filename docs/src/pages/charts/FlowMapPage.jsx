@@ -11,9 +11,7 @@ import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data — international airports with real coordinates
-// ---------------------------------------------------------------------------
 
 const airports = [
   { id: "SFO", name: "San Francisco", lon: -122.375, lat: 37.619 },
@@ -89,9 +87,7 @@ const tradeFlows = [
   { source: "Singapore", target: "Mumbai", value: 22 },
 ]
 
-// ---------------------------------------------------------------------------
 // Loading style
-// ---------------------------------------------------------------------------
 
 const loadingStyle = {
   background: "var(--surface-1)",
@@ -102,9 +98,7 @@ const loadingStyle = {
   color: "var(--text-secondary)",
 }
 
-// ---------------------------------------------------------------------------
 // Streaming demo — push flows incrementally
-// ---------------------------------------------------------------------------
 
 const streamingFlowCode = `import { useRef, useEffect, useState } from "react"
 import { FlowMap, resolveReferenceGeography } from "semiotic/geo"
@@ -207,9 +201,7 @@ function StreamingFlowDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // World FlowMap wrapper — loads basemap asynchronously
-// ---------------------------------------------------------------------------
 
 function WorldFlowMap({ width = 700, height = 400, ...props }) {
   const [worldAreas, setWorldAreas] = useState(null)
@@ -233,9 +225,7 @@ function WorldFlowMap({ width = 700, height = 400, ...props }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Domestic US FlowMap wrapper — loads basemap asynchronously
-// ---------------------------------------------------------------------------
 
 function DomesticFlowMap({ width = 600, height = 400, ...props }) {
   const [worldAreas, setWorldAreas] = useState(null)
@@ -259,9 +249,7 @@ function DomesticFlowMap({ width = 600, height = 400, ...props }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Props definition
-// ---------------------------------------------------------------------------
 
 const flowMapProps = [
   { name: "nodes", type: "array", required: true, default: null, description: "Array of node objects with geographic coordinates." },
@@ -290,9 +278,7 @@ const flowMapProps = [
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamGeoFrame props." },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function FlowMapPage() {
   return (
@@ -328,9 +314,7 @@ export default function FlowMapPage() {
         geographic context.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <ChartGrounding component="FlowMap" />
 
       <h2 id="quick-start">Quick Start</h2>
@@ -402,9 +386,6 @@ function WorldFlowMap() {
         }
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="domestic-routes">US Domestic Routes</h3>
@@ -647,16 +628,11 @@ function WorldFlowMap() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="FlowMap" props={flowMapProps} />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Graduating */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
@@ -723,9 +699,6 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

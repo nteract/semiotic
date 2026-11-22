@@ -264,9 +264,7 @@ function MiniCodeBlock({ code, language = "jsx", showCopy = false }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Gallery data
-// ---------------------------------------------------------------------------
 
 const galleryLineData = [
   { month: 1, value: 42, series: "Revenue" },

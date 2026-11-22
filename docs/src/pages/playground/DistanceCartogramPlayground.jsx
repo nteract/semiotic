@@ -2,9 +2,7 @@ import React from "react"
 import { DistanceCartogram } from "semiotic/geo"
 import PlaygroundLayout from "../../components/PlaygroundLayout"
 
-// ---------------------------------------------------------------------------
 // Controls
-// ---------------------------------------------------------------------------
 
 const controls = [
   { name: "strength", type: "number", label: "Strength", group: "Cartogram",
@@ -21,9 +19,7 @@ const controls = [
     default: "" },
 ]
 
-// ---------------------------------------------------------------------------
 // Datasets
-// ---------------------------------------------------------------------------
 
 const romanCities = [
   { id: "Rome", lon: 12.5, lat: 41.9, travelDays: 0 },
@@ -101,9 +97,7 @@ const datasets = [
   },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function DistanceCartogramPlayground() {
   return (

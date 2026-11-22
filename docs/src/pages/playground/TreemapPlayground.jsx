@@ -2,9 +2,7 @@ import React from "react"
 import { Treemap } from "semiotic"
 import PlaygroundLayout from "../../components/PlaygroundLayout"
 
-// ---------------------------------------------------------------------------
 // Control schema
-// ---------------------------------------------------------------------------
 
 const controls = [
   { name: "colorByDepth", type: "boolean", label: "Color by Depth", group: "Color",
@@ -17,9 +15,7 @@ const controls = [
     default: "" },
 ]
 
-// ---------------------------------------------------------------------------
 // Datasets
-// ---------------------------------------------------------------------------
 
 const fileSystemData = {
   name: "project",
@@ -184,9 +180,7 @@ const datasets = [
   },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function TreemapPlayground() {
   return (

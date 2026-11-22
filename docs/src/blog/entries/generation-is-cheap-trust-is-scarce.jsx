@@ -3,9 +3,7 @@ import { Link } from "react-router-dom"
 import { BarChart } from "semiotic/ordinal"
 import { prepareChart } from "semiotic/ai"
 
-// ---------------------------------------------------------------------------
 // Demo data + two proposals a model might emit: one good, one broken
-// ---------------------------------------------------------------------------
 
 const REGIONS = [
   { region: "North", revenue: 128 },
@@ -121,9 +119,7 @@ function LoopDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Body
-// ---------------------------------------------------------------------------
 
 function Body() {
   return (

@@ -2,9 +2,7 @@ import React from "react"
 import { DonutChart } from "semiotic"
 import PlaygroundLayout from "../../components/PlaygroundLayout"
 
-// ---------------------------------------------------------------------------
 // Control schema
-// ---------------------------------------------------------------------------
 
 const controls = [
   { name: "innerRadius", type: "number", label: "Inner Radius", group: "Donut",
@@ -19,9 +17,7 @@ const controls = [
     default: "" },
 ]
 
-// ---------------------------------------------------------------------------
 // Datasets
-// ---------------------------------------------------------------------------
 
 const budgetData = [
   { category: "Housing", amount: 1850 },
@@ -70,9 +66,7 @@ const datasets = [
   },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function DonutChartPlayground() {
   return (

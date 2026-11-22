@@ -4,9 +4,7 @@ import PageLayout from "../components/PageLayout"
 import CodeBlock from "../components/CodeBlock"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const timeSeriesData = [
   { month: 1, revenue: 42000 },
@@ -118,9 +116,7 @@ const treemapData = {
   ],
 }
 
-// ---------------------------------------------------------------------------
 // Gallery card
-// ---------------------------------------------------------------------------
 
 function GalleryCard({ title, svgString, code, darkCard }) {
   return (
@@ -150,9 +146,7 @@ function GalleryCard({ title, svgString, code, darkCard }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Chart configs — each entry produces one gallery card
-// ---------------------------------------------------------------------------
 
 function useGalleryCharts() {
   return useMemo(() => {
@@ -535,9 +529,7 @@ function useGalleryCharts() {
   }, [])
 }
 
-// ---------------------------------------------------------------------------
 // Page
-// ---------------------------------------------------------------------------
 
 export default function SSRGalleryPage() {
   const charts = useGalleryCharts()

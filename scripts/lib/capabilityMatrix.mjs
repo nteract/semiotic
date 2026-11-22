@@ -101,21 +101,9 @@ export function parseCapabilityMatrix() {
     }
   }
 
-  // Sort by category then alphabetical within category — same order
-  // both md/json consumers expect.
-  const ORDER = [
-    "xy",
-    "ordinal",
-    "network",
-    "geo",
-    "realtime",
-    "physics",
-    "value",
-    "wordcloud"
-  ]
   entries.sort((a, b) => {
-    const ai = ORDER.indexOf(a.category)
-    const bi = ORDER.indexOf(b.category)
+    const ai = CATEGORY_ORDER.indexOf(a.category)
+    const bi = CATEGORY_ORDER.indexOf(b.category)
     if (ai !== bi) return ai - bi
     return a.name.localeCompare(b.name)
   })
@@ -134,3 +122,18 @@ export const CATEGORY_ORDER = [
   "value",
   "wordcloud"
 ]
+
+/** Published chart capabilities, in the order used by the docs and suggestion tools. */
+export function capabilityIndex(entries) {
+  return Object.fromEntries(entries.map(e => [e.name, {
+    category: e.category,
+    supportsLegend: e.legend,
+    supportsSelection: e.selection,
+    supportsLinkedHover: e.linkedHover,
+    supportsPush: e.push,
+    supportsSSR: e.ssr,
+    colorModel: e.colorModel,
+    layoutMode: e.layoutMode,
+    specialFeatures: e.features
+  }]))
+}

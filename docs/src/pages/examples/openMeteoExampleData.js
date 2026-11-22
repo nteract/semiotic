@@ -1,3 +1,4 @@
+import { dateFromDay, END_DAY, SNAPSHOT_END, SNAPSHOT_TODAY, SNAPSHOT_YEAR } from "./weatherSnapshot"
 import presetBaselines from "./data/openMeteoPresetBaselines.json"
 
 const DAY_MS = 86_400_000
@@ -59,9 +60,9 @@ export async function fetchOpenMeteoExampleData(profile, options = {}) {
 
   const {
     signal,
-    year = 2026,
-    todayDate = "2026-06-26",
-    endDate = "2026-07-08",
+    year = SNAPSHOT_YEAR,
+    todayDate = SNAPSHOT_TODAY,
+    endDate = SNAPSHOT_END,
   } = options
   const point = {
     lat: Number(profile.lat.toFixed(3)),
@@ -311,7 +312,7 @@ function buildLiveWeatherData(statsByDay, currentByDay, year, fallbackConditions
 }
 
 function buildClimateRows(statsByDay, currentByDay, endDate, year) {
-  const endDay = dayOfYear(endDate, year) ?? 188
+  const endDay = dayOfYear(endDate, year) ?? END_DAY
   return statsByDay.slice(0, endDay + 1).map((stats) => {
     const current = currentByDay.get(stats.day)
     return {
@@ -350,10 +351,6 @@ function dayOfYear(isoDate, displayYear) {
   if (!year || !month || !day || month === 2 && day === 29) return null
   const date = Date.UTC(displayYear, month - 1, day)
   return Math.round((date - Date.UTC(displayYear, 0, 1)) / DAY_MS)
-}
-
-function dateFromDay(day, year) {
-  return new Date(Date.UTC(year, 0, 1 + day))
 }
 
 function shiftIsoDate(isoDate, days) {

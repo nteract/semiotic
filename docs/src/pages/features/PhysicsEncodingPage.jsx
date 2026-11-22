@@ -168,9 +168,7 @@ export default function PhysicsEncodingPage() {
         important value discoverable only by watching a collision.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Channel lab */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="lab">Test the Channel Families</h2>
 
       <p>
@@ -180,9 +178,6 @@ export default function PhysicsEncodingPage() {
 
       <EncodingLab />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Channel families */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="channels">Channel families</h2>
 
       <p>
@@ -200,9 +195,7 @@ export default function PhysicsEncodingPage() {
         ))}
       </ul>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Encode / execute / observe */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="model">Encode, execute, observe</h2>
 
       <p>A physics chart is authored in three layers, each with a clear owner:</p>
@@ -224,9 +217,7 @@ export default function PhysicsEncodingPage() {
         </li>
       </ul>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Compiler API */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="api">Compile accessors before simulation</h2>
 
       <p>
@@ -236,9 +227,7 @@ export default function PhysicsEncodingPage() {
       </p>
       <CodeBlock language="jsx" code={compilerCode} />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Visible twin */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="visible-twin">Give dynamics a visible twin</h2>
 
       <p>
@@ -248,9 +237,7 @@ export default function PhysicsEncodingPage() {
       </p>
       <CodeBlock language="js" code={visibleTwinCode} />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Geometry owner */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="geometry">One owner for authored geometry</h2>
 
       <p>
@@ -260,9 +247,6 @@ export default function PhysicsEncodingPage() {
         and accessibility disagree.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

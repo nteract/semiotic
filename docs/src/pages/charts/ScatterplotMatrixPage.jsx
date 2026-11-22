@@ -9,9 +9,7 @@ import ChartGrounding from "../../components/ChartGrounding"
 import CodeBlock from "../../components/CodeBlock"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data — iris-like dataset (~60 points, 4 numeric fields, 1 species)
-// ---------------------------------------------------------------------------
 
 const irisData = [
   // setosa (20 points)
@@ -88,9 +86,7 @@ const fieldLabels = {
   petalWidth: "Petal Width",
 }
 
-// ---------------------------------------------------------------------------
 // Props definition for PropTable
-// ---------------------------------------------------------------------------
 
 const splomProps = [
   { name: "data", type: "array", required: true, default: null, description: "Array of data objects. Each object should contain numeric fields for plotting and optionally a categorical field for coloring." },
@@ -118,9 +114,7 @@ const splomProps = [
   { name: "className", type: "string", required: false, default: null, description: "CSS class name applied to the outermost container." },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function ScatterplotMatrixPage() {
   return (
@@ -159,9 +153,7 @@ export default function ScatterplotMatrixPage() {
         categorical variable with <code>colorBy</code> to reveal group structure.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <ChartGrounding component="ScatterplotMatrix" />
 
       <h2 id="quick-start">Quick Start</h2>
@@ -193,9 +185,6 @@ export default function ScatterplotMatrixPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="hover-interaction">Hover Interaction</h3>
@@ -316,16 +305,10 @@ export default function ScatterplotMatrixPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="ScatterplotMatrix" props={splomProps} />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

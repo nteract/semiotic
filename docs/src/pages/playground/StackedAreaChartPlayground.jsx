@@ -2,9 +2,7 @@ import React from "react"
 import { StackedAreaChart } from "semiotic"
 import PlaygroundLayout from "../../components/PlaygroundLayout"
 
-// ---------------------------------------------------------------------------
 // Control schema
-// ---------------------------------------------------------------------------
 
 const controls = [
   { name: "curve", type: "select", label: "Curve", group: "Area",
@@ -29,9 +27,7 @@ const controls = [
     default: "" },
 ]
 
-// ---------------------------------------------------------------------------
 // Datasets
-// ---------------------------------------------------------------------------
 
 const quarterlyRevenue = [
   { quarter: 1, amount: 120, product: "Software" },
@@ -143,9 +139,7 @@ const datasets = [
   },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function StackedAreaChartPlayground() {
   return (

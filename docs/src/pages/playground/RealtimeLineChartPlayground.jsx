@@ -4,9 +4,7 @@ import PageLayout from "../../components/PageLayout"
 import PropControls from "../../components/PropControls"
 import CodeBlock from "../../components/CodeBlock"
 
-// ---------------------------------------------------------------------------
 // Control schemas (shared + per-chart-type)
-// ---------------------------------------------------------------------------
 
 const sharedControls = [
   { name: "windowSize", type: "number", label: "Buffer Size", group: "Data",
@@ -37,9 +35,7 @@ const waterfallControls = [
     default: 1, min: 0, max: 5, step: 1 },
 ]
 
-// ---------------------------------------------------------------------------
 // Signal generators
-// ---------------------------------------------------------------------------
 
 const signals = [
   {
@@ -82,9 +78,7 @@ const signals = [
   },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function RealtimeLineChartPlayground() {
   const [chartType, setChartType] = useState("line")

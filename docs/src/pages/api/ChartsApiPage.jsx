@@ -292,9 +292,7 @@ const realtimeHeatmapKeyProps = [
   { name: "enableHover", type: "boolean | object", required: false, default: null, description: "Enable hover annotations on cells." },
 ]
 
-// ---------------------------------------------------------------------------
 // Chart registry -- the single source of truth for the index
-// ---------------------------------------------------------------------------
 
 const chartCategories = [
   {
@@ -523,9 +521,7 @@ const chartCategories = [
   },
 ]
 
-// ---------------------------------------------------------------------------
 // Styles
-// ---------------------------------------------------------------------------
 
 const styles = {
   intro: {
@@ -589,9 +585,7 @@ const styles = {
   },
 }
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function ChartsApiPage() {
   return (

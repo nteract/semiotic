@@ -1,48 +1,15 @@
 #!/usr/bin/env node
-/**
- * Verify the capability tags in `chartSpecs.ts` against runtime
- * behavior. The audit's anti-goal is "Do not make registry metadata
- * aspirational. It should describe real runtime behavior and be
- * checked." — this script is the check.
- *
- * Today the script enforces the cheapest, highest-signal runtime locks:
- *
- *   1. `supportsSSR: true` ↔ entry in `serverChartConfigs.ts`
- *      CHART_CONFIGS. A chart claiming SSR support must be
- *      registered for `renderChart()`. A chart in CHART_CONFIGS but
- *      claiming `supportsSSR: false` is also an error. Server configs
- *      outside chartSpecs must appear in the explicit server-only
- *      allowlist below.
- *
- *   2. `supportsPush: true` ↔ HOC source invokes a recognized imperative
- *      handle bridge. This includes the canonical shared realtime helper;
- *      charts claiming push support without a real invocation would expose
- *      an inconsistent ref API.
- *
- *   3. Physics `supportsSelection` ↔ a direct `usePhysicsSelection` call.
- *
- *   4. `supportsLinkedHover: true` ↔ standardized selection wiring.
- *
- *   5. `layoutMode: "custom"` ↔ custom-layout dispatch.
- *
- *   6. `ai/capabilities.json` mirrors chartSpecs.
- *
- * Usage:
- *   node scripts/check-capabilities.mjs
- *
- * Exit code 1 on any mismatch.
- */
-
 import fs from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { readRegistryKeys } from "./lib/registry-source.cjs"
-import { parseCapabilityMatrix, CATEGORY_ORDER } from "./lib/capabilityMatrix.mjs"
+import { capabilityIndex, parseCapabilityMatrix } from "./lib/capabilityMatrix.mjs"
 import { renderAccessCapabilitiesModule } from "./lib/accessCapabilities.mjs"
 import {
   PUSH_HANDLE_CALLEES,
   readCapabilityWiring,
-  capabilitySignals
+  capabilitySignals,
+  hasLegendControl
 } from "./lib/capabilitySourceChecks.mjs"
 
 const __filename = fileURLToPath(import.meta.url)
@@ -64,28 +31,9 @@ const ACCESS_CAPABILITIES_PATH = path.join(
 )
 const AI_SCHEMA_PATH = path.join(ROOT, "ai/schema.json")
 
-// Parse via the shared helper so this script, the markdown
-// generator, and the JSON generator all read chartSpecs the same
-// way. Returns entries shaped { name, category, legend, selection,
-// linkedHover, push, ssr, colorModel, layoutMode, features } sorted
-// by (category, name).
 const matrix = parseCapabilityMatrix()
-// Re-shape into the field names the rest of this script expects.
-// Keeping the local rename is intentional: the existing readability
-// of `entry.supportsSSR` / `.supportsPush` reads like a capability
-// claim better than `.ssr` / `.push`, especially in error messages.
-const specEntries = matrix.map((e) => ({
-  name: e.name,
-  category: e.category,
-  supportsSSR: e.ssr,
-  supportsPush: e.push,
-  supportsLinkedHover: e.linkedHover,
-  supportsLegend: e.legend,
-  supportsSelection: e.selection,
-  colorModel: e.colorModel,
-  layoutMode: e.layoutMode,
-  specialFeatures: e.features
-}))
+const published = capabilityIndex(matrix)
+const specEntries = Object.entries(published).map(([name, entry]) => ({ name, ...entry }))
 
 if (specEntries.length === 0) {
   console.error(
@@ -130,12 +78,7 @@ const SERVER_CONFIG_ONLY = new Map([
   ]
 ])
 
-// ── Index HOC source files for the push-API gate ───────────────────
-//
-// `supportsPush: true` charts must invoke one of the narrowly recognized
-// imperative-handle bridges. Read each HOC's source and check for the call;
-// importing a helper without invoking it does not satisfy the gate.
-const HOC_DIRS = ["../recipes/atlas", "xy", "ordinal", "network", "geo", "realtime", "physics", "wordcloud"]
+const HOC_DIRS = ["../recipes/atlas", "xy", "ordinal", "network", "geo", "realtime", "physics", "value", "wordcloud"]
 const hocSources = new Map()
 for (const dir of HOC_DIRS) {
   const fullDir = path.join(CHARTS_DIR, dir)
@@ -161,11 +104,9 @@ for (const dir of HOC_DIRS) {
 const errors = []
 
 const specNames = new Set(specEntries.map((entry) => entry.name))
-const recipeNames = new Set(
-  JSON.parse(fs.readFileSync(AI_SCHEMA_PATH, "utf8")).tools
-    .filter((tool) => tool.function?.["x-semiotic-kind"] === "recipe")
-    .map((tool) => tool.function.name)
-)
+const schemaTools = JSON.parse(fs.readFileSync(AI_SCHEMA_PATH, "utf8")).tools.map(tool => tool.function)
+const schemaProps = new Map(schemaTools.map(tool => [tool.name, tool.parameters?.properties]))
+const recipeNames = new Set(schemaTools.filter(tool => tool["x-semiotic-kind"] === "recipe").map(tool => tool.name))
 for (const chart of [...ssrRegistered].sort()) {
   if (
     !specNames.has(chart) &&
@@ -193,7 +134,6 @@ for (const chart of SERVER_CONFIG_ONLY.keys()) {
 }
 
 for (const e of specEntries) {
-  // Lock 1: SSR claim ↔ CHART_CONFIGS membership.
   const inServerConfigs = ssrRegistered.has(e.name)
   if (e.supportsSSR && !inServerConfigs) {
     errors.push(
@@ -208,38 +148,14 @@ for (const e of specEntries) {
     )
   }
 
-  // Lock 2: push claim ↔ a recognized push wiring mechanism.
-  // Paths that qualify:
-  //   - `useFrameImperativeHandle` — the standard ref bridge used by
-  //     XY, network, and the simpler ordinal HOCs.
-  //   - `useSizeEncoding` — wraps useFrameImperativeHandle to track size
-  //     domains before forwarding pushes in XY, swarm, and point-map HOCs.
-  //   - `useOrdinalStreaming` — the aggregator-aware push pipeline
-  //     used by BarChart family.
-  //   - `useImperativeHandle(` (a raw call, not just an import) —
-  //     bespoke bridges for composite charts (ScatterplotMatrix,
-  //     MinimapChart) and aggregators that pre-process via a
-  //     specialized hook (LikertChart via useLikertAggregation).
-  //   - `usePhysicsHocHandle` — the StreamPhysicsFrame row-level
-  //     bridge used by physics HOCs.
-  //   - `useProcessSankeyPush` — ProcessSankey's edge/node push buffer
-  //     (extracts useFrameImperativeHandle into a co-located hook so
-  //     the HOC source stays under the file-size budget).
-  //   - `useRealtimeFrameHandle` — the canonical ref bridge shared by
-  //     realtime HOCs that do not need a chart-specific handle extension.
-  //   - `useRealtimeLineIngestion` — the aggregation/reordering handle bridge.
-  // The shared hooks are preferred; the raw call is the fallback for
-  // charts whose ref API legitimately needs custom plumbing. All
-  // signal that the chart exposes a working `ref.current.push`.
-  const source = hocSources.get(e.name)
-  const wiring = capabilitySignals(readCapabilityWiring(source))
+  // The bounded temporal wrapper forwards to RealtimeHistogram in the same module.
+  const source = hocSources.get(e.name === "TemporalHistogram" ? "RealtimeHistogram" : e.name)
+  const syntax = readCapabilityWiring(source)
+  const wiring = capabilitySignals(syntax)
+  if (e.supportsLegend && !hasLegendControl(schemaProps.get(e.name), syntax)) {
+    errors.push(`✗ ${e.name}: supportsLegend=true requires a public legend control or a forwarded frame legend.`)
+  }
 
-  // Lock 3: physics selection claims are bidirectionally tied to the public
-  // HOC bridge. Scope this deliberately to chartSpecs' physics category and a
-  // direct hook call in that HOC's source. A generic useSelection-style hook
-  // elsewhere in the implementation is not the standard PhysicsSharedChartProps
-  // contract, and network charts such as ProcessSankey must not qualify merely
-  // because their internals also reason about selection.
   if (e.category === "physics") {
     const wiresPhysicsSelection = wiring.physicsSelection
     if (e.supportsSelection !== wiresPhysicsSelection) {
@@ -251,97 +167,36 @@ for (const e of specEntries) {
     }
   }
 
-  if (e.supportsPush) {
-    if (!source) {
-      // Couldn't find the HOC source — skip rather than false-positive.
-      continue
-    }
-    if (!wiring.push) {
-      errors.push(
-        `✗ ${e.name}: capabilities.supportsPush=true but does not wire a push handle ` +
-          `(${PUSH_HANDLE_CALLEES.join(", ")}). ` +
-          `Either wire one of those, or set supportsPush=false (and document the exemption in specialFeatures).`
-      )
-    }
+  if (e.supportsPush && !wiring.push) {
+    errors.push(
+      `✗ ${e.name}: capabilities.supportsPush=true but does not wire a push handle ` +
+        `(${PUSH_HANDLE_CALLEES.join(", ")}). ` +
+        `Either wire one of those, or set supportsPush=false (and document the exemption in specialFeatures).`
+    )
   }
 
-  // Lock 4: linkedHover claim ↔ useChartSelection or one of its standard
-  // wrappers: useChartSetup, useNetworkChartSetup, or usePhysicsSelection.
-  // These hooks are the standardized way to wire `linkedHover` into the
-  // frame's hover-selection
-  // pipeline; charts claiming linked-hover support without it would
-  // have a no-op `linkedHover` prop.
-  if (e.supportsLinkedHover) {
-    if (!source) continue
-    // Rendered custom-chart wrappers inherit their selection setup.
-    if (!wiring.linkedHover) {
-      errors.push(
-        `✗ ${e.name}: capabilities.supportsLinkedHover=true but does not wire selection. ` +
-          `Either invoke useChartSelection / useChartSetup / useNetworkChartSetup / usePhysicsSelection, render a custom-chart wrapper, or set ` +
-          `supportsLinkedHover=false.`
-      )
-    }
+  if (e.supportsLinkedHover && !wiring.linkedHover) {
+    errors.push(
+      `✗ ${e.name}: capabilities.supportsLinkedHover=true but does not wire selection. ` +
+        `Either invoke useChartSelection / useChartSetup / useNetworkChartSetup / usePhysicsSelection, render a custom-chart wrapper, or set ` +
+        `supportsLinkedHover=false.`
+    )
   }
 
-  // Lock 5: layoutMode === "custom" ↔ customNetworkLayout /
-  // customXYLayout / customOrdinalLayout reference. The escape-hatch
-  // claim must be backed by a real customLayout dispatch.
-  if (e.layoutMode === "custom") {
-    if (!source) continue
-    if (!wiring.customLayout) {
-      errors.push(
-        `✗ ${e.name}: capabilities.layoutMode="custom" but does not reference any customLayout ` +
-          `escape hatch. Either wire customNetworkLayout/customXYLayout/customOrdinalLayout, or ` +
-          `set layoutMode="plugin".`
-      )
-    }
+  if (e.layoutMode === "custom" && !wiring.customLayout) {
+    errors.push(
+      `✗ ${e.name}: capabilities.layoutMode="custom" but does not reference any customLayout ` +
+        `escape hatch. Either wire customNetworkLayout/customXYLayout/customOrdinalLayout, or ` +
+        `set layoutMode="plugin".`
+    )
   }
-
-  // TODO (next pass):
-  //   - supportsLegend ↔ a legend signal (showLegend prop on the
-  //     props interface OR useChartLegendAndMargin import). Harder
-  //     to gate cleanly because chord-style "interaction-only"
-  //     legends pass `showLegend: false` to the hook but still
-  //     produce a categorical interaction surface.
 }
 
-// ── Lock 6: ai/capabilities.json mirrors chartSpecs ───────────────
-//
-// `ai/capabilities.json` is consumed by `ai/chartSuggestions.cjs` so
-// the AI suggestion path can filter recommendations by capability
-// (push, linkedHover, ssr, etc.) without re-parsing TS at runtime.
-// If chartSpecs has changed since the JSON was last regenerated, the
-// AI surface is silently stale — fail with a regenerate hint.
 const CAPABILITIES_JSON_PATH = path.join(ROOT, "ai/capabilities.json")
 if (fs.existsSync(CAPABILITIES_JSON_PATH)) {
-  const expected = {}
-  for (const e of specEntries) {
-    expected[e.name] = {
-      category: e.category,
-      supportsLegend: e.supportsLegend,
-      supportsSelection: e.supportsSelection,
-      supportsLinkedHover: e.supportsLinkedHover,
-      supportsPush: e.supportsPush,
-      supportsSSR: e.supportsSSR,
-      colorModel: e.colorModel,
-      layoutMode: e.layoutMode,
-      specialFeatures: e.specialFeatures
-    }
-  }
-  // Sort keys to match the generator's output (category-then-name).
-  const ORDER = CATEGORY_ORDER
-  const sortedNames = Object.keys(expected).sort((a, b) => {
-    const ai = ORDER.indexOf(expected[a].category)
-    const bi = ORDER.indexOf(expected[b].category)
-    if (ai !== bi) return ai - bi
-    return a.localeCompare(b)
-  })
-  const expectedSorted = {}
-  for (const name of sortedNames) expectedSorted[name] = expected[name]
-
   const actual = JSON.parse(fs.readFileSync(CAPABILITIES_JSON_PATH, "utf8"))
   const actualCharts = actual?.charts ?? {}
-  if (JSON.stringify(actualCharts) !== JSON.stringify(expectedSorted)) {
+  if (JSON.stringify(actualCharts) !== JSON.stringify(published)) {
     errors.push(
       "ai/capabilities.json drifted from chartSpecs. Regenerate with `npm run docs:capabilities`."
     )
@@ -352,9 +207,6 @@ if (fs.existsSync(CAPABILITIES_JSON_PATH)) {
   )
 }
 
-// The public access/evidence entries use a compact generated map instead of
-// importing the full schema registry. Lock it to the same parsed source so
-// public claims cannot drift while the tooling bundle stays narrow.
 const expectedAccessCapabilities = renderAccessCapabilitiesModule(matrix)
 if (!fs.existsSync(ACCESS_CAPABILITIES_PATH)) {
   errors.push(

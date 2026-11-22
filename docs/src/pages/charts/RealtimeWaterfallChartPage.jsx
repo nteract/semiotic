@@ -7,9 +7,7 @@ import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Responsive container hook
-// ---------------------------------------------------------------------------
 
 function useContainerWidth() {
   const ref = useRef(null)
@@ -30,9 +28,7 @@ function useContainerWidth() {
   return [ref, width]
 }
 
-// ---------------------------------------------------------------------------
 // Live streaming demos
-// ---------------------------------------------------------------------------
 
 function BasicWaterfallDemo() {
   const chartRef = useRef()
@@ -143,9 +139,7 @@ function StyledWaterfallDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Props definition for PropTable
-// ---------------------------------------------------------------------------
 
 const realtimeWaterfallChartProps = [
   { name: "data", type: "array", required: false, default: "[]", description: "Controlled data array. Each object should contain fields matched by timeAccessor and valueAccessor. Positive values represent gains, negative values represent losses." },
@@ -179,9 +173,7 @@ const realtimeWaterfallChartProps = [
   { name: "className", type: "string", required: false, default: null, description: "CSS class name for the chart container." },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function RealtimeWaterfallChartPage() {
   return (
@@ -227,9 +219,6 @@ export default function RealtimeWaterfallChartPage() {
         stream data in.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="quick-start">Quick Start</h2>
 
       <p>
@@ -273,9 +262,6 @@ function StreamingWaterfall() {
         />
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="with-connectors">With Connector Lines</h3>
@@ -324,16 +310,11 @@ function StreamingWaterfall() {
         />
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="RealtimeWaterfallChart" props={realtimeWaterfallChartProps} />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
@@ -389,9 +370,6 @@ function StreamingWaterfall() {
         StreamXYFrame.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

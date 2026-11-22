@@ -9,9 +9,7 @@ import {
 } from "./withChartWrapper"
 import type { Datum } from "./datumTypes"
 
-// ---------------------------------------------------------------------------
 // Helpers
-// ---------------------------------------------------------------------------
 
 /** A child component that always throws during render */
 function ThrowingChild({ message }: { message: string }): React.ReactElement {
@@ -26,9 +24,7 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-// ---------------------------------------------------------------------------
 // SafeRender
-// ---------------------------------------------------------------------------
 
 describe("SafeRender", () => {
   it("renders children when no error is thrown", () => {
@@ -61,9 +57,7 @@ describe("SafeRender", () => {
   })
 })
 
-// ---------------------------------------------------------------------------
 // warnMissingField
-// ---------------------------------------------------------------------------
 
 describe("warnMissingField", () => {
   it("warns when string accessor is not found in data", () => {
@@ -102,9 +96,7 @@ describe("warnMissingField", () => {
   })
 })
 
-// ---------------------------------------------------------------------------
 // renderEmptyState
-// ---------------------------------------------------------------------------
 
 describe("renderEmptyState", () => {
   it("returns null when emptyContent is false", () => {
@@ -156,9 +148,7 @@ describe("renderEmptyState", () => {
   })
 })
 
-// ---------------------------------------------------------------------------
 // renderLoadingState
-// ---------------------------------------------------------------------------
 
 describe("renderLoadingState", () => {
   it("returns null when loading is false", () => {

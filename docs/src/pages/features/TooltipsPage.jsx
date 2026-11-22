@@ -8,9 +8,7 @@ import PropTable from "../../components/PropTable"
 import PageLayout from "../../components/PageLayout"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const scatterData = [
   { x: 10, y: 20, category: "A", value: 100 },
@@ -44,9 +42,7 @@ const colorHash = {
   C: "#10b981",
 }
 
-// ---------------------------------------------------------------------------
 // Tooltip props
-// ---------------------------------------------------------------------------
 
 const tooltipUtilityProps = [
   { name: "title", type: "string | function", required: false, default: "auto", description: "Field name or function to display as the tooltip header." },
@@ -64,9 +60,7 @@ const multiLineTooltipProps = [
   { name: "className", type: "string", required: false, default: null, description: "Custom CSS class for the tooltip container." },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function TooltipsPage() {
   return (
@@ -87,9 +81,6 @@ export default function TooltipsPage() {
         position within the plot when its size permits.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Format cascade */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="format-cascade">Format Cascade</h2>
 
       <p>
@@ -192,9 +183,6 @@ export default function TooltipsPage() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* With Charts */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="with-charts">With Charts</h2>
 
       <p>
@@ -394,9 +382,6 @@ function withTooltipSurface(content) {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* With Frames */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="with-frames">With Frames</h2>
 
       <h3 id="simple-tooltip">Simple Tooltip</h3>
@@ -571,9 +556,6 @@ function withTooltipSurface(content) {
         title="Crosshair Tooltip with Guide Lines"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Configuration */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="configuration">Configuration</h2>
 
       <h3 id="tooltip-utility">Tooltip() API</h3>
@@ -684,9 +666,6 @@ hoverAnnotation={[
 }`}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

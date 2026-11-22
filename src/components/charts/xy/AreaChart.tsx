@@ -602,7 +602,6 @@ export const AreaChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
     ...(yExtent && { yExtent }),
     ...setup.crosshairProps,
     ...frameProps,
-    // frameProps precedence: the caller's style still wins; this re-applies it with selection dimming preserved.
     ...(userLineStyle && { lineStyle: userLineStyle }),
     ...(userAreaStyle && { areaStyle: userAreaStyle }),
   }

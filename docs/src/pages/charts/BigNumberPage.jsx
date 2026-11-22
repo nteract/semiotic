@@ -43,9 +43,7 @@ const bigNumberProps = [
   { name: "chartSize", type: "number", description: "Pixels reserved for chartSlot; defaults to 44px in tile mode and 80px in presentation mode." },
 ]
 
-// ---------------------------------------------------------------------------
 // Shared styles for this page
-// ---------------------------------------------------------------------------
 
 const gridStyle = {
   display: "grid",
@@ -60,13 +58,9 @@ const sectionNote = {
   margin: "4px 0 12px",
 }
 
-// ---------------------------------------------------------------------------
 // Streaming demo
-// ---------------------------------------------------------------------------
 
-// ---------------------------------------------------------------------------
 // Theming preset cycler
-// ---------------------------------------------------------------------------
 
 const THEMING_PRESETS = [
   "light",
@@ -199,9 +193,7 @@ function ThemingBigNumberDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Streaming demo
-// ---------------------------------------------------------------------------
 
 function StreamingBigNumberDemo() {
   const ref = useRef(null)
@@ -245,9 +237,7 @@ function StreamingBigNumberDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Page
-// ---------------------------------------------------------------------------
 
 export default function BigNumberPage() {
   return (

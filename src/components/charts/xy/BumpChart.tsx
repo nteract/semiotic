@@ -376,9 +376,6 @@ export const BumpChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
         axes,
         axisExtent: "exact",
         ...restFrameProps,
-        // Composes after the frameProps spread: a side legend that shares a
-        // margin with endpoint labels starts past them, unless the caller set
-        // its own legendLayout.sideGutter.
         ...(legendSideGutter != null && restFrameProps.legendLayout?.sideGutter == null && {
           legendLayout: { ...restFrameProps.legendLayout, sideGutter: legendSideGutter },
         }),

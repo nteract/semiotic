@@ -540,7 +540,6 @@ export const Heatmap = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ fo
     ...(yExtent && { yExtent }),
     ...crosshairFrameProps,
     ...frameProps,
-    // frameProps precedence: the caller's style still wins; this re-applies it with selection dimming preserved.
     ...(userCellStyle && { areaStyle: userCellStyle }),
   }
 

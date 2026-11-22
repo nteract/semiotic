@@ -17,9 +17,7 @@ import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const barData = [
   { category: "Q1", value: 120 },
@@ -76,9 +74,7 @@ const donutData = [
   { category: "Sales", value: 20 },
 ]
 
-// ---------------------------------------------------------------------------
 // Preset metadata for display
-// ---------------------------------------------------------------------------
 
 const PRESET_GROUPS = [
   {
@@ -115,9 +111,7 @@ const PRESET_GROUPS = [
   },
 ]
 
-// ---------------------------------------------------------------------------
 // CSS variable editor state
-// ---------------------------------------------------------------------------
 
 const EDITABLE_VARS = [
   { key: "background", cssVar: "--semiotic-bg", label: "Background", type: "color" },
@@ -128,9 +122,7 @@ const EDITABLE_VARS = [
   { key: "primary", cssVar: "--semiotic-primary", label: "Primary", type: "color" },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 function ColorSwatch({ color, size = 16 }) {
   return (
@@ -433,9 +425,7 @@ ${overrideLines.join("\n")}
         tokens, or JSX code.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Preset Selector */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="presets">Theme Presets</h2>
 
       <p>Select a preset as your starting point:</p>
@@ -469,9 +459,7 @@ ${overrideLines.join("\n")}
         ))}
       </div>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Customization */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="customize">Customize</h2>
 
       <p>
@@ -515,9 +503,6 @@ ${overrideLines.join("\n")}
         onOverride={handleOverride}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Live Preview */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="preview">Live Preview</h2>
 
       <ThemeProvider theme={resolvedTheme}>
@@ -626,9 +611,6 @@ ${overrideLines.join("\n")}
         </div>
       </ThemeProvider>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Export */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="export">Export</h2>
 
       <p>
@@ -667,9 +649,6 @@ ${overrideLines.join("\n")}
         language={codeFormat === "tokens" ? "json" : codeFormat === "css" ? "css" : "jsx"}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Preset Gallery */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="gallery">Preset Gallery</h2>
 
       <p>
@@ -746,9 +725,7 @@ ${overrideLines.join("\n")}
         ))}
       </div>
 
-      {/* ----------------------------------------------------------------- */}
       {/* SSR / data-semiotic-theme */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="ssr-theming">SSR Theme Switching</h2>
 
       <p>
@@ -787,9 +764,6 @@ const allCSS = Object.entries(THEME_PRESETS)
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

@@ -8,9 +8,7 @@ import PropTable from "../../components/PropTable"
 import PageLayout from "../../components/PageLayout"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const lineData = [
   { month: 1, revenue: 12000 },
@@ -41,18 +39,14 @@ const frameLineData = [
   },
 ]
 
-// ---------------------------------------------------------------------------
 // Props
-// ---------------------------------------------------------------------------
 
 const responsiveProps = [
   { name: "responsiveWidth", type: "boolean", required: false, default: "false", description: "When true, the frame width (size[0]) automatically matches the container width." },
   { name: "responsiveHeight", type: "boolean", required: false, default: "false", description: "When true, the frame height (size[1]) automatically matches the container height." },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function ResponsivePage() {
   return (
@@ -73,9 +67,6 @@ export default function ResponsivePage() {
         container width is not known ahead of time.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* With Charts */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="with-charts">With Charts</h2>
 
       <p>
@@ -132,9 +123,6 @@ export default function ResponsivePage() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* With Frames */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="with-frames">With Frames</h2>
 
       <h3 id="responsive-xy">StreamXYFrame (Responsive)</h3>
@@ -233,9 +221,6 @@ export default function ResponsivePage() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Configuration */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="configuration">Configuration</h2>
 
       <h3 id="responsive-components">Available Responsive Components</h3>
@@ -356,9 +341,6 @@ export default function ResponsivePage() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

@@ -6,9 +6,7 @@ import CodeBlock from "../../components/CodeBlock"
 import PropTable from "../../components/PropTable"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Site theme hook — reads data-theme from the docs site root element
-// ---------------------------------------------------------------------------
 
 function useSiteTheme() {
   const [theme, setTheme] = useState(() => {
@@ -28,9 +26,7 @@ function useSiteTheme() {
   return theme
 }
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const lineData = [
   {
@@ -71,9 +67,7 @@ const barDataByYear = {
 
 const barData = barDataByYear[2024]
 
-// ---------------------------------------------------------------------------
 // Prop definitions
-// ---------------------------------------------------------------------------
 
 const containerProps = [
   {
@@ -203,9 +197,7 @@ const containerProps = [
   },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 const notificationDemoItems = [
   {
@@ -259,9 +251,6 @@ export default function ChartContainersPage() {
         via <Link to="/features/theming">ThemeProvider</Link>.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Basic usage */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="basic-usage">Basic Usage</h2>
 
       <p>
@@ -309,9 +298,6 @@ export default function ChartContainersPage() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Custom controls */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="custom-controls">Custom Controls</h2>
 
       <p>
@@ -378,9 +364,6 @@ const dataByYear = {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Data Summary */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="data-summary">Data Summary</h2>
 
       <p>
@@ -437,9 +420,6 @@ const dataByYear = {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Notifications */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="notifications">Notifications</h2>
 
       <p>
@@ -584,9 +564,7 @@ const numericNotices = toDataAuditNotifications(report)
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Loading and Error states */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="loading-error">Loading & Error States</h2>
 
       <p>
@@ -659,9 +637,6 @@ const numericNotices = toDataAuditNotifications(report)
         documentation on empty, loading, and error patterns.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Status badge */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="status-badge">Status Badge</h2>
 
       <p>
@@ -721,9 +696,6 @@ const numericNotices = toDataAuditNotifications(report)
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Imperative handle */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="imperative-handle">Imperative Handle</h2>
 
       <p>
@@ -753,9 +725,6 @@ function Dashboard() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Dark theme */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="dark-theme">Dark Theme</h2>
 
       <p>
@@ -806,16 +775,11 @@ function Dashboard() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Props table */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="ChartContainer" props={containerProps} />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

@@ -11,9 +11,7 @@ import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data — Flight hours from London Heathrow to major world cities
-// ---------------------------------------------------------------------------
 
 const worldCities = [
   { id: "London", lon: -0.1, lat: 51.5, flightHours: 0 },
@@ -105,9 +103,7 @@ const railRoutes = [
   { source: "Barcelona", target: "Madrid" },
 ]
 
-// ---------------------------------------------------------------------------
 // Streaming demo — accumulate points and lines over time
-// ---------------------------------------------------------------------------
 
 const streamingCartogramCode = `import { useState, useEffect } from "react"
 import { DistanceCartogram } from "semiotic/geo"
@@ -207,9 +203,7 @@ function StreamingCartogramDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Props definition
-// ---------------------------------------------------------------------------
 
 const distanceCartogramProps = [
   { name: "points", type: "array", required: true, default: null, description: "Array of data objects with geographic coordinates and a cost/distance field." },
@@ -243,9 +237,7 @@ const distanceCartogramProps = [
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamGeoFrame props." },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function DistanceCartogramPage() {
   return (
@@ -283,9 +275,7 @@ export default function DistanceCartogramPage() {
         geographic truth and cost-based distortion.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <ChartGrounding component="DistanceCartogram" />
 
       <h2 id="quick-start">Quick Start</h2>
@@ -343,9 +333,6 @@ export default function DistanceCartogramPage() {
         }
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="strength">Strength Control</h3>
@@ -512,9 +499,6 @@ export default function DistanceCartogramPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* How It Works */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="how-it-works">How It Works</h2>
 
       <p>
@@ -544,16 +528,11 @@ export default function DistanceCartogramPage() {
         Langren chart. Rings become baseline ticks; north and basemap chrome stay off.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="DistanceCartogram" props={distanceCartogramProps} />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Graduating */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
@@ -611,9 +590,6 @@ export default function DistanceCartogramPage() {
         </div>
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

@@ -22,9 +22,7 @@
 
 import type { ChartCapability, ChartDataProfile } from "./chartCapabilityTypes"
 
-// ----------------------------------------------------------------------------
 // Bands
-// ----------------------------------------------------------------------------
 
 /**
  * Coarse row-count band. Used for grouping suggestions ("show me charts that
@@ -47,9 +45,7 @@ export type CardinalityBand = "low" | "medium" | "high"
  */
 export type FieldBand = "narrow" | "typical" | "wide"
 
-// ----------------------------------------------------------------------------
 // Default thresholds
-// ----------------------------------------------------------------------------
 
 /**
  * Research-backed default breakpoints. Treat as starting points — orgs override
@@ -94,9 +90,7 @@ export interface ScaleThresholds {
   fields?: { narrow?: number; typical?: number }
 }
 
-// ----------------------------------------------------------------------------
 // User-declared profiles
-// ----------------------------------------------------------------------------
 
 /**
  * Per-chart scale preference — analogous to AudienceProfile.targets but scoped
@@ -195,9 +189,7 @@ export interface DataQualityProfile {
   name?: string
 }
 
-// ----------------------------------------------------------------------------
 // Classification
-// ----------------------------------------------------------------------------
 
 const BAND_ORDER: ScaleBand[] = ["tiny", "small", "medium", "large", "huge"]
 
@@ -307,9 +299,7 @@ export function resolveCardinalityToNumber(
   return measured
 }
 
-// ----------------------------------------------------------------------------
 // Effective scale — what the engine reasons over
-// ----------------------------------------------------------------------------
 
 /**
  * The effective scale view the engine reasons over. Merges the declared
@@ -390,9 +380,7 @@ function resolveFieldBandToNumber(band: FieldBand, scale?: DataScaleProfile): nu
   }
 }
 
-// ----------------------------------------------------------------------------
 // Bias
-// ----------------------------------------------------------------------------
 
 // Scale bias has to be strong enough to reorder rankings — a 5.0 chart in its
 // wrong scale band should be able to lose to a 3.0 chart in its right band.

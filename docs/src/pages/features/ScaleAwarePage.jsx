@@ -146,9 +146,7 @@ const INTENTS = [
   { id: "hierarchy", label: "Hierarchy" },
 ]
 
-// ---------------------------------------------------------------------------
 // Tier grid — the "graduation of views" surface
-// ---------------------------------------------------------------------------
 
 function TierCard({ band, suggestion, highlighted }) {
   const Component = suggestion ? COMPONENT_MAP[suggestion.component] : null
@@ -210,9 +208,7 @@ function TierCard({ band, suggestion, highlighted }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Demo
-// ---------------------------------------------------------------------------
 
 function ScaleAwareDemo() {
   const [datasetKey, setDatasetKey] = useState("layered")
@@ -395,9 +391,7 @@ function ScaleAwareDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Page
-// ---------------------------------------------------------------------------
 
 export default function ScaleAwarePage() {
   return (

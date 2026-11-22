@@ -5,9 +5,7 @@ import PageLayout from "../components/PageLayout"
 import navData, { flattenNav } from "../components/navData"
 import { suggestReshapes } from "../components/reshapeSuggestions"
 
-// ---------------------------------------------------------------------------
 // Sample datasets — a few shapes so the recommendation reasoning is visible.
-// ---------------------------------------------------------------------------
 
 const DATASETS = {
   "sales-by-region": {

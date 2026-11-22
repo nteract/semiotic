@@ -10,9 +10,7 @@ import { useBlocksView, useRegisterBlocksExample } from "./BlocksView"
 // `import { propertyToString } from "./LiveExample"`.
 export { propertyToString }
 
-// ---------------------------------------------------------------------------
 // LiveExample component
-// ---------------------------------------------------------------------------
 
 export default function LiveExample({
   frameProps,
@@ -264,9 +262,7 @@ export default function LiveExample({
   )
 }
 
-// ---------------------------------------------------------------------------
 // Inline styles
-// ---------------------------------------------------------------------------
 
 const styles = {
   wrapper: {

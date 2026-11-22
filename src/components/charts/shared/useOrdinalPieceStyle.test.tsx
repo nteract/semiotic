@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest"
 import React from "react"
 import { renderHook } from "@testing-library/react"
-import { useOrdinalPieceStyle } from "./useOrdinalPieceStyle"
+import { useOrdinalPieceStyle, withoutOrdinalPieceStyle } from "./useOrdinalPieceStyle"
 import { TooltipProvider } from "../../store/TooltipStore"
 
 const wrapper = ({ children }: { children: React.ReactNode }) =>
@@ -15,6 +15,12 @@ const baseInput = {
 }
 
 describe("useOrdinalPieceStyle", () => {
+  it("forwards other frame overrides after composing the caller's piece style", () => {
+    const frame = { pieceStyle: { fill: "blue" }, summaryStyle: null, showAxes: false }
+    expect(withoutOrdinalPieceStyle(frame)).toEqual({ summaryStyle: null, showAxes: false })
+    expect(frame.pieceStyle).toEqual({ fill: "blue" })
+  })
+
   it("returns base fill from getColor when colorBy is set", () => {
     // colorScale that maps category names to specific colors
     const colorScale = (v: string) => ({ A: "#aaa", B: "#bbb" }[v] || "#000")

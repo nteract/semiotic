@@ -12,9 +12,7 @@ import StreamingDemo from "../../components/StreamingDemo"
 import PageLayout from "../../components/PageLayout"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data: a microservice architecture
-// ---------------------------------------------------------------------------
 
 const systemNodes = [
   { id: "API Gateway" },
@@ -39,9 +37,7 @@ const systemEdges = [
   { source: "Notification Service", target: "Database", value: 30 },
 ]
 
-// ---------------------------------------------------------------------------
 // Demo 1: DetailsPanel with click
-// ---------------------------------------------------------------------------
 
 function DetailsPanelDemo() {
   return (
@@ -102,9 +98,7 @@ function DetailsPanelDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Demo 2: Streaming with proportional speed + thresholds + topology diff
-// ---------------------------------------------------------------------------
 
 const SERVICES = ["API Gateway", "Auth", "Users", "Orders", "Payments", "Notifications", "DB", "Cache"]
 const ROUTES = [
@@ -294,9 +288,7 @@ function StreamingSystemDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Code snippets
-// ---------------------------------------------------------------------------
 
 const detailsPanelCode = `import { ChartContainer, DetailsPanel, SankeyDiagram, LinkedCharts } from "semiotic"
 
@@ -406,9 +398,7 @@ import { DetailsPanel, ChartContainer, Scatterplot, LinkedCharts } from "semioti
   </ChartContainer>
 </LinkedCharts>`
 
-// ---------------------------------------------------------------------------
 // Page
-// ---------------------------------------------------------------------------
 
 export default function StreamingSystemModelPage() {
   return (
@@ -436,9 +426,6 @@ export default function StreamingSystemModelPage() {
         not just network charts.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Details Panel */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="details-panel">Details Panel</h2>
 
       <p>
@@ -568,9 +555,6 @@ export default function StreamingSystemModelPage() {
 
       <CodeBlock code={detailsPanelApiCode} language="jsx" />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Edge Flow Rate */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="edge-flow-rate">Edge Flow Rate</h2>
 
       <p>
@@ -582,9 +566,6 @@ export default function StreamingSystemModelPage() {
 
       <CodeBlock code={proportionalSpeedCode} language="jsx" />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Threshold Alerting */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="threshold-alerting">Threshold Alerting</h2>
 
       <p>
@@ -645,9 +626,6 @@ export default function StreamingSystemModelPage() {
         </tbody>
       </table>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Topology Diffing */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="topology-diffing">Topology Diffing</h2>
 
       <p>
@@ -664,9 +642,7 @@ export default function StreamingSystemModelPage() {
 
       <CodeBlock code={topologyDiffCode} language="jsx" />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Live Streaming Demo */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="live-demo">Live Demo</h2>
 
       <p>
@@ -708,9 +684,6 @@ setInterval(() => {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>
@@ -739,9 +712,7 @@ setInterval(() => {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Styles
-// ---------------------------------------------------------------------------
 
 const btnStyle = {
   background: "var(--accent, #007bff)",

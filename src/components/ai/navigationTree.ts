@@ -38,9 +38,7 @@ import { buildGeoNavigationTree } from "./geoNavigation"
  * and surfaced as the opt-in ChartContainer `navigable` affordance.
  */
 
-// ---------------------------------------------------------------------------
 // Types
-// ---------------------------------------------------------------------------
 
 export type NavTreeRole = "chart" | "axis" | "series" | "datum" | "annotation"
 
@@ -280,9 +278,7 @@ function buildAnnotationBranch(
   }
 }
 
-// ---------------------------------------------------------------------------
 // Public API
-// ---------------------------------------------------------------------------
 
 /**
  * Build a structured navigation tree for a chart config. Full trees for XY,

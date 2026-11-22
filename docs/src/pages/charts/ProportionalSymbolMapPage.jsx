@@ -11,9 +11,7 @@ import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data — major world cities with real coordinates and population
-// ---------------------------------------------------------------------------
 
 const cityData = [
   { id: "tokyo", name: "Tokyo", lon: 139.7, lat: 35.7, population: 37400000, region: "Asia" },
@@ -38,9 +36,7 @@ const cityData = [
   { id: "nairobi", name: "Nairobi", lon: 36.8, lat: -1.3, population: 4735000, region: "Africa" },
 ]
 
-// ---------------------------------------------------------------------------
 // World map wrapper — loads basemap asynchronously
-// ---------------------------------------------------------------------------
 
 function WorldSymbolMap({ width = 600, height = 400, ...props }) {
   const [worldAreas, setWorldAreas] = useState(null)
@@ -64,9 +60,7 @@ function WorldSymbolMap({ width = 600, height = 400, ...props }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Streaming demo — cities appearing one by one with graduated symbols
-// ---------------------------------------------------------------------------
 
 const streamingSymbolCode = `import { useState, useEffect } from "react"
 import { ProportionalSymbolMap, resolveReferenceGeography } from "semiotic/geo"
@@ -161,9 +155,7 @@ function StreamingSymbolDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Props definition
-// ---------------------------------------------------------------------------
 
 const proportionalSymbolMapProps = [
   { name: "points", type: "array", required: true, default: null, description: "Array of data objects with geographic coordinates." },
@@ -188,9 +180,7 @@ const proportionalSymbolMapProps = [
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamGeoFrame props." },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function ProportionalSymbolMapPage() {
   return (
@@ -225,9 +215,7 @@ export default function ProportionalSymbolMapPage() {
         BubbleChart's visual grammar to geography.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <ChartGrounding component="ProportionalSymbolMap" />
 
       <h2 id="quick-start">Quick Start</h2>
@@ -293,9 +281,6 @@ function WorldSymbolMap() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="colored">Color by Region</h3>
@@ -500,16 +485,11 @@ function WorldSymbolMap() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="ProportionalSymbolMap" props={proportionalSymbolMapProps} />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
@@ -569,9 +549,6 @@ const worldAreas = await resolveReferenceGeography("world-110m")
         </div>
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

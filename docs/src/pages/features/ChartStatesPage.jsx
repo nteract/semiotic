@@ -5,9 +5,7 @@ import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function ChartStatesPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -43,9 +41,6 @@ export default function ChartStatesPage() {
         dashboard cards.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Empty State */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="empty-state">Empty State</h2>
 
       <p>
@@ -146,9 +141,6 @@ return rows.length ? (
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Loading State */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="loading-state">Loading State</h2>
 
       <p>
@@ -240,9 +232,6 @@ return rows.length ? (
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Error State */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="error-state">Error State</h2>
 
       <p>
@@ -300,9 +289,6 @@ return rows.length ? (
         work, and server rendering at their call sites.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

@@ -11,9 +11,7 @@ import { mulberry32 } from "semiotic/recipes"
 
 export { mulberry32 }
 
-// ---------------------------------------------------------------------------
 // Bauhaus "Perception Lab" palette
-// ---------------------------------------------------------------------------
 export const PAPER = "#f1e7d2"
 export const PAPER_DEEP = "#e7dabf"
 export const INK = "#1a1610"
@@ -68,9 +66,7 @@ export const GRID_CLUSTERS = [
 export const GRID_X_EXTENT = [-0.7, GRID_COLS - 1 + PROXIMITY_GAP + 0.7]
 export const GRID_Y_EXTENT = [-0.7, GRID_ROWS - 0.3]
 
-// ===========================================================================
 // CHAPTER II — Common Fate, Parallelism & Connectedness
-// ===========================================================================
 
 // Parallelism / common fate: five series, three falling in lockstep and two
 // rising in lockstep — shared slopes group them, just like a slopegraph.
@@ -247,9 +243,7 @@ export function findProximityProblem(nodes, edges, pos) {
   return { problemIds: problem, threshold, minHops }
 }
 
-// ===========================================================================
 // CHAPTER IV — Figure/Ground & Metastability
-// ===========================================================================
 
 // The interlocking dual bar chart: five "vertical" bars rising from the
 // bottom and five "horizontal" bars growing from the left tessellate one

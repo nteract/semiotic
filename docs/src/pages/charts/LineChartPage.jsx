@@ -13,9 +13,7 @@ import Tabs from "../../components/Tabs"
 import DirectLabelsDemo from "../../examples/DirectLabelsDemo"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const forecastData = [
   { month: 1, value: 120, upper: 15, lower: 10 },
@@ -121,9 +119,7 @@ function AnimateLineDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Props definition for PropTable
-// ---------------------------------------------------------------------------
 
 // Throughput series with an asymmetric min/max envelope per sample —
 // the average rides through the middle, the band shows the spread.
@@ -428,9 +424,7 @@ const lineChartProps = [
   },
 ]
 
-// ---------------------------------------------------------------------------
 // Streaming demo
-// ---------------------------------------------------------------------------
 
 const streamingLineCode = `import { useRef, useEffect } from "react"
 import { LineChart } from "semiotic"
@@ -500,9 +494,7 @@ function StreamingLineDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function LineChartPage() {
   return (
@@ -536,9 +528,7 @@ export default function LineChartPage() {
         all with sensible defaults.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <ChartGrounding
         component="LineChart"
         props={{
@@ -600,9 +590,6 @@ export default function LineChartPage() {
         }
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="multi-line">Multiple Lines</h3>
@@ -862,9 +849,7 @@ export default function LineChartPage() {
         envelope can never get clipped; explicit <code>yExtent</code> still wins.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Gap Strategy */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="gap-strategy">Data Gap Handling</h2>
 
       <p>
@@ -975,9 +960,6 @@ export default function LineChartPage() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Direct Labels */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="direct-label">Direct Labels</h2>
 
       <p>
@@ -1003,9 +985,7 @@ export default function LineChartPage() {
         server axis geometry remains unassessed.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Empty & Loading States */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="empty-loading">Empty and Loading States</h2>
 
       <p>
@@ -1014,9 +994,7 @@ export default function LineChartPage() {
         documentation and examples.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Hover Highlight */}
-      {/* ----------------------------------------------------------------- */}
       <h3 id="multi-tooltip">Hover-Anywhere Multi Tooltip</h3>
       <p>
         Set <code>tooltip="multi"</code> to show all series values at the hovered x position with
@@ -1102,9 +1080,7 @@ export default function LineChartPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Animate */}
-      {/* ----------------------------------------------------------------- */}
       <h3 id="animate">Animated Transitions</h3>
       <p>
         Set <code>animate</code> to smoothly transition line positions when data changes. Pass{" "}
@@ -1126,9 +1102,6 @@ export default function LineChartPage() {
 />`}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Click-to-Lock Crosshair */}
-      {/* ----------------------------------------------------------------- */}
       <h3 id="click-to-lock">Click-to-Lock Crosshair</h3>
       <p>
         With <code>linkedHover</code> in <code>"x-position"</code> mode, click a chart to lock the
@@ -1175,16 +1148,11 @@ export default function LineChartPage() {
   />
 </LinkedCharts>`}</CodeBlock>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="LineChart" props={lineChartProps} />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
@@ -1268,9 +1236,6 @@ export default function LineChartPage() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

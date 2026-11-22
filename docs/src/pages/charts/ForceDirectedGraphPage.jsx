@@ -11,9 +11,7 @@ import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const nodeData = [
   { id: "Alice", group: "Engineering" },
@@ -50,9 +48,7 @@ const sizedNodeData = [
   { id: "Heidi", group: "Product", connections: 3 },
 ]
 
-// ---------------------------------------------------------------------------
 // Props definition for PropTable
-// ---------------------------------------------------------------------------
 
 const forceDirectedGraphProps = [
   { name: "nodes", type: "array", required: true, default: null, description: "Array of node objects. Each node should have an id property." },
@@ -85,9 +81,7 @@ const forceDirectedGraphProps = [
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamNetworkFrame props for advanced customization. Escape hatch to the full Frame API." },
 ]
 
-// ---------------------------------------------------------------------------
 // Streaming demo
-// ---------------------------------------------------------------------------
 
 const streamingForceNames = ["Alice", "Bob", "Carol", "Dave", "Eve", "Frank", "Grace", "Heidi"]
 
@@ -160,9 +154,7 @@ function StreamingForceDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function ForceDirectedGraphPage() {
   return (
@@ -199,9 +191,7 @@ export default function ForceDirectedGraphPage() {
         and legends.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <ChartGrounding component="ForceDirectedGraph" />
 
       <h2 id="quick-start">Quick Start</h2>
@@ -244,9 +234,6 @@ export default function ForceDirectedGraphPage() {
         }
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="color-by-group">Colored by Group</h3>
@@ -368,16 +355,11 @@ export default function ForceDirectedGraphPage() {
         layout path.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="ForceDirectedGraph" props={forceDirectedGraphProps} />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
@@ -455,9 +437,6 @@ export default function ForceDirectedGraphPage() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

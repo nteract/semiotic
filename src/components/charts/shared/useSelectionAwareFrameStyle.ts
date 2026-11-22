@@ -1,21 +1,3 @@
-/**
- * useSelectionAwareFrameStyle — memoized `selectionAwareFrameStyle` for chart
- * components. See `frameStyleProps.ts` for the contract.
- *
- * @example
- * ```tsx
- * const framePointStyle = useSelectionAwareFrameStyle(
- *   frameProps.pointStyle,
- *   setup.effectiveSelectionHook,
- *   setup.resolvedSelection,
- * )
- * const streamProps = {
- *   pointStyle,
- *   ...frameProps,
- *   ...(framePointStyle && { pointStyle: framePointStyle }),
- * }
- * ```
- */
 "use client"
 import { useMemo } from "react"
 import {

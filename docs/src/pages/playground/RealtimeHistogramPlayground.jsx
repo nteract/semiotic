@@ -4,9 +4,7 @@ import PageLayout from "../../components/PageLayout"
 import PropControls from "../../components/PropControls"
 import CodeBlock from "../../components/CodeBlock"
 
-// ---------------------------------------------------------------------------
 // Control schemas
-// ---------------------------------------------------------------------------
 
 const sharedControls = [
   { name: "windowSize", type: "number", label: "Buffer Size", group: "Data",
@@ -37,9 +35,7 @@ const swarmControls = [
     default: "#007bff" },
 ]
 
-// ---------------------------------------------------------------------------
 // Category colors for stacked/colored mode
-// ---------------------------------------------------------------------------
 
 const categoryColors = {
   GET: "#007bff",
@@ -47,9 +43,7 @@ const categoryColors = {
   DELETE: "#dc3545",
 }
 
-// ---------------------------------------------------------------------------
 // Data generators
-// ---------------------------------------------------------------------------
 
 const generators = [
   {
@@ -106,9 +100,7 @@ const generators = [
   },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function RealtimeHistogramPlayground() {
   const [chartType, setChartType] = useState("bar")

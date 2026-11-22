@@ -5,9 +5,7 @@ import PageLayout from "../../components/PageLayout"
 import PropControls from "../../components/PropControls"
 import CodeBlock from "../../components/CodeBlock"
 
-// ---------------------------------------------------------------------------
 // LOESS datasets
-// ---------------------------------------------------------------------------
 
 const curvedData = [
   { x: 1, y: 5 }, { x: 2, y: 8 }, { x: 3, y: 14 }, { x: 4, y: 11 },
@@ -46,9 +44,7 @@ const loessDatasets = [
   { label: "Two Clusters (30 pts)", data: clusterData },
 ]
 
-// ---------------------------------------------------------------------------
 // LOESS controls
-// ---------------------------------------------------------------------------
 
 const loessControls = [
   { name: "bandwidth", type: "number", label: "Bandwidth", group: "LOESS",
@@ -67,9 +63,7 @@ const loessControls = [
     default: false },
 ]
 
-// ---------------------------------------------------------------------------
 // Anomaly streaming signals
-// ---------------------------------------------------------------------------
 
 function makeNormalWithSpikes(spikeRate) {
   return (t) => {
@@ -105,9 +99,7 @@ const anomalySignals = [
   },
 ]
 
-// ---------------------------------------------------------------------------
 // Pre-computed forecast dataset
-// ---------------------------------------------------------------------------
 
 function generatePrecomputedDataset() {
   const total = 80
@@ -185,9 +177,7 @@ const forecastDatasets = [
   { label: "Pre-computed: ML Model Bounds", mode: "precomputed" },
 ]
 
-// ---------------------------------------------------------------------------
 // Forecast controls
-// ---------------------------------------------------------------------------
 
 const forecastControls = [
   { name: "fSteps", type: "number", label: "Forecast Steps", group: "Forecast",
@@ -279,9 +269,7 @@ function generateForecastCode(values, isPrecomputed) {
   return code
 }
 
-// ---------------------------------------------------------------------------
 // Anomaly controls
-// ---------------------------------------------------------------------------
 
 const anomalyControls = [
   { name: "threshold", type: "number", label: "Threshold (σ)", group: "Anomaly Band",
@@ -302,9 +290,7 @@ const anomalyControls = [
     default: true },
 ]
 
-// ---------------------------------------------------------------------------
 // Code generators
-// ---------------------------------------------------------------------------
 
 function generateLoessCode(values, loessDefaults, dataset) {
   const annotations = []
@@ -360,9 +346,7 @@ function generateAnomalyCode(values) {
   return code
 }
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 function ForecastChart({ data, dataset, values, width }) {
   const isPrecomputed = dataset.mode === "precomputed"
@@ -542,9 +526,7 @@ export default function StatisticalAnnotationsPlayground() {
         copy the generated code.
       </p>
 
-      {/* ================================================================= */}
       {/* LOESS Section */}
-      {/* ================================================================= */}
       <h2 id="loess-smoothing">LOESS Smoothing</h2>
 
       <p>
@@ -602,9 +584,7 @@ export default function StatisticalAnnotationsPlayground() {
         language="jsx"
       />
 
-      {/* ================================================================= */}
       {/* Streaming Anomaly Section */}
-      {/* ================================================================= */}
       <h2 id="streaming-anomaly">Streaming Anomaly Detection</h2>
 
       <p>
@@ -681,9 +661,7 @@ export default function StatisticalAnnotationsPlayground() {
         language="jsx"
       />
 
-      {/* ================================================================= */}
       {/* Forecast & Anomaly Section */}
-      {/* ================================================================= */}
       <h2 id="forecast-anomaly">Forecast & Anomaly Detection</h2>
 
       <p>

@@ -4,9 +4,7 @@ import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const salesData = [
   { x: 1, y: 4200 },
@@ -42,9 +40,7 @@ function toDemoConfig(componentName, props, options) {
   }
 }
 
-// ---------------------------------------------------------------------------
 // Interactive demo: Round-trip serializer
-// ---------------------------------------------------------------------------
 
 const CHART_OPTIONS = {
   LineChart: {
@@ -224,9 +220,7 @@ function RoundTripDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Interactive demo: Config editor
-// ---------------------------------------------------------------------------
 
 function ConfigEditorDemo() {
   const [configText, setConfigText] = useState(() =>
@@ -308,9 +302,7 @@ function ConfigEditorDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function SerializationPage() {
   return (
@@ -331,9 +323,7 @@ export default function SerializationPage() {
         configurations programmatically.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Why */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="why">Why Serialize Charts?</h2>
 
       <ul style={{ lineHeight: 1.8, fontSize: 14 }}>
@@ -366,9 +356,6 @@ export default function SerializationPage() {
         </li>
       </ul>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="quick-start">Quick Start</h2>
 
       <CodeBlock
@@ -401,9 +388,7 @@ const code = configToJSX(config)
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Live Demo */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="round-trip-demo">Round-Trip Demo</h2>
 
       <p>
@@ -416,9 +401,6 @@ const code = configToJSX(config)
 
       <RoundTripDemo />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Config Editor */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="config-editor">Config Editor</h2>
 
       <p>
@@ -430,9 +412,6 @@ const code = configToJSX(config)
 
       <ConfigEditorDemo />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* What Gets Serialized */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="what-gets-serialized">What Gets Serialized</h2>
 
       <p>
@@ -501,9 +480,6 @@ const code = configToJSX(config)
         </tbody>
       </table>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* ChartContainer Integration */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="chart-container">ChartContainer Integration</h2>
 
       <p>
@@ -539,9 +515,6 @@ const chartProps = {
         as a JSX code snippet instead.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Selection State */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="selection-state">Selection State</h2>
 
       <p>
@@ -569,9 +542,6 @@ const deserialized = deserializeSelections(config.selections)
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* AI Agent Workflow */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="ai-workflow">AI Agent Workflow</h2>
 
       <p>
@@ -610,9 +580,6 @@ const code = configToJSX(config)
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* API Reference */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="api-reference">API Reference</h2>
 
       <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 24 }}>
@@ -667,9 +634,6 @@ const code = configToJSX(config)
         </tbody>
       </table>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>
@@ -694,9 +658,7 @@ const code = configToJSX(config)
   )
 }
 
-// ---------------------------------------------------------------------------
 // Styles
-// ---------------------------------------------------------------------------
 
 const thStyle = {
   padding: "12px 16px",

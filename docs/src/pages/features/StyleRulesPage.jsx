@@ -7,9 +7,7 @@ import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 // Simple bars whose values cross the 10 and 15 thresholds — for the
 // "last-applicable-rule-wins" demo.

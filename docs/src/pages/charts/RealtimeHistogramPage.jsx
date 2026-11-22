@@ -12,9 +12,7 @@ import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Responsive container hook
-// ---------------------------------------------------------------------------
 
 function useContainerWidth() {
   const ref = useRef(null)
@@ -35,9 +33,7 @@ function useContainerWidth() {
   return [ref, width]
 }
 
-// ---------------------------------------------------------------------------
 // Live streaming demos
-// ---------------------------------------------------------------------------
 
 function BasicBarDemo() {
   const chartRef = useRef()
@@ -148,9 +144,7 @@ function StyledBarDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Brush demos
-// ---------------------------------------------------------------------------
 
 function StaticDataDemo() {
   const [containerRef, containerWidth] = useContainerWidth()
@@ -391,9 +385,7 @@ function LinkedBrushDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Stacked brush → multi-line demo
-// ---------------------------------------------------------------------------
 
 const CATEGORIES = ["errors", "warnings", "info"]
 const CATEGORY_COLORS = { errors: "#dc3545", warnings: "#fd7e14", info: "#007bff" }
@@ -541,9 +533,7 @@ function StackedBrushDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Props definition for PropTable
-// ---------------------------------------------------------------------------
 
 const RealtimeHistogramProps = [
   { name: "binAlign", type: '"start" | "center"', default: '"start"', description: "Centered bins surround zero-anchored grid timestamps by binSize/2 on each side. Automatic extents include whole edge bins; explicit timeExtent clips them." },
@@ -594,9 +584,7 @@ const RealtimeHistogramProps = [
   { name: "linkedBrush", type: "string | object", required: false, default: null, description: "Linked brush for cross-chart coordination via LinkedCharts. String shorthand sets the selection name." },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function RealtimeHistogramPage() {
   return (
@@ -635,9 +623,6 @@ export default function RealtimeHistogramPage() {
         visible time window are rendered at proportionally narrower widths.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="quick-start">Quick Start</h2>
 
       <p>
@@ -689,9 +674,6 @@ function StreamingBars() {
         />
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="grid-and-hover">Horizontal grid lines and column hover</h3>
@@ -817,9 +799,7 @@ useEffect(() => {
         />
       </div>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Brush */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="brush">Brushable Selection</h2>
 
       <h3 id="static-brush">Static Data with Brush</h3>
@@ -988,9 +968,7 @@ function FilteredMultiLineOverlay({ allData, width }) {
         />
       </div>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="linked-mirrored">Linked hover and mirrored histograms</h2>
       <p>
         Hover a category bar or line to highlight its series. Hover a time bin to
@@ -1115,9 +1093,7 @@ function HealthCharts({ rows }: { rows: { time: number; value: number }[] }) {
 
       <PropTable componentName="RealtimeHistogram" props={RealtimeHistogramProps} />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
@@ -1176,9 +1152,6 @@ function HealthCharts({ rows }: { rows: { time: number; value: number }[] }) {
         <code>barColors</code> on StreamXYFrame for stacked bar support.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

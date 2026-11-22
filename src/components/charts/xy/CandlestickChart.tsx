@@ -314,7 +314,6 @@ export const CandlestickChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PUR
     ...(yExtent && { yExtent }),
     ...setup.crosshairProps,
     ...frameProps,
-    // frameProps precedence: the caller's style still wins; this re-applies it with selection dimming preserved.
     ...(userPointStyle && { pointStyle: userPointStyle }),
   }
 

@@ -6,9 +6,7 @@ import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const lineData = [
   { month: 1, revenue: 12000 },
@@ -26,9 +24,7 @@ const barData = [
   { category: "Q4", revenue: 36000 },
 ]
 
-// ---------------------------------------------------------------------------
 // DiagnoseConfig demo
-// ---------------------------------------------------------------------------
 
 function DiagnoseDemo() {
   const result = diagnoseConfig("LineChart", {
@@ -66,9 +62,7 @@ function DiagnoseDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function AccessibilityPage() {
   return (
@@ -116,9 +110,7 @@ export default function AccessibilityPage() {
         <Link to="/accessibility/anchoring-complex-charts">Anchoring Complex Charts</Link>.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Built-in Features */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="built-in">Built-in Accessibility Features</h2>
 
       <h3 id="aria-labels">ARIA Labels and Descriptions</h3>
@@ -378,9 +370,7 @@ const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").mat
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Validation */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="validation">Accessibility Validation</h2>
 
       <p>
@@ -416,9 +406,6 @@ const result = diagnoseConfig("LineChart", {
         />
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Best Practices */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="best-practices">Best Practices</h2>
 
       <h3 id="text-alternatives">Text Alternatives</h3>
@@ -504,9 +491,7 @@ const result = diagnoseConfig("LineChart", {
         <code> live="off"</code> to silence all announcements.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Props Reference */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Accessibility Props Reference</h2>
 
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
@@ -536,9 +521,7 @@ const result = diagnoseConfig("LineChart", {
         </tbody>
       </table>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Limitations */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="limitations">Current Limitations</h2>
 
       <ul>
@@ -564,9 +547,7 @@ const result = diagnoseConfig("LineChart", {
         </li>
       </ul>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Testing */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="preference-hooks">Preference hooks</h2>
       <p>
         Charts auto-detect <code>prefers-reduced-motion</code> and{" "}
@@ -620,9 +601,6 @@ function Panel() {
         </li>
       </ul>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

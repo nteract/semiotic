@@ -4,9 +4,7 @@ import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Live audit demo — runs the real auditAccessibility() in the browser
-// ---------------------------------------------------------------------------
 
 const STATUS_META = {
   pass: { icon: "✓", color: "#1a7f37", bg: "rgba(26,127,55,0.10)" },
@@ -129,9 +127,7 @@ function AuditDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Page
-// ---------------------------------------------------------------------------
 
 export default function AccessibilityAuditPage() {
   return (

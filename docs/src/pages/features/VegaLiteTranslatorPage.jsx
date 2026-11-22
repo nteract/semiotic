@@ -18,9 +18,7 @@ import {
 import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
 
-// ---------------------------------------------------------------------------
 // Sample Vega-Lite specs
-// ---------------------------------------------------------------------------
 
 const SAMPLES = {
   "Bar Chart": JSON.stringify(
@@ -156,35 +154,27 @@ const SAMPLES = {
   ),
 }
 
-// ---------------------------------------------------------------------------
 // Chart renderer — maps component name to Semiotic component
-// ---------------------------------------------------------------------------
 
-// Covers every component name that `fromVegaLite` can return per the
-// "Mark to component" table on this page. Keep in sync with the table —
-// a missing entry sends the demo into the "preview not available"
-// placeholder even though the JSX panel shows valid code.
-const COMPONENT_MAP = {
-  BarChart: (props) => <BarChart {...props} />,
-  StackedBarChart: (props) => <StackedBarChart {...props} />,
-  LineChart: (props) => <LineChart {...props} />,
-  AreaChart: (props) => <AreaChart {...props} />,
-  StackedAreaChart: (props) => <StackedAreaChart {...props} />,
-  Scatterplot: (props) => <Scatterplot {...props} />,
-  BubbleChart: (props) => <BubbleChart {...props} />,
-  Heatmap: (props) => <Heatmap {...props} />,
-  PieChart: (props) => <PieChart {...props} />,
-  DonutChart: (props) => <DonutChart {...props} />,
-  DotPlot: (props) => <DotPlot {...props} />,
-  Histogram: (props) => <Histogram {...props} />,
+const markPreviews = {
+  BarChart: { component: BarChart, mark: "bar", condition: "default or stacking disabled" },
+  StackedBarChart: { component: StackedBarChart, mark: "bar + color", condition: "color field with stacking enabled" },
+  LineChart: { component: LineChart, mark: "line", condition: "default" },
+  AreaChart: { component: AreaChart, mark: "area", condition: "default" },
+  StackedAreaChart: { component: StackedAreaChart, mark: "area + color", condition: "color field present" },
+  Scatterplot: { component: Scatterplot, mark: "point / circle / square", condition: "default" },
+  BubbleChart: { component: BubbleChart, mark: "point / circle / square", condition: "size field present" },
+  Heatmap: { component: Heatmap, mark: "rect", condition: "default" },
+  PieChart: { component: PieChart, mark: "arc", condition: "default" },
+  DonutChart: { component: DonutChart, mark: "arc", condition: "innerRadius > 0" },
+  DotPlot: { component: DotPlot, mark: "tick", condition: "default" },
+  Histogram: { component: Histogram, mark: "any + bin", condition: "x or y bin present" },
 }
 
 function renderChart(config) {
-  // Lazy-import approach — we render the few most common chart types inline.
-  // For other types we just show the JSX output.
-  const Component = COMPONENT_MAP[config.component]
+  const Component = markPreviews[config.component]?.component
   if (Component) {
-    return Component({ ...config.props, width: 480, height: 320 })
+    return <Component {...config.props} width={480} height={320} />
   }
   return (
     <div
@@ -207,9 +197,7 @@ function renderChart(config) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Page component
-// ---------------------------------------------------------------------------
 
 export default function VegaLiteTranslatorPage() {
   const [specText, setSpecText] = useState(SAMPLES["Bar Chart"])
@@ -382,24 +370,11 @@ const { componentName, props } = fromConfig(config)`} />
             </tr>
           </thead>
           <tbody>
-            {[
-              ["bar", "BarChart", "default"],
-              ["bar + color", "StackedBarChart", "color encoding present"],
-              ["line", "LineChart", "default"],
-              ["area", "AreaChart", "default"],
-              ["area + color", "StackedAreaChart", "color encoding present"],
-              ["point / circle / square", "Scatterplot", "default"],
-              ["point + size", "BubbleChart", "size encoding present"],
-              ["rect", "Heatmap", "default"],
-              ["arc", "PieChart", "default"],
-              ["arc + innerRadius", "DonutChart", "innerRadius > 0"],
-              ["tick", "DotPlot", "default"],
-              ["any + bin", "Histogram", "bin encoding present"],
-            ].map(([mark, comp, cond], i) => (
-              <tr key={i} style={{ borderBottom: "1px solid var(--surface-3)" }}>
+            {Object.entries(markPreviews).map(([name, { mark, condition }]) => (
+              <tr key={name} style={{ borderBottom: "1px solid var(--surface-3)" }}>
                 <td style={{ padding: "8px" }}><code>{mark}</code></td>
-                <td style={{ padding: "8px" }}><code>{comp}</code></td>
-                <td style={{ padding: "8px", color: "var(--text-secondary)" }}>{cond}</td>
+                <td style={{ padding: "8px" }}><code>{name}</code></td>
+                <td style={{ padding: "8px", color: "var(--text-secondary)" }}>{condition}</td>
               </tr>
             ))}
           </tbody>

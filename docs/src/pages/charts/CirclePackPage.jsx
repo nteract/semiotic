@@ -9,9 +9,7 @@ import PageLayout from "../../components/PageLayout"
 import ChartGrounding from "../../components/ChartGrounding"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const sampleData = {
   name: "Languages",
@@ -43,9 +41,7 @@ const sampleData = {
   ],
 }
 
-// ---------------------------------------------------------------------------
 // Props definition for PropTable
-// ---------------------------------------------------------------------------
 
 const circlePackProps = [
   { name: "data", type: "object", required: true, default: null, description: "Hierarchical data structure with children and values." },
@@ -71,9 +67,7 @@ const circlePackProps = [
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamNetworkFrame props for advanced customization." },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function CirclePackPage() {
   return (
@@ -111,9 +105,7 @@ export default function CirclePackPage() {
         remain visible.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <ChartGrounding component="CirclePack" />
 
       <h2 id="quick-start">Quick Start</h2>
@@ -158,9 +150,6 @@ export default function CirclePackPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="color-by-name">Color by Name</h3>
@@ -185,16 +174,11 @@ export default function CirclePackPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="CirclePack" props={circlePackProps} />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
@@ -242,9 +226,6 @@ export default function CirclePackPage() {
         </div>
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

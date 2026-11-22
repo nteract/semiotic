@@ -11,9 +11,7 @@ import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const simpleData = [
   { day: 1, hour: 8, value: 12 },
@@ -62,9 +60,7 @@ const correlationData = [
   { x: 4, y: 4, value: 1.0 },
 ]
 
-// ---------------------------------------------------------------------------
 // Streaming demo
-// ---------------------------------------------------------------------------
 
 const streamingHeatmapCode = `import { useRef, useEffect } from "react"
 import { Heatmap } from "semiotic"
@@ -135,9 +131,7 @@ function StreamingHeatmapDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Props definition for PropTable
-// ---------------------------------------------------------------------------
 
 const heatmapProps = [
   { name: "data", type: "array", required: true, default: null, description: "Array of data points with x, y, and value properties." },
@@ -164,9 +158,7 @@ const heatmapProps = [
   { name: "legendPosition", type: '"right" | "left" | "top" | "bottom"', required: false, default: '"right"', description: "Position of the gradient legend relative to the chart." },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function HeatmapPage() {
   return (
@@ -202,9 +194,7 @@ export default function HeatmapPage() {
         glance.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <ChartGrounding component="Heatmap" />
 
       <h2 id="quick-start">Quick Start</h2>
@@ -247,9 +237,6 @@ export default function HeatmapPage() {
         }
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="with-values">With Cell Value Labels</h3>
@@ -367,16 +354,11 @@ export default function HeatmapPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="Heatmap" props={heatmapProps} />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
@@ -462,9 +444,6 @@ import { interpolateViridis } from "d3-scale-chromatic"
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

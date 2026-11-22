@@ -9,9 +9,7 @@ import {
   unstable_attachIDIDAnnotations as attachIDIDAnnotations,
 } from "semiotic/experimental"
 
-// ---------------------------------------------------------------------------
 // Demo data + frame
-// ---------------------------------------------------------------------------
 
 const VEGA_SPEC = {
   mark: "bar",
@@ -109,9 +107,7 @@ function EnrichedDemo() {
   return <pre style={preStyle}>{JSON.stringify({ usermeta: enriched.usermeta }, null, 2)}</pre>
 }
 
-// ---------------------------------------------------------------------------
 // Body
-// ---------------------------------------------------------------------------
 
 function Body() {
   return (

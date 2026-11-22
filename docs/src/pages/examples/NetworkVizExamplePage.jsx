@@ -156,9 +156,7 @@ export default function NetworkVizExamplePage() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Shared presentation building blocks
-// ---------------------------------------------------------------------------
 function ChapterHead({ num, title, lead }) {
   return (
     <div className="nv-chapter-head">
@@ -320,9 +318,7 @@ function useAnimatedNetworkPositions(target, duration = 700) {
   }
 }
 
-// ===========================================================================
 // CHAPTER 1 — What a network is
-// ===========================================================================
 const TYPE_STEPS = ["Hierarchy", "Directed acyclic", "General graph"]
 const TYPE_CAPTIONS = {
   0: "In a hierarchy, every node below the root has one parent. A tree makes those levels and relationships easy to follow.",
@@ -408,9 +404,7 @@ function ChapterWhat() {
   )
 }
 
-// ===========================================================================
 // CHAPTER 2 — Static layouts (arc / matrix / circular)
-// ===========================================================================
 const STATIC_STEPS = ["Arc diagram", "Adjacency matrix", "Circular (avoid)"]
 const STATIC_CAPTIONS = {
   0: "An arc diagram lines the nodes up and draws each connection as an arc. Order the line well — here by community — and clusters surface as nested bundles of arcs.",
@@ -476,9 +470,7 @@ function ChapterStatic() {
   )
 }
 
-// ===========================================================================
 // CHAPTER 3 — The hairball and how it lies
-// ===========================================================================
 const HAIR_STEPS = ["The whole graph", "Filter weak ties", "How it lies"]
 
 function ChapterHairball() {
@@ -544,9 +536,7 @@ function ChapterHairball() {
   )
 }
 
-// ===========================================================================
 // CHAPTER 4 — Reading the edges
-// ===========================================================================
 const EDGE_STEPS = ["Plain", "Arrowheads", "Curved", "By weight", "Reciprocity"]
 const EDGE_ENC = ["line", "arrow", "curved", "weighted", "reciprocity"]
 const EDGE_CAPTIONS = {
@@ -592,9 +582,7 @@ function ChapterEdges() {
   )
 }
 
-// ===========================================================================
 // CHAPTER 5 — Reading the nodes
-// ===========================================================================
 function ChapterNodes() {
   const [sizing, setSizing] = useState("degree")
   const [labels, setLabels] = useState(true)
@@ -673,9 +661,7 @@ function ChapterNodes() {
   )
 }
 
-// ===========================================================================
 // CHAPTER 6 — Finding structure
-// ===========================================================================
 const STRUCT_STEPS = ["Colour by community", "Pull the groups apart"]
 
 function ChapterStructure() {
@@ -738,9 +724,7 @@ function ChapterStructure() {
   )
 }
 
-// ===========================================================================
 // CHAPTER 7 — Beyond the node-link
-// ===========================================================================
 const BEYOND_STEPS = ["Chord", "Sankey"]
 const BEYOND_CAPTIONS = {
   0: "A chord diagram groups the characters and shows the connections between those groups. Each ribbon counts shared scenes, making the larger relationships easier to compare.",
@@ -807,9 +791,7 @@ function ChapterBeyond() {
   )
 }
 
-// ===========================================================================
 // CHAPTER 8 — The Network Toy
-// ===========================================================================
 const TOY_SAMPLES = N.SAMPLE_GRAPHS
 
 function ChapterToy() {
@@ -1078,9 +1060,7 @@ function Colophon() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // helpers
-// ---------------------------------------------------------------------------
 function idOf(datum) {
   if (!datum) return null
   return datum.id ?? datum.data?.id ?? null
@@ -1112,9 +1092,7 @@ function gridByGroup(nodes) {
   return pos
 }
 
-// ---------------------------------------------------------------------------
 // Custom network layouts
-// ---------------------------------------------------------------------------
 function makeMapper(plot, pad) {
   const inset = pad == null ? 26 : pad
   return {

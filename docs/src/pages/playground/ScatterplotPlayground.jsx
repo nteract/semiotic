@@ -2,9 +2,7 @@ import React from "react"
 import { Scatterplot } from "semiotic"
 import PlaygroundLayout from "../../components/PlaygroundLayout"
 
-// ---------------------------------------------------------------------------
 // Control schema
-// ---------------------------------------------------------------------------
 
 const controls = [
   { name: "pointRadius", type: "number", label: "Point Radius", group: "Points",
@@ -25,9 +23,7 @@ const controls = [
     default: "" },
 ]
 
-// ---------------------------------------------------------------------------
 // Datasets
-// ---------------------------------------------------------------------------
 
 const heightWeight = [
   { x: 160, y: 55 }, { x: 165, y: 62 }, { x: 170, y: 68 },
@@ -92,9 +88,7 @@ const datasets = [
   },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function ScatterplotPlayground() {
   return (

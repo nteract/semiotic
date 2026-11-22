@@ -15,9 +15,7 @@ import PageLayout from "../../components/PageLayout"
 import useResponsiveWidth from "../../hooks/useResponsiveWidth"
 import { useDocsTheme } from "../../hooks/useDocsTheme"
 
-// ---------------------------------------------------------------------------
 // Shared layout styles
-// ---------------------------------------------------------------------------
 
 const demoShellStyle = {
   border: "1px solid var(--surface-3)",
@@ -62,9 +60,7 @@ const chartTitleStyle = {
   color: "var(--text-secondary)",
 }
 
-// ---------------------------------------------------------------------------
 // Example 1 — Drug-trial gauntlet → stacked area of lift vs drag
-// ---------------------------------------------------------------------------
 
 const TRIAL_PROJECT = {
   id: "nexavax-7",
@@ -579,9 +575,7 @@ function GauntletStackedAreaDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Example 2 — Merge-pressure process flow ↔ scatter (1:1 particles)
-// ---------------------------------------------------------------------------
 
 const MERGE_STAGES = [
   { id: "coding", label: "Authoring", force: 14, share: 1.05 },
@@ -824,9 +818,7 @@ function MergePressureScatterDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Page
-// ---------------------------------------------------------------------------
 
 export default function AnchoringComplexChartsPage() {
   const [width, widthRef] = useResponsiveWidth(640, 980)

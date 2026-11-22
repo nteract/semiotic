@@ -10,9 +10,7 @@ import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const lineData = [
   { week: 1, score: 12 },
@@ -62,9 +60,7 @@ const loessData = [
   { x: 17, y: 26 }, { x: 18, y: 30 }, { x: 19, y: 34 }, { x: 20, y: 38 },
 ]
 
-// ---------------------------------------------------------------------------
 // Streaming annotation demo
-// ---------------------------------------------------------------------------
 
 const streamingAnnotationCode = `import { useRef, useEffect } from "react"
 import { StreamXYFrame } from "semiotic"
@@ -143,9 +139,7 @@ function StreamingAnnotatedChart({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Streaming point-anchored callout demo
-// ---------------------------------------------------------------------------
 
 const streamingCalloutCode = `import { useRef, useEffect, useCallback, useState } from "react"
 import { StreamXYFrame } from "semiotic"
@@ -271,9 +265,7 @@ function StreamingCalloutDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Streaming anomaly band demo
-// ---------------------------------------------------------------------------
 
 const streamingAnomalyCode = `import { useRef, useEffect } from "react"
 import { StreamXYFrame } from "semiotic"
@@ -365,9 +357,7 @@ function StreamingAnomalyDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function AnnotationsPage() {
   return (
@@ -452,9 +442,6 @@ export default function AnnotationsPage() {
         annotation rules or graphics hooks supported by the chart's frame.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Thresholds */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="thresholds">Thresholds</h2>
       <p>
         Both x and y thresholds accept <code>endCap: "circle"</code> for a native
@@ -547,9 +534,6 @@ export default function AnnotationsPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Labels & Callouts */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="labels-callouts">Labels & Callouts</h2>
 
       <p>
@@ -594,9 +578,7 @@ export default function AnnotationsPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Hierarchy & Emphasis */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="emphasis">Hierarchy &amp; Emphasis</h2>
 
       <p>
@@ -656,9 +638,6 @@ export default function AnnotationsPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Auto Placement */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="auto-placement">Auto Placement</h2>
 
       <p>
@@ -718,9 +697,7 @@ export default function AnnotationsPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Density & Progressive Disclosure */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="density">Density &amp; Progressive Disclosure</h2>
 
       <p>
@@ -792,9 +769,6 @@ export default function AnnotationsPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Responsive Annotations */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="responsive">Responsive Annotations</h2>
 
       <p>
@@ -877,9 +851,6 @@ export default function AnnotationsPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Curved Connectors */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="connectors">Curved Connectors</h2>
 
       <p>
@@ -927,9 +898,7 @@ export default function AnnotationsPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Association & Redundant Cues */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="association">Association &amp; Redundant Cues</h2>
 
       <p>
@@ -981,9 +950,6 @@ export default function AnnotationsPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Cohesion */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="cohesion">Cohesion</h2>
 
       <p>
@@ -1032,9 +998,7 @@ export default function AnnotationsPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Audience & Defensive Annotations */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="defensive">Audience &amp; Defensive Annotations</h2>
 
       <p>
@@ -1134,9 +1098,6 @@ export default function AnnotationsPage() {
   annotations={annotations}
 />`}</pre>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Enclosures */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="enclosures">Enclosures</h2>
 
       <p>
@@ -1211,9 +1172,6 @@ export default function AnnotationsPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Analytical Annotations */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="analytical-annotations">Analytical Annotations</h2>
 
       <p>
@@ -1304,9 +1262,6 @@ export default function AnnotationsPage() {
         histograms.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Anomaly Band */}
-      {/* ----------------------------------------------------------------- */}
       <h3 id="anomaly-band">Anomaly Band</h3>
 
       <p>
@@ -1361,9 +1316,7 @@ export default function AnnotationsPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
       {/* LOESS Regression */}
-      {/* ----------------------------------------------------------------- */}
       <h3 id="loess">LOESS Smoothing</h3>
 
       <p>
@@ -1431,9 +1384,6 @@ export default function AnnotationsPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Forecast Region */}
-      {/* ----------------------------------------------------------------- */}
       <h3 id="forecast">Forecast Region</h3>
 
       <p>
@@ -1493,9 +1443,6 @@ export default function AnnotationsPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Ordinal Charts */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="ordinal-charts">Ordinal Charts</h2>
 
       <p>
@@ -1530,9 +1477,6 @@ export default function AnnotationsPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Streaming Charts */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="streaming">Streaming Charts</h2>
 
       <p>
@@ -1578,9 +1522,6 @@ export default function AnnotationsPage() {
         code={streamingAnomalyCode}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Custom Rules */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="custom-rules">Custom Rules</h2>
 
       <p>
@@ -1621,9 +1562,6 @@ export default function AnnotationsPage() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Built-in Types Reference */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="built-in-types">Built-in Types Reference</h2>
 
       <p>
@@ -1672,9 +1610,6 @@ export default function AnnotationsPage() {
         </tbody>
       </table>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>
@@ -1704,9 +1639,7 @@ export default function AnnotationsPage() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Table styles
-// ---------------------------------------------------------------------------
 
 const thStyle = {
   padding: "12px 16px",

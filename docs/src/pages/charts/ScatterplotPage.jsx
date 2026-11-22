@@ -11,9 +11,7 @@ import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const simpleData = [
   { height: 160, weight: 55 },
@@ -64,9 +62,7 @@ const sizedData = [
   { height: 178, weight: 78, score: 92 },
 ]
 
-// ---------------------------------------------------------------------------
 // Props definition for PropTable
-// ---------------------------------------------------------------------------
 
 const scatterplotProps = [
   { name: "data", type: "array", required: true, default: null, description: "Array of data points. Each point should have x and y properties." },
@@ -95,9 +91,7 @@ const scatterplotProps = [
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamXYFrame props for advanced customization. Escape hatch to the full Frame API." },
 ]
 
-// ---------------------------------------------------------------------------
 // Streaming demo
-// ---------------------------------------------------------------------------
 
 const streamingScatterCode = `import { useRef, useEffect } from "react"
 import { Scatterplot } from "semiotic"
@@ -164,9 +158,7 @@ function StreamingScatterDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function ScatterplotPage() {
   return (
@@ -202,9 +194,7 @@ export default function ScatterplotPage() {
         <Link to="/charts/bubble-chart">BubbleChart</Link>.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <ChartGrounding
         component="Scatterplot"
         props={{
@@ -256,9 +246,6 @@ export default function ScatterplotPage() {
         }
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="color-by-category">Color by Category</h3>
@@ -342,9 +329,7 @@ export default function ScatterplotPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h3 id="hover-radius">Custom Hover Radius</h3>
       <p>
         Use <code>hoverRadius</code> to control how far the cursor can be from a
@@ -369,9 +354,6 @@ export default function ScatterplotPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Regression overlay */}
-      {/* ----------------------------------------------------------------- */}
       <h3 id="regression">Regression Overlay</h3>
       <p>
         Set <code>regression</code> to overlay a fitted line. Pass{" "}
@@ -419,16 +401,11 @@ export default function ScatterplotPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="Scatterplot" props={scatterplotProps} />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
@@ -507,9 +484,6 @@ export default function ScatterplotPage() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

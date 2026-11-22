@@ -8,9 +8,7 @@ import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 // Flat data — StreamXYFrame needs flat arrays with groupAccessor, not nested coordinates
 const lineData = [
@@ -48,9 +46,7 @@ const stackedData = [
   ...[1,2,3,4,5,6].map(m => ({ group: "Product C", month: m, value: [2000,3000,2000,4000,3000,5000][m-1] })),
 ]
 
-// ---------------------------------------------------------------------------
 // Props definition for PropTable
-// ---------------------------------------------------------------------------
 
 const xyFrameProps = [
   { name: "chartType", type: "string", required: true, default: null, description: 'Chart type: "line", "area", "stackedarea", "scatter", "bubble", "heatmap", "bar", "swarm", "waterfall", "candlestick".' },
@@ -79,9 +75,7 @@ const xyFrameProps = [
   { name: "svgAnnotationRules", type: "function", required: false, default: null, description: "Custom SVG annotation render function." },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function XYFramePage() {
   return (
@@ -114,9 +108,6 @@ export default function XYFramePage() {
         compositions, or features beyond what the simpler Chart components offer.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="quick-start">Quick Start</h2>
 
       <p>
@@ -150,9 +141,6 @@ export default function XYFramePage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="multi-line">Multi-Line with Color</h3>
@@ -297,16 +285,10 @@ export default function XYFramePage() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="StreamXYFrame" props={xyFrameProps} />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

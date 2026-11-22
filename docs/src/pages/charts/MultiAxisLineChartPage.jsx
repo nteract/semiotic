@@ -11,9 +11,7 @@ import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data — weather station readings
-// ---------------------------------------------------------------------------
 
 const weatherData = [
   { time: 0, temperature: 58, humidity: 0.82 },
@@ -58,9 +56,7 @@ const serverData = [
   { minute: 55, rps: 1300, latency: 43 },
 ]
 
-// ---------------------------------------------------------------------------
 // Props definition for PropTable
-// ---------------------------------------------------------------------------
 
 const multiAxisProps = [
   { name: "data", type: "array", required: false, default: null, description: "Array of data points shared by both series. Omit when using push API." },
@@ -90,9 +86,7 @@ const seriesConfigProps = [
   { name: "extent", type: "[number, number]", required: false, default: "computed from data", description: "Fixed [min, max] extent. Required for push API streaming so unitization is stable." },
 ]
 
-// ---------------------------------------------------------------------------
 // Streaming demo
-// ---------------------------------------------------------------------------
 
 const streamingCode = `import { useRef, useEffect } from "react"
 import { MultiAxisLineChart } from "semiotic"
@@ -157,9 +151,7 @@ function StreamingDualAxisDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Main Page
-// ---------------------------------------------------------------------------
 
 export default function MultiAxisLineChartPage() {
   return (

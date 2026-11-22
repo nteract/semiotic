@@ -8,9 +8,7 @@ import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const lineData = [
   { month: 1, sales: 4200 },
@@ -60,9 +58,7 @@ const frameLineData = [
   },
 ]
 
-// ---------------------------------------------------------------------------
 // Datasets for the axisExtent demos
-// ---------------------------------------------------------------------------
 
 // Sparse temporal series — picks dates that the d3 "nice" algorithm wouldn't
 // land on (a Tuesday close-of-quarter), so the difference between nice and
@@ -136,9 +132,7 @@ const axisExtentSwarmData = [
   { group: "Activation", score: 98.7 },
 ]
 
-// ---------------------------------------------------------------------------
 // Axis props definition
-// ---------------------------------------------------------------------------
 
 const axisProps = [
   {
@@ -260,9 +254,7 @@ const axisProps = [
   },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 function ResizableAutoRotateDemo() {
   const [chartWidth, setChartWidth] = useState(300)
@@ -376,9 +368,6 @@ export default function AxesPage() {
         the lower-level Frame components share the same axis configuration system.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* With Charts */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="with-charts">With Charts</h2>
 
       <p>
@@ -428,9 +417,7 @@ export default function AxesPage() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Exact-extent axes */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="axis-extent">Nice, Exact, and Rounded Extents</h2>
 
       <p>
@@ -675,9 +662,7 @@ resolveAxisTickCount({ size: 130, orientation: "vertical" }) // 4`} language="js
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Tick Anchor */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="tick-anchor">Edge-Aligned Tick Labels</h2>
 
       <p>
@@ -725,9 +710,7 @@ resolveAxisTickCount({ size: 130, orientation: "vertical" }) // 4`} language="js
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Per-axis styling */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="per-axis-styling">Per-Axis CSS Targeting</h2>
 
       <p>
@@ -809,9 +792,6 @@ resolveAxisTickCount({ size: 130, orientation: "vertical" }) // 4`} language="js
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* With Frames */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="with-frames">With Frames</h2>
 
       <p>
@@ -867,7 +847,6 @@ resolveAxisTickCount({ size: 130, orientation: "vertical" }) // 4`} language="js
           showAxes: true,
           xLabel: "Month",
           yLabel: "Revenue",
-          // TODO: migrate custom tickFormat to StreamXYFrame API
           axes: [
             {
               orient: "left",
@@ -1236,9 +1215,6 @@ axes={[{
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Configuration */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="configuration">Configuration</h2>
 
       <p>
@@ -1304,9 +1280,6 @@ axes={[{
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

@@ -7,9 +7,7 @@ import { GeoPipelineStore } from "./GeoPipelineStore"
 import { OrdinalPipelineStore } from "./OrdinalPipelineStore"
 import { NetworkPipelineStore } from "./NetworkPipelineStore"
 
-// ═══════════════════════════════════════════════════════════════════════
 // PipelineStore.remove
-// ═══════════════════════════════════════════════════════════════════════
 
 describe("PipelineStore.remove", () => {
   it("removes points by ID using pointIdAccessor", () => {
@@ -163,9 +161,7 @@ describe("PipelineStore.remove", () => {
   })
 })
 
-// ═══════════════════════════════════════════════════════════════════════
 // PipelineStore.update
-// ═══════════════════════════════════════════════════════════════════════
 
 describe("PipelineStore.update", () => {
   it("updates a point's value by ID", () => {
@@ -268,9 +264,7 @@ describe("PipelineStore.update", () => {
   })
 })
 
-// ═══════════════════════════════════════════════════════════════════════
 // OrdinalPipelineStore.update
-// ═══════════════════════════════════════════════════════════════════════
 
 describe("OrdinalPipelineStore.update", () => {
   it("updates item value by ID", () => {
@@ -313,9 +307,7 @@ describe("OrdinalPipelineStore.update", () => {
   })
 })
 
-// ═══════════════════════════════════════════════════════════════════════
 // OrdinalPipelineStore.remove
-// ═══════════════════════════════════════════════════════════════════════
 
 describe("OrdinalPipelineStore.remove", () => {
   it("removes items by dataIdAccessor", () => {
@@ -387,9 +379,7 @@ describe("OrdinalPipelineStore.remove", () => {
   })
 })
 
-// ═══════════════════════════════════════════════════════════════════════
 // NetworkPipelineStore.removeNode / removeEdge
-// ═══════════════════════════════════════════════════════════════════════
 
 describe("NetworkPipelineStore.removeNode", () => {
   it("removes a node and its connected edges", () => {
@@ -507,9 +497,7 @@ describe("NetworkPipelineStore.removeEdge", () => {
   })
 })
 
-// ═══════════════════════════════════════════════════════════════════════
 // GeoPipelineStore.removePoint
-// ═══════════════════════════════════════════════════════════════════════
 
 describe("GeoPipelineStore.removePoint", () => {
   it("removes points by ID from static data", () => {

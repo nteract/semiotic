@@ -8,9 +8,7 @@ import PageLayout from "../../components/PageLayout"
 import { Link } from "react-router-dom"
 import useContainerWidth from "../../hooks/useContainerWidth"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const lineData = [
   { week: 1, score: 12 },
@@ -96,9 +94,7 @@ const semanticAnchorAnnotation = {
   },
 }
 
-// ---------------------------------------------------------------------------
 // Table styles (matches the Annotations overview page)
-// ---------------------------------------------------------------------------
 
 const thStyle = {
   padding: "12px 16px",
@@ -209,9 +205,7 @@ function SemanticAnchorDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function AnnotationProvenancePage() {
   return (

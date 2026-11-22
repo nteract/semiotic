@@ -562,7 +562,6 @@ export const ChoroplethMap = /* @__PURE__ */ withChartErrorBoundary(function Cho
     ...(className && { className }),
     ...(props.animate != null && { animate: props.animate }),
     ...frameProps,
-    // frameProps precedence: the caller's style still wins; this re-applies it with selection dimming preserved.
     ...(userAreaStyle && { areaStyle: userAreaStyle }),
   }
 

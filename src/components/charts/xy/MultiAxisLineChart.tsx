@@ -442,7 +442,6 @@ export const MultiAxisLineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__P
     legendPosition: legendPositionProp,
     frameLegend: {
       ...frameProps,
-      // Intentional frameProps override: use the derived layout so setup reserves dual-axis chrome.
       legendLayout,
     },
     selection,
@@ -610,11 +609,6 @@ export const MultiAxisLineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__P
     [defaultTooltipContent, multiDefaultContent, resolvedTooltipInput],
   )
 
-  // Loading / empty state — returned only after every hook above has run, so
-  // the hook count is identical whether or not data is present. Mounting empty
-  // (loading skeleton, 0 lines) and then streaming in data must not change the
-  // number of hooks between renders, or React throws "Rendered more hooks than
-  // during the previous render."
   if (setup.earlyReturn) return setup.earlyReturn
 
   // ── Validation ────────────────────────────────────────────────────────
@@ -677,10 +671,7 @@ export const MultiAxisLineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__P
     }),
     ...setup.crosshairProps,
     ...frameProps,
-    // frameProps precedence: the caller's style still wins; this re-applies it with selection dimming preserved.
     ...(userLineStyle && { lineStyle: userLineStyle }),
-    // frameProps precedence: callers own the final frame configuration; the
-    // derived legend is appended only when this HOC explicitly requested it.
     ...(legendLayout && { legendLayout }),
   }
 

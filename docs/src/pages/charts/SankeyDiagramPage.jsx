@@ -11,9 +11,7 @@ import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Responsive container hook
-// ---------------------------------------------------------------------------
 
 function useContainerWidth() {
   const ref = useRef(null)
@@ -34,9 +32,7 @@ function useContainerWidth() {
   return [ref, width]
 }
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const edgeData = [
   { source: "Budget", target: "Engineering", value: 400 },
@@ -62,9 +58,7 @@ const nodeData = [
   { id: "Facilities", category: "Expense" },
 ]
 
-// ---------------------------------------------------------------------------
 // Circular link examples
-// ---------------------------------------------------------------------------
 
 const circularFeedbackLoop = [
   { source: "API", target: "Auth", value: 30 },
@@ -107,9 +101,7 @@ const conversionEdges = [
   { source: "Paid", target: "Churned", value: 100 },
 ]
 
-// ---------------------------------------------------------------------------
 // Pastel color scheme for streaming examples
-// ---------------------------------------------------------------------------
 
 const pastelColors = [
   "#a8d8ea", // soft blue
@@ -124,9 +116,7 @@ const pastelColors = [
   "#b2dfdb", // soft teal
 ]
 
-// ---------------------------------------------------------------------------
 // Streaming data sets
-// ---------------------------------------------------------------------------
 
 const BUDGET_EDGES = [
   { source: "Salary", target: "Budget", value: 5000 },
@@ -150,9 +140,7 @@ const MORE_EDGES = [
   { source: "Food", target: "Dining", value: 300 }
 ]
 
-// ---------------------------------------------------------------------------
 // Props definition for PropTable
-// ---------------------------------------------------------------------------
 
 const sankeyDiagramProps = [
   { name: "edges", type: "array", required: true, default: null, description: "Array of edge objects with source, target, and value properties." },
@@ -182,9 +170,7 @@ const sankeyDiagramProps = [
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamNetworkFrame props for advanced customization." },
 ]
 
-// ---------------------------------------------------------------------------
 // Streaming Quick Start demo
-// ---------------------------------------------------------------------------
 
 const streamingSankeyCode = `import { useRef } from "react"
 import { SankeyDiagram } from "semiotic"
@@ -267,9 +253,7 @@ function StreamingSankeyDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Interactive push demo (from former RealtimeSankey page)
-// ---------------------------------------------------------------------------
 
 function PushApiDemo() {
   const chartRef = useRef()
@@ -352,9 +336,7 @@ function PushApiDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Continuous streaming demo (from former RealtimeSankey page)
-// ---------------------------------------------------------------------------
 
 const CONTINUOUS_STREAM_PIPELINE = [
   { source: "Ingest", target: "Validate", w: 3 },
@@ -438,9 +420,7 @@ function ContinuousStreamDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function SankeyDiagramPage() {
   return (
@@ -479,9 +459,7 @@ export default function SankeyDiagramPage() {
         with animated particles.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <ChartGrounding component="SankeyDiagram" />
 
       <h2 id="quick-start">Quick Start</h2>
@@ -519,9 +497,6 @@ export default function SankeyDiagramPage() {
         }
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Circular Links */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="circular-links">Circular Links</h2>
 
       <p>
@@ -577,9 +552,6 @@ export default function SankeyDiagramPage() {
         title="Multiple Cycles"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="colored-nodes">Colored by Category</h3>
@@ -665,9 +637,6 @@ export default function SankeyDiagramPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Streaming */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="streaming">Streaming</h2>
 
       <p>
@@ -748,16 +717,11 @@ chartRef.current.push({ source: "Budget", target: "Rent", value: 2000 })
         <li>Default threshold: 3.0</li>
       </ul>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="SankeyDiagram" props={sankeyDiagramProps} />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
@@ -809,9 +773,6 @@ chartRef.current.push({ source: "Budget", target: "Rent", value: 2000 })
         </div>
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

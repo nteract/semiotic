@@ -11,9 +11,7 @@ import { mulberry32, findProximityProblem } from "./gestaltData"
 
 export { LESMIS_NODES, LESMIS_EDGES, CORE_IDS, findProximityProblem }
 
-// ---------------------------------------------------------------------------
 // Mid-century textbook palette
-// ---------------------------------------------------------------------------
 export const PAPER = "#f3ecda"
 export const PAPER_DEEP = "#e9dfc6"
 export const INK = "#2a241d"
@@ -38,9 +36,7 @@ export function groupColor(group) {
   return COMMUNITY_COLORS[n % COMMUNITY_COLORS.length]
 }
 
-// ---------------------------------------------------------------------------
 // Graph utilities
-// ---------------------------------------------------------------------------
 export function buildAdjacency(nodes, edges) {
   const adj = new Map(nodes.map((n) => [n.id, new Set()]))
   for (const e of edges) {
@@ -226,9 +222,7 @@ export function centralityFor(metric, nodes, edges) {
   return out
 }
 
-// ---------------------------------------------------------------------------
 // Static layout helpers (return { id: {x, y} } in normalized 0–1 space)
-// ---------------------------------------------------------------------------
 export function arcLayout(ids) {
   const pos = {}
   const n = ids.length
@@ -258,9 +252,7 @@ export function orderedIds(nodes, edges) {
     .map((n) => n.id)
 }
 
-// ---------------------------------------------------------------------------
 // Subgraphs + aggregations
-// ---------------------------------------------------------------------------
 export function subgraph(ids) {
   const set = new Set(ids)
   const nodes = LESMIS_NODES.filter((n) => set.has(n.id))
@@ -318,9 +310,7 @@ export function membershipSankey(nodes, edges, topN = 14) {
   return { nodes: sankeyNodes, edges: sankeyEdges }
 }
 
-// ---------------------------------------------------------------------------
 // Chapter 1 — a tiny hierarchy for the "network types" figure
-// ---------------------------------------------------------------------------
 export const TYPE_TREE = {
   id: "Company",
   children: [
@@ -385,9 +375,7 @@ export function markReciprocity(edges) {
   }))
 }
 
-// ---------------------------------------------------------------------------
 // Chapter 8 — sample graphs for the Network Toy
-// ---------------------------------------------------------------------------
 // A random graph with planted clusters, so communities are real and visible.
 export function randomClustered(seed = 1, clusters = 4, perCluster = 6) {
   const rand = mulberry32(seed)

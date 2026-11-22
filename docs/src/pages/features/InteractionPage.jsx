@@ -7,9 +7,7 @@ import PropTable from "../../components/PropTable"
 import PageLayout from "../../components/PageLayout"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const lineData = [
   { month: 1, revenue: 12000, product: "Widget" },
@@ -46,9 +44,7 @@ const swarmData = Array.from({ length: 80 }, () => ({
 
 const colors = ["#6366f1", "#f59e0b"]
 
-// ---------------------------------------------------------------------------
 // Interaction props
-// ---------------------------------------------------------------------------
 
 const interactionProps = [
   { name: "brush", type: "string", required: true, default: null, description: 'Brush type: "xBrush", "yBrush", or "xyBrush".' },
@@ -59,9 +55,7 @@ const interactionProps = [
   { name: "columnsBrush", type: "boolean", required: false, default: "false", description: "For StreamOrdinalFrame: enable per-column brushes (parallel coordinates style)." },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function InteractionPage() {
   return (
@@ -81,9 +75,6 @@ export default function InteractionPage() {
         filtering interfaces, and exploratory visualizations.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* With Charts */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="with-charts">With Charts</h2>
 
       <p>
@@ -132,9 +123,6 @@ export default function InteractionPage() {
         title="Line Highlighting on Hover"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* With Frames */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="with-frames">With Frames</h2>
 
       <h3 id="highlight-hover">Highlight on Hover</h3>
@@ -490,9 +478,6 @@ function OrdinalBrushExample() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Configuration */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="configuration">Configuration</h2>
 
       <h3 id="interaction-prop">interaction Prop (StreamXYFrame)</h3>
@@ -580,9 +565,6 @@ function OrdinalBrushExample() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

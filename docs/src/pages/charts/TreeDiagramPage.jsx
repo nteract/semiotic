@@ -9,9 +9,7 @@ import PageLayout from "../../components/PageLayout"
 import ChartGrounding from "../../components/ChartGrounding"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const orgData = {
   name: "CEO",
@@ -40,9 +38,7 @@ const orgData = {
   ],
 }
 
-// ---------------------------------------------------------------------------
 // Props definition for PropTable
-// ---------------------------------------------------------------------------
 
 const treeDiagramProps = [
   { name: "data", type: "object", required: true, default: null, description: "Hierarchical data object with a children property (or custom accessor)." },
@@ -71,9 +67,7 @@ const treeDiagramProps = [
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamNetworkFrame props for advanced customization. Escape hatch to the full Frame API." },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function TreeDiagramPage() {
   return (
@@ -109,9 +103,7 @@ export default function TreeDiagramPage() {
         parent-child relationships.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <ChartGrounding component="TreeDiagram" />
 
       <h2 id="quick-start">Quick Start</h2>
@@ -146,9 +138,6 @@ export default function TreeDiagramPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="horizontal-cluster">Horizontal Dendrogram</h3>
@@ -202,16 +191,11 @@ export default function TreeDiagramPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="TreeDiagram" props={treeDiagramProps} />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
@@ -295,9 +279,6 @@ export default function TreeDiagramPage() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

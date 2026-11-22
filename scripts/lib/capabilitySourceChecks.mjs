@@ -150,3 +150,9 @@ export function capabilitySignals(wiring) {
 export function sourceWiresPushHandle(source) {
   return capabilitySignals(readCapabilityWiring(source)).push
 }
+
+/** Some physics charts expose their legend through the frame escape hatch. */
+export function hasLegendControl(schemaProps, { calls, components }) {
+  return !!(schemaProps?.showLegend || schemaProps?.legend ||
+    (components.has("StreamPhysicsFrame") && calls.has("resolvePhysicsFrameSharedProps")))
+}

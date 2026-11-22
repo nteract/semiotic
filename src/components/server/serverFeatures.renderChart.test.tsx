@@ -78,9 +78,7 @@ const hierarchyLegendData = {
   ],
 }
 
-// ═══════════════════════════════════════════════════════════════════════
 // renderChart HOC-level API
-// ═══════════════════════════════════════════════════════════════════════
 
 describe("renderChart", () => {
   // ── XY Charts ──────────────────────────────────────────────────────
@@ -1036,9 +1034,7 @@ describe("renderChart", () => {
   })
 })
 
-// ═══════════════════════════════════════════════════════════════════════
 // renderDashboard
-// ═══════════════════════════════════════════════════════════════════════
 
 describe("renderDashboard", () => {
   it("renders empty dashboard", () => {
@@ -1192,9 +1188,7 @@ describe("renderDashboard", () => {
   })
 })
 
-// ═══════════════════════════════════════════════════════════════════════
 // Parity: renderChart vs renderToStaticSVG
-// ═══════════════════════════════════════════════════════════════════════
 
 describe("Parity: renderChart vs frame-level API", () => {
   it("BarChart produces same structure as ordinal frame", () => {
@@ -1263,9 +1257,7 @@ describe("Parity: renderChart vs frame-level API", () => {
   })
 })
 
-// ═══════════════════════════════════════════════════════════════════════
 // Edge cases and error handling
-// ═══════════════════════════════════════════════════════════════════════
 
 describe("Edge cases", () => {
   it("handles empty data gracefully", () => {

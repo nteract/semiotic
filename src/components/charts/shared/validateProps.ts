@@ -27,9 +27,7 @@ import { findUnknownAxisConfigKeys } from "../../stream/axisConfigKeys"
 export { VALIDATION_MAP }
 export type { PropType, DataShape }
 
-// ---------------------------------------------------------------------------
 // Types
-// ---------------------------------------------------------------------------
 
 /** Stable identifiers for the kinds of finding `validateProps` reports. */
 export type ValidationIssueCode =
@@ -117,9 +115,7 @@ export interface ComponentSpec {
   props: Record<string, PropDef>
 }
 
-// ---------------------------------------------------------------------------
 // Helpers
-// ---------------------------------------------------------------------------
 
 function checkType(value: unknown, expected: PropType | PropType[]): boolean {
   const types = Array.isArray(expected) ? expected : [expected]
@@ -423,9 +419,7 @@ function validateLegendLayout(frameProps: Datum): ValidationIssue[] {
   return issues
 }
 
-// ---------------------------------------------------------------------------
 // Public API
-// ---------------------------------------------------------------------------
 
 /**
  * Validate props for a Semiotic HOC chart component.

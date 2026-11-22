@@ -11,9 +11,7 @@ import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 // Generate dense sample data for visible distribution shapes
 function generateNormal(mean, std, n) {
@@ -39,9 +37,7 @@ const colorData = [
   ...generateNormal(68, 7, 50).map(v => ({ category: "Region C", value: v, zone: "Rural" })),
 ]
 
-// ---------------------------------------------------------------------------
 // Streaming demo
-// ---------------------------------------------------------------------------
 
 const violinTimeSlots = ["Morning", "Afternoon", "Evening"]
 
@@ -115,13 +111,9 @@ function StreamingViolinDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Props definition for PropTable
-// ---------------------------------------------------------------------------
 
-// ---------------------------------------------------------------------------
 // Brush + Zoom demo
-// ---------------------------------------------------------------------------
 
 function ViolinBrushDemo() {
   const [brushExtent, setBrushExtent] = useState(null)
@@ -180,9 +172,7 @@ const violinPlotProps = [
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamOrdinalFrame props for advanced customization. Escape hatch to the full Frame API." },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function ViolinPlotPage() {
   return (
@@ -220,9 +210,7 @@ export default function ViolinPlotPage() {
         bimodality and skew.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <ChartGrounding component="ViolinPlot" />
 
       <h2 id="quick-start">Quick Start</h2>
@@ -267,9 +255,6 @@ export default function ViolinPlotPage() {
         }
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="no-iqr">Without IQR Lines</h3>
@@ -368,9 +353,6 @@ export default function ViolinPlotPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Brush + Zoom */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="brush-zoom">Brush + Zoom</h2>
 
       <p>
@@ -392,16 +374,11 @@ export default function ViolinPlotPage() {
         />
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="ViolinPlot" props={violinPlotProps} />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
@@ -459,9 +436,6 @@ export default function ViolinPlotPage() {
         </div>
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

@@ -12,9 +12,7 @@ import { extent } from "d3-array"
 import { scaleLinear } from "d3-scale"
 import theme from "../../theme"
 
-// ---------------------------------------------------------------------------
 // Streaming demo — replay the season chronologically
-// ---------------------------------------------------------------------------
 
 // Sort by date so the season replays in order
 const sortedData = [...stantonData].sort(

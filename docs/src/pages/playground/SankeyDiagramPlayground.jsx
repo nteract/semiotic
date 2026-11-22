@@ -2,9 +2,7 @@ import React from "react"
 import { SankeyDiagram } from "semiotic"
 import PlaygroundLayout from "../../components/PlaygroundLayout"
 
-// ---------------------------------------------------------------------------
 // Control schema
-// ---------------------------------------------------------------------------
 
 const controls = [
   { name: "orientation", type: "select", label: "Orientation", group: "Layout",
@@ -23,9 +21,7 @@ const controls = [
     default: true },
 ]
 
-// ---------------------------------------------------------------------------
 // Datasets
-// ---------------------------------------------------------------------------
 
 // Dataset 1: Company revenue breakdown (income statement style)
 const revenueEdges = [
@@ -141,9 +137,7 @@ const datasets = [
   },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function SankeyDiagramPlayground() {
   return (

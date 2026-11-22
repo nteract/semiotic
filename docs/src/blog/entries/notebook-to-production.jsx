@@ -4,9 +4,7 @@ import { LineChart } from "semiotic/line"
 import { StackedBarChart } from "semiotic/ordinal"
 import { unstable_fromObservablePlot as fromObservablePlot } from "semiotic/experimental"
 
-// ---------------------------------------------------------------------------
 // Demo data + two Plot specs a notebook might produce
-// ---------------------------------------------------------------------------
 
 // Categorical x (month) for the bars; continuous x (week) for the line — a
 // line chart needs a continuous x scale, not category labels.
@@ -127,9 +125,7 @@ function Demo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Body
-// ---------------------------------------------------------------------------
 
 function Body() {
   return (

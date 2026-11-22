@@ -190,10 +190,6 @@ describe("MultiAxisLineChart", () => {
   })
 
   it("survives the loading→data transition without a hooks-count error", () => {
-    // Mounting empty (loading skeleton, 0 lines) then re-rendering as data
-    // arrives must not call a different number of hooks between renders —
-    // otherwise React throws "Rendered more hooks than during the previous
-    // render". Regression guard for the misplaced `setup.earlyReturn` return.
     const errSpy = vi.spyOn(console, "error").mockImplementation(() => {})
     const ref = React.createRef<RealtimeFrameHandle>()
     try {

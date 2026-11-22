@@ -59,9 +59,7 @@ import {
 } from "./chartFamilySets"
 import { getChartRecipe } from "../../ai/chartRecipeRegistry"
 
-// ---------------------------------------------------------------------------
 // Types
-// ---------------------------------------------------------------------------
 
 export type A11yPrinciple =
   | "perceivable"
@@ -141,9 +139,7 @@ export interface AuditAccessibilityOptions {
 const REFERENCE =
   "Chartability (POUR-CAF) — https://chartability.github.io/POUR-CAF/. Not a pass/fail cert; pair with manual screen-reader testing (NVDA+Firefox, JAWS+Chrome, VoiceOver+Safari)."
 
-// ---------------------------------------------------------------------------
 // Small helpers
-// ---------------------------------------------------------------------------
 
 function annotationConfidence(a: Datum): number | null {
   const c = a?.provenance?.confidence
@@ -301,9 +297,7 @@ function checkContrast(props: Datum): A11yFinding {
   }
 }
 
-// ---------------------------------------------------------------------------
 // Public API
-// ---------------------------------------------------------------------------
 
 /**
  * Audit a Semiotic chart configuration against the Chartability heuristics.
@@ -1079,9 +1073,7 @@ export function accessibilityCaveats(
   return out
 }
 
-// ---------------------------------------------------------------------------
 // Formatting (shared by CLI + MCP so their output stays identical)
-// ---------------------------------------------------------------------------
 
 const STATUS_ICON: Record<A11yStatus, string> = {
   pass: "✓",
