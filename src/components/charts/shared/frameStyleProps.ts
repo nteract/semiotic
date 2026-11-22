@@ -1,32 +1,3 @@
-/**
- * frameStyleProps — keep a caller's `frameProps.*Style` interactive.
- *
- * Chart components build their mark style in layers and finish by wrapping it
- * so shared selection, linked hover, and legend highlighting can dim the marks
- * that do not match. `frameProps` spreads last, so a style function passed
- * there takes the place of the chart's own. That swap used to remove the
- * selection wrapper too: a chart given `frameProps.pointStyle` stopped
- * responding to `selection`, `linkedHover`, and legend interaction, with no
- * warning.
- *
- * `selectionAwareFrameStyle` wraps the caller's function with the same
- * selection wrapper the chart applies to its own style, so the interaction
- * layer survives the override. While no selection is active the wrapped
- * function returns the caller's fields unchanged, so a chart at rest renders
- * exactly as it did before. Chart components call it through
- * `useSelectionAwareFrameStyle`, which memoizes the result.
- *
- * Only function-form styles are wrapped. Object-form styles and `undefined`
- * pass through untouched, because the frames resolve those through different
- * defaults and converting one into the other would change the drawn marks.
- *
- * Ordinal charts layer `frameProps.pieceStyle` over their base style through
- * `useOrdinalPieceStyle`, which already ends in the selection wrap; they do
- * not need this helper for that key.
- *
- * This module is free of React so the static renderer can share
- * `overlayFrameStyle` with the chart components.
- */
 import type { Datum } from "./datumTypes"
 import {
   wrapStyleWithSelection,
@@ -40,11 +11,6 @@ import {
 
 type FrameStyleFn = (datum: Datum, ...args: unknown[]) => Datum
 
-/**
- * Selection wrapper with the signature the family helpers share
- * (`wrapStyleWithSelection`, `wrapNetworkNodeStyleWithSelection`,
- * `wrapNetworkEdgeStyleWithSelection`).
- */
 export type FrameStyleSelectionWrapper = (
   style: FrameStyleFn,
   selectionHook: SelectionHookResult | null,
@@ -68,13 +34,7 @@ export interface FrameStyleSelectionOptions {
 
 const NO_STYLE: Datum = Object.freeze({})
 
-/**
- * Return `frameStyle` with the chart's selection wrapper applied.
- *
- * Returns the input unchanged when it is not a function or when the chart has
- * no selection hook. A style function that returns `null` or `undefined` for a
- * datum keeps returning that value, so the frame's own fallback still applies.
- */
+/** Wrap function styles for selection while preserving nullish per-datum fallbacks. */
 export function selectionAwareFrameStyle<TStyle>(
   frameStyle: TStyle,
   selectionHook: SelectionHookResult | null | undefined,
@@ -110,13 +70,7 @@ export function selectionAwareFrameStyle<TStyle>(
   return aware as unknown as TStyle
 }
 
-/**
- * Layer a caller's style over a chart-owned style function, field by field.
- * Used where a chart composes a secondary style itself and a raw `frameProps`
- * spread would otherwise replace or drop it.
- *
- * Returns `base` unchanged when `overlay` is undefined.
- */
+/** Caller fields override the chart style for the same datum. */
 export function overlayFrameStyle<TArgs extends unknown[]>(
   base: (...args: TArgs) => Datum,
   overlay: Datum | ((...args: TArgs) => Datum | null | undefined) | null | undefined,

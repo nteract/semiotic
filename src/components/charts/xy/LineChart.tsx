@@ -940,7 +940,6 @@ export const LineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
     ...crosshairFrameProps,
     ...brushStreamProps,
     ...framePropsWithoutLegend,
-    // frameProps precedence: the caller's style still wins; this re-applies it with selection dimming preserved.
     ...frameStyles,
   }
 

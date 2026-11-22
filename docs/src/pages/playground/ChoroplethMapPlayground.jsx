@@ -2,9 +2,7 @@ import React, { useEffect, useState } from "react"
 import { ChoroplethMap, mergeData, resolveReferenceGeography } from "semiotic/geo"
 import PlaygroundLayout from "../../components/PlaygroundLayout"
 
-// ---------------------------------------------------------------------------
 // Controls
-// ---------------------------------------------------------------------------
 
 const controls = [
   { name: "colorScheme", type: "select", label: "Color Scheme", group: "Color",
@@ -23,9 +21,7 @@ const controls = [
     default: "" },
 ]
 
-// ---------------------------------------------------------------------------
 // Datasets — pre-enriched world maps
-// ---------------------------------------------------------------------------
 
 const gdpData = [
   { id: "840", gdpPerCapita: 63544 }, { id: "156", gdpPerCapita: 12556 },
@@ -91,9 +87,7 @@ const areas = mergeData(world, popData, { featureKey: "id", dataKey: "id" })`,
   },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function ChoroplethMapPlayground() {
   return (

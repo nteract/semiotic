@@ -2,9 +2,7 @@ import React from "react"
 import { ForceDirectedGraph } from "semiotic"
 import PlaygroundLayout from "../../components/PlaygroundLayout"
 
-// ---------------------------------------------------------------------------
 // Control schema
-// ---------------------------------------------------------------------------
 
 const controls = [
   { name: "nodeSize", type: "number", label: "Node Size", group: "Nodes",
@@ -27,9 +25,7 @@ const controls = [
     default: true },
 ]
 
-// ---------------------------------------------------------------------------
 // Datasets
-// ---------------------------------------------------------------------------
 
 const smallTeamNodes = [
   { id: "Alice", group: "Engineering" },
@@ -161,9 +157,7 @@ const datasets = [
   },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function ForceDirectedGraphPlayground() {
   return (

@@ -11,9 +11,7 @@ import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const sampleData = [
   { category: "Q1", product: "Widgets", value: 12000 },
@@ -42,9 +40,7 @@ const regionData = [
   { category: "2024", region: "Asia", value: 330 },
 ]
 
-// ---------------------------------------------------------------------------
 // Streaming demo
-// ---------------------------------------------------------------------------
 
 const quarters = ["Q1", "Q2", "Q3", "Q4"]
 const products = ["Widgets", "Gadgets", "Gizmos"]
@@ -127,9 +123,7 @@ function StreamingStackedBarDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Props definition for PropTable
-// ---------------------------------------------------------------------------
 
 const stackedBarChartProps = [
   { name: "data", type: "array", required: true, default: null, description: "Array of data points with category, subcategory, and value fields." },
@@ -161,9 +155,7 @@ const stackedBarChartProps = [
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamOrdinalFrame props for advanced customization. Escape hatch to the full Frame API." },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function StackedBarChartPage() {
   return (
@@ -198,9 +190,7 @@ export default function StackedBarChartPage() {
         legends, and hover interactions.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <ChartGrounding component="StackedBarChart" />
 
       <h2 id="quick-start">Quick Start</h2>
@@ -242,9 +232,6 @@ export default function StackedBarChartPage() {
         }
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="horizontal-stacked">Horizontal Stacked</h3>
@@ -413,16 +400,11 @@ export default function StackedBarChartPage() {
   roundedTop={6}
 />`} />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="StackedBarChart" props={stackedBarChartProps} />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
@@ -504,9 +486,6 @@ export default function StackedBarChartPage() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

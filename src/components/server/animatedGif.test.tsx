@@ -57,9 +57,7 @@ function firstCircleY(svg: string): number {
   return match ? Number(match[1]) : NaN
 }
 
-// ═══════════════════════════════════════════════════════════════════════
 // generateFrameSVGs — Phase 1: Sliding window
-// ═══════════════════════════════════════════════════════════════════════
 
 describe("generateFrameSVGs", () => {
   describe("Phase 1: Sliding window", () => {
@@ -170,9 +168,7 @@ describe("generateFrameSVGs", () => {
     })
   })
 
-  // ═════════════════════════════════════════════════════════════════════
   // Phase 2: Transition easing
-  // ═════════════════════════════════════════════════════════════════════
 
   describe("Phase 2: Transition easing", () => {
     it("generates extra frames when transitionFrames > 0", () => {
@@ -200,9 +196,7 @@ describe("generateFrameSVGs", () => {
     })
   })
 
-  // ═════════════════════════════════════════════════════════════════════
   // Phase 3: Decay
-  // ═════════════════════════════════════════════════════════════════════
 
   describe("Phase 3: Decay effects", () => {
     it("accepts decay config without errors", () => {
@@ -243,9 +237,7 @@ describe("generateFrameSVGs", () => {
     })
   })
 
-  // ═════════════════════════════════════════════════════════════════════
   // Annotations in frames
-  // ═════════════════════════════════════════════════════════════════════
 
   describe("Annotations in animated frames", () => {
     it("renders y-threshold annotation in every frame", () => {
@@ -267,9 +259,7 @@ describe("generateFrameSVGs", () => {
     })
   })
 
-  // ═════════════════════════════════════════════════════════════════════
   // Theme integration
-  // ═════════════════════════════════════════════════════════════════════
 
   describe("Theme integration", () => {
     it("applies dark theme to frames", () => {
@@ -321,9 +311,7 @@ describe("generateFrameSVGs", () => {
     expect(frames[0]).toContain('font-weight="500"')
   })
 
-  // ═════════════════════════════════════════════════════════════════════
   // Chart type coverage
-  // ═════════════════════════════════════════════════════════════════════
 
   describe("Chart type coverage", () => {
     it("generates frames for area charts", () => {
@@ -356,9 +344,7 @@ describe("generateFrameSVGs", () => {
 })
 
 // ═══════════════════════════════════════════════════════════════════════
-// ═══════════════════════════════════════════════════════════════════════
 // generateFrameSequence — snapshot-based animation
-// ═══════════════════════════════════════════════════════════════════════
 
 describe("generateFrameSequence", () => {
   it("generates frames from ForceDirectedGraph snapshots", () => {
@@ -434,9 +420,7 @@ describe("generateFrameSequence", () => {
   })
 })
 
-// ═══════════════════════════════════════════════════════════════════════
 // generatePhysicsFrameSVGs — sim-stepped physics animation
-// ═══════════════════════════════════════════════════════════════════════
 
 describe("generatePhysicsFrameSVGs", () => {
   it("applies the physics camera to every frame without relocating body coordinates", () => {
@@ -540,9 +524,7 @@ describe("generatePhysicsFrameSVGs", () => {
   })
 })
 
-// ═══════════════════════════════════════════════════════════════════════
 // renderToAnimatedGif — integration (requires sharp + gifenc)
-// ═══════════════════════════════════════════════════════════════════════
 
 describe("renderToAnimatedGif", () => {
   it("produces a GIF buffer from line data", async () => {

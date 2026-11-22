@@ -8,9 +8,7 @@ import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const barData = [
   { department: "Engineering", employees: 42 },
@@ -35,9 +33,7 @@ const swarmData = Array.from({ length: 80 }, (_, i) => {
   return { department: dept, score: base + (Math.random() - 0.5) * 40 }
 })
 
-// ---------------------------------------------------------------------------
 // Props definition
-// ---------------------------------------------------------------------------
 
 const ordinalFrameProps = [
   { name: "chartType", type: "string", required: true, default: null, description: '"bar", "clusterbar", "point", "swarm", "pie", "donut", "boxplot", "violin", "histogram", "ridgeline", "timeline".' },
@@ -62,9 +58,7 @@ const ordinalFrameProps = [
   { name: "barColors", type: "object", required: false, default: null, description: "Category-to-color mapping." },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function OrdinalFramePage() {
   return (
@@ -97,9 +91,6 @@ export default function OrdinalFramePage() {
         the simpler Chart components provide.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="quick-start">Quick Start</h2>
 
       <p>
@@ -133,9 +124,6 @@ export default function OrdinalFramePage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="stacked-bar">Stacked Bar Chart</h3>
@@ -196,16 +184,10 @@ export default function OrdinalFramePage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="StreamOrdinalFrame" props={ordinalFrameProps} />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

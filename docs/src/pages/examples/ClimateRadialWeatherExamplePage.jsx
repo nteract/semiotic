@@ -3,6 +3,7 @@ import { ChartContainer, ThemeProvider } from "semiotic"
 import CodeBlock from "../../components/CodeBlock"
 import ExamplePageLayout from "./ExamplePageLayout"
 import { useDocsTheme } from "../../hooks/useDocsTheme"
+import { TODAY_DAY } from "./weatherSnapshot"
 import { useOpenMeteoLoader } from "./useOpenMeteoLoader"
 import {
   RadialWeatherOrdinalChart,
@@ -12,11 +13,6 @@ import {
   selectRows,
   formatDateLabel,
 } from "./radialWeather"
-
-// Day-of-year of the baked fixture's "today" (2026-06-26 — keep in sync with
-// openMeteoExampleData's `todayDate`), derived rather than hardcoded so the
-// two Climate pages can't drift.
-const TODAY_DAY = Math.round((Date.UTC(2026, 5, 26) - Date.UTC(2026, 0, 1)) / (24 * 60 * 60 * 1000))
 
 const PRESET_PROFILES = [
   {
@@ -78,7 +74,7 @@ const combinedCode = `<RadialWeatherOrdinalChart
 />`
 
 export default function ClimateRadialWeatherExamplePage() {
-  const [brush, setBrush] = useState({ start: 352, end: 176 })
+  const [brush, setBrush] = useState({ start: 352, end: TODAY_DAY })
   const [docsTheme] = useDocsTheme()
   const carbonTheme = docsTheme === "dark" ? "carbon-dark" : "carbon"
 

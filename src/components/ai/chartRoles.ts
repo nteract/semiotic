@@ -184,9 +184,7 @@ export function fmtDim(
   return aiScalarLabel(v) ?? "—"
 }
 
-// ---------------------------------------------------------------------------
 // Statistics over the measure
-// ---------------------------------------------------------------------------
 
 export interface MeasureStats {
   count: number

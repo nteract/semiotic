@@ -7,9 +7,7 @@
  * @module charts
  */
 
-// ============================================================================
 // XY Charts (based on XYFrame)
-// ============================================================================
 
 export { Scatterplot } from "./xy/Scatterplot"
 export type { ScatterplotProps } from "./xy/Scatterplot"
@@ -71,9 +69,7 @@ export type { CandlestickChartProps } from "./xy/CandlestickChart"
 export { WaterfallChart } from "./xy/WaterfallChart"
 export type { WaterfallChartProps } from "./xy/WaterfallChart"
 
-// ============================================================================
 // Custom Chart (escape hatch for bespoke layouts)
-// ============================================================================
 
 export { XYCustomChart } from "./custom/XYCustomChart"
 export type { XYCustomChartProps } from "./custom/XYCustomChart"
@@ -84,9 +80,7 @@ export type { NetworkCustomChartProps } from "./custom/NetworkCustomChart"
 export { OrdinalCustomChart } from "./custom/OrdinalCustomChart"
 export type { OrdinalCustomChartProps } from "./custom/OrdinalCustomChart"
 
-// ============================================================================
 // Ordinal Charts (based on OrdinalFrame)
-// ============================================================================
 
 export { BarChart } from "./ordinal/BarChart"
 export type { BarChartProps } from "./ordinal/BarChart"
@@ -136,9 +130,7 @@ export type { GroupedBarChartProps } from "./ordinal/GroupedBarChart"
 export { SwimlaneChart } from "./ordinal/SwimlaneChart"
 export type { SwimlaneChartProps } from "./ordinal/SwimlaneChart"
 
-// ============================================================================
 // Network Charts (based on NetworkFrame)
-// ============================================================================
 
 export { ForceDirectedGraph } from "./network/ForceDirectedGraph"
 export type { ForceDirectedGraphProps } from "./network/ForceDirectedGraph"
@@ -183,9 +175,7 @@ export type { CirclePackProps } from "./network/CirclePack"
 export { OrbitDiagram } from "./network/OrbitDiagram"
 export type { OrbitDiagramProps, OrbitNode } from "./network/OrbitDiagram"
 
-// ============================================================================
 // Realtime Charts
-// ============================================================================
 
 export { RealtimeLineChart } from "./realtime/RealtimeLineChart"
 export type {
@@ -205,9 +195,7 @@ export type { RealtimeWaterfallChartProps } from "./realtime/RealtimeWaterfallCh
 export { RealtimeHeatmap } from "./realtime/RealtimeHeatmap"
 export type { RealtimeHeatmapProps } from "./realtime/RealtimeHeatmap"
 
-// ============================================================================
 // Physics Charts
-// ============================================================================
 
 export { GaltonBoardChart } from "./physics/GaltonBoardChart"
 export type {
@@ -343,9 +331,7 @@ export type {
   PhysicsCustomSpawnDatumResult
 } from "./physics/PhysicsCustomChart"
 
-// ============================================================================
 // Shared Utilities
-// ============================================================================
 
 // Re-export shared types for convenience
 export type {

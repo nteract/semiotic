@@ -13,9 +13,7 @@ import CodeBlock from "../../components/CodeBlock"
 import PropTable from "../../components/PropTable"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const lineData = [
   {
@@ -79,9 +77,7 @@ const scatterData = Array.from({ length: 30 }, (_, i) => ({
   above: Math.random() > 0.5,
 }))
 
-// ---------------------------------------------------------------------------
 // Prop definitions
-// ---------------------------------------------------------------------------
 
 const stylingProps = [
   {
@@ -150,9 +146,7 @@ const stylingProps = [
   },
 ]
 
-// ---------------------------------------------------------------------------
 // Interactive styling demo
-// ---------------------------------------------------------------------------
 
 function StylingDemo() {
   const [scheme, setScheme] = useState("default")
@@ -231,9 +225,7 @@ function StylingDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Data-driven styling demo
-// ---------------------------------------------------------------------------
 
 function ConditionalStylingDemo() {
   return (
@@ -290,9 +282,7 @@ function ConditionalStylingDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Hatch pattern demo
-// ---------------------------------------------------------------------------
 
 const hatchBlue = createHatchPattern({
   background: "#4e79a7",
@@ -363,9 +353,7 @@ function HatchPatternDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function StylingPage() {
   return (
@@ -390,9 +378,6 @@ export default function StylingPage() {
         palette, then fine-tune individual marks.
       </p>
 
-      {/* ================================================================= */}
-      {/* Color Schemes */}
-      {/* ================================================================= */}
       <h2 id="color-schemes">Color Schemes</h2>
 
       <p>
@@ -427,9 +412,6 @@ const palette = ["#2563eb", "#0d9488", "#ea580c", "#6b7280"]
         language="jsx"
       />
 
-      {/* ================================================================= */}
-      {/* Data-Driven Styling */}
-      {/* ================================================================= */}
       <h2 id="data-driven">Data-Driven Styling</h2>
 
       <p>
@@ -518,9 +500,6 @@ const palette = ["#2563eb", "#0d9488", "#ea580c", "#6b7280"]
         </tbody>
       </table>
 
-      {/* ================================================================= */}
-      {/* Foreground & Background Graphics */}
-      {/* ================================================================= */}
       <h2 id="graphics-layers">Foreground & Background Graphics</h2>
 
       <p>
@@ -623,9 +602,7 @@ const palette = ["#2563eb", "#0d9488", "#ea580c", "#6b7280"]
         startHidden
       />
 
-      {/* ================================================================= */}
       {/* CSS Classes */}
-      {/* ================================================================= */}
       <h2 id="css-classes">CSS Class Names</h2>
 
       <p>
@@ -650,9 +627,6 @@ const palette = ["#2563eb", "#0d9488", "#ea580c", "#6b7280"]
         language="jsx"
       />
 
-      {/* ================================================================= */}
-      {/* Gradients & Patterns */}
-      {/* ================================================================= */}
       <h2 id="gradients-patterns">Gradients & Patterns</h2>
 
       <p>
@@ -685,9 +659,6 @@ const palette = ["#2563eb", "#0d9488", "#ea580c", "#6b7280"]
         language="jsx"
       />
 
-      {/* ================================================================= */}
-      {/* Canvas Hatch Patterns */}
-      {/* ================================================================= */}
       <h2 id="canvas-hatch-patterns">Canvas Hatch Patterns</h2>
 
       <p>
@@ -778,9 +749,6 @@ const hatch = createHatchPattern({
         </tbody>
       </table>
 
-      {/* ================================================================= */}
-      {/* Styling Hierarchy */}
-      {/* ================================================================= */}
       <h2 id="hierarchy">Styling Hierarchy</h2>
 
       <p>
@@ -827,16 +795,11 @@ const hatch = createHatchPattern({
         </tbody>
       </table>
 
-      {/* ================================================================= */}
       {/* Props */}
-      {/* ================================================================= */}
       <h2 id="props">Props Reference</h2>
 
       <PropTable componentName="Styling" props={stylingProps} />
 
-      {/* ================================================================= */}
-      {/* Related */}
-      {/* ================================================================= */}
       <h2 id="related">Related</h2>
 
       <ul>

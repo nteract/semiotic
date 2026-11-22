@@ -11,9 +11,7 @@ import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const edgeData = [
   { source: "Engineering", target: "Design", value: 40 },
@@ -50,9 +48,7 @@ const trafficEdges = [
   { source: "Checkout", target: "Homepage", value: 30 },
 ]
 
-// ---------------------------------------------------------------------------
 // Props definition for PropTable
-// ---------------------------------------------------------------------------
 
 const chordDiagramProps = [
   { name: "edges", type: "array", required: true, default: null, description: "Array of edge objects with source, target, and value properties." },
@@ -83,9 +79,7 @@ const chordDiagramProps = [
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamNetworkFrame props for advanced customization. Escape hatch to the full Frame API." },
 ]
 
-// ---------------------------------------------------------------------------
 // Streaming demo
-// ---------------------------------------------------------------------------
 
 const streamingChordCode = `import { useRef } from "react"
 import { ChordDiagram } from "semiotic"
@@ -134,9 +128,7 @@ function StreamingChordDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function ChordDiagramPage() {
   return (
@@ -180,9 +172,7 @@ export default function ChordDiagramPage() {
         negative values contribute no ribbon, and disconnected nodes are omitted.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <ChartGrounding component="ChordDiagram" />
 
       <h2 id="quick-start">Quick Start</h2>
@@ -220,9 +210,6 @@ export default function ChordDiagramPage() {
         }
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="with-color">Colored by Category</h3>
@@ -311,16 +298,11 @@ export default function ChordDiagramPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="ChordDiagram" props={chordDiagramProps} />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
@@ -399,9 +381,6 @@ export default function ChordDiagramPage() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

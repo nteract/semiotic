@@ -17,9 +17,7 @@ import CodeBlock from "../../components/CodeBlock"
 import PropTable from "../../components/PropTable"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const barData = [
   { category: "Q1", value: 120 },
@@ -67,9 +65,7 @@ const donutData = [
   { category: "Sales", value: 20 },
 ]
 
-// ---------------------------------------------------------------------------
 // Preset names grouped for UI
-// ---------------------------------------------------------------------------
 
 const PRESET_GROUPS = {
   Base: ["light", "dark", "high-contrast"],
@@ -82,9 +78,7 @@ const PRESET_GROUPS = {
   Carbon: ["carbon", "carbon-dark"],
 }
 
-// ---------------------------------------------------------------------------
 // Props definitions
-// ---------------------------------------------------------------------------
 
 const themeProviderProps = [
   {
@@ -269,9 +263,7 @@ const themeShapeProps = [
   },
 ]
 
-// ---------------------------------------------------------------------------
 // Interactive preset demo
-// ---------------------------------------------------------------------------
 
 function PresetDemo() {
   const [preset, setPreset] = useState("light")
@@ -389,9 +381,7 @@ function PresetDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Page
-// ---------------------------------------------------------------------------
 
 export default function ThemingPage() {
   return (
@@ -420,9 +410,6 @@ export default function ThemingPage() {
         brings the chart palette resolver.
       </p>
 
-      {/* ================================================================= */}
-      {/* Quick Start */}
-      {/* ================================================================= */}
       <h2 id="quick-start">Quick Start</h2>
 
       <CodeBlock
@@ -448,9 +435,7 @@ export default function ThemingPage() {
         language="jsx"
       />
 
-      {/* ================================================================= */}
       {/* Named Presets Demo */}
-      {/* ================================================================= */}
       <h2 id="presets">15 Named Presets</h2>
 
       <p>
@@ -483,9 +468,6 @@ import { TUFTE_LIGHT, TUFTE_DARK, PASTELS_LIGHT } from "semiotic/themes"
         language="jsx"
       />
 
-      {/* ================================================================= */}
-      {/* Dark / Light Mode Integration */}
-      {/* ================================================================= */}
       <h2 id="dark-light-mode">Dark / Light Mode Integration</h2>
 
       <p>
@@ -619,9 +601,7 @@ const darkTheme  = { ...DARK_THEME,  colors: { ...DARK_THEME.colors,  categorica
         language="jsx"
       />
 
-      {/* ================================================================= */}
       {/* CSS Custom Properties */}
-      {/* ================================================================= */}
       <h2 id="css-custom-properties">CSS Custom Properties Reference</h2>
 
       <p>
@@ -672,9 +652,6 @@ const darkTheme  = { ...DARK_THEME,  colors: { ...DARK_THEME.colors,  categorica
         language="css"
       />
 
-      {/* ================================================================= */}
-      {/* useTheme Hook */}
-      {/* ================================================================= */}
       <h2 id="usetheme">useTheme Hook</h2>
 
       <p>
@@ -708,9 +685,6 @@ function DashboardHeader({ title, subtitle }) {
         language="jsx"
       />
 
-      {/* ================================================================= */}
-      {/* Theme Serialization */}
-      {/* ================================================================= */}
       <h2 id="serialization">Theme Serialization</h2>
 
       <p>
@@ -875,9 +849,7 @@ const theme = designTokensToTheme(brandTokens, {
         language="jsx"
       />
 
-      {/* ================================================================= */}
       {/* CSS-only theming (no ThemeProvider) */}
-      {/* ================================================================= */}
       <h2 id="css-only">CSS-Only Theming</h2>
 
       <p>
@@ -908,9 +880,6 @@ const theme = designTokensToTheme(brandTokens, {
         language="css"
       />
 
-      {/* ================================================================= */}
-      {/* Accessibility */}
-      {/* ================================================================= */}
       <h2 id="accessibility">Accessibility</h2>
 
       <p>
@@ -946,9 +915,6 @@ const theme = designTokensToTheme(brandTokens, {
         run <code>npx -p semiotic semiotic-ai --doctor</code> to audit your chart configs.
       </p>
 
-      {/* ================================================================= */}
-      {/* IBM Carbon Palettes */}
-      {/* ================================================================= */}
       <h2 id="carbon-palettes">IBM Carbon Palettes</h2>
 
       <p>
@@ -1124,9 +1090,7 @@ const theme = designTokensToTheme(brandTokens, {
         language="jsx"
       />
 
-      {/* ================================================================= */}
       {/* Props */}
-      {/* ================================================================= */}
       <h2 id="serialization">Serialization &amp; custom themes</h2>
       <p>
         A theme is a plain object — start from a preset and override, or build
@@ -1210,9 +1174,6 @@ const ink = "var(--essay-chart-ink, #203b32)"
       <h3 style={{ marginTop: 32 }}>SemioticTheme Shape</h3>
       <PropTable componentName="SemioticTheme" props={themeShapeProps} />
 
-      {/* ================================================================= */}
-      {/* Related */}
-      {/* ================================================================= */}
       <h2 id="related">Related</h2>
 
       <ul>

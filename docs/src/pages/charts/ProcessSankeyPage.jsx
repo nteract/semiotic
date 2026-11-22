@@ -488,9 +488,7 @@ function StreamingQuickStartDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Sandbox container — width-aware wrapper so it keeps responsive.
-// ---------------------------------------------------------------------------
 
 function Segmented({ label, options, value, onChange }) {
   return (

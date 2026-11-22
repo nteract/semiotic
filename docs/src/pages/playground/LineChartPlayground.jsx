@@ -2,9 +2,7 @@ import React from "react"
 import { LineChart } from "semiotic"
 import PlaygroundLayout from "../../components/PlaygroundLayout"
 
-// ---------------------------------------------------------------------------
 // Control schema
-// ---------------------------------------------------------------------------
 
 const controls = [
   { name: "curve", type: "select", label: "Curve", group: "Line",
@@ -33,9 +31,7 @@ const controls = [
     default: "" },
 ]
 
-// ---------------------------------------------------------------------------
 // Datasets
-// ---------------------------------------------------------------------------
 
 const monthlyRevenue = [
   { month: 1, revenue: 12000 },
@@ -118,9 +114,7 @@ const datasets = [
   },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function LineChartPlayground() {
   return (

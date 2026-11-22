@@ -5,9 +5,7 @@ import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Responsive container hook
-// ---------------------------------------------------------------------------
 
 function useContainerWidth() {
   const ref = useRef(null)
@@ -28,9 +26,7 @@ function useContainerWidth() {
   return [ref, width]
 }
 
-// ---------------------------------------------------------------------------
 // Decay demo
-// ---------------------------------------------------------------------------
 
 function DecayDemo() {
   const chartRef = useRef()
@@ -68,9 +64,7 @@ function DecayDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Pulse demo
-// ---------------------------------------------------------------------------
 
 function PulseDemo() {
   const chartRef = useRef()
@@ -108,9 +102,7 @@ function PulseDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Staleness demo
-// ---------------------------------------------------------------------------
 
 function StalenessDemo() {
   const chartRef = useRef()
@@ -168,9 +160,7 @@ function StalenessDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Combined demo
-// ---------------------------------------------------------------------------
 
 function CombinedDemo() {
   const chartRef = useRef()
@@ -210,9 +200,7 @@ function CombinedDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function RealtimeEncodingPage() {
   return (
@@ -234,9 +222,6 @@ export default function RealtimeEncodingPage() {
         (StreamXYFrame, StreamOrdinalFrame, and all realtime HOCs).
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Decay */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="decay">Decay</h2>
 
       <p>
@@ -266,9 +251,6 @@ export default function RealtimeEncodingPage() {
         />
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Pulse */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="pulse">Pulse</h2>
 
       <p>
@@ -294,9 +276,6 @@ export default function RealtimeEncodingPage() {
         />
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Staleness */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="staleness">Staleness</h2>
       <p>
         Freshness uses elapsed wall time, including time spent paused or in a hidden tab;
@@ -330,9 +309,6 @@ export default function RealtimeEncodingPage() {
         />
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Transitions */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="transitions">Transitions</h2>
 
       <p>
@@ -395,9 +371,7 @@ export default function RealtimeEncodingPage() {
         which wipes the position snapshot the transition needs.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Combining */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="combining">Combining Encodings</h2>
 
       <p>
@@ -421,9 +395,6 @@ export default function RealtimeEncodingPage() {
         />
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

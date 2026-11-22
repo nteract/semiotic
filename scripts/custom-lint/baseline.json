@@ -4,20 +4,20 @@
   "description": "Grandfathered findings for unstable custom lints. Managed by scripts/check-custom-lints.mjs; do not edit by hand.",
   "evidenceCursor": {
     "semiotic/frame-props-last": {
-      "count": 2,
-      "digest": "c57720112496df4d"
+      "count": 3,
+      "digest": "459fa58b9707e1be"
     },
     "semiotic/family-subpath-imports": {
-      "count": 0,
-      "digest": "4f53cda18c2baa0c"
+      "count": 1,
+      "digest": "ed8eae025625738c"
     },
     "semiotic/interaction-test-layout-control": {
-      "count": 1,
-      "digest": "9f884acaa408eb21"
+      "count": 3,
+      "digest": "aa695eec15259dcb"
     },
     "semiotic/no-module-side-effects": {
-      "count": 2,
-      "digest": "3e8f5f46baf3cf82"
+      "count": 4,
+      "digest": "e53db8baaca34f46"
     }
   },
   "findings": {}

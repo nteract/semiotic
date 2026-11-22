@@ -60,9 +60,7 @@ type RenderChartName = Parameters<typeof renderChart>[0]
 type RenderChartProps = Parameters<typeof renderChart>[1]
 type RenderImageTarget = Parameters<typeof renderToImage>[0]
 
-// ═══════════════════════════════════════════════════════════════════════
 // SVG Generation — end-to-end
-// ═══════════════════════════════════════════════════════════════════════
 
 describe("SVG generation (end-to-end)", () => {
   it("renderChart produces valid SVG for every XY chart type", () => {
@@ -196,9 +194,7 @@ describe("SVG generation (end-to-end)", () => {
   })
 })
 
-// ═══════════════════════════════════════════════════════════════════════
 // PNG Generation — end-to-end
-// ═══════════════════════════════════════════════════════════════════════
 
 describe("PNG generation (end-to-end)", () => {
   it.each([
@@ -306,9 +302,7 @@ describe("PNG generation (end-to-end)", () => {
   })
 })
 
-// ═══════════════════════════════════════════════════════════════════════
 // GIF Generation — end-to-end
-// ═══════════════════════════════════════════════════════════════════════
 
 describe("GIF generation (end-to-end)", () => {
   it("renderToAnimatedGif produces valid GIF from line data", async () => {
@@ -373,9 +367,7 @@ describe("GIF generation (end-to-end)", () => {
   })
 })
 
-// ═══════════════════════════════════════════════════════════════════════
 // Dashboard composition — end-to-end
-// ═══════════════════════════════════════════════════════════════════════
 
 describe("Dashboard composition (end-to-end)", () => {
   it("renderDashboard produces valid SVG with multiple charts", () => {
@@ -429,9 +421,7 @@ describe("Dashboard composition (end-to-end)", () => {
   })
 })
 
-// ═══════════════════════════════════════════════════════════════════════
 // Cross-format consistency
-// ═══════════════════════════════════════════════════════════════════════
 
 describe("Cross-format consistency", () => {
   it("renderChart and renderToStaticSVG produce same element counts for bars", () => {
@@ -466,9 +456,7 @@ describe("Cross-format consistency", () => {
   })
 })
 
-// ═══════════════════════════════════════════════════════════════════════
 // Geo SSR
-// ═══════════════════════════════════════════════════════════════════════
 
 describe("Geo SSR", () => {
   const geoFeatures = [
@@ -637,9 +625,7 @@ describe("Geo SSR", () => {
   })
 })
 
-// ═══════════════════════════════════════════════════════════════════════
 // Negative cases — invalid/edge-case props
-// ═══════════════════════════════════════════════════════════════════════
 
 describe("Graceful handling of invalid props", () => {
   it("renderChart with empty data produces valid SVG (not a crash)", () => {

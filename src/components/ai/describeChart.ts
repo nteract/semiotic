@@ -56,9 +56,7 @@ import {
  * `buildReaderGrounding` into the agent-reader payload.
  */
 
-// ---------------------------------------------------------------------------
 // Types
-// ---------------------------------------------------------------------------
 
 export type DescribeLevel = "l1" | "l2" | "l3" | "l4"
 
@@ -142,9 +140,7 @@ export interface DescribeChartOptions {
   includeCaveats?: boolean
 }
 
-// ---------------------------------------------------------------------------
 // Chart-kind phrasing + role resolution
-// ---------------------------------------------------------------------------
 
 const KIND_PHRASE: Record<string, string> = {
   Scatterplot: "scatter plot",
@@ -192,9 +188,7 @@ function kindPhrase(component: string): string {
     : `${humanizeComponent(component).replace(/ chart$/, "")} chart`
 }
 
-// ---------------------------------------------------------------------------
 // Communicative act (powers the L4 illocutionary sentence)
-// ---------------------------------------------------------------------------
 
 // Scatter-shaped XY charts are about relationship, not trajectory.
 const SCATTER = new Set([
@@ -459,9 +453,7 @@ export function hasGeneratedAlertAnnotation(props: Datum): boolean {
   })
 }
 
-// ---------------------------------------------------------------------------
 // Formatting
-// ---------------------------------------------------------------------------
 
 /** Build a number formatter — compact (6.5M) for large magnitudes, plain
  *  otherwise. Exported so the navigation tree formats values identically. */
@@ -477,18 +469,14 @@ export function chartValueFormatter(locale = "en"): (n: number) => string {
   }
 }
 
-// ---------------------------------------------------------------------------
 // Public API
-// ---------------------------------------------------------------------------
 
 /**
  * Generate a layered (L1/L2/L3) natural-language description of a chart config.
  * Best for XY, bar, part-to-whole, and distribution families; degrades to an
  * L1-only description (chart type + structure) for network/hierarchy/geo/value.
  */
-// ---------------------------------------------------------------------------
 // Author annotations — the reception side of author intent
-// ---------------------------------------------------------------------------
 
 // Human phrasing per annotation type, with a leading article so the sentence
 // reads naturally ("a callout", "an enclosure").
@@ -890,9 +878,7 @@ function trendSentence(
     : `Overall ${measureName} falls from ${fmtNum(first)} (${firstLabel}) to ${fmtNum(last)} (${lastLabel}), after dipping to ${fmtNum(min)} (${minLabel}).`
 }
 
-// ---------------------------------------------------------------------------
 // L4 — the illocutionary sentence
-// ---------------------------------------------------------------------------
 
 /**
  * Compose the L4 sentence: a frame naming the communicative act ("This is an

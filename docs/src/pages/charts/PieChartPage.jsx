@@ -11,9 +11,7 @@ import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const sampleData = [
   { category: "Electronics", value: 340 },
@@ -23,9 +21,7 @@ const sampleData = [
   { category: "Books", value: 120 },
 ]
 
-// ---------------------------------------------------------------------------
 // Streaming demo
-// ---------------------------------------------------------------------------
 
 const marketSegments = ["Electronics", "Clothing", "Grocery", "Furniture", "Books"]
 const pieColors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
@@ -111,9 +107,7 @@ function StreamingPieDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Props definition for PropTable
-// ---------------------------------------------------------------------------
 
 const pieChartProps = [
   { name: "data", type: "array", required: true, default: null, description: "Array of data points, one per slice." },
@@ -135,9 +129,7 @@ const pieChartProps = [
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamOrdinalFrame props for advanced customization." },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function PieChartPage() {
   return (
@@ -173,9 +165,7 @@ export default function PieChartPage() {
         box.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <ChartGrounding
         component="PieChart"
         props={{
@@ -227,9 +217,6 @@ export default function PieChartPage() {
         }
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="custom-colors">Custom Color Scheme</h3>
@@ -333,16 +320,11 @@ export default function PieChartPage() {
   cornerRadius={8}
 />`} />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="PieChart" props={pieChartProps} />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
@@ -390,9 +372,6 @@ export default function PieChartPage() {
         </div>
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

@@ -10,7 +10,7 @@ import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/
 import { normalizeTooltip, defaultTooltipStyle, type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
 import { validateArrayData } from "../shared/validateChartData"
-import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
+import { useOrdinalPieceStyle, withoutOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
@@ -275,9 +275,8 @@ export const LikertChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ *
     () => Object.hasOwn(frameProps, "legend")
       ? frameProps
       : {
-          ...frameProps,
-          // Intentional frameProps precedence: compose Likert's level legend only when no frame legend was supplied.
           legend: manualLegend,
+          ...frameProps,
         },
     [frameProps, manualLegend]
   )
@@ -502,11 +501,6 @@ export const LikertChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ *
     return (v: number | string) => `${Number(v).toFixed(0)}%`
   }, [isDiverging, valueFormat])
 
-  // Loading / empty state — returned only after every hook above has run, so
-  // the hook count is identical whether or not data is present. Mounting empty
-  // (loading skeleton, 0 bars) and then streaming in data must not change the
-  // number of hooks between renders, or React throws "Rendered more hooks than
-  // during the previous render."
   if (setup.earlyReturn) return setup.earlyReturn
 
   // ── Build frame props ────────────────────────────────────────────────
@@ -560,9 +554,7 @@ export const LikertChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ *
     }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...(valueExtent && { rExtent: valueExtent }),
-    // frameProps spread last for escape hatch, but pieceStyle excluded to prevent
-    // clobbering the HOC's color-resolved, selection-wrapped style function.
-    ...Object.fromEntries(Object.entries(frameProps).filter(([k]) => k !== "pieceStyle")),
+    ...withoutOrdinalPieceStyle(frameProps),
   }
 
   if (validationError) {

@@ -23,7 +23,7 @@
       "introducedAt": "2026-08-16",
       "implementation": "scripts/custom-lint/rules/frame-props-last.mjs",
       "tests": ["scripts/custom-lint/custom-lint-rules.test.mjs"],
-      "rationale": "Advanced frameProps retain final precedence unless a chart documents why it must compose an owned renderer or layout prop afterward.",
+      "rationale": "Frame configuration objects preserve caller precedence except for selection-wrapped caller styles and specific chart-owned layers.",
       "evidence": [
         {
           "kind": "false_positive",
@@ -36,6 +36,12 @@
           "date": "2026-08-16",
           "reference": "review-local-frame-prop-scope",
           "note": "Review required the precedence explanation to be attached to the frameProps spread and first override."
+        },
+        {
+          "kind": "rule_revision",
+          "date": "2026-11-22",
+          "reference": "frame-props-per-property-tests",
+          "note": "Check every trailing property. Comment waivers also admitted unrelated later overrides; the AST identifies wrapped caller styles and the chart-specific layer keys."
         }
       ]
     },

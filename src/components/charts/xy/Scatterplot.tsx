@@ -393,11 +393,6 @@ export const Scatterplot = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ *
     ]
   }, [regression, annotations, statisticalAnnotations])
 
-  // Loading / empty state — returned only after every hook above has run, so
-  // the hook count is identical whether or not data is present. Mounting empty
-  // (loading skeleton, 0 points) and then streaming in data must not change the
-  // number of hooks between renders, or React throws "Rendered more hooks than
-  // during the previous render."
   if (setup.earlyReturn) return setup.earlyReturn
 
   // Validate data (after all hooks)
@@ -460,7 +455,6 @@ export const Scatterplot = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ *
     ...brushStreamProps,
     ...setup.crosshairProps,
     ...frameProps,
-    // frameProps precedence: the caller's style still wins; this re-applies it with selection dimming preserved.
     ...(framePointStyle && { pointStyle: framePointStyle }),
   }
 

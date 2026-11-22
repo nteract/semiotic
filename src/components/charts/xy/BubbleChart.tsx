@@ -429,11 +429,6 @@ export const BubbleChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ *
     ...(colorBy ? [{ label: accessorName(colorBy), accessor: colorBy, role: "color" as const }] : []),
   ]), [xAccessor, yAccessor, xLabel, yLabel, sizeBy, colorBy, xFormat, yFormat])
 
-  // Loading / empty state — returned only after every hook above has run, so
-  // the hook count is identical whether or not data is present. Mounting empty
-  // (loading skeleton, 0 bubbles) and then streaming in data must not change
-  // the number of hooks between renders, or React throws "Rendered more hooks
-  // than during the previous render."
   if (setup.earlyReturn) return setup.earlyReturn
 
   // Validate data (after all hooks)
@@ -499,7 +494,6 @@ export const BubbleChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ *
     ...setup.crosshairProps,
     ...brushStreamProps,
     ...frameProps,
-    // frameProps precedence: the caller's style still wins; this re-applies it with selection dimming preserved.
     ...(framePointStyle && { pointStyle: framePointStyle }),
   }
 

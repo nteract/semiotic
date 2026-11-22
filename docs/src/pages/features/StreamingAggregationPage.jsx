@@ -6,9 +6,7 @@ import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Shared decoration
-// ---------------------------------------------------------------------------
 
 function useContainerWidth() {
   const ref = useRef(null)
@@ -85,9 +83,7 @@ function ChipGroup({ label, options, value, onChange, accent }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // 1. Windowed aggregation — the firehose
-// ---------------------------------------------------------------------------
 
 const STATS = [
   { value: "mean", label: "mean" },
@@ -171,9 +167,7 @@ function AggregationDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // 2. Event-time ingestion — out-of-order + lateness
-// ---------------------------------------------------------------------------
 
 function EventTimeDemo() {
   const chartRef = useRef()
@@ -254,9 +248,7 @@ function EventTimeDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // 3. Banded staleness
-// ---------------------------------------------------------------------------
 
 const STALE_THRESHOLD = 2000
 function bandLabel(idleMs) {
@@ -325,9 +317,7 @@ function StalenessDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Page
-// ---------------------------------------------------------------------------
 
 export default function StreamingAggregationPage() {
   return (

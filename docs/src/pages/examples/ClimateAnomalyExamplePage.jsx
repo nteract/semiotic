@@ -1,30 +1,18 @@
 import React, { useMemo, useState } from "react"
 import { area as d3Area, curveCatmullRom, line as d3Line } from "d3-shape"
 import { ChartContainer, DifferenceChart, ThemeProvider } from "semiotic"
-// hatchFill: the SVG hatch <pattern> helper (shared by the band + its legend
-// swatch, so they never drift). The overlay also reads the chart's resolved
-// scales from the foregroundGraphics callback.
 import { hatchFill } from "semiotic/recipes"
+import { useOpenMeteoLoader } from "./useOpenMeteoLoader"
+import { dateFromDay, END_DAY, SNAPSHOT_YEAR, TODAY_DAY } from "./weatherSnapshot"
 import CodeBlock from "../../components/CodeBlock"
 import ExamplePageLayout from "./ExamplePageLayout"
 import { useDocsTheme } from "../../hooks/useDocsTheme"
 
-// One source of truth for the percentile-envelope hatch, reused by the chart
-// overlay and the legend swatch.
 const BAND_HATCH = hatchFill({ id: "climate-band-hatch", color: "var(--semiotic-text-secondary)", spacing: 8, opacity: 0.38 })
-import { useOpenMeteoLoader } from "./useOpenMeteoLoader"
 
-const DAY_MS = 24 * 60 * 60 * 1000
-const START_DATE = Date.UTC(2026, 0, 1)
-const TODAY_DATE = Date.UTC(2026, 5, 26)
-const END_DATE = Date.UTC(2026, 6, 8)
-const TODAY_DAY = dayFromDate(TODAY_DATE)
-const END_DAY = dayFromDate(END_DATE)
+const snapshotDate = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "UTC" })
+const snapshotRange = `${snapshotDate.format(dateFromDay(0))} to ${snapshotDate.format(dateFromDay(END_DAY))}, ${SNAPSHOT_YEAR}`
 
-// Theme-driven semantic status roles (above average → warm/danger, below →
-// cool/info), with the original hues as fallbacks. The DifferenceChart fill and
-// the legend swatches both read these, so they respond to ThemeProvider / dark
-// mode without drifting apart.
 const ABOVE_COLOR = "var(--semiotic-danger, #ff4d2f)"
 const BELOW_COLOR = "var(--semiotic-info, #5ca8c7)"
 const ABOVE_FORECAST_HATCH = hatchFill({
@@ -215,7 +203,7 @@ export default function ClimateAnomalyExamplePage() {
       <ThemeProvider theme={carbonTheme}>
         <ChartContainer
           title={profile.label}
-          subtitle="Jan 1 to Jul 8, 2026. Open-Meteo daily mean against a 1991-2020 baseline."
+          subtitle={`${snapshotRange}. Open-Meteo daily mean against a 1991-2020 baseline.`}
           height={520}
           loading={isLoading}
           banner={banner}
@@ -304,7 +292,7 @@ export default function ClimateAnomalyExamplePage() {
               xExtent={[0, END_DAY]}
               yExtent={yDomain}
               axisExtent="exact"
-              xLabel="2026"
+              xLabel={String(SNAPSHOT_YEAR)}
               yLabel="Mean temperature (deg C)"
               xFormat={formatMonthTick}
               yFormat={(value) => `${Math.round(value)} C`}
@@ -342,7 +330,7 @@ export default function ClimateAnomalyExamplePage() {
         The location controls take a latitude/longitude directly (or your browser
         location) and use Open-Meteo's keyless historical archive and forecast APIs
         in the browser. The example computes the daily historical
-        mean and percentile band from 1991-2020, then overlays available 2026
+        mean and percentile band from 1991-2020, then overlays available {SNAPSHOT_YEAR}
         observations and forecast values. A deterministic local profile remains as
         the offline fallback.
       </p>
@@ -609,14 +597,6 @@ function profileFromCoordinates(lat, lon) {
     seed: Math.abs(lat * 0.17 + lon * 0.03) % 9,
     derived: true,
   }
-}
-
-function dayFromDate(date) {
-  return Math.round((date - START_DATE) / DAY_MS)
-}
-
-function dateFromDay(day) {
-  return new Date(START_DATE + day * DAY_MS)
 }
 
 function formatMonthTick(day) {

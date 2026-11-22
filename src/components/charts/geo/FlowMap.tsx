@@ -602,11 +602,6 @@ export const FlowMap = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ fo
     return null
   }, [valueAccessor, nodeIdAccessor])
 
-  // Loading / empty state — returned only after every hook above has run, so
-  // the hook count is identical whether or not data is present. Mounting empty
-  // (loading skeleton, no flows) and then streaming in data must not change the
-  // number of hooks between renders, or React throws "Rendered more hooks than
-  // during the previous render."
   if (setup.earlyReturn) return setup.earlyReturn
 
   const streamProps: StreamGeoFrameProps = {
@@ -666,7 +661,6 @@ export const FlowMap = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ fo
     ...(className && { className }),
     ...(props.animate != null && { animate: props.animate }),
     ...frameProps,
-    // frameProps precedence: the caller's style still wins; this re-applies it with selection dimming preserved.
     ...(userLineStyle && { lineStyle: userLineStyle }),
   }
 

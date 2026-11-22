@@ -7,9 +7,7 @@ import CodeBlock from "../../components/CodeBlock"
 import PropTable from "../../components/PropTable"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const theme = [
   "#ac58e5",
@@ -83,9 +81,7 @@ const regionColors = {
   East: theme[2],
 }
 
-// ---------------------------------------------------------------------------
 // Prop definitions
-// ---------------------------------------------------------------------------
 
 const legendProps = [
   {
@@ -169,9 +165,7 @@ const legendProps = [
   },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function LegendsPage() {
   return (
@@ -193,9 +187,6 @@ export default function LegendsPage() {
         positioning.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* With Charts */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="with-charts">With Charts</h2>
 
       <p>
@@ -236,9 +227,6 @@ export default function LegendsPage() {
         configuration object.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* With Frames */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="with-frames">With Frames</h2>
 
       <h3 id="auto-legend-xy">Auto-Generated Legend (StreamXYFrame)</h3>
@@ -583,9 +571,6 @@ export default function LegendsPage() {
         satisfy both to remain at full opacity.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Configuration */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="configuration">Configuration</h2>
 
       <PropTable componentName="Legend" props={legendProps} />
@@ -823,9 +808,6 @@ function InteractiveChart({ data }) {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

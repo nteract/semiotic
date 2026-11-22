@@ -5,9 +5,7 @@ import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const lineData = [
   { month: "Jan", revenue: 4200 },
@@ -44,9 +42,7 @@ const barData = [
   { region: "West", sales: 410 },
 ]
 
-// ---------------------------------------------------------------------------
 // Interactive demo: Observation Log
-// ---------------------------------------------------------------------------
 
 function ObservationLogDemo() {
   const [log, setLog] = useState([])
@@ -112,9 +108,7 @@ function ObservationLogDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Interactive demo: useChartObserver aggregation
-// ---------------------------------------------------------------------------
 
 function ObserverInsightPanel() {
   const { observations, latest } = useChartObserver({
@@ -212,9 +206,7 @@ function LinkedObserverDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function ObservationHooksPage() {
   return (
@@ -234,9 +226,6 @@ export default function ObservationHooksPage() {
         real-time insight generation based on what users are exploring.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="quick-start">Quick Start</h2>
 
       <p>
@@ -266,9 +255,6 @@ export default function ObservationHooksPage() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Live Demo */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="live-demo">Live Demo</h2>
 
       <p>
@@ -302,9 +288,6 @@ export default function ObservationHooksPage() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Event Types */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="event-types">Event Types</h2>
 
       <p>
@@ -420,9 +403,6 @@ export default function ObservationHooksPage() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* useChartObserver */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="use-chart-observer">useChartObserver</h2>
 
       <p>
@@ -518,9 +498,6 @@ function Dashboard() {
         </tbody>
       </table>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* AI Agent Integration */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="ai-integration">AI Agent Integration</h2>
 
       <p>
@@ -556,9 +533,6 @@ function AIAssistant() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>
@@ -583,9 +557,7 @@ function AIAssistant() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Styles
-// ---------------------------------------------------------------------------
 
 const thStyle = {
   padding: "12px 16px",

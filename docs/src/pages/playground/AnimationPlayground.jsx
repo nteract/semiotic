@@ -3,9 +3,7 @@ import { BarChart, StackedBarChart, PieChart, DonutChart, LineChart, Scatterplot
 import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
 
-// ---------------------------------------------------------------------------
 // Shared controls
-// ---------------------------------------------------------------------------
 
 function AnimateControls({ config, onChange }) {
   return (
@@ -77,9 +75,7 @@ function ResetButton({ onClick }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Datasets
-// ---------------------------------------------------------------------------
 
 const barA = [
   { category: "Electronics", value: 12400 },
@@ -225,9 +221,7 @@ const treemapB = {
   ],
 }
 
-// ---------------------------------------------------------------------------
 // Section wrapper
-// ---------------------------------------------------------------------------
 
 function Section({ title, id, children }) {
   return (
@@ -238,9 +232,7 @@ function Section({ title, id, children }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Chart wrappers with key-based remount for intro replay
-// ---------------------------------------------------------------------------
 
 function AnimatedBarChart({ animConfig }) {
   const [useB, setUseB] = useState(false)
@@ -458,9 +450,7 @@ function AnimatedTreemap({ animConfig }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Page
-// ---------------------------------------------------------------------------
 
 export default function AnimationPlayground() {
   const [config, setConfig] = useState({

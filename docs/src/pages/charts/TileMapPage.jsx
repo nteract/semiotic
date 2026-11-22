@@ -10,9 +10,7 @@ import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data — notable earthquakes with real coordinates and magnitudes
-// ---------------------------------------------------------------------------
 
 const earthquakeData = [
   { id: "tohoku", name: "Tohoku, Japan", lon: 142.4, lat: 38.3, magnitude: 9.1, depth: 29, year: 2011, region: "Pacific" },
@@ -32,9 +30,7 @@ const earthquakeData = [
   { id: "iran", name: "Kermanshah, Iran", lon: 45.9, lat: 34.9, magnitude: 7.3, depth: 19, year: 2017, region: "Asia" },
 ]
 
-// ---------------------------------------------------------------------------
 // Country GDP data for choropleth-with-tiles example
-// ---------------------------------------------------------------------------
 
 const countryGDP = [
   { id: "840", name: "United States", gdpPerCapita: 63544 },
@@ -55,9 +51,7 @@ const countryGDP = [
   { id: "710", name: "South Africa", gdpPerCapita: 6994 },
 ]
 
-// ---------------------------------------------------------------------------
 // Example 1: ProportionalSymbolMap with tiles — earthquake data
-// ---------------------------------------------------------------------------
 
 function EarthquakeTileMap({ width = 700, height = 450 }) {
   return (
@@ -88,9 +82,7 @@ function EarthquakeTileMap({ width = 700, height = 450 }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Example 2: ChoroplethMap with semi-transparent fill over tiles
-// ---------------------------------------------------------------------------
 
 function ChoroplethTileMap({ width = 700, height = 450 }) {
   const [areas, setAreas] = useState(null)
@@ -126,9 +118,7 @@ function ChoroplethTileMap({ width = 700, height = 450 }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Example 3: StreamGeoFrame streaming points over tiles
-// ---------------------------------------------------------------------------
 
 const streamingTileCode = `import { useRef, useEffect } from "react"
 import { StreamGeoFrame } from "semiotic/geo"
@@ -231,9 +221,7 @@ function StreamingTileDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Props definition — tile-specific props
-// ---------------------------------------------------------------------------
 
 const tileProps = [
   { name: "tileURL", type: "string | ((z, x, y, dpr) => string)", required: true, default: null, description: 'URL template for raster tiles with {z}/{x}/{y} placeholders, or a function returning a URL. Use {r} for retina suffix (@2x). Example: "https://tile.openstreetmap.org/{z}/{x}/{y}.png".' },
@@ -243,9 +231,7 @@ const tileProps = [
   { name: "zoomable", type: "boolean", required: false, default: "true with tileURL, false otherwise", description: "Enable pan and zoom. Defaults to true when tileURL is set. Can be set to false to disable." },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function TileMapPage() {
   return (
@@ -297,9 +283,7 @@ export default function TileMapPage() {
         are not compatible with raster tiles.
       </div>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Example 1: Proportional Symbol Map with Tiles */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="earthquake-map">Earthquake Map with Tiles</h2>
 
       <p>
@@ -344,9 +328,7 @@ const earthquakes = [
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Example 2: Choropleth with Tiles */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="choropleth-tiles">Semi-Transparent Choropleth over Tiles</h2>
 
       <p>
@@ -382,9 +364,7 @@ const areas = mergeData(worldFeatures, countryGDP, {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Example 3: Streaming points over tiles */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="streaming-tiles">Streaming Points over Tiles</h2>
 
       <p>
@@ -412,9 +392,6 @@ const areas = mergeData(worldFeatures, countryGDP, {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Tile Providers */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="tile-providers">Tile Providers</h2>
 
       <p>
@@ -459,9 +436,6 @@ const areas = mergeData(worldFeatures, countryGDP, {
         </tbody>
       </table>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Production Tile Providers & API Keys */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="production-providers">Production Tile Providers & API Keys</h2>
 
       <p>
@@ -560,9 +534,6 @@ const areas = mergeData(worldFeatures, countryGDP, {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Tips */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="tips">Tips</h2>
 
       <h3>Projection must be Mercator</h3>
@@ -596,9 +567,7 @@ const areas = mergeData(worldFeatures, countryGDP, {
         bottom-right corner of the map).
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Tile Props</h2>
 
       <p>
@@ -610,9 +579,6 @@ const areas = mergeData(worldFeatures, countryGDP, {
 
       <PropTable componentName="Tile Map" props={tileProps} />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

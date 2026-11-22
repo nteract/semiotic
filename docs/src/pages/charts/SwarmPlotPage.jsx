@@ -11,9 +11,7 @@ import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const sampleData = [
   { category: "Control", value: 23, trial: "A" },
@@ -60,9 +58,7 @@ const sizedData = [
   { category: "Team C", value: 93, importance: 9 },
 ]
 
-// ---------------------------------------------------------------------------
 // Streaming demo
-// ---------------------------------------------------------------------------
 
 const swarmGroups = ["Control", "Treatment", "Placebo"]
 
@@ -138,13 +134,9 @@ function StreamingSwarmDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Props definition for PropTable
-// ---------------------------------------------------------------------------
 
-// ---------------------------------------------------------------------------
 // Brush + Zoom demo
-// ---------------------------------------------------------------------------
 
 // Denser data for the brush demo
 const brushSwarmData = [
@@ -212,9 +204,7 @@ const swarmPlotProps = [
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamOrdinalFrame props for advanced customization. Escape hatch to the full Frame API." },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function SwarmPlotPage() {
   return (
@@ -250,9 +240,7 @@ export default function SwarmPlotPage() {
         easy to spot.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <ChartGrounding component="SwarmPlot" />
 
       <h2 id="quick-start">Quick Start</h2>
@@ -293,9 +281,6 @@ export default function SwarmPlotPage() {
         }
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="color-by-group">Color by Subgroup</h3>
@@ -377,9 +362,6 @@ export default function SwarmPlotPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Brush + Zoom */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="brush-zoom">Brush + Zoom</h2>
 
       <p>
@@ -401,16 +383,11 @@ export default function SwarmPlotPage() {
         />
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="SwarmPlot" props={swarmPlotProps} />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
@@ -488,9 +465,6 @@ export default function SwarmPlotPage() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

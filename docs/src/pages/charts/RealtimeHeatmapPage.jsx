@@ -7,9 +7,7 @@ import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Responsive container hook
-// ---------------------------------------------------------------------------
 
 function useContainerWidth() {
   const ref = useRef(null)
@@ -30,9 +28,7 @@ function useContainerWidth() {
   return [ref, width]
 }
 
-// ---------------------------------------------------------------------------
 // Live streaming demos
-// ---------------------------------------------------------------------------
 
 function BasicHeatmapDemo() {
   const chartRef = useRef()
@@ -158,9 +154,7 @@ function DecayHeatmapDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Props definition for PropTable
-// ---------------------------------------------------------------------------
 
 const realtimeHeatmapProps = [
   { name: "data", type: "array", required: false, default: "[]", description: "Controlled data array. Each object should contain fields matched by timeAccessor and valueAccessor." },
@@ -195,9 +189,7 @@ const realtimeHeatmapProps = [
   { name: "className", type: "string", required: false, default: null, description: "CSS class name for the chart container." },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function RealtimeHeatmapPage() {
   return (
@@ -238,9 +230,6 @@ export default function RealtimeHeatmapPage() {
         encoding features like decay and pulse.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="quick-start">Quick Start</h2>
 
       <p>
@@ -291,9 +280,6 @@ function StreamingHeatmap() {
         />
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="sum-aggregation">Sum Aggregation</h3>
@@ -363,16 +349,11 @@ chartRef.current?.push({
         />
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="RealtimeHeatmap" props={realtimeHeatmapProps} />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
@@ -424,9 +405,6 @@ chartRef.current?.push({
         </div>
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

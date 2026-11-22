@@ -15,9 +15,7 @@ import CodeBlock from "../../components/CodeBlock"
 import PropTable from "../../components/PropTable"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data for LinkedCharts live example
-// ---------------------------------------------------------------------------
 
 const salesData = [
   { month: "Jan", revenue: 42, region: "North", spend: 18 },
@@ -41,9 +39,7 @@ const regionTotals = ["North", "South", "East", "West"].map((region) => ({
     .reduce((s, d) => s + d.revenue, 0),
 }))
 
-// ---------------------------------------------------------------------------
 // Sample data for ScatterplotMatrix
-// ---------------------------------------------------------------------------
 
 const splomData = Array.from({ length: 80 }, (_, i) => {
   const species = ["setosa", "versicolor", "virginica"][i % 3]
@@ -57,9 +53,7 @@ const splomData = Array.from({ length: 80 }, (_, i) => {
   }
 })
 
-// ---------------------------------------------------------------------------
 // Prop definitions
-// ---------------------------------------------------------------------------
 
 const linkedChartsProps = [
   {
@@ -171,9 +165,7 @@ const splomProps = [
   },
 ]
 
-// ---------------------------------------------------------------------------
 // Brush-and-link helper
-// ---------------------------------------------------------------------------
 
 function FilteredBarChart({ data }) {
   const filtered = useFilteredData(data, "brush")
@@ -196,9 +188,7 @@ function FilteredBarChart({ data }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function SmallMultiplesPage() {
   return (
@@ -232,9 +222,7 @@ export default function SmallMultiplesPage() {
         <a href="#unified-legend"><code>Unified Legend</code></a> below.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Live example */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="example">Example</h2>
 
       <p>
@@ -312,9 +300,6 @@ const regionTotals = ["North", "South", "East", "West"].map(region => ({
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* How it works */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="how-it-works">How It Works</h2>
 
       <p>
@@ -536,9 +521,6 @@ function FilteredBarChart({ data }) {
         props={linkedChartsProps}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* ScatterplotMatrix */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="scatterplot-matrix">ScatterplotMatrix</h2>
 
       <p>
@@ -591,9 +573,7 @@ function FilteredBarChart({ data }) {
         props={splomProps}
       />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Hooks */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="hooks">Selection Hooks</h2>
       <p>
         For custom coordinated views beyond the built-in chart props,
@@ -643,9 +623,6 @@ const filtered = useFilteredData(data, "mySelection")`}
         <code> LinkedCharts</code> to isolate its selections and crosshairs.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

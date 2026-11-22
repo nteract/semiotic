@@ -11,9 +11,7 @@ import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const sampleData = [
   { category: "Electronics", value: 12400 },
@@ -77,9 +75,7 @@ function AnimateBarDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Streaming demo
-// ---------------------------------------------------------------------------
 
 const departments = ["Engineering", "Marketing", "Sales", "Operations", "HR", "Design"]
 
@@ -144,9 +140,7 @@ function StreamingBarDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Props definition for PropTable
-// ---------------------------------------------------------------------------
 
 const barChartProps = [
   { name: "data", type: "array", required: true, default: null, description: "Array of data points. Each point should have a category and value." },
@@ -174,9 +168,7 @@ const barChartProps = [
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamOrdinalFrame props for advanced customization. Escape hatch to the full Frame API." },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function BarChartPage() {
   return (
@@ -212,9 +204,7 @@ export default function BarChartPage() {
         defaults.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <ChartGrounding
         component="BarChart"
         props={{
@@ -267,9 +257,6 @@ export default function BarChartPage() {
         }
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="horizontal">Horizontal Bars</h3>
@@ -349,9 +336,6 @@ export default function BarChartPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Custom Tick Labels (ReactNode) */}
-      {/* ----------------------------------------------------------------- */}
       <h3 id="custom-tick-labels">Custom Tick Labels (ReactNode)</h3>
       <p>
         <code>categoryFormat</code> can return a React element for custom tick rendering.
@@ -373,9 +357,6 @@ export default function BarChartPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Hover Highlight */}
-      {/* ----------------------------------------------------------------- */}
       <h3 id="hover-highlight-bars">Hover Highlight</h3>
       <p>
         Set <code>hoverHighlight="series"</code> with <code>colorBy</code> to
@@ -442,9 +423,6 @@ export default function BarChartPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Gradient fill */}
-      {/* ----------------------------------------------------------------- */}
       <h3 id="gradient-fill">Gradient Fill</h3>
       <p>
         <code>gradientFill</code> runs a gradient from each bar's tip (opposite
@@ -539,9 +517,7 @@ export default function BarChartPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Animate */}
-      {/* ----------------------------------------------------------------- */}
       <h3 id="animate">Animated Transitions</h3>
       <p>
         Set <code>animate</code> to smoothly transition bar heights when data changes.
@@ -566,16 +542,11 @@ export default function BarChartPage() {
   Swap data
 </button>`} />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="BarChart" props={barChartProps} />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
@@ -649,9 +620,6 @@ export default function BarChartPage() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

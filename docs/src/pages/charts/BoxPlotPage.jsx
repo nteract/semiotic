@@ -11,9 +11,7 @@ import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const sampleData = [
   { category: "Morning", value: 62 },
@@ -63,9 +61,7 @@ const colorData = [
   { category: "Region C", value: 75, zone: "Rural" },
 ]
 
-// ---------------------------------------------------------------------------
 // Streaming demo
-// ---------------------------------------------------------------------------
 
 const timeSlots = ["Morning", "Afternoon", "Evening"]
 
@@ -139,9 +135,7 @@ function StreamingBoxPlotDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Props definition for PropTable
-// ---------------------------------------------------------------------------
 
 const boxPlotProps = [
   { name: "data", type: "array", required: true, default: null, description: "Array of data points. Multiple points per category are used to compute quartiles." },
@@ -167,9 +161,7 @@ const boxPlotProps = [
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamOrdinalFrame props for advanced customization. Escape hatch to the full Frame API." },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function BoxPlotPage() {
   return (
@@ -205,9 +197,7 @@ export default function BoxPlotPage() {
         interactions that reveal quartile details.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <ChartGrounding component="BoxPlot" />
 
       <h2 id="quick-start">Quick Start</h2>
@@ -251,9 +241,6 @@ export default function BoxPlotPage() {
         }
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="horizontal-boxplot">Horizontal Box Plot</h3>
@@ -331,16 +318,11 @@ export default function BoxPlotPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="BoxPlot" props={boxPlotProps} />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
@@ -421,9 +403,6 @@ export default function BoxPlotPage() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

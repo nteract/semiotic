@@ -12,7 +12,7 @@ import type { BaseChartProps, ChartAccessor, CategoryFormatFn } from "../shared/
 import { type TooltipProp } from "../../Tooltip/Tooltip"
 import ChartError from "../shared/ChartError"
 import { validateArrayData } from "../shared/validateChartData"
-import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
+import { useOrdinalPieceStyle, withoutOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import { useSelectionAwareFrameStyle } from "../shared/useSelectionAwareFrameStyle"
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
@@ -213,11 +213,6 @@ export const ViolinPlot = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */
 
   const defaultTooltipContent = useMemo(() => buildStatsTooltip({ valueAccessor }), [valueAccessor])
 
-  // Loading / empty state — returned only after every hook above has run, so
-  // the hook count is identical whether or not data is present. Mounting empty
-  // (loading skeleton, 0 bars) and then streaming in data must not change the
-  // number of hooks between renders, or React throws "Rendered more hooks than
-  // during the previous render."
   if (setup.earlyReturn) return setup.earlyReturn
 
   const error = validateArrayData({
@@ -261,9 +256,7 @@ export const ViolinPlot = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */
     ...(annotations && annotations.length > 0 && { annotations }),
     ...(valueExtent && { rExtent: valueExtent }),
     ...ordinalBrush.brushStreamProps,
-    // frameProps spread last for escape hatch, but pieceStyle excluded to prevent
-    // clobbering the HOC's color-resolved, selection-wrapped style function.
-    ...Object.fromEntries(Object.entries(frameProps).filter(([k]) => k !== "pieceStyle")),
+    ...withoutOrdinalPieceStyle(frameProps),
     ...(userSummaryStyle && { summaryStyle: userSummaryStyle }),
   }
 

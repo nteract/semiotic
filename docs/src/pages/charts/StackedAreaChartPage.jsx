@@ -11,9 +11,7 @@ import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const stackedData = [
   { quarter: 1, revenue: 12000, region: "North" },
@@ -34,9 +32,7 @@ const stackedData = [
   { quarter: 4, revenue: 8500, region: "West" },
 ]
 
-// ---------------------------------------------------------------------------
 // Props definition for PropTable
-// ---------------------------------------------------------------------------
 
 const stackedAreaChartProps = [
   { name: "data", type: "array", required: true, default: null, description: "Array of data points, grouped by category." },
@@ -67,9 +63,7 @@ const stackedAreaChartProps = [
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamXYFrame props for advanced customization. Escape hatch to the full Frame API." },
 ]
 
-// ---------------------------------------------------------------------------
 // Streaming demo
-// ---------------------------------------------------------------------------
 
 const streamingStackedCode = `import { useRef, useEffect } from "react"
 import { StackedAreaChart } from "semiotic"
@@ -143,9 +137,7 @@ function StreamingStackedDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function StackedAreaChartPage() {
   return (
@@ -183,9 +175,7 @@ export default function StackedAreaChartPage() {
         <Link to="/charts/area-chart">AreaChart</Link>.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <ChartGrounding component="StackedAreaChart" />
 
       <h2 id="quick-start">Quick Start</h2>
@@ -231,9 +221,6 @@ export default function StackedAreaChartPage() {
         }
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="multi-tooltip">Hover-Anywhere Multi Tooltip</h3>
@@ -350,16 +337,11 @@ export default function StackedAreaChartPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="StackedAreaChart" props={stackedAreaChartProps} />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
@@ -444,9 +426,6 @@ export default function StackedAreaChartPage() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

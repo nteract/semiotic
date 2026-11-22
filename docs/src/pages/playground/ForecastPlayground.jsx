@@ -4,9 +4,7 @@ import PageLayout from "../../components/PageLayout"
 import PropControls from "../../components/PropControls"
 import CodeBlock from "../../components/CodeBlock"
 
-// ---------------------------------------------------------------------------
 // Sample datasets
-// ---------------------------------------------------------------------------
 
 function generateTimeSeries(n, trend, noise, anomalyRate) {
   const data = []
@@ -69,9 +67,7 @@ const datasets = [
   },
 ]
 
-// ---------------------------------------------------------------------------
 // Controls
-// ---------------------------------------------------------------------------
 
 const forecastControls = [
   { name: "steps", type: "number", label: "Forecast Steps", group: "Forecast",
@@ -124,9 +120,7 @@ const chartControls = [
 
 const allControls = [...forecastControls, ...anomalyControls, ...chartControls]
 
-// ---------------------------------------------------------------------------
 // Code generator
-// ---------------------------------------------------------------------------
 
 function generateCode(values, datasetLabel, isPrecomputed) {
   let code = `import { LineChart } from "semiotic"\n\n`
@@ -236,9 +230,7 @@ const rowFieldsCode = `import { LineChart, ANOMALY_FIELD, FORECAST_SEGMENT_FIELD
   }}
 />`
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function ForecastPlayground() {
   const [datasetIndex, setDatasetIndex] = useState(0)

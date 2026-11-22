@@ -11,9 +11,7 @@ import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const sampleData = [
   { category: "Q1", product: "Alpha", value: 120 },
@@ -30,9 +28,7 @@ const sampleData = [
   { category: "Q4", product: "Gamma", value: 190 },
 ]
 
-// ---------------------------------------------------------------------------
 // Streaming demo
-// ---------------------------------------------------------------------------
 
 const years = ["2021", "2022", "2023", "2024"]
 const groupProducts = ["Alpha", "Beta", "Gamma"]
@@ -118,9 +114,7 @@ function StreamingGroupedBarDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Props definition for PropTable
-// ---------------------------------------------------------------------------
 
 const groupedBarChartProps = [
   { name: "data", type: "array", required: true, default: null, description: "Array of data points with category, group, and value fields." },
@@ -151,9 +145,7 @@ const groupedBarChartProps = [
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamOrdinalFrame props for advanced customization." },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function GroupedBarChartPage() {
   return (
@@ -191,9 +183,7 @@ export default function GroupedBarChartPage() {
         comparison between groups.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <ChartGrounding component="GroupedBarChart" />
 
       <h2 id="quick-start">Quick Start</h2>
@@ -236,9 +226,6 @@ export default function GroupedBarChartPage() {
         }
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="horizontal">Horizontal Grouped Bars</h3>
@@ -348,16 +335,11 @@ export default function GroupedBarChartPage() {
   roundedTop={4}
 />`} />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="GroupedBarChart" props={groupedBarChartProps} />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
@@ -404,9 +386,6 @@ export default function GroupedBarChartPage() {
         </div>
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

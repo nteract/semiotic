@@ -4,9 +4,7 @@ import PageLayout from "../../components/PageLayout"
 import PropControls from "../../components/PropControls"
 import CodeBlock from "../../components/CodeBlock"
 
-// ---------------------------------------------------------------------------
 // Datasets
-// ---------------------------------------------------------------------------
 
 const countryTrajectory = Array.from({ length: 25 }, (_, i) => ({
   x: 20 + i * 4 + Math.sin(i * 0.4) * 8,
@@ -35,9 +33,7 @@ const datasets = [
   { label: "Climate (30 pts)", data: climate, xLabel: "CO₂ (ppm)", yLabel: "Temperature (°C)", orderAccessor: "year", orderLabel: "Year" },
 ]
 
-// ---------------------------------------------------------------------------
 // Controls
-// ---------------------------------------------------------------------------
 
 const controls = [
   { name: "pointRadius", type: "number", label: "Point Radius", group: "Points",
@@ -48,9 +44,7 @@ const controls = [
     default: true },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function ConnectedScatterplotPlayground() {
   const [datasetIndex, setDatasetIndex] = useState(0)

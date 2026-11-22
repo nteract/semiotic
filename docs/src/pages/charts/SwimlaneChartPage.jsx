@@ -8,9 +8,7 @@ import PageLayout from "../../components/PageLayout"
 import ChartGrounding from "../../components/ChartGrounding"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Responsive container hook
-// ---------------------------------------------------------------------------
 
 function useContainerWidth() {
   const ref = useRef(null)
@@ -31,9 +29,7 @@ function useContainerWidth() {
   return [ref, width]
 }
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const STATIC_DATA = [
   { lane: "Backend", task: "Auth", value: 3 },
@@ -53,9 +49,7 @@ const TASK_COLORS = {
   UI: "#fd7e14",
 }
 
-// ---------------------------------------------------------------------------
 // Static demo
-// ---------------------------------------------------------------------------
 
 function StaticDemo() {
   const [containerRef, containerWidth] = useContainerWidth()
@@ -83,9 +77,7 @@ function StaticDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Streaming demo
-// ---------------------------------------------------------------------------
 
 const STREAM_LANES = ["Ingest", "Transform"]
 const STREAM_TASKS = ["parse", "validate", "enrich", "write"]
@@ -133,9 +125,7 @@ function StreamingDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Toggle demo (static / streaming)
-// ---------------------------------------------------------------------------
 
 function QuickStartDemo() {
   const [mode, setMode] = useState("static")
@@ -155,9 +145,7 @@ function QuickStartDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Brush + Zoom demo
-// ---------------------------------------------------------------------------
 
 const BRUSH_LANES = ["Pipeline A", "Pipeline B", "Pipeline C", "Pipeline D"]
 const BRUSH_TASKS = ["fetch", "parse", "validate", "transform", "enrich", "write", "notify"]
@@ -238,9 +226,7 @@ function BrushZoomDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Props definition
-// ---------------------------------------------------------------------------
 
 const SwimlaneChartPropsTable = [
   { name: "data", type: "array", required: false, default: null, description: "Data array. Omit for push API mode." },
@@ -270,9 +256,7 @@ const SwimlaneChartPropsTable = [
   { name: "frameProps", type: "object", required: false, default: null, description: "Pass-through props to StreamOrdinalFrame for advanced control." },
 ]
 
-// ---------------------------------------------------------------------------
 // Page
-// ---------------------------------------------------------------------------
 
 export default function SwimlaneChartPage() {
   return (
@@ -311,9 +295,7 @@ export default function SwimlaneChartPage() {
         the push API for streaming.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <ChartGrounding component="SwimlaneChart" />
 
       <h2 id="quick-start">Quick Start</h2>
@@ -366,9 +348,6 @@ ref.current.push({ lane: "Backend", task: "Auth", value: 2 })
         />
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Brush + Zoom */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="brush-zoom">Brush + Zoom</h2>
 
       <p>
@@ -406,9 +385,6 @@ ref.current.push({ lane: "Backend", task: "Auth", value: 2 })
         />
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Themed Borders */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="themed-borders">Themed Borders</h2>
 
       <p>
@@ -459,9 +435,6 @@ ref.current.push({ lane: "Backend", task: "Auth", value: 2 })
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Gradient Fill + Threshold */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="gradient-fill">Gradient Fill + Threshold</h2>
 
       <p>
@@ -571,9 +544,6 @@ ref.current.push({ lane: "Backend", task: "Auth", value: 2 })
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Rounded corners */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="rounded-corners">Rounded Corners</h2>
 
       <p>
@@ -616,16 +586,11 @@ ref.current.push({ lane: "Backend", task: "Auth", value: 2 })
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="SwimlaneChart" props={SwimlaneChartPropsTable} />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
@@ -674,9 +639,6 @@ ref.current.push({ lane: "Backend", task: "Auth", value: 2 })
         </div>
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

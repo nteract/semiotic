@@ -213,9 +213,7 @@ export default function MotionEncodingsPage() {
         </li>
       </ul>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Workbench */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="workbench">Two runtimes, one dataset</h2>
 
       <p>
@@ -226,9 +224,7 @@ export default function MotionEncodingsPage() {
 
       <MotionWorkbench />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Shared channels */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="channels">The shared channels</h2>
 
       <p>
@@ -262,9 +258,7 @@ export default function MotionEncodingsPage() {
         </li>
       </ul>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Clocks */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="clocks">Choosing a clock</h2>
 
       <p>
@@ -284,9 +278,7 @@ export default function MotionEncodingsPage() {
         ))}
       </ul>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Cause / cue / evidence */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="layers">Cause, cue, and evidence</h2>
 
       <p>
@@ -308,9 +300,7 @@ export default function MotionEncodingsPage() {
         </li>
       </ul>
 
-      {/* ----------------------------------------------------------------- */}
       {/* API */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="api">Composing the encoding</h2>
 
       <p>
@@ -328,9 +318,6 @@ export default function MotionEncodingsPage() {
         <CodeBlock language="js" code={clockCode} />
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Reduced motion */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="reduced-motion">Reduced motion</h2>
 
       <p>
@@ -339,9 +326,6 @@ export default function MotionEncodingsPage() {
         semantic items and tables. A frozen mid-animation frame is not a reduced-motion alternative.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

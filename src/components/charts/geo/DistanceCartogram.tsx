@@ -469,11 +469,6 @@ export const DistanceCartogram = /* @__PURE__ */ withChartErrorBoundary(/* @__PU
       : <>{cartogramOverlay}{userForeground}</>
   }, [cartogramLayout, ringValues, showRings, showRingLabels, showNorth, costLabel, ringStyle, setup.margin.bottom, frameProps.foregroundGraphics])
 
-  // Loading / empty state — returned only after every hook above has run, so
-  // the hook count is identical whether or not data is present. Mounting empty
-  // (loading skeleton, no points) and then streaming in data must not change
-  // the number of hooks between renders, or React throws "Rendered more hooks
-  // than during the previous render."
   if (setup.earlyReturn) return setup.earlyReturn
 
   warnMissingField("DistanceCartogram", safeData, "xAccessor", xAccessor)
@@ -525,9 +520,7 @@ export const DistanceCartogram = /* @__PURE__ */ withChartErrorBoundary(/* @__PU
     ...(className && { className }),
     ...(props.animate != null && { animate: props.animate }),
     ...frameProps,
-    // frameProps precedence: the caller's style still wins; this re-applies it with selection dimming preserved.
     ...(userPointStyle && { pointStyle: userPointStyle }),
-    // frameProps precedence: replace its overlay with the composed cartogram layer afterward.
     foregroundGraphics: overlayGraphics
   }
 

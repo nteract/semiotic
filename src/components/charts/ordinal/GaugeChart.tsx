@@ -554,7 +554,6 @@ export const GaugeChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */
     ...(className && { className }),
     ...(props.animate != null && { animate: props.animate }),
     ...frameProps,
-    // frameProps precedence: the caller's style still wins; this re-applies it with selection dimming preserved.
     ...(userPieceStyle && { pieceStyle: userPieceStyle }),
   }
 

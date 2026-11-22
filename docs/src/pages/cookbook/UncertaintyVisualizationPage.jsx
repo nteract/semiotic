@@ -8,9 +8,7 @@ import { Link } from "react-router-dom"
 
 import UncertaintyVisualization from "../../examples/UncertaintyVisualization"
 
-// ---------------------------------------------------------------------------
 // Streaming demo
-// ---------------------------------------------------------------------------
 
 const streamingForecastCode = `import { useRef, useEffect } from "react"
 import { StreamXYFrame } from "semiotic"

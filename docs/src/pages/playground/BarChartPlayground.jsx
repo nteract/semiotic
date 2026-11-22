@@ -2,9 +2,7 @@ import React from "react"
 import { BarChart } from "semiotic"
 import PlaygroundLayout from "../../components/PlaygroundLayout"
 
-// ---------------------------------------------------------------------------
 // Control schema
-// ---------------------------------------------------------------------------
 
 const controls = [
   { name: "orientation", type: "select", label: "Orientation", group: "Bars",
@@ -27,9 +25,7 @@ const controls = [
     default: "" },
 ]
 
-// ---------------------------------------------------------------------------
 // Datasets
-// ---------------------------------------------------------------------------
 
 const departmentSales = [
   { category: "Electronics", value: 42000 },
@@ -99,9 +95,7 @@ const datasets = [
   },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function BarChartPlayground() {
   return (

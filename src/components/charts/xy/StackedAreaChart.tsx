@@ -503,7 +503,6 @@ export const StackedAreaChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PUR
     ...setup.crosshairProps,
     ...brushStreamProps,
     ...frameProps,
-    // frameProps precedence: the caller's style still wins; this re-applies it with selection dimming preserved.
     ...(userLineStyle && { lineStyle: userLineStyle }),
     ...(userAreaStyle && { areaStyle: userAreaStyle }),
   }

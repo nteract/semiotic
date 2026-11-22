@@ -1,23 +1,4 @@
-/**
- * Metadata-only mirror of the blog entries registry.
- *
- * The full registry in `./entries.js` imports the entry-body
- * components, which pull in React, semiotic charts, and other code
- * that can't run inside the bare-Node OG-card build script (no JSX
- * transform there). This file is the build-time read-only view that
- * the OG card generator + prerender script can consume without
- * touching React.
- *
- * KEEP IN SYNC with `./entries.js`. The blog-post skill enforces
- * adding entries to BOTH places when registering a new post; the
- * size + position of this file is small enough that a stale entry
- * here is a CI fail away from being caught (see
- * scripts/check-blog-entry-sync.mjs).
- */
-
-// Same shape as `entries.js`'s `allBlogEntries`. Drafts (entries with
-// `draft: true`) are included here so the sync check and per-entry
-// inspection still work; the build scripts filter at consumption time.
+/** JSX-free metadata for Node builds. check-blog-entry-sync verifies it against the entry bodies. */
 export const allBlogEntriesMeta = [
   {
     slug: "release-3-12-0",

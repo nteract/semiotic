@@ -167,9 +167,7 @@ describe("Shared HOC rendering contracts", () => {
   })
 })
 
-// ═══════════════════════════════════════════════════════════════════════
 // Custom axes (generateAxesSVG via frameProps.axes)
-// ═══════════════════════════════════════════════════════════════════════
 
 describe("Custom axes SSR (generateAxesSVG)", () => {
   // Non-Bump coverage for the custom-`axes` SSR path: BumpChart exercises it
@@ -294,9 +292,7 @@ describe("Custom axes SSR (generateAxesSVG)", () => {
   })
 })
 
-// ═══════════════════════════════════════════════════════════════════════
 // Theme Inlining
-// ═══════════════════════════════════════════════════════════════════════
 
 describe("Theme inlining", () => {
   it("applies light theme text colors by default", () => {
@@ -422,9 +418,7 @@ describe("Theme inlining", () => {
   })
 })
 
-// ═══════════════════════════════════════════════════════════════════════
 // Accessibility
-// ═══════════════════════════════════════════════════════════════════════
 
 describe("Accessibility", () => {
   it("adds role='img' to SVG element", () => {
@@ -507,9 +501,7 @@ describe("Accessibility", () => {
   })
 })
 
-// ═══════════════════════════════════════════════════════════════════════
 // Grid Lines
-// ═══════════════════════════════════════════════════════════════════════
 
 describe("Grid lines", () => {
   it("renders grid when showGrid is true (XY)", () => {
@@ -620,9 +612,7 @@ describe("Grid lines", () => {
   })
 })
 
-// ═══════════════════════════════════════════════════════════════════════
 // Legend Rendering
-// ═══════════════════════════════════════════════════════════════════════
 
 describe("Legend rendering", () => {
   it("renders legend when showLegend=true with colorAccessor", () => {
@@ -843,9 +833,7 @@ describe("Legend rendering", () => {
   })
 })
 
-// ═══════════════════════════════════════════════════════════════════════
 // Annotations in server SVG
-// ═══════════════════════════════════════════════════════════════════════
 
 describe("Annotations in server SVG", () => {
   it("renders y-threshold annotation on XY chart", () => {

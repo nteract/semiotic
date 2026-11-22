@@ -11,9 +11,7 @@ import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const sampleData = [
   { category: "Norway", value: 82.4 },
@@ -37,9 +35,7 @@ const colorData = [
   { category: "Brazil", value: 65.8, continent: "Americas" },
 ]
 
-// ---------------------------------------------------------------------------
 // Streaming demo
-// ---------------------------------------------------------------------------
 
 const countries = ["Norway", "Switzerland", "Australia", "Germany", "Canada", "Japan", "Brazil", "USA"]
 
@@ -112,9 +108,7 @@ function StreamingDotPlotDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Props definition for PropTable
-// ---------------------------------------------------------------------------
 
 const dotPlotProps = [
   { name: "data", type: "array", required: true, default: null, description: "Array of data points with category and value fields." },
@@ -140,9 +134,7 @@ const dotPlotProps = [
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamOrdinalFrame props for advanced customization. Escape hatch to the full Frame API." },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function DotPlotPage() {
   return (
@@ -178,9 +170,7 @@ export default function DotPlotPage() {
         making rank easy to read at a glance.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <ChartGrounding component="DotPlot" />
 
       <h2 id="quick-start">Quick Start</h2>
@@ -221,9 +211,6 @@ export default function DotPlotPage() {
         }
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="color-by-group">Colored by Group</h3>
@@ -308,16 +295,11 @@ export default function DotPlotPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="DotPlot" props={dotPlotProps} />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
@@ -396,9 +378,6 @@ export default function DotPlotPage() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

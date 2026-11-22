@@ -8,9 +8,7 @@ import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const forceNodes = [
   { id: "Alice", group: "team1" },
@@ -73,9 +71,7 @@ const treeData = {
   ],
 }
 
-// ---------------------------------------------------------------------------
 // Props definition
-// ---------------------------------------------------------------------------
 
 const networkFrameProps = [
   { name: "chartType", type: "string", required: true, default: null, description: '"force", "sankey", "chord", "tree", "cluster", "circlepack", "treemap", "partition".' },
@@ -94,9 +90,7 @@ const networkFrameProps = [
   { name: "margin", type: "object", required: false, default: null, description: "Chart margins." },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function NetworkFramePage() {
   return (
@@ -129,9 +123,6 @@ export default function NetworkFramePage() {
         control over layout and styling.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="quick-start">Quick Start</h2>
 
       <p>
@@ -169,9 +160,6 @@ export default function NetworkFramePage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="sankey">Sankey Diagram</h3>
@@ -237,16 +225,10 @@ export default function NetworkFramePage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="StreamNetworkFrame" props={networkFrameProps} />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

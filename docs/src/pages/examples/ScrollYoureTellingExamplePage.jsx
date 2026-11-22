@@ -373,9 +373,7 @@ export default function ScrollYoureTellingExamplePage() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Reading telemetry — the page measures itself being read.
-// ---------------------------------------------------------------------------
 
 function useReadingTelemetry(chapterRefs, running) {
   const [beats, setBeats] = useState([])
@@ -505,9 +503,7 @@ function buildRereadCallout(windowed) {
   return []
 }
 
-// ---------------------------------------------------------------------------
 // Presentation helpers
-// ---------------------------------------------------------------------------
 
 function beatPointStyle(beat) {
   const meta = BEAT_KINDS[beat.kind] || BEAT_KINDS.idle

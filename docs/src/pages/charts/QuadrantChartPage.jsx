@@ -11,9 +11,7 @@ import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data — BCG Growth-Share Matrix (0–1 unitized scale)
-// ---------------------------------------------------------------------------
 
 const bcgData = [
   { product: "TurboEncabulator 9000", growth: 0.82, share: 0.75, revenue: 120, category: "Stars" },
@@ -77,9 +75,7 @@ const riskQuadrants = {
   bottomRight: { label: "Annoying but Survivable", color: "#FF9800", opacity: 0.08 },
 }
 
-// ---------------------------------------------------------------------------
 // Props definition for PropTable
-// ---------------------------------------------------------------------------
 
 const quadrantChartProps = [
   { name: "data", type: "array", required: false, default: null, description: "Array of data points. Omit when using push API." },
@@ -111,9 +107,7 @@ const quadrantChartProps = [
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamXYFrame props for advanced customization." },
 ]
 
-// ---------------------------------------------------------------------------
 // Streaming demo
-// ---------------------------------------------------------------------------
 
 const streamingCode = `import { useRef, useEffect } from "react"
 import { QuadrantChart } from "semiotic"
@@ -180,9 +174,7 @@ function StreamingQuadrantDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Main Page
-// ---------------------------------------------------------------------------
 
 export default function QuadrantChartPage() {
   return (

@@ -241,9 +241,7 @@ export default function LikertChartPage() {
         pre-aggregated counts, and any scale size (3-point to 7-point and beyond).
       </p>
 
-      {/* ================================================================= */}
       {/* Quick Start: Horizontal Diverging */}
-      {/* ================================================================= */}
       <ChartGrounding component="LikertChart" />
 
       <h2 id="quick-start">Quick Start — Diverging (Horizontal)</h2>
@@ -315,9 +313,7 @@ const divergingColors = ["#da1e28", "#ff8389", "#a8a8a8", "#4589ff", "#0043ce"]
         }
       />
 
-      {/* ================================================================= */}
       {/* Vertical Stacked */}
-      {/* ================================================================= */}
       <h2 id="vertical">Stacked 100% (Vertical)</h2>
 
       <p>
@@ -357,9 +353,6 @@ const divergingColors = ["#da1e28", "#ff8389", "#a8a8a8", "#4589ff", "#0043ce"]
         language="jsx"
       />
 
-      {/* ================================================================= */}
-      {/* Scale Variants */}
-      {/* ================================================================= */}
       <h2 id="variants">Scale Variants</h2>
 
       <div style={{
@@ -523,9 +516,7 @@ const colors = [
         </div>
       )}
 
-      {/* ================================================================= */}
       {/* Data Format Reference */}
-      {/* ================================================================= */}
       <h2 id="data-formats">Data Formats</h2>
 
       <h3>Raw responses (integer scores)</h3>
@@ -580,9 +571,7 @@ const data = [
         language="jsx"
       />
 
-      {/* ================================================================= */}
       {/* Props Reference */}
-      {/* ================================================================= */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="LikertChart" props={likertProps} />

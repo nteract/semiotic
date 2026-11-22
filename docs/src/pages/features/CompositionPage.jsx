@@ -8,9 +8,7 @@ import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const lineData = [
   { month: 1, revenue: 12, region: "North" },
@@ -53,9 +51,7 @@ const treeData = {
   ]
 }
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 
 export default function CompositionPage() {
@@ -79,9 +75,6 @@ export default function CompositionPage() {
         fluid sizing.
       </p>
 
-      {/* ================================================================= */}
-      {/* ChartGrid */}
-      {/* ================================================================= */}
       <h2 id="chart-grid">ChartGrid</h2>
 
       <p>
@@ -170,9 +163,7 @@ export default function CompositionPage() {
         language="jsx"
       />
 
-      {/* ================================================================= */}
       {/* Emphasis */}
-      {/* ================================================================= */}
       <h2 id="emphasis">Visual Hierarchy with Emphasis</h2>
 
       <p>
@@ -244,9 +235,6 @@ export default function CompositionPage() {
         language="jsx"
       />
 
-      {/* ================================================================= */}
-      {/* ContextLayout */}
-      {/* ================================================================= */}
       <h2 id="context-layout">ContextLayout</h2>
 
       <p>
@@ -306,9 +294,6 @@ export default function CompositionPage() {
         language="jsx"
       />
 
-      {/* ================================================================= */}
-      {/* CategoryColorProvider */}
-      {/* ================================================================= */}
       <h2 id="shared-colors">CategoryColorProvider</h2>
 
       <p>
@@ -378,9 +363,6 @@ export default function CompositionPage() {
         language="jsx"
       />
 
-      {/* ================================================================= */}
-      {/* Putting it all together */}
-      {/* ================================================================= */}
       <h2 id="full-example">Putting It All Together</h2>
 
       <p>
@@ -418,9 +400,6 @@ export default function CompositionPage() {
         language="jsx"
       />
 
-      {/* ================================================================= */}
-      {/* Props Reference */}
-      {/* ================================================================= */}
       <h2 id="props">Props Reference</h2>
 
       <h3>ChartGrid</h3>
@@ -502,9 +481,6 @@ export default function CompositionPage() {
         </tbody>
       </table>
 
-      {/* ================================================================= */}
-      {/* Related */}
-      {/* ================================================================= */}
       <h2 id="related">Related</h2>
 
       <ul>

@@ -11,9 +11,7 @@ import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 // Generate dense sample data (~60 points per category) for visible distributions
 function generateNormal(mean, std, n) {
@@ -40,9 +38,7 @@ const colorData = [
   ...generateNormal(68, 7, 40).map(v => ({ category: "Region C", value: v, zone: "Rural" })),
 ]
 
-// ---------------------------------------------------------------------------
 // Streaming demo
-// ---------------------------------------------------------------------------
 
 const histGroups = ["Morning", "Afternoon", "Evening"]
 
@@ -115,13 +111,9 @@ function StreamingHistogramDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Props definition for PropTable
-// ---------------------------------------------------------------------------
 
-// ---------------------------------------------------------------------------
 // Brush + Zoom demo
-// ---------------------------------------------------------------------------
 
 function HistogramBrushDemo() {
   const [brushExtent, setBrushExtent] = useState(null)
@@ -178,9 +170,7 @@ const histogramProps = [
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamOrdinalFrame props for advanced customization. Escape hatch to the full Frame API." },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function HistogramPage() {
   return (
@@ -217,9 +207,7 @@ export default function HistogramPage() {
         <code>relative</code> to normalize per-category for comparison.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <ChartGrounding component="Histogram" />
 
       <h2 id="quick-start">Quick Start</h2>
@@ -263,9 +251,6 @@ export default function HistogramPage() {
         }
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="fewer-bins">Fewer Bins</h3>
@@ -341,9 +326,6 @@ export default function HistogramPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Brush + Zoom */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="brush-zoom">Brush + Zoom</h2>
 
       <p>
@@ -365,16 +347,11 @@ export default function HistogramPage() {
         />
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="Histogram" props={histogramProps} />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
@@ -431,9 +408,6 @@ export default function HistogramPage() {
         </div>
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

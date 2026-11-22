@@ -13,7 +13,7 @@ import { type TooltipProp } from "../../Tooltip/Tooltip"
 import { buildOrdinalTooltip } from "../shared/tooltipUtils"
 import ChartError from "../shared/ChartError"
 import { validateArrayData } from "../shared/validateChartData"
-import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
+import { useOrdinalPieceStyle, withoutOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import { useOrdinalBrush } from "../shared/useOrdinalBrush"
 import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
 import type { RealtimeFrameHandle } from "../../realtime/types"
@@ -240,11 +240,6 @@ export const GroupedBarChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE
     setup,
   })
 
-  // Loading / empty state — returned only after every hook above has run, so
-  // the hook count is identical whether or not data is present. Mounting empty
-  // (loading skeleton, 0 bars) and then streaming in data must not change the
-  // number of hooks between renders, or React throws "Rendered more hooks than
-  // during the previous render."
   // Normalize once (memoized by the raw prop), before the early returns, so a
   // fresh gradient identity per render can't trip PipelineStore's by-reference
   // config comparison (rules-of-hooks: must precede any early return).
@@ -290,9 +285,7 @@ export const GroupedBarChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE
     ...(annotations && annotations.length > 0 && { annotations }),
     ...(valueExtent && { rExtent: valueExtent }),
     ...ordinalBrush.brushStreamProps,
-    // frameProps spread last for escape hatch, but pieceStyle excluded to prevent
-    // clobbering the HOC's color-resolved, selection-wrapped style function.
-    ...Object.fromEntries(Object.entries(frameProps).filter(([k]) => k !== "pieceStyle")),
+    ...withoutOrdinalPieceStyle(frameProps),
   }
 
   if (validationError) return <ChartError componentName="GroupedBarChart" message={validationError} width={width} height={height} />

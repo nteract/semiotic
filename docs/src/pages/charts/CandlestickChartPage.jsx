@@ -11,9 +11,7 @@ import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 // Synthetic OHLC over 20 sessions — drifts up then pulls back so both up and
 // down bodies appear. Deterministic on purpose: `Math.random()` at module
@@ -46,9 +44,7 @@ const temperatureRanges = [
 ]
 const formatDay = d => DAY_LABELS[d] ?? ""
 
-// ---------------------------------------------------------------------------
 // Streaming demo — random-walk OHLC pushed every 400ms
-// ---------------------------------------------------------------------------
 
 const streamingCode = `import { useRef, useEffect } from "react"
 import { CandlestickChart } from "semiotic"
@@ -120,9 +116,7 @@ function StreamingCandlestickDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Animation demos
-// ---------------------------------------------------------------------------
 
 // Deterministic OHLC generator seeded by a number — regenerating with a new
 // seed yields a totally different bar sequence. Used by the morph demo below.
@@ -291,9 +285,7 @@ return (
   />
 )`
 
-// ---------------------------------------------------------------------------
 // Props for the PropTable
-// ---------------------------------------------------------------------------
 
 const candlestickProps = [
   { name: "data", type: "array", required: false, default: null, description: "Array of data points. Omit when using the push API." },
@@ -316,9 +308,7 @@ const candlestickProps = [
   { name: "frameProps", type: "object", required: false, default: null, description: "Escape hatch for passing additional props to the underlying StreamXYFrame." },
 ]
 
-// ---------------------------------------------------------------------------
 // Main page
-// ---------------------------------------------------------------------------
 
 export default function CandlestickChartPage() {
   return (

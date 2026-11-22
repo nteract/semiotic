@@ -7,7 +7,8 @@ import { fileURLToPath } from "node:url"
 import {
   sourceWiresPushHandle,
   readCapabilityWiring,
-  capabilitySignals
+  capabilitySignals,
+  hasLegendControl
 } from "./lib/capabilitySourceChecks.mjs"
 
 const scriptsDir = dirname(fileURLToPath(import.meta.url))
@@ -272,5 +273,19 @@ describe("check-capabilities push-handle detection", () => {
       signals("const props = { customNetworkLayout: layout }").customLayout,
       true
     )
+  })
+})
+
+describe("legend capability controls", () => {
+  const bridge = 'import { resolvePhysicsFrameSharedProps as shared } from "./physicsHocUtils"'
+  it("accepts public controls and requires the shared bridge for a frame-only legend", () => {
+    const unused = readCapabilityWiring(bridge)
+    assert.ok(hasLegendControl({ showLegend: {} }, unused))
+    assert.ok(hasLegendControl({ legend: {} }, unused))
+    assert.equal(hasLegendControl({ legendPosition: {}, frameProps: {} }, unused), false)
+    const setup = bridge + '\nimport { StreamPhysicsFrame } from "./StreamPhysicsFrame"'
+    assert.equal(hasLegendControl({}, readCapabilityWiring(setup + "\nshared(props, frameProps)")), false)
+    const forwarded = readCapabilityWiring(setup + "\nconst frame = <StreamPhysicsFrame {...shared(props, frameProps)} />")
+    assert.ok(hasLegendControl({}, forwarded))
   })
 })

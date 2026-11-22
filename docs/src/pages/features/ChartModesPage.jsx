@@ -9,9 +9,7 @@ import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const revenueByQuarter = [
   { quarter: "Q1", revenue: 420 },
@@ -104,9 +102,7 @@ const kpiData = [
   },
 ]
 
-// ---------------------------------------------------------------------------
 // Streaming forecast sparkline
-// ---------------------------------------------------------------------------
 
 const FORECAST_WINDOW = 50
 const FORECAST_LEN = 12
@@ -161,9 +157,7 @@ function useForecastSparkData() {
   return data
 }
 
-// ---------------------------------------------------------------------------
 // Streaming Sankey sparkline helpers
-// ---------------------------------------------------------------------------
 
 // Fixed node definitions: 2 sources → 3 middle processors → 3 sinks.
 // Two middles both feed one shared sink (M1, M2 → Out1); the third
@@ -203,9 +197,7 @@ function buildSankeyEdges(t) {
   ]
 }
 
-// ---------------------------------------------------------------------------
 // Streaming spark chart
-// ---------------------------------------------------------------------------
 
 function StreamingSparkRow() {
   const forecastData = useForecastSparkData()
@@ -350,9 +342,7 @@ function StreamingSparkRow() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Mode toggle demo
-// ---------------------------------------------------------------------------
 
 function ModeToggleDemo() {
   const [mode, setMode] = useState("primary")
@@ -416,9 +406,7 @@ function ModeToggleDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Linked context + primary demo
-// ---------------------------------------------------------------------------
 
 // Shared color palette — same order as channels appear in data.
 // Using a single array ensures Email, Search, Social, Display get consistent
@@ -534,9 +522,7 @@ function LinkedDashboardDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // KPI cards
-// ---------------------------------------------------------------------------
 
 function KpiCards() {
   return (
@@ -583,9 +569,7 @@ function KpiCards() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function ChartModesPage() {
   return (
@@ -612,9 +596,7 @@ export default function ChartModesPage() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Interactive toggle */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="interactive-demo">Interactive Demo</h2>
 
       <p>
@@ -625,9 +607,7 @@ export default function ChartModesPage() {
 
       <ModeToggleDemo />
 
-      {/* ----------------------------------------------------------------- */}
       {/* KPI Cards */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="kpi-cards">KPI Cards with Sparklines</h2>
 
       <p>
@@ -655,9 +635,7 @@ export default function ChartModesPage() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Linked Dashboard */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="linked-dashboard">Linked Dashboard with Context Panels</h2>
 
       <p>
@@ -704,9 +682,7 @@ export default function ChartModesPage() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Streaming Sparklines */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="streaming-sparklines">Streaming Sparklines in Tables</h2>
 
       <p>
@@ -763,9 +739,7 @@ export default function ChartModesPage() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Mode Defaults Table */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="mode-defaults">Mode Defaults</h2>
 
       <p>
@@ -808,9 +782,6 @@ export default function ChartModesPage() {
         </tbody>
       </table>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>
@@ -835,9 +806,7 @@ export default function ChartModesPage() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Table styles
-// ---------------------------------------------------------------------------
 
 const thStyle = {
   padding: "10px 14px",

@@ -11,9 +11,7 @@ import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 // Temperature anomaly — daily highs vs. the climatological normal. Months
 // 5/6 sit below normal (cool snap), 1/2 and 9–11 run above. Crossovers at
@@ -62,9 +60,7 @@ const budgetData = [
   { week: 12, spend: 16,  budget: 18 },
 ]
 
-// ---------------------------------------------------------------------------
 // Streaming demo
-// ---------------------------------------------------------------------------
 
 const streamingDifferenceCode = `import { useRef, useEffect } from "react"
 import { DifferenceChart } from "semiotic"
@@ -132,9 +128,7 @@ function StreamingDifferenceDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Props definition
-// ---------------------------------------------------------------------------
 
 const differenceChartProps = [
   { name: "data", type: "array", required: false, default: null, description: "Array of {x, a, b} objects. Omit for push API mode." },
@@ -163,9 +157,7 @@ const differenceChartProps = [
   { name: "frameProps", type: "object", required: false, default: null, description: "Pass-through props to StreamXYFrame." },
 ]
 
-// ---------------------------------------------------------------------------
 // Page
-// ---------------------------------------------------------------------------
 
 export default function DifferenceChartPage() {
   return (
@@ -207,9 +199,7 @@ export default function DifferenceChartPage() {
         information.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Quick Start (with streaming toggle) */}
-      {/* ----------------------------------------------------------------- */}
       <ChartGrounding component="DifferenceChart" />
 
       <h2 id="quick-start">Quick Start</h2>
@@ -253,9 +243,6 @@ export default function DifferenceChartPage() {
         }
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="forecast-accuracy">Forecast accuracy with multiple crossovers</h3>
@@ -449,9 +436,7 @@ export default function DifferenceChartPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Streaming details */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="streaming">Streaming via push API</h2>
 
       <p>
@@ -491,16 +476,10 @@ chartRef.current.update("row-42", d => ({ ...d, a: 99 }))`}
         streams, consider down-sampling before pushing.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="DifferenceChart" props={differenceChartProps} />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

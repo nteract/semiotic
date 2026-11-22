@@ -36,9 +36,7 @@ const lineData = [
   { x: 2, y: 15, series: "Beta" },
 ]
 
-// ═══════════════════════════════════════════════════════════════════════
 // Legend visibility — must be within SVG bounds
-// ═══════════════════════════════════════════════════════════════════════
 
 describe("Server legend positioning", () => {
   describe("right position (default)", () => {

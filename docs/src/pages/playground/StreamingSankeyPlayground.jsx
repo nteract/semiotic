@@ -4,9 +4,7 @@ import PageLayout from "../../components/PageLayout"
 import PropControls from "../../components/PropControls"
 import CodeBlock from "../../components/CodeBlock"
 
-// ---------------------------------------------------------------------------
 // Control schemas
-// ---------------------------------------------------------------------------
 
 const layoutControls = [
   { name: "orientation", type: "select", label: "Orientation", group: "Layout",
@@ -67,9 +65,7 @@ const allControls = [
   ...interactionControls,
 ]
 
-// ---------------------------------------------------------------------------
 // Topology generators — each returns batches of edges to push
-// ---------------------------------------------------------------------------
 
 const topologies = [
   {
@@ -134,9 +130,7 @@ const topologies = [
   },
 ]
 
-// ---------------------------------------------------------------------------
 // Color schemes for the selector
-// ---------------------------------------------------------------------------
 
 const colorSchemes = [
   { label: "Category10", value: "category10" },
@@ -146,9 +140,7 @@ const colorSchemes = [
   { label: "Dark2", value: "dark2" },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function StreamingSankeyPlayground() {
   const [values, setValues] = useState(() => {
@@ -404,9 +396,7 @@ export default function StreamingSankeyPlayground() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Code generator
-// ---------------------------------------------------------------------------
 
 function generateCode(values, defaults, colorScheme) {
   let code = `import { StreamNetworkFrame } from "semiotic"\nimport { useRef } from "react"\n\n`

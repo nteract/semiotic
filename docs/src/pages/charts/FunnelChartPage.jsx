@@ -11,9 +11,7 @@ import ChartGrounding from "../../components/ChartGrounding"
 import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 
-// ---------------------------------------------------------------------------
 // Sample data — single category
-// ---------------------------------------------------------------------------
 
 const singleCategoryData = [
   { step: "Awareness", value: 1900 },
@@ -24,9 +22,7 @@ const singleCategoryData = [
   { step: "Purchase", value: 160 },
 ]
 
-// ---------------------------------------------------------------------------
 // Sample data — 2 categories
-// ---------------------------------------------------------------------------
 
 const twoCategoryData = [
   { step: "Awareness", category: "control", value: 1000 },
@@ -43,9 +39,7 @@ const twoCategoryData = [
   { step: "Purchase", category: "treatment", value: 60 },
 ]
 
-// ---------------------------------------------------------------------------
 // Sample data — 4 categories
-// ---------------------------------------------------------------------------
 
 const fourCategoryData = [
   { step: "Awareness", category: "organic", value: 5000 },
@@ -70,13 +64,9 @@ const fourCategoryData = [
   { step: "Purchase", category: "direct", value: 100 },
 ]
 
-// ---------------------------------------------------------------------------
 // Code examples
-// ---------------------------------------------------------------------------
 
-// ---------------------------------------------------------------------------
 // Props table
-// ---------------------------------------------------------------------------
 
 const funnelChartProps = [
   { name: "data", type: "array", required: true, default: null, description: "Array of data points. Each point should have a step name and numeric value." },
@@ -100,9 +90,7 @@ const funnelChartProps = [
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamOrdinalFrame props for advanced customization." },
 ]
 
-// ---------------------------------------------------------------------------
 // Streaming demo
-// ---------------------------------------------------------------------------
 
 const funnelSteps = ["Awareness", "Interest", "Consideration", "Intent", "Evaluation", "Purchase"]
 
@@ -176,9 +164,7 @@ function StreamingFunnelDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Interactive demo
-// ---------------------------------------------------------------------------
 
 function CategorySwitcher({ width, orientation }) {
   const [categories, setCategories] = useState(1)
@@ -231,9 +217,7 @@ function CategorySwitcher({ width, orientation }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Page
-// ---------------------------------------------------------------------------
 
 export default function FunnelChartPage() {
   return (
@@ -324,9 +308,7 @@ export default function FunnelChartPage() {
       </p>
       <CategorySwitcher width={600} />
 
-      {/* ================================================================= */}
       {/* Vertical Orientation (Bar Funnel) */}
-      {/* ================================================================= */}
       <ChartGrounding component="FunnelChart" />
 
       <h2 id="vertical">Vertical Orientation (Bar Funnel)</h2>
@@ -398,9 +380,7 @@ export default function FunnelChartPage() {
       <h3>Interactive: Vertical Category Switching</h3>
       <CategorySwitcher width={600} orientation="vertical" />
 
-      {/* ================================================================= */}
       {/* Graduating to the Frame */}
-      {/* ================================================================= */}
       <h2 id="graduating">When to Use the Frame</h2>
 
       <p>

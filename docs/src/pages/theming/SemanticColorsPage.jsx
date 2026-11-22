@@ -9,9 +9,7 @@ import {
 import PageLayout from "../../components/PageLayout"
 import CodeBlock from "../../components/CodeBlock"
 
-// ---------------------------------------------------------------------------
 // Docs-theme tracker
-// ---------------------------------------------------------------------------
 //
 // The docs site's own CSS only defines a handful of --semiotic-* vars
 // (bg / text / text-secondary / border / grid — see docs/src/index.css).
@@ -44,9 +42,7 @@ function useDocsThemeName() {
   return name
 }
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const baseTime = new Date("2026-04-01T10:00:00Z").getTime()
 const errorValues = [2, 4, 3, 6, 5, 7, 4, 8, 6, 5]
@@ -72,9 +68,7 @@ const statusBarData = [
   { category: "Service E", value: 65, status: "warning" },
 ]
 
-// ---------------------------------------------------------------------------
 // Swatch component — displays a single role with its computed CSS var
-// ---------------------------------------------------------------------------
 
 function Swatch({ role, label }) {
   const cssVar = `var(--semiotic-${role})`
@@ -139,9 +133,7 @@ function RoleGrid() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Page
-// ---------------------------------------------------------------------------
 
 export default function SemanticColorsPage() {
   // The docs site toggles between `data-theme="light"` and `data-theme="dark"`

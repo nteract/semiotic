@@ -338,11 +338,6 @@ export const ProportionalSymbolMap = /* @__PURE__ */ withChartErrorBoundary(/* @
     )
   }, [sizeBy, colorBy])
 
-  // Loading / empty state — returned only after every hook above has run, so
-  // the hook count is identical whether or not data is present. Mounting empty
-  // (loading skeleton, no points) and then streaming in data must not change
-  // the number of hooks between renders, or React throws "Rendered more hooks
-  // than during the previous render."
   if (setup.earlyReturn) return setup.earlyReturn
 
   warnMissingField("ProportionalSymbolMap", safeData, "xAccessor", xAccessor)
@@ -394,7 +389,6 @@ export const ProportionalSymbolMap = /* @__PURE__ */ withChartErrorBoundary(/* @
     ...(className && { className }),
     ...(props.animate != null && { animate: props.animate }),
     ...frameProps,
-    // frameProps precedence: the caller's style still wins; this re-applies it with selection dimming preserved.
     ...(userPointStyle && { pointStyle: userPointStyle }),
   }
 

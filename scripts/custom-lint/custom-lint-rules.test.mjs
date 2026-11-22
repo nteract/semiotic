@@ -18,14 +18,44 @@ function lint(code, ruleId, filename) {
 }
 
 describe("Semiotic custom lint rules", () => {
-  it("requires frameProps spreads to retain final precedence", () => {
-    assert.equal(lint("const props = { data, ...framePropsWithoutLegend }", "semiotic/frame-props-last", "src/components/charts/xy/LineChart.tsx").length, 0)
-    assert.equal(lint("const props = { ...frameProps, /* frameProps precedence: compose the owned overlay after the spread */ foregroundGraphics }", "semiotic/frame-props-last", "src/components/charts/xy/LineChart.tsx").length, 0)
-    assert.equal(lint("const props = { ...frameProps, /* preserve the label color */ foregroundGraphics }", "semiotic/frame-props-last", "src/components/charts/xy/LineChart.tsx").length, 1)
-    assert.equal(lint("const props = { ...frameProps, data, /* frameProps precedence: compose the foreground */ foregroundGraphics }", "semiotic/frame-props-last", "src/components/charts/xy/LineChart.tsx").length, 1)
-    const findings = lint("const props = { ...frameProps, data }", "semiotic/frame-props-last", "src/components/charts/xy/LineChart.tsx")
-    assert.equal(findings.length, 1)
-    assert.equal(findings[0].messageId, "framePropsLast")
+  it("checks each override after frameProps regardless of nearby comments", () => {
+    function findings(properties, chart = "xy/LineChart.tsx", setup = "") {
+      return lint(setup + "\nconst props = {" + properties + "}", "semiotic/frame-props-last", "src/components/charts/" + chart)
+        .map(message => message.messageId)
+    }
+    const error = ["framePropsLast"]
+    assert.deepEqual(findings("data, ...framePropsWithoutLegend"), [])
+    assert.deepEqual(findings("...frameProps, /* frameProps precedence: compose */ data"), error)
+    assert.deepEqual(findings("...frameProps, ...unknownProps"), error)
+    assert.deepEqual(findings("...frameProps, foregroundGraphics"), error)
+    const cartogram = "geo/DistanceCartogram.tsx"
+    assert.deepEqual(findings("...frameProps, foregroundGraphics, data", cartogram), error)
+    assert.deepEqual(findings("...frameProps, [key]: value", cartogram), error)
+    assert.deepEqual(findings("...restFrameProps, ...(show && { foregroundGraphics, data })", cartogram), error)
+    assert.deepEqual(findings("...framePropsWithoutLegend, ...frameProps"), error)
+    const ordinal = 'import { withoutOrdinalPieceStyle as rest } from "../shared/useOrdinalPieceStyle"'
+    assert.deepEqual(findings("...rest(frameProps), pieceStyle", "ordinal/BarChart.tsx", ordinal), error)
+    const setup = `
+      import { useSelectionAwareFrameStyle as wrap, useSelectionAwareXYFrameStyles as wrapXY } from "../shared/useSelectionAwareFrameStyle"
+      const style = wrap(frameProps.pointStyle, selection)
+      const styles = wrapXY(frameProps, selection)
+    `
+    assert.deepEqual(findings("...frameProps, ...(style && {pointStyle: style}), ...styles", undefined, setup), [])
+    assert.deepEqual(findings("...frameProps, pointStyle: style", undefined, setup), error)
+    assert.deepEqual(findings("...frameProps, ...(enabled && {pointStyle: style})", undefined, setup), error)
+    assert.deepEqual(findings("...frameProps, ...(style && {lineStyle: style})", undefined, setup), error)
+    assert.deepEqual(findings("...frameProps, ...(data && {data})", undefined, setup + "; const data = wrap(frameProps.data)"), error)
+    assert.deepEqual(findings("...frameProps, ...styles", undefined, setup + "; styles.data = data"), error)
+    assert.deepEqual(findings("...frameProps, ...styles", undefined, 'const styles = { data }'), error)
+    assert.deepEqual(findings("...frameProps, pointStyle: style", undefined, 'const style = useSelectionAwareFrameStyle(frameProps.pointStyle)'), error)
+    const shadowed = `
+      import { useSelectionAwareFrameStyle } from "../shared/useSelectionAwareFrameStyle"
+      function build(useSelectionAwareFrameStyle) {
+        const style = useSelectionAwareFrameStyle(frameProps.pointStyle)
+        return { ...frameProps, ...(style && { pointStyle: style }) }
+      }
+    `
+    assert.equal(lint(shadowed, "semiotic/frame-props-last", "src/components/charts/xy/LineChart.tsx")[0]?.messageId, "framePropsLast")
   })
 
   it("requires family imports in production examples", () => {

@@ -9,9 +9,7 @@ import PageLayout from "../../components/PageLayout"
 import ChartGrounding from "../../components/ChartGrounding"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const sampleData = {
   name: "Budget",
@@ -43,9 +41,7 @@ const sampleData = {
   ],
 }
 
-// ---------------------------------------------------------------------------
 // Props definition for PropTable
-// ---------------------------------------------------------------------------
 
 const treemapProps = [
   { name: "data", type: "object", required: true, default: null, description: "Hierarchical data structure with children and values." },
@@ -73,9 +69,7 @@ const treemapProps = [
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamNetworkFrame props for advanced customization." },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function TreemapPage() {
   return (
@@ -111,9 +105,7 @@ export default function TreemapPage() {
         <code>networkType="treemap"</code>.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <ChartGrounding component="Treemap" />
 
       <h2 id="quick-start">Quick Start</h2>
@@ -159,9 +151,6 @@ export default function TreemapPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="color-by-depth">Color by Depth</h3>
@@ -211,16 +200,11 @@ export default function TreemapPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="Treemap" props={treemapProps} />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
@@ -267,9 +251,6 @@ export default function TreemapPage() {
         </div>
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

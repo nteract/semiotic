@@ -7,9 +7,7 @@ import CodeBlock from "../../components/CodeBlock"
 import PageLayout from "../../components/PageLayout"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Responsive container hook
-// ---------------------------------------------------------------------------
 
 function useContainerWidth() {
   const ref = useRef(null)
@@ -30,9 +28,7 @@ function useContainerWidth() {
   return [ref, width]
 }
 
-// ---------------------------------------------------------------------------
 // Live streaming demos
-// ---------------------------------------------------------------------------
 
 function BasicLineDemo() {
   const chartRef = useRef()
@@ -240,9 +236,7 @@ function ThresholdDemo() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Props definition for PropTable
-// ---------------------------------------------------------------------------
 
 const realtimeLineChartProps = [
   { name: "data", type: "array", required: false, default: null, description: "Controlled data array. Omit this prop to use the ref push API; data={[]} is controlled empty data, not push mode." },
@@ -275,9 +269,7 @@ const realtimeLineChartProps = [
   { name: "className", type: "string", required: false, default: null, description: "CSS class name for the chart container." },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function RealtimeLineChartPage() {
   return (
@@ -316,9 +308,6 @@ export default function RealtimeLineChartPage() {
         <code>setInterval</code> to stream data in.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="quick-start">Quick Start</h2>
 
       <p>
@@ -408,9 +397,6 @@ chartRef.current?.flush()`}
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="custom-stroke">Custom Stroke Color and Width</h3>
@@ -517,16 +503,11 @@ chartRef.current?.flush()`}
         />
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="RealtimeLineChart" props={realtimeLineChartProps} />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
@@ -572,9 +553,6 @@ chartRef.current?.flush()`}
         </div>
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

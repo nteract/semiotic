@@ -11,9 +11,7 @@ import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const countryData = [
   { gdp: 12000, lifeExpectancy: 72, population: 45, country: "Brazil" },
@@ -41,9 +39,7 @@ const categorizedData = [
   { gdp: 34000, lifeExpectancy: 84, population: 126, continent: "Asia" },
 ]
 
-// ---------------------------------------------------------------------------
 // Props definition for PropTable
-// ---------------------------------------------------------------------------
 
 const bubbleChartProps = [
   { name: "data", type: "array", required: true, default: null, description: "Array of data points. Each point should have x, y, and size properties." },
@@ -72,9 +68,7 @@ const bubbleChartProps = [
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamXYFrame props for advanced customization. Escape hatch to the full Frame API." },
 ]
 
-// ---------------------------------------------------------------------------
 // Streaming demo
-// ---------------------------------------------------------------------------
 
 const streamingBubbleCode = `import { useRef, useEffect } from "react"
 import { BubbleChart } from "semiotic"
@@ -152,9 +146,7 @@ function StreamingBubbleDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function BubbleChartPage() {
   return (
@@ -191,9 +183,7 @@ export default function BubbleChartPage() {
         <Link to="/charts/scatterplot">Scatterplot</Link>.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <ChartGrounding component="BubbleChart" />
 
       <h2 id="quick-start">Quick Start</h2>
@@ -236,9 +226,6 @@ export default function BubbleChartPage() {
         }
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="color-by-category">Color by Category</h3>
@@ -324,16 +311,11 @@ export default function BubbleChartPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="BubbleChart" props={bubbleChartProps} />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
@@ -413,9 +395,6 @@ export default function BubbleChartPage() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

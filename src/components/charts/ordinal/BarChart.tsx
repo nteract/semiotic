@@ -18,7 +18,7 @@ import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { resolveOrdinalAxisChrome } from "../../legendLayout"
 import { useOrdinalStreaming } from "../shared/useOrdinalStreaming"
-import { useOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
+import { useOrdinalPieceStyle, withoutOrdinalPieceStyle } from "../shared/useOrdinalPieceStyle"
 import { useOrdinalBrush } from "../shared/useOrdinalBrush"
 import { makeRuleValueResolver, type StyleRule } from "../shared/styleRules"
 import { buildRegressionAnnotation, type RegressionProp } from "../shared/regressionUtils"
@@ -388,11 +388,6 @@ export const BarChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ f
     [categoryAccessor, valueAccessor, colorBy, valueFormat]
   )
 
-  // Loading / empty state — returned only after every hook above has run, so
-  // the hook count is identical whether or not data is present. Mounting empty
-  // (loading skeleton, 0 bars) and then streaming in data must not change the
-  // number of hooks between renders, or React throws "Rendered more hooks than
-  // during the previous render."
   // Normalize once (memoized by the raw prop): normalizeGradient allocates a
   // new object for legacy inputs, and PipelineStore.updateConfig compares
   // config by reference, so a fresh identity each render would force rebuilds.
@@ -454,9 +449,7 @@ export const BarChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ f
     ...(resolvedAnnotations && resolvedAnnotations.length > 0 && { annotations: resolvedAnnotations }),
     ...(valueExtent && { rExtent: valueExtent }),
     ...ordinalBrush.brushStreamProps,
-    // frameProps spread last for escape hatch, but pieceStyle is excluded
-    // to prevent clobbering the HOC's color-resolved, selection-wrapped style.
-    ...Object.fromEntries(Object.entries(frameProps).filter(([k]) => k !== "pieceStyle")),
+    ...withoutOrdinalPieceStyle(frameProps),
   }
 
   return <StreamOrdinalFrame ref={frameRef} {...streamProps} />

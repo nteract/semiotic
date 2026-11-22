@@ -210,9 +210,7 @@ export interface ChartSpec {
   capabilities: ChartCapabilities
 }
 
-// ---------------------------------------------------------------------------
 // Shared prop bags
-// ---------------------------------------------------------------------------
 
 const legendLayoutSchema = {
   type: "object",
@@ -230,9 +228,7 @@ const legendLayoutSchema = {
   },
 } as const
 
-// ---------------------------------------------------------------------------
 // Runtime-only public props
-// ---------------------------------------------------------------------------
 //
 // Every prop a chart's public TypeScript type accepts must be declared in its
 // spec, or `validateProps` reports a real React prop as unknown. The props
@@ -675,9 +671,7 @@ export const PROP_BAGS = {
   physics: physicsProps,
 } as const
 
-// ---------------------------------------------------------------------------
 // Reusable enums
-// ---------------------------------------------------------------------------
 
 export const ORIENTATION_ENUM = ["vertical", "horizontal"] as const
 export const HORIZONTAL_VERTICAL_ENUM = ["horizontal", "vertical"] as const
@@ -688,9 +682,7 @@ export const CURVE_ENUM = [
 ] as const
 export const CHART_MODE_ENUM = ["primary", "context", "sparkline", "mobile"] as const
 
-// ---------------------------------------------------------------------------
 // Chart specs (XY, ordinal, network, geo, and realtime families)
-// ---------------------------------------------------------------------------
 //
 // Drift annotations (`omitFromSchema: true`) tag props that are runtime-only
 // — callbacks, escape hatches, comparator functions an LLM can't supply.
@@ -700,9 +692,7 @@ export const CHART_MODE_ENUM = ["primary", "context", "sparkline", "mobile"] as 
 // a structured config.
 
 
-// ---------------------------------------------------------------------------
 // Helpers (used by generators)
-// ---------------------------------------------------------------------------
 
 /**
  * Compose a chart's full prop set (bags + ownProps) in deterministic order.

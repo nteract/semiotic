@@ -116,9 +116,7 @@ export default function GestaltPrinciplesExamplePage() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Shared building blocks
-// ---------------------------------------------------------------------------
 function Stepper({ steps, active, onChange }) {
   return (
     <div className="gz-stepper" role="tablist" aria-label="Steps">
@@ -227,9 +225,7 @@ function ToggleRow({ label, value, onChange, options }) {
   )
 }
 
-// ===========================================================================
 // CHAPTER I — Similarity, Proximity & Enclosure
-// ===========================================================================
 const SIMILARITY_STEPS = ["Base", "Similarity", "Proximity", "Enclosure"]
 const SIMILARITY_CAPTIONS = {
   0: "All forty marks share the same neutral gray, so the field has no grouping signal yet.",
@@ -352,9 +348,7 @@ function ChapterSimilarity() {
   )
 }
 
-// ===========================================================================
 // CHAPTER II — Common Fate, Parallelism & Connectedness
-// ===========================================================================
 const FATE_STEPS = ["Common Fate", "Parallelism", "Slopegraph"]
 const SLOPE_TRANSITION_MS = 700
 const SLOPE_LABEL_FONT_SIZE = 11
@@ -570,9 +564,7 @@ function ChapterCommonFate() {
   )
 }
 
-// ===========================================================================
 // CHAPTER III — Proximity & Past Experience
-// ===========================================================================
 const PAST_STEPS = ["The layout", "Proximity problem", "Past experience"]
 
 function ChapterPastExperience() {
@@ -660,9 +652,7 @@ function ChapterPastExperience() {
   )
 }
 
-// ===========================================================================
 // CHAPTER IV — Figure/Ground & Metastability
-// ===========================================================================
 const FG_STEPS = ["Ambiguous", "Bars rise", "Bars reverse", "Settle"]
 const FG_CAPTIONS = {
   0: "A bar chart — or two bar charts, depending on how you look at it. Five bars rise from the bottom; five grow from the left; they share one square. With nothing outlined, your eye flips between them.",
@@ -800,9 +790,7 @@ function ChapterFigureGround() {
   )
 }
 
-// ===========================================================================
 // CHAPTER V — Continuity & Closure (completing the canonical set)
-// ===========================================================================
 const CONTINUITY_STEPS = ["Points", "Connect", "Smooth"]
 const CONTINUITY_CAPTIONS = {
   0: "A scatter of twelve readings. The upward trend is latent — you have to work to see it.",
@@ -950,9 +938,7 @@ function ChapterContinuity() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Closing synthesis + credits
-// ---------------------------------------------------------------------------
 function GestaltGaze() {
   return (
     <section className="gz-gaze">
@@ -1011,9 +997,7 @@ function Credits() {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Custom layout functions (network + XY escape hatches)
-// ---------------------------------------------------------------------------
 function makeMapper(plot, pad) {
   const inset = pad == null ? 18 : pad
   return {

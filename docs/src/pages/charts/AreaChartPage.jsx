@@ -11,9 +11,7 @@ import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data
-// ---------------------------------------------------------------------------
 
 const simpleData = [
   { month: 1, sales: 4200 },
@@ -65,9 +63,7 @@ const multiAreaData = [
   { month: 6, sales: 3600, channel: "Wholesale" },
 ]
 
-// ---------------------------------------------------------------------------
 // Props definition for PropTable
-// ---------------------------------------------------------------------------
 
 const areaChartProps = [
   {
@@ -306,9 +302,7 @@ const areaChartProps = [
   },
 ]
 
-// ---------------------------------------------------------------------------
 // Streaming demo
-// ---------------------------------------------------------------------------
 
 const streamingAreaCode = `import { useRef, useEffect } from "react"
 import { AreaChart } from "semiotic"
@@ -376,9 +370,7 @@ function StreamingAreaDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function AreaChartPage() {
   return (
@@ -413,9 +405,7 @@ export default function AreaChartPage() {
         <Link to="/charts/stacked-area-chart">StackedAreaChart</Link>.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <ChartGrounding component="AreaChart" />
 
       <h2 id="quick-start">Quick Start</h2>
@@ -456,9 +446,6 @@ export default function AreaChartPage() {
         }
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="multi-area">Multiple Areas</h3>
@@ -652,9 +639,6 @@ export default function AreaChartPage() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Multi-Color Gradient Fill */}
-      {/* ----------------------------------------------------------------- */}
       <h3 id="multi-color-gradient">Multi-Color Gradient Fill</h3>
       <p>
         Use <code>gradientFill</code> with <code>stops</code> for semantic color bands (e.g.
@@ -729,9 +713,6 @@ export default function AreaChartPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Per-Series Fill Area */}
-      {/* ----------------------------------------------------------------- */}
       <h3 id="per-series-fill-area">Per-Series Fill Area</h3>
       <p>
         Use <code>LineChart</code> with <code>fillArea</code> set to an array of series names to
@@ -760,16 +741,11 @@ export default function AreaChartPage() {
         hiddenProps={{}}
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="AreaChart" props={areaChartProps} />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
@@ -859,9 +835,6 @@ export default function AreaChartPage() {
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>

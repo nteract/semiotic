@@ -10,9 +10,7 @@ import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Loading style shared across async examples
-// ---------------------------------------------------------------------------
 
 const loadingStyle = {
   width: "100%",
@@ -25,9 +23,7 @@ const loadingStyle = {
   color: "var(--text-secondary)",
 }
 
-// ---------------------------------------------------------------------------
 // Sample data — real-world earthquake locations (notable recent events)
-// ---------------------------------------------------------------------------
 
 const earthquakes = [
   { id: "eq1", name: "Tohoku, Japan", lon: 142.37, lat: 38.32, magnitude: 9.1 },
@@ -50,9 +46,7 @@ const majorFlightRoutes = [
   { source: "eq7", target: "eq10", coordinates: [{ lon: 13.38, lat: 42.35 }, { lon: 37.17, lat: 37.22 }] },
 ]
 
-// ---------------------------------------------------------------------------
 // WorldGeoFrame — wraps StreamGeoFrame with async world map loading
-// ---------------------------------------------------------------------------
 
 function WorldGeoFrame({ width = 600, height = 400, ...props }) {
   const [worldAreas, setWorldAreas] = useState(null)
@@ -68,9 +62,7 @@ function WorldGeoFrame({ width = 600, height = 400, ...props }) {
   return <StreamGeoFrame areas={worldAreas} size={[width, height]} {...props} />
 }
 
-// ---------------------------------------------------------------------------
 // Streaming demo
-// ---------------------------------------------------------------------------
 
 const streamingGeoCode = `import { useRef, useEffect, useState } from "react"
 import { StreamGeoFrame, resolveReferenceGeography } from "semiotic/geo"
@@ -198,9 +190,7 @@ function StreamingGeoDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Props definition
-// ---------------------------------------------------------------------------
 
 const geoFrameProps = [
   { name: "projection", type: "string | object | function", required: true, default: null, description: 'Projection: name string ("mercator", "equalEarth", etc.), config object { type, rotate, center }, or d3 projection function.' },
@@ -240,9 +230,7 @@ const geoFrameProps = [
   { name: "responsiveHeight", type: "boolean", required: false, default: "false", description: "Auto-resize to container height." },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function GeoFramePage() {
   return (
@@ -284,9 +272,6 @@ export default function GeoFramePage() {
         cached after first load.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Quick Start */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="quick-start">Quick Start</h2>
 
       <p>
@@ -309,9 +294,6 @@ export default function GeoFramePage() {
         }
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="mixed-layers">World Map with Earthquakes and Routes</h3>
@@ -345,9 +327,7 @@ export default function GeoFramePage() {
 
       <GraticuleExample />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Push API */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="push-api">Push API (Streaming)</h2>
 
       <p>
@@ -415,9 +395,6 @@ function StreamingMap() {
         <li><code>ref.current.getGeoPath()</code> — get the d3 geoPath generator</li>
       </ul>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Reference Geography */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="reference-geography">Reference Geography</h2>
 
       <p>
@@ -441,9 +418,7 @@ const features = await resolveReferenceGeography("world-110m")
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Distance Cartogram */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="cartogram">Distance Cartogram Transform</h2>
 
       <p>
@@ -472,16 +447,10 @@ const features = await resolveReferenceGeography("world-110m")
         language="jsx"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="StreamGeoFrame" props={geoFrameProps} />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>
@@ -514,9 +483,7 @@ const features = await resolveReferenceGeography("world-110m")
   )
 }
 
-// ---------------------------------------------------------------------------
 // Async example components — each loads the world map independently
-// ---------------------------------------------------------------------------
 
 function QuickStartExample() {
   const [worldAreas, setWorldAreas] = useState(null)

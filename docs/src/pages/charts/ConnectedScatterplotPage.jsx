@@ -10,9 +10,7 @@ import StreamingToggle from "../../components/StreamingToggle"
 import StreamingDemo from "../../components/StreamingDemo"
 import { Link } from "react-router-dom"
 
-// ---------------------------------------------------------------------------
 // Sample data — country trajectory over time
-// ---------------------------------------------------------------------------
 
 const trajectoryData = Array.from({ length: 20 }, (_, i) => ({
   x: 30 + i * 3 + Math.sin(i * 0.5) * 5,
@@ -29,9 +27,7 @@ const spiralData = Array.from({ length: 30 }, (_, i) => {
   }
 })
 
-// ---------------------------------------------------------------------------
 // Props
-// ---------------------------------------------------------------------------
 
 const chartProps = [
   {
@@ -116,9 +112,7 @@ const chartProps = [
   { name: "height", type: "number", required: false, default: "400", description: "Chart height." },
 ]
 
-// ---------------------------------------------------------------------------
 // Streaming demo
-// ---------------------------------------------------------------------------
 
 // Pre-compute Fibonacci spiral points: quarter-circle arcs through
 // Fibonacci-sized squares. Each arc is ~25% larger than the last.
@@ -249,9 +243,7 @@ function StreamingConnectedDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function ConnectedScatterplotPage() {
   return (

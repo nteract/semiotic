@@ -2,9 +2,7 @@ import React from "react"
 import { BubbleChart } from "semiotic"
 import PlaygroundLayout from "../../components/PlaygroundLayout"
 
-// ---------------------------------------------------------------------------
 // Control schema
-// ---------------------------------------------------------------------------
 
 const controls = [
   { name: "sizeRange", type: "number", label: "Size Range Min", group: "Bubbles",
@@ -29,9 +27,7 @@ const controls = [
     default: "" },
 ]
 
-// ---------------------------------------------------------------------------
 // Datasets
-// ---------------------------------------------------------------------------
 
 const countryData = [
   { country: "United States", gdp: 63544, lifeExpectancy: 77.3, population: 331900000, continent: "Americas" },
@@ -91,9 +87,7 @@ const datasets = [
   },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function BubbleChartPlayground() {
   return (

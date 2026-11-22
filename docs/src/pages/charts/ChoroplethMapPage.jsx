@@ -49,9 +49,7 @@ const countryGDP = [
   { id: "704", name: "Vietnam", gdpPerCapita: 3694 },
 ]
 
-// ---------------------------------------------------------------------------
 // World map with data — resolved at render time
-// ---------------------------------------------------------------------------
 
 function WorldChoropleth({ colorScheme = "viridis", graticule = false, width = 700, height = 450, tooltip = true, ...rest }) {
   const [areas, setAreas] = useState(null)
@@ -85,9 +83,7 @@ function WorldChoropleth({ colorScheme = "viridis", graticule = false, width = 7
   )
 }
 
-// ---------------------------------------------------------------------------
 // Streaming demo — countries updating values over time (simulated live data)
-// ---------------------------------------------------------------------------
 
 // Subset of country IDs that will receive streaming updates
 const streamingCountryIds = countryGDP.map(c => c.id)
@@ -170,9 +166,7 @@ function StreamingChoroplethDemo({ width }) {
   )
 }
 
-// ---------------------------------------------------------------------------
 // Props definition
-// ---------------------------------------------------------------------------
 
 const choroplethMapProps = [
   { name: "areas", type: 'GeoJSON.Feature[] | "world-110m" | "world-50m" | "land-110m" | "land-50m"', required: true, default: null, description: "GeoJSON features or a reference string. Reference strings load built-in Natural Earth data via dynamic import." },
@@ -195,9 +189,7 @@ const choroplethMapProps = [
   { name: "frameProps", type: "object", required: false, default: null, description: "Additional StreamGeoFrame props for advanced customization." },
 ]
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 export default function ChoroplethMapPage() {
   return (
@@ -234,9 +226,7 @@ export default function ChoroplethMapPage() {
         tooltips.
       </p>
 
-      {/* ----------------------------------------------------------------- */}
       {/* Quick Start — world map */}
-      {/* ----------------------------------------------------------------- */}
       <ChartGrounding component="ChoroplethMap" />
 
       <h2 id="quick-start">Quick Start</h2>
@@ -287,9 +277,6 @@ const areas = mergeData(worldFeatures, countryGDP, {
         resolves the reference automatically (but won't have your data merged in).
       </p>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Reference Geography */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="reference-geography">Reference Geography</h2>
 
       <p>
@@ -339,9 +326,7 @@ const areas = mergeData(worldFeatures, countryGDP, {
         </tbody>
       </table>
 
-      {/* ----------------------------------------------------------------- */}
       {/* mergeData */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="merge-data">Joining Data</h2>
 
       <p>
@@ -370,9 +355,6 @@ const byName = mergeData(world, data, {
         language="ts"
       />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Examples */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="examples">Examples</h2>
 
       <h3 id="color-schemes">Color Schemes</h3>
@@ -391,16 +373,11 @@ const byName = mergeData(world, data, {
 
       <WorldChoropleth colorScheme="reds" graticule width={700} height={400} />
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Props */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="props">Props</h2>
 
       <PropTable componentName="ChoroplethMap" props={choroplethMapProps} />
 
-      {/* ----------------------------------------------------------------- */}
       {/* Graduating to the Frame */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="graduating">When to Use the Frame</h2>
 
       <p>
@@ -445,9 +422,6 @@ const byName = mergeData(world, data, {
         </div>
       </div>
 
-      {/* ----------------------------------------------------------------- */}
-      {/* Related */}
-      {/* ----------------------------------------------------------------- */}
       <h2 id="related">Related</h2>
 
       <ul>
