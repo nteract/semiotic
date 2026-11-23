@@ -37,28 +37,21 @@ export function resolveY(ann: Datum, context: AnnotationContext): number | null 
  * For "latest" anchor mode, resolve coordinates from the most recent datum
  * in the buffer rather than from the annotation's own coordinate fields.
  */
-function resolveLatest(
-  context: AnnotationContext
-): { x: number; y: number } | null {
-  const data = context.data
-  if (!data || data.length === 0) return null
+function projectedPosition(x: number | null, y: number | null) {
+  return x == null || y == null ? null : { x, y }
+}
 
-  const latestDatum = data[data.length - 1]
-  const scaleX = context.scales?.x ?? context.scales?.time
-  const scaleY = context.scales?.y ?? context.scales?.value
-  if (!scaleX || !scaleY) return null
+function resolvePoint(row: Datum, context: AnnotationContext) {
+  return projectedPosition(resolveX(row, context), resolveY(row, context))
+}
 
-  const xAcc = context.xAccessor || "x"
-  const yAcc = context.yAccessor || "y"
-
-  const xVal = latestDatum[xAcc]
-  const yVal = latestDatum[yAcc]
-  if (xVal == null || yVal == null) return null
-
-  const x = projectHeatmapBandValue(scaleX, xVal)
-  const y = projectHeatmapBandValue(scaleY, yVal)
-  if (x == null || y == null) return null
-  return { x, y }
+function resolveLatest(context: AnnotationContext) {
+  const latest = context.data?.at(-1)
+  if (!latest) return null
+  return projectedPosition(
+    resolveX({ x: latest[context.xAccessor || "x"] }, context),
+    resolveY({ y: latest[context.yAccessor || "y"] }, context)
+  )
 }
 
 function stableId(value: unknown): string | null {
@@ -74,43 +67,18 @@ function datumStableId(datum: Datum): string | null {
   return stableId(datum.stableId ?? datum.id ?? datum.provenance?.stableId)
 }
 
-function cachePosition(
-  index: number,
-  context: AnnotationContext,
-  pos: { x: number; y: number }
-): { x: number; y: number } {
-  context.stickyPositionCache?.set(index, pos)
-  return pos
-}
-
 /**
  * For "semantic" anchor mode, use provenance.stableId as a semantic target
  * key. A chart with pointIdAccessor can resolve directly from point scene
  * nodes; otherwise we look for a current data row carrying the same stableId.
  */
-function resolveSemantic(
-  ann: Datum,
-  index: number,
-  context: AnnotationContext
-): { x: number; y: number } | null {
+function resolveSemantic(ann: Datum, context: AnnotationContext) {
   const targetId = annotationStableId(ann)
   if (!targetId) return null
-
-  const pointMatch = context.pointNodes?.find(
-    (node) => stableId(node.pointId) === targetId
-  )
-  if (pointMatch) {
-    return cachePosition(index, context, { x: pointMatch.x, y: pointMatch.y })
-  }
-
-  const datumMatch = context.data?.find((datum) => datumStableId(datum) === targetId)
-  if (!datumMatch) return null
-
-  const px = resolveX(datumMatch, context)
-  const py = resolveY(datumMatch, context)
-  if (px == null || py == null) return null
-
-  return cachePosition(index, context, { x: px, y: py })
+  const point = context.pointNodes?.find(node => stableId(node.pointId) === targetId)
+  if (point) return { x: point.x, y: point.y }
+  const row = context.data?.find(datum => datumStableId(datum) === targetId)
+  return row ? resolvePoint(row, context) : null
 }
 
 /**
@@ -127,50 +95,20 @@ export function resolveAnchoredPosition(
 ): { x: number; y: number } | null {
   const anchor = ann.anchor || ann.lifecycle?.anchor || "fixed"
 
-  if (anchor === "latest") {
-    if (ann.pointId != null && context.pointNodes && context.pointNodes.length > 0) {
-      for (let i = context.pointNodes.length - 1; i >= 0; i--) {
-        const node = context.pointNodes[i]
-        if (node.pointId === ann.pointId) {
-          return cachePosition(index, context, { x: node.x, y: node.y })
-        }
+  let position = anchor === "semantic" ? resolveSemantic(ann, context) : null
+  if (!position && ann.pointId != null && context.pointNodes) {
+    const nodes = context.pointNodes
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[anchor === "latest" ? nodes.length - i - 1 : i]
+      if (node.pointId === ann.pointId) {
+        position = { x: node.x, y: node.y }
+        break
       }
     }
-    const pos = resolveLatest(context)
-    return pos ? cachePosition(index, context, pos) : null
   }
-
-  if (anchor === "semantic") {
-    const pos = resolveSemantic(ann, index, context)
-    if (pos) return pos
-  }
-
-  let px: number | null = null
-  let py: number | null = null
-
-  if (ann.pointId != null && context.pointNodes) {
-    const match = context.pointNodes.find(p => p.pointId === ann.pointId)
-    if (match) {
-      px = match.x
-      py = match.y
-    }
-  }
-
-  if (px == null || py == null) {
-    px = resolveX(ann, context)
-    py = resolveY(ann, context)
-  }
-
-  if (px != null && py != null) {
-    return cachePosition(index, context, { x: px, y: py })
-  }
-
-  if (anchor === "sticky") {
-    const cached = context.stickyPositionCache?.get(index)
-    if (cached) return cached
-  }
-
-  return null
+  position ??= anchor === "latest" ? resolveLatest(context) : resolvePoint(ann, context)
+  if (position) context.stickyPositionCache?.set(index, position)
+  return position ?? (anchor === "sticky" ? context.stickyPositionCache?.get(index) ?? null : null)
 }
 
 /**
