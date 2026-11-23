@@ -30,7 +30,7 @@ export function chartProfileInput(args: {
   }
   const edges = props.edges ?? props.links
   if (Array.isArray(edges)) {
-    const derivesNodes = args.component === "SankeyDiagram" || args.component === "ChordDiagram"
+    const derivesNodes = ["SankeyDiagram", "ChordDiagram", "ProcessSankey"].includes(args.component)
     const nodes = derivesNodes ? inferNodesFromEdges(
       Array.isArray(props.nodes) ? props.nodes.filter(isDataRecord) : undefined, edges.filter(isDataRecord),
       typeof props.sourceAccessor === "string" ? props.sourceAccessor : "source",
