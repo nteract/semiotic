@@ -9,6 +9,12 @@ export interface ServerPropContract {
 
 export const serverPropContracts: readonly ServerPropContract[] = [
   {
+    id: "process-sankey-curves",
+    component: "ProcessSankey",
+    props: ["curves"],
+    observable: "Changing inventory interpolation changes the band perimeter while preserving ribbon geometry."
+  },
+  {
     id: "line-area",
     component: "LineChart",
     props: ["fillArea", "areaOpacity"],

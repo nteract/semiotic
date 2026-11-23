@@ -81,6 +81,7 @@ export interface BuildScenesInput {
   domain: [number, number]
   plotW: number
   plotH: number
+  curves?: "straight" | "smooth"
   orientation?: ProcessSankeyOrientation
   ribbonLane: "source" | "target" | "both"
   /**
@@ -239,7 +240,7 @@ export function buildProcessSankeyScenes(
     const renderedSamples = projectFeederBandSamples(
       data.samples, visualDeparturesByNode.get(n.id),
     )
-    const path = buildBandPath(renderedSamples, centerlines[n.id], S, xScale, domain)
+    const path = buildBandPath(renderedSamples, centerlines[n.id], S, xScale, domain, input.curves)
     if (!path) return
     const smSamples = clampSamples(renderedSamples, domain)
     const firstNonZero = smSamples.find((s) => s.topMass + s.botMass > 0) || smSamples[0]

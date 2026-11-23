@@ -25,23 +25,46 @@ export function clampSamples(samples: readonly ProcessSankeySample[], domain: Do
 
 export function attachmentYRange(att: ProcessSankeyAttachment, cl: number, S: number): [number, number] {
   const boundary = cl + (att.boundaryOffset ?? 0) * S
-  const v = att.value * S
-  if (att.kind === "out") {
-    const before = att.sideMassBefore * S
-    if (att.side === "top") {
-      const oldTop = boundary - before
-      return [oldTop, oldTop + v]
-    }
-    const oldBot = boundary + before
-    return [oldBot - v, oldBot]
-  }
-  const after = att.sideMassAfter * S
+  const width = att.value * S
+  const sideMass = (att.kind === "out" ? att.sideMassBefore : att.sideMassAfter) * S
   if (att.side === "top") {
-    const newTop = boundary - after
-    return [newTop, newTop + v]
+    const top = boundary - sideMass
+    return [top, top + width]
   }
-  const newBot = boundary + after
-  return [newBot - v, newBot]
+  const bottom = boundary + sideMass
+  return [bottom - width, bottom]
+}
+
+type BandSection = { x: number; top: number; bottom: number }
+
+/** Keep every attachment covered at its event time and the observed thickness midway between events. */
+function continuousSections(sections: BandSection[]): BandSection[] {
+  const knots: BandSection[] = []
+  for (let i = 0; i < sections.length;) {
+    const first = sections[i]
+    let end = i + 1
+    let widest = first
+    while (end < sections.length && sections[end].x === first.x) {
+      const section = sections[end++]
+      if (section.bottom - section.top > widest.bottom - widest.top) widest = section
+    }
+    const group = sections.slice(i, end)
+    const last = sections[end - 1]
+    if (group.every(s => s.top >= widest.top && s.bottom <= widest.bottom)) {
+      if (first.top === first.bottom && first !== widest) knots.push(first)
+      knots.push(widest)
+      if (last.bottom === last.top && last !== widest) knots.push(last)
+    } else {
+      // Simultaneous attachments on opposite sides can have no containing section.
+      for (const section of group) knots.push(section)
+    }
+    const next = sections[end]
+    if (next && last.top === next.top && last.bottom === next.bottom) {
+      knots.push({ ...last, x: (last.x + next.x) / 2 })
+    }
+    i = end
+  }
+  return knots
 }
 
 export function buildBandPath(
@@ -50,21 +73,33 @@ export function buildBandPath(
   S: number,
   xScale: (t: number) => number,
   domain: Domain,
+  curves: "straight" | "smooth" = "straight",
 ): string | null {
   if (samples.length === 0) return null
-  const sm = clampSamples(samples, domain)
-  const boundary = (i: number) => cl + (sm[i].boundaryOffset ?? 0) * S
-  const yTop = (i: number) => boundary(i) - sm[i].topMass * S
-  const yBot = (i: number) => boundary(i) + sm[i].botMass * S
-  let path = `M${xScale(sm[0].t)},${yTop(0)}`
-  for (let i = 1; i < sm.length; i++) {
-    path += ` L${xScale(sm[i].t)},${yTop(i)}`
+  const sections = samples.map(sample => {
+    const boundary = cl + (sample.boundaryOffset ?? 0) * S
+    return {
+      x: xScale(clampTime(sample.t, domain)),
+      top: boundary - sample.topMass * S,
+      bottom: boundary + sample.botMass * S,
+    }
+  })
+  const knots = curves === "smooth" ? continuousSections(sections) : sections
+  function side(points: BandSection[], edge: "top" | "bottom") {
+    let path = `${points[0].x},${points[0][edge]}`
+    for (let i = 1; i < points.length; i++) {
+      const from = points[i - 1]
+      const to = points[i]
+      if (curves === "smooth" && from.x !== to.x && from[edge] !== to[edge]) {
+        const middle = (from.x + to.x) / 2
+        path += ` C${middle},${from[edge]} ${middle},${to[edge]} ${to.x},${to[edge]}`
+      } else {
+        path += ` L${to.x},${to[edge]}`
+      }
+    }
+    return path
   }
-  path += ` L${xScale(sm[sm.length - 1].t)},${yBot(sm.length - 1)}`
-  for (let i = sm.length - 2; i >= 0; i--) {
-    path += ` L${xScale(sm[i].t)},${yBot(i)}`
-  }
-  return path + " Z"
+  return `M${side(knots, "top")} L${side(knots.reverse(), "bottom")} Z`
 }
 
 /**

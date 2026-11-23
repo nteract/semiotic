@@ -75,6 +75,29 @@ describe("buildProcessSankeyScenes validation policy", () => {
     expect(scene.layoutConfig.ribbons.map((ribbon) => ribbon.opacity)).toEqual([0.8, 1])
   })
 
+  it("changes only band outlines on a prepared layout with stacked transfers", () => {
+    const input = {
+      nodes: [{ id: "Intake" }, { id: "Queue" }, { id: "Done" }],
+      edges: [
+        { id: "first", source: "Intake", target: "Queue", startTime: 5, endTime: 15, value: 3 },
+        { id: "second", source: "Intake", target: "Queue", startTime: 25, endTime: 40, value: 7 },
+        { id: "exit", source: "Queue", target: "Done", startTime: 75, endTime: 85, value: 10 }
+      ],
+      domain: [0, 100] as [number, number], plotW: 450, plotH: 300,
+      ribbonLane: "both" as const, edgeOpacity: 0.4, colorOf: () => "#175e48",
+      selectionDatum: "scene" as const, layoutOpts: {}
+    }
+    const straight = buildProcessSankeyScenes(input)
+    const smooth = buildProcessSankeyScenes({ ...input, curves: "smooth" }, straight)
+    expect(smooth.layout).toBe(straight.layout)
+    expect(smooth.layoutConfig.ribbons).toEqual(straight.layoutConfig.ribbons)
+    expect(smooth.layoutConfig.selectionDatum).toBe("scene")
+    expect(smooth.layoutConfig.bands.map(({ pathD: _outline, ...band }) => band))
+      .toEqual(straight.layoutConfig.bands.map(({ pathD: _outline, ...band }) => band))
+    expect(smooth.layoutConfig.bands.find(band => band.id === "Queue")?.pathD).toContain("C")
+    expect(straight.layoutConfig.bands.find(band => band.id === "Queue")?.pathD).not.toContain("C")
+  })
+
   it("CSR/SSR reserve time-axis height without fixed side gutters", () => {
     const margin = resolveProcessSankeyMarginDefaults(true, true, true, "horizontal")
     expect(margin.left).toBe(20)

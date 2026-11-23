@@ -31,6 +31,7 @@ const processSankeyProps = [
   { name: "lanePlacement", type: '"stack" | "hug"', default: '"stack"', description: "Use capped-scale slack to pull connected lanes together." },
   { name: "groupPadding", type: "number", default: "0", description: "Pixel gutter inside a bonded group; zero makes adjacent silhouettes touch." },
   { name: "lifetimeMode", type: '"full" | "half"', default: '"half"', description: "Whether dashed node rails split each transition at its midpoint or span the full edge." },
+  { name: "curves", type: '"straight" | "smooth"', default: '"straight"', description: "Straight bands show discrete inventory changes. Smooth bands interpolate between event cross-sections and the observed inventory halfway between events. Ribbon attachments retain their times and values." },
   { name: "ribbonLane", type: '"source" | "target" | "both"', description: "Which side(s) ribbons attach to." },
   { name: "ribbonMinRun", type: 'number | "auto"', default: "0", description: "Minimum rendered time-axis runway for source-only feeders and lockstep bonded feeder groups; auto adapts to lane distance and moves the visual band handoff with the ribbon." },
   { name: "colorBy", type: "string | function", description: "Field/accessor that drives categorical node + ribbon color." },

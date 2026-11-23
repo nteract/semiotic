@@ -143,6 +143,7 @@ export const ProcessSankey = /* @__PURE__ */ withSizedChartErrorBoundary(/* @__P
     lanePlacement = "stack",
     nodeSizing = "temporal",
     groupPadding = 0,
+    curves,
     ribbonLane = "both",
     ribbonMinRun = 0,
     lifetimeMode = "half",
@@ -422,6 +423,7 @@ export const ProcessSankey = /* @__PURE__ */ withSizedChartErrorBoundary(/* @__P
       plotW,
       plotH,
       orientation,
+      curves,
       ribbonLane,
       ribbonMinRun,
       edgeOpacity:
@@ -458,6 +460,7 @@ export const ProcessSankey = /* @__PURE__ */ withSizedChartErrorBoundary(/* @__P
     plotW,
     plotH,
     orientation,
+    curves,
     ribbonLane,
     ribbonMinRun,
     edgeOpacity,

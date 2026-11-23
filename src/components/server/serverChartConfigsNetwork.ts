@@ -294,6 +294,7 @@ export const processSankey: ChartConfig = {
       plotW,
       plotH,
       orientation,
+      curves: rest.curves,
       ribbonLane: rest.ribbonLane || "both",
       ribbonMinRun:
         rest.ribbonMinRun === "auto" || typeof rest.ribbonMinRun === "number"

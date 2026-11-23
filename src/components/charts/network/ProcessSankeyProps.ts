@@ -103,6 +103,8 @@ export interface ProcessSankeyProps<
   /** Pixel gutter inside a bonded node group. Defaults to `0`, so adjacent
    * band silhouettes touch without overlapping. */
   groupPadding?: number
+  /** Interpolate inventory bands continuously between timed events. @default "straight" */
+  curves?: "straight" | "smooth"
   ribbonLane?: "source" | "target" | "both"
   /**
    * Minimum rendered run along the time axis for **source-only feeder**
