@@ -1,3 +1,4 @@
+import { toVegaInterpolation } from "../vegaLiteCurves"
 import type { Datum } from "../../charts/shared/datumTypes"
 import type { PortabilityLoss } from "./result"
 
@@ -85,21 +86,7 @@ export function vegaLiteExportLosses(
     )
       add(key)
   }
-  if (
-    props.curve !== undefined &&
-    ![
-      "linear",
-      "monotoneX",
-      "monotoneY",
-      "step",
-      "stepAfter",
-      "stepBefore",
-      "basis",
-      "cardinal",
-      "catmullRom"
-    ].includes(props.curve)
-  )
-    add("curve")
+  if (props.curve !== undefined && !toVegaInterpolation(props.curve)) add("curve")
   if (component === "DonutChart" && props.innerRadius === undefined)
     add(
       "innerRadius",

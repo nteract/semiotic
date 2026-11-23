@@ -1,3 +1,4 @@
+import { compareRecipeIds as compareProcessSankeyIds } from "../../../utils/compareRecipeIds"
 import {
   packBandsBySilhouette,
   placeWithMinGap,
@@ -44,9 +45,7 @@ export interface SlotGeometry {
   verticalUtilization: number
 }
 
-export function compareProcessSankeyIds(a: string, b: string): number {
-  return a < b ? -1 : a > b ? 1 : 0
-}
+export { compareProcessSankeyIds }
 
 export function slotStableId(slot: ProcessSankeySlot): string {
   return slot.occupants

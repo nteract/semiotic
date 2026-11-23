@@ -1,3 +1,4 @@
+import { compareRecipeIds } from "../../utils/compareRecipeIds"
 import { idDictionary, setOwnValue, prefixIdFor } from "./ids"
 import type { AtlasOccurrence, PrefixForest, PrefixForestNode } from "./types"
 
@@ -88,7 +89,7 @@ export function buildPrefixForest(
         ? (rightChild.partitionCounts.get(reference) ?? 0)
         : 1
       if (leftRef > 0 !== rightRef > 0) return leftRef > 0 ? -1 : 1
-      return left.localeCompare(right)
+      return compareRecipeIds(left, right)
     })
     return keys
   }

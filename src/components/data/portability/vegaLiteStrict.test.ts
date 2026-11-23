@@ -26,6 +26,40 @@ describe("strict Vega-Lite boundaries", () => {
     expect(importSpec(spec, true).lossReport).toContainEqual(expect.objectContaining({ path: "/encoding/y/stack" }))
   })
 
+  it.each(["x", "y"])("preserves the bar stack on the quantitative %s axis", axis => {
+    const other = axis === "x" ? "y" : "x"
+    const rows = [{ cat: "A", v: 1, group: "a" }, { cat: "A", v: 2, group: "b" }]
+    const spec = (stack: string | boolean | null) => ({ mark: "bar", data: { values: rows }, encoding: {
+      [other]: { field: "cat", type: "nominal" }, [axis]: { field: "v", type: "quantitative", stack },
+      color: { field: "group", type: "nominal" }
+    } })
+    for (const stack of [false, null]) {
+      expect(importSpec(spec(stack)).status).toBe("refused")
+      expect(importSpec(spec(stack), true).lossReport).toContainEqual(expect.objectContaining({ path: `/encoding/${axis}/stack` }))
+    }
+    for (const stack of ["zero", "normalize"]) {
+      const chart = importSpec(spec(stack)).config!
+      expect(chart.component).toBe("StackedBarChart")
+      expect(toVegaLiteResult(chart).spec?.encoding?.[axis]).toMatchObject({ stack, aggregate: "sum" })
+    }
+  })
+
+  it("reports repeated unaggregated bars that would become a single chart mark", () => {
+    const spec = { mark: "bar", data: { values: [{ cat: "A", v: 1 }, { cat: "A", v: 2 }] },
+      encoding: { x: { field: "cat", type: "nominal" }, y: { field: "v", type: "quantitative" } } }
+    expect(importSpec(spec).status).toBe("refused")
+    expect(importSpec(spec, true).lossReport).toContainEqual(expect.objectContaining({ path: "/encoding/y" }))
+    expect(importSpec({ ...spec, encoding: { ...spec.encoding, y: { ...spec.encoding.y, aggregate: "sum" } } }).status).toBe("success")
+  })
+
+  it.each([{ filled: true }, "transparent"])("reports point-overlay settings outside the supported boolean form (%j)", point => {
+    const spec = { ...base, mark: { type: "line", point } }
+    expect(importSpec(spec).status).toBe("refused")
+    const result = importSpec(spec, true)
+    expect(result.lossReport).toContainEqual(expect.objectContaining({ path: "/mark/point" }))
+    if (typeof point === "object") expect(result.config?.props.showPoints).toBe(true)
+  })
+
   it.each(["x", "y"])("discloses a discarded histogram measure with bins on %s", binned => {
     const other = binned === "x" ? "y" : "x"
     const spec = { ...base, mark: "bar", encoding: {

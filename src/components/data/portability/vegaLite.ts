@@ -13,6 +13,7 @@
  *
  * Pure, dependency-free, no chart-family imports.
  */
+import { toVegaInterpolation } from "../vegaLiteCurves"
 import { hasVegaFieldPath, isRecord, isRecordArray } from "../vegaLiteValidation"
 import { exportableColorScheme, vegaLiteExportLosses } from "./vegaLiteExportDiagnostics"
 import type { ChartConfig } from "../../export/chartConfig"
@@ -49,18 +50,7 @@ export interface VegaLiteExportResult extends PortabilityExportResult<VegaLiteSp
   spec?: VegaLiteSpec
 }
 
-/** Reverse of fromVegaLite's CURVE_MAP. */
-const CURVE_TO_INTERPOLATE: Record<string, string> = {
-  linear: "linear",
-  monotoneX: "monotone-x",
-  monotoneY: "monotone-y",
-  step: "step",
-  stepAfter: "step-after",
-  stepBefore: "step-before",
-  basis: "basis",
-  cardinal: "cardinal",
-  catmullRom: "catmull-rom",
-}
+
 
 function quant(field: string): VegaLiteEncoding {
   return { field, type: "quantitative" }
@@ -112,23 +102,15 @@ const OPTIONAL_ACCESSORS: Record<string, readonly string[]> = {
 
 function accessorDiagnostics(component: string, props: AnyProps): PortabilityDiagnostic[] {
   const diagnostics: PortabilityDiagnostic[] = []
-  for (const key of (Object.prototype.hasOwnProperty.call(REQUIRED_ACCESSORS, component) ? REQUIRED_ACCESSORS[component] : [])) {
-    if (typeof props[key] !== "string" || props[key].length === 0) {
+  for (const [table, required] of [[REQUIRED_ACCESSORS, true], [OPTIONAL_ACCESSORS, false]] as const) {
+    if (!Object.prototype.hasOwnProperty.call(table, component)) continue
+    for (const key of table[component]) {
+      const value = props[key]
+      if ((!required && value === undefined) || (typeof value === "string" && value.length)) continue
       diagnostics.push({
-        code: "UNSERIALIZABLE_ACCESSOR",
-        severity: "error",
-        path: `/props/${key}`,
-        message: `${component} requires a string ${key} for Vega-Lite export.`,
-      })
-    }
-  }
-  for (const key of (Object.prototype.hasOwnProperty.call(OPTIONAL_ACCESSORS, component) ? OPTIONAL_ACCESSORS[component] : [])) {
-    if (props[key] !== undefined && (typeof props[key] !== "string" || props[key].length === 0)) {
-      diagnostics.push({
-        code: "UNSERIALIZABLE_ACCESSOR",
-        severity: "error",
-        path: `/props/${key}`,
-        message: `${component} can export ${key} only as a non-empty string field name.`,
+        code: "UNSERIALIZABLE_ACCESSOR", severity: "error", path: `/props/${key}`,
+        message: required ? `${component} requires a string ${key} for Vega-Lite export.`
+          : `${component} can export ${key} only as a non-empty string field name.`
       })
     }
   }
@@ -175,6 +157,7 @@ export function toVegaLiteResult(
 
   const component = config.component
 
+  const interpolation = toVegaInterpolation(props.curve)
   switch (component) {
     case "BarChart":
     case "StackedBarChart":
@@ -183,6 +166,8 @@ export function toVegaLiteResult(
       const horizontal = props.orientation === "horizontal"
       const cat = withAxisTitle(nominal(props.categoryAccessor), props.categoryLabel)
       const val = withAxisTitle(quant(props.valueAccessor), props.valueLabel)
+      val.aggregate = "sum"
+      if (component === "BarChart") val.stack = null
       if (horizontal) {
         enc.y = cat
         enc.x = val
@@ -192,7 +177,7 @@ export function toVegaLiteResult(
       }
       if (component === "StackedBarChart" && props.stackBy) {
         enc.color = nominal(props.stackBy)
-        if (props.normalize) val.stack = "normalize"
+        val.stack = props.normalize ? "normalize" : "zero"
       } else if (component === "GroupedBarChart" && props.groupBy) {
         enc.color = nominal(props.groupBy)
         lossReport.push({
@@ -207,8 +192,8 @@ export function toVegaLiteResult(
     case "LineChart": {
       mark = props.curve || props.showPoints ? { type: "line" } : "line"
       if (typeof mark === "object") {
-        if (props.curve && Object.prototype.hasOwnProperty.call(CURVE_TO_INTERPOLATE, props.curve)) {
-          mark.interpolate = CURVE_TO_INTERPOLATE[props.curve]
+        if (interpolation) {
+          mark.interpolate = interpolation
         }
         if (props.showPoints) mark.point = true
       }
@@ -221,8 +206,8 @@ export function toVegaLiteResult(
     case "AreaChart":
     case "StackedAreaChart": {
       mark = props.curve || props.areaOpacity !== undefined ? { type: "area" } : "area"
-      if (typeof mark === "object" && props.curve && Object.prototype.hasOwnProperty.call(CURVE_TO_INTERPOLATE, props.curve)) {
-        mark.interpolate = CURVE_TO_INTERPOLATE[props.curve]
+      if (typeof mark === "object" && interpolation) {
+        mark.interpolate = interpolation
       }
       if (typeof mark === "object" && props.areaOpacity !== undefined) {
         mark.opacity = props.areaOpacity
@@ -232,7 +217,7 @@ export function toVegaLiteResult(
       if (props.areaBy) {
         enc.color = nominal(props.areaBy)
         if (component === "AreaChart") enc.y.stack = null
-        else if (props.normalize) enc.y.stack = "normalize"
+        else enc.y.stack = props.normalize ? "normalize" : "zero"
       }
       break
     }
@@ -323,32 +308,14 @@ export function toVegaLiteResult(
   if (typeof props.width === "number") spec.width = props.width
   if (typeof props.height === "number") spec.height = props.height
 
-  if (lossReport.length > 0 && !options.allowLossy) {
-    return {
-      status: "refused",
-      diagnostics: lossReport.map(({ code, message, path }) => ({
-        code,
-        severity: "error" as const,
-        message,
-        path,
-      })),
-      lossReport,
-      provenance,
-    }
-  }
-
+  const refused = lossReport.length > 0 && !options.allowLossy
+  const diagnostics = lossReport.map(({ code, message, path }): PortabilityDiagnostic => ({
+    code, message, path, severity: refused ? "error" : "warning"
+  }))
+  if (refused) return { status: "refused", diagnostics, lossReport, provenance }
   return {
-    status: lossReport.length > 0 ? "lossy" : "success",
-    spec,
-    artifact: spec,
-    diagnostics: lossReport.map(({ code, message, path }) => ({
-      code,
-      severity: "warning" as const,
-      message,
-      path,
-    })),
-    lossReport,
-    provenance,
+    status: lossReport.length ? "lossy" : "success",
+    spec, artifact: spec, diagnostics, lossReport, provenance
   }
 }
 

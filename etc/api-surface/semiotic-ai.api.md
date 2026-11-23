@@ -246,6 +246,7 @@ function formatArtifactContract(contract: ArtifactContract, options?: FormatArti
 function formatDataAudit(result: DataAuditResult): string
 function formatEvaluateChart(result: EvaluateChartResult): string
 function formatMobileVisualizationAudit(result: MobileVisualizationAuditResult): string
+function formatNumericRequirements(result: DataAuditResult, maxFindings?: number | undefined): string
 function formatObligations(findings: readonly ObligationResult[]): string
 function fromConfig(config: ChartConfig): FromConfigResult
 function fromDbtArtifacts(artifacts: DbtArtifacts, options?: DataQualityAnnotationOptions | undefined): DataQualityAnnotationsResult

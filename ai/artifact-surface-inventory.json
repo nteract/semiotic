@@ -4971,6 +4971,7 @@
         "ProfileNumericFieldsOptions",
         "auditData",
         "formatDataAudit",
+        "formatNumericRequirements",
         "profileNumericFields",
         "toDataAuditNotifications"
       ]

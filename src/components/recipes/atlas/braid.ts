@@ -1,3 +1,4 @@
+import { compareRecipeIds } from "../../utils/compareRecipeIds"
 import { selectCapsules, type MotifCapsule } from "./capsules"
 import {
   assignedDenominator,
@@ -125,7 +126,7 @@ export function prepareMotifBraid(
   ].sort((left, right) => {
     const rank =
       (signatureIndex.get(left) ?? 0) - (signatureIndex.get(right) ?? 0)
-    return rank !== 0 ? rank : left.localeCompare(right)
+    return rank !== 0 ? rank : compareRecipeIds(left, right)
   })
 
   const ribbons: BraidRibbon[] = []

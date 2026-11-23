@@ -1,3 +1,5 @@
+import { aggregateRows } from "./aggregateRows"
+import { fromVegaInterpolation } from "./vegaLiteCurves"
 import type { VegaLiteSpec } from "./fromVegaLite"
 import type { PortabilityDiagnostic } from "./portability/result"
 
@@ -144,26 +146,28 @@ export function vegaLiteSemanticDiagnostics(
     if (mark === "area") allowed.push("interpolate", "opacity")
     if (mark === "arc") allowed.push("innerRadius")
     keys(spec.mark, allowed, "/mark")
-    if (
-      spec.mark.interpolate !== undefined &&
-      ![
-        "linear",
-        "monotone-x",
-        "monotone-y",
-        "monotone",
-        "step",
-        "step-after",
-        "step-before",
-        "basis",
-        "cardinal",
-        "catmull-rom"
-      ].includes(spec.mark.interpolate)
-    )
+    if (mark === "line" && spec.mark.point !== undefined && typeof spec.mark.point !== "boolean") {
+      unsupported("/mark/point")
+    }
+    if (spec.mark.interpolate !== undefined && !fromVegaInterpolation(spec.mark.interpolate))
       unsupported("/mark/interpolate")
   }
   const { x, y, color } = spec.encoding ?? {}
   for (const [binned, measure, channel] of [[x, y, "y"], [y, x, "x"]] as const) {
     if (binned?.bin && measure && measure.aggregate !== "count") unsupported(`/encoding/${channel}`)
+  }
+  if (mark === "bar" && x && y && !x.bin && !y.bin) {
+    const horizontal = x.type === "quantitative"
+    const [dimension, measure] = horizontal ? [y, x] : [x, y]
+    const path = horizontal ? "/encoding/x" : "/encoding/y"
+    if (dimension.stack !== undefined) unsupported(horizontal ? "/encoding/y/stack" : "/encoding/x/stack")
+    const overlaid = measure.stack === null || measure.stack === false
+    if (color?.field && overlaid) unsupported(`${path}/stack`)
+    if (!measure.aggregate && typeof dimension.field === "string" && dimension.field && spec.data?.values) {
+      const fields = [dimension.field]
+      if (typeof color?.field === "string" && color.field) fields.push(color.field)
+      if (aggregateRows(spec.data.values, fields, []).length !== spec.data.values.length) unsupported(path)
+    }
   }
   if (mark === "area" && color?.field && x?.aggregate && !y?.aggregate &&
       x.stack === undefined && y?.stack === undefined) unsupported("/encoding/x/stack")

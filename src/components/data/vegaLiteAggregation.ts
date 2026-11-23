@@ -50,6 +50,12 @@ export function vegaLiteAggregationDiagnostics(
       code = "INVALID_AGGREGATE"
       message = `aggregate: "${encoding.aggregate}" on ${channel} requires an encoded value field.`
     } else if (!spec.data?.values) {
+      const mark = typeof spec.mark === "string" ? spec.mark : spec.mark?.type
+      const category = channel === "x" ? encodings.y : channel === "y" ? encodings.x : undefined
+      if (mark === "bar" && operation === "sum" && encoding.type === "quantitative" &&
+          !encoding.bin && (category?.type === "nominal" || category?.type === "ordinal") && !category.aggregate) {
+        continue
+      }
       code = "INVALID_AGGREGATE"
       message = `aggregate: "${encoding.aggregate}" on ${channel} requires inline data.values; accessors remain unchanged.`
     }

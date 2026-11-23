@@ -1,3 +1,5 @@
+import { portableScheme } from "./portableEncodingNames"
+import { fromPortableInterpolation } from "./vegaLiteCurves"
 import { isPlotPaint, malformedPlotDiagnostics, observablePlotDiagnostics } from "./observablePlotValidation"
 import { coerceUtcTimeValue } from "../charts/shared/temporalStrings"
 import type { PortabilityImportResult } from "./portability/result"
@@ -77,35 +79,6 @@ export interface ObservablePlotSpec {
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────
-
-/** Plot scheme name → Semiotic colorScheme. */
-const SCHEME_MAP: Record<string, string> = {
-  category10: "category10",
-  tableau10: "category10",
-  observable10: "category10",
-  accent: "accent",
-  dark2: "dark2",
-  paired: "paired",
-  pastel1: "pastel1",
-  pastel2: "pastel2",
-  set1: "set1",
-  set2: "set2",
-  set3: "set3",
-}
-
-/** Plot curve name → Semiotic curve name. */
-const CURVE_MAP: Record<string, string> = {
-  linear: "linear",
-  "monotone-x": "monotoneX",
-  "monotone-y": "monotoneY",
-  step: "step",
-  "step-after": "stepAfter",
-  "step-before": "stepBefore",
-  basis: "basis",
-  cardinal: "cardinal",
-  "catmull-rom": "catmullRom",
-  natural: "natural",
-}
 
 /** Plot marks that draw chrome, not data — skipped when finding the primary mark. */
 const DECORATIVE = new Set([
@@ -213,7 +186,7 @@ function translateObservablePlot(spec: ObservablePlotSpec, silent = false, creat
   if (spec.y?.label) props.yLabel = spec.y.label
 
   // Shared color scheme
-  const scheme = spec.color?.scheme ? (Object.prototype.hasOwnProperty.call(SCHEME_MAP, spec.color.scheme) ? SCHEME_MAP[spec.color.scheme] : undefined) : undefined
+  const scheme = portableScheme(spec.color?.scheme, "plot")
 
   // Channel function warnings (these channels are the ones we read)
   pushFnWarning(warnings, opts.x, "x")
@@ -222,6 +195,7 @@ function translateObservablePlot(spec: ObservablePlotSpec, silent = false, creat
   pushFnWarning(warnings, opts.stroke, "stroke")
   pushFnWarning(warnings, opts.r, "r")
 
+  const curve = opts.curve === "natural" ? "natural" : fromPortableInterpolation(opts.curve)
   const x = fieldName(opts.x)
   const y = fieldName(opts.y)
   const fill = isPlotPaint(opts.fill) ? undefined : fieldName(opts.fill)
@@ -255,26 +229,28 @@ function translateObservablePlot(spec: ObservablePlotSpec, silent = false, creat
       }
       const lineBy = z || stroke || fill
       if (lineBy) props.lineBy = lineBy
-      applyCurve(opts, props)
-      attach(props, data, { colorBy: colorField, colorScheme: scheme })
+      if (curve) props.curve = curve
+      if (colorField) props.colorBy = colorField
       break
     }
     case "bary":
-    case "bar": {
-      component = colorField ? "StackedBarChart" : "BarChart"
-      if (x) props.categoryAccessor = x
-      if (y) props.valueAccessor = y
-      if (colorField) props.stackBy = colorField
-      attach(props, data, { colorScheme: scheme })
-      break
-    }
-    case "barx": {
-      component = colorField ? "StackedBarChart" : "BarChart"
-      props.orientation = "horizontal"
-      if (y) props.categoryAccessor = y
-      if (x) props.valueAccessor = x
-      if (colorField) props.stackBy = colorField
-      attach(props, data, { colorScheme: scheme })
+    case "bar":
+    case "barx":
+    case "tick":
+    case "tickx":
+    case "ticky": {
+      const tick = type.startsWith("tick")
+      const horizontal = type.endsWith("x")
+      component = tick ? "DotPlot" : colorField ? "StackedBarChart" : "BarChart"
+      if (horizontal) props.orientation = "horizontal"
+      const category = horizontal ? y : x
+      const value = horizontal ? x : y
+      if (category) props.categoryAccessor = category
+      if (value) props.valueAccessor = value
+      if (colorField) {
+        if (tick) props.colorBy = colorField
+        else props.stackBy = colorField
+      }
       break
     }
     case "dot":
@@ -291,7 +267,7 @@ function translateObservablePlot(spec: ObservablePlotSpec, silent = false, creat
       }
       if (x) props.xAccessor = x
       if (y) props.yAccessor = y
-      attach(props, data, { colorBy: colorField, colorScheme: scheme })
+      if (colorField) props.colorBy = colorField
       break
     }
     case "area":
@@ -308,11 +284,8 @@ function translateObservablePlot(spec: ObservablePlotSpec, silent = false, creat
         )
       }
       if (component === "StackedAreaChart" && areaBy) props.areaBy = areaBy
-      applyCurve(opts, props)
-      attach(props, data, {
-        colorBy: component === "StackedAreaChart" ? undefined : colorField,
-        colorScheme: scheme,
-      })
+      if (curve) props.curve = curve
+      if (component !== "StackedAreaChart" && colorField) props.colorBy = colorField
       break
     }
     case "recty":
@@ -323,7 +296,6 @@ function translateObservablePlot(spec: ObservablePlotSpec, silent = false, creat
       const valueField = type === "rectx" ? y : x
       if (valueField) props.valueAccessor = valueField
       if (colorField) props.categoryAccessor = colorField
-      attach(props, data, { colorScheme: scheme })
       break
     }
     case "cell":
@@ -333,23 +305,6 @@ function translateObservablePlot(spec: ObservablePlotSpec, silent = false, creat
       if (x) props.xAccessor = x
       if (y) props.yAccessor = y
       if (colorField) props.valueAccessor = colorField
-      attach(props, data)
-      break
-    }
-    case "tick":
-    case "tickx":
-    case "ticky": {
-      component = "DotPlot"
-      // tickX: x is the value, y the category; tickY: the reverse.
-      if (type === "tickx") {
-        if (y) props.categoryAccessor = y
-        if (x) props.valueAccessor = x
-        props.orientation = "horizontal"
-      } else {
-        if (x) props.categoryAccessor = x
-        if (y) props.valueAccessor = y
-      }
-      attach(props, data, { colorBy: colorField, colorScheme: scheme })
       break
     }
     default: {
@@ -360,9 +315,12 @@ function translateObservablePlot(spec: ObservablePlotSpec, silent = false, creat
       component = "Scatterplot"
       if (x) props.xAccessor = x
       if (y) props.yAccessor = y
-      attach(props, data, { colorBy: colorField, colorScheme: scheme })
+      if (colorField) props.colorBy = colorField
     }
   }
+
+  if (Array.isArray(data)) props.data = data
+  if (scheme && component !== "Heatmap") props.colorScheme = scheme
 
   // Carry Plot's scale types onto the continuous-axis XY charts (time/log).
   if (CONTINUOUS_XY.has(component)) {
@@ -380,7 +338,7 @@ function translateObservablePlot(spec: ObservablePlotSpec, silent = false, creat
     }
   }
   if (spec.color?.scheme && !scheme) warnings.push(`Color scheme "${spec.color.scheme}" is not supported.`)
-  if (opts.curve && !Object.prototype.hasOwnProperty.call(CURVE_MAP, opts.curve)) warnings.push(`Curve "${opts.curve}" is not supported.`)
+  if (opts.curve && !curve) warnings.push(`Curve "${opts.curve}" is not supported.`)
   return buildConfig(component, props, warnings, silent, createdAt)
 }
 
@@ -428,21 +386,6 @@ function scaleType(type: string | undefined): "time" | "log" | undefined {
 }
 
 // ── Internal helpers ───────────────────────────────────────────────────────
-
-function applyCurve(opts: ObservablePlotMarkOptions, props: Datum): void {
-  if (opts.curve && Object.prototype.hasOwnProperty.call(CURVE_MAP, opts.curve)) props.curve = CURVE_MAP[opts.curve]
-}
-
-/** Attach data, an optional colorBy field, and an optional color scheme to props. */
-function attach(
-  props: Datum,
-  data: Datum[] | undefined,
-  color: { colorBy?: string; colorScheme?: string } = {},
-): void {
-  if (Array.isArray(data)) props.data = data
-  if (color.colorBy) props.colorBy = color.colorBy
-  if (color.colorScheme) props.colorScheme = color.colorScheme
-}
 
 function buildConfig(
   component: string,

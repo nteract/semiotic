@@ -36,7 +36,7 @@ describe("ChartContainer dataAudit", () => {
     fireEvent.click(toggle())
     expect(screen.getByText(/Negative Size · size/)).toBeTruthy()
     expect(screen.getByText("Semiotic data audit")).toBeTruthy()
-    expect(screen.getByText(/maps this role to non-negative geometry/)).toBeTruthy()
+    expect(screen.getByText(/requires "size" ≥ 0. Found negative values in 1 row/)).toBeTruthy()
   })
 
   it("merges automatic findings after caller notices so callback indices stay stable", async () => {
