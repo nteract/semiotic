@@ -46,6 +46,27 @@ describe("strict Vega-Lite boundaries", () => {
     expect(importSpec(vertical, true).lossReport).toContainEqual(expect.objectContaining({ path: "/encoding/y/bin" }))
   })
 
+  it.each([
+    ["square", {}, "/mark"],
+    ["point", { size: { field: "group", type: "nominal" } }, "/encoding/size/type"],
+    ["circle", { size: { field: "group", type: "ordinal" } }, "/encoding/size/type"],
+    ["circle", { size: { field: "value", type: "quantitative", scale: { range: [16, 256] } } }, "/encoding/size/scale/range"]
+  ] as const)("discloses a symbol shape or discrete size the chart cannot render (%s)", (mark, extra, path) => {
+    const spec = { ...base, mark, encoding: { ...base.encoding, ...extra } }
+    expect(importSpec(spec).status).toBe("refused")
+    expect(importSpec(spec, true).lossReport).toContainEqual(expect.objectContaining({ path }))
+  })
+
+  it("preserves temporal and log positions in a lossy square conversion", () => {
+    const result = importSpec({ ...base, mark: "square", encoding: {
+      ...base.encoding, y: { ...base.encoding!.y, scale: { type: "log" } }
+    } }, true)
+    expect(result.config?.props).toMatchObject({ xScaleType: "time", yScaleType: "log" })
+    const back = toVegaLiteResult(result.config!)
+    expect(back.spec?.encoding?.x.type).toBe("temporal")
+    expect(back.spec?.encoding?.y.scale?.type).toBe("log")
+  })
+
   it("refuses implicit horizontal stacking for aggregated x values in a colored area", () => {
     const spec = { ...base, mark: "area", encoding: {
       x: { field: "amount", type: "quantitative", aggregate: "sum" },
@@ -190,7 +211,7 @@ describe("strict Vega-Lite boundaries", () => {
     )
   })
 
-  it.each(["line", "area", "point", "circle", "square"])(
+  it.each(["line", "area", "point", "circle"])(
     "preserves temporal x and log y for %s",
     (mark) => {
       const input = {
@@ -268,6 +289,12 @@ describe("strict Vega-Lite export", () => {
     props,
     version: "1",
     createdAt: "2024-01-01T00:00:00Z"
+  })
+
+  it("discloses an explicit bubble radius range on export to symbol areas", () => {
+    const chart = config("BubbleChart", { xAccessor: "x", yAccessor: "y", sizeBy: "v", sizeRange: [2, 8] })
+    expect(toVegaLiteResult(chart).status).toBe("refused")
+    expect(toVegaLiteResult(chart, { allowLossy: true }).lossReport).toContainEqual(expect.objectContaining({ path: "/props/sizeRange" }))
   })
 
   it.each(["BarChart", "DotPlot"])(

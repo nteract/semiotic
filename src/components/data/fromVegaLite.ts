@@ -136,7 +136,7 @@ function strictImportDiagnostics(spec: VegaLiteSpec): PortabilityDiagnostic[] {
     })
   } else {
     const { type } = normalizeMark(normalized.mark as VegaLiteSpec["mark"])
-    const supported = new Set(["bar", "line", "area", "point", "circle", "square", "rect", "arc", "tick"])
+    const supported = new Set(["bar", "line", "area", "point", "circle", "rect", "arc", "tick"])
     if (!supported.has(type)) {
       diagnostics.push({
         code: "UNSUPPORTED_MARK",

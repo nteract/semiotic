@@ -25,7 +25,7 @@ const SUPPORTED: Record<string, string[]> = {
   AreaChart: [...XY, "areaBy", "curve", "areaOpacity"],
   StackedAreaChart: [...XY, "areaBy", "curve", "areaOpacity", "normalize"],
   Scatterplot: [...XY, "colorBy", "pointOpacity"],
-  BubbleChart: [...XY, "colorBy", "sizeBy", "sizeRange"],
+  BubbleChart: [...XY, "colorBy", "sizeBy"],
   Heatmap: ["xAccessor", "yAccessor", "valueAccessor", "xLabel", "yLabel"],
   PieChart: ["categoryAccessor", "valueAccessor"],
   DonutChart: ["categoryAccessor", "valueAccessor", "innerRadius"],

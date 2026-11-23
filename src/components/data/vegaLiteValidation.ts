@@ -202,6 +202,7 @@ export function vegaLiteSemanticDiagnostics(
     if (!continuous && enc.type === "temporal") unsupported(`${path}/type`)
     if (channel === "color" && mark !== "rect" && enc.type === "quantitative")
       unsupported(`${path}/type`)
+    if (channel === "size" && enc.type !== undefined && enc.type !== "quantitative") unsupported(`${path}/type`)
     if (enc.axis) keys(enc.axis, ["title"], `${path}/axis`)
     if (enc.bin !== undefined && enc.bin !== false) {
       if (mark !== "bar" || channel !== "x") unsupported(`${path}/bin`)
@@ -224,11 +225,9 @@ export function vegaLiteSemanticDiagnostics(
       const scaleKeys =
         channel === "color"
           ? ["scheme", "range"]
-          : channel === "size"
-            ? ["range"]
-            : continuous
-              ? ["type"]
-              : []
+          : continuous && channel !== "size"
+            ? ["type"]
+            : []
       keys(enc.scale, scaleKeys, `${path}/scale`)
       if (
         enc.scale.type !== undefined &&
