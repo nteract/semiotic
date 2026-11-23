@@ -8,12 +8,8 @@ import { createColorScale, DEFAULT_COLOR, getColor } from "../charts/shared/colo
 import { mergeShapeStyle } from "../charts/shared/mergeShapeStyle"
 import { composeStyleRules, makeRuleValueResolver, makeXYRuleContext, resolveStyleRules, type StyleRule } from "../charts/shared/styleRules"
 import { buildXYLineBaseStyle } from "../charts/shared/xyLineStyle"
-import { computeDifferenceSegments } from "../charts/xy/differenceSegments"
-import {
-  buildDifferenceAreaStyle,
-  buildDifferencePointStyle,
-  buildDifferenceLineStyle,
-} from "../charts/xy/differenceMarkStyle"
+import { buildOverlayLineRows, createDifferenceProjection, differenceFrameAccessors } from "../charts/xy/differenceSegments"
+import { buildDifferenceLegend, buildDifferenceStyles } from "../charts/xy/differenceMarkStyle"
 import {
   normalizeGradient,
   normalizeSemanticGradient,
@@ -23,9 +19,7 @@ import {
 } from "../charts/shared/gradient"
 import {
   type ChartConfig,
-  accessorValue,
   mergeServerRegressionAnnotation,
-  numericValue,
   prepareConnectedScatterplotData,
   primitiveStyleOverrides,
   viridisColor,
@@ -398,9 +392,6 @@ export const differenceChart: ChartConfig = {
     const xKey = rest.xAccessor || "x"
     const aKey = rest.seriesAAccessor || "a"
     const bKey = rest.seriesBAccessor || "b"
-    const getX = (d: Datum) => numericValue(accessorValue(xKey, "x", d))
-    const getA = (d: Datum) => numericValue(accessorValue(aKey, "a", d))
-    const getB = (d: Datum) => numericValue(accessorValue(bKey, "b", d))
     const seriesAColor = rest.seriesAColor || "var(--semiotic-danger, #dc2626)"
     const seriesBColor = rest.seriesBColor || "var(--semiotic-info, #2563eb)"
     const areaOpacity = rest.areaOpacity ?? 0.6
@@ -411,73 +402,30 @@ export const differenceChart: ChartConfig = {
     const seriesBLabel = rest.seriesBLabel || "B"
     const legendPosition = common.legendPosition || "right"
 
-    const segmented = computeDifferenceSegments(Array.isArray(data) ? data : [], getX, getA, getB)
-    const overlay: Datum[] = []
-    if (showLines && Array.isArray(data)) {
-      // Filter non-finite x BEFORE sorting. `Array.sort`'s comparator
-      // returns NaN for NaN-NaN, which V8 treats like 0 (equal), so
-      // surrounding finite-x rows can land out of order. The downstream
-      // emission already skips non-finite-x rows; doing it first keeps
-      // the sort total-ordered.
-      const finite = data.filter((d) => Number.isFinite(getX(d)))
-      const sorted = finite.sort((p, q) => getX(p) - getX(q))
-      for (const d of sorted) {
-        const x = getX(d), a = getA(d), b = getB(d)
-        if (Number.isFinite(a)) overlay.push({ __x: x, __y: a, __diffSegment: "line-A", __diffWinner: "A", __sourceDatum: d })
-        if (Number.isFinite(b)) overlay.push({ __x: x, __y: b, __diffSegment: "line-B", __diffWinner: "B", __sourceDatum: d })
-      }
-    }
+    const [areaStyle, lineStyle, pointStyle] = buildDifferenceStyles({
+      seriesAColor, seriesBColor, areaOpacity, lineWidth,
+      pointRadius: typeof rest.pointRadius === "number" ? rest.pointRadius : 3,
+      styleRules: rest.styleRules as StyleRule[] | undefined
+    })
+    const { segmented, points, areaGroups } = createDifferenceProjection(xKey, aKey, bKey).read(Array.isArray(data) ? data : [])
+    const overlay = showLines ? buildOverlayLineRows(points) : []
     const combined = [...segmented, ...overlay] as Datum[]
-    const areaGroups = Array.from(new Set(segmented.map((r) => r.__diffSegment)))
 
     return {
-      chartType: "mixed",
+      ...differenceFrameAccessors,
       data: combined,
-      xAccessor: "__x",
-      yAccessor: "__y",
-      y0Accessor: "__y0",
-      groupAccessor: "__diffSegment",
       areaGroups,
       // No primitive overlay here on purpose: DifferenceChart's HOC owns its
       // A/B series colors and never applies `mergeShapeStyle`, so honoring
       // top-level stroke/strokeWidth/opacity in SSR alone would make the
       // static SVG diverge from the canvas rather than match it.
-      areaStyle: buildDifferenceAreaStyle({
-        seriesAColor,
-        seriesBColor,
-        areaOpacity,
-        styleRules: rest.styleRules as StyleRule[] | undefined,
-      }),
-      lineStyle: buildDifferenceLineStyle({
-        seriesAColor,
-        seriesBColor,
-        lineWidth,
-        styleRules: rest.styleRules as StyleRule[] | undefined,
-      }),
-      // showPoints draws a dot per source row on each series line, colored by
-      // series, exactly as the HOC does.
-      ...(rest.showPoints && {
-        pointStyle: buildDifferencePointStyle({
-          seriesAColor,
-          seriesBColor,
-          pointRadius: typeof rest.pointRadius === "number" ? rest.pointRadius : 3,
-          styleRules: rest.styleRules as StyleRule[] | undefined,
-        }),
-      }),
+      areaStyle,
+      lineStyle,
+      ...(rest.showPoints && { pointStyle }),
       curve: rest.curve || "linear",
       ...common,
       ...(showLegend && {
-        legend: {
-          legendGroups: [{
-            label: "",
-            type: "fill" as const,
-            styleFn: (item: { color?: string }) => ({ fill: item.color || "currentColor" }),
-            items: [
-              { label: seriesALabel, color: seriesAColor },
-              { label: seriesBLabel, color: seriesBColor },
-            ],
-          }],
-        },
+        legend: buildDifferenceLegend(seriesALabel, seriesAColor, seriesBLabel, seriesBColor),
         legendPosition,
       }),
     }

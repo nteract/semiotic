@@ -783,6 +783,38 @@ describe("DifferenceChart push API", () => {
     expect(ref.current!.getData().length).toBe(2)
   })
 
+  it("projects only new ordered samples, and reconciles late and edited samples with static segmentation", () => {
+    const ref = React.createRef<React.ElementRef<typeof DifferenceChart>>()
+    let reads = 0
+    const readA = (row: Datum) => {
+      reads++
+      return Number(row.a)
+    }
+    const chart = () => <TooltipProvider><DifferenceChart ref={ref} xAccessor="x" seriesAAccessor={readA} seriesBAccessor="b" pointIdAccessor="id" /></TooltipProvider>
+    const { rerender } = render(chart())
+    const seed = Array.from({ length: 100 }, (_, x) => ({ id: String(x), x, a: x, b: 50 }))
+    ref.current!.pushMany(seed)
+    rerender(chart())
+    reads = 0
+    ref.current!.push({ id: "tail", x: 100, a: 1, b: 12 })
+    rerender(chart())
+    expect(reads).toBe(1)
+    const late = { id: "late", x: 50.5, a: 100, b: 20 }
+    const expectStaticSegments = () => {
+      const expected = computeDifferenceSegments(ref.current!.getData(), row => Number(row.x), row => Number(row.a), row => Number(row.b))
+      expect(lastXYFrameProps.data.filter(row => row.__diffSegment.startsWith("seg-"))).toEqual(expected)
+    }
+    reads = 0
+    ref.current!.push(late)
+    rerender(chart())
+    expect(reads).toBe(1)
+    expectStaticSegments()
+    ref.current!.update("tail", row => ({ ...row, a: 50 }))
+    ref.current!.remove("0")
+    rerender(chart())
+    expectStaticSegments()
+  })
+
   it("clear() empties the push buffer", () => {
     const ref = React.createRef<React.ElementRef<typeof DifferenceChart>>()
     const { rerender } = render(
@@ -836,6 +868,25 @@ describe("DifferenceChart push API", () => {
     // Live buffer should now contain only r2.
     expect(ref.current!.getData()).toHaveLength(1)
     expect(ref.current!.getData()[0].id).toBe("r2")
+  })
+
+  it("reprojects retained samples when an updater throws after changing them", () => {
+    const ref = React.createRef<React.ElementRef<typeof DifferenceChart>>()
+    const chart = () => <TooltipProvider><DifferenceChart ref={ref} xAccessor="x" seriesAAccessor="a" seriesBAccessor="b" pointIdAccessor="id" /></TooltipProvider>
+    const { rerender } = render(chart())
+    ref.current!.pushMany([{ id: "a", x: 0, a: 2, b: 5 }, { id: "b", x: 1, a: 3, b: 6 }])
+    rerender(chart())
+    expect(() => ref.current!.update(["a", "b"], row => {
+      if (row.id === "a") return { ...row, a: 12 }
+      row.a = 13
+      throw new Error("interrupted")
+    })).toThrow("interrupted")
+    rerender(chart())
+    const retained = ref.current!.getData()
+    expect(retained.map(row => row.a)).toEqual([12, 13])
+    expect(lastXYFrameProps.data.filter(row => row.__diffSegment.startsWith("seg-"))).toEqual(
+      computeDifferenceSegments(retained, row => Number(row.x), row => Number(row.a), row => Number(row.b))
+    )
   })
 
   it("update() returns the updated records synchronously", () => {
