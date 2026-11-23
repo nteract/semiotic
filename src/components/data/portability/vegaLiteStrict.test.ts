@@ -36,6 +36,16 @@ describe("strict Vega-Lite boundaries", () => {
     expect(importSpec(spec, true).lossReport).toContainEqual(expect.objectContaining({ path: `/encoding/${other}` }))
   })
 
+  it("keeps the histogram value axis horizontal and reports rotated y bins", () => {
+    const bin = { field: "value", type: "quantitative", bin: true }
+    const count = { aggregate: "count", type: "quantitative" }
+    const input = (encoding: object) => ({ ...base, mark: "bar", encoding })
+    expect(importSpec(input({ x: bin, y: count })).status).toBe("success")
+    const vertical = input({ x: count, y: bin })
+    expect(importSpec(vertical).status).toBe("refused")
+    expect(importSpec(vertical, true).lossReport).toContainEqual(expect.objectContaining({ path: "/encoding/y/bin" }))
+  })
+
   it("refuses implicit horizontal stacking for aggregated x values in a colored area", () => {
     const spec = { ...base, mark: "area", encoding: {
       x: { field: "amount", type: "quantitative", aggregate: "sum" },

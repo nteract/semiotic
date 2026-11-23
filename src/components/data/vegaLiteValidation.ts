@@ -204,7 +204,7 @@ export function vegaLiteSemanticDiagnostics(
       unsupported(`${path}/type`)
     if (enc.axis) keys(enc.axis, ["title"], `${path}/axis`)
     if (enc.bin !== undefined && enc.bin !== false) {
-      if (mark !== "bar") unsupported(`${path}/bin`)
+      if (mark !== "bar" || channel !== "x") unsupported(`${path}/bin`)
       if (isRecord(enc.bin)) keys(enc.bin, ["maxbins"], `${path}/bin`)
       else if (enc.bin !== true) unsupported(`${path}/bin`)
     }
