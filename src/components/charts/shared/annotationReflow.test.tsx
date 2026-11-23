@@ -87,6 +87,23 @@ describe("annotation reflow binding", () => {
     expect(notePos(b)).toEqual({ x: xScale(2), y: yScale(2) })
   })
 
+  it("uses the first fixed match and the last latest match for repeated point IDs", () => {
+    const context = ctx([], undefined, {
+      pointNodes: [{ pointId: "a", x: 4, y: 5 }, { pointId: "a", x: 14, y: 15 }]
+    })
+    expect(notePos(rules({ ...callout, pointId: "a" }, 0, context))).toEqual({ x: 4, y: 5 })
+    expect(notePos(rules({ ...callout, pointId: "a", anchor: "latest" }, 0, context)))
+      .toEqual({ x: 14, y: 15 })
+  })
+
+  it("requires both latest-row accessor values when axis field names overlap", () => {
+    const latest = { ...callout, anchor: "latest" }
+    const accessors = { xAccessor: "y", yAccessor: "price" }
+    expect(rules(latest, 0, ctx([{ price: 3 }], undefined, accessors))).toBeNull()
+    expect(notePos(rules(latest, 0, ctx([{ y: 6, price: 3 }], undefined, accessors))))
+      .toEqual({ x: xScale(6), y: yScale(3) })
+  })
+
   it("re-resolves a semantic annotation through provenance.stableId when the target is still present", () => {
     const semantic: Datum = {
       type: "callout",
