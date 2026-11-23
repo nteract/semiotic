@@ -344,6 +344,16 @@ describe("Component SSR — XY Charts", () => {
     expect(svg).toContain(">SB<")
   })
 
+  it("renders sparse DifferenceChart input like the same dense samples", () => {
+    const dense = [{ x: 1, a: 4, b: 1 }, { x: 5, a: 1, b: 4 }]
+    const sparse = new Array<(typeof dense)[number]>(3)
+    sparse[0] = dense[0]
+    sparse[2] = dense[1]
+    const props = { xAccessor: "x", seriesAAccessor: "a", seriesBAccessor: "b", width: 400, height: 200 }
+    const paths = (data: typeof dense) => renderChart("DifferenceChart", { ...props, data }).match(/<path[^>]+>/g)
+    expect(paths(sparse)).toEqual(paths(dense))
+  })
+
   it("renderChart('DifferenceChart', …) emits filled crossover segments — regression for OG-card path", () => {
     // The standalone `renderChart` server path (used by
     // `scripts/generate-blog-og-cards.mjs` and any MCP/AI snapshot

@@ -1,7 +1,7 @@
 "use client"
 import type { Datum } from "../shared/datumTypes"
 import type * as React from "react"
-import { useMemo, useCallback, forwardRef, useRef, useImperativeHandle, createElement } from "react"
+import { useMemo, forwardRef, useRef, useImperativeHandle, createElement } from "react"
 import StreamOrdinalFrame from "../../stream/StreamOrdinalFrame"
 import type { StreamOrdinalFrameProps, StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import { useChartMode, useThemeDiverging } from "../shared/hooks"
@@ -14,7 +14,6 @@ import { useOrdinalPieceStyle, withoutOrdinalPieceStyle } from "../shared/useOrd
 import type { RealtimeFrameHandle } from "../../realtime/types"
 import { useChartSetup } from "../shared/useChartSetup"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
-import { useStreamingLegend } from "../shared/useStreamingLegend"
 import {
   useLikertAggregation,
   defaultDivergingScheme,
@@ -121,6 +120,8 @@ export interface LikertChartProps<TDatum extends Datum = Datum> extends BaseChar
   categoryLabel?: string
   valueLabel?: string
   valueFormat?: (d: number | string) => string
+  /** Maximum raw responses retained in push mode, with oldest responses evicted first. */
+  windowSize?: number
   barPadding?: number
   enableHover?: boolean
   showGrid?: boolean
@@ -282,7 +283,7 @@ export const LikertChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ *
   )
 
   // ── Aggregation (extracted hook) ───────────────────────────────────
-  const { processedData, reAggregate, accumulatorRef } = useLikertAggregation({
+  const { processedData, stream } = useLikertAggregation({
     data,
     levels,
     categoryAccessor,
@@ -290,52 +291,22 @@ export const LikertChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ *
     levelAccessor,
     countAccessor,
     isDiverging,
+    windowSize: props.windowSize,
+    dataIdAccessor: props.dataIdAccessor,
     frameRef,
   })
 
-  // ── Streaming legend (for margin adjustment only — legend is deterministic) ──
   const effectiveColorBy = "__likertLevelLabel"
-  const streaming = useStreamingLegend({
-    isPushMode,
-    colorBy: effectiveColorBy,
-    colorScheme,
-    showLegend,
-    legendPosition: legendPositionProp,
-  })
-  const { wrapPush, wrapPushMany } = streaming
-
-  const wrappedPush = useCallback(
-    (d: Datum) => wrapPush((next: Datum) => {
-      accumulatorRef.current.push(next)
-      reAggregate(accumulatorRef.current)
-    })(d),
-    [wrapPush, reAggregate, accumulatorRef]
-  )
-  const wrappedPushMany = useCallback(
-    (d: Datum[]) => wrapPushMany((next: Datum[]) => {
-      accumulatorRef.current.push(...next)
-      reAggregate(accumulatorRef.current)
-    })(d),
-    [wrapPushMany, reAggregate, accumulatorRef]
-  )
-
   useImperativeHandle(ref, () => ({
-    push: wrappedPush,
-    pushMany: wrappedPushMany,
-    remove: (id) => frameRef.current?.remove(id) ?? [],
-    update: (id, updater) => frameRef.current?.update(id, updater) ?? [],
-    replace: (rows: Datum[]) => frameRef.current?.replace(rows),
-    clear: () => {
-      accumulatorRef.current = []
-      streaming.resetCategories()
-      frameRef.current?.clear()
-    },
-    getData: () => frameRef.current?.getData() ?? [],
-    // Exposed for debuggability and test verification of streaming
-    // category order. The ordinal scale's domain is the source of truth
-    // for how categories appear in the rendered output.
+    ...stream,
+    ...(!isPushMode && {
+      remove: (id: string | string[]) => frameRef.current?.remove(id) ?? [],
+      update: (id: string | string[], update: (row: Datum) => Datum) => frameRef.current?.update(id, update) ?? [],
+      replace: (rows: Datum[]) => frameRef.current?.replace(rows),
+      getData: () => frameRef.current?.getData() ?? []
+    }),
     getScales: () => frameRef.current?.getScales() ?? null
-  }), [wrappedPush, wrappedPushMany, accumulatorRef, streaming])
+  }), [stream, isPushMode])
 
   // ── Chart setup ──────────────────────────────────────────────────────
   const setup = useChartSetup({
@@ -482,15 +453,10 @@ export const LikertChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ *
       else if (pos === "top" && m.top < 50) m.top = 50
       else if (pos === "right" && m.right < 110) m.right = 110
       else if (pos === "left" && m.left < 110) m.left = 110
-    } else if (streaming.streamingMarginAdjust) {
-      for (const [key, val] of Object.entries(streaming.streamingMarginAdjust)) {
-        const k = key as keyof typeof m
-        if (m[k] < val) m[k] = val
-      }
     }
     if (isDiverging && m.left < 100) m.left = 100
     return m
-  }, [setup.margin, setup.legend, setup.legendPosition, streaming.streamingMarginAdjust, isDiverging, isPushMode])
+  }, [setup.margin, setup.legend, setup.legendPosition, isDiverging, isPushMode])
 
   // ── Axis format ────────────────────────────────────────────────────
   const rFormat = useMemo(() => {

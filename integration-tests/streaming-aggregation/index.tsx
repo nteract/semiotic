@@ -1,6 +1,7 @@
 import React, { useCallback, useRef, useState } from "react"
 import { createRoot } from "react-dom/client"
-import { WaterfallChart } from "../../dist/xy.module.min.js"
+import { LikertChart } from "../../dist/ordinal.module.min.js"
+import { DifferenceChart, WaterfallChart } from "../../dist/xy.module.min.js"
 import { useStreamStatus } from "../../dist/realtime.module.min.js"
 
 function App() {
@@ -81,4 +82,36 @@ function App() {
     </>
   )
 }
-createRoot(document.getElementById("root")!).render(<App />)
+function SurveyAndDifference() {
+  const survey = useRef<React.ElementRef<typeof LikertChart>>(null)
+  const difference = useRef<React.ElementRef<typeof DifferenceChart>>(null)
+  const [width, setWidth] = useState(480)
+  const margin = { top: 20, right: 40, bottom: 40, left: 60 }
+  const edit = () => {
+    survey.current!.pushMany([
+      { id: "a", question: "Service", score: 1 },
+      { id: "b", question: "Service", score: 1 }
+    ])
+    survey.current!.remove("a")
+    survey.current!.update("b", row => ({ ...row, score: 2 }))
+    survey.current!.push({ id: "c", question: "Service", score: 2 })
+    difference.current!.pushMany([{ id: "end", x: 10, a: 2, b: 9 }, { id: "start", x: 0, a: 8, b: 2 }])
+    difference.current!.update("end", row => ({ ...row, a: 8, b: 2 }))
+  }
+  return <>
+    <button onClick={edit}>Edit responses and series</button>
+    <button onClick={() => setWidth(360)}>Resize charts</button>
+    <div data-testid="survey">
+      <LikertChart ref={survey} width={width} height={220} margin={margin} orientation="vertical"
+        levels={["No", "Yes"]} categoryAccessor="question" valueAccessor="score" dataIdAccessor="id" showLegend={false} />
+    </div>
+    <div data-testid="difference">
+      <DifferenceChart ref={difference} width={width} height={220} margin={margin} tooltip="multi"
+        xAccessor="x" seriesAAccessor="a" seriesBAccessor="b" pointIdAccessor="id" showLegend={false} />
+    </div>
+  </>
+}
+
+createRoot(document.getElementById("root")!).render(
+  new URLSearchParams(location.search).has("survey") ? <SurveyAndDifference /> : <App />
+)
