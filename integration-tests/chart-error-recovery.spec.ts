@@ -8,6 +8,7 @@ for (const theme of ["light", "dark"]) {
     await page.goto(`/chart-features-examples/?chart-states=${theme}`)
     const fixture = page.getByTestId("chart-states")
     const loading = fixture.getByRole("status", { name: "Chargement du graphique" })
+    await expect(fixture.getByRole("status", { name: "Chargement du classement" })).toBeVisible()
     await expect(loading).toHaveAttribute("aria-busy", "true")
     await expect(loading.locator(".semiotic-loading-bar")).toHaveCSS("height", "8px")
     await expect(fixture.getByRole("status").filter({ hasText: "Aucune donnée" })).toHaveText("Aucune donnée")

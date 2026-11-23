@@ -2,7 +2,7 @@
 import type { CurveType, Style } from "../types"
 import type { GradientConfig, GradientStop } from "../../charts/shared/gradient"
 import { resolveCSSColor } from "./resolveCSSColor"
-import { parseCanvasColor } from "./colorUtils"
+import { isNoneCanvasPaint, parseCanvasColor } from "./colorUtils"
 import { isHatchFill, resolveHatchCanvasPattern, type HatchFill } from "../../charts/shared/hatchFill"
 import {
   curveMonotoneX,
@@ -53,9 +53,7 @@ export function resolveEnvelopeCurveFactory(curve: CurveType | undefined): Curve
  */
 export const CANVAS_NONE_PAINT = "rgba(0,0,0,0)"
 
-export function isNoneCanvasPaint(paint: unknown): boolean {
-  return typeof paint === "string" && paint.trim().toLowerCase() === "none"
-}
+export { isNoneCanvasPaint } from "./colorUtils"
 
 /**
  * Resolve a node's `style.fill` (or `style.stroke`) to something the

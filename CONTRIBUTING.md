@@ -254,6 +254,18 @@ refresh too. The adoption inventory includes
 the complete `README.md`, so even a README-only edit requires
 `npm run prepare:adoption-evals` after the edit.
 
+After `npm run dist:prod`, run `npm run check:server-runtimes` to render a chart
+and a two-panel dashboard from the packed library in Node CommonJS, Node ESM,
+and the Vercel Edge Runtime VM. The fixture checks the selected package export,
+ReactDOM server dependency, bar counts and heights, and accessible labels.
+The standalone check installs the minimum supported React 18 peer and the
+repository’s installed React peer in separate projects, omitting optional
+dependencies. The Vercel fixtures use the `edge-light` condition with a
+`browser` fallback for React 18 in neutral and browser-targeted bundles.
+An ordinary browser bundle also checks ReactDOM’s browser renderer. Pass
+`-- --tarball /path/to/semiotic.tgz` to verify an existing archive.
+`check:pack` also runs the fixture against its installed archive.
+
 `check:consumer-compatibility` installs the built package in a temporary consumer
 with the exact compiler versions in `scripts/consumer-compatibility/toolchain.json`.
 It checks all public JavaScript entries in their browser or server targets with

@@ -1,3 +1,4 @@
+import { compareRecipeIds } from "../../utils/compareRecipeIds"
 import { prepareDependencyForest } from "./dependencyForest"
 import type { PreparedNetworkAtlas, MotifMatch } from "./types"
 import type {
@@ -101,7 +102,7 @@ export function prepareFlowCircuit(
       .sort(
         (left, right) =>
           priority.indexOf(left.template) - priority.indexOf(right.template) ||
-          left.id.localeCompare(right.id)
+          compareRecipeIds(left.id, right.id)
       )
     const ports = atlas.source.edges.flatMap((edge) => [
       ...(edge.source === nodeId

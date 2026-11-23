@@ -569,7 +569,7 @@ const PAST_STEPS = ["The layout", "Proximity problem", "Past experience"]
 
 function ChapterPastExperience() {
   const [step, setStep] = useState(0)
-  const [seed, setSeed] = useState(7)
+  const [seed, setSeed] = useState(1)
   const [prevSeed, setPrevSeed] = useState(null)
 
   const { positions: pos } = useForceLayout(G.NET_NODES, G.NET_EDGES, { seed })
@@ -591,7 +591,9 @@ function ChapterPastExperience() {
 
   const captions = {
     0: "A force-directed layout pushes unconnected nodes apart and pulls connected ones together — the same simulation Semiotic's ForceDirectedGraph runs. One disconnected node is held on screen only by gravity.",
-    1: `Once it settles, mark the offenders red: nodes drawn within ${Math.round(
+    1: problem && problem.problemIds.size === 0
+      ? "No distant nodes are unusually close in this layout."
+      : `Red nodes lie within ${Math.round(
       (problem?.threshold ?? 0) * 100
     )}% of the canvas of each other while sitting at least ${
       problem?.minHops ?? "several"

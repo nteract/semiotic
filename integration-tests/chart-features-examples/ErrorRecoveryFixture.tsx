@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import { BarChart } from "../../dist/ordinal.module.min.js"
-import { LineChart } from "../../dist/xy.module.min.js"
+import { BumpChart, LineChart } from "../../dist/xy.module.min.js"
 import { ChartContainer, ThemeProvider } from "../../dist/semiotic.module.min.js"
 
 const rows = [
@@ -23,6 +23,7 @@ export function ChartStatesFixture({ dark }: { dark: boolean }) {
     <ThemeProvider theme={dark ? "dark" : "light"}>
       <div data-testid="chart-states" style={{ background: "var(--semiotic-bg)", color: "var(--semiotic-text)" }}>
         <LineChart loading loadingLabel="Chargement du graphique" width={120} height={24} />
+        <BumpChart data={[]} loading loadingLabel="Chargement du classement" width={120} height={24} />
         <BarChart data={[]} categoryAccessor="category" valueAccessor="value" emptyContent="Aucune donnée" />
         <ChartContainer loading loadingLabel="Chargement du tableau" height={32}>
           <div />

@@ -163,3 +163,26 @@ test("CSS-variable hatch fills repaint after theme changes and resize with worki
     }
   }
 })
+
+test("disabling both CSS hatch paints clears the rendered bar's interior", async ({ page }) => {
+  await page.goto("/theme-updates/")
+  const chart = page.getByTestId("hatched-bar")
+  const canvas = chart.locator("canvas").first()
+  const paintedPixels = () => canvas.evaluate((element: HTMLCanvasElement) => {
+    const ctx = element.getContext("2d")!
+    const dpr = element.width / element.clientWidth
+    const background = ctx.getImageData(1, 1, 1, 1).data
+    const { data } = ctx.getImageData(250 * dpr, 140 * dpr, 24 * dpr, 24 * dpr)
+    let count = 0
+    for (let i = 0; i < data.length; i += 4) {
+      if (background.some((channel, j) => channel !== data[i + j])) count++
+    }
+    return count
+  })
+  await expect.poll(paintedPixels).toBeGreaterThan(0)
+  await chart.evaluate((element) => {
+    element.style.setProperty("--semiotic-warning", "none")
+    element.style.setProperty("--semiotic-text", "none")
+  })
+  await expect.poll(paintedPixels).toBe(0)
+})

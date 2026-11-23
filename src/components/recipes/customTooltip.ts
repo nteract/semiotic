@@ -94,7 +94,7 @@ export function formatTooltipValue(value: unknown): string {
   if (typeof value === "number") {
     return Number.isInteger(value)
       ? String(value)
-      : value.toLocaleString(undefined, { maximumFractionDigits: 2 })
+      : value.toLocaleString("en-US", { maximumFractionDigits: 2 })
   }
   if (typeof value === "boolean") return value ? "true" : "false"
   if (Array.isArray(value)) return `${value.length} items`
