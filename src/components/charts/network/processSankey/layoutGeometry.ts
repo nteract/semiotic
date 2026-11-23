@@ -1,3 +1,4 @@
+import { attachmentOffset, attachmentYRange } from "./bandPaths"
 import { clamp } from "../../../utils/clamp"
 import { laneControl } from "./ribbonInputs"
 import { compareRecipeIds as compareProcessSankeyIds } from "../../../utils/compareRecipeIds"
@@ -136,16 +137,6 @@ function stackCenters(
     for (let i = 0; i < centers.length; i++) centers[i] *= scale
   }
   return centers
-}
-
-function attachmentOffset(
-  attachment: ProcessSankeyAttachment,
-  valueScale: number
-): number {
-  const boundary = (attachment.boundaryOffset ?? 0) * valueScale
-  const mass = (attachment.kind === "out" ? attachment.sideMassBefore : attachment.sideMassAfter) * valueScale
-  const half = attachment.value * valueScale / 2
-  return boundary + (attachment.side === "top" ? -mass + half : mass - half)
 }
 
 function hugCenters(
@@ -364,16 +355,6 @@ function parameterAtX(xFraction: number, controlFraction: number): number {
   return (lo + hi) / 2
 }
 
-function attachmentRange(
-  attachment: ProcessSankeyAttachment,
-  centerline: number,
-  valueScale: number
-): [number, number] {
-  const center = centerline + attachmentOffset(attachment, valueScale)
-  const half = (attachment.value * valueScale) / 2
-  return [center - half, center + half]
-}
-
 function overlapRatio(a0: number, a1: number, b0: number, b1: number): number {
   const overlap = Math.max(0, Math.min(a1, b1) - Math.max(a0, b0))
   return overlap / Math.max(1e-9, a1 - a0)
@@ -429,12 +410,12 @@ export function measureTransitOcclusion(
     const start = Math.max(edge.startTime, domain?.[0] ?? -Infinity)
     const end = Math.min(edge.endTime, domain?.[1] ?? Infinity)
     if (!(end > start)) continue
-    const [sourceTop, sourceBottom] = attachmentRange(
+    const [sourceTop, sourceBottom] = attachmentYRange(
       sourceAttachment,
       centerlines[edge.source],
       valueScale
     )
-    const [targetTop, targetBottom] = attachmentRange(
+    const [targetTop, targetBottom] = attachmentYRange(
       targetAttachment,
       centerlines[edge.target],
       valueScale

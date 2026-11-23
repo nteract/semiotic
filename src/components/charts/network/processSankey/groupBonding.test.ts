@@ -55,9 +55,9 @@ describe("ProcessSankey group bonding", () => {
   it("keeps every same-time state and uses the last maximum-mass state for placement", () => {
     const result = bond(fixture())
     expect(result.A.samples.filter((sample) => sample.t === 1)).toEqual([
-      { t: 1, topMass: 1, botMass: 0, boundaryOffset: -1 },
-      { t: 1, topMass: 3, botMass: 1, boundaryOffset: 0 },
-      { t: 1, topMass: 2, botMass: 2, boundaryOffset: 4 }
+      { t: 1, topMass: 1, botMass: 0, boundaryOffset: -1, groupOffset: -1 },
+      { t: 1, topMass: 3, botMass: 1, boundaryOffset: 0, groupOffset: -1 },
+      { t: 1, topMass: 2, botMass: 2, boundaryOffset: 4, groupOffset: -1 }
     ])
   })
 
@@ -67,7 +67,8 @@ describe("ProcessSankey group bonding", () => {
       t: 1.5,
       topMass: 2,
       botMass: 2,
-      boundaryOffset: 4
+      boundaryOffset: 4,
+      groupOffset: -1
     })
     expect(result.A.samples.find((sample) => sample.t === 2)).toEqual({
       t: 2,
@@ -93,7 +94,8 @@ describe("ProcessSankey group bonding", () => {
     const result = bond(data)
     expect(result.A.localAttachments.get("edge")).toEqual({
       ...original.A.localAttachments.get("edge"),
-      boundaryOffset: 4
+      boundaryOffset: 4,
+      groupOffset: -1
     })
     expect(result.A.localAttachments.get("edge")).not.toBe(
       data.A.localAttachments.get("edge")

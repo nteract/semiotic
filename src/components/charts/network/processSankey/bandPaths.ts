@@ -23,16 +23,24 @@ export function hasInventory(sample: ProcessSankeySample): boolean {
   return sample.topMass + sample.botMass > 0
 }
 
-export function attachmentYRange(att: ProcessSankeyAttachment, cl: number, S: number): [number, number] {
-  const boundary = cl + (att.boundaryOffset ?? 0) * S
-  const width = att.value * S
-  const sideMass = (att.kind === "out" ? att.sideMassBefore : att.sideMassAfter) * S
-  if (att.side === "top") {
-    const top = boundary - sideMass
-    return [top, top + width]
-  }
-  const bottom = boundary + sideMass
-  return [bottom - width, bottom]
+export function attachmentOffset(
+  attachment: ProcessSankeyAttachment,
+  valueScale: number
+): number {
+  const boundary = (attachment.boundaryOffset ?? 0) * valueScale
+  const mass = (attachment.kind === "out" ? attachment.sideMassBefore : attachment.sideMassAfter) * valueScale
+  const half = attachment.value * valueScale / 2
+  return boundary + (attachment.side === "top" ? -mass + half : mass - half)
+}
+
+export function attachmentYRange(
+  attachment: ProcessSankeyAttachment,
+  centerline: number,
+  valueScale: number
+): [number, number] {
+  const center = centerline + attachmentOffset(attachment, valueScale)
+  const half = (attachment.value * valueScale) / 2
+  return [center - half, center + half]
 }
 
 /** Interior inventory checkpoints in the authored time coordinate. */
@@ -42,7 +50,7 @@ export function intervalTimes(start: number, end: number, domain: Domain, midpoi
   return [...times].sort((a, b) => a - b)
 }
 
-type BandSection = { x: number; top: number; bottom: number; boundary?: number }
+type BandSection = { x: number; top: number; bottom: number; translation?: number }
 
 /** Keep every attachment covered at its event time and the observed thickness midway between events. */
 function continuousSections(sections: BandSection[], domain: Domain, hasIntervalSamples: boolean): BandSection[] {
@@ -87,7 +95,7 @@ export function projectBandSections(
   const sections = samples.map(sample => {
     const boundary = cl + (sample.boundaryOffset ?? 0) * S
     return {
-      x: sample.t, boundary,
+      x: sample.t, translation: (sample.groupOffset ?? 0) * S,
       top: boundary - sample.topMass * S,
       bottom: boundary + sample.botMass * S,
     }
@@ -141,7 +149,7 @@ export interface BandGradientStub {
   to: 0 | 1
 }
 
-type ContourBounds = Pick<BandSection, "top" | "bottom" | "boundary">
+type ContourBounds = Pick<BandSection, "top" | "bottom" | "translation">
 
 /** Each branch bounds the slot that stays flat throughout its interval. */
 function indexContour(knots: BandSection[]) {
@@ -152,7 +160,7 @@ function indexContour(knots: BandSection[]) {
     const left = build(first, middle, index * 2)
     const right = build(middle + 1, last, index * 2 + 1)
     return bounds[index] = {
-      boundary: left.boundary === right.boundary ? left.boundary : undefined,
+      translation: left.translation === right.translation ? left.translation : undefined,
       top: Math.max(left.top, right.top),
       bottom: Math.min(left.bottom, right.bottom)
     }
@@ -163,7 +171,7 @@ function indexContour(knots: BandSection[]) {
 
 function lifecycleContour(
   knots: BandSection[], bounds: ContourBounds[], left: number, right: number,
-  boundary: number, top: number, bottom: number
+  translation: number, top: number, bottom: number
 ) {
   const slot: BandSection[] = []
   function append(x: number, top: number, bottom: number) {
@@ -179,8 +187,8 @@ function lifecycleContour(
     // Include the adjacent knot to preserve the cubic at each fade boundary.
     if (knots[Math.min(last + 1, knots.length - 1)].x < left || knots[Math.max(0, first - 1)].x > right) return
     const range = bounds[index] ?? knots[first]
-    const shift = (range.boundary ?? boundary) - boundary
-    if (first === last || (range.boundary !== undefined && top + shift >= range.top &&
+    const shift = (range.translation ?? translation) - translation
+    if (first === last || (range.translation !== undefined && top + shift >= range.top &&
         bottom + shift <= range.bottom && knots[first].x >= left && knots[last].x <= right)) {
       const slotEdge = (y: number) => clamp(y + shift, range.top, range.bottom)
       append(knots[first].x, slotEdge(top), slotEdge(bottom))
@@ -223,7 +231,7 @@ export function buildBandCutoutsForNode(
     if (smoothSections && !smoothSections.length) return
     const pathD = smoothSections
       ? lifecycleContour(smoothSections, contourIndex ??= indexContour(smoothSections), left, right,
-          cl + (att.boundaryOffset ?? 0) * S, top, bottom)
+          (att.groupOffset ?? 0) * S, top, bottom)
       : bandSectionPath([{ x: left, top, bottom }, { x: right, top, bottom }], false)
     if (!pathD) return
     stubs.push({

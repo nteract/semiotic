@@ -67,7 +67,7 @@ import { invertHeatmapBandValue } from "./heatmapBandTicks"
 import { collectAnnotationAnchors } from "./xyAnnotationAnchors"
 import { getXYCanvasRenderers, getXYPlugin } from "./xyPlugins/registry"
 import { useEnsureXYPlugins } from "./useEnsureCustomXYRenderers"
-import { paintSceneWithBackend, renderSceneWithBackend } from "./renderBackend"
+import { paintSceneWithBackend, renderSceneElements } from "./renderBackend"
 import { drawCrosshair, drawLineHighlight } from "./xyCrosshair"
 import { XYFrameTooltip } from "./xyDefaultTooltip"
 import { observationInputType } from "../charts/shared/semanticInteractions"
@@ -1229,12 +1229,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
               {svgPreRenderers && scales && svgPreRenderers.map((renderer, ri) => (
                 <Fragment key={`svgpre-${ri}`}>{renderer(scene, scales, { width: adjustedWidth, height: adjustedHeight })}</Fragment>
               ))}
-              {scene.map((node, i) => renderSceneWithBackend({
-                node,
-                index: i,
-                renderMode,
-                fallback: () => xySceneNodeToSVG(node, i, svgInstanceId, hoverRadius)
-              })).filter(Boolean)}
+              {renderSceneElements(scene, renderMode, (node, i) => xySceneNodeToSVG(node, i, svgInstanceId, hoverRadius)).filter(Boolean)}
             </g>
           </svg>
           <SVGOverlay

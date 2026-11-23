@@ -1,7 +1,7 @@
 import { networkFrameDefaultMargin } from "../stream/frameDefaultMargins"
 import { resolveAxisFreeMarginDefaults } from "../charts/shared/chartMode"
 import type { Datum } from "../charts/shared/datumTypes"
-import { normalizeProcessNode } from "../charts/network/processSankey/accessors"
+import { normalizeProcessEdge, normalizeProcessNode } from "../charts/network/processSankey/accessors"
 import { buildProcessSankeyScenes } from "../charts/network/processSankey/buildScenes"
 import { resolveProcessSankeyMarginDefaults } from "../charts/network/processSankey/frameMargins"
 import { buildProcessSankeyBackgroundGraphics } from "../charts/network/processSankey/axisChrome"
@@ -96,34 +96,10 @@ export const processSankey: ChartConfig = {
       const target = String(accVal(targetAccessor, e))
       const fromAcc = accVal(edgeIdAccessor, e)
       const id = fromAcc == null ? `${source}-${target}-${i}` : String(fromAcc)
-      const out: {
-        id: string
-        source: string
-        target: string
-        value: number
-        startTime: number
-        endTime: number
-        systemInTime?: number
-        systemOutTime?: number
-        __raw: Datum
-      } = {
-        id,
-        source,
-        target,
-        value: Number(accVal(valueAccessor, e)),
-        startTime: toTime(accVal(startTimeAccessor, e)),
-        endTime: toTime(accVal(endTimeAccessor, e)),
-        __raw: e
-      }
-      if (systemInTimeAccessor) {
-        const t = toTime(accVal(systemInTimeAccessor, e))
-        if (Number.isFinite(t)) out.systemInTime = t
-      }
-      if (systemOutTimeAccessor) {
-        const t = toTime(accVal(systemOutTimeAccessor, e))
-        if (Number.isFinite(t)) out.systemOutTime = t
-      }
-      return out
+      return normalizeProcessEdge(e, id, source, target, accVal(valueAccessor, e),
+        accVal(startTimeAccessor, e), accVal(endTimeAccessor, e),
+        systemInTimeAccessor ? accVal(systemInTimeAccessor, e) : undefined,
+        systemOutTimeAccessor ? accVal(systemOutTimeAccessor, e) : undefined)
     })
 
     // Resolve the same dimensions `renderNetworkFrame` will use so the

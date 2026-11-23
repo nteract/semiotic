@@ -15,8 +15,12 @@ function sampleMass(sample: ProcessSankeySample): number {
   return sample.topMass + sample.botMass
 }
 
-function translateBoundary<T extends { boundaryOffset?: number }>(point: T, delta?: number): T {
-  return delta === undefined ? { ...point } : { ...point, boundaryOffset: (point.boundaryOffset ?? 0) + delta }
+function translateBoundary<T extends { boundaryOffset?: number; groupOffset?: number }>(point: T, delta?: number): T {
+  return delta === undefined ? { ...point } : {
+    ...point,
+    boundaryOffset: (point.boundaryOffset ?? 0) + delta,
+    groupOffset: (point.groupOffset ?? 0) + delta
+  }
 }
 
 function createSampleCursor(data: ProcessSankeyNodeData) {

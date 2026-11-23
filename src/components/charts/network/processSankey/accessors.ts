@@ -3,7 +3,7 @@
  */
 import type { Datum } from "../../shared/datumTypes"
 import type { ChartAccessor } from "../../shared/types"
-import type { ProcessSankeyNormalizedNode } from "./buildScenes"
+import type { ProcessSankeyNormalizedNode, ProcessSankeyNormalizedEdge } from "./buildScenes"
 import { toProcessSankeyTime } from "./time"
 
 /** Read a string-or-function accessor against a datum. */
@@ -26,4 +26,19 @@ export function normalizeProcessNode(
     if (Number.isFinite(start) && Number.isFinite(end)) node.xExtent = [start, end]
   }
   return node
+}
+
+export function normalizeProcessEdge(
+  raw: Datum, id: string, source: unknown, target: unknown, value: unknown,
+  start: unknown, end: unknown, systemIn: unknown, systemOut: unknown
+): ProcessSankeyNormalizedEdge {
+  const edge: ProcessSankeyNormalizedEdge = {
+    id, source: String(source), target: String(target), value: Number(value),
+    startTime: toProcessSankeyTime(start), endTime: toProcessSankeyTime(end), __raw: raw
+  }
+  const incoming = toProcessSankeyTime(systemIn)
+  const outgoing = toProcessSankeyTime(systemOut)
+  if (Number.isFinite(incoming)) edge.systemInTime = incoming
+  if (Number.isFinite(outgoing)) edge.systemOutTime = outgoing
+  return edge
 }

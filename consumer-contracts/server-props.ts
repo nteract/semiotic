@@ -158,6 +158,12 @@ export const serverPropExclusions: readonly ServerPropExclusion[] = [
     reason: "Customizes the live layout status. Static WordCloud rendering requires prepared placements."
   })),
   {
+    component: "LikertChart",
+    prop: "windowSize",
+    status: "intentionally-client-only",
+    reason: "The retention limit applies to responses pushed through the React ref. Static rendering aggregates the supplied data array in full."
+  },
+  {
     component: "LineChart",
     prop: "enableHover",
     status: "intentionally-client-only",

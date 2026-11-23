@@ -143,27 +143,28 @@ export function networkSceneEdgeToSVG(edge: NetworkSceneEdge, i: number, idPrefi
 }
 
 function networkSceneEdgeToSVGMark(edge: NetworkSceneEdge, i: number, idPrefix: string): React.ReactNode {
+  const style = edge.style
+  const paintStyle = {
+    "data-perspective-part": edge._perspectivePart, opacity: style.opacity,
+    stroke: style.stroke || "#999", strokeOpacity: style.strokeOpacity,
+    strokeWidth: style.strokeWidth ?? 1, strokeDasharray: style.strokeDasharray,
+    strokeLinecap: style.strokeLinecap
+  }
   switch (edge.type) {
     case "line": {
       const e = edge as NetworkLineEdge
       return (
         <line
           key={`net-edge-${i}`}
-          data-perspective-part={e._perspectivePart}
           x1={e.x1} y1={e.y1} x2={e.x2} y2={e.y2}
-          stroke={e.style.stroke || "#999"}
-          strokeOpacity={e.style.strokeOpacity}
-          strokeWidth={e.style.strokeWidth ?? 1}
-          strokeDasharray={e.style.strokeDasharray}
-          strokeLinecap={e.style.strokeLinecap}
-          opacity={e.style.opacity}
+          {...paintStyle}
         />
       )
     }
     case "bezier":
     case "ribbon": {
       const e = edge
-      const gradient = e.type === "bezier" ? e._gradient : undefined
+      const gradient = e.type === "bezier" && e.style.fill !== "none" ? e._gradient : undefined
       const paintId = gradient ? `${idPrefix}-lifecycle-${i}` : `net-${e.type}-${i}-hatch`
       const color = svgFill(e.style.fill, "#999")
       const paint = gradient ? (
@@ -178,15 +179,12 @@ function networkSceneEdgeToSVGMark(edge: NetworkSceneEdge, i: number, idPrefix: 
           {paint && <defs>{paint}</defs>}
           <path
             d={e.pathD}
-            data-perspective-part={e._perspectivePart}
             fill={paint ? `url(#${paintId})` : color}
             fillOpacity={e.style.fillOpacity ?? 0.5}
+            {...paintStyle}
             stroke={e.style.stroke || "none"}
             strokeOpacity={(e.style.strokeOpacity ?? 1) * (e.type === "bezier" ? 0.5 : 0.3)}
             strokeWidth={e.style.strokeWidth}
-            strokeDasharray={e.style.strokeDasharray}
-            strokeLinecap={e.style.strokeLinecap}
-            opacity={e.style.opacity}
           />
         </Fragment>
       )
@@ -197,17 +195,11 @@ function networkSceneEdgeToSVGMark(edge: NetworkSceneEdge, i: number, idPrefix: 
         <path
           key={`net-edge-${i}`}
           d={e.pathD}
-          data-perspective-part={e._perspectivePart}
           fill={svgFill(e.style.fill, "none")}
           // Mirror the canvas renderer, which fills curved edges at
           // `fillOpacity ?? 0.1`; without this, SSR painted fills opaque.
           fillOpacity={e.style.fill && e.style.fill !== "none" ? e.style.fillOpacity ?? 0.1 : undefined}
-          stroke={e.style.stroke || "#999"}
-          strokeOpacity={e.style.strokeOpacity}
-          strokeWidth={e.style.strokeWidth ?? 1}
-          strokeDasharray={e.style.strokeDasharray}
-          strokeLinecap={e.style.strokeLinecap}
-          opacity={e.style.opacity}
+          {...paintStyle}
         />
       )
     }

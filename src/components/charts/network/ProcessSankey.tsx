@@ -14,7 +14,7 @@ import {
 import { useProcessSankeyScenes } from "./processSankey/useProcessSankeyScenes"
 import { useProcessSankeyPush } from "./processSankey/useProcessSankeyPush"
 import { useProcessSankeyTooltipContent } from "./processSankey/processSankeyTooltip"
-import { normalizeProcessNode, readChartAccessor } from "./processSankey/accessors"
+import { normalizeProcessEdge, normalizeProcessNode, readChartAccessor } from "./processSankey/accessors"
 import {
   toProcessSankeyTime,
   isProcessSankeyDateDomain,
@@ -211,34 +211,12 @@ export const ProcessSankey = /* @__PURE__ */ withSizedChartErrorBoundary(/* @__P
       groupBy && readChartAccessor(groupBy, n),
       xExtentAccessor && readChartAccessor(xExtentAccessor, n)
     ))
-    const es: NormalizedEdge[] = (rawEdges ?? []).map((e, i) => {
-      const out: NormalizedEdge = {
-        id: getEdgeId(e, i),
-        source: String(readChartAccessor(sourceAccessor, e)),
-        target: String(readChartAccessor(targetAccessor, e)),
-        value: Number(readChartAccessor(valueAccessor, e)),
-        startTime: toProcessSankeyTime(
-          readChartAccessor(startTimeAccessor, e) as TimeLike
-        ),
-        endTime: toProcessSankeyTime(
-          readChartAccessor(endTimeAccessor, e) as TimeLike
-        ),
-        __raw: e as Datum
-      }
-      if (systemInTimeAccessor) {
-        const v = toProcessSankeyTime(
-          readChartAccessor(systemInTimeAccessor, e) as TimeLike
-        )
-        if (Number.isFinite(v)) out.systemInTime = v
-      }
-      if (systemOutTimeAccessor) {
-        const v = toProcessSankeyTime(
-          readChartAccessor(systemOutTimeAccessor, e) as TimeLike
-        )
-        if (Number.isFinite(v)) out.systemOutTime = v
-      }
-      return out
-    })
+    const es: NormalizedEdge[] = (rawEdges ?? []).map((e, i) => normalizeProcessEdge(
+      e, getEdgeId(e, i), readChartAccessor(sourceAccessor, e), readChartAccessor(targetAccessor, e),
+      readChartAccessor(valueAccessor, e), readChartAccessor(startTimeAccessor, e), readChartAccessor(endTimeAccessor, e),
+      systemInTimeAccessor ? readChartAccessor(systemInTimeAccessor, e) : undefined,
+      systemOutTimeAccessor ? readChartAccessor(systemOutTimeAccessor, e) : undefined
+    ))
     const dom: [number, number] = [
       toProcessSankeyTime(rawDomain[0]),
       toProcessSankeyTime(rawDomain[1])

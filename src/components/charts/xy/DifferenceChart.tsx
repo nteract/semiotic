@@ -11,12 +11,14 @@ import {
   forwardRef,
   useRef,
   useState,
+  useSyncExternalStore,
+  useLayoutEffect,
   useImperativeHandle,
   useCallback
 } from "react"
 import StreamXYFrame from "../../stream/StreamXYFrame"
 import { ensureXYPlugin } from "../../stream/xyPlugins/registry"
-import { buildOverlayLineRows, differenceHoverScene } from "./differenceSeries"
+import { differenceHoverScene } from "./differenceSeries"
 import { mixedXYPlugin } from "../../stream/xyPlugins/mixedPlugin"
 import type {
   StreamXYFrameProps,
@@ -34,23 +36,16 @@ import {
 import { useChartSetup } from "../shared/useChartSetup"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import type { HoverData } from "../../realtime/types"
-import type { LegendGroup } from "../../types/legendTypes"
-import { computeDifferenceSegments } from "./differenceSegments"
+import { buildOverlayLineRows, createDifferenceProjection, differenceFrameAccessors } from "./differenceSegments"
+import { RingBuffer } from "../../realtime/RingBuffer"
+import { toIdSet } from "../../stream/pipelineIdentityOps"
+import { reserveChartRows } from "../shared/reserveChartRows"
 import { normalizeGradient, type GradientInput } from "../shared/gradient"
 import { wrapStyleWithSelection } from "../shared/selectionUtils"
 import { useSelectionAwareXYFrameStyles } from "../shared/useSelectionAwareFrameStyle"
 import { type StyleRule } from "../shared/styleRules"
-import {
-  buildDifferenceAreaStyle,
-  buildDifferenceLineStyle,
-  buildDifferencePointStyle
-} from "./differenceMarkStyle"
+import { buildDifferenceLegend, buildDifferenceStyles } from "./differenceMarkStyle"
 import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
-
-// Registered at render (not import) so unused charts stay tree-shakeable.
-function ensureDifferenceChartRegistrations(): void {
-  ensureXYPlugin(mixedXYPlugin)
-}
 
 export { computeDifferenceSegments } from "./differenceSegments"
 
@@ -126,42 +121,37 @@ export interface DifferenceChartProps<TDatum extends Datum = Datum>
   pointIdAccessor?: string | ((d: Datum) => string)
   /** Maximum number of raw rows kept in the push buffer. When exceeded,
    *  oldest rows are evicted FIFO (sliding window). Default: unbounded.
-   *  Recommended for long-running streams so the per-render segment
-   *  recomputation stays bounded. */
+   *  Limits retained samples for long-running streams. */
   windowSize?: number
   /** Pass-through StreamXYFrame props. */
   frameProps?: Partial<Omit<StreamXYFrameProps, "chartType" | "data" | "size">>
 }
 
-/**
- * Coerce an accessor result to a `number` the way the Stream Frame
- * pipeline does:
- *
- *   - `number` → passed through.
- *   - `Date` → `getTime()` (milliseconds), so `xScaleType="time"` users
- *     can pass `Date` objects through `xAccessor` without the segment
- *     algorithm silently dropping every row at the `Number.isFinite`
- *     guard. This matches `xExtent.ts` and the XY pipeline's time-axis
- *     handling.
- *   - numeric string (`"5"`, `"3.14"`) → parsed via `+v`. Common when
- *     consuming CSV or JSON that wasn't type-coerced upstream.
- *   - `null` / `undefined` / non-numeric string → `NaN`. The caller's
- *     `Number.isFinite` filter then drops the row cleanly.
- */
-function toNumber(v: unknown): number {
-  if (v == null) return NaN
-  if (typeof v === "number") return v
-  if (v instanceof Date) return v.getTime()
-  if (typeof v === "string") {
-    if (v.trim() === "") return NaN
-    const n = +v
-    return Number.isFinite(n) ? n : NaN
+function createPushRevision() {
+  let version = 0
+  let epoch = 0
+  let frame: number | undefined
+  let listener: (() => void) | undefined
+  return {
+    read: () => version,
+    get epoch() { return epoch },
+    changed(reset = false) {
+      if (reset) epoch++
+      version++
+      if (listener && frame === undefined) frame = requestAnimationFrame(() => {
+        frame = undefined
+        listener?.()
+      })
+    },
+    subscribe(callback: () => void) {
+      listener = callback
+      return () => {
+        if (frame !== undefined) cancelAnimationFrame(frame)
+        frame = undefined
+        listener = undefined
+      }
+    }
   }
-  return NaN
-}
-
-function useNumberAccessor<TDatum extends Datum>(accessor: ChartAccessor<TDatum, number>) {
-  return useMemo(() => (d: TDatum) => toNumber(typeof accessor === "function" ? accessor(d) : d[accessor]), [accessor])
 }
 
 /**
@@ -206,31 +196,14 @@ function useNumberAccessor<TDatum extends Datum>(accessor: ChartAccessor<TDatum,
 export const DifferenceChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ forwardRef(function DifferenceChart<
   TDatum extends Datum = Datum
 >(props: DifferenceChartProps<TDatum>, ref: React.Ref<RealtimeFrameHandle>) {
-  ensureDifferenceChartRegistrations()
+  ensureXYPlugin(mixedXYPlugin)
   const frameRef = useRef<StreamXYFrameHandle>(null)
 
-  const resolved = useChartMode(props.mode, {
-    width: props.width,
-    height: props.height,
-    showAxes: props.showAxes,
-    showGrid: props.showGrid,
-    enableHover: props.enableHover,
-    showLegend: props.showLegend,
-    title: props.title,
-    description: props.description,
-    summary: props.summary,
-    accessibleTable: props.accessibleTable,
-    xLabel: props.xLabel,
-    yLabel: props.yLabel,
-    mobileInteraction: props.mobileInteraction,
-    mobileSemantics: props.mobileSemantics,
-    responsiveRules: props.responsiveRules
-  })
+  const resolved = useChartMode(props.mode, props)
 
   const {
     data,
     margin: userMargin,
-    className,
     xFormat,
     yFormat,
     xAccessor = "x" as ChartAccessor<TDatum, number>,
@@ -275,53 +248,22 @@ export const DifferenceChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE
     showGrid,
     showLegend,
     title,
-    description,
-    summary,
-    accessibleTable,
     xLabel,
     yLabel
   } = resolved
 
-  // ── Resolve string accessors once ────────────────────────────────────
-  // Every accessor result flows through `toNumber` so `Date` (common for
-  // `xScaleType="time"`) and numeric-string fields (CSV / JSON without
-  // upstream type coercion) survive the `Number.isFinite` guards in
-  // segment computation. The raw-field cast still trips on object types
-  // it can't coerce — those produce `NaN` and the row is dropped cleanly.
-  const getX = useNumberAccessor(xAccessor)
-  const getA = useNumberAccessor(seriesAAccessor)
-  const getB = useNumberAccessor(seriesBAccessor)
-
-  // ── Push-mode raw data state ────────────────────────────────────────
-  // The HOC owns a copy of the raw rows so push/pushMany/clear can
-  // drive re-renders without going through the parent. Two-tier
-  // storage:
-  //   - `pushRowsRef` holds the LIVE array, mutated synchronously by
-  //     the imperative-handle methods. Reading it inside `remove()` /
-  //     `update()` returns the actually-removed records deterministically
-  //     even under React's concurrent batching (React may defer the
-  //     `setState` updater; the ref doesn't).
-  //   - `pushRows` is the state mirror that triggers re-renders. The
-  //     `sync()` helper updates both in lockstep so the ref never
-  //     diverges from the rendered value.
-  // When `data` is provided statically, push state is ignored — static
-  // and push modes are mutually exclusive.
-  const [pushRows, setPushRows] = useState<TDatum[]>([])
-  const pushRowsRef = useRef<TDatum[]>([])
-  const isPushMode = data == null
-
-  const safeData = useMemo(
-    () => filterSparseArray(isPushMode ? pushRows : data) as TDatum[],
-    [isPushMode, pushRows, data]
-  )
-
-  // ── Compute segmented + overlay rows ────────────────────────────────
-  const segmented = useMemo(
-    () => computeDifferenceSegments(safeData, getX, getA, getB),
-    [safeData, getX, getA, getB]
-  )
-  const getLineRows = useCallback(() => buildOverlayLineRows(safeData, getX, getA, getB),
-    [safeData, getX, getA, getB])
+  const [rows] = useState(() => new RingBuffer<TDatum>(1))
+  const [updates] = useState(createPushRevision)
+  const version = useSyncExternalStore(updates.subscribe, updates.read, updates.read)
+  useLayoutEffect(() => {
+    if (reserveChartRows(rows, 0, windowSize).length) updates.changed(true)
+  }, [rows, windowSize, updates])
+  const safeData = useMemo(() => filterSparseArray(data ?? rows.toArray()) as TDatum[],
+    [data, rows, version])
+  const projection = useMemo(() => createDifferenceProjection<TDatum>(xAccessor, seriesAAccessor, seriesBAccessor),
+    [xAccessor, seriesAAccessor, seriesBAccessor, data, updates.epoch])
+  const { segmented, areaGroups, points } = useMemo(() => projection.read(safeData), [projection, safeData])
+  const getLineRows = useCallback(() => buildOverlayLineRows(points), [points])
   const multiHoverScene = useMemo(() =>
     differenceHoverScene(showLines, getLineRows, seriesAColor, seriesBColor, curve),
     [showLines, getLineRows, seriesAColor, seriesBColor, curve])
@@ -330,114 +272,60 @@ export const DifferenceChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE
   const combined = useMemo(() => showLines ? [...segmented, ...getLineRows()] : segmented,
     [segmented, showLines, getLineRows])
 
-  // Array of area-group keys (each `seg-N-A`/`seg-N-B`). Line groups
-  // (`line-A`/`line-B`) are NOT in this list so they render as lines.
-  // Deduplicated via Set during the build (segments contain 2+ vertices
-  // per group); the StreamXYFrame prop is a string[] so we hand off the
-  // unique values.
-  const areaGroups = useMemo(() => {
-    const s = new Set<string>()
-    for (const r of segmented) s.add(r.__diffSegment)
-    return Array.from(s)
-  }, [segmented])
-
-  // ── Imperative handle (push API) ────────────────────────────────────
-  // All mutations route through `sync()` so the ref and state stay
-  // aligned. Return values are computed BEFORE the setState call so
-  // they're deterministic under React 18+ concurrent batching — the
-  // earlier pattern of building results inside the updater function
-  // could return empty arrays if React deferred or replayed the
-  // updater.
   useImperativeHandle(ref, () => {
-    const sync = (next: TDatum[]) => {
-      // FIFO window: when `windowSize` is set, evict the oldest rows so
-      // the segment recomputation cost on each render stays bounded.
-      // Without this, push streams accumulate forever even when the
-      // user has indicated a maximum buffer size via prop.
-      const trimmed =
-        windowSize && next.length > windowSize
-          ? next.slice(next.length - windowSize)
-          : next
-      pushRowsRef.current = trimmed
-      setPushRows(trimmed)
+    const matches = (id: string | string[]) => {
+      const ids = toIdSet(id)
+      return (row: TDatum) => ids.has(typeof pointIdAccessor === "function"
+        ? pointIdAccessor(row) : row[pointIdAccessor as string] as string)
     }
-    const resolveId = pointIdAccessor
-      ? typeof pointIdAccessor === "function"
-        ? pointIdAccessor
-        : (d: Datum) => d[pointIdAccessor as string] as string
-      : null
+    const pushMany = (batch: Datum[]) => {
+      const trimmed = reserveChartRows(rows, batch.length, windowSize)
+      const evicted = rows.pushMany(batch as TDatum[])
+      updates.changed(Boolean(trimmed.length || evicted.length))
+    }
     return {
-      push: (point) => sync([...pushRowsRef.current, point as TDatum]),
-      pushMany: (points) =>
-        sync([...pushRowsRef.current, ...(points as TDatum[])]),
-      remove: (id) => {
-        if (!resolveId) return []
-        const ids = Array.isArray(id) ? id : [id]
-        const removed: TDatum[] = []
-        const next: TDatum[] = []
-        for (const d of pushRowsRef.current) {
-          if (ids.includes(resolveId(d))) removed.push(d)
-          else next.push(d)
-        }
-        sync(next)
+      push: (row) => pushMany([row]),
+      pushMany,
+      remove(id) {
+        const removed = pointIdAccessor ? rows.remove(matches(id)) : []
+        if (removed.length) updates.changed(true)
         return removed
       },
-      update: (id, updater) => {
-        if (!resolveId) return []
-        const ids = Array.isArray(id) ? id : [id]
+      update(id, updater) {
         const updated: TDatum[] = []
-        const next: TDatum[] = pushRowsRef.current.map((d) => {
-          if (ids.includes(resolveId(d))) {
-            const newD = updater(d) as TDatum
-            updated.push(newD)
-            return newD
-          }
-          return d
-        })
-        sync(next)
-        return updated
+        if (!pointIdAccessor) return updated
+        let edited = false
+        try {
+          rows.update(matches(id), row => {
+            edited = true
+            const next = updater(row) as TDatum
+            updated.push(next)
+            return next
+          })
+          return updated
+        } finally {
+          if (edited) updates.changed(true)
+        }
       },
-      clear: () => sync([]),
-      getData: () => (isPushMode ? pushRowsRef.current : safeData) as Datum[],
+      clear() {
+        rows.clear()
+        updates.changed(true)
+      },
+      getData: () => data == null ? rows.toArray() : safeData,
       getScales: () => frameRef.current?.getScales() ?? null
     }
-  }, [isPushMode, safeData, pointIdAccessor, windowSize])
+  }, [rows, data, safeData, pointIdAccessor, windowSize, updates])
 
-  // Custom two-item legend keyed to series labels, not the internal
-  // segment keys. Defaults to ON (two series always merits a legend);
-  // skipped entirely when the user explicitly passes `showLegend={false}`.
-  //
-  // The legend renderer takes the swatch color from `styleFn(item).fill`,
-  // not from `item.color` — `item.color` is just metadata for downstream
-  // consumers like custom hover handlers. Read each item's color back out
-  // of the styleFn so the swatch matches the series fill.
-  const customLegend = useMemo(() => {
-    if (showLegend === false) return undefined
-    const groups: LegendGroup[] = [
-      {
-        label: "",
-        type: "fill",
-        styleFn: (item) => ({ fill: (item.color as string) || "currentColor" }),
-        items: [
-          { label: seriesALabel, color: seriesAColor },
-          { label: seriesBLabel, color: seriesBColor }
-        ]
-      }
-    ]
-    return { legendGroups: groups }
-  }, [showLegend, seriesALabel, seriesBLabel, seriesAColor, seriesBColor])
+  const seriesLegend = useMemo(
+    () => buildDifferenceLegend(seriesALabel, seriesAColor, seriesBLabel, seriesBColor),
+    [seriesALabel, seriesAColor, seriesBLabel, seriesBColor]
+  )
 
   // ── Setup (margin, selection, hover behavior) ────────────────────────
   // colorBy is set to `__diffWinner` so hover/selection retain a categorical
   // field, while this custom two-series legend remains the exact legend that
   // shared setup measures and hands to StreamXYFrame. `frameProps.legend`
   // still owns the final escape hatch.
-  const effectiveFrameLegend = Object.hasOwn(frameProps, "legend")
-    ? frameProps
-    : {
-        legend: customLegend,
-        ...frameProps
-      }
   const setup = useChartSetup({
     responsive: props,
     data: safeData,
@@ -446,11 +334,10 @@ export const DifferenceChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE
     colorScheme: [seriesAColor, seriesBColor],
     legendInteraction,
     legendPosition: legendPositionProp,
-    frameLegend: effectiveFrameLegend,
+    frameLegend: { legend: showLegend === false ? undefined : seriesLegend, ...frameProps },
     selection,
     linkedHover,
     fallbackFields: ["__diffWinner"],
-    unwrapData: false,
     onObservation,
     onClick,
     hoverHighlight,
@@ -476,11 +363,7 @@ export const DifferenceChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE
   // Fill segments, source lines and points share winner colors and selection.
   const [selectedAreaStyle, selectedLineStyle, selectedPointStyle] = useMemo(() => {
     const options = { seriesAColor, seriesBColor, areaOpacity, lineWidth, pointRadius, styleRules }
-    return [
-      buildDifferenceAreaStyle(options),
-      buildDifferenceLineStyle(options),
-      buildDifferencePointStyle(options)
-    ].map(style => wrapStyleWithSelection(style, setup.effectiveSelectionHook, setup.resolvedSelection))
+    return buildDifferenceStyles(options).map(style => wrapStyleWithSelection(style, setup.effectiveSelectionHook, setup.resolvedSelection))
   }, [seriesAColor, seriesBColor, areaOpacity, lineWidth, pointRadius, styleRules, setup.effectiveSelectionHook, setup.resolvedSelection])
   const frameStyles = useSelectionAwareXYFrameStyles(frameProps, setup.effectiveSelectionHook, setup.resolvedSelection)
 
@@ -498,27 +381,18 @@ export const DifferenceChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE
       const xVal = (hover.xValue ?? hd?.__x) as number | undefined
       const seriesValue = (group: string, fallback: number | undefined) => {
         const value = hover.allSeries?.find(row => row.group === group)?.value
-        return value !== undefined && Number.isFinite(value) ? value : fallback
+        return Number.isFinite(value) ? value : fallback
       }
       let aVal = seriesValue("line-A", hd?.__valA)
       let bVal = seriesValue("line-B", hd?.__valB)
       if (xVal != null && (aVal == null || bVal == null)) {
-        const source = safeData.find((d) => getX(d) === xVal)
-        if (source) {
-          if (aVal == null) aVal = getA(source)
-          if (bVal == null) bVal = getB(source)
-        }
+        const point = points.find((sample) => sample.x === xVal)
+        aVal ??= point?.a
+        bVal ??= point?.b
       }
       const fmt = (v: number | undefined) =>
-        v == null || !Number.isFinite(v)
-          ? "—"
-          : (Math.round(v * 100) / 100).toString()
-      const fmtX =
-        xFormat && xVal != null
-          ? xFormat(xVal)
-          : xVal != null
-            ? String(xVal)
-            : ""
+        Number.isFinite(v) ? String(Math.round(v! * 100) / 100) : "—"
+      const fmtX = xVal == null ? "" : (xFormat ?? String)(xVal)
       // Use `defaultTooltipStyle` + the `semiotic-tooltip` className so the
       // tooltip picks up the standard chrome (background, padding, shadow,
       // theme-aware text color) instead of rendering as a transparent
@@ -530,33 +404,24 @@ export const DifferenceChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE
           {fmtX && (
             <div style={{ fontWeight: 600, marginBottom: 4 }}>{fmtX}</div>
           )}
-          {([[seriesALabel, seriesAColor, aVal], [seriesBLabel, seriesBColor, bVal]] as const).map(([label, color, value], i) => (
+          {seriesLegend.legendGroups[0].items.map(({ label, color }, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <span style={{ width: 10, height: 10, background: color, display: "inline-block", borderRadius: 2 }} />
-              <span>{label}: {fmt(value)}</span>
+              <span>{label}: {fmt(i === 0 ? aVal : bVal)}</span>
             </div>
           ))}
-          {aVal != null &&
-            bVal != null &&
-            Number.isFinite(aVal) &&
-            Number.isFinite(bVal) && (
+          {Number.isFinite(aVal) && Number.isFinite(bVal) && (
               <div style={{ marginTop: 4, opacity: 0.7 }}>
-                Δ = {fmt(aVal - bVal)}
+                Δ = {fmt(aVal! - bVal!)}
               </div>
             )}
         </div>
       )
     },
     [
-      safeData,
-      getX,
-      getA,
-      getB,
+      points,
       xFormat,
-      seriesAColor,
-      seriesBColor,
-      seriesALabel,
-      seriesBLabel
+      seriesLegend
     ]
   )
 
@@ -596,12 +461,8 @@ export const DifferenceChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE
   // boundary), and the two `line-*` groups render as continuous lines.
   // All groups share the same x/y scale so geometry aligns perfectly.
   const streamProps: StreamXYFrameProps = {
-    chartType: "mixed",
+    ...differenceFrameAccessors,
     data: combined,
-    xAccessor: "__x",
-    yAccessor: "__y",
-    y0Accessor: "__y0",
-    groupAccessor: "__diffSegment",
     areaGroups,
     curve,
     areaStyle: selectedAreaStyle,
@@ -620,30 +481,10 @@ export const DifferenceChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE
     showGrid,
     ...(normalizedGradientFill && { gradientFill: normalizedGradientFill }),
     ...setup.legendBehaviorProps,
-    ...buildBaseMetadataProps({
-      title,
-      description,
-      summary,
-      accessibleTable,
-      className,
-      animate: props.animate,
-      maxDevicePixelRatio: props.maxDevicePixelRatio,
-      axisExtent: props.axisExtent,
-      autoPlaceAnnotations: props.autoPlaceAnnotations
-    }),
+    ...buildBaseMetadataProps({ ...props, ...resolved }),
     ...tooltipProps,
     multiHoverScene,
-    ...buildCustomBehaviorProps({
-      linkedHover,
-      selection,
-      onObservation,
-      onClick,
-      hoverHighlight,
-      hoverRadius: props.hoverRadius,
-      mobileInteraction: setup.mobileInteraction,
-      customHoverBehavior: setup.customHoverBehavior,
-      customClickBehavior: setup.customClickBehavior
-    }),
+    ...buildCustomBehaviorProps({ ...props, ...setup }),
     ...(annotations && annotations.length > 0 && { annotations }),
     ...(xExtent && { xExtent }),
     ...(yExtent && { yExtent }),

@@ -38,6 +38,10 @@ export function buildEdgeIndex(
   return { incoming, outgoing }
 }
 
+function oppositeSide(side: AttachmentSide): AttachmentSide {
+  return side === "top" ? "bot" : "top"
+}
+
 export function assignSides(
   nodes: ProcessSankeyNode[],
   edges: ProcessSankeyEdge[],
@@ -139,46 +143,17 @@ export function computeNode(
       a.side !== b.side
     )
       return 0
-    if (a.kind === "out") {
-      // If both ends are tied at the same node there is no stable far-end
-      // order to copy. Keeping the id order avoids a symmetric flip-flop.
-      if (a.edge.target === b.edge.target && a.edge.endTime === b.edge.endTime)
-        return 0
-      const aY = endpointPositions.get(a.edge.id)?.target
-      const bY = endpointPositions.get(b.edge.id)?.target
-      if (
-        typeof aY !== "number" ||
-        !Number.isFinite(aY) ||
-        typeof bY !== "number" ||
-        !Number.isFinite(bY) ||
-        aY === bY
-      )
-        return 0
-      // OUT slots are allocated outside-in: top grows upward, bottom grows
-      // downward. Sort in the corresponding screen-space direction so the
-      // departure order copies the already-resolved target order.
-      return a.side === "top" ? aY - bY : bY - aY
-    }
-    if (a.kind === "in") {
-      if (
-        a.edge.source === b.edge.source &&
-        a.edge.startTime === b.edge.startTime
-      )
-        return 0
-      const aY = endpointPositions.get(a.edge.id)?.source
-      const bY = endpointPositions.get(b.edge.id)?.source
-      if (
-        typeof aY !== "number" ||
-        !Number.isFinite(aY) ||
-        typeof bY !== "number" ||
-        !Number.isFinite(bY) ||
-        aY === bY
-      )
-        return 0
-      // IN slots are allocated inside-out, the inverse of OUT slots.
-      return a.side === "top" ? bY - aY : aY - bY
-    }
-    return 0
+    if (a.kind !== "out" && a.kind !== "in") return 0
+    const outgoing = a.kind === "out"
+    const endpoint = outgoing ? "target" : "source"
+    const time = outgoing ? "endTime" : "startTime"
+    // Identical far endpoints keep their stable ID order.
+    if (a.edge[endpoint] === b.edge[endpoint] && a.edge[time] === b.edge[time]) return 0
+    const aY = endpointPositions.get(a.edge.id)?.[endpoint]
+    const bY = endpointPositions.get(b.edge.id)?.[endpoint]
+    if (aY == null || bY == null || !Number.isFinite(aY) || !Number.isFinite(bY)) return 0
+    // Arrivals fill inside-out and departures empty outside-in.
+    return outgoing === (a.side === "top") ? aY - bY : bY - aY
   }
   const sortEvents = () => {
     events.sort(
@@ -198,19 +173,11 @@ export function computeNode(
   // other side if available; if a deficit remains, batch a `create`
   // event at `xExtent[0] - 1` (or `firstEventTime - 1`) so the band
   // reads as one continuous mass through the whole lifetime.
-  const firstEventTime: number | null = events.length
-    ? getMin(events.map((e) => e.time))
-    : null
-  const xStart: number | null =
-    Array.isArray(node.xExtent) && Number.isFinite(node.xExtent[0])
-      ? node.xExtent[0]
-      : null
-  const batchTime: number | null =
-    xStart != null
-      ? xStart - 1
-      : firstEventTime != null && Number.isFinite(firstEventTime)
-        ? firstEventTime - 1
-        : null
+  const extent = Array.isArray(node.xExtent) ? node.xExtent : []
+  const xStart = Number.isFinite(extent[0]) ? extent[0] : null
+  const xEnd = Number.isFinite(extent[1]) ? extent[1] : null
+  const firstTime = xStart ?? getMin(events.map(event => event.time))
+  const batchTime = firstTime - 1
   sortEvents()
 
   // Give real events at the same time a stable execution order before adding
@@ -245,17 +212,14 @@ export function computeNode(
   })
 
   const synthesized: NodeEvent[] = []
-  let simTop = 0,
-    simBot = 0
+  const balance = { top: 0, bot: 0 }
   for (const e of events) {
     if (e.kind === "out") {
       const value = Math.abs(e.delta)
-      const sideMass = e.side === "top" ? simTop : simBot
-      let deficit = value - sideMass
+      let deficit = value - balance[e.side]
       if (deficit > 0) {
-        const otherSide: AttachmentSide = e.side === "top" ? "bot" : "top"
-        const otherMass = otherSide === "top" ? simTop : simBot
-        const transfer = Math.min(deficit, otherMass)
+        const otherSide = oppositeSide(e.side)
+        const transfer = Math.min(deficit, balance[otherSide])
         if (transfer > 0) {
           const placement = transferPlacementFor(e)
           synthesized.push({
@@ -270,29 +234,23 @@ export function computeNode(
             kind: "transfer-in",
             side: e.side
           })
-          if (otherSide === "top") simTop -= transfer
-          else simBot -= transfer
-          if (e.side === "top") simTop += transfer
-          else simBot += transfer
+          balance[otherSide] -= transfer
+          balance[e.side] += transfer
           deficit -= transfer
         }
-        if (deficit > 0 && batchTime !== null) {
+        if (deficit > 0 && Number.isFinite(batchTime)) {
           synthesized.push({
             time: batchTime,
             delta: +deficit,
             kind: "create",
             side: e.side
           })
-          if (e.side === "top") simTop += deficit
-          else simBot += deficit
+          balance[e.side] += deficit
         }
       }
-      if (e.side === "top") simTop -= value
-      else simBot -= value
+      balance[e.side] -= value
     } else if (e.kind === "in") {
-      const value = Math.abs(e.delta)
-      if (e.side === "top") simTop += value
-      else simBot += value
+      balance[e.side] += Math.abs(e.delta)
     }
   }
 
@@ -394,10 +352,6 @@ export function computeNode(
   // inventory lifetime so per-edge gradient stubs have a surface to render
   // onto. Event states inside the authored transfer window stay unchanged;
   // the appropriate outer non-zero state is replayed to the lifecycle bound.
-  const xEnd: number | null =
-    Array.isArray(node.xExtent) && Number.isFinite(node.xExtent[1])
-      ? node.xExtent[1]
-      : null
   let earliestSystemIn = Infinity
   for (const edge of outgoing) {
     const time = edge.systemInTime
@@ -428,7 +382,6 @@ export function computeNode(
     // it opens the rail but does not invent stock before a real arrival.
     if (
       xStart != null &&
-      Number.isFinite(xStart) &&
       xStart < first.t &&
       hasInventory(first)
     ) {
@@ -576,7 +529,7 @@ export function assignSameSlotHandoffSides(
     side: AttachmentSide,
     value: number
   ): void => {
-    const other: AttachmentSide = side === "top" ? "bot" : "top"
+    const other = oppositeSide(side)
     const local = Math.min(value, state[side])
     state[side] -= local
     const remainder = value - local
@@ -632,7 +585,7 @@ export function rebalanceOutgoingSides(
       const top = outgoing.top - incoming.top
       const bottom = outgoing.bot - incoming.bot
       const fromSide = top > 0 ? "top" : "bot"
-      const toSide = fromSide === "top" ? "bot" : "top"
+      const toSide = oppositeSide(fromSide)
       const move = fromSide === "top" ? Math.min(top, -bottom) : Math.min(bottom, -top)
       if (!(move > 0)) break
       const candidates = out
