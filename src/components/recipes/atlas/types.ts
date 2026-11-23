@@ -83,6 +83,8 @@ export type DisplayForestSpec =
     }
 
 export type SharedPartitionComparison = {
+  outcomeMeasureIds?: string[]
+  motifTemplates?: MotifTemplate[]
   partitions: string[]
   denominatorMeasureId: string
   referencePartition?: string
@@ -223,10 +225,7 @@ export type PrefixForest = {
   referencePartition?: string
 }
 
-export type PreparedComparison = {
-  partitions: string[]
-  denominatorMeasureId: string
-  referencePartition?: string
+export type PreparedComparison = SharedPartitionComparison & {
   rows: Array<{
     partition: string
     assigned: number

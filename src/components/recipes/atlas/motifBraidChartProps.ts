@@ -1,7 +1,7 @@
 import type { NetworkCustomChartProps } from "../../charts/custom/NetworkCustomChart"
 import { atlasLinkedHover, type AtlasChartOptions } from "./atlasChartOptions"
-import { prepareMotifBraid } from "./braid"
-import { motifBraidLayout } from "./motifBraidLayout"
+import { prepareBraidGeometry } from "./braid"
+import { layoutBraidGeometry } from "./motifBraidLayout"
 import type { PreparedNetworkAtlas } from "./types"
 
 export type MotifBraidChartProps = AtlasChartOptions & {
@@ -21,7 +21,7 @@ export type MotifBraidChartProps = AtlasChartOptions & {
 /** Shared client/static reader contract; atlas analysis precedes rendering. */
 export function motifBraidChartProps(
   { atlas, linkedHover, ...props }: MotifBraidChartProps,
-  braid = prepareMotifBraid(atlas)
+  braid = prepareBraidGeometry(atlas)
 ) {
   return {
     ...props,
@@ -36,7 +36,7 @@ export function motifBraidChartProps(
     accessibleTable: props.accessibleTable ?? true,
     nodes: braid.sceneSeeds.nodes,
     edges: braid.sceneSeeds.edges,
-    layout: motifBraidLayout,
+    layout: layoutBraidGeometry,
     layoutConfig: { braid }
   }
 }

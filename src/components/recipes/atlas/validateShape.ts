@@ -11,6 +11,22 @@ type Rule =
   | readonly string[]
 const countUnits = ["entity", "occurrence", "embedding", "work-item"]
 
+const sourceRowRules: Record<string, Record<string, Rule>> = {
+  nodes: {
+    id: "string",
+    "sectionId?": "string",
+    "completeness?": ["known", "unknown", "incomplete", "truncated", "unsupported-template"]
+  },
+  edges: { id: "string", source: "string", target: "string" },
+  measureValues: {
+    measureId: "string", subjectId: "string", status: ["exact", "estimated", "unknown", "incomplete"]
+  },
+  occurrences: {
+    id: "string", entityId: "string", complete: "boolean",
+    "missingPrehistory?": "boolean", "entityCount?": "count", "partition?": "string"
+  }
+}
+
 function matches(value: unknown, rule: Rule): boolean {
   if (Array.isArray(rule)) return rule.includes(value)
   if (rule === "strings")
@@ -118,6 +134,8 @@ export function validateAtlasShape(
       {
         partitions: "strings",
         denominatorMeasureId: "string",
+        "outcomeMeasureIds?": "strings",
+        "motifTemplates?": "strings",
         "referencePartition?": "string"
       },
       "comparison"
@@ -154,42 +172,13 @@ export function validateAtlasShape(
       (temporal.end as number) < (temporal.start as number))
   )
     reject("temporal", "window bounds", "finite and ordered")
-  for (const key of ["nodes", "edges", "measureValues", "occurrences"]) {
+  for (const [key, rules] of Object.entries(sourceRowRules)) {
     const rows = data[key]
     if (key === "occurrences" && rows === undefined) continue
     if (!Array.isArray(rows)) {
       reject("source-shape", key, "an array")
       continue
     }
-    const rules: Record<string, Rule> =
-      key === "nodes"
-        ? {
-            id: "string",
-            "sectionId?": "string",
-            "completeness?": [
-              "known",
-              "unknown",
-              "incomplete",
-              "truncated",
-              "unsupported-template"
-            ]
-          }
-        : key === "edges"
-          ? { id: "string", source: "string", target: "string" }
-          : key === "measureValues"
-            ? {
-                measureId: "string",
-                subjectId: "string",
-                status: ["exact", "estimated", "unknown", "incomplete"]
-              }
-            : {
-                id: "string",
-                entityId: "string",
-                complete: "boolean",
-                "missingPrehistory?": "boolean",
-                "entityCount?": "count",
-                "partition?": "string"
-              }
     for (const row of rows) {
       if (
         !check(
