@@ -179,6 +179,12 @@ describe("forceLayout", () => {
     expect(c).not.toEqual(a)
   })
 
+  it("preserves the layout when self-loops are added", () => {
+    const options = { seed: 2, iterations: 40 }
+    expect(forceLayout(NODES, [...EDGES, { source: "A", target: "A" }], options))
+      .toEqual(forceLayout(NODES, EDGES, options))
+  })
+
   it("centers a graph with a single node", () => {
     expect(forceLayout([{ id: "only" }], [], { seed: 1 }).only).toEqual({
       x: 0.5,

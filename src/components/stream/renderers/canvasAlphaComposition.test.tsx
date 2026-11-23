@@ -521,6 +521,15 @@ it("keeps overlapping points separate when the frame is translucent", () => {
   expect(fills).toEqual([0.3, 0.3])
 })
 
+it("pulses an open curved link along its stroke", () => {
+  const { ctx, fills, strokes } = recordingContext(0.5)
+  networkEdgeRenderer(ctx, [{
+    type: "curved", pathD: "M10,10 Q30,40 50,10", style: { stroke: "red" }, datum: {}, _pulseIntensity: 1,
+  }])
+  expect(strokes).toEqual([0.5, 0.2])
+  expect(fills).toEqual([])
+})
+
 it("dims independent pulse overlays by the frame alpha", () => {
   const { ctx, fills } = recordingContext(0.3)
   barCanvasRenderer(
