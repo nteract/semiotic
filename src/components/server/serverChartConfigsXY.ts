@@ -167,12 +167,16 @@ function buildShowPointsStyle(
     ? createColorScale(colorRows, colorKey, resolvedColorScheme as string | string[] | Record<string, string>)
     : undefined
   const r = typeof rest.pointRadius === "number" ? rest.pointRadius : 3
-  return (d: Datum) => {
+  const base = (d: Datum) => {
     const color = colorBy && colorScale
       ? getColor(d, colorBy as string | ((datum: Datum) => string), colorScale)
       : typeof rest.color === "string" ? rest.color : DEFAULT_COLOR
     return { r, fill: color, stroke: "none" }
   }
+  const ruled = composeStyleRules(base, rest.styleRules, makeXYRuleContext(
+    rest.xAccessor ?? "x", rest.yAccessor ?? "y"
+  ))
+  return mergeShapeStyle(ruled, primitiveStyleOverrides(rest))
 }
 
 export const lineChart: ChartConfig = {

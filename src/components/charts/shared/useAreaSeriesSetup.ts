@@ -1,35 +1,3 @@
-/**
- * useAreaSeriesSetup — shared series construction for area-shaped XY HOCs.
- *
- * AreaChart and StackedAreaChart both follow the same recipe to turn a
- * flat data array (or pre-grouped area objects) into the props
- * `StreamXYFrame` expects:
- *
- *   1. **Area-format detection + grouping** — if `data[0][lineDataAccessor]`
- *      is set, the input is already in `{ [groupKey]: rows[] }` shape;
- *      otherwise group by `areaBy` (or wrap in a single-area object
- *      when neither is supplied).
- *   2. **Flatten back** — `StreamXYFrame` consumes a flat array; we
- *      re-flatten the grouped form, re-injecting the `areaBy` field so
- *      the frame's group accessor can re-derive series.
- *   3. **Line style** — fill/stroke from `colorBy`+`colorScale` or
- *      uniform-`color` fallback, `fillOpacity = areaOpacity`,
- *      stroke/lineWidth gated on `showLine`. Push-mode with `colorBy`
- *      but no `colorScale` returns an empty style so the frame can
- *      paint from its own palette.
- *   4. **Primitive overlay + selection wrap** — top-level
- *      `stroke`/`strokeWidth`/`opacity` win via `mergeShapeStyle`;
- *      then `wrapStyleWithSelection` dims unmatched series when a
- *      selection is active.
- *   5. **Optional point style** — same color resolution as line style
- *      but with `r: pointRadius, fillOpacity: 1`. Skipped when
- *      `showPoints` is false.
- *   6. **Default tooltip content** — `buildDefaultTooltip` rows for
- *      x / y / group with `xFormat`/`yFormat` cascading through.
- *
- * This hook collapses those six steps into one call. Adopters drop
- * ~70 lines of recipe per HOC.
- */
 "use client"
 import { useMemo } from "react"
 import type { ReactNode } from "react"
@@ -38,6 +6,8 @@ import { prepareAreaSeriesData } from "./areaSeriesData"
 import type { Accessor, ChartAccessor } from "./types"
 import type { SelectionHookResult } from "./selectionUtils"
 import { wrapStyleWithSelection } from "./selectionUtils"
+import { useXYPointStyle, seriesPointColorDatum } from "./useXYPointStyle"
+import { selectionDatumWithParent } from "../../store/selectionProvenance"
 import { mergeShapeStyle } from "./mergeShapeStyle"
 import { getColor } from "./colorUtils"
 import { DEFAULT_COLOR } from "./hooks"
@@ -133,7 +103,7 @@ export interface AreaSeriesSetupResult<TDatum extends Datum = Datum> {
   lineStyle: (d: Datum) => Record<string, AreaStyleValue>
   /** Selection-aware point style fn — `undefined` when `showPoints`
    *  is false so the HOC can spread it conditionally. */
-  pointStyle: ((d: Datum) => Record<string, string | number>) | undefined
+  pointStyle: ReturnType<typeof useXYPointStyle> | undefined
   /** Default tooltip content fn for the chart. */
   defaultTooltipContent: (hover: HoverData) => ReactNode
 }
@@ -183,7 +153,6 @@ export function useAreaSeriesSetup<TDatum extends Datum = Datum>(
     return prepareAreaSeriesData({ data, safeData, areaBy, lineDataAccessor })
   }, [data, safeData, areaBy, lineDataAccessor])
 
-  // 3 — base line/area style
   const baseLineStyle = useMemo(() => {
     return (d: Datum) => {
       const baseStyle: Record<string, AreaStyleValue> = {}
@@ -236,7 +205,6 @@ export function useAreaSeriesSetup<TDatum extends Datum = Datum>(
     ruleContext
   ])
 
-  // 4 — primitive overlay + selection wrap
   const baseLineStyleWithPrimitives = useMemo(
     () => mergeShapeStyle(baseLineStyle, { stroke, strokeWidth, opacity }),
     [baseLineStyle, stroke, strokeWidth, opacity]
@@ -252,25 +220,14 @@ export function useAreaSeriesSetup<TDatum extends Datum = Datum>(
     [baseLineStyleWithPrimitives, effectiveSelectionHook, resolvedSelection]
   )
 
-  // 5 — optional point style
-  const pointStyle = useMemo(() => {
-    if (!showPoints) return undefined
-    return (d: Datum) => {
-      const baseStyle: Record<string, string | number> = {
-        r: pointRadius,
-        fillOpacity: 1
-      }
-      if (colorBy) {
-        if (colorScale)
-          baseStyle.fill = getColor(d.parentLine || d, colorBy, colorScale)
-      } else {
-        baseStyle.fill = color || DEFAULT_COLOR
-      }
-      return baseStyle
-    }
-  }, [showPoints, pointRadius, colorBy, colorScale, color])
+  const pointStyle = useXYPointStyle({
+    colorBy, colorScale, color, pointRadius,
+    colorDatumAccessor: seriesPointColorDatum,
+    selectionDatumAccessor: selectionDatumWithParent,
+    stroke, strokeWidth, opacity, styleRules, ruleContext,
+    effectiveSelectionHook, resolvedSelection
+  })
 
-  // 6 — default tooltip content
   const defaultTooltipContent = useMemo(
     () =>
       buildDefaultTooltip([
@@ -309,5 +266,5 @@ export function useAreaSeriesSetup<TDatum extends Datum = Datum>(
     ]
   )
 
-  return { flattenedData, lineStyle, pointStyle, defaultTooltipContent }
+  return { flattenedData, lineStyle, pointStyle: showPoints ? pointStyle : undefined, defaultTooltipContent }
 }

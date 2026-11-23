@@ -37,6 +37,8 @@ import type { HatchFill } from "./hatchFill"
 type PointStyleValue = string | number | HatchFill | CanvasPattern | undefined
 type PointStyleObject = Record<string, PointStyleValue>
 
+export const seriesPointColorDatum = (datum: Datum): Datum => datum.parentLine || datum
+
 export interface XYPointStyleOptions {
   /** colorBy accessor — string field name or function. */
   colorBy?: Accessor<string> | ChartAccessor<Datum, string>

@@ -266,6 +266,20 @@ describe("useAreaSeriesSetup", () => {
       expect(style.fillOpacity).toBe(1)
     })
 
+    it("lets the frame color pushed points unless a style rule supplies their fill", () => {
+      const { result } = renderHook(() => useAreaSeriesSetup({
+        ...baseInput,
+        safeData: [],
+        data: undefined,
+        colorBy: "group",
+        showPoints: true,
+        styleRules: [{ when: { field: "y", gt: 5 }, style: { fill: "gold" } }]
+      }), { wrapper })
+      const style = result.current.pointStyle!
+      expect(style({ group: "A", y: 2 }).fill).toBeUndefined()
+      expect(style({ group: "A", y: 8 }).fill).toBe("gold")
+    })
+
     it("uses parentLine for color when present (stacked-area row)", () => {
       const colorScale = (v: string) => `c-${v}`
       const { result } = renderHook(
