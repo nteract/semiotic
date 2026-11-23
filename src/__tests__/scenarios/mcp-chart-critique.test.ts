@@ -174,7 +174,8 @@ describe("developer MCP chart critique", () => {
 
   it.each(["coordinates", "observations"])("scores the observations in a line's %s array", async key => {
     const report = await critique("LineChart", {
-      data: [{ label: "North", [key]: [{ x: 1, y: 10 }, { x: 2, y: 20 }] }],
+      data: [null, { label: "North", [key]: [{ x: 1, y: 10 }, { x: 2, y: 20 }] }],
+      xAccessor: "x", yAccessor: "y",
       ...(key === "coordinates" ? {} : { lineDataAccessor: key }), lineBy: "label"
     }, "trend")
     expect(report.structuredContent).toMatchObject({ configurationValid: true, fit: { status: "ok" } })
@@ -183,8 +184,9 @@ describe("developer MCP chart critique", () => {
   it.each(["AreaChart", "StackedAreaChart", "MinimapChart"])("profiles the plotted observations and groups of nested %s series", async component => {
     const count = component === "MinimapChart" ? 32 : 4
     const observations = Array.from({ length: count }, (_, x) => ({ x, y: x + 1, region: "point group" }))
+    const series = [{ region: "East", observations }, { region: "West", observations }]
     const props = {
-      data: [{ region: "East", observations }, { region: "West", observations }],
+      data: [null, ...series],
       lineDataAccessor: "observations", [component === "MinimapChart" ? "lineBy" : "areaBy"]: "region",
       xAccessor: "x", yAccessor: "y"
     }
@@ -198,7 +200,7 @@ describe("developer MCP chart critique", () => {
         ? [...Array(count).fill("East"), ...Array(count).fill("West")]
         : Array(count * 2).fill("point group")
     )
-    const grouped = props.data.map(({ region, observations }) => ({
+    const grouped = series.map(({ region, observations }) => ({
       region, observations: observations.map(({ x, y }) => ({ x, y }))
     }))
     const result = await critique(component, { ...props, data: grouped }, "trend")

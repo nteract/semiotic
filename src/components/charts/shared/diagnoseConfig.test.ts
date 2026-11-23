@@ -146,6 +146,11 @@ describe("diagnoseConfig", () => {
       ...(component === "StackedAreaChart" ? { areaBy: "group" } : {}) }
     expect(validateProps(component, props).valid).toBe(true)
     expect(diagnoseConfig(component, props).diagnoses.map(issue => issue.code)).not.toContain("ACCESSOR_MISSING")
+    for (const gap of [[null], Array(2)]) {
+      const sparse = { ...props, data: gap.concat(props.data) }
+      expect(validateProps(component, sparse).valid).toBe(true)
+      expect(diagnoseConfig(component, sparse).diagnoses.map(issue => issue.code)).not.toContain("ACCESSOR_MISSING")
+    }
     const invalid = { ...props, xAccessor: "group" }
     expect(validateProps(component, invalid).errors.join(" ")).toContain('xAccessor "group" not found')
     expect(diagnoseConfig(component, invalid).diagnoses).toContainEqual(expect.objectContaining({ code: "ACCESSOR_MISSING" }))

@@ -17,7 +17,7 @@ export function sampleDataRecords(data: readonly unknown[], seriesField?: string
     data.length <= 3
       ? data
       : [data[0], data[Math.floor(data.length / 2)], data[data.length - 1]]
-  const nested = seriesField && Array.isArray((data[0] as Datum | undefined)?.[seriesField]) ? seriesField : undefined
+  const nested = seriesField && Array.isArray(data.find(isDataRecord)?.[seriesField]) ? seriesField : undefined
   const inspect = (rows: readonly unknown[]) => {
     const records = rows.filter(isDataRecord)
     return nested ? records.flatMap(row => Array.isArray(row[nested]) ? sampleDataRecords(row[nested]) : []) : records
