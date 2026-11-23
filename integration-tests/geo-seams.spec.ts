@@ -202,10 +202,10 @@ test("panning a zoomed map keeps keyboard focus on the visible Pacific polygon",
   await page.mouse.move(bounds.x + 420, bounds.y + 150, { steps: 6 })
   await page.mouse.up()
   await expect.poll(() => frame.getAttribute("data-camera")).not.toBe(camera)
-  await chart.focus()
-  await page.keyboard.press("Home")
-  for (let i = 0; i < 4 && (await tip.textContent()) !== "Pacific reserve"; i++) {
-    await page.keyboard.press("ArrowRight")
+  await page.mouse.move(0, 0)
+  await chart.press("Home")
+  for (let i = 0; i < 4 && !(await tip.allTextContents()).includes("Pacific reserve"); i++) {
+    await chart.press("ArrowRight")
   }
   await expect(tip).toHaveText("Pacific reserve")
   const anchor = await tip.locator("span").evaluate(node => ({

@@ -20,6 +20,30 @@ const styles = ["basic", "arc", "offset"] as const
 const lineTypes = ["geo", "line"] as const
 const hitContext = document.createElement("canvas").getContext("2d")!
 
+describe("geographic route styling at the clip extent", () => {
+  const extent: [[number, number], [number, number]] = [[100, 100], [500, 250]]
+  it.each([
+    { flowStyle: "offset" as const, ends: [[99, 130], [99, 200]], hit: [102, 165] },
+    { flowStyle: "arc" as const, ends: [[200, 99], [400, 99]], hit: [300, 129] }
+  ])("clips the $flowStyle after it enters the rectangle", ({ flowStyle, ends, hit }) => {
+    const projection = geoEquirectangular().translate([300, 160]).scale(200).clipExtent(extent)
+    const coordinates = ends.map(([x, y]) => {
+      const [lon, lat] = projection.invert!([x, y])!
+      return { lon, lat }
+    })
+    const datum = { coordinates }
+    const lines = buildBuiltInGeoScene({
+      projection, path: geoPath(projection), areas: [], points: [], lines: [datum], layout: size,
+      config: { projection, lineType: "line", flowStyle, lineStyle: () => ({ strokeWidth: 4 }) }
+    }).filter(node => node.type === "line")
+    expect(lines).toHaveLength(1)
+    expect(findNearestGeoNode(lines, hit[0], hit[1], 1, hitContext)?.node.datum).toBe(datum)
+    expect(lines[0].path.every(([x, y]) => x >= 100 && x <= 500 && y >= 100 && y <= 250)).toBe(true)
+    expect(extractGeoNavPoints(lines).map(point => point.datum)).toEqual([datum])
+    expect(projection.clipExtent()).toEqual(extent)
+  })
+})
+
 for (const [name, createProjection] of [
   ["equirectangular", geoEquirectangular],
   ["equalEarth", geoEqualEarth]

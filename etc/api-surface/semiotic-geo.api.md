@@ -227,6 +227,7 @@ interface-member GeoAreaSceneNode::property::accessibleDatum = optional accessib
 interface-member GeoAreaSceneNode::property::bounds = required bounds: [[number, number], [number, number]]
 interface-member GeoAreaSceneNode::property::centroid = required centroid: [number, number]
 interface-member GeoAreaSceneNode::property::datum = required datum: SceneDatum
+interface-member GeoAreaSceneNode::property::focusPath = optional focusPath: string | undefined
 interface-member GeoAreaSceneNode::property::group = optional group: string | undefined
 interface-member GeoAreaSceneNode::property::interactive = optional interactive: boolean | undefined
 interface-member GeoAreaSceneNode::property::pathData = required pathData: string

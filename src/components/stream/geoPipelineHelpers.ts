@@ -152,7 +152,7 @@ export function createGeoLineProjector(
   position: (d: Datum) => Position, cartogram = false
 ) {
   const extent = projection.clipExtent?.()
-  const postclip = cartogram && projection.postclip?.()
+  const postclip = typeof projection.postclip === "function" ? projection.postclip() : undefined
   const angle = cartogram && projection.clipAngle?.()
   const precision = projection.precision()
   try {
@@ -171,11 +171,12 @@ export function createGeoLineProjector(
 }
 
 export function clipStyledGeoLine(projection: GeoProjection, width: number, height: number) {
-  const [[x0, y0], [x1, y1]] = projection.clipExtent?.() ?? [[0, 0], [width, height]]
-  return lineFragments<Position>(
-    geoClipRectangle(Math.max(0, x0), Math.max(0, y0), Math.min(width, x1), Math.min(height, y1)),
-    point => point
-  )
+  const viewport = geoClipRectangle(0, 0, width, height)
+  const postclip = typeof projection.postclip === "function" ? projection.postclip() : undefined
+  return lineFragments<Position>(sink => {
+    const clipped = viewport(sink)
+    return postclip ? postclip(clipped) : clipped
+  }, point => point)
 }
 
 // ── Flow style helpers ───────────────────────────────────────────────
