@@ -188,9 +188,9 @@ export function indexFeederVisualDepartures(
  * quality metrics, tooltips, and authored dates.
  */
 export function projectFeederBandSamples<TSample extends FeederSample>(
-  samples: readonly TSample[],
+  samples: TSample[],
   visualByAuthoredTime: ReadonlyMap<number, number> | undefined,
-): readonly TSample[] {
+): TSample[] {
   if (!visualByAuthoredTime || visualByAuthoredTime.size === 0) return samples
 
   return samples.map((sample) => {

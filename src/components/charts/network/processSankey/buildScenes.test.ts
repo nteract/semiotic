@@ -255,6 +255,30 @@ describe("buildProcessSankeyScenes feeder runway", () => {
     expect(edges.every((edge) => edge.startTime === 96)).toBe(true)
   })
 
+  it("places smooth bonded feeder checkpoints on their visual departure clock", () => {
+    const input = {
+      nodes: [
+        { id: "A", group: "feeders", xExtent: [0, 8] as [number, number] },
+        { id: "B", group: "feeders", xExtent: [0, 8] as [number, number] },
+        { id: "Sink", xExtent: [0, 10] as [number, number] }
+      ],
+      edges: ["A", "B"].map(source => ({ id: source + "-sink", source, target: "Sink", value: 1, startTime: 8, endTime: 9 })),
+      domain: [0, 10] as [number, number], plotH: 100, plotW: 300,
+      orientation: "vertical" as const, ribbonLane: "both" as const, ribbonMinRun: 90,
+      edgeOpacity: 0.5, colorOf: () => "#123456", layoutOpts: { groupPadding: 0 }
+    }
+    const straight = buildProcessSankeyScenes(input)
+    const smooth = buildProcessSankeyScenes({ ...input, curves: "smooth" })
+    expect(smooth.layout).toEqual(straight.layout)
+    expect(smooth.layoutConfig.ribbons).toEqual(straight.layoutConfig.ribbons)
+    const start = smooth.layoutConfig.ribbons[0].bezier?.points?.[0].y
+    expect(start).toBe(0)
+    for (const node of ["A", "B"]) {
+      const band = smooth.layoutConfig.bands.find(band => band.id === node)!
+      expect(verticalPathEnd(band.pathD)).toBe(start)
+    }
+  })
+
   it("keeps a lockstep bonded feeder group contiguous through its visual handoff", () => {
     const scene = buildProcessSankeyScenes({
       nodes: [

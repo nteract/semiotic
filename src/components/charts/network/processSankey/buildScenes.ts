@@ -193,9 +193,6 @@ export function buildProcessSankeyScenes(
   }
 
   const { centerlines, nodeData, valueScale: S } = layout
-  const smoothGroups = input.curves === "smooth"
-    ? bondProcessSankeyNodeData(nodes, nodeData, layout.slots, layout.slotByNode, centerlines, S, input.layoutOpts.groupPadding, domain)
-    : undefined
   const ruleContext = makeNodeRuleContext(colorBy, valueAccessor)
 
   const bands: ProcessSankeyBandSpec[] = []
@@ -239,13 +236,20 @@ export function buildProcessSankeyScenes(
     layoutEdges, visualDepartureByEdge, sourceGroupByNode,
   )
 
+  const projectedNodeData = { ...nodeData }
+  for (const [id, departures] of visualDeparturesByNode) {
+    const original = nodeData[id]
+    if (original) projectedNodeData[id] = { ...original, samples: projectFeederBandSamples(original.samples, departures) }
+  }
+  const smoothGroups = input.curves === "smooth"
+    ? bondProcessSankeyNodeData(nodes, projectedNodeData, layout.slots, layout.slotByNode, centerlines, S, input.layoutOpts.groupPadding, domain)
+    : undefined
+
   nodes.forEach((n, idx) => {
     const data = nodeData[n.id]
     if (!data || data.samples.length === 0) return
     const grouped = smoothGroups && n.group ? smoothGroups[n.id].samples : undefined
-    const renderedSamples = projectFeederBandSamples(
-      grouped ?? data.samples, visualDeparturesByNode.get(n.id),
-    )
+    const renderedSamples = grouped ?? projectedNodeData[n.id].samples
     const path = buildBandPath(
       renderedSamples,
       centerlines[n.id], S, xScale, domain, input.curves, !!grouped,
