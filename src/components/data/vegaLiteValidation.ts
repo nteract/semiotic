@@ -206,7 +206,7 @@ export function vegaLiteSemanticDiagnostics(
     if (
       enc.stack !== undefined && (
         !["bar", "area"].includes(mark) ||
-        (enc.stack === "normalize" && !spec.encoding?.color?.field)
+        (enc.stack === "normalize" && (!spec.encoding?.color?.field || spec.encoding?.x?.bin || spec.encoding?.y?.bin))
       )
     ) unsupported(`${path}/stack`)
     if (enc.scale) {

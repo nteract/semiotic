@@ -25,6 +25,19 @@ describe("strict Vega-Lite boundaries", () => {
     expect(importSpec(spec, true).lossReport).toContainEqual(expect.objectContaining({ path: "/encoding/y/stack" }))
   })
 
+  it.each(["x", "y"])("discloses lost normalization for grouped histograms binned on %s", binned => {
+    const count = binned === "x" ? "y" : "x"
+    const spec = { mark: "bar", data: { values: [{ score: 5, group: "A" }] }, encoding: {
+      [binned]: { field: "score", type: "quantitative", bin: true },
+      [count]: { aggregate: "count", type: "quantitative", stack: "normalize" },
+      color: { field: "group", type: "nominal" }
+    } }
+    const diagnostic = expect.objectContaining({ path: `/encoding/${count}/stack` })
+    expect(importSpec(spec).status).toBe("refused")
+    expect(importSpec(spec).diagnostics).toContainEqual(diagnostic)
+    expect(importSpec(spec, true).lossReport).toContainEqual(diagnostic)
+  })
+
   it.each([null, false])("preserves explicitly unstacked colored area series (%s) across import and export", stack => {
     const spec = {
       ...base, mark: "area",
