@@ -12,6 +12,7 @@
  * />
  * ```
  */
+import { isNoneCanvasPaint } from "../../stream/renderers/colorUtils"
 import type { HatchFill } from "./hatchFill"
 
 export interface HatchPatternOptions {
@@ -83,13 +84,13 @@ function getOffscreenCanvas(width: number, height: number): HTMLCanvasElement | 
 
 type HatchTileContext = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
 
-function tileRasterScale(): number {
+export function hatchRasterScale(): number {
   const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1
   return Math.min(3, Math.max(1, dpr))
 }
 
 function paintTileBackground(ctx: HatchTileContext, background: string, width: number, height: number): void {
-  if (background && background !== "transparent" && background !== "none") {
+  if (background && background !== "transparent" && !isNoneCanvasPaint(background)) {
     ctx.fillStyle = background
     ctx.fillRect(0, 0, width, height)
   } else {
@@ -129,7 +130,7 @@ export function createHatchPattern(
 
   // Bake the tile at device resolution; the pattern transform scales it back
   // to CSS pixels, so a 2x canvas gets crisp lines.
-  const scale = tileRasterScale()
+  const scale = hatchRasterScale()
   const tileWidth = Math.max(1, Math.round(tile.width * scale))
   const tileHeight = Math.max(1, Math.round(tile.height * scale))
 
@@ -146,11 +147,13 @@ export function createHatchPattern(
   paintTileBackground(ctx, background, tileWidth, tileHeight)
   const pxPerUnitY = tileHeight / tile.height
   const bandHeight = Math.max(0, lineWidth) * pxPerUnitY
-  ctx.save()
-  ctx.globalAlpha = Math.min(1, Math.max(0, lineOpacity))
-  ctx.fillStyle = stroke
-  ctx.fillRect(0, tile.lineY * pxPerUnitY - bandHeight / 2, tileWidth, bandHeight)
-  ctx.restore()
+  if (!isNoneCanvasPaint(stroke)) {
+    ctx.save()
+    ctx.globalAlpha = Math.min(1, Math.max(0, lineOpacity))
+    ctx.fillStyle = stroke
+    ctx.fillRect(0, tile.lineY * pxPerUnitY - bandHeight / 2, tileWidth, bandHeight)
+    ctx.restore()
+  }
 
   // Create the pattern on the target context if provided, otherwise use the tile's own context
   const patternCtx = targetCtx || ctx

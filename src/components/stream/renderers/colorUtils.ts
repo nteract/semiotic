@@ -5,6 +5,10 @@
  * renderers don't reach into unrelated layers for primitive helpers.
  */
 
+export function isNoneCanvasPaint(paint: unknown): boolean {
+  return typeof paint === "string" && paint.trim().toLowerCase() === "none"
+}
+
 /**
  * Resolve any valid CSS color string to an [r, g, b] tuple.
  *
