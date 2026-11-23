@@ -1428,6 +1428,7 @@ interface-member LikertChartProps::property::valueAccessor = optional valueAcces
 interface-member LikertChartProps::property::valueExtent = optional valueExtent: [number | undefined, number | undefined] | [number] | undefined
 interface-member LikertChartProps::property::valueFormat = optional valueFormat: ((d: number | string) => string) | undefined
 interface-member LikertChartProps::property::valueLabel = optional valueLabel: string | undefined
+interface-member LikertChartProps::property::windowSize = optional windowSize: number | undefined
 interface-member LineChartProps::property::annotations = optional annotations: Datum[] | undefined
 interface-member LineChartProps::property::anomaly = optional anomaly: AnomalyConfig | undefined
 interface-member LineChartProps::property::areaOpacity = optional areaOpacity: number | undefined

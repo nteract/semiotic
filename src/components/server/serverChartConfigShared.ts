@@ -29,6 +29,10 @@ export interface ServerChartLayoutDefaults {
   modeDefaults?: Partial<ChartModeInput>
 }
 
+export function ordinalDatumRows(data: unknown): Datum[] {
+  return Array.isArray(data) ? data.filter(row => row !== null && typeof row === "object") : []
+}
+
 export interface ServerChartOverlayContext {
   theme: SemioticTheme
 }
