@@ -1,10 +1,13 @@
 "use client"
 import * as React from "react"
+import type { BaseChartProps } from "./types"
 import type { Datum, DatumValue } from "./datumTypes"
 import { ChartErrorBoundary } from "../../ChartErrorBoundary"
 import ChartError from "./ChartError"
+import { SR_ONLY_STYLE } from "../../screenReaderStyles"
 
-export interface PlaceholderLayout {
+export interface ChartPlaceholderOptions {
+  loadingLabel?: string
   responsiveWidth?: boolean
   responsiveHeight?: boolean
 }
@@ -14,7 +17,7 @@ export interface PlaceholderLayout {
 function placeholderSize(
   width: number,
   height: number,
-  layout?: PlaceholderLayout
+  layout?: ChartPlaceholderOptions
 ) {
   return {
     width: layout?.responsiveWidth ? "100%" : width,
@@ -64,12 +67,17 @@ export function SafeRender({
 
 // ── Empty & loading state helpers ────────────────────────────────────────
 
-const EMPTY_STYLE: React.CSSProperties = {
+const CENTERED: React.CSSProperties = {
   display: "flex",
   alignItems: "stretch",
   flexDirection: "column",
   textAlign: "center",
   justifyContent: "center",
+  boxSizing: "border-box"
+}
+
+const EMPTY_STYLE: React.CSSProperties = {
+  ...CENTERED,
   // Fallback matches LIGHT_THEME.textSecondary (#666 — 5.7:1 on white).
   // #999 was 2.8:1, a WCAG AA failure axe caught once color-contrast was
   // re-enabled in the integration scan.
@@ -77,13 +85,7 @@ const EMPTY_STYLE: React.CSSProperties = {
   fontSize: 13,
   fontFamily: "inherit",
   border: "1px dashed var(--semiotic-border, #ddd)",
-  borderRadius: 4,
-  boxSizing: "border-box" as const
-}
-
-const LOADING_BAR_STYLE: React.CSSProperties = {
-  background: "var(--semiotic-border, #e0e0e0)",
-  borderRadius: 2
+  borderRadius: 4
 }
 
 /**
@@ -91,66 +93,23 @@ const LOADING_BAR_STYLE: React.CSSProperties = {
  * Returns null when data is present or emptyContent is `false`.
  */
 export function renderEmptyState(
-  data: Array<Datum | null | undefined> | undefined | null,
+  data: ReadonlyArray<Datum | null | undefined> | undefined | null,
   width: number,
   height: number,
   emptyContent?: React.ReactNode | false,
-  layout?: PlaceholderLayout
+  layout?: ChartPlaceholderOptions
 ): React.ReactElement | null {
-  if (emptyContent === false) return null
-  if (data == null) return null // undefined/null = no data provided (e.g. push API)
-  if (!Array.isArray(data)) return null // hierarchy data (object)
+  if (emptyContent === false || !Array.isArray(data)) return null
   if (data.some((row) => row != null && typeof row === "object")) return null
 
   return (
-    <div style={{ ...EMPTY_STYLE, ...placeholderSize(width, height, layout) }}>
-      {emptyContent || "No data available"}
+    <div role="status" style={{ ...EMPTY_STYLE, ...placeholderSize(width, height, layout) }}>
+      {emptyContent ?? "No data available"}
     </div>
   )
 }
 
-/**
- * Renders a loading placeholder while `loading` is true.
- *
- * When `loadingContent` is provided, it replaces the default shimmer
- * skeleton — wrapped in the same sized container so the chart still
- * occupies the slot it would when rendered. Pass `false` to suppress
- * the skeleton entirely (the early-return becomes null and the chart's
- * own loading UI takes over).
- *
- * Returns null when `loading` is falsy.
- */
-export function renderLoadingState(
-  loading: boolean | undefined,
-  width: number,
-  height: number,
-  loadingContent?: React.ReactNode | false,
-  layout?: PlaceholderLayout
-): React.ReactElement | null {
-  if (!loading) return null
-  if (loadingContent === false) return null
-
-  // Custom loading content — wrap in the same sized container so the
-  // chart still occupies the slot. Inline styles mirror the skeleton
-  // container so consumers don't have to re-implement sizing.
-  if (loadingContent != null) {
-    return (
-      <div
-        style={{
-          ...placeholderSize(width, height, layout),
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "stretch",
-          textAlign: "center",
-          justifyContent: "center",
-          boxSizing: "border-box"
-        }}
-      >
-        {loadingContent}
-      </div>
-    )
-  }
-
+function skeletonBars(height: number, responsive?: boolean) {
   // Default skeleton: a few horizontal bars at varying widths
   const barCount = Math.max(1, Math.min(5, Math.floor(height / 40)))
   const barHeight = Math.max(8, Math.floor(height / (barCount * 3)))
@@ -158,13 +117,14 @@ export function renderLoadingState(
   const startY = Math.floor((height - (barCount * (barHeight + gap) - gap)) / 2)
 
   const vertical = (value: number) =>
-    layout?.responsiveHeight ? `${(100 * value) / Math.max(1, height)}%` : value
-  const bars = Array.from({ length: barCount }, (_, i) => (
+    responsive ? `${(100 * value) / Math.max(1, height)}%` : value
+  return Array.from({ length: barCount }, (_, i) => (
     <div
       key={i}
       className="semiotic-loading-bar"
       style={{
-        ...LOADING_BAR_STYLE,
+        background: "var(--semiotic-border, #e0e0e0)",
+        borderRadius: 2,
         position: "absolute",
         top: vertical(startY + i * (barHeight + gap)),
         left: "10%",
@@ -174,20 +134,44 @@ export function renderLoadingState(
       }}
     />
   ))
+}
+
+export function renderLoadingState(
+  loading: boolean | undefined,
+  width: number,
+  height: number,
+  loadingContent?: React.ReactNode | false,
+  layout?: ChartPlaceholderOptions
+): React.ReactElement | null {
+  if (!loading || loadingContent === false) return null
+  const skeleton = loadingContent == null
+  const label = layout?.loadingLabel ?? "Loading chart"
   return (
     <div
+      key="loading"
+      role="status"
+      aria-label={skeleton ? label : undefined}
       style={{
         ...placeholderSize(width, height, layout),
-        position: "relative",
-        overflow: "hidden",
-        border: "1px solid var(--semiotic-border, #e0e0e0)",
-        borderRadius: 4,
-        boxSizing: "border-box"
+        ...(skeleton ? {
+          position: "relative", overflow: "hidden", boxSizing: "border-box",
+          border: "1px solid var(--semiotic-border, #e0e0e0)", borderRadius: 4
+        } : CENTERED)
       }}
     >
-      {bars}
+      {skeleton && <span style={SR_ONLY_STYLE}>{label}</span>}
+      {loadingContent ?? skeletonBars(height, layout?.responsiveHeight)}
     </div>
   )
+}
+
+export function renderChartPlaceholder(
+  props: ChartPlaceholderOptions & Pick<BaseChartProps, "loading" | "loadingContent" | "emptyContent">,
+  [width, height]: [number, number],
+  data: readonly (Datum | null | undefined)[] | null | undefined
+) {
+  return renderLoadingState(props.loading, width, height, props.loadingContent, props) ??
+    renderEmptyState(data, width, height, props.emptyContent, props)
 }
 
 // ── Dev warning helpers ──────────────────────────────────────────────────

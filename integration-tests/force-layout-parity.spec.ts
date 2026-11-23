@@ -16,7 +16,7 @@ test("force worker and sync keep equivalent geometry, spacing and hover after ra
   })
   const checkGeometryAndHover = async (radius: number, width: number) => {
     for (const execution of ["worker", "sync"]) {
-      const status = page.getByTestId(`force-${execution}`).getByRole("status")
+      const status = page.getByTestId(`force-${execution}`).getByRole("status", { name: "Force layout progress" })
       await expect(status).toHaveAttribute("data-layout-inputs", `${radius}:${width}`)
       await expect(status).toHaveText(`${execution}: ready`)
     }

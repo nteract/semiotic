@@ -27,6 +27,7 @@ import {
 import type { AccessibleSceneNode } from "../../stream/accessibleDataRows"
 import { ScatterplotCell, DiagonalCell, LabelCell, SPLOM_IDX } from "./scatterplotMatrixCells"
 import { type StyleRule } from "../shared/styleRules"
+import { renderChartPlaceholder } from "../shared/withChartWrapper"
 import { withSizedChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -80,6 +81,11 @@ export interface ScatterplotMatrixProps<TDatum extends Datum = Datum> extends Ba
    * drag-select overlay captures pointer events, so clicks are not delivered.
    */
   onClick?: (datum: TDatum, event: { x: number; y: number }) => void
+}
+
+function matrixSide({ fields, cellSize, cellGap }: Pick<ScatterplotMatrixProps, "fields" | "cellSize" | "cellGap">) {
+  return SCATTERPLOT_MATRIX_SIZE.labelWidth + (fields?.length ?? 0) *
+    ((cellSize ?? SCATTERPLOT_MATRIX_SIZE.cellSize) + (cellGap ?? SCATTERPLOT_MATRIX_SIZE.cellGap))
 }
 
 // ── ScatterplotMatrix ──────────────────────────────────────────────────────
@@ -481,6 +487,10 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
 export const ScatterplotMatrix = /* @__PURE__ */ withSizedChartErrorBoundary(function ScatterplotMatrix<TDatum extends Datum = Datum>(
   props: ScatterplotMatrixProps<TDatum>
 ) {
+  const side = matrixSide(props)
+  const placeholder = renderChartPlaceholder(props, [side, side], props.data)
+  if (placeholder) return placeholder
+
   const { brushMode = "crossfilter", hoverMode = true } = props
 
   const selectionConfig: Record<string, { resolution?: "union" | "intersect" | "crossfilter" }> = {}
@@ -497,7 +507,6 @@ export const ScatterplotMatrix = /* @__PURE__ */ withSizedChartErrorBoundary(fun
     </LinkedCharts>
   )
 }, "ScatterplotMatrix", (props) => {
-  const side = SCATTERPLOT_MATRIX_SIZE.labelWidth + (props.fields?.length ?? 0) *
-    ((props.cellSize ?? SCATTERPLOT_MATRIX_SIZE.cellSize) + (props.cellGap ?? SCATTERPLOT_MATRIX_SIZE.cellGap))
+  const side = matrixSide(props)
   return { width: side, height: side }
 })
