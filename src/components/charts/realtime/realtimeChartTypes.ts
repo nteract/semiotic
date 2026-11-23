@@ -15,6 +15,8 @@ export interface RealtimeResponsiveProps {
 
 /** Accessibility metadata shared by the streaming chart wrappers. */
 export interface RealtimeAccessibilityProps {
+  /** Accessible name of the default loading skeleton. */
+  loadingLabel?: string
   /** Visible chart title and accessible name. */
   title?: string
   /** Concise accessible description overriding the generated frame label. */

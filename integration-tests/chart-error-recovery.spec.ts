@@ -1,5 +1,27 @@
 import { expect, test } from "@playwright/test"
+import AxeBuilder from "@axe-core/playwright"
 import { expectTooltipWithinPlot } from "./helpers"
+
+for (const theme of ["light", "dark"]) {
+  test(`chart states expose translated status, readable errors and reduced motion in ${theme} mode`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    await page.goto(`/chart-features-examples/?chart-states=${theme}`)
+    const fixture = page.getByTestId("chart-states")
+    const loading = fixture.getByRole("status", { name: "Chargement du graphique" })
+    await expect(fixture.getByRole("status", { name: "Chargement du classement" })).toBeVisible()
+    await expect(loading).toHaveText("Chargement du graphique")
+    expect(await loading.evaluate(element => element.closest('[aria-busy="true"]') === null)).toBe(true)
+    await expect(loading.locator(".semiotic-loading-bar")).toHaveCSS("height", "8px")
+    await expect(fixture.getByRole("status").filter({ hasText: "Aucune donnée" })).toHaveText("Aucune donnée")
+    const container = fixture.getByRole("status", { name: "Chargement du tableau" })
+    await expect(container).toHaveCSS("animation-name", "none")
+    await expect(fixture.getByRole("alert")).toContainText("Invalid region in chart data")
+    const audit = await new AxeBuilder({ page }).include('[data-testid="chart-states"]').withTags(["wcag2a", "wcag2aa"]).analyze()
+    expect(audit.violations).toEqual([])
+    await page.emulateMedia({ reducedMotion: "no-preference" })
+    await expect(container).toHaveCSS("animation-name", "semiotic-skeleton-pulse")
+  })
+}
 
 test("chart repairs restore painted marks and tooltips, including after resize", async ({
   page
@@ -93,3 +115,24 @@ test("chart repairs restore painted marks and tooltips, including after resize",
   await Promise.all(consoleChecks)
   expect(unexpectedErrors).toEqual([])
 })
+
+for (const initial of ["loading", "empty"]) {
+  test(`ChainReactionChart measures after initial ${initial} and delivers an in-flight dependency after loading`, async ({ page }) => {
+    await page.goto(`/chart-features-examples/?chain-loading=${initial}`)
+    const chart = page.getByTestId("chain-recovery")
+    if (initial === "loading") await expect(chart.getByRole("status", {name: "Loading tasks"})).toBeVisible()
+    else await expect(chart.getByText("No data available")).toBeVisible()
+    await chart.getByRole("button", {name: "Show tasks"}).click()
+    const canvas = chart.locator("canvas").first()
+    await expect(canvas).toHaveCSS("width", "420px")
+    await chart.getByRole("button", {name: "Resize chart"}).click()
+    await expect(canvas).toHaveCSS("width", "320px")
+    await canvas.evaluate(node => { node.dataset.retained = "yes" })
+    await chart.getByRole("button", {name: "Complete and load"}).click()
+    await expect(chart.getByRole("status", {name: "Loading tasks"})).toBeVisible()
+    await expect(canvas).toBeHidden()
+    await chart.getByRole("button", {name: "Show tasks"}).click()
+    await expect(canvas).toHaveAttribute("data-retained", "yes")
+    await expect(chart.getByRole("status", {name: "Armed task"})).toHaveText("b", {timeout: 15000})
+  })
+}

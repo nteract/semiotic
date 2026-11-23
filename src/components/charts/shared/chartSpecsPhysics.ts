@@ -650,6 +650,7 @@ export const PHYSICS_CHART_SPECS: Record<string, ChartSpec> = {
         description:
           "Show a loading state instead of starting the authored run."
       },
+      loadingLabel: { type: "string", omitFromSchema: true, description: "Accessible name of the default React loading skeleton." },
       loadingContent: { type: REACT_NODE_TYPES, omitFromSchema: true },
       emptyContent: { type: REACT_NODE_TYPES, omitFromSchema: true },
       onStateChange: { type: "function", omitFromSchema: true },

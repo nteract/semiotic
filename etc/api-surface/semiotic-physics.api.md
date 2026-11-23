@@ -258,7 +258,7 @@ interface CapacityQueueVisitInfo
 interface CapacityQueueWindowSnapshot
 interface CategoricalLegendConfig
 interface ChainReactionChartHandle
-interface ChainReactionChartProps<TDatum extends Datum = Datum>
+interface ChainReactionChartProps<TDatum extends Datum = Datum> extends Pick<BaseChartProps, "emptyContent" | "loading" | "loadingContent" | "loadingLabel">
 interface ChainReactionMachineState
 interface CollisionSwarmChartProps<TDatum extends Datum = Datum> extends Omit<BaseChartProps, "margin" | "selection">, PhysicsSharedChartProps
 interface CollisionSwarmPhysicsOptions<TDatum extends Datum = Datum>

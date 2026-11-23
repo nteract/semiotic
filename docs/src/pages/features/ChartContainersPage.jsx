@@ -152,6 +152,13 @@ const containerProps = [
     description: "Shows a pulsing skeleton placeholder instead of chart children.",
   },
   {
+    name: "loadingLabel",
+    type: "string",
+    required: false,
+    default: '"Loading chart"',
+    description: "Accessible name of the loading skeleton.",
+  },
+  {
     name: "error",
     type: "string | ReactNode",
     required: false,

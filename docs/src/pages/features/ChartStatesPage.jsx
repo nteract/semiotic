@@ -45,7 +45,7 @@ export default function ChartStatesPage() {
 
       <p>
         When <code>data</code> is an empty array, charts with an empty state
-        displays a centered "No data available" message. Customize this with
+        display a centered "No data available" status. Translate it with
         the <code>emptyContent</code> prop, or suppress it entirely with{" "}
         <code>emptyContent=&#123;false&#125;</code>.
         Network charts validate required graph or hierarchy input first;
@@ -111,7 +111,7 @@ return rows.length ? (
             width={250}
             height={180}
             emptyContent={
-              <div style={{ textAlign: "center", color: "#888", padding: 16 }}>
+              <div style={{ textAlign: "center", color: "var(--semiotic-text-secondary, #666)", padding: 16 }}>
                 <div style={{ fontSize: 20, marginBottom: 6 }}>No sales data</div>
                 <div style={{ fontSize: 12 }}>Try adjusting the date range</div>
               </div>
@@ -144,9 +144,11 @@ return rows.length ? (
       <h2 id="loading-state">Loading State</h2>
 
       <p>
-        Set <code>loading=&#123;true&#125;</code> on any chart to show a pulsing
-        skeleton placeholder. This works at both the chart level and the{" "}
-        <Link to="/features/chart-container">ChartContainer</Link> level.
+        Set <code>loading=&#123;true&#125;</code> to show a skeleton with the
+        accessible name “Loading chart”. Set <code>loadingLabel</code> to
+        translate the name on a chart or its{" "}
+        <Link to="/features/chart-container">ChartContainer</Link>. The
+        container animates its skeleton when the viewer allows motion.
       </p>
 
       <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
@@ -203,13 +205,17 @@ return rows.length ? (
       <h3 id="loading-content">Custom Loading UI (loadingContent)</h3>
 
       <p>
-        The default skeleton is a stack of pulsing bars. For branded
+        The default chart skeleton shows a stack of bars. For branded
         loading states, progress text, or a spinner, pass a{" "}
         <code>loadingContent</code> ReactNode — it renders in place of the
-        skeleton, wrapped in the same sized container so the chart slot
-        stays reserved. Pass <code>loadingContent=&#123;false&#125;</code>{" "}
+        skeleton in a polite status region. Include text or an accessible
+        alternative for a custom spinner. Pass <code>loadingContent=&#123;false&#125;</code>{" "}
         to suppress the loading UI entirely (an outer wrapper's loading
         state takes over).
+      </p>
+      <p>
+        WordCloud uses <code>loadingContent</code> while it prepares positions
+        and <code>emptyContent</code> when no words fit the layout.
       </p>
 
       <CodeBlock

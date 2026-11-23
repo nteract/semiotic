@@ -99,7 +99,8 @@ for (const theme of ["light", "dark"] as const) {
     page.on("pageerror", (error) => pageErrors.push(error.message))
     await page.goto("/charts/unit-pile-chart#live-updates")
     const editor = page.getByRole("region", { name: "Live pile editor" })
-    const status = editor.getByRole("status")
+    const status = editor.getByRole("status", { name: "Source record totals" })
+    const emptyChart = editor.getByRole("status").filter({ hasText: "No data available" })
     await expect(status).toHaveText("2 source records · Total 98")
     await expectPileProjection(editor, ["98", "A"])
     await editor
@@ -142,9 +143,11 @@ for (const theme of ["light", "dark"] as const) {
       .getByRole("button", { name: "Add 49 to A", exact: true })
       .click()
     await expect(status).toHaveText("0 source records · Total 0")
+    await expect(emptyChart).toHaveText("No data available")
     await expect(editor.locator("canvas")).toHaveCount(0)
     await expectPileProjection(editor, [])
     await editor.getByLabel("Data source").selectOption("push")
+    await expect(emptyChart).toHaveCount(0)
     await expect(status).toHaveText("0 source records · Total 0")
     await expectPileProjection(editor, [])
     await editor

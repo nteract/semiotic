@@ -31,7 +31,7 @@ export function ForceLayoutFixture() {
     <button onClick={() => setRadius(20)}>Enlarge nodes</button>
     <button onClick={() => setWidth(420)}>Narrow graphs</button>
     {(["sync", "worker"] as const).map((execution) => <section key={execution} data-testid={`force-${execution}`}>
-      <p role="status" data-layout-inputs={status[execution].inputKey}>
+      <p role="status" aria-label="Force layout progress" data-layout-inputs={status[execution].inputKey}>
         {execution}: {status[execution].inputKey === inputKey ? status[execution].state : "pending"}
       </p>
       <StreamNetworkFrame ref={execution === "sync" ? sync : worker}

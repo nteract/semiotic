@@ -21,6 +21,7 @@
 "use client"
 import { useMemo, useRef } from "react"
 import type { Ref, RefObject, ReactElement, ReactNode } from "react"
+import type { ChartPlaceholderOptions } from "./withChartWrapper"
 import { useChartMode } from "./hooks"
 import { useChartSetup, type ChartSetupResult } from "./useChartSetup"
 import type {
@@ -66,7 +67,7 @@ interface ScaffoldOptions {
   // Common chart-mode inputs
   width?: number
   height?: number
-  responsive?: { responsiveWidth?: boolean; responsiveHeight?: boolean }
+  responsive?: ChartPlaceholderOptions
   showGrid?: boolean
   enableHover?: boolean
   showLegend?: boolean
