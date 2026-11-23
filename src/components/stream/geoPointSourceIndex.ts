@@ -17,21 +17,18 @@ export function geoPointIndices(
   rows: Datum[]
 ): number[] {
   let fallback: Map<unknown, number[]> | undefined
-  const cursors = new Map<unknown, number>()
   return nodes.map((node) => {
     const stored = sourceIndices.get(node)
     if (stored !== undefined) return stored
     if (!fallback) {
-      const indicesByRow = new Map<unknown, number[]>()
-      fallback = indicesByRow
-      rows.forEach((row, i) => {
-        const indices = indicesByRow.get(row)
+      fallback = new Map()
+      for (let i = rows.length - 1; i >= 0; i--) {
+        if (!(i in rows)) continue
+        const indices = fallback.get(rows[i])
         if (indices) indices.push(i)
-        else indicesByRow.set(row, [i])
-      })
+        else fallback.set(rows[i], [i])
+      }
     }
-    const cursor = cursors.get(node.datum) ?? 0
-    cursors.set(node.datum, cursor + 1)
-    return fallback.get(node.datum)?.[cursor] ?? -1
+    return fallback.get(node.datum)?.pop() ?? -1
   })
 }

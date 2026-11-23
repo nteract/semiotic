@@ -11,7 +11,6 @@ import type { Datum } from "../charts/shared/datumTypes"
 import type { HoverData } from "../realtime/types"
 import { findNearestGeoNode } from "./GeoCanvasHitTester"
 import type {
-  GeoAreaSceneNode,
   GeoSceneNode,
   ProjectionName,
   ProjectionProp
@@ -150,16 +149,9 @@ export function resolveGeoPointerHit(options: {
     : datum?.properties
       ? datum
       : datum?.data || datum
-  const x = node.type === "point"
-    ? node.x
-    : node.type === "geoarea"
-      ? (node as GeoAreaSceneNode).centroid[0]
-      : chartX
-  const y = node.type === "point"
-    ? node.y
-    : node.type === "geoarea"
-      ? (node as GeoAreaSceneNode).centroid[1]
-      : chartY
+  const areaAnchor = node.type === "geoarea" && !node.pathData.includes("M", 1) ? node.centroid : undefined
+  const x = node.type === "point" ? node.x : areaAnchor?.[0] ?? chartX
+  const y = node.type === "point" ? node.y : areaAnchor?.[1] ?? chartY
   return {
     kind: "hit",
     node,

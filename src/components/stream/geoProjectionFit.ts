@@ -5,7 +5,7 @@ import type { StreamLayout } from "./types"
 /** A singleton or coincident points have zero extent; keep a finite local view. */
 export function repairDegenerateGeoFit(
   projection: GeoProjection,
-  data: GeoJSON.FeatureCollection,
+  data: GeoJSON.GeometryCollection | GeoJSON.FeatureCollection,
   layout: StreamLayout
 ): void {
   if (

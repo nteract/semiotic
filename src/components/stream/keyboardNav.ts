@@ -15,6 +15,7 @@ import type { SceneNode } from "./types"
 import type { OrdinalSceneNode } from "./ordinalTypes"
 import type { GeoSceneNode } from "./geoTypes"
 import { glyphHitGeometry } from "./glyphDef"
+import { polygonFocusAnchor } from "./geoPolygonFocus"
 import { normalizeHoverDatum } from "./hoverUtils"
 
 export { buildNavGraph, resolvePosition, nextGraphIndex, nextIndex } from "./navigationGraph"
@@ -269,7 +270,7 @@ export function extractGeoNavPoints(scene: GeoSceneNode[]): NavPoint[] {
         h: geometry.halfHeight * 2,
       })
     } else if (node.type === "line") {
-      if (node.datum == null || node.path.length < 2) continue
+      if (node.continuation || node.datum == null || node.path.length < 2) continue
       // Half the drawn path length keeps the tooltip on curved/resampled flows.
       const lengths = node.path.slice(1).map((point, index) =>
         Math.hypot(point[0] - node.path[index][0], point[1] - node.path[index][1]))
@@ -298,9 +299,9 @@ export function extractGeoNavPoints(scene: GeoSceneNode[]): NavPoint[] {
       // new geoarea focus ring would outline the whole graticule mesh.
       // Navigate to the centroid (for the hover payload + label position) but
       // carry the path so the focus ring outlines the whole area, not a dot.
+      const [x, y] = polygonFocusAnchor(node.focusPath ?? node.pathData, node.centroid) ?? node.centroid
       points.push({
-        x: node.centroid[0],
-        y: node.centroid[1],
+        x, y,
         datum: node.datum,
         shape: "geoarea",
         pathData: node.pathData,
