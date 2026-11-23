@@ -5,6 +5,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -24,6 +25,8 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 2
 
       - name: Use Node.js
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
@@ -35,6 +38,9 @@ jobs:
         env:
           PROVENANCE_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            PROVENANCE_BASE=$(git rev-parse HEAD^)
+          fi
           test -n "$PROVENANCE_BASE"
           git fetch --no-tags origin "$PROVENANCE_BASE"
           node --experimental-strip-types scripts/check-changelog-provenance.ts --base-ref "$PROVENANCE_BASE"
@@ -353,6 +359,23 @@ jobs:
       - name: Build docs from the existing production artifacts
         run: npm run check:website-build:from-dist
 
+      - name: Prepare Pages files
+        if: github.ref == 'refs/heads/main'
+        run: |
+          cp docs/build/index.html docs/build/404.html
+          cp ai/reference.md docs/build/CLAUDE.md
+          cp ai/reference.md docs/build/llms-full.txt
+          cp docs/public/llms.txt docs/build/llms.txt
+          cp ai/schema.json docs/build/schema.json
+          cp ai/system-prompt.md docs/build/api-reference.md
+          cp ai/examples.md docs/build/examples.md
+
+      - name: Upload validated Pages site
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
+        with:
+          path: docs/build
+
       - name: Check machine baseline
         run: npm run check:machine-baseline
 
@@ -453,6 +476,25 @@ jobs:
             echo "::error title=Testing failed::Preflight: ${{ needs['fast-contracts'].result }}; coverage shards: ${{ needs['coverage-shards'].result }}; merged coverage: ${{ needs['coverage'].result }}; contracts: ${{ needs['full-contracts'].result }}; docs/package: ${{ needs['docs-package'].result }}; smoke matrix: ${{ needs['testing-matrix'].result }}; E2E: ${{ needs['e2e'].result }}; docs examples: ${{ needs['docs-examples'].result }}; network camera: ${{ needs['network-camera'].result }}"
             exit 1
           fi
+
+  deploy-docs:
+    name: Deploy docs
+    needs: testing
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: true
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5
 
   bench:
     name: Performance regression

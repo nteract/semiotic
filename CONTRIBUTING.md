@@ -29,6 +29,10 @@ request CI builds the production library once (`production-build`) and the
 package and browser jobs download that build; the docs example suite runs as
 three Playwright shards.
 
+On `main`, the Semiotic workflow publishes the checked documentation build to
+GitHub Pages after the `testing` job passes. To redeploy, run that workflow
+manually on `main`.
+
 Visual baselines exist for Linux only (`*-linux.png`). See
 [TESTING_BASELINE.md](TESTING_BASELINE.md) for running the browser suite on
 another platform.
