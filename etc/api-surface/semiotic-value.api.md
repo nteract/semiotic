@@ -56,6 +56,7 @@ interface-member BigNumberProps::property::height = optional height: number | st
 interface-member BigNumberProps::property::label = optional label: string | undefined
 interface-member BigNumberProps::property::loading = optional loading: boolean | undefined
 interface-member BigNumberProps::property::loadingContent = optional loadingContent: React.ReactNode
+interface-member BigNumberProps::property::loadingLabel = optional loadingLabel: string | undefined
 interface-member BigNumberProps::property::locale = optional locale: string | undefined
 interface-member BigNumberProps::property::mode = optional mode: BigNumberMode | undefined
 interface-member BigNumberProps::property::onClick = optional onClick: ((datum: {value: number; level: BigNumberLevel; delta: null | number;}, event: {x: number; y: number;}) => void) | undefined

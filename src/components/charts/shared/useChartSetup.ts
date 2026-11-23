@@ -53,7 +53,7 @@ import type { OnObservationCallback } from "../../store/ObservationStore"
 import type { PartialMargin } from "../../types/marginType"
 import type { SelectionHookResult } from "./selectionUtils"
 import { useResolvedSelection } from "./useResolvedSelection"
-import { renderEmptyState, renderLoadingState, type PlaceholderLayout } from "./withChartWrapper"
+import { renderEmptyState, renderLoadingState, type ChartPlaceholderOptions } from "./withChartWrapper"
 import { filterSparseArray } from "./sparseArray"
 import type { ReactElement, ReactNode } from "react"
 import type { LegendValue } from "../../types/legendTypes"
@@ -124,7 +124,7 @@ export interface ChartSetupInput {
   /** Resolved height from useChartMode */
   height: number
   /** Responsive host flags for empty and loading placeholders. */
-  responsive?: PlaceholderLayout
+  responsive?: ChartPlaceholderOptions
   /** Whether the resolved chart mode includes a title. */
   hasTitle?: boolean
   /**

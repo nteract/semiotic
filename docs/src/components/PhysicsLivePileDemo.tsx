@@ -120,7 +120,7 @@ export default function PhysicsLivePileDemo() {
       {data?.length === 0 && (
         <p>An explicit empty data array stays empty. Select Push via ref to add records.</p>
       )}
-      <p className="physics-live-demo__total" role="status">
+      <p className="physics-live-demo__total" role="status" aria-label="Source record totals">
         {rows.length} source {rows.length === 1 ? "record" : "records"} · Total {total}
       </p>
       <div className="physics-live-demo__scene">
