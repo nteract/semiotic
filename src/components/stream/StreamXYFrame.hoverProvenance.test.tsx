@@ -40,7 +40,7 @@ it("adds aggregate source fields when hover behavior is enabled on a mounted fra
   await act(async () => {
     await Promise.resolve()
   })
-  const target = container.querySelector(".stream-xy-frame > div[role='img']")!
+  const target = container.querySelector(".stream-xy-frame div[role='img']")!
   fireEvent.mouseMove(target, { clientX: 100, clientY: 60 })
   expect(onHover).toHaveBeenCalled()
   expect(getSelectionProvenance(onHover.mock.calls.at(-1)![0].data)).toEqual(
@@ -77,7 +77,7 @@ it("gives a hovered stacked segment its bin's ordered category breakdown", async
   await act(async () => {
     await Promise.resolve()
   })
-  const target = container.querySelector(".stream-xy-frame > div[role='img']")!
+  const target = container.querySelector(".stream-xy-frame div[role='img']")!
   // North stacks at the bottom: values 0..5 of the 0..10 y extent.
   fireEvent.mouseMove(target, { clientX: 100, clientY: 80 })
   const hover = onHover.mock.calls.at(-1)![0]

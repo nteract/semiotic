@@ -48,7 +48,7 @@ describe.each([RealtimeHistogram, TemporalHistogram])("%s multi tooltip", (Histo
       />
     )
     await act(async () => { await Promise.resolve() })
-    fireEvent.mouseMove(view.container.querySelector(".stream-xy-frame > div[role='img']")!, { clientX: 50, clientY })
+    fireEvent.mouseMove(view.container.querySelector(".stream-xy-frame div[role='img']")!, { clientX: 50, clientY })
     await act(async () => { await Promise.resolve() })
     return view.container.querySelector(".stream-frame-tooltip")
   }

@@ -1,5 +1,6 @@
 "use client"
 import { useId, useState, type KeyboardEvent, type ReactNode } from "react"
+import { SR_ONLY_STYLE } from "../../screenReaderStyles"
 
 interface MatrixGridProps {
   fields: string[]
@@ -138,7 +139,7 @@ export function MatrixGrid({
           </div>
         ))}
         <div role="row" style={{ display: "contents" }}>
-          <div role="columnheader" aria-label="Fields" />
+          <div role="columnheader"><span style={SR_ONLY_STYLE}>Fields</span></div>
           {fields.map((field) => (
             <div key={field} role="columnheader" style={labelStyle}>
               {labelFor(field)}

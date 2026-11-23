@@ -14,11 +14,6 @@ import { useSelection } from "../../store/useSelection"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
 import { composeStyleRules, makeXYRuleContext, type StyleRule } from "../shared/styleRules"
 
-// Registered at render (not import) so unused charts stay tree-shakeable.
-function ensureScatterplotMatrixCellsRegistrations(): void {
-  ensureXYPlugin(scatterXYPlugin)
-}
-
 // Internal field used to identify datums across cells
 export const HOVER_SELECTION = "splom-hover"
 export const BRUSH_SELECTION = "splom"
@@ -72,7 +67,7 @@ export function ScatterplotCell({
   onPointHover,
   onPointClick
 }: CellProps) {
-  ensureScatterplotMatrixCellsRegistrations()
+  ensureXYPlugin(scatterXYPlugin)
 
   // Brush selection (crossfilter) - only used in brush mode
   const brushSelectionHook = useSelection({
@@ -222,20 +217,19 @@ export function DiagonalCell({
   const histogram = useMemo(() => {
     const colorField = typeof colorBy === "string" ? colorBy : null
     const values: number[] = []
-    const categorySet = new Set<string>()
+    const categoryIndex = new Map<string, number>()
     for (const d of data) {
       const value = d[field]
       if (value != null && !isNaN(value)) values.push(Number(value))
-      if (colorField) {
-        const category = d[colorField]
-        if (category != null) categorySet.add(String(category))
+      if (colorField && d[colorField] != null) {
+        const category = String(d[colorField])
+        if (!categoryIndex.has(category)) categoryIndex.set(category, categoryIndex.size)
       }
     }
     if (!values.length) return []
     const [min, max] = getMinMax(values)
     const binWidth = (max - min) / bins || 1
-    const categories = Array.from(categorySet)
-    const categoryIndex = new Map(categories.map((category, i) => [category, i]))
+    const categories = Array.from(categoryIndex.keys())
     const counts = new Array<number>(bins).fill(0)
     const makeBins = () => Array.from({ length: bins }, () => new Array<number>(categories.length || 1).fill(0))
     const all = makeBins()

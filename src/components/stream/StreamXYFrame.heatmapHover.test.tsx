@@ -73,7 +73,7 @@ it("emits heatmap data keys for pointer, click, and a linked crosshair", async (
   await act(async () => {
     await Promise.resolve()
   })
-  const target = container.querySelector(".stream-xy-frame > div[role='img']")!
+  const target = container.querySelector(".stream-xy-frame div[role='img']")!
   fireEvent.mouseMove(target, { clientX: 150, clientY: 100 })
   expect(onHover.mock.lastCall?.[0]).toMatchObject({ xValue: 20 })
   fireEvent.click(target, { clientX: 150, clientY: 100 })

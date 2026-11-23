@@ -35,7 +35,7 @@ function renderChart(props: Partial<React.ComponentProps<typeof LineChart>>) {
       <LineChart data={wave} xAccessor="x" yAccessor="y" {...plotProps} {...props} />
     </TooltipProvider>
   )
-  const plot = () => view.container.querySelector<HTMLElement>('.stream-xy-frame > div[role="img"]')!
+  const plot = () => view.container.querySelector<HTMLElement>('.stream-xy-frame div[role="img"]')!
   const hoverAt = async (clientX: number, clientY = 100) => {
     fireEvent.mouseMove(plot(), { clientX, clientY })
     await act(async () => { await Promise.resolve() })

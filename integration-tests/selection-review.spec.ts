@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test"
-import { expectTooltipWithinPlot } from "./helpers"
+import { expectCanvasPainted, expectTooltipWithinPlot } from "./helpers"
 
 test("OrbitDiagram preserves pointer and keyboard activation through resize", async ({
   page
@@ -132,7 +132,7 @@ test("removing unrelated matrix cells preserves the surviving cell's hover", asy
 test("keyboard activation and brushing keep sibling matrices independent", async ({ page, browserName }) => {
   await page.goto("/selection-predicates-examples/?review=keyboard")
   const tile = page.getByRole("button", { name: /Sales/ })
-  await expect(tile).toBeVisible()
+  await expect(tile).toHaveAccessibleDescription("Sales for the current quarter")
   await page.keyboard.press("Tab")
   await expect(tile).toBeFocused()
   await page.keyboard.press("Enter")
@@ -181,9 +181,35 @@ test("matrix cells expose point values and activation from the keyboard", async 
   await page.keyboard.press("Home")
   const tooltip = chart.locator(".scatterplot-matrix-tooltip")
   await expect(tooltip).toContainText("Matrix row: A")
+  const highlightedBars = chart.locator('rect[opacity="0.7"]')
+  await expect.poll(() => highlightedBars.count()).toBeGreaterThan(0)
   await page.keyboard.press("Enter")
   await expect(page.getByTestId("matrix-activated")).toHaveText("A")
   await page.keyboard.press("Escape")
   await expect(cell).toBeFocused()
   await expect(tooltip).toBeHidden()
+  await expect(highlightedBars).toHaveCount(0)
+  await page.keyboard.press("Enter")
+  await page.keyboard.press("Home")
+  await expect.poll(() => highlightedBars.count()).toBeGreaterThan(0)
+  await page.keyboard.press("Tab")
+  await expect(highlightedBars).toHaveCount(0)
+  await expect(tooltip).toBeHidden()
+})
+
+test("brushed scatterplot exposes the mark tooltip through its overlay after resize", async ({ page }) => {
+  await page.goto("/selection-predicates-examples/?review=brush-hover")
+  const chart = page.getByTestId("brushed-scatterplot")
+  const canvas = chart.locator("canvas").first()
+  const tooltip = chart.locator(".stream-frame-tooltip")
+  for (const width of [320, 420]) {
+    if (width === 420) await page.getByRole("button", { name: "Resize scatterplot" }).click()
+    await expect(canvas).toHaveCSS("width", width + "px")
+    await expectCanvasPainted(canvas)
+    await chart.locator(".brush-g .overlay").hover()
+    await expect(tooltip).toHaveText("Reading Center")
+    await expectTooltipWithinPlot(chart, { left: 20, right: 20, top: 20, bottom: 20 })
+    await page.mouse.move(0, 0)
+    await expect(tooltip).toBeHidden()
+  }
 })

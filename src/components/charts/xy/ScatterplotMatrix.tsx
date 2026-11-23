@@ -137,8 +137,7 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
   const clearSelection = useSelectionSelector((state) => state.clearSelection)
   const [hoveredInfo, setHoveredInfo] = useState<HoveredPoint | null>(null)
 
-  // Clear all hover state when mouse leaves the grid
-  const handleGridMouseLeave = useCallback(() => {
+  const clearHover = useCallback(() => {
     clearSelection(HOVER_SELECTION)
     setHoveredInfo(null)
   }, [clearSelection])
@@ -179,7 +178,7 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
   function handlePoint(type: "hover" | "click", datum: Datum | null, col: number, row: number, px = 0, py = 0) {
     if (!datum) {
       if (type === "hover") {
-        setHoveredInfo(null)
+        clearHover()
         onObservation?.({ type: "hover-end", timestamp: Date.now(), chartType: "ScatterplotMatrix", chartId })
       }
       return
@@ -235,7 +234,7 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
       <div style={{ position: "relative", width: "fit-content" }}>
         <MatrixGrid fields={fields} cellSize={cellSize} cellGap={cellGap} labelWidth={labelWidth}
           brush={cellMode === "brush"} labelFor={fieldLabel}
-          onMouseLeave={cellMode === "hover" ? handleGridMouseLeave : undefined}>
+          onMouseLeave={cellMode === "hover" ? clearHover : undefined}>
           {(rowField, row, colField, col, label) => {
             if (row === col) {
               // Diagonal
@@ -297,9 +296,7 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
             ? (typeof idAccessor === "function" ? idAccessor(d as TDatum) : d[idAccessor])
             : `Row ${d[SPLOM_IDX]}`
           const { [SPLOM_IDX]: _index, ...rawDatum } = d
-          const hasCustomContent = typeof normalizedTooltip === "function"
-          const customContent = hasCustomContent ? normalizedTooltip(rawDatum) : null
-          const defaultContent = (
+          const tooltipContent = typeof normalizedTooltip === "function" ? normalizedTooltip(rawDatum) : (
             <TooltipRoot
               style={{
                 color: "var(--semiotic-tooltip-text, #333)",
@@ -320,7 +317,6 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
               {colorLabel != null && <div style={{ opacity: 0.8 }}>{typeof colorBy === "string" ? colorBy : "group"}: {String(colorLabel)}</div>}
             </TooltipRoot>
           )
-          const tooltipContent = hasCustomContent ? customContent : defaultContent
           if (!hasTooltipContent(tooltipContent)) return null
           return (
             <FlippingTooltip

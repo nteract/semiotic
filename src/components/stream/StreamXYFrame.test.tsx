@@ -572,7 +572,7 @@ describe("StreamXYFrame", () => {
       })
 
       const hoverTarget = container.querySelector(
-        ".stream-xy-frame > div[role='img']"
+        ".stream-xy-frame div[role='img']"
       )!
       fireEvent.mouseMove(hoverTarget, { clientX: 100, clientY: 85 })
 
