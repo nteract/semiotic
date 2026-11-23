@@ -1,7 +1,10 @@
-import { idDictionary, ownValue, setOwnValue } from "./ids"
+import { isDataRecord } from "../../charts/shared/dataRecords"
+import { measureSubjectKey } from "./ledger"
+import { ownValue } from "./ids"
 import { validateAtlasShape } from "./validateShape"
 import {
   NETWORK_ATLAS_SCHEMA_VERSION,
+  PHASE2_MOTIF_MATCHERS,
   type AtlasIssue,
   type NetworkAtlasSource,
   type NetworkAtlasSpec
@@ -12,17 +15,10 @@ export type AtlasValidation = {
   issues: AtlasIssue[]
 }
 
-function fatal(
-  issues: AtlasIssue[],
-  kind: string,
-  message: string,
-  id?: string
-): void {
-  issues.push({ kind, severity: "fatal", message, id })
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === "object" && !Array.isArray(value)
+export function isOutcomeMeasure(spec: NetworkAtlasSpec, id: string, population: string) {
+  const outcome = ownValue(spec.measures, id)
+  const denominator = ownValue(spec.measures, population)
+  return outcome?.unitKind === "stock" && denominator?.unitKind === "stock" && outcome.countUnit === denominator.countUnit
 }
 
 export function validateAtlas(
@@ -30,10 +26,19 @@ export function validateAtlas(
   source: NetworkAtlasSource
 ): AtlasValidation {
   const issues = validateAtlasShape(spec, source)
+  function fatal(kind: string, message: string, id?: string) {
+    issues.push({ kind, severity: "fatal", message, id })
+  }
+  function checkRoots(roots: string[], kind: string, message: string) {
+    for (const root of roots) if (!nodeIds.has(root)) fatal(kind, message, root)
+  }
+  function recordId(ids: Set<string>, id: string, kind: string, message: string, subjectId = id) {
+    if (ids.has(id)) fatal(kind, message, subjectId)
+    ids.add(id)
+  }
   if (issues.length) return { ok: false, issues }
   if (spec.schemaVersion !== NETWORK_ATLAS_SCHEMA_VERSION) {
     fatal(
-      issues,
       "schema-version",
       `expected schemaVersion ${NETWORK_ATLAS_SCHEMA_VERSION}`
     )
@@ -44,35 +49,31 @@ export function validateAtlas(
     spec.relations.parallelEdges !== "keep-by-id" ||
     spec.relations.selfLoops !== "keep-by-id"
   ) {
-    fatal(issues, "relations", "Phase 1 requires directed edges, preserving parallel edges and self-loops by id")
+    fatal("relations", "Phase 1 requires directed edges, preserving parallel edges and self-loops by id")
   }
   if (
     spec.forest.display.kind !== "rooted-backbone" &&
     spec.forest.display.kind !== "observed-prefix"
   ) {
-    fatal(issues, "forest", "supported display kinds: rooted-backbone, observed-prefix")
+    fatal("forest", "supported display kinds: rooted-backbone, observed-prefix")
   }
   if (spec.coordinate.kind !== "ordinal") {
-    fatal(issues, "coordinate", "Phase 1 kernel uses ordinal sections")
+    fatal("coordinate", "Phase 1 kernel uses ordinal sections")
   }
 
-  const nodeIds = idDictionary<true>()
+  const nodeIds = new Set<string>()
   for (const node of source.nodes) {
     if (!node.id) {
-      fatal(issues, "node-id", "node is missing id")
+      fatal("node-id", "node is missing id")
       continue
     }
-    if (nodeIds[node.id]) {
-      fatal(issues, "duplicate-node", "duplicate node id", node.id)
-    }
-    setOwnValue(nodeIds, node.id, true)
+    recordId(nodeIds, node.id, "duplicate-node", "duplicate node id")
     if (
       spec.coordinate.kind === "ordinal" &&
       node.sectionId &&
       !spec.coordinate.sectionIds.includes(node.sectionId)
     ) {
       fatal(
-        issues,
         "section-membership",
         `node section ${node.sectionId} is not in the coordinate`,
         node.id
@@ -80,96 +81,97 @@ export function validateAtlas(
     }
   }
 
-  const edgeIds = idDictionary<true>()
+  const edgeIds = new Set<string>()
   for (const edge of source.edges) {
     if (!edge.id) {
-      fatal(issues, "edge-id", "edge is missing id")
+      fatal("edge-id", "edge is missing id")
       continue
     }
-    if (edgeIds[edge.id]) {
-      fatal(issues, "duplicate-edge", "duplicate edge id", edge.id)
-    }
-    setOwnValue(edgeIds, edge.id, true)
-    if (!nodeIds[edge.source]) {
-      fatal(issues, "dangling-source", "edge source is not a node", edge.id)
-    }
-    if (!nodeIds[edge.target]) {
-      fatal(issues, "dangling-target", "edge target is not a node", edge.id)
+    recordId(edgeIds, edge.id, "duplicate-edge", "duplicate edge id")
+    for (const key of ["source", "target"] as const) {
+      if (!nodeIds.has(edge[key])) fatal(`dangling-${key}`, `edge ${key} is not a node`, edge.id)
     }
   }
 
-  for (const root of spec.forest.display.roots ?? []) {
-    if (!nodeIds[root]) {
-      fatal(issues, "missing-root", "display root is not a node", root)
-    }
-  }
+  checkRoots(spec.forest.display.roots ?? [], "missing-root", "display root is not a node")
   const required = spec.forest.requiredPaths
   if (required) {
     if (required.relationScopeId !== "directed-admitted") {
-      fatal(issues, "required-path-scope", "required paths use the full directed-admitted relation scope")
+      fatal("required-path-scope", "required paths use the full directed-admitted relation scope")
     }
-    if (!Array.isArray(required.roots) || required.roots.length === 0) {
-      fatal(issues, "required-path-roots", "required paths need declared roots")
-    } else {
-      for (const root of required.roots) {
-        if (!nodeIds[root]) fatal(issues, "required-path-roots", "required-path root is not a node", root)
-      }
+    if (required.roots.length === 0) {
+      fatal("required-path-roots", "required paths need declared roots")
     }
+    checkRoots(required.roots, "required-path-roots", "required-path root is not a node")
   }
   if (
     spec.forest.display.kind === "rooted-backbone" &&
     spec.forest.display.roots.length === 0
   ) {
-    fatal(issues, "missing-root", "rooted-backbone requires at least one root")
+    fatal("missing-root", "rooted-backbone requires at least one root")
   }
   if (spec.comparison) {
-    if (spec.comparison.partitions.length < 2) {
-      fatal(issues, "comparison", "comparison requires at least two partitions")
-    }
-    if (!ownValue(spec.measures, spec.comparison.denominatorMeasureId)) {
+    const {
+      partitions,
+      referencePartition,
+      denominatorMeasureId,
+      outcomeMeasureIds,
+      motifTemplates
+    } = spec.comparison
+    if (partitions.length < 2) fatal("comparison", "comparison requires at least two partitions")
+    if (
+      new Set(partitions).size !== partitions.length ||
+      (referencePartition !== undefined &&
+        !partitions.includes(referencePartition))
+    ) {
       fatal(
-        issues,
+        "comparison-partitions",
+        "use distinct partitions and a listed reference"
+      )
+    }
+    for (const id of outcomeMeasureIds ?? []) {
+      if (!isOutcomeMeasure(spec, id, denominatorMeasureId)) {
+        fatal(
+          "comparison-outcome",
+          "outcome must be a comparable stock measure",
+          id
+        )
+      }
+    }
+    for (const template of motifTemplates ?? []) {
+      if (!PHASE2_MOTIF_MATCHERS.includes(template))
+        fatal(
+          "comparison-template",
+          "unsupported comparison motif",
+          template
+        )
+    }
+    if (!ownValue(spec.measures, denominatorMeasureId)) {
+      fatal(
         "comparison-denominator",
         "comparison denominatorMeasureId is not a declared measure"
       )
     }
   }
 
-  if (!isRecord(spec.measures)) {
-    fatal(issues, "measures", "measures must be an object")
-  } else {
-    for (const [measureId, measure] of Object.entries(spec.measures)) {
-      if (measure.unitKind === "rate" && !measure.timeDenominator) {
-        fatal(
-          issues,
-          "rate-denominator",
-          "rate measures require a timeDenominator",
-          measureId
-        )
-      }
+  for (const [measureId, measure] of Object.entries(spec.measures)) {
+    if (measure.unitKind === "rate" && !measure.timeDenominator) {
+      fatal(
+        "rate-denominator",
+        "rate measures require a timeDenominator",
+        measureId
+      )
     }
   }
 
-  const measureSubjects = new Map<string, Set<string>>()
+  const measureSubjects = new Set<string>()
   for (const row of source.measureValues) {
-    let subjects = measureSubjects.get(row.measureId)
-    if (!subjects) {
-      subjects = new Set()
-      measureSubjects.set(row.measureId, subjects)
-    }
-    if (subjects.has(row.subjectId)) {
-      fatal(
-        issues,
-        "duplicate-measure-value",
-        "measureValue must be unique per measureId and subjectId",
-        row.subjectId
-      )
-    }
-    subjects.add(row.subjectId)
+    const key = measureSubjectKey(row.measureId, row.subjectId)
+    recordId(measureSubjects, key, "duplicate-measure-value",
+      "measureValue must be unique per measureId and subjectId", row.subjectId)
     const measure = ownValue(spec.measures, row.measureId)
     if (!measure) {
       fatal(
-        issues,
         "unknown-measure",
         "measureValue refers to an undeclared measure",
         row.measureId
@@ -177,25 +179,17 @@ export function validateAtlas(
       continue
     }
     if (!Number.isFinite(row.value)) {
-      fatal(issues, "non-finite-measure", "measure value is not finite", row.measureId)
+      fatal("non-finite-measure", "measure value is not finite", row.measureId)
     }
   }
 
   const occurrenceIds = new Set<string>()
   for (const occurrence of source.occurrences ?? []) {
     if (!occurrence.id || !occurrence.entityId) {
-      fatal(issues, "occurrence", "occurrence needs id and entityId")
+      fatal("occurrence", "occurrence needs id and entityId")
       continue
     }
-    if (occurrenceIds.has(occurrence.id)) {
-      fatal(
-        issues,
-        "duplicate-occurrence",
-        "occurrence id must be unique",
-        occurrence.id
-      )
-    }
-    occurrenceIds.add(occurrence.id)
+    recordId(occurrenceIds, occurrence.id, "duplicate-occurrence", "occurrence id must be unique")
     if (
       occurrence.stepEntityCounts !== undefined &&
       (!Array.isArray(occurrence.stepEntityCounts) ||
@@ -205,16 +199,14 @@ export function validateAtlas(
         ))
     ) {
       fatal(
-        issues,
         "occurrence-step-counts",
         "stepEntityCounts must contain one finite, nonnegative count per nodePath step",
         occurrence.id
       )
     }
     for (const nodeId of occurrence.nodePath) {
-      if (!nodeIds[nodeId]) {
+      if (!nodeIds.has(nodeId)) {
         fatal(
-          issues,
           "occurrence-node",
           "occurrence path references a missing node",
           occurrence.id
@@ -223,7 +215,7 @@ export function validateAtlas(
     }
   }
 
-  return { ok: issues.every((issue) => issue.severity !== "fatal"), issues }
+  return { ok: issues.length === 0, issues }
 }
 
 export function measuresAreComparable(
@@ -231,11 +223,10 @@ export function measuresAreComparable(
   rightId: string,
   spec: NetworkAtlasSpec
 ): { ok: true } | { ok: false; reason: string } {
-  const left = isRecord(spec?.measures) ? ownValue(spec.measures, leftId) : undefined
-  const right = isRecord(spec?.measures) ? ownValue(spec.measures, rightId) : undefined
-  if (!isRecord(left) || !isRecord(right)) {
-    return { ok: false, reason: "unknown-measure" }
-  }
+  const measures = isDataRecord(spec?.measures) ? spec.measures : {}
+  const left = ownValue(measures, leftId)
+  const right = ownValue(measures, rightId)
+  if (!isDataRecord(left) || !isDataRecord(right)) return { ok: false, reason: "unknown-measure" }
   if (left.countUnit !== right.countUnit) {
     return { ok: false, reason: "count-unit-mismatch" }
   }

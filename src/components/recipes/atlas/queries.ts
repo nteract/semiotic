@@ -1,9 +1,9 @@
 import { countMotifEntities } from "./entityCounts"
+import { templateEvidence } from "./compare"
 import { ledgerValue } from "./ledger"
 import {
   graphWalkExists,
-  supportedRouteOccurrences,
-  supportedNextHops
+  supportedRouteOccurrences
 } from "./support"
 import type {
   MotifMatch,
@@ -32,24 +32,9 @@ export function getSectionMeasures(
   sectionId: string,
   countingPolicy: { measureId: string }
 ): QueryResult<number> {
-  const entry = atlas.ledger.entries.find(
-    (row) =>
-      row.measureId === countingPolicy.measureId &&
-      row.subjectId === sectionId &&
-      row.subjectKind === "section"
-  )
-  const fallback = ledgerValue(
-    atlas.ledger,
-    countingPolicy.measureId,
-    sectionId
-  )
-  const resolved = entry ?? fallback
-  if (!resolved) {
-    return {
-      ...baseResult(atlas, sectionId, [], ["no-measure-for-section"]),
-      status: "unknown"
-    }
-  }
+  const resolved = ledgerValue(atlas.ledger, countingPolicy.measureId, sectionId, "section")
+    ?? ledgerValue(atlas.ledger, countingPolicy.measureId, sectionId)
+  if (!resolved) return unknownResult(atlas, sectionId, "no-measure-for-section")
   return {
     ...baseResult(atlas, sectionId, [
       `ledger:${resolved.measureId}:${resolved.subjectId}`
@@ -68,6 +53,10 @@ export type PrevalenceWindow =
   | { kind: "completion"; sectionId: string }
   | { kind: "intersection"; sectionId: string }
 
+function unknownResult(atlas: PreparedNetworkAtlas, scope: string, limitation: string) {
+  return { ...baseResult(atlas, scope, [], [limitation]), status: "unknown" as const }
+}
+
 export function getMotifPrevalence(
   atlas: PreparedNetworkAtlas,
   query: {
@@ -75,32 +64,18 @@ export function getMotifPrevalence(
     window?: PrevalenceWindow
   }
 ): QueryResult<{ matchCount: number; entityCount: number }> {
-  const incomplete = atlas.motifs.incompleteCandidates.filter(
+  const incomplete = atlas.motifs.incompleteCandidates.some(
     (row) => row.template === query.template
   )
   if (atlas.motifs.unsupportedTemplates.includes(query.template)) {
-    return {
-      ...baseResult(atlas, query.template, [], ["unsupported-template"]),
-      status: "unknown"
-    }
+    return unknownResult(atlas, query.template, "unsupported-template")
   }
-  const matches = atlas.motifs.matches.filter((match) => {
-    if (match.template !== query.template) return false
-    if (!query.window) return true
-    if (query.window.kind === "completion") {
-      return match.completionSectionId === query.window.sectionId
-    }
-    return match.intersectSectionIds.includes(query.window.sectionId)
-  })
-  const truncated = matches.some((match) => match.truncation)
+  const { matches, truncated } = templateEvidence(atlas, query.template, query.window)
   const uniqueEntities = countMotifEntities(matches)
   const limitations: string[] = []
-  if (incomplete.length > 0) limitations.push("missing-prehistory")
+  if (incomplete) limitations.push("missing-prehistory")
   if (truncated) limitations.push("truncated-match-budget")
-  let status: QueryResult<never>["status"] = "exact"
-  if (incomplete.length > 0 && matches.length === 0) status = "incomplete"
-  else if (truncated) status = "truncated"
-  else if (incomplete.length > 0) status = "incomplete"
+  const status = truncated ? "truncated" : incomplete ? "incomplete" : "exact"
   return {
     ...baseResult(
       atlas,
@@ -122,23 +97,10 @@ export function getMotifWitness(
 ): QueryResult<MotifMatch> {
   const match = atlas.motifs.matches.find((row) => row.id === matchId)
   if (!match) {
-    const incomplete = atlas.motifs.incompleteCandidates.find(
-      (row) => row.occurrenceId === matchId
-    )
-    if (incomplete) {
-      return {
-        ...baseResult(
-          atlas,
-          matchId,
-          [incomplete.occurrenceId],
-          ["missing-prehistory"]
-        ),
-        status: "incomplete"
-      }
-    }
+    const incomplete = atlas.motifs.incompleteCandidates.some(row => row.occurrenceId === matchId)
     return {
-      ...baseResult(atlas, matchId, [], ["unknown-match"]),
-      status: "unknown"
+      ...baseResult(atlas, matchId, incomplete ? [matchId] : [], [incomplete ? "missing-prehistory" : "unknown-match"]),
+      status: incomplete ? "incomplete" : "unknown"
     }
   }
   return {
@@ -158,10 +120,7 @@ export function followSupportedRoute(
 }> {
   const scope = selection.route?.join(">") ?? selection.fromNode ?? "route"
   if (!atlas.source.occurrences?.length) {
-    return {
-      ...baseResult(atlas, scope, [], ["missing-traces"]),
-      status: "unknown"
-    }
+    return unknownResult(atlas, scope, "missing-traces")
   }
   if (selection.route) {
     const evidenceRefs = [
@@ -177,7 +136,7 @@ export function followSupportedRoute(
     return {
       ...baseResult(
         atlas,
-        selection.route.join(">"),
+        scope,
         evidenceRefs,
         supported ? [] : ["unsupported-composite"]
       ),
@@ -192,20 +151,14 @@ export function followSupportedRoute(
     }
   }
   if (!selection.fromNode) {
-    return {
-      ...baseResult(atlas, scope, [], ["missing-from-node"]),
-      status: "unknown"
-    }
+    return unknownResult(atlas, scope, "missing-from-node")
   }
   const next = new Set<string>()
   const evidenceRefs = new Set<string>()
-  for (const hop of supportedNextHops(
-    atlas.source,
-    selection.fromNode,
-    selection.viaNode
-  )) {
-    next.add(hop.nodeId)
-    evidenceRefs.add(hop.occurrenceId)
+  for (const hop of atlas.ports.hops) {
+    if (hop.from !== selection.fromNode || (selection.viaNode != null && hop.via !== selection.viaNode)) continue
+    next.add(hop.to)
+    for (const id of hop.occurrenceIds) evidenceRefs.add(id)
   }
   const nextNodes = [...next]
   return {
@@ -249,12 +202,5 @@ export function getResidualConnections(
 }
 
 export function uniqueEntityCount(atlas: PreparedNetworkAtlas): number {
-  const ids = new Set<string>()
-  let counted = 0
-  for (const occurrence of atlas.source.occurrences ?? []) {
-    ids.add(occurrence.entityId)
-    counted += occurrence.entityCount ?? 1
-  }
-  if (ids.size > 0) return ids.size
-  return counted
+  return new Set(atlas.source.occurrences?.map(row => row.entityId)).size
 }

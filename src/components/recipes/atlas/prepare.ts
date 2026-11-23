@@ -24,6 +24,10 @@ export type PrepareResult =
   | { ok: true; atlas: PreparedNetworkAtlas; issues: AtlasIssue[] }
   | { ok: false; atlas?: undefined; issues: AtlasIssue[] }
 
+function invalidPreparation(kind: string, message: string): PrepareResult {
+  return { ok: false, issues: [{ kind, severity: "fatal", message }] }
+}
+
 function analysisRevision(
   spec: NetworkAtlasSpec,
   source: NetworkAtlasSource,
@@ -58,16 +62,7 @@ export function prepareNetworkAtlas(
     (options.generation !== undefined &&
       (!Number.isSafeInteger(options.generation) || options.generation < 0))
   ) {
-    return {
-      ok: false,
-      issues: [
-        {
-          kind: "generation",
-          severity: "fatal",
-          message: "generation must be a nonnegative safe integer"
-        }
-      ]
-    }
+    return invalidPreparation("generation", "generation must be a nonnegative safe integer")
   }
   const generation = options.generation ?? 1
   let revision: string
@@ -76,16 +71,7 @@ export function prepareNetworkAtlas(
   } catch {
     // Optional extension fields still contribute to the revision. Cycles and
     // non-JSON values must fail before any derived atlas is built.
-    return {
-      ok: false,
-      issues: [
-        {
-          kind: "spec-serialization",
-          severity: "fatal",
-          message: "atlas spec must be serializable as JSON"
-        }
-      ]
-    }
+    return invalidPreparation("spec-serialization", "atlas spec must be serializable as JSON")
   }
   const sections = buildSections(spec, source)
   const motifs = matchMotifs(spec, source)
@@ -94,17 +80,14 @@ export function prepareNetworkAtlas(
   const ledger = buildLedger(spec, source, sections)
   const completeness = buildCompleteness(source, motifs)
   const ports = buildRouteSupportIndex(source)
-  const prefixForest =
-    spec.forest.display.kind === "observed-prefix" ||
-    (source.occurrences?.length ?? 0) > 0
-      ? buildPrefixForest(source.occurrences ?? [], {
-          referencePartition:
-            spec.forest.display.kind === "observed-prefix"
-              ? (spec.forest.display.referencePartition ??
-                spec.comparison?.referencePartition)
-              : spec.comparison?.referencePartition
-        })
-      : undefined
+  const display = spec.forest.display
+  const occurrences = source.occurrences ?? []
+  const observed = display.kind === "observed-prefix"
+  const prefixForest = observed || occurrences.length
+    ? buildPrefixForest(occurrences, {
+        referencePartition: (observed ? display.referencePartition : undefined) ?? spec.comparison?.referencePartition
+      })
+    : undefined
   const atlas: PreparedNetworkAtlas = {
     sourceGraphRef: source.graphRef,
     analysisRevision: revision,
