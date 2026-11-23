@@ -180,6 +180,31 @@ describe("developer MCP chart critique", () => {
     expect(report.structuredContent).toMatchObject({ configurationValid: true, fit: { status: "ok" } })
   })
 
+  it.each(["AreaChart", "StackedAreaChart", "MinimapChart"])("profiles the plotted observations and groups of nested %s series", async component => {
+    const count = component === "MinimapChart" ? 32 : 4
+    const observations = Array.from({ length: count }, (_, x) => ({ x, y: x + 1, region: "point group" }))
+    const props = {
+      data: [{ region: "East", observations }, { region: "West", observations }],
+      lineDataAccessor: "observations", [component === "MinimapChart" ? "lineBy" : "areaBy"]: "region",
+      xAccessor: "x", yAccessor: "y"
+    }
+    const improved = await sendRequest(publicServer, "tools/call", {
+      name: "improveChart", arguments: { component, props }
+    }, component + "-nested-profile")
+    const profile = improved.result.structuredContent.repair.profile
+    expect(profile.rowCount).toBe(count * 2)
+    expect(profile.data.map((row: { region: string }) => row.region)).toEqual(
+      component === "MinimapChart"
+        ? [...Array(count).fill("East"), ...Array(count).fill("West")]
+        : Array(count * 2).fill("point group")
+    )
+    const grouped = props.data.map(({ region, observations }) => ({
+      region, observations: observations.map(({ x, y }) => ({ x, y }))
+    }))
+    const result = await critique(component, { ...props, data: grouped }, "trend")
+    expect(result.structuredContent.fit.status, JSON.stringify(result.structuredContent.findings)).toBe("ok")
+  })
+
   it("scores distinct line objects as series when every observation has the same category", async () => {
     const report = await critique("LineChart", {
       data: [

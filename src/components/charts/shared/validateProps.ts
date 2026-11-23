@@ -1,3 +1,4 @@
+import { positionalData } from "./dataRecords"
 import type { Datum } from "./datumTypes"
 /**
  * Static props validation for AI code-generation pipelines.
@@ -615,7 +616,7 @@ export function validateProps(
 
   // 5. Data shape + accessor validation (delegate to existing helpers)
   if (spec.dataShape === "array") {
-    const data = props.data
+    const data = positionalData(props.data, !!spec.props.lineDataAccessor, props.lineDataAccessor) as typeof props.data
     const accessors: Record<string, string | undefined> = {}
     for (const acc of spec.dataAccessors) {
       const val = props[acc]

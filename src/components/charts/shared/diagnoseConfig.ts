@@ -37,7 +37,7 @@ import {
 import { checkPhysicsConfig } from "./diagnosePhysicsChecks"
 import { diagnoseProcessSankeyProps } from "../network/processSankey/layoutQualityProduct"
 import { auditData } from "../../data/auditData"
-import { isDataRecord, sampledFields } from "./dataRecords"
+import { positionalData, isDataRecord, sampledFields } from "./dataRecords"
 
 export { contrastRatio } from "./colorContrast"
 export type {
@@ -131,7 +131,7 @@ function checkAccessorFieldMissing(
 ): void {
   const spec = VALIDATION_MAP[component]
   if (!spec || spec.dataShape !== "array") return
-  const data = props.data
+  const data = positionalData(props.data, !!spec.props.lineDataAccessor, props.lineDataAccessor)
   if (!data || !Array.isArray(data) || data.length === 0) return
 
   const available = sampledFields(data)

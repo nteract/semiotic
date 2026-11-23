@@ -1,3 +1,4 @@
+import { prepareAreaSeriesData } from "../src/components/charts/shared/areaSeriesData"
 import { isDataRecord } from "../src/components/charts/shared/dataRecords"
 import { inferNodesFromEdges } from "../src/components/charts/shared/inferNodesFromEdges"
 import { normalizeLineChartData } from "../src/components/charts/shared/lineChartData"
@@ -39,6 +40,26 @@ export function chartProfileInput(args: {
   const rows = args.data ?? props.data
   if (Array.isArray(rows)) {
     const key = typeof props.lineDataAccessor === "string" ? props.lineDataAccessor : "coordinates"
+    if (args.component === "AreaChart" || args.component === "StackedAreaChart") {
+      const areaBy = typeof props.areaBy === "string" ? props.areaBy : undefined
+      const records = rows.filter(isDataRecord)
+      return {
+        data: records[0]?.[key] === undefined ? records :
+          prepareAreaSeriesData({ data: records, safeData: records, areaBy, lineDataAccessor: key }),
+        seriesField: areaBy
+      }
+    }
+    if (args.component === "MinimapChart") {
+      const lineBy = typeof props.lineBy === "string" ? props.lineBy : undefined
+      const records = rows.filter(isDataRecord)
+      const data = records[0]?.[key] === undefined ? records : records.flatMap(line => {
+        const coordinates = line[key]
+        if (!Array.isArray(coordinates)) return []
+        const points = coordinates.filter(isDataRecord)
+        return lineBy ? points.map(point => ({ ...point, [lineBy]: line[lineBy] })) : points
+      })
+      return { data, seriesField: lineBy }
+    }
     if (args.component === "LineChart") {
       const lineBy = typeof props.lineBy === "string" ? props.lineBy : undefined
       const lines = rows.filter(isDataRecord)
