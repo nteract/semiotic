@@ -17,24 +17,19 @@ export function containsRoute(
   )
 }
 
-export function buildRouteSupportIndex(
-  source: NetworkAtlasSource
-): RouteSupportIndex {
-  const hops: SupportedHop[] = []
+function* observedHops(source: NetworkAtlasSource): Generator<SupportedHop> {
   for (const occurrence of source.occurrences ?? []) {
     if (occurrence.missingPrehistory) continue
     const path = occurrence.nodePath
-    for (let i = 0; i < path.length - 1; i++) {
-      hops.push({
-        from: path[i],
-        to: path[i + 1],
-        via: i > 0 ? path[i - 1] : undefined,
-        occurrenceIds: [occurrence.id]
-      })
+    for (let i = 0; i + 1 < path.length; i++) {
+      yield { from: path[i], to: path[i + 1], via: path[i - 1], occurrenceIds: [occurrence.id] }
     }
   }
+}
+
+export function buildRouteSupportIndex(source: NetworkAtlasSource): RouteSupportIndex {
   return {
-    hops,
+    hops: Array.from(observedHops(source)),
     graphAdjacency: source.edges.map((edge) => ({
       source: edge.source,
       target: edge.target,
@@ -47,11 +42,8 @@ export function graphWalkExists(
   source: NetworkAtlasSource,
   route: readonly string[]
 ): boolean {
-  for (let i = 0; i < route.length - 1; i++) {
-    const ok = source.edges.some(
-      (edge) => edge.source === route[i] && edge.target === route[i + 1]
-    )
-    if (!ok) return false
+  for (let index = 1; index < route.length; index++) {
+    if (!source.edges.some(edge => edge.source === route[index - 1] && edge.target === route[index])) return false
   }
   return route.length > 0
 }
@@ -82,13 +74,9 @@ export function* supportedNextHops(
   fromNode: string,
   viaNode?: string
 ) {
-  for (const occurrence of source.occurrences ?? []) {
-    if (occurrence.missingPrehistory) continue
-    const path = occurrence.nodePath
-    for (let i = 0; i < path.length - 1; i++) {
-      if (path[i] !== fromNode) continue
-      if (viaNode != null && (i === 0 || path[i - 1] !== viaNode)) continue
-      yield { nodeId: path[i + 1], occurrenceId: occurrence.id }
+  for (const hop of observedHops(source)) {
+    if (hop.from === fromNode && (viaNode == null || hop.via === viaNode)) {
+      yield { nodeId: hop.to, occurrenceId: hop.occurrenceIds[0] }
     }
   }
 }

@@ -37,7 +37,7 @@ import {
 import { checkPhysicsConfig } from "./diagnosePhysicsChecks"
 import { diagnoseProcessSankeyProps } from "../network/processSankey/layoutQualityProduct"
 import { auditData } from "../../data/auditData"
-import { positionalData, isDataRecord, sampledFields } from "./dataRecords"
+import { isDataRecord, recordFields, sampleDataRecords, seriesCoordinateField } from "./dataRecords"
 
 export { contrastRatio } from "./colorContrast"
 export type {
@@ -72,7 +72,7 @@ function checkEmptyData(
 
   if (spec.dataShape === "array" || spec.dataShape === "realtime") {
     const data = props.data
-    if (data && Array.isArray(data) && data.length === 0) {
+    if (Array.isArray(data) && data.length === 0) {
       out.push({
         severity: "error",
         code: "EMPTY_DATA",
@@ -131,10 +131,10 @@ function checkAccessorFieldMissing(
 ): void {
   const spec = VALIDATION_MAP[component]
   if (!spec || spec.dataShape !== "array") return
-  const data = positionalData(props.data, !!spec.props.lineDataAccessor, props.lineDataAccessor)
-  if (!data || !Array.isArray(data) || data.length === 0) return
+  const data = props.data
+  if (!Array.isArray(data)) return
 
-  const available = sampledFields(data)
+  const available = recordFields(sampleDataRecords(data, seriesCoordinateField(spec.props, props)))
   if (!available.length) return
 
   for (const accProp of spec.dataAccessors) {
@@ -258,7 +258,7 @@ function checkNonZeroBaseline(
   if (!BAR_AREA_CHARTS.has(component)) return
 
   const extent = props.rExtent || props.yExtent || props.valueExtent
-  if (extent && Array.isArray(extent) && extent.length >= 1 && extent[0] != null && extent[0] !== 0) {
+  if (Array.isArray(extent) && extent[0] != null && extent[0] !== 0) {
     out.push({
       severity: "warning",
       code: "NON_ZERO_BASELINE",
@@ -318,7 +318,7 @@ function checkColorContrast(
   out: Diagnosis[]
 ): void {
   const colors = props.colorScheme
-  if (!colors || !Array.isArray(colors)) return
+  if (!Array.isArray(colors)) return
 
   const bg = typeof props.background === "string" ? props.background : "#ffffff"
   if (!bg.startsWith("#")) return

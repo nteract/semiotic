@@ -173,7 +173,8 @@ export type {
   MotifBraidProjection,
   TrajectoryGroup,
   BraidRibbon,
-  SignedReadout
+  SignedReadout,
+  UnavailableDifference
 } from "./recipes/atlas/braid"
 export type { MotifCapsule } from "./recipes/atlas/capsules"
 export type { MotifProfileCell, MotifProfileStrip } from "./recipes/atlas/profile"

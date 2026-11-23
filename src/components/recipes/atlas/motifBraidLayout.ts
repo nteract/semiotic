@@ -81,9 +81,9 @@ const restyleMark: NonNullable<NetworkLayoutResult["restyle"]> &
  * journey keeps its own lane through shared steps and splits only when its
  * prefix diverges. Width interpolates between the two supplied step counts.
  */
-export const motifBraidLayout: NetworkCustomLayout<MotifBraidLayoutConfig> = (
-  ctx
-) => {
+export const layoutBraidGeometry: NetworkCustomLayout<{
+  braid: Pick<MotifBraidProjection, "atlas" | "groups" | "signatureOrder">
+}> = (ctx) => {
   const braid = ctx.config.braid
   const plot = ctx.dimensions.plot
   const partitions = braid.atlas.spec.comparison?.partitions ?? [
@@ -325,3 +325,5 @@ export const motifBraidLayout: NetworkCustomLayout<MotifBraidLayoutConfig> = (
     restyleEdge: restyleMark
   }
 }
+
+export const motifBraidLayout: NetworkCustomLayout<MotifBraidLayoutConfig> = layoutBraidGeometry

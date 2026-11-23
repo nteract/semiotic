@@ -12,35 +12,26 @@ export function isDataRecord(value: unknown): value is Datum {
 }
 
 /** Sample ordinary rows cheaply; inspect all records when samples are gaps. */
-export function sampleDataRecords(data: readonly unknown[]): Datum[] {
+export function sampleDataRecords(data: readonly unknown[], seriesField?: string): Datum[] {
   const sampled =
     data.length <= 3
-      ? Array.from(data)
+      ? data
       : [data[0], data[Math.floor(data.length / 2)], data[data.length - 1]]
-  const records = sampled.filter(isDataRecord)
-  if (records.length) return records
-  return data.filter(isDataRecord)
-}
-
-export function sampledFields(data: readonly unknown[]): string[] {
-  return [...new Set(sampleDataRecords(data).flatMap(Object.keys))]
-}
-
-
-/** Positional accessors on a series wrapper read its observation records. */
-export function positionalData(data: unknown, nested: boolean, key: unknown) {
-  if (!nested || !Array.isArray(data)) return data
-  const field = typeof key === "string" ? key : "coordinates"
-  if (!Array.isArray(data[0]?.[field])) return data
-  const samples = sampleDataRecords(data).flatMap(row =>
-    Array.isArray(row[field]) ? sampleDataRecords(row[field]) : []
-  )
-  if (samples.length) return samples
-  for (const row of data) {
-    if (Array.isArray(row?.[field])) {
-      const records = sampleDataRecords(row[field])
-      if (records.length) return records
-    }
+  const nested = seriesField && Array.isArray((data[0] as Datum | undefined)?.[seriesField]) ? seriesField : undefined
+  const inspect = (rows: readonly unknown[]) => {
+    const records = rows.filter(isDataRecord)
+    return nested ? records.flatMap(row => Array.isArray(row[nested]) ? sampleDataRecords(row[nested]) : []) : records
   }
-  return []
+  const records = inspect(sampled)
+  return records.length ? records : inspect(data)
+}
+
+export function recordFields(records: Datum[]): string[] {
+  return [...new Set(records.flatMap(Object.keys))]
+}
+
+export function seriesCoordinateField(definitions: Record<string, unknown>, props: Datum) {
+  if (definitions.lineDataAccessor) {
+    return typeof props.lineDataAccessor === "string" ? props.lineDataAccessor : "coordinates"
+  }
 }

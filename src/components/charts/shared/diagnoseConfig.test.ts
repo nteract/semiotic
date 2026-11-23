@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { diagnoseConfig } from "./diagnoseConfig"
+import { validateProps } from "./validateProps"
 import type { Datum } from "./datumTypes"
 
 describe("diagnoseConfig", () => {
@@ -136,6 +137,18 @@ describe("diagnoseConfig", () => {
     })
     const codes = result.diagnoses.map((d) => d.code)
     expect(codes).toContain("BAD_WIDTH")
+  })
+
+  it.each(["LineChart", "AreaChart", "StackedAreaChart"])("validates %s accessors on populated coordinate rows", component => {
+    const empty = { group: "B", points: [] }
+    const props = { data: [empty, { group: "A", points: [{ date: 1, amount: 4 }] }, empty, empty],
+      lineDataAccessor: "points", xAccessor: "date", yAccessor: "amount",
+      ...(component === "StackedAreaChart" ? { areaBy: "group" } : {}) }
+    expect(validateProps(component, props).valid).toBe(true)
+    expect(diagnoseConfig(component, props).diagnoses.map(issue => issue.code)).not.toContain("ACCESSOR_MISSING")
+    const invalid = { ...props, xAccessor: "group" }
+    expect(validateProps(component, invalid).errors.join(" ")).toContain('xAccessor "group" not found')
+    expect(diagnoseConfig(component, invalid).diagnoses).toContainEqual(expect.objectContaining({ code: "ACCESSOR_MISSING" }))
   })
 
   it("detects accessor field not in data", () => {

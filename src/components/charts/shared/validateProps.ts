@@ -1,4 +1,4 @@
-import { positionalData } from "./dataRecords"
+import { seriesCoordinateField } from "./dataRecords"
 import type { Datum } from "./datumTypes"
 /**
  * Static props validation for AI code-generation pipelines.
@@ -118,10 +118,8 @@ export interface ComponentSpec {
 
 // Helpers
 
-function checkType(value: unknown, expected: PropType | PropType[]): boolean {
-  const types = Array.isArray(expected) ? expected : [expected]
-  const actual = Array.isArray(value) ? "array" : typeof value
-  return types.includes(actual as PropType)
+function propTypes(type: PropType | PropType[]): PropType[] {
+  return Array.isArray(type) ? type : [type]
 }
 
 function runtimeTypeOf(value: unknown): string {
@@ -209,7 +207,7 @@ function suggestPropName(
   knownNames: string[],
 ): { name: string; rename: boolean } | undefined {
   const has = (name: string) =>
-    Object.prototype.hasOwnProperty.call(known, name)
+    Object.hasOwn(known, name)
   const lower = key.toLowerCase()
   const sameName = knownNames.find((name) => name.toLowerCase() === lower)
   if (sameName) return { name: sameName, rename: true }
@@ -467,53 +465,26 @@ export function validateProps(
     }
   }
 
-  // 2. Required props
-  for (const req of spec.required) {
-    if (props[req] === undefined || props[req] === null) {
-      issues.push({
-        code: "MISSING_REQUIRED_PROP",
-        path: req,
-        message: `"${req}" is required for ${componentName}.`,
-      })
-    }
-  }
-
-  // 2b. Array-shape charts need a `data` prop in static usage even when "data"
-  // isn't in `required` (those lists hold semantic accessors). Without this,
-  // CandlestickChart / MultiAxisLineChart / QuadrantChart / DifferenceChart /
-  // SwimlaneChart / LikertChart validated as OK with no data and rendered
-  // blank. The canonical message lets the usageMode filter keep it in static
-  // and drop it in push. The guard avoids double-emitting for charts that
-  // already list "data" in `required` (handled in the loop above).
-  if (
-    spec.dataShape === "array" &&
-    // Geo HOCs such as FlowMap declare their own array input (`flows`,
-    // `points`, or `areas`) rather than a generic `data` prop. Do not invent
-    // an unknown `data` requirement for a chart whose declared prop surface
-    // cannot satisfy it.
-    Object.prototype.hasOwnProperty.call(spec.props, "data") &&
-    !spec.required.includes("data") &&
-    !allowsGeneratedArrayData(componentName, props) &&
-    (props.data === undefined || props.data === null)
-  ) {
-    issues.push({
-      code: "MISSING_REQUIRED_PROP",
-      path: "data",
-      message: `"data" is required for ${componentName}.`,
+  // Array charts with a declared data prop also require it in static configs.
+  const needsData = spec.dataShape === "array" && Object.hasOwn(spec.props, "data") &&
+    !spec.required.includes("data") && !allowsGeneratedArrayData(componentName, props)
+  for (const req of needsData ? [...spec.required, "data"] : spec.required) {
+    if (props[req] == null) issues.push({
+      code: "MISSING_REQUIRED_PROP", path: req, message: `"${req}" is required for ${componentName}.`
     })
   }
 
   // 3. Prop types & enum values
   for (const [key, value] of Object.entries(props)) {
-    if (value === undefined || value === null) continue
-    const def = Object.prototype.hasOwnProperty.call(spec.props, key)
+    if (value == null) continue
+    const def = Object.hasOwn(spec.props, key)
       ? spec.props[key] : undefined
     if (!def) continue // unknown prop — checked in step 4
 
     // Type check
-    if (!checkType(value, def.type)) {
-      const expectedTypes = Array.isArray(def.type) ? def.type : [def.type]
-      const actualType = runtimeTypeOf(value)
+    const expectedTypes = propTypes(def.type)
+    const actualType = runtimeTypeOf(value)
+    if (!expectedTypes.includes(actualType as PropType)) {
       // A callback prop handed a serializable value is the classic generated-
       // config mistake (a d3 format string for `yFormat`). Say why it cannot
       // work rather than only naming the type.
@@ -571,7 +542,7 @@ export function validateProps(
   let validProps: string[] | undefined
   for (const key of Object.keys(props)) {
     if (props[key] === undefined) continue
-    if (Object.prototype.hasOwnProperty.call(spec.props, key)) continue
+    if (Object.hasOwn(spec.props, key)) continue
     const match = suggestPropName(key, spec.props, knownPropNames)
     if (match) {
       const suggestion = match.name
@@ -583,7 +554,7 @@ export function validateProps(
         ? { op: "remove", path: key }
         : match.rename &&
             (props[key] === null ||
-              checkType(props[key], spec.props[suggestion].type))
+              propTypes(spec.props[suggestion].type).includes(runtimeTypeOf(props[key]) as PropType))
           ? { op: "rename", from: key, to: suggestion }
           : undefined
       issues.push({
@@ -610,32 +581,24 @@ export function validateProps(
   }
 
   // Histogram charts take axis configs as a top-level prop.
-  if (Object.prototype.hasOwnProperty.call(spec.props, "axes")) {
+  if (Object.hasOwn(spec.props, "axes")) {
     issues.push(...validateAxisConfigKeys(props.axes, "axes"))
   }
 
   // 5. Data shape + accessor validation (delegate to existing helpers)
+  let dataError: string | null = null
   if (spec.dataShape === "array") {
-    const data = positionalData(props.data, !!spec.props.lineDataAccessor, props.lineDataAccessor) as typeof props.data
-    const accessors: Record<string, string | undefined> = {}
-    for (const acc of spec.dataAccessors) {
-      const val = props[acc]
-      if (typeof val === "string") {
-        accessors[acc] = val
-      }
-    }
-    const dataError = validateArrayData({
+    dataError = validateArrayData({
       componentName,
-      data,
-      accessors: Object.keys(accessors).length > 0 ? accessors : undefined,
+      data: props.data,
+      seriesField: seriesCoordinateField(spec.props, props),
+      accessors: Object.fromEntries(spec.dataAccessors.map(key => [key, props[key]])),
     })
-    if (dataError) issues.push({ code: "INVALID_DATA", path: "data", message: dataError })
   } else if (spec.dataShape === "object") {
-    const dataError = validateObjectData({
+    dataError = validateObjectData({
       componentName,
       data: props.data,
     })
-    if (dataError) issues.push({ code: "INVALID_DATA", path: "data", message: dataError })
   } else if (spec.dataShape === "network") {
     // Network validation checks node fields only; source/target accessors
     // belong to edge records and must not be tested against a node sample.
@@ -645,7 +608,7 @@ export function validateProps(
     const nodeAccessors = typeof nodeIdAccessor === "string"
       ? { nodeIdAccessor }
       : undefined
-    const dataError = validateNetworkData({
+    dataError = validateNetworkData({
       componentName,
       nodes: props.nodes,
       edges: props.edges,
@@ -653,10 +616,11 @@ export function validateProps(
       edgesRequired: spec.required.includes("edges"),
       accessors: nodeAccessors,
     })
-    if (dataError) issues.push({ code: "INVALID_DATA", message: dataError })
   }
-  // "none" (e.g. GaugeChart's value-only props) and "realtime" (ref-based
-  // push API) data shapes have no data prop to validate — no branch needed.
+  if (dataError) issues.push({
+    code: "INVALID_DATA", message: dataError,
+    ...(spec.dataShape === "network" ? {} : { path: "data" })
+  })
 
   if (componentName === "GaugeChart") {
     issues.push(...validateGaugeThresholds(props))

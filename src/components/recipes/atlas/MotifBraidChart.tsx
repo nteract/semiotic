@@ -1,7 +1,7 @@
 "use client"
 import { useMemo } from "react"
 import { NetworkCustomChart } from "../../charts/custom/NetworkCustomChart"
-import { prepareMotifBraid } from "./braid"
+import { prepareBraidGeometry } from "./braid"
 import {
   motifBraidChartProps,
   type MotifBraidChartProps
@@ -23,6 +23,6 @@ export type { MotifBraidChartProps }
  * })
  */
 export function MotifBraidChart(props: MotifBraidChartProps) {
-  const braid = useMemo(() => prepareMotifBraid(props.atlas), [props.atlas])
+  const braid = useMemo(() => prepareBraidGeometry(props.atlas), [props.atlas])
   return <NetworkCustomChart {...motifBraidChartProps(props, braid)} />
 }

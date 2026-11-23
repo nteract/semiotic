@@ -1,5 +1,5 @@
 import { compareRecipeIds } from "../../utils/compareRecipeIds"
-import { idDictionary, setOwnValue } from "./ids"
+import { idDictionary } from "./ids"
 import { buildRootedForest } from "./rootedForest"
 import type {
   AtlasEdge,
@@ -74,7 +74,7 @@ export function classifyForest(
     if (rootSet.has(node.id)) continue
     const candidates = rankEdges(incoming.get(node.id) ?? [], order)
     const preferred = candidates.find((edge) => mainEdge(edge)) ?? candidates[0]
-    if (preferred) setOwnValue(primaryParentEdgeIdByNode, node.id, preferred.id)
+    if (preferred) primaryParentEdgeIdByNode[node.id] = preferred.id
   }
 
   let backboneEdgeIds: string[]
