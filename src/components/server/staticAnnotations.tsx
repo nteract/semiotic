@@ -21,12 +21,12 @@ import { resolveAnchoredPosition, resolveAnnotationCoordinate } from "../charts/
 import type { AnnotationContext } from "../realtime/types"
 import { prepareFrameAnnotations, type AutoPlaceAnnotations } from "../recipes/annotationLayout"
 import { AnnotationLabel } from "../charts/shared/AnnotationLabel"
-import { resolveAnnotationBandFill } from "../charts/shared/annotationBandFill"
+import { renderBandAnnotation } from "../charts/shared/renderBandAnnotation"
 import { filterAnnotationsByStatus } from "../charts/shared/annotationStatusFilter"
 import { FrameTextAnnotationSVG } from "../charts/shared/FrameTextAnnotationSVG"
 import { renderStaticAnnotationFallback } from "./staticAnnotationFallbacks"
 import { ssrLabelBackground } from "./ssrLabelBackground"
-import { projectHeatmapBandBound, projectHeatmapBandValue } from "../stream/heatmapBandTicks"
+import { projectHeatmapBandValue } from "../stream/heatmapBandTicks"
 
 const TOP_LABEL_BASELINE = 16
 
@@ -398,96 +398,17 @@ function renderAnnotation(
         background={ssrLabelBackground(ann, theme, "halo")} dash="6,4" />
     }
 
-    case "band": {
-      // A null/omitted bound extends to the axis extent on that side
-      // (y0 → domain min, y1 → domain max) rather than skipping the band.
-      if (typeof scales.y !== "function") return null
-      const projectedY0 = projectHeatmapBandBound(scales.y, ann.y0, 0)
-      const projectedY1 = projectHeatmapBandBound(scales.y, ann.y1, 1)
-      if ((ann.y0 != null && projectedY0 == null) || (ann.y1 != null && projectedY1 == null)) return null
-      const y0 = projectedY0 ?? 0
-      const y1 = projectedY1 ?? layout.height
-      const top = Math.min(y0, y1)
-      const height = Math.abs(y1 - y0)
-      // Region fill may be a declarative HatchFill → inline <pattern>.
-      // Unset fill/color defaults to the theme primary, like the client band.
-      const bandFill = resolveAnnotationBandFill(
-        ann,
-        `ssr-band-${index}`,
-        "vertical",
-        theme.colors.primary || resolveAnnotationColor(ann, theme),
-      )
-      // Base fill alpha from `fillOpacity` (matches the client renderer);
-      // `opacity` is the group/decay alpha so freshness dimming composes.
-      const fillOpacity = ann.fillOpacity ?? 0.1
-      // A `layer: "under"` band's fill renders beneath the marks (staticXY).
-      const fillUnderMarks = config.underLayerBands === true && ann.layer === "under"
-      return (
-        <g key={`ann-band-${index}`} opacity={ann.opacity}>
-          {!fillUnderMarks && bandFill.def && <defs>{bandFill.def}</defs>}
-          {!fillUnderMarks && <rect
-            x={0} y={top} width={layout.width} height={height}
-            fill={bandFill.fill} fillOpacity={fillOpacity}
-          />}
-          {ann.label && (
-            <AnnotationLabel
-              x={layout.width - 4} y={Math.max(top, 0) + TOP_LABEL_BASELINE}
-              textAnchor="end"
-              fontSize={theme.typography.tickSize}
-              fill={ann.labelColor ?? (ann.color || theme.colors.primary || resolveAnnotationColor(ann, theme))}
-              fontFamily={theme.typography.fontFamily}
-              fontWeight="bold"
-              text={ann.label}
-              background={ssrLabelBackground(ann, theme, "halo")}
-            />
-          )}
-        </g>
-      )
-    }
-
+    case "band":
     case "x-band": {
-      // A null/omitted bound extends to the axis extent on that side
-      // (x0 → domain min, x1 → domain max) rather than skipping the band.
-      if (typeof scales.x !== "function") return null
-      const projectedX0 = projectHeatmapBandBound(scales.x, ann.x0, 0)
-      const projectedX1 = projectHeatmapBandBound(scales.x, ann.x1, 1)
-      if ((ann.x0 != null && projectedX0 == null) || (ann.x1 != null && projectedX1 == null)) return null
-      const x0 = projectedX0 ?? 0
-      const x1 = projectedX1 ?? layout.width
-      const left = Math.min(x0, x1)
-      const width = Math.abs(x1 - x0)
-      const xBandFill = resolveAnnotationBandFill(
-        ann,
-        `ssr-xband-${index}`,
-        "horizontal",
-        theme.colors.primary || resolveAnnotationColor(ann, theme),
-      )
-      const fillOpacity = ann.fillOpacity ?? 0.1
-      const fillUnderMarks = config.underLayerBands === true && ann.layer === "under"
-      return (
-        <g key={`ann-xband-${index}`} opacity={ann.opacity}>
-          {!fillUnderMarks && xBandFill.def && <defs>{xBandFill.def}</defs>}
-          {!fillUnderMarks && <rect
-            x={left} y={0} width={width} height={layout.height}
-            fill={xBandFill.fill} fillOpacity={fillOpacity}
-          />}
-          {ann.label && (
-            <AnnotationLabel
-              x={left + 4} y={TOP_LABEL_BASELINE}
-              textAnchor="start"
-              fontSize={theme.typography.tickSize}
-              // Match the client x-band label default (`--semiotic-primary`),
-              // not the generic annotation text color — otherwise an unlabeled-
-              // color x-band reads dark in SSR but primary-tinted on canvas.
-              fill={ann.labelColor ?? (ann.color || theme.colors.primary || resolveAnnotationColor(ann, theme))}
-              fontFamily={theme.typography.fontFamily}
-              fontWeight="bold"
-              text={ann.label}
-              background={ssrLabelBackground(ann, theme, "halo")}
-            />
-          )}
-        </g>
-      )
+      const xBand = ann.type === "x-band"
+      const scale = xBand ? scales.x : scales.y
+      if (typeof scale !== "function") return null
+      return renderBandAnnotation(ann, {
+        ...layout, scale, id: `ssr-${xBand ? "xband" : "band"}-${index}`,
+        underLayer: config.underLayerBands, color: theme.colors.primary || resolveAnnotationColor(ann, theme),
+        fontSize: theme.typography.tickSize, fontFamily: theme.typography.fontFamily,
+        background: ssrLabelBackground(ann, theme, "halo")
+      })
     }
 
     case "category-highlight": {
