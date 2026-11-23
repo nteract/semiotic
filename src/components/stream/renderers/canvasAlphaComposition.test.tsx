@@ -402,12 +402,23 @@ describe.each(cases)(
           alpha *= Number(attribute(current, "opacity") ?? 1)
         return alpha
       }
-      if (filled)
+      if (name === "gradient bezier") {
+        const mark = marks.find(mark => mark.getAttribute("fill")?.startsWith("url(#"))
+        expect(mark).toBeDefined()
+        const gradient = doc.getElementById(mark!.getAttribute("fill")!.slice(5, -1))
+        expect(gradient?.localName).toBe("linearGradient")
+        const stops = Array.from(gradient!.querySelectorAll("stop"), stop => [
+          stop.getAttribute("stop-color"),
+          effective(mark!, "fill") * Number(stop.getAttribute("stop-opacity"))
+        ])
+        expect(stops).toEqual([["#336699", 0.2], ["#336699", 0]])
+      } else if (filled) {
         expect(
           marks
             .filter((m) => m.getAttribute("fill") === "#336699")
             .map((m) => effective(m, "fill"))
         ).toContainEqual(0.2)
+      }
       expect(
         marks
           .filter((m) => m.getAttribute("stroke") === "#112233")

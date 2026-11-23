@@ -41,7 +41,7 @@ export function intervalTimes(start: number, end: number, domain: Domain, midpoi
   return [...times].sort((a, b) => a - b)
 }
 
-type BandSection = { x: number; top: number; bottom: number }
+type BandSection = { x: number; top: number; bottom: number; boundary?: number }
 
 /** Keep every attachment covered at its event time and the observed thickness midway between events. */
 function continuousSections(sections: BandSection[], domain: Domain, hasIntervalSamples: boolean): BandSection[] {
@@ -86,7 +86,7 @@ export function projectBandSections(
   const sections = samples.map(sample => {
     const boundary = cl + (sample.boundaryOffset ?? 0) * S
     return {
-      x: sample.t,
+      x: sample.t, boundary,
       top: boundary - sample.topMass * S,
       bottom: boundary + sample.botMass * S,
     }
@@ -123,7 +123,7 @@ export function bandSectionPath(knots: BandSection[], smooth: boolean): string |
  * One 20-px gradient stub at an attachment with `systemInTime` /
  * `systemOutTime`. Rendered as its own bezier scene-edge with a
  * horizontal gradient, painted underneath the band. The band
- * paints with `fill: none` whenever any stubs are present, so the
+ * uses a transparent fill whenever any stubs are present, so the
  * stub gradients are the only colored regions inside the band's
  * outline.
  */
@@ -175,7 +175,9 @@ export function buildBandCutoutsForNode(
         ? (knots[i - 1] ?? knot).x <= right
         : (knots[i + 1] ?? knot).x >= left
       ).map(knot => {
-        const withinBand = (edge: number) => Math.max(knot.top, Math.min(knot.bottom, edge))
+        const attachmentBoundary = cl + (att.boundaryOffset ?? 0) * S
+        const shift = (knot.boundary ?? attachmentBoundary) - attachmentBoundary
+        const withinBand = (edge: number) => Math.max(knot.top, Math.min(knot.bottom, edge + shift))
         return { x: knot.x, top: withinBand(top), bottom: withinBand(bottom) }
       })
       const outline = bandSectionPath(slot, true)

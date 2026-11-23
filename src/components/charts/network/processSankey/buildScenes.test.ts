@@ -103,7 +103,7 @@ describe("buildProcessSankeyScenes validation policy", () => {
       nodes: [{ id: "source" }, { id: "A", group: "stock", xExtent: [0, 8] as [number, number] }, { id: "B", group: "stock", xExtent: [0, 8] as [number, number] }],
       edges: [
         { id: "a", source: "source", target: "A", startTime: -1, endTime: 0, value: 1 },
-        { id: "b", source: "source", target: "B", startTime: -1, endTime: 0, value: 1 },
+        { id: "b", source: "source", target: "B", startTime: -1, endTime: 0, value: 1, systemOutTime: 8 },
         { id: "growth", source: "source", target: "A", startTime: 3, endTime: 4, value: 2 }
       ],
       domain: [0, 8] as [number, number], plotW: 800, plotH: 300,
@@ -120,6 +120,16 @@ describe("buildProcessSankeyScenes validation policy", () => {
       return { top, bottom }
     }).sort((a, b) => a.top - b.top)
     expect(atMidpoint[0].bottom).toBeCloseTo(atMidpoint[1].top)
+
+    const lower = layoutConfig.bands.find(band => band.id === "B")!
+    const slot = lower.gradientStubs![0]
+    const spanAtSix = (path: string) => [...path.matchAll(/(?:^|[ ML])600,([-\d.]+)(?= |$)/g)]
+      .map(match => Number(match[1])).sort((a, b) => a - b)
+    const band = spanAtSix(lower.pathD)
+    expect(band).toHaveLength(2)
+    expect(band[1] - band[0]).toBeCloseTo(layout!.valueScale)
+    expect(spanAtSix(slot.pathD)).toEqual(band)
+    expect([slot.x0, slot.x1, slot.from, slot.to]).toEqual([800, 820, 1, 0])
   })
 
   it("CSR/SSR reserve time-axis height without fixed side gutters", () => {
