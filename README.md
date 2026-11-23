@@ -646,9 +646,9 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { GaltonBoardChart } from "semiotic/physics"` | browser | **98.6 KiB** | 2.7 KiB | 101.0 KiB |
 | `import { MATTER_PHYSICS_CAPABILITIES } from "semiotic/physics/matter"` | browser | **0.1 KiB** | — | 0.1 KiB |
 | `import { RAPIER_PHYSICS_CAPABILITIES } from "semiotic/physics/rapier"` | browser | **0.2 KiB** | — | 0.2 KiB |
-| `import { renderChart } from "semiotic/server"` | node | **312.0 KiB** | — | 312.0 KiB |
+| `import { renderChart } from "semiotic/server"` | node | **312.1 KiB** | — | 312.1 KiB |
 | `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **130.2 KiB** | — | 130.2 KiB |
-| `import { renderToImage } from "semiotic/server/node"` | node | **312.3 KiB** | 0.6 KiB | 313.0 KiB |
+| `import { renderToImage } from "semiotic/server/node"` | node | **312.4 KiB** | 0.6 KiB | 313.1 KiB |
 | `import { suggestCharts } from "semiotic/ai"` | browser | **32.7 KiB** | 13.5 KiB | 33.9 KiB |
 | `import { suggestCharts } from "semiotic/ai/core"` | browser | **32.4 KiB** | — | 32.4 KiB |
 | `import { buildArtifactContract } from "semiotic/artifact"` | browser | **4.5 KiB** | — | 4.5 KiB |

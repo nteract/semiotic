@@ -32,8 +32,8 @@ export function buildEdgeIndex(
     outgoing[n.id] = []
   }
   for (const e of edges) {
-    if (outgoing[e.source]) outgoing[e.source].push(e)
-    if (incoming[e.target]) incoming[e.target].push(e)
+    outgoing[e.source]?.push(e)
+    incoming[e.target]?.push(e)
   }
   return { incoming, outgoing }
 }
@@ -53,18 +53,6 @@ export function assignSides(
   /** Matches the public HOC default (`"temporal"`). */
   pairing: "value" | "temporal" = "temporal"
 ): Map<string, ProcessSankeySideRecord> {
-  const sortIn =
-    pairing === "temporal"
-      ? (a: ProcessSankeyEdge, b: ProcessSankeyEdge) =>
-          a.endTime - b.endTime || compareProcessSankeyIds(a.id, b.id)
-      : (a: ProcessSankeyEdge, b: ProcessSankeyEdge) =>
-          b.value - a.value || compareProcessSankeyIds(a.id, b.id)
-  const sortOut =
-    pairing === "temporal"
-      ? (a: ProcessSankeyEdge, b: ProcessSankeyEdge) =>
-          a.startTime - b.startTime || compareProcessSankeyIds(a.id, b.id)
-      : (a: ProcessSankeyEdge, b: ProcessSankeyEdge) =>
-          b.value - a.value || compareProcessSankeyIds(a.id, b.id)
   const sides = new Map<string, ProcessSankeySideRecord>()
   for (const e of edges) sides.set(e.id, {})
 
@@ -92,54 +80,32 @@ export function assignSides(
       g.earliestStart = Math.min(g.earliestStart, e.startTime)
       g.latestEnd = Math.max(g.latestEnd, e.endTime)
     }
-    const list = [...groups.values()]
-    if (pairing === "temporal") {
-      list.sort((a, b) =>
-        partnerKey === "target"
-          ? a.earliestStart - b.earliestStart ||
-            compareProcessSankeyIds(a.partner, b.partner)
-          : a.latestEnd - b.latestEnd ||
-            compareProcessSankeyIds(a.partner, b.partner)
+    const outgoing = partnerKey === "target"
+    const edgeTime = outgoing ? "startTime" : "endTime"
+    const groupTime = outgoing ? "earliestStart" : "latestEnd"
+    const temporal = pairing === "temporal"
+    const list = [...groups.values()].sort((a, b) =>
+      (temporal ? a[groupTime] - b[groupTime] : b.total - a.total) ||
+      compareProcessSankeyIds(a.partner, b.partner)
+    )
+    for (const group of list) {
+      group.edges.sort((a, b) =>
+        (temporal ? a[edgeTime] - b[edgeTime] : b.value - a.value) ||
+        compareProcessSankeyIds(a.id, b.id)
       )
-    } else {
-      list.sort(
-        (a, b) =>
-          b.total - a.total || compareProcessSankeyIds(a.partner, b.partner)
-      )
-    }
-    for (const g of list) {
-      g.edges.sort(partnerKey === "target" ? sortOut : sortIn)
     }
     return list
   }
 
-  for (const n of nodes) {
-    const out = edgeIndex.outgoing[n.id]
-    const inn = edgeIndex.incoming[n.id]
-    if (inn.length === 0) {
-      const groups = groupBy(out, "target")
-      groups.forEach((g, i) => {
-        const side: AttachmentSide = i % 2 === 0 ? "top" : "bot"
-        for (const e of g.edges) sides.get(e.id)!.sourceSide = side
-      })
-    } else if (out.length === 0) {
-      const groups = groupBy(inn, "source")
-      groups.forEach((g, i) => {
-        const side: AttachmentSide = i % 2 === 0 ? "top" : "bot"
-        for (const e of g.edges) sides.get(e.id)!.targetSide = side
-      })
-    } else {
-      const inGroups = groupBy(inn, "source")
-      const outGroups = groupBy(out, "target")
-      const pairs = Math.max(inGroups.length, outGroups.length)
-      for (let i = 0; i < pairs; i++) {
-        const side: AttachmentSide = i % 2 === 0 ? "top" : "bot"
-        if (inGroups[i])
-          for (const e of inGroups[i].edges) sides.get(e.id)!.targetSide = side
-        if (outGroups[i])
-          for (const e of outGroups[i].edges) sides.get(e.id)!.sourceSide = side
-      }
-    }
+  function assignGroups(edges: ProcessSankeyEdge[], partner: "source" | "target", endpoint: "targetSide" | "sourceSide") {
+    groupBy(edges, partner).forEach((group, index) => {
+      const side = index % 2 === 0 ? "top" : "bot"
+      for (const edge of group.edges) sides.get(edge.id)![endpoint] = side
+    })
+  }
+  for (const node of nodes) {
+    assignGroups(edgeIndex.incoming[node.id], "source", "targetSide")
+    assignGroups(edgeIndex.outgoing[node.id], "target", "sourceSide")
   }
   return sides
 }
