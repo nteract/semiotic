@@ -1,3 +1,4 @@
+import { clamp } from "../../../utils/clamp"
 // Band path geometry for ProcessSankey — pure SVG path builders.
 
 import type {
@@ -11,7 +12,7 @@ type Domain = readonly [number, number] | null | undefined
 
 export function clampTime(t: number, domain: Domain): number {
   if (!domain) return t
-  return Math.max(domain[0], Math.min(domain[1], t))
+  return clamp(t, domain[0], domain[1])
 }
 
 export function clampSamples(samples: readonly ProcessSankeySample[], domain: Domain): ProcessSankeySample[] {
@@ -102,21 +103,23 @@ export function buildBandPath(...args: Parameters<typeof projectBandSections>): 
 
 export function bandSectionPath(knots: BandSection[], smooth: boolean): string | null {
   if (!knots.length) return null
-  function side(points: BandSection[], edge: "top" | "bottom") {
-    let path = `${points[0].x},${points[0][edge]}`
-    for (let i = 1; i < points.length; i++) {
-      const from = points[i - 1]
-      const to = points[i]
+  function side(edge: "top" | "bottom", start: number, step: number) {
+    let from = knots[start]
+    let path = `${from.x},${from[edge]}`
+    for (let i = start + step; i >= 0 && i < knots.length; i += step) {
+      const to = knots[i]
+      const end = `${to.x},${to[edge]}`
       if (smooth && from.x !== to.x && from[edge] !== to[edge]) {
         const middle = (from.x + to.x) / 2
-        path += ` C${middle},${from[edge]} ${middle},${to[edge]} ${to.x},${to[edge]}`
+        path += ` C${middle},${from[edge]} ${middle},${to[edge]} ${end}`
       } else {
-        path += ` L${to.x},${to[edge]}`
+        path += ` L${end}`
       }
+      from = to
     }
     return path
   }
-  return `M${side(knots, "top")} L${side(knots.slice().reverse(), "bottom")} Z`
+  return `M${side("top", 0, 1)} L${side("bottom", knots.length - 1, -1)} Z`
 }
 
 /**
@@ -138,34 +141,28 @@ export interface BandGradientStub {
   to: 0 | 1
 }
 
-interface ContourRange {
-  first: number
-  last: number
-  boundary?: number
-  highestTop: number
-  lowestBottom: number
-  halves?: [ContourRange, ContourRange]
-}
+type ContourBounds = Pick<BandSection, "top" | "bottom" | "boundary">
 
-/** A slot inside these bounds stays flat across the whole range. */
-function indexContour(knots: BandSection[], first: number, last: number): ContourRange {
-  if (first === last) {
-    const { top, bottom, boundary } = knots[first]
-    return { first, last, boundary, highestTop: top, lowestBottom: bottom }
+/** Each branch bounds the slot that stays flat throughout its interval. */
+function indexContour(knots: BandSection[]) {
+  const bounds: ContourBounds[] = []
+  function build(first: number, last: number, index: number): ContourBounds {
+    if (first === last) return knots[first]
+    const middle = Math.floor((first + last) / 2)
+    const left = build(first, middle, index * 2)
+    const right = build(middle + 1, last, index * 2 + 1)
+    return bounds[index] = {
+      boundary: left.boundary === right.boundary ? left.boundary : undefined,
+      top: Math.max(left.top, right.top),
+      bottom: Math.min(left.bottom, right.bottom)
+    }
   }
-  const middle = Math.floor((first + last) / 2)
-  const left = indexContour(knots, first, middle)
-  const right = indexContour(knots, middle + 1, last)
-  return {
-    first, last, halves: [left, right],
-    boundary: left.boundary === right.boundary ? left.boundary : undefined,
-    highestTop: Math.max(left.highestTop, right.highestTop),
-    lowestBottom: Math.min(left.lowestBottom, right.lowestBottom)
-  }
+  build(0, knots.length - 1, 1)
+  return bounds
 }
 
 function lifecycleContour(
-  knots: BandSection[], range: ContourRange, left: number, right: number,
+  knots: BandSection[], bounds: ContourBounds[], left: number, right: number,
   boundary: number, top: number, bottom: number
 ) {
   const slot: BandSection[] = []
@@ -178,24 +175,23 @@ function lifecycleContour(
       slot.push({ x, top, bottom })
     }
   }
-  function visit(range: ContourRange) {
-    const { first, last, halves } = range
-    // Retain the adjacent knot so the cubic at either boundary keeps both control points.
-    if ((knots[last + 1] ?? knots[last]).x < left || (knots[first - 1] ?? knots[first]).x > right) return
+  function visit(first: number, last: number, index: number) {
+    // Include the adjacent knot to preserve the cubic at each fade boundary.
+    if (knots[Math.min(last + 1, knots.length - 1)].x < left || knots[Math.max(0, first - 1)].x > right) return
+    const range = bounds[index] ?? knots[first]
     const shift = (range.boundary ?? boundary) - boundary
-    if (halves && range.boundary !== undefined && top + shift >= range.highestTop &&
-        bottom + shift <= range.lowestBottom && knots[first].x >= left && knots[last].x <= right) {
-      append(knots[first].x, top + shift, bottom + shift)
-      append(knots[last].x, top + shift, bottom + shift)
-    } else if (halves) {
-      for (const half of halves) visit(half)
+    if (first === last || (range.boundary !== undefined && top + shift >= range.top &&
+        bottom + shift <= range.bottom && knots[first].x >= left && knots[last].x <= right)) {
+      const slotEdge = (y: number) => clamp(y + shift, range.top, range.bottom)
+      append(knots[first].x, slotEdge(top), slotEdge(bottom))
+      if (first !== last) append(knots[last].x, top + shift, bottom + shift)
     } else {
-      const knot = knots[first]
-      const clamp = (y: number) => Math.max(knot.top, Math.min(knot.bottom, y + shift))
-      append(knot.x, clamp(top), clamp(bottom))
+      const middle = Math.floor((first + last) / 2)
+      visit(first, middle, index * 2)
+      visit(middle + 1, last, index * 2 + 1)
     }
   }
-  visit(range)
+  visit(0, knots.length - 1, 1)
   return bandSectionPath(slot, true)
 }
 
@@ -214,30 +210,22 @@ export function buildBandCutoutsForNode(
   const S = layout.valueScale
   const cl = layout.centerlines[nodeId]
   const clampX = (t: number): number => xScale(clampTime(t, domain))
-  let first: ProcessSankeySample | undefined
-  let last: ProcessSankeySample | undefined
-  for (const sample of data.samples) if (hasInventory(sample)) {
-    first ??= sample
-    last = sample
-  }
-  const xLeft = clampX((first ?? data.samples[0]).t)
-  const xRight = clampX((last ?? data.samples[data.samples.length - 1]).t)
+  const samples = data.samples
+  const xLeft = clampX((samples.find(hasInventory) ?? samples[0]).t)
+  const xRight = clampX((samples.findLast(hasInventory) ?? samples[samples.length - 1]).t)
   // 20 screen pixels of gradient — width-independent of zoom/domain.
   const FADE_PX = 20
   const stubs: BandGradientStub[] = []
-  let contourIndex: ContourRange | undefined
+  let contourIndex: ContourBounds[] | undefined
   function addStub(att: ProcessSankeyAttachment, left: number, right: number, x0: number, x1: number, from: 0 | 1) {
     if (!(right > left)) return
     const [top, bottom] = attachmentYRange(att, cl, S)
-    let pathD = `M${left},${top} L${right},${top} L${right},${bottom} L${left},${bottom} Z`
-    if (smoothSections) {
-      if (!smoothSections.length) return
-      contourIndex ??= indexContour(smoothSections, 0, smoothSections.length - 1)
-      const outline = lifecycleContour(smoothSections, contourIndex, left, right,
-        cl + (att.boundaryOffset ?? 0) * S, top, bottom)
-      if (!outline) return
-      pathD = outline
-    }
+    if (smoothSections && !smoothSections.length) return
+    const pathD = smoothSections
+      ? lifecycleContour(smoothSections, contourIndex ??= indexContour(smoothSections), left, right,
+          cl + (att.boundaryOffset ?? 0) * S, top, bottom)
+      : bandSectionPath([{ x: left, top, bottom }, { x: right, top, bottom }], false)
+    if (!pathD) return
     stubs.push({
       pathD,
       x0, x1, from, to: from === 0 ? 1 : 0,

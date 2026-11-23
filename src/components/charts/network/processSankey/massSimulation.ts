@@ -7,7 +7,7 @@ import {
   createProcessSankeyRecord,
   type SlotByNode
 } from "./layoutGeometry"
-import { attachmentYRange } from "./bandPaths"
+import { attachmentYRange, hasInventory } from "./bandPaths"
 import type {
   AttachmentKind,
   AttachmentSide,
@@ -38,14 +38,6 @@ export function buildEdgeIndex(
   return { incoming, outgoing }
 }
 
-interface EdgeGroup {
-  partner: string
-  edges: ProcessSankeyEdge[]
-  total: number
-  earliestStart: number
-  latestEnd: number
-}
-
 export function assignSides(
   nodes: ProcessSankeyNode[],
   edges: ProcessSankeyEdge[],
@@ -56,49 +48,22 @@ export function assignSides(
   const sides = new Map<string, ProcessSankeySideRecord>()
   for (const e of edges) sides.set(e.id, {})
 
-  // Group edges by partner-node id. Multi-edge parallel ribbons between
-  // the same pair land side-by-side rather than crossing.
-  const groupBy = (
-    edgeList: ProcessSankeyEdge[],
-    partnerKey: "source" | "target"
-  ): EdgeGroup[] => {
-    const groups = new Map<string, EdgeGroup>()
-    for (const e of edgeList) {
-      const partner = e[partnerKey]
-      if (!groups.has(partner)) {
-        groups.set(partner, {
-          partner,
-          edges: [],
-          total: 0,
-          earliestStart: Infinity,
-          latestEnd: -Infinity
-        })
-      }
-      const g = groups.get(partner)!
-      g.edges.push(e)
-      g.total += e.value
-      g.earliestStart = Math.min(g.earliestStart, e.startTime)
-      g.latestEnd = Math.max(g.latestEnd, e.endTime)
-    }
+  function assignGroups(edges: ProcessSankeyEdge[], partnerKey: "source" | "target", endpoint: "targetSide" | "sourceSide") {
     const outgoing = partnerKey === "target"
-    const edgeTime = outgoing ? "startTime" : "endTime"
-    const groupTime = outgoing ? "earliestStart" : "latestEnd"
-    const temporal = pairing === "temporal"
-    const list = [...groups.values()].sort((a, b) =>
-      (temporal ? a[groupTime] - b[groupTime] : b.total - a.total) ||
-      compareProcessSankeyIds(a.partner, b.partner)
-    )
-    for (const group of list) {
-      group.edges.sort((a, b) =>
-        (temporal ? a[edgeTime] - b[edgeTime] : b.value - a.value) ||
-        compareProcessSankeyIds(a.id, b.id)
-      )
+    const groups = new Map<string, { partner: string, edges: ProcessSankeyEdge[], rank: number }>()
+    for (const edge of edges) {
+      const partner = edge[partnerKey]
+      let group = groups.get(partner)
+      if (!group) {
+        group = { partner, edges: [], rank: pairing === "value" ? 0 : outgoing ? Infinity : -Infinity }
+        groups.set(partner, group)
+      }
+      group.edges.push(edge)
+      if (pairing === "value") group.rank -= edge.value
+      else group.rank = outgoing ? Math.min(group.rank, edge.startTime) : Math.max(group.rank, edge.endTime)
     }
-    return list
-  }
-
-  function assignGroups(edges: ProcessSankeyEdge[], partner: "source" | "target", endpoint: "targetSide" | "sourceSide") {
-    groupBy(edges, partner).forEach((group, index) => {
+    const ranked = [...groups.values()].sort((a, b) => a.rank - b.rank || compareProcessSankeyIds(a.partner, b.partner))
+    ranked.forEach((group, index) => {
       const side = index % 2 === 0 ? "top" : "bot"
       for (const edge of group.edges) sides.get(edge.id)![endpoint] = side
     })
@@ -433,45 +398,30 @@ export function computeNode(
     Array.isArray(node.xExtent) && Number.isFinite(node.xExtent[1])
       ? node.xExtent[1]
       : null
-  let earliestSystemIn: number | null = null
-  for (const e of outgoing) {
-    if (
-      e.systemInTime != null &&
-      Number.isFinite(e.systemInTime) &&
-      e.systemInTime < e.startTime
-    ) {
-      if (earliestSystemIn === null || e.systemInTime < earliestSystemIn)
-        earliestSystemIn = e.systemInTime
+  let earliestSystemIn = Infinity
+  for (const edge of outgoing) {
+    const time = edge.systemInTime
+    if (time != null && Number.isFinite(time) && time < edge.startTime) {
+      earliestSystemIn = Math.min(earliestSystemIn, time)
     }
   }
-  let latestSystemOut: number | null = null
-  for (const e of incoming) {
-    if (
-      e.systemOutTime != null &&
-      Number.isFinite(e.systemOutTime) &&
-      e.systemOutTime > e.endTime
-    ) {
-      if (latestSystemOut === null || e.systemOutTime > latestSystemOut)
-        latestSystemOut = e.systemOutTime
+  let rightEnd = xEnd ?? -Infinity
+  for (const edge of incoming) {
+    const time = edge.systemOutTime
+    if (time != null && Number.isFinite(time) && time > edge.endTime) {
+      rightEnd = Math.max(rightEnd, time)
     }
   }
   if (collapsed.length > 0) {
     const last = collapsed[collapsed.length - 1]
-    const rightEnd = Math.max(
-      xEnd != null ? xEnd : -Infinity,
-      latestSystemOut != null ? latestSystemOut : -Infinity
-    )
     if (
-      Number.isFinite(rightEnd) &&
       rightEnd > last.t &&
-      last.topMass + last.botMass > 0
+      hasInventory(last)
     ) {
       collapsed.push({ ...last, t: rightEnd })
     }
     const first = collapsed[0]
-    const firstNonZero = collapsed.find(
-      (sample) => sample.topMass + sample.botMass > 0
-    )
+    const firstNonZero = collapsed.find(hasInventory)
     let leftStart = Infinity
     let leftSample: ProcessSankeySample | undefined
     // Preserve xExtent's lifetime-only behavior when the first state is empty:
@@ -480,7 +430,7 @@ export function computeNode(
       xStart != null &&
       Number.isFinite(xStart) &&
       xStart < first.t &&
-      first.topMass + first.botMass > 0
+      hasInventory(first)
     ) {
       leftStart = xStart
       leftSample = first
@@ -489,8 +439,6 @@ export function computeNode(
     // already present, so extend the first non-zero state to that timestamp.
     if (
       firstNonZero &&
-      earliestSystemIn != null &&
-      Number.isFinite(earliestSystemIn) &&
       earliestSystemIn < firstNonZero.t &&
       earliestSystemIn < leftStart
     ) {
@@ -540,36 +488,18 @@ export function collectEndpointPositions(
   valueScale: number
 ): Map<string, ProcessSankeyEndpointPositions> {
   const positions = new Map<string, ProcessSankeyEndpointPositions>()
+  function midpoint(node: string, edge: string) {
+    const attachment = nodeData[node]?.localAttachments.get(edge)
+    const center = centerlines[node]
+    if (attachment && Number.isFinite(center)) {
+      const [top, bottom] = attachmentYRange(attachment, center, valueScale)
+      return (top + bottom) / 2
+    }
+  }
   for (const edge of edges) {
-    const sourceAttachment = nodeData[edge.source]?.localAttachments.get(
-      edge.id
-    )
-    const targetAttachment = nodeData[edge.target]?.localAttachments.get(
-      edge.id
-    )
-    const sourceCenter = centerlines[edge.source]
-    const targetCenter = centerlines[edge.target]
-    if (
-      !sourceAttachment ||
-      !targetAttachment ||
-      !Number.isFinite(sourceCenter) ||
-      !Number.isFinite(targetCenter)
-    )
-      continue
-    const sourceRange = attachmentYRange(
-      sourceAttachment,
-      sourceCenter,
-      valueScale
-    )
-    const targetRange = attachmentYRange(
-      targetAttachment,
-      targetCenter,
-      valueScale
-    )
-    positions.set(edge.id, {
-      source: (sourceRange[0] + sourceRange[1]) / 2,
-      target: (targetRange[0] + targetRange[1]) / 2
-    })
+    const source = midpoint(edge.source, edge.id)
+    const target = midpoint(edge.target, edge.id)
+    if (source !== undefined && target !== undefined) positions.set(edge.id, { source, target })
   }
   return positions
 }
@@ -691,30 +621,20 @@ export function rebalanceOutgoingSides(
     const inn = edgeIndex.incoming[node.id]
     const out = edgeIndex.outgoing[node.id]
     if (inn.length === 0 || out.length === 0) continue
-    const tally = () => {
-      const r = { inTop: 0, inBot: 0, outTop: 0, outBot: 0 }
-      for (const e of inn) {
-        const s = sides.get(e.id)!.targetSide
-        if (s === "top") r.inTop += e.value
-        else r.inBot += e.value
-      }
-      for (const e of out) {
-        const s = sides.get(e.id)!.sourceSide
-        if (s === "top") r.outTop += e.value
-        else r.outBot += e.value
-      }
-      return r
+    const totalBySide = (edges: ProcessSankeyEdge[], endpoint: "sourceSide" | "targetSide") => {
+      const totals = { top: 0, bot: 0 }
+      for (const edge of edges) totals[sides.get(edge.id)![endpoint] ?? "bot"] += edge.value
+      return totals
     }
-    const tryMove = (
-      fromSide: AttachmentSide,
-      toSide: AttachmentSide
-    ): boolean => {
-      const t = tally()
-      const surplusFrom =
-        fromSide === "top" ? t.outTop - t.inTop : t.outBot - t.inBot
-      const slackTo = toSide === "top" ? t.inTop - t.outTop : t.inBot - t.outBot
-      if (surplusFrom <= 0 || slackTo <= 0) return false
-      const move = Math.min(surplusFrom, slackTo)
+    const incoming = totalBySide(inn, "targetSide")
+    for (let moves = 0; moves <= out.length; moves++) {
+      const outgoing = totalBySide(out, "sourceSide")
+      const top = outgoing.top - incoming.top
+      const bottom = outgoing.bot - incoming.bot
+      const fromSide = top > 0 ? "top" : "bot"
+      const toSide = fromSide === "top" ? "bot" : "top"
+      const move = fromSide === "top" ? Math.min(top, -bottom) : Math.min(bottom, -top)
+      if (!(move > 0)) break
       const candidates = out
         .filter(
           (e) =>
@@ -725,13 +645,8 @@ export function rebalanceOutgoingSides(
         .sort(
           (a, b) => b.value - a.value || compareProcessSankeyIds(a.id, b.id)
         )
-      if (candidates.length === 0) return false
+      if (!candidates.length) break
       sides.get(candidates[0].id)!.sourceSide = toSide
-      return true
-    }
-    let safety = out.length + 1
-    while (safety-- > 0) {
-      if (!tryMove("top", "bot") && !tryMove("bot", "top")) break
     }
   }
 }

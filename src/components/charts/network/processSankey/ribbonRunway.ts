@@ -1,5 +1,9 @@
 import { appendToGroup } from "../../../utils/appendToGroup"
 import { getMax } from "../../shared/minMax"
+function startsBefore(time: number | undefined, departure: number): time is number {
+  return Number.isFinite(time) && time! < departure
+}
+
 interface RibbonRunwayNode {
   id: string
   group?: string
@@ -49,13 +53,9 @@ export function computeFeederRibbonRunwayStarts(
   const lockstepGroups = new Map<string, RibbonRunwayEdge[]>()
   for (const [group, members] of groupMembers) {
     const groupEdges = members.flatMap((member) => outgoingBySource.get(member.id) ?? [])
-    const departureTimes = new Set(groupEdges.map((edge) => edge.startTime))
-    if (departureTimes.size === 1 && members.every((member) => {
-      const start = member.xExtent?.[0]
-      const departure = groupEdges[0].startTime
-      return outgoingBySource.has(member.id) &&
-        Number.isFinite(start) && start! < departure
-    })) {
+    const departure = groupEdges[0]?.startTime
+    if (groupEdges.every(edge => edge.startTime === departure) &&
+        members.every(member => outgoingBySource.has(member.id) && startsBefore(member.xExtent?.[0], departure))) {
       lockstepGroups.set(group, groupEdges)
     }
   }
@@ -72,35 +72,24 @@ export function computeFeederRibbonRunwayStarts(
     // unit before the first departure. A much earlier systemInTime decorates
     // that stock but does not expand the aggregate silhouette, so do not pull
     // a ribbon ahead of the pixels the band can actually hand off.
-    const implicitStockStart = sorted[0]?.startTime - 1
-    let previousDeparture: number | null = null
-
-    for (let index = 0; index < sorted.length;) {
-      const departure = sorted[index].startTime
-      let end = index + 1
-      while (end < sorted.length && sorted[end].startTime === departure) end++
-
-      for (let cursor = index; cursor < end; cursor++) {
-        const edge = sorted[cursor]
-        const hasExplicitStart = Number.isFinite(explicitStart) && explicitStart! < edge.startTime
-        const hasSystemStart = Number.isFinite(edge.systemInTime) && edge.systemInTime! < edge.startTime
-        if (!hasExplicitStart && !hasSystemStart) continue
-
-        let floor = domain[0]
-        if (hasExplicitStart) floor = Math.max(floor, explicitStart!)
-        if (hasSystemStart) floor = Math.max(floor, edge.systemInTime!)
-        if (!hasExplicitStart && hasSystemStart && Number.isFinite(implicitStockStart)) {
-          floor = Math.max(floor, implicitStockStart)
-        }
-        if (previousDeparture != null) floor = Math.max(floor, previousDeparture)
-        if (floor < edge.startTime) runwayByEdge.set(edge.id, floor)
+    const implicitStockStart = sorted[0].startTime - 1
+    let batchTime = sorted[0].startTime
+    let previousFloor = domain[0]
+    for (const edge of sorted) {
+      if (edge.startTime !== batchTime) {
+        previousFloor = Math.max(domain[0], batchTime)
+        batchTime = edge.startTime
       }
-
-      previousDeparture = departure
-      index = end
+      const explicit = startsBefore(explicitStart, batchTime)
+      const systemStart = edge.systemInTime
+      const system = startsBefore(systemStart, batchTime)
+      if (!explicit && !system) continue
+      const floor = Math.max(previousFloor,
+        explicit ? explicitStart : Number.isFinite(implicitStockStart) ? implicitStockStart : -Infinity,
+        system ? systemStart : -Infinity)
+      if (floor < batchTime) runwayByEdge.set(edge.id, floor)
     }
   }
-
 
   // A lockstep bonded group is one contiguous silhouette. Use its latest
   // member floor for every ribbon so no member begins before a neighbor exists.
@@ -155,21 +144,20 @@ export function indexFeederVisualDepartures(
   sourceGroupByNode?: ReadonlyMap<string, string>,
 ): FeederVisualDepartureIndex {
   const indexed: FeederVisualDepartureIndex = new Map()
-  const membersByGroup = new Map<string, string[]>()
-  for (const [nodeId, group] of sourceGroupByNode ?? []) {
-    appendToGroup(membersByGroup, group, nodeId)
-  }
+  const byGroup: FeederVisualDepartureIndex = new Map()
   for (const edge of edges) {
-    const visualTime = visualDepartureByEdge.get(edge.id)
-    if (visualTime == null || !Number.isFinite(visualTime) || !(visualTime < edge.startTime)) continue
+    const time = visualDepartureByEdge.get(edge.id)
+    if (!startsBefore(time, edge.startTime)) continue
     const group = sourceGroupByNode?.get(edge.source)
-    const affectedNodes = group == null ? [edge.source] : (membersByGroup.get(group) ?? [edge.source])
-    for (const nodeId of affectedNodes) {
-      const byTime = indexed.get(nodeId) ?? new Map<number, number>()
-      const current = byTime.get(edge.startTime)
-      byTime.set(edge.startTime, current == null ? visualTime : Math.min(current, visualTime))
-      indexed.set(nodeId, byTime)
-    }
+    const owners = group == null ? indexed : byGroup
+    const key = group ?? edge.source
+    const byTime = owners.get(key) ?? new Map<number, number>()
+    byTime.set(edge.startTime, Math.min(byTime.get(edge.startTime) ?? Infinity, time))
+    owners.set(key, byTime)
+  }
+  for (const [node, group] of sourceGroupByNode ?? []) {
+    const times = byGroup.get(group)
+    if (times) indexed.set(node, new Map(times))
   }
   return indexed
 }

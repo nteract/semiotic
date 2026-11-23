@@ -23,7 +23,7 @@ function getMotifWitness(atlas: PreparedNetworkAtlas, matchId: string): QueryRes
 function getRequiredPaths(atlas: PreparedNetworkAtlas, target: string): QueryResult<{target: string; reachable: boolean; dominatorIds: string[];}>
 function getResidualConnections(atlas: PreparedNetworkAtlas, nodeId: string): QueryResult<{edgeId: string; source: string; target: string;}[]>
 function getSectionMeasures(atlas: PreparedNetworkAtlas, sectionId: string, countingPolicy: {measureId: string;}): QueryResult<number>
-function ledgerValue(ledger: MeasureLedger, measureId: string, subjectId: string): LedgerEntry | undefined
+function ledgerValue(ledger: MeasureLedger, measureId: string, subjectId: string, kind?: "global" | "node" | "section" | undefined): LedgerEntry | undefined
 function measuresAreComparable(leftId: string, rightId: string, spec: NetworkAtlasSpec): {ok: false; reason: string;} | {ok: true;}
 function prepareDependencyForest(atlas: PreparedNetworkAtlas, options?: undefined | {rankingPolicyId?: "rooted-traversal:id-asc" | "rooted-traversal:id-desc";}): {order: string[]; children: {[k: string]: string[];}; components: string[][]; requiredChildren: {[k: string]: string[];}; sceneSeeds: {nodes: import("./types").AtlasNode[]; edges: import("./types").AtlasEdge[];}; forest: import("./types").DisplayForest; residual: import("./types").OriginalEdgeIndex; atlas: PreparedNetworkAtlas;}
 function prepareFlowCircuit(atlas: PreparedNetworkAtlas, semantics: readonly CircuitNodeSemantics[], options?: undefined | {overlapPolicy?: "role-priority:id-asc"; rankingPolicyId?: "rooted-traversal:id-asc" | "rooted-traversal:id-desc";}): FlowCircuitProjection
@@ -162,11 +162,11 @@ type EvidenceStatus = "estimated" | "exact" | "incomplete" | "unknown"
 type LedgerEntry = {measureId: string; subjectId: string; subjectKind: "global" | "node" | "section"; value: number; status: EvidenceStatus; unitKind: UnitKind; countUnit: AtlasCountUnit; timeDenominator?: string;}
 type MeasureLedger = {entries: LedgerEntry[];}
 type MeasureSpec = {unitKind: UnitKind; countUnit: AtlasCountUnit; timeDenominator?: string; description?: string;}
-type MotifBraidProjection = {atlas: PreparedNetworkAtlas; groups: TrajectoryGroup[]; signatureOrder: string[]; ribbons: BraidRibbon[]; capsules: MotifCapsule[]; profile: MotifProfileStrip; differences: SignedReadout[]; prefixForest: PrefixForest; sceneSeeds: {nodes: Array<{id: string; partition?: string; signature?: string;}>; edges: Array<{id: string; source: string; target: string;}>;};}
+type MotifBraidProjection = {atlas: PreparedNetworkAtlas; groups: TrajectoryGroup[]; signatureOrder: string[]; ribbons: BraidRibbon[]; capsules: MotifCapsule[]; profile: MotifProfileStrip; differences: SignedReadout[]; unavailableDifferences?: UnavailableDifference[]; prefixForest: PrefixForest; sceneSeeds: {nodes: Array<{id: string; partition?: string; signature?: string;}>; edges: Array<{id: string; source: string; target: string;}>;};}
 type MotifFlags = {occurrence: boolean; temporal: boolean; trajectorySupported: boolean; enriched: boolean;}
 type MotifMatch = {id: string; template: MotifTemplate; roles: Record<string, string | string[]>; nodePath: string[]; edgeIds: string[]; startSectionId?: string; completionSectionId?: string; intersectSectionIds: string[]; entityIds: string[]; entityWeights: Record<string, number>; entityCount: number; flags: MotifFlags; truncation?: {disclosed: true; omitted: number; fullCount: number;};}
 type MotifMatchIndex = {catalogId: string; catalogVersion: string; matches: MotifMatch[]; incompleteCandidates: Array<{template: MotifTemplate; occurrenceId: string; reason: "missing-prehistory";}>; unsupportedTemplates: MotifTemplate[];}
-type MotifProfileCell = {template: MotifTemplate; sectionId: string; partition?: string; completionCount: number; intersectionCount: number; denominator: number; status: EvidenceStatus;}
+type MotifProfileCell = {template: MotifTemplate; sectionId: string; partition?: string; completionCount: number; intersectionCount: number; /** Population total, or NaN when the ledger cannot supply a full total. */ denominator: number; denominatorStatus?: EvidenceStatus; status: EvidenceStatus;}
 type MotifProfileStrip = {templates: MotifTemplate[]; sections: string[]; cells: MotifProfileCell[];}
 type MotifSpec = {catalogId: string; catalogVersion: string; countUnit: AtlasCountUnit; denominatorRef?: string; timeWindowMs?: number; anchor: "completion"; matchBudget?: number;}
 type MotifTemplate = "connector-bypass" | "fan-in" | "fan-out" | "repeated-state-episode" | "serial-chain" | "shared-upstream-source" | "split-rejoin-diamond"
@@ -177,7 +177,7 @@ type PrefixForest = {kind: "observed-prefix"; rootIds: string[]; nodes: PrefixFo
 type PrefixForestNode = {id: string; stateId: string; prefix: string[]; parentId: null | string; childIds: string[]; entityCount: number; occurrenceIds: string[]; partitionCounts: Record<string, number>;}
 type PrepareOptions = {generation?: number;}
 type PrepareResult = {ok: false; atlas?: undefined; issues: AtlasIssue[];} | {ok: true; atlas: PreparedNetworkAtlas; issues: AtlasIssue[];}
-type PreparedComparison = {partitions: string[]; denominatorMeasureId: string; referencePartition?: string; rows: Array<{partition: string; assigned: number; motifUsers: Record<string, number>; outcomes: Record<string, number>;}>;}
+type PreparedComparison = SharedPartitionComparison & {rows: Array<{partition: string; assigned: number; motifUsers: Record<string, number>; outcomes: Record<string, number>;}>;}
 type PreparedNetworkAtlas = {sourceGraphRef: string; analysisRevision: string; spec: NetworkAtlasSpec; source: NetworkAtlasSource; sections: SectionIndex; motifs: MotifMatchIndex; forest: DisplayForest; residualEdges: OriginalEdgeIndex; ports: RouteSupportIndex; ledger: MeasureLedger; completeness: CompletenessReport; provenance: AtlasProvenance; prefixForest?: PrefixForest; comparison?: PreparedComparison; requiredPaths?: DominatorResult;}
 type PrevalenceWindow = {kind: "completion"; sectionId: string;} | {kind: "intersection"; sectionId: string;}
 type QueryResult<T> = {status: "truncated" | EvidenceStatus; value?: T; units?: string; countUnit?: AtlasCountUnit; unitKind?: UnitKind; scope: string; sourceRevision: string; analysisRevision: string; evidenceRefs: string[]; limitations: string[];}
@@ -185,11 +185,12 @@ type RelationPolicy = {directed: true; edgeIdRequired: true; parallelEdges: "kee
 type RequiredPathsSpec = {roots: string[]; relationScopeId: "directed-admitted";}
 type RouteSupportIndex = {hops: SupportedHop[]; graphAdjacency: Array<{source: string; target: string; edgeId: string;}>;}
 type SectionIndex = {kind: "ordinal"; sectionIds: string[]; nodeIdsBySection: Record<string, string[]>;}
-type SharedPartitionComparison = {partitions: string[]; denominatorMeasureId: string; referencePartition?: string;}
-type SignedReadout = {motif: string; leftPartition: string; rightPartition: string; leftCount: number; rightCount: number; deltaCount: number; deltaBps: number; denominator: number;}
+type SharedPartitionComparison = {outcomeMeasureIds?: string[]; motifTemplates?: MotifTemplate[]; partitions: string[]; denominatorMeasureId: string; referencePartition?: string;}
+type SignedReadout = {motif: string; leftPartition: string; rightPartition: string; leftCount: number; rightCount: number; deltaCount: number; deltaBps: number; /** Reference partition population. */ denominator: number; leftDenominator?: number; rightDenominator?: number; kind?: "motif" | "outcome";}
 type StructuralPath = {nodeIds: string[]; edgeIds: string[];}
 type SupportedHop = {from: string; to: string; via?: string; occurrenceIds: string[];}
 type TemporalContract = {kind: "snapshot";} | {kind: "window"; start: number; end: number;}
 type TrajectoryGroup = {id: string; occurrenceId: string; partition?: string; nodePath: string[]; entityCount: number; /** Traffic at each nodePath step; entityCount remains the cohort weight. */ stepEntityCounts?: number[]; /** Canonical escaped nodePath key produced by prepareMotifBraid. */ signature: string;}
+type UnavailableDifference = Pick<SignedReadout, "kind" | "leftPartition" | "motif" | "rightPartition"> & {status: "unknown"; reason: "denominator" | "missing-count";}
 type UnitKind = "capacity" | "rate" | "stock"
 ```

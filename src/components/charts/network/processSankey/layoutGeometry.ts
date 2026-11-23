@@ -1,3 +1,5 @@
+import { clamp } from "../../../utils/clamp"
+import { laneControl } from "./ribbonInputs"
 import { compareRecipeIds as compareProcessSankeyIds } from "../../../utils/compareRecipeIds"
 import {
   packBandsBySilhouette,
@@ -140,20 +142,10 @@ function attachmentOffset(
   attachment: ProcessSankeyAttachment,
   valueScale: number
 ): number {
-  const boundaryOffset = (attachment.boundaryOffset ?? 0) * valueScale
-  const value = attachment.value * valueScale
-  if (attachment.kind === "out") {
-    const before = attachment.sideMassBefore * valueScale
-    return (
-      boundaryOffset +
-      (attachment.side === "top" ? -before + value / 2 : before - value / 2)
-    )
-  }
-  const after = attachment.sideMassAfter * valueScale
-  return (
-    boundaryOffset +
-    (attachment.side === "top" ? -after + value / 2 : after - value / 2)
-  )
+  const boundary = (attachment.boundaryOffset ?? 0) * valueScale
+  const mass = (attachment.kind === "out" ? attachment.sideMassBefore : attachment.sideMassAfter) * valueScale
+  const half = attachment.value * valueScale / 2
+  return boundary + (attachment.side === "top" ? -mass + half : mass - half)
 }
 
 function hugCenters(
@@ -294,7 +286,7 @@ export function computeSlotGeometry(
   }
   const verticalUtilization =
     Number.isFinite(top) && Number.isFinite(bottom) && options.plotH > 0
-      ? Math.max(0, Math.min(1, (bottom - top) / options.plotH))
+      ? clamp((bottom - top) / options.plotH, 0, 1)
       : 0
   return {
     adjacentClearance,
@@ -412,12 +404,7 @@ export function measureTransitOcclusion(
   options: TransitOcclusionOptions
 ): number {
   const { valueScale, domain, mode = "quality" } = options
-  const control =
-    options.ribbonLane === "source"
-      ? 0.85
-      : options.ribbonLane === "target"
-        ? 0.15
-        : 0.5
+  const control = laneControl(options.ribbonLane)
   // Intermediate lanes reuse normalized times with the same cubic control.
   // Keep exact fractions, bounded for caller-authored dense quality samples;
   // this invocation's numeric cache is released after scoring.

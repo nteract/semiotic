@@ -40,6 +40,12 @@ const motifTemplate = {
     "connector-bypass"
   ]
 }
+const comparisonOptions = {
+  referencePartition: text,
+  outcomeMeasureIds: strings,
+  motifTemplates: /* @__PURE__ */ array(motifTemplate)
+}
+
 const roles = /* @__PURE__ */ dictionary({ anyOf: [text, strings] })
 const node = /* @__PURE__ */ object(
   { id: text },
@@ -162,9 +168,7 @@ export const preparedAtlasSchema = /* @__PURE__ */ object(
       {
         comparison: /* @__PURE__ */ object(
           { partitions: strings, denominatorMeasureId: text },
-          {
-            referencePartition: text
-          }
+          comparisonOptions
         )
       }
     ),
@@ -309,7 +313,7 @@ export const preparedAtlasSchema = /* @__PURE__ */ object(
           })
         )
       },
-      { referencePartition: text }
+      comparisonOptions
     ),
     requiredPaths: /* @__PURE__ */ object({
       roots: strings,

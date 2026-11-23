@@ -1,6 +1,5 @@
 import { appendToGroup } from "../../../utils/appendToGroup"
 import { intervalTimes } from "./bandPaths"
-import { getMax } from "../../shared/minMax"
 import type {
   ProcessSankeyAttachment,
   ProcessSankeyNode,
@@ -101,35 +100,33 @@ export function bondProcessSankeyNodeData(
         : [time])
       : eventTimes
     const series = members.map(node => ({
-      node, sampleAt: createSampleCursor(nodeData[node.id]), deltas: new Map<number, number>(),
-    }))
+      node, slot: slotByNode[node.id], sampleAt: createSampleCursor(nodeData[node.id]), deltas: new Map<number, number>()
+    })).sort((a, b) => (a.slot ?? Infinity) - (b.slot ?? Infinity))
 
     for (const time of times) {
-      const activeBySlot = new Map<number, Array<{
-        node: ProcessSankeyNode
-        sample: ProcessSankeySample
-        deltas: Map<number, number>
-      }>>()
-      for (const { node, sampleAt, deltas } of series) {
+      const activeSlots: Array<{
+        index: number
+        mass: number
+        rows: { node: ProcessSankeyNode, sample: ProcessSankeySample, deltas: Map<number, number> }[]
+      }> = []
+      for (const { node, slot, sampleAt, deltas } of series) {
         const { sample } = sampleAt(time)
-        if (!sample || sampleMass(sample) <= MASS_EPSILON) continue
-        const slot = slotByNode[node.id]
-        if (slot == null) continue
-        appendToGroup(activeBySlot, slot, { node, sample, deltas })
+        if (!sample || slot == null) continue
+        const mass = sampleMass(sample)
+        if (mass <= MASS_EPSILON) continue
+        let active = activeSlots.at(-1)
+        if (active?.index !== slot) {
+          active = { index: slot, mass, rows: [] }
+          activeSlots.push(active)
+        }
+        active.mass = Math.max(active.mass, mass)
+        active.rows.push({ node, sample, deltas })
       }
-      const activeSlots = [...activeBySlot]
-        .sort((a, b) => a[0] - b[0])
-        .map(([, active]) => ({
-          active,
-          mass: getMax(active.map(({ sample }) => sampleMass(sample))),
-        }))
-      if (activeSlots.length === 0) continue
-
       const totalMass = activeSlots.reduce((sum, active) => sum + active.mass, 0)
       const internalPadding = slotGap * (activeSlots.length - 1)
       let cursor = blockCenter - (totalMass * valueScale + internalPadding) / 2
       for (const activeSlot of activeSlots) {
-        for (const { node, sample, deltas } of activeSlot.active) {
+        for (const { node, sample, deltas } of activeSlot.rows) {
           const desiredBoundaryOffset =
             (cursor - centerlines[node.id]) / valueScale + sample.topMass
           const delta = desiredBoundaryOffset - (sample.boundaryOffset ?? 0)

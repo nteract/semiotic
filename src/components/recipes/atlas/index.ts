@@ -43,7 +43,8 @@ export type {
   MotifBraidProjection,
   TrajectoryGroup,
   BraidRibbon,
-  SignedReadout
+  SignedReadout,
+  UnavailableDifference
 } from "./braid"
 export { motifBraidLayout } from "./motifBraidLayout"
 export type { MotifBraidLayoutConfig } from "./motifBraidLayout"

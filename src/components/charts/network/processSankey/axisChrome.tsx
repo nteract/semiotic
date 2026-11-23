@@ -1,3 +1,4 @@
+import { clamp } from "../../../utils/clamp"
 /**
  * Shared ProcessSankey background chrome (time axis, grid, quality readout,
  * optional lane rails). Used by the client HOC and the SSR config so both
@@ -66,7 +67,7 @@ export function buildProcessSankeyBackgroundGraphics(
     minTime = Math.min(minTime, lifetime.start)
     maxTime = Math.max(maxTime, lifetime.end)
   }
-  const clampTimeCoord = (time: number) => Math.max(0, Math.min(timelineExtent, xScale(time)))
+  const clampTimeCoord = (time: number) => clamp(xScale(time), 0, timelineExtent)
   const axisStart = Number.isFinite(minTime) ? clampTimeCoord(minTime) : 0
   const axisEnd = Number.isFinite(maxTime) ? Math.max(axisStart, clampTimeCoord(maxTime)) : timelineExtent
   const tickDomain: [number, number] = [
