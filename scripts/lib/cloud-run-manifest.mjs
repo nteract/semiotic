@@ -138,8 +138,12 @@ export function validateCloudRunManifest({
     // release. During pre-publish CI the root package version is therefore
     // expected to be newer than the deployed wrapper. Deployment preparation
     // can opt into this stricter same-release assertion after publication.
-    if (requireRootVersion && dependencies.semiotic !== rootManifest.version) {
-      errors.push(`Cloud Run semiotic version must equal the root package version (${JSON.stringify(rootManifest.version)})`)
+    if (dependencies.semiotic !== rootManifest.version) {
+      if (requireRootVersion) {
+        errors.push(`Cloud Run semiotic version must equal the root package version (${JSON.stringify(rootManifest.version)})`)
+      } else {
+        warnings.push(`Stable manual wrapper pins semiotic@${dependencies.semiotic}. The checkout is ${rootManifest.version}. Refresh the wrapper and its lockfile after publication.`)
+      }
     }
   }
 

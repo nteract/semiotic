@@ -1,6 +1,5 @@
-import { clamp } from "../utils/clamp"
+import { rankAnnotationNotes } from "./annotationPriority"
 import type { Datum } from "../charts/shared/datumTypes"
-import { isNoteAnnotation } from "../charts/shared/annotationTypes"
 
 /**
  * M3 — Amount & density management (Rahman et al.'s sixth consideration:
@@ -66,12 +65,6 @@ export interface AnnotationDensityResult {
   budget: number
 }
 
-/** Notes that are never shed by the budget: `primary` emphasis and M6
- *  `defensive` (traveling caveat) notes. */
-function isFloor(a: Datum): boolean {
-  return a?.emphasis === "primary" || a?.defensive === true
-}
-
 /**
  * Derive the note budget for a plot. Exported so the clutter diagnostic
  * (`diagnoseConfig`) and the runtime pass agree on the same threshold.
@@ -91,28 +84,6 @@ export function annotationBudget(
   return Math.max(1, Math.round((width * height) / per))
 }
 
-function priority(a: Datum): number {
-  let p: number
-  const emphasis = a?.emphasis
-  if (emphasis === "primary") p = 100
-  else if (emphasis === "secondary") p = 10
-  else p = 50
-
-  const confidence = a?.provenance?.confidence
-  if (typeof confidence === "number" && Number.isFinite(confidence)) {
-    p += clamp(confidence, 0, 1) * 15
-  }
-
-  switch (a?.lifecycle?.freshness) {
-    case "fresh": p += 8; break
-    case "aging": p += 4; break
-    case "stale": p += 1; break
-    case "expired": p -= 200; break
-    default: break
-  }
-  return p
-}
-
 /**
  * Partition annotations into a persistent (visible) set and a deferred set
  * given a note budget. Pure and deterministic; preserves author order within
@@ -123,21 +94,8 @@ export function annotationDensity(options: AnnotationDensityOptions): Annotation
   const minVisible = Math.max(0, options.minVisible ?? DEFAULT_MIN_VISIBLE)
   const budget = annotationBudget(width, height, options)
 
-  // Keep original indices so equally ranked notes and repeated records retain author order.
-  const candidates: number[] = []
-  let protectedCount = 0
-  annotations.forEach((note, index) => {
-    if (!isNoteAnnotation(note)) return
-    if (isFloor(note)) protectedCount++
-    else candidates.push(index)
-  })
-  if (protectedCount + candidates.length <= budget) {
-    return { visible: annotations.slice(), deferred: [], budget }
-  }
-
-  candidates.sort((a, b) => priority(annotations[b]) - priority(annotations[a]) || a - b)
-  const available = Math.max(0, Math.max(budget, minVisible) - protectedCount)
-  const shed = new Set(candidates.slice(available))
+  const { ranked, visibleCount } = rankAnnotationNotes(annotations, budget, minVisible)
+  const shed = new Set(ranked.slice(visibleCount).map(entry => entry.index))
   const visible: Datum[] = []
   const deferred: Datum[] = []
   annotations.forEach((note, index) => {

@@ -142,17 +142,13 @@ export function PhysicsSVGOverlay(props: PhysicsSVGOverlayProps) {
     layoutAnnotations?.some(
       (annotation) =>
         annotation.type === "widget" && annotation._annotationDeferred === true
-    ) === true
+    )
 
   // Always paint an SVG shell so ChartContainer exportChart can find an
   // svg + canvas pair (PNG composites canvas under this overlay).
   return (
     <>
-      {hasDeferredWidget ? (
-        <style key="physics-annotation-disclosure-style">
-          {ANNOTATION_DISCLOSURE_REVEAL_CSS}
-        </style>
-      ) : null}
+      {hasDeferredWidget && <style>{ANNOTATION_DISCLOSURE_REVEAL_CSS}</style>}
       <svg
         className="stream-physics-frame__overlay"
         data-testid="stream-physics-overlay"

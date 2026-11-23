@@ -5,9 +5,6 @@ FROM node:22-bookworm-slim AS build
 
 WORKDIR /app
 
-# npm ci is the repository's lockfile-backed install command.  Keep dev
-# dependencies available: the package and MCP build tools live there, and the
-# checked-out package also uses some of them at runtime.
 COPY package.json package-lock.json .npmrc ./
 RUN npm ci --include=dev
 
@@ -18,7 +15,7 @@ RUN npm ci --include=dev
 COPY src ./src
 COPY ai ./ai
 COPY spec ./spec
-COPY scripts/build.mjs scripts/build-mcp.mjs scripts/generate-ai-surface-manifest.mjs ./scripts/
+COPY scripts/build.mjs scripts/build-mcp.mjs scripts/check-entry-graph-size.mjs scripts/generate-ai-surface-manifest.mjs ./scripts/
 # Build/check entry scripts share small transitive helpers here. Copy the
 # helper directory as one allowlisted build input so a new helper import
 # cannot make the repository-built image differ from CI or local builds.
@@ -32,16 +29,16 @@ RUN npm run check:ai-surface-manifest \
   && npm run dist:prod \
   && npm run build:mcp
 
+FROM build AS production-deps
+RUN node deploy/cloud-run-nightly/prepare-runtime-manifest.mjs \
+  && npm prune --omit=dev --offline --ignore-scripts --no-audit --no-fund
+
 FROM node:22-bookworm-slim AS runtime
 
 WORKDIR /app
 
-# The current package declares runtime imports used by the repository-built
-# MCP bundle under devDependencies as well as dependencies. Copy the exact
-# lockfile installation from the build stage instead of pruning it and
-# accidentally replacing repository code with a published semiotic package.
-COPY --from=build /app/package.json /app/package-lock.json /app/.npmrc ./
-COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/package.json ./
+COPY --from=production-deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/ai ./ai
 COPY --from=build /app/spec ./spec
@@ -67,6 +64,7 @@ LABEL org.opencontainers.image.source="https://github.com/nteract/semiotic" \
 
 # Fail the image build before it is tagged or pushed if its MCP executable,
 # source-built self-import targets, resource files, or identity are incomplete.
+USER node
 RUN node deploy/cloud-run-nightly/verify-runtime.mjs --require-nightly-build-info
 
 EXPOSE 8080

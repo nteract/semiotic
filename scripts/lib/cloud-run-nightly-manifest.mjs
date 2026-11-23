@@ -108,6 +108,7 @@ export function validateNightlyCloudRunDeployment({
       "scripts/build.mjs",
       "scripts/build-mcp.mjs",
       "scripts/generate-ai-surface-manifest.mjs",
+      "scripts/check-entry-graph-size.mjs",
       "COPY scripts/lib ./scripts/lib",
       "COPY tsconfig.json tsconfig.declarations.json ./"
     ]) {
@@ -130,7 +131,7 @@ export function validateNightlyCloudRunDeployment({
       )
     }
     for (const fragment of [
-      "COPY --from=build /app/node_modules ./node_modules",
+      "COPY --from=production-deps /app/node_modules ./node_modules",
       "COPY --from=build /app/dist ./dist",
       "COPY --from=build /app/ai ./ai",
       "COPY --from=build /app/spec ./spec",
@@ -151,6 +152,12 @@ export function validateNightlyCloudRunDeployment({
         fragment,
         `nightly Dockerfile is missing required runtime contract: ${fragment}`
       )
+    }
+    if (!inOrder(dockerfile, [
+      "FROM build AS production-deps", "node deploy/cloud-run-nightly/prepare-runtime-manifest.mjs",
+      "npm prune --omit=dev --offline", "AS runtime", "USER node", "RUN node deploy/cloud-run-nightly/verify-runtime.mjs"
+    ])) {
+      errors.push("nightly must prune build dependencies offline and verify the final image as the node user")
     }
     if (/npm\s+(?:install|i)\s+[^\n]*\bsemiotic\b/.test(dockerfile)) {
       errors.push(
