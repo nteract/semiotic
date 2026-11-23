@@ -113,3 +113,24 @@ test("chart repairs restore painted marks and tooltips, including after resize",
   await Promise.all(consoleChecks)
   expect(unexpectedErrors).toEqual([])
 })
+
+for (const initial of ["loading", "empty"]) {
+  test(`ChainReactionChart measures after initial ${initial} and delivers an in-flight dependency after loading`, async ({ page }) => {
+    await page.goto(`/chart-features-examples/?chain-loading=${initial}`)
+    const chart = page.getByTestId("chain-recovery")
+    if (initial === "loading") await expect(chart.getByRole("status", {name: "Loading tasks"})).toBeVisible()
+    else await expect(chart.getByText("No data available")).toBeVisible()
+    await chart.getByRole("button", {name: "Show tasks"}).click()
+    const canvas = chart.locator("canvas").first()
+    await expect(canvas).toHaveCSS("width", "420px")
+    await chart.getByRole("button", {name: "Resize chart"}).click()
+    await expect(canvas).toHaveCSS("width", "320px")
+    await canvas.evaluate(node => { node.dataset.retained = "yes" })
+    await chart.getByRole("button", {name: "Complete and load"}).click()
+    await expect(chart.getByRole("status", {name: "Loading tasks"})).toBeVisible()
+    await expect(canvas).toBeHidden()
+    await chart.getByRole("button", {name: "Show tasks"}).click()
+    await expect(canvas).toHaveAttribute("data-retained", "yes")
+    await expect(chart.getByRole("status", {name: "Armed task"})).toHaveText("b", {timeout: 15000})
+  })
+}

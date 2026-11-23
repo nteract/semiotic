@@ -682,7 +682,7 @@ export const GauntletChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__
     [frameProps.regionEffects, gateRegionEffects]
   )
 
-  if (stateEl) return stateEl
+  if (stateEl) return renderPhysicsFrame(chartSize, stateEl, layoutMode)
 
   const tooltipProps = resolvePhysicsTooltipProps(props.tooltip, frameProps)
   const sharedFrameProps = resolvePhysicsFrameSharedProps(

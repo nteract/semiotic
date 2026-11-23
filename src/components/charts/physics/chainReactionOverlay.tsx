@@ -8,13 +8,12 @@ import type {
 } from "./dependencyMachine"
 import type { RuntimeState } from "./chainReactionRuntime"
 
-export function ChainReactionDiagnostics({ className, width, diagnostics }: {
-  className?: string
+export function ChainReactionDiagnostics({ width, diagnostics }: {
   width: number
   diagnostics: DependencyMachineDiagnostic[]
 }) {
   return (
-    <div className={className} role="alert" style={{ width, maxWidth: "100%" }}>
+    <div role="alert" style={{ width, maxWidth: "100%" }}>
       <strong>ChainReactionChart could not compile this dependency graph.</strong>
       <ul>
         {diagnostics.map((diagnostic, index) => (

@@ -473,7 +473,7 @@ export const ProcessFlowChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PUR
   })
 
   const stateEl = renderChartPlaceholder(props, chartSize, data)
-  if (stateEl) return stateEl
+  if (stateEl) return renderPhysicsFrame(chartSize, stateEl, layoutMode)
 
   if (!stages?.length) {
     return renderPhysicsFrame(

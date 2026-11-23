@@ -866,7 +866,7 @@ export const CrucibleChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__
   const controlVisible = Object.values(controlConfig).some(Boolean)
   const currentPhase = plan.phases[runtime.state.phaseIndex]
   const stateEl = renderChartPlaceholder(props, resolvedChartSize, data)
-  if (stateEl) return stateEl
+  if (stateEl) return renderPhysicsFrame(chartSize, stateEl, layoutMode)
 
   const errors = plan.diagnostics.filter((item) => item.severity === "error")
   if (errors.length) {

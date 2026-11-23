@@ -223,7 +223,7 @@ export const CollisionSwarmChart = /* @__PURE__ */ withChartErrorBoundary(/* @__
   })
 
   const stateEl = renderChartPlaceholder(props, chartSize, data)
-  if (stateEl) return stateEl
+  if (stateEl) return renderPhysicsFrame(chartSize, stateEl, layoutMode)
 
   const projectionOverlay = collisionSwarmProjectionOverlay(
     layout.metadata as CollisionSwarmProjectionMetadata | undefined,

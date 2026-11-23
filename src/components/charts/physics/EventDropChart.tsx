@@ -437,7 +437,7 @@ export const EventDropChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE_
     const stateEl = renderChartPlaceholder(props, chartSize, data)
     if (props.emitters && !live)
       throw new Error("EventDrop emitters require live mode")
-    if (stateEl) return stateEl
+    if (stateEl) return renderPhysicsFrame(chartSize, stateEl, layoutMode)
     const windowBackground = eventDropWindowBackground(
       metadata,
       showProjection,

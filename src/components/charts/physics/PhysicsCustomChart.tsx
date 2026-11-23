@@ -431,7 +431,7 @@ export const PhysicsCustomChart = /* @__PURE__ */ withChartErrorBoundary(/* @__P
     [frameProps]
   )
 
-  if (stateEl) return stateEl
+  if (stateEl) return renderPhysicsFrame(chartSize, stateEl, layoutMode)
   const tooltipProps = resolvePhysicsTooltipProps(props.tooltip, frameProps)
   const sharedFrameProps = resolvePhysicsFrameSharedProps(
     props,

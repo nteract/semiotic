@@ -265,7 +265,7 @@ export const GaltonBoardChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PUR
     props, chartSize,
     simulationMode === "mechanical" ? chartData : data
   )
-  if (stateEl) return stateEl
+  if (stateEl) return renderPhysicsFrame(chartSize, stateEl, layoutMode)
   const structureOverlay = galtonBoardOverlay(
     layout.projectionRows,
     bins,

@@ -592,7 +592,7 @@ export const PacketFlowChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE
     props, chartSize,
     links == null && edges == null && data == null ? undefined : chartLinks
   )
-  if (stateEl) return stateEl
+  if (stateEl) return renderPhysicsFrame(chartSize, stateEl, layoutMode)
 
   const overlay = physicalFlowOverlay(
     layout.metadata as PhysicalFlowProjectionMetadata | undefined,

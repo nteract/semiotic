@@ -139,6 +139,8 @@ export const ChainReactionChart = /* @__PURE__ */ withSizedChartErrorBoundary(/*
     responsiveHeight
   )
   const [width, height] = responsiveLayout.size
+  const placeholder = renderChartPlaceholder(props, responsiveLayout.size, data)
+  const suspended = placeholder != null
   const frameRef = useRef<StreamPhysicsFrameHandle>(null)
   const [internalSelection, setInternalSelection] = useState<string[]>([])
   const selectedTaskIDs = controlledSelection
@@ -388,10 +390,10 @@ export const ChainReactionChart = /* @__PURE__ */ withSizedChartErrorBoundary(/*
   }, [commitRuntime, reduced, settle])
 
   useEffect(() => {
-    if (!runtime.playing || mode !== "replay" || reduced) return undefined
+    if (!runtime.playing || mode !== "replay" || reduced || suspended) return undefined
     const timer = window.setInterval(step, 760)
     return () => window.clearInterval(timer)
-  }, [mode, reduced, runtime.playing, step])
+  }, [mode, reduced, runtime.playing, step, suspended])
 
   const reset = useCallback(() => {
     frameRef.current?.clear()
@@ -652,12 +654,7 @@ export const ChainReactionChart = /* @__PURE__ */ withSizedChartErrorBoundary(/*
     [machine]
   )
 
-  const placeholder = renderChartPlaceholder(props, responsiveLayout.size, data)
-  if (placeholder) return placeholder
-  if (!machine.valid) {
-    return <ChainReactionDiagnostics className={className} width={width} diagnostics={machine.diagnostics} />
-  }
-
+  const fallback = placeholder ?? (!machine.valid && <ChainReactionDiagnostics width={width} diagnostics={machine.diagnostics} />)
   return (
     <div
       className={className}
@@ -667,7 +664,7 @@ export const ChainReactionChart = /* @__PURE__ */ withSizedChartErrorBoundary(/*
         position: "relative"
       }}
     >
-      {controlList.length > 0 && (
+      {!fallback && controlList.length > 0 && (
         <div
           aria-label="Chain reaction replay controls"
           style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}
@@ -703,65 +700,70 @@ export const ChainReactionChart = /* @__PURE__ */ withSizedChartErrorBoundary(/*
           height: responsiveHeight ? "100%" : height
         }}
       >
-        <StreamPhysicsFrame
-          key={`${width}x${height}`}
-          ref={frameRef}
-          size={[width, height]}
-          responsiveWidth={false}
-          responsiveHeight={false}
-          maxDevicePixelRatio={props.maxDevicePixelRatio}
-          title={title}
-          description={
-            description ??
-            "Tasks are arranged by workstream and dependency depth. Balls represent satisfied prerequisites; task completion remains an explicit data event."
-          }
-          summary={`${blockerSummary}${amplification && insight === "blocker-amplification" ? ` Selected task reaches ${amplification.downstreamTaskCount} unfinished tasks across ${amplification.affectedLaneCount} lanes.` : ""}`}
-          accessibleTable={false}
-          enableHover={tooltipProps.enableHover ?? enableHover}
-          initialSpawns={EMPTY_SPAWNS}
-          bodyForces={dependencyBodyForce}
-          bodyStyle={{
-            fill: "var(--semiotic-primary, #f0a329)",
-            stroke: "var(--semiotic-text, #243039)",
-            strokeWidth: 1.25
-          }}
-          bodySemanticItems={false}
-          semanticItems={semanticItems}
-          onSemanticItemActivate={(item) => item.id && selectTask(item.id)}
-          foregroundGraphics={() => overlay}
-          paused={reduced}
-          continuous={runtime.inFlight.size > 0}
-          onTick={handleTick as never}
-          tooltipContent={
-            props.tooltip === false
-              ? tooltipProps.tooltipContent
-              : (tooltipProps.tooltipContent ?? defaultTooltipContent)
-          }
-          config={{
-            bodyLimit: Math.max(16, machine.edges.length + 4),
-            colliders,
-            settleStepLimit: 2200,
-            kernel: {
-              seed,
-              gravity: { x: 0, y: 7 },
-              fixedDt: 1 / 60,
-              cellSize: 28,
-              collisionIterations: 2,
-              velocityDamping: 0.992,
-              restitution: 0.02,
-              friction: 0.12,
-              maxVelocity: 150,
-              sleepSpeed: 1.1,
-              sleepAfter: 0.8
-            },
-            observation: {
-              chartType: "ChainReactionChart",
-              onSimulationStateChange
-            }
-          }}
-        />
+        {fallback}
+        {machine.valid && (!suspended || machine.nodes.length > 0) && (
+          <div hidden={suspended}>
+            <StreamPhysicsFrame
+              key={`${width}x${height}`}
+              ref={frameRef}
+              size={[width, height]}
+              responsiveWidth={false}
+              responsiveHeight={false}
+              maxDevicePixelRatio={props.maxDevicePixelRatio}
+              title={title}
+              description={
+                description ??
+                "Tasks are arranged by workstream and dependency depth. Balls represent satisfied prerequisites; task completion remains an explicit data event."
+              }
+              summary={`${blockerSummary}${amplification && insight === "blocker-amplification" ? ` Selected task reaches ${amplification.downstreamTaskCount} unfinished tasks across ${amplification.affectedLaneCount} lanes.` : ""}`}
+              accessibleTable={false}
+              enableHover={tooltipProps.enableHover ?? enableHover}
+              initialSpawns={EMPTY_SPAWNS}
+              bodyForces={dependencyBodyForce}
+              bodyStyle={{
+                fill: "var(--semiotic-primary, #f0a329)",
+                stroke: "var(--semiotic-text, #243039)",
+                strokeWidth: 1.25
+              }}
+              bodySemanticItems={false}
+              semanticItems={semanticItems}
+              onSemanticItemActivate={(item) => item.id && selectTask(item.id)}
+              foregroundGraphics={() => overlay}
+              paused={reduced || suspended}
+              continuous={runtime.inFlight.size > 0}
+              onTick={handleTick as never}
+              tooltipContent={
+                props.tooltip === false
+                  ? tooltipProps.tooltipContent
+                  : (tooltipProps.tooltipContent ?? defaultTooltipContent)
+              }
+              config={{
+                bodyLimit: Math.max(16, machine.edges.length + 4),
+                colliders,
+                settleStepLimit: 2200,
+                kernel: {
+                  seed,
+                  gravity: { x: 0, y: 7 },
+                  fixedDt: 1 / 60,
+                  cellSize: 28,
+                  collisionIterations: 2,
+                  velocityDamping: 0.992,
+                  restitution: 0.02,
+                  friction: 0.12,
+                  maxVelocity: 150,
+                  sleepSpeed: 1.1,
+                  sleepAfter: 0.8
+                },
+                observation: {
+                  chartType: "ChainReactionChart",
+                  onSimulationStateChange
+                }
+              }}
+            />
+          </div>
+        )}
       </div>
-      {accessibleTable && (
+      {!fallback && accessibleTable && (
         <AccessibleTablePortal accessibleTable={accessibleTable}>
           <ChainReactionAccessibleTable
             blockerSummary={blockerSummary}

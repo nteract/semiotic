@@ -241,7 +241,7 @@ export const UnitPileChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__
     props, chartSize,
     simulationMode === "mechanical" ? chartData : data
   )
-  if (stateEl) return stateEl
+  if (stateEl) return renderPhysicsFrame(chartSize, stateEl, layoutMode)
   const projectionOverlay = pileProjectionOverlay(
     layout.projectionRows,
     ballRadius,
