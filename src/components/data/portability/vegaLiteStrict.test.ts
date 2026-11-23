@@ -1,3 +1,4 @@
+import { encodingLossExamples } from "./vegaLiteEncodingLoss.fixture"
 import { describe, expect, it, vi } from "vitest"
 import { fromVegaLite, fromVegaLiteResult } from "../fromVegaLite"
 import type { VegaLiteSpec } from "../fromVegaLite"
@@ -20,6 +21,13 @@ const importSpec = (value: unknown, lossy = false) =>
   })
 
 describe("strict Vega-Lite boundaries", () => {
+  it.each(encodingLossExamples)("reports $path on a $spec.mark before rendering", ({ spec, path }) => {
+    const strict = importSpec(spec)
+    expect(strict.status).toBe("refused")
+    expect(strict.diagnostics).toContainEqual(expect.objectContaining({ path, severity: "error" }))
+    expect(importSpec(spec, true).lossReport).toContainEqual(expect.objectContaining({ path }))
+  })
+
   it.each(["bar", "area"])("discloses normalization without a grouping field for %s", mark => {
     const spec = { ...base, mark, encoding: { ...base.encoding, y: { ...base.encoding!.y, stack: "normalize" } } }
     expect(importSpec(spec).status).toBe("refused")

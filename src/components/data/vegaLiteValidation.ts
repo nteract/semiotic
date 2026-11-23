@@ -108,12 +108,10 @@ export function vegaLiteSemanticDiagnostics(
       if (!allowed.includes(key)) unsupported(`${path}/${pointer(key)}`)
   }
   const mark = typeof spec.mark === "string" ? spec.mark : spec.mark?.type
-  const continuous = ["line", "area", "point", "circle", "square"].includes(
-    mark
-  )
+  const symbol = ["point", "circle", "square"].includes(mark)
+  const continuous = symbol || mark === "line" || mark === "area"
   const channels = mark === "arc" ? ["theta", "color"] : ["x", "y", "color"]
-  if (["point", "circle", "square"].includes(mark))
-    channels.push("size", "opacity")
+  if (symbol) channels.push("size", "opacity")
   keys(
     spec,
     [
@@ -153,6 +151,12 @@ export function vegaLiteSemanticDiagnostics(
       unsupported("/mark/interpolate")
   }
   const { x, y, color } = spec.encoding ?? {}
+  if (continuous || mark === "rect") {
+    for (const axis of ["x", "y"] as const) {
+      const channel = spec.encoding?.[axis]
+      if (!channel?.field && !channel?.aggregate) unsupported(`/encoding/${axis}`)
+    }
+  }
   for (const [binned, measure, channel] of [[x, y, "y"], [y, x, "x"]] as const) {
     if (binned?.bin && measure && measure.aggregate !== "count") unsupported(`/encoding/${channel}`)
   }
@@ -163,10 +167,16 @@ export function vegaLiteSemanticDiagnostics(
     if (dimension.stack !== undefined) unsupported(horizontal ? "/encoding/y/stack" : "/encoding/x/stack")
     const overlaid = measure.stack === null || measure.stack === false
     if (color?.field && overlaid) unsupported(`${path}/stack`)
-    if (!measure.aggregate && typeof dimension.field === "string" && dimension.field && spec.data?.values) {
+    if (typeof dimension.field === "string" && dimension.field && spec.data?.values) {
       const fields = [dimension.field]
       if (typeof color?.field === "string" && color.field) fields.push(color.field)
-      if (aggregateRows(spec.data.values, fields, []).length !== spec.data.values.length) unsupported(path)
+      const rows = measure.aggregate ? aggregateRows(spec.data.values, fields, []) : spec.data.values
+      const seen = new Set<string>()
+      for (const row of rows) {
+        const key = JSON.stringify(fields.map(field => String(row[field])))
+        if (seen.has(key)) { unsupported(path); break }
+        seen.add(key)
+      }
     }
   }
   if (mark === "area" && color?.field && x?.aggregate && !y?.aggregate &&
@@ -204,7 +214,7 @@ export function vegaLiteSemanticDiagnostics(
     )
       unsupported(`${path}/type`)
     if (!continuous && enc.type === "temporal") unsupported(`${path}/type`)
-    if (channel === "color" && mark !== "rect" && enc.type === "quantitative")
+    if (channel === "color" && (mark === "rect" ? ["nominal", "ordinal"].includes(enc.type ?? "") : enc.type === "quantitative"))
       unsupported(`${path}/type`)
     if (channel === "size" && enc.type !== undefined && enc.type !== "quantitative") unsupported(`${path}/type`)
     if (enc.axis) keys(enc.axis, ["title"], `${path}/axis`)

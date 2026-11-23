@@ -1,3 +1,4 @@
+import { encodingLossExamples } from "../../components/data/portability/vegaLiteEncodingLoss.fixture"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import type { ChildProcess } from "node:child_process"
 import { initializeServer, sendRequest, spawnServer } from "./mcpStdioHarness"
@@ -63,6 +64,14 @@ describe("developer MCP Vega-Lite conversion", () => {
     ).result
     expect(rendered.isError).not.toBe(true)
     expect(rendered.content[0].text).toContain("<svg")
+  })
+
+  it.each(encodingLossExamples)("exposes $path on a $spec.mark over MCP", async ({ spec, path }) => {
+    const strict = await call(spec)
+    expect(strict.isError).toBe(true)
+    expect(strict.structuredContent.diagnostics).toContainEqual(expect.objectContaining({ path }))
+    const lossy = await call(spec, "lossy")
+    expect(lossy.structuredContent.warnings).toContainEqual(expect.stringContaining(path))
   })
 
   it("refuses semantic loss by default and names every dropped feature in lossy output", async () => {
