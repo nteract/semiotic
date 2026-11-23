@@ -11,19 +11,7 @@
 
 import type { GraphNode, GraphEdge, Point } from "./networkAnalysis"
 import { degree } from "./networkAnalysis"
-
-function setPosition(
-  positions: Record<string, Point>,
-  id: string,
-  point: Point
-): void {
-  Object.defineProperty(positions, id, {
-    value: point,
-    enumerable: true,
-    configurable: true,
-    writable: true
-  })
-}
+import { setOwnValue } from "./atlas/ids"
 
 /**
  * Order node ids by community/group then descending degree, so related nodes sit
@@ -74,7 +62,7 @@ export function arcLayout(
   const out: Record<string, Point> = {}
   const n = ids.length
   ids.forEach((id, i) => {
-    setPosition(out, id, {
+    setOwnValue(out, id, {
       x: n > 1 ? inset + (i / (n - 1)) * (1 - 2 * inset) : 0.5,
       y: baseline
     })
@@ -121,7 +109,7 @@ export function circularLayout(
   const n = ids.length
   ids.forEach((id, i) => {
     const angle = start + (i / n) * Math.PI * 2 - Math.PI / 2
-    setPosition(out, id, {
+    setOwnValue(out, id, {
       x: cx + Math.cos(angle) * radius,
       y: cy + Math.sin(angle) * radius
     })

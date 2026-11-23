@@ -6,16 +6,12 @@ type Location = Point & { ids: string[] }
 
 // Every pair in the group is at most two hops apart if one vertex touches them all.
 function hasCoveringHub(ids: string[], adjacency: Map<string, Set<string>>) {
-  if (ids.length === 1) return true
-  let seed = ids[0]
-  for (const id of ids) {
-    if (adjacency.get(id)!.size < adjacency.get(seed)!.size) seed = id
-  }
+  const seed = ids[0]
   function covers(hub: string) {
     const neighbors = adjacency.get(hub)!
     return neighbors.size >= ids.length - 1 && ids.every(id => id === hub || neighbors.has(id))
   }
-  if (covers(seed)) return true
+  if (ids.length === 1 || covers(seed)) return true
   for (const neighbor of adjacency.get(seed)!) if (covers(neighbor)) return true
   return false
 }
@@ -67,13 +63,13 @@ export function findProximityProblems(
   }
   const minHops = options.minHops ?? 3
   const maxNearHops = Math.ceil(minHops) - 1
-  const compact = new Set(maxNearHops >= 2 ? points.filter(point => hasCoveringHub(point.ids, adjacency)) : [])
   const maxDistance = options.maxThreshold ?? options.startThreshold ?? spacing * 0.9
   let threshold = Math.min(options.startThreshold ?? spacing / 2, maxDistance)
   const problemIds = new Set<string>()
   function inspect(radius: number) {
     for (const point of points) {
       const { x, y, ids } = point
+      const compact = maxNearHops >= 2 && hasCoveringHub(ids, adjacency)
       for (const id of ids) {
         // A flagged node needs no further search: each unflagged peer will check its own neighborhood.
         if (problemIds.has(id)) continue
@@ -83,7 +79,7 @@ export function findProximityProblems(
           if (x0 > x + radius || x1 < x - radius || y0 > y + radius || y1 < y - radius) return true
           if (cell.length) return false
           const candidate = cell.data
-          if (candidate === point && compact.has(point)) return false
+          if (candidate === point && compact) return false
           const distance = Math.hypot(candidate.x - x, candidate.y - y)
           if (distance >= radius && distance !== 0) return false
           for (const other of candidate.ids) {
