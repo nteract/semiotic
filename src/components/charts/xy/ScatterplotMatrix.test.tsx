@@ -44,6 +44,27 @@ describe("ScatterplotMatrix", () => {
     expect(streamFrames.length).toBe(6) // 3x3 - 3 diagonal = 6
   })
 
+  it("uses one tab stop for the matrix and lets the reader enter and leave a cell", () => {
+    const { getByRole, getAllByRole } = render(<ScatterplotMatrix
+      data={sampleData} fields={["a", "b", "c"]} accessibleTable={false} />)
+    const grid = getByRole("grid")
+    expect(grid.querySelectorAll('[tabindex="0"]')).toHaveLength(1)
+    const cells = getAllByRole("gridcell")
+    cells[0].focus()
+    fireEvent.keyDown(cells[0], { key: "ArrowRight" })
+    expect(cells[1]).toHaveFocus()
+    fireEvent.keyDown(cells[1], { key: "ArrowDown" })
+    expect(cells[4]).toHaveFocus()
+    fireEvent.keyDown(cells[4], { key: "ArrowLeft" })
+    expect(cells[3]).toHaveFocus()
+    fireEvent.keyDown(cells[3], { key: "Enter" })
+    const frame = within(cells[3]).getByRole("group", { name: /a versus b/ })
+    expect(frame).toHaveFocus()
+    fireEvent.keyDown(frame, { key: "Escape" })
+    expect(cells[3]).toHaveFocus()
+    expect(grid.querySelectorAll('[tabindex="0"]')).toHaveLength(1)
+  })
+
   it("renders diagonal histograms as SVGs", () => {
     const { container } = render(
       <TooltipProvider>

@@ -34,6 +34,7 @@ import type { XYBrushEndMeta, XYBrushExtent, XYBrushExtentInput } from "./xyBrus
 import { axisEndMeta, pixelRange, rangeOf, sameRange } from "./brushControl"
 
 export interface XYBrushOverlayProps {
+  tabIndex?: number
   width: number
   height: number
   totalWidth: number
@@ -185,7 +186,8 @@ export function XYBrushOverlay({
   snapDuring,
   streaming,
   extent: controlledExtent,
-  onBrushEnd
+  onBrushEnd,
+  tabIndex = 0
 }: XYBrushOverlayProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   // d3-brush's `BrushBehavior` is generic over the datum bound to the
@@ -461,6 +463,7 @@ export function XYBrushOverlay({
       width={totalWidth}
       height={totalHeight}
       {...brushA11y.svgProps}
+      tabIndex={tabIndex}
       style={{
         position: "absolute",
         top: 0,

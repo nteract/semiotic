@@ -2,7 +2,7 @@
 import { SCATTERPLOT_MATRIX_SIZE } from "../shared/chartSizeDefaultsXY"
 import type { Datum } from "../shared/datumTypes"
 
-import { useMemo, useCallback, useState, useId, Fragment } from "react"
+import { useMemo, useCallback, useState, useId } from "react"
 import { resolveExplicitColor } from "../shared/colorUtils"
 import type { BaseChartProps, ChartAccessor } from "../shared/types"
 import {
@@ -16,20 +16,26 @@ import { useColorScale, DEFAULT_COLOR, resolveMobileInteraction } from "../share
 import { LinkedCharts } from "../../LinkedCharts"
 import { useSelectionSelector } from "../../store/SelectionStore"
 import {
-  type ScatterplotMatrixHoverInfo,
-} from "./scatterplotMatrixInteractionTypes"
-import {
   AccessibleDataTable,
   AccessibleTablePortal,
   ScreenReaderSummary,
   SkipToTableLink,
 } from "../../stream/AccessibleDataTable"
 import type { AccessibleSceneNode } from "../../stream/accessibleDataRows"
-import { ScatterplotCell, DiagonalCell, LabelCell, SPLOM_IDX } from "./scatterplotMatrixCells"
+import { MatrixGrid } from "./scatterplotMatrixGrid"
+import { ScatterplotCell, DiagonalCell, LabelCell, SPLOM_IDX, HOVER_SELECTION, BRUSH_SELECTION } from "./scatterplotMatrixCells"
 import { type StyleRule } from "../shared/styleRules"
 import { withSizedChartErrorBoundary } from "../shared/withChartErrorBoundary"
 
 // ── Types ──────────────────────────────────────────────────────────────────
+
+interface HoveredPoint {
+  datum: Datum
+  xField: string
+  yField: string
+  px: number
+  py: number
+}
 
 export interface ScatterplotMatrixProps<TDatum extends Datum = Datum> extends BaseChartProps {
   /** Array of data objects */
@@ -102,14 +108,12 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
     brushMode = "crossfilter",
     hoverMode = true,
     unselectedOpacity = 0.1,
-    showGrid = false,
     maxDevicePixelRatio,
     tooltip,
     showLegend,
     idAccessor,
     styleRules,
     width: _width,
-    height: _height,
     className,
     title,
     description,
@@ -120,8 +124,6 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
     chartId
   } = props
 
-  const brushSelectionName = "splom"
-  const hoverSelectionName = "splom-hover"
   const mobileInteraction = resolveMobileInteraction(props.mobileInteraction, {
     mode: props.mode,
     width: _width ?? fields.length * cellSize,
@@ -129,17 +131,17 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
   })
 
   // Brush and hover are mutually exclusive: hover wins when enabled
-  const cellMode: "brush" | "hover" = hoverMode ? "hover" : (brushMode ? "brush" : "hover")
+  const cellMode = !hoverMode && brushMode ? "brush" : "hover"
 
   // Grid-level hover state — single tooltip for the entire matrix
   const clearSelection = useSelectionSelector((state) => state.clearSelection)
-  const [hoveredInfo, setHoveredInfo] = useState<ScatterplotMatrixHoverInfo | null>(null)
+  const [hoveredInfo, setHoveredInfo] = useState<HoveredPoint | null>(null)
 
   // Clear all hover state when mouse leaves the grid
   const handleGridMouseLeave = useCallback(() => {
-    clearSelection(hoverSelectionName)
+    clearSelection(HOVER_SELECTION)
     setHoveredInfo(null)
-  }, [clearSelection, hoverSelectionName])
+  }, [clearSelection])
 
   // Stamp each datum with a stable index for cross-cell identity matching
   const indexedData = useMemo(() => {
@@ -166,19 +168,27 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
     [tooltip],
   )
 
-  const _n = fields.length
   const labelWidth = SCATTERPLOT_MATRIX_SIZE.labelWidth
 
-  // Translate a cell's local pixel offset into grid-relative coordinates so
-  // hover and click observations (and onClick) share one coordinate space.
-  const gridPoint = useCallback(
-    (col: number, row: number, px?: number, py?: number): [number, number] => {
-      const cellLeft = labelWidth + cellGap + col * (cellSize + cellGap)
-      const cellTop = row * (cellSize + cellGap)
-      return [cellLeft + (px ?? 0), cellTop + (py ?? 0)]
-    },
-    [labelWidth, cellSize, cellGap]
-  )
+  const stride = cellSize + cellGap
+  const fieldLabel = (field: string) => resolveExplicitColor(fieldLabels, field) ?? field
+  const gridPoint = (col: number, row: number, px: number, py: number) => ({
+    x: labelWidth + cellGap + col * stride + px,
+    y: row * stride + py
+  })
+  function handlePoint(type: "hover" | "click", datum: Datum | null, col: number, row: number, px = 0, py = 0) {
+    if (!datum) {
+      if (type === "hover") {
+        setHoveredInfo(null)
+        onObservation?.({ type: "hover-end", timestamp: Date.now(), chartType: "ScatterplotMatrix", chartId })
+      }
+      return
+    }
+    const { x, y } = gridPoint(col, row, px, py)
+    if (type === "hover") setHoveredInfo({ datum, xField: fields[col], yField: fields[row], px, py })
+    else onClick?.(datum as TDatum, { x, y })
+    onObservation?.({ type, datum, x, y, timestamp: Date.now(), chartType: "ScatterplotMatrix", chartId })
+  }
 
   // Legend
   const shouldShowLegend = showLegend !== undefined ? showLegend : !!colorBy
@@ -192,17 +202,6 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
       color: colorScale ? colorScale(String(cat)) : DEFAULT_COLOR
     }))
   }, [shouldShowLegend, colorBy, indexedData, colorScale])
-
-  const gridStyle = useMemo(
-    () => ({
-      display: "grid",
-      gridTemplateColumns: `${labelWidth}px ${fields.map(() => `${cellSize}px`).join(" ")}`,
-      gridTemplateRows: `${fields.map(() => `${cellSize}px`).join(" ")} ${labelWidth}px`,
-      gap: `${cellGap}px`,
-      width: "fit-content"
-    }),
-    [fields, cellSize, cellGap, labelWidth]
-  )
 
   return (
     <div
@@ -237,192 +236,109 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
         </div>
       )}
       <div style={{ position: "relative", width: "fit-content" }}>
-      <div style={gridStyle} onMouseLeave={cellMode === "hover" ? handleGridMouseLeave : undefined}>
-        {fields.map((rowField, row) => (
-          <Fragment key={`row-${rowField}`}>
-            {/* Row label */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                writingMode: "vertical-rl",
-                transform: "rotate(180deg)",
-                fontSize: 11,
-                fontWeight: "bold",
-                color: "var(--semiotic-text, #333)"
-              }}
-            >
-              {resolveExplicitColor(fieldLabels, rowField) ?? rowField}
-            </div>
-
-            {/* Cells for this row */}
-            {fields.map((colField, col) => {
-              if (row === col) {
-                // Diagonal
-                if (diagonal === "label") {
-                  return (
-                    <LabelCell
-                      key={`diag-${rowField}`}
-                      label={resolveExplicitColor(fieldLabels, rowField) ?? rowField}
-                      cellSize={cellSize}
-                    />
-                  )
-                }
+        <MatrixGrid fields={fields} cellSize={cellSize} cellGap={cellGap} labelWidth={labelWidth}
+          brush={cellMode === "brush"} labelFor={fieldLabel}
+          onMouseLeave={cellMode === "hover" ? handleGridMouseLeave : undefined}>
+          {(rowField, row, colField, col, label) => {
+            if (row === col) {
+              // Diagonal
+              if (diagonal === "label") {
                 return (
-                  <DiagonalCell
-                    key={`diag-${rowField}`}
-                    data={indexedData}
-                    field={rowField}
-                    label={resolveExplicitColor(fieldLabels, rowField) ?? rowField}
+                  <LabelCell
+                    label={label}
                     cellSize={cellSize}
-                    bins={histogramBins}
-                    colorBy={colorBy as ChartAccessor<Datum, string> | undefined}
-                    colorScale={colorScale}
-                    brushSelectionName={brushSelectionName}
-                    hoverSelectionName={hoverSelectionName}
-                    unselectedOpacity={unselectedOpacity}
-                    mode={cellMode}
                   />
                 )
               }
-
               return (
-                <ScatterplotCell
-                  key={`cell-${rowField}-${colField}`}
+                <DiagonalCell
                   data={indexedData}
-                  xField={colField}
-                  yField={rowField}
-                  fieldLabels={fieldLabels}
+                  field={rowField}
+                  label={label}
                   cellSize={cellSize}
-                  pointRadius={pointRadius}
-                  pointOpacity={pointOpacity}
-                  styleRules={styleRules}
+                  bins={histogramBins}
                   colorBy={colorBy as ChartAccessor<Datum, string> | undefined}
                   colorScale={colorScale}
-                  brushSelectionName={brushSelectionName}
-                  hoverSelectionName={hoverSelectionName}
-                  unselectedOpacity={unselectedOpacity}
-                  showGrid={showGrid}
-                  maxDevicePixelRatio={maxDevicePixelRatio}
-                  mobileInteraction={mobileInteraction}
                   mode={cellMode}
-                  onPointHover={cellMode === "hover" ? (datum, px, py) => {
-                    if (datum) {
-                      setHoveredInfo({
-                        datum,
-                        xField: colField,
-                        yField: rowField,
-                        colIndex: col,
-                        rowIndex: row,
-                        px: px ?? 0,
-                        py: py ?? 0
-                      })
-                      if (onObservation) {
-                        // Emit grid-relative coordinates, matching click, so a
-                        // coordinated-view handler can position UI consistently
-                        // across event types. (The internal tooltip uses the
-                        // cell-local px/py stored in hoveredInfo instead.)
-                        const [gx, gy] = gridPoint(col, row, px, py)
-                        onObservation({ type: "hover", datum, x: gx, y: gy, timestamp: Date.now(), chartType: "ScatterplotMatrix", chartId })
-                      }
-                    } else {
-                      setHoveredInfo(null)
-                      if (onObservation) {
-                        onObservation({ type: "hover-end", timestamp: Date.now(), chartType: "ScatterplotMatrix", chartId })
-                      }
-                    }
-                  } : undefined}
-                  onPointClick={(onClick || onObservation) ? (datum, px, py) => {
-                    if (!datum) return
-                    const [gx, gy] = gridPoint(col, row, px, py)
-                    if (onClick) onClick(datum as TDatum, { x: gx, y: gy })
-                    if (onObservation) {
-                      onObservation({ type: "click", datum, x: gx, y: gy, timestamp: Date.now(), chartType: "ScatterplotMatrix", chartId })
-                    }
-                  } : undefined}
                 />
               )
-            })}
-          </Fragment>
-        ))}
+            }
 
-        {/* Bottom column labels */}
-        <div /> {/* Empty corner cell */}
-        {fields.map((field) => (
-          <div
-            key={`col-label-${field}`}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 11,
-              fontWeight: "bold",
-              color: "#333"
-            }}
-          >
-            {resolveExplicitColor(fieldLabels, field) ?? field}
-          </div>
-        ))}
-      </div>
-      {/* Single tooltip for the entire matrix — positioned above the hovered point. */}
-      {hoveredInfo && cellMode === "hover" && tooltip !== false && (() => {
-        const d = hoveredInfo.datum
-        const xFieldLabel = resolveExplicitColor(fieldLabels, hoveredInfo.xField) ?? hoveredInfo.xField
-        const yFieldLabel = resolveExplicitColor(fieldLabels, hoveredInfo.yField) ?? hoveredInfo.yField
-        const colorLabel = colorBy
-          ? typeof colorBy === "function" ? colorBy(d as TDatum) : d[colorBy]
-          : null
-        // Resolve ID for header
-        const idLabel = idAccessor
-          ? (typeof idAccessor === "function" ? idAccessor(d as TDatum) : d[idAccessor])
-          : `Row ${d[SPLOM_IDX]}`
-        // Cell origin in grid coordinates
-        const cellLeft = labelWidth + cellGap + hoveredInfo.colIndex * (cellSize + cellGap)
-        const cellTop = hoveredInfo.rowIndex * (cellSize + cellGap)
-        // Point position within the cell
-        const tooltipLeft = cellLeft + hoveredInfo.px
-        const tooltipTop = cellTop + hoveredInfo.py
-        const { [SPLOM_IDX]: _index, ...rawDatum } = d
-        const hasCustomContent = typeof normalizedTooltip === "function"
-        const customContent = hasCustomContent ? normalizedTooltip(rawDatum) : null
-        const defaultContent = (
-          <TooltipRoot
-            style={{
-              color: "var(--semiotic-tooltip-text, #333)",
-              background: "var(--semiotic-tooltip-bg, rgba(255,255,255,0.95))",
-              border: "1px solid var(--semiotic-border, #ddd)",
-              borderRadius: 3,
-              padding: "4px 8px",
-              fontSize: 11,
-              lineHeight: 1.4,
-              whiteSpace: "nowrap",
-              boxShadow: "none",
-            }}
-          >
-            <div style={{ fontWeight: "bold", marginBottom: 2 }}>{String(idLabel)}</div>
-            <div>{xFieldLabel}: {d[hoveredInfo.xField] != null ? Number(d[hoveredInfo.xField]).toFixed(1) : "–"}</div>
-            <div>{yFieldLabel}: {d[hoveredInfo.yField] != null ? Number(d[hoveredInfo.yField]).toFixed(1) : "–"}</div>
-            {colorLabel != null && <div style={{ opacity: 0.8 }}>{typeof colorBy === "string" ? colorBy : "group"}: {String(colorLabel)}</div>}
-          </TooltipRoot>
-        )
-        const tooltipContent = hasCustomContent ? customContent : defaultContent
-        if (!hasTooltipContent(tooltipContent)) return null
-        return (
-          <FlippingTooltip
-            contentOwnsChrome={hasOwnTooltipChrome(normalizedTooltip)}
-            x={tooltipLeft}
-            y={tooltipTop}
-            containerWidth={labelWidth + fields.length * cellSize + fields.length * cellGap}
-            containerHeight={fields.length * cellSize + labelWidth + fields.length * cellGap}
-            margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-            className="scatterplot-matrix-tooltip"
-            zIndex={10}
-          >
-            {tooltipContent}
-          </FlippingTooltip>
-        )
-      })()}
+            return (
+              <ScatterplotCell
+                data={indexedData}
+                xField={colField}
+                yField={rowField}
+                description={`${label} scatterplot`}
+                cellSize={cellSize}
+                pointRadius={pointRadius}
+                pointOpacity={pointOpacity}
+                styleRules={styleRules}
+                colorBy={colorBy as ChartAccessor<Datum, string> | undefined}
+                colorScale={colorScale}
+                unselectedOpacity={unselectedOpacity}
+                maxDevicePixelRatio={maxDevicePixelRatio}
+                mobileInteraction={mobileInteraction}
+                mode={cellMode}
+                onPointHover={cellMode === "hover" ? (datum, x, y) => handlePoint("hover", datum, col, row, x, y) : undefined}
+                onPointClick={onClick || onObservation ? (datum, x, y) => handlePoint("click", datum, col, row, x, y) : undefined}
+              />
+            )
+          }}
+        </MatrixGrid>
+        {/* Single tooltip for the entire matrix — positioned above the hovered point. */}
+        {hoveredInfo && cellMode === "hover" && tooltip !== false && (() => {
+          const { datum: d, xField, yField, px, py } = hoveredInfo
+          const col = fields.indexOf(xField)
+          const row = fields.indexOf(yField)
+          if (col < 0 || row < 0) return null
+          const colorLabel = colorBy
+            ? typeof colorBy === "function" ? colorBy(d as TDatum) : d[colorBy]
+            : null
+          // Resolve ID for header
+          const idLabel = idAccessor
+            ? (typeof idAccessor === "function" ? idAccessor(d as TDatum) : d[idAccessor])
+            : `Row ${d[SPLOM_IDX]}`
+          const { [SPLOM_IDX]: _index, ...rawDatum } = d
+          const hasCustomContent = typeof normalizedTooltip === "function"
+          const customContent = hasCustomContent ? normalizedTooltip(rawDatum) : null
+          const defaultContent = (
+            <TooltipRoot
+              style={{
+                color: "var(--semiotic-tooltip-text, #333)",
+                background: "var(--semiotic-tooltip-bg, rgba(255,255,255,0.95))",
+                border: "1px solid var(--semiotic-border, #ddd)",
+                borderRadius: 3,
+                padding: "4px 8px",
+                fontSize: 11,
+                lineHeight: 1.4,
+                whiteSpace: "nowrap",
+                boxShadow: "none",
+              }}
+            >
+              <div style={{ fontWeight: "bold", marginBottom: 2 }}>{String(idLabel)}</div>
+              {[xField, yField].map(field => (
+                <div key={field}>{fieldLabel(field)}: {d[field] != null ? Number(d[field]).toFixed(1) : "–"}</div>
+              ))}
+              {colorLabel != null && <div style={{ opacity: 0.8 }}>{typeof colorBy === "string" ? colorBy : "group"}: {String(colorLabel)}</div>}
+            </TooltipRoot>
+          )
+          const tooltipContent = hasCustomContent ? customContent : defaultContent
+          if (!hasTooltipContent(tooltipContent)) return null
+          return (
+            <FlippingTooltip
+              contentOwnsChrome={hasOwnTooltipChrome(normalizedTooltip)}
+              {...gridPoint(col, row, px, py)}
+              containerWidth={labelWidth + fields.length * stride}
+              containerHeight={labelWidth + fields.length * stride}
+              margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+              className="scatterplot-matrix-tooltip"
+              zIndex={10}
+            >
+              {tooltipContent}
+            </FlippingTooltip>
+          )
+        })()}
       </div>
       {accessibleTable && (
         <AccessibleTablePortal accessibleTable={accessibleTable}><AccessibleDataTable
@@ -485,10 +401,10 @@ export const ScatterplotMatrix = /* @__PURE__ */ withSizedChartErrorBoundary(fun
 
   const selectionConfig: Record<string, { resolution?: "union" | "intersect" | "crossfilter" }> = {}
   if (!hoverMode && brushMode) {
-    selectionConfig.splom = { resolution: brushMode as "crossfilter" | "intersect" }
+    selectionConfig[BRUSH_SELECTION] = { resolution: brushMode }
   }
   if (hoverMode) {
-    selectionConfig["splom-hover"] = { resolution: "union" }
+    selectionConfig[HOVER_SELECTION] = { resolution: "union" }
   }
 
   return (

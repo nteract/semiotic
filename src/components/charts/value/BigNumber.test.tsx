@@ -641,6 +641,34 @@ describe("BigNumber — semantic CSS classes", () => {
 })
 
 describe("BigNumber — events", () => {
+  it.each(["tile", "inline"] as const)("activates a %s tile with Enter and Space", mode => {
+    const onClick = vi.fn()
+    const onObservation = vi.fn()
+    render(<BigNumber mode={mode} label="Sales" value={42} onClick={onClick} onObservation={onObservation} />)
+    const tile = screen.getByRole("button", { name: /Sales/ })
+    expect(tile).toHaveAttribute("tabindex", "0")
+    vi.spyOn(tile, "getBoundingClientRect").mockReturnValue(new DOMRect(100, 80, 60, 40))
+    tile.focus()
+    fireEvent.keyDown(tile, { key: "Enter" })
+    fireEvent.keyUp(tile, { key: "Enter" })
+    fireEvent.keyDown(tile, { key: " " })
+    expect(onClick).toHaveBeenCalledTimes(1)
+    fireEvent.keyUp(tile, { key: " " })
+    expect(onClick).toHaveBeenCalledTimes(2)
+    expect(onClick).toHaveBeenLastCalledWith(expect.objectContaining({ value: 42 }), { x: 30, y: 20 })
+    expect(onObservation).toHaveBeenCalledTimes(2)
+    expect(onObservation).toHaveBeenLastCalledWith(expect.objectContaining({ type: "click", x: 30, y: 20 }))
+  })
+
+  it("keeps static and placeholder tiles out of the tab order", () => {
+    const { rerender } = render(<BigNumber value={10} />)
+    expect(screen.getByRole("group")).not.toHaveAttribute("tabindex")
+    rerender(<BigNumber value={10} loading onClick={vi.fn()} />)
+    expect(screen.getByRole("status")).not.toHaveAttribute("tabindex")
+    rerender(<BigNumber value={NaN} onClick={vi.fn()} />)
+    expect(screen.getByRole("status")).not.toHaveAttribute("tabindex")
+  })
+
   it("fires onClick with the resolved datum + click coords", () => {
     const onClick = vi.fn()
     const { container } = render(<BigNumber value={10} onClick={onClick} />)

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react"
 import { LinkedCharts, useSelection } from "../../dist/semiotic.module.min.js"
 import { OrbitDiagram } from "../../dist/network.module.min.js"
+import { BigNumber } from "../../dist/semiotic-value.module.min.js"
 import { ScatterplotMatrix } from "../../dist/xy.module.min.js"
 import type { StreamNetworkFrameHandle } from "../../src/components/stream/networkTypes"
 
@@ -51,11 +52,13 @@ const matrixData = [
 
 function MatrixSelection() {
   const [fields, setFields] = useState(["a", "b", "c"])
+  const [activated, setActivated] = useState("")
   return (
     <>
       <button onClick={() => setFields(["a", "b"])}>
         Remove unrelated field
       </button>
+      <output data-testid="matrix-activated">{activated}</output>
       <div data-testid="matrix-review">
         <ScatterplotMatrix
           data={matrixData}
@@ -68,6 +71,7 @@ function MatrixSelection() {
           colorScheme={{ A: "#1460aa", B: "#e96c2c" }}
           showLegend={false}
           diagonal="label"
+          onClick={d => setActivated(d.id)}
           tooltip={(d) => <span>Matrix row: {d.id}</span>}
         />
       </div>
@@ -75,8 +79,24 @@ function MatrixSelection() {
   )
 }
 
+function KeyboardMatrices() {
+  const [activations, setActivations] = useState(0)
+  const parentSelection = useSelection({ name: "splom" })
+  return <>
+    <BigNumber value={42} label="Sales" onClick={() => setActivations(count => count + 1)} />
+    <output data-testid="activations">{activations}</output>
+    <output data-testid="parent-selection">{String(parentSelection.isActive)}</output>
+    {["First matrix", "Second matrix"].map(title => <ScatterplotMatrix key={title} title={title}
+      data={matrixData} fields={["a", "b", "c"]} cellSize={108}
+      pointRadius={6} pointOpacity={1} hoverMode={false} accessibleTable={false} />)}
+    <button>After matrices</button>
+  </>
+}
+
 export function SelectionReviewFixtures() {
-  return new URLSearchParams(location.search).get("review") === "orbit" ? (
+  const fixture = new URLSearchParams(location.search).get("review")
+  if (fixture === "keyboard") return <LinkedCharts><KeyboardMatrices /></LinkedCharts>
+  return fixture === "orbit" ? (
     <LinkedCharts showLegend={false}>
       <OrbitSelection />
     </LinkedCharts>

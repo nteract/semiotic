@@ -227,6 +227,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       xScaleType,
       yScaleType,
       accessibleTable = true,
+      tabIndex = 0,
       description,
       summary,
       linkedCrosshairName,
@@ -1301,7 +1302,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
         className={`stream-xy-frame${className ? ` ${className}` : ""}`}
         role="group"
         aria-label={description || (typeof title === "string" ? title : "XY chart")}
-        tabIndex={0}
+        tabIndex={tabIndex}
         style={{
           position: "relative",
           fontFamily: "var(--semiotic-font-family, sans-serif)",
@@ -1417,26 +1418,6 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
           linkedCrosshairName={linkedCrosshairName}
           linkedCrosshairSourceId={linkedCrosshairSourceId}
         />
-        {(brush || onBrush) && (
-          <XYBrushOverlayLazy
-            width={adjustedWidth}
-            height={adjustedHeight}
-            totalWidth={size[0]}
-            totalHeight={size[1]}
-            margin={margin}
-            dimension={brush?.dimension ?? "xy"}
-            scales={currentScales}
-            onBrush={onBrush ?? (() => {})}
-            binSize={binSize}
-            snap={brush?.snap}
-            binBoundaries={brush?.binBoundaries ?? (chartType === "bar" ? storeRef.current?.getBinBoundaries() : undefined)}
-            snapDuring={brush?.snapDuring}
-            streaming={runtimeMode === "streaming"}
-            extent={brushExtent}
-            onBrushEnd={onBrushEnd}
-          />
-        )}
-
         {focusRing}
         <XYFrameTooltip
           enabled={Boolean(effectiveHoverAnnotation)}
@@ -1447,6 +1428,26 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
           margin={margin}
         />
         </div>{/* end role="img" */}
+        {(brush || onBrush) && (
+          <XYBrushOverlayLazy
+            width={adjustedWidth}
+            height={adjustedHeight}
+            totalWidth={size[0]}
+            totalHeight={size[1]}
+            margin={margin}
+            dimension={brush?.dimension ?? "xy"}
+            scales={currentScales}
+            tabIndex={tabIndex}
+            onBrush={onBrush ?? (() => {})}
+            binSize={binSize}
+            snap={brush?.snap}
+            binBoundaries={brush?.binBoundaries ?? (chartType === "bar" ? storeRef.current?.getBinBoundaries() : undefined)}
+            snapDuring={brush?.snapDuring}
+            streaming={runtimeMode === "streaming"}
+            extent={brushExtent}
+            onBrushEnd={onBrushEnd}
+          />
+        )}
         {staleness?.showBadge && (
           <StalenessBadge
             isStale={isStale}

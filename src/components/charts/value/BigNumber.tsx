@@ -7,6 +7,7 @@
  * would inherit (format cascade, threshold zones via semantic theme
  * roles, comparison anchoring, sentence-form ARIA, push API + staleness).
  */
+import { SR_ONLY_STYLE } from "../../screenReaderStyles"
 import { BIG_NUMBER_SIZES } from "../shared/chartSizeDefaultsValue"
 import * as React from "react"
 import {
@@ -52,15 +53,8 @@ interface ModeDefaults {
   deltaSize: number
   padding: { top: number; right: number; bottom: number; left: number }
   background: string
-  border: boolean
-  showHeader: boolean
+  expanded: boolean
   showDelta: boolean
-  /** Whether to render `trendSlot` content if provided. Inline / thumbnail
-   *  modes suppress the wide chart area. */
-  showTrend: boolean
-  /** Whether to render `chartSlot` content if provided. Inline / thumbnail
-   *  modes suppress the square chart area. */
-  showChart: boolean
   /** Default reserved square size (pixels) for `chartSlot`. Sized for
    *  sparkline scale by default — roughly two line-heights — so the
    *  decoration sits in the corner without competing with the focal value.
@@ -78,11 +72,8 @@ const MODE_DEFAULTS: Record<BigNumberMode, ModeDefaults> = {
     deltaSize: 13,
     padding: { top: 14, right: 16, bottom: 14, left: 16 },
     background: "var(--semiotic-surface, transparent)",
-    border: true,
-    showHeader: true,
+    expanded: true,
     showDelta: true,
-    showTrend: true,
-    showChart: true,
     chartSize: 44
   },
   presentation: {
@@ -94,11 +85,8 @@ const MODE_DEFAULTS: Record<BigNumberMode, ModeDefaults> = {
     deltaSize: 18,
     padding: { top: 32, right: 32, bottom: 32, left: 32 },
     background: "var(--semiotic-surface, transparent)",
-    border: true,
-    showHeader: true,
+    expanded: true,
     showDelta: true,
-    showTrend: true,
-    showChart: true,
     chartSize: 80
   },
   inline: {
@@ -110,11 +98,8 @@ const MODE_DEFAULTS: Record<BigNumberMode, ModeDefaults> = {
     deltaSize: 0,
     padding: { top: 0, right: 0, bottom: 0, left: 0 },
     background: "transparent",
-    border: false,
-    showHeader: false,
+    expanded: false,
     showDelta: true,
-    showTrend: false,
-    showChart: false,
     chartSize: 0
   },
   thumbnail: {
@@ -126,11 +111,8 @@ const MODE_DEFAULTS: Record<BigNumberMode, ModeDefaults> = {
     deltaSize: 0,
     padding: { top: 4, right: 6, bottom: 4, left: 6 },
     background: "transparent",
-    border: false,
-    showHeader: false,
+    expanded: false,
     showDelta: false,
-    showTrend: false,
-    showChart: false,
     chartSize: 0
   }
 }
@@ -157,9 +139,6 @@ function useTweenedValue(
 ): number {
   const [displayed, setDisplayed] = useState<number>(() => initialValue)
   const displayedRef = useRef<number>(initialValue)
-  const rafRef = useRef<number | null>(null)
-  const fromRef = useRef<number>(target)
-  const startRef = useRef<number>(0)
   const animationEnabled = Boolean(animate)
   const configuredDuration =
     typeof animate === "object" ? animate.duration : undefined
@@ -171,59 +150,32 @@ function useTweenedValue(
     typeof animate === "object" && animate.easing === "linear"
       ? "linear"
       : "ease-out"
-  // Track the latest target without re-creating the RAF callback on every
-  // setDisplayed re-render — the tween reads tweenTargetRef.current to
-  // know where to land. A new target re-arms the animation via the
-  // outer useEffect.
-  const tweenTargetRef = useRef<number>(target)
-
   useEffect(() => {
     const updateDisplayed = (next: number) => {
       displayedRef.current = next
       setDisplayed(next)
     }
 
-    if (!Number.isFinite(target)) {
+    if (!Number.isFinite(target) || !animationEnabled || reducedMotion || duration === 0) {
       updateDisplayed(target)
       return
     }
-    if (!animationEnabled || reducedMotion) {
-      updateDisplayed(target)
-      return
-    }
-    if (duration === 0) {
-      updateDisplayed(target)
-      return
-    }
-
-    fromRef.current = displayedRef.current
-    tweenTargetRef.current = target
-    startRef.current =
-      typeof performance !== "undefined" ? performance.now() : Date.now()
-
+    const from = displayedRef.current
+    const start = typeof performance !== "undefined" ? performance.now() : Date.now()
+    let request: number
     const ease =
       easing === "linear"
         ? (t: number) => t
         : (t: number) => 1 - Math.pow(1 - t, 3)
 
     const tick = (now: number) => {
-      const t = Math.min(1, (now - startRef.current) / duration)
+      const t = Math.min(1, (now - start) / duration)
       const eased = ease(t)
-      const next =
-        fromRef.current + (tweenTargetRef.current - fromRef.current) * eased
-      updateDisplayed(next)
-      if (t < 1) {
-        rafRef.current = requestAnimationFrame(tick)
-      } else {
-        rafRef.current = null
-        updateDisplayed(tweenTargetRef.current)
-      }
+      updateDisplayed(t < 1 ? from + (target - from) * eased : target)
+      if (t < 1) request = requestAnimationFrame(tick)
     }
-    rafRef.current = requestAnimationFrame(tick)
-    return () => {
-      if (rafRef.current != null) cancelAnimationFrame(rafRef.current)
-      rafRef.current = null
-    }
+    request = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(request)
     // The current display value lives in a ref so a tween frame can update
     // React state without restarting this effect.
   }, [animationEnabled, duration, easing, reducedMotion, target])
@@ -641,11 +593,6 @@ const BigNumberInner = (
   // ── Staleness ────────────────────────────────────────────────────
   const stale = useStaleness(lastUpdate, stalenessThreshold)
 
-  // (No value-update observation event is emitted — the ChartObservation
-  // union currently only covers hover/click/brush/selection. Click is wired
-  // below via handleClick; a future `"value-update"` variant on the union
-  // would let live-KPI consumers subscribe without a slot override.)
-
   // ── Pre-rendered strings ─────────────────────────────────────────
   const formattedValue = Number.isFinite(displayedValue)
     ? decorate(formatter(displayedValue), prefix, suffix)
@@ -704,6 +651,7 @@ const BigNumberInner = (
           ? "flex-start"
           : "inherit"
 
+  const display = mode === "inline" ? "inline-flex" : "flex"
   const containerStyle: React.CSSProperties = {
     // `relative` so a top-right-anchored `chartSlot` can absolute-position
     // against the card.
@@ -713,14 +661,14 @@ const BigNumberInner = (
     height,
     padding: `${padding.top}px ${padding.right}px ${padding.bottom}px ${padding.left}px`,
     background: backgroundProp ?? defaults.background,
-    border: defaults.border
+    border: defaults.expanded
       ? `1px solid ${borderColor ?? "var(--semiotic-border, #e2e2e2)"}`
       : undefined,
     borderRadius:
       typeof borderRadius === "number"
         ? `${borderRadius}px`
         : (borderRadius ?? "var(--semiotic-border-radius, 8px)"),
-    display: mode === "inline" ? "inline-flex" : "flex",
+    display,
     flexDirection: "column",
     alignItems:
       flexAlign === "inherit"
@@ -732,44 +680,42 @@ const BigNumberInner = (
     opacity: stale ? 0.55 : 1,
     transition: "opacity 240ms ease-out",
     gridColumn: emphasis === "primary" ? "span 2" : undefined,
-    cursor: onClick ? "pointer" : undefined,
+    cursor: onClick || onObservation ? "pointer" : undefined,
     ...styleProp
   }
 
   // ── Click handler ────────────────────────────────────────────────
-  const handleClick = useCallback(
-    (e: React.MouseEvent) => {
-      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-      const x = e.clientX - rect.left
-      const y = e.clientY - rect.top
-      const datum = {
-        value: isEmpty ? Number.NaN : (effectiveValue as number),
-        level,
-        delta: computedDelta
-      }
-      if (onClick) onClick(datum, { x, y })
-      if (onObservation) {
-        onObservation({
-          type: "click",
-          datum,
-          x,
-          y,
-          chartType: "BigNumber",
-          chartId,
-          timestamp: Date.now()
-        })
-      }
-    },
-    [
-      onClick,
-      onObservation,
-      chartId,
-      isEmpty,
-      effectiveValue,
+  function activate(x: number, y: number) {
+    const datum = {
+      value: isEmpty ? Number.NaN : (effectiveValue as number),
       level,
-      computedDelta
-    ]
-  )
+      delta: computedDelta
+    }
+    if (onClick) onClick(datum, { x, y })
+    if (onObservation) {
+      onObservation({
+        type: "click",
+        datum,
+        x,
+        y,
+        chartType: "BigNumber",
+        chartId,
+        timestamp: Date.now()
+      })
+    }
+  }
+
+  const interactive = Boolean(onClick || onObservation)
+  function handleActivationKey(event: React.KeyboardEvent<HTMLElement>) {
+    if (event.target !== event.currentTarget || event.defaultPrevented) return
+    if (event.key !== "Enter" && event.key !== " ") return
+    event.preventDefault()
+    const trigger = event.key === "Enter" ? "keydown" : "keyup"
+    if (event.type === trigger && !event.repeat) {
+      const rect = event.currentTarget.getBoundingClientRect()
+      activate(rect.width / 2, rect.height / 2)
+    }
+  }
 
   // ── Element tag — `span` in inline mode so the card can sit inside a
   // `<p>` without HTML-validity hydration errors. `<span>` accepts
@@ -842,7 +788,8 @@ const BigNumberInner = (
   // ── Render ───────────────────────────────────────────────────────
   return (
     <Block
-        role="group"
+        role={interactive ? "button" : "group"}
+        tabIndex={interactive ? 0 : undefined}
         aria-label={ariaSentence}
         data-chart="BigNumber"
         data-mode={mode}
@@ -851,10 +798,15 @@ const BigNumberInner = (
         data-sentiment={sentiment}
         className={rootClassName}
         style={containerStyle}
-        onClick={onClick || onObservation ? handleClick : undefined}
+        onKeyDown={interactive ? handleActivationKey : undefined}
+        onKeyUp={interactive ? handleActivationKey : undefined}
+        onClick={interactive ? event => {
+          const rect = event.currentTarget.getBoundingClientRect()
+          activate(event.clientX - rect.left, event.clientY - rect.top)
+        } : undefined}
       >
         {/* Header (label + caption) */}
-        {defaults.showHeader && (label || caption || headerSlot) ? (
+        {defaults.expanded && (label || caption || headerSlot) ? (
           <div
             className="semiotic-bignumber__header"
             style={{
@@ -866,7 +818,7 @@ const BigNumberInner = (
               // overdraw the label / caption. Width hint = default chart
               // size + small gutter.
               paddingRight:
-                defaults.showChart && chartSlot != null
+                chartSlot != null
                   ? (chartSizeProp ?? defaults.chartSize) + 8
                   : 0
             }}
@@ -911,7 +863,7 @@ const BigNumberInner = (
           <Block
             className={`semiotic-bignumber__value semiotic-bignumber__value--${level}`}
             style={{
-              display: mode === "inline" ? "inline-flex" : "flex",
+              display,
               alignItems: "baseline",
               gap: 6,
               fontVariantNumeric: "tabular-nums",
@@ -947,7 +899,7 @@ const BigNumberInner = (
           <Block
             className={`semiotic-bignumber__delta semiotic-bignumber__delta--${sentimentSuffix}`}
             style={{
-              display: mode === "inline" ? "inline-flex" : "flex",
+              display,
               flexWrap: "wrap",
               gap: 8,
               alignItems: "baseline",
@@ -1037,7 +989,7 @@ const BigNumberInner = (
             Absolute-positioned so it overlays a corner without
             displacing the text content; the header above reserves
             right-padding to keep the label from running under it. */}
-        {defaults.showChart && chartSlot != null ? (
+        {defaults.expanded && chartSlot != null ? (
           <div
             className="semiotic-bignumber__chart"
             style={{
@@ -1066,7 +1018,7 @@ const BigNumberInner = (
             overlays without consuming flex-flow space. Cards must be
             tall enough that the text content doesn't overlap this
             region — the default tile height is tuned accordingly. */}
-        {defaults.showTrend && trendSlot != null ? (
+        {defaults.expanded && trendSlot != null ? (
           <div
             className="semiotic-bignumber__trend"
             style={{
@@ -1098,19 +1050,7 @@ const BigNumberInner = (
 
         {/* Sr-only summary supplement */}
         {summary ? (
-          <span
-            style={{
-              position: "absolute",
-              width: 1,
-              height: 1,
-              padding: 0,
-              margin: -1,
-              overflow: "hidden",
-              clip: "rect(0,0,0,0)",
-              whiteSpace: "nowrap",
-              border: 0
-            }}
-          >
+          <span style={{ ...SR_ONLY_STYLE, padding: 0, margin: -1 }}>
             {summary}
           </span>
         ) : null}

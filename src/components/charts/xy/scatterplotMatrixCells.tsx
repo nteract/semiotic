@@ -1,18 +1,17 @@
 "use client"
 import * as React from "react"
-import { useMemo, useCallback, useRef } from "react"
+import { useMemo, useCallback } from "react"
 import type { Datum } from "../shared/datumTypes"
 import type { ChartAccessor, ResolvedMobileInteractionConfig } from "../shared/types"
 import StreamXYFrame from "../../stream/StreamXYFrame"
-import type { StreamXYFrameHandle, HoverData, Style } from "../../stream/types"
+import type { StreamXYFrameProps, HoverData, Style } from "../../stream/types"
 import { ensureXYPlugin } from "../../stream/xyPlugins/registry"
 import { scatterXYPlugin } from "../../stream/xyPlugins/pointPlugin"
-import { getColor, resolveExplicitColor } from "../shared/colorUtils"
+import { getColor } from "../shared/colorUtils"
 import { getMax, getMinMax } from "../shared/minMax"
 import { DEFAULT_COLOR } from "../shared/hooks"
-import { useSelection, useBrushSelection } from "../../store/useSelection"
+import { useSelection } from "../../store/useSelection"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
-import { ScatterplotMatrixBrushOverlayLazy } from "./scatterplotMatrixBrushOverlayLazy"
 import { composeStyleRules, makeXYRuleContext, type StyleRule } from "../shared/styleRules"
 
 // Registered at render (not import) so unused charts stay tree-shakeable.
@@ -21,6 +20,8 @@ function ensureScatterplotMatrixCellsRegistrations(): void {
 }
 
 // Internal field used to identify datums across cells
+export const HOVER_SELECTION = "splom-hover"
+export const BRUSH_SELECTION = "splom"
 export const SPLOM_IDX = "__splomIdx"
 
 // Shared clientId for all hover writers - ensures each new hover REPLACES
@@ -35,17 +36,14 @@ interface CellProps {
   data: Datum[]
   xField: string
   yField: string
-  fieldLabels: Record<string, string>
+  description: string
   cellSize: number
   pointRadius: number
   pointOpacity: number
   styleRules?: StyleRule[]
   colorBy?: ChartAccessor<Datum, string>
   colorScale?: (v: string) => string
-  brushSelectionName: string
-  hoverSelectionName: string
   unselectedOpacity: number
-  showGrid: boolean
   maxDevicePixelRatio?: number
   mobileInteraction?: ResolvedMobileInteractionConfig
   /** "brush" or "hover" - mutually exclusive */
@@ -60,17 +58,14 @@ export function ScatterplotCell({
   data,
   xField,
   yField,
-  fieldLabels: _fieldLabels,
+  description,
   cellSize,
   pointRadius,
   pointOpacity,
   styleRules,
   colorBy,
   colorScale,
-  brushSelectionName,
-  hoverSelectionName,
   unselectedOpacity,
-  showGrid: _showGrid,
   maxDevicePixelRatio,
   mobileInteraction,
   mode,
@@ -78,43 +73,28 @@ export function ScatterplotCell({
   onPointClick
 }: CellProps) {
   ensureScatterplotMatrixCellsRegistrations()
-  const frameRef = useRef<StreamXYFrameHandle>(null)
-  const clientId = `splom-${xField}-${yField}`
 
   // Brush selection (crossfilter) - only used in brush mode
   const brushSelectionHook = useSelection({
-    name: brushSelectionName,
-    clientId,
+    name: BRUSH_SELECTION,
     fields: [xField, yField]
-  })
-
-  const brushHook = useBrushSelection({
-    name: brushSelectionName,
-    xField,
-    yField
   })
 
   // Hover selection - all cells share HOVER_CLIENT_ID so each new hover
   // REPLACES the previous cell's clause instead of accumulating.
   const hoverHook = useSelection({
-    name: hoverSelectionName,
+    name: HOVER_SELECTION,
     clientId: HOVER_CLIENT_ID,
     fields: [SPLOM_IDX]
   })
 
   const hoverSelectPoints = hoverHook.selectPoints
 
-  // Brush callback: convert d3-brush data-space extent to useBrushSelection format
-  const handleBrush = useCallback(
-    (extent: [number, number][] | null) => {
-      if (!extent) {
-        brushHook.brushInteraction.end(null)
-        return
-      }
-      brushHook.brushInteraction.during(extent)
-    },
-    [brushHook.brushInteraction]
-  )
+  const { selectInterval, clear } = brushSelectionHook
+  const handleBrush: NonNullable<StreamXYFrameProps["onBrush"]> = useCallback(extent => {
+    if (extent) selectInterval({ [xField]: extent.x, [yField]: extent.y })
+    else clear()
+  }, [selectInterval, clear, xField, yField])
 
   const customHoverBehavior = useCallback(
     (hover: HoverData | null) => {
@@ -189,38 +169,30 @@ export function ScatterplotCell({
   )
 
   return (
-    <div style={{ position: "relative", width: cellSize, height: cellSize }}>
-      <StreamXYFrame
-        ref={frameRef}
-        chartType="scatter"
-        data={data}
-        size={[cellSize, cellSize]}
-        xAccessor={xField}
-        yAccessor={yField}
-        pointStyle={pointStyle}
-        margin={CELL_MARGIN}
-        showAxes={false}
-        maxDevicePixelRatio={maxDevicePixelRatio}
-        enableHover={mode === "hover"}
-        accessibleTable={false}
-        description={`${resolveExplicitColor(_fieldLabels, xField) ?? xField} versus ${resolveExplicitColor(_fieldLabels, yField) ?? yField} scatterplot`}
-        {...buildCustomBehaviorProps({
-          forceHoverBehavior: mode === "hover",
-          forceClickBehavior: !!onPointClick,
-          mobileInteraction,
-          customHoverBehavior,
-          customClickBehavior,
-        })}
-        tooltipContent={mode === "hover" ? (() => null) : undefined}
-      />
-      {mode === "brush" && (
-        <ScatterplotMatrixBrushOverlayLazy
-          frameRef={frameRef}
-          cellSize={cellSize}
-          onBrush={handleBrush}
-        />
-      )}
-    </div>
+    <StreamXYFrame
+      tabIndex={-1}
+      onBrush={mode === "brush" ? handleBrush : undefined}
+      chartType="scatter"
+      data={data}
+      size={[cellSize, cellSize]}
+      xAccessor={xField}
+      yAccessor={yField}
+      pointStyle={pointStyle}
+      margin={CELL_MARGIN}
+      showAxes={false}
+      maxDevicePixelRatio={maxDevicePixelRatio}
+      enableHover={mode === "hover"}
+      accessibleTable={false}
+      description={description}
+      {...buildCustomBehaviorProps({
+        forceHoverBehavior: mode === "hover",
+        forceClickBehavior: !!onPointClick,
+        mobileInteraction,
+        customHoverBehavior,
+        customClickBehavior,
+      })}
+      tooltipContent={mode === "hover" ? (() => null) : undefined}
+    />
   )
 }
 
@@ -234,9 +206,6 @@ interface DiagonalCellProps {
   bins: number
   colorBy?: ChartAccessor<Datum, string>
   colorScale?: (v: string) => string
-  brushSelectionName: string
-  hoverSelectionName: string
-  unselectedOpacity: number
   /** "brush" or "hover" - matches parent mode */
   mode: "brush" | "hover"
 }
@@ -249,28 +218,11 @@ export function DiagonalCell({
   bins,
   colorBy,
   colorScale,
-  brushSelectionName,
-  hoverSelectionName,
-  unselectedOpacity: _unselectedOpacity,
   mode
 }: DiagonalCellProps) {
-  const brushHook = useSelection({
-    name: brushSelectionName,
-    clientId: `splom-diag-${field}`,
-    fields: [field]
+  const { isActive, predicate } = useSelection({
+    name: mode === "hover" ? HOVER_SELECTION : BRUSH_SELECTION
   })
-
-  const hoverHook = useSelection({
-    name: hoverSelectionName,
-    clientId: `splom-diag-${field}-hover`,
-    fields: [SPLOM_IDX]
-  })
-
-  // Use the active mode's predicate
-  const activeHook = mode === "hover" ? hoverHook : brushHook
-  const isActive = activeHook.isActive
-  const activePredicate = activeHook.predicate
-
   const histogram = useMemo(() => {
     const colorField = typeof colorBy === "string" ? colorBy : null
     const values: number[] = []
@@ -283,95 +235,39 @@ export function DiagonalCell({
         if (category != null) categorySet.add(String(category))
       }
     }
-    if (values.length === 0) return { bars: [], selectedBars: [], categoryBars: [], selectedCategoryBars: [], max: 0, categories: [] }
-
+    if (!values.length) return []
     const [min, max] = getMinMax(values)
     const binWidth = (max - min) / bins || 1
-
     const categories = Array.from(categorySet)
-    // O(1) category->index lookup
-    const categoryIndexMap = new Map<string, number>(categories.map((cat, i) => [cat, i]))
-
-    const counts = new Array(bins).fill(0)
-    const selectedCounts = new Array(bins).fill(0)
-
-    // Per-category counts: categoryCounts[binIdx][categoryIdx]
-    const categoryCounts: number[][] = Array.from({ length: bins }, () => new Array(categories.length).fill(0))
-    const selectedCategoryCounts: number[][] = Array.from({ length: bins }, () => new Array(categories.length).fill(0))
-
-    for (const d of data) {
-      const v = d[field]
-      if (v == null || isNaN(v)) continue
-      const idx = Math.min(Math.floor((v - min) / binWidth), bins - 1)
-      counts[idx]++
-      if (!isActive || activePredicate(d)) {
-        selectedCounts[idx]++
-      }
-      if (colorField) {
-        const catIdx = categoryIndexMap.get(String(d[colorField]))
-        if (catIdx !== undefined) {
-          categoryCounts[idx][catIdx]++
-          if (!isActive || activePredicate(d)) {
-            selectedCategoryCounts[idx][catIdx]++
-          }
-        }
-      }
+    const categoryIndex = new Map(categories.map((category, i) => [category, i]))
+    const counts = new Array<number>(bins).fill(0)
+    const makeBins = () => Array.from({ length: bins }, () => new Array<number>(categories.length || 1).fill(0))
+    const all = makeBins()
+    const selected = isActive ? makeBins() : null
+    for (const row of data) {
+      const value = row[field]
+      if (value == null || isNaN(value)) continue
+      const bin = Math.min(Math.floor((value - min) / binWidth), bins - 1)
+      counts[bin]++
+      const category = categories.length && colorField ? categoryIndex.get(String(row[colorField])) : 0
+      if (category === undefined) continue
+      all[bin][category]++
+      if (selected && predicate(row)) selected[bin][category]++
     }
-
     const maxCount = getMax(counts, 1)
-
-    // Build stacked bar segments per bin per category
-    const categoryBars = categoryCounts.map((catCounts, i) => {
-      let y0 = 0
-      return catCounts.map((c, catIdx) => {
-        const h = (c / maxCount) * (cellSize - 24)
-        const segment = {
-          x: (i / bins) * cellSize,
-          w: (cellSize / bins) - 1,
-          h,
-          y0,
-          category: categories[catIdx]
-        }
-        y0 += h
-        return segment
+    const renderBars = (series: number[][], opacity: number) => series.map((stack, bin) => {
+      let bottom = cellSize
+      return stack.map((count, i) => {
+        const h = (count / maxCount) * (cellSize - 24)
+        bottom -= h
+        return <rect key={i} x={(bin / bins) * cellSize} y={bottom}
+          width={Math.max(cellSize / bins - 1, 1)} height={h}
+          fill={categories.length && colorScale ? colorScale(categories[i]) : DEFAULT_COLOR}
+          opacity={opacity} />
       })
     })
-
-    const selectedCategoryBars = selectedCategoryCounts.map((catCounts, i) => {
-      let y0 = 0
-      return catCounts.map((c, catIdx) => {
-        const h = (c / maxCount) * (cellSize - 24)
-        const segment = {
-          x: (i / bins) * cellSize,
-          w: (cellSize / bins) - 1,
-          h,
-          y0,
-          category: categories[catIdx]
-        }
-        y0 += h
-        return segment
-      })
-    })
-
-    return {
-      bars: counts.map((c, i) => ({
-        x: (i / bins) * cellSize,
-        w: (cellSize / bins) - 1,
-        h: (c / maxCount) * (cellSize - 24),
-        count: c
-      })),
-      selectedBars: selectedCounts.map((c, i) => ({
-        x: (i / bins) * cellSize,
-        w: (cellSize / bins) - 1,
-        h: (c / maxCount) * (cellSize - 24),
-        count: c
-      })),
-      categoryBars,
-      selectedCategoryBars,
-      max: maxCount,
-      categories
-    }
-  }, [data, field, bins, cellSize, isActive, activePredicate, colorBy])
+    return [renderBars(all, isActive ? 0.3 : 0.6), selected && renderBars(selected, 0.7)]
+  }, [data, field, bins, cellSize, isActive, predicate, colorBy, colorScale])
 
   return (
     <svg width={cellSize} height={cellSize} style={{ overflow: "hidden" }}>
@@ -386,59 +282,7 @@ export function DiagonalCell({
       >
         {label}
       </text>
-      {/* Full distribution - colored by category when colorBy is set */}
-      {histogram.categories.length > 0
-        ? histogram.categoryBars.map((segments, i) =>
-            segments.map((seg, catIdx) => (
-              <rect
-                key={`bg-${i}-${catIdx}`}
-                x={seg.x}
-                y={cellSize - seg.y0 - seg.h}
-                width={Math.max(seg.w, 1)}
-                height={seg.h}
-                fill={colorScale ? colorScale(seg.category) : DEFAULT_COLOR}
-                opacity={isActive ? 0.3 : 0.6}
-              />
-            ))
-          )
-        : histogram.bars.map((bar, i) => (
-            <rect
-              key={`bg-${i}`}
-              x={bar.x}
-              y={cellSize - bar.h}
-              width={Math.max(bar.w, 1)}
-              height={bar.h}
-              fill={DEFAULT_COLOR}
-              opacity={isActive ? 0.3 : 0.6}
-            />
-          ))}
-      {/* Selected distribution - colored by category when colorBy is set */}
-      {isActive &&
-        (histogram.categories.length > 0
-          ? histogram.selectedCategoryBars.map((segments, i) =>
-              segments.map((seg, catIdx) => (
-                <rect
-                  key={`sel-${i}-${catIdx}`}
-                  x={seg.x}
-                  y={cellSize - seg.y0 - seg.h}
-                  width={Math.max(seg.w, 1)}
-                  height={seg.h}
-                  fill={colorScale ? colorScale(seg.category) : DEFAULT_COLOR}
-                  opacity={0.7}
-                />
-              ))
-            )
-          : histogram.selectedBars.map((bar, i) => (
-              <rect
-                key={`sel-${i}`}
-                x={bar.x}
-                y={cellSize - bar.h}
-                width={Math.max(bar.w, 1)}
-                height={bar.h}
-                fill={DEFAULT_COLOR}
-                opacity={0.7}
-              />
-            )))}
+      {histogram}
     </svg>
   )
 }
