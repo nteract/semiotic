@@ -60,6 +60,16 @@ describe("forceLayoutPlugin", () => {
 
   })
 
+  it("preserves layout positions when self-loops are added", () => {
+    const layout = (extraEdges: RealtimeEdge[]) => {
+      const nodes = ["A", "B", "C"].map(makeNode)
+      const edges = [makeEdge("A", "B"), makeEdge("B", "C"), ...extraEdges]
+      forceLayoutPlugin.computeLayout(nodes, edges, { chartType: "force", seed: 2, iterations: 50 }, [400, 300])
+      return nodes.map(({ x, y }) => [x, y])
+    }
+    expect(layout([makeEdge("B", "B"), makeEdge("A", "A")])).toEqual(layout([]))
+  })
+
   it("retains d3-force's deterministic default random source", () => {
     // Identical positioned nodes force d3-force to choose a jitter direction.
     // Without an explicit source, that must use d3-force's internal LCG rather
