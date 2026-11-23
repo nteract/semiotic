@@ -2,6 +2,16 @@ import { isDataRecord } from "../src/components/charts/shared/dataRecords"
 import { inferNodesFromEdges } from "../src/components/charts/shared/inferNodesFromEdges"
 import { normalizeLineChartData } from "../src/components/charts/shared/lineChartData"
 
+function profileRecords(rows: unknown[], fields: Record<string, unknown>) {
+  const aliases = Object.entries(fields).filter((pair): pair is [string, string] =>
+    typeof pair[1] === "string" && pair[1] !== pair[0])
+  const records = rows.filter(isDataRecord)
+  if (!aliases.length) return records
+  return records.map(row => ({
+    ...row, ...Object.fromEntries(aliases.map(([canonical, authored]) => [canonical, row[authored]]))
+  }))
+}
+
 function profileHierarchy(root: Record<string, unknown>, key: string) {
   const data: Record<string, unknown>[] = []
   function visit(node: unknown): unknown {
@@ -52,23 +62,20 @@ export function chartProfileInput(args: {
   }
   const edges = props.edges ?? props.links
   if (Array.isArray(edges)) {
-    const derivesNodes = ["SankeyDiagram", "ChordDiagram", "ProcessSankey"].includes(args.component)
-    const nodes = derivesNodes ? inferNodesFromEdges(
-      Array.isArray(props.nodes) ? props.nodes.filter(isDataRecord) : undefined, edges.filter(isDataRecord),
-      typeof props.sourceAccessor === "string" ? props.sourceAccessor : "source",
-      typeof props.targetAccessor === "string" ? props.targetAccessor : "target"
-    ) : props.nodes
-    if (Array.isArray(nodes)) {
-      const { startTimeAccessor, endTimeAccessor } = props
-      const customTimes = args.component === "ProcessSankey" &&
-        (typeof startTimeAccessor === "string" || typeof endTimeAccessor === "string")
-      const timedEdges = customTimes ? edges.map(edge => isDataRecord(edge) ? {
-        ...edge,
-        ...(typeof startTimeAccessor === "string" && { startTime: edge[startTimeAccessor], start: edge[startTimeAccessor] }),
-        ...(typeof endTimeAccessor === "string" && { endTime: edge[endTimeAccessor], end: edge[endTimeAccessor] })
-      } : edge) : edges
-      return { data: [], rawInput: { nodes, edges: timedEdges } }
-    }
+    const { sourceAccessor, targetAccessor, valueAccessor, startTimeAccessor, endTimeAccessor } = props
+    const records = profileRecords(edges, {
+      source: sourceAccessor, target: targetAccessor, value: valueAccessor,
+      ...(args.component === "ProcessSankey" && {
+        startTime: startTimeAccessor, start: startTimeAccessor, endTime: endTimeAccessor, end: endTimeAccessor
+      })
+    })
+    const explicitNodes = Array.isArray(props.nodes)
+      ? profileRecords(props.nodes, { id: props.nodeIdAccessor ?? props.nodeIDAccessor })
+      : undefined
+    const nodes = ["SankeyDiagram", "ChordDiagram", "ProcessSankey"].includes(args.component)
+      ? inferNodesFromEdges(explicitNodes, records, "source", "target")
+      : explicitNodes
+    if (nodes) return { data: [], rawInput: { nodes, edges: records } }
   }
   if (isDataRecord(props.data)) {
     const key = props.childrenAccessor

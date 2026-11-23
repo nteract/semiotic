@@ -97,6 +97,47 @@ describe("developer MCP chart critique", () => {
     expect(report.structuredContent).toMatchObject({ configurationValid: true, fit: { status: "ok" } })
   })
 
+  it("returns network alternatives and variants whose accessors resolve the authored edges", async () => {
+    const edge = { from: "a", to: "b", amount: 3 }
+    const props = { edges: [edge], sourceAccessor: "from", targetAccessor: "to", valueAccessor: "amount" }
+    const publicServer = spawnServer(["--profile", "public"])
+    try {
+      await initializeServer(publicServer)
+      const improved = await sendRequest(publicServer, "tools/call", {
+        name: "improveChart", arguments: { component: "SankeyDiagram", props }
+      }, "network-repair-endpoints")
+      expect(improved.result.isError, JSON.stringify(improved.result.content)).not.toBe(true)
+      const alternative = improved.result.structuredContent.repair.alternatives.find(
+        (entry: { component: string }) => entry.component === "ForceDirectedGraph"
+      )
+      expect(alternative.props).toMatchObject({
+        edges: [{ ...edge, source: "a", target: "b", value: 3 }],
+        nodes: [{ id: "a" }, { id: "b" }], sourceAccessor: "source", targetAccessor: "target"
+      })
+    } finally {
+      publicServer.kill()
+    }
+    const second = { from: "b", to: "c", amount: 4 }
+    const proposed = await sendRequest(server, "tools/call", {
+      name: "proposeChartVariants", arguments: {
+        component: "ForceDirectedGraph", intent: "flow",
+        props: { ...props, edges: [edge, second], nodeIdAccessor: "code", nodes: ["a", "b", "c"].map(code => ({ code })) }
+      }
+    }, "network-variant-endpoints")
+    expect(proposed.result.isError, JSON.stringify(proposed.result.content)).not.toBe(true)
+    expect(proposed.result.structuredContent.proposals).toContainEqual(expect.objectContaining({
+      proposal: expect.objectContaining({ baseComponent: "SankeyDiagram" }),
+      props: expect.objectContaining({
+        nodes: ["a", "b", "c"].map(code => ({ code, id: code })),
+        edges: [
+          { ...edge, source: "a", target: "b", value: 3 },
+          { ...second, source: "b", target: "c", value: 4 }
+        ],
+        nodeIdAccessor: "id", sourceAccessor: "source", targetAccessor: "target", valueAccessor: "value"
+      })
+    }))
+  })
+
   it.each(["coordinates", "observations"])("scores the observations in a line's %s array", async key => {
     const report = await critique("LineChart", {
       data: [{ label: "North", [key]: [{ x: 1, y: 10 }, { x: 2, y: 20 }] }],
