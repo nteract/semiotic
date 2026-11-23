@@ -40,9 +40,16 @@ export function chartProfileInput(args: {
     const key = typeof props.lineDataAccessor === "string" ? props.lineDataAccessor : "coordinates"
     if (args.component === "LineChart") {
       const lineBy = typeof props.lineBy === "string" ? props.lineBy : undefined
-      const normalized = normalizeLineChartData(rows.filter(isDataRecord), key, lineBy)
+      const lines = rows.filter(isDataRecord)
+      const normalized = normalizeLineChartData(lines, key, lineBy)
+      const parents = new Map(normalized.isLineObjectFormat ? lines.map(line => {
+        const { [key]: _coordinates, ...metadata } = line
+        return [line, metadata] as const
+      }) : [])
       return {
-        data: normalized.rows,
+        data: normalized.isLineObjectFormat
+          ? normalized.rows.map(row => ({ ...row, parentLine: parents.get(row.parentLine) }))
+          : normalized.rows,
         seriesField: typeof normalized.groupAccessor === "string" ? normalized.groupAccessor : undefined
       }
     }
@@ -55,8 +62,10 @@ export function chartProfileInput(args: {
       rawInput: {
         type: "FeatureCollection",
         features: Array.isArray(props.areas) ? props.areas : [],
-        points,
-        flows: props.flows
+        points: Array.isArray(points) ? profileRecords(points, {
+          lon: props.xAccessor, lat: props.yAccessor, id: props.nodeIdAccessor ?? props.pointIdAccessor
+        }) : undefined,
+        flows: Array.isArray(props.flows) ? profileRecords(props.flows, { value: props.valueAccessor }) : undefined
       }
     }
   }

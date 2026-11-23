@@ -3,11 +3,16 @@ import { initializeServer, sendRequest, spawnServer } from "./mcpStdioHarness"
 
 describe("developer MCP chart critique", () => {
   let server: ReturnType<typeof spawnServer>
+  let publicServer: ReturnType<typeof spawnServer>
   beforeAll(async () => {
     server = spawnServer(["--profile", "developer"])
-    await initializeServer(server)
+    publicServer = spawnServer(["--profile", "public"])
+    await Promise.all([initializeServer(server), initializeServer(publicServer)])
   })
-  afterAll(() => server?.kill())
+  afterAll(() => {
+    server?.kill()
+    publicServer?.kill()
+  })
 
   const data = [
     { month: "2025-01-01", sales: 12 },
@@ -97,26 +102,55 @@ describe("developer MCP chart critique", () => {
     expect(report.structuredContent).toMatchObject({ configurationValid: true, fit: { status: "ok" } })
   })
 
+  it("keeps a nested line repair proportional to its observation count", async () => {
+    const observations = Array.from({ length: 500 }, (_, x) => ({ x, y: x * 2 }))
+    const response = await sendRequest(publicServer, "tools/call", {
+      name: "improveChart", arguments: {
+        component: "LineChart",
+        props: { data: [{ region: "West", observations }], lineBy: "region", lineDataAccessor: "observations" }
+      }
+    }, "nested-repair-size")
+    expect(response.result.isError, JSON.stringify(response.result.content)).not.toBe(true)
+    const profile = response.result.structuredContent.repair.profile
+    expect(profile.data).toHaveLength(500)
+    expect(profile.data[499]).toMatchObject({ x: 499, y: 998, region: "West", parentLine: { region: "West" } })
+    expect(profile.data[499].parentLine).not.toHaveProperty("observations")
+    expect(Buffer.byteLength(JSON.stringify(profile))).toBeLessThan(200_000)
+  })
+
+  it("builds a geographic alternative with readable positions from custom FlowMap fields", async () => {
+    const nodes = [
+      { code: "west", longitude: -122, latitude: 38, value: 5 },
+      { code: "east", longitude: -72, latitude: 43, value: 7 }
+    ]
+    const result = await sendRequest(publicServer, "tools/call", {
+      name: "improveChart", arguments: { component: "FlowMap", props: {
+        nodes, flows: [], nodeIdAccessor: "code", xAccessor: "longitude", yAccessor: "latitude"
+      } }
+    }, "geo-repair-positions")
+    expect(result.result.isError, JSON.stringify(result.result.content)).not.toBe(true)
+    const symbol = result.result.structuredContent.repair.alternatives.find(
+      (item: { component: string }) => item.component === "ProportionalSymbolMap"
+    ).props
+    expect(symbol.points.map((point: Record<string, unknown>) =>
+      [point.id, point[symbol.xAccessor], point[symbol.yAccessor]]
+    )).toEqual([["west", -122, 38], ["east", -72, 43]])
+  })
+
   it("returns network alternatives and variants whose accessors resolve the authored edges", async () => {
     const edge = { from: "a", to: "b", amount: 3 }
     const props = { edges: [edge], sourceAccessor: "from", targetAccessor: "to", valueAccessor: "amount" }
-    const publicServer = spawnServer(["--profile", "public"])
-    try {
-      await initializeServer(publicServer)
-      const improved = await sendRequest(publicServer, "tools/call", {
-        name: "improveChart", arguments: { component: "SankeyDiagram", props }
-      }, "network-repair-endpoints")
-      expect(improved.result.isError, JSON.stringify(improved.result.content)).not.toBe(true)
-      const alternative = improved.result.structuredContent.repair.alternatives.find(
-        (entry: { component: string }) => entry.component === "ForceDirectedGraph"
-      )
-      expect(alternative.props).toMatchObject({
-        edges: [{ ...edge, source: "a", target: "b", value: 3 }],
-        nodes: [{ id: "a" }, { id: "b" }], sourceAccessor: "source", targetAccessor: "target"
-      })
-    } finally {
-      publicServer.kill()
-    }
+    const improved = await sendRequest(publicServer, "tools/call", {
+      name: "improveChart", arguments: { component: "SankeyDiagram", props }
+    }, "network-repair-endpoints")
+    expect(improved.result.isError, JSON.stringify(improved.result.content)).not.toBe(true)
+    const alternative = improved.result.structuredContent.repair.alternatives.find(
+      (entry: { component: string }) => entry.component === "ForceDirectedGraph"
+    )
+    expect(alternative.props).toMatchObject({
+      edges: [{ ...edge, source: "a", target: "b", value: 3 }],
+      nodes: [{ id: "a" }, { id: "b" }], sourceAccessor: "source", targetAccessor: "target"
+    })
     const second = { from: "b", to: "c", amount: 4 }
     const proposed = await sendRequest(server, "tools/call", {
       name: "proposeChartVariants", arguments: {
