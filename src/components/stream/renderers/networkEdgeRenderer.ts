@@ -67,14 +67,6 @@ export function networkEdgeRenderer(
       ctx.moveTo(edge.x1, edge.y1)
       ctx.lineTo(edge.x2, edge.y2)
       strokeEdge(ctx, edge, baseAlpha)
-      // Pulse is independent of the mark's opacity, but inherits the frame dim.
-      if (hasPulse(edge)) {
-        ctx.setLineDash([])
-        ctx.strokeStyle = edge._pulseColor || "rgba(255,255,255,0.6)"
-        ctx.lineWidth = (edge.style.strokeWidth ?? 1) + 3 * edge._pulseIntensity!
-        ctx.globalAlpha = baseAlpha * edge._pulseIntensity! * 0.4
-        ctx.stroke()
-      }
     } else {
       const path = getOrBuildEdgePath2D(edge)
       // Curved paths retain their stroke-before-fill order; bands outline last.
@@ -109,6 +101,14 @@ function strokeEdge(
   ctx.globalAlpha = baseAlpha * (edge.style.opacity ?? 1) * (edge.style.strokeOpacity ?? 1) * factor
   if (path) ctx.stroke(path)
   else ctx.stroke()
+  if (!band && hasPulse(edge)) {
+    ctx.setLineDash([])
+    ctx.strokeStyle = edge._pulseColor || "rgba(255,255,255,0.6)"
+    ctx.lineWidth = width + 3 * edge._pulseIntensity!
+    ctx.globalAlpha = baseAlpha * edge._pulseIntensity! * 0.4
+    if (path) ctx.stroke(path)
+    else ctx.stroke()
+  }
 }
 
 function fillEdge(
