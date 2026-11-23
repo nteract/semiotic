@@ -191,17 +191,14 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
   }
 
   // Legend
-  const shouldShowLegend = showLegend !== undefined ? showLegend : !!colorBy
   const legend = useMemo(() => {
-    if (!shouldShowLegend || !colorBy) return null
-    const colorField = typeof colorBy === "string" ? colorBy : null
-    if (!colorField) return null
-    const categories = Array.from(new Set(indexedData.map((d) => d[colorField]).filter((v) => v != null)))
+    if (showLegend === false || !colorBy || typeof colorBy !== "string") return null
+    const categories = Array.from(new Set(indexedData.map((d) => d[colorBy]).filter((v) => v != null)))
     return categories.map((cat) => ({
       label: String(cat),
       color: colorScale ? colorScale(String(cat)) : DEFAULT_COLOR
     }))
-  }, [shouldShowLegend, colorBy, indexedData, colorScale])
+  }, [showLegend, colorBy, indexedData, colorScale])
 
   return (
     <div

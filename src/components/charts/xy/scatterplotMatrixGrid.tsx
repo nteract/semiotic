@@ -84,10 +84,8 @@ export function MatrixGrid({
         return
     }
     event.preventDefault()
-    cell
-      .closest('[role="grid"]')
-      ?.querySelectorAll<HTMLElement>('[role="gridcell"]')
-      [row * n + col]?.focus()
+    const targets = cell.closest('[role="grid"]')?.querySelectorAll<HTMLElement>('[role="gridcell"]')
+    targets?.[row * n + col]?.focus()
   }
 
   return (

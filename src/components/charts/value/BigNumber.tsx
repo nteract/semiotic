@@ -7,7 +7,6 @@
  * would inherit (format cascade, threshold zones via semantic theme
  * roles, comparison anchoring, sentence-form ARIA, push API + staleness).
  */
-import { SR_ONLY_STYLE } from "../../screenReaderStyles"
 import { BIG_NUMBER_SIZES } from "../shared/chartSizeDefaultsValue"
 import * as React from "react"
 import {
@@ -62,6 +61,10 @@ interface ModeDefaults {
   chartSize: number
 }
 
+function cardPadding(vertical: number, horizontal = vertical) {
+  return { top: vertical, right: horizontal, bottom: vertical, left: horizontal }
+}
+
 const MODE_DEFAULTS: Record<BigNumberMode, ModeDefaults> = {
   tile: {
     ...BIG_NUMBER_SIZES.tile,
@@ -70,7 +73,7 @@ const MODE_DEFAULTS: Record<BigNumberMode, ModeDefaults> = {
     captionSize: 11,
     valueSize: 40,
     deltaSize: 13,
-    padding: { top: 14, right: 16, bottom: 14, left: 16 },
+    padding: /* @__PURE__ */ cardPadding(14, 16),
     background: "var(--semiotic-surface, transparent)",
     expanded: true,
     showDelta: true,
@@ -83,7 +86,7 @@ const MODE_DEFAULTS: Record<BigNumberMode, ModeDefaults> = {
     captionSize: 14,
     valueSize: 96,
     deltaSize: 18,
-    padding: { top: 32, right: 32, bottom: 32, left: 32 },
+    padding: /* @__PURE__ */ cardPadding(32),
     background: "var(--semiotic-surface, transparent)",
     expanded: true,
     showDelta: true,
@@ -96,7 +99,7 @@ const MODE_DEFAULTS: Record<BigNumberMode, ModeDefaults> = {
     captionSize: 0,
     valueSize: 0, // inherits ambient font-size
     deltaSize: 0,
-    padding: { top: 0, right: 0, bottom: 0, left: 0 },
+    padding: /* @__PURE__ */ cardPadding(0),
     background: "transparent",
     expanded: false,
     showDelta: true,
@@ -109,12 +112,18 @@ const MODE_DEFAULTS: Record<BigNumberMode, ModeDefaults> = {
     captionSize: 0,
     valueSize: 22,
     deltaSize: 0,
-    padding: { top: 4, right: 6, bottom: 4, left: 6 },
+    padding: /* @__PURE__ */ cardPadding(4, 6),
     background: "transparent",
     expanded: false,
     showDelta: false,
     chartSize: 0
   }
+}
+
+function normalisePushInput(input: number | BigNumberPushInput): BigNumberPushInput {
+  if (typeof input === "number") return { value: input, time: Date.now() }
+  const { time } = input
+  return { ...input, time: typeof time === "number" ? time : time instanceof Date ? time.getTime() : Date.now() }
 }
 
 // ── Slot resolver ────────────────────────────────────────────────────
@@ -368,43 +377,16 @@ const BigNumberInner = (
 
   const pushBufferRef = useRef<BigNumberPushInput[]>([])
   const pushedValueRef = useRef<number | null>(null)
-  const propValueRef = useRef<number | null | undefined>(propValue)
+  const fallbackValue = Number.isFinite(propValue) ? propValue as number : null
+  const pushOptions = useRef({ fallbackValue, windowSize })
   useEffect(() => {
-    propValueRef.current = propValue
-  }, [propValue])
-  const windowSizeRef = useRef<number>(windowSize)
-  useEffect(() => {
-    windowSizeRef.current = windowSize
-  }, [windowSize])
+    pushOptions.current = { fallbackValue, windowSize }
+  }, [fallbackValue, windowSize])
 
-  // Normalize a single push input into a BigNumberPushInput with a
-  // numeric timestamp. Pulled out so `ingestBatch` can avoid a per-item
-  // setState fan-out on `pushMany([...])`.
-  const normalisePushInput = useCallback(
-    (input: number | BigNumberPushInput): BigNumberPushInput => {
-      const raw: BigNumberPushInput =
-        typeof input === "number"
-          ? { value: input, time: Date.now() }
-          : { time: Date.now(), ...input }
-      // Normalize `time`: number (ms) or Date — both must produce
-      // identical staleness behavior. Without this, a Date silently
-      // fell back to wall-clock `Date.now()`.
-      const t =
-        typeof raw.time === "number"
-          ? raw.time
-          : raw.time instanceof Date
-            ? raw.time.getTime()
-            : Date.now()
-      return { ...raw, time: t }
-    },
-    []
-  )
-
-  /** Append one or many inputs through a single state-update pass. */
   const ingestBatch = useCallback(
     (inputs: ReadonlyArray<number | BigNumberPushInput>) => {
       if (inputs.length === 0) return
-      const win = windowSizeRef.current
+      const win = pushOptions.current.windowSize
       const normalised = inputs.map(normalisePushInput)
       const prev = pushBufferRef.current
       // Concat + drop from the head until we're within window. Skipping
@@ -417,30 +399,19 @@ const BigNumberInner = (
       pushedValueRef.current = last.value
       setPushBuffer(next)
       setPushedValue(last.value)
-      // Latest comparison wins.
-      for (let i = normalised.length - 1; i >= 0; i--) {
-        const c = normalised[i].comparison
-        if (c != null) {
-          setPushedComparison(c)
-          break
-        }
-      }
+      const comparison = normalised.findLast(row => row.comparison != null)?.comparison
+      if (comparison != null) setPushedComparison(comparison)
       setLastUpdate(last.time as number)
     },
-    [normalisePushInput]
-  )
-
-  const ingest = useCallback(
-    (input: number | BigNumberPushInput) => ingestBatch([input]),
-    [ingestBatch]
+    []
   )
 
   useImperativeHandle(
     ref,
     () => ({
-      push: (input) => ingest(input),
+      push: (input) => ingestBatch([input]),
       // Single state-update pass for the whole batch.
-      pushMany: (inputs) => ingestBatch(inputs),
+      pushMany: ingestBatch,
       clear: () => {
         pushBufferRef.current = []
         pushedValueRef.current = null
@@ -449,16 +420,12 @@ const BigNumberInner = (
         setPushedComparison(null)
         setLastUpdate(null)
       },
-      getValue: () =>
-        pushedValueRef.current ??
-        (Number.isFinite(propValueRef.current)
-          ? (propValueRef.current as number)
-          : null),
+      getValue: () => pushedValueRef.current ?? pushOptions.current.fallbackValue,
       // Defensive copy — consumers receive a snapshot rather than the live
       // ref, so they can't mutate component state by writing into the array.
       getData: () => pushBufferRef.current.slice()
     }),
-    [ingest, ingestBatch]
+    [ingestBatch]
   )
 
   // Effective value — pushed value wins once any push has landed.
@@ -466,10 +433,8 @@ const BigNumberInner = (
   // Treat anything non-finite as empty so Infinity / -Infinity / NaN
   // don't silently render as `0` via the downstream displayedValue
   // fallback.
-  const isEmpty =
-    effectiveValue == null ||
-    typeof effectiveValue !== "number" ||
-    !Number.isFinite(effectiveValue)
+  const isEmpty = !Number.isFinite(effectiveValue)
+  const numericValue = isEmpty ? NaN : effectiveValue as number
 
   // ── Formatting context ───────────────────────────────────────────
   const formatter = useMemo(
@@ -494,39 +459,23 @@ const BigNumberInner = (
 
   // ── Animation ────────────────────────────────────────────────────
   const animateOpt = animate ?? false
-  const introEnabled =
-    typeof animateOpt === "object" && animateOpt.intro === false
-      ? false
-      : Boolean(animateOpt)
-  const tweenTarget = Number.isFinite(effectiveValue)
-    ? (effectiveValue as number)
-    : 0
+  const introEnabled = Boolean(animateOpt) && (typeof animateOpt !== "object" || animateOpt.intro !== false)
+  const tweenTarget = isEmpty ? 0 : numericValue
   // Preserve the final value in SSR and on the first hydration render so the
   // client markup matches the server. Fresh CSR mounts can visibly animate
   // into the focal value when intro is enabled.
-  const initialTweenValueRef = useRef<number>(
-    introEnabled && !reducedMotion && !wasHydratingFromSSR ? 0 : tweenTarget
-  )
   const tweened = useTweenedValue(
     tweenTarget,
     animateOpt,
     reducedMotion,
-    initialTweenValueRef.current
+    introEnabled && !reducedMotion && !wasHydratingFromSSR ? 0 : tweenTarget
   )
-  const displayedValue = animateOpt
-    ? tweened
-    : Number.isFinite(effectiveValue)
-      ? (effectiveValue as number)
-      : 0
+  const displayedValue = animateOpt ? tweened : tweenTarget
 
   // ── Threshold + colour ───────────────────────────────────────────
   const matchedThreshold = useMemo(
-    () =>
-      resolveThreshold(
-        Number.isFinite(effectiveValue) ? (effectiveValue as number) : NaN,
-        thresholds
-      ),
-    [effectiveValue, thresholds]
+    () => resolveThreshold(numericValue, thresholds),
+    [numericValue, thresholds]
   )
   const level: BigNumberLevel = matchedThreshold
     ? matchedThreshold.level
@@ -539,8 +488,8 @@ const BigNumberInner = (
   const computedDelta =
     explicitDelta != null
       ? explicitDelta
-      : comparisonValue != null && Number.isFinite(effectiveValue)
-        ? (effectiveValue as number) - comparisonValue
+      : comparisonValue != null && !isEmpty
+        ? numericValue - comparisonValue
         : null
   // A delta that formats as zero reads, and is colored, as no change; the
   // raw delta still reaches slots and callbacks.
@@ -570,11 +519,11 @@ const BigNumberInner = (
   )
   const deltaPercent =
     comparisonValue != null &&
-    Number.isFinite(effectiveValue) &&
+    !isEmpty &&
     (showDeltaPercent ?? true) &&
     comparisonValue !== 0
       ? deltaPercentFormatter.format(
-          ((effectiveValue as number) - comparisonValue) / Math.abs(comparisonValue)
+          (numericValue - comparisonValue) / Math.abs(comparisonValue)
         )
       : null
 
@@ -634,12 +583,7 @@ const BigNumberInner = (
   // ── Layout primitives ────────────────────────────────────────────
   const padding =
     typeof paddingProp === "number"
-      ? {
-          top: paddingProp,
-          right: paddingProp,
-          bottom: paddingProp,
-          left: paddingProp
-        }
+      ? cardPadding(paddingProp)
       : { ...defaults.padding, ...(paddingProp ?? {}) }
 
   const flexAlign =
@@ -687,7 +631,7 @@ const BigNumberInner = (
   // ── Click handler ────────────────────────────────────────────────
   function activate(x: number, y: number) {
     const datum = {
-      value: isEmpty ? Number.NaN : (effectiveValue as number),
+      value: numericValue,
       level,
       delta: computedDelta
     }
@@ -1050,7 +994,19 @@ const BigNumberInner = (
 
         {/* Sr-only summary supplement */}
         {summary ? (
-          <span style={{ ...SR_ONLY_STYLE, padding: 0, margin: -1 }}>
+          <span
+            style={{
+              position: "absolute",
+              width: 1,
+              height: 1,
+              padding: 0,
+              margin: -1,
+              overflow: "hidden",
+              clip: "rect(0,0,0,0)",
+              whiteSpace: "nowrap",
+              border: 0
+            }}
+          >
             {summary}
           </span>
         ) : null}

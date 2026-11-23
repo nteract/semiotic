@@ -1131,6 +1131,37 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       ? `${tableId}-direct-labels`
       : undefined
 
+    function renderOverlay({
+      foregroundGraphics: foreground, ...layout
+    }: Pick<React.ComponentProps<typeof SVGOverlay>,
+      "scales" | "foregroundGraphics" | "xFormat" | "xValues" | "yValues" |
+      "annotationFrame" | "underlayRendered" | "canvasObscuresUnderlay">) {
+      return <SVGOverlay
+        decorative
+        width={adjustedWidth} height={adjustedHeight}
+        totalWidth={size[0]} totalHeight={size[1]} margin={margin}
+        title={title} description={description} directLabelDescriptionId={directLabelDescriptionId}
+        showAxes={showAxes} axes={axesConfig} axisExtent={axisExtent} showGrid={showGrid}
+        xLabel={xLabel} yLabel={yLabel} yLabelRight={yLabelRight}
+        yFormat={yFormat || (tickFormatValue as StreamXYFrameProps["yFormat"])}
+        legend={resolveSceneLegend(storeRef.current)}
+        legendHoverBehavior={legendHoverBehavior} legendClickBehavior={legendClickBehavior}
+        legendHighlightedCategory={legendHighlightedCategory} legendIsolatedCategories={legendIsolatedCategories}
+        legendPosition={legendPosition} legendLayout={legendLayout}
+        foregroundGraphics={composeOverlays(foreground, wrapWithCustomLayoutSelection(storeRef.current?.customLayoutOverlays, layoutSelection ?? null))}
+        marginalGraphics={marginalGraphics} annotations={annotations}
+        onAnnotationActivate={onAnnotationActivate} onObservation={annotationObservationCallback ?? onObservation}
+        chartId={chartId} chartType="StreamXYFrame" autoPlaceAnnotations={autoPlaceAnnotations}
+        svgAnnotationRules={svgAnnotationRules} xAccessor={annXAccessor} yAccessor={annYAccessor}
+        annotationData={enrichAnnotationData(storeRef.current?.getData())}
+        pointNodes={collectAnnotationAnchors(storeRef.current?.scene)}
+        curve={typeof curve === "string" ? curve : undefined}
+        linkedCrosshairName={linkedCrosshairName} linkedCrosshairSourceId={linkedCrosshairSourceId}
+        {...layout}
+      />
+    }
+    const ariaLabel = description || (typeof title === "string" ? title : "XY chart")
+
     // ── SSR + hydration path: render SVG instead of canvas ─────────────
     //
     // Fires on the server pass (so the framework gets pre-rendered SVG
@@ -1238,55 +1269,10 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
               })).filter(Boolean)}
             </g>
           </svg>
-          <SVGOverlay
-            decorative
-            directLabelDescriptionId={directLabelDescriptionId}
-            width={adjustedWidth}
-            height={adjustedHeight}
-            totalWidth={size[0]}
-            totalHeight={size[1]}
-            margin={margin}
-            scales={scales}
-            showAxes={showAxes}
-            axes={axesConfig}
-            xLabel={xLabel}
-            yLabel={yLabel}
-            yLabelRight={yLabelRight}
-            xFormat={ssrXFormat}
-            yFormat={yFormat || (tickFormatValue as StreamXYFrameProps["yFormat"])}
-            axisExtent={axisExtent}
-            showGrid={showGrid}
-            title={title}
-            description={description}
-            legend={resolveSceneLegend(store)}
-            legendHoverBehavior={legendHoverBehavior}
-            legendClickBehavior={legendClickBehavior}
-            legendHighlightedCategory={legendHighlightedCategory}
-            legendIsolatedCategories={legendIsolatedCategories}
-            legendPosition={legendPosition}
-            legendLayout={legendLayout}
-            foregroundGraphics={
-            composeOverlays(ssrForeground, wrapWithCustomLayoutSelection(storeRef.current?.customLayoutOverlays, layoutSelection ?? null))
-          }
-            marginalGraphics={marginalGraphics}
-            xValues={ssrMarginal.xValues}
-            yValues={ssrMarginal.yValues}
-            annotations={annotations}
-            onAnnotationActivate={onAnnotationActivate}
-            onObservation={annotationObservationCallback ?? onObservation}
-            chartId={chartId}
-            chartType="StreamXYFrame"
-            autoPlaceAnnotations={autoPlaceAnnotations}
-            svgAnnotationRules={svgAnnotationRules}
-            annotationFrame={0}
-            xAccessor={annXAccessor}
-            yAccessor={annYAccessor}
-            annotationData={enrichAnnotationData(storeRef.current?.getData())}
-            pointNodes={collectAnnotationAnchors(storeRef.current?.scene)}
-            curve={typeof curve === "string" ? curve : undefined}
-            linkedCrosshairName={linkedCrosshairName}
-            linkedCrosshairSourceId={linkedCrosshairSourceId}
-          />
+          {renderOverlay({
+            scales, xFormat: ssrXFormat, foregroundGraphics: ssrForeground,
+            xValues: ssrMarginal.xValues, yValues: ssrMarginal.yValues, annotationFrame: 0
+          })}
           </div>
         </div>
       )
@@ -1301,7 +1287,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
         ref={responsiveRef}
         className={`stream-xy-frame${className ? ` ${className}` : ""}`}
         role="group"
-        aria-label={description || (typeof title === "string" ? title : "XY chart")}
+        aria-label={ariaLabel}
         tabIndex={tabIndex}
         style={{
           position: "relative",
@@ -1328,7 +1314,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
         {/* Inner graphic wrapper — role="img" so AT treats canvas as a single image */}
         <div
           role="img"
-          aria-label={description || (typeof title === "string" ? title : "XY chart")}
+          aria-label={ariaLabel}
           aria-describedby={directLabelDescriptionId}
           style={{ position: "relative", width: "100%", height: "100%" }}
           onPointerMove={onPointerMoveWrapped}
@@ -1366,58 +1352,11 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
         {/* CSS box from the frame size at commit, so paused or hidden-tab mounts lay out before their first paint. */}
         <canvas aria-hidden="true" ref={canvasRef} aria-label={computeCanvasAriaLabel(storeRef.current?.scene ?? [], chartType + " chart")} style={{ position: "absolute", left: 0, top: 0, width: size[0], height: size[1] }} />
         <canvas ref={interactionCanvasRef} style={{ position: "absolute", left: 0, top: 0, width: size[0], height: size[1], pointerEvents: "none" }} />
-        <SVGOverlay
-          decorative
-          directLabelDescriptionId={directLabelDescriptionId}
-          width={adjustedWidth}
-          height={adjustedHeight}
-          totalWidth={size[0]}
-          totalHeight={size[1]}
-          margin={margin}
-          scales={currentScales}
-          showAxes={showAxes}
-          axes={axesConfig}
-          xLabel={xLabel}
-          yLabel={yLabel}
-          yLabelRight={yLabelRight}
-          xFormat={effectiveXFormat}
-          yFormat={yFormat || (tickFormatValue as StreamXYFrameProps["yFormat"])}
-          axisExtent={axisExtent}
-          showGrid={showGrid}
-          title={title}
-          description={description}
-          legend={resolveSceneLegend(storeRef.current)}
-          legendHoverBehavior={legendHoverBehavior}
-          legendClickBehavior={legendClickBehavior}
-          legendHighlightedCategory={legendHighlightedCategory}
-          legendIsolatedCategories={legendIsolatedCategories}
-          legendPosition={legendPosition}
-          legendLayout={legendLayout}
-          foregroundGraphics={
-            composeOverlays(resolvedForeground, wrapWithCustomLayoutSelection(storeRef.current?.customLayoutOverlays, layoutSelection ?? null))
-          }
-          marginalGraphics={marginalGraphics}
-          xValues={marginalXValues}
-          yValues={marginalYValues}
-          annotations={annotations}
-          onAnnotationActivate={onAnnotationActivate}
-          onObservation={annotationObservationCallback ?? onObservation}
-          chartId={chartId}
-          chartType="StreamXYFrame"
-          autoPlaceAnnotations={autoPlaceAnnotations}
-          svgAnnotationRules={svgAnnotationRules}
-          annotationFrame={annotationFrame}
-          xAccessor={annXAccessor}
-          yAccessor={annYAccessor}
-          annotationData={enrichAnnotationData(storeRef.current?.getData())}
-          pointNodes={collectAnnotationAnchors(storeRef.current?.scene)}
-          curve={typeof curve === "string" ? curve : undefined}
-          underlayRendered
-          // The SVG grid and baselines remain visible below the mark canvas.
-          canvasObscuresUnderlay={false}
-          linkedCrosshairName={linkedCrosshairName}
-          linkedCrosshairSourceId={linkedCrosshairSourceId}
-        />
+        {renderOverlay({
+          scales: currentScales, xFormat: effectiveXFormat, foregroundGraphics: resolvedForeground,
+          xValues: marginalXValues, yValues: marginalYValues, annotationFrame,
+          underlayRendered: true, canvasObscuresUnderlay: false
+        })}
         {focusRing}
         <XYFrameTooltip
           enabled={Boolean(effectiveHoverAnnotation)}

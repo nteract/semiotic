@@ -126,10 +126,6 @@ export function ScatterplotCell({
     [onPointClick]
   )
 
-  const ruleContext = useMemo(
-    () => makeXYRuleContext(xField, yField),
-    [xField, yField]
-  )
   const ruledPointStyle = useMemo(
     () => composeStyleRules(
       (d: Datum) => ({
@@ -138,9 +134,9 @@ export function ScatterplotCell({
         fill: colorBy ? getColor(d, colorBy, colorScale) : DEFAULT_COLOR
       }),
       styleRules,
-      ruleContext
+      makeXYRuleContext(xField, yField)
     ),
-    [pointOpacity, pointRadius, colorBy, colorScale, styleRules, ruleContext]
+    [pointOpacity, pointRadius, colorBy, colorScale, styleRules, xField, yField]
   )
   const pointStyle = useCallback(
     (d: Datum) => {
@@ -269,16 +265,26 @@ export function DiagonalCell({
     return [renderBars(all, isActive ? 0.3 : 0.6), selected && renderBars(selected, 0.7)]
   }, [data, field, bins, cellSize, isActive, predicate, colorBy, colorScale])
 
+  return <LabelCell label={label} cellSize={cellSize} histogram={histogram} />
+}
+
+export function LabelCell({ label, cellSize, histogram }: {
+  label: string
+  cellSize: number
+  histogram?: React.ReactNode
+}) {
+  const centered = histogram === undefined
   return (
-    <svg width={cellSize} height={cellSize} style={{ overflow: "hidden" }}>
+    <svg width={cellSize} height={cellSize} style={centered ? undefined : { overflow: "hidden" }}>
       <text
         x={cellSize / 2}
-        y={14}
+        y={centered ? cellSize / 2 : 14}
         textAnchor="middle"
-        fontSize={11}
+        dominantBaseline={centered ? "middle" : undefined}
+        fontSize={centered ? 12 : 11}
         fontWeight="bold"
         fill="var(--semiotic-text, #333)"
-        fontFamily="var(--semiotic-font-family, sans-serif)"
+        fontFamily={centered ? undefined : "var(--semiotic-font-family, sans-serif)"}
       >
         {label}
       </text>
@@ -286,25 +292,3 @@ export function DiagonalCell({
     </svg>
   )
 }
-
-// -- Label Cell -------------------------------------------------------------
-
-export function LabelCell({ label, cellSize }: { label: string; cellSize: number }) {
-  return (
-    <svg width={cellSize} height={cellSize}>
-      <text
-        x={cellSize / 2}
-        y={cellSize / 2}
-        textAnchor="middle"
-        dominantBaseline="middle"
-        fontSize={12}
-        fontWeight="bold"
-        fill="var(--semiotic-text, #333)"
-        fontFamily="var(--semiotic-font-family, sans-serif)"
-      >
-        {label}
-      </text>
-    </svg>
-  )
-}
-
