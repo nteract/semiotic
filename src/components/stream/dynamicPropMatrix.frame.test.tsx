@@ -174,7 +174,7 @@ describe("dynamic-prop contract matrix — frame presentation", () => {
       expect(getByTestId("marginal-histogram-top")).toBeTruthy()
     })
 
-    const hoverTarget = container.querySelector(".stream-xy-frame div[role='img']")!
+    const hoverTarget = container.querySelector(".stream-xy-frame > div[role='img']")!
     fireEvent.mouseMove(hoverTarget, { clientX: 0, clientY: 100 })
     flushFrames()
 

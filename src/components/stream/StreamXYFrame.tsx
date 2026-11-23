@@ -1279,7 +1279,14 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
 
     // ── Render ───────────────────────────────────────────────────────────
 
-    // tableId comes from useFrame above (semiotic-table-${React.useId()}).
+    const pointerHandlers = {
+      onPointerMove: onPointerMoveWrapped,
+      onMouseMove: onMouseMoveFallback,
+      onPointerLeave,
+      onMouseLeave: onPointerLeave,
+      onPointerDown: effectiveHoverAnnotation || hasClickBehavior ? onPointerDown : undefined,
+      onClick: hasClickBehavior ? onClick : undefined
+    }
 
     return (
       <div
@@ -1307,15 +1314,10 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
             image as atomic and never announces content nested inside it. */}
         <AriaLiveTooltip active={kbFocusIndexRef.current >= 0} hoverPoint={hoverPoint} />
         <div
+          role="img" aria-label={ariaLabel} aria-describedby={directLabelDescriptionId}
           style={{ position: "relative", width: "100%", height: "100%" }}
-          onPointerMove={onPointerMoveWrapped}
-          onMouseMove={onMouseMoveFallback}
-          onPointerLeave={onPointerLeave}
-          onMouseLeave={onPointerLeave}
-          onPointerDown={effectiveHoverAnnotation || hasClickBehavior ? onPointerDown : undefined}
-          onClick={hasClickBehavior ? onClick : undefined}
+          {...pointerHandlers}
         >
-        <div role="img" aria-label={ariaLabel} aria-describedby={directLabelDescriptionId} style={{ position: "absolute", inset: 0 }}>
         <CanvasFrameBackground
           size={size}
           margin={margin}
@@ -1352,22 +1354,23 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
         />
         </div>
         {(brush || onBrush) && (
-          <XYBrushOverlayLazy
-            {...overlaySize}
-            dimension={brush?.dimension ?? "xy"}
-            scales={currentScales}
-            tabIndex={tabIndex}
-            onBrush={onBrush ?? (() => {})}
-            binSize={binSize}
-            snap={brush?.snap}
-            binBoundaries={brush?.binBoundaries ?? (chartType === "bar" ? storeRef.current?.getBinBoundaries() : undefined)}
-            snapDuring={brush?.snapDuring}
-            streaming={runtimeMode === "streaming"}
-            extent={brushExtent}
-            onBrushEnd={onBrushEnd}
-          />
+          <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }} {...pointerHandlers}>
+            <XYBrushOverlayLazy
+              {...overlaySize}
+              dimension={brush?.dimension ?? "xy"}
+              scales={currentScales}
+              tabIndex={tabIndex}
+              onBrush={onBrush ?? (() => {})}
+              binSize={binSize}
+              snap={brush?.snap}
+              binBoundaries={brush?.binBoundaries ?? (chartType === "bar" ? storeRef.current?.getBinBoundaries() : undefined)}
+              snapDuring={brush?.snapDuring}
+              streaming={runtimeMode === "streaming"}
+              extent={brushExtent}
+              onBrushEnd={onBrushEnd}
+            />
+          </div>
         )}
-        </div>
         {staleness?.showBadge && (
           <StalenessBadge
             isStale={isStale}

@@ -41,7 +41,7 @@ for (const tooltipMode of ["single", "multi"] as const) {
       await Promise.resolve()
     })
     const target = container.querySelector(
-      ".stream-xy-frame div[role='img']"
+      ".stream-xy-frame > div[role='img']"
     )!
     fireEvent.mouseMove(target, { clientX: 50, clientY: 60 })
     expect(onHover.mock.lastCall?.[0]).toMatchObject({

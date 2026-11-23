@@ -90,7 +90,7 @@ describe("LineChart: lineDataAccessor + tooltip=\"multi\"", () => {
 
     await act(async () => { await Promise.resolve() })
 
-    const hoverTarget = container.querySelector(".stream-xy-frame div[role='img']")!
+    const hoverTarget = container.querySelector(".stream-xy-frame > div[role='img']")!
     fireEvent.mouseMove(hoverTarget, { clientX: 100, clientY: 50 })
 
     // The callback mutates this value outside TypeScript's synchronous
@@ -149,7 +149,7 @@ describe("LineChart: lineDataAccessor + tooltip=\"multi\"", () => {
 
     await act(async () => { await Promise.resolve() })
 
-    const hoverTarget = container.querySelector(".stream-xy-frame div[role='img']")!
+    const hoverTarget = container.querySelector(".stream-xy-frame > div[role='img']")!
     fireEvent.mouseMove(hoverTarget, { clientX: 100, clientY: 50 })
 
     await act(async () => { await Promise.resolve() })
@@ -202,7 +202,7 @@ describe("LineChart: lineDataAccessor + tooltip=\"multi\"", () => {
     )
     await act(async () => { await Promise.resolve() })
 
-    const hoverTarget = container.querySelector(".stream-xy-frame div[role='img']")!
+    const hoverTarget = container.querySelector(".stream-xy-frame > div[role='img']")!
     for (const clientX of [110, 150, 199]) {
       fireEvent.mouseMove(hoverTarget, { clientX, clientY: 50 })
       await act(async () => { await Promise.resolve() })

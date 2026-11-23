@@ -164,7 +164,7 @@ describe("RealtimeLineChart", () => {
       </TooltipProvider>
     )
     await act(async () => { await Promise.resolve() })
-    fireEvent.mouseMove(container.querySelector(".stream-xy-frame div[role='img']")!, { clientX: 100, clientY: 50 })
+    fireEvent.mouseMove(container.querySelector(".stream-xy-frame > div[role='img']")!, { clientX: 100, clientY: 50 })
     await act(async () => { await Promise.resolve() })
     const labels = Array.from(container.querySelectorAll(".stream-frame-tooltip span"))
       .map(span => span.textContent)

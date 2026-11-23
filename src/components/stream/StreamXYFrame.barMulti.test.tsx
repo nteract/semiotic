@@ -37,7 +37,7 @@ async function renderFrame(overrides: Partial<StreamXYFrameProps> = {}) {
   const onHover = vi.fn()
   const view = render(<StreamXYFrame {...props} {...overrides} customHoverBehavior={onHover} />)
   await act(async () => { await Promise.resolve() })
-  const target = view.container.querySelector<HTMLElement>(".stream-xy-frame div[role='img']")!
+  const target = view.container.querySelector<HTMLElement>(".stream-xy-frame > div[role='img']")!
   const last = () => onHover.mock.calls.at(-1)?.[0] as HoverData | null | undefined
   const hoverAt = (clientX: number, clientY: number) => {
     fireEvent.mouseMove(target, { clientX, clientY })

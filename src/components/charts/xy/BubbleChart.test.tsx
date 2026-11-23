@@ -272,7 +272,7 @@ describe("BubbleChart", () => {
         <BubbleChart {...plotProps} data={sampleData} sizeBy="size" tooltip={tooltip} />
       </TooltipProvider>
     )
-    const plot = container.querySelector('.stream-xy-frame div[role="img"]')!
+    const plot = container.querySelector('.stream-xy-frame > div[role="img"]')!
     fireEvent.mouseMove(plot, { clientX: 100, clientY: 225 })
     await act(async () => { await Promise.resolve() })
     expect(getByText("Bubble details").textContent).toBe("Bubble details")
@@ -302,7 +302,7 @@ describe("BubbleChart", () => {
           tooltip={MultiLineTooltip({ title: "name", fields: ["category", "x", "y", "size"] })} />
       </TooltipProvider>
     )
-    const plot = container.querySelector('.stream-xy-frame div[role="img"]')!
+    const plot = container.querySelector('.stream-xy-frame > div[role="img"]')!
     fireEvent.mouseMove(plot, { clientX: 100, clientY: 225 })
     await act(async () => { await Promise.resolve() })
     expect(getByText("Company A").textContent).toBe("Company A")
