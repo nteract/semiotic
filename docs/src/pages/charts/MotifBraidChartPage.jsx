@@ -123,6 +123,24 @@ const { svg, evidence } = renderChartWithEvidence("MotifBraidChart", props)
         matrices and modeled comparisons at <a href="/examples/dependency-xray">Dependency X-Ray</a>{" "}
         and <a href="/examples/flow-circuit">Flow Circuit</a>.
       </p>
+      <h2>Comparing partitions</h2>
+      <p>
+        Set <code>spec.comparison.outcomeMeasureIds</code> and <code>motifTemplates</code> to
+        choose the readouts. Each partition is compared with <code>referencePartition</code>,
+        which defaults to the first listed partition. For example, 1,600 of 20,000
+        and 6,000 of 75,000 are both 8%, so their difference is zero basis points.
+      </p>
+      <p>
+        <code>prepareMotifBraid(atlas).differences</code> includes the two counts and
+        populations. Missing counts or nonpositive populations appear in{" "}
+        <code>unavailableDifferences</code> with an unknown status.
+        Omitting the selections uses observed motif types and declared, comparable
+        count measures present in the partition ledger. An empty selection omits that
+        kind of readout.
+        Motif profile cells expose <code>denominatorStatus</code>. An estimated population
+        retains its numeric total. A missing or incomplete population has a <code>NaN</code>
+        denominator, which serializes to <code>null</code> in JSON.
+      </p>
       <h2>Props</h2>
       <PropTable props={props} />
     </PageLayout>

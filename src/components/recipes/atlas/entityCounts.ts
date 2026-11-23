@@ -1,41 +1,52 @@
 import type { AtlasOccurrence, MotifMatch } from "./types"
+import { idDictionary } from "./ids"
+
+export function totalEntityWeight(weights: Record<string, number>): number {
+  return Object.values(weights).reduce((sum, weight) => sum + weight, 0)
+}
+
+export function traceStatus(rows: readonly AtlasOccurrence[] = []) {
+  if (!rows.length) return "unknown"
+  return rows.some(row => row.missingPrehistory || row.complete === false) ? "incomplete" : "exact"
+}
+
+export function entityCountOf(occurrence: AtlasOccurrence): number {
+  return occurrence.entityCount ?? 1
+}
+
+export function structuralWitnesses(nodePath: readonly string[], occurrences: readonly AtlasOccurrence[] = []) {
+  const nodes = new Set(nodePath)
+  return occurrences.filter(row => !row.missingPrehistory && row.nodePath.some(id => nodes.has(id)))
+}
 
 /** Count each entity once across matching episodes, optionally within a partition. */
 export function countMotifEntities(
   matches: readonly MotifMatch[],
-  occurrences: readonly AtlasOccurrence[] = [],
-  partition?: string | readonly string[]
+  occurrences?: readonly AtlasOccurrence[]
 ): number {
-  const partitions =
-    partition === undefined
-      ? undefined
-      : new Set(typeof partition === "string" ? [partition] : partition)
-  const admitted = occurrences.filter(
-    (occurrence) =>
-      !occurrence.missingPrehistory &&
-      occurrence.partition !== undefined &&
-      partitions?.has(occurrence.partition)
-  )
-  const occurrenceIds = new Set(admitted.map((occurrence) => occurrence.id))
-  const entityIds = new Set(admitted.map((occurrence) => occurrence.entityId))
-  const weights = new Map<string, number>()
-  let structuralCount = 0
-  for (const match of matches) {
-    if (
-      partition !== undefined &&
-      typeof match.roles.occurrence === "string" &&
-      !occurrenceIds.has(match.roles.occurrence)
-    )
-      continue
-    const entries = Object.entries(match.entityWeights)
-    if (entries.length === 0 && partition === undefined)
-      structuralCount += match.entityCount
-    for (const [id, weight] of entries) {
-      if (partition === undefined || entityIds.has(id)) weights.set(id, weight)
+  const weights = idDictionary<number>()
+  let total = 0
+  if (occurrences === undefined) {
+    for (const match of matches) {
+      if (Object.keys(match.entityWeights).length) Object.assign(weights, match.entityWeights)
+      else total += match.entityCount
+    }
+  } else {
+    const episodeIds = new Set<string>()
+    const structuralNodes = new Set<string>()
+    for (const match of matches) {
+      const id = match.roles.occurrence
+      if (typeof id === "string") episodeIds.add(id)
+      else for (const node of match.nodePath) structuralNodes.add(node)
+    }
+    for (const occurrence of occurrences) {
+      if (occurrence.missingPrehistory) continue
+      if (
+        episodeIds.has(occurrence.id) ||
+        occurrence.nodePath.some((node) => structuralNodes.has(node))
+      )
+        weights[occurrence.entityId] = entityCountOf(occurrence)
     }
   }
-  return [...weights.values()].reduce(
-    (sum, weight) => sum + weight,
-    structuralCount
-  )
+  return total + totalEntityWeight(weights)
 }

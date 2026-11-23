@@ -66,6 +66,8 @@
     "comparison": {
       "partitions": ["mobile/control", "mobile/treatment"],
       "denominatorMeasureId": "assigned",
+      "outcomeMeasureIds": ["purchases"],
+      "motifTemplates": ["repeated-state-episode"],
       "referencePartition": "mobile/control"
     },
     "dataRevision": "checkout-ab-v1",

@@ -1,9 +1,12 @@
 import { compareRecipeIds } from "../../utils/compareRecipeIds"
+import { entityCountOf } from "./entityCounts"
 import { selectCapsules, type MotifCapsule } from "./capsules"
 import {
   assignedDenominator,
-  buildComparison,
-  signedDifferenceBps
+  comparePartitionRates,
+  resolveComparison,
+  type UnavailableDifference,
+  type SignedReadout
 } from "./compare"
 import { containsRoute } from "./support"
 import { prefixIdFor } from "./ids"
@@ -39,16 +42,7 @@ export type BraidRibbon = {
   toEntityCount?: number
 }
 
-export type SignedReadout = {
-  motif: string
-  leftPartition: string
-  rightPartition: string
-  leftCount: number
-  rightCount: number
-  deltaCount: number
-  deltaBps: number
-  denominator: number
-}
+export type { SignedReadout, UnavailableDifference } from "./compare"
 
 export type MotifBraidProjection = {
   atlas: PreparedNetworkAtlas
@@ -58,15 +52,12 @@ export type MotifBraidProjection = {
   capsules: MotifCapsule[]
   profile: MotifProfileStrip
   differences: SignedReadout[]
+  unavailableDifferences?: UnavailableDifference[]
   prefixForest: PrefixForest
   sceneSeeds: {
     nodes: Array<{ id: string; partition?: string; signature?: string }>
     edges: Array<{ id: string; source: string; target: string }>
   }
-}
-
-function entityCountOf(occurrence: AtlasOccurrence): number {
-  return occurrence.entityCount ?? 1
 }
 
 function groupFromOccurrence(
@@ -86,48 +77,22 @@ function groupFromOccurrence(
   }
 }
 
-export function prepareMotifBraid(
-  atlas: PreparedNetworkAtlas
-): MotifBraidProjection {
-  const prefixForest = atlas.prefixForest
-  if (!prefixForest) {
-    return {
-      atlas,
-      groups: [],
-      signatureOrder: [],
-      ribbons: [],
-      capsules: [],
-      profile: buildMotifProfile(atlas),
-      differences: [],
-      prefixForest: {
-        kind: "observed-prefix",
-        rootIds: [],
-        nodes: [],
-        order: []
-      },
-      sceneSeeds: { nodes: [], edges: [] }
-    }
+/** Geometry consumed by the React and static chart readers. */
+export function prepareBraidGeometry(atlas: PreparedNetworkAtlas) {
+  const prefixForest: PrefixForest = atlas.prefixForest ?? {
+    kind: "observed-prefix",
+    rootIds: [],
+    nodes: [],
+    order: []
   }
-
-  const groups = (atlas.source.occurrences ?? [])
+  const occurrences = atlas.prefixForest ? (atlas.source.occurrences ?? []) : []
+  const groups = occurrences
     .map(groupFromOccurrence)
     .filter((group): group is TrajectoryGroup => Boolean(group))
 
-  const signatureIndex = new Map<string, number>()
-  for (const group of groups) {
-    const rank = prefixForest.order.indexOf(group.signature)
-    const current = signatureIndex.get(group.signature)
-    const next = rank === -1 ? prefixForest.order.length : rank
-    if (current == null || next < current)
-      signatureIndex.set(group.signature, next)
-  }
-  const signatureOrder = [
-    ...new Set(groups.map((group) => group.signature))
-  ].sort((left, right) => {
-    const rank =
-      (signatureIndex.get(left) ?? 0) - (signatureIndex.get(right) ?? 0)
-    return rank !== 0 ? rank : compareRecipeIds(left, right)
-  })
+  const signatures = new Set(groups.map(group => group.signature))
+  const signatureOrder = prefixForest.order.filter(id => signatures.delete(id))
+  for (const id of [...signatures].sort((a, b) => compareRecipeIds(a, b))) signatureOrder.push(id)
 
   const ribbons: BraidRibbon[] = []
   for (const group of groups) {
@@ -150,42 +115,6 @@ export function prepareMotifBraid(
     }
   }
 
-  const capsules = selectCapsules(atlas.motifs.matches)
-  const comparison = atlas.comparison ?? buildComparison(atlas)
-  const differences: SignedReadout[] = []
-  if (comparison && comparison.partitions.length >= 2) {
-    const left = comparison.rows[0]
-    const right = comparison.rows[1]
-    const denom = Math.min(left.assigned, right.assigned) || left.assigned
-    const leftLoop = left.motifUsers["repeated-state-episode"] ?? 0
-    const rightLoop = right.motifUsers["repeated-state-episode"] ?? 0
-    differences.push({
-      motif: "repeated-state-episode",
-      leftPartition: left.partition,
-      rightPartition: right.partition,
-      leftCount: leftLoop,
-      rightCount: rightLoop,
-      deltaCount: rightLoop - leftLoop,
-      deltaBps: signedDifferenceBps(leftLoop, rightLoop, denom),
-      denominator: denom
-    })
-    differences.push({
-      motif: "purchases",
-      leftPartition: left.partition,
-      rightPartition: right.partition,
-      leftCount: left.outcomes.purchases ?? 0,
-      rightCount: right.outcomes.purchases ?? 0,
-      deltaCount:
-        (right.outcomes.purchases ?? 0) - (left.outcomes.purchases ?? 0),
-      deltaBps: signedDifferenceBps(
-        left.outcomes.purchases ?? 0,
-        right.outcomes.purchases ?? 0,
-        denom
-      ),
-      denominator: denom
-    })
-  }
-
   const sceneSeeds = {
     nodes: groups.map((group) => ({
       id: group.id,
@@ -199,16 +128,24 @@ export function prepareMotifBraid(
     }))
   }
 
+  return { atlas, groups, signatureOrder, ribbons, prefixForest, sceneSeeds }
+}
+
+export function prepareMotifBraid(
+  atlas: PreparedNetworkAtlas
+): MotifBraidProjection {
+  const comparison = resolveComparison(atlas)
   return {
-    atlas,
-    groups,
-    signatureOrder,
-    ribbons,
-    capsules,
+    ...prepareBraidGeometry(atlas),
+    capsules: atlas.prefixForest
+      ? selectCapsules(
+          atlas.motifs.matches,
+          atlas.source.occurrences,
+          atlas.spec.comparison?.motifTemplates
+        )
+      : [],
     profile: buildMotifProfile(atlas),
-    differences,
-    prefixForest,
-    sceneSeeds
+    ...comparePartitionRates(comparison)
   }
 }
 
