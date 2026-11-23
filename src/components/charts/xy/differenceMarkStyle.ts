@@ -1,3 +1,4 @@
+import type { CategoricalLegendConfig } from "../../types/legendTypes"
 import type { Datum } from "../shared/datumTypes"
 import {
   composeStyleRules,
@@ -7,9 +8,9 @@ import {
 
 /** Which series is on top (area) or which overlay line this vertex belongs to. */
 export function differenceWinner(d: Datum): "A" | "B" {
-  if (d.__diffWinner === "A" || d.__diffWinner === "B") return d.__diffWinner
-  const key = String(d.__diffSegment ?? "")
-  return key === "line-A" || key.endsWith("-A") ? "A" : "B"
+  const winner = d.__diffWinner
+  if (winner === "A" || winner === "B") return winner
+  return String(d.__diffSegment).endsWith("-A") ? "A" : "B"
 }
 
 /**
@@ -17,77 +18,47 @@ export function differenceWinner(d: Datum): "A" | "B" {
  * plotted `__x`/`__y`; `field` thresholds see the original source row when
  * `__sourceDatum` is present.
  */
-export function makeDifferenceRuleContext(): (d: Datum) => StyleRuleContext {
-  return (d) => {
-    const x = Number(d.__x)
-    const y = Number(d.__y)
-    return {
-      value: Number.isFinite(y) ? y : undefined,
-      x: Number.isFinite(x) ? x : undefined,
-      y: Number.isFinite(y) ? y : undefined,
-      category: differenceWinner(d)
-    }
+function finiteCoordinate(value: unknown) {
+  const coordinate = Number(value)
+  return Number.isFinite(coordinate) ? coordinate : undefined
+}
+
+function differenceRuleContext(d: Datum): StyleRuleContext {
+  const y = finiteCoordinate(d.__y)
+  return { value: y, x: finiteCoordinate(d.__x), y, category: differenceWinner(d) }
+}
+
+interface DifferenceColors {
+  seriesAColor: string
+  seriesBColor: string
+  styleRules?: ReadonlyArray<StyleRule>
+}
+
+export function buildDifferenceLegend(
+  seriesALabel: string, seriesAColor: string, seriesBLabel: string, seriesBColor: string
+): CategoricalLegendConfig {
+  return {
+    legendGroups: [{
+      label: "", type: "fill", styleFn: item => ({ fill: item.color || "currentColor" }),
+      items: [{ label: seriesALabel, color: seriesAColor }, { label: seriesBLabel, color: seriesBColor }]
+    }]
   }
 }
 
-function withDifferenceRules(
-  base: (d: Datum) => Datum,
-  styleRules: ReadonlyArray<StyleRule> | undefined
-): (d: Datum) => Datum {
-  return composeStyleRules(
-    base,
-    styleRules,
-    makeDifferenceRuleContext(),
-    (d) => (d.__sourceDatum ? { ...(d.__sourceDatum as Datum), ...d } : d)
-  )
-}
-
-export function buildDifferenceAreaStyle(options: {
-  seriesAColor: string
-  seriesBColor: string
+export function buildDifferenceStyles(options: DifferenceColors & {
   areaOpacity: number
-  styleRules?: ReadonlyArray<StyleRule>
-}): (d: Datum) => Datum {
-  const { seriesAColor, seriesBColor, areaOpacity, styleRules } = options
-  return withDifferenceRules((d) => {
-    const winner = differenceWinner(d)
-    return {
-      fill: winner === "A" ? seriesAColor : seriesBColor,
-      stroke: "none",
-      fillOpacity: areaOpacity
-    }
-  }, styleRules)
-}
-
-export function buildDifferenceLineStyle(options: {
-  seriesAColor: string
-  seriesBColor: string
   lineWidth: number
-  styleRules?: ReadonlyArray<StyleRule>
-}): (d: Datum) => Datum {
-  const { seriesAColor, seriesBColor, lineWidth, styleRules } = options
-  return withDifferenceRules((d) => {
-    const winner = differenceWinner(d)
-    return {
-      stroke: winner === "A" ? seriesAColor : seriesBColor,
-      strokeWidth: lineWidth,
-      fill: "none"
-    }
-  }, styleRules)
-}
-
-export function buildDifferencePointStyle(options: {
-  seriesAColor: string
-  seriesBColor: string
   pointRadius: number
-  styleRules?: ReadonlyArray<StyleRule>
-}): (d: Datum) => Datum {
-  const { seriesAColor, seriesBColor, pointRadius, styleRules } = options
-  return withDifferenceRules((d) => {
-    const winner = differenceWinner(d)
-    return {
-      fill: winner === "A" ? seriesAColor : seriesBColor,
-      r: pointRadius
-    }
-  }, styleRules)
+}) {
+  const styleForWinner = (style: (color: string) => Datum) => composeStyleRules(
+    datum => style(differenceWinner(datum) === "A" ? options.seriesAColor : options.seriesBColor),
+    options.styleRules,
+    differenceRuleContext,
+    datum => datum.__sourceDatum ? { ...datum.__sourceDatum, ...datum } : datum
+  )
+  return [
+    styleForWinner(fill => ({ fill, stroke: "none", fillOpacity: options.areaOpacity })),
+    styleForWinner(stroke => ({ stroke, strokeWidth: options.lineWidth, fill: "none" })),
+    styleForWinner(fill => ({ fill, r: options.pointRadius }))
+  ] as const
 }

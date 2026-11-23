@@ -47,3 +47,25 @@ test("waterfall carry-in hover survives resize and wall-clock freshness survives
   await expect(tooltip).toBeHidden()
   expect(errors).toEqual([])
 })
+
+test("retained survey responses and difference samples drive tooltips after edits and resize", async ({ page }) => {
+  await page.goto("/streaming-aggregation/?survey")
+  await page.getByRole("button", { name: "Edit responses and series" }).click()
+  for (const width of [480, 360]) {
+    if (width === 360) await page.getByRole("button", { name: "Resize charts" }).click()
+    for (const [id, evidence] of [
+      ["survey", ["Service", "Yes: 100.0% (n=2)"]],
+      ["difference", ["A: 8", "B: 2"]]
+    ] as const) {
+      const chart = page.getByTestId(id)
+      const canvas = chart.locator("canvas").first()
+      await expect(canvas).toHaveCSS("width", `${width}px`)
+      await canvas.hover({ position: { x: width / 2, y: 100 } })
+      const tooltip = chart.locator(id === "survey" ? ".stream-ordinal-tooltip" : ".stream-frame-tooltip")
+      for (const value of evidence) await expect(tooltip).toContainText(value)
+      await expectTooltipWithinPlot(chart, { top: 20, right: 40, bottom: 40, left: 60 })
+      await page.mouse.move(0, 0)
+      await expect(tooltip).toBeHidden()
+    }
+  }
+})
