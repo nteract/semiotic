@@ -87,11 +87,6 @@ const EMPTY_STYLE: React.CSSProperties = {
   borderRadius: 4
 }
 
-const LOADING_BAR_STYLE: React.CSSProperties = {
-  background: "var(--semiotic-border, #e0e0e0)",
-  borderRadius: 2
-}
-
 /**
  * Renders a "No data available" placeholder when data is empty.
  * Returns null when data is present or emptyContent is `false`.
@@ -103,9 +98,7 @@ export function renderEmptyState(
   emptyContent?: React.ReactNode | false,
   layout?: ChartPlaceholderOptions
 ): React.ReactElement | null {
-  if (emptyContent === false) return null
-  if (data == null) return null // undefined/null = no data provided (e.g. push API)
-  if (!Array.isArray(data)) return null // hierarchy data (object)
+  if (emptyContent === false || !Array.isArray(data)) return null
   if (data.some((row) => row != null && typeof row === "object")) return null
 
   return (
@@ -129,7 +122,8 @@ function skeletonBars(height: number, responsive?: boolean) {
       key={i}
       className="semiotic-loading-bar"
       style={{
-        ...LOADING_BAR_STYLE,
+        background: "var(--semiotic-border, #e0e0e0)",
+        borderRadius: 2,
         position: "absolute",
         top: vertical(startY + i * (barHeight + gap)),
         left: "10%",
