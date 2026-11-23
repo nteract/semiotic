@@ -1,7 +1,7 @@
 /** Prototype-safe dictionaries so author ids such as `__proto__` stay data. */
 
 export function hasOwn(record: object, key: string): boolean {
-  return Object.prototype.hasOwnProperty.call(record, key)
+  return Object.hasOwn(record, key)
 }
 
 export function ownValue<T>(

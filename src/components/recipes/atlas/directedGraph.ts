@@ -2,12 +2,9 @@ import { compareRecipeIds } from "../../utils/compareRecipeIds"
 import type { AtlasEdge, NetworkAtlasSource } from "./types"
 
 export function graphAdjacency(source: NetworkAtlasSource) {
-  const outgoing = new Map(
-    source.nodes.map((node) => [node.id, [] as AtlasEdge[]])
-  )
-  const incoming = new Map(
-    source.nodes.map((node) => [node.id, [] as AtlasEdge[]])
-  )
+  const emptyAdjacency = () => new Map(source.nodes.map(node => [node.id, [] as AtlasEdge[]]))
+  const outgoing = emptyAdjacency()
+  const incoming = emptyAdjacency()
   for (const edge of source.edges) {
     outgoing.get(edge.source)!.push(edge)
     incoming.get(edge.target)!.push(edge)

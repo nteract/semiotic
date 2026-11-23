@@ -38,23 +38,10 @@ export function reachableFrom(
   start: string,
   options: { includeStart?: boolean } = {}
 ): Set<string> {
-  const reached = new Set<string>()
-  const queue: string[] = []
-  // Mark on discovery: converging paths otherwise enqueue the same node once
-  // per incoming edge. Iteration also avoids the argument limit of push(...set)
-  // for a high-fanout node. Starting with successors preserves cyclic reachability
-  // of `start` even when includeStart is false.
-  const enqueue = (neighbors: Set<string> | undefined) => {
-    if (!neighbors) return
-    for (const neighbor of neighbors) {
-      if (reached.has(neighbor)) continue
-      reached.add(neighbor)
-      queue.push(neighbor)
-    }
-  }
-  enqueue(adjacency.get(start))
-  for (let head = 0; head < queue.length; head++) {
-    enqueue(adjacency.get(queue[head]))
+  // Set iteration visits newly added successors once, in discovery order.
+  const reached = new Set(adjacency.get(start))
+  for (const id of reached) {
+    for (const next of adjacency.get(id) ?? []) reached.add(next)
   }
   if (options.includeStart) reached.add(start)
   return reached

@@ -631,14 +631,14 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 |---|---:|---:|---:|---:|
 | `import { semioticVite } from "semiotic/vite"` | node | **0.6 KiB** | — | 0.6 KiB |
 | `import { getNetworkPerspectiveSize } from "semiotic/network/perspective/core"` | browser | **1.1 KiB** | — | 1.1 KiB |
-| `import { MotifBraidChart } from "semiotic/atlas"` | browser | **114.0 KiB** | 30.4 KiB | 140.6 KiB |
+| `import { MotifBraidChart } from "semiotic/atlas"` | browser | **114.0 KiB** | 30.5 KiB | 141.0 KiB |
 | `import { prepareNetworkAtlas } from "semiotic/atlas/core"` | browser | **7.1 KiB** | — | 7.1 KiB |
 | `import { LineChart } from "semiotic"` | browser | **129.1 KiB** | 44.6 KiB | 156.4 KiB |
 | `import { LineChart } from "semiotic/xy"` | browser | **128.9 KiB** | 32.7 KiB | 156.4 KiB |
 | `import { LineChart } from "semiotic/line"` | browser | **128.8 KiB** | 32.8 KiB | 156.0 KiB |
 | `import { BarChart } from "semiotic/ordinal"` | browser | **109.6 KiB** | 14.6 KiB | 123.9 KiB |
-| `import { SankeyDiagram } from "semiotic/network"` | browser | **123.8 KiB** | 23.3 KiB | 142.3 KiB |
-| `import { ZoomableNetworkCustomChart } from "semiotic/network/zoom"` | browser | **117.3 KiB** | 30.3 KiB | 143.8 KiB |
+| `import { SankeyDiagram } from "semiotic/network"` | browser | **123.8 KiB** | 23.4 KiB | 142.7 KiB |
+| `import { ZoomableNetworkCustomChart } from "semiotic/network/zoom"` | browser | **117.3 KiB** | 30.5 KiB | 144.2 KiB |
 | `import { isometricGlyphs } from "semiotic/network/perspective"` | browser | **1.4 KiB** | — | 1.4 KiB |
 | `import { RealtimeLineChart } from "semiotic/realtime"` | browser | **129.2 KiB** | 42.9 KiB | 156.0 KiB |
 | `import { RingBuffer } from "semiotic/realtime/core"` | browser | **0.7 KiB** | 13.5 KiB | 0.7 KiB |
@@ -646,9 +646,9 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { GaltonBoardChart } from "semiotic/physics"` | browser | **98.5 KiB** | 2.7 KiB | 101.0 KiB |
 | `import { MATTER_PHYSICS_CAPABILITIES } from "semiotic/physics/matter"` | browser | **0.1 KiB** | — | 0.1 KiB |
 | `import { RAPIER_PHYSICS_CAPABILITIES } from "semiotic/physics/rapier"` | browser | **0.2 KiB** | — | 0.2 KiB |
-| `import { renderChart } from "semiotic/server"` | node | **312.0 KiB** | — | 312.0 KiB |
-| `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **130.1 KiB** | — | 130.1 KiB |
-| `import { renderToImage } from "semiotic/server/node"` | node | **312.3 KiB** | 0.6 KiB | 312.9 KiB |
+| `import { renderChart } from "semiotic/server"` | node | **312.1 KiB** | — | 312.1 KiB |
+| `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **130.2 KiB** | — | 130.2 KiB |
+| `import { renderToImage } from "semiotic/server/node"` | node | **312.4 KiB** | 0.6 KiB | 313.0 KiB |
 | `import { suggestCharts } from "semiotic/ai"` | browser | **32.7 KiB** | 13.5 KiB | 33.9 KiB |
 | `import { suggestCharts } from "semiotic/ai/core"` | browser | **32.4 KiB** | — | 32.4 KiB |
 | `import { buildArtifactContract } from "semiotic/artifact"` | browser | **4.5 KiB** | — | 4.5 KiB |
@@ -657,7 +657,7 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { toEvidenceEnvelope } from "semiotic/evidence"` | browser | **44.8 KiB** | — | 44.8 KiB |
 | `import { bin } from "semiotic/data"` | browser | **0.9 KiB** | — | 0.9 KiB |
 | `import { ChoroplethMap } from "semiotic/geo"` | browser | **110.8 KiB** | 1.7 KiB | 111.8 KiB |
-| `import { WordCloud } from "semiotic/wordcloud"` | browser | **112.4 KiB** | 39.9 KiB | 147.2 KiB |
+| `import { WordCloud } from "semiotic/wordcloud"` | browser | **112.4 KiB** | 40.1 KiB | 147.4 KiB |
 | `import { usePretextAnnotations } from "semiotic/text"` | browser | **1.5 KiB** | — | 1.5 KiB |
 | `import { createRoughRenderMode } from "semiotic/rough"` | browser | **3.1 KiB** | — | 3.1 KiB |
 | `import { resolveThemePreset } from "semiotic/themes"` | browser | **2.6 KiB** | — | 2.6 KiB |
