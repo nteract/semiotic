@@ -1,4 +1,5 @@
-import { findProximityProblems, nodesWithinHops } from "./networkProximity"
+import { findProximityProblems, hopDistances } from "./networkProximity"
+import { adjacencyMap } from "./directedReachability"
 import { hasOwn, ownValue, setOwnValue, idDictionary } from "./atlas/ids"
 
 /**
@@ -40,16 +41,7 @@ export function buildAdjacency(
   nodes: ReadonlyArray<GraphNode>,
   edges: ReadonlyArray<GraphEdge>
 ): Map<string, Set<string>> {
-  const adj = new Map<string, Set<string>>()
-  for (const n of nodes) adj.set(n.id, new Set())
-  for (const e of edges) {
-    if (!adj.has(e.source)) adj.set(e.source, new Set())
-    if (!adj.has(e.target)) adj.set(e.target, new Set())
-    if (e.source === e.target) continue
-    adj.get(e.source)!.add(e.target)
-    adj.get(e.target)!.add(e.source)
-  }
-  return adj
+  return adjacencyMap(nodes, edges, false)
 }
 
 /** Degree (neighbor count) per node id. */
@@ -57,9 +49,7 @@ export function degree(
   nodes: ReadonlyArray<GraphNode>,
   edges: ReadonlyArray<GraphEdge>
 ): Record<string, number> {
-  const out: Record<string, number> = {}
-  for (const [id, neighbors] of buildAdjacency(nodes, edges)) setOwnValue(out, id, neighbors.size)
-  return out
+  return Object.fromEntries(Array.from(buildAdjacency(nodes, edges), ([id, neighbors]) => [id, neighbors.size]))
 }
 
 /** Breadth-first hop distance from `start` to every reachable node. */
@@ -67,21 +57,7 @@ export function bfsDistances(
   adjacency: Map<string, Set<string>>,
   start: string
 ): Record<string, number> {
-  const dist: Record<string, number> = {}
-  setOwnValue(dist, start, 0)
-  const queue: string[] = [start]
-  let head = 0
-  while (head < queue.length) {
-    const cur = queue[head]
-    head += 1
-    for (const nb of adjacency.get(cur) || []) {
-      if (!hasOwn(dist, nb)) {
-        setOwnValue(dist, nb, dist[cur] + 1)
-        queue.push(nb)
-      }
-    }
-  }
-  return dist
+  return Object.fromEntries(hopDistances(adjacency, start))
 }
 
 /**
@@ -131,7 +107,10 @@ export function egoNetwork(
   id: string,
   depth = 1
 ): Set<string> {
-  return nodesWithinHops(buildAdjacency(nodes, edges), id, depth)
+  const adjacency = buildAdjacency(nodes, edges)
+  return adjacency.has(id) && depth >= 0
+    ? new Set(hopDistances(adjacency, id, depth).keys())
+    : new Set()
 }
 
 /**
@@ -203,13 +182,9 @@ export function closeness(
   const out: Record<string, number> = {}
   for (const n of nodes) {
     const dist = bfsDistances(adj, n.id)
-    let sum = 0
-    let reach = 0
-    for (const key of Object.keys(dist)) {
-      sum += dist[key]
-      reach += 1
-    }
-    setOwnValue(out, n.id, sum > 0 ? (reach - 1) / sum : 0)
+    const distances = Object.values(dist)
+    const sum = distances.reduce((total, hops) => total + hops, 0)
+    setOwnValue(out, n.id, sum > 0 ? (distances.length - 1) / sum : 0)
   }
   return out
 }

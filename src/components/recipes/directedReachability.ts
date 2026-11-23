@@ -12,12 +12,22 @@ export function buildDirectedAdjacency(
   nodes: ReadonlyArray<IdentifiedNode>,
   edges: ReadonlyArray<DirectedEdge>
 ): Map<string, Set<string>> {
+  return adjacencyMap(nodes, edges, true)
+}
+
+export function adjacencyMap(
+  nodes: ReadonlyArray<IdentifiedNode>,
+  edges: ReadonlyArray<DirectedEdge>,
+  directed: boolean
+): Map<string, Set<string>> {
   const adjacency = new Map<string, Set<string>>()
   for (const node of nodes) adjacency.set(node.id, new Set())
   for (const edge of edges) {
     if (!adjacency.has(edge.source)) adjacency.set(edge.source, new Set())
     if (!adjacency.has(edge.target)) adjacency.set(edge.target, new Set())
+    if (!directed && edge.source === edge.target) continue
     adjacency.get(edge.source)!.add(edge.target)
+    if (!directed) adjacency.get(edge.target)!.add(edge.source)
   }
   return adjacency
 }

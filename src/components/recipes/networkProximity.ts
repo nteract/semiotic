@@ -4,23 +4,37 @@ import { ownValue } from "./atlas/ids"
 
 type Location = Point & { ids: string[] }
 
-export function nodesWithinHops(adjacency: Map<string, Set<string>>, start: string, maxHops: number) {
-  const seen = new Set<string>()
-  if (!adjacency.has(start) || !(maxHops >= 0)) return seen
-  seen.add(start)
-  let frontier = [start]
-  for (let depth = 1; depth <= maxHops && frontier.length; depth++) {
-    const next: string[] = []
-    for (const id of frontier) {
-      for (const neighbor of adjacency.get(id) ?? []) {
-        if (seen.has(neighbor)) continue
-        seen.add(neighbor)
-        next.push(neighbor)
-      }
-    }
-    frontier = next
+// Every pair in the group is at most two hops apart if one vertex touches them all.
+function hasCoveringHub(ids: string[], adjacency: Map<string, Set<string>>) {
+  if (ids.length === 1) return true
+  let seed = ids[0]
+  for (const id of ids) {
+    if (adjacency.get(id)!.size < adjacency.get(seed)!.size) seed = id
   }
-  return seen
+  function covers(hub: string) {
+    const neighbors = adjacency.get(hub)!
+    return neighbors.size >= ids.length - 1 && ids.every(id => id === hub || neighbors.has(id))
+  }
+  if (covers(seed)) return true
+  for (const neighbor of adjacency.get(seed)!) if (covers(neighbor)) return true
+  return false
+}
+
+function shareNeighbor(left: Set<string>, right: Set<string>) {
+  const [smaller, larger] = left.size <= right.size ? [left, right] : [right, left]
+  for (const id of smaller) if (larger.has(id)) return true
+  return false
+}
+
+export function hopDistances(adjacency: Map<string, Set<string>>, start: string, maxHops = Infinity) {
+  const distances = new Map([[start, 0]])
+  for (const [id, depth] of distances) {
+    if (depth + 1 > maxHops) break
+    for (const neighbor of adjacency.get(id) ?? []) {
+      if (!distances.has(neighbor)) distances.set(neighbor, depth + 1)
+    }
+  }
+  return distances
 }
 
 export function findProximityProblems(
@@ -52,25 +66,33 @@ export function findProximityProblems(
     spacing = (distances[Math.floor(middle)] + distances[Math.ceil(middle)]) / 2
   }
   const minHops = options.minHops ?? 3
+  const maxNearHops = Math.ceil(minHops) - 1
+  const compact = new Set(maxNearHops >= 2 ? points.filter(point => hasCoveringHub(point.ids, adjacency)) : [])
   const maxDistance = options.maxThreshold ?? options.startThreshold ?? spacing * 0.9
   let threshold = Math.min(options.startThreshold ?? spacing / 2, maxDistance)
   const problemIds = new Set<string>()
   function inspect(radius: number) {
-    for (const { x, y, ids } of points) {
+    for (const point of points) {
+      const { x, y, ids } = point
       for (const id of ids) {
         // A flagged node needs no further search: each unflagged peer will check its own neighborhood.
         if (problemIds.has(id)) continue
-        let nearby: Set<string> | undefined
+        const neighbors = adjacency.get(id)!
+        let extendedNeighborhood: Map<string, number> | undefined
         tree.visit((cell, x0, y0, x1, y1) => {
           if (x0 > x + radius || x1 < x - radius || y0 > y + radius || y1 < y - radius) return true
           if (cell.length) return false
           const candidate = cell.data
+          if (candidate === point && compact.has(point)) return false
           const distance = Math.hypot(candidate.x - x, candidate.y - y)
           if (distance >= radius && distance !== 0) return false
           for (const other of candidate.ids) {
-            if (other === id) continue
-            nearby ??= nodesWithinHops(adjacency, id, Math.ceil(minHops) - 1)
-            if (nearby.has(other)) continue
+            if (other === id || (maxNearHops >= 1 && neighbors.has(other))) continue
+            if (maxNearHops >= 2 && shareNeighbor(neighbors, adjacency.get(other)!)) continue
+            if (maxNearHops > 2) {
+              extendedNeighborhood ??= hopDistances(adjacency, id, maxNearHops)
+              if (extendedNeighborhood.has(other)) continue
+            }
             problemIds.add(id)
             problemIds.add(other)
           }
