@@ -97,6 +97,22 @@ describe("developer MCP chart critique", () => {
     expect(report.structuredContent).toMatchObject({ configurationValid: true, fit: { status: "ok" } })
   })
 
+  it.each(["coordinates", "observations"])("scores the observations in a line's %s array", async key => {
+    const report = await critique("LineChart", {
+      data: [{ label: "North", [key]: [{ x: 1, y: 10 }, { x: 2, y: 20 }] }],
+      ...(key === "coordinates" ? {} : { lineDataAccessor: key }), lineBy: "label"
+    }, "trend")
+    expect(report.structuredContent).toMatchObject({ configurationValid: true, fit: { status: "ok" } })
+  })
+
+  it.each(["TreeDiagram", "CirclePack", "Treemap", "OrbitDiagram"])("scores the authored children field for %s", async component => {
+    const data = { name: "Root", reports: [{ name: "Team", reports: [
+      { name: "One", value: 2 }, { name: "Two", value: 1 }
+    ] }] }
+    const report = await critique(component, { data, childrenAccessor: "reports" }, "hierarchy")
+    expect(report.structuredContent).toMatchObject({ configurationValid: true, fit: { status: "ok" } })
+  })
+
   it("scores ProcessSankey edges with custom time fields", async () => {
     const report = await critique("ProcessSankey", {
       domain: [0, 10], startTimeAccessor: "entered", endTimeAccessor: "left",

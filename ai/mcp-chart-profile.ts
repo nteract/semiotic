@@ -1,5 +1,19 @@
 import { isDataRecord } from "../src/components/charts/shared/dataRecords"
 import { inferNodesFromEdges } from "../src/components/charts/shared/inferNodesFromEdges"
+import { normalizeLineChartData } from "../src/components/charts/shared/lineChartData"
+
+function profileHierarchy(root: Record<string, unknown>, key: string) {
+  const data: Record<string, unknown>[] = []
+  function visit(node: unknown): unknown {
+    if (!isDataRecord(node)) return node
+    data.push(node)
+    const children = node[key]
+    if (!Array.isArray(children)) return key === "children" ? node : { ...node, children: undefined }
+    return { ...node, children: children.map(visit) }
+  }
+  const rawInput = visit(root)
+  return { data, rawInput }
+}
 
 export function chartProfileInput(args: {
   component: string
@@ -10,11 +24,14 @@ export function chartProfileInput(args: {
   rawInput?: unknown
 } {
   const props = args.props ?? {}
-  if (Array.isArray(args.data)) {
-    return { data: args.data as Record<string, unknown>[] }
-  }
-  if (Array.isArray(props.data)) {
-    return { data: props.data as Record<string, unknown>[] }
+  const rows = args.data ?? props.data
+  if (Array.isArray(rows)) {
+    const key = typeof props.lineDataAccessor === "string" ? props.lineDataAccessor : "coordinates"
+    if (args.component === "LineChart" && Array.isArray(rows[0]?.[key])) {
+      const lineBy = typeof props.lineBy === "string" ? props.lineBy : undefined
+      return { data: normalizeLineChartData(rows.filter(isDataRecord), key, lineBy).rows }
+    }
+    return { data: rows as Record<string, unknown>[] }
   }
   const points = args.component === "FlowMap" ? props.nodes : props.points
   if (Array.isArray(props.areas) || Array.isArray(points) || Array.isArray(props.flows)) {
@@ -48,11 +65,10 @@ export function chartProfileInput(args: {
       return { data: [], rawInput: { nodes, edges: timedEdges } }
     }
   }
-  if (
-    props.data &&
-    typeof props.data === "object" &&
-    !Array.isArray(props.data)
-  ) {
+  if (isDataRecord(props.data)) {
+    const key = props.childrenAccessor
+    const childrenKey = typeof key === "string" ? key : "children"
+    if (Array.isArray(props.data[childrenKey])) return profileHierarchy(props.data, childrenKey)
     return { data: [], rawInput: props.data }
   }
   return { data: [] }
