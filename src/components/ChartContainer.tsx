@@ -206,6 +206,8 @@ export interface ChartContainerProps {
 
   /** Loading state — shows skeleton placeholder */
   loading?: boolean
+  /** Accessible name of the container's loading skeleton. */
+  loadingLabel?: string
   /** Error state — shows error message (overrides children) */
   error?: string | React.ReactNode
   /** Wrap children in ChartErrorBoundary */
@@ -291,22 +293,23 @@ const STATUS_COLORS = {
   static: { bg: "#6b7280", color: "#fff" },
 } satisfies Record<NonNullable<ChartContainerProps["status"]>, { bg: string; color: string }>
 
-function Skeleton({ height }: { height: number }) {
+function Skeleton({ height, label }: { height: number; label: string }) {
   return (
     <div
       role="status"
-      aria-busy="true"
-      aria-label="Loading chart"
+      aria-label={label}
+      className="semiotic-container-skeleton"
       style={{
         width: "100%",
         height,
         background:
           "linear-gradient(90deg, var(--semiotic-border, #e0e0e0) 25%, var(--semiotic-bg, #f5f5f5) 50%, var(--semiotic-border, #e0e0e0) 75%)",
         backgroundSize: "200% 100%",
-        animation: "semiotic-skeleton-pulse 1.5s ease-in-out infinite",
         borderRadius: 4,
       }}
-    />
+    >
+      <span style={SR_ONLY}>{label}</span>
+    </div>
   )
 }
 
@@ -360,6 +363,7 @@ export const ChartContainer = /* @__PURE__ */ forwardRef<
     dataAudit,
     onNotificationDismiss,
     loading = false,
+    loadingLabel = "Loading chart",
     error,
     errorBoundary = false,
     status,
@@ -664,7 +668,7 @@ export const ChartContainer = /* @__PURE__ */ forwardRef<
   }, [children, mobileEnabled, mobileChartMode, mobileSemantics, mobileInteraction])
 
   const innerContent = loading ? (
-    <Skeleton height={height} />
+    <Skeleton height={height} label={loadingLabel} />
   ) : error ? (
     <ErrorDisplay error={error} />
   ) : errorBoundary ? (

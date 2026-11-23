@@ -67,10 +67,9 @@ export class RingBuffer<T> {
 
   toArray(): T[] {
     const result = new Array<T>(this._size)
-    const start = (this.head - this._size + this._capacity) % this._capacity
-    for (let i = 0; i < this._size; i++) {
-      result[i] = this.buffer[(start + i) % this._capacity]!
-    }
+    this.forEach((value, index) => {
+      result[index] = value
+    })
     return result
   }
 

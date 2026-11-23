@@ -5,6 +5,9 @@ import { useEffect, useLayoutEffect, useState } from "react"
 const sharedCSS = `@keyframes semiotic-skeleton-pulse {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .semiotic-container-skeleton { animation: semiotic-skeleton-pulse 1.5s ease-in-out infinite; }
 }`
 
 const useClientLayoutEffect =
