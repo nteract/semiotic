@@ -7,6 +7,7 @@ import type {
   RealtimeEdge,
   RealtimeNode
 } from "../networkTypes"
+import { forceLayoutPlugin } from "./forceLayoutPlugin"
 import { orbitLayoutPlugin } from "./orbitLayoutPlugin"
 import { findNearestNetworkNode } from "../NetworkCanvasHitTester"
 
@@ -37,10 +38,16 @@ describe("orbitLayoutPlugin scene styles", () => {
     orbitLayoutPlugin.computeLayout(nodes, edges, config, [400, 300])
     const scene = orbitLayoutPlugin.buildScene(nodes, edges, config, [400, 300])
     const rings = scene.sceneEdges.filter((edge) => edge.datum == null)
-    expect(rings.length).toBeGreaterThan(0)
-    for (const ring of rings) {
+    expect(rings).toHaveLength(48)
+    for (const [index, ring] of rings.entries()) {
       expect(ring.interactive).toBe(false)
       if (ring.type === "line") {
+        const next = rings[(index + 1) % rings.length]
+        expect(next.type).toBe("line")
+        if (next.type === "line") {
+          expect(ring.x2).toBeCloseTo(next.x1, 8)
+          expect(ring.y2).toBeCloseTo(next.y1, 8)
+        }
         expect(findNearestNetworkNode([], [ring], (ring.x1 + ring.x2) / 2, (ring.y1 + ring.y2) / 2)).toBeNull()
       }
     }
@@ -87,5 +94,27 @@ describe("orbitLayoutPlugin scene styles", () => {
       <svg>{networkSceneEdgeToSVG(result.sceneEdges[0]!, 0)}</svg>
     )
     expect(html).toContain('data-semiotic-mark-cursor="pointer"')
+  })
+})
+
+describe.each([["orbit", orbitLayoutPlugin], ["force", forceLayoutPlugin]] as const)("%s multigraph", (chartType, plugin) => {
+  it("keeps loop and reciprocal paths distinct while preserving paint order, styles and source rows", () => {
+    const nodes = [node("a", 30, 80), node("b", 130, 80), node("c", 220, 80)]
+    const rows = [["a", "a"], ["b", "a"], ["a", "a"], ["a", "b"], ["b", "c"]]
+    const edges = rows.map(([source, target], id) => ({
+      source, target, value: 1, y0: 0, y1: 0, sankeyWidth: 0, data: { id },
+    }))
+    const { sceneEdges } = plugin.buildScene(nodes, edges, {
+      chartType, nodeSize: 20, orbitShowRings: false, edgeStyle: () => ({ stroke: "purple" }),
+    }, [300, 200])
+    expect(sceneEdges.map(edge => edge.datum)).toEqual(edges)
+    expect(sceneEdges.map(edge => edge.accessibleDatum)).toEqual(edges.map(edge => edge.data))
+    expect(sceneEdges.every(edge => edge.style.stroke === "purple")).toBe(true)
+    expect(sceneEdges.map(edge => edge.type)).toEqual(["curved", "curved", "curved", "curved", "line"])
+    const paths = sceneEdges.flatMap(edge => edge.type === "curved" ? [edge.pathD] : [])
+    expect(new Set(paths).size).toBe(4)
+    const controlY = (path: string) => Number(path.match(/ Q[^,]+,([^ ]+)/)![1])
+    expect((controlY(paths[1]) + controlY(paths[3])) / 2).toBe(80)
+    expect(controlY(paths[1])).not.toBe(controlY(paths[3]))
   })
 })

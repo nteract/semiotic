@@ -1,5 +1,5 @@
 import * as React from "react"
-import { StreamNetworkFrame } from "../dist/semiotic.module.min.js"
+import { ForceDirectedGraph, StreamNetworkFrame } from "../dist/semiotic.module.min.js"
 import type { StreamNetworkFrameHandle } from "../src/components/stream/networkFrameHandleTypes"
 
 const nodes = Array.from({ length: 6 }, (_, index) => ({ id: `n${index}` }))
@@ -42,5 +42,27 @@ export function ForceLayoutFixture() {
         onLayoutStateChange={execution === "sync" ? onSyncState : onWorkerState}
       />
     </section>)}
+  </>
+}
+
+const fixedNodes = [{ id: "a", x: 70, y: 100 }, { id: "b", x: 250, y: 100 }]
+const multigraphEdges = [
+  { source: "a", target: "a", label: "Self reference" },
+  { source: "a", target: "b", label: "Outgoing reference" },
+  { source: "b", target: "a", label: "Return reference" }
+]
+
+export function MultigraphFixture() {
+  const [width, setWidth] = React.useState(400)
+  const [renderAs, setRenderer] = React.useState<"canvas" | "svg">("svg")
+  return <>
+    <button onClick={() => setWidth(340)}>Resize graph</button>
+    <button onClick={() => setRenderer("canvas")}>Use canvas</button>
+    <button onClick={() => setRenderer("svg")}>Use SVG</button>
+    <ForceDirectedGraph nodes={fixedNodes} edges={multigraphEdges} iterations={0}
+      width={width} height={260} nodeSize={8} edgeColor="#328461" edgeWidth={3}
+      margin={{ left: 15, top: 10, right: 15, bottom: 10 }}
+      tooltip={(datum: { label?: unknown; id?: unknown }) => <span>{String(datum.label ?? datum.id)}</span>}
+      frameProps={{ renderAs, animate: false }} />
   </>
 }

@@ -1,14 +1,13 @@
+import { buildNetworkLinks, buildLinkNodes, buildLinkLabels, indexLinkNodes } from "./networkLinkScene"
 import { networkPluginState } from "../networkPluginState"
 import { pie as d3Pie } from "d3-shape"
 import { flattenHierarchy } from "../../charts/shared/networkUtils"
 import { resolveChildrenAccessor, uniqueHierarchyIds } from "./hierarchyUtils"
-import { wrapWithDataHint } from "../devDataAccessWarning"
 import type {
   NetworkLayoutPlugin,
   NetworkPipelineConfig,
   NetworkSceneNode,
   NetworkSceneEdge,
-  NetworkCircleNode,
   NetworkLineEdge,
   NetworkLabel,
   RealtimeNode,
@@ -32,10 +31,16 @@ interface OrbitState {
   startTime: number
 }
 
+const orbitNow = () => globalThis.performance?.now() ?? Date.now()
+
+function numberAccessor<T>(value: number | ((datum: T) => number)) {
+  return typeof value === "number" ? () => value : value
+}
+
 function getOrbitState(config: NetworkPipelineConfig): OrbitState {
   return networkPluginState(config, "orbit", () => ({
     metaMap: new Map<string, OrbitMeta>(),
-    startTime: typeof performance !== "undefined" ? performance.now() : Date.now(),
+    startTime: orbitNow(),
   }))
 }
 
@@ -96,10 +101,9 @@ function buildOrbitLayout(
   const childrenFn = resolveChildrenAccessor(config.childrenAccessor || "children")!
   const nodeIdFn = resolveNodeIdAccessor(config.nodeIDAccessor)
   const ringCapacities = resolveMode(config.orbitMode)
-  const orbitSizeOpt = config.orbitSize ?? 2.95
-  const eccentricityOpt = config.orbitEccentricity ?? 1
-  const orbitSizeFn = typeof orbitSizeOpt === "number" ? () => orbitSizeOpt : orbitSizeOpt
-  const eccentricityFn = typeof eccentricityOpt === "number" ? () => eccentricityOpt : eccentricityOpt
+  const ringCapacity = (index: number) => ringCapacities[Math.min(index, ringCapacities.length - 1)]
+  const orbitSizeFn = numberAccessor(config.orbitSize ?? 2.95)
+  const eccentricityFn = numberAccessor(config.orbitEccentricity ?? 1)
 
   // Clear previous layout state (but preserve frame counter for continuous animation)
   const state = getOrbitState(config)
@@ -111,27 +115,22 @@ function buildOrbitLayout(
   const ids = uniqueHierarchyIds(
     flattenHierarchy(root, childrenFn).map((datum) => String(nodeIdFn(datum)))
   )
+  const angularLayout = d3Pie<Datum>().value(kid => childrenFn(kid)?.length ? 4 : 1).sort(null)
   let idIndex = 0
 
   const cx = size[0] / 2
   const cy = size[1] / 2
   const maxRing = (Math.min(size[0], size[1]) / 2) * 0.85
 
-  // Create root node
-  const rootId = ids[idIndex++]
-  const rootNode: RealtimeNode = {
-    id: rootId,
-    x: cx, y: cy,
-    x0: cx, x1: cx, y0: cy, y1: cy,
-    width: 0, height: 0,
-    value: 0,
-    depth: 0,
-    data: root
+  function addNode(id: string, x: number, y: number, depth: number, data: Datum) {
+    nodes.push({ id, x, y, x0: x, x1: x, y0: y, y1: y, width: 0, height: 0, value: 0, depth, data })
   }
-  nodes.push(rootNode)
+
+  const rootId = ids[idIndex++]
+  addNode(rootId, cx, cy, 0, root)
   state.metaMap.set(rootId, { ring: maxRing, angle: 0, depth: 0, parentId: null, eccentricity: 1 })
 
-  function buildTree(parentDatum: Datum, parentId: string, parentX: number, parentY: number, parentRing: number, depth: number, hasGrandparent: boolean) {
+  function buildTree(parentDatum: Datum, parentId: string, parentX: number, parentY: number, parentRing: number, depth: number) {
     const kids = childrenFn(parentDatum)
     if (!kids?.length) return
 
@@ -140,35 +139,25 @@ function buildOrbitLayout(
     // Compute how many rings we need
     let ringCount = 0
     let counted = 0
-    let p = 0
     while (counted < totalChildren) {
-      counted += ringCapacities[Math.min(p, ringCapacities.length - 1)]
-      p++
+      counted += ringCapacity(ringCount)
       ringCount++
     }
 
     let childIndex = 0
     for (let currentRing = 0; currentRing < ringCount; currentRing++) {
-      const capacity = ringCapacities[Math.min(currentRing, ringCapacities.length - 1)]
+      const capacity = ringCapacity(currentRing)
       const ringSlice = kids.slice(childIndex, childIndex + capacity)
       if (!ringSlice.length) break
 
       const ringFraction = (currentRing + 1) / ringCount
       // Build a context object for callbacks that matches what user functions expect
       const depthContext = { id: parentId, depth, data: parentDatum, parentId: parentId }
-      const r = hasGrandparent
+      const r = depth > 1
         ? (parentRing / orbitSizeFn(depthContext)) * ringFraction
         : parentRing * ringFraction
 
-      // Use d3-pie for angular spacing — heavier children (with grandchildren) get more space
-      const pieGen = d3Pie<Datum>()
-        .value((kid) => {
-          const hasKids = childrenFn(kid)?.length
-          return hasKids ? 4 : 1
-        })
-        .sort(null)
-
-      const arcs = pieGen(ringSlice)
+      const arcs = angularLayout(ringSlice)
       const ecc = eccentricityFn(depthContext)
 
       for (let j = 0; j < ringSlice.length; j++) {
@@ -179,17 +168,7 @@ function buildOrbitLayout(
         const x = parentX + r * Math.sin(angle)
         const y = parentY + r * Math.cos(angle) * ecc
 
-        const kidNode: RealtimeNode = {
-          id: kidId,
-          x, y,
-          x0: x, x1: x, y0: y, y1: y,
-          width: 0, height: 0,
-          value: 0,
-          depth,
-          data: kidDatum
-        }
-        nodes.push(kidNode)
-
+        addNode(kidId, x, y, depth, kidDatum)
         state.metaMap.set(kidId, { ring: r, angle, depth, parentId: parentId, eccentricity: ecc })
 
         // Edge from parent to child
@@ -202,23 +181,21 @@ function buildOrbitLayout(
           data: { source: parentId, target: kidId }
         })
 
-        buildTree(kidDatum, kidId, x, y, r, depth + 1, true)
+        buildTree(kidDatum, kidId, x, y, r, depth + 1)
       }
 
       childIndex += capacity
     }
   }
 
-  buildTree(root, rootId, cx, cy, maxRing, 1, false)
+  buildTree(root, rootId, cx, cy, maxRing, 1)
 }
 
 // ── Tick: update positions each frame ─────────────────────────────────
 
 function tickOrbitPositions(
   nodes: RealtimeNode[],
-  config: NetworkPipelineConfig,
-  _size: [number, number],
-  _deltaTime: number
+  config: NetworkPipelineConfig
 ): void {
   const state = getOrbitState(config)
   const speed = config.orbitSpeed ?? 0.25
@@ -226,14 +203,11 @@ function tickOrbitPositions(
 
   // Use wall-clock elapsed time for deterministic animation regardless of
   // re-render frequency or frame rate
-  const elapsed = ((typeof performance !== "undefined" ? performance.now() : Date.now()) - state.startTime) / 1000 // seconds
+  const elapsed = (orbitNow() - state.startTime) / 1000 // seconds
   const baseRate = speed * (Math.PI / 6) // radians per second (speed=0.25 → ~7.5°/s)
 
   // Build a node lookup for parent positions
-  const nodeMap = new Map<string, RealtimeNode>()
-  for (const node of nodes) {
-    nodeMap.set(node.id, node)
-  }
+  const nodeMap = indexLinkNodes(nodes)
 
   for (const node of nodes) {
     const meta = state.metaMap.get(node.id)
@@ -279,162 +253,68 @@ export const orbitLayoutPlugin: NetworkLayoutPlugin = {
     nodes: RealtimeNode[],
     edges: RealtimeEdge[],
     config: NetworkPipelineConfig,
-    _size: [number, number]
+    size: [number, number]
   ): {
     sceneNodes: NetworkSceneNode[]
     sceneEdges: NetworkSceneEdge[]
     labels: NetworkLabel[]
   } {
-    const nodeStyleFn = config.nodeStyle
-    const edgeStyleFn = config.edgeStyle
     const nodeSize = config.nodeSize
-    const nodeSizeFn = typeof nodeSize === "number"
-      ? () => nodeSize
-      : typeof nodeSize === "function"
-        ? nodeSize
-        : () => 6
+    const nodeSizeFn = numberAccessor(typeof nodeSize === "string" ? 6 : nodeSize ?? 6)
 
-    const sceneNodes: NetworkCircleNode[] = []
-    const sceneEdges: NetworkLineEdge[] = []
-    const labels: NetworkLabel[] = []
+    const ringEdges: NetworkLineEdge[] = []
 
     // Build orbit ring ellipses (when orbitShowRings !== false)
     if (config.orbitShowRings !== false) {
       const state = getOrbitState(config)
-      const nodeMap = new Map<string, RealtimeNode>()
-      for (const n of nodes) nodeMap.set(n.id, n)
+      const nodeMap = indexLinkNodes(nodes)
 
-      // Collect unique rings: keyed by parentId + ring radius
-      const rings = new Map<string, { parentX: number; parentY: number; ring: number; ecc: number }>()
-      for (const [, meta] of state.metaMap) {
-        if (!meta.parentId) continue
-        const parent = nodeMap.get(meta.parentId)
-        if (!parent) continue
-        const ringKey = `${meta.parentId}:${meta.ring}`
-        if (!rings.has(ringKey)) {
-          rings.set(ringKey, { parentX: parent.x, parentY: parent.y, ring: meta.ring, ecc: meta.eccentricity })
-        }
-      }
-
-      const RING_SEGMENTS = 48
-      const ringStyle: Style = { stroke: "rgba(128,128,128,0.35)", strokeWidth: 0.5, opacity: 1 }
-      for (const [, { parentX, parentY, ring, ecc }] of rings) {
-        for (let s = 0; s < RING_SEGMENTS; s++) {
-          const a1 = (s / RING_SEGMENTS) * Math.PI * 2
-          const a2 = ((s + 1) / RING_SEGMENTS) * Math.PI * 2
-          sceneEdges.push({
-            type: "line",
-            x1: parentX + ring * Math.sin(a1),
-            y1: parentY + ring * Math.cos(a1) * ecc,
-            x2: parentX + ring * Math.sin(a2),
-            y2: parentY + ring * Math.cos(a2) * ecc,
-            style: ringStyle,
-            interactive: false,
-            // SceneDatum is `Datum | null`; ring segments are decorative,
-            // not data-bearing, so null is the right value.
-            datum: null
-          })
+      const rings = new Set<string>()
+      const segments = 48
+      const style: Style = { stroke: "rgba(128,128,128,0.35)", strokeWidth: 0.5, opacity: 1 }
+      for (const { parentId, ring, eccentricity } of state.metaMap.values()) {
+        if (!parentId) continue
+        const key = `${parentId}:${ring}`
+        const parent = nodeMap.get(parentId)
+        if (!parent || rings.has(key)) continue
+        rings.add(key)
+        let x1 = parent.x
+        let y1 = parent.y + ring * eccentricity
+        for (let segment = 1; segment <= segments; segment++) {
+          const angle = (segment / segments) * Math.PI * 2
+          const x2 = parent.x + ring * Math.sin(angle)
+          const y2 = parent.y + ring * Math.cos(angle) * eccentricity
+          ringEdges.push({ type: "line", x1, y1, x2, y2, style, interactive: false, datum: null })
+          x1 = x2
+          y1 = y2
         }
       }
     }
 
-    // Build circle nodes
-    for (const node of nodes) {
-      if (node.x == null || node.y == null) continue
+    const sceneNodes = buildLinkNodes(nodes, config, nodeSizeFn, node => ({
+      fill: config.themeSemantic?.primary || "#6366f1",
+      strokeWidth: 1,
+      opacity: (node.depth ?? 0) === 0 ? 1 : 0.85,
+    }))
 
-      const r = nodeSizeFn(wrapWithDataHint(node, "nodeSize"))
-      const userStyle = nodeStyleFn ? nodeStyleFn(wrapWithDataHint(node, "nodeStyle")) : {}
-      const style: Style = {
-        // Node fill: user > theme primary > hardcoded indigo fallback.
-        fill: userStyle.fill || config.themeSemantic?.primary || "#6366f1",
-        // Halo stroke: user > theme surface (contrasts with chart bg) > #fff.
-        stroke: userStyle.stroke || config.themeSemantic?.surface || "#fff",
-        strokeWidth: userStyle.strokeWidth ?? 1,
-        opacity: userStyle.opacity ?? ((node.depth ?? 0) === 0 ? 1 : 0.85),
-        cursor: userStyle.cursor
-      }
+    const links = buildNetworkLinks(
+      sceneNodes, edges, size[1], config.edgeStyle, "rgba(128,128,128,0.35)", 0.5, 1,
+    )
 
-      sceneNodes.push({
-        type: "circle",
-        cx: node.x,
-        cy: node.y,
-        r,
-        style,
-        accessibleDatum: node.data,
-        datum: node,
-        id: node.id,
-        label: node.id,
-        depth: node.depth
-      })
-    }
-
-    // Build line edges (parent → child)
-    const nodeMap = new Map<string, RealtimeNode>()
-    for (const n of nodes) nodeMap.set(n.id, n)
-
-    for (const edge of edges) {
-      const sourceNode = typeof edge.source === "object" ? edge.source : nodeMap.get(edge.source)
-      const targetNode = typeof edge.target === "object" ? edge.target : nodeMap.get(edge.target)
-      if (!sourceNode || !targetNode) continue
-      if (sourceNode.x == null || targetNode.x == null) continue
-
-      const userStyle = edgeStyleFn
-        ? edgeStyleFn(wrapWithDataHint(edge, "edgeStyle"))
-        : {}
-      const style: Style = {
-        stroke: userStyle.stroke || "rgba(128,128,128,0.35)",
-        strokeWidth: userStyle.strokeWidth ?? 0.5,
-        opacity: userStyle.opacity ?? 1,
-        cursor: userStyle.cursor
-      }
-
-      sceneEdges.push({
-        type: "line",
-        x1: sourceNode.x,
-        y1: sourceNode.y,
-        x2: targetNode.x,
-        y2: targetNode.y,
-        style,
-        datum: edge
-      })
-    }
-
-    // Labels
-    if (config.showLabels) {
-      const labelFn = config.nodeLabel
-      for (const node of nodes) {
-        const r = nodeSizeFn(wrapWithDataHint(node, "nodeSize"))
-        if (r <= 4) continue
-        const text = typeof labelFn === "function"
-          ? labelFn(node)
-          : labelFn
-            ? (node.data?.[labelFn] ?? node.id)
-            : node.id
-
-        labels.push({
-          x: node.x,
-          y: node.y + r + 12,
-          text: String(text),
-          anchor: "middle",
-          fontSize: 10,
-          fill: "currentColor",
-          anchorPoint: [node.x, node.y]
-        })
-      }
-    }
-
-    return { sceneNodes, sceneEdges, labels }
+    const label = config.nodeLabel
+    const labels = config.showLabels ? buildLinkLabels(sceneNodes, "below", node =>
+      typeof label === "function" ? label(node) : label ? (node.data?.[label] ?? node.id) : node.id
+    ) : []
+    return { sceneNodes, sceneEdges: [...ringEdges, ...links], labels }
   },
 
   tick(
     nodes: RealtimeNode[],
     _edges: RealtimeEdge[],
-    config: NetworkPipelineConfig,
-    size: [number, number],
-    deltaTime: number
+    config: NetworkPipelineConfig
   ): boolean {
     if (config.orbitAnimated === false) return false
-    tickOrbitPositions(nodes, config, size, deltaTime)
+    tickOrbitPositions(nodes, config)
     return true // always rebuild scene
   }
 }

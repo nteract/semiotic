@@ -8,28 +8,25 @@ import {
   forceCollide
 } from "d3-force"
 import { schemeCategory10 } from "../../charts/shared/colorPalettes"
+import { buildNetworkLinks, buildLinkNodes, buildLinkLabels, indexLinkNodes } from "./networkLinkScene"
 import { resolveNodeSizeFn } from "./forceLayoutNodeSize"
 import { resolveForceEdgeWeight } from "./forceLayoutEdgeWeight"
 import { createSeededFrameRandom } from "../FrameRuntime"
-import { wrapWithDataHint } from "../devDataAccessWarning"
 import { resolveLabelFn, resolveNodeRefId } from "../accessorUtils"
 import type {
   NetworkLayoutPlugin,
   NetworkPipelineConfig,
   NetworkSceneNode,
   NetworkSceneEdge,
-  NetworkCircleNode,
-  NetworkLineEdge,
   NetworkLabel,
   RealtimeNode,
   RealtimeEdge
 } from "../networkTypes"
-import type { Style } from "../types"
 
 /**
  * Force-directed layout plugin — uses d3-force for physics-based node positioning.
  *
- * Produces circle scene nodes and line scene edges. Runs the force simulation
+ * Produces circle nodes and links. Runs the force simulation
  * synchronously for a configurable number of iterations, using phyllotaxis
  * spiral for deterministic initial positions.
  *
@@ -73,61 +70,33 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
       config.__previousPositions
 
     // Classify nodes: positioned (have initialized coordinates or a previous position) vs new
-    let positionedCount = 0
+    const nodeById = indexLinkNodes(nodes)
     const newNodes: RealtimeNode[] = []
 
     for (const node of nodes) {
-      const hasCurrentPos = node.__hasPosition !== false &&
-        Number.isFinite(node.x) &&
-        Number.isFinite(node.y)
       const prevPos = previousPositions?.get(node.id)
 
-      if (hasCurrentPos) {
-        positionedCount++
-      } else if (prevPos) {
+      if (hasPosition(node)) continue
+      if (prevPos) {
         // Restore from previous positions map (bounded re-ingestion case)
         node.x = prevPos.x
         node.y = prevPos.y
-        positionedCount++
       } else {
         newNodes.push(node)
       }
     }
 
     // Decide warm vs cold start
-    const newFraction = nodes.length > 0 ? newNodes.length / nodes.length : 1
-    const useWarmStart = positionedCount > 0 && newFraction <= COLD_START_THRESHOLD
+    const useWarmStart = newNodes.length / nodes.length <= COLD_START_THRESHOLD
 
     if (useWarmStart) {
-      // Warm start: place new nodes near the centroid of their connected neighbors
-      const nodeMap = new Map<string, RealtimeNode>()
-      for (const n of nodes) nodeMap.set(n.id, n)
-
       for (const node of newNodes) {
-        const neighbors = findNeighborPositions(node.id, edges, nodeMap)
-
-        if (neighbors.length > 0) {
-          // Place near centroid of connected neighbors with a small offset
-          let sumX = 0, sumY = 0
-          for (const pos of neighbors) {
-            sumX += pos.x
-            sumY += pos.y
-          }
-          // Add a small deterministic offset based on the node id hash to avoid
-          // stacking multiple new nodes at exactly the same point
-          const hash = simpleHash(node.id)
-          const offsetAngle = (hash % 360) * (Math.PI / 180)
-          const offsetR = (10 + (hash % 20)) * spatialScale
-          node.x = sumX / neighbors.length + offsetR * Math.cos(offsetAngle)
-          node.y = sumY / neighbors.length + offsetR * Math.sin(offsetAngle)
-        } else {
-          // No positioned neighbors — place near center
-          const hash = simpleHash(node.id)
-          const offsetAngle = (hash % 360) * (Math.PI / 180)
-          const offsetR = (15 + (hash % 30)) * spatialScale
-          node.x = cx + offsetR * Math.cos(offsetAngle)
-          node.y = cy + offsetR * Math.sin(offsetAngle)
-        }
+        const center = neighborCentroid(node.id, edges, nodeById)
+        const hash = simpleHash(node.id)
+        const angle = (hash % 360) * (Math.PI / 180)
+        const offset = (center ? 10 + hash % 20 : 15 + hash % 30) * spatialScale
+        node.x = (center?.x ?? cx) + offset * Math.cos(angle)
+        node.y = (center?.y ?? cy) + offset * Math.sin(angle)
       }
     } else {
       // Cold start: deterministic phyllotaxis spiral for all unpositioned nodes.
@@ -138,10 +107,7 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
 
       for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i]
-        if (node.__hasPosition === false ||
-          !Number.isFinite(node.x) ||
-          !Number.isFinite(node.y)
-        ) {
+        if (!hasPosition(node)) {
           const r = Math.sqrt(i + 0.5) * 10 * spatialScale
           const theta = i * goldenAngle
           node.x = cx + r * Math.cos(theta)
@@ -160,8 +126,7 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
       Math.min(300, Math.floor(300 - (nodeCount - 30) * 2))
     )
     // config.iterations=0 means "skip simulation" (pinned layout) regardless of warm/cold
-    const iterations = config.__skipForceSimulation ? 0
-      : config.iterations === 0 ? 0
+    const iterations = config.__skipForceSimulation || config.iterations === 0 ? 0
       : useWarmStart ? WARM_START_ITERATIONS
       : coldIterations
 
@@ -180,52 +145,41 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
       // uniform spring/charge model. This mirrors the useful parts of
       // ForceAtlas2 (degree-dependent repulsion) and d3-force's own default
       // link-strength heuristic without requiring a continuous worker layout.
-      const degreeById = new Map<string, number>()
-      const nodeById = new Map<string, RealtimeNode>()
-      for (const node of nodes) {
-        degreeById.set(node.id, 0)
-        nodeById.set(node.id, node)
+      type ForceLink = RealtimeEdge & { source: RealtimeNode; target: RealtimeNode }
+      const linkData: ForceLink[] = []
+      const degrees = new Map<RealtimeNode, number>()
+      const requireNode = (id: string) => {
+        const node = nodeById.get(id)
+        if (!node) throw new Error(`node not found: ${id}`)
+        return node
       }
       for (const edge of edges) {
         const sourceId = resolveNodeRefId(edge.source)
         const targetId = resolveNodeRefId(edge.target)
-        degreeById.set(sourceId, (degreeById.get(sourceId) ?? 0) + 1)
-        degreeById.set(targetId, (degreeById.get(targetId) ?? 0) + 1)
+        if (sourceId === targetId) continue
+        const source = requireNode(sourceId)
+        const target = requireNode(targetId)
+        linkData.push({ ...edge, source, target })
+        degrees.set(source, (degrees.get(source) ?? 0) + 1)
+        degrees.set(target, (degrees.get(target) ?? 0) + 1)
       }
 
-      // Configure link force — parameterized on RealtimeNode + RealtimeEdge so
-      // d3-force's internal typing knows the shape of source/target.
-      const linkForce = forceLink<RealtimeNode, RealtimeEdge>()
+      const linkForce = forceLink<RealtimeNode, ForceLink>(linkData)
         .strength((d) => {
           const weight = resolveForceEdgeWeight(d)
-          const sourceId = resolveNodeRefId(d.source)
-          const targetId = resolveNodeRefId(d.target)
-          const endpointDegree = Math.max(
-            1,
-            Math.min(degreeById.get(sourceId) ?? 1, degreeById.get(targetId) ?? 1)
-          )
-          const weightFactor = weight && weight > 0 ? Math.sqrt(weight) : 1
+          const endpointDegree = Math.min(degrees.get(d.source)!, degrees.get(d.target)!)
+          const weightFactor = weight > 0 ? Math.sqrt(weight) : 1
           return Math.min(
             2.5,
             (weightFactor * forceStrength) / (0.1 * endpointDegree)
           )
         })
         .distance((d) => {
-          const source =
-            typeof d.source === "string"
-              ? nodeById.get(d.source)
-              : d.source
-          const target =
-            typeof d.target === "string"
-              ? nodeById.get(d.target)
-              : d.target
           const endpointClearance =
-            (source ? nodeRadius(source) : 0) +
-            (target ? nodeRadius(target) : 0) +
+            nodeRadius(d.source) + nodeRadius(d.target) +
             Math.max(6, 12 * spatialScale)
           return Math.max(16, 40 * spatialScale, endpointClearance)
         })
-        .id((d) => d.id)
 
       // Build simulation — parameterizing forceSimulation + forceManyBody with
       // RealtimeNode lets d3-force thread the node type through charge callbacks
@@ -234,7 +188,7 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
       // selected a random source. The deterministic LCG keeps
       // otherwise identical force layouts between renders. A custom random
       // callback or serializable seed opts into an override.
-      const simulation = forceSimulation<RealtimeNode>()
+      const simulation = forceSimulation(nodes)
 
       if (config.random !== undefined || config.seed !== undefined) {
         simulation.randomSource(
@@ -246,7 +200,7 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
         .force(
           "charge",
           forceManyBody<RealtimeNode>().strength((d) => {
-            const degree = degreeById.get(d.id) ?? 0
+            const degree = degrees.get(d) ?? 0
             return -15 * spatialScale * nodeRadius(d) * Math.sqrt(degree + 1)
           })
         )
@@ -272,35 +226,11 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
         // Apply the viewport constraint during settling so collision and link
         // forces can respond to it. A final coordinate clamp alone assigns
         // every outlier the same border coordinate in short viewports.
-        .force("bounds", forceBounds(size, nodeRadius))
+        .force("bounds", forceBounds(nodes, size, nodeRadius))
 
-      simulation.nodes(nodes)
-
-      if (edges.length > 0) {
-        // Resolve edge source/target to id strings for d3-force linking
-        const linkData = edges.map((e) => ({
-          ...e,
-          source: resolveNodeRefId(e.source),
-          target: resolveNodeRefId(e.target)
-        }))
-
-        linkForce.links(linkData)
-        simulation.force("link", linkForce)
-      }
-
-      // For warm start, use a lower initial alpha since the layout is mostly converged
-      if (useWarmStart) {
-        simulation.alpha(0.3)
-      } else if (simulation.alpha() < 0.1) {
-        simulation.alpha(1)
-      }
-
-      simulation.stop()
-
-      // Run synchronously
-      for (let i = 0; i < iterations; ++i) {
-        simulation.tick()
-      }
+      if (linkData.length > 0) simulation.force("link", linkForce)
+      if (useWarmStart) simulation.alpha(0.3)
+      simulation.stop().tick(iterations)
     }
 
     // Retain a padded safety clamp for extremely dense or under-settled
@@ -312,10 +242,8 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
       // Use a radius-only clamp for explicitly pinned
       // layouts; the extra inset belongs to simulated layouts only.
       const safetyPadding = iterations > 0 ? 2 : 0
-      const insetX = Math.min(size[0] / 2, r + safetyPadding)
-      const insetY = Math.min(size[1] / 2, r + safetyPadding)
-      node.x = Math.max(insetX, Math.min(size[0] - insetX, node.x))
-      node.y = Math.max(insetY, Math.min(size[1] - insetY, node.y))
+      node.x = clampToViewport(node.x, size[0], r + safetyPadding)
+      node.y = clampToViewport(node.y, size[1], r + safetyPadding)
 
       // Reset bounding box so finalizeLayout derives it from the updated x/y.
       // Without this, stale x0/x1/y0/y1 from a previous layout would cause
@@ -328,18 +256,9 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
 
     // Resolve edge source/target to node object references so that
     // HOC style functions can access d.source.data for color lookups.
-    const resolveMap = new Map<string, RealtimeNode>()
-    for (const n of nodes) resolveMap.set(n.id, n)
-
     for (const edge of edges) {
-      if (typeof edge.source === "string") {
-        const n = resolveMap.get(edge.source)
-        if (n) edge.source = n
-      }
-      if (typeof edge.target === "string") {
-        const n = resolveMap.get(edge.target as string)
-        if (n) edge.target = n
-      }
+      if (typeof edge.source === "string") edge.source = nodeById.get(edge.source) ?? edge.source
+      if (typeof edge.target === "string") edge.target = nodeById.get(edge.target) ?? edge.target
     }
   },
 
@@ -347,14 +266,12 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
     nodes: RealtimeNode[],
     edges: RealtimeEdge[],
     config: NetworkPipelineConfig,
-    _size: [number, number]
+    size: [number, number]
   ): {
     sceneNodes: NetworkSceneNode[]
     sceneEdges: NetworkSceneEdge[]
     labels: NetworkLabel[]
   } {
-    const nodeStyleFn = config.nodeStyle
-    const edgeStyleFn = config.edgeStyle
     const nodeSizeFn = resolveNodeSizeFn(
       config.nodeSize,
       config.nodeSizeRange,
@@ -370,137 +287,50 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
       : config.themeCategorical && config.themeCategorical.length > 0
           ? config.themeCategorical
           : (schemeCategory10 as readonly string[])
-    const nodeColorMap = new Map<string, string>()
-    nodes.forEach((n, i) => {
-      nodeColorMap.set(n.id, palette[i % palette.length])
-    })
+    const sceneNodes = buildLinkNodes(nodes, config, nodeSizeFn, (_node, index) => ({
+      fill: palette[index % palette.length] || config.themeSemantic?.primary || "#007bff",
+      strokeWidth: 2,
+    }))
 
-    const sceneNodes: NetworkCircleNode[] = []
-    const sceneEdges: NetworkLineEdge[] = []
-    const labels: NetworkLabel[] = []
+    const sceneEdges = buildNetworkLinks(
+      sceneNodes, edges, size[1], config.edgeStyle,
+      config.themeSemantic?.border || config.themeSemantic?.secondary || "#999",
+    )
 
-    // Build circle nodes
-    for (const node of nodes) {
-      if (node.x == null || node.y == null) continue
-
-      const r = nodeSizeFn(wrapWithDataHint(node, "nodeSize"))
-      const userStyle = nodeStyleFn ? nodeStyleFn(wrapWithDataHint(node, "nodeStyle")) : {}
-      const style: Style = {
-        // Node fill: user > categorical > theme primary > hardcoded fallback.
-        fill: userStyle.fill || nodeColorMap.get(node.id) || config.themeSemantic?.primary || "#007bff",
-        // Halo stroke against neighbor overlaps: user > theme surface (contrasts with chart bg) > #fff.
-        stroke: userStyle.stroke || config.themeSemantic?.surface || "#fff",
-        strokeWidth: userStyle.strokeWidth ?? 2,
-        opacity: userStyle.opacity,
-        cursor: userStyle.cursor
-      }
-
-      sceneNodes.push({
-        type: "circle",
-        cx: node.x,
-        cy: node.y,
-        r,
-        style,
-        accessibleDatum: node.data,
-        datum: node,
-        id: node.id,
-        label: node.id
-      })
-    }
-
-    // Build node lookup for edge resolution
-    const nodeMap = new Map<string, RealtimeNode>()
-    for (const n of nodes) nodeMap.set(n.id, n)
-
-    // Build line edges
-    for (const edge of edges) {
-      const sourceNode =
-        typeof edge.source === "object" ? edge.source : nodeMap.get(edge.source)
-      const targetNode =
-        typeof edge.target === "object" ? edge.target : nodeMap.get(edge.target)
-      if (!sourceNode || !targetNode) continue
-      if (sourceNode.x == null || sourceNode.y == null) continue
-      if (targetNode.x == null || targetNode.y == null) continue
-
-      const userStyle = edgeStyleFn ? edgeStyleFn(wrapWithDataHint(edge, "edgeStyle")) : {}
-      const style: Style = {
-        // Edge stroke: user > theme border (chart chrome) > theme secondary > #999.
-        stroke: userStyle.stroke || config.themeSemantic?.border || config.themeSemantic?.secondary || "#999",
-        strokeWidth: userStyle.strokeWidth ?? 1,
-        opacity: userStyle.opacity ?? 0.6,
-        cursor: userStyle.cursor
-      }
-
-      sceneEdges.push({
-        type: "line",
-        x1: sourceNode.x,
-        y1: sourceNode.y,
-        x2: targetNode.x,
-        y2: targetNode.y,
-        style,
-        accessibleDatum: edge.data,
-        datum: edge
-      })
-    }
-
-    // Build labels
-    if (config.showLabels !== false) {
-      const labelFn = resolveLabelFn(config.nodeLabel)
-
-      for (const node of nodes) {
-        if (node.x == null || node.y == null) continue
-
-        const text = labelFn ? labelFn(node) : node.id
-        if (!text) continue
-
-        const r = nodeSizeFn(wrapWithDataHint(node, "nodeSize"))
-
-        labels.push({
-          x: node.x,
-          y: node.y - r - 4,
-          text: String(text),
-          anchor: "middle",
-          baseline: "auto",
-          fontSize: 11,
-          anchorPoint: [node.x, node.y]
-        })
-      }
-    }
-
+    const label = resolveLabelFn(config.nodeLabel)
+    const labels = config.showLabels !== false ? buildLinkLabels(sceneNodes, "above", node => label ? label(node) : node.id) : []
     return { sceneNodes, sceneEdges, labels }
   }
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
-/**
- * Find positioned neighbors of a node by scanning edges.
- * Returns an array of {x, y} for neighbors that have non-zero positions.
- */
-function findNeighborPositions(
-  nodeId: string,
-  edges: RealtimeEdge[],
-  nodeMap: Map<string, RealtimeNode>
-): Array<{ x: number; y: number }> {
-  const positions: Array<{ x: number; y: number }> = []
+function hasPosition(node: RealtimeNode) {
+  return node.__hasPosition !== false && Number.isFinite(node.x) && Number.isFinite(node.y)
+}
 
+function neighborCentroid(nodeId: string, edges: RealtimeEdge[], nodes: ReadonlyMap<string, RealtimeNode>) {
+  let x = 0
+  let y = 0
+  let count = 0
   for (const edge of edges) {
-    const srcId = resolveNodeRefId(edge.source)
-    const tgtId = resolveNodeRefId(edge.target)
-
-    let neighborId: string | null = null
-    if (srcId === nodeId) neighborId = tgtId
-    else if (tgtId === nodeId) neighborId = srcId
-
-    if (neighborId) {
-      const neighbor = nodeMap.get(neighborId)
-      if (neighbor && (neighbor.x !== 0 || neighbor.y !== 0)) {
-        positions.push({ x: neighbor.x, y: neighbor.y })
-      }
+    const source = resolveNodeRefId(edge.source)
+    const target = resolveNodeRefId(edge.target)
+    if (source === target) continue
+    const id = source === nodeId ? target : target === nodeId ? source : undefined
+    const neighbor = id && nodes.get(id)
+    if (neighbor && (neighbor.x !== 0 || neighbor.y !== 0)) {
+      x += neighbor.x
+      y += neighbor.y
+      count++
     }
   }
+  return count ? { x: x / count, y: y / count } : undefined
+}
 
-  return positions
+function clampToViewport(value: number, length: number, radius: number) {
+  const inset = Math.min(length / 2, radius)
+  return Math.max(inset, Math.min(length - inset, value))
 }
 
 /**
@@ -510,47 +340,25 @@ function findNeighborPositions(
  * onto identical edge positions.
  */
 function forceBounds(
+  nodes: (RealtimeNode & { vx?: number; vy?: number })[],
   size: [number, number],
-  nodeRadius: (node: RealtimeNode) => number,
-  padding = 2,
-  strength = 0.6
+  nodeRadius: (node: RealtimeNode) => number
 ) {
-  type ForcePositionedNode = RealtimeNode & { vx?: number; vy?: number }
-  let nodes: ForcePositionedNode[] = []
-
-  const force = (alpha: number) => {
-    const forceStrength = strength * Math.max(alpha, 0.2)
+  return (alpha: number) => {
+    const forceStrength = 0.6 * Math.max(alpha, 0.2)
     for (const node of nodes) {
-      const x = node.x ?? size[0] / 2
-      const y = node.y ?? size[1] / 2
       const vx = node.vx ?? 0
       const vy = node.vy ?? 0
-      const radius = nodeRadius(node) + padding
-      const minX = Math.min(size[0] / 2, radius)
-      const maxX = Math.max(size[0] / 2, size[0] - radius)
-      const minY = Math.min(size[1] / 2, radius)
-      const maxY = Math.max(size[1] / 2, size[1] - radius)
-      const nextX = x + vx
-      const nextY = y + vy
-
-      if (nextX < minX) node.vx = vx + (minX - nextX) * forceStrength
-      else if (nextX > maxX) node.vx = vx + (maxX - nextX) * forceStrength
-
-      if (nextY < minY) node.vy = vy + (minY - nextY) * forceStrength
-      else if (nextY > maxY) node.vy = vy + (maxY - nextY) * forceStrength
+      const radius = nodeRadius(node) + 2
+      const nextX = node.x + vx
+      const nextY = node.y + vy
+      node.vx = vx + (clampToViewport(nextX, size[0], radius) - nextX) * forceStrength
+      node.vy = vy + (clampToViewport(nextY, size[1], radius) - nextY) * forceStrength
     }
   }
 
-  force.initialize = (nextNodes: RealtimeNode[]) => {
-    nodes = nextNodes as ForcePositionedNode[]
-  }
-
-  return force
 }
 
-/**
- * Simple deterministic hash for a string — used for spreading new node offsets.
- */
 function simpleHash(str: string): number {
   let hash = 0
   for (let i = 0; i < str.length; i++) {
