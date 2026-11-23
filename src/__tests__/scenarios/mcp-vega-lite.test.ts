@@ -1,4 +1,4 @@
-import { encodingLossExamples } from "../../components/data/portability/vegaLiteEncodingLoss.fixture"
+import { encodingLossExamples } from "../fixtures/vegaLiteEncodingLoss"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import type { ChildProcess } from "node:child_process"
 import { initializeServer, sendRequest, spawnServer } from "./mcpStdioHarness"

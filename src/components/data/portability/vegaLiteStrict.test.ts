@@ -1,4 +1,4 @@
-import { encodingLossExamples } from "./vegaLiteEncodingLoss.fixture"
+import { encodingLossExamples } from "../../../__tests__/fixtures/vegaLiteEncodingLoss"
 import { describe, expect, it, vi } from "vitest"
 import { fromVegaLite, fromVegaLiteResult } from "../fromVegaLite"
 import type { VegaLiteSpec } from "../fromVegaLite"
