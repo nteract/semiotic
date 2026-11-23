@@ -418,6 +418,22 @@ describe("MCP protocol round-trip", () => {
     expect(result.result.structuredContent.suggestions[0].component).toBe("BarChart")
   })
 
+  it("keeps GauntletChart suggestions grounded in the input property IDs", async () => {
+    const recommend = async (data: Record<string, unknown>[]) => {
+      const { result } = await sendRequest(proc, "tools/call", {
+        name: "suggestCharts", arguments: { data, allow: ["GauntletChart"] }
+      })
+      expect(result.isError).not.toBe(true)
+      return result.structuredContent.suggestions
+    }
+    expect(await recommend([{ id: "A", cost: 4 }])).toEqual([])
+    const [suggestion] = await recommend([{ id: "A", negatives: ["delay", "delay"] }, { id: "B" }])
+    expect(suggestion.props).toMatchObject({
+      negativeProperties: [{ id: "delay" }], positiveProperties: [],
+      data: [{ id: "A", negatives: ["delay", "delay"] }, { id: "B", positives: [], negatives: [] }]
+    })
+  })
+
   it("suggestChart with empty data returns error", async () => {
     const result = await sendRequest(proc, "tools/call", {
       name: "suggestChart",

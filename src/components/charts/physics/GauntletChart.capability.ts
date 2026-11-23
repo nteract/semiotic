@@ -1,5 +1,9 @@
 import type { ChartCapability } from "../../ai/chartCapabilityTypes"
 
+function propertyIds(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter(id => typeof id === "string" && id.trim()) : []
+}
+
 export const GauntletChartCapability: ChartCapability = {
   component: "GauntletChart",
   family: "realtime",
@@ -8,7 +12,9 @@ export const GauntletChartCapability: ChartCapability = {
 
   fits: (profile) => {
     if (profile.rowCount < 1) return "needs at least one project/plan row"
-    // Gauntlet is process narrative; fit loosely when categorical + numeric exist
+    if (!profile.data.some(row => propertyIds(row?.positives).length || propertyIds(row?.negatives).length)) {
+      return "needs project rows with positive or negative property IDs"
+    }
     const hasId = profile.data.some(
       (row) => row && typeof row === "object" && "id" in row
     )
@@ -33,20 +39,18 @@ export const GauntletChartCapability: ChartCapability = {
     const data = profile.data.map((row, index) => ({
       ...row,
       id: row?.id ?? `project-${index}`,
-      positives: Array.isArray(row?.positives) ? row.positives : ["value"],
-      negatives: Array.isArray(row?.negatives) ? row.negatives : ["cost"]
+      positives: propertyIds(row?.positives),
+      negatives: propertyIds(row?.negatives)
     }))
+    const definitions = (key: "positives" | "negatives") =>
+      Array.from(new Set(data.flatMap(row => row[key])), id => ({ id }))
     return {
       data,
       idAccessor: "id",
       positiveAccessor: "positives",
       negativeAccessor: "negatives",
-      positiveProperties: [
-        { id: "value", label: "Value", short: "V", color: "#22c55e", buoyancy: 2, radius: 9 }
-      ],
-      negativeProperties: [
-        { id: "cost", label: "Cost", short: "$", color: "#ef4444", load: 1.1, radius: 7 }
-      ],
+      positiveProperties: definitions("positives"),
+      negativeProperties: definitions("negatives"),
       gates: [
         { id: "review", label: "Review" },
         { id: "approval", label: "Approval" }
