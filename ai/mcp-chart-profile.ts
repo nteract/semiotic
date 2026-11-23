@@ -12,14 +12,15 @@ function profileRecords(rows: unknown[], fields: Record<string, unknown>) {
   }))
 }
 
-function profileHierarchy(root: Record<string, unknown>, key: string) {
+function profileHierarchy(root: Record<string, unknown>, key: string, valueAccessor: unknown) {
   const data: Record<string, unknown>[] = []
   function visit(node: unknown): unknown {
     if (!isDataRecord(node)) return node
-    data.push(node)
-    const children = node[key]
-    if (!Array.isArray(children)) return key === "children" ? node : { ...node, children: undefined }
-    return { ...node, children: children.map(visit) }
+    const { [key]: children, ...record } = node
+    if (key !== "children") delete record.children
+    if (typeof valueAccessor === "string" && valueAccessor !== "value") record.value = node[valueAccessor]
+    data.push(record)
+    return Array.isArray(children) ? { ...record, children: children.map(visit) } : record
   }
   const rawInput = visit(root)
   return { data, rawInput }
@@ -89,7 +90,7 @@ export function chartProfileInput(args: {
   if (isDataRecord(props.data)) {
     const key = props.childrenAccessor
     const childrenKey = typeof key === "string" ? key : "children"
-    if (Array.isArray(props.data[childrenKey])) return profileHierarchy(props.data, childrenKey)
+    if (Array.isArray(props.data[childrenKey])) return profileHierarchy(props.data, childrenKey, props.valueAccessor)
     return { data: [], rawInput: props.data }
   }
   return { data: [] }

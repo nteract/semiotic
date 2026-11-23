@@ -193,6 +193,30 @@ describe("developer MCP chart critique", () => {
     })
   })
 
+  it("preserves authored leaf weights in hierarchy repairs and variants", async () => {
+    const leaves = [{ name: "One", amount: 7, value: 90 }, { name: "Two", amount: 2, note: "retained" }]
+    const props = { data: { name: "Root", reports: leaves }, valueAccessor: "amount", childrenAccessor: "reports" }
+    const repaired = await sendRequest(publicServer, "tools/call", {
+      name: "improveChart", arguments: { component: "Treemap", props, intent: "hierarchy" }
+    }, "hierarchy-repair")
+    const proposed = await sendRequest(server, "tools/call", {
+      name: "proposeChartVariants", arguments: { component: "TreeDiagram", intent: "hierarchy", props }
+    }, "hierarchy-variants")
+    const alternative = repaired.result.structuredContent.repair.alternatives.find(
+      (item: { component: string }) => item.component === "CirclePack"
+    )
+    const variant = proposed.result.structuredContent.proposals.find(
+      (item: { proposal: { baseComponent: string } }) => item.proposal.baseComponent === "CirclePack"
+    )
+    for (const chart of [alternative, variant]) {
+      expect(chart).toBeDefined()
+      const children = chart.props.data.children
+      expect(children.map((leaf: Record<string, unknown>) => leaf[chart.props.valueAccessor])).toEqual([7, 2])
+      expect(children[1]).toMatchObject(leaves[1])
+      expect(chart.props.data).not.toHaveProperty("reports")
+    }
+  })
+
   it.each(["TreeDiagram", "CirclePack", "Treemap", "OrbitDiagram"])("scores the authored children field for %s", async component => {
     const data = { name: "Root", reports: [{ name: "Team", reports: [
       { name: "One", value: 2 }, { name: "Two", value: 1 }
