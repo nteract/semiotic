@@ -22,7 +22,7 @@ const SUPPORTED: Record<string, string[]> = {
   StackedBarChart: [...ORDINAL, "stackBy", "normalize"],
   GroupedBarChart: [...ORDINAL, "groupBy"],
   LineChart: [...XY, "lineBy", "colorBy", "curve", "showPoints"],
-  AreaChart: [...XY, "curve", "areaOpacity"],
+  AreaChart: [...XY, "areaBy", "curve", "areaOpacity"],
   StackedAreaChart: [...XY, "areaBy", "curve", "areaOpacity", "normalize"],
   Scatterplot: [...XY, "colorBy", "pointOpacity"],
   BubbleChart: [...XY, "colorBy", "sizeBy", "sizeRange"],

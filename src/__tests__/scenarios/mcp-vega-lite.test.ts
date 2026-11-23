@@ -94,6 +94,25 @@ describe("developer MCP Vega-Lite conversion", () => {
     )
   })
 
+  it("returns independent area series when stacking is explicitly disabled", async () => {
+    const spec = {
+      mark: "area",
+      data: { values: [{ x: 1, y: 4, series: "A" }, { x: 1, y: 3, series: "B" }] },
+      encoding: {
+        x: { type: "quantitative", field: "x" },
+        y: { type: "quantitative", field: "y", stack: null },
+        color: { type: "nominal", field: "series" }
+      }
+    }
+    const result = await call(spec)
+    expect(result.isError).not.toBe(true)
+    expect(result.structuredContent).toMatchObject({
+      component: "AreaChart",
+      props: { data: spec.data.values, areaBy: "series", colorBy: "series" }
+    })
+    expect(result.structuredContent.warnings).toBeUndefined()
+  })
+
   it.each([
     [{ ...base, transform: { filter: "datum.orders > 10" } }, "INVALID_SPEC"],
     [{ ...base, encoding: { x: null } }, "INVALID_SPEC"],

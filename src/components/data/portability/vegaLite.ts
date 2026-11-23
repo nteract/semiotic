@@ -102,7 +102,7 @@ const REQUIRED_ACCESSORS: Record<string, readonly string[]> = {
 
 const OPTIONAL_ACCESSORS: Record<string, readonly string[]> = {
   LineChart: ["lineBy", "colorBy"],
-  AreaChart: ["colorBy"],
+  AreaChart: ["areaBy", "colorBy"],
   StackedAreaChart: ["colorBy"],
   Scatterplot: ["colorBy"],
   BubbleChart: ["colorBy"],
@@ -229,8 +229,11 @@ export function toVegaLiteResult(
       }
       enc.x = withAxisTitle(xyEncoding(props, "x"), props.xLabel)
       enc.y = withAxisTitle(xyEncoding(props, "y"), props.yLabel)
-      if (component === "StackedAreaChart" && props.areaBy) enc.color = nominal(props.areaBy)
-      if (props.normalize) enc.y.stack = "normalize"
+      if (props.areaBy) {
+        enc.color = nominal(props.areaBy)
+        if (component === "AreaChart") enc.y.stack = null
+        else if (props.normalize) enc.y.stack = "normalize"
+      }
       break
     }
     case "Scatterplot":

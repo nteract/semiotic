@@ -203,8 +203,12 @@ export function vegaLiteSemanticDiagnostics(
       ![null, false, true, "zero", "normalize"].includes(enc.stack)
     )
       unsupported(`${path}/stack`)
-    if (enc.stack !== undefined && !["bar", "area"].includes(mark))
-      unsupported(`${path}/stack`)
+    if (
+      enc.stack !== undefined && (
+        !["bar", "area"].includes(mark) ||
+        (enc.stack === "normalize" && !spec.encoding?.color?.field)
+      )
+    ) unsupported(`${path}/stack`)
     if (enc.scale) {
       const scaleKeys =
         channel === "color"

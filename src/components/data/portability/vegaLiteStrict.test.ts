@@ -19,6 +19,24 @@ const importSpec = (value: unknown, lossy = false) =>
   })
 
 describe("strict Vega-Lite boundaries", () => {
+  it.each(["bar", "area"])("discloses normalization without a grouping field for %s", mark => {
+    const spec = { ...base, mark, encoding: { ...base.encoding, y: { ...base.encoding!.y, stack: "normalize" } } }
+    expect(importSpec(spec).status).toBe("refused")
+    expect(importSpec(spec, true).lossReport).toContainEqual(expect.objectContaining({ path: "/encoding/y/stack" }))
+  })
+
+  it.each([null, false])("preserves explicitly unstacked colored area series (%s) across import and export", stack => {
+    const spec = {
+      ...base, mark: "area",
+      encoding: { ...base.encoding, y: { ...base.encoding!.y, stack }, color: { field: "group", type: "nominal" } }
+    }
+    const imported = importSpec(spec)
+    expect(imported.config).toMatchObject({ component: "AreaChart", props: { areaBy: "group", colorBy: "group" } })
+    const exported = toVegaLiteResult(imported.config!)
+    expect(exported.spec?.encoding).toMatchObject({ y: { stack: null }, color: { field: "group" } })
+    expect(importSpec(exported.spec).config?.component).toBe("AreaChart")
+  })
+
   it.each([
     null,
     42,
