@@ -5,6 +5,7 @@ import type { Drawable, OpSet, Options } from "roughjs/bin/core"
 import type { RoughGenerator } from "roughjs/bin/generator"
 import type { SceneDatum, SceneRenderBackend, Style } from "../stream/types"
 import type { Datum } from "../charts/shared/datumTypes"
+import { cachePaint, readCachedPaint } from "../stream/renderers/canvasPaintCache"
 import { resolveCSSColor } from "../stream/renderers/resolveCSSColor"
 
 type Point = [number, number]
@@ -345,8 +346,7 @@ export function createRoughRenderMode(options: RoughRenderModeOptions = {}): Rou
   const generator = rough.generator()
   const cache = new Map<string, CachedDrawable>()
 
-  function makeCacheKey(node: RoughSceneNode, style: Style): string {
-    const geometry = geometryFor(node)
+  function makeCacheKey(node: RoughSceneNode, style: Style, geometry = geometryFor(node)): string {
     return stableString({
       backend: "roughjs",
       identity: identityFor(node),
@@ -374,13 +374,9 @@ export function createRoughRenderMode(options: RoughRenderModeOptions = {}): Rou
           stroke: resolveCSSColor(context, paint.stroke) || paint.stroke
         }
       : paint
-    const key = `${makeCacheKey(node, style)}:${stableString(resolvedPaint)}`
-    const cached = cache.get(key)
-    if (cached) {
-      cache.delete(key)
-      cache.set(key, cached)
-      return cached
-    }
+    const key = `${makeCacheKey(node, style, geometry)}:${stableString(resolvedPaint)}`
+    const cached = readCachedPaint(cache, key)
+    if (cached) return cached
 
     const nodeSeed = stableRoughSeed(`${seed}:${identityFor(node) ?? stableString(geometry)}`)
     const drawableOptions: Options = {
@@ -396,12 +392,7 @@ export function createRoughRenderMode(options: RoughRenderModeOptions = {}): Rou
       geometry,
       style
     }
-    cache.set(key, created)
-    while (cache.size > maxCacheSize) {
-      const oldest = cache.keys().next().value
-      if (oldest === undefined) break
-      cache.delete(oldest)
-    }
+    cachePaint(cache, key, created, maxCacheSize)
     return created
   }
 

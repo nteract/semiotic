@@ -12,6 +12,7 @@
  * />
  * ```
  */
+import { isNoneCanvasPaint } from "../../stream/renderers/colorUtils"
 import type { HatchFill } from "./hatchFill"
 
 export interface HatchPatternOptions {
@@ -48,25 +49,6 @@ export function hatchTileGeometry(spacing: number): {
   return { width: Math.max(8, period), height: period, lineY: period / 2 }
 }
 
-/**
- * The serializable `HatchFill` equivalent of the requested pattern. Returned
- * when no canvas is available (SSR/test) so a `pieceStyle`/`nodeStyle` doing
- * `createHatchPattern(...) ?? color` still yields a hatch that the SVG path
- * renders as a `<pattern>` — instead of silently collapsing to the solid
- * fallback. On canvas the real `CanvasPattern` is returned as before.
- */
-function hatchFillDescriptor(o: Required<HatchPatternOptions>): HatchFill {
-  return {
-    type: "hatch",
-    background: o.background,
-    stroke: o.stroke,
-    lineWidth: o.lineWidth,
-    spacing: o.spacing,
-    angle: o.angle,
-    ...(o.lineOpacity !== 1 ? { lineOpacity: o.lineOpacity } : {}),
-  }
-}
-
 let _offscreen: HTMLCanvasElement | null = null
 
 function getOffscreenCanvas(width: number, height: number): HTMLCanvasElement | OffscreenCanvas {
@@ -83,13 +65,13 @@ function getOffscreenCanvas(width: number, height: number): HTMLCanvasElement | 
 
 type HatchTileContext = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
 
-function tileRasterScale(): number {
+export function hatchRasterScale(): number {
   const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1
   return Math.min(3, Math.max(1, dpr))
 }
 
 function paintTileBackground(ctx: HatchTileContext, background: string, width: number, height: number): void {
-  if (background && background !== "transparent" && background !== "none") {
+  if (background && background !== "transparent" && !isNoneCanvasPaint(background)) {
     ctx.fillStyle = background
     ctx.fillRect(0, 0, width, height)
   } else {
@@ -124,12 +106,15 @@ export function createHatchPattern(
     angle = 45,
     lineOpacity = 1,
   } = options
-  const resolved = { background, stroke, lineWidth, spacing, angle, lineOpacity }
+  function fallback(): HatchFill {
+    return { type: "hatch", background, stroke, lineWidth, spacing, angle,
+      ...(lineOpacity !== 1 && { lineOpacity }) }
+  }
   const tile = hatchTileGeometry(spacing)
 
   // Bake the tile at device resolution; the pattern transform scales it back
   // to CSS pixels, so a 2x canvas gets crisp lines.
-  const scale = tileRasterScale()
+  const scale = hatchRasterScale()
   const tileWidth = Math.max(1, Math.round(tile.width * scale))
   const tileHeight = Math.max(1, Math.round(tile.height * scale))
 
@@ -137,20 +122,22 @@ export function createHatchPattern(
   try {
     tileCanvas = getOffscreenCanvas(tileWidth, tileHeight)
   } catch {
-    return hatchFillDescriptor(resolved) // SSR or test environment
+    return fallback() // SSR or test environment
   }
 
   const ctx = tileCanvas.getContext("2d") as HatchTileContext | null
-  if (!ctx) return hatchFillDescriptor(resolved)
+  if (!ctx) return fallback()
 
   paintTileBackground(ctx, background, tileWidth, tileHeight)
   const pxPerUnitY = tileHeight / tile.height
   const bandHeight = Math.max(0, lineWidth) * pxPerUnitY
-  ctx.save()
-  ctx.globalAlpha = Math.min(1, Math.max(0, lineOpacity))
-  ctx.fillStyle = stroke
-  ctx.fillRect(0, tile.lineY * pxPerUnitY - bandHeight / 2, tileWidth, bandHeight)
-  ctx.restore()
+  if (!isNoneCanvasPaint(stroke)) {
+    ctx.save()
+    ctx.globalAlpha = Math.min(1, Math.max(0, lineOpacity))
+    ctx.fillStyle = stroke
+    ctx.fillRect(0, tile.lineY * pxPerUnitY - bandHeight / 2, tileWidth, bandHeight)
+    ctx.restore()
+  }
 
   // Create the pattern on the target context if provided, otherwise use the tile's own context
   const patternCtx = targetCtx || ctx

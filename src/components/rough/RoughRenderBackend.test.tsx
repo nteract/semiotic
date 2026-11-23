@@ -70,6 +70,21 @@ describe("createRoughRenderMode", () => {
     )
   })
 
+  it("reads the same line geometry for the cache key and the drawable", () => {
+    const mode = createRoughRenderMode()
+    const path = [[0, 0], [10, 20]]
+    const readPath = vi.fn(() => path)
+    const node = { type: "line", get path() { return readPath() } }
+    const render = () => ReactDOMServer.renderToStaticMarkup(
+      <svg>{mode.renderStaticSVG({ node, style: { stroke: "black" }, key: "line" })}</svg>
+    )
+    const first = render()
+    expect(readPath).toHaveBeenCalledTimes(1)
+    path[1][1] = 40
+    expect(render()).not.toBe(first)
+    expect(readPath).toHaveBeenCalledTimes(2)
+  })
+
   it("normalizes a non-finite cache size to the documented default", () => {
     const mode = createRoughRenderMode({ cacheSize: Number.NaN })
     for (let index = 0; index <= 1000; index += 1) {
