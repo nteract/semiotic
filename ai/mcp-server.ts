@@ -2,7 +2,7 @@ import { initializeSvgSanitizer, sanitizeSvgForWidget } from "./svg-sanitize"
 /**
  * Semiotic MCP Server
  *
- * Exposes twenty-four developer tools, thirteen resources (eleven fixed and
+ * Exposes developer tools, thirteen resources (eleven fixed and
  * two templates), and two prompts:
  *   1. getSchema — returns the prop schema for a specific component
  *   2. suggestChart — sample-row chart recommender
@@ -28,6 +28,7 @@ import { initializeSvgSanitizer, sanitizeSvgForWidget } from "./svg-sanitize"
  *   22. recommendRepresentation — considers chart and non-chart outcomes without inventing facts
  *   23. repairArtifact — proposes repairs or fills missing identity fields
  *   24. explainRefusal — explains policy refusals from an explicit contract
+ *   25. critiqueChart — reviews configuration, representation, and fit to the caller’s intent
  *
  * Usage (Claude Desktop / claude_desktop_config.json):
  * {
@@ -88,6 +89,8 @@ import { isAuthorizedRequest } from "./mcp-http-auth"
 import { mcpClientKey, resolveMcpTrustedProxyHops } from "./mcp-client-key"
 import { DEFAULT_MCP_BODY_TIMEOUT_MS } from "./mcp-http-body"
 import { closeMcpRequestAfterResponse, createMcpUploadAdmission, resolveMcpUploadLimit } from "./mcp-upload-admission"
+import { chartProfileInput } from "./mcp-chart-profile"
+import { critiqueChart } from "./operations/critique"
 import { diagnoseChart } from "./operations/diagnose"
 import { createMcpRequestCancellationSignal } from "./mcp-request-cancellation"
 import {
@@ -2236,41 +2239,6 @@ async function applyThemeHandler(args: { name?: string }): Promise<ToolResult> {
   }
 }
 
-function profileInputFromVariantArgs(args: {
-  data?: unknown[]
-  props?: Record<string, unknown>
-}): {
-  data: Record<string, unknown>[]
-  rawInput?: unknown
-} {
-  const props = args.props ?? {}
-  if (Array.isArray(args.data)) {
-    return { data: args.data as Record<string, unknown>[] }
-  }
-  if (Array.isArray(props.data)) {
-    return { data: props.data as Record<string, unknown>[] }
-  }
-  if (
-    Array.isArray(props.nodes) &&
-    (Array.isArray(props.edges) || Array.isArray(props.links))
-  ) {
-    return {
-      data: [],
-      rawInput: {
-        nodes: props.nodes,
-        edges: props.edges ?? props.links
-      }
-    }
-  }
-  if (
-    props.data &&
-    typeof props.data === "object" &&
-    !Array.isArray(props.data)
-  ) {
-    return { data: [], rawInput: props.data }
-  }
-  return { data: [] }
-}
 
 function buildVariantProposalProps(
   proposal: VariantProposal,
@@ -2360,7 +2328,7 @@ async function proposeChartVariantsHandler(args: {
     }
   }
 
-  const { data, rawInput } = profileInputFromVariantArgs(args)
+  const { data, rawInput } = chartProfileInput(args)
   const profile = profileData(data, {
     rawInput,
     identifiers: args.identifiers,
@@ -3149,7 +3117,7 @@ async function improveChartHandler(args: {
   identifiers?: string[]
   fieldRoles?: McpProfileFieldRoleHints
 }): Promise<ToolResult> {
-  const { data, rawInput } = profileInputFromVariantArgs(args)
+  const { data, rawInput } = chartProfileInput(args)
   const intent = (
     Array.isArray(args.intent)
       ? args.intent
@@ -4614,6 +4582,25 @@ function createServer(
     },
     READ_ONLY_TOOL_ANNOTATIONS,
     isolateTool("auditAccessibility", auditAccessibilityHandler)
+  )
+
+  srv.tool(
+    "critiqueChart",
+    "Critique a chart's configuration, representation, and fit to the supplied analytical intent. Returns a concise static assessment, ranked findings, and the capability score when data supports it.",
+    {
+      component: z.string().min(1).describe("Semiotic component name."),
+      props: unknownRecordInput.describe("Chart configuration including its authored data."),
+      intent: z.string().trim().min(1).optional().describe("A registered analytical intent such as trend or distribution.")
+    },
+    READ_ONLY_TOOL_ANNOTATIONS,
+    isolateTool("critiqueChart", (args: Parameters<typeof critiqueChart>[0]) => {
+      const report = critiqueChart(args)
+      return {
+        content: [{ type: "text", text: report.narrative }],
+        structuredContent: report,
+        isError: !report.configurationValid
+      }
+    })
   )
 
   srv.tool(
