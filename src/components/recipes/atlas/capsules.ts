@@ -1,3 +1,4 @@
+import { compareRecipeIds } from "../../utils/compareRecipeIds"
 import type { MotifMatch, MotifTemplate } from "./types"
 
 export type MotifCapsule = {
@@ -48,7 +49,7 @@ export function selectCapsules(
       if (right.entityCount !== left.entityCount) {
         return right.entityCount - left.entityCount
       }
-      return left.id.localeCompare(right.id)
+      return compareRecipeIds(left.id, right.id)
     })
 
   const claimed = new Set<string>()

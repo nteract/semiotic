@@ -1,3 +1,4 @@
+import { compareRecipeIds } from "../utils/compareRecipeIds"
 import type { CustomLayout } from "../stream/customLayout"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { RectSceneNode } from "../stream/types"
@@ -264,7 +265,7 @@ function allocate<T extends CellWeight>(
   while (assigned > cellBudget) {
     const reducible = groups
       .filter((g) => g.cells > minPer)
-      .sort((a, b) => b.cells - a.cells || a.remainder - b.remainder || a.key.localeCompare(b.key))[0]
+      .sort((a, b) => b.cells - a.cells || a.remainder - b.remainder || compareRecipeIds(a.key, b.key))[0]
     if (!reducible) break
     reducible.cells--
     assigned--
@@ -275,7 +276,7 @@ function allocate<T extends CellWeight>(
     .filter((group) => safeWeight(group.weight) > 0)
     .sort(
       (a, b) => b.remainder - a.remainder
-        || (stableOrder ? 0 : safeWeight(b.weight) - safeWeight(a.weight) || a.key.localeCompare(b.key)),
+        || (stableOrder ? 0 : safeWeight(b.weight) - safeWeight(a.weight) || compareRecipeIds(a.key, b.key)),
     )
   for (let i = 0; assigned < cellBudget; i++) {
     ranked[i % ranked.length].cells++
