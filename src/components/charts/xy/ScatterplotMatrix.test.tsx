@@ -1,5 +1,5 @@
 import { vi } from "vitest"
-import { fireEvent, render, within } from "@testing-library/react"
+import { act, fireEvent, render, within } from "@testing-library/react"
 import { ScatterplotMatrix } from "./ScatterplotMatrix"
 import { TooltipProvider } from "../../store/TooltipStore"
 
@@ -63,6 +63,20 @@ describe("ScatterplotMatrix", () => {
     fireEvent.keyDown(frame, { key: "Escape" })
     expect(cells[3]).toHaveFocus()
     expect(grid.querySelectorAll('[tabindex="0"]')).toHaveLength(1)
+  })
+
+  it("keeps the surviving focused cell tabbable across field changes", () => {
+    const chart = (fields: string[]) => <ScatterplotMatrix data={sampleData} fields={fields} accessibleTable={false} />
+    const { getByRole, rerender } = render(chart(["a", "b", "c"]))
+    const active = getByRole("gridcell", { name: "a versus b" })
+    act(() => active.focus())
+    for (const fields of [["a", "b"], ["b", "a"]]) {
+      rerender(chart(fields))
+      expect(active).toHaveAttribute("tabindex", "0")
+      expect(getByRole("grid").querySelectorAll('[tabindex="0"]')).toHaveLength(1)
+    }
+    rerender(chart(["a", "c"]))
+    expect(getByRole("gridcell", { name: "a" })).toHaveAttribute("tabindex", "0")
   })
 
   it("renders diagonal histograms as SVGs", () => {

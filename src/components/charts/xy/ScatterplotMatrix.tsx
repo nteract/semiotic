@@ -288,13 +288,10 @@ function ScatterplotMatrixInner<TDatum extends Datum = Datum>(
           const col = fields.indexOf(xField)
           const row = fields.indexOf(yField)
           if (col < 0 || row < 0) return null
-          const colorLabel = colorBy
-            ? typeof colorBy === "function" ? colorBy(d as TDatum) : d[colorBy]
-            : null
-          // Resolve ID for header
-          const idLabel = idAccessor
-            ? (typeof idAccessor === "function" ? idAccessor(d as TDatum) : d[idAccessor])
-            : `Row ${d[SPLOM_IDX]}`
+          const read = (accessor: typeof colorBy | typeof idAccessor) =>
+            typeof accessor === "function" ? accessor(d as TDatum) : accessor ? d[accessor] : undefined
+          const colorLabel = read(colorBy)
+          const idLabel = idAccessor ? read(idAccessor) : `Row ${d[SPLOM_IDX]}`
           const { [SPLOM_IDX]: _index, ...rawDatum } = d
           const tooltipContent = typeof normalizedTooltip === "function" ? normalizedTooltip(rawDatum) : (
             <TooltipRoot

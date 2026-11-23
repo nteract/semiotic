@@ -149,16 +149,9 @@ function useTweenedValue(
   const [displayed, setDisplayed] = useState<number>(() => initialValue)
   const displayedRef = useRef<number>(initialValue)
   const animationEnabled = Boolean(animate)
-  const configuredDuration =
-    typeof animate === "object" ? animate.duration : undefined
-  const duration =
-    typeof configuredDuration === "number" && Number.isFinite(configuredDuration)
-      ? Math.max(0, configuredDuration)
-      : 300
-  const easing: "linear" | "ease-out" =
-    typeof animate === "object" && animate.easing === "linear"
-      ? "linear"
-      : "ease-out"
+  const options = typeof animate === "object" ? animate : undefined
+  const duration = Number.isFinite(options?.duration) ? Math.max(0, options!.duration!) : 300
+  const linear = options?.easing === "linear"
   useEffect(() => {
     const updateDisplayed = (next: number) => {
       displayedRef.current = next
@@ -172,14 +165,9 @@ function useTweenedValue(
     const from = displayedRef.current
     const start = typeof performance !== "undefined" ? performance.now() : Date.now()
     let request: number
-    const ease =
-      easing === "linear"
-        ? (t: number) => t
-        : (t: number) => 1 - Math.pow(1 - t, 3)
-
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / duration)
-      const eased = ease(t)
+      const eased = linear ? t : 1 - (1 - t) ** 3
       updateDisplayed(t < 1 ? from + (target - from) * eased : target)
       if (t < 1) request = requestAnimationFrame(tick)
     }
@@ -187,7 +175,7 @@ function useTweenedValue(
     return () => cancelAnimationFrame(request)
     // The current display value lives in a ref so a tween frame can update
     // React state without restarting this effect.
-  }, [animationEnabled, duration, easing, reducedMotion, target])
+  }, [animationEnabled, duration, linear, reducedMotion, target])
 
   return displayed
 }
@@ -226,11 +214,8 @@ function resolveSentiment(
   override: BigNumberProps["sentiment"]
 ): "positive" | "negative" | "neutral" {
   if (override && override !== "auto") return override
-  if (delta == null || delta === 0 || !Number.isFinite(delta)) return "neutral"
-  const dir = direction ?? "higher-is-better"
-  if (dir === "neutral") return "neutral"
-  const higherBetter = dir === "higher-is-better"
-  const positive = higherBetter ? delta > 0 : delta < 0
+  if (!delta || !Number.isFinite(delta) || direction === "neutral") return "neutral"
+  const positive = direction === "lower-is-better" ? delta < 0 : delta > 0
   return positive ? "positive" : "negative"
 }
 

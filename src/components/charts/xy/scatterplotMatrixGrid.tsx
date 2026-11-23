@@ -29,10 +29,12 @@ export function MatrixGrid({
   onMouseLeave,
   children
 }: MatrixGridProps) {
-  const [active, setActive] = useState(0)
+  const [active, setActive] = useState([fields[0], fields[0]])
   const helpId = useId()
   const n = fields.length
-  const cells = fields.map(() => `${cellSize}px`).join(" ")
+  const cells = `repeat(${n}, ${cellSize}px)`
+  const [activeRow, activeCol] = active.every(field => fields.includes(field))
+    ? active : [fields[0], fields[0]]
   const labelStyle = {
     display: "flex",
     alignItems: "center",
@@ -64,16 +66,16 @@ export function MatrixGrid({
     }
     switch (event.key) {
       case "ArrowLeft":
-        col = Math.max(0, col - 1)
+        col--
         break
       case "ArrowRight":
-        col = Math.min(n - 1, col + 1)
+        col++
         break
       case "ArrowUp":
-        row = Math.max(0, row - 1)
+        row--
         break
       case "ArrowDown":
-        row = Math.min(n - 1, row + 1)
+        row++
         break
       case "Home":
         col = 0
@@ -86,7 +88,7 @@ export function MatrixGrid({
     }
     event.preventDefault()
     const targets = cell.closest('[role="grid"]')?.querySelectorAll<HTMLElement>('[role="gridcell"]')
-    targets?.[row * n + col]?.focus()
+    if (row >= 0 && col >= 0 && col < n) targets?.[row * n + col]?.focus()
   }
 
   return (
@@ -121,15 +123,14 @@ export function MatrixGrid({
               {labelFor(rowField)}
             </div>
             {fields.map((colField, col) => {
-              const index = row * n + col
               const label = row === col ? labelFor(rowField) : `${labelFor(colField)} versus ${labelFor(rowField)}`
               return (
                 <div
                   role="gridcell"
                   key={colField}
                   aria-label={label}
-                  tabIndex={index === Math.min(active, n * n - 1) ? 0 : -1}
-                  onFocus={() => setActive(index)}
+                  tabIndex={rowField === activeRow && colField === activeCol ? 0 : -1}
+                  onFocus={() => setActive([rowField, colField])}
                   onKeyDownCapture={(event) => onKeyDown(event, row, col)}
                 >
                   {children(rowField, row, colField, col, label)}

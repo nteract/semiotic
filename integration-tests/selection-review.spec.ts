@@ -197,6 +197,18 @@ test("matrix cells expose point values and activation from the keyboard", async 
   await expect(tooltip).toBeHidden()
 })
 
+test("Tab leaves the matrix after an unrelated field is removed", async ({ page }) => {
+  await page.goto("/selection-predicates-examples/?review=matrix")
+  const chart = page.getByTestId("matrix-review")
+  const cell = chart.getByRole("gridcell", { name: "a versus b" })
+  await cell.focus()
+  await page.getByRole("button", { name: "Remove unrelated field" }).evaluate(button => (button as HTMLButtonElement).click())
+  await expect(cell).toBeFocused()
+  await expect(cell).toHaveAttribute("tabindex", "0")
+  await page.keyboard.press("Tab")
+  await expect(chart.locator('[role="grid"] :focus')).toHaveCount(0)
+})
+
 test("brushed scatterplot exposes the mark tooltip through its overlay after resize", async ({ page }) => {
   await page.goto("/selection-predicates-examples/?review=brush-hover")
   const chart = page.getByTestId("brushed-scatterplot")
