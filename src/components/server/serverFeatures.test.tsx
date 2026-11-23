@@ -16,6 +16,7 @@
  */
 
 // Polyfill TextEncoder/TextDecoder for react-dom/server in jsdom
+import type { Datum } from "../charts/shared/datumTypes"
 import { TextEncoder, TextDecoder } from "util"
 Object.assign(global, { TextEncoder, TextDecoder })
 
@@ -69,6 +70,19 @@ describe("DifferenceChart server layout", () => {
     { x: 0, a: 10, b: 12 },
     { x: 1, a: 16, b: 14 },
   ]
+
+  it("uses the same gap and late-sample geometry for static and streamed numeric fields", () => {
+    const paths = (rows: Datum[]) => {
+      const svg = renderChart("DifferenceChart", { data: rows, width: 420, height: 240, showPoints: true })
+      const doc = new DOMParser().parseFromString(svg, "image/svg+xml")
+      return Array.from(doc.querySelectorAll("path[d]"), node => node.getAttribute("d"))
+    }
+    const rows = [{ x: 2, a: 4, b: 6 }, { x: 4, a: 8, b: 2 }]
+    const expected = paths(rows)
+    expect(expected.length).toBeGreaterThan(1)
+    expect(paths([rows[1], { x: null, a: 100, b: 90 }, { x: " ", a: 90, b: 100 },
+      { x: 3, a: null, b: false }, { x: "2", a: "4", b: "6" }])).toEqual(expected)
+  })
 
   it("reserves the client legend gutter when no margin side was supplied", () => {
     const svg = renderChart("DifferenceChart", {

@@ -1,7 +1,12 @@
 "use client"
 
-import type { RefObject, MutableRefObject } from "react"
-import { useMemo, useCallback, useRef } from "react"
+import { Adder } from "d3-array"
+import type { RefObject } from "react"
+import { useMemo, useCallback, useRef, useLayoutEffect, useState } from "react"
+import { RingBuffer } from "../../realtime/RingBuffer"
+import { reserveChartRows } from "./reserveChartRows"
+import { toIdSet } from "../../stream/pipelineIdentityOps"
+import { resolveStringAccessor } from "../../stream/accessorUtils"
 import type { StreamOrdinalFrameHandle } from "../../stream/ordinalTypes"
 import {
   interpolateRdBu,
@@ -60,6 +65,24 @@ export function resolveAccessorFn<T>(
   return (d: Datum) => d[key]
 }
 
+type LikertAccessors = Pick<UseLikertAggregationConfig, "categoryAccessor" | "valueAccessor" | "levelAccessor" | "countAccessor">
+
+export function resolveLikertFields({ categoryAccessor, valueAccessor, levelAccessor, countAccessor }: LikertAccessors) {
+  const fieldName = (accessor: LikertAccessors[keyof LikertAccessors]) => typeof accessor === "string" ? accessor : undefined
+  return {
+    getCat: resolveAccessorFn<string>(categoryAccessor, "question"),
+    getScore: levelAccessor ? null : resolveAccessorFn<number>(valueAccessor, "score"),
+    getLevel: levelAccessor ? resolveAccessorFn<string>(levelAccessor, "level") : null,
+    getCount: levelAccessor ? resolveAccessorFn<number>(countAccessor, "count") : null,
+    aliases: {
+      category: fieldName(categoryAccessor),
+      level: fieldName(levelAccessor),
+      count: fieldName(countAccessor),
+      score: levelAccessor ? undefined : fieldName(valueAccessor)
+    }
+  }
+}
+
 // ── Color scheme ──────────────────────────────────────────────────────
 
 /**
@@ -78,45 +101,16 @@ export function resolveAccessorFn<T>(
  */
 export function defaultDivergingScheme(n: number, themeDivergingSchemeName?: string): string[] {
   if (n <= 0) return []
-
-  // Path A: named diverging scheme from the theme.
-  if (
-    themeDivergingSchemeName &&
-    Object.prototype.hasOwnProperty.call(
-      DIVERGING_INTERPOLATORS,
-      themeDivergingSchemeName
-    )
-  ) {
-    const interp = DIVERGING_INTERPOLATORS[themeDivergingSchemeName]
-    if (n === 1) return [interp(0.5)]
-    const result: string[] = []
-    for (let i = 0; i < n; i++) {
-      result.push(interp(i / (n - 1)))
-    }
-    return result
+  if (themeDivergingSchemeName && Object.hasOwn(DIVERGING_INTERPOLATORS, themeDivergingSchemeName)) {
+    const interpolate = DIVERGING_INTERPOLATORS[themeDivergingSchemeName]
+    return Array.from({ length: n }, (_, i) => interpolate(n === 1 ? 0.5 : i / (n - 1)))
   }
-  // Unknown scheme name → fall through to hardcoded palette.
-
-  // Path B: Carbon-inspired hardcoded palette.
-  const negColors = ["#da1e28", "#ff8389", "#ffb3b8"]
-  const posColors = ["#a6c8ff", "#4589ff", "#0043ce"]
-  const neutral = "#a8a8a8"
-
-  if (n === 1) return [neutral]
-
-  const isOdd = n % 2 !== 0
-  const halfSize = Math.floor(n / 2)
-  const result: string[] = []
-
-  for (let i = 0; i < halfSize; i++) {
-    result.push(negColors[Math.min(Math.floor(i * negColors.length / halfSize), negColors.length - 1)])
-  }
-  if (isOdd) result.push(neutral)
-  for (let i = 0; i < halfSize; i++) {
-    result.push(posColors[Math.min(Math.floor(i * posColors.length / halfSize), posColors.length - 1)])
-  }
-
-  return result
+  const half = Math.floor(n / 2)
+  const sampleHalf = (colors: string[]) =>
+    Array.from({ length: half }, (_, i) => colors[Math.floor(i * colors.length / half)])
+  const negative = sampleHalf(["#da1e28", "#ff8389", "#ffb3b8"])
+  const positive = sampleHalf(["#a6c8ff", "#4589ff", "#0043ce"])
+  return n % 2 ? [...negative, "#a8a8a8", ...positive] : [...negative, ...positive]
 }
 
 // ── Aggregation ───────────────────────────────────────────────────────
@@ -124,50 +118,76 @@ export function defaultDivergingScheme(n: number, themeDivergingSchemeName?: str
 export function aggregateData(
   data: Datum[],
   levels: string[],
-  getCat: (d: Datum) => string,
-  getScore: ((d: Datum) => number) | null,
-  getLevel: ((d: Datum) => string) | null,
-  getCount: ((d: Datum) => number) | null,
-  fieldAliases: LikertAggregationFieldAliases = {},
+  fields: ReturnType<typeof resolveLikertFields>,
+  isDiverging: boolean
 ): AggregatedRow[] {
-  const counts = new Map<string, Map<string, number>>()
+  const table = createLikertCounts(levels, fields)
+  for (const row of data) table.adjust(row, 1)
+  return aggregateRows(table.counts, levels, fields.aliases, isDiverging)
+}
+
+function createLikertCounts(
+  levels: string[],
+  { getCat, getScore, getLevel, getCount }: ReturnType<typeof resolveLikertFields>
+) {
+  const counts = new Map<string, { size: number; values: Map<string, number | Adder> }>()
   const levelSet = new Set(levels)
-
-  for (const d of data) {
-    const cat = getCat(d)
-    if (!counts.has(cat)) counts.set(cat, new Map<string, number>())
-    const catMap = counts.get(cat)!
-
+  function adjust(row: Datum, direction: 1 | -1) {
+    const category = getCat(row)
+    let level: string | undefined
+    let weight = 1
     if (getScore) {
-      const score = getScore(d)
-      if (score == null || !Number.isFinite(score)) continue
-      if (!Number.isInteger(score)) {
-        if (process.env.NODE_ENV !== "production") {
-          console.warn("[LikertChart] Ignoring non-integer Likert score:", score)
-        }
-        continue
-      }
-      const idx = score - 1
-      if (idx < 0 || idx >= levels.length) continue
-      const level = levels[idx]
-      catMap.set(level, (catMap.get(level) || 0) + 1)
+      const score = getScore(row)
+      if (Number.isInteger(score) && score >= 1 && score <= levels.length) level = levels[score - 1]
+      else if (process.env.NODE_ENV !== "production" && Number.isFinite(score) && !Number.isInteger(score))
+        console.warn("[LikertChart] Ignoring non-integer Likert score:", score)
     } else if (getLevel && getCount) {
-      const level = getLevel(d)
-      const count = getCount(d)
-      if (!levelSet.has(level)) continue
-      catMap.set(level, (catMap.get(level) || 0) + (Number.isFinite(count) ? count : 0))
+      const label = getLevel(row)
+      weight = getCount(row)
+      if (levelSet.has(label) && Number.isFinite(weight)) level = label
+    }
+    let group = counts.get(category)
+    if (!group) {
+      group = { size: 0, values: new Map() }
+      counts.set(category, group)
+    }
+    group.size += direction
+    if (!group.size) {
+      counts.delete(category)
+      return
+    }
+    if (level === undefined || weight === 0) return
+    const previous = group.values.get(level)
+    if (getScore) {
+      group.values.set(level, Number(previous ?? 0) + direction)
+    } else {
+      // Expansions retain tiny weights and exactly cancel fractional FIFO removals.
+      const sum = previous instanceof Adder ? previous : new Adder()
+      sum.add(direction * weight)
+      group.values.set(level, sum)
     }
   }
+  return { counts, adjust }
+}
 
+function aggregateRows(
+  counts: ReturnType<typeof createLikertCounts>["counts"],
+  levels: string[],
+  fieldAliases: LikertAggregationFieldAliases,
+  isDiverging: boolean
+): AggregatedRow[] {
   const rows: AggregatedRow[] = []
-  for (const [cat, catMap] of counts) {
+  const middle = Math.floor(levels.length / 2)
+  const splitNeutral = isDiverging && levels.length % 2 === 1
+  for (const [cat, { values: catMap }] of counts) {
+    const countOf = (level: string) => Number(catMap.get(level) ?? 0)
     let total = 0
-    for (const level of levels) total += catMap.get(level) || 0
+    for (const level of levels) total += countOf(level)
     if (total === 0) continue
 
-    for (let li = 0; li < levels.length; li++) {
+    function append(li: number, fraction: number, stack = levels[li]) {
       const level = levels[li]
-      const count = catMap.get(level) || 0
+      const count = countOf(level)
       const publicFields: Datum = {}
       if (fieldAliases.category) publicFields[fieldAliases.category] = cat
       if (fieldAliases.level) publicFields[fieldAliases.level] = level
@@ -176,78 +196,22 @@ export function aggregateData(
       rows.push({
         ...publicFields,
         __likertCategory: cat,
-        __likertLevel: level,
+        __likertLevel: stack,
         __likertLevelLabel: level,
         __likertCount: count,
-        __likertPct: (count / total) * 100,
+        __likertPct: (count / total) * 100 * fraction,
         __likertLevelIndex: li,
       })
     }
+    if (isDiverging) {
+      if (splitNeutral) append(middle, -0.5, NEUTRAL_NEG)
+      for (let i = middle - 1; i >= 0; i--) append(i, -1)
+      if (splitNeutral) append(middle, 0.5, NEUTRAL_POS)
+    }
+    const firstPositive = isDiverging ? middle + Number(splitNeutral) : 0
+    for (let i = firstPositive; i < levels.length; i++) append(i, 1)
   }
-
   return rows
-}
-
-// ── Diverging transforms ──────────────────────────────────────────────
-
-export function toDivergingValues(rows: AggregatedRow[], levels: string[]): AggregatedRow[] {
-  const n = levels.length
-  const isOdd = n % 2 !== 0
-  const midIdx = Math.floor(n / 2)
-
-  const result: AggregatedRow[] = []
-  for (const r of rows) {
-    const li = r.__likertLevelIndex
-    if (isOdd && li === midIdx) {
-      const half = r.__likertPct / 2
-      result.push({ ...r, __likertLevel: NEUTRAL_NEG, __likertPct: -half })
-      result.push({ ...r, __likertLevel: NEUTRAL_POS, __likertPct: half })
-    } else if (li < midIdx) {
-      result.push({ ...r, __likertPct: -r.__likertPct })
-    } else {
-      result.push(r)
-    }
-  }
-  return result
-}
-
-export function orderForDiverging(rows: AggregatedRow[], levels: string[]): AggregatedRow[] {
-  const n = levels.length
-  const isOdd = n % 2 !== 0
-  const midIdx = Math.floor(n / 2)
-
-  const byCategory = new Map<string, AggregatedRow[]>()
-  for (const r of rows) {
-    const arr = byCategory.get(r.__likertCategory) || []
-    arr.push(r)
-    byCategory.set(r.__likertCategory, arr)
-  }
-
-  const result: AggregatedRow[] = []
-  for (const [, catRows] of byCategory) {
-    const byIdx = new Map<number, AggregatedRow>()
-    let neutralNeg: AggregatedRow | undefined
-    let neutralPos: AggregatedRow | undefined
-    for (const r of catRows) {
-      if (r.__likertLevel === NEUTRAL_NEG) neutralNeg = r
-      else if (r.__likertLevel === NEUTRAL_POS) neutralPos = r
-      else byIdx.set(r.__likertLevelIndex, r)
-    }
-
-    if (isOdd && neutralNeg) result.push(neutralNeg)
-    for (let i = midIdx - 1; i >= 0; i--) {
-      const r = byIdx.get(i)
-      if (r) result.push(r)
-    }
-    if (isOdd && neutralPos) result.push(neutralPos)
-    const posStart = isOdd ? midIdx + 1 : midIdx
-    for (let i = posStart; i < n; i++) {
-      const r = byIdx.get(i)
-      if (r) result.push(r)
-    }
-  }
-
-  return result
 }
 
 // ── Hook ──────────────────────────────────────────────────────────────
@@ -260,25 +224,11 @@ interface UseLikertAggregationConfig {
   levelAccessor?: string | ((d: Datum) => string)
   countAccessor?: string | ((d: Datum) => number)
   isDiverging: boolean
+  windowSize?: number
+  dataIdAccessor?: string | ((d: Datum) => string)
   frameRef: RefObject<StreamOrdinalFrameHandle | null>
 }
 
-interface UseLikertAggregationResult {
-  /** Pre-processed data for static mode */
-  processedData: AggregatedRow[]
-  /** Re-aggregate all accumulated data (call from push handlers) */
-  reAggregate: (rawData: Datum[]) => void
-  /** Ref holding accumulated raw data for push mode */
-  accumulatorRef: MutableRefObject<Datum[]>
-}
-
-/**
- * Encapsulates Likert-specific data aggregation:
- * - Resolves accessor functions
- * - Aggregates raw/pre-aggregated data to percentages
- * - Applies diverging transforms (sign flip, neutral split, stacking order)
- * - Provides re-aggregation callback for push API streaming
- */
 export function useLikertAggregation({
   data,
   levels,
@@ -287,65 +237,107 @@ export function useLikertAggregation({
   levelAccessor,
   countAccessor,
   isDiverging,
+  windowSize,
+  dataIdAccessor,
   frameRef,
-}: UseLikertAggregationConfig): UseLikertAggregationResult {
-  const isRawMode = !levelAccessor
-  const getCat = useMemo(() => resolveAccessorFn<string>(categoryAccessor, "question"), [categoryAccessor])
-  const getScore = useMemo(() => isRawMode ? resolveAccessorFn<number>(valueAccessor, "score") : null, [isRawMode, valueAccessor])
-  const getLevel = useMemo(() => !isRawMode ? resolveAccessorFn<string>(levelAccessor, "level") : null, [isRawMode, levelAccessor])
-  const getCount = useMemo(() => !isRawMode ? resolveAccessorFn<number>(countAccessor, "count") : null, [isRawMode, countAccessor])
+}: UseLikertAggregationConfig) {
+  const [rows] = useState(() => new RingBuffer<Datum>(1))
+  const fields = useMemo(() => resolveLikertFields({ categoryAccessor, valueAccessor, levelAccessor, countAccessor }),
+    [categoryAccessor, valueAccessor, levelAccessor, countAccessor])
 
-  const accumulatorRef = useRef<Datum[]>([])
-  const fieldAliases = useMemo<LikertAggregationFieldAliases>(() => ({
-    category:
-      typeof categoryAccessor === "string" ? categoryAccessor : undefined,
-    level: typeof levelAccessor === "string" ? levelAccessor : undefined,
-    count: typeof countAccessor === "string" ? countAccessor : undefined,
-    score:
-      !levelAccessor && typeof valueAccessor === "string"
-        ? valueAccessor
-        : undefined,
-  }), [categoryAccessor, countAccessor, levelAccessor, valueAccessor])
+  const processedData = useMemo(() => data?.length
+    ? aggregateData(data, levels, fields, isDiverging)
+    : [], [data, levels, fields, isDiverging])
 
-  const processedData = useMemo(() => {
-    const safeData = data || []
-    if (safeData.length === 0) return []
-    let agg = aggregateData(
-      safeData,
-      levels,
-      getCat,
-      getScore,
-      getLevel,
-      getCount,
-      fieldAliases
-    )
-    if (isDiverging) {
-      agg = toDivergingValues(agg, levels)
-      agg = orderForDiverging(agg, levels)
+  const table = useMemo(() => createLikertCounts(levels, fields), [levels, fields])
+  useLayoutEffect(() => {
+    table.counts.clear()
+    rows.forEach(row => table.adjust(row, 1))
+  }, [rows, table])
+  const publish = useCallback(() => {
+    frameRef.current?.replace(aggregateRows(table.counts, levels, fields.aliases, isDiverging))
+  }, [frameRef, table, levels, fields, isDiverging])
+  const pending = useRef<(() => void) | null>(null)
+  const schedule = useCallback(() => {
+    if (!pending.current) queueMicrotask(() => {
+      const flush = pending.current
+      pending.current = null
+      flush?.()
+    })
+    pending.current = publish
+  }, [publish])
+  useLayoutEffect(() => {
+    for (const row of reserveChartRows(rows, 0, windowSize)) table.adjust(row, -1)
+    if (data === undefined) schedule()
+    return () => { pending.current = null }
+  }, [rows, table, windowSize, data, schedule])
+
+  const next = { table, windowSize, getId: resolveStringAccessor(dataIdAccessor), schedule }
+  const config = useRef(next)
+  useLayoutEffect(() => { config.current = next })
+  const stream = useMemo(() => {
+    const matches = (id: string | string[], getId: (row: Datum) => string) => {
+      const ids = toIdSet(id)
+      return (row: Datum) => ids.has(getId(row))
     }
-    return agg
-  }, [data, levels, getCat, getScore, getLevel, getCount, fieldAliases, isDiverging])
-
-  const reAggregate = useCallback((rawData: Datum[]) => {
-    let agg = aggregateData(
-      rawData,
-      levels,
-      getCat,
-      getScore,
-      getLevel,
-      getCount,
-      fieldAliases
-    )
-    if (isDiverging) {
-      agg = toDivergingValues(agg, levels)
-      agg = orderForDiverging(agg, levels)
+    const pushMany = (batch: Datum[]) => {
+      const { table, windowSize, schedule } = config.current
+      for (const row of reserveChartRows(rows, batch.length, windowSize)) table.adjust(row, -1)
+      for (const row of batch) {
+        const evicted = rows.push(row)
+        if (evicted) table.adjust(evicted, -1)
+        table.adjust(row, 1)
+      }
+      schedule()
     }
-    // `replace()` routes through bounded ingest, which preserves the
-    // store's prevPositionMap so the transition system can animate
-    // from the old percentages to the new ones. `clear() + pushMany()`
-    // would wipe prevPositionMap and skip the animation entirely.
-    frameRef.current?.replace(agg)
-  }, [levels, getCat, getScore, getLevel, getCount, fieldAliases, isDiverging, frameRef])
-
-  return { processedData, reAggregate, accumulatorRef }
+    const clear = () => {
+      pending.current = null
+      rows.clear()
+      config.current.table.counts.clear()
+      frameRef.current?.clear()
+    }
+    return {
+      push: (row: Datum) => pushMany([row]),
+      pushMany,
+      remove(id: string | string[]) {
+        const { table, schedule, getId } = config.current
+        const removed = getId ? rows.remove(matches(id, getId)) : []
+        for (const row of removed) table.adjust(row, -1)
+        if (removed.length) schedule()
+        return removed
+      },
+      update(id: string | string[], update: (row: Datum) => Datum) {
+        const { table, schedule, getId } = config.current
+        if (!getId) return []
+        let edited = false
+        try {
+          return rows.update(matches(id, getId), row => {
+            edited = true
+            return update(row)
+          })
+        } finally {
+          // An updater may mutate objects shared by other retained responses.
+          if (edited) {
+            for (const group of table.counts.values()) {
+              group.size = 0
+              group.values.clear()
+            }
+            rows.forEach(row => table.adjust(row, 1))
+            for (const [category, group] of table.counts) {
+              if (!group.size) table.counts.delete(category)
+            }
+            schedule()
+          }
+        }
+      },
+      replace(batch: Datum[]) {
+        rows.clear()
+        config.current.table.counts.clear()
+        pushMany(batch)
+      },
+      clear,
+      getData: () => rows.toArray()
+    }
+  }, [rows, frameRef])
+  return { processedData, stream }
 }

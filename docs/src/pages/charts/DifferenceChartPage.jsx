@@ -442,10 +442,9 @@ export default function DifferenceChartPage() {
       <p>
         DifferenceChart supports the standard semiotic push API: omit
         <code>data</code>, attach a <code>ref</code>, and push raw{" "}
-        <code>{`{ x, a, b }`}</code> rows. The HOC recomputes crossovers
-        and re-renders each push. Use the top-level <code>windowSize</code>{" "}
-        prop to cap the raw-data buffer — older rows evict FIFO so the
-        per-render segment recomputation stays bounded.
+        <code>{`{ x, a, b }`}</code> rows. The chart batches redraws by animation frame. Ordered samples extend the current
+        segments. A late sample updates the crossover geometry in x order.
+        Set <code>windowSize</code> to retain the latest raw rows in arrival order.
       </p>
 
       <CodeBlock

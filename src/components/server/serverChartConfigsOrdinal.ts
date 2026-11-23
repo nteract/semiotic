@@ -14,6 +14,7 @@ import {
 import { getMinMax } from "../charts/shared/minMax"
 import { resolveTheme } from "./themeResolver"
 import {
+  ordinalDatumRows,
   type ChartConfig,
   type ServerAccessor,
   mergeServerRegressionAnnotation
@@ -50,9 +51,7 @@ function buildBarPieceStyle(
     common.theme as Parameters<typeof resolveTheme>[0]
   ).colors.categorical
   const resolvedColorScheme = colorScheme ?? common.colorScheme
-  const rows = Array.isArray(data)
-    ? data.filter((d): d is Datum => !!d && typeof d === "object")
-    : []
+  const rows = ordinalDatumRows(data)
   const colorKey = typeof colorBy === "string" ? colorBy : "__ssrColorBy"
   const colorRows =
     typeof colorBy === "function"
@@ -192,9 +191,7 @@ function buildSwarmPieceStyle(
   rest: Datum
 ): (d: Datum, category?: string) => Datum {
   const base = buildBarPieceStyle(data, colorBy, colorScheme, common, rest)
-  const rows = Array.isArray(data)
-    ? data.filter((d): d is Datum => !!d && typeof d === "object")
-    : []
+  const rows = ordinalDatumRows(data)
   const sizeBy = rest.sizeBy as string | ((d: Datum) => number) | undefined
   const sizeRange = Array.isArray(rest.sizeRange)
     ? (rest.sizeRange as [number, number])
@@ -396,9 +393,7 @@ export const donutChart: ChartConfig = {
 export const histogram: ChartConfig = {
   frameType: "ordinal",
   buildProps: (data, colorBy, colorScheme, common, rest) => {
-    const rows = Array.isArray(data)
-      ? data.filter((d): d is Datum => !!d && typeof d === "object")
-      : []
+    const rows = ordinalDatumRows(data)
     const valueAccessor = rest.valueAccessor || "value"
     const valueOf = (d: Datum) =>
       typeof valueAccessor === "function"

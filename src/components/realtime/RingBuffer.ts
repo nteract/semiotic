@@ -42,13 +42,11 @@ export class RingBuffer<T> {
   }
 
   peek(): T | undefined {
-    if (this._size === 0) return undefined
-    return this.buffer[(this.head - 1 + this._capacity) % this._capacity]
+    return this.get(this._size - 1)
   }
 
   peekOldest(): T | undefined {
-    if (this._size === 0) return undefined
-    return this.buffer[(this.head - this._size + this._capacity) % this._capacity]
+    return this.get(0)
   }
 
   [Symbol.iterator](): Iterator<T> {
@@ -80,22 +78,18 @@ export class RingBuffer<T> {
     if (!Number.isSafeInteger(newCapacity) || newCapacity < 1) {
       throw new Error("RingBuffer capacity must be a positive safe integer")
     }
-    const items = this.toArray()
-    // Drop oldest items with slice — avoid O(n²) shift() loops when
-    // shrinking a large growing window down to maxCapacity.
-    let keepStart = 0
-    let evicted: T[] = []
-    if (items.length > newCapacity) {
-      keepStart = items.length - newCapacity
-      evicted = items.slice(0, keepStart)
-    }
+    if (this._capacity === newCapacity) return []
+    const excess = Math.max(0, this._size - newCapacity)
+    const evicted: T[] = []
+    const buffer = new Array<T>(newCapacity)
+    this.forEach((item, index) => {
+      if (index < excess) evicted.push(item)
+      else buffer[index - excess] = item
+    })
+    this.buffer = buffer
     this._capacity = newCapacity
-    this.buffer = new Array(newCapacity)
-    this.head = 0
-    this._size = 0
-    for (let i = keepStart; i < items.length; i++) {
-      this.push(items[i]!)
-    }
+    this._size -= excess
+    this.head = this._size % newCapacity
     return evicted
   }
 
@@ -143,9 +137,7 @@ export class RingBuffer<T> {
     })
     if (removed.length === 0) return removed
     // Rebuild buffer from kept items
-    this.buffer = new Array(this._capacity)
-    this.head = 0
-    this._size = 0
+    this.clear()
     for (const item of kept) {
       this.push(item)
     }

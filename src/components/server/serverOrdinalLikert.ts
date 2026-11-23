@@ -1,17 +1,17 @@
 import type { Datum } from "../charts/shared/datumTypes"
+import { DEFAULT_LIKERT_LEVELS } from "../charts/ordinal/LikertChart.defaults"
 import { mergeShapeStyle } from "../charts/shared/mergeShapeStyle"
 import {
   NEUTRAL_NEG,
   NEUTRAL_POS,
   aggregateData,
   defaultDivergingScheme,
-  orderForDiverging,
-  resolveAccessorFn,
-  toDivergingValues
+  resolveLikertFields
 } from "../charts/shared/useLikertAggregation"
 import { resolveStyleRules, type StyleRule } from "../charts/shared/styleRules"
 import { composeLegendConfigs } from "../types/legendTypes"
 import {
+  ordinalDatumRows,
   primitiveStyleOverrides,
   type ChartConfig
 } from "./serverChartConfigShared"
@@ -32,64 +32,10 @@ export const likertChart: ChartConfig = {
     const levels =
       Array.isArray(rest.levels) && rest.levels.length >= 2
         ? (rest.levels as string[])
-        : [
-            "Strongly disagree",
-            "Disagree",
-            "Neutral",
-            "Agree",
-            "Strongly agree"
-          ]
+        : DEFAULT_LIKERT_LEVELS
     const isDiverging = rest.orientation !== "vertical"
-    const rows = Array.isArray(data)
-      ? data.filter(
-          (datum): datum is Datum => !!datum && typeof datum === "object"
-        )
-      : []
-    const getCategory = resolveAccessorFn<string>(
-      rest.categoryAccessor,
-      "question"
-    )
-    const getScore = rest.levelAccessor
-      ? null
-      : resolveAccessorFn<number>(rest.valueAccessor, "score")
-    const getLevel = rest.levelAccessor
-      ? resolveAccessorFn<string>(rest.levelAccessor, "level")
-      : null
-    const getCount = rest.levelAccessor
-      ? resolveAccessorFn<number>(rest.countAccessor, "count")
-      : null
-    let processed = aggregateData(
-      rows,
-      levels,
-      getCategory,
-      getScore,
-      getLevel,
-      getCount,
-      {
-        category:
-          typeof rest.categoryAccessor === "string"
-            ? rest.categoryAccessor
-            : undefined,
-        level:
-          typeof rest.levelAccessor === "string"
-            ? rest.levelAccessor
-            : undefined,
-        count:
-          typeof rest.countAccessor === "string"
-            ? rest.countAccessor
-            : undefined,
-        score:
-          !rest.levelAccessor && typeof rest.valueAccessor === "string"
-            ? rest.valueAccessor
-            : undefined
-      }
-    )
-    if (isDiverging) {
-      processed = orderForDiverging(
-        toDivergingValues(processed, levels),
-        levels
-      )
-    }
+    const rows = ordinalDatumRows(data)
+    const processed = aggregateData(rows, levels, resolveLikertFields(rest), isDiverging)
     const themeDiverging = resolveTheme(
       common.theme as Parameters<typeof resolveTheme>[0]
     ).colors.diverging
@@ -100,10 +46,8 @@ export const likertChart: ChartConfig = {
     const levelColors = new Map(
       levels.map((level, index) => [level, palette[index] || "#888"])
     )
-    const neutralColor =
-      levels.length % 2
-        ? levelColors.get(levels[Math.floor(levels.length / 2)]) || "#888"
-        : "#888"
+    const neutralLevel = levels.length % 2 ? levels[Math.floor(levels.length / 2)] : undefined
+    const colorFor = (level?: string) => (level === undefined ? undefined : levelColors.get(level)) || "#888"
     const valueFormat =
       typeof rest.valueFormat === "function"
         ? rest.valueFormat
@@ -117,7 +61,7 @@ export const likertChart: ChartConfig = {
                 label: "",
                 items: levels.map((label) => ({ label })),
                 styleFn: (item: { label: string }) => ({
-                  fill: levelColors.get(item.label) || "#888"
+                  fill: colorFor(item.label)
                 })
               }
             ]
@@ -131,10 +75,7 @@ export const likertChart: ChartConfig = {
       const label = datum.__likertLevelLabel || datum.data?.__likertLevelLabel
       const value = datum.__likertPct ?? datum.data?.__likertPct
       const base: Datum = {
-        fill:
-          level === NEUTRAL_NEG || level === NEUTRAL_POS
-            ? neutralColor
-            : levelColors.get(String(label || level)) || "#888"
+        fill: colorFor(level === NEUTRAL_NEG || level === NEUTRAL_POS ? neutralLevel : String(label || level))
       }
       if (rules?.length) {
         Object.assign(
@@ -161,7 +102,6 @@ export const likertChart: ChartConfig = {
       normalize: false,
       projection: isDiverging ? "horizontal" : "vertical",
       barPadding: rest.barPadding,
-      showGrid: common.showGrid,
       oLabel: rest.categoryLabel,
       rLabel: rest.valueLabel || (isDiverging ? undefined : "Percentage"),
       rFormat: valueFormat,
