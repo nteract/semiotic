@@ -34,14 +34,15 @@ describe("BigNumber — render basics", () => {
     expect(screen.getByText("—")).toBeInTheDocument()
   })
 
-  it("respects loading prop and renders a busy region", () => {
+  it("exposes loading text in an available live region", () => {
     render(<BigNumber value={10} loading />)
-    expect(screen.getByRole("status")).toHaveAttribute("aria-busy", "true")
+    expect(screen.getByRole("status")).toHaveTextContent("Loading chart")
+    expect(screen.getByRole("status").closest('[aria-busy="true"]')).toBeNull()
   })
 
   it("uses translated placeholder content and suppresses an explicitly disabled skeleton", () => {
     const { rerender } = render(<BigNumber loading loadingLabel="Wert wird geladen" />)
-    expect(screen.getByRole("status", { name: "Wert wird geladen" })).toHaveAttribute("aria-busy", "true")
+    expect(screen.getByRole("status", { name: "Wert wird geladen" })).toHaveTextContent("Wert wird geladen")
     rerender(<BigNumber loading loadingContent={<span>Wird aktualisiert</span>} />)
     expect(screen.getByRole("status")).toHaveTextContent("Wird aktualisiert")
     expect(screen.getByRole("status")).not.toHaveAttribute("aria-busy")

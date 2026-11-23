@@ -203,7 +203,9 @@ describe("renderLoadingState", () => {
     const result = renderLoadingState(true, 600, 400, undefined)
     expect(result).not.toBeNull()
     const { container } = render(result!)
-    expect(screen.getByRole("status", { name: "Loading chart" })).toHaveAttribute("aria-busy", "true")
+    const status = screen.getByRole("status", { name: "Loading chart" })
+    expect(status).toHaveTextContent("Loading chart")
+    expect(status.closest('[aria-busy="true"]')).toBeNull()
     expect(container.querySelectorAll(".semiotic-loading-bar").length).toBeGreaterThan(0)
   })
 

@@ -4,6 +4,7 @@ import type { BaseChartProps } from "./types"
 import type { Datum, DatumValue } from "./datumTypes"
 import { ChartErrorBoundary } from "../../ChartErrorBoundary"
 import ChartError from "./ChartError"
+import { SR_ONLY_STYLE } from "../../screenReaderStyles"
 
 export interface ChartPlaceholderOptions {
   loadingLabel?: string
@@ -144,11 +145,12 @@ export function renderLoadingState(
 ): React.ReactElement | null {
   if (!loading || loadingContent === false) return null
   const skeleton = loadingContent == null
+  const label = layout?.loadingLabel ?? "Loading chart"
   return (
     <div
+      key="loading"
       role="status"
-      aria-busy={skeleton || undefined}
-      aria-label={skeleton ? (layout?.loadingLabel ?? "Loading chart") : undefined}
+      aria-label={skeleton ? label : undefined}
       style={{
         ...placeholderSize(width, height, layout),
         ...(skeleton ? {
@@ -157,6 +159,7 @@ export function renderLoadingState(
         } : CENTERED)
       }}
     >
+      {skeleton && <span style={SR_ONLY_STYLE}>{label}</span>}
       {loadingContent ?? skeletonBars(height, layout?.responsiveHeight)}
     </div>
   )

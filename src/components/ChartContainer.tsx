@@ -297,7 +297,6 @@ function Skeleton({ height, label }: { height: number; label: string }) {
   return (
     <div
       role="status"
-      aria-busy="true"
       aria-label={label}
       className="semiotic-container-skeleton"
       style={{
@@ -308,7 +307,9 @@ function Skeleton({ height, label }: { height: number; label: string }) {
         backgroundSize: "200% 100%",
         borderRadius: 4,
       }}
-    />
+    >
+      <span style={SR_ONLY}>{label}</span>
+    </div>
   )
 }
 
