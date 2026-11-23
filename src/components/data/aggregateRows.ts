@@ -7,23 +7,15 @@ export interface AggregateMeasure {
   field?: string
   operation: AggregateOperation
   outputField: string
+  readValue?: (raw: unknown) => number | undefined
 }
 
 export function normalizeAggregate(
   value: unknown
 ): AggregateOperation | undefined {
-  switch (value) {
-    case "sum":
-    case "mean":
-    case "count":
-    case "min":
-    case "max":
-      return value
-    case "average":
-      return "mean"
-    default:
-      return undefined
-  }
+  if (value === "average") return "mean"
+  return ["sum", "mean", "count", "min", "max"].includes(value as string)
+    ? value as AggregateOperation : undefined
 }
 
 /** Choose an output name without overwriting a retained dimension or measure. */
@@ -126,7 +118,7 @@ export function aggregateRows(
     for (let i = 0; i < measures.length; i++) {
       const measure = measures[i]
       if (measure.operation === "count") continue
-      const value = parseNumericValue(row[measure.field!])
+      const value = (measure.readValue ?? parseNumericValue)(row[measure.field!])
       if (value === undefined || !Number.isFinite(value)) continue
       const state = group.measures[i]
       if (measure.operation === "min" || measure.operation === "max") {

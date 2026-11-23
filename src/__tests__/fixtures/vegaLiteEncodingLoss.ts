@@ -3,6 +3,9 @@ const category = { field: "team", type: "nominal" }
 const values = [{ team: 1, cohort: "A", state: "open", orders: 3 }, { team: "1", cohort: "A", state: "closed", orders: 2 }]
 
 export const encodingLossExamples = [
+  { spec: { mark: "bar", data: { values: [{ x: 1, y: 2 }, { x: 100, y: 3 }] }, encoding: {
+    x: { field: "x", type: "quantitative" }, y: { field: "y", type: "quantitative" }
+  } }, path: "/encoding/x/type" },
   ...["arc", { type: "arc", innerRadius: 60 }].map(mark => ({
     spec: { mark, data: { values }, encoding: { theta: quantity } }, path: "/encoding/color"
   })),

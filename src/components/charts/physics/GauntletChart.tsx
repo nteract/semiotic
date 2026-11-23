@@ -1,4 +1,5 @@
 "use client"
+import { renderChartPlaceholder } from "../shared/withChartWrapper"
 import { GAUNTLET_CHART_SIZE } from "../shared/chartSizeDefaultsPhysics"
 
 import * as React from "react"
@@ -33,7 +34,6 @@ import { filterSparseArray } from "../shared/sparseArray"
 import { physicsProcessGroupSemanticItems } from "./physicsProcessPrimitives"
 import {
   composePhysicsFrameGraphics,
-  renderPhysicsChartState,
   renderPhysicsFrame,
   resolvePhysicsFrameSharedProps,
   resolvePhysicsTooltipProps,
@@ -113,13 +113,10 @@ export const GauntletChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__
     crashDetection = true,
     crashOffset = 30,
     data,
-    emptyContent,
     events,
     frameProps = {},
     gates,
     initialSpawnPacing,
-    loading,
-    loadingContent,
     negativeProperties,
     onCapacityChange,
     onClick,
@@ -181,14 +178,7 @@ export const GauntletChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__
     unwrapSourceDatum: true
   })
 
-  const stateEl = renderPhysicsChartState({
-    responsive: props,
-    data,
-    emptyContent,
-    loading,
-    loadingContent,
-    size: chartSize
-  })
+  const stateEl = renderChartPlaceholder(props, chartSize, data)
   const safeData = useMemo(
     () => filterSparseArray(data ?? []) as TDatum[],
     [data]
@@ -692,7 +682,7 @@ export const GauntletChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__
     [frameProps.regionEffects, gateRegionEffects]
   )
 
-  if (stateEl) return stateEl
+  if (stateEl) return renderPhysicsFrame(chartSize, stateEl, layoutMode)
 
   const tooltipProps = resolvePhysicsTooltipProps(props.tooltip, frameProps)
   const sharedFrameProps = resolvePhysicsFrameSharedProps(

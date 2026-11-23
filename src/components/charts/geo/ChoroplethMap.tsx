@@ -463,30 +463,9 @@ export const ChoroplethMap = /* @__PURE__ */ withChartErrorBoundary(function Cho
     })
 
   // ── Loading / empty states (computed early, returned after all hooks) ───
-  // The secondary fallback fires while `areas` is still resolving (e.g.
-  // a "world-110m" reference geography being fetched). Thread
-  // `loadingContent` through both calls so a `false` suppression OR
-  // a custom node applies during the geo-resolution wait too.
-  const loadingEl =
-    renderLoadingState(
-      loading,
-      resolved.width,
-      resolved.height,
-      loadingContent, props) ||
-    (!resolvedAreas
-      ? renderLoadingState(
-          true,
-          resolved.width,
-          resolved.height,
-          loadingContent, props)
-      : null)
-  const emptyEl = !loadingEl
-    ? renderEmptyState(
-        resolvedAreas,
-        resolved.width,
-        resolved.height,
-        emptyContent, props)
-    : null
+  const placeholder = renderLoadingState(
+    loading || !resolvedAreas, resolved.width, resolved.height, loadingContent, props
+  ) ?? renderEmptyState(resolvedAreas, resolved.width, resolved.height, emptyContent, props)
 
   // Validate areas is a valid GeoJSON feature array.
   // We skip accessor validation here because valueAccessor resolves through
@@ -566,8 +545,7 @@ export const ChoroplethMap = /* @__PURE__ */ withChartErrorBoundary(function Cho
   }
 
   // ── Loading / empty guards (deferred to after all hooks) ───────────────
-  if (loadingEl) return loadingEl
-  if (emptyEl) return emptyEl
+  if (placeholder) return placeholder
 
   return (
     <StreamGeoFrame {...streamProps} />

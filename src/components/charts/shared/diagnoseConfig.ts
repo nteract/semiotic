@@ -67,42 +67,29 @@ function checkEmptyData(
   props: Datum,
   out: Diagnosis[]
 ): void {
-  const spec = VALIDATION_MAP[component]
-  if (!spec) return
-
-  if (spec.dataShape === "array" || spec.dataShape === "realtime") {
-    const data = props.data
-    if (data && Array.isArray(data) && data.length === 0) {
-      out.push({
-        severity: "error",
-        code: "EMPTY_DATA",
-        message: `data is an empty array — chart will render blank.`,
-        fix: spec.dataShape === "realtime"
-          ? `Provide at least one observation: data={[{ time: 0, value: 1 }]}, or omit data for React ref push mode.`
-          : `Provide at least one data point: data={[{ x: 1, y: 2 }]}.`,
-      })
-    }
-  }
-
-  if (spec.dataShape === "network") {
-    if (props.edges && Array.isArray(props.edges) && props.edges.length === 0) {
-      out.push({
-        severity: "error",
-        code: "EMPTY_EDGES",
-        message: `edges is an empty array — network chart will render blank.`,
-        fix: `Provide at least one edge: edges={[{ source: "A", target: "B" }]}.`,
-      })
-    }
-  }
+  const shape = VALIDATION_MAP[component]?.dataShape
+  const network = shape === "network"
+  if (!network && shape !== "array" && shape !== "realtime") return
+  const key = network ? "edges" : "data"
+  if (!Array.isArray(props[key]) || props[key].length) return
+  out.push({
+    severity: "error",
+    code: network ? "EMPTY_EDGES" : "EMPTY_DATA",
+    message: `${key} is an empty array.`,
+    fix: network ? 'Provide at least one edge: edges={[{ source: "A", target: "B" }]}.'
+      : shape === "realtime" ? "Provide at least one observation: data={[{ time: 0, value: 1 }]}, or omit data for React ref push mode."
+      : "Provide at least one data point: data={[{ x: 1, y: 2 }]}."
+  })
 }
 
 function checkBadDimensions(
   props: Datum,
   out: Diagnosis[]
 ): void {
+  const invalid = (value: unknown) => typeof value !== "number" || !Number.isFinite(value) || value <= 0
   for (const [dimension, fallback] of [["width", 600], ["height", 400]] as const) {
     const value = props[dimension]
-    if (value !== undefined && (typeof value !== "number" || !Number.isFinite(value) || value <= 0)) {
+    if (value !== undefined && invalid(value)) {
       out.push({
         severity: "error",
         code: dimension === "width" ? "BAD_WIDTH" : "BAD_HEIGHT",
@@ -111,9 +98,9 @@ function checkBadDimensions(
       })
     }
   }
-  if (props.size && Array.isArray(props.size)) {
+  if (Array.isArray(props.size)) {
     const [sw, sh] = props.size
-    if (props.size.length !== 2 || [sw, sh].some((value) => typeof value !== "number" || !Number.isFinite(value) || value <= 0)) {
+    if (props.size.length !== 2 || [sw, sh].some(invalid)) {
       out.push({
         severity: "error",
         code: "BAD_SIZE",

@@ -159,13 +159,14 @@ export function vegaLiteSemanticDiagnostics(
     if (spec.mark.interpolate !== undefined && !fromVegaInterpolation(spec.mark.interpolate))
       unsupported("/mark/interpolate")
   }
-  const { x, y, color, theta } = spec.encoding ?? {}
+  const encoding = spec.encoding ?? {}
+  const { x, y, color, theta } = encoding
   if (mark === "arc" && !theta?.field && !theta?.aggregate) unsupported("/encoding/theta")
   if ((mark === "arc" && !color?.field) || (mark === "rect" && !color?.field && !color?.aggregate) ||
       (mark === "bar" && (x?.bin || y?.bin) && color)) unsupported("/encoding/color")
   if (continuous || mark === "rect" || mark === "tick" || (mark === "bar" && !x?.bin && !y?.bin)) {
     for (const axis of ["x", "y"] as const) {
-      const channel = spec.encoding?.[axis]
+      const channel = encoding[axis]
       if (!channel?.field && !channel?.aggregate) unsupported(`/encoding/${axis}`)
     }
   }
@@ -175,8 +176,11 @@ export function vegaLiteSemanticDiagnostics(
   if (mark === "bar" && x && y && !x.bin && !y.bin) {
     const horizontal = isHorizontalBar(x, y)
     const [dimension, measure] = horizontal ? [y, x] : [x, y]
+    const dimensionPath = horizontal ? "/encoding/y" : "/encoding/x"
     const path = horizontal ? "/encoding/x" : "/encoding/y"
-    if (dimension.stack !== undefined) unsupported(horizontal ? "/encoding/y/stack" : "/encoding/x/stack")
+    if (dimension.type && !isCategory(dimension.type)) unsupported(`${dimensionPath}/type`)
+    if (measure.type && measure.type !== "quantitative") unsupported(`${path}/type`)
+    if (dimension.stack !== undefined) unsupported(`${dimensionPath}/stack`)
     const overlaid = measure.stack === null || measure.stack === false
     if (color?.field && overlaid) unsupported(`${path}/stack`)
     if (typeof dimension.field === "string" && dimension.field && spec.data?.values) {
@@ -193,7 +197,7 @@ export function vegaLiteSemanticDiagnostics(
   }
   if (mark === "area" && color?.field && x?.aggregate && !y?.aggregate &&
       x.stack === undefined && y?.stack === undefined) unsupported("/encoding/x/stack")
-  for (const [channel, enc] of Object.entries(spec.encoding || {})) {
+  for (const [channel, enc] of Object.entries(encoding)) {
     const path = `/encoding/${pointerSegment(channel)}`
     if (!channels.includes(channel)) {
       unsupported(path)
@@ -243,7 +247,7 @@ export function vegaLiteSemanticDiagnostics(
       enc.stack !== undefined && (
         !["bar", "area"].includes(mark) ||
         (mark === "area" && channel === "x" && Boolean(enc.stack)) ||
-        (enc.stack === "normalize" && (!spec.encoding?.color?.field || spec.encoding?.x?.bin || spec.encoding?.y?.bin))
+        (enc.stack === "normalize" && (!color?.field || x?.bin || y?.bin))
       )
     ) unsupported(`${path}/stack`)
     if (enc.scale) {

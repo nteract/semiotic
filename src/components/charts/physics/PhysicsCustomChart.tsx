@@ -1,4 +1,5 @@
 "use client"
+import { renderChartPlaceholder } from "../shared/withChartWrapper"
 import { PHYSICS_CUSTOM_CHART_SIZE } from "../shared/chartSizeDefaultsPhysics"
 
 import * as React from "react"
@@ -39,7 +40,6 @@ import {
 } from "./physicsHocHandle"
 import {
   composePhysicsFrameGraphics,
-  renderPhysicsChartState,
   renderPhysicsFrame,
   resolvePhysicsFrameSharedProps,
   resolvePhysicsTooltipProps,
@@ -207,12 +207,9 @@ export const PhysicsCustomChart = /* @__PURE__ */ withChartErrorBoundary(/* @__P
     config,
     controllers: propControllers,
     data,
-    emptyContent,
     frameProps = {},
     layout,
     layoutConfig,
-    loading,
-    loadingContent,
     onObservation,
     opacity,
     paused,
@@ -249,14 +246,7 @@ export const PhysicsCustomChart = /* @__PURE__ */ withChartErrorBoundary(/* @__P
     onBodyHover: frameProps?.onBodyHover
   })
 
-  const stateEl = renderPhysicsChartState({
-    responsive: props,
-    data,
-    emptyContent,
-    loading,
-    loadingContent,
-    size: chartSize
-  })
+  const stateEl = renderChartPlaceholder(props, chartSize, data)
   const skipLayout = stateEl != null
   const safeData = useMemo(
     () => filterSparseArray(data ?? []) as TDatum[],
@@ -441,7 +431,7 @@ export const PhysicsCustomChart = /* @__PURE__ */ withChartErrorBoundary(/* @__P
     [frameProps]
   )
 
-  if (stateEl) return stateEl
+  if (stateEl) return renderPhysicsFrame(chartSize, stateEl, layoutMode)
   const tooltipProps = resolvePhysicsTooltipProps(props.tooltip, frameProps)
   const sharedFrameProps = resolvePhysicsFrameSharedProps(
     props,

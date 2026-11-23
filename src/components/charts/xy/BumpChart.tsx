@@ -366,6 +366,7 @@ export const BumpChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
       onObservation={props.onObservation}
       chartId={props.chartId}
       loading={props.loading}
+      loadingLabel={props.loadingLabel}
       loadingContent={props.loadingContent}
       emptyContent={props.emptyContent}
       animate={props.animate}

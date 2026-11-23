@@ -20,6 +20,13 @@ const importSpec = (value: unknown, lossy = false) =>
     mode: lossy ? "lossy" : "strict"
   })
 
+const config = (component: string, props: Record<string, unknown>) => ({
+  component,
+  props,
+  version: "1",
+  createdAt: "2024-01-01T00:00:00Z"
+})
+
 describe("strict Vega-Lite boundaries", () => {
   it("round trips BubbleChart opacity through its public prop", () => {
     const imported = importSpec(translucentBubbles)
@@ -62,6 +69,19 @@ describe("strict Vega-Lite boundaries", () => {
       expect(chart.component).toBe("StackedBarChart")
       expect(toVegaLiteResult(chart).spec?.encoding?.[axis]).toMatchObject({ stack, aggregate: "sum" })
     }
+  })
+
+  it("round-trips explicitly quantitative bar values without coercing category identifiers", () => {
+    const chart = config("BarChart", { data: [
+      { team: "001", orders: "007" }, { team: "001", orders: "03" }, { team: "1", orders: 4 }
+    ], categoryAccessor: "team", valueAccessor: "orders" })
+    const exported = toVegaLiteResult(chart)
+    expect(exported.status).toBe("success")
+    const result = importSpec(exported.spec)
+    expect(result.status).toBe("success")
+    const props = result.config!.props
+    expect(props.data.map((row: Record<string, unknown>) => [row[props.categoryAccessor], row[props.valueAccessor]]))
+      .toEqual([["001", 10], ["1", 4]])
   })
 
   it("reports repeated unaggregated bars that would become a single chart mark", () => {
@@ -338,13 +358,6 @@ describe("strict Vega-Lite boundaries", () => {
 })
 
 describe("strict Vega-Lite export", () => {
-  const config = (component: string, props: Record<string, unknown>) => ({
-    component,
-    props,
-    version: "1",
-    createdAt: "2024-01-01T00:00:00Z"
-  })
-
   it("discloses an explicit bubble radius range on export to symbol areas", () => {
     const chart = config("BubbleChart", { xAccessor: "x", yAccessor: "y", sizeBy: "v", sizeRange: [2, 8] })
     expect(toVegaLiteResult(chart).status).toBe("refused")

@@ -61,6 +61,10 @@ export interface WordCloudProps extends WordCloudLayoutOptions {
   title?: string
   description?: string
   summary?: string
+  /** Status shown while preparing word positions. */
+  loadingContent?: React.ReactNode
+  /** Status shown when the layout contains no placed words. */
+  emptyContent?: React.ReactNode
   accessibleTable?: AccessibleTableProp
   colorBy?: string | ((datum: Datum) => string)
   colorScheme?: string | string[] | Record<string, string>
@@ -228,6 +232,9 @@ export function WordCloud(props: WordCloudProps): React.ReactElement {
     },
     [layout, props.data, tooltip]
   )
+  const status = pending ? props.loadingContent ?? "Preparing words…"
+    : !error && !nodes.length ? props.emptyContent ?? "No terms could be placed. See the data summary for omitted terms."
+    : false
   return (
     <div
       className={`semiotic-wordcloud ${props.className ?? ""}`}
@@ -236,9 +243,9 @@ export function WordCloud(props: WordCloudProps): React.ReactElement {
     >
       <div
         ref={containerRef}
-        aria-busy={pending}
+        aria-busy={pending && props.loadingContent === false ? true : undefined}
         data-wordcloud-state={error ? "error" : pending ? "preparing" : "ready"}
-        data-placed-count={layout?.words.length ?? 0}
+        data-placed-count={nodes.length}
         data-omitted-count={layout?.omitted.length ?? 0}
         style={{
           position: "relative",
@@ -271,19 +278,14 @@ export function WordCloud(props: WordCloudProps): React.ReactElement {
           accessibleTable={false}
           maxDevicePixelRatio={props.maxDevicePixelRatio}
         />
-        {pending && (
+        {status !== false && (
           <div role="status" style={{ position: "absolute", inset: 16 }}>
-            Preparing words…
+            {status}
           </div>
         )}
         {error && (
           <div role="alert" style={{ position: "absolute", inset: 16 }}>
             {error.message}
-          </div>
-        )}
-        {!pending && !error && !layout?.words.length && (
-          <div role="status" style={{ position: "absolute", inset: 16 }}>
-            No terms could be placed. See the data summary for omitted terms.
           </div>
         )}
       </div>

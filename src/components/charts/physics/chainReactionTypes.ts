@@ -1,3 +1,4 @@
+import type { BaseChartProps } from "../shared/types"
 import type { Datum } from "../shared/datumTypes"
 import type { TooltipProp } from "../../Tooltip/Tooltip"
 import type { AccessibleTableProp } from "../../stream/accessibleTableTypes"
@@ -69,7 +70,8 @@ export interface ChainReactionChartHandle {
   getMachineState: () => ChainReactionMachineState
 }
 
-export interface ChainReactionChartProps<TDatum extends Datum = Datum> {
+export interface ChainReactionChartProps<TDatum extends Datum = Datum>
+  extends Pick<BaseChartProps, "loading" | "loadingLabel" | "loadingContent" | "emptyContent"> {
   data: readonly TDatum[]
   taskIDAccessor: DependencyAccessor<TDatum, string | number>
   labelAccessor: DependencyAccessor<TDatum, string>

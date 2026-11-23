@@ -1,4 +1,5 @@
 import type { Datum } from "../charts/shared/datumTypes"
+import { isCategory, isRecordArray } from "./vegaLiteValidation"
 import type { PortabilityDiagnostic } from "./portability/result"
 import type { VegaLiteEncoding, VegaLiteSpec } from "./fromVegaLite"
 import {
@@ -8,31 +9,22 @@ import {
 } from "./aggregateRows"
 import type { AggregateMeasure } from "./aggregateRows"
 
+/** Explicit quantitative encodings also accept zero-padded numeric strings. */
+function quantitativeValue(raw: unknown) {
+  if (typeof raw === "number") return raw
+  if (typeof raw === "string" && raw.trim()) return Number(raw)
+}
+
 /** Validate before changing rows or accessors, including in strict imports. */
 export function vegaLiteAggregationDiagnostics(
   spec: VegaLiteSpec
 ): PortabilityDiagnostic[] {
   const encodings = spec.encoding ?? {}
   const diagnostics: PortabilityDiagnostic[] = []
-  if (
-    Object.values(encodings).some(
-      (encoding) => encoding.aggregate !== undefined
-    ) &&
-    spec.data?.values !== undefined
-  ) {
-    const rows = spec.data.values
-    if (
-      !Array.isArray(rows) ||
-      rows.some((row) => !row || typeof row !== "object" || Array.isArray(row))
-    ) {
-      diagnostics.push({
-        code: "INVALID_AGGREGATE_DATA",
-        severity: "error",
-        path: "/data/values",
-        message:
-          "Aggregation requires data.values to be an array of row objects."
-      })
-    }
+  if (spec.data?.values !== undefined && !isRecordArray(spec.data.values) &&
+      Object.values(encodings).some(encoding => encoding.aggregate !== undefined)) {
+    diagnostics.push({ code: "INVALID_AGGREGATE_DATA", severity: "error", path: "/data/values",
+      message: "Aggregation requires data.values to be an array of row objects." })
   }
   for (const [channel, encoding] of Object.entries(encodings)) {
     if (encoding.aggregate === undefined) continue
@@ -53,7 +45,7 @@ export function vegaLiteAggregationDiagnostics(
       const mark = typeof spec.mark === "string" ? spec.mark : spec.mark?.type
       const category = channel === "x" ? encodings.y : channel === "y" ? encodings.x : undefined
       if (mark === "bar" && operation === "sum" && encoding.type === "quantitative" &&
-          !encoding.bin && (category?.type === "nominal" || category?.type === "ordinal") && !category.aggregate) {
+          !encoding.bin && isCategory(category?.type) && !category?.aggregate) {
         continue
       }
       code = "INVALID_AGGREGATE"
@@ -99,7 +91,8 @@ export function aggregateVegaLite(
     if (!operation) continue
     const outputField = unusedAggregateField(usedFields)
     usedFields.add(outputField)
-    measures.push({ field: value.field, operation, outputField })
+    measures.push({ field: value.field, operation, outputField,
+      readValue: value.type === "quantitative" ? quantitativeValue : undefined })
     resolved[channel] = { ...value, field: outputField, aggregate: undefined }
   }
   return measures.length
