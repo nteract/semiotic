@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "scope": "source-only",
-  "verifiedAt": "2026-11-23T19:53:35.073Z",
+  "verifiedAt": "2026-11-23T19:56:59.752Z",
   "environment": {
     "node": "v22.22.1",
     "platform": "darwin",
@@ -9,13 +9,13 @@
     "browser": "Playwright Chromium"
   },
   "taskRevisions": {
-    "compare-category-totals": "sha256:4fc5305a5f8221938623db0e4a0a9ea57f6ec9d15efc5793df3d1f9edef692d4",
-    "update-live-chart": "sha256:4fab778b6e3eb73e7fda8bce65d416736aede4e278f7b2a369615c628dc4daa6",
-    "correct-published-chart": "sha256:ba0b5016b74ab62cda3bdf4cc00febb6e377653d9eb9aacd1432ffb4d9819cb4"
+    "compare-category-totals": "sha256:915390176230e66b013a5425da9aa660abba2a438a1d243c610bbd15d97c3f83",
+    "update-live-chart": "sha256:dacdabca57f3859c5308bf7c4f40e62bb483784a42dab31a2e76faec5e4f2c38",
+    "correct-published-chart": "sha256:5fcf56954bbd2ced368a007f408aafb4ccbf56120c71e6a84f438f9bfcc25b48"
   },
   "runtime": {
-    "digest": "sha256:ce6b126b9e209521b7d8ad47eaf620af5705d99046eb7bcace039bc8121b7ce7",
-    "fileCount": 1535
+    "digest": "sha256:3025bbac5dc7d2f54a913a9d1ca53eb7a8550f4c1fb074ec1ceeb67b68e67a7c",
+    "fileCount": 1533
   },
   "harness": {
     "digest": "sha256:acdb4ff3e31197059c1113897147528fabf10409377b136a5a1e90b54f48ef56",
