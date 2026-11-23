@@ -1,5 +1,5 @@
 import { compareRecipeIds } from "../../utils/compareRecipeIds"
-import { idDictionary, setOwnValue, prefixIdFor } from "./ids"
+import { idDictionary, prefixIdFor } from "./ids"
 import type { AtlasOccurrence, PrefixForest, PrefixForestNode } from "./types"
 
 type TrieNode = {
@@ -9,20 +9,19 @@ type TrieNode = {
   children: Map<string, TrieNode>
   occurrenceIds: string[]
   entityCount: number
-  partitionCounts: Map<string, number>
+  partitionCounts: Record<string, number>
 }
 
-function entityCountOf(occurrence: AtlasOccurrence): number {
-  return occurrence.entityCount ?? 1
-}
-
-function addPartition(
-  node: TrieNode,
-  partition: string | undefined,
-  count: number
-): void {
-  const key = partition ?? ""
-  node.partitionCounts.set(key, (node.partitionCounts.get(key) ?? 0) + count)
+function trieNode(prefix: string[]): TrieNode {
+  return {
+    id: prefixIdFor(prefix, prefix.length - 1),
+    stateId: prefix[prefix.length - 1] ?? "",
+    prefix,
+    children: new Map(),
+    occurrenceIds: [],
+    entityCount: 0,
+    partitionCounts: idDictionary()
+  }
 }
 
 /**
@@ -33,42 +32,22 @@ export function buildPrefixForest(
   occurrences: readonly AtlasOccurrence[],
   options: { referencePartition?: string } = {}
 ): PrefixForest {
-  const root: TrieNode = {
-    id: "",
-    stateId: "",
-    prefix: [],
-    children: new Map(),
-    occurrenceIds: [],
-    entityCount: 0,
-    partitionCounts: new Map()
-  }
-
+  const root = trieNode([])
   for (const occurrence of occurrences) {
     if (occurrence.missingPrehistory) continue
-    const weight = entityCountOf(occurrence)
+    const weight = occurrence.entityCount ?? 1
+    const partition = occurrence.partition ?? ""
     let cursor = root
-    cursor.occurrenceIds.push(occurrence.id)
-    cursor.entityCount += weight
-    addPartition(cursor, occurrence.partition, weight)
     for (const stateId of occurrence.nodePath) {
-      const prefix = [...cursor.prefix, stateId]
-      const id = prefixIdFor(prefix, prefix.length - 1)
       let child = cursor.children.get(stateId)
       if (!child) {
-        child = {
-          id,
-          stateId,
-          prefix,
-          children: new Map(),
-          occurrenceIds: [],
-          entityCount: 0,
-          partitionCounts: new Map()
-        }
+        child = trieNode([...cursor.prefix, stateId])
         cursor.children.set(stateId, child)
       }
       child.occurrenceIds.push(occurrence.id)
       child.entityCount += weight
-      addPartition(child, occurrence.partition, weight)
+      child.partitionCounts[partition] =
+        (child.partitionCounts[partition] ?? 0) + weight
       cursor = child
     }
   }
@@ -77,50 +56,47 @@ export function buildPrefixForest(
   const order: string[] = []
   const reference = options.referencePartition
 
-  function childKeys(node: TrieNode): string[] {
-    const keys = [...node.children.keys()]
-    keys.sort((left, right) => {
-      const leftChild = node.children.get(left)!
-      const rightChild = node.children.get(right)!
-      const leftRef = reference
-        ? (leftChild.partitionCounts.get(reference) ?? 0)
-        : 1
-      const rightRef = reference
-        ? (rightChild.partitionCounts.get(reference) ?? 0)
-        : 1
-      if (leftRef > 0 !== rightRef > 0) return leftRef > 0 ? -1 : 1
-      return compareRecipeIds(left, right)
-    })
-    return keys
-  }
-
-  function walk(node: TrieNode, parentId: string | null): void {
-    if (node.id) {
-      const partitionCounts = idDictionary<number>()
-      for (const [partition, count] of node.partitionCounts) {
-        setOwnValue(partitionCounts, partition, count)
+  function walkChildren(parent: TrieNode): string[] {
+    const preferred = (node: TrieNode) =>
+      reference && node.partitionCounts[reference] > 0 ? 1 : 0
+    const children = [...parent.children.values()].sort(
+      (a, b) =>
+        preferred(b) - preferred(a) || compareRecipeIds(a.stateId, b.stateId)
+    )
+    for (const child of children) {
+      if (!child.id) {
+        walkChildren(child)
+        continue
       }
-      nodes.push({
-        id: node.id,
-        stateId: node.stateId,
-        prefix: node.prefix,
-        parentId,
-        childIds: childKeys(node).map((key) => node.children.get(key)!.id),
-        entityCount: node.entityCount,
-        occurrenceIds: [...node.occurrenceIds],
+      const {
+        id,
+        stateId,
+        prefix,
+        occurrenceIds,
+        partitionCounts,
+        entityCount
+      } = child
+      const row = {
+        id,
+        stateId,
+        prefix,
+        parentId: parent.id || null,
+        childIds: [] as string[],
+        entityCount,
+        occurrenceIds,
         partitionCounts
-      })
-      order.push(node.id)
+      }
+      nodes.push(row)
+      order.push(id)
+      row.childIds = walkChildren(child)
     }
-    for (const key of childKeys(node)) {
-      walk(node.children.get(key)!, node.id || null)
-    }
+    return children.map((child) => child.id)
   }
 
-  walk(root, null)
+  const rootIds = walkChildren(root)
   return {
     kind: "observed-prefix",
-    rootIds: childKeys(root).map((key) => root.children.get(key)!.id),
+    rootIds,
     nodes,
     order,
     referencePartition: reference

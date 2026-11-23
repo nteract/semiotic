@@ -343,12 +343,34 @@ describe("Motif Braid review regressions", () => {
     ])
     fixture.source.occurrences![1].entityId =
       fixture.source.occurrences![0].entityId
-    const capsules = selectCapsules(prepareFixture(fixture).motifs.matches)
+    const atlas = prepareFixture(fixture)
+    const capsules = selectCapsules(atlas.motifs.matches, atlas.source.occurrences)
     expect(capsules.map((c) => c.occurrenceIds)).toEqual([
       ["occurrence-0"],
       ["occurrence-1"]
     ])
     expect(capsules.every((c) => c.selected)).toBe(true)
+  })
+
+  it("uses occurrence IDs for overlapping structural and episode capsules, after snapshot serialization", () => {
+    const fixture = journeys([["A", "B", "A"], ["A", "C"], ["X", "Y", "X"]])
+    fixture.source.edges = [
+      { id: "AB", source: "A", target: "B" },
+      { id: "AC", source: "A", target: "C" }
+    ]
+    const rows = fixture.source.occurrences!
+    rows[0].entityId = rows[2].id
+    const atlas = prepareFixture(fixture)
+    for (const snapshot of [atlas, JSON.parse(JSON.stringify(atlas))]) {
+      const capsules = prepareMotifBraid(snapshot).capsules
+      const fan = capsules.find(c => c.matchId === "fan-out:A")!
+      const episode = (id: string) => capsules.find(c =>
+        c.template === "repeated-state-episode" && c.occurrenceIds.includes(id))!
+      expect(fan.occurrenceIds).toEqual([rows[0].id, rows[1].id])
+      expect(fan.selected).toBe(true)
+      expect(episode(rows[0].id).selected).toBe(false)
+      expect(episode(rows[2].id).selected).toBe(true)
+    }
   })
 
   it("orders complete journeys by the reference partition's prefix forest", () => {

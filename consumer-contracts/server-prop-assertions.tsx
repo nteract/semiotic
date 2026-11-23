@@ -5,6 +5,9 @@ import type { LoadedContract } from "./types"
 import type { ServerPropContract } from "./server-props"
 import { renderChartWithEvidence } from "../src/components/server/renderToStaticSVG"
 
+import { prepareNetworkAtlas, admitCircuitEdition, readCircuitEdition } from "../src/components/semiotic-atlas-core"
+import { atlasStory } from "../scripts/network-atlas/stories/atlasStories"
+
 interface Context {
   contract: ServerPropContract
   seed?: LoadedContract
@@ -345,10 +348,93 @@ function cursorTarget({ contract }: Context) {
   expect(targets({ ...props, frameProps: {}, hoverRadius: 12 })).toHaveLength(0)
 }
 
+function atlasComparison({ contract }: Context) {
+  const story = atlasStory(
+    contract.component === "MotifBraidChart"
+      ? "checkout"
+      : contract.component === "DependencyForestChart"
+        ? "supplier"
+        : "etl"
+  )
+  const props = story.props
+  const original = props.atlas ?? props.forest?.atlas ?? props.circuit!.atlas
+  const partitions = original.spec.comparison?.partitions ?? [
+    "reference",
+    "other"
+  ]
+  const measure = { unitKind: "stock", countUnit: "entity" } as const
+  const source = {
+    ...original.source,
+    measureValues: [
+      ...original.source.measureValues,
+      ...partitions.flatMap((subjectId, index) => [
+        {
+          subjectId,
+          measureId: "readers",
+          value: 10,
+          status: "exact" as const
+        },
+        {
+          subjectId,
+          measureId: "completions",
+          value: 2 + index,
+          status: "exact" as const
+        }
+      ])
+    ]
+  }
+  const draw = (selected: boolean) => {
+    const result = prepareNetworkAtlas(
+      {
+        ...original.spec,
+        measures: {
+          ...original.spec.measures,
+          readers: measure,
+          completions: measure
+        },
+        comparison: {
+          partitions,
+          denominatorMeasureId: "readers",
+          outcomeMeasureIds: selected ? ["completions"] : [],
+          motifTemplates: selected ? ["fan-out"] : []
+        }
+      },
+      source
+    )
+    if (!result.ok) throw new Error(JSON.stringify(result.issues))
+    const { atlas } = result
+    expect(atlas.comparison?.outcomeMeasureIds).toEqual(
+      selected ? ["completions"] : []
+    )
+    expect(atlas.comparison?.motifTemplates).toEqual(
+      selected ? ["fan-out"] : []
+    )
+    let input: Record<string, unknown> = { ...props, atlas }
+    if (props.forest) input = { ...props, forest: { ...props.forest, atlas } }
+    if (props.circuit && props.edition) {
+      const circuit = { ...props.circuit, atlas }
+      const edition = admitCircuitEdition(circuit, { ...props.edition, analysisRevision: atlas.analysisRevision })
+      input = { ...props, circuit, edition, reading: readCircuitEdition(edition, "observed-snapshot", 60) }
+    }
+    const { doc, evidence } = render(contract.component, input)
+    expect(evidence.markCount).toBeGreaterThan(0)
+    return {
+      marks: evidence.markCountByType,
+      paths: [...doc.querySelectorAll("path[d]")].map((path) =>
+        path.getAttribute("d")
+      )
+    }
+  }
+  expect(draw(true)).toEqual(draw(false))
+}
+
 // Source inventory parses these keys without loading React, Vitest, or a renderer.
 // The test runner also checks exact agreement before executing every contract.
 export const serverPropAssertions: Record<string, (context: Context) => void> =
   {
+    "MotifBraidChart-comparison": atlasComparison,
+    "DependencyForestChart-comparison": atlasComparison,
+    "FlowCircuitChart-comparison": atlasComparison,
     "line-area": lineArea,
     "line-band": lineBand,
     "area-gradient": areaGradient,
