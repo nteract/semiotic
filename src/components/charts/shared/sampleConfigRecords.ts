@@ -6,8 +6,9 @@ export function sampleConfigRecords(definitions: Record<string, unknown>, props:
   const data = props.data
   if (!Array.isArray(data)) return []
   const records = sampleDataRecords(data)
+  if (!definitions.lineDataAccessor) return records
   const field = typeof props.lineDataAccessor === "string" ? props.lineDataAccessor : "coordinates"
-  if (!definitions.lineDataAccessor || !Array.isArray(data.find(isDataRecord)?.[field])) return records
+  if (!Array.isArray(data.find(isDataRecord)?.[field])) return records
   const coordinates = (row: unknown) =>
     isDataRecord(row) && Array.isArray(row[field]) ? sampleDataRecords(row[field]) : []
   const points = records.flatMap(coordinates)

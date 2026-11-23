@@ -432,6 +432,17 @@ describe("renderChart", () => {
     expect(svg).toContain("semiotic-legend")
   })
 
+  it("labels raw Likert scores with the same default levels as the React chart", () => {
+    const svg = renderChart("LikertChart", {
+      data: [{ question: "Support", score: 1 }, { question: "Support", score: 5 }],
+      valueAccessor: "score",
+      categoryAccessor: "question",
+      showLegend: true
+    })
+    expect(svg).toContain("Very Low")
+    expect(svg).toContain("Very High")
+  })
+
   it("preprocesses Likert data into the HOC's diverging layout", () => {
     const svg = renderChart("LikertChart", {
       data: [

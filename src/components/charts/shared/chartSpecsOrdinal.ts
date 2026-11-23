@@ -549,6 +549,7 @@ export const ORDINAL_CHART_SPECS: Record<string, ChartSpec> = {
       valueAccessor: { type: ["string", "function"], default: "score", description: "Integer score field for raw response mode (1-based: score 1 → levels[0])" },
       levelAccessor: { type: ["string", "function"], description: "Level name field for pre-aggregated mode. Each value must match an entry in levels." },
       countAccessor: { type: ["string", "function"], default: "count", description: "Count/frequency field for pre-aggregated mode" },
+      windowSize: { type: "number", description: "Maximum raw responses retained in push mode. Evicts the oldest responses first." },
       // LikertChart's runtime validationMap uses ORIENTATION_ENUM order
       // (vertical/horizontal) while its canonical schema entry uses
       // (horizontal/vertical). The schema test reads canonical schema and

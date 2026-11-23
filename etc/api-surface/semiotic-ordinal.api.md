@@ -384,6 +384,7 @@ interface-member LikertChartProps::property::valueAccessor = optional valueAcces
 interface-member LikertChartProps::property::valueExtent = optional valueExtent: [number | undefined, number | undefined] | [number] | undefined
 interface-member LikertChartProps::property::valueFormat = optional valueFormat: ((d: number | string) => string) | undefined
 interface-member LikertChartProps::property::valueLabel = optional valueLabel: string | undefined
+interface-member LikertChartProps::property::windowSize = optional windowSize: number | undefined
 interface-member MultiLineTooltipConfig::property::separator = optional separator: string | undefined
 interface-member MultiLineTooltipConfig::property::showLabels = optional showLabels: boolean | undefined
 interface-member MultiTooltipConfig::property::chrome = optional chrome: "default" | "none" | undefined

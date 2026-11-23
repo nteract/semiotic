@@ -119,9 +119,6 @@ function checkAccessorFieldMissing(
 ): void {
   const spec = VALIDATION_MAP[component]
   if (!spec || spec.dataShape !== "array") return
-  const data = props.data
-  if (!Array.isArray(data)) return
-
   const available = recordFields(sampleConfigRecords(spec.props, props))
   if (!available.length) return
 
