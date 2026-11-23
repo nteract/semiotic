@@ -159,7 +159,10 @@ export function vegaLiteSemanticDiagnostics(
     if (spec.mark.interpolate !== undefined && !fromVegaInterpolation(spec.mark.interpolate))
       unsupported("/mark/interpolate")
   }
-  const { x, y, color } = spec.encoding ?? {}
+  const { x, y, color, theta } = spec.encoding ?? {}
+  if (mark === "arc" && !theta?.field && !theta?.aggregate) unsupported("/encoding/theta")
+  if ((mark === "arc" && !color?.field) || (mark === "rect" && !color?.field && !color?.aggregate) ||
+      (mark === "bar" && (x?.bin || y?.bin) && color)) unsupported("/encoding/color")
   if (continuous || mark === "rect" || mark === "tick" || (mark === "bar" && !x?.bin && !y?.bin)) {
     for (const axis of ["x", "y"] as const) {
       const channel = spec.encoding?.[axis]
@@ -215,7 +218,7 @@ export function vegaLiteSemanticDiagnostics(
       (enc.field !== undefined || typeof enc.value !== "number")
     )
       unsupported(path)
-    if (enc.type === "temporal" && (!continuous || channel === "y")) unsupported(`${path}/type`)
+    if (enc.type === "temporal" && (!continuous || channel !== "x")) unsupported(`${path}/type`)
     if (
       continuous &&
       (channel === "x" || channel === "y") &&
