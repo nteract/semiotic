@@ -61,6 +61,10 @@ export interface WordCloudProps extends WordCloudLayoutOptions {
   title?: string
   description?: string
   summary?: string
+  /** Status shown while preparing word positions. */
+  loadingContent?: React.ReactNode
+  /** Status shown when the layout contains no placed words. */
+  emptyContent?: React.ReactNode
   accessibleTable?: AccessibleTableProp
   colorBy?: string | ((datum: Datum) => string)
   colorScheme?: string | string[] | Record<string, string>
@@ -271,9 +275,9 @@ export function WordCloud(props: WordCloudProps): React.ReactElement {
           accessibleTable={false}
           maxDevicePixelRatio={props.maxDevicePixelRatio}
         />
-        {pending && (
+        {pending && props.loadingContent !== false && (
           <div role="status" style={{ position: "absolute", inset: 16 }}>
-            Preparing words…
+            {props.loadingContent ?? "Preparing words…"}
           </div>
         )}
         {error && (
@@ -281,9 +285,9 @@ export function WordCloud(props: WordCloudProps): React.ReactElement {
             {error.message}
           </div>
         )}
-        {!pending && !error && !layout?.words.length && (
+        {!pending && !error && !layout?.words.length && props.emptyContent !== false && (
           <div role="status" style={{ position: "absolute", inset: 16 }}>
-            No terms could be placed. See the data summary for omitted terms.
+            {props.emptyContent ?? "No terms could be placed. See the data summary for omitted terms."}
           </div>
         )}
       </div>

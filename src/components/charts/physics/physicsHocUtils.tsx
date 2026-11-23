@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { renderEmptyState, renderLoadingState } from "../shared/withChartWrapper"
 import type { FrameGraphicsProp } from "../../stream/useFrame"
 import { useResponsiveSize } from "../../stream/useResponsiveSize"
 import type {
@@ -538,26 +537,6 @@ export function usePhysicsResponsiveSize(
     responsiveWidth: Boolean(responsiveWidth),
     responsiveHeight: Boolean(responsiveHeight)
   }
-}
-
-export function renderPhysicsChartState<TDatum extends Datum>(options: {
-  data?: TDatum[] | null
-  emptyContent?: BaseChartProps["emptyContent"]
-  loading?: BaseChartProps["loading"]
-  loadingContent?: BaseChartProps["loadingContent"]
-  size: [number, number]
-  responsive?: { responsiveWidth?: boolean; responsiveHeight?: boolean }
-}): React.ReactElement | null {
-  const [width, height] = options.size
-  const loadingEl = renderLoadingState(
-    options.loading,
-    width,
-    height,
-    options.loadingContent,
-    options.responsive
-  )
-  if (loadingEl) return loadingEl
-  return renderEmptyState(options.data, width, height, options.emptyContent, options.responsive)
 }
 
 export function renderPhysicsFrame(

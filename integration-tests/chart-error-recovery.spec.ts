@@ -1,5 +1,25 @@
 import { expect, test } from "@playwright/test"
+import AxeBuilder from "@axe-core/playwright"
 import { expectTooltipWithinPlot } from "./helpers"
+
+for (const theme of ["light", "dark"]) {
+  test(`chart states expose translated status, readable errors and reduced motion in ${theme} mode`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    await page.goto(`/chart-features-examples/?chart-states=${theme}`)
+    const fixture = page.getByTestId("chart-states")
+    const loading = fixture.getByRole("status", { name: "Chargement du graphique" })
+    await expect(loading).toHaveAttribute("aria-busy", "true")
+    await expect(loading.locator(".semiotic-loading-bar")).toHaveCSS("height", "8px")
+    await expect(fixture.getByRole("status").filter({ hasText: "Aucune donnée" })).toHaveText("Aucune donnée")
+    const container = fixture.getByRole("status", { name: "Chargement du tableau" })
+    await expect(container).toHaveCSS("animation-name", "none")
+    await expect(fixture.getByRole("alert")).toContainText("Invalid region in chart data")
+    const audit = await new AxeBuilder({ page }).include('[data-testid="chart-states"]').withTags(["wcag2a", "wcag2aa"]).analyze()
+    expect(audit.violations).toEqual([])
+    await page.emulateMedia({ reducedMotion: "no-preference" })
+    await expect(container).toHaveCSS("animation-name", "semiotic-skeleton-pulse")
+  })
+}
 
 test("chart repairs restore painted marks and tooltips, including after resize", async ({
   page

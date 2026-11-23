@@ -38,6 +38,19 @@ describe("BigNumber — render basics", () => {
     render(<BigNumber value={10} loading />)
     expect(screen.getByRole("status")).toHaveAttribute("aria-busy", "true")
   })
+
+  it("uses translated placeholder content and suppresses an explicitly disabled skeleton", () => {
+    const { rerender } = render(<BigNumber loading loadingLabel="Wert wird geladen" />)
+    expect(screen.getByRole("status", { name: "Wert wird geladen" })).toHaveAttribute("aria-busy", "true")
+    rerender(<BigNumber loading loadingContent={<span>Wird aktualisiert</span>} />)
+    expect(screen.getByRole("status")).toHaveTextContent("Wird aktualisiert")
+    expect(screen.getByRole("status")).not.toHaveAttribute("aria-busy")
+    rerender(<BigNumber emptyContent="Kein Wert" />)
+    expect(screen.getByRole("status")).toHaveTextContent("Kein Wert")
+    expect(screen.getByRole("status")).not.toHaveAttribute("aria-label")
+    rerender(<BigNumber loading loadingContent={false} />)
+    expect(screen.queryByRole("status")).toBeNull()
+  })
 })
 
 describe("BigNumber — formatting cascade", () => {

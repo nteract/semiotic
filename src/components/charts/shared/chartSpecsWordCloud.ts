@@ -1,4 +1,4 @@
-import type { ChartSpec } from "./chartSpecCore"
+import { REACT_NODE_TYPES, type ChartSpec } from "./chartSpecCore"
 import { WORD_CLOUD_SIZE } from "./chartSizeDefaultsWordCloud"
 
 export const WORDCLOUD_CHART_SPECS: Record<string, ChartSpec> = {
@@ -14,6 +14,8 @@ export const WORDCLOUD_CHART_SPECS: Record<string, ChartSpec> = {
     dataAccessors: ["textAccessor", "valueAccessor", "idAccessor"],
     propBags: [],
     ownProps: {
+      loadingContent: { type: REACT_NODE_TYPES, omitFromSchema: true },
+      emptyContent: { type: REACT_NODE_TYPES, omitFromSchema: true },
       data: {
         type: "array",
         description:

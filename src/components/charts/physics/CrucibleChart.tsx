@@ -1,4 +1,5 @@
 "use client"
+import { renderChartPlaceholder } from "../shared/withChartWrapper"
 import { CRUCIBLE_CHART_SIZE } from "../shared/chartSizeDefaultsPhysics"
 
 import * as React from "react"
@@ -28,7 +29,6 @@ import { useWasHydratingFromSSR } from "../../stream/useHydration"
 import { filterSparseArray } from "../shared/sparseArray"
 import {
   composePhysicsFrameGraphics,
-  renderPhysicsChartState,
   renderPhysicsFrame,
   resolvePhysicsFrameSharedProps,
   resolvePhysicsTooltipProps,
@@ -191,15 +191,12 @@ export const CrucibleChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__
     conservation,
     controls,
     data,
-    emptyContent,
     events,
     frameProps = {},
     idAccessor,
     initialStateAccessor,
     initialSpawnPacing,
     labelAccessor,
-    loading,
-    loadingContent,
     metrics,
     metricsAccessor,
     onClick,
@@ -868,14 +865,7 @@ export const CrucibleChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__
   const controlConfig = resolveCrucibleControls(controls)
   const controlVisible = Object.values(controlConfig).some(Boolean)
   const currentPhase = plan.phases[runtime.state.phaseIndex]
-  const stateEl = renderPhysicsChartState({
-    responsive: props,
-    data,
-    emptyContent,
-    loading,
-    loadingContent,
-    size: resolvedChartSize
-  })
+  const stateEl = renderChartPlaceholder(props, resolvedChartSize, data)
   if (stateEl) return stateEl
 
   const errors = plan.diagnostics.filter((item) => item.severity === "error")

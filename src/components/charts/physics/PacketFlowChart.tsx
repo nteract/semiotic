@@ -1,4 +1,5 @@
 "use client"
+import { renderChartPlaceholder } from "../shared/withChartWrapper"
 import { PACKET_FLOW_CHART_SIZE } from "../shared/chartSizeDefaultsPhysics"
 
 import * as React from "react"
@@ -33,7 +34,6 @@ import {
 } from "./physicsHocHandle"
 import {
   composePhysicsFrameGraphics,
-  renderPhysicsChartState,
   renderPhysicsFrame,
   resolvePhysicsFrameSharedProps,
   resolvePhysicsTooltipProps,
@@ -375,12 +375,9 @@ export const PacketFlowChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE
     coordinateMode = "auto",
     data,
     edges,
-    emptyContent,
     flowSpeed = 90,
     frameProps,
     links,
-    loading,
-    loadingContent,
     maxParticles = 180,
     nodeIdAccessor = "id" as ChartAccessor<TNode, string>,
     nodeXAccessor = "x" as ChartAccessor<TNode, number>,
@@ -591,15 +588,10 @@ export const PacketFlowChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE
       typeof sourceAccessor === "string" ? [sourceAccessor] : undefined
   })
 
-  const stateEl = renderPhysicsChartState({
-    responsive: props,
-    data:
-      links == null && edges == null && data == null ? undefined : chartLinks,
-    emptyContent,
-    loading,
-    loadingContent,
-    size: chartSize
-  })
+  const stateEl = renderChartPlaceholder(
+    props, chartSize,
+    links == null && edges == null && data == null ? undefined : chartLinks
+  )
   if (stateEl) return stateEl
 
   const overlay = physicalFlowOverlay(

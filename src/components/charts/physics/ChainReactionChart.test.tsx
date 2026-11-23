@@ -19,6 +19,14 @@ const dag: Row[] = [
 ]
 
 describe("ChainReactionChart", () => {
+  it("announces loading followed by empty dependency data", () => {
+    const props = { ...accessors, data: [], emptyContent: "Keine Aufgaben" }
+    const { rerender } = render(<ChainReactionChart {...props} loading loadingLabel="Aufgaben laden" />)
+    expect(screen.getByRole("status", { name: "Aufgaben laden" })).toHaveAttribute("aria-busy", "true")
+    rerender(<ChainReactionChart {...props} />)
+    expect(screen.getByRole("status")).toHaveTextContent("Keine Aufgaben")
+  })
+
   it("compiles a DAG and exposes it through the imperative handle", () => {
     const ref = React.createRef<ChainReactionChartHandle>()
     render(

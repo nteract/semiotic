@@ -300,8 +300,7 @@ const SPEC_ONLY_PROP_EXCEPTIONS: Record<
     "legendPosition",
     "legendLayout",
     "selection",
-    "linkedHover",
-    "loading"
+    "linkedHover"
   ])
 }
 

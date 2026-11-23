@@ -57,13 +57,15 @@ describe("WordCloud size resolution across renderers", () => {
     const size = resolveChartSize("WordCloud")
     const prepared = await prepareWordCloudLayout({ data: [] })
     expect(prepared).toMatchObject(size)
-    const { container, rerender } = render(<WordCloud data={[]} />)
+    const { container, rerender } = render(<WordCloud data={[]} loadingContent="Préparation des mots" />)
+    expect(screen.getByText("Préparation des mots").closest('[role="status"]')).toHaveTextContent("Préparation des mots")
     expect(container.querySelector(".stream-network-frame")).toHaveStyle({
       width: `${size.width}px`,
       height: `${size.height}px`
     })
     expect(container.querySelector("[data-wordcloud-state]")).toHaveAttribute("data-wordcloud-state", "preparing")
-    rerender(<WordCloud data={[]} layout={prepared} />)
+    rerender(<WordCloud data={[]} layout={prepared} emptyContent="Aucun mot" />)
+    expect(screen.getByText("Aucun mot").closest('[role="status"]')).toHaveTextContent("Aucun mot")
     expect(container.querySelector("[data-wordcloud-state]")).toHaveAttribute("data-wordcloud-state", "ready")
     expect(container.querySelector(".stream-network-frame")).toHaveStyle({
       width: `${size.width}px`,

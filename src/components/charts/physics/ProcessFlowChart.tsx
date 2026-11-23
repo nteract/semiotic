@@ -1,4 +1,5 @@
 "use client"
+import { renderChartPlaceholder } from "../shared/withChartWrapper"
 import type { PhysicsBodyMark } from "../../stream/physics/physicsBodyCanvas"
 import { PROCESS_FLOW_CHART_SIZE } from "../shared/chartSizeDefaultsPhysics"
 
@@ -45,7 +46,6 @@ import {
 } from "./physicsHocHandle"
 import {
   composePhysicsFrameGraphics,
-  renderPhysicsChartState,
   renderPhysicsFrame,
   resolvePhysicsFrameSharedProps,
   resolvePhysicsTooltipProps,
@@ -199,7 +199,6 @@ export const ProcessFlowChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PUR
     chromeOptions,
     colorBy,
     data,
-    emptyContent,
     frameProps = {},
     groupAnchorAlong,
     groupBy,
@@ -214,8 +213,6 @@ export const ProcessFlowChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PUR
     selection,
     bodyLimit,
     bodyMark,
-    loading,
-    loadingContent,
     paused,
     radiusAccessor,
     rerunMS,
@@ -475,14 +472,7 @@ export const ProcessFlowChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PUR
       typeof stageAccessor === "string" ? [stageAccessor] : undefined
   })
 
-  const stateEl = renderPhysicsChartState({
-    responsive: props,
-    data,
-    emptyContent,
-    loading,
-    loadingContent,
-    size: chartSize
-  })
+  const stateEl = renderChartPlaceholder(props, chartSize, data)
   if (stateEl) return stateEl
 
   if (!stages?.length) {

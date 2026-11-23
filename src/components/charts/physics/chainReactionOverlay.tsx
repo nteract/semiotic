@@ -2,10 +2,28 @@ import * as React from "react"
 import type { Datum } from "../shared/datumTypes"
 import type {
   DependencyMachine,
+  DependencyMachineDiagnostic,
   DependencyMachineNode,
   DependencyTrackLayout
 } from "./dependencyMachine"
 import type { RuntimeState } from "./chainReactionRuntime"
+
+export function ChainReactionDiagnostics({ className, width, diagnostics }: {
+  className?: string
+  width: number
+  diagnostics: DependencyMachineDiagnostic[]
+}) {
+  return (
+    <div className={className} role="alert" style={{ width, maxWidth: "100%" }}>
+      <strong>ChainReactionChart could not compile this dependency graph.</strong>
+      <ul>
+        {diagnostics.map((diagnostic, index) => (
+          <li key={`${diagnostic.code}-${index}`}>{diagnostic.message}</li>
+        ))}
+      </ul>
+    </div>
+  )
+}
 
 function statusColor<TDatum extends Datum>(
   node: DependencyMachineNode<TDatum>,

@@ -10,7 +10,7 @@ import { LinkedCrosshairFixture } from "./LinkedCrosshairFixture"
 import { HistogramHoverFixture } from "./HistogramHoverFixture"
 import { LineMultiEdgeFixture } from "./LineMultiEdgeFixture"
 import { CandlestickSizingFixture } from "./CandlestickSizingFixture"
-import { ErrorRecoveryFixture } from "./ErrorRecoveryFixture"
+import { ChartStatesFixture, ErrorRecoveryFixture } from "./ErrorRecoveryFixture"
 import { SizeEncodingFixture } from "./SizeEncodingFixture"
 
 import { RoundedAxesFixture } from "./RoundedAxesFixture"
@@ -106,6 +106,8 @@ function App() {
   )
 }
 createRoot(document.getElementById("root")!).render(
+  new URLSearchParams(location.search).has("chart-states") ?
+    <ChartStatesFixture dark={new URLSearchParams(location.search).get("chart-states") === "dark"} /> :
   new URLSearchParams(location.search).has("size-encoding") ? <SizeEncodingFixture /> :
   new URLSearchParams(location.search).has("error-recovery") ? <ErrorRecoveryFixture /> :
   new URLSearchParams(location.search).has("rounded-axes") ? <RoundedAxesFixture /> :

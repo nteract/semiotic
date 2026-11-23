@@ -801,13 +801,14 @@ const BigNumberInner = (
 
   // ── Loading + empty ──────────────────────────────────────────────
   if (loading) {
+    if (loadingContent === false) return null
     const w = typeof width === "number" ? width : 280
     const h = typeof height === "number" ? height : 160
     return (
       <Block
         role="status"
-        aria-live="polite"
-        aria-busy="true"
+        aria-label={loadingContent == null ? (props.loadingLabel ?? "Loading chart") : undefined}
+        aria-busy={loadingContent == null || undefined}
         className={`${rootClassName} semiotic-bignumber--loading`}
         style={{ ...containerStyle, opacity: 1 }}
       >
@@ -823,7 +824,7 @@ const BigNumberInner = (
     return (
       <Block
         role="status"
-        aria-label={label ? `${label}: no value` : "no value"}
+        aria-label={emptyContent == null ? (label ? `${label}: no value` : "no value") : undefined}
         className={`${rootClassName} semiotic-bignumber--empty`}
         style={{
           ...containerStyle,

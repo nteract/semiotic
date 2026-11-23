@@ -1,4 +1,5 @@
 "use client"
+import { renderChartPlaceholder } from "../shared/withChartWrapper"
 
 import { CHAIN_REACTION_CHART_SIZE } from "../shared/chartSizeDefaultsPhysics"
 import * as React from "react"
@@ -53,7 +54,7 @@ import {
   taskCompletionTime,
   type RuntimeState
 } from "./chainReactionRuntime"
-import { ChainReactionOverlay } from "./chainReactionOverlay"
+import { ChainReactionDiagnostics, ChainReactionOverlay } from "./chainReactionOverlay"
 import { ChainReactionAccessibleTable } from "./chainReactionAccessibleTable"
 import { AccessibleTablePortal } from "../../stream/AccessibleDataTable"
 import { withSizedChartErrorBoundary } from "../shared/withChartErrorBoundary"
@@ -651,23 +652,10 @@ export const ChainReactionChart = /* @__PURE__ */ withSizedChartErrorBoundary(/*
     [machine]
   )
 
+  const placeholder = renderChartPlaceholder(props, responsiveLayout.size, data)
+  if (placeholder) return placeholder
   if (!machine.valid) {
-    return (
-      <div
-        className={className}
-        role="alert"
-        style={{ width, maxWidth: "100%" }}
-      >
-        <strong>
-          ChainReactionChart could not compile this dependency graph.
-        </strong>
-        <ul>
-          {machine.diagnostics.map((diagnostic, index) => (
-            <li key={`${diagnostic.code}-${index}`}>{diagnostic.message}</li>
-          ))}
-        </ul>
-      </div>
-    )
+    return <ChainReactionDiagnostics className={className} width={width} diagnostics={machine.diagnostics} />
   }
 
   return (

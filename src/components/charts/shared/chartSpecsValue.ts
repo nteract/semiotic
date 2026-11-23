@@ -27,6 +27,7 @@ export const VALUE_CHART_SPECS: Record<string, ChartSpec> = {
       description: { type: "string", description: "Override the auto-generated accessible label sentence." },
       summary: { type: "string", description: "Screen-reader-only supplement appended after the accessible label." },
       loading: { type: "boolean", description: "Show the loading skeleton overlay." },
+      loadingLabel: { type: "string", omitFromSchema: true, description: "Accessible name of the default React loading skeleton." },
       loadingContent: { type: REACT_NODE_TYPES, omitFromSchema: true, description: "ReactNode override for loading state; false suppresses it." },
       emptyContent: { type: REACT_NODE_TYPES, omitFromSchema: true, description: "ReactNode shown when value is null, undefined, or NaN; false suppresses it." },
       value: { type: "number", description: "The focal number this card exists to display" },
