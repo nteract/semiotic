@@ -1,5 +1,6 @@
 import { compareRecipeIds } from "../../utils/compareRecipeIds"
-import type { MotifMatch, MotifTemplate } from "./types"
+import { structuralWitnesses } from "./entityCounts"
+import type { AtlasOccurrence, MotifMatch, MotifTemplate } from "./types"
 
 export type MotifCapsule = {
   id: string
@@ -12,9 +13,11 @@ export type MotifCapsule = {
   selected: boolean
 }
 
-function occurrenceKeys(match: MotifMatch): string[] {
+function occurrenceKeys(match: MotifMatch, occurrences: readonly AtlasOccurrence[] | undefined): string[] {
   const occurrenceId = match.roles.occurrence
-  return typeof occurrenceId === "string" ? [occurrenceId] : match.entityIds
+  return typeof occurrenceId === "string"
+    ? [occurrenceId]
+    : structuralWitnesses(match.nodePath, occurrences).map((row) => row.id)
 }
 
 /**
@@ -23,11 +26,11 @@ function occurrenceKeys(match: MotifMatch): string[] {
  */
 export function selectCapsules(
   matches: readonly MotifMatch[],
-  options: { templates?: MotifTemplate[] } = {}
+  occurrences: readonly AtlasOccurrence[] | undefined,
+  allowedTemplates?: MotifTemplate[]
 ): MotifCapsule[] {
-  const templates = new Set(options.templates ?? ["repeated-state-episode"])
   const candidates = matches
-    .filter((match) => templates.has(match.template))
+    .filter((match) => !allowedTemplates || allowedTemplates.includes(match.template))
     .map((match) => {
       const entryState =
         typeof match.roles.state === "string"
@@ -41,16 +44,11 @@ export function selectCapsules(
         entryState,
         exitState: last,
         entityCount: match.entityCount,
-        occurrenceIds: occurrenceKeys(match),
+        occurrenceIds: occurrenceKeys(match, occurrences),
         selected: false as boolean
       } satisfies MotifCapsule
     })
-    .sort((left, right) => {
-      if (right.entityCount !== left.entityCount) {
-        return right.entityCount - left.entityCount
-      }
-      return compareRecipeIds(left.id, right.id)
-    })
+    .sort((left, right) => right.entityCount - left.entityCount || compareRecipeIds(left.id, right.id))
 
   const claimed = new Set<string>()
   for (const capsule of candidates) {

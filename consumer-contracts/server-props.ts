@@ -8,6 +8,21 @@ export interface ServerPropContract {
 }
 
 export const serverPropContracts: readonly ServerPropContract[] = [
+  ...Object.entries({
+    MotifBraidChart: "atlas",
+    DependencyForestChart: "forest.atlas",
+    FlowCircuitChart: "circuit.atlas"
+  }).map(([component, prefix]) => ({
+    id: `${component}-comparison`,
+    component,
+    props: ["spec.comparison", "comparison"].flatMap((path) =>
+      ["outcomeMeasureIds", "motifTemplates"].map(
+        (key) => `${prefix}.${path}.${key}`
+      )
+    ),
+    observable:
+      "Selecting comparison readouts preserves the painted network paths and mark counts."
+  })),
   {
     id: "line-area",
     component: "LineChart",

@@ -1,4 +1,5 @@
-import { idDictionary, setOwnValue } from "./ids"
+import { traceStatus } from "./entityCounts"
+import { idDictionary } from "./ids"
 import type {
   CompletenessReport,
   CompletenessStatus,
@@ -13,28 +14,21 @@ export function buildCompleteness(
 ): CompletenessReport {
   const nodes = idDictionary<CompletenessStatus>()
   for (const node of source.nodes) {
-    setOwnValue(nodes, node.id, node.completeness ?? "known")
+    nodes[node.id] = node.completeness ?? "known"
   }
 
   const motifStatus = idDictionary<CompletenessStatus>()
   for (const template of motifs.unsupportedTemplates) {
-    setOwnValue(motifStatus, template, "unsupported-template")
+    motifStatus[template] = "unsupported-template"
   }
-  if (motifs.incompleteCandidates.length > 0) {
-    const templates = new Set(
-      motifs.incompleteCandidates.map((row) => row.template)
-    )
-    for (const template of templates) {
-      setOwnValue(motifStatus, template, "incomplete")
-    }
+  for (const { template } of motifs.incompleteCandidates) {
+    motifStatus[template] = "incomplete"
   }
 
   const truncated = motifs.matches.find((match) => match.truncation)
-  const traces: CompletenessStatus = source.occurrences?.some(
-    (row) => row.missingPrehistory || row.complete === false
-  )
+  const traces: CompletenessStatus = traceStatus(source.occurrences) === "incomplete"
     ? "incomplete"
-    : source.nodes.some((node) => node.completeness === "unknown")
+    : Object.values(nodes).includes("unknown")
       ? "unknown"
       : "known"
 

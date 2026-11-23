@@ -1,4 +1,4 @@
-import { idDictionary, setOwnValue } from "./ids"
+import { idDictionary } from "./ids"
 import type {
   NetworkAtlasSource,
   NetworkAtlasSpec,
@@ -10,21 +10,18 @@ export function buildSections(
   spec: NetworkAtlasSpec,
   source: NetworkAtlasSource
 ): SectionIndex {
-  if (spec.coordinate.kind !== "ordinal") {
-    return { kind: "ordinal", sectionIds: [], nodeIdsBySection: idDictionary() }
-  }
+  const sectionIds = spec.coordinate.kind === "ordinal" ? [...spec.coordinate.sectionIds] : []
   const nodeIdsBySection = idDictionary<string[]>()
-  for (const sectionId of spec.coordinate.sectionIds) {
-    setOwnValue(nodeIdsBySection, sectionId, [])
+  for (const sectionId of sectionIds) {
+    nodeIdsBySection[sectionId] = []
   }
   for (const node of source.nodes) {
     if (!node.sectionId) continue
-    const bucket = nodeIdsBySection[node.sectionId]
-    if (bucket) bucket.push(node.id)
+    nodeIdsBySection[node.sectionId]?.push(node.id)
   }
   return {
     kind: "ordinal",
-    sectionIds: [...spec.coordinate.sectionIds],
+    sectionIds,
     nodeIdsBySection
   }
 }
