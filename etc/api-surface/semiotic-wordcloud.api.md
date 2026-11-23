@@ -93,10 +93,12 @@ interface-member WordCloudProps::property::className = optional className: strin
 interface-member WordCloudProps::property::colorBy = optional colorBy: ((datum: Datum) => string) | string | undefined
 interface-member WordCloudProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
 interface-member WordCloudProps::property::description = optional description: string | undefined
+interface-member WordCloudProps::property::emptyContent = optional emptyContent: React.ReactNode
 interface-member WordCloudProps::property::enableHover = optional enableHover: boolean | undefined
 interface-member WordCloudProps::property::groupHulls = optional groupHulls: WordCloudGroupHull[] | undefined
 interface-member WordCloudProps::property::layout = optional layout: WordCloudLayoutResult | undefined
 interface-member WordCloudProps::property::linkedHover = optional linkedHover: LinkedHoverProp | undefined
+interface-member WordCloudProps::property::loadingContent = optional loadingContent: React.ReactNode
 interface-member WordCloudProps::property::margin = optional margin: PartialMargin | undefined
 interface-member WordCloudProps::property::maxDevicePixelRatio = optional maxDevicePixelRatio: number | undefined
 interface-member WordCloudProps::property::onClick = optional onClick: ((datum: Datum, point: {x: number; y: number;}) => void) | undefined

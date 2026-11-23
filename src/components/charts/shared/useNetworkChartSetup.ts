@@ -65,7 +65,7 @@ import { inferNodesFromEdges } from "./networkUtils"
 import { filterSparseArray } from "./sparseArray"
 import type { SelectionHookResult } from "./selectionUtils"
 import { useResolvedSelection } from "./useResolvedSelection"
-import { renderEmptyState, renderLoadingState, type PlaceholderLayout } from "./withChartWrapper"
+import { renderEmptyState, renderLoadingState, type ChartPlaceholderOptions } from "./withChartWrapper"
 
 const PUSH_CATEGORY_FIELD = "__streamNetworkCategory"
 
@@ -117,7 +117,7 @@ export interface NetworkChartSetupInput<TNode extends Datum = Datum, TEdge exten
   userMargin?: PartialMargin
   width: number
   height: number
-  responsive?: PlaceholderLayout
+  responsive?: ChartPlaceholderOptions
   hasTitle?: boolean
   /** Only layouts with chart-owned axes need extra legend clearance. */
   axisChrome?: AxisChromeInput

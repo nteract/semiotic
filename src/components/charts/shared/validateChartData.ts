@@ -76,7 +76,7 @@ function validateAccessors(
 interface ArrayDataValidation {
   componentName: string
   data: ChartDataInput
-  seriesField?: string
+  samples?: Datum[]
   accessors?: Record<string, AccessorLike | undefined>
   requiredProps?: Datum
 }
@@ -103,7 +103,7 @@ export function validateArrayData({
   componentName,
   data,
   accessors,
-  seriesField,
+  samples,
   requiredProps
 }: ArrayDataValidation): string | null {
   // Check required props first
@@ -131,7 +131,7 @@ export function validateArrayData({
     return `${componentName}: No data provided. Pass a non-empty array to the data prop.`
   }
 
-  const samples = sampleDataRecords(data, seriesField)
+  samples ??= sampleDataRecords(data)
   if (!samples.length) {
     return `${componentName}: No data records provided. Pass a non-empty array of objects to the data prop.`
   }

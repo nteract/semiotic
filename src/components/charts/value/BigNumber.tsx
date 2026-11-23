@@ -801,18 +801,20 @@ const BigNumberInner = (
 
   // ── Loading + empty ──────────────────────────────────────────────
   if (loading) {
+    if (loadingContent === false) return null
+    const loadingLabel = props.loadingLabel ?? "Loading chart"
     const w = typeof width === "number" ? width : 280
-    const h = typeof height === "number" ? height : 160
     return (
       <Block
+        key="loading"
         role="status"
-        aria-live="polite"
-        aria-busy="true"
+        aria-label={loadingContent == null ? loadingLabel : undefined}
         className={`${rootClassName} semiotic-bignumber--loading`}
         style={{ ...containerStyle, opacity: 1 }}
       >
+        {loadingContent == null && <span style={hiddenTextStyle}>{loadingLabel}</span>}
         {loadingContent ?? (
-          <DefaultLoadingShimmer width={w} height={h} mode={mode} />
+          <DefaultLoadingShimmer width={w} mode={mode} />
         )}
       </Block>
     )
@@ -823,7 +825,7 @@ const BigNumberInner = (
     return (
       <Block
         role="status"
-        aria-label={label ? `${label}: no value` : "no value"}
+        aria-label={emptyContent == null ? (label ? `${label}: no value` : "no value") : undefined}
         className={`${rootClassName} semiotic-bignumber--empty`}
         style={{
           ...containerStyle,
@@ -1099,17 +1101,7 @@ const BigNumberInner = (
         {/* Sr-only summary supplement */}
         {summary ? (
           <span
-            style={{
-              position: "absolute",
-              width: 1,
-              height: 1,
-              padding: 0,
-              margin: -1,
-              overflow: "hidden",
-              clip: "rect(0,0,0,0)",
-              whiteSpace: "nowrap",
-              border: 0
-            }}
+            style={hiddenTextStyle}
           >
             {summary}
           </span>
@@ -1193,9 +1185,13 @@ export default BigNumber
 
 // ── Internal: loading shimmer ────────────────────────────────────────
 
+const hiddenTextStyle: React.CSSProperties = {
+  position: "absolute", width: 1, height: 1, padding: 0, margin: -1,
+  overflow: "hidden", clip: "rect(0,0,0,0)", whiteSpace: "nowrap", border: 0
+}
+
 function DefaultLoadingShimmer(props: {
   width: number
-  height: number
   mode: BigNumberMode
 }) {
   const labelW = Math.floor(props.width * 0.45)

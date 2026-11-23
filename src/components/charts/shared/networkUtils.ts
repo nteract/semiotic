@@ -19,22 +19,22 @@ function unwrapNetworkDatum(datum: Datum): Datum {
     : datum
 }
 
-function applyNetworkSelectionStyle(
-  style: NetworkMarkStyle,
-  matches: boolean,
-  config?: SelectionStyleConfig,
-): NetworkMarkStyle {
-  if (matches) {
-    if (config?.selectedStyle) Object.assign(style, config.selectedStyle)
-    return style
-  }
+type StyleFn = (datum: Datum) => NetworkMarkStyle
 
-  const dimOpacity = config?.unselectedOpacity ?? DEFAULT_SELECTION_OPACITY
-  style.opacity = dimOpacity
-  style.fillOpacity = dimOpacity
-  style.strokeOpacity = dimOpacity
-  if (config?.unselectedStyle) Object.assign(style, config.unselectedStyle)
-  return style
+function wrapSelectionStyle(
+  baseStyle: StyleFn | undefined,
+  selection: SelectionHookResult | null,
+  config: SelectionStyleConfig | undefined,
+  matches: (datum: Datum, predicate: SelectionHookResult["predicate"]) => boolean
+): StyleFn | undefined {
+  if (!baseStyle || !selection) return baseStyle
+  return datum => {
+    const style = { ...baseStyle(datum) }
+    if (!selection.isActive) return style
+    if (matches(datum, selection.predicate)) return Object.assign(style, config?.selectedStyle)
+    const opacity = config?.unselectedOpacity ?? DEFAULT_SELECTION_OPACITY
+    return Object.assign(style, { opacity, fillOpacity: opacity, strokeOpacity: opacity }, config?.unselectedStyle)
+  }
 }
 
 /** Apply shared/legend selection to a network node's raw user datum. */
@@ -58,18 +58,8 @@ export function wrapNetworkNodeStyleWithSelection(
   selectionHook: SelectionHookResult | null,
   config?: SelectionStyleConfig,
 ): ((datum: Datum) => NetworkMarkStyle) | undefined {
-  if (!baseStyle) return undefined
-  if (!selectionHook) return baseStyle
-
-  return (datum: Datum) => {
-    const style = { ...baseStyle(datum) }
-    if (!selectionHook.isActive) return style
-    return applyNetworkSelectionStyle(
-      style,
-      selectionHook.predicate(unwrapNetworkDatum(datum)),
-      config,
-    )
-  }
+  return wrapSelectionStyle(baseStyle, selectionHook, config,
+    (datum, predicate) => predicate(unwrapNetworkDatum(datum)))
 }
 
 /**
@@ -97,26 +87,16 @@ export function wrapNetworkEdgeStyleWithSelection(
   selectionHook: SelectionHookResult | null,
   config?: SelectionStyleConfig,
 ): ((datum: Datum) => NetworkMarkStyle) | undefined {
-  if (!baseStyle) return undefined
-  if (!selectionHook) return baseStyle
-
-  return (datum: Datum) => {
-    const style = { ...baseStyle(datum) }
-    if (!selectionHook.isActive) return style
-
-    const edgeDatum = unwrapNetworkDatum(datum)
-    const source = typeof datum.source === "object"
-      ? unwrapNetworkDatum(datum.source)
-      : null
-    const target = typeof datum.target === "object"
-      ? unwrapNetworkDatum(datum.target)
-      : null
-    const matches = source || target
-      ? (source ? selectionHook.predicate(source) : false) ||
-        (target ? selectionHook.predicate(target) : false)
-      : selectionHook.predicate(edgeDatum)
-    return applyNetworkSelectionStyle(style, matches, config)
-  }
+  return wrapSelectionStyle(baseStyle, selectionHook, config, (datum, predicate) => {
+    let hasEndpoints = false
+    for (const endpoint of [datum.source, datum.target]) {
+      if (endpoint && typeof endpoint === "object") {
+        hasEndpoints = true
+        if (predicate(unwrapNetworkDatum(endpoint))) return true
+      }
+    }
+    return !hasEndpoints && predicate(unwrapNetworkDatum(datum))
+  })
 }
 
 /**
@@ -170,19 +150,12 @@ export function createEdgeStyleFn({
 
     if (typeof edgeColorBy === "function") {
       style.fill = edgeColorBy(d)
-    } else if (edgeColorBy === "source") {
-      const src = typeof d.source === "object" ? d.source : null
-      if (colorBy && src) {
-        style.fill = getColor(src.data || src, colorBy, colorScale)
-      } else if (src) {
-        style.fill = nodeStyleFn(src, src.index).fill
-      }
-    } else if (edgeColorBy === "target") {
-      const tgt = typeof d.target === "object" ? d.target : null
-      if (colorBy && tgt) {
-        style.fill = getColor(tgt.data || tgt, colorBy, colorScale)
-      } else if (tgt) {
-        style.fill = nodeStyleFn(tgt, tgt.index).fill
+    } else if (edgeColorBy === "source" || edgeColorBy === "target") {
+      const endpoint = d[edgeColorBy]
+      if (endpoint && typeof endpoint === "object") {
+        style.fill = colorBy
+          ? getColor(endpoint.data || endpoint, colorBy, colorScale)
+          : nodeStyleFn(endpoint, endpoint.index).fill
       }
     } else if (edgeColorBy === "gradient") {
       style.fill = "#999"

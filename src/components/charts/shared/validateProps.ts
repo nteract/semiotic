@@ -1,4 +1,4 @@
-import { seriesCoordinateField } from "./dataRecords"
+import { sampleConfigRecords } from "./sampleConfigRecords"
 import type { Datum } from "./datumTypes"
 /**
  * Static props validation for AI code-generation pipelines.
@@ -506,7 +506,7 @@ export function validateProps(
     }
 
     if ((key === "width" || key === "height") &&
-      (typeof value !== "number" || !Number.isFinite(value) || value <= 0)) {
+      (!Number.isFinite(value) || value <= 0)) {
       issues.push({
         code: "INVALID_PROP_VALUE",
         path: key,
@@ -514,7 +514,7 @@ export function validateProps(
       })
     }
     if (key === "size" && Array.isArray(value) &&
-      (value.length !== 2 || !Array.from(value).every((entry) => typeof entry === "number" && Number.isFinite(entry) && entry > 0))) {
+      (value.length !== 2 || !Array.from(value).every((entry) => Number.isFinite(entry) && entry > 0))) {
       issues.push({
         code: "INVALID_PROP_VALUE",
         path: key,
@@ -549,7 +549,7 @@ export function validateProps(
       // Rename only when it cannot clobber a value the caller already set and
       // the target accepts this value; otherwise the unknown prop is redundant
       // (target already set) or needs a human decision (type mismatch).
-      const targetSet = props[suggestion] !== undefined && props[suggestion] !== null
+      const targetSet = props[suggestion] != null
       const patch: ValidationPatch | undefined = targetSet
         ? { op: "remove", path: key }
         : match.rename &&
@@ -569,7 +569,7 @@ export function validateProps(
     // The accepted-prop list is long, so it is spelled out once per result:
     // in the first such sentence, and as `validProps` for structured callers.
     const firstWithoutSuggestion = validProps === undefined
-    validProps ??= [...knownPropNames]
+    validProps ??= knownPropNames
     issues.push({
       code: "UNKNOWN_PROP",
       path: key,
@@ -591,7 +591,7 @@ export function validateProps(
     dataError = validateArrayData({
       componentName,
       data: props.data,
-      seriesField: seriesCoordinateField(spec.props, props),
+      samples: sampleConfigRecords(spec.props, props),
       accessors: Object.fromEntries(spec.dataAccessors.map(key => [key, props[key]])),
     })
   } else if (spec.dataShape === "object") {

@@ -340,6 +340,8 @@ export interface BigNumberProps<_TDatum extends Datum = Datum> {
   // ── State ──────────────────────────────────────────────────────
   /** Loading skeleton overlay. */
   loading?: boolean
+  /** Accessible name of the default loading skeleton. */
+  loadingLabel?: string
   /** Replace the default skeleton; `false` suppresses it entirely. */
   loadingContent?: React.ReactNode | false
   /** Empty-state placeholder rendered when `value` is `null`/`undefined`/`NaN`. */

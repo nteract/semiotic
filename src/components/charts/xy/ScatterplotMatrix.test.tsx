@@ -4,6 +4,14 @@ import { ScatterplotMatrix } from "./ScatterplotMatrix"
 import { TooltipProvider } from "../../store/TooltipStore"
 
 describe("ScatterplotMatrix", () => {
+  it("reserves the matrix footprint and announces translated loading and empty states", () => {
+    const props = { data: [], fields: ["a", "b"], cellSize: 100, cellGap: 4, emptyContent: "Keine Daten" }
+    const { getByRole, rerender } = render(<ScatterplotMatrix {...props} loading loadingLabel="Matrix laden" />)
+    expect(getByRole("status", { name: "Matrix laden" })).toHaveStyle({ width: "248px", height: "248px" })
+    rerender(<ScatterplotMatrix {...props} />)
+    expect(getByRole("status")).toHaveTextContent("Keine Daten")
+  })
+
   const sampleData = [
     { a: 1, b: 2, c: 3, cat: "X" },
     { a: 4, b: 5, c: 6, cat: "Y" },

@@ -11,21 +11,14 @@ export function inferNodesFromEdges(
   sourceAccessor: string | ((d: Datum) => string),
   targetAccessor: string | ((d: Datum) => string)
 ): Datum[] {
-  if (nodes && nodes.length > 0) return nodes
+  if (nodes?.length) return nodes
 
-  const nodeSet = new Set<string>()
-  edges.forEach((edge) => {
-    const sourceId =
-      typeof sourceAccessor === "function"
-        ? sourceAccessor(edge)
-        : edge[sourceAccessor]
-    const targetId =
-      typeof targetAccessor === "function"
-        ? targetAccessor(edge)
-        : edge[targetAccessor]
-    nodeSet.add(sourceId)
-    nodeSet.add(targetId)
+  const ids = new Set<string>()
+  const endpoints = [sourceAccessor, targetAccessor]
+  edges.forEach(edge => {
+    for (const accessor of endpoints) {
+      ids.add(typeof accessor === "function" ? accessor(edge) : edge[accessor])
+    }
   })
-
-  return Array.from(nodeSet).map((id) => ({ id }))
+  return Array.from(ids, id => ({ id }))
 }
