@@ -566,7 +566,7 @@ const numericNotices = toDataAuditNotifications(report)
 
       <p>
         For a text summary, pass the same report to <code>formatNumericRequirements(report)</code>{" "}
-        from <code>semiotic/ai/data-audit</code>. It shows up to three findings with their
+        from <code>semiotic/ai/core</code>. It shows up to three findings with their
         diagnostic codes, blocking errors first. Pass a second argument to change the limit.
         The full findings and row counts are available in <code>report.diagnoses</code>.
       </p>
