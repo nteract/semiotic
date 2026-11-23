@@ -204,7 +204,7 @@
     "owner": "Semiotic repository maintainers",
     "status": "supported-in-scope",
     "observed": {
-      "verifiedAt": "2026-11-23T19:32:13.543Z",
+      "verifiedAt": "2026-11-23T19:47:25.859Z",
       "environment": {
         "node": "v22.22.1",
         "platform": "darwin",

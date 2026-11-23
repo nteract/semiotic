@@ -97,6 +97,14 @@ describe("developer MCP chart critique", () => {
     expect(report.structuredContent).toMatchObject({ configurationValid: true, fit: { status: "ok" } })
   })
 
+  it("scores ProcessSankey edges with custom time fields", async () => {
+    const report = await critique("ProcessSankey", {
+      domain: [0, 10], startTimeAccessor: "entered", endTimeAccessor: "left",
+      edges: [{ source: "a", target: "b", value: 5, entered: 1, left: 4 }]
+    }, "flow")
+    expect(report.structuredContent).toMatchObject({ configurationValid: true, fit: { status: "ok" } })
+  })
+
   it("scores timed ProcessSankey edges without a nodes array", async () => {
     const report = await critique("ProcessSankey", {
       domain: [0, 10], edges: [{ source: "a", target: "b", value: 5, startTime: 1, endTime: 4 }]

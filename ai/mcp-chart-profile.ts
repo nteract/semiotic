@@ -36,7 +36,17 @@ export function chartProfileInput(args: {
       typeof props.sourceAccessor === "string" ? props.sourceAccessor : "source",
       typeof props.targetAccessor === "string" ? props.targetAccessor : "target"
     ) : props.nodes
-    if (Array.isArray(nodes)) return { data: [], rawInput: { nodes, edges } }
+    if (Array.isArray(nodes)) {
+      const { startTimeAccessor, endTimeAccessor } = props
+      const customTimes = args.component === "ProcessSankey" &&
+        (typeof startTimeAccessor === "string" || typeof endTimeAccessor === "string")
+      const timedEdges = customTimes ? edges.map(edge => isDataRecord(edge) ? {
+        ...edge,
+        ...(typeof startTimeAccessor === "string" && { startTime: edge[startTimeAccessor], start: edge[startTimeAccessor] }),
+        ...(typeof endTimeAccessor === "string" && { endTime: edge[endTimeAccessor], end: edge[endTimeAccessor] })
+      } : edge) : edges
+      return { data: [], rawInput: { nodes, edges: timedEdges } }
+    }
   }
   if (
     props.data &&
