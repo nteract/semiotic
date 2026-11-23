@@ -53,41 +53,36 @@ export function buildLinkLabels(circles: LinkNode[], placement: "above" | "below
   return labels
 }
 
-function pairKey(source: string, target: string) {
-  const [first, second] = source < target ? [source, target] : [target, source]
-  return `${first.length}:${first}${second}`
+function clearance(position: number, extent: number) {
+  return position < extent / 2 ? extent - position : -position
 }
 
 /** Preserve input paint order and give links between the same endpoints separate lanes. */
 export function buildNetworkLinks(
   circles: LinkNode[],
   edges: RealtimeEdge[],
-  height: number,
+  [width, height]: [number, number],
   edgeStyle: NetworkPipelineConfig["edgeStyle"],
   stroke: string,
   strokeWidth = 1,
   opacity = 0.6,
 ): NetworkSceneEdge[] {
   const nodes = indexLinkNodes(circles)
-  const pairs = new Map<string, { count: number; next: number }>()
-  for (const edge of edges) {
-    const key = pairKey(resolveNodeRefId(edge.source), resolveNodeRefId(edge.target))
-    const pair = pairs.get(key)
-    if (pair) pair.count++
-    else pairs.set(key, { count: 1, next: 0 })
-  }
-
-  const links: NetworkSceneEdge[] = []
-  for (const edge of edges) {
+  const pairs = new Map<string, number>()
+  const lanes = edges.map(edge => {
     const source = resolveNodeRefId(edge.source)
     const target = resolveNodeRefId(edge.target)
-    const a = nodes.get(source)
-    const b = nodes.get(target)
+    const key = JSON.stringify([source, target].sort())
+    const index = pairs.get(key) ?? 0
+    pairs.set(key, index + 1)
+    return { edge, a: nodes.get(source), b: nodes.get(target), key, index }
+  })
+
+  const links: NetworkSceneEdge[] = []
+  for (const { edge, a, b, key, index } of lanes) {
     if (!a || !b) continue
-    const pair = pairs.get(pairKey(source, target))!
-    const index = pair.next++
     const userStyle = edgeStyle?.(wrapWithDataHint(edge, "edgeStyle"))
-    const style = {
+    const style: Style = {
       stroke: userStyle?.stroke || stroke,
       strokeWidth: userStyle?.strokeWidth ?? strokeWidth,
       opacity: userStyle?.opacity ?? opacity,
@@ -96,21 +91,28 @@ export function buildNetworkLinks(
     const meta = { datum: edge, accessibleDatum: edge.data, style }
     const dx = b.cx - a.cx
     const dy = b.cy - a.cy
-    if (dx === 0 && dy === 0) {
+    const distance = Math.hypot(dx, dy)
+    if (distance === 0) {
       const reach = Math.max(12, a.r, b.r) + 8 + index * 12
-      const y = a.cy + (a.cy < height / 2 ? 1 : -1) * 2 * reach
-      links.push({ ...meta, type: "curved", pathD: `M${a.cx},${a.cy} C${a.cx - reach},${y} ${a.cx + reach},${y} ${b.cx},${b.cy}` })
+      const vertical = clearance(a.cy, height)
+      const horizontal = clearance(a.cx, width)
+      const sideways = Math.abs(horizontal) > Math.abs(vertical)
+      const extension = 2 * reach * Math.sign(sideways ? horizontal : vertical)
+      const controls = sideways
+        ? `${extension},${-reach} ${extension},${reach}`
+        : `${-reach},${extension} ${reach},${extension}`
+      links.push({ ...meta, type: "curved", pathD: `M${a.cx},${a.cy} c${controls} 0,0` })
       continue
     }
-    const bend = (index - (pair.count - 1) / 2) * 28
+    const bend = (index - (pairs.get(key)! - 1) / 2) * 28
     if (bend === 0) {
       links.push({ ...meta, type: "line", x1: a.cx, y1: a.cy, x2: b.cx, y2: b.cy })
       continue
     }
     // Orient the normal consistently for A→B and B→A.
-    const scale = bend * (source < target ? 1 : -1) / Math.hypot(dx, dy)
-    const cx = (a.cx + b.cx) / 2 - dy * scale
-    const cy = (a.cy + b.cy) / 2 + dx * scale
+    const scale = bend * (a.id < b.id ? 1 : -1) / distance
+    const cx = a.cx + dx / 2 - dy * scale
+    const cy = a.cy + dy / 2 + dx * scale
     links.push({ ...meta, type: "curved", pathD: `M${a.cx},${a.cy} Q${cx},${cy} ${b.cx},${b.cy}` })
   }
   return links

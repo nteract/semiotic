@@ -94,3 +94,23 @@ test("canvas and SVG expose separate tooltips for a self-loop and reciprocal lin
     }
   }
 })
+
+
+test("a compact force plot exposes a self-loop beyond its node on both renderers", async ({ page }) => {
+  await page.goto("/network-examples/?multigraph&compact")
+  const frame = page.locator(".stream-network-frame")
+  const path = frame.locator('path[stroke="#328461"]')
+  await expect(path).toHaveCount(1)
+  const point = await path.evaluate(element => {
+    const curve = element as SVGPathElement
+    const p = curve.getPointAtLength(curve.getTotalLength() / 2).matrixTransform(curve.getScreenCTM()!)
+    return { x: p.x, y: p.y }
+  })
+  for (const mode of ["SVG", "canvas"]) {
+    await page.getByRole("button", { name: `Use ${mode}` }).click()
+    await page.mouse.move(point.x, point.y)
+    await expect(frame.locator(".stream-network-tooltip")).toHaveText("Self reference")
+    await page.mouse.move(0, 0)
+    await expect(frame.locator(".stream-network-tooltip")).toHaveCount(0)
+  }
+})

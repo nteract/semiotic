@@ -16,7 +16,7 @@ it("renders loops and parallel edges in React SSR and standalone SVG", () => {
     const paths = edges.map(tag => tag.match(/ d="([^"]+)"/)![1])
     expect(paths).toHaveLength(3)
     expect(new Set(paths).size).toBe(3)
-    expect(paths.filter(d => d.includes(" C"))).toHaveLength(1)
+    expect(paths.filter(d => / [Cc]/.test(d))).toHaveLength(1)
     expect(paths.filter(d => d.includes(" Q"))).toHaveLength(2)
   }
 })

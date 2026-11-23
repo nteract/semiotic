@@ -53,14 +53,16 @@ const multigraphEdges = [
 ]
 
 export function MultigraphFixture() {
+  const compact = new URLSearchParams(location.search).has("compact")
   const [width, setWidth] = React.useState(400)
   const [renderAs, setRenderer] = React.useState<"canvas" | "svg">("svg")
   return <>
     <button onClick={() => setWidth(340)}>Resize graph</button>
     <button onClick={() => setRenderer("canvas")}>Use canvas</button>
     <button onClick={() => setRenderer("svg")}>Use SVG</button>
-    <ForceDirectedGraph nodes={fixedNodes} edges={multigraphEdges} iterations={0}
-      width={width} height={260} nodeSize={8} edgeColor="#328461" edgeWidth={3}
+    <ForceDirectedGraph nodes={compact ? [{ id: "a", x: 200, y: 20 }] : fixedNodes}
+      edges={compact ? multigraphEdges.slice(0, 1) : multigraphEdges} iterations={0}
+      width={width} height={compact ? 60 : 260} nodeSize={compact ? 30 : 8} edgeColor="#328461" edgeWidth={3}
       margin={{ left: 15, top: 10, right: 15, bottom: 10 }}
       tooltip={(datum: { label?: unknown; id?: unknown }) => <span>{String(datum.label ?? datum.id)}</span>}
       frameProps={{ renderAs, animate: false }} />

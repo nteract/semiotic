@@ -61,7 +61,7 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
     // and repulsion while strengthening the positional pull, so the simulation
     // settles inside the plot instead of relying on a final boundary clamp.
     // Charts at or above 200px use the standard force magnitudes.
-    const spatialScale = Math.max(0.1, Math.min(1, Math.min(size[0], size[1]) / 200))
+    const spatialScale = Math.max(0.1, Math.min(1, Math.min(...size) / 200))
     const positionalStrength = Math.min(0.5, 0.06 + (1 - spatialScale) * 1.8)
 
     // Retrieve previous positions if stashed by the pipeline store
@@ -131,11 +131,7 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
       : coldIterations
 
     // Build node size accessor for charge strength
-    const nodeRadius = resolveNodeSizeFn(
-      config.nodeSize,
-      config.nodeSizeRange,
-      nodes
-    )
+    const nodeRadius = forceNodeRadius(config, nodes)
 
     // Skip simulation entirely when iterations=0 (pinned layout mode).
     // d3-force's simulation.nodes() modifies positions during setup, so
@@ -160,8 +156,7 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
         const source = requireNode(sourceId)
         const target = requireNode(targetId)
         linkData.push({ ...edge, source, target })
-        degrees.set(source, (degrees.get(source) ?? 0) + 1)
-        degrees.set(target, (degrees.get(target) ?? 0) + 1)
+        for (const endpoint of [source, target]) degrees.set(endpoint, (degrees.get(endpoint) ?? 0) + 1)
       }
 
       const linkForce = forceLink<RealtimeNode, ForceLink>(linkData)
@@ -238,12 +233,9 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
     // preserving collision spacing.
     for (const node of nodes) {
       if (node.x == null || node.y == null) continue
-      const r = nodeRadius(node)
-      // Use a radius-only clamp for explicitly pinned
-      // layouts; the extra inset belongs to simulated layouts only.
-      const safetyPadding = iterations > 0 ? 2 : 0
-      node.x = clampToViewport(node.x, size[0], r + safetyPadding)
-      node.y = clampToViewport(node.y, size[1], r + safetyPadding)
+      const inset = nodeRadius(node) + (iterations > 0 ? 2 : 0)
+      node.x = clampToViewport(node.x, size[0], inset)
+      node.y = clampToViewport(node.y, size[1], inset)
 
       // Reset bounding box so finalizeLayout derives it from the updated x/y.
       // Without this, stale x0/x1/y0/y1 from a previous layout would cause
@@ -257,8 +249,10 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
     // Resolve edge source/target to node object references so that
     // HOC style functions can access d.source.data for color lookups.
     for (const edge of edges) {
-      if (typeof edge.source === "string") edge.source = nodeById.get(edge.source) ?? edge.source
-      if (typeof edge.target === "string") edge.target = nodeById.get(edge.target) ?? edge.target
+      for (const side of ["source", "target"] as const) {
+        const ref = edge[side]
+        if (typeof ref === "string") edge[side] = nodeById.get(ref) ?? ref
+      }
     }
   },
 
@@ -272,11 +266,7 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
     sceneEdges: NetworkSceneEdge[]
     labels: NetworkLabel[]
   } {
-    const nodeSizeFn = resolveNodeSizeFn(
-      config.nodeSize,
-      config.nodeSizeRange,
-      nodes
-    )
+    const nodeSizeFn = forceNodeRadius(config, nodes)
 
     // Auto-color palette for when no nodeStyle is provided.
     // Priority: explicit array colorScheme > theme categorical (non-empty) > schemeCategory10.
@@ -284,7 +274,7 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
     // `undefined` fills from the modulo lookup below, so guard the length.
     const palette = Array.isArray(config.colorScheme)
       ? config.colorScheme
-      : config.themeCategorical && config.themeCategorical.length > 0
+      : config.themeCategorical?.length
           ? config.themeCategorical
           : (schemeCategory10 as readonly string[])
     const sceneNodes = buildLinkNodes(nodes, config, nodeSizeFn, (_node, index) => ({
@@ -293,7 +283,7 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
     }))
 
     const sceneEdges = buildNetworkLinks(
-      sceneNodes, edges, size[1], config.edgeStyle,
+      sceneNodes, edges, size, config.edgeStyle,
       config.themeSemantic?.border || config.themeSemantic?.secondary || "#999",
     )
 
@@ -304,6 +294,10 @@ export const forceLayoutPlugin: NetworkLayoutPlugin = {
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────
+
+function forceNodeRadius(config: NetworkPipelineConfig, nodes: RealtimeNode[]) {
+  return resolveNodeSizeFn(config.nodeSize, config.nodeSizeRange, nodes)
+}
 
 function hasPosition(node: RealtimeNode) {
   return node.__hasPosition !== false && Number.isFinite(node.x) && Number.isFinite(node.y)
@@ -345,15 +339,15 @@ function forceBounds(
   nodeRadius: (node: RealtimeNode) => number
 ) {
   return (alpha: number) => {
-    const forceStrength = 0.6 * Math.max(alpha, 0.2)
+    const strength = 0.6 * Math.max(alpha, 0.2)
+    const constrain = (position: number, speed: number, length: number, radius: number) => {
+      const next = position + speed
+      return speed + (clampToViewport(next, length, radius) - next) * strength
+    }
     for (const node of nodes) {
-      const vx = node.vx ?? 0
-      const vy = node.vy ?? 0
       const radius = nodeRadius(node) + 2
-      const nextX = node.x + vx
-      const nextY = node.y + vy
-      node.vx = vx + (clampToViewport(nextX, size[0], radius) - nextX) * forceStrength
-      node.vy = vy + (clampToViewport(nextY, size[1], radius) - nextY) * forceStrength
+      node.vx = constrain(node.x, node.vx ?? 0, size[0], radius)
+      node.vy = constrain(node.y, node.vy ?? 0, size[1], radius)
     }
   }
 
@@ -362,7 +356,7 @@ function forceBounds(
 function simpleHash(str: string): number {
   let hash = 0
   for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0
+    hash = (hash * 31 + str.charCodeAt(i)) | 0
   }
   return Math.abs(hash)
 }

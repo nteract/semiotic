@@ -120,7 +120,7 @@ function buildOrbitLayout(
 
   const cx = size[0] / 2
   const cy = size[1] / 2
-  const maxRing = (Math.min(size[0], size[1]) / 2) * 0.85
+  const maxRing = (Math.min(...size) / 2) * 0.85
 
   function addNode(id: string, x: number, y: number, depth: number, data: Datum) {
     nodes.push({ id, x, y, x0: x, x1: x, y0: y, y1: y, width: 0, height: 0, value: 0, depth, data })
@@ -219,14 +219,8 @@ function tickOrbitPositions(
     // Pass actual node context to revolutionFn
     const nodeContext = { id: node.id, depth: meta.depth, data: node.data, parentId: meta.parentId }
     const a = meta.angle + elapsed * baseRate * revolutionFn(nodeContext)
-    node.x = parent.x + meta.ring * Math.sin(a)
-    node.y = parent.y + meta.ring * Math.cos(a) * meta.eccentricity
-
-    // Keep bounding box in sync
-    node.x0 = node.x
-    node.x1 = node.x
-    node.y0 = node.y
-    node.y1 = node.y
+    node.x = node.x0 = node.x1 = parent.x + meta.ring * Math.sin(a)
+    node.y = node.y0 = node.y1 = parent.y + meta.ring * Math.cos(a) * meta.eccentricity
   }
 }
 
@@ -298,7 +292,7 @@ export const orbitLayoutPlugin: NetworkLayoutPlugin = {
     }))
 
     const links = buildNetworkLinks(
-      sceneNodes, edges, size[1], config.edgeStyle, "rgba(128,128,128,0.35)", 0.5, 1,
+      sceneNodes, edges, size, config.edgeStyle, "rgba(128,128,128,0.35)", 0.5, 1,
     )
 
     const label = config.nodeLabel

@@ -98,6 +98,27 @@ describe("orbitLayoutPlugin scene styles", () => {
 })
 
 describe.each([["orbit", orbitLayoutPlugin], ["force", forceLayoutPlugin]] as const)("%s multigraph", (chartType, plugin) => {
+  it.each([[400, 40], [40, 400]])("exposes the loop stroke inside a %i by %i plot", (width, height) => {
+    const cx = width / 2
+    const cy = height / 2
+    const radius = 30
+    const edge = { source: "a", target: "a", value: 1, y0: 0, y1: 0, sankeyWidth: 0, data: {} }
+    const scene = plugin.buildScene([node("a", cx, cy)], [edge], {
+      chartType, nodeSize: radius, orbitShowRings: false
+    }, [width, height])
+    const loop = scene.sceneEdges[0]
+    expect(loop.type).toBe("curved")
+    if (loop.type !== "curved") throw new Error("Expected a cubic loop")
+    const [x0, y0, x1, y1, x2, y2, x3, y3] = loop.pathD.match(/-?[\d.]+/g)!.map(Number)
+    const x = x0 + (3 * x1 + 3 * x2 + x3) / 8
+    const y = y0 + (3 * y1 + 3 * y2 + y3) / 8
+    expect(x).toBeGreaterThan(0)
+    expect(x).toBeLessThan(width)
+    expect(y).toBeGreaterThan(0)
+    expect(y).toBeLessThan(height)
+    expect(Math.hypot(x - cx, y - cy)).toBeGreaterThan(radius)
+  })
+
   it("keeps loop and reciprocal paths distinct while preserving paint order, styles and source rows", () => {
     const nodes = [node("a", 30, 80), node("b", 130, 80), node("c", 220, 80)]
     const rows = [["a", "a"], ["b", "a"], ["a", "a"], ["a", "b"], ["b", "c"]]
