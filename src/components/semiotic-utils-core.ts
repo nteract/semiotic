@@ -80,6 +80,7 @@ export { diagnoseConfig } from "./charts/shared/diagnoseConfig"
 export {
   auditData,
   formatDataAudit,
+  formatNumericRequirements,
   profileNumericFields,
   toDataAuditNotifications
 } from "./data/auditData"
