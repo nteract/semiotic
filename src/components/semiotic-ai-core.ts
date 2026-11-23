@@ -108,6 +108,7 @@ export type {
 export {
   auditData,
   formatDataAudit,
+  formatNumericRequirements,
   profileNumericFields,
   toDataAuditNotifications
 } from "./data/auditData"
