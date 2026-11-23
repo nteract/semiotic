@@ -1,5 +1,6 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import { isNoteAnnotation } from "../charts/shared/annotationTypes"
+import { rankAnnotationNotes } from "./annotationPriority"
 
 export type MobileAnnotationStrategyMode = "plot" | "callout-list" | "hybrid"
 
@@ -83,42 +84,6 @@ function annotationLabel(annotation: Datum, preferShortText: boolean): string | 
   )
 }
 
-function explicitPriority(
-  annotation: Datum,
-  index: number,
-  accessor: MobileAnnotationStrategyConfig["priorityAccessor"]
-): number | undefined {
-  if (!accessor) return undefined
-  const value = typeof accessor === "function" ? accessor(annotation, index) : annotation[accessor]
-  return typeof value === "number" && Number.isFinite(value) ? value : undefined
-}
-
-function priorityScore(
-  annotation: Datum,
-  index: number,
-  config: MobileAnnotationStrategyConfig
-): number {
-  const explicit = explicitPriority(annotation, index, config.priorityAccessor)
-  if (explicit !== undefined) return explicit
-
-  let score = 1000 - index
-  const emphasis = String(annotation.emphasis ?? "").toLowerCase()
-  if (emphasis === "primary" || emphasis === "critical") score += 10000
-  if (emphasis === "secondary") score -= 1000
-  if (annotation.priority === "high") score += 5000
-  if (annotation.priority === "low") score -= 1500
-  if (typeof annotation.priority === "number") score += annotation.priority * 100
-
-  const provenance = isObject(annotation.provenance) ? annotation.provenance : undefined
-  if (typeof provenance?.confidence === "number") score += provenance.confidence * 100
-
-  const lifecycle = isObject(annotation.lifecycle) ? annotation.lifecycle : undefined
-  const freshness = String(lifecycle?.freshness ?? "").toLowerCase()
-  if (freshness === "expired" || freshness === "stale") score -= 3000
-
-  return score
-}
-
 function withMobileCopy(annotation: Datum, preferShortText: boolean): Datum {
   if (!preferShortText) return annotation
   const label = annotationLabel(annotation, true)
@@ -179,46 +144,28 @@ export function mobileAnnotationStrategy(
     }
   }
 
-  const structural: Datum[] = []
-  const notes = all
-    .map((annotation, index) => ({ annotation, index, priority: priorityScore(annotation, index, config) }))
-    .filter((entry) => {
-      if (!isNoteAnnotation(entry.annotation)) {
-        structural.push(entry.annotation)
-        return false
-      }
-      return true
-    })
-    .sort((a, b) => b.priority - a.priority)
-
-  const primary = preservePrimary
-    ? notes.filter((entry) => String(entry.annotation.emphasis ?? "").toLowerCase() === "primary")
-    : []
-  const primaryIndexes = new Set(primary.map((entry) => entry.index))
-  const remaining = notes.filter((entry) => !primaryIndexes.has(entry.index))
-  const visibleNoteEntries = [...primary, ...remaining].slice(0, Math.max(budget, minVisible))
-  const visibleIndexes = new Set(visibleNoteEntries.map((entry) => entry.index))
-  const deferredEntries = notes.filter((entry) => !visibleIndexes.has(entry.index))
-
-  const visible = [
-    ...structural,
-    ...visibleNoteEntries
-      .sort((a, b) => a.index - b.index)
-      .map((entry) => withMobileCopy(entry.annotation, preferShortText)),
-  ]
-  const deferred = deferredEntries
-    .sort((a, b) => a.index - b.index)
-    .map((entry) => entry.annotation)
-
-  const maxCalloutItems = Math.max(0, config.maxCalloutItems ?? 6)
-  const calloutList = deferredEntries
-    .filter((entry) => config.calloutFilter ? config.calloutFilter(entry.annotation, entry.index) : true)
-    .map((entry) => calloutItem(entry.annotation, entry.index, entry.priority, preferShortText))
-    .filter((item): item is MobileAnnotationCalloutItem => !!item)
-    .slice(0, maxCalloutItems)
-
-  const listed = new Set(calloutList.map((item) => item.annotation))
-  const hidden = deferred.filter((annotation) => !listed.has(annotation))
+  const { ranked, visibleCount } = rankAnnotationNotes(all, budget, minVisible, {
+    preservePrimary, priorityAccessor: config.priorityAccessor
+  })
+  const deferredScores = new Map(ranked.slice(visibleCount).map(entry => [entry.index, entry.priority]))
+  const visible: Datum[] = []
+  const deferred: Datum[] = []
+  const hidden: Datum[] = []
+  const calloutList: MobileAnnotationCalloutItem[] = []
+  const maxCalloutItems = Math.max(0, Math.floor(config.maxCalloutItems ?? 6))
+  all.forEach((annotation, index) => {
+    const priority = deferredScores.get(index)
+    if (priority === undefined) {
+      visible.push(isNoteAnnotation(annotation) ? withMobileCopy(annotation, preferShortText) : annotation)
+      return
+    }
+    deferred.push(annotation)
+    const item = calloutList.length < maxCalloutItems && (config.calloutFilter?.(annotation, index) ?? true)
+      ? calloutItem(annotation, index, priority, preferShortText)
+      : null
+    if (item) calloutList.push(item)
+    else hidden.push(annotation)
+  })
 
   return {
     active,

@@ -20,6 +20,23 @@ const PHYSICS_CASES = [
   ["physics-pile-settled", "physics-pile-settled.png"],
 ] as const
 
+test("reveals deferred physics notes on hover and keyboard focus", async ({ page }) => {
+  await page.goto("/physics-examples/?annotations")
+  const frame = page.getByTestId("physics-galton-settled").locator(".stream-physics-frame")
+  const detail = frame.locator(".annotation-deferred")
+  const primary = frame.locator(".annotation-emphasis--primary:not(.annotation-deferred *)")
+  await expect(primary).toHaveText("Core note")
+  await expect(primary).toHaveCSS("opacity", "1")
+  await expect(detail).toHaveText("Deferred detail")
+  await expect(detail).toHaveCSS("opacity", "0")
+  await frame.hover()
+  await expect(detail).toHaveCSS("opacity", "1")
+  await page.mouse.move(0, 0)
+  await expect(detail).toHaveCSS("opacity", "0")
+  await frame.focus()
+  await expect(detail).toHaveCSS("opacity", "1")
+})
+
 test.describe("Physics charts - settled-state baselines", () => {
   test.beforeEach(async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" })

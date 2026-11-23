@@ -38,9 +38,9 @@ arbitrary commits from `main`.
 
 ### Lockfile status
 
-The checked-in wrapper pins the published `semiotic@3.8.7` release and includes a generated
+The checked-in wrapper records its exact published release in `package.json` and includes a generated
 `package-lock.json`. Cloud Buildpacks receives that lockfile because `.gcloudignore` excludes
-only `node_modules`. This pin serves manual deploys only and lags the stable endpoint: the
+only `node_modules`. This pin serves manual deploys. The
 release workflow redeploys the stable service from a freshly generated source artifact for
 every release, as described below. Bump the pin and regenerate its lockfile before deploying
 this directory by hand.
@@ -64,7 +64,7 @@ actual deployed revision to prove that its source upload and image used the comm
 
 From the repository root, `npm run check:cloud-run-manifest` verifies the public-host, port,
 profile, exact published dependency, and build-context contract for the currently deployed stable
-wrapper. It intentionally does not require that pin to match an unpublished root version, so
+wrapper. It reports a warning when the wrapper pin differs from the checkout, so
 pre-publish CI can validate the last deployed release. `check:cloud-run-lock` additionally fails
 until a fully resolved lockfile is present; run `check:cloud-run-release` after publication when
 preparing the wrapper to deploy the new root release.
