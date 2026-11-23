@@ -89,6 +89,7 @@ describe("Cloud Run deployment manifest", () => {
     })
 
     assert.deepEqual(ordinary.errors, [])
+    assert.ok(ordinary.warnings.some(warning => warning.includes(wrapperManifest.dependencies.semiotic)))
     assert.equal(
       deployment.errors.some((error) => error.includes("must equal the root package version")),
       true,

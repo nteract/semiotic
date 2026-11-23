@@ -35,6 +35,17 @@ describe("nightly Cloud Run deployment configuration", () => {
     )
   })
 
+  it("requires the verified runtime to use a non-root user and production dependencies", () => {
+    for (const [original, replacement] of [
+      ["USER node", "USER root"],
+      ["COPY --from=production-deps /app/node_modules", "COPY --from=build /app/node_modules"],
+      ["npm prune --omit=dev --offline", "npm prune --include=dev"]
+    ]) {
+      const dockerfile = deployment().dockerfile.replace(original, replacement)
+      assert.ok(validateNightlyCloudRunDeployment(deployment({ dockerfile })).errors.length)
+    }
+  })
+
   it("rejects a Dockerfile that skips the repository runtime or MCP build", () => {
     const dockerfile = deployment().dockerfile.replace(
       "  && npm run build:mcp",
