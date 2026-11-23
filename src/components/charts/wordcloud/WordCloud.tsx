@@ -240,7 +240,7 @@ export function WordCloud(props: WordCloudProps): React.ReactElement {
     >
       <div
         ref={containerRef}
-        aria-busy={pending}
+        aria-busy={pending && props.loadingContent === false ? true : undefined}
         data-wordcloud-state={error ? "error" : pending ? "preparing" : "ready"}
         data-placed-count={layout?.words.length ?? 0}
         data-omitted-count={layout?.omitted.length ?? 0}

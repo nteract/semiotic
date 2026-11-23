@@ -53,6 +53,16 @@ describe("WordCloud deterministic helpers", () => {
 })
 
 describe("WordCloud size resolution across renderers", () => {
+  it("announces updated custom progress while layout is still preparing", () => {
+    const data: Array<{ text: string; value: number }> = []
+    const { rerender } = render(<WordCloud data={data} loadingContent="Preparing words" />)
+    const status = screen.getByText("Preparing words").closest('[role="status"]')!
+    rerender(<WordCloud data={data} loadingContent="Placing words" />)
+    expect(status).toHaveTextContent("Placing words")
+    expect(status.closest("[data-wordcloud-state]")).toHaveAttribute("data-wordcloud-state", "preparing")
+    expect(status.closest('[aria-busy="true"]')).toBeNull()
+  })
+
   it("shares default dimensions with preparation, React and static rendering", async () => {
     const size = resolveChartSize("WordCloud")
     const prepared = await prepareWordCloudLayout({ data: [] })
