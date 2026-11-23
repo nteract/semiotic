@@ -57,3 +57,60 @@ test("force worker and sync keep equivalent geometry, spacing and hover after ra
   expect(resized).not.toEqual(enlarged)
   expect(errors).toEqual([])
 })
+
+test("canvas and SVG expose separate tooltips for a self-loop and reciprocal links after resize", async ({ page }) => {
+  await page.goto("/network-examples/?multigraph")
+  const frame = page.locator(".stream-network-frame")
+  const tooltip = frame.locator(".stream-network-tooltip")
+  for (const width of [400, 340]) {
+    if (width === 340) await page.getByRole("button", { name: "Resize graph" }).click()
+    await page.getByRole("button", { name: "Use SVG" }).click()
+    await expect(frame).toHaveCSS("width", `${width}px`)
+    const paths = frame.locator('path[stroke="#328461"]')
+    await expect(paths).toHaveCount(3)
+    const midpoints = await paths.evaluateAll(elements => elements.map(element => {
+      const path = element as SVGPathElement
+      const point = path.getPointAtLength(path.getTotalLength() / 2).matrixTransform(path.getScreenCTM()!)
+      return { x: point.x, y: point.y }
+    }))
+    for (const renderer of ["SVG", "canvas"]) {
+      if (renderer === "canvas") {
+        await page.getByRole("button", { name: "Use canvas" }).click()
+        await expect(paths).toHaveCount(0)
+      }
+      for (const [index, label] of ["Self reference", "Outgoing reference", "Return reference"].entries()) {
+        const point = midpoints[index]
+        await page.mouse.move(point.x, point.y)
+        await expect(tooltip).toHaveText(label)
+        const bounds = (await frame.boundingBox())!
+        const tip = (await tooltip.boundingBox())!
+        expect(tip.x).toBeGreaterThanOrEqual(bounds.x)
+        expect(tip.x + tip.width).toBeLessThanOrEqual(bounds.x + bounds.width)
+        expect(tip.y).toBeGreaterThanOrEqual(bounds.y)
+        expect(tip.y + tip.height).toBeLessThanOrEqual(bounds.y + bounds.height)
+        await page.mouse.move(0, 0)
+        await expect(tooltip).toHaveCount(0)
+      }
+    }
+  }
+})
+
+
+test("a compact force plot exposes a self-loop beyond its node on both renderers", async ({ page }) => {
+  await page.goto("/network-examples/?multigraph&compact")
+  const frame = page.locator(".stream-network-frame")
+  const path = frame.locator('path[stroke="#328461"]')
+  await expect(path).toHaveCount(1)
+  const point = await path.evaluate(element => {
+    const curve = element as SVGPathElement
+    const p = curve.getPointAtLength(curve.getTotalLength() / 2).matrixTransform(curve.getScreenCTM()!)
+    return { x: p.x, y: p.y }
+  })
+  for (const mode of ["SVG", "canvas"]) {
+    await page.getByRole("button", { name: `Use ${mode}` }).click()
+    await page.mouse.move(point.x, point.y)
+    await expect(frame.locator(".stream-network-tooltip")).toHaveText("Self reference")
+    await page.mouse.move(0, 0)
+    await expect(frame.locator(".stream-network-tooltip")).toHaveCount(0)
+  }
+})
