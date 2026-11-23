@@ -60,6 +60,13 @@ function App() {
       { title: "GaltonBoardChart settled", testId: "physics-galton-settled" },
       React.createElement(GaltonBoardChart, {
         ref: (handle) => { window.__physicsChartHandles.galton = handle },
+        ...(new URLSearchParams(location.search).has("annotations") && {
+          annotations: [
+            { type: "text", x: 80, y: 60, label: "Deferred detail" },
+            { type: "text", x: 80, y: 60, label: "Core note", emphasis: "primary" }
+          ],
+          autoPlaceAnnotations: { density: { maxAnnotations: 1 }, progressiveDisclosure: true }
+        }),
         data: galtonData,
         valueAccessor: "value",
         colorBy: "cohort",
