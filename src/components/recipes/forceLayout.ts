@@ -101,6 +101,7 @@ export function forceLayout(
   const degreeById = new Map<string, number>()
   for (const node of nodes) degreeById.set(node.id, 0)
   for (const edge of edges) {
+    if (edge.source === edge.target) continue
     degreeById.set(edge.source, (degreeById.get(edge.source) ?? 0) + 1)
     degreeById.set(edge.target, (degreeById.get(edge.target) ?? 0) + 1)
   }
@@ -118,7 +119,7 @@ export function forceLayout(
       : nodeRadiusOption
   const validIds = new Set(nodes.map((node) => node.id))
   const links: SimEdge[] = edges
-    .filter((edge) => validIds.has(edge.source) && validIds.has(edge.target))
+    .filter((edge) => edge.source !== edge.target && validIds.has(edge.source) && validIds.has(edge.target))
     .map((edge) => ({ source: edge.source, target: edge.target }))
 
   if (iterations > 0) {
