@@ -12,6 +12,9 @@ export function chartProfileInput(args: {
   if (Array.isArray(props.data)) {
     return { data: props.data as Record<string, unknown>[] }
   }
+  if (Array.isArray(props.areas)) {
+    return { data: [], rawInput: { type: "FeatureCollection", features: props.areas, points: props.points, flows: props.flows } }
+  }
   if (
     Array.isArray(props.nodes) &&
     (Array.isArray(props.edges) || Array.isArray(props.links))

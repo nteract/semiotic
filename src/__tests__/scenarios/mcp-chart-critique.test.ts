@@ -35,7 +35,8 @@ describe("developer MCP chart critique", () => {
     expect(report.findings.map((f: { rank: number }) => f.rank)).toEqual(report.findings.map((_: unknown, i: number) => i + 1))
     expect(report.narrative).toMatch(/requested intent: trend/i)
     const other = await critique("LineChart", props, "distribution")
-    expect(other.structuredContent.fit.score).not.toBe(report.fit.score)
+    expect(other.structuredContent.fit.score).toBe(0)
+    expect(other.structuredContent.findings).toContainEqual(expect.objectContaining({ stage: "fit", code: "INTENT_UNSUPPORTED" }))
   })
 
   it("reports missing intent and invalid input without claiming a rendering result", async () => {
@@ -57,6 +58,17 @@ describe("developer MCP chart critique", () => {
     }, "compare-categories")
     expect(stacked.structuredContent).toMatchObject({ configurationValid: true, fit: { status: "rejected" } })
     expect(stacked.structuredContent.findings).toContainEqual(expect.objectContaining({ stage: "fit", code: "FIT_REJECTED", severity: "warning" }))
+  })
+
+  it("scores inline choropleth features and keeps unresolved references unavailable", async () => {
+    const areas = [1, 2].map((value) => ({
+      type: "Feature", properties: { value },
+      geometry: { type: "Polygon", coordinates: [[[value, 0], [value, 1], [value + 1, 0], [value, 0]]] }
+    }))
+    const inline = await critique("ChoroplethMap", { areas, valueAccessor: "value" }, "geo")
+    expect(inline.structuredContent).toMatchObject({ configurationValid: true, fit: { status: "ok" } })
+    const reference = await critique("ChoroplethMap", { areas: "world", valueAccessor: "value" }, "geo")
+    expect(reference.structuredContent.fit.status).toBe("unavailable")
   })
 
   it("scores graph inputs supplied through nodes and edges", async () => {

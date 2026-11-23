@@ -1,7 +1,7 @@
 import { evaluateChart, getIntent, profileData, scoreChart } from "semiotic/ai"
 import { chartProfileInput } from "../mcp-chart-profile"
 
-interface CritiqueInput {
+type CritiqueInput = {
   component: string
   props: Record<string, unknown>
   intent?: string
@@ -26,7 +26,7 @@ export function critiqueChart(args: CritiqueInput) {
   const fit = assessFit(args, configurationValid)
   const fitFinding = fit.status === "rejected"
     ? { code: "FIT_REJECTED", message: fit.reason }
-    : fit.status === "ok" && intent && fit.intentScores[intent] === 0
+    : fit.status === "ok" && intent && (fit.intentScores[intent] ?? 0) === 0
       ? { code: "INTENT_UNSUPPORTED", message: `The ${component} capability scores zero for the requested ${intent} intent.` }
       : undefined
   const ordered = [
