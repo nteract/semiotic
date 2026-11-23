@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 /**
- * Generate docs/public/llms.txt — the llms.txt-convention index an agent reads
- * first (https://llmstxt.org).
+ * Generate the site's llms.txt catalog and its repository entry point.
  *
  * The chart catalog is the part that drifts (a chart is added; the hand-kept
  * list isn't), so it is GENERATED from `chartSpecs.ts` — grouped by family,
@@ -26,7 +25,6 @@ import { resolveCommunicativeAct } from "../src/components/ai/describeChart.ts"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, "..")
-const outPath = join(repoRoot, "docs/public/llms.txt")
 const chartsDir = join(repoRoot, "docs/src/pages/charts")
 
 const playgroundDir = join(repoRoot, "docs/src/pages/playground")
@@ -142,26 +140,34 @@ const OPTIONAL = `## Optional
 - [Custom Charts](/custom-charts/overview): XY/Ordinal/Network custom layouts and semiotic/recipes
 - [Vega-Lite Translator](/interoperability/vega-lite): Convert Vega-Lite specs to Semiotic`
 
-function render() {
-  return [INTRO, DOCS, chartCatalog(), INTELLIGENCE, FEATURES, AI_INTEGRATION, OPTIONAL].join("\n\n") + "\n"
-}
+const repository = "https://github.com/nteract/semiotic/blob/main"
+const repositoryIndex = `${INTRO}
+
+Install with \`npm install semiotic\`. Start the MCP server with \`npx -y -p semiotic semiotic-mcp\`.
+
+- [Documentation catalog](https://semiotic.nteract.io/llms.txt) — published charts, features, and examples
+- [Repository instructions](${repository}/AGENTS.md) — development workflow and source map
+- [System prompt](${repository}/ai/system-prompt.md) — chart authoring and validation
+- [Component schema](${repository}/ai/schema.json) and [examples](${repository}/ai/examples.md) — retrieve the selected chart's contract and usage
+- [Source Task Packets](${repository}/ai/task-packets/index.json) — development-build guidance and verification limits
+- [Full AI reference](${repository}/ai/reference.md) — detailed API guidance
+- [README](${repository}/README.md) and [changelog](${repository}/CHANGELOG.md) — installation and migration notes
+`
 
 // ── Write / check ───────────────────────────────────────────────────────────
 
-const content = render()
 const check = process.argv.includes("--check")
-
-if (check) {
-  const existing = existsSync(outPath) ? readFileSync(outPath, "utf8") : ""
-  if (existing !== content) {
-    console.error(
-      "✗ docs/public/llms.txt is out of date. Run `npm run docs:llms` and commit the result.",
-    )
-    process.exit(1)
+const catalog = [INTRO, DOCS, chartCatalog(), INTELLIGENCE, FEATURES, AI_INTEGRATION, OPTIONAL].join("\n\n") + "\n"
+for (const [file, content] of [["docs/public/llms.txt", catalog], ["llms.txt", repositoryIndex]]) {
+  const target = join(repoRoot, file)
+  if (check) {
+    if (!existsSync(target) || readFileSync(target, "utf8") !== content) {
+      console.error(`✗ ${file} is out of date. Run npm run docs:llms and commit the result.`)
+      process.exitCode = 1
+    }
+  } else {
+    writeFileSync(target, content)
+    console.log(`✓ wrote ${file}`)
   }
-  console.log("✓ llms.txt is up to date.")
-} else {
-  writeFileSync(outPath, content)
-  const charts = (content.match(/^- \[/gm) || []).length
-  console.log(`✓ wrote docs/public/llms.txt (${content.split("\n").length} lines, ${charts} entries).`)
 }
+if (check && !process.exitCode) console.log("✓ Both llms.txt indexes are up to date.")

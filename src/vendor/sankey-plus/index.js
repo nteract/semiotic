@@ -180,8 +180,8 @@ function computeNodeDepths(graph, sortNodes, align) {
     });
     if (indegree[node.index] === 0) queue.push(node);
   });
-  for (var i = 0; i < queue.length; i++) {
-    var node = queue[i];
+  for (let i = 0; i < queue.length; i++) {
+    const node = queue[i];
     levels = Math.max(levels, node.depth + 1);
     node.sourceLinks.forEach(function (link) {
       if (link.circular) return;
@@ -189,8 +189,8 @@ function computeNodeDepths(graph, sortNodes, align) {
       if (--indegree[link.target.index] === 0) queue.push(link.target);
     });
   }
-  for (var i = queue.length - 1; i >= 0; i--) {
-    var node = queue[i];
+  for (let i = queue.length - 1; i >= 0; i--) {
+    const node = queue[i];
     node.sourceLinks.forEach(function (link) {
       if (!link.circular) node.height = Math.max(node.height, link.target.height + 1);
     });
