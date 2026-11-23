@@ -61,6 +61,23 @@ describe("resolveCSSColor", () => {
     expect(second).toBe("#abcdef")
   })
 
+  it("evicts old CSS paint lookups while keeping recently used colors", () => {
+    const ctx = makeCtx()
+    const lookup = vi.spyOn(window, "getComputedStyle")
+    try {
+      const resolve = (index: number) => resolveCSSColor(ctx, `var(--paint-${index}, red)`)
+      for (let i = 0; i < 256; i++) resolve(i)
+      resolve(0)
+      resolve(256)
+      expect(resolve(0)).toBe("red")
+      expect(lookup).toHaveBeenCalledTimes(257)
+      expect(resolve(1)).toBe("red")
+      expect(lookup).toHaveBeenCalledTimes(258)
+    } finally {
+      lookup.mockRestore()
+    }
+  })
+
   it("invalidates cache when clearCSSColorCache is called", () => {
     const ctx = makeCtx("--color", "#abcdef")
     expect(resolveCSSColor(ctx, "var(--color)")).toBe("#abcdef")

@@ -53,12 +53,40 @@ describe("canvas hatch lifecycle and CSS colors", () => {
     expect(tile.fillRect).toHaveNthReturnedWith(3, { fill: "#aabbcc", opacity: 1 })
   })
 
+  it("reuses one tile for equivalent resolved paints and capped raster scales", () => {
+    const { ctx, createPattern } = targetContext()
+    vi.stubGlobal("devicePixelRatio", 3)
+    const first = resolveHatchCanvasPattern(hatch, ctx)
+    vi.stubGlobal("devicePixelRatio", 4)
+    expect(resolveHatchCanvasPattern({
+      ...hatch, background: "#ffd166", stroke: "#403300"
+    }, ctx)).toBe(first)
+    expect(createPattern).toHaveBeenCalledOnce()
+    vi.stubGlobal("devicePixelRatio", 2)
+    resolveHatchCanvasPattern(hatch, ctx)
+    expect(createPattern).toHaveBeenCalledTimes(2)
+  })
+
   it("keeps cached patterns with their owning canvas context", () => {
     const first = targetContext()
     const second = targetContext()
     expect(resolveHatchCanvasPattern(hatch, first.ctx)).toBe(first.pattern)
     expect(resolveHatchCanvasPattern(hatch, second.ctx)).toBe(second.pattern)
     expect(second.createPattern).toHaveBeenCalledOnce()
+  })
+
+  it("evicts old hatch tiles while keeping frequently painted tiles", () => {
+    const { ctx, createPattern } = targetContext()
+    const resolve = (index: number) => resolveHatchCanvasPattern({
+      type: "hatch", stroke: `rgb(${index % 256}, ${Math.floor(index / 256)}, 0)`
+    }, ctx)
+    for (let i = 0; i < 256; i++) resolve(i)
+    resolve(0)
+    resolve(256)
+    resolve(0)
+    expect(createPattern).toHaveBeenCalledTimes(257)
+    resolve(1)
+    expect(createPattern).toHaveBeenCalledTimes(258)
   })
 
   it("retries after pattern creation is unavailable instead of caching the failure", () => {

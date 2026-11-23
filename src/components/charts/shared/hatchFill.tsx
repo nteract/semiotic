@@ -26,7 +26,8 @@ import { fnv1a32 } from "../../utils/hash"
  * ```
  */
 import * as React from "react"
-import { createHatchPattern, hatchTileGeometry } from "./hatchPattern"
+import { createHatchPattern, hatchRasterScale, hatchTileGeometry } from "./hatchPattern"
+import { cachePaint, readCachedPaint, MAX_CACHED_PAINTS, type CanvasPaintCache } from "../../stream/renderers/canvasPaintCache"
 import { getCSSColorCacheVersion, resolveCSSColor } from "../../stream/renderers/resolveCSSColor"
 
 type AnnotationGradientDirection = "horizontal" | "vertical"
@@ -67,13 +68,17 @@ export function isHatchFill(fill: unknown): fill is HatchFill {
   )
 }
 
+function patternKey(h: HatchFill, background: string | undefined, stroke: string | undefined): string {
+  return `hatch|${background ?? "transparent"}|${stroke ?? "#000"}|${h.lineWidth ?? 1.5}|${h.spacing ?? 6}|${h.angle ?? 45}|${h.lineOpacity ?? 1}`
+}
+
 /**
  * Stable, content-derived key for a hatch descriptor. Used to cache canvas
  * patterns and to mint deterministic SVG `<pattern>` ids so identical
  * descriptors dedupe rather than proliferate.
  */
 export function hatchFillKey(h: HatchFill): string {
-  return `hatch|${h.background ?? "transparent"}|${h.stroke ?? "#000"}|${h.lineWidth ?? 1.5}|${h.spacing ?? 6}|${h.angle ?? 45}|${h.lineOpacity ?? 1}`
+  return patternKey(h, h.background, h.stroke)
 }
 
 /** Deterministic, SVG-id-safe identifier for a hatch descriptor. */
@@ -81,15 +86,7 @@ export function hatchFillId(prefix: string, h: HatchFill): string {
   return `${prefix}-hatch-${fnv1a32(hatchFillKey(h)).toString(36)}`
 }
 
-// Canvas patterns are cached by (content key + device-pixel-ratio) so a
-// per-frame repaint reuses one pattern rather than rebuilding a tile canvas
-// on every draw. DPR is part of the key because a pattern baked at 1x reads
-// blurry on a 2x context. The context owns its patterns so unmounted charts
-// release their tiles, and a theme change discards the previous palette.
-const canvasPatternCache = new WeakMap<CanvasRenderingContext2D, {
-  version: number
-  patterns: Map<string, CanvasPattern>
-}>()
+const canvasPatternCache = new WeakMap<CanvasRenderingContext2D, CanvasPaintCache<CanvasPattern>>()
 
 /**
  * Resolve a `HatchFill` descriptor to a `CanvasPattern` for the given
@@ -101,45 +98,22 @@ export function resolveHatchCanvasPattern(
   h: HatchFill,
   ctx: CanvasRenderingContext2D,
 ): CanvasPattern | null {
-  // CSS custom properties cannot be used as fillStyle on an offscreen tile —
-  // the browser treats invalid paint as black. Resolve against the live canvas
-  // DOM ancestor first; cache key includes the resolved paint so theme toggles
-  // still re-bake.
-  const backgroundRaw = h.background ?? "transparent"
-  const strokeRaw = h.stroke ?? "#000"
-  const background = backgroundRaw === "transparent" || backgroundRaw === "none"
-    ? backgroundRaw
-    : resolveCSSColor(ctx, backgroundRaw) || backgroundRaw
-  const stroke = resolveCSSColor(ctx, strokeRaw) || strokeRaw || "#000"
-
-  const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1
-  const key = `${hatchFillKey(h)}|${background}|${stroke}@${dpr}`
+  const background = resolveCSSColor(ctx, h.background)
+  const stroke = resolveCSSColor(ctx, h.stroke) || "#000"
+  const key = `${patternKey(h, background, stroke)}@${hatchRasterScale()}`
   const version = getCSSColorCacheVersion()
   let entry = canvasPatternCache.get(ctx)
-  if (!entry) {
-    entry = { version, patterns: new Map() }
+  if (entry?.version !== version) {
+    entry = { version, paints: new Map() }
     canvasPatternCache.set(ctx, entry)
-  } else if (entry.version !== version) {
-    entry.patterns.clear()
-    entry.version = version
   }
-  const cached = entry.patterns.get(key)
+  const cached = readCachedPaint(entry.paints, key)
   if (cached !== undefined) return cached
-  const result = createHatchPattern(
-    {
-      background,
-      stroke,
-      lineWidth: h.lineWidth,
-      spacing: h.spacing,
-      angle: h.angle,
-      lineOpacity: h.lineOpacity,
-    },
-    ctx,
-  )
+  const result = createHatchPattern({ ...h, background, stroke }, ctx)
   // Offscreen tile allocation can fail even with a live target context.
   // Keep that fallback retryable after context/resource recovery.
   const pattern = isHatchFill(result) ? null : result
-  if (pattern) entry.patterns.set(key, pattern)
+  if (pattern) cachePaint(entry.paints, key, pattern, MAX_CACHED_PAINTS)
   return pattern
 }
 
