@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest"
 import { scaleLinear } from "d3-scale"
 import { annotationLayout } from "./annotationLayout"
+import { annotationDensity } from "./annotationDensity"
+import { mobileAnnotationStrategy } from "./mobileAnnotationBehavior"
 import type { AnnotationContext } from "../realtime/types"
 import type { Datum } from "../charts/shared/datumTypes"
 
@@ -35,6 +37,59 @@ describe("annotationLayout", () => {
     })
 
     expect([placed[0].dx, placed[0].dy]).not.toEqual([placed[1].dx, placed[1].dy])
+  })
+
+  it.each([false, true])("places retained notes before deferred notes (disclosure %s)", progressiveDisclosure => {
+    const notes = Array.from({ length: 10 }, (_, i) => ({
+      type: "label", x: 50, y: 50, label: String(i), emphasis: i === 9 ? "primary" : "secondary"
+    }))
+    const layout = (annotations: typeof notes) => annotationLayout({
+      annotations, context: context(), density: { maxAnnotations: 1 }, progressiveDisclosure
+    })
+    const result = layout(notes)
+    expect(result.filter(a => !a._annotationDeferred)).toEqual(layout(notes.slice(-1)))
+    if (progressiveDisclosure) {
+      expect(result.map(a => a.label)).toEqual(notes.map(a => a.label))
+      expect(result[0].dx).toEqual(expect.any(Number))
+    }
+  })
+
+  it("keeps repeated annotation objects independently by input index", () => {
+    const note = { type: "label", x: 50, y: 50, label: "repeat" }
+    const result = annotationLayout({
+      annotations: [note, note], context: context(), density: { maxAnnotations: 1 }, progressiveDisclosure: true
+    })
+    expect(result.map(a => !!a._annotationDeferred)).toEqual([false, true])
+  })
+
+  it("keeps defensive and primary notes above a zero budget in author order across recipes", () => {
+    const annotations = [
+      { type: "label", label: "low", emphasis: "secondary" },
+      { type: "label", label: "caveat", emphasis: "secondary", defensive: true },
+      { type: "y-threshold", label: "threshold" },
+      { type: "label", label: "urgent", emphasis: "primary" }
+    ]
+    const limits = { maxAnnotations: 0, minVisible: 0 }
+    const results = [
+      annotationDensity({ annotations, width: 200, height: 120, ...limits }).visible,
+      mobileAnnotationStrategy(annotations, { active: true, ...limits }).visible,
+      annotationLayout({ annotations, context: context(), mobile: limits }).filter(a => !a._annotationDeferred)
+    ]
+    for (const visible of results) {
+      expect(visible.map(a => a.label)).toEqual(["caveat", "threshold", "urgent"])
+    }
+  })
+
+  it("retains the highest-ranked secondary notes up to minVisible and caps mobile callouts", () => {
+    const notes = ["low", "high", "low", "high", "low"].map((priority, i) => ({
+      type: "label", x: 50, y: 50, label: String(i), emphasis: "secondary", priority
+    }))
+    const result = annotationLayout({
+      annotations: notes, context: context(),
+      mobile: { maxAnnotations: 0, minVisible: 2, strategy: "callout-list", maxCalloutItems: 1 }
+    })
+    expect(result.filter(a => !a._annotationDeferred).map(a => a.label)).toEqual(["1", "3"])
+    expect(result.filter(a => a._annotationDeferred).map(a => a.label)).toEqual(["0"])
   })
 
   it("preserves manual offsets by default", () => {

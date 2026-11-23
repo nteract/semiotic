@@ -39,14 +39,8 @@ const INFERRED_OPACITY_STEP = 0.06
  */
 export const ANNOTATION_DISCLOSURE_REVEAL_CSS =
   ".annotation-deferred{opacity:0;pointer-events:none;transition:opacity .12s ease}" +
-  ".stream-xy-frame:hover .annotation-deferred," +
-  ".stream-ordinal-frame:hover .annotation-deferred," +
-  ".stream-network-frame:hover .annotation-deferred," +
-  ".stream-geo-frame:hover .annotation-deferred," +
-  ".stream-xy-frame:focus-within .annotation-deferred," +
-  ".stream-ordinal-frame:focus-within .annotation-deferred," +
-  ".stream-network-frame:focus-within .annotation-deferred," +
-  ".stream-geo-frame:focus-within .annotation-deferred{opacity:1;pointer-events:auto}" +
+  ":is(.stream-xy-frame,.stream-ordinal-frame,.stream-network-frame,.stream-geo-frame,.stream-physics-frame)" +
+  ":is(:hover,:focus-within) .annotation-deferred{opacity:1;pointer-events:auto}" +
   "@media (prefers-reduced-motion:reduce){.annotation-deferred{transition:none}}"
 
 /**
