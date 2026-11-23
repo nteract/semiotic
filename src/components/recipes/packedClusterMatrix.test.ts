@@ -190,14 +190,19 @@ describe("packedClusterMatrix", () => {
     expect(result.overlays).toBeTruthy()
   })
 
-  it("is deterministic across independent calls with the same data", () => {
-    const a = packedClusterMatrix(makeCtx(baseConfig, nodesFrom(SAMPLE)))
-    const b = packedClusterMatrix(makeCtx(baseConfig, nodesFrom(SAMPLE)))
-    const pos = (r: typeof a) =>
-      (r.sceneNodes ?? [])
-        .filter((n): n is NetworkSymbolNode => n.type === "symbol")
-        .map((n) => `${n.id}:${n.cx.toFixed(2)},${n.cy.toFixed(2)}`)
-    expect(pos(a)).toEqual(pos(b))
+  it("reproduces complete glyph geometry with independent packing caches", async () => {
+    async function coldLayout() {
+      vi.resetModules()
+      const { packedClusterMatrix: layout } = await import("./packedClusterMatrix")
+      const result = layout(makeCtx(baseConfig, nodesFrom(SAMPLE)))
+      return (result.sceneNodes ?? [])
+        .filter((node): node is NetworkSymbolNode => node.type === "symbol")
+        .map(({ id, cx, cy, size }) => ({ id, cx, cy, size }))
+    }
+
+    const first = await coldLayout()
+    expect(first.map(mark => mark.id).sort()).toEqual(SAMPLE.map(row => row.id).sort())
+    expect(await coldLayout()).toEqual(first)
   })
 
   it("falls back to a single default shape with no symbolAccessor", () => {

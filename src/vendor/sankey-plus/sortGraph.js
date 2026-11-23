@@ -264,18 +264,6 @@ export function sortTargetLinks(inputGraph, id) {
   return graph;
 }
 
-export function sortLinks(inputGraph) {
-  let g = inputGraph;
-
-  for (var iteration = 0; iteration < linkSortingIterations; iteration++) {
-    g = sortSourceLinks(g);
-    g = sortTargetLinks(g);
-  }
-
-  return g;
-}
-
-
 // test if links both slope up, or both slope down
 function sameInclines(link1, link2) {
   return incline(link1) == incline(link2);

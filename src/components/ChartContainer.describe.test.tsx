@@ -54,6 +54,23 @@ describe("ChartContainer describe", () => {
     expect(note.textContent).toContain("sales ranges from 100 (Jan) to 250 (Feb)")
   })
 
+  it("updates the accessible description when the chart changes from categories to a network", () => {
+    const bar = { component: "BarChart", props: {
+      data: [{ team: "West", sales: 12 }], categoryAccessor: "team", valueAccessor: "sales",
+    } }
+    const graph = { component: "ForceDirectedGraph", props: {
+      nodes: [{ id: "a" }, { id: "b" }, { id: "c" }], edges: [{ source: "a", target: "b" }],
+    } }
+    const { rerender } = render(<ChartContainer chartConfig={bar} describe={{ levels: ["l1"] }}>
+      <div>chart</div>
+    </ChartContainer>)
+    expect(screen.getByRole("note")).toHaveTextContent(/^A bar chart of sales by team\.$/)
+    rerender(<ChartContainer chartConfig={graph} describe={{ levels: ["l1"] }}>
+      <div>chart</div>
+    </ChartContainer>)
+    expect(screen.getByRole("note")).toHaveTextContent(/^A network graph with 3 nodes and 1 edge\.$/)
+  })
+
   it("does not render a description without chartConfig", () => {
     render(
       <ChartContainer title="Sales" describe>
