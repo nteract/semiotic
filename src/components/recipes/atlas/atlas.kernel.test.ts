@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { ledgerValue } from "./ledger"
 import { operationalLabel } from "./motifs"
 import { prepareNetworkAtlas } from "./prepare"
@@ -27,6 +27,30 @@ function loadJson(name: string): {
 } {
   return JSON.parse(readFileSync(join(FIXTURE_DIR, name), "utf8"))
 }
+
+it("selects the same backbone when the host uses Swedish collation", () => {
+  const { spec, source } = loadJson("etl-snapshot-v1.json")
+  const renamed = { ...source, edges: source.edges.map((edge, index) => ({
+    ...edge, id: ["ä", "Z", "å", "a", "B", "e9", "e10", "Ö", "o"][index]
+  })) }
+  function backbone() {
+    const result = prepareNetworkAtlas(spec, renamed)
+    if (!result.ok) throw new Error(result.issues.map(issue => issue.message).join(", "))
+    return result.atlas.forest.backboneEdgeIds
+  }
+  const expected = backbone()
+  expect(expected.length).toBeGreaterThan(0)
+  const swedish = new Intl.Collator("sv").compare
+  const locale = vi.spyOn(String.prototype, "localeCompare").mockImplementation(function (this: string, other: string) {
+    return swedish(String(this), other)
+  })
+  try {
+    expect(backbone()).toEqual(expected)
+    expect(locale).not.toHaveBeenCalled()
+  } finally {
+    locale.mockRestore()
+  }
+})
 
 describe("etl-snapshot-v1 kernel", () => {
   const fixture = loadJson("etl-snapshot-v1.json")

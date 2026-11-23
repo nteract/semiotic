@@ -66,9 +66,6 @@ interface NumericObservation {
   readonly nonFiniteRows: number[]
   readonly nonNumericRows: number[]
   readonly accessorErrorRows: number[]
-  readonly zeroRows: number[]
-  readonly negativeRows: number[]
-  readonly fractionalRows: number[]
 }
 
 interface ResolvedField {
@@ -169,9 +166,6 @@ function observe(
     nonFiniteRows: [],
     nonNumericRows: [],
     accessorErrorRows: [],
-    zeroRows: [],
-    negativeRows: [],
-    fractionalRows: [],
   }
 
   for (let index = 0; index < rows.length; index++) {
@@ -183,20 +177,12 @@ function observe(
       continue
     }
 
-    if (value == null || value === "") {
-      if (missingValue !== undefined) {
-        observation.numbers.push(missingValue)
-        observation.finiteRows.push(index)
-        if (missingValue === 0) observation.zeroRows.push(index)
-        if (missingValue < 0) observation.negativeRows.push(index)
-        if (!Number.isInteger(missingValue)) observation.fractionalRows.push(index)
-        continue
-      }
+    const missing = value == null || value === ""
+    if (missing && missingValue === undefined) {
       observation.missingRows.push(index)
       continue
     }
-
-    const number = numericValue(value, temporalValues)
+    const number = missing ? missingValue! : numericValue(value, temporalValues)
     if (number == null) {
       if (isExplicitNonFinite(value)) observation.nonFiniteRows.push(index)
       else observation.nonNumericRows.push(index)
@@ -205,9 +191,6 @@ function observe(
 
     observation.numbers.push(number)
     observation.finiteRows.push(index)
-    if (number === 0) observation.zeroRows.push(index)
-    if (number < 0) observation.negativeRows.push(index)
-    if (!Number.isInteger(number)) observation.fractionalRows.push(index)
   }
 
   return observation
@@ -295,6 +278,10 @@ function bounded(rows: ReadonlyArray<number>): number[] {
   return rows.slice(0, MAX_AFFECTED_ROWS)
 }
 
+function rowEvidence(rows: ReadonlyArray<number>) {
+  return { rows: bounded(rows), count: rows.length }
+}
+
 function diagnosis(
   value: Omit<DataAuditDiagnosis, "domain">,
 ): DataAuditDiagnosis {
@@ -326,6 +313,10 @@ function outlierRows(field: ResolvedField): number[] {
     .map((pair) => pair.row)
 }
 
+function rowCountText(count: number): string {
+  return `${count} row${count === 1 ? "" : "s"}`
+}
+
 function fieldDiagnoses(
   field: ResolvedField,
   checkOutliers: boolean,
@@ -344,10 +335,10 @@ function fieldDiagnoses(
       diagnosis({
         severity: "error",
         code: "DEGENERATE_EXTENT",
-        message: `${contract.accessor}="${accessorLabel}" produces no finite numeric values; the chart cannot resolve its ${contract.role} input.`,
+        message: `The ${contract.role} input needs a finite value from "${accessorLabel}". None of the ${rowCountText(field.rows.length)} supplied one.`,
         fix: `Ensure ${accessorLabel} contains finite numbers${contract.role === "x" ? " (or valid dates for a time scale)" : ""}.`,
         ...base,
-        ...(invalidRows.length > 0 ? { rows: bounded(invalidRows), count: invalidRows.length } : {}),
+        ...(invalidRows.length > 0 ? rowEvidence(invalidRows) : {}),
       }),
     )
     return out
@@ -358,11 +349,10 @@ function fieldDiagnoses(
       diagnosis({
         severity: "error",
         code: "NON_FINITE_VALUE",
-        message: `${accessorLabel} contains ${observation.nonFiniteRows.length} NaN or infinite value${observation.nonFiniteRows.length === 1 ? "" : "s"}; scale and layout math require finite numbers.`,
+        message: `"${accessorLabel}" requires finite values. Found NaN or infinity in ${rowCountText(observation.nonFiniteRows.length)}.`,
         fix: `Filter or replace NaN/Infinity in ${accessorLabel} before rendering.`,
         ...base,
-        rows: bounded(observation.nonFiniteRows),
-        count: observation.nonFiniteRows.length,
+        ...rowEvidence(observation.nonFiniteRows),
       }),
     )
   }
@@ -372,11 +362,10 @@ function fieldDiagnoses(
       diagnosis({
         severity: "error",
         code: "MISSING_NUMERIC_VALUE",
-        message: `${accessorLabel} is missing for ${observation.missingRows.length} row${observation.missingRows.length === 1 ? "" : "s"}; the ${contract.role} role requires an explicit numeric value.`,
+        message: `The ${contract.role} input requires "${accessorLabel}". It is missing in ${rowCountText(observation.missingRows.length)}.`,
         fix: `Fill or filter missing ${accessorLabel} values before rendering.`,
         ...base,
-        rows: bounded(observation.missingRows),
-        count: observation.missingRows.length,
+        ...rowEvidence(observation.missingRows),
       }),
     )
   }
@@ -390,11 +379,10 @@ function fieldDiagnoses(
       diagnosis({
         severity: "error",
         code: "NON_NUMERIC_VALUE",
-        message: `${accessorLabel} produces ${nonNumericRows.length} non-numeric value${nonNumericRows.length === 1 ? "" : "s"} for the ${contract.role} role.`,
+        message: `The ${contract.role} input requires a number from "${accessorLabel}". Found non-numeric values in ${rowCountText(nonNumericRows.length)}.`,
         fix: `Bind ${contract.accessor} to a numeric field or return finite numbers from the accessor.`,
         ...base,
-        rows: bounded(nonNumericRows),
-        count: nonNumericRows.length,
+        ...rowEvidence(nonNumericRows),
       }),
     )
   }
@@ -406,89 +394,78 @@ function fieldDiagnoses(
         diagnosis({
           severity: "warning",
           code: "ZERO_SPAN_DOMAIN",
-          message: `${accessorLabel} is constant at ${min}; its ${contract.role} scale has a zero-span data domain.`,
+          message: `The ${contract.role} scale needs variation in "${accessorLabel}" to infer a range. All ${rowCountText(observation.finiteRows.length)} have the value ${min}.`,
           fix: `Provide varying ${contract.role} values, set an explicit extent around ${min}, or use a single-value display.`,
           ...base,
-          rows: bounded(observation.finiteRows),
-          count: observation.finiteRows.length,
+          ...rowEvidence(observation.finiteRows),
         }),
       )
     }
   }
 
+  const rowsWhere = (invalid: (value: number) => boolean) =>
+    observation.finiteRows.filter((_, index) => invalid(observation.numbers[index]))
+
   if (requirements.includes("positive")) {
-    const rows = observation.numbers
-      .map((number, index) => ({ number, row: observation.finiteRows[index] }))
-      .filter(({ number }) => number <= 0)
-      .map(({ row }) => row)
+    const rows = rowsWhere(value => value <= 0)
     if (rows.length > 0) {
       const isLog = field.logScale
       out.push(
         diagnosis({
           severity: "error",
           code: isLog ? "LOG_NON_POSITIVE" : "NON_POSITIVE_VALUE",
-          message: `${accessorLabel} contains ${rows.length} non-positive value${rows.length === 1 ? "" : "s"}, which ${isLog ? "cannot be represented on a log scale" : "violate the positive-value contract"}.`,
+          message: `${isLog ? `A log ${contract.role}-axis` : `The ${contract.role} input`} requires "${accessorLabel}" > 0. Found non-positive values in ${rowCountText(rows.length)}.`,
           fix: isLog
             ? `Remove or transform values ≤ 0, or use a linear/symlog scale.`
             : `Provide values greater than zero.`,
           ...base,
-          rows: bounded(rows),
-          count: rows.length,
+          ...rowEvidence(rows),
         }),
       )
     }
   }
 
-  if (requirements.includes("non-negative") && observation.negativeRows.length > 0) {
+  const negativeRows = requirements.includes("non-negative") ? rowsWhere(value => value < 0) : []
+  if (negativeRows.length > 0) {
     out.push(
       diagnosis({
         severity: "error",
         code: contract.role === "size" ? "NEGATIVE_SIZE" : "NEGATIVE_VALUE",
-        message: `${accessorLabel} contains ${observation.negativeRows.length} negative ${contract.role} value${observation.negativeRows.length === 1 ? "" : "s"}; the chart maps this role to non-negative geometry.`,
+        message: `The ${contract.role} input requires "${accessorLabel}" ≥ 0. Found negative values in ${rowCountText(negativeRows.length)}.`,
         fix: `Use a non-negative measure, clamp intentionally, or encode sign with position/color instead.`,
         ...base,
-        rows: bounded(observation.negativeRows),
-        count: observation.negativeRows.length,
+        ...rowEvidence(negativeRows),
       }),
     )
   }
 
   if (requirements.includes("integer")) {
-    const invalid = [...new Set([
-      ...observation.negativeRows,
-      ...observation.zeroRows,
-      ...observation.fractionalRows,
-    ])].sort((a, b) => a - b)
+    const invalid = rowsWhere(value => value < 1 || !Number.isInteger(value))
     if (invalid.length > 0) {
       out.push(
         diagnosis({
           severity: "error",
           code: "INVALID_COUNT",
-          message: `${accessorLabel} contains ${invalid.length} value${invalid.length === 1 ? "" : "s"} that are not positive integers.`,
+          message: `"${accessorLabel}" requires positive integers. Found invalid counts in ${rowCountText(invalid.length)}.`,
           fix: `Counts must be integers ≥ 1; aggregate, round intentionally, or use a continuous-value encoding.`,
           ...base,
-          rows: bounded(invalid),
-          count: invalid.length,
+          ...rowEvidence(invalid),
         }),
       )
     }
   }
 
   if (requirements.includes("unit-interval")) {
-    const rows = observation.numbers
-      .map((number, index) => ({ number, row: observation.finiteRows[index] }))
-      .filter(({ number }) => number < 0 || number > 1)
-      .map(({ row }) => row)
+    const rows = rowsWhere(value => value < 0 || value > 1)
     if (rows.length > 0) {
       out.push(
         diagnosis({
           severity: "error",
           code: "OUTSIDE_UNIT_INTERVAL",
-          message: `${accessorLabel} contains ${rows.length} value${rows.length === 1 ? "" : "s"} outside [0, 1].`,
+          message: `"${accessorLabel}" must be within [0, 1]. Found out-of-range values in ${rowCountText(rows.length)}.`,
           fix: `Normalize ${accessorLabel} to [0, 1] before using it as ${contract.role}.`,
           ...base,
-          rows: bounded(rows),
-          count: rows.length,
+          ...rowEvidence(rows),
         }),
       )
     }
@@ -504,8 +481,7 @@ function fieldDiagnoses(
           message: `${accessorLabel} has ${rows.length} extreme value${rows.length === 1 ? "" : "s"} beyond the 10×IQR guardrail; the main distribution may collapse visually.`,
           fix: `Verify the extreme values, then consider a log scale, robust extent, inset, or explicit annotation rather than silently clipping them.`,
           ...base,
-          rows: bounded(rows),
-          count: rows.length,
+          ...rowEvidence(rows),
         }),
       )
     }
@@ -699,8 +675,8 @@ export function auditData(
       diagnosis({
         severity: "error",
         code: "EMPTY_DATA",
-        message: `${dataProp} is an explicitly empty array; there are no numeric inputs to render.`,
-        fix: `Provide at least one valid row, render an intentional empty state, or omit ${dataProp} when using the ref push API.`,
+        message: `"${dataProp}" needs at least one row to render numeric inputs. It has 0 rows.`,
+        fix: `Provide rows, render an empty state, or omit ${dataProp} for ref push mode.`,
         count: 0,
         rows: [],
       }),
@@ -719,7 +695,7 @@ export function auditData(
       diagnosis({
         severity: "warning",
         code: "SINGLE_ROW_DOMAIN",
-        message: `${dataProp} has one row; a quantitative scale cannot establish variation from a single observation.`,
+        message: `A quantitative domain needs at least two observations to show variation. "${dataProp}" has 1 row.`,
         fix: `Provide at least two observations or use a single-value display such as BigNumber.`,
         count: 1,
         rows: [0],
@@ -763,5 +739,5 @@ export function auditData(
 
 export { profileNumericFields } from "./numericFieldProfiler"
 export type { NumericFieldProfile, ProfileNumericFieldsOptions } from "./numericFieldProfiler"
-export { formatDataAudit, toDataAuditNotifications } from "./dataAuditPresentation"
+export { formatDataAudit, formatNumericRequirements, toDataAuditNotifications } from "./dataAuditPresentation"
 export type { DataAuditChartNotification, DataAuditNotificationOptions } from "./dataAuditPresentation"

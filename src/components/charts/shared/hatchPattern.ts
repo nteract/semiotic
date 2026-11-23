@@ -49,25 +49,6 @@ export function hatchTileGeometry(spacing: number): {
   return { width: Math.max(8, period), height: period, lineY: period / 2 }
 }
 
-/**
- * The serializable `HatchFill` equivalent of the requested pattern. Returned
- * when no canvas is available (SSR/test) so a `pieceStyle`/`nodeStyle` doing
- * `createHatchPattern(...) ?? color` still yields a hatch that the SVG path
- * renders as a `<pattern>` — instead of silently collapsing to the solid
- * fallback. On canvas the real `CanvasPattern` is returned as before.
- */
-function hatchFillDescriptor(o: Required<HatchPatternOptions>): HatchFill {
-  return {
-    type: "hatch",
-    background: o.background,
-    stroke: o.stroke,
-    lineWidth: o.lineWidth,
-    spacing: o.spacing,
-    angle: o.angle,
-    ...(o.lineOpacity !== 1 ? { lineOpacity: o.lineOpacity } : {}),
-  }
-}
-
 let _offscreen: HTMLCanvasElement | null = null
 
 function getOffscreenCanvas(width: number, height: number): HTMLCanvasElement | OffscreenCanvas {
@@ -125,7 +106,10 @@ export function createHatchPattern(
     angle = 45,
     lineOpacity = 1,
   } = options
-  const resolved = { background, stroke, lineWidth, spacing, angle, lineOpacity }
+  function fallback(): HatchFill {
+    return { type: "hatch", background, stroke, lineWidth, spacing, angle,
+      ...(lineOpacity !== 1 && { lineOpacity }) }
+  }
   const tile = hatchTileGeometry(spacing)
 
   // Bake the tile at device resolution; the pattern transform scales it back
@@ -138,11 +122,11 @@ export function createHatchPattern(
   try {
     tileCanvas = getOffscreenCanvas(tileWidth, tileHeight)
   } catch {
-    return hatchFillDescriptor(resolved) // SSR or test environment
+    return fallback() // SSR or test environment
   }
 
   const ctx = tileCanvas.getContext("2d") as HatchTileContext | null
-  if (!ctx) return hatchFillDescriptor(resolved)
+  if (!ctx) return fallback()
 
   paintTileBackground(ctx, background, tileWidth, tileHeight)
   const pxPerUnitY = tileHeight / tile.height
