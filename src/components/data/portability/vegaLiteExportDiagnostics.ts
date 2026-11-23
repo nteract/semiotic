@@ -1,3 +1,4 @@
+import { pointerSegment } from "../vegaLiteValidation"
 import { toVegaInterpolation } from "../vegaLiteCurves"
 import type { Datum } from "../../charts/shared/datumTypes"
 import type { PortabilityLoss } from "./result"
@@ -26,7 +27,7 @@ const SUPPORTED: Record<string, string[]> = {
   AreaChart: [...XY, "areaBy", "curve", "areaOpacity"],
   StackedAreaChart: [...XY, "areaBy", "curve", "areaOpacity", "normalize"],
   Scatterplot: [...XY, "colorBy", "pointOpacity"],
-  BubbleChart: [...XY, "colorBy", "sizeBy"],
+  BubbleChart: [...XY, "colorBy", "sizeBy", "bubbleOpacity"],
   Heatmap: ["xAccessor", "yAccessor", "valueAccessor", "xLabel", "yLabel"],
   PieChart: ["categoryAccessor", "valueAccessor"],
   DonutChart: ["categoryAccessor", "valueAccessor", "innerRadius"],
@@ -56,10 +57,10 @@ export function vegaLiteExportLosses(
   ) =>
     losses.push({
       code: "UNSUPPORTED_PROP",
-      path: `/props/${key.replace(/~/g, "~0").replace(/\//g, "~1")}`,
+      path: `/props/${pointerSegment(key)}`,
       message
     })
-  const allowed = Object.prototype.hasOwnProperty.call(SUPPORTED, component)
+  const allowed = Object.hasOwn(SUPPORTED, component)
     ? SUPPORTED[component]
     : []
   // Imported implicit colors are equivalent only when the exporter actually

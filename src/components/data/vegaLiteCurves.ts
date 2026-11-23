@@ -11,7 +11,7 @@ const CURVE_TO_INTERPOLATE: Record<string, string> = {
 }
 
 export function toVegaInterpolation(curve: unknown): string | undefined {
-  return typeof curve === "string" && Object.prototype.hasOwnProperty.call(CURVE_TO_INTERPOLATE, curve)
+  return typeof curve === "string" && Object.hasOwn(CURVE_TO_INTERPOLATE, curve)
     ? CURVE_TO_INTERPOLATE[curve] : undefined
 }
 

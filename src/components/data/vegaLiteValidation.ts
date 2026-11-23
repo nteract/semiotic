@@ -1,7 +1,21 @@
 import { aggregateRows } from "./aggregateRows"
 import { fromVegaInterpolation } from "./vegaLiteCurves"
-import type { VegaLiteSpec } from "./fromVegaLite"
+import type { VegaLiteEncoding, VegaLiteSpec } from "./fromVegaLite"
 import type { PortabilityDiagnostic } from "./portability/result"
+
+export const compositionKeys = ["hconcat", "vconcat", "concat", "facet", "repeat", "params", "selection"] as const
+
+export function pointOpacityProp(component: string) {
+  return component === "BubbleChart" ? "bubbleOpacity" : "pointOpacity"
+}
+
+export function isCategory(type?: string): boolean {
+  return type === "nominal" || type === "ordinal"
+}
+
+export function isHorizontalBar(x?: VegaLiteEncoding, y?: VegaLiteEncoding): boolean {
+  return (x?.type === "quantitative" || x?.type === "temporal") && isCategory(y?.type)
+}
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value)
@@ -14,7 +28,7 @@ export function isRecordArray(value: unknown): value is Record<string, unknown>[
   return true
 }
 
-const pointer = (value: string) =>
+export const pointerSegment = (value: string) =>
   value.replace(/~/g, "~0").replace(/\//g, "~1")
 
 /** Vega interprets dots, brackets, and escapes in field references. */
@@ -43,16 +57,17 @@ export function vegaLiteShapeDiagnostics(
       invalid("/encoding", "encoding must be an object.")
     else
       for (const [channel, encoding] of Object.entries(value.encoding)) {
+        const path = `/encoding/${pointerSegment(channel)}`
         if (!isRecord(encoding))
           invalid(
-            `/encoding/${pointer(channel)}`,
+            path,
             "An encoding must be an object."
           )
         else
           for (const key of ["scale", "axis"] as const) {
             if (encoding[key] !== undefined && !isRecord(encoding[key])) {
               invalid(
-                `/encoding/${pointer(channel)}/${key}`,
+                `${path}/${key}`,
                 `${key} must be an object in the supported subset.`
               )
             }
@@ -105,7 +120,7 @@ export function vegaLiteSemanticDiagnostics(
     })
   const keys = (value: object, allowed: string[], path: string) => {
     for (const key of Object.keys(value))
-      if (!allowed.includes(key)) unsupported(`${path}/${pointer(key)}`)
+      if (!allowed.includes(key)) unsupported(`${path}/${pointerSegment(key)}`)
   }
   const mark = typeof spec.mark === "string" ? spec.mark : spec.mark?.type
   const symbol = ["point", "circle", "square"].includes(mark)
@@ -124,13 +139,7 @@ export function vegaLiteSemanticDiagnostics(
       "title",
       "usermeta",
       "layer",
-      "hconcat",
-      "vconcat",
-      "concat",
-      "facet",
-      "repeat",
-      "params",
-      "selection",
+      ...compositionKeys,
       "transform"
     ],
     ""
@@ -151,7 +160,7 @@ export function vegaLiteSemanticDiagnostics(
       unsupported("/mark/interpolate")
   }
   const { x, y, color } = spec.encoding ?? {}
-  if (continuous || mark === "rect") {
+  if (continuous || mark === "rect" || mark === "tick" || (mark === "bar" && !x?.bin && !y?.bin)) {
     for (const axis of ["x", "y"] as const) {
       const channel = spec.encoding?.[axis]
       if (!channel?.field && !channel?.aggregate) unsupported(`/encoding/${axis}`)
@@ -161,7 +170,7 @@ export function vegaLiteSemanticDiagnostics(
     if (binned?.bin && measure && measure.aggregate !== "count") unsupported(`/encoding/${channel}`)
   }
   if (mark === "bar" && x && y && !x.bin && !y.bin) {
-    const horizontal = x.type === "quantitative"
+    const horizontal = isHorizontalBar(x, y)
     const [dimension, measure] = horizontal ? [y, x] : [x, y]
     const path = horizontal ? "/encoding/x" : "/encoding/y"
     if (dimension.stack !== undefined) unsupported(horizontal ? "/encoding/y/stack" : "/encoding/x/stack")
@@ -182,7 +191,7 @@ export function vegaLiteSemanticDiagnostics(
   if (mark === "area" && color?.field && x?.aggregate && !y?.aggregate &&
       x.stack === undefined && y?.stack === undefined) unsupported("/encoding/x/stack")
   for (const [channel, enc] of Object.entries(spec.encoding || {})) {
-    const path = `/encoding/${pointer(channel)}`
+    const path = `/encoding/${pointerSegment(channel)}`
     if (!channels.includes(channel)) {
       unsupported(path)
       continue
@@ -206,15 +215,14 @@ export function vegaLiteSemanticDiagnostics(
       (enc.field !== undefined || typeof enc.value !== "number")
     )
       unsupported(path)
-    if (channel === "y" && enc.type === "temporal") unsupported(`${path}/type`)
+    if (enc.type === "temporal" && (!continuous || channel === "y")) unsupported(`${path}/type`)
     if (
       continuous &&
       (channel === "x" || channel === "y") &&
-      ["nominal", "ordinal"].includes(enc.type || "")
+      isCategory(enc.type)
     )
       unsupported(`${path}/type`)
-    if (!continuous && enc.type === "temporal") unsupported(`${path}/type`)
-    if (channel === "color" && (mark === "rect" ? ["nominal", "ordinal"].includes(enc.type ?? "") : enc.type === "quantitative"))
+    if (channel === "color" && (mark === "rect" ? isCategory(enc.type) : enc.type === "quantitative"))
       unsupported(`${path}/type`)
     if (channel === "size" && enc.type !== undefined && enc.type !== "quantitative") unsupported(`${path}/type`)
     if (enc.axis) keys(enc.axis, ["title"], `${path}/axis`)

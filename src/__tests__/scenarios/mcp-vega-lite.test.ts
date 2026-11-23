@@ -1,4 +1,4 @@
-import { encodingLossExamples } from "../fixtures/vegaLiteEncodingLoss"
+import { encodingLossExamples, translucentBubbles } from "../fixtures/vegaLiteEncodingLoss"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import type { ChildProcess } from "node:child_process"
 import { initializeServer, sendRequest, spawnServer } from "./mcpStdioHarness"
@@ -64,6 +64,12 @@ describe("developer MCP Vega-Lite conversion", () => {
     ).result
     expect(rendered.isError).not.toBe(true)
     expect(rendered.content[0].text).toContain("<svg")
+  })
+
+  it("converts sized points to translucent bubbles", async () => {
+    const result = await call(translucentBubbles)
+    expect(result.isError).not.toBe(true)
+    expect(result.structuredContent).toMatchObject({ component: "BubbleChart", props: { bubbleOpacity: 0.25 } })
   })
 
   it.each(encodingLossExamples)("exposes $path on a $spec.mark over MCP", async ({ spec, path }) => {

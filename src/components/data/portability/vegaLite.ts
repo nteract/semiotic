@@ -14,7 +14,7 @@
  * Pure, dependency-free, no chart-family imports.
  */
 import { toVegaInterpolation } from "../vegaLiteCurves"
-import { hasVegaFieldPath, isRecord, isRecordArray } from "../vegaLiteValidation"
+import { hasVegaFieldPath, isRecord, isRecordArray, pointOpacityProp } from "../vegaLiteValidation"
 import { exportableColorScheme, vegaLiteExportLosses } from "./vegaLiteExportDiagnostics"
 import type { ChartConfig } from "../../export/chartConfig"
 import type { Datum } from "../../charts/shared/datumTypes"
@@ -103,7 +103,7 @@ const OPTIONAL_ACCESSORS: Record<string, readonly string[]> = {
 function accessorDiagnostics(component: string, props: AnyProps): PortabilityDiagnostic[] {
   const diagnostics: PortabilityDiagnostic[] = []
   for (const [table, required] of [[REQUIRED_ACCESSORS, true], [OPTIONAL_ACCESSORS, false]] as const) {
-    if (!Object.prototype.hasOwnProperty.call(table, component)) continue
+    if (!Object.hasOwn(table, component)) continue
     for (const key of table[component]) {
       const value = props[key]
       if ((!required && value === undefined) || (typeof value === "string" && value.length)) continue
@@ -166,7 +166,7 @@ export function toVegaLiteResult(
       const horizontal = props.orientation === "horizontal"
       const cat = withAxisTitle(nominal(props.categoryAccessor), props.categoryLabel)
       const val = withAxisTitle(quant(props.valueAccessor), props.valueLabel)
-      val.aggregate = "sum"
+      if (component !== "GroupedBarChart") val.aggregate = "sum"
       if (component === "BarChart") val.stack = null
       if (horizontal) {
         enc.y = cat
@@ -227,7 +227,8 @@ export function toVegaLiteResult(
       enc.x = withAxisTitle(xyEncoding(props, "x"), props.xLabel)
       enc.y = withAxisTitle(xyEncoding(props, "y"), props.yLabel)
       if (props.colorBy) enc.color = nominal(props.colorBy)
-      if (props.pointOpacity !== undefined) enc.opacity = { value: props.pointOpacity }
+      const opacity = props[pointOpacityProp(component)]
+      if (opacity !== undefined) enc.opacity = { value: opacity }
       if (component === "BubbleChart" && props.sizeBy) {
         enc.size = quant(props.sizeBy)
         if (Array.isArray(props.sizeRange)) enc.size.scale = { range: props.sizeRange }

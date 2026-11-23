@@ -1,4 +1,4 @@
-import { idDictionary, ownValue, setOwnValue } from "./ids"
+import { ownValue } from "./ids"
 import type {
   LedgerEntry,
   MeasureLedger,
@@ -7,21 +7,14 @@ import type {
   SectionIndex
 } from "./types"
 
-const uncertainty: Record<LedgerEntry["status"], number> = {
-  exact: 0,
-  estimated: 1,
-  incomplete: 2,
-  unknown: 3
+const certainty: LedgerEntry["status"][] = ["unknown", "incomplete", "estimated", "exact"]
+
+export function leastCertain(a: LedgerEntry["status"], b: LedgerEntry["status"]) {
+  return certainty.indexOf(a) < certainty.indexOf(b) ? a : b
 }
 
-function nodeKind(
-  subjectId: string,
-  nodeIds: ReadonlySet<string>,
-  sections: SectionIndex
-): LedgerEntry["subjectKind"] {
-  if (nodeIds.has(subjectId)) return "node"
-  if (ownValue(sections.nodeIdsBySection, subjectId)) return "section"
-  return "global"
+export function measureSubjectKey(measureId: string, subjectId: string): string {
+  return JSON.stringify([measureId, subjectId])
 }
 
 /**
@@ -34,13 +27,15 @@ export function buildLedger(
   sections: SectionIndex
 ): MeasureLedger {
   const entries: LedgerEntry[] = []
-  const nodeIds = new Set(source.nodes.map((node) => node.id))
+  const nodes = new Map(source.nodes.map((node) => [node.id, node]))
   const authoredSectionKeys = new Set<string>()
 
   for (const row of source.measureValues) {
     const measure = ownValue(spec.measures, row.measureId)
     if (!measure) continue
-    const subjectKind = nodeKind(row.subjectId, nodeIds, sections)
+    const subjectKind = nodes.has(row.subjectId)
+      ? "node"
+      : ownValue(sections.nodeIdsBySection, row.subjectId) ? "section" : "global"
     entries.push({
       measureId: row.measureId,
       subjectId: row.subjectId,
@@ -52,44 +47,37 @@ export function buildLedger(
       timeDenominator: measure.timeDenominator
     })
     if (subjectKind === "section") {
-      authoredSectionKeys.add(JSON.stringify([row.measureId, row.subjectId]))
+      authoredSectionKeys.add(measureSubjectKey(row.measureId, row.subjectId))
     }
   }
-
-  const nodeById = idDictionary<(typeof source.nodes)[number]>()
-  for (const node of source.nodes) setOwnValue(nodeById, node.id, node)
 
   const derived = new Map<string, LedgerEntry>()
   for (const entry of entries) {
     if (entry.subjectKind !== "node") continue
-    const node = nodeById[entry.subjectId]
-    if (!node?.sectionId) continue
-    const key = JSON.stringify([entry.measureId, node.sectionId])
+    const sectionId = nodes.get(entry.subjectId)?.sectionId
+    if (!sectionId) continue
+    const key = measureSubjectKey(entry.measureId, sectionId)
     if (authoredSectionKeys.has(key)) continue
     const previous = derived.get(key)
     if (previous) {
       previous.value += entry.value
-      if (uncertainty[entry.status] > uncertainty[previous.status])
-        previous.status = entry.status
+      previous.status = leastCertain(previous.status, entry.status)
     } else {
-      derived.set(key, {
-        ...entry,
-        subjectId: node.sectionId,
-        subjectKind: "section"
-      })
+      const section: LedgerEntry = { ...entry, subjectId: sectionId, subjectKind: "section" }
+      derived.set(key, section)
+      entries.push(section)
     }
   }
-  for (const entry of derived.values()) entries.push(entry)
-
   return { entries }
 }
 
 export function ledgerValue(
   ledger: MeasureLedger,
   measureId: string,
-  subjectId: string
+  subjectId: string,
+  kind?: LedgerEntry["subjectKind"]
 ): LedgerEntry | undefined {
   return ledger.entries.find(
-    (entry) => entry.measureId === measureId && entry.subjectId === subjectId
+    (entry) => entry.measureId === measureId && entry.subjectId === subjectId && (!kind || entry.subjectKind === kind)
   )
 }

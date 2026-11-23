@@ -1,4 +1,4 @@
-import { encodingLossExamples } from "../../../__tests__/fixtures/vegaLiteEncodingLoss"
+import { encodingLossExamples, translucentBubbles } from "../../../__tests__/fixtures/vegaLiteEncodingLoss"
 import { describe, expect, it, vi } from "vitest"
 import { fromVegaLite, fromVegaLiteResult } from "../fromVegaLite"
 import type { VegaLiteSpec } from "../fromVegaLite"
@@ -21,6 +21,18 @@ const importSpec = (value: unknown, lossy = false) =>
   })
 
 describe("strict Vega-Lite boundaries", () => {
+  it("round trips BubbleChart opacity through its public prop", () => {
+    const imported = importSpec(translucentBubbles)
+    expect(imported.status).toBe("success")
+    expect(imported.config).toMatchObject({ component: "BubbleChart", props: { bubbleOpacity: 0.25 } })
+    const chart = imported.config!
+    const rendered = renderChartWithEvidence(chart.component, chart.props)
+    expect(rendered.svg).toMatch(/(?:fill-)?opacity="0\.25"/)
+    const exported = toVegaLiteResult(chart)
+    expect(exported.status).toBe("success")
+    expect(exported.spec?.encoding?.opacity).toEqual({ value: 0.25 })
+  })
+
   it.each(encodingLossExamples)("reports $path on a $spec.mark before rendering", ({ spec, path }) => {
     const strict = importSpec(spec)
     expect(strict.status).toBe("refused")
@@ -409,6 +421,16 @@ describe("strict Vega-Lite export", () => {
       type: component === "Heatmap" ? "quantitative" : "nominal",
       scale: { range: ["red", "blue"] }
     })
+  })
+
+  it.each(["horizontal", "vertical"])("keeps individual %s grouped bars", orientation => {
+    const data = [{ c: "A", g: "G", v: 2 }, { c: "A", g: "G", v: 3 }]
+    const result = toVegaLiteResult(config("GroupedBarChart", {
+      orientation, categoryAccessor: "c", valueAccessor: "v", groupBy: "g", data
+    }), { allowLossy: true })
+    expect(result.lossReport).toContainEqual(expect.objectContaining({ code: "GROUPED_BAR_APPROXIMATION" }))
+    expect(result.spec?.data?.values).toEqual(data)
+    expect(result.spec?.encoding?.[orientation === "horizontal" ? "x" : "y"]).toEqual({ field: "v", type: "quantitative" })
   })
 
   it("preserves grouped colors while reporting the grouped layout approximation", () => {

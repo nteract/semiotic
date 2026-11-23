@@ -12,7 +12,8 @@ export type {
   MotifBraidProjection,
   TrajectoryGroup,
   BraidRibbon,
-  SignedReadout
+  SignedReadout,
+  UnavailableDifference
 } from "./recipes/atlas/braid"
 export * from "./recipes/atlas/queries"
 export * from "./recipes/atlas/dependencyQueries"
