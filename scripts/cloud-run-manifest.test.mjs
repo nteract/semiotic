@@ -38,8 +38,10 @@ function validate(overrides = {}) {
 }
 
 describe("Cloud Run deployment manifest", () => {
-  it("keeps the current wrapper structurally valid while honestly reporting the missing lock", () => {
-    const report = validate()
+  it("reports a missing lockfile for an otherwise aligned wrapper", () => {
+    const report = validate({
+      rootManifest: { ...rootManifest, version: wrapperManifest.dependencies.semiotic }
+    })
 
     assert.deepEqual(report.errors, [])
     assert.equal(report.lockfile.state, "missing")
