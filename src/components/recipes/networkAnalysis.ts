@@ -1,3 +1,4 @@
+import { findProximityProblems, nodesWithinHops } from "./networkProximity"
 import { hasOwn, ownValue, setOwnValue, idDictionary } from "./atlas/ids"
 
 /**
@@ -11,7 +12,7 @@ import { hasOwn, ownValue, setOwnValue, idDictionary } from "./atlas/ids"
  * recipes: size nodes by centrality, highlight an ego network on hover, trace a
  * shortest path, or diagnose a misleading layout.
  *
- * All functions are pure and dependency-free. Edges are treated as undirected.
+ * All functions are pure. Edges are treated as undirected.
  */
 
 export interface GraphNode {
@@ -44,6 +45,7 @@ export function buildAdjacency(
   for (const e of edges) {
     if (!adj.has(e.source)) adj.set(e.source, new Set())
     if (!adj.has(e.target)) adj.set(e.target, new Set())
+    if (e.source === e.target) continue
     adj.get(e.source)!.add(e.target)
     adj.get(e.target)!.add(e.source)
   }
@@ -56,11 +58,7 @@ export function degree(
   edges: ReadonlyArray<GraphEdge>
 ): Record<string, number> {
   const out: Record<string, number> = {}
-  for (const n of nodes) setOwnValue(out, n.id, 0)
-  for (const e of edges) {
-    setOwnValue(out, e.source, (ownValue(out, e.source) ?? 0) + 1)
-    setOwnValue(out, e.target, (ownValue(out, e.target) ?? 0) + 1)
-  }
+  for (const [id, neighbors] of buildAdjacency(nodes, edges)) setOwnValue(out, id, neighbors.size)
   return out
 }
 
@@ -133,12 +131,7 @@ export function egoNetwork(
   id: string,
   depth = 1
 ): Set<string> {
-  const adj = buildAdjacency(nodes, edges)
-  if (!adj.has(id)) return new Set()
-  const dist = bfsDistances(adj, id)
-  const out = new Set<string>()
-  for (const key of Object.keys(dist)) if (dist[key] <= depth) out.add(key)
-  return out
+  return nodesWithinHops(buildAdjacency(nodes, edges), id, depth)
 }
 
 /**
@@ -261,11 +254,11 @@ export function normalizeScores(scores: Record<string, number>): Record<string, 
 }
 
 export interface ProximityProblemOptions {
-  /** Minimum graph-hop distance for a pair to count as "far". @default 4 */
+  /** Minimum graph-hop distance for a pair to count as "far". @default 3 */
   minHops?: number
-  /** Starting screen-distance threshold (in the units of `positions`). @default 0.08 */
+  /** First distance to check in position units. Defaults to half the median nearest distinct position distance. */
   startThreshold?: number
-  /** Cap the threshold search at this distance before relaxing `minHops`. @default 0.2 */
+  /** Fallback distance in position units. Defaults to 90% of typical spacing, or an explicit startThreshold. */
   maxThreshold?: number
 }
 
@@ -278,55 +271,12 @@ export interface ProximityProblemResult {
   minHops: number
 }
 
-/**
- * The "spatial problem": find nodes drawn near each other on screen yet far
- * apart (or disconnected) in the graph — proximity pretending to be kinship,
- * the classic force-layout lie. `positions` is a map of node id → screen point
- * (any consistent coordinate space; distances are compared in those units).
- * The search escalates the distance threshold, then relaxes `minHops`, until at
- * least one offending pair is found.
- */
+/** Find spatially close nodes separated by at least the requested number of graph hops. */
 export function proximityProblem(
   nodes: ReadonlyArray<GraphNode>,
   edges: ReadonlyArray<GraphEdge>,
   positions: Record<string, Point>,
   options: ProximityProblemOptions = {}
 ): ProximityProblemResult {
-  const adj = buildAdjacency(nodes, edges)
-  const dist = idDictionary<Record<string, number>>()
-  for (const n of nodes) dist[n.id] = bfsDistances(adj, n.id)
-
-  let minHops = options.minHops ?? 4
-  let threshold = options.startThreshold ?? 0.08
-  const maxThreshold = options.maxThreshold ?? 0.2
-  const problemIds = new Set<string>()
-  let guard = 0
-  while (problemIds.size === 0 && guard < 40) {
-    for (let i = 0; i < nodes.length; i += 1) {
-      for (let j = i + 1; j < nodes.length; j += 1) {
-        const a = nodes[i].id
-        const b = nodes[j].id
-        const pa = ownValue(positions, a)
-        const pb = ownValue(positions, b)
-        if (!pa || !pb) continue
-        const hops = dist[a][b] === undefined ? Infinity : dist[a][b]
-        const dx = pa.x - pb.x
-        const dy = pa.y - pb.y
-        const screen = Math.sqrt(dx * dx + dy * dy)
-        if (hops >= minHops && screen < threshold) {
-          problemIds.add(a)
-          problemIds.add(b)
-        }
-      }
-    }
-    if (problemIds.size === 0) {
-      threshold += 0.02
-      if (threshold > maxThreshold) {
-        threshold = options.startThreshold ?? 0.08
-        minHops = Math.max(2, minHops - 1)
-      }
-    }
-    guard += 1
-  }
-  return { problemIds, threshold, minHops }
+  return findProximityProblems(nodes, buildAdjacency(nodes, edges), positions, options)
 }

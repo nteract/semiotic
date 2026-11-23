@@ -1,3 +1,4 @@
+import { compareRecipeIds } from "../utils/compareRecipeIds"
 import type { Datum } from "../charts/shared/datumTypes"
 import type { RealtimeEdge, RealtimeNode } from "../stream/networkTypes"
 import { createSafeDatum, readField, unwrapDatum } from "./recipeUtils"
@@ -274,7 +275,7 @@ export function allocateAdjacencyFlowWidths(
     group.sort((a, b) => {
       const aIndex = outgoing ? a.targetIndex : a.sourceIndex
       const bIndex = outgoing ? b.targetIndex : b.sourceIndex
-      return aIndex - bIndex || a.key.localeCompare(b.key)
+      return aIndex - bIndex || compareRecipeIds(a.key, b.key)
     })
   }
 

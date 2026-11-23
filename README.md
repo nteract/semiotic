@@ -634,9 +634,9 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { MotifBraidChart } from "semiotic/atlas"` | browser | **114.0 KiB** | 30.4 KiB | 140.6 KiB |
 | `import { prepareNetworkAtlas } from "semiotic/atlas/core"` | browser | **7.1 KiB** | — | 7.1 KiB |
 | `import { LineChart } from "semiotic"` | browser | **129.1 KiB** | 44.6 KiB | 156.4 KiB |
-| `import { LineChart } from "semiotic/xy"` | browser | **128.8 KiB** | 32.7 KiB | 156.4 KiB |
+| `import { LineChart } from "semiotic/xy"` | browser | **128.9 KiB** | 32.7 KiB | 156.4 KiB |
 | `import { LineChart } from "semiotic/line"` | browser | **128.8 KiB** | 32.8 KiB | 156.0 KiB |
-| `import { BarChart } from "semiotic/ordinal"` | browser | **109.6 KiB** | 14.6 KiB | 123.8 KiB |
+| `import { BarChart } from "semiotic/ordinal"` | browser | **109.6 KiB** | 14.6 KiB | 123.9 KiB |
 | `import { SankeyDiagram } from "semiotic/network"` | browser | **123.8 KiB** | 23.3 KiB | 142.3 KiB |
 | `import { ZoomableNetworkCustomChart } from "semiotic/network/zoom"` | browser | **117.3 KiB** | 30.3 KiB | 143.8 KiB |
 | `import { isometricGlyphs } from "semiotic/network/perspective"` | browser | **1.4 KiB** | — | 1.4 KiB |
@@ -652,7 +652,7 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { suggestCharts } from "semiotic/ai"` | browser | **32.7 KiB** | 13.5 KiB | 33.9 KiB |
 | `import { suggestCharts } from "semiotic/ai/core"` | browser | **32.4 KiB** | — | 32.4 KiB |
 | `import { buildArtifactContract } from "semiotic/artifact"` | browser | **4.5 KiB** | — | 4.5 KiB |
-| `import { ArtifactInspector } from "semiotic/artifact/react"` | browser | **3.7 KiB** | — | 3.7 KiB |
+| `import { ArtifactInspector } from "semiotic/artifact/react"` | browser | **3.9 KiB** | — | 3.9 KiB |
 | `import { createChartAccessContract } from "semiotic/access"` | browser | **29.3 KiB** | — | 29.3 KiB |
 | `import { toEvidenceEnvelope } from "semiotic/evidence"` | browser | **44.8 KiB** | — | 44.8 KiB |
 | `import { bin } from "semiotic/data"` | browser | **0.9 KiB** | — | 0.9 KiB |
@@ -672,7 +672,7 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { BigNumber } from "semiotic/value"` | browser | **5.9 KiB** | — | 5.9 KiB |
 | `import { DirectManipulationControl } from "semiotic/controls"` | browser | **1.5 KiB** | — | 1.5 KiB |
 
-**Line-boundary interpretation:** the retained named import from `semiotic/line` emits 376.9 KiB raw versus 377.0 KiB from `semiotic/xy`; gzip differs by 0.1 KiB (0.1%). Tree-shaking converges both paths on the same LineChart implementation graph. Treat `semiotic/line` as a narrower API/direct-ESM artifact boundary, not an application-bundle saving. Do not add another per-chart entry until its packed named import beats the family path by both 10 KiB gzip and 7%.
+**Line-boundary interpretation:** the retained named import from `semiotic/line` emits 377.0 KiB raw versus 377.1 KiB from `semiotic/xy`; gzip differs by 0.1 KiB (0.1%). Tree-shaking converges both paths on the same LineChart implementation graph. Treat `semiotic/line` as a narrower API/direct-ESM artifact boundary, not an application-bundle saving. Do not add another per-chart entry until its packed named import beats the family path by both 10 KiB gzip and 7%.
 
 <!-- semiotic-cold-consumer:end -->
 

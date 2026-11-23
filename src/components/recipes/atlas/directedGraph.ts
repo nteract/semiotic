@@ -1,3 +1,4 @@
+import { compareRecipeIds } from "../../utils/compareRecipeIds"
 import type { AtlasEdge, NetworkAtlasSource } from "./types"
 
 export function graphAdjacency(source: NetworkAtlasSource) {
@@ -76,5 +77,5 @@ export function stronglyConnectedComponents(
     }
     components.push(members.sort())
   }
-  return components.sort((a, b) => a[0].localeCompare(b[0]))
+  return components.sort((a, b) => compareRecipeIds(a[0], b[0]))
 }

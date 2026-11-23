@@ -40,6 +40,46 @@ describe("networkAnalysis", () => {
     expect(deg).toMatchObject({ A: 2, B: 2, C: 3, D: 2, E: 1 })
   })
 
+  it("counts distinct neighbors and ignores loops when closing triangles", () => {
+    const nodes = ["center", "a", "b"].map(id => ({ id }))
+    const edges = ["a", "a", "b", "center"].map(target => ({ source: "center", target }))
+    edges.push({ source: "orphan", target: "orphan" })
+    expect(Array.from(buildAdjacency(nodes, edges).get("center")!).sort()).toEqual(["a", "b"])
+    expect(degree(nodes, edges)).toEqual({ center: 2, a: 1, b: 1, orphan: 0 })
+    expect(clustering(nodes, edges).center).toBe(0)
+  })
+
+  it("detects the same misleading pair in pixels and normalized coordinates", () => {
+    const nodes = ["a", "b", "c", "constructor"].map(id => ({ id }))
+    const edges = [{ source: "a", target: "b" }, { source: "b", target: "c" }]
+    for (const scale of [1, 1000]) {
+      const positions = Object.fromEntries(nodes.map(({ id }, i) => [id, { x: [0, 1, 2, 0.03][i] * scale, y: 0 }]))
+      const result = proximityProblem(nodes, edges, positions, { minHops: 4 })
+      expect([...result.problemIds].sort()).toEqual(["a", "constructor"])
+      expect(result.minHops).toBe(4)
+    }
+  })
+
+  it("respects explicit thresholds and shared locations, ignoring absent or invalid coordinates", () => {
+    const nodes = ["a", "b", "missing", "invalid"].map(id => ({ id }))
+    const positions = { a: { x: 0, y: 0 }, b: { x: 8, y: 0 }, invalid: { x: NaN, y: 0 } }
+    expect(proximityProblem(nodes, [], positions, { startThreshold: 4 }).problemIds.size).toBe(0)
+    const options = { startThreshold: 4, maxThreshold: 9, minHops: 10 }
+    const result = proximityProblem(nodes, [], positions, options)
+    expect(result).toEqual({ problemIds: new Set(["a", "b"]), threshold: 9, minHops: 10 })
+    expect(proximityProblem(nodes, [], { ...positions, b: positions.a }).problemIds).toEqual(new Set(["a", "b"]))
+    expect(proximityProblem(nodes, [{ source: "a", target: "b" }], { ...positions, b: positions.a }).problemIds.size).toBe(0)
+  })
+
+  it("leaves an evenly spaced path unflagged at its requested hop distance", () => {
+    const nodes = Array.from({ length: 450 }, (_, i) => ({ id: String(i) }))
+    const edges = nodes.slice(1).map((node, i) => ({ source: nodes[i].id, target: node.id }))
+    const positions = Object.fromEntries(nodes.map(({ id }, i) => [id, { x: i / 450, y: i / 450 }]))
+    const result = proximityProblem(nodes, edges, positions)
+    expect(result.problemIds.size).toBe(0)
+    expect(proximityProblem(nodes, edges, positions, { minHops: 450, startThreshold: 0.5, maxThreshold: 0.5 }).minHops).toBe(450)
+  })
+
   it("bfs + shortest path", () => {
     const adj = buildAdjacency(NODES, EDGES)
     expect(bfsDistances(adj, "A").E).toBe(3)
