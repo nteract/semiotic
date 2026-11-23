@@ -1,3 +1,5 @@
+import { compareRecipeIds as compareIds } from "../../utils/compareRecipeIds"
+export { compareIds }
 import type { Diagnostic, EndpointRef, LocalEndpointRef } from "./types"
 
 export const wholeNode: LocalEndpointRef = Object.freeze({ kind: "node" })
@@ -19,9 +21,6 @@ export function endpoint(
   return { nodeId, endpoint: local }
 }
 
-export function compareIds(a: string, b: string): number {
-  return a < b ? -1 : a > b ? 1 : 0
-}
 
 /** Canonical JSON with sorted object keys; arrays retain semantic order. */
 export function canonical(value: unknown): string {

@@ -50,9 +50,7 @@ interface ModeDefaults {
   valueSize: number
   deltaSize: number
   padding: { top: number; right: number; bottom: number; left: number }
-  background: string
   expanded: boolean
-  showDelta: boolean
   /** Default reserved square size (pixels) for `chartSlot`. Sized for
    *  sparkline scale by default — roughly two line-heights — so the
    *  decoration sits in the corner without competing with the focal value.
@@ -73,9 +71,7 @@ const MODE_DEFAULTS: Record<BigNumberMode, ModeDefaults> = {
     valueSize: 40,
     deltaSize: 13,
     padding: /* @__PURE__ */ cardPadding(14, 16),
-    background: "var(--semiotic-surface, transparent)",
     expanded: true,
-    showDelta: true,
     chartSize: 44
   },
   presentation: {
@@ -86,9 +82,7 @@ const MODE_DEFAULTS: Record<BigNumberMode, ModeDefaults> = {
     valueSize: 96,
     deltaSize: 18,
     padding: /* @__PURE__ */ cardPadding(32),
-    background: "var(--semiotic-surface, transparent)",
     expanded: true,
-    showDelta: true,
     chartSize: 80
   },
   inline: {
@@ -99,9 +93,7 @@ const MODE_DEFAULTS: Record<BigNumberMode, ModeDefaults> = {
     valueSize: 0, // inherits ambient font-size
     deltaSize: 0,
     padding: /* @__PURE__ */ cardPadding(0),
-    background: "transparent",
     expanded: false,
-    showDelta: true,
     chartSize: 0
   },
   thumbnail: {
@@ -112,9 +104,7 @@ const MODE_DEFAULTS: Record<BigNumberMode, ModeDefaults> = {
     valueSize: 22,
     deltaSize: 0,
     padding: /* @__PURE__ */ cardPadding(4, 6),
-    background: "transparent",
     expanded: false,
-    showDelta: false,
     chartSize: 0
   }
 }
@@ -131,9 +121,9 @@ function emptySnapshot(): ValueSnapshot {
 }
 
 function normalisePushInput(input: number | BigNumberPushInput): BigNumberPushInput {
-  if (typeof input === "number") return { value: input, time: Date.now() }
-  const { time } = input
-  return { ...input, time: typeof time === "number" ? time : time instanceof Date ? time.getTime() : Date.now() }
+  const row = typeof input === "number" ? { value: input } : input
+  const { time } = row
+  return { ...row, time: typeof time === "number" ? time : time instanceof Date ? time.getTime() : Date.now() }
 }
 
 // ── Slot resolver ────────────────────────────────────────────────────
@@ -277,13 +267,8 @@ function buildAriaSentence(args: {
     // factual phrasing must remain "up" for +5 and "down" for −5
     // regardless. Avoids the previous "up −5" reading on lower-is-better
     // metrics.
-    const d = args.delta
-    const dirWord =
-      d != null && Number.isFinite(d) && d !== 0
-        ? d > 0
-          ? "up"
-          : "down"
-        : "change"
+    const delta = args.delta ?? 0
+    const dirWord = delta > 0 ? "up" : delta < 0 ? "down" : "change"
     const pct = args.deltaPercent ? ` (${args.deltaPercent})` : ""
     const comp = args.comparisonLabel ? ` from ${args.comparisonLabel}` : ""
     parts.push(`${dirWord} ${args.deltaFormatted}${pct}${comp}`)
@@ -467,9 +452,9 @@ const BigNumberInner = (
         : null
   // A delta that formats as zero reads, and is colored, as no change; the
   // raw delta still reaches slots and callbacks.
+  const hasDelta = computedDelta != null && Number.isFinite(computedDelta)
   const shownDelta =
-    computedDelta != null && Number.isFinite(computedDelta) &&
-      isFormattedZero(computedDelta, deltaFormatter)
+    hasDelta && isFormattedZero(computedDelta, deltaFormatter)
       ? 0
       : computedDelta
   const sentiment = resolveSentiment(
@@ -478,7 +463,7 @@ const BigNumberInner = (
     sentimentProp
   )
   const deltaFormatted =
-    computedDelta != null && Number.isFinite(computedDelta)
+    hasDelta
       ? formatSignedDelta(computedDelta, deltaFormatter)
       : null
   const deltaPercentFormatter = useMemo(
@@ -572,7 +557,7 @@ const BigNumberInner = (
     width,
     height,
     padding: `${padding.top}px ${padding.right}px ${padding.bottom}px ${padding.left}px`,
-    background: backgroundProp ?? defaults.background,
+    background: backgroundProp ?? (defaults.expanded ? "var(--semiotic-surface, transparent)" : "transparent"),
     border: defaults.expanded
       ? `1px solid ${borderColor ?? "var(--semiotic-border, #e2e2e2)"}`
       : undefined,
@@ -602,13 +587,13 @@ const BigNumberInner = (
     }
     onClick?.(datum, { x, y })
     onObservation?.({
-        type: "click",
-        datum,
-        x,
-        y,
-        chartType: "BigNumber",
-        chartId,
-        timestamp: Date.now()
+      type: "click",
+      datum,
+      x,
+      y,
+      chartType: "BigNumber",
+      chartId,
+      timestamp: Date.now()
     })
   }
 
@@ -796,7 +781,7 @@ const BigNumberInner = (
         )}
 
         {/* Delta + comparison + target */}
-        {defaults.showDelta &&
+        {mode !== "thumbnail" &&
         (deltaFormatted || targetPresentation || comparison) ? (
           <Block
             className={`semiotic-bignumber__delta semiotic-bignumber__delta--${sentimentSuffix}`}

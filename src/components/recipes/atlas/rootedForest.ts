@@ -1,3 +1,4 @@
+import { compareRecipeIds } from "../../utils/compareRecipeIds"
 import { graphAdjacency } from "./directedGraph"
 import type { NetworkAtlasSource } from "./types"
 import type { ForestClassification } from "./forests"
@@ -11,7 +12,7 @@ export function buildRootedForest(
   const { outgoing } = graphAdjacency(source)
   const direction = rankingPolicyId.endsWith("id-desc") ? -1 : 1
   for (const edges of outgoing.values()) {
-    edges.sort((a, b) => direction * a.id.localeCompare(b.id))
+    edges.sort((a, b) => direction * compareRecipeIds(a.id, b.id))
   }
   const visited = new Set(roots)
   const parents: Array<[string, string]> = []

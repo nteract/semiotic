@@ -1087,6 +1087,16 @@
           "sourceMap": false
         },
         {
+          "kind": "edge-light.import",
+          "path": "dist/semiotic-server-edge-node.module.min.js",
+          "sourceMap": false
+        },
+        {
+          "kind": "edge-light.require",
+          "path": "dist/semiotic-server-edge.min.js",
+          "sourceMap": false
+        },
+        {
           "kind": "node.import",
           "path": "dist/semiotic-server-edge-node.module.min.js",
           "sourceMap": false

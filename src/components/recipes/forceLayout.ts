@@ -25,6 +25,7 @@ import {
   type SimulationNodeDatum,
 } from "d3-force"
 import type { GraphNode, GraphEdge, Point } from "./networkAnalysis"
+import { setOwnValue } from "./atlas/ids"
 export { mulberry32 } from "./random"
 import { mulberry32 } from "./random"
 
@@ -198,12 +199,7 @@ export function forceLayout(
           ? 0.5
           : inset + (((node.y ?? center) - minY) / spanY) * (1 - 2 * inset),
     }
-    Object.defineProperty(out, node.id, {
-      value: point,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    })
+    setOwnValue(out, node.id, point)
   }
   return out
 }
