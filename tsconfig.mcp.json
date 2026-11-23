@@ -23,6 +23,7 @@
       "semiotic/geo": ["./dist/semiotic-geo.d.ts"],
       "semiotic/physics": ["./dist/semiotic-physics.d.ts"],
       "semiotic/access": ["./dist/semiotic-access.d.ts"],
+      "semiotic/experimental": ["./dist/semiotic-experimental.d.ts"],
       "semiotic/evidence": ["./dist/semiotic-evidence.d.ts"],
       "semiotic/server": ["./dist/semiotic-server.d.ts"]
     }

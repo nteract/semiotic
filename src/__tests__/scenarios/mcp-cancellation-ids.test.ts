@@ -122,7 +122,7 @@ describe("shipped MCP cancellation identities", () => {
         )
         const reused = await sendRequest(proc, "tools/list", {}, id)
         expect(reused.id).toBe(id)
-        expect(reused.result.tools).toHaveLength(profile === "public" ? 5 : 24)
+        expect(reused.result.tools).toHaveLength(profile === "public" ? 5 : 25)
       },
       15_000
     )

@@ -215,9 +215,21 @@ for (const profile of ["public", "developer"]) {
       })
     )
     const tools = await server.request("tools/list")
-    assert.equal(tools.tools.length, profile === "public" ? 5 : 24)
+    assert.equal(tools.tools.length, profile === "public" ? 5 : 25)
     if (profile === "developer") {
       assert.ok(tools.tools.some(({ name }) => name === "suggestStreamDashboard"))
+      const converted = await server.request("tools/call", {
+        name: "convertVegaLite",
+        arguments: {
+          spec: {
+            mark: "point", data: { values: [{ x: 4, y: 7 }] },
+            encoding: { x: { field: "x", type: "quantitative" }, y: { field: "y", type: "quantitative" } }
+          }
+        }
+      })
+      assert.notEqual(converted.isError, true, JSON.stringify(converted.content))
+      assert.equal(converted.structuredContent.component, "Scatterplot")
+      assert.deepEqual(converted.structuredContent.props.data, [{ x: 4, y: 7 }])
     }
     assert.ok(
       !tools.tools.some(({ name }) => /task/i.test(name)),

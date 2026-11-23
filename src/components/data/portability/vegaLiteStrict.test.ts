@@ -27,6 +27,8 @@ describe("strict Vega-Lite boundaries", () => {
     { ...base, encoding: { x: null } },
     { ...base, data: { values: "bad" } },
     { ...base, data: { values: [null, 1] } },
+    { ...base, transform: { filter: "datum.value > 0" } },
+    { ...base, params: [null] },
     { ...base, layer: [null] }
   ])("refuses malformed input without throwing: %j", (value) => {
     for (const lossy of [false, true]) {

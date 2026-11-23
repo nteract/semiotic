@@ -68,11 +68,9 @@ export function vegaLiteShapeDiagnostics(
         diagnostics[diagnostics.length - 1].code = "INVALID_AGGREGATE_DATA"
     }
   }
-  if (
-    value.layer !== undefined &&
-    !isRecordArray(value.layer)
-  ) {
-    invalid("/layer", "layer must be an array of spec objects.")
+  for (const key of ["layer", "transform", "params"]) {
+    if (value[key] !== undefined && !isRecordArray(value[key]))
+      invalid(`/${key}`, `${key} must be an array of objects.`)
   }
   if (Array.isArray(value.layer)) {
     for (let index = 0; index < value.layer.length; index++) {

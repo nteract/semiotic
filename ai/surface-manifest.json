@@ -862,13 +862,14 @@
     ]
   },
   "mcp": {
-    "toolCount": 29,
+    "toolCount": 30,
     "tools": [
       "applyTheme",
       "auditAccessibility",
       "auditArtifact",
       "auditChart",
       "auditMobileVisualization",
+      "convertVegaLite",
       "createChart",
       "diagnoseConfig",
       "evaluateChart",
