@@ -89,7 +89,7 @@ describe("annotation reflow binding", () => {
 
   it("uses the first fixed match and the last latest match for repeated point IDs", () => {
     const context = ctx([], undefined, {
-      pointNodes: [{ pointId: "a", x: 4, y: 5 }, { pointId: "a", x: 14, y: 15 }]
+      pointNodes: [{ pointId: "a", x: 4, y: 5, r: 3 }, { pointId: "a", x: 14, y: 15, r: 3 }]
     })
     expect(notePos(rules({ ...callout, pointId: "a" }, 0, context))).toEqual({ x: 4, y: 5 })
     expect(notePos(rules({ ...callout, pointId: "a", anchor: "latest" }, 0, context)))
