@@ -24,12 +24,12 @@ allow-list and runs:
 
 ```sh
 npm ci --include=dev
-npm run check:ai-surface
+npm run check:ai-surface-manifest
 npm run dist:prod
 npm run build:mcp
 ```
 
-The final image is runtime-verified before push. It starts the five-tool public
+The build prunes development tools offline and retains the required React peers at their locked versions. The final image runs and verifies the source-built server as the unprivileged `node` user. It starts the five-tool public
 MCP profile:
 
 ```sh
