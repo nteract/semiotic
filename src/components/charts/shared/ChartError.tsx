@@ -46,7 +46,7 @@ export default function ChartError({
           style={{
             fontSize: 13,
             fontWeight: 600,
-            color: "rgba(128, 128, 128, 0.7)",
+            color: "var(--semiotic-text-secondary, #666)",
             marginBottom: 6,
             fontFamily: "monospace"
           }}
@@ -56,7 +56,7 @@ export default function ChartError({
         <div
           style={{
             fontSize: 14,
-            color: "rgba(128, 128, 128, 0.9)",
+            color: "var(--semiotic-text, #333)",
             lineHeight: 1.5
           }}
         >

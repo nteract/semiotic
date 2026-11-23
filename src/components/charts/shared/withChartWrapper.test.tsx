@@ -122,8 +122,8 @@ describe("renderEmptyState", () => {
   it("renders default message for empty array", () => {
     const result = renderEmptyState([], 600, 400)
     expect(result).not.toBeNull()
-    const { container } = render(result!)
-    expect(container.textContent).toContain("No data available")
+    render(result!)
+    expect(screen.getByRole("status")).toHaveTextContent("No data available")
   })
 
   it("renders a centered placeholder when sparse input has no usable rows", () => {
@@ -143,8 +143,8 @@ describe("renderEmptyState", () => {
   it("renders custom emptyContent for empty array", () => {
     const result = renderEmptyState([], 600, 400, "Custom empty message")
     expect(result).not.toBeNull()
-    const { container } = render(result!)
-    expect(container.textContent).toContain("Custom empty message")
+    render(result!)
+    expect(screen.getByRole("status")).toHaveTextContent("Custom empty message")
   })
 })
 
@@ -193,7 +193,8 @@ describe("renderLoadingState", () => {
     )
     expect(result).not.toBeNull()
     const { container } = render(result!)
-    expect(container.querySelector("[data-testid='custom-loading']")).toBeTruthy()
+    expect(screen.getByRole("status")).toHaveTextContent("Fetching analytics…")
+    expect(screen.getByRole("status")).not.toHaveAttribute("aria-busy")
     // Default skeleton bars must be absent — custom content replaces them.
     expect(container.querySelectorAll(".semiotic-loading-bar").length).toBe(0)
   })
@@ -202,6 +203,9 @@ describe("renderLoadingState", () => {
     const result = renderLoadingState(true, 600, 400, undefined)
     expect(result).not.toBeNull()
     const { container } = render(result!)
+    const status = screen.getByRole("status", { name: "Loading chart" })
+    expect(status).toHaveTextContent("Loading chart")
+    expect(status.closest('[aria-busy="true"]')).toBeNull()
     expect(container.querySelectorAll(".semiotic-loading-bar").length).toBeGreaterThan(0)
   })
 

@@ -1,4 +1,5 @@
 "use client"
+import { renderChartPlaceholder } from "../shared/withChartWrapper"
 import { UNIT_PILE_CHART_SIZE } from "../shared/chartSizeDefaultsPhysics"
 
 import * as React from "react"
@@ -22,7 +23,6 @@ import type { PhysicsFrameHandle } from "./physicsHocHandle"
 import { usePhysicsChartData } from "./usePhysicsChartData"
 import {
   composePhysicsFrameGraphics,
-  renderPhysicsChartState,
   renderPhysicsFrame,
   resolvePhysicsFrameSharedProps,
   resolvePhysicsTooltipProps,
@@ -111,10 +111,7 @@ export const UnitPileChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__
     categoryAccessor = "category" as ChartAccessor<TDatum, string>,
     colorBy,
     data,
-    emptyContent,
     frameProps,
-    loading,
-    loadingContent,
     mechanicalCategories: mechanicalCategoriesProp,
     mechanicalCount,
     paused,
@@ -240,15 +237,11 @@ export const UnitPileChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__
       typeof categoryAccessor === "string" ? [categoryAccessor] : undefined
   })
 
-  const stateEl = renderPhysicsChartState({
-    responsive: props,
-    data: simulationMode === "mechanical" ? chartData : data,
-    emptyContent,
-    loading,
-    loadingContent,
-    size: chartSize
-  })
-  if (stateEl) return stateEl
+  const stateEl = renderChartPlaceholder(
+    props, chartSize,
+    simulationMode === "mechanical" ? chartData : data
+  )
+  if (stateEl) return renderPhysicsFrame(chartSize, stateEl, layoutMode)
   const projectionOverlay = pileProjectionOverlay(
     layout.projectionRows,
     ballRadius,
