@@ -15,12 +15,7 @@ export function clampTime(t: number, domain: Domain): number {
 }
 
 export function clampSamples(samples: readonly ProcessSankeySample[], domain: Domain): ProcessSankeySample[] {
-  return samples.map((s) => ({
-    t: clampTime(s.t, domain),
-    topMass: s.topMass,
-    botMass: s.botMass,
-    ...(s.boundaryOffset != null && { boundaryOffset: s.boundaryOffset }),
-  }))
+  return samples.map(sample => ({ ...sample, t: clampTime(sample.t, domain) }))
 }
 
 export function hasInventory(sample: ProcessSankeySample): boolean {
@@ -79,7 +74,7 @@ function continuousSections(sections: BandSection[], domain: Domain, hasInterval
   return knots
 }
 
-export function buildBandPath(
+export function projectBandSections(
   samples: readonly ProcessSankeySample[],
   cl: number,
   S: number,
@@ -87,8 +82,7 @@ export function buildBandPath(
   domain: Domain,
   curves: "straight" | "smooth" = "straight",
   hasIntervalSamples = false,
-): string | null {
-  if (samples.length === 0) return null
+): BandSection[] {
   const sections = samples.map(sample => {
     const boundary = cl + (sample.boundaryOffset ?? 0) * S
     return {
@@ -99,12 +93,21 @@ export function buildBandPath(
   })
   const knots = curves === "smooth" ? continuousSections(sections, domain, hasIntervalSamples) : sections
   for (const knot of knots) knot.x = xScale(clampTime(knot.x, domain))
+  return knots
+}
+
+export function buildBandPath(...args: Parameters<typeof projectBandSections>): string | null {
+  return bandSectionPath(projectBandSections(...args), args[5] === "smooth")
+}
+
+export function bandSectionPath(knots: BandSection[], smooth: boolean): string | null {
+  if (!knots.length) return null
   function side(points: BandSection[], edge: "top" | "bottom") {
     let path = `${points[0].x},${points[0][edge]}`
     for (let i = 1; i < points.length; i++) {
       const from = points[i - 1]
       const to = points[i]
-      if (curves === "smooth" && from.x !== to.x && from[edge] !== to[edge]) {
+      if (smooth && from.x !== to.x && from[edge] !== to[edge]) {
         const middle = (from.x + to.x) / 2
         path += ` C${middle},${from[edge]} ${middle},${to[edge]} ${to.x},${to[edge]}`
       } else {
@@ -113,7 +116,7 @@ export function buildBandPath(
     }
     return path
   }
-  return `M${side(knots, "top")} L${side(knots.reverse(), "bottom")} Z`
+  return `M${side(knots, "top")} L${side(knots.slice().reverse(), "bottom")} Z`
 }
 
 /**
@@ -125,7 +128,7 @@ export function buildBandPath(
  * outline.
  */
 export interface BandGradientStub {
-  /** Rect path (M-L-L-L-Z). */
+  /** Closed shape of the inventory slot. */
   pathD: string
   /** Gradient extent in screen pixels. */
   x0: number
@@ -135,25 +138,7 @@ export interface BandGradientStub {
   to: 0 | 1
 }
 
-/**
- * Build the per-edge 20-px gradient stubs that visualize
- * `systemInTime` / `systemOutTime` on a node band. Each stub is
- * a rect on the edge's attachment slot, painted with a horizontal
- * gradient that fades the band color in (or out) over 20 screen
- * pixels and saturates through the rest of the rect.
- *
- * The rect is clipped to the band's outline bounds (so cutouts don't
- * spill outside the node shape), but the gradient extent stays at
- * its natural range. In-domain entrances use
- * `[xSysIn - FADE_PX, xSysIn]`; entrances known to predate the visible
- * domain use `[domainStart, domainStart + FADE_PX]` so they blur inward
- * rather than completing their fade offscreen. Exits use
- * `[xSysOut, xSysOut + FADE_PX]`. The canvas renderer uses pad-mode
- * clamping for color stops outside the rect.
- *
- * Pure rendering hint — layout/mass-profile unchanged. Returns an
- * empty array when the node has no qualifying edges.
- */
+/** Fade each lifecycle slot over 20 screen pixels inside the band outline. */
 export function buildBandCutoutsForNode(
   nodeId: string,
   edges: ProcessSankeyEdge[],
@@ -161,61 +146,63 @@ export function buildBandCutoutsForNode(
   xScale: (t: number) => number,
   domain: Domain,
   visualDepartureByEdge?: ReadonlyMap<string, number>,
+  smoothSections?: BandSection[],
 ): BandGradientStub[] {
   const data = layout.nodeData[nodeId]
   if (!data || data.samples.length === 0) return []
   const S = layout.valueScale
   const cl = layout.centerlines[nodeId]
   const clampX = (t: number): number => xScale(clampTime(t, domain))
-  const first = data.samples.find(hasInventory) ?? data.samples[0]
-  const last = data.samples.findLast(hasInventory) ?? data.samples[data.samples.length - 1]
-  const xLeft = clampX(first.t)
-  const xRight = clampX(last.t)
+  let first: ProcessSankeySample | undefined
+  let last: ProcessSankeySample | undefined
+  for (const sample of data.samples) if (hasInventory(sample)) {
+    first ??= sample
+    last = sample
+  }
+  const xLeft = clampX((first ?? data.samples[0]).t)
+  const xRight = clampX((last ?? data.samples[data.samples.length - 1]).t)
   // 20 screen pixels of gradient — width-independent of zoom/domain.
   const FADE_PX = 20
   const stubs: BandGradientStub[] = []
   function addStub(att: ProcessSankeyAttachment, left: number, right: number, x0: number, x1: number, from: 0 | 1) {
     if (!(right > left)) return
     const [top, bottom] = attachmentYRange(att, cl, S)
+    let pathD = `M${left},${top} L${right},${top} L${right},${bottom} L${left},${bottom} Z`
+    if (smoothSections) {
+      // Carry the slot through the shoulder adjoining the transfer. On the other
+      // side the gradient itself is transparent beyond its lifecycle boundary.
+      const slot = smoothSections.filter((knot, i, knots) => from === 0
+        ? (knots[i - 1] ?? knot).x <= right
+        : (knots[i + 1] ?? knot).x >= left
+      ).map(knot => {
+        const withinBand = (edge: number) => Math.max(knot.top, Math.min(knot.bottom, edge))
+        return { x: knot.x, top: withinBand(top), bottom: withinBand(bottom) }
+      })
+      const outline = bandSectionPath(slot, true)
+      if (!outline) return
+      pathD = outline
+    }
     stubs.push({
-      pathD: `M${left},${top} L${right},${top} L${right},${bottom} L${left},${bottom} Z`,
+      pathD,
       x0, x1, from, to: from === 0 ? 1 : 0,
     })
   }
   for (const e of edges) {
     const att = data.localAttachments.get(e.id)
     if (!att) continue
-    if (e.source === nodeId && e.systemInTime != null && Number.isFinite(e.systemInTime)) {
-      const renderedStartTime = visualDepartureByEdge?.get(e.id) ?? e.startTime
-      if (att.kind === "out" && e.systemInTime < renderedStartTime) {
-        const xSysIn = clampX(e.systemInTime)
-        const xStart = clampX(renderedStartTime)
-        const predatesVisibleDomain = domain != null && e.systemInTime < domain[0]
-        // An arrival inside the domain fades up to its event. An entity known
-        // only to predate the visible domain instead fades inward from the
-        // cropped boundary; placing its transparent stop outside the plot
-        // would pad-clamp the entire visible band to an unintended solid fill.
-        const xGradStart = predatesVisibleDomain ? xSysIn : xSysIn - FADE_PX
-        const xGradEnd = predatesVisibleDomain
-          ? Math.min(xStart, xSysIn + FADE_PX)
-          : xSysIn
-        // Rect extent is clipped to the band's visible span. Pre-domain
-        // lifecycles deliberately put the transparent stop on that span's
-        // boundary and fade inward; in-domain lifecycles retain the
-        // conventional lead-in fade ending at `systemInTime`.
-        addStub(att, Math.max(xLeft, xGradStart), xStart, xGradStart, xGradEnd, 0)
-      }
-    }
-    if (e.target === nodeId && e.systemOutTime != null && Number.isFinite(e.systemOutTime)) {
-      if (att.kind === "in" && e.systemOutTime > e.endTime) {
-        const xSysOut = clampX(e.systemOutTime)
-        const xEnd = clampX(e.endTime)
-        // Mirror of systemIn: gradient saturated at `xSysOut`,
-        // transparent at `xSysOut + FADE_PX`. Rect clipped to the
-        // band's right edge.
-        const xGradEnd = xSysOut + FADE_PX
-        addStub(att, xEnd, Math.min(xRight, xGradEnd), xSysOut, xGradEnd, 1)
-      }
+    if (att.kind === "out" && e.source === nodeId && Number.isFinite(e.systemInTime)) {
+      const renderedStart = visualDepartureByEdge?.get(e.id) ?? e.startTime
+      if (e.systemInTime! >= renderedStart) continue
+      const incoming = clampX(e.systemInTime!)
+      const departure = clampX(renderedStart)
+      const cropped = domain && e.systemInTime! < domain[0]
+      const start = cropped ? incoming : incoming - FADE_PX
+      const end = cropped ? Math.min(departure, incoming + FADE_PX) : incoming
+      addStub(att, Math.max(xLeft, start), departure, start, end, 0)
+    } else if (att.kind === "in" && e.target === nodeId && Number.isFinite(e.systemOutTime) && e.systemOutTime! > e.endTime) {
+      const start = clampX(e.systemOutTime!)
+      const end = start + FADE_PX
+      addStub(att, clampX(e.endTime), Math.min(xRight, end), start, end, 1)
     }
   }
   return stubs

@@ -14,6 +14,7 @@ import type {
 } from "./algorithm"
 import {
   compareProcessSankeyIds,
+  positionByItem,
   computeSlotPairClearance,
   computeSlotGeometry,
   measureTransitOcclusion,
@@ -50,7 +51,7 @@ export { bondProcessSankeySlotGroups }
 
 export function countCrossings(slotByNode: SlotByNode, edges: readonly ProcessSankeyEdge[]): number {
   const lanes = [...new Set(Object.values(slotByNode))].sort((a, b) => a - b)
-  const ranks = new Map(lanes.map((lane, i) => [lane, i]))
+  const ranks = positionByItem(lanes)
   const nodeSlots = new Map(Object.entries(slotByNode).map(([id, lane]) => [id, ranks.get(lane)!]))
   return new ProcessSankeyCrossings(edges, nodeSlots, lanes.length).count(lanes.map((_, i) => i))
 }
@@ -183,7 +184,7 @@ export function orderProcessSankeySlots(
     row.set(lower, value)
     return value
   }
-  const stableSlotIndex = new Map(slots.map((slot, index) => [slot, index]))
+  const stableSlotIndex = positionByItem(slots)
   const crossingIndex = new ProcessSankeyCrossings(edges,
     new Map([...slotForNode].map(([id, slot]) => [id, stableSlotIndex.get(slot)!])), slots.length)
   const positionsFor = (order: readonly ProcessSankeySlot[]): Int32Array => {
@@ -607,7 +608,7 @@ export function applyFixedSlotOrder(
   slotByNode: SlotByNode,
   orderedStableIds: readonly string[],
 ): void {
-  const rank = new Map(orderedStableIds.map((id, index) => [id, index]))
+  const rank = positionByItem(orderedStableIds)
   const ordered = [...slots].sort((a, b) => {
     const rankA = rank.get(slotStableId(a)) ?? Infinity
     const rankB = rank.get(slotStableId(b)) ?? Infinity

@@ -1,3 +1,4 @@
+import { appendToGroup } from "../../../utils/appendToGroup"
 import { attachmentYRange, clampTime } from "./bandPaths"
 import type { ProcessSankeyAttachment } from "./processSankeyTypes"
 import { getMax, getMin } from "../../shared/minMax"
@@ -117,9 +118,7 @@ export function synchronizeProcessSankeyFeederBatches(
     const group = sourceGroupByNode?.get(edge.source)
     const batchOwner = group == null ? `node:${edge.source}` : `group:${group}`
     const byTime = batchesBySource.get(batchOwner) ?? new Map<number, FeederBatchEdge[]>()
-    const batch = byTime.get(edge.startTime) ?? []
-    batch.push(edge)
-    byTime.set(edge.startTime, batch)
+    appendToGroup(byTime, edge.startTime, edge)
     batchesBySource.set(batchOwner, byTime)
   }
 

@@ -559,3 +559,7 @@ export function computeLayoutQuality(
     verticalUtilization
   }
 }
+
+export function positionByItem<T>(items: readonly T[]): Map<T, number> {
+  return new Map(items.map((item, index) => [item, index]))
+}

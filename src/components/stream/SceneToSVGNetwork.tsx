@@ -17,8 +17,6 @@ import type {
   NetworkSymbolNode,
   NetworkGlyphNode,
   NetworkLineEdge,
-  NetworkBezierEdge,
-  NetworkRibbonEdge,
   NetworkCurvedEdge
 } from "./networkTypes"
 import { symbolPathString } from "./symbolPath"
@@ -136,15 +134,15 @@ function networkSceneNodeToSVGMark(node: NetworkSceneNode, i: number): React.Rea
   }
 }
 
-export function networkSceneEdgeToSVG(edge: NetworkSceneEdge, i: number): React.ReactNode {
+export function networkSceneEdgeToSVG(edge: NetworkSceneEdge, i: number, idPrefix = "net"): React.ReactNode {
   return withSceneMarkCursor(
-    networkSceneEdgeToSVGMark(edge, i),
+    networkSceneEdgeToSVGMark(edge, i, idPrefix),
     edge,
     `network-edge-cursor-${i}`
   )
 }
 
-function networkSceneEdgeToSVGMark(edge: NetworkSceneEdge, i: number): React.ReactNode {
+function networkSceneEdgeToSVGMark(edge: NetworkSceneEdge, i: number, idPrefix: string): React.ReactNode {
   switch (edge.type) {
     case "line": {
       const e = edge as NetworkLineEdge
@@ -162,42 +160,29 @@ function networkSceneEdgeToSVGMark(edge: NetworkSceneEdge, i: number): React.Rea
         />
       )
     }
-    case "bezier": {
-      const e = edge as NetworkBezierEdge
-      const hatchId = `net-bezier-${i}-hatch`
-      const hatch = isHatchFill(e.style.fill) ? hatchPatternDef(e.style.fill, hatchId) : undefined
-      return (
-        <Fragment key={`net-edge-${i}`}>
-          {hatch && <defs>{hatch}</defs>}
-          <path
-            d={e.pathD}
-            data-perspective-part={e._perspectivePart}
-            fill={hatch ? `url(#${hatchId})` : svgFill(e.style.fill, "#999")}
-            fillOpacity={e.style.fillOpacity ?? 0.5}
-            stroke={e.style.stroke || "none"}
-            strokeOpacity={(e.style.strokeOpacity ?? 1) * 0.5}
-            strokeWidth={e.style.strokeWidth}
-            strokeDasharray={e.style.strokeDasharray}
-            strokeLinecap={e.style.strokeLinecap}
-            opacity={e.style.opacity}
-          />
-        </Fragment>
-      )
-    }
+    case "bezier":
     case "ribbon": {
-      const e = edge as NetworkRibbonEdge
-      const hatchId = `net-ribbon-${i}-hatch`
-      const hatch = isHatchFill(e.style.fill) ? hatchPatternDef(e.style.fill, hatchId) : undefined
+      const e = edge
+      const gradient = e.type === "bezier" ? e._gradient : undefined
+      const paintId = gradient ? `${idPrefix}-lifecycle-${i}` : `net-${e.type}-${i}-hatch`
+      const color = svgFill(e.style.fill, "#999")
+      const paint = gradient ? (
+        <linearGradient id={paintId} gradientUnits="userSpaceOnUse"
+          x1={gradient.x0} x2={gradient.x1} y1={gradient.y0 ?? 0} y2={gradient.y1 ?? 0}>
+          <stop offset="0" stopColor={color} stopOpacity={gradient.from} />
+          <stop offset="1" stopColor={color} stopOpacity={gradient.to} />
+        </linearGradient>
+      ) : isHatchFill(e.style.fill) ? hatchPatternDef(e.style.fill, paintId) : undefined
       return (
         <Fragment key={`net-edge-${i}`}>
-          {hatch && <defs>{hatch}</defs>}
+          {paint && <defs>{paint}</defs>}
           <path
             d={e.pathD}
             data-perspective-part={e._perspectivePart}
-            fill={hatch ? `url(#${hatchId})` : svgFill(e.style.fill, "#999")}
+            fill={paint ? `url(#${paintId})` : color}
             fillOpacity={e.style.fillOpacity ?? 0.5}
             stroke={e.style.stroke || "none"}
-            strokeOpacity={(e.style.strokeOpacity ?? 1) * 0.3}
+            strokeOpacity={(e.style.strokeOpacity ?? 1) * (e.type === "bezier" ? 0.5 : 0.3)}
             strokeWidth={e.style.strokeWidth}
             strokeDasharray={e.style.strokeDasharray}
             strokeLinecap={e.style.strokeLinecap}

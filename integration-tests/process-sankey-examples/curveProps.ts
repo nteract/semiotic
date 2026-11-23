@@ -14,6 +14,7 @@ export function curveProps(
         target: "Queue",
         startTime: 5,
         endTime: 15,
+        systemOutTime: 64,
         value: 3
       },
       {
@@ -22,6 +23,7 @@ export function curveProps(
         target: "Queue",
         startTime: 25,
         endTime: 40,
+        systemOutTime: 71,
         value: 7
       },
       {
@@ -40,6 +42,7 @@ export function curveProps(
     showLabels: false,
     showLegend: false,
     accessibleTable: true,
+    systemOutTimeAccessor: "systemOutTime",
     colorBy: "id",
     colorScheme: { Intake: "#556677", Queue: "#237752", Done: "#554488" },
     margin: curveMargin,

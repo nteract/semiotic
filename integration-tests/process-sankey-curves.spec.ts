@@ -36,7 +36,7 @@ for (const renderer of ["canvas", "svg"] as const) {
     expect(original).toContain("C")
     await expect(frame.locator(selector)).toHaveAttribute("d", original!)
     const summary = frame.getByRole("button", { name: /View data summary/ })
-    await expect(summary).toHaveText("View data summary (3 nodes, 6 edges)")
+    await expect(summary).toHaveText("View data summary (3 nodes, 8 edges)")
     let initialRows: string[] | undefined
     const tooltip = frame.locator(
       ".stream-network-tooltip, .stream-frame-tooltip"
@@ -78,6 +78,16 @@ for (const renderer of ["canvas", "svg"] as const) {
           point
         )
       ).toBe(true)
+      const surfaces = renderer === "svg" ? [reference, frame.locator("svg[data-network-scene]")] : [reference]
+      for (const surface of surfaces) {
+        const fills = surface.locator('path[fill^="url("]')
+        expect(await fills.evaluateAll((paths, p) => paths.some(path => {
+          const id = path.getAttribute("fill")!.slice(5, -1)
+          const gradient = (path as SVGPathElement).ownerSVGElement?.getElementById(id)
+          return gradient?.tagName === "linearGradient" &&
+            (path as SVGPathElement).isPointInFill(new DOMPoint(p.x, p.y))
+        }), point)).toBe(true)
+      }
       if (renderer === "canvas") {
         await expect
           .poll(() =>

@@ -462,7 +462,7 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
   const renderedEdges = renderSceneListWithBackend<NetworkSceneEdge>({
     nodes: sceneEdges,
     renderMode: props.renderMode,
-    fallback: (edge, index) => networkSceneEdgeToSVG(edge, index),
+    fallback: (edge, index) => networkSceneEdgeToSVG(edge, index, props._idPrefix),
   })
   const renderedNodes = renderSceneListWithBackend<NetworkSceneNode>({
     nodes: sceneNodes,
@@ -485,7 +485,7 @@ export function renderNetworkFrame(props: StreamNetworkFrameProps & ThemeAwarePr
   // Annotation anchors stay in layout coordinates inside the camera group.
   const annotationNodes = renderAnnotations(sceneNodes)
 
-  const marks = [underlay.map((edge, index) => networkSceneEdgeToSVG(edge, index)), edgeElements, nodeElements]
+  const marks = [underlay.map((edge, index) => networkSceneEdgeToSVG(edge, index + sceneEdges.length, props._idPrefix)), edgeElements, nodeElements]
   const opacity = resolveStalenessOverride(props.staleness)?.alpha ?? 1
   const content = (
     <>

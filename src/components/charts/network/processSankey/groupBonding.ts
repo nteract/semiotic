@@ -1,3 +1,4 @@
+import { appendToGroup } from "../../../utils/appendToGroup"
 import { intervalTimes } from "./bandPaths"
 import { getMax } from "../../shared/minMax"
 import type {
@@ -24,12 +25,7 @@ function createSampleCursor(data: ProcessSankeyNodeData) {
   for (const sample of data.samples) {
     // Exact matching uses ===; unlike Map lookup, NaN never matches itself.
     if (Number.isNaN(sample.t)) continue
-    let exact = byTime.get(sample.t)
-    if (!exact) {
-      exact = []
-      byTime.set(sample.t, exact)
-    }
-    exact.push(sample)
+    appendToGroup(byTime, sample.t, sample)
   }
 
   let nextIndex = 0
@@ -76,9 +72,7 @@ export function bondProcessSankeyNodeData(
   const groups = new Map<string, ProcessSankeyNode[]>()
   for (const node of nodes) {
     if (!node.group || !nodeData[node.id]) continue
-    const members = groups.get(node.group) ?? []
-    members.push(node)
-    groups.set(node.group, members)
+    appendToGroup(groups, node.group, node)
   }
   if (groups.size === 0 || !(valueScale > 0)) return nodeData
 
@@ -121,9 +115,7 @@ export function bondProcessSankeyNodeData(
         if (!sample || sampleMass(sample) <= MASS_EPSILON) continue
         const slot = slotByNode[node.id]
         if (slot == null) continue
-        const active = activeBySlot.get(slot) ?? []
-        active.push({ node, sample, deltas })
-        activeBySlot.set(slot, active)
+        appendToGroup(activeBySlot, slot, { node, sample, deltas })
       }
       const activeSlots = [...activeBySlot]
         .sort((a, b) => a[0] - b[0])

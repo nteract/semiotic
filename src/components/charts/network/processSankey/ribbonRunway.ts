@@ -1,3 +1,4 @@
+import { appendToGroup } from "../../../utils/appendToGroup"
 import { getMax } from "../../shared/minMax"
 interface RibbonRunwayNode {
   id: string
@@ -34,9 +35,7 @@ export function computeFeederRibbonRunwayStarts(
 
   for (const edge of edges) {
     if (incomingNodeIds.has(edge.source)) continue
-    const outgoing = outgoingBySource.get(edge.source) ?? []
-    outgoing.push(edge)
-    outgoingBySource.set(edge.source, outgoing)
+    appendToGroup(outgoingBySource, edge.source, edge)
   }
 
   // Bonded silhouettes can share a projected clock only when every member is
@@ -45,22 +44,19 @@ export function computeFeederRibbonRunwayStarts(
   const groupMembers = new Map<string, RibbonRunwayNode[]>()
   for (const node of nodes) {
     if (!node.group) continue
-    const members = groupMembers.get(node.group) ?? []
-    members.push(node)
-    groupMembers.set(node.group, members)
+    appendToGroup(groupMembers, node.group, node)
   }
-  const lockstepGroups = new Set<string>()
+  const lockstepGroups = new Map<string, RibbonRunwayEdge[]>()
   for (const [group, members] of groupMembers) {
     const groupEdges = members.flatMap((member) => outgoingBySource.get(member.id) ?? [])
     const departureTimes = new Set(groupEdges.map((edge) => edge.startTime))
-    if (groupEdges.length > 0 && departureTimes.size === 1 && members.every((member) => {
+    if (departureTimes.size === 1 && members.every((member) => {
       const start = member.xExtent?.[0]
       const departure = groupEdges[0].startTime
-      return !incomingNodeIds.has(member.id) &&
-        (outgoingBySource.get(member.id)?.length ?? 0) > 0 &&
+      return outgoingBySource.has(member.id) &&
         Number.isFinite(start) && start! < departure
     })) {
-      lockstepGroups.add(group)
+      lockstepGroups.set(group, groupEdges)
     }
   }
 
@@ -108,9 +104,7 @@ export function computeFeederRibbonRunwayStarts(
 
   // A lockstep bonded group is one contiguous silhouette. Use its latest
   // member floor for every ribbon so no member begins before a neighbor exists.
-  for (const [group, members] of groupMembers) {
-    if (!lockstepGroups.has(group)) continue
-    const groupEdges = members.flatMap((member) => outgoingBySource.get(member.id) ?? [])
+  for (const groupEdges of lockstepGroups.values()) {
     if (!groupEdges.every((edge) => runwayByEdge.has(edge.id))) {
       for (const edge of groupEdges) runwayByEdge.delete(edge.id)
       continue
@@ -163,9 +157,7 @@ export function indexFeederVisualDepartures(
   const indexed: FeederVisualDepartureIndex = new Map()
   const membersByGroup = new Map<string, string[]>()
   for (const [nodeId, group] of sourceGroupByNode ?? []) {
-    const members = membersByGroup.get(group) ?? []
-    members.push(nodeId)
-    membersByGroup.set(group, members)
+    appendToGroup(membersByGroup, group, nodeId)
   }
   for (const edge of edges) {
     const visualTime = visualDepartureByEdge.get(edge.id)

@@ -17,12 +17,13 @@ export function NetworkSceneMarks({
   store: NetworkPipelineStore
   renderMode?: StreamNetworkFrameProps["renderMode"]
 }) {
+  const idPrefix = React.useId()
   return (
     <>
       {store.perspective.underlay.map((edge, index) =>
         networkSceneEdgeToSVG(
           edge,
-          index + store.sceneEdges.length + store.sceneNodes.length
+          index + store.sceneEdges.length + store.sceneNodes.length, idPrefix
         )
       )}
       {store.sceneEdges.map((edge, index) =>
@@ -30,7 +31,7 @@ export function NetworkSceneMarks({
           node: edge,
           index,
           renderMode,
-          fallback: () => networkSceneEdgeToSVG(edge, index)
+          fallback: () => networkSceneEdgeToSVG(edge, index, idPrefix)
         })
       )}
       {store.sceneNodes.map((node, index) =>

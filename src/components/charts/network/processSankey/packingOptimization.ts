@@ -3,7 +3,7 @@ import type {
   ProcessSankeyLaneLifetime,
   ProcessSankeyNode
 } from "./algorithm"
-import { compareProcessSankeyIds } from "./layoutGeometry"
+import { compareProcessSankeyIds, positionByItem } from "./layoutGeometry"
 
 const EXACT_PACKING_NODE_MAX = 12
 const EXACT_PACKING_EVALUATION_MAX = 75_000
@@ -332,7 +332,7 @@ function improveLargeContinuityColoring(
     return baseline.assignment
   }
 
-  const position = new Map(ids.map((id, index) => [id, index]))
+  const position = positionByItem(ids)
   const flowAffinity = Array.from(
     { length: ids.length },
     () => new Map<number, number>()
@@ -602,7 +602,7 @@ function continuityColoring(
     return baseline.assignment
   }
 
-  const position = new Map(ids.map((id, index) => [id, index]))
+  const position = positionByItem(ids)
   const relation = Array.from(
     { length: ids.length },
     () => new Float64Array(ids.length)

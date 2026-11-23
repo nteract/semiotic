@@ -4,7 +4,7 @@
 // the same computation without instantiating React state — keeps CSR
 // and SSR paths byte-identical.
 
-import { hasInventory } from "./bandPaths"
+import { bandSectionPath, hasInventory, projectBandSections } from "./bandPaths"
 import { bondProcessSankeyNodeData } from "./groupBonding"
 import { scaleTime } from "d3-scale"
 import {
@@ -12,7 +12,6 @@ import {
   partitionProcessSankeyIssues,
   validateProcessSankey,
   applyProcessSankeyValidationPolicy,
-  buildBandPath,
   buildBandCutoutsForNode,
   clampTime,
   type ProcessSankeyOptions,
@@ -250,10 +249,12 @@ export function buildProcessSankeyScenes(
     if (!data || data.samples.length === 0) return
     const grouped = smoothGroups && n.group ? smoothGroups[n.id].samples : undefined
     const renderedSamples = grouped ?? projectedNodeData[n.id].samples
-    const path = buildBandPath(
+    const sections = projectBandSections(
       renderedSamples,
       centerlines[n.id], S, xScale, domain, input.curves, !!grouped,
     )
+    const smooth = input.curves === "smooth"
+    const path = bandSectionPath(sections, smooth)
     if (!path) return
     const firstNonZero = renderedSamples.find(hasInventory) ?? renderedSamples[0]
     const visualOffset = (
@@ -282,7 +283,7 @@ export function buildProcessSankeyScenes(
       if (typeof ruled.opacity === "number" && fillOpacity == null) fillOpacity = ruled.opacity
     }
     const stubs = buildBandCutoutsForNode(
-      n.id, layoutEdges, layout, xScale, domain, visualDepartureByEdge,
+      n.id, layoutEdges, layout, xScale, domain, visualDepartureByEdge, smooth ? sections : undefined,
     )
     bands.push({
       id: n.id,
