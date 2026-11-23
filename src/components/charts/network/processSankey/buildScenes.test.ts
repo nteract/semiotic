@@ -123,8 +123,17 @@ describe("buildProcessSankeyScenes validation policy", () => {
 
     const lower = layoutConfig.bands.find(band => band.id === "B")!
     const slot = lower.gradientStubs![0]
-    const spanAtSix = (path: string) => [...path.matchAll(/(?:^|[ ML])600,([-\d.]+)(?= |$)/g)]
-      .map(match => Number(match[1])).sort((a, b) => a - b)
+    function spanAtSix(path: string) {
+      const ys = new Set<number>()
+      let previous: number[] = []
+      for (const match of path.matchAll(/([MLC])([^MLCZ]+)/g)) {
+        const [x, y] = match[2].trim().split(/\s+/).at(-1)!.split(",").map(Number)
+        if (x === 600 || (match[1] === "L" && y === previous[1] &&
+          Math.min(x, previous[0]) < 600 && 600 < Math.max(x, previous[0]))) ys.add(y)
+        previous = [x, y]
+      }
+      return [...ys].sort((a, b) => a - b)
+    }
     const band = spanAtSix(lower.pathD)
     expect(band).toHaveLength(2)
     expect(band[1] - band[0]).toBeCloseTo(layout!.valueScale)

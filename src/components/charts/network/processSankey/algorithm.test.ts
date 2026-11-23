@@ -1,3 +1,4 @@
+import { projectBandSections } from "./bandPaths"
 import { describe, it, expect } from "vitest"
 import {
   validateProcessSankey,
@@ -733,6 +734,29 @@ describe("band geometry helpers", () => {
       [0, 10]
     )
     expect(path).toBe("M0,90 L50,80 L100,90 L100,110 L50,130 L0,100 Z")
+  })
+
+  it("keeps smooth lifecycle work bounded as inventory accumulates", () => {
+    const count = 256
+    const edges = Array.from({ length: count }, (_, i) => ({
+      id: String(i), source: "A", target: "B", value: 1, startTime: i, endTime: i + 1,
+      systemOutTime: count + 2
+    }))
+    const layout = computeProcessSankeyLayout([{ id: "A" }, { id: "B" }], edges, {
+      plotH: 400, pairing: "temporal", packing: "reuse", laneOrder: "insertion", lifetimeMode: "full"
+    })
+    const domain: [number, number] = [0, count + 2]
+    const contour = projectBandSections(layout.nodeData.B.samples, layout.centerlines.B, layout.valueScale, xScale, domain, "smooth")
+    let visited = 0
+    const observed = contour.map(knot => ({
+      ...knot, get top() { visited++; return knot.top }
+    }))
+    const stubs = buildBandCutoutsForNode("B", edges, layout, xScale, domain, undefined, observed)
+    expect(stubs).toHaveLength(count)
+    expect(stubs.every(stub => stub.x0 === xScale(count + 2) && stub.x1 === stub.x0 + 20)).toBe(true)
+    const commands = stubs.reduce((sum, stub) => sum + (stub.pathD.match(/[LMC]/g)?.length ?? 0), 0)
+    expect(commands).toBeLessThan(count * 32)
+    expect(visited).toBeLessThan(count * 2 * Math.ceil(Math.log2(contour.length)) * 10)
   })
 
   it("builds system-in and system-out gradient cutouts clipped to the band", () => {

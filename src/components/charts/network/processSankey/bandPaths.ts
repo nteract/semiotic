@@ -138,6 +138,67 @@ export interface BandGradientStub {
   to: 0 | 1
 }
 
+interface ContourRange {
+  first: number
+  last: number
+  boundary?: number
+  highestTop: number
+  lowestBottom: number
+  halves?: [ContourRange, ContourRange]
+}
+
+/** A slot inside these bounds stays flat across the whole range. */
+function indexContour(knots: BandSection[], first: number, last: number): ContourRange {
+  if (first === last) {
+    const { top, bottom, boundary } = knots[first]
+    return { first, last, boundary, highestTop: top, lowestBottom: bottom }
+  }
+  const middle = Math.floor((first + last) / 2)
+  const left = indexContour(knots, first, middle)
+  const right = indexContour(knots, middle + 1, last)
+  return {
+    first, last, halves: [left, right],
+    boundary: left.boundary === right.boundary ? left.boundary : undefined,
+    highestTop: Math.max(left.highestTop, right.highestTop),
+    lowestBottom: Math.min(left.lowestBottom, right.lowestBottom)
+  }
+}
+
+function lifecycleContour(
+  knots: BandSection[], range: ContourRange, left: number, right: number,
+  boundary: number, top: number, bottom: number
+) {
+  const slot: BandSection[] = []
+  function append(x: number, top: number, bottom: number) {
+    const last = slot.at(-1)
+    const prior = slot.at(-2)
+    if (last?.top === top && last.bottom === bottom && prior?.top === top && prior.bottom === bottom) {
+      last.x = x
+    } else {
+      slot.push({ x, top, bottom })
+    }
+  }
+  function visit(range: ContourRange) {
+    const { first, last, halves } = range
+    // Retain the adjacent knot so the cubic at either boundary keeps both control points.
+    if ((knots[last + 1] ?? knots[last]).x < left || (knots[first - 1] ?? knots[first]).x > right) return
+    const shift = (range.boundary ?? boundary) - boundary
+    if (halves && range.boundary !== undefined && top + shift >= range.highestTop &&
+        bottom + shift <= range.lowestBottom && knots[first].x >= left && knots[last].x <= right) {
+      append(knots[first].x, top + shift, bottom + shift)
+      append(knots[last].x, top + shift, bottom + shift)
+    } else if (halves) {
+      for (const half of halves) visit(half)
+    } else {
+      const knot = knots[first]
+      const clamp = (y: number) => Math.max(knot.top, Math.min(knot.bottom, y + shift))
+      append(knot.x, clamp(top), clamp(bottom))
+    }
+  }
+  visit(range)
+  return bandSectionPath(slot, true)
+}
+
 /** Fade each lifecycle slot over 20 screen pixels inside the band outline. */
 export function buildBandCutoutsForNode(
   nodeId: string,
@@ -164,23 +225,16 @@ export function buildBandCutoutsForNode(
   // 20 screen pixels of gradient — width-independent of zoom/domain.
   const FADE_PX = 20
   const stubs: BandGradientStub[] = []
+  let contourIndex: ContourRange | undefined
   function addStub(att: ProcessSankeyAttachment, left: number, right: number, x0: number, x1: number, from: 0 | 1) {
     if (!(right > left)) return
     const [top, bottom] = attachmentYRange(att, cl, S)
     let pathD = `M${left},${top} L${right},${top} L${right},${bottom} L${left},${bottom} Z`
     if (smoothSections) {
-      // Carry the slot through the shoulder adjoining the transfer. On the other
-      // side the gradient itself is transparent beyond its lifecycle boundary.
-      const slot = smoothSections.filter((knot, i, knots) => from === 0
-        ? (knots[i - 1] ?? knot).x <= right
-        : (knots[i + 1] ?? knot).x >= left
-      ).map(knot => {
-        const attachmentBoundary = cl + (att.boundaryOffset ?? 0) * S
-        const shift = (knot.boundary ?? attachmentBoundary) - attachmentBoundary
-        const withinBand = (edge: number) => Math.max(knot.top, Math.min(knot.bottom, edge + shift))
-        return { x: knot.x, top: withinBand(top), bottom: withinBand(bottom) }
-      })
-      const outline = bandSectionPath(slot, true)
+      if (!smoothSections.length) return
+      contourIndex ??= indexContour(smoothSections, 0, smoothSections.length - 1)
+      const outline = lifecycleContour(smoothSections, contourIndex, left, right,
+        cl + (att.boundaryOffset ?? 0) * S, top, bottom)
       if (!outline) return
       pathD = outline
     }
