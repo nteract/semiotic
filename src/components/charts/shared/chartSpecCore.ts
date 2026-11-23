@@ -399,6 +399,7 @@ const commonProps: Record<string, ChartPropSpec> = {
     description: "Enable mark transitions (boolean or {duration?, easing?, intro?}).",
   },
   loading: { type: "boolean", description: "Show loading skeleton / loadingContent." },
+  loadingLabel: { type: "string", omitFromSchema: true, description: "Accessible name of the default React loading skeleton." },
   loadingContent: { type: REACT_NODE_TYPES, omitFromSchema: true, description: "ReactNode override for loading state; false suppresses." },
   emptyContent: { type: REACT_NODE_TYPES, omitFromSchema: true, description: "ReactNode when data is empty; false suppresses." },
   hoverHighlight: { type: ["boolean", "string"], description: "Dim non-hovered series/categories (true or the series-level mode; requires colorBy)." },
@@ -551,6 +552,7 @@ const realtimeProps: Record<string, ChartPropSpec> = {
   linkedHover: { type: ["boolean", "string", "object"] },
   selection: { type: "object" },
   loading: { type: "boolean" },
+  loadingLabel: { type: "string", omitFromSchema: true, description: "Accessible name of the default React loading skeleton." },
   loadingContent: { type: REACT_NODE_TYPES, omitFromSchema: true },
   emptyContent: { type: REACT_NODE_TYPES, omitFromSchema: true },
   chartId: { type: "string" },
@@ -638,6 +640,7 @@ const physicsProps: Record<string, ChartPropSpec> = {
       "Observe running/settled pipeline state changes without reaching into frameProps.config."
   },
   loading: { type: "boolean" },
+  loadingLabel: { type: "string", omitFromSchema: true, description: "Accessible name of the default React loading skeleton." },
   loadingContent: { type: REACT_NODE_TYPES, omitFromSchema: true },
   emptyContent: { type: REACT_NODE_TYPES, omitFromSchema: true },
   frameProps: { type: "object", omitFromSchema: true },

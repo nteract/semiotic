@@ -132,6 +132,31 @@ export interface ServerPropExclusion {
 
 // These are individual reviews, not exemptions applied to every chart by name.
 export const serverPropExclusions: readonly ServerPropExclusion[] = [
+  ...[
+    "BarChart", "StackedBarChart", "GroupedBarChart", "SwarmPlot", "BoxPlot",
+    "Histogram", "ViolinPlot", "RidgelinePlot", "DotPlot", "PieChart",
+    "DonutChart", "GaugeChart", "FunnelChart", "RadarChart", "SwimlaneChart",
+    "LikertChart", "LineChart", "BumpChart", "AreaChart", "DifferenceChart",
+    "StackedAreaChart", "Scatterplot", "BubbleChart", "Heatmap", "QuadrantChart",
+    "MultiAxisLineChart", "WaterfallChart", "CandlestickChart", "ConnectedScatterplot", "ScatterplotMatrix",
+    "MinimapChart", "ForceDirectedGraph", "SankeyDiagram", "ProcessSankey", "ChordDiagram",
+    "TreeDiagram", "Treemap", "CirclePack", "OrbitDiagram", "ChoroplethMap",
+    "ProportionalSymbolMap", "FlowMap", "DistanceCartogram", "RealtimeLineChart", "RealtimeHistogram",
+    "TemporalHistogram", "RealtimeSwarmChart", "RealtimeWaterfallChart", "RealtimeHeatmap", "GaltonBoardChart",
+    "EventDropChart", "UnitPileChart", "CollisionSwarmChart", "GauntletChart", "CrucibleChart",
+    "ProcessFlowChart", "PacketFlowChart", "ChainReactionChart", "BigNumber",
+  ].map((component): ServerPropExclusion => ({
+    component,
+    prop: "loadingLabel",
+    status: "intentionally-client-only",
+    reason: "Names the live React skeleton. Static chart rendering produces SVG and mark evidence from bounded input."
+  })),
+  ...["emptyContent", "loadingContent"].map((prop): ServerPropExclusion => ({
+    component: "WordCloud",
+    prop,
+    status: "intentionally-client-only",
+    reason: "Customizes the live layout status. Static WordCloud rendering requires prepared placements."
+  })),
   {
     component: "LineChart",
     prop: "enableHover",
