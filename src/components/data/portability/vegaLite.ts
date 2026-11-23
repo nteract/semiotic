@@ -13,7 +13,7 @@
  *
  * Pure, dependency-free, no chart-family imports.
  */
-import { isRecord, isRecordArray } from "../vegaLiteValidation"
+import { hasVegaFieldPath, isRecord, isRecordArray } from "../vegaLiteValidation"
 import { exportableColorScheme, vegaLiteExportLosses } from "./vegaLiteExportDiagnostics"
 import type { ChartConfig } from "../../export/chartConfig"
 import type { Datum } from "../../charts/shared/datumTypes"
@@ -303,6 +303,12 @@ export function toVegaLiteResult(
     }
   }
 
+  for (const [channel, encoding] of Object.entries(enc)) {
+    if (encoding.field && hasVegaFieldPath(encoding.field)) {
+      lossReport.push({ code: "UNSUPPORTED_ENCODING", path: `/encoding/${channel}/field`,
+        message: "Vega-Lite interprets this literal Semiotic field name as a field path." })
+    }
+  }
   lossReport.unshift(...vegaLiteExportLosses(component, props, enc.color?.field))
 
   // Shared color scheme

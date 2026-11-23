@@ -94,6 +94,25 @@ describe("developer MCP Vega-Lite conversion", () => {
     )
   })
 
+  it("refuses independent arc positions and nested coordinate fields over MCP", async () => {
+    const positioned = { mark: "arc", data: { values: rows }, encoding: {
+      theta: { field: "orders", type: "quantitative" }, color: { field: "team", type: "nominal" },
+      x: { field: "orders", type: "quantitative" }, y: { field: "orders", type: "quantitative" }
+    } }
+    const nested = { mark: "point", data: { values: [{ metrics: { x: 4, y: 7 } }] }, encoding: {
+      x: { field: "metrics.x", type: "quantitative" }, y: { field: "metrics.y", type: "quantitative" }
+    } }
+    for (const [spec, paths] of [[positioned, ["/encoding/x", "/encoding/y"]], [nested, ["/encoding/x/field", "/encoding/y/field"]]] as const) {
+      const strict = await call(spec)
+      expect(strict.isError).toBe(true)
+      const lossy = await call(spec, "lossy")
+      for (const path of paths) {
+        expect(strict.structuredContent.diagnostics).toContainEqual(expect.objectContaining({ path }))
+        expect(lossy.structuredContent.warnings).toContainEqual(expect.stringContaining(path))
+      }
+    }
+  })
+
   it("returns independent area series when stacking is explicitly disabled", async () => {
     const spec = {
       mark: "area",

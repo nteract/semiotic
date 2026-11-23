@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest"
 import { fromVegaLite, fromVegaLiteResult } from "../fromVegaLite"
 import type { VegaLiteSpec } from "../fromVegaLite"
+import { renderChartWithEvidence } from "../../server/renderToStaticSVG"
 import { validatePortableAnnotation } from "./spec"
 import { toVegaLite, toVegaLiteResult } from "./vegaLite"
 
@@ -36,6 +37,30 @@ describe("strict Vega-Lite boundaries", () => {
     expect(importSpec(spec).status).toBe("refused")
     expect(importSpec(spec).diagnostics).toContainEqual(diagnostic)
     expect(importSpec(spec, true).lossReport).toContainEqual(diagnostic)
+  })
+
+  it.each([
+    ["arc", { theta: { field: "value", type: "quantitative" }, color: { field: "group", type: "nominal" }, x: { field: "x", type: "quantitative" }, y: { field: "y", type: "quantitative" } }, ["/encoding/x", "/encoding/y"]],
+    ["area", { x: { field: "value", type: "quantitative", stack: "normalize" }, y: { field: "y", type: "quantitative" }, color: { field: "group", type: "nominal" } }, ["/encoding/x/stack"]]
+  ] as const)("discloses untranslated positions or stacking on %s", (mark, encoding, paths) => {
+    const spec = { mark, encoding, data: { values: [{ x: 1, y: 2, value: 3, group: "A" }] } }
+    expect(importSpec(spec).status).toBe("refused")
+    for (const path of paths) expect(importSpec(spec, true).lossReport).toContainEqual(expect.objectContaining({ path }))
+  })
+
+  it("refuses nested field paths and renders the flattened samples", () => {
+    const values = [{ x: 4, y: 7 }, { x: 5, y: 9 }]
+    const point = (x: string, y: string, rows: unknown[]) => ({
+      mark: "point", data: { values: rows }, encoding: { x: { field: x, type: "quantitative" }, y: { field: y, type: "quantitative" } }
+    })
+    const nested = point("metrics.x", "metrics.y", values.map(metrics => ({ metrics })))
+    expect(importSpec(nested).status).toBe("refused")
+    const approximate = importSpec(nested, true)
+    for (const path of ["/encoding/x/field", "/encoding/y/field"]) {
+      expect(approximate.lossReport).toContainEqual(expect.objectContaining({ path }))
+    }
+    const flat = importSpec(point("x", "y", values)).config!
+    expect(renderChartWithEvidence(flat.component, flat.props).evidence.markCount).toBe(2)
   })
 
   it.each([null, false])("preserves explicitly unstacked colored area series (%s) across import and export", stack => {
@@ -373,6 +398,14 @@ describe("strict Vega-Lite export", () => {
       })
     }
   )
+
+  it.each(["metrics.x", "metrics[0]", "metrics\\.x"])("reports literal field names that Vega-Lite parses as paths: %s", field => {
+    const input = config("LineChart", { xAccessor: field, yAccessor: "y" })
+    expect(toVegaLiteResult(input).status).toBe("refused")
+    const lossy = toVegaLiteResult(input, { allowLossy: true })
+    expect(lossy.status).toBe("lossy")
+    expect(lossy.lossReport).toContainEqual(expect.objectContaining({ path: "/encoding/x/field" }))
+  })
 
   it("preserves area opacity without requiring a curve", () => {
     const result = toVegaLiteResult(

@@ -15,6 +15,11 @@ export function isRecordArray(value: unknown): value is Record<string, unknown>[
 const pointer = (value: string) =>
   value.replace(/~/g, "~0").replace(/\//g, "~1")
 
+/** Vega interprets dots, brackets, and escapes in field references. */
+export function hasVegaFieldPath(field: string): boolean {
+  return [".", "[", "]", "\\"].some(character => field.includes(character))
+}
+
 /** Reject malformed wire inputs before the compatibility translator reads them. */
 export function vegaLiteShapeDiagnostics(
   value: unknown
@@ -104,10 +109,9 @@ export function vegaLiteSemanticDiagnostics(
   const continuous = ["line", "area", "point", "circle", "square"].includes(
     mark
   )
-  const channels = ["x", "y", "color"]
+  const channels = mark === "arc" ? ["theta", "color"] : ["x", "y", "color"]
   if (["point", "circle", "square"].includes(mark))
     channels.push("size", "opacity")
-  if (mark === "arc") channels.push("theta")
   keys(
     spec,
     [
@@ -169,7 +173,7 @@ export function vegaLiteSemanticDiagnostics(
     keys(enc, allowed, path)
     if (
       enc.field !== undefined &&
-      (typeof enc.field !== "string" || !enc.field.length)
+      (typeof enc.field !== "string" || !enc.field.length || hasVegaFieldPath(enc.field))
     )
       unsupported(`${path}/field`)
     if (
@@ -206,6 +210,7 @@ export function vegaLiteSemanticDiagnostics(
     if (
       enc.stack !== undefined && (
         !["bar", "area"].includes(mark) ||
+        (mark === "area" && channel === "x" && Boolean(enc.stack)) ||
         (enc.stack === "normalize" && (!spec.encoding?.color?.field || spec.encoding?.x?.bin || spec.encoding?.y?.bin))
       )
     ) unsupported(`${path}/stack`)
