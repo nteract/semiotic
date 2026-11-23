@@ -33,4 +33,14 @@ for (const template of ["chart-explainer.js", "release-summary.js", "narrative.j
     throw new Error(`Blog skill is missing template: ${template}`)
   }
 }
+const submissionSkill = fs.readFileSync(path.join(root, "chatgpt-app-submission/SKILL.md"), "utf8")
+if (!/^---\r?\n/.test(submissionSkill) || !/^name:\s*chatgpt-app-submission$/m.test(submissionSkill) || !/^description:\s*.+$/m.test(submissionSkill)) {
+  throw new Error("Submission skill requires its name and a description in YAML frontmatter.")
+}
+const manifest = JSON.parse(fs.readFileSync(path.join(root, "chatgpt-app-submission.json"), "utf8"))
+const exampleBlock = submissionSkill.match(/^```json\r?\n([\s\S]*?)\r?\n```/m)
+const example = exampleBlock && JSON.parse(exampleBlock[1])
+if (!example || example.$schema !== manifest.$schema || example.schema_version !== manifest.schema_version) {
+  throw new Error("Submission skill output example must use the project's submission schema and version.")
+}
 console.log(`✅ Agent Skills valid; semiotic-charts packaged for semiotic@${packageJson.version}`)
