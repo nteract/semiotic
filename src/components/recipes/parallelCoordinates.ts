@@ -53,7 +53,7 @@ export interface ParallelCoordinatesConfig {
   axisLabelPadding?: number
   /**
    * Optional per-field tick formatter map. Falls back to
-   * `v.toLocaleString()` for fields without explicit formatters.
+   * `v.toLocaleString("en-US")` for fields without explicit formatters.
    */
   tickFormat?: Record<string, (v: number) => string>
   /**
@@ -264,7 +264,7 @@ export const parallelCoordinatesLayout: OrdinalCustomLayout<ParallelCoordinatesC
       const fmt =
         typeof configuredTickFormat === "function"
           ? configuredTickFormat
-          : (v: number) => v.toLocaleString()
+          : (v: number) => v.toLocaleString("en-US")
 
       // Vertical axis line.
       elements.push(

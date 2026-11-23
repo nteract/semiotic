@@ -22,14 +22,19 @@ export function chartProfileInput(args: {
 }): {
   data: Record<string, unknown>[]
   rawInput?: unknown
+  seriesField?: string
 } {
   const props = args.props ?? {}
   const rows = args.data ?? props.data
   if (Array.isArray(rows)) {
     const key = typeof props.lineDataAccessor === "string" ? props.lineDataAccessor : "coordinates"
-    if (args.component === "LineChart" && Array.isArray(rows[0]?.[key])) {
+    if (args.component === "LineChart") {
       const lineBy = typeof props.lineBy === "string" ? props.lineBy : undefined
-      return { data: normalizeLineChartData(rows.filter(isDataRecord), key, lineBy).rows }
+      const normalized = normalizeLineChartData(rows.filter(isDataRecord), key, lineBy)
+      return {
+        data: normalized.rows,
+        seriesField: typeof normalized.groupAccessor === "string" ? normalized.groupAccessor : undefined
+      }
     }
     return { data: rows as Record<string, unknown>[] }
   }

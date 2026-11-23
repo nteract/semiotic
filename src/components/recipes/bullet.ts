@@ -45,7 +45,7 @@ export interface BulletConfig {
   showTicks?: boolean
   /**
    * Format function for the per-row tick labels rendered below each
-   * bullet. @default v => v.toLocaleString()
+   * bullet. @default v => v.toLocaleString("en-US")
    */
   tickFormat?: (v: number) => string
 }
@@ -103,7 +103,7 @@ export const bulletLayout: OrdinalCustomLayout<BulletConfig> = (ctx) => {
   const labelW = showLabels ? nonNegativeFinite(cfg.labelWidth ?? 120) : 0
   const showTicks = cfg.showTicks !== false
   const tickAreaH = showTicks ? 14 : 0
-  const tickFormat = cfg.tickFormat ?? ((v: number) => v.toLocaleString())
+  const tickFormat = cfg.tickFormat ?? ((v: number) => v.toLocaleString("en-US"))
 
   // Bullet area sits to the right of the labels. Bars draw inside [bulletX, plot.right].
   const bulletX = plot.x + labelW

@@ -2328,9 +2328,10 @@ async function proposeChartVariantsHandler(args: {
     }
   }
 
-  const { data, rawInput } = chartProfileInput(args)
+  const { data, rawInput, seriesField } = chartProfileInput(args)
   const profile = profileData(data, {
     rawInput,
+    seriesField,
     identifiers: args.identifiers,
     fieldRoles: args.fieldRoles
   })
@@ -3117,7 +3118,7 @@ async function improveChartHandler(args: {
   identifiers?: string[]
   fieldRoles?: McpProfileFieldRoleHints
 }): Promise<ToolResult> {
-  const { data, rawInput } = chartProfileInput(args)
+  const { data, rawInput, seriesField } = chartProfileInput(args)
   const intent = (
     Array.isArray(args.intent)
       ? args.intent
@@ -3126,16 +3127,13 @@ async function improveChartHandler(args: {
         : undefined
   ) as IntentId[] | undefined
   const diagnosis = diagnoseConfig(args.component, args.props)
-  const repair = repairChartConfigFromCapabilities(args.component, data, {
-    intent,
-    identifiers: args.identifiers,
-    fieldRoles: args.fieldRoles
-  })
   const profile = profileData(data, {
     rawInput,
+    seriesField,
     identifiers: args.identifiers,
     fieldRoles: args.fieldRoles
   })
+  const repair = repairChartConfigFromCapabilities(args.component, data, { intent, profile })
   const { proposals: variants } = rankVariantProposals(
     args.component,
     profile,

@@ -1701,10 +1701,9 @@ async function build() {
     serverOnly: true,
     groupName: "ai-core"
   })
-  // Node can resolve the public edge entry while running package smoke tests
-  // or universal build tooling. Keep that condition on the Node renderer so
-  // React 19's browser static renderer cannot retain a MessagePort there;
-  // browser and worker conditions still select the regular edge artifact.
+  // Node and edge-light use this native-free entry so the consumer resolves
+  // react-dom/server for its runtime. React 19's browser renderer opens a
+  // MessageChannel, which the Vercel Edge Runtime does not provide.
   await createSharedEsmGroup({
     entries: {
       "semiotic-server-edge-node": "src/components/semiotic-server-edge.ts"
@@ -1894,17 +1893,11 @@ function assertBrowserCompatibleStaticMarkupImports() {
   const edgeArtifacts = emitted
     .filter(([, code]) => /["']react-dom\/server\.edge["']/.test(code))
     .map(([name]) => name)
-  const browserRemap = pkg.browser?.["react-dom/server"]
 
   if (edgeArtifacts.length > 0) {
     throw new Error(
       `React-19-only react-dom/server.edge request in: ${edgeArtifacts.join(", ")}. ` +
         'Use "react-dom/server.browser" in browser/edge source paths.'
-    )
-  }
-  if (browserRemap !== "react-dom/server.browser") {
-    throw new Error(
-      'package.json browser mapping must resolve react-dom/server to "react-dom/server.browser".'
     )
   }
 
@@ -1944,7 +1937,7 @@ function assertBrowserCompatibleStaticMarkupImports() {
   }
 
   console.log(
-    "\u2705 static markup imports verified (React 18-compatible browser mapping; Node bundles use react-dom/server)"
+    "\u2705 static markup imports verified (React 18-compatible browser entry; conditional server bundles use react-dom/server)"
   )
 }
 

@@ -10,6 +10,7 @@
 import { mulberry32 } from "semiotic/recipes"
 
 export { mulberry32 }
+export { proximityProblem as findProximityProblem } from "semiotic/recipes"
 
 // Bauhaus "Perception Lab" palette
 export const PAPER = "#f1e7d2"
@@ -177,71 +178,6 @@ export const NET_EDGES = [
   { source: "g12", target: "g6" },
   // g15 is intentionally left disconnected — held on screen only by gravity
 ]
-
-function buildAdjacency(nodes, edges) {
-  const adj = new Map(nodes.map((n) => [n.id, new Set()]))
-  for (const e of edges) {
-    adj.get(e.source)?.add(e.target)
-    adj.get(e.target)?.add(e.source)
-  }
-  return adj
-}
-
-// Breadth-first hop distance from one node to every other.
-function bfs(adj, start) {
-  const dist = { [start]: 0 }
-  const queue = [start]
-  while (queue.length) {
-    const cur = queue.shift()
-    for (const nb of adj.get(cur) || []) {
-      if (dist[nb] === undefined) {
-        dist[nb] = dist[cur] + 1
-        queue.push(nb)
-      }
-    }
-  }
-  return dist
-}
-
-// Find the nodes that are displayed close together on screen yet are far
-// apart (or disconnected) in the graph — the proximity problem. The search
-// escalates the pixel threshold and relaxes the hop requirement until at
-// least one offending pair turns up, mirroring the original's approach.
-export function findProximityProblem(nodes, edges, pos) {
-  const adj = buildAdjacency(nodes, edges)
-  const dist = {}
-  for (const n of nodes) dist[n.id] = bfs(adj, n.id)
-
-  let minHops = 4
-  let threshold = 0.08
-  const problem = new Set()
-  let guard = 0
-  while (problem.size === 0 && guard < 40) {
-    for (let i = 0; i < nodes.length; i += 1) {
-      for (let j = i + 1; j < nodes.length; j += 1) {
-        const a = nodes[i].id
-        const b = nodes[j].id
-        const hops = dist[a][b] === undefined ? Infinity : dist[a][b]
-        const dx = pos[a].x - pos[b].x
-        const dy = pos[a].y - pos[b].y
-        const screen = Math.sqrt(dx * dx + dy * dy)
-        if (hops >= minHops && screen < threshold) {
-          problem.add(a)
-          problem.add(b)
-        }
-      }
-    }
-    if (problem.size === 0) {
-      threshold += 0.02
-      if (threshold > 0.2) {
-        threshold = 0.08
-        minHops = Math.max(2, minHops - 1)
-      }
-    }
-    guard += 1
-  }
-  return { problemIds: problem, threshold, minHops }
-}
 
 // CHAPTER IV — Figure/Ground & Metastability
 

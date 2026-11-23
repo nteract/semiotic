@@ -14,13 +14,9 @@
  */
 
 import { subscribeToCanvasFontInvalidation } from "../fontLoading"
+import { cachePaint, readCachedPaint, MAX_CACHED_PAINTS, type CanvasPaintCache } from "./canvasPaintCache"
 
-interface CacheEntry {
-  version: number
-  map: Map<string, string>
-}
-
-const cache = new WeakMap<HTMLCanvasElement, CacheEntry>()
+const cache = new WeakMap<HTMLCanvasElement, CanvasPaintCache<string>>()
 let currentVersion = 0
 // One owner for the document listeners, released by the final subscribing frame.
 let cleanupGlobalObserver: (() => void) | undefined
@@ -186,7 +182,7 @@ export function resolveCSSColor(
   const canvas = ctx.canvas
   let entry = canvas ? cache.get(canvas) : undefined
   if (entry?.version === currentVersion) {
-    const cached = entry.map.get(value)
+    const cached = readCachedPaint(entry.paints, value)
     if (cached !== undefined) return cached
   }
 
@@ -198,12 +194,12 @@ export function resolveCSSColor(
   if (!name.startsWith("--")) return value
   const fallback = comma < 0 ? "" : inner.slice(comma + 1).trim()
   if (canvas && entry?.version !== currentVersion) {
-    entry = { version: currentVersion, map: new Map() }
+    entry = { version: currentVersion, paints: new Map() }
     cache.set(canvas, entry)
   }
   const computed = canvas && getComputedStyle(canvas).getPropertyValue(name).trim()
   const resolved = computed || (fallback && resolveCSSColor(ctx, fallback)) || value
-  entry?.map.set(value, resolved)
+  if (entry) cachePaint(entry.paints, value, resolved, MAX_CACHED_PAINTS)
   return resolved
 }
 

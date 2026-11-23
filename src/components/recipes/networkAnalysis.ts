@@ -1,4 +1,6 @@
-import { hasOwn, ownValue, setOwnValue, idDictionary } from "./atlas/ids"
+import { findProximityProblems, hopDistances } from "./networkProximity"
+import { adjacencyMap } from "./directedReachability"
+import { idDictionary } from "./atlas/ids"
 
 /**
  * Network-analysis kit — pure graph algorithms for network visualizations.
@@ -11,7 +13,7 @@ import { hasOwn, ownValue, setOwnValue, idDictionary } from "./atlas/ids"
  * recipes: size nodes by centrality, highlight an ego network on hover, trace a
  * shortest path, or diagnose a misleading layout.
  *
- * All functions are pure and dependency-free. Edges are treated as undirected.
+ * All functions are pure. Edges are treated as undirected.
  */
 
 export interface GraphNode {
@@ -39,15 +41,7 @@ export function buildAdjacency(
   nodes: ReadonlyArray<GraphNode>,
   edges: ReadonlyArray<GraphEdge>
 ): Map<string, Set<string>> {
-  const adj = new Map<string, Set<string>>()
-  for (const n of nodes) adj.set(n.id, new Set())
-  for (const e of edges) {
-    if (!adj.has(e.source)) adj.set(e.source, new Set())
-    if (!adj.has(e.target)) adj.set(e.target, new Set())
-    adj.get(e.source)!.add(e.target)
-    adj.get(e.target)!.add(e.source)
-  }
-  return adj
+  return adjacencyMap(nodes, edges, false)
 }
 
 /** Degree (neighbor count) per node id. */
@@ -55,13 +49,7 @@ export function degree(
   nodes: ReadonlyArray<GraphNode>,
   edges: ReadonlyArray<GraphEdge>
 ): Record<string, number> {
-  const out: Record<string, number> = {}
-  for (const n of nodes) setOwnValue(out, n.id, 0)
-  for (const e of edges) {
-    setOwnValue(out, e.source, (ownValue(out, e.source) ?? 0) + 1)
-    setOwnValue(out, e.target, (ownValue(out, e.target) ?? 0) + 1)
-  }
-  return out
+  return Object.fromEntries(Array.from(buildAdjacency(nodes, edges), ([id, neighbors]) => [id, neighbors.size]))
 }
 
 /** Breadth-first hop distance from `start` to every reachable node. */
@@ -69,21 +57,7 @@ export function bfsDistances(
   adjacency: Map<string, Set<string>>,
   start: string
 ): Record<string, number> {
-  const dist: Record<string, number> = {}
-  setOwnValue(dist, start, 0)
-  const queue: string[] = [start]
-  let head = 0
-  while (head < queue.length) {
-    const cur = queue[head]
-    head += 1
-    for (const nb of adjacency.get(cur) || []) {
-      if (!hasOwn(dist, nb)) {
-        setOwnValue(dist, nb, dist[cur] + 1)
-        queue.push(nb)
-      }
-    }
-  }
-  return dist
+  return Object.fromEntries(hopDistances(adjacency, start))
 }
 
 /**
@@ -98,27 +72,19 @@ export function shortestPath(
 ): string[] {
   if (source === target) return source ? [source] : []
   const adj = buildAdjacency(nodes, edges)
-  const prev = idDictionary<string | null>()
-  prev[source] = null
-  const queue: string[] = [source]
-  let head = 0
-  while (head < queue.length) {
-    const cur = queue[head]
-    head += 1
+  const prev = new Map<string, string | null>([[source, null]])
+  for (const cur of prev.keys()) {
     if (cur === target) break
     for (const nb of adj.get(cur) || []) {
-      if (!hasOwn(prev, nb)) {
-        prev[nb] = cur
-        queue.push(nb)
-      }
+      if (!prev.has(nb)) prev.set(nb, cur)
     }
   }
-  if (!hasOwn(prev, target)) return []
+  if (!prev.has(target)) return []
   const path: string[] = []
   let cur: string | null = target
   while (cur != null) {
     path.push(cur)
-    cur = prev[cur]
+    cur = prev.get(cur) ?? null
   }
   return path.reverse()
 }
@@ -133,12 +99,10 @@ export function egoNetwork(
   id: string,
   depth = 1
 ): Set<string> {
-  const adj = buildAdjacency(nodes, edges)
-  if (!adj.has(id)) return new Set()
-  const dist = bfsDistances(adj, id)
-  const out = new Set<string>()
-  for (const key of Object.keys(dist)) if (dist[key] <= depth) out.add(key)
-  return out
+  const adjacency = buildAdjacency(nodes, edges)
+  return adjacency.has(id) && depth >= 0
+    ? new Set(hopDistances(adjacency, id, depth).keys())
+    : new Set()
 }
 
 /**
@@ -151,18 +115,18 @@ export function betweenness(
   edges: ReadonlyArray<GraphEdge>
 ): Record<string, number> {
   const adj = buildAdjacency(nodes, edges)
-  const cb: Record<string, number> = {}
-  for (const n of nodes) setOwnValue(cb, n.id, 0)
+  const cb: Record<string, number> = Object.fromEntries(nodes.map(({ id }) => [id, 0]))
 
-  for (const s of nodes.map((n) => n.id)) {
-    const stack: string[] = []
+  for (const { id: s } of nodes) {
     const pred = idDictionary<string[]>()
     const sigma = idDictionary<number>()
     const dist = idDictionary<number>()
+    const delta = idDictionary<number>()
     for (const n of nodes) {
       pred[n.id] = []
       sigma[n.id] = 0
       dist[n.id] = -1
+      delta[n.id] = 0
     }
     sigma[s] = 1
     dist[s] = 0
@@ -171,7 +135,6 @@ export function betweenness(
     while (head < queue.length) {
       const v = queue[head]
       head += 1
-      stack.push(v)
       for (const w of adj.get(v) || []) {
         if (dist[w] < 0) {
           dist[w] = dist[v] + 1
@@ -183,18 +146,16 @@ export function betweenness(
         }
       }
     }
-    const delta = idDictionary<number>()
-    for (const n of nodes) delta[n.id] = 0
-    while (stack.length) {
-      const w = stack.pop()!
+    while (queue.length) {
+      const w = queue.pop()!
       for (const v of pred[w]) {
         delta[v] += (sigma[v] / sigma[w]) * (1 + delta[w])
       }
-      if (w !== s) setOwnValue(cb, w, (ownValue(cb, w) ?? 0) + delta[w])
+      if (w !== s) cb[w] += delta[w]
     }
   }
   // Undirected: each pair counted twice.
-  for (const id of Object.keys(cb)) setOwnValue(cb, id, cb[id] / 2)
+  for (const id of Object.keys(cb)) cb[id] /= 2
   return cb
 }
 
@@ -207,18 +168,12 @@ export function closeness(
   edges: ReadonlyArray<GraphEdge>
 ): Record<string, number> {
   const adj = buildAdjacency(nodes, edges)
-  const out: Record<string, number> = {}
-  for (const n of nodes) {
-    const dist = bfsDistances(adj, n.id)
+  return Object.fromEntries(nodes.map(({ id }) => {
+    const distances = hopDistances(adj, id)
     let sum = 0
-    let reach = 0
-    for (const key of Object.keys(dist)) {
-      sum += dist[key]
-      reach += 1
-    }
-    setOwnValue(out, n.id, sum > 0 ? (reach - 1) / sum : 0)
-  }
-  return out
+    for (const hops of distances.values()) sum += hops
+    return [id, sum > 0 ? (distances.size - 1) / sum : 0]
+  }))
 }
 
 /**
@@ -230,42 +185,31 @@ export function clustering(
   edges: ReadonlyArray<GraphEdge>
 ): Record<string, number> {
   const adj = buildAdjacency(nodes, edges)
-  const out: Record<string, number> = {}
-  for (const n of nodes) {
-    const nb = [...(adj.get(n.id) || [])]
-    const k = nb.length
-    if (k < 2) {
-      setOwnValue(out, n.id, 0)
-      continue
-    }
+  return Object.fromEntries(nodes.map(({ id }) => {
+    const neighbors = adj.get(id)!
+    const k = neighbors.size
+    if (k < 2) return [id, 0]
     let links = 0
-    for (let i = 0; i < nb.length; i += 1) {
-      for (let j = i + 1; j < nb.length; j += 1) {
-        if (adj.get(nb[i])?.has(nb[j])) links += 1
-      }
+    for (const neighbor of neighbors) {
+      for (const other of adj.get(neighbor)!) if (neighbors.has(other)) links++
     }
-    setOwnValue(out, n.id, (2 * links) / (k * (k - 1)))
-  }
-  return out
+    return [id, links / (k * (k - 1))]
+  }))
 }
 
 /** Rescale a score map to 0–1 by its maximum (for size/opacity encodings). */
 export function normalizeScores(scores: Record<string, number>): Record<string, number> {
   let max = 0
   for (const id of Object.keys(scores)) if (scores[id] > max) max = scores[id]
-  const out: Record<string, number> = {}
-  for (const id of Object.keys(scores)) {
-    setOwnValue(out, id, max > 0 ? scores[id] / max : 0)
-  }
-  return out
+  return Object.fromEntries(Object.entries(scores).map(([id, value]) => [id, max > 0 ? value / max : 0]))
 }
 
 export interface ProximityProblemOptions {
-  /** Minimum graph-hop distance for a pair to count as "far". @default 4 */
+  /** Minimum graph-hop distance for a pair to count as "far". @default 3 */
   minHops?: number
-  /** Starting screen-distance threshold (in the units of `positions`). @default 0.08 */
+  /** First distance to check in position units. Defaults to half the median nearest distinct position distance. */
   startThreshold?: number
-  /** Cap the threshold search at this distance before relaxing `minHops`. @default 0.2 */
+  /** Fallback distance in position units. Defaults to 90% of typical spacing, or an explicit startThreshold. */
   maxThreshold?: number
 }
 
@@ -278,55 +222,12 @@ export interface ProximityProblemResult {
   minHops: number
 }
 
-/**
- * The "spatial problem": find nodes drawn near each other on screen yet far
- * apart (or disconnected) in the graph — proximity pretending to be kinship,
- * the classic force-layout lie. `positions` is a map of node id → screen point
- * (any consistent coordinate space; distances are compared in those units).
- * The search escalates the distance threshold, then relaxes `minHops`, until at
- * least one offending pair is found.
- */
+/** Find spatially close nodes separated by at least the requested number of graph hops. */
 export function proximityProblem(
   nodes: ReadonlyArray<GraphNode>,
   edges: ReadonlyArray<GraphEdge>,
   positions: Record<string, Point>,
   options: ProximityProblemOptions = {}
 ): ProximityProblemResult {
-  const adj = buildAdjacency(nodes, edges)
-  const dist = idDictionary<Record<string, number>>()
-  for (const n of nodes) dist[n.id] = bfsDistances(adj, n.id)
-
-  let minHops = options.minHops ?? 4
-  let threshold = options.startThreshold ?? 0.08
-  const maxThreshold = options.maxThreshold ?? 0.2
-  const problemIds = new Set<string>()
-  let guard = 0
-  while (problemIds.size === 0 && guard < 40) {
-    for (let i = 0; i < nodes.length; i += 1) {
-      for (let j = i + 1; j < nodes.length; j += 1) {
-        const a = nodes[i].id
-        const b = nodes[j].id
-        const pa = ownValue(positions, a)
-        const pb = ownValue(positions, b)
-        if (!pa || !pb) continue
-        const hops = dist[a][b] === undefined ? Infinity : dist[a][b]
-        const dx = pa.x - pb.x
-        const dy = pa.y - pb.y
-        const screen = Math.sqrt(dx * dx + dy * dy)
-        if (hops >= minHops && screen < threshold) {
-          problemIds.add(a)
-          problemIds.add(b)
-        }
-      }
-    }
-    if (problemIds.size === 0) {
-      threshold += 0.02
-      if (threshold > maxThreshold) {
-        threshold = options.startThreshold ?? 0.08
-        minHops = Math.max(2, minHops - 1)
-      }
-    }
-    guard += 1
-  }
-  return { problemIds, threshold, minHops }
+  return findProximityProblems(nodes, buildAdjacency(nodes, edges), positions, options)
 }

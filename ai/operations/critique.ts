@@ -11,9 +11,9 @@ function assessFit(args: CritiqueInput, valid: boolean) {
   const { component, intent } = args
   if (!valid) return { status: "unavailable" as const, reason: "Correct the configuration before assessing fit." }
   if (intent && !getIntent(intent)) return { status: "unavailable" as const, reason: `Unknown analytical intent “${intent}”.` }
-  const { data, rawInput } = chartProfileInput(args)
+  const { data, rawInput, seriesField } = chartProfileInput(args)
   if (!data.length && !rawInput) return { status: "unavailable" as const, reason: "The configuration provides no dataset to score." }
-  const result = scoreChart(component, data, { intent, profile: profileData(data, { rawInput }) })
+  const result = scoreChart(component, data, { intent, profile: profileData(data, { rawInput, seriesField }) })
   if (result.status === "rejected") return result
   const { status, score, intentScores, reasons, caveats } = result
   return { status, score, intentScores, reasons, caveats }

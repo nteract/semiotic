@@ -105,6 +105,19 @@ describe("developer MCP chart critique", () => {
     expect(report.structuredContent).toMatchObject({ configurationValid: true, fit: { status: "ok" } })
   })
 
+  it("scores distinct line objects as series when every observation has the same category", async () => {
+    const report = await critique("LineChart", {
+      data: [
+        { coordinates: [{ x: 1, y: 10, category: "sales" }, { x: 2, y: 20, category: "sales" }] },
+        { coordinates: [{ x: 3, y: 30, category: "sales" }, { x: 4, y: 40, category: "sales" }] }
+      ]
+    }, "compare-series")
+    expect(report.structuredContent).toMatchObject({
+      configurationValid: true,
+      fit: { status: "ok", intentScores: { "compare-series": 4 } }
+    })
+  })
+
   it.each(["TreeDiagram", "CirclePack", "Treemap", "OrbitDiagram"])("scores the authored children field for %s", async component => {
     const data = { name: "Root", reports: [{ name: "Team", reports: [
       { name: "One", value: 2 }, { name: "Two", value: 1 }

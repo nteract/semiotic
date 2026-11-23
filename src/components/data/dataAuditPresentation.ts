@@ -31,6 +31,22 @@ export function formatDataAudit(result: DataAuditResult): string {
   return lines.join("\n")
 }
 
+/** Summarize audited input requirements, with blocking findings first. */
+export function formatNumericRequirements(result: DataAuditResult, maxFindings = 3): string {
+  const { diagnoses, component, rowCount } = result
+  if (!diagnoses.length) {
+    return result.contracts.length
+      ? `${component} has no numeric findings across ${rowCount} ${rowCount === 1 ? "row" : "rows"}.`
+      : `${component} has no checked numeric requirements.`
+  }
+  const limit = Number.isFinite(maxFindings) ? Math.max(0, Math.floor(maxFindings)) : 3
+  const ranked = [...diagnoses].sort((a, b) => Number(b.severity === "error") - Number(a.severity === "error"))
+  const lines = ranked.slice(0, limit).map(item => `[${item.code}] ${item.message}`)
+  const remaining = ranked.length - lines.length
+  if (remaining) lines.push(`${remaining} more numeric finding${remaining === 1 ? "" : "s"}.`)
+  return lines.join("\n")
+}
+
 function findingTitle(item: DataAuditDiagnosis): string {
   return item.code
     .toLowerCase()

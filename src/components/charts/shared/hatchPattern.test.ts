@@ -103,6 +103,12 @@ describe("hatch tile geometry", () => {
     expect(line?.globalAlpha).toBe(0.4)
   })
 
+  it("leaves a disabled hatch stroke transparent over a translucent background", () => {
+    const { ctx } = targetContext()
+    createHatchPattern({ background: "rgba(20, 40, 60, 0.5)", stroke: "none" }, ctx)
+    expect(calls.map((call) => call.fillStyle)).toEqual(["rgba(20, 40, 60, 0.5)"])
+  })
+
   it("serializes the same tile to SVG", () => {
     const svg = renderToStaticMarkup(
       hatchPatternDef({ type: "hatch", stroke: "#123", spacing: 5, angle: -45, lineOpacity: 0.4 }, "h")
