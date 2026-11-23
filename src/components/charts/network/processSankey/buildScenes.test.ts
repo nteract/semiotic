@@ -98,6 +98,30 @@ describe("buildProcessSankeyScenes validation policy", () => {
     expect(straight.layoutConfig.bands.find(band => band.id === "Queue")?.pathD).not.toContain("C")
   })
 
+  it("keeps grouped inventory and touching edges at the interval midpoint", () => {
+    const input = {
+      nodes: [{ id: "source" }, { id: "A", group: "stock", xExtent: [0, 8] as [number, number] }, { id: "B", group: "stock", xExtent: [0, 8] as [number, number] }],
+      edges: [
+        { id: "a", source: "source", target: "A", startTime: -1, endTime: 0, value: 1 },
+        { id: "b", source: "source", target: "B", startTime: -1, endTime: 0, value: 1 },
+        { id: "growth", source: "source", target: "A", startTime: 3, endTime: 4, value: 2 }
+      ],
+      domain: [0, 8] as [number, number], plotW: 800, plotH: 300,
+      curves: "smooth" as const, ribbonLane: "both" as const,
+      edgeOpacity: 0.4, colorOf: () => "green", layoutOpts: {}
+    }
+    const { layout, layoutConfig } = buildProcessSankeyScenes(input)
+    const atMidpoint = ["A", "B"].map((id) => {
+      const path = layoutConfig.bands.find((band) => band.id === id)!.pathD
+      const ys = [...path.matchAll(/(?:^|[ ML])200,([-\d.]+)(?= |$)/g)].map((m) => Number(m[1]))
+      expect(ys).toHaveLength(2)
+      const [top, bottom] = ys.sort((a, b) => a - b)
+      expect(bottom - top).toBeCloseTo(layout!.valueScale)
+      return { top, bottom }
+    }).sort((a, b) => a.top - b.top)
+    expect(atMidpoint[0].bottom).toBeCloseTo(atMidpoint[1].top)
+  })
+
   it("CSR/SSR reserve time-axis height without fixed side gutters", () => {
     const margin = resolveProcessSankeyMarginDefaults(true, true, true, "horizontal")
     expect(margin.left).toBe(20)

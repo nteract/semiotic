@@ -7,7 +7,7 @@ import type {
   ProcessSankeySample,
 } from "./processSankeyTypes"
 
-type Domain = [number, number] | null | undefined
+type Domain = readonly [number, number] | null | undefined
 
 export function clampTime(t: number, domain: Domain): number {
   if (!domain) return t
@@ -23,6 +23,10 @@ export function clampSamples(samples: readonly ProcessSankeySample[], domain: Do
   }))
 }
 
+export function hasInventory(sample: ProcessSankeySample): boolean {
+  return sample.topMass + sample.botMass > 0
+}
+
 export function attachmentYRange(att: ProcessSankeyAttachment, cl: number, S: number): [number, number] {
   const boundary = cl + (att.boundaryOffset ?? 0) * S
   const width = att.value * S
@@ -35,10 +39,17 @@ export function attachmentYRange(att: ProcessSankeyAttachment, cl: number, S: nu
   return [bottom - width, bottom]
 }
 
+/** Interior inventory checkpoints in the authored time coordinate. */
+export function intervalTimes(start: number, end: number, domain: Domain, midpoint: boolean): number[] {
+  const times = new Set((domain ?? []).filter(t => start < t && t < end))
+  if (midpoint) times.add((start + end) / 2)
+  return [...times].sort((a, b) => a - b)
+}
+
 type BandSection = { x: number; top: number; bottom: number }
 
 /** Keep every attachment covered at its event time and the observed thickness midway between events. */
-function continuousSections(sections: BandSection[]): BandSection[] {
+function continuousSections(sections: BandSection[], domain: Domain, hasIntervalSamples: boolean): BandSection[] {
   const knots: BandSection[] = []
   for (let i = 0; i < sections.length;) {
     const first = sections[i]
@@ -59,8 +70,9 @@ function continuousSections(sections: BandSection[]): BandSection[] {
       for (const section of group) knots.push(section)
     }
     const next = sections[end]
-    if (next && last.top === next.top && last.bottom === next.bottom) {
-      knots.push({ ...last, x: (last.x + next.x) / 2 })
+    if (next && !hasIntervalSamples) {
+      const stable = last.top === next.top && last.bottom === next.bottom
+      for (const x of intervalTimes(last.x, next.x, domain, stable)) knots.push({ ...last, x })
     }
     i = end
   }
@@ -74,17 +86,19 @@ export function buildBandPath(
   xScale: (t: number) => number,
   domain: Domain,
   curves: "straight" | "smooth" = "straight",
+  hasIntervalSamples = false,
 ): string | null {
   if (samples.length === 0) return null
   const sections = samples.map(sample => {
     const boundary = cl + (sample.boundaryOffset ?? 0) * S
     return {
-      x: xScale(clampTime(sample.t, domain)),
+      x: sample.t,
       top: boundary - sample.topMass * S,
       bottom: boundary + sample.botMass * S,
     }
   })
-  const knots = curves === "smooth" ? continuousSections(sections) : sections
+  const knots = curves === "smooth" ? continuousSections(sections, domain, hasIntervalSamples) : sections
+  for (const knot of knots) knot.x = xScale(clampTime(knot.x, domain))
   function side(points: BandSection[], edge: "top" | "bottom") {
     let path = `${points[0].x},${points[0][edge]}`
     for (let i = 1; i < points.length; i++) {
@@ -152,22 +166,28 @@ export function buildBandCutoutsForNode(
   if (!data || data.samples.length === 0) return []
   const S = layout.valueScale
   const cl = layout.centerlines[nodeId]
-  const sm = clampSamples(data.samples, domain)
-  const firstNonZero = sm.find((s) => s.topMass + s.botMass > 0) || sm[0]
-  const lastNonZero = [...sm].reverse().find((s) => s.topMass + s.botMass > 0) || sm[sm.length - 1]
-  const xLeft = xScale(firstNonZero.t)
-  const xRight = xScale(lastNonZero.t)
   const clampX = (t: number): number => xScale(clampTime(t, domain))
+  const first = data.samples.find(hasInventory) ?? data.samples[0]
+  const last = data.samples.findLast(hasInventory) ?? data.samples[data.samples.length - 1]
+  const xLeft = clampX(first.t)
+  const xRight = clampX(last.t)
   // 20 screen pixels of gradient — width-independent of zoom/domain.
   const FADE_PX = 20
   const stubs: BandGradientStub[] = []
-  const rect = (x0: number, yT: number, x1: number, yB: number): string =>
-    `M${x0},${yT} L${x1},${yT} L${x1},${yB} L${x0},${yB} Z`
+  function addStub(att: ProcessSankeyAttachment, left: number, right: number, x0: number, x1: number, from: 0 | 1) {
+    if (!(right > left)) return
+    const [top, bottom] = attachmentYRange(att, cl, S)
+    stubs.push({
+      pathD: `M${left},${top} L${right},${top} L${right},${bottom} L${left},${bottom} Z`,
+      x0, x1, from, to: from === 0 ? 1 : 0,
+    })
+  }
   for (const e of edges) {
+    const att = data.localAttachments.get(e.id)
+    if (!att) continue
     if (e.source === nodeId && e.systemInTime != null && Number.isFinite(e.systemInTime)) {
-      const att = data.localAttachments.get(e.id)
       const renderedStartTime = visualDepartureByEdge?.get(e.id) ?? e.startTime
-      if (att && att.kind === "out" && e.systemInTime < renderedStartTime) {
+      if (att.kind === "out" && e.systemInTime < renderedStartTime) {
         const xSysIn = clampX(e.systemInTime)
         const xStart = clampX(renderedStartTime)
         const predatesVisibleDomain = domain != null && e.systemInTime < domain[0]
@@ -183,39 +203,18 @@ export function buildBandCutoutsForNode(
         // lifecycles deliberately put the transparent stop on that span's
         // boundary and fade inward; in-domain lifecycles retain the
         // conventional lead-in fade ending at `systemInTime`.
-        const xRectStart = Math.max(xLeft, xGradStart)
-        if (xStart > xRectStart) {
-          const [yT, yB] = attachmentYRange(att, cl, S)
-          stubs.push({
-            pathD: rect(xRectStart, yT, xStart, yB),
-            x0: xGradStart,
-            x1: xGradEnd,
-            from: 0,
-            to: 1,
-          })
-        }
+        addStub(att, Math.max(xLeft, xGradStart), xStart, xGradStart, xGradEnd, 0)
       }
     }
     if (e.target === nodeId && e.systemOutTime != null && Number.isFinite(e.systemOutTime)) {
-      const att = data.localAttachments.get(e.id)
-      if (att && att.kind === "in" && e.systemOutTime > e.endTime) {
+      if (att.kind === "in" && e.systemOutTime > e.endTime) {
         const xSysOut = clampX(e.systemOutTime)
         const xEnd = clampX(e.endTime)
         // Mirror of systemIn: gradient saturated at `xSysOut`,
         // transparent at `xSysOut + FADE_PX`. Rect clipped to the
         // band's right edge.
         const xGradEnd = xSysOut + FADE_PX
-        const xRectEnd = Math.min(xRight, xGradEnd)
-        if (xRectEnd > xEnd) {
-          const [yT, yB] = attachmentYRange(att, cl, S)
-          stubs.push({
-            pathD: rect(xEnd, yT, xRectEnd, yB),
-            x0: xSysOut,
-            x1: xGradEnd,
-            from: 1,
-            to: 0,
-          })
-        }
+        addStub(att, xEnd, Math.min(xRight, xGradEnd), xSysOut, xGradEnd, 1)
       }
     }
   }

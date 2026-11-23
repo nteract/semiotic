@@ -500,14 +500,7 @@ export function computeNode(
       rightEnd > last.t &&
       last.topMass + last.botMass > 0
     ) {
-      collapsed.push({
-        t: rightEnd,
-        topMass: last.topMass,
-        botMass: last.botMass,
-        ...(last.boundaryOffset != null && {
-          boundaryOffset: last.boundaryOffset
-        })
-      })
+      collapsed.push({ ...last, t: rightEnd })
     }
     const first = collapsed[0]
     const firstNonZero = collapsed.find(
@@ -539,14 +532,7 @@ export function computeNode(
       leftSample = firstNonZero
     }
     if (leftSample && Number.isFinite(leftStart)) {
-      collapsed.unshift({
-        t: leftStart,
-        topMass: leftSample.topMass,
-        botMass: leftSample.botMass,
-        ...(leftSample.boundaryOffset != null && {
-          boundaryOffset: leftSample.boundaryOffset
-        })
-      })
+      collapsed.unshift({ ...leftSample, t: leftStart })
     }
   }
 
@@ -569,17 +555,10 @@ export function computeNode(
       }
     }
     if (peakSample) {
-      const peakState = {
-        topMass: peakSample.topMass,
-        botMass: peakSample.botMass,
-        ...(peakSample.boundaryOffset != null && {
-          boundaryOffset: peakSample.boundaryOffset
-        })
-      }
       renderedSamples = [
         ...collapsed.filter((sample) => sample.t < xStart),
-        { t: xStart, ...peakState },
-        { t: xEnd, ...peakState },
+        { ...peakSample, t: xStart },
+        { ...peakSample, t: xEnd },
         ...collapsed.filter((sample) => sample.t > xEnd)
       ]
     }

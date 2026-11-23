@@ -1,3 +1,4 @@
+import { intervalTimes } from "./bandPaths"
 import { getMax } from "../../shared/minMax"
 import type {
   ProcessSankeyAttachment,
@@ -12,6 +13,10 @@ const MASS_EPSILON = 1e-9
 
 function sampleMass(sample: ProcessSankeySample): number {
   return sample.topMass + sample.botMass
+}
+
+function translateBoundary<T extends { boundaryOffset?: number }>(point: T, delta?: number): T {
+  return delta === undefined ? { ...point } : { ...point, boundaryOffset: (point.boundaryOffset ?? 0) + delta }
 }
 
 function createSampleCursor(data: ProcessSankeyNodeData) {
@@ -48,19 +53,6 @@ function createSampleCursor(data: ProcessSankeyNodeData) {
   }
 }
 
-function cloneNodeData(
-  data: Record<string, ProcessSankeyNodeData>,
-): Record<string, ProcessSankeyNodeData> {
-  return Object.fromEntries(Object.entries(data).map(([id, node]) => [id, {
-    ...node,
-    samples: node.samples.map((sample) => ({ ...sample })),
-    localAttachments: new Map([...node.localAttachments].map(([edgeId, attachment]) => [
-      edgeId,
-      { ...attachment },
-    ])),
-  }]))
-}
-
 /**
  * Translate same-group bands as a time-aware streamgraph stack.
  *
@@ -79,6 +71,7 @@ export function bondProcessSankeyNodeData(
   centerlines: Readonly<Record<string, number>>,
   valueScale: number,
   groupPadding = 0,
+  smoothDomain?: readonly [number, number],
 ): Record<string, ProcessSankeyNodeData> {
   const groups = new Map<string, ProcessSankeyNode[]>()
   for (const node of nodes) {
@@ -89,16 +82,15 @@ export function bondProcessSankeyNodeData(
   }
   if (groups.size === 0 || !(valueScale > 0)) return nodeData
 
-  const result = cloneNodeData(nodeData)
+  const result = { ...nodeData }
+  const slotGap = Math.max(0, groupPadding)
 
   for (const [group, members] of groups) {
-    const groupSlots = slots
-      .map((slot, index) => ({ slot, index }))
-      .filter(({ slot }) => slot.group === group)
+    const groupSlots = slots.filter(slot => slot.group === group)
     if (groupSlots.length === 0) continue
 
-    const first = groupSlots[0].slot
-    const last = groupSlots.at(-1)!.slot
+    const first = groupSlots[0]
+    const last = groupSlots.at(-1)!
     const firstCenter = centerlines[first.occupants[0]?.id]
     const lastCenter = centerlines[last.occupants[0]?.id]
     if (!Number.isFinite(firstCenter) || !Number.isFinite(lastCenter)) continue
@@ -106,89 +98,73 @@ export function bondProcessSankeyNodeData(
     const blockBottom = lastCenter + last.peak.botPeak * valueScale
     const blockCenter = (blockTop + blockBottom) / 2
 
-    const times = [...new Set(members.flatMap((node) =>
+    const eventTimes = [...new Set(members.flatMap((node) =>
       nodeData[node.id].samples.map((sample) => sample.t),
     ))].sort((a, b) => a - b)
-    const deltaByNode = new Map<string, Map<number, number>>()
-    for (const node of members) deltaByNode.set(node.id, new Map())
-    const sampleAtByNode = new Map(members.map((node) =>
-      [node.id, createSampleCursor(nodeData[node.id])] as const,
-    ))
+    const times = smoothDomain
+      ? eventTimes.flatMap((time, i) => i
+        ? [...intervalTimes(eventTimes[i - 1], time, smoothDomain, true), time]
+        : [time])
+      : eventTimes
+    const series = members.map(node => ({
+      node, sampleAt: createSampleCursor(nodeData[node.id]), deltas: new Map<number, number>(),
+    }))
 
     for (const time of times) {
       const activeBySlot = new Map<number, Array<{
         node: ProcessSankeyNode
         sample: ProcessSankeySample
+        deltas: Map<number, number>
       }>>()
-      for (const node of members) {
-        const { sample } = sampleAtByNode.get(node.id)!(time)
+      for (const { node, sampleAt, deltas } of series) {
+        const { sample } = sampleAt(time)
         if (!sample || sampleMass(sample) <= MASS_EPSILON) continue
         const slot = slotByNode[node.id]
         if (slot == null) continue
         const active = activeBySlot.get(slot) ?? []
-        active.push({ node, sample })
+        active.push({ node, sample, deltas })
         activeBySlot.set(slot, active)
       }
       const activeSlots = [...activeBySlot]
         .sort((a, b) => a[0] - b[0])
-        .map(([slot, active]) => ({
-          slot,
+        .map(([, active]) => ({
           active,
           mass: getMax(active.map(({ sample }) => sampleMass(sample))),
         }))
       if (activeSlots.length === 0) continue
 
       const totalMass = activeSlots.reduce((sum, active) => sum + active.mass, 0)
-      const internalPadding = Math.max(0, groupPadding) * Math.max(0, activeSlots.length - 1)
+      const internalPadding = slotGap * (activeSlots.length - 1)
       let cursor = blockCenter - (totalMass * valueScale + internalPadding) / 2
       for (const activeSlot of activeSlots) {
-        for (const { node, sample } of activeSlot.active) {
+        for (const { node, sample, deltas } of activeSlot.active) {
           const desiredBoundaryOffset =
             (cursor - centerlines[node.id]) / valueScale + sample.topMass
           const delta = desiredBoundaryOffset - (sample.boundaryOffset ?? 0)
-          deltaByNode.get(node.id)!.set(time, delta)
+          deltas.set(time, delta)
         }
-        cursor += activeSlot.mass * valueScale + Math.max(0, groupPadding)
+        cursor += activeSlot.mass * valueScale + slotGap
       }
     }
 
-    for (const node of members) {
+    for (const { node, sampleAt, deltas } of series) {
       const original = nodeData[node.id]
-      const translated = result[node.id]
-      const deltas = deltaByNode.get(node.id)!
-      const sampleAt = sampleAtByNode.get(node.id)!
       const samples: ProcessSankeySample[] = []
       for (const time of times) {
         const delta = deltas.get(time)
         const { exact, sample } = sampleAt(time)
         if (exact) {
-          samples.push(...exact.map((sample) => ({
-            ...sample,
-            ...(delta != null ? {
-              boundaryOffset: (sample.boundaryOffset ?? 0) + delta,
-            } : {}),
-          })))
+          for (const state of exact) samples.push(translateBoundary(state, delta))
           continue
         }
         if (delta == null || !sample || sampleMass(sample) <= MASS_EPSILON) continue
-        samples.push({
-          ...sample,
-          t: time,
-          boundaryOffset: (sample.boundaryOffset ?? 0) + delta,
-        })
+        samples.push({ ...translateBoundary(sample, delta), t: time })
       }
-      translated.samples = samples
-      translated.localAttachments = new Map([...original.localAttachments].map(
-        ([edgeId, attachment]): [string, ProcessSankeyAttachment] => {
-          const delta = deltas.get(attachment.time)
-          return [edgeId, {
-            ...attachment,
-            ...(delta != null ? {
-              boundaryOffset: (attachment.boundaryOffset ?? 0) + delta,
-            } : {}),
-          }]
-        },
+      const localAttachments = new Map([...original.localAttachments].map(
+        ([edgeId, attachment]): [string, ProcessSankeyAttachment] =>
+          [edgeId, translateBoundary(attachment, deltas.get(attachment.time))]
       ))
+      result[node.id] = { ...original, samples, localAttachments }
     }
   }
 

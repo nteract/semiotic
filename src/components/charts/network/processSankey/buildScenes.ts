@@ -4,6 +4,8 @@
 // the same computation without instantiating React state — keeps CSR
 // and SSR paths byte-identical.
 
+import { hasInventory } from "./bandPaths"
+import { bondProcessSankeyNodeData } from "./groupBonding"
 import { scaleTime } from "d3-scale"
 import {
   computeProcessSankeyLayout,
@@ -12,7 +14,7 @@ import {
   applyProcessSankeyValidationPolicy,
   buildBandPath,
   buildBandCutoutsForNode,
-  clampSamples,
+  clampTime,
   type ProcessSankeyOptions,
   type ProcessSankeyLayout,
   type ProcessSankeyIssue,
@@ -191,6 +193,9 @@ export function buildProcessSankeyScenes(
   }
 
   const { centerlines, nodeData, valueScale: S } = layout
+  const smoothGroups = input.curves === "smooth"
+    ? bondProcessSankeyNodeData(nodes, nodeData, layout.slots, layout.slotByNode, centerlines, S, input.layoutOpts.groupPadding, domain)
+    : undefined
   const ruleContext = makeNodeRuleContext(colorBy, valueAccessor)
 
   const bands: ProcessSankeyBandSpec[] = []
@@ -237,13 +242,16 @@ export function buildProcessSankeyScenes(
   nodes.forEach((n, idx) => {
     const data = nodeData[n.id]
     if (!data || data.samples.length === 0) return
+    const grouped = smoothGroups && n.group ? smoothGroups[n.id].samples : undefined
     const renderedSamples = projectFeederBandSamples(
-      data.samples, visualDeparturesByNode.get(n.id),
+      grouped ?? data.samples, visualDeparturesByNode.get(n.id),
     )
-    const path = buildBandPath(renderedSamples, centerlines[n.id], S, xScale, domain, input.curves)
+    const path = buildBandPath(
+      renderedSamples,
+      centerlines[n.id], S, xScale, domain, input.curves, !!grouped,
+    )
     if (!path) return
-    const smSamples = clampSamples(renderedSamples, domain)
-    const firstNonZero = smSamples.find((s) => s.topMass + s.botMass > 0) || smSamples[0]
+    const firstNonZero = renderedSamples.find(hasInventory) ?? renderedSamples[0]
     const visualOffset = (
       firstNonZero.botMass - firstNonZero.topMass + 2 * (firstNonZero.boundaryOffset ?? 0)
     ) * S / 2
@@ -287,7 +295,7 @@ export function buildProcessSankeyScenes(
       // much earlier than that opening, so anchoring to firstNonZero would
       // mislabel the preceding era. Horizontal process views retain their
       // established first-visible-band anchor.
-      labelX: xScale(orientation === "vertical" && n.xExtent ? n.xExtent[0] : firstNonZero.t) - 4,
+      labelX: xScale(orientation === "vertical" && n.xExtent ? n.xExtent[0] : clampTime(firstNonZero.t, domain)) - 4,
       labelY,
       labelText: n.label ?? n.id,
     })

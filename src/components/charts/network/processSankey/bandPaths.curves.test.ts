@@ -31,6 +31,18 @@ describe("ProcessSankey inventory contours", () => {
     )
   })
 
+  it.each([
+    { domain: [0, 8], times: [-4, -2, -2, 4, 4, 8], widths: [10, 10, 1, 1, 4, 4], midpoint: 1, boundary: 0 },
+    { domain: [0, 8], times: [0, 4, 4, 10, 10, 12], widths: [4, 4, 1, 1, 10, 10], midpoint: 7, boundary: 8 }
+  ])("preserves the observed inventory when cropped at $boundary", ({ domain, times, widths, midpoint, boundary }) => {
+    const path = buildBandPath(times.map((t, i) => sample(t, widths[i], 0)), 0, 1, identity, domain as [number, number], "smooth")!
+    const endpoints = [...path.matchAll(/[MLC]([^A-Z]+)/g)].map(([, points]) =>
+      points.trim().split(/\s+/).at(-1)!.split(",").map(Number)
+    )
+    expect(endpoints.filter(([x]) => x === midpoint).map(([, y]) => y)).toEqual([-1, 0])
+    expect(endpoints).toContainEqual([boundary, -1])
+  })
+
   it("keeps the edges paired while a narrow ribbon crosses its centerline", () => {
     const samples = [sample(0, 1, 1, -5), sample(0.001, 2, 2, 6)]
     const path = buildBandPath(samples, 0, 1, identity, null, "smooth")
