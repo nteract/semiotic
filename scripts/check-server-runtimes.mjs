@@ -2,7 +2,6 @@ import assert from "node:assert/strict"
 import { execFileSync } from "node:child_process"
 import {
   cpSync,
-  mkdirSync,
   mkdtempSync,
   realpathSync,
   rmSync,
@@ -150,8 +149,7 @@ if (
       ["18.1.0", "18.1.0"],
       [react, reactDom]
     ]) {
-      const project = join(workspace, `react-${domVersion}`)
-      mkdirSync(project)
+      const project = mkdtempSync(join(workspace, `react-${domVersion}-`))
       writeFileSync(
         join(project, "package.json"),
         JSON.stringify({
