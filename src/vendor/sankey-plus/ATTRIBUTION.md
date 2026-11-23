@@ -1,13 +1,14 @@
 # sankey-plus
 
-Sankey layout engine with improved circular link handling, derived from
-[sankey-plus](https://github.com/tomshanley/sankey-plus) by
-[Tom Shanley](https://github.com/tomshanley) (@tomshanley).
+Semiotic's layout derives from Tom Shanley's [sankey-plus at
+2459c812](https://github.com/tomshanley/sankey-plus/tree/2459c812cb240735b07796c97226b45ed4f59c86).
+The first Semiotic import, `775d6da1a`, contains local adaptations. Its
+`find.js` and `sortGraph.js` match the upstream revision byte for byte.
 
-Tom built `d3-sankey-circular` and then `sankey-plus` as its successor,
-with better cycle detection (Johnson's algorithm), hierarchical arc radius
-stacking, two-pass layout with collision resolution, and dynamic extent
-adjustment. The original work was released under the MIT license.
+Upstream credits [d3-sankey-circular](https://github.com/tomshanley/d3-sankey-circular/tree/7d9a6e3fba7aafdc7f4664e6bcac5879ad46a5b2)
+and [d3-sankey](https://github.com/d3/d3-sankey/tree/bb7233ea0004669878d922e55fe83084ef3cb555).
+Their routing and alignment code survives in this layout. The [license
+notices](./LICENSE) ship in the npm package as `dist/sankey-plus.LICENSE.txt`.
 
 Vendored into Semiotic as JavaScript with TypeScript declarations and typed
 ordering helpers. Semiotic replaces elementary-circuit enumeration with a
