@@ -71,6 +71,32 @@ describe("developer MCP chart critique", () => {
     expect(reference.structuredContent.fit.status).toBe("unavailable")
   })
 
+  const points = [
+    { id: "a", lon: 0, lat: 0, cost: 1, value: 5 },
+    { id: "b", lon: 2, lat: 3, cost: 4, value: 7 }
+  ]
+
+  it.each([
+    ["ProportionalSymbolMap", { sizeBy: "value" }],
+    ["DistanceCartogram", { center: "a", costAccessor: "cost" }]
+  ] as const)("scores %s from points alone", async (component, options) => {
+    const report = await critique(component, { points, ...options }, "geo")
+    expect(report.structuredContent).toMatchObject({ configurationValid: true, fit: { status: "ok" } })
+  })
+
+  it.each([{}, { areas: [] }])("scores FlowMap's flow nodes independently of its background %j", async background => {
+    const report = await critique("FlowMap", {
+      ...background, nodes: points, flows: [{ source: "a", target: "b", value: 3 }]
+    }, "flow")
+    expect(report.structuredContent).toMatchObject({ configurationValid: true, fit: { status: "ok" } })
+  })
+
+  it.each(["SankeyDiagram", "ChordDiagram"])("infers %s nodes using the configured endpoint accessors", async component => {
+    const edges = [{ from: "a", to: "b", value: 2 }, { from: "b", to: "c", value: 1 }, { from: "a", to: "c", value: 3 }]
+    const report = await critique(component, { edges, sourceAccessor: "from", targetAccessor: "to" }, "flow")
+    expect(report.structuredContent).toMatchObject({ configurationValid: true, fit: { status: "ok" } })
+  })
+
   it("scores graph inputs supplied through nodes and edges", async () => {
     const graph = await critique("ForceDirectedGraph", {
       nodes: [{ id: "a" }, { id: "b" }], edges: [{ source: "a", target: "b" }]

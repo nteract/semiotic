@@ -1,4 +1,8 @@
+import { isDataRecord } from "../src/components/charts/shared/dataRecords"
+import { inferNodesFromEdges } from "../src/components/charts/shared/inferNodesFromEdges"
+
 export function chartProfileInput(args: {
+  component: string
   data?: unknown[]
   props?: Record<string, unknown>
 }): {
@@ -12,20 +16,27 @@ export function chartProfileInput(args: {
   if (Array.isArray(props.data)) {
     return { data: props.data as Record<string, unknown>[] }
   }
-  if (Array.isArray(props.areas)) {
-    return { data: [], rawInput: { type: "FeatureCollection", features: props.areas, points: props.points, flows: props.flows } }
-  }
-  if (
-    Array.isArray(props.nodes) &&
-    (Array.isArray(props.edges) || Array.isArray(props.links))
-  ) {
+  const points = args.component === "FlowMap" ? props.nodes : props.points
+  if (Array.isArray(props.areas) || Array.isArray(points) || Array.isArray(props.flows)) {
     return {
       data: [],
       rawInput: {
-        nodes: props.nodes,
-        edges: props.edges ?? props.links
+        type: "FeatureCollection",
+        features: Array.isArray(props.areas) ? props.areas : [],
+        points,
+        flows: props.flows
       }
     }
+  }
+  const edges = props.edges ?? props.links
+  if (Array.isArray(edges)) {
+    const derivesNodes = args.component === "SankeyDiagram" || args.component === "ChordDiagram"
+    const nodes = derivesNodes ? inferNodesFromEdges(
+      Array.isArray(props.nodes) ? props.nodes.filter(isDataRecord) : undefined, edges.filter(isDataRecord),
+      typeof props.sourceAccessor === "string" ? props.sourceAccessor : "source",
+      typeof props.targetAccessor === "string" ? props.targetAccessor : "target"
+    ) : props.nodes
+    if (Array.isArray(nodes)) return { data: [], rawInput: { nodes, edges } }
   }
   if (
     props.data &&
