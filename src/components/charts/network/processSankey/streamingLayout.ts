@@ -207,10 +207,7 @@ export const emitProcessSankeyScenes: NetworkCustomLayout<ProcessSankeyLayoutCon
   }
 
   for (const b of bands) {
-    // When the band carries gradient stubs, drop the flat fill — the
-    // node should read as "outline + stubs only", so the stubs are
-    // the only colored regions inside the perimeter. Otherwise paint
-    // the usual translucent band.
+    // A transparent fill gives the gradient-painted inventory its original band hit target.
     const hasStubs = !!(b.gradientStubs && b.gradientStubs.length > 0)
     const payload = {
       __kind: "band" as const,
@@ -225,7 +222,7 @@ export const emitProcessSankeyScenes: NetworkCustomLayout<ProcessSankeyLayoutCon
       pathD: b.pathD,
       style: {
         ...(hasStubs
-          ? { fill: "none" }
+          ? { fill: "transparent" }
           : { fill: bandFill as string, fillOpacity: dimmed ? DIM_OPACITY : baseFillOpacity }),
         stroke: b.stroke ?? (typeof b.fill === "string" ? b.fill : "#666"),
         strokeWidth: b.strokeWidth ?? 0.5,

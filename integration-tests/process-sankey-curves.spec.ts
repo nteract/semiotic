@@ -107,11 +107,21 @@ for (const renderer of ["canvas", "svg"] as const) {
           )
           .toBe(true)
       }
-      await frame.hover({ position: point })
+      // After both arrivals and before the exit, the queue is unobstructed by ribbons.
+      const inventoryPoint = await queuePath.evaluate((path: SVGPathElement, x) => {
+        const bounds = path.getBBox()
+        const inside: number[] = []
+        for (let y = Math.ceil(bounds.y); y < bounds.y + bounds.height; y++) {
+          if (path.isPointInFill(new DOMPoint(x, y))) inside.push(y)
+        }
+        if (!inside.length) throw new Error("Expected visible inventory between transfers")
+        return { x, y: inside[Math.floor(inside.length / 2)] }
+      }, Math.round(width * 0.52))
+      await frame.hover({ position: inventoryPoint })
       await expect(tooltip).toContainText("Queue")
       await expect(tooltip).toContainText("Mass")
       await expectTooltipWithinPlot(frame, curveMargin)
-      await frame.click({ position: point })
+      await frame.click({ position: inventoryPoint })
       await expect(page.locator("output")).toHaveText("Queue")
       await page.mouse.move(800, 1)
       await expect(tooltip).toHaveCount(0)
