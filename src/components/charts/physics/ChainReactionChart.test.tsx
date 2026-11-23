@@ -22,7 +22,9 @@ describe("ChainReactionChart", () => {
   it("announces loading followed by empty dependency data", () => {
     const props = { ...accessors, data: [], emptyContent: "Keine Aufgaben" }
     const { rerender } = render(<ChainReactionChart {...props} loading loadingLabel="Aufgaben laden" />)
-    expect(screen.getByRole("status", { name: "Aufgaben laden" })).toHaveAttribute("aria-busy", "true")
+    const status = screen.getByRole("status", { name: "Aufgaben laden" })
+    expect(status).toHaveTextContent("Aufgaben laden")
+    expect(status.closest('[aria-busy="true"]')).toBeNull()
     rerender(<ChainReactionChart {...props} />)
     expect(screen.getByRole("status")).toHaveTextContent("Keine Aufgaben")
   })
