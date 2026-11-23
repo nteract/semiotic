@@ -3,8 +3,9 @@ import type {
   MotifTemplate,
   PreparedNetworkAtlas
 } from "./types"
-import { countMotifEntities } from "./entityCounts"
-import { assignedDenominator } from "./compare"
+import { countMotifEntities, traceStatus } from "./entityCounts"
+import { ledgerValue, leastCertain } from "./ledger"
+import { availableValue, denominatorId, countsEntities, observedTemplates, templateEvidence } from "./compare"
 
 export type MotifProfileCell = {
   template: MotifTemplate
@@ -12,7 +13,9 @@ export type MotifProfileCell = {
   partition?: string
   completionCount: number
   intersectionCount: number
+  /** Population total, or NaN when the ledger cannot supply a full total. */
   denominator: number
+  denominatorStatus?: EvidenceStatus
   status: EvidenceStatus
 }
 
@@ -26,49 +29,41 @@ export function buildMotifProfile(
   atlas: PreparedNetworkAtlas,
   options: { templates?: MotifTemplate[]; partition?: string } = {}
 ): MotifProfileStrip {
-  const templates = options.templates ?? ["repeated-state-episode"]
-  const sections =
-    atlas.spec.coordinate.kind === "ordinal"
-      ? atlas.spec.coordinate.sectionIds
-      : []
-  const denominator =
-    options.partition !== undefined
-      ? (assignedDenominator(atlas, options.partition) ?? 0)
-      : atlas.spec.comparison
-        ? (atlas.comparison?.rows.reduce((sum, row) => sum + row.assigned, 0) ??
-          0)
-        : (atlas.ledger.entries.find(
-            (entry) =>
-              entry.subjectKind === "global" &&
-              entry.measureId === atlas.spec.motifs.denominatorRef
-          )?.value ?? 0)
-  const count = (matches: typeof atlas.motifs.matches) =>
-    countMotifEntities(
-      matches,
-      atlas.source.occurrences,
-      options.partition ?? atlas.spec.comparison?.partitions
-    )
+  const templates = observedTemplates(atlas.motifs.matches, options.templates ?? atlas.spec.comparison?.motifTemplates)
+  const sections = atlas.sections.sectionIds
+  const partitions = options.partition === undefined ? atlas.spec.comparison?.partitions : [options.partition]
+  const measure = denominatorId(atlas)
+  const populations = partitions
+    ? partitions.map(id => ledgerValue(atlas.ledger, measure, id))
+    : [atlas.ledger.entries.find(entry => entry.subjectKind === "global" && entry.measureId === measure)]
+  let denominatorStatus: EvidenceStatus = "exact"
+  let denominator = 0
+  for (const entry of populations) {
+    denominatorStatus = leastCertain(denominatorStatus, entry?.status ?? "unknown")
+    denominator += availableValue(entry) ?? NaN
+  }
+  const selected = partitions && new Set(partitions)
+  const rows = (atlas.source.occurrences ?? []).filter(row => !selected || selected.has(row.partition!))
+  const evidence = countsEntities(atlas) ? traceStatus(rows) : "unknown"
+  const partial = selected && new Set(rows.map(row => row.partition)).size < selected.size
+  function count(matches: typeof atlas.motifs.matches) {
+    return countMotifEntities(matches, partitions ? rows : undefined)
+  }
   const cells: MotifProfileCell[] = []
-  const incomplete = atlas.motifs.incompleteCandidates.length > 0
   for (const template of templates) {
+    const { matches, truncated } = templateEvidence(atlas, template)
+    const status = atlas.motifs.unsupportedTemplates.includes(template) ? "unknown"
+      : evidence === "exact" && (partial || truncated) ? "incomplete" : evidence
     for (const sectionId of sections) {
-      const matches = atlas.motifs.matches.filter(
-        (match) => match.template === template
-      )
-      const completionCount = count(
-        matches.filter((match) => match.completionSectionId === sectionId)
-      )
-      const intersectionCount = count(
-        matches.filter((match) => match.intersectSectionIds.includes(sectionId))
-      )
       cells.push({
         template,
         sectionId,
         partition: options.partition,
-        completionCount,
-        intersectionCount,
+        completionCount: count(matches.filter(match => match.completionSectionId === sectionId)),
+        intersectionCount: count(matches.filter(match => match.intersectSectionIds.includes(sectionId))),
         denominator,
-        status: incomplete ? "incomplete" : "exact"
+        denominatorStatus,
+        status: leastCertain(status, denominatorStatus)
       })
     }
   }
