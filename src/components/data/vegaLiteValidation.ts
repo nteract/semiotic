@@ -161,6 +161,12 @@ export function vegaLiteSemanticDiagnostics(
     )
       unsupported("/mark/interpolate")
   }
+  const { x, y, color } = spec.encoding ?? {}
+  for (const [binned, measure, channel] of [[x, y, "y"], [y, x, "x"]] as const) {
+    if (binned?.bin && measure && measure.aggregate !== "count") unsupported(`/encoding/${channel}`)
+  }
+  if (mark === "area" && color?.field && x?.aggregate && !y?.aggregate &&
+      x.stack === undefined && y?.stack === undefined) unsupported("/encoding/x/stack")
   for (const [channel, enc] of Object.entries(spec.encoding || {})) {
     const path = `/encoding/${pointer(channel)}`
     if (!channels.includes(channel)) {

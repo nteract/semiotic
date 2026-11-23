@@ -26,6 +26,25 @@ describe("strict Vega-Lite boundaries", () => {
     expect(importSpec(spec, true).lossReport).toContainEqual(expect.objectContaining({ path: "/encoding/y/stack" }))
   })
 
+  it.each(["x", "y"])("discloses a discarded histogram measure with bins on %s", binned => {
+    const other = binned === "x" ? "y" : "x"
+    const spec = { ...base, mark: "bar", encoding: {
+      [binned]: { field: "score", type: "quantitative", bin: true },
+      [other]: { field: "amount", type: "quantitative" }
+    } }
+    expect(importSpec(spec).status).toBe("refused")
+    expect(importSpec(spec, true).lossReport).toContainEqual(expect.objectContaining({ path: `/encoding/${other}` }))
+  })
+
+  it("refuses implicit horizontal stacking for aggregated x values in a colored area", () => {
+    const spec = { ...base, mark: "area", encoding: {
+      x: { field: "amount", type: "quantitative", aggregate: "sum" },
+      y: { field: "step", type: "quantitative" }, color: { field: "group", type: "nominal" }
+    } }
+    expect(importSpec(spec).status).toBe("refused")
+    expect(importSpec(spec, true).lossReport).toContainEqual(expect.objectContaining({ path: "/encoding/x/stack" }))
+  })
+
   it.each(["x", "y"])("discloses lost normalization for grouped histograms binned on %s", binned => {
     const count = binned === "x" ? "y" : "x"
     const spec = { mark: "bar", data: { values: [{ score: 5, group: "A" }] }, encoding: {
