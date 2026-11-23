@@ -44,6 +44,34 @@ describe("styleRules across families (server / renderChart)", () => {
     expect(target(renderChart("AreaChart", config))).toContain('stroke-width="60"')
   })
 
+  it.each(["AreaChart", "StackedAreaChart", "LineChart"] as const)(
+    "%s styles visible point marks by their own coordinates",
+    (chart) => {
+      const config = {
+        data: [{ t: 1, value: 6, group: "A" }, { t: 2, value: 2, group: "A" }],
+        areaBy: "group", lineBy: "group", xAccessor: "t", yAccessor: "value",
+        colorBy: "group", colorScheme: { A: "navy" }, showPoints: true, pointRadius: 5, showLegend: false,
+        stroke: "black", strokeWidth: 2, opacity: 0.7,
+        styleRules: [{ when: { axis: "x", gt: 1 }, style: { fill: "gold", stroke: "red" } }]
+      }
+      const circles = (svg: string) =>
+        Array.from(new DOMParser().parseFromString(svg, "image/svg+xml").querySelectorAll("circle"))
+      const points = circles(renderChart(chart, config))
+      expect(points.map((point) => point.getAttribute("fill"))).toEqual(["navy", "gold"])
+      for (const point of points) {
+        expect(point.getAttribute("stroke")).toBe("black")
+        expect(point.getAttribute("stroke-width")).toBe("2")
+        expect(point.getAttribute("opacity")).toBe("0.7")
+        expect(point.getAttribute("r")).toBe("5")
+      }
+      expect(circles(renderChart(chart, { ...config, showPoints: false }))).toHaveLength(0)
+      const override = { pointStyle: () => ({ r: 7, fill: "purple" }) }
+      expect(circles(renderChart(chart, { ...config, frameProps: override })).map(
+        (point) => point.getAttribute("fill")
+      )).toEqual(["purple", "purple"])
+    }
+  )
+
   it("Ordinal FunnelChart — renders grouped connector fills in static SVG", () => {
     const svg = renderChart("FunnelChart", {
       data: [

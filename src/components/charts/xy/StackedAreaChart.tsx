@@ -20,7 +20,8 @@ import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useAreaSeriesSetup } from "../shared/useAreaSeriesSetup"
 import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
-import { useSelectionAwareFrameStyle } from "../shared/useSelectionAwareFrameStyle"
+import { selectionDatumWithParent } from "../../store/selectionProvenance"
+import { useSelectionAwareXYFrameStyles } from "../shared/useSelectionAwareFrameStyle"
 import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 import { useXYBrush } from "../shared/useXYBrush"
 import type { XYBrushEndMeta, XYBrushExtent, XYBrushExtentInput } from "../../stream/xyBrushTypes"
@@ -88,9 +89,9 @@ export interface StackedAreaChartProps<TDatum extends Datum = Datum> extends Bas
    */
   colorScheme?: string | string[] | Record<string, string>
   /**
-   * Declarative, threshold-aware styling for the stacked series. Ordered
-   * `{ when, style }` rules; last applicable rule wins. Per-SERIES. A rule
-   * `fill` may be a color or a HatchFill. Layers over the resolved series color.
+   * Rules style each area using its series sample and each visible point using
+   * its own coordinates. Later matching rules win per property. A rule fill
+   * can be a color or a HatchFill.
    */
   styleRules?: StyleRule[]
 
@@ -424,17 +425,8 @@ export const StackedAreaChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PUR
     styleRules,
     ruleContext: areaRuleContext,
   })
-  // Styles passed through `frameProps` take the place of the series style
-  // above. Keep them selection-aware so linked selection still dims.
-  const userLineStyle = useSelectionAwareFrameStyle(
-    frameProps.lineStyle,
-    setup.effectiveSelectionHook,
-    setup.resolvedSelection,
-  )
-  const userAreaStyle = useSelectionAwareFrameStyle(
-    frameProps.areaStyle,
-    setup.effectiveSelectionHook,
-    setup.resolvedSelection,
+  const frameStyles = useSelectionAwareXYFrameStyles(
+    frameProps, setup.effectiveSelectionHook, setup.resolvedSelection, selectionDatumWithParent
   )
 
   // Validate data (after all hooks)
@@ -503,8 +495,7 @@ export const StackedAreaChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PUR
     ...setup.crosshairProps,
     ...brushStreamProps,
     ...frameProps,
-    ...(userLineStyle && { lineStyle: userLineStyle }),
-    ...(userAreaStyle && { areaStyle: userAreaStyle }),
+    ...frameStyles,
   }
 
   if (setup.earlyReturn) return setup.earlyReturn

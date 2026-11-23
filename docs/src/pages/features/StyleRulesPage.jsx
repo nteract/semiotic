@@ -819,10 +819,9 @@ export default function StyleRulesPage() {
         and RealtimeHeatmap rules receive displayed cells, including aggregate <code>count</code>,{" "}
         <code>sum</code>, and <code>agg</code> fields. Tree, Treemap, CirclePack, and Orbit rules see
         the authored raw node and layer over <code>colorByDepth</code>. All six realtime forms use
-        their displayed line, bin, point, delta, or cell value. Line/area rules still resolve
-        per-series (against the series&apos; first point), not per-vertex; MultiAxisLineChart,
-        MinimapChart, CandlestickChart, DifferenceChart, WaterfallChart, and ScatterplotMatrix are
-        not wired.
+        their displayed line, bin, point, delta, or cell value. LineChart, AreaChart, and
+        StackedAreaChart style each series using its first point. With <code>showPoints</code>,
+        rules also style each marker using its own x and y values.
       </p>
 
       <h2 id="ai">For agents & server rendering</h2>

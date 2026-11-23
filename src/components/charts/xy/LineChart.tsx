@@ -19,7 +19,7 @@ import { warnMissingField } from "../shared/withChartWrapper"
 import { validateArrayData } from "../shared/validateChartData"
 import { useChartSetup } from "../shared/useChartSetup"
 import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
-import { useXYPointStyle } from "../shared/useXYPointStyle"
+import { seriesPointColorDatum, useXYPointStyle } from "../shared/useXYPointStyle"
 import { useSelectionAwareXYFrameStyles } from "../shared/useSelectionAwareFrameStyle"
 import { useXYLineStyle } from "../shared/useXYLineStyle"
 import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
@@ -48,8 +48,6 @@ import { withChartErrorBoundary } from "../shared/withChartErrorBoundary"
 function ensureLineChartRegistrations(): void {
   ensureLineFamilyXYPlugins()
 }
-
-const pointColorDatum = (datum: Datum) => datum.parentLine || datum
 
 /**
  * LineChart component props
@@ -132,7 +130,8 @@ export interface LineChartProps<TDatum extends Datum = Datum> extends BaseChartP
    * rules; last applicable rule wins per property. NOTE: line styles resolve
    * per-SERIES against the series' first data point, so a rule's `ctx.x`/`ctx.y`
    * reflect that sample, not every vertex (use it to recolor a whole series by
-   * a representative value). `when` accepts a predicate, a threshold
+   * a representative value). With `showPoints`, each point evaluates these
+   * rules against its own coordinates. `when` accepts a predicate, a threshold
    * (`{ axis: "x"|"y", … }`), or `true`. A rule `stroke`/`fill` may be a color
    * or a HatchFill. Layers over the resolved series color.
    */
@@ -736,7 +735,9 @@ export const LineChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
     colorScale,
     color,
     pointRadius,
-    colorDatumAccessor: pointColorDatum,
+    colorDatumAccessor: seriesPointColorDatum,
+    stroke, strokeWidth: topLevelStrokeWidth, opacity,
+    styleRules, ruleContext: lineRuleContext,
     selectionDatumAccessor: selectionDatumWithParent,
     effectiveSelectionHook,
     resolvedSelection,

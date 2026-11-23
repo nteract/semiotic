@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Visible points on area, stacked area, and line charts now honor per-point style rules, stroke, and opacity in live charts and static SVG. Linked selections also dim area points with custom styles. [source: #1460]
 - `ArtifactInspector` respects parent-controlled disclosure state and keeps
   records with duplicate IDs visible as the inspected contract changes.
   [source: #1537]

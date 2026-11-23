@@ -2,6 +2,9 @@ import React from "react"
 import { act, render } from "@testing-library/react"
 import { vi, expect, it } from "vitest"
 import { LineChart } from "./LineChart"
+import { AreaChart } from "./AreaChart"
+import { StackedAreaChart } from "./StackedAreaChart"
+import type { StyleRule } from "../shared/styleRules"
 import { SelectionProvider } from "../../store/SelectionStore"
 import { useSelection } from "../../store/useSelection"
 import type { StreamXYFrameProps } from "../../stream/types"
@@ -25,15 +28,31 @@ function Probe() {
   return null
 }
 
-it("dims nonmatching lines and their points and restores them on clear", () => {
+const seriesCharts = [
+  { name: "AreaChart", Chart: AreaChart },
+  { name: "StackedAreaChart", Chart: StackedAreaChart },
+  { name: "LineChart", Chart: LineChart }
+]
+
+const styleRules: StyleRule[] = [
+  { when: { axis: "y", gt: 8 }, style: { fill: "gold", stroke: "red" } }
+]
+
+it.each(seriesCharts)("$name styles individual points and restores their styles on clear", ({ Chart }) => {
   render(
     <SelectionProvider>
       <Probe />
-      <LineChart
+      <Chart
         data={rows}
+        {...{ areaBy: "category", lineBy: "category" }}
         colorBy="category"
-        lineBy="category"
+        colorScheme={{ A: "blue", B: "green" }}
         showPoints
+        pointRadius={5}
+        stroke="black"
+        strokeWidth={2}
+        opacity={0.8}
+        styleRules={styleRules}
         selection={{
           name: "join",
           unselectedOpacity: 0.15,
@@ -43,16 +62,37 @@ it("dims nonmatching lines and their points and restores them on clear", () => {
     </SelectionProvider>
   )
   act(() => selection.selectPoints({ category: ["B"] }))
-  const line = frame.lineStyle as (
-    datum: (typeof rows)[number]
-  ) => Record<string, unknown>
-  expect(line(rows[0]).opacity).toBe(0.15)
+  const line = frame.lineStyle as (datum: (typeof rows)[number]) => Record<string, unknown>
+  expect(line(rows[0]).opacity).toBeCloseTo(0.12)
   expect(line(rows[2]).strokeWidth).toBe(4)
-  expect(frame.pointStyle!(rows[0]).opacity).toBe(0.15)
-  expect(frame.pointStyle!(rows[2]).opacity).toBeUndefined()
+  expect(frame.pointStyle!(rows[0])).toMatchObject({ fill: "blue", opacity: 0.12 })
+  expect(frame.pointStyle!(rows[2])).toMatchObject({ fill: "green", opacity: 0.8 })
+  expect(frame.pointStyle!(rows[3])).toMatchObject({ fill: "gold", stroke: "black", strokeWidth: 4, r: 5 })
   act(() => selection.clear())
-  expect((frame.lineStyle as typeof line)(rows[0]).opacity).toBeUndefined()
+  expect((frame.lineStyle as typeof line)(rows[0]).opacity).toBe(0.8)
+  expect(frame.pointStyle!(rows[0]).opacity).toBe(0.8)
+  expect(frame.pointStyle!(rows[3])).toMatchObject({ fill: "gold", strokeWidth: 2 })
+})
+
+it.each(seriesCharts)("$name keeps a custom frame point style selection-aware", ({ Chart }) => {
+  render(
+    <SelectionProvider>
+      <Probe />
+      <Chart
+        data={rows}
+        {...{ areaBy: "category", lineBy: "category" }}
+        showPoints
+        styleRules={styleRules}
+        selection={{ name: "join", unselectedOpacity: 0.2 }}
+        frameProps={{ pointStyle: () => ({ fill: "purple", r: 7 }) }}
+      />
+    </SelectionProvider>
+  )
+  act(() => selection.selectPoints({ category: ["A"] }))
+  expect(frame.pointStyle!(rows[3])).toMatchObject({ fill: "purple", r: 7, opacity: 0.2 })
   expect(frame.pointStyle!(rows[0]).opacity).toBeUndefined()
+  act(() => selection.clear())
+  expect(frame.pointStyle!(rows[3])).toEqual({ fill: "purple", r: 7 })
 })
 
 it("field mode publishes the hovered category rather than the x position", () => {

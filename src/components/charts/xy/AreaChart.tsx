@@ -21,7 +21,8 @@ import { resolveXYFramePropsAxisChrome } from "../../legendLayout"
 import { useFrameImperativeHandle } from "../shared/useFrameImperativeHandle"
 import { useAreaSeriesSetup } from "../shared/useAreaSeriesSetup"
 import { makeXYRuleContext, type StyleRule } from "../shared/styleRules"
-import { useSelectionAwareFrameStyle } from "../shared/useSelectionAwareFrameStyle"
+import { selectionDatumWithParent } from "../../store/selectionProvenance"
+import { useSelectionAwareXYFrameStyles } from "../shared/useSelectionAwareFrameStyle"
 import { accessorName } from "../shared/tooltipUtils"
 import { useSeriesFeatures } from "../shared/useSeriesFeatures"
 import { prepareAreaSeriesData } from "../shared/areaSeriesData"
@@ -105,10 +106,9 @@ export interface AreaChartProps<TDatum extends Datum = Datum> extends BaseChartP
    */
   colorScheme?: string | string[] | Record<string, string>
   /**
-   * Declarative, threshold-aware area styling. Ordered `{ when, style }`
-   * rules; last applicable rule wins. Per-SERIES (resolves against the series'
-   * sample datum). A rule `fill` may be a color or a HatchFill — hatch an
-   * "uncertain"/"projected" series. Layers over the resolved series color.
+   * Rules style each area using its series sample and each visible point using
+   * its own coordinates. Later matching rules win per property. A rule fill
+   * can be a color or a HatchFill.
    */
   styleRules?: StyleRule[]
 
@@ -531,17 +531,8 @@ export const AreaChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
     styleRules,
     ruleContext: areaRuleContext,
   })
-  // Styles passed through `frameProps` take the place of the series style
-  // above. Keep them selection-aware so linked selection still dims.
-  const userLineStyle = useSelectionAwareFrameStyle(
-    frameProps.lineStyle,
-    setup.effectiveSelectionHook,
-    setup.resolvedSelection,
-  )
-  const userAreaStyle = useSelectionAwareFrameStyle(
-    frameProps.areaStyle,
-    setup.effectiveSelectionHook,
-    setup.resolvedSelection,
+  const frameStyles = useSelectionAwareXYFrameStyles(
+    frameProps, setup.effectiveSelectionHook, setup.resolvedSelection, selectionDatumWithParent
   )
 
   // Validate data (after all hooks)
@@ -602,8 +593,7 @@ export const AreaChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__ */ 
     ...(yExtent && { yExtent }),
     ...setup.crosshairProps,
     ...frameProps,
-    ...(userLineStyle && { lineStyle: userLineStyle }),
-    ...(userAreaStyle && { areaStyle: userAreaStyle }),
+    ...frameStyles,
   }
 
   // ── Loading / empty guards (deferred to after all hooks) ───────────────
