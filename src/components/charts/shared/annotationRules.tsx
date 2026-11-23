@@ -16,13 +16,12 @@ import {
   regressionPoints,
 } from "./leastSquaresRegression"
 import { resolveX, resolveY, resolveAnchoredPosition, isInBounds } from "./annotationResolvers"
-import { projectHeatmapBandBound } from "../../stream/heatmapBandTicks"
 import type { Datum } from "./datumTypes"
 import { getMinMax } from "./minMax"
 import { annotationActivationProps, type AnnotationActivationOptions } from "./annotationActivation"
-import { bandLabelY, TOP_LABEL_BASELINE } from "./annotationLabelLayout"
+import { TOP_LABEL_BASELINE } from "./annotationLabelLayout"
 import { AnnotationLabel } from "./AnnotationLabel"
-import { resolveAnnotationBandFill } from "./annotationBandFill"
+import { renderBandAnnotation } from "./renderBandAnnotation"
 import { FrameTextAnnotationSVG } from "./FrameTextAnnotationSVG"
 
 export { applyAnnotationEmphasis, type AnnotationRenderPair } from "./annotationHierarchy"
@@ -106,92 +105,42 @@ export function createDefaultAnnotationRules(
           color={ann.color || "#f97316"} bold />
       }
 
-      // ── Enclose (circle enclosure) ────────────────────────────────────
-      case "enclose": {
-        const coords = (ann.coordinates || [])
-          .map((c: Datum) => ({
-            x: resolveX(c, context),
-            y: resolveY(c, context),
-            r: 1
-          }))
-          .filter(
-            (c: { x: number | null; y: number | null; r: number }) =>
-              c.x != null && c.y != null
-          ) as { x: number; y: number; r: number }[]
-        if (coords.length < 2) return null
-        const enclosure = packEnclose(coords)
-        if (!enclosure) return null
-        const padding = ann.padding ?? 10
-        return (
-          <g key={`ann-${index}`}>
-            <circle
-              cx={enclosure.x}
-              cy={enclosure.y}
-              r={enclosure.r + padding}
-              fill={ann.fill || "none"}
-              fillOpacity={ann.fillOpacity ?? 0.1}
-              stroke={ann.color || "var(--semiotic-text-secondary, #666)"}
-              strokeWidth={1.5}
-              strokeDasharray="4,2"
-            />
-            {ann.label && (
-              <AnnotationLabel
-                x={enclosure.x}
-                y={enclosure.y - enclosure.r - padding - 4}
-                textAnchor="middle"
-                fill={ann.color || "var(--semiotic-text-secondary, #666)"}
-                fontSize={12}
-                text={ann.label}
-                background={ann.labelBackground ?? "none"}
-              />
-            )}
-          </g>
-        )
-      }
-
-      // ── Rect-enclose (bounding rectangle) ─────────────────────────────
+      case "enclose":
       case "rect-enclose": {
-        const coords = (ann.coordinates || [])
-          .map((c: Datum) => ({
-            x: resolveX(c, context),
-            y: resolveY(c, context)
-          }))
-          .filter(
-            (c: { x: number | null; y: number | null }) =>
-              c.x != null && c.y != null
-          ) as { x: number; y: number }[]
-        if (coords.length < 2) return null
+        const points: { x: number; y: number; r: number }[] = []
+        for (const point of ann.coordinates ?? []) {
+          const x = resolveX(point, context)
+          const y = resolveY(point, context)
+          if (x != null && y != null) points.push({ x, y, r: 1 })
+        }
+        if (points.length < 2) return null
         const padding = ann.padding ?? 10
-        const [rawMinX, rawMaxX] = getMinMax(coords, (c) => c.x)
-        const [rawMinY, rawMaxY] = getMinMax(coords, (c) => c.y)
-        const minX = rawMinX - padding
-        const maxX = rawMaxX + padding
-        const minY = rawMinY - padding
-        const maxY = rawMaxY + padding
+        const color = ann.color || "var(--semiotic-text-secondary, #666)"
+        const style = { fill: ann.fill || "none", fillOpacity: ann.fillOpacity ?? 0.1,
+          stroke: color, strokeWidth: 1.5, strokeDasharray: "4,2" }
+        let shape
+        let center: number
+        let top: number
+        if (ann.type === "enclose") {
+          const circle = packEnclose(points)
+          if (!circle) return null
+          const radius = circle.r + padding
+          center = circle.x
+          top = circle.y - radius
+          shape = <circle cx={center} cy={circle.y} r={radius} {...style} />
+        } else {
+          const [x0, x1] = getMinMax(points, p => p.x)
+          const [y0, y1] = getMinMax(points, p => p.y)
+          center = (x0 + x1) / 2
+          top = y0 - padding
+          shape = <rect x={x0 - padding} y={top} width={x1 - x0 + 2 * padding}
+            height={y1 - y0 + 2 * padding} {...style} />
+        }
         return (
           <g key={`ann-${index}`}>
-            <rect
-              x={minX}
-              y={minY}
-              width={maxX - minX}
-              height={maxY - minY}
-              fill={ann.fill || "none"}
-              fillOpacity={ann.fillOpacity ?? 0.1}
-              stroke={ann.color || "var(--semiotic-text-secondary, #666)"}
-              strokeWidth={1.5}
-              strokeDasharray="4,2"
-            />
-            {ann.label && (
-              <AnnotationLabel
-                x={(minX + maxX) / 2}
-                y={minY - 4}
-                textAnchor="middle"
-                fill={ann.color || "var(--semiotic-text-secondary, #666)"}
-                fontSize={12}
-                text={ann.label}
-                background={ann.labelBackground ?? "none"}
-              />
-            )}
+            {shape}
+            {ann.label && <AnnotationLabel x={center} y={top - 4} textAnchor="middle"
+              fill={color} fontSize={12} text={ann.label} background={ann.labelBackground ?? "none"} />}
           </g>
         )
       }
@@ -292,90 +241,15 @@ export function createDefaultAnnotationRules(
         )
       }
 
-      // ── Band (shaded region between y0 and y1) ────────────────────────
-      case "band": {
-        const scaleY = context.scales?.y ?? context.scales?.value
-        // A null/omitted bound extends to the axis extent on that side
-        // (y0 → domain min, y1 → domain max) instead of being treated as 0.
-        const y0px = projectHeatmapBandBound(scaleY, ann.y0, 0)
-        const y1px = projectHeatmapBandBound(scaleY, ann.y1, 1)
-        // Ordinal category scales have no domain(). An omitted bound still
-        // extends to the plot edge; only a failed explicit key is dropped.
-        if (
-          scaleY &&
-          ((ann.y0 != null && y0px == null) || (ann.y1 != null && y1px == null))
-        ) return null
-        const y0 = y0px ?? 0
-        const y1 = y1px ?? (context.height || 0)
-        // Region fill may be a declarative HatchFill → inline <pattern>. A
-        // `layer: "under"` band paints its fill beneath the marks instead.
-        const bandFill = resolveAnnotationBandFill(ann, `ann-${index}`, "vertical", "var(--semiotic-primary, #6366f1)")
-        const fillUnderMarks = underLayerBands && ann.layer === "under"
-        return (
-          <g key={`ann-${index}`} opacity={ann.opacity}>
-            {!fillUnderMarks && bandFill.def && <defs>{bandFill.def}</defs>}
-            {!fillUnderMarks && <rect
-              x={0}
-              y={Math.min(y0, y1)}
-              width={context.width || 0}
-              height={Math.abs(y1 - y0)}
-              fill={bandFill.fill}
-              fillOpacity={ann.fillOpacity ?? 0.1}
-            />}
-            {ann.label && (
-              <AnnotationLabel
-                x={(context.width || 0) - 4}
-                y={bandLabelY(y0, y1)}
-                textAnchor="end"
-                fill={ann.labelColor ?? (ann.color || "var(--semiotic-primary, #6366f1)")}
-                fontSize={11}
-                fontWeight="bold"
-                text={ann.label}
-                background={ann.labelBackground ?? "halo"}
-              />
-            )}
-          </g>
-        )
-      }
-
-      // ── Vertical band (shaded region between x0 and x1) ─────────────
-      case "x-band": {
-        const scaleX = context.scales?.x ?? context.scales?.time
-        // A null/omitted bound extends to the axis extent on that side
-        // (x0 → domain min, x1 → domain max) rather than skipping the band.
-        const x0px = projectHeatmapBandBound(scaleX, ann.x0, 0)
-        const x1px = projectHeatmapBandBound(scaleX, ann.x1, 1)
-        if ((ann.x0 != null && x0px == null) || (ann.x1 != null && x1px == null)) return null
-        const x0 = x0px ?? 0
-        const x1 = x1px ?? (context.width || 0)
-        const xBandFill = resolveAnnotationBandFill(ann, `ann-${index}`, "horizontal", "var(--semiotic-primary, #6366f1)")
-        const fillUnderMarks = underLayerBands && ann.layer === "under"
-        return (
-          <g key={`ann-${index}`} opacity={ann.opacity}>
-            {!fillUnderMarks && xBandFill.def && <defs>{xBandFill.def}</defs>}
-            {!fillUnderMarks && <rect
-              x={Math.min(x0, x1)}
-              y={0}
-              width={Math.abs(x1 - x0)}
-              height={context.height || 0}
-              fill={xBandFill.fill}
-              fillOpacity={ann.fillOpacity ?? 0.1}
-            />}
-            {ann.label && (
-              <AnnotationLabel
-                x={Math.min(x0, x1) + 4}
-                y={TOP_LABEL_BASELINE}
-                textAnchor="start"
-                fill={ann.labelColor ?? (ann.color || "var(--semiotic-primary, #6366f1)")}
-                fontSize={11}
-                fontWeight="bold"
-                text={ann.label}
-                background={ann.labelBackground ?? "halo"}
-              />
-            )}
-          </g>
-        )
-      }
+      case "band":
+      case "x-band":
+        return renderBandAnnotation(ann, {
+          id: `ann-${index}`, width: context.width || 0, height: context.height || 0,
+          scale: ann.type === "x-band"
+            ? context.scales?.x ?? context.scales?.time
+            : context.scales?.y ?? context.scales?.value,
+          underLayer: underLayerBands
+        })
 
       // ── Envelope (per-point upper/lower bounds polygon) ─────────────
       case "envelope": {
@@ -690,54 +564,27 @@ export function createDefaultAnnotationRules(
         const isBandScale = (scale: unknown): scale is BandLikeScale =>
           typeof scale === "function" &&
           typeof (scale as { bandwidth?: unknown }).bandwidth === "function"
-        const rawO = context.scales?.o
-        const oScale = context.scales?.x
-        const altScale = context.scales?.y
-        const scale = isBandScale(rawO)
-          ? rawO
-          : isBandScale(oScale) ? oScale
-          : isBandScale(altScale) ? altScale
-          : null
+        const scales = context.scales
+        const candidates: unknown[] = [scales?.o, scales?.x, scales?.y]
+        const scale = candidates.find(isBandScale)
         if (!scale) return null
-
         const pos = scale(String(catValue))
         if (pos == null) return null
         const bandwidth = scale.bandwidth()
-        // Determine orientation: use projection from context (ordinal frames),
-        // or fall back to checking which axis has the band scale (XY frames)
-        const isVertical = context.projection
-          ? context.projection === "vertical"
-          : scale === oScale
-
+        const vertical = context.projection ? context.projection === "vertical" : Object.is(scale, scales?.x)
         const color = ann.color || "var(--semiotic-primary, #4589ff)"
-        const opacity = ann.opacity ?? 0.15
-        const label = ann.label
-
-        if (isVertical) {
-          return (
-            <g key={`ann-${index}`}>
-              <rect x={pos} y={0} width={bandwidth} height={context.height || 0}
-                    fill={color} fillOpacity={opacity} />
-              {label && (
-                <AnnotationLabel x={pos + bandwidth / 2} y={TOP_LABEL_BASELINE} textAnchor="middle"
-                      fill={color} fontSize={12} fontWeight="bold" text={label}
-                      background={ann.labelBackground ?? "none"} />
-              )}
-            </g>
-          )
-        } else {
-          return (
-            <g key={`ann-${index}`}>
-              <rect x={0} y={pos} width={context.width || 0} height={bandwidth}
-                    fill={color} fillOpacity={opacity} />
-              {label && (
-                <AnnotationLabel x={12} y={pos + bandwidth / 2} dominantBaseline="middle"
-                      fill={color} fontSize={12} fontWeight="bold" text={label}
-                      background={ann.labelBackground ?? "none"} />
-              )}
-            </g>
-          )
-        }
+        return (
+          <g key={`ann-${index}`}>
+            <rect x={vertical ? pos : 0} y={vertical ? 0 : pos}
+              width={vertical ? bandwidth : context.width || 0} height={vertical ? context.height || 0 : bandwidth}
+              fill={color} fillOpacity={ann.opacity ?? 0.15} />
+            {ann.label && <AnnotationLabel x={vertical ? pos + bandwidth / 2 : 12}
+              y={vertical ? TOP_LABEL_BASELINE : pos + bandwidth / 2}
+              textAnchor={vertical ? "middle" : undefined} dominantBaseline={vertical ? undefined : "middle"}
+              fill={color} fontSize={12} fontWeight="bold" text={ann.label}
+              background={ann.labelBackground ?? "none"} />}
+          </g>
+        )
       }
 
       // ── Unrecognized type ─────────────────────────────────────────────
