@@ -24,6 +24,29 @@ const props = {
 const expert = { familiarity: { Scatterplot: 5 } }
 
 describe("annotation policy on a public chart", () => {
+  it("keeps the location of the persistent note in live and static charts", async () => {
+    const primary = { type: "text", x: 1.5, y: 1.5, label: "Core", emphasis: "primary" }
+    const secondary = { ...primary, label: "Detail", emphasis: "secondary" }
+    const policy = { density: { maxAnnotations: 1 }, progressiveDisclosure: true }
+    const config = (annotations: typeof primary[]) => ({ ...props, annotations, autoPlaceAnnotations: policy })
+    const { container, rerender } = render(<Scatterplot {...config([primary])} />)
+    const coordinates = (el: Element) => [el.getAttribute("x"), el.getAttribute("y")]
+    const live = () => within(container).findByText("Core", { selector: "svg text" })
+    const exported = (notes: typeof primary[]) => {
+      const { svg } = renderChartWithEvidence("Scatterplot", config(notes))
+      return new DOMParser().parseFromString(svg, "image/svg+xml")
+    }
+    const solo = coordinates(await live())
+    const batch = [secondary, primary]
+    rerender(<Scatterplot {...config(batch)} />)
+    expect(coordinates(await live())).toEqual(solo)
+    for (const root of [exported(batch), container]) {
+      expect(root.querySelector(".annotation-deferred")?.textContent).toBe("Detail")
+    }
+    const core = (root: Document) => Array.from(root.querySelectorAll("text")).find(el => el.textContent === "Core")!
+    expect(coordinates(core(exported(batch)))).toEqual(coordinates(core(exported([primary]))))
+  })
+
   it.each(["light", "dark"] as const)("cascades theme, chart and note cohesion in %s live and static output", async mode => {
     const theme = { mode, annotationCohesion: "layer" as const, colors: { annotation: "#347566" } }
     const view = (layout?: AutoPlaceAnnotations) => (

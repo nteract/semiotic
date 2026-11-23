@@ -87,12 +87,14 @@ try {
   if (typeof ai.validateProps !== "function") failures.push("invalid-semiotic-ai-self-import")
 
   const geo = requireFromRoot("semiotic/geo")
-  if (typeof geo.ChoroplethMap !== "function") failures.push("invalid-semiotic-geo-self-import")
+  const { createElement } = requireFromRoot("react")
+  const { renderToStaticMarkup } = requireFromRoot("react-dom/server")
+  const markup = renderToStaticMarkup(createElement(geo.ChoroplethMap, {
+    loading: true, loadingContent: "Checking geo renderer"
+  }))
+  if (!markup.includes("Checking geo renderer")) failures.push("invalid-semiotic-geo-self-import")
 
-  requireFromRoot.resolve("@modelcontextprotocol/sdk/server/mcp.js")
   requireFromRoot.resolve("jsdom")
-  requireFromRoot.resolve("react")
-  requireFromRoot.resolve("react-dom/server")
 } catch {
   failures.push("unresolvable-mcp-runtime-dependency")
 }
@@ -103,6 +105,10 @@ const syntaxCheck = spawnSync(process.execPath, ["--check", resolve(root, "ai/di
 if (syntaxCheck.status !== 0) failures.push("invalid-mcp-server-syntax")
 
 if (requireBuildIdentity) {
+  if (process.getuid?.() === 0) failures.push("nightly-running-as-root")
+  for (const tool of ["typescript", "vite", "playwright", "esbuild"]) {
+    if (existsSync(resolve(root, "node_modules", tool))) failures.push(`unexpected-build-tool-${tool}`)
+  }
   if (process.env.SEMIOTIC_DEPLOYMENT_CHANNEL !== "nightly") {
     failures.push("invalid-deployment-channel")
   }
