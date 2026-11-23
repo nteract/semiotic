@@ -34,16 +34,26 @@ const PROJECTION_MAP: Record<ProjectionName, () => GeoProjection> = {
 }
 
 export function resolveProjection(prop: ProjectionProp | undefined): GeoProjection {
-  if (typeof prop === "function") return prop
-  const config = typeof prop === "object" && prop ? prop : undefined
-  const name = typeof prop === "string" ? prop : config?.type
-  const factory = name && Object.hasOwn(PROJECTION_MAP, name) ? PROJECTION_MAP[name] : geoEqualEarth
-  if (process.env.NODE_ENV !== "production" && typeof prop === "string" && !Object.hasOwn(PROJECTION_MAP, prop))
-    console.warn(`GeoFrame: Unknown projection "${prop}", falling back to equalEarth`)
-  const projection = factory()
-  if (config?.rotate && "rotate" in projection) projection.rotate(config.rotate as [number, number, number])
-  if (config?.center && "center" in projection) projection.center(config.center)
-  return projection
+  if (!prop) return geoEqualEarth()
+  if (typeof prop === "string") {
+    const factory = PROJECTION_MAP[prop]
+    if (!factory) {
+      if (process.env.NODE_ENV !== "production") {
+        console.warn(`GeoFrame: Unknown projection "${prop}", falling back to equalEarth`)
+      }
+      return geoEqualEarth()
+    }
+    return factory()
+  }
+  if (typeof prop === "object" && "type" in prop) {
+    const factory = PROJECTION_MAP[prop.type]
+    const proj = factory ? factory() : geoEqualEarth()
+    if (prop.rotate && "rotate" in proj) proj.rotate(prop.rotate as [number, number, number])
+    if (prop.center && "center" in proj) proj.center(prop.center)
+    return proj
+  }
+  // Already a d3 projection object
+  return prop as GeoProjection
 }
 
 // ── Accessor helpers ─────────────────────────────────────────────────
