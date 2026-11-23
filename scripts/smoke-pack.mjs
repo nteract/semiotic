@@ -32,6 +32,7 @@ import { tmpdir } from "node:os"
 import { join, dirname, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 import { sharedStoreSelectorBindings } from "./lib/shared-client-modules.mjs"
+import { checkPackedServerRuntimes, edgeVmVersion } from "./check-server-runtimes.mjs"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(__dirname, "..")
@@ -1093,6 +1094,7 @@ try {
         // runtime peers, while its public declarations import React types; a clean
         // TypeScript app needs both rather than borrowing this repository's tree.
         dependencies: {
+          "@edge-runtime/vm": edgeVmVersion,
           // Pin the resolution an existing d3 v7 application can carry. The
           // packed Semiotic install must accept this copy rather than place a
           // second ESM-only d3-geo under node_modules/semiotic.
@@ -1187,6 +1189,7 @@ try {
   checkUtilsFacadeExportContract(packageRoot, pkg.exports, failures)
   checkPackedImportIsolation(packageRoot, pkg.exports, failures)
   checkReactServerCoreImports(proj, failures)
+  checkPackedServerRuntimes(proj)
   checkExperimentalBridgeStoreAnchor(packageRoot, failures)
 
   for (const { entry, exportEntry, esmPath } of entryPoints) {

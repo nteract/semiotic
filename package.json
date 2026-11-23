@@ -5,9 +5,6 @@
   "description": "Verified generative visualization for React and agents, with deterministic chart validation, repair, rendering evidence, and MCP.",
   "main": "dist/semiotic.min.js",
   "module": "dist/semiotic.module.min.js",
-  "browser": {
-    "react-dom/server": "react-dom/server.browser"
-  },
   "types": "dist/semiotic.d.ts",
   "sideEffects": false,
   "bin": {
@@ -138,6 +135,10 @@
     },
     "./server/edge": {
       "types": "./dist/semiotic-server-edge.d.ts",
+      "edge-light": {
+        "import": "./dist/semiotic-server-edge-node.module.min.js",
+        "require": "./dist/semiotic-server-edge.min.js"
+      },
       "node": {
         "import": "./dist/semiotic-server-edge-node.module.min.js",
         "require": "./dist/semiotic-server-edge.min.js"
@@ -431,6 +432,7 @@
     "check:multi-import-size": "node scripts/check-multi-import-size.mjs",
     "check:bundle-budgets": "npm run check:entry-graph-size && npm run check:multi-import-size",
     "check:pack": "node scripts/smoke-pack.mjs",
+    "check:server-runtimes": "node scripts/check-server-runtimes.mjs",
     "test:consumer-compatibility": "node --import tsx --test scripts/consumer-compatibility/*.test.mjs && vitest run src/components/server/consumer-edge.test.tsx && tsc -p scripts/consumer-compatibility/tsconfig.json",
     "check:consumer-compatibility": "npm run test:consumer-compatibility && node --import tsx scripts/consumer-compatibility/run.ts",
     "check:api-surface": "npm run build:declarations && npm run check:public-signature-types && node scripts/check-api-surface.mjs",

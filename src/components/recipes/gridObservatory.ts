@@ -549,7 +549,7 @@ export function tightestHours(
 /** Format MW with locale grouping; returns "—" for non-finite. */
 export function formatMw(value: number, digits = 0): string {
   if (!Number.isFinite(value)) return "—"
-  return `${value.toLocaleString(undefined, {
+  return `${value.toLocaleString("en-US", {
     maximumFractionDigits: digits,
     minimumFractionDigits: digits
   })} MW`
