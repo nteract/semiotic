@@ -1,3 +1,4 @@
+import { compareRecipeIds } from "../../utils/compareRecipeIds"
 import { idDictionary, setOwnValue } from "./ids"
 import { buildRootedForest } from "./rootedForest"
 import type {
@@ -32,8 +33,8 @@ function isMainNode(source: NetworkAtlasSource, spec: NetworkAtlasSpec, nodeId: 
 function rankEdges(edges: AtlasEdge[], order: "id-asc" | "id-desc"): AtlasEdge[] {
   return [...edges].sort((left, right) =>
     order === "id-asc"
-      ? left.id.localeCompare(right.id)
-      : right.id.localeCompare(left.id)
+      ? compareRecipeIds(left.id, right.id)
+      : compareRecipeIds(right.id, left.id)
   )
 }
 

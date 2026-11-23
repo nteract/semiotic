@@ -1,6 +1,7 @@
 export {
   auditData,
   formatDataAudit,
+  formatNumericRequirements,
   profileNumericFields,
   toDataAuditNotifications,
 } from "./data/auditData"

@@ -75,6 +75,7 @@ function formatAccessibilityAudit(result: AccessibilityAuditResult): string
 function formatDataAudit(result: DataAuditResult): string
 function formatEvaluateChart(result: EvaluateChartResult): string
 function formatMobileVisualizationAudit(result: MobileVisualizationAuditResult): string
+function formatNumericRequirements(result: DataAuditResult, maxFindings?: number | undefined): string
 function fromConfig(config: ChartConfig): FromConfigResult
 function fromURL(urlString: string): ChartConfig
 function fromVegaLite(spec: VegaLiteSpec): ChartConfig & {warnings?: string[];}
