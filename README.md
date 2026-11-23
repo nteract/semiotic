@@ -631,8 +631,8 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 |---|---:|---:|---:|---:|
 | `import { semioticVite } from "semiotic/vite"` | node | **0.6 KiB** | — | 0.6 KiB |
 | `import { getNetworkPerspectiveSize } from "semiotic/network/perspective/core"` | browser | **1.1 KiB** | — | 1.1 KiB |
-| `import { MotifBraidChart } from "semiotic/atlas"` | browser | **113.9 KiB** | 30.5 KiB | 140.8 KiB |
-| `import { prepareNetworkAtlas } from "semiotic/atlas/core"` | browser | **7.1 KiB** | — | 7.1 KiB |
+| `import { MotifBraidChart } from "semiotic/atlas"` | browser | **112.8 KiB** | 30.5 KiB | 139.7 KiB |
+| `import { prepareNetworkAtlas } from "semiotic/atlas/core"` | browser | **6.9 KiB** | — | 7.0 KiB |
 | `import { LineChart } from "semiotic"` | browser | **129.0 KiB** | 44.6 KiB | 156.3 KiB |
 | `import { LineChart } from "semiotic/xy"` | browser | **128.7 KiB** | 32.8 KiB | 156.4 KiB |
 | `import { LineChart } from "semiotic/line"` | browser | **128.7 KiB** | 32.8 KiB | 156.0 KiB |
@@ -646,9 +646,9 @@ Method: fresh `npm pack --ignore-scripts` tarball → temporary consumer → min
 | `import { GaltonBoardChart } from "semiotic/physics"` | browser | **98.6 KiB** | 2.7 KiB | 101.0 KiB |
 | `import { MATTER_PHYSICS_CAPABILITIES } from "semiotic/physics/matter"` | browser | **0.1 KiB** | — | 0.1 KiB |
 | `import { RAPIER_PHYSICS_CAPABILITIES } from "semiotic/physics/rapier"` | browser | **0.2 KiB** | — | 0.2 KiB |
-| `import { renderChart } from "semiotic/server"` | node | **312.0 KiB** | — | 312.0 KiB |
-| `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **130.2 KiB** | — | 130.2 KiB |
-| `import { renderToImage } from "semiotic/server/node"` | node | **312.4 KiB** | 0.6 KiB | 313.0 KiB |
+| `import { renderChart } from "semiotic/server"` | node | **310.9 KiB** | — | 310.9 KiB |
+| `import { generateFrameSVGs } from "semiotic/server/edge"` | node | **129.0 KiB** | — | 129.0 KiB |
+| `import { renderToImage } from "semiotic/server/node"` | node | **311.2 KiB** | 0.6 KiB | 311.8 KiB |
 | `import { suggestCharts } from "semiotic/ai"` | browser | **32.7 KiB** | 13.5 KiB | 33.9 KiB |
 | `import { suggestCharts } from "semiotic/ai/core"` | browser | **32.4 KiB** | — | 32.4 KiB |
 | `import { buildArtifactContract } from "semiotic/artifact"` | browser | **4.5 KiB** | — | 4.5 KiB |
