@@ -397,7 +397,7 @@ const BigNumberInner = (
       const last = normalised[normalised.length - 1]
       publish({
         rows: next, value: last.value, time: last.time as number,
-        comparison: normalised.findLast(row => row.comparison != null)?.comparison ?? latest.current.comparison
+        comparison: normalised.reduce((previous, row) => row.comparison ?? previous, latest.current.comparison)
       })
     },
     [publish]

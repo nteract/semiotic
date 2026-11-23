@@ -458,6 +458,24 @@ describe("BigNumber — push API", () => {
     expect(handle!.getValue()).toBe(42)
   })
 
+  it("retains the latest supplied batch comparison on ES2020 browsers", () => {
+    let handle: BigNumberHandle | null = null
+    const { container } = render(<Harness onReady={h => { handle = h }} />)
+    const findLast = Object.getOwnPropertyDescriptor(Array.prototype, "findLast")
+    try {
+      Object.defineProperty(Array.prototype, "findLast", { configurable: true, value: undefined })
+      act(() => {
+        handle!.pushMany([{ value: 4, comparison: 2 }, { value: 6, comparison: 0 }, 9])
+        handle!.push(12)
+      })
+      expect(handle!.getValue()).toBe(12)
+      expect(container.querySelector(".semiotic-bignumber__delta")).toHaveTextContent("+12")
+    } finally {
+      if (findLast) Object.defineProperty(Array.prototype, "findLast", findLast)
+      else Reflect.deleteProperty(Array.prototype, "findLast")
+    }
+  })
+
   it("pushMany honours windowSize as a cap", () => {
     let handle: BigNumberHandle | null = null
     render(<Harness onReady={(h) => (handle = h)} />)
