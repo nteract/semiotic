@@ -21,7 +21,7 @@ const react = fixupPluginRules(reactPlugin)
 
 export default [
   {
-    ignores: ["src/vendor/**", "dist/**", "docs/build/**", ".parcel-cache/**", "coverage/**"]
+    ignores: ["dist/**", "docs/build/**", ".parcel-cache/**", "coverage/**"]
   },
 
   js.configs.recommended,

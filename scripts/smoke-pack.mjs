@@ -1158,6 +1158,12 @@ try {
     )
   }
   const packageRoot = join(proj, "node_modules/semiotic")
+  const sankeyNotice = join(packageRoot, "dist/sankey-plus.LICENSE.txt")
+  if (!existsSync(sankeyNotice) || !readFileSync(sankeyNotice).equals(
+    readFileSync(join(repoRoot, "src/vendor/sankey-plus/LICENSE"))
+  )) {
+    failures.push("the packed Sankey license notices must match the vendored source")
+  }
   if (
     pkg.peerDependenciesMeta?.["@chenglou/pretext"]?.optional !== true ||
     pkg.dependencies?.["@chenglou/pretext"] ||

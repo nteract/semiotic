@@ -1,6 +1,7 @@
 import bundleFreshness from "./lib/mcp-bundle-freshness.cjs"
 import { execFileSync, execSync } from "child_process"
 import {
+  copyFileSync,
   existsSync,
   readFileSync,
   readdirSync,
@@ -2031,17 +2032,15 @@ const buildPromise = isDeclarationsOnly
 
 buildPromise
   .then(() => {
-    if (!isDeclarationsOnly)
-      writeFileSync(
-        "dist/d3-cloud.LICENSE.txt",
-        readFileSync("node_modules/d3-cloud/LICENSE", "utf8")
-      )
-    if (!isDeclarationsOnly)
+    if (!isDeclarationsOnly) {
+      copyFileSync("node_modules/d3-cloud/LICENSE", "dist/d3-cloud.LICENSE.txt")
+      copyFileSync("src/vendor/sankey-plus/LICENSE", "dist/sankey-plus.LICENSE.txt")
       bundleFreshness.writeBuildFingerprint(
         process.cwd(),
         "library",
         buildSourceFingerprint
       )
+    }
     process.exit(0)
   })
   .catch((err) => {

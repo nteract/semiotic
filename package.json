@@ -307,6 +307,7 @@
     "dist/*.min.js",
     "dist/**/*.d.ts",
     "dist/d3-cloud.LICENSE.txt",
+    "dist/sankey-plus.LICENSE.txt",
     "dist/forceLayoutWorker.js",
     "dist/physicsWorker.js",
     "dist/processSankeyLayoutWorker.js",
