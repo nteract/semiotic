@@ -435,7 +435,7 @@ function renderConnector(
   let startY = 0
 
   if ((type === "callout-circle" || type === "label") && subject?.radius) {
-    const totalRadius = (subject.radius || 0) + (subject.radiusPadding || 0)
+    const totalRadius = subject.radius + (subject.radiusPadding || 0)
     if (totalRadius > 0 && (dx !== 0 || dy !== 0)) {
       const angle = Math.atan2(dy, dx)
       startX = Math.cos(angle) * totalRadius
@@ -450,11 +450,9 @@ function renderConnector(
       const tdx = dx - cx
       const tdy = dy - cy
       if (tdx !== 0 || tdy !== 0) {
-        const absTdx = Math.abs(tdx)
-        const absTdy = Math.abs(tdy)
-        const hw = w / 2
-        const hh = h / 2
-        const t = absTdx * hh > absTdy * hw ? hw / absTdx : hh / absTdy
+        const t = Math.abs(tdx) * cy > Math.abs(tdy) * cx
+          ? cx / Math.abs(tdx)
+          : cy / Math.abs(tdy)
         startX = cx + tdx * t
         startY = cy + tdy * t
       }
@@ -492,13 +490,9 @@ function renderConnector(
     let arrowAngle = Math.atan2(vy, vx)
 
     if (isCurve) {
-      const midX = (startX + dx) / 2
-      const midY = (startY + dy) / 2
-      const nx = -vy / connectorLength
-      const ny = vx / connectorLength
-      const bend = (connector?.curve ?? 0.25) * connectorLength
-      const cx = midX + nx * bend
-      const cy = midY + ny * bend
+      const bend = connector.curve ?? 0.25
+      const cx = (startX + dx) / 2 - vy * bend
+      const cy = (startY + dy) / 2 + vx * bend
       lineElement = (
         <path
           key="connector-line"
@@ -523,17 +517,13 @@ function renderConnector(
     }
 
     if (connector?.end === "arrow") {
-      const arrowSize = 10
-      const angleOffset = (16 / 180) * Math.PI
-      const a1x = startX + arrowSize * Math.cos(arrowAngle + angleOffset)
-      const a1y = startY + arrowSize * Math.sin(arrowAngle + angleOffset)
-      const a2x = startX + arrowSize * Math.cos(arrowAngle - angleOffset)
-      const a2y = startY + arrowSize * Math.sin(arrowAngle - angleOffset)
-
+      const wing = (angle: number) =>
+        `${startX + 10 * Math.cos(angle)},${startY + 10 * Math.sin(angle)}`
+      const offset = (16 / 180) * Math.PI
       arrowElement = (
         <path
           key="connector-arrow"
-          d={`M${startX},${startY}L${a1x},${a1y}L${a2x},${a2y}Z`}
+          d={`M${startX},${startY}L${wing(arrowAngle + offset)}L${wing(arrowAngle - offset)}Z`}
           fill={stroke}
           stroke="none"
         />
