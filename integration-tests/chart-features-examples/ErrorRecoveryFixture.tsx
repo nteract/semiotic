@@ -7,6 +7,10 @@ const rows = [
   { category: "North", value: 12 },
   { category: "South", value: 8 }
 ]
+const controlStyle = {
+  color: "var(--semiotic-text, #202020)",
+  backgroundColor: "var(--semiotic-surface, #fff)"
+}
 const invalidRows = [{ category: "invalid", value: 12 }]
 const colorBy = (row: (typeof rows)[number]) => {
   if (row.category === "invalid")
@@ -34,10 +38,10 @@ export function ErrorRecoveryFixture() {
   const [compact, setCompact] = useState(false)
   return (
     <main style={{ padding: 20 }}>
-      <button onClick={() => setValid(!valid)}>
+      <button style={controlStyle} onClick={() => setValid(!valid)}>
         {valid ? "Break data" : "Repair data"}
       </button>
-      <button onClick={() => setCompact(!compact)}>Resize chart</button>
+      <button style={controlStyle} onClick={() => setCompact(!compact)}>Resize chart</button>
       <section
         data-testid="recovering-chart"
         style={{ width: compact ? 360 : 600 }}
