@@ -30,3 +30,5 @@ export type DatumValue =
   | Datum[]
   | null
   | undefined
+
+export type Accessor<T = DatumValue> = string | ((d: Datum, i?: number) => T)
