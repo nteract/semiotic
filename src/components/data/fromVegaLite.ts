@@ -1,6 +1,7 @@
 import { portableScheme } from "./portableEncodingNames"
 import { fromVegaInterpolation } from "./vegaLiteCurves"
-import { compositionKeys, isHorizontalOrdinal, pointOpacityProp, isRecord, vegaLiteShapeDiagnostics, vegaLiteSemanticDiagnostics } from "./vegaLiteValidation"
+import { areaStackAxis, compositionKeys, isHorizontalOrdinal, pointOpacityProp, isRecord, vegaLiteFieldType, vegaLiteShapeDiagnostics, vegaLiteSemanticDiagnostics } from "./vegaLiteValidation"
+import type { VegaLiteImportError } from "./vegaLiteValidation"
 import type { Datum } from "../charts/shared/datumTypes"
 /**
  * Vega-Lite to Semiotic translator.
@@ -93,9 +94,9 @@ export function unwrapIDIDEnrichedVegaLiteSpec(spec: VegaLiteSpec): VegaLiteSpec
   return { ...outer, ...base }
 }
 
-function strictImportDiagnostics(spec: VegaLiteSpec): PortabilityDiagnostic[] {
+function strictImportDiagnostics(spec: VegaLiteSpec): VegaLiteImportError[] {
   const normalized = unwrapIDIDEnrichedVegaLiteSpec(spec)
-  const diagnostics: PortabilityDiagnostic[] = []
+  const diagnostics: VegaLiteImportError[] = []
   function reject(code: string, path: string, message: string) {
     diagnostics.push({ code, severity: "error", path, message })
   }
@@ -157,27 +158,20 @@ function translateVegaLite(spec: VegaLiteSpec, silent = false, createdAt?: strin
     warnings.push("Materialize Vega-Lite transforms before import.")
   }
 
-  // Unsupported composition features
   if (spec.layer) {
-    warnings.push(
-      'Layered specs ("layer") are unsupported; provide one mark.'
-    )
+    warnings.push("Import one layer per chart.")
   }
   if (spec.hconcat || spec.vconcat || spec.concat) {
-    warnings.push(
-      'Import each concat, hconcat or vconcat view separately.'
-    )
+    warnings.push("Import concat, hconcat and vconcat views separately.")
   }
   if (spec.facet || enc.facet || enc.row || enc.column) {
-    warnings.push("Faceted views are unsupported; use LinkedCharts or separate charts.")
+    warnings.push("Import each facet separately or use LinkedCharts.")
   }
   if (spec.repeat) {
-    warnings.push(
-      'Import each repeat field combination separately.'
-    )
+    warnings.push("Import each repeat view separately.")
   }
   if (spec.params || spec.selection) {
-    warnings.push("Selections/params are unsupported; use LinkedCharts and selection props.")
+    warnings.push("Use LinkedCharts selection props for params and selections.")
   }
 
   // Determine component and build props
@@ -214,8 +208,22 @@ function translateVegaLite(spec: VegaLiteSpec, silent = false, createdAt?: strin
   let component: string
 
   switch (markType) {
-    case "bar": {
-      component = resolveBarComponent(x, y, color, props)
+    case "bar":
+    case "tick": {
+      const horizontal = isHorizontalOrdinal(x, y)
+      const [category, measure] = horizontal ? [y, x] : [x, y]
+      setAxisProps(props, "categoryAccessor", "categoryLabel", category)
+      setAxisProps(props, "valueAccessor", "valueLabel", measure)
+      if (horizontal) props.orientation = "horizontal"
+      if (markType === "tick") {
+        if (!horizontal) props.orientation = "vertical"
+        component = "DotPlot"
+      } else {
+        const stack = color?.field && stackOffset(measure)
+        component = stack ? "StackedBarChart" : "BarChart"
+        if (stack) props.stackBy = color.field
+        if (stack === "normalize") props.normalize = true
+      }
       break
     }
     case "line": {
@@ -230,8 +238,8 @@ function translateVegaLite(spec: VegaLiteSpec, silent = false, createdAt?: strin
       break
     }
     case "area": {
-      const stackAxis = spec.encoding?.x?.aggregate && !spec.encoding?.y?.aggregate && y?.stack === undefined ? x : y
-      const stack = color?.field && stackOffset(stackAxis)
+      const axis = areaStackAxis(spec.encoding ?? {})
+      const stack = color?.field && axis && stackOffset(enc[axis])
       component = stack ? "StackedAreaChart" : "AreaChart"
       if (color?.field) props.areaBy = color.field
       setXYAccessors(x, y, props)
@@ -281,13 +289,6 @@ function translateVegaLite(spec: VegaLiteSpec, silent = false, createdAt?: strin
       if (category) props.categoryAccessor = category
       break
     }
-    case "tick": {
-      component = "DotPlot"
-      const horizontal = isHorizontalOrdinal(x, y)
-      if (!horizontal) props.orientation = "vertical"
-      setOrdinalAccessors(x, y, props, horizontal)
-      break
-    }
     default: {
       warnings.push(`Unsupported mark type "${markType}". Defaulting to Scatterplot.`)
       component = "Scatterplot"
@@ -317,8 +318,7 @@ export function fromVegaLiteResult(
 ): VegaLiteImportResult {
   const malformed = vegaLiteShapeDiagnostics(spec)
   const diagnostics = malformed.length ? malformed : strictImportDiagnostics(spec)
-  const errors = diagnostics.filter((diagnostic) => diagnostic.severity === "error")
-  const lossReport = errors.map(({ code, message, path }) => ({ code, message, path }))
+  const lossReport = diagnostics.map(({ code, message, path }) => ({ code, message, path }))
   const idid = readIDIDMetadata(spec)
   const provenance = {
     adapter: "semiotic/vega-lite",
@@ -329,7 +329,7 @@ export function fromVegaLiteResult(
     ...(idid ? { metadata: { idid } } : {}),
   }
 
-  if (errors.length > 0 && (options.mode !== "lossy" || malformed.length > 0)) {
+  if (malformed.length || (diagnostics.length && options.mode !== "lossy")) {
     return {
       status: "refused",
       diagnostics,
@@ -344,17 +344,7 @@ export function fromVegaLiteResult(
     severity: "warning",
     message,
   }))
-  // In lossy mode, strict-subset failures describe approximated or discarded
-  // semantics rather than a refusal. Keep them in `lossReport`, but surface
-  // them as warnings so callers can use error-level diagnostics as a reliable
-  // refusal signal.
-  const surfacedDiagnostics = options.mode === "lossy"
-    ? diagnostics.map((diagnostic) =>
-          diagnostic.severity === "error"
-        ? { ...diagnostic, severity: "warning" as const }
-        : diagnostic
-        )
-    : diagnostics
+  const surfacedDiagnostics = diagnostics.map(diagnostic => ({ ...diagnostic, severity: "warning" as const }))
 
   return {
     status: lossReport.length > 0 ? "lossy" : "success",
@@ -371,30 +361,6 @@ function stackOffset(channel?: VegaLiteEncoding) {
   return channel?.stack === undefined ? "zero" : channel.stack
 }
 
-function resolveBarComponent(
-  x: VegaLiteEncoding | undefined,
-  y: VegaLiteEncoding | undefined,
-  color: VegaLiteEncoding | undefined,
-  props: Datum,
-): string {
-  const horizontal = isHorizontalOrdinal(x, y)
-  setOrdinalAccessors(x, y, props, horizontal)
-  const stack = stackOffset(horizontal ? x : y)
-  if (!color?.field || !stack) return "BarChart"
-  props.stackBy = color.field
-  if (stack === "normalize") props.normalize = true
-  return "StackedBarChart"
-}
-
-function setOrdinalAccessors(
-  x: VegaLiteEncoding | undefined, y: VegaLiteEncoding | undefined,
-  props: Datum, horizontal: boolean
-) {
-  if (horizontal) props.orientation = "horizontal"
-  setAxisProps(props, "categoryAccessor", "categoryLabel", horizontal ? y : x)
-  setAxisProps(props, "valueAccessor", "valueLabel", horizontal ? x : y)
-}
-
 function setAxisProps(props: Datum, accessor: string, label: string, channel?: VegaLiteEncoding) {
   if (channel?.field) props[accessor] = channel.field
   if (channel?.axis?.title) props[label] = channel.axis.title
@@ -409,7 +375,7 @@ function setXYAccessors(
   setAxisProps(props, "xAccessor", "xLabel", x)
   setAxisProps(props, "yAccessor", "yLabel", y)
   if (!continuous) return
-  if (x?.type === "temporal") props.xScaleType = "time"
+  if (vegaLiteFieldType(x) === "temporal") props.xScaleType = "time"
   else if (x?.scale?.type === "log") props.xScaleType = "log"
   if (y?.scale?.type === "log" || y?.scale?.type === "symlog") props.yScaleType = y.scale.type
 }

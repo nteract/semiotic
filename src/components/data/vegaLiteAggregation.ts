@@ -1,6 +1,6 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import { isCategory, vegaLiteFieldType } from "./vegaLiteValidation"
-import type { PortabilityDiagnostic } from "./portability/result"
+import type { VegaLiteImportError } from "./vegaLiteValidation"
 import type { VegaLiteEncoding, VegaLiteSpec } from "./fromVegaLite"
 import {
   aggregateRows,
@@ -18,9 +18,9 @@ function quantitativeValue(raw: unknown) {
 /** Validate before changing rows or accessors, including in strict imports. */
 export function vegaLiteAggregationDiagnostics(
   spec: VegaLiteSpec
-): PortabilityDiagnostic[] {
+): VegaLiteImportError[] {
   const encodings = spec.encoding ?? {}
-  const diagnostics: PortabilityDiagnostic[] = []
+  const diagnostics: VegaLiteImportError[] = []
   for (const [channel, encoding] of Object.entries(encodings)) {
     if (encoding.aggregate === undefined) continue
     const operation = normalizeAggregate(encoding.aggregate)

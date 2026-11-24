@@ -58,6 +58,20 @@ describe("strict Vega-Lite boundaries", () => {
     expect(result.config).toMatchObject({ component: "StackedAreaChart", props: { areaBy: "team", normalize: true } })
   })
 
+  it.each(["time", "linear", "log"])("preserves an x field's implied %s scale", scale => {
+    const result = importSpec({ ...base, encoding: { x: { field: "date", scale: { type: scale } }, y: base.encoding!.y } })
+    expect(result.status).toBe("success")
+    expect(result.config?.props.xScaleType ?? "linear").toBe(scale)
+  })
+
+  it("keeps an area unstacked when its only color field is the aggregated chart's grouping axis", () => {
+    const result = importSpec({ ...base, mark: "area", encoding: {
+      x: { field: "group", type: "quantitative" }, y: { ...base.encoding!.y, aggregate: "sum" }, color: { field: "group", type: "nominal" }
+    }, data: { values: [{ group: 1, value: 5 }, { group: 2, value: 4 }] } })
+    expect(result.status).toBe("success")
+    expect(result.config?.component).toBe("AreaChart")
+  })
+
   it.each(["bar", "tick"])("retains the implied category and aggregate axes of a horizontal %s", mark => {
     const result = fromVegaLiteResult({ mark, ...impliedAggregateAxes })
     expect(result.status).toBe("success")

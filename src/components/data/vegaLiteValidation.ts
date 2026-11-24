@@ -4,6 +4,8 @@ import { fromVegaInterpolation } from "./vegaLiteCurves"
 import type { VegaLiteEncoding, VegaLiteSpec } from "./fromVegaLite"
 import type { PortabilityDiagnostic } from "./portability/result"
 
+export type VegaLiteImportError = PortabilityDiagnostic & { severity: "error" }
+
 export const compositionKeys = ["hconcat", "vconcat", "concat", "facet", "repeat", "params", "selection"] as const
 
 export function pointOpacityProp(component: string) {
@@ -15,11 +17,34 @@ export function isCategory(type?: string): boolean {
 }
 
 export function vegaLiteFieldType(channel?: VegaLiteEncoding) {
-  return channel?.type ?? (channel?.aggregate || channel?.bin ? "quantitative" : "nominal")
+  if (channel?.type) return channel.type
+  const scale = channel?.scale?.type
+  if (channel?.aggregate || channel?.bin || scale === "linear" || scale === "log" || scale === "symlog") return "quantitative"
+  return scale === "time" || scale === "utc" ? "temporal" : "nominal"
 }
 
 export function isHorizontalOrdinal(x?: VegaLiteEncoding, y?: VegaLiteEncoding): boolean {
   return !isCategory(vegaLiteFieldType(x)) && isCategory(vegaLiteFieldType(y))
+}
+
+function supportsChannelType(channel: string, type: string, mark: string, continuous: boolean) {
+  const quantitative = type === "quantitative"
+  if (channel === "color") return mark === "rect" ? quantitative : isCategory(type)
+  if (channel === "size" || channel === "theta") return quantitative
+  if (channel === "x" || channel === "y") {
+    if (continuous) return quantitative || (channel === "x" && type === "temporal")
+    if (mark === "rect") return isCategory(type)
+  }
+  return quantitative || isCategory(type)
+}
+
+export function areaStackAxis({ x, y, color }: Record<string, VegaLiteEncoding>) {
+  const axis = x?.stack || (!y?.stack && x?.aggregate && !y?.aggregate) ? "x" : "y"
+  const [measure, dimension] = axis === "x" ? [x, y] : [y, x]
+  if (measure?.stack === false || measure?.stack === null) return
+  if ((x?.aggregate || y?.aggregate || color?.aggregate) &&
+      (!color?.field || color.aggregate || (color.field === dimension?.field && !dimension.aggregate))) return
+  return axis
 }
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
@@ -43,67 +68,59 @@ export function hasVegaFieldPath(field: string): boolean {
 
 /** Reject malformed wire inputs before the compatibility translator reads them. */
 export function vegaLiteShapeDiagnostics(
-  value: unknown
-): PortabilityDiagnostic[] {
-  const diagnostics: PortabilityDiagnostic[] = []
-  const invalid = (path: string, message: string) =>
-    diagnostics.push({
-      code: "INVALID_SPEC",
-      severity: "error",
-      path,
-      message
-    })
+  value: unknown,
+  base = ""
+): VegaLiteImportError[] {
+  const diagnostics: VegaLiteImportError[] = []
+  function invalid(relative: string, expected: string, code = "INVALID_SPEC") {
+    const path = base + relative || "/"
+    diagnostics.push({ code, severity: "error", path, message: `${path} must be ${expected}.` })
+  }
   if (!isRecord(value)) {
-    invalid("/", "A Vega-Lite spec must be an object.")
+    invalid("", "an object")
     return diagnostics
   }
   if (value.encoding !== undefined) {
     if (!isRecord(value.encoding))
-      invalid("/encoding", "encoding must be an object.")
+      invalid("/encoding", "an object")
     else
       for (const [channel, encoding] of Object.entries(value.encoding)) {
         const path = `/encoding/${pointerSegment(channel)}`
         if (!isRecord(encoding)) {
-          invalid(path, "An encoding must be an object.")
+          invalid(path, "an object")
           continue
         }
         if (encoding.field !== undefined && (typeof encoding.field !== "string" || !encoding.field.length)) {
-          invalid(`${path}/field`, "An encoded field name must be a nonempty string.")
+          invalid(`${path}/field`, "a nonempty string")
         }
         for (const key of ["scale", "axis"] as const) {
           if (encoding[key] !== undefined && !isRecord(encoding[key])) {
-            invalid(`${path}/${key}`, `${key} must be an object in the supported subset.`)
+            invalid(`${path}/${key}`, "an object")
           }
         }
       }
   }
   if (value.data !== undefined) {
-    if (!isRecord(value.data)) invalid("/data", "data must be an object.")
+    if (!isRecord(value.data)) invalid("/data", "an object")
     else if (
       value.data.values !== undefined &&
       !isRecordArray(value.data.values)
     ) {
-      invalid("/data/values", "data.values must be an array of row objects.")
-      if (
-        isRecord(value.encoding) &&
-        Object.values(value.encoding).some(
-          (enc) => isRecord(enc) && enc.aggregate !== undefined
-        )
+      const aggregated = isRecord(value.encoding) && Object.values(value.encoding).some(
+        enc => isRecord(enc) && enc.aggregate !== undefined
       )
-        diagnostics[diagnostics.length - 1].code = "INVALID_AGGREGATE_DATA"
+      invalid("/data/values", "an array of row objects", aggregated ? "INVALID_AGGREGATE_DATA" : undefined)
     }
   }
   for (const key of ["layer", "transform", "params"]) {
     if (value[key] !== undefined && !isRecordArray(value[key]))
-      invalid(`/${key}`, `${key} must be an array of objects.`)
+      invalid(`/${key}`, "an array of objects")
   }
   if (Array.isArray(value.layer)) {
     for (let index = 0; index < value.layer.length; index++) {
       const layer = value.layer[index]
       if (!isRecord(layer)) continue
-      for (const diagnostic of vegaLiteShapeDiagnostics(layer)) {
-        diagnostics.push({ ...diagnostic, path: `/layer/${index}${diagnostic.path === "/" ? "" : diagnostic.path}` })
-      }
+      for (const error of vegaLiteShapeDiagnostics(layer, `${base}/layer/${index}`)) diagnostics.push(error)
     }
   }
   return diagnostics
@@ -124,8 +141,8 @@ export function repeatedCategories(data: Datum[], fields: string[], aggregate = 
 /** The strict subset is an allowlist: unhandled semantics cannot silently succeed. */
 export function vegaLiteSemanticDiagnostics(
   spec: VegaLiteSpec
-): PortabilityDiagnostic[] {
-  const diagnostics: PortabilityDiagnostic[] = []
+): VegaLiteImportError[] {
+  const diagnostics: VegaLiteImportError[] = []
   const unsupported = (path: string) =>
     diagnostics.push({
       code: "UNSUPPORTED_ENCODING",
@@ -210,8 +227,11 @@ export function vegaLiteSemanticDiagnostics(
       }
     }
   }
-  if (mark === "area" && color?.field && x?.aggregate && !y?.aggregate &&
-      x.stack === undefined && y?.stack === undefined) unsupported("/encoding/x/stack")
+  if (mark === "area") {
+    const axis = areaStackAxis(encoding)
+    if (axis === "x" || (axis && !color?.field && x?.field && spec.data?.values &&
+        repeatedCategories(spec.data.values, [x.field]))) unsupported(`/encoding/${axis}/stack`)
+  }
   for (const [channel, enc] of Object.entries(encoding)) {
     const path = `/encoding/${pointerSegment(channel)}`
     if (!channels.includes(channel)) {
@@ -224,28 +244,12 @@ export function vegaLiteSemanticDiagnostics(
     keys(enc, allowed, path)
     if (enc.field && hasVegaFieldPath(enc.field))
       unsupported(`${path}/field`)
-    if (
-      enc.type !== undefined &&
-      !["quantitative", "nominal", "ordinal", "temporal"].includes(enc.type)
-    )
-      unsupported(`${path}/type`)
+    if (!supportsChannelType(channel, vegaLiteFieldType(enc), mark, continuous)) unsupported(`${path}/type`)
     if (
       channel === "opacity" &&
       (enc.field !== undefined || typeof enc.value !== "number")
     )
       unsupported(path)
-    if (mark === "rect" && (channel === "x" || channel === "y") && enc.type === "quantitative")
-      unsupported(`${path}/type`)
-    if (enc.type === "temporal" && (!continuous || channel !== "x")) unsupported(`${path}/type`)
-    if (
-      continuous &&
-      (channel === "x" || channel === "y") &&
-      isCategory(enc.type)
-    )
-      unsupported(`${path}/type`)
-    if (channel === "color" && (mark === "rect" ? isCategory(enc.type) : enc.type === "quantitative"))
-      unsupported(`${path}/type`)
-    if (channel === "size" && enc.type !== undefined && enc.type !== "quantitative") unsupported(`${path}/type`)
     if (enc.axis) keys(enc.axis, ["title"], `${path}/axis`)
     if (enc.bin !== undefined && enc.bin !== false) {
       unsupported(`${path}/bin`)

@@ -3,6 +3,15 @@ const category = { field: "team", type: "nominal" } as const
 const values = [{ team: 1, cohort: "A", state: "open", orders: 3 }, { team: "1", cohort: "A", state: "closed", orders: 2 }]
 
 export const encodingLossExamples = [
+  ...["line", "point", "area"].map(mark => ({
+    spec: { mark, data: { values }, encoding: { x: { field: "team" }, y: quantity } }, path: "/encoding/x/type"
+  })),
+  { spec: { mark: "rect", data: { values }, encoding: { x: category, y: category, color: { field: "orders" } } }, path: "/encoding/color/type" },
+  { spec: { mark: "arc", data: { values }, encoding: { theta: { field: "orders" }, color: category } }, path: "/encoding/theta/type" },
+  { spec: { mark: "point", data: { values }, encoding: { x: quantity, y: quantity, size: { field: "orders" } } }, path: "/encoding/size/type" },
+  { spec: { mark: "area", data: { values }, encoding: { x: { ...quantity, aggregate: "sum" }, y: { ...quantity, stack: null }, color: category } }, path: "/encoding/x/stack" },
+  { spec: { mark: "area", data: { values: [{ t: 1, v: 3 }, { t: 1, v: 5 }] },
+    encoding: { x: { field: "t", type: "quantitative" }, y: { field: "v", type: "quantitative" } } }, path: "/encoding/y/stack" },
   {
     spec: { mark: "tick", data: { values: [1, 2, 100].map(x => ({ x, y: 4 })) },
       encoding: { x: { field: "x", type: "quantitative" }, y: { field: "y", type: "quantitative" } } },
