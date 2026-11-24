@@ -1,4 +1,4 @@
-import { encodingLossExamples, impliedAggregateAxes, malformedAggregateFields, normalizedArea, tickOrientations, translucentBubbles } from "../fixtures/vegaLiteEncodingLoss"
+import { encodingLossExamples, flatSeriesCases, impliedAggregateAxes, malformedAggregateFields, normalizedArea, tickOrientations, translucentBubbles } from "../fixtures/vegaLiteEncodingLoss"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import type { ChildProcess } from "node:child_process"
 import { initializeServer, sendRequest, spawnServer } from "./mcpStdioHarness"
@@ -30,6 +30,16 @@ describe("developer MCP Vega-Lite conversion", () => {
         arguments: { spec, mode }
       })
     ).result
+
+  it.each(flatSeriesCases)("keeps flat $component observations with coordinates arrays", async ({ component, spec }) => {
+    const result = await call(spec)
+    expect(result.isError).not.toBe(true)
+    expect(result.structuredContent.component).toBe(component)
+    const { data, lineDataAccessor } = result.structuredContent.props
+    expect(data).toEqual(spec.data.values)
+    expect(typeof lineDataAccessor).toBe("string")
+    expect(spec.data.values.every(row => !Object.hasOwn(row, lineDataAccessor))).toBe(true)
+  })
 
   it("sums numeric strings under an implied quantitative type while preserving nominal IDs", async () => {
     for (const mode of [undefined, "lossy"] as const) {

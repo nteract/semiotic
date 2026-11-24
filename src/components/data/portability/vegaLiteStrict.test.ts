@@ -1,4 +1,4 @@
-import { encodingLossExamples, impliedAggregateAxes, malformedAggregateFields, normalizedArea, translucentBubbles } from "../../../__tests__/fixtures/vegaLiteEncodingLoss"
+import { encodingLossExamples, flatSeriesCases, impliedAggregateAxes, malformedAggregateFields, normalizedArea, translucentBubbles } from "../../../__tests__/fixtures/vegaLiteEncodingLoss"
 import { describe, expect, it, vi } from "vitest"
 import { fromVegaLite, fromVegaLiteResult } from "../fromVegaLite"
 import type { VegaLiteSpec } from "../fromVegaLite"
@@ -28,6 +28,33 @@ const config = (component: string, props: Record<string, unknown>) => ({
 })
 
 describe("strict Vega-Lite boundaries", () => {
+  it.each(flatSeriesCases)("renders flat $component observations with unrelated coordinates arrays", ({ spec, component }) => {
+    const chart = fromVegaLiteResult(spec).config!
+    expect(chart.component).toBe(component)
+    expect(chart.props.data).toEqual(spec.data.values)
+    const reference = renderChartWithEvidence(component, { ...chart.props, data: spec.data.values.map(({ t, v, group }) => ({ t, v, group })) })
+    expect(reference.evidence.markCount).toBeGreaterThan(0)
+    const paths = (svg: string) => Array.from(svg.matchAll(/<path\b[^>]*\bd="([^"]+)"/g), match => match[1])
+    for (const config of [chart, fromVegaLite(spec)]) {
+      const rendered = renderChartWithEvidence(component, config.props)
+      expect(rendered.evidence.markCountByType).toEqual(reference.evidence.markCountByType)
+      expect(paths(rendered.svg)).toEqual(paths(reference.svg))
+    }
+    const exported = toVegaLiteResult(chart)
+    expect(exported.status).toBe("success")
+    expect(exported.spec?.data?.values).toEqual(spec.data.values)
+  })
+
+  it.each([undefined, "points"])("reports the loss of nested series using accessor %s", (accessor) => {
+    const chart = config("LineChart", {
+      data: [{ [accessor ?? "coordinates"]: [{ t: 1, v: 3 }, { t: 2, v: 5 }] }],
+      xAccessor: "t",
+      yAccessor: "v",
+      ...(accessor && { lineDataAccessor: accessor })
+    })
+    expect(toVegaLiteResult(chart).lossReport).toContainEqual(expect.objectContaining({ path: "/props/data" }))
+  })
+
   it("round trips BubbleChart opacity through its public prop", () => {
     const imported = importSpec(translucentBubbles)
     expect(imported.status).toBe("success")

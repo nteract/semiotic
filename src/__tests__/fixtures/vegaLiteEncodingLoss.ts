@@ -110,6 +110,29 @@ export const impliedAggregateAxes = {
   }
 }
 
+export const flatSeriesCases = [
+  { mark: "line", component: "LineChart", grouped: false },
+  { mark: "area", component: "AreaChart", grouped: false },
+  { mark: "area", component: "StackedAreaChart", grouped: true }
+].map(({ mark, component, grouped }) => ({
+  component,
+  spec: {
+    mark,
+    data: {
+      values: [
+        { t: 1, v: 3, group: "A", coordinates: [], coordinates_: [] },
+        { t: 2, v: 5, group: "A", coordinates: [{ t: 100, v: 90 }] },
+        { t: 3, v: 4, group: "A" }
+      ]
+    },
+    encoding: {
+      x: { field: "t", type: "quantitative" as const },
+      y: { field: "v", type: "quantitative" as const },
+      ...(grouped && { color: { field: "group", type: "nominal" as const } })
+    }
+  }
+}))
+
 export const malformedAggregateFields = [
   { mark: "arc", encoding: { theta: { ...quantity, aggregate: "sum" }, color: { ...category, field: "" } }, path: "/encoding/color/field" },
   { mark: "bar", encoding: { x: { ...category, field: 2 }, y: { ...quantity, aggregate: "sum" } }, path: "/encoding/x/field" },

@@ -74,10 +74,6 @@ function readIDIDMetadata(spec: VegaLiteSpec): Datum | undefined {
   return spec?.usermeta?.idid
 }
 
-function isIDIDAnnotationLayer(layer: VegaLiteSpec): boolean {
-  return layer?.usermeta?.idid?.role === "annotation-layer"
-}
-
 /**
  * Recover the one base view emitted by attachIDIDAnnotations(). This is
  * narrow: arbitrary Vega-Lite layer composition remains
@@ -86,7 +82,7 @@ function isIDIDAnnotationLayer(layer: VegaLiteSpec): boolean {
 export function unwrapIDIDEnrichedVegaLiteSpec(spec: VegaLiteSpec): VegaLiteSpec {
   if (!readIDIDMetadata(spec) || !Array.isArray(spec.layer)) return spec
 
-  const baseLayers = spec.layer.filter((layer) => !isIDIDAnnotationLayer(layer))
+  const baseLayers = spec.layer.filter(layer => layer?.usermeta?.idid?.role !== "annotation-layer")
   if (baseLayers.length !== 1) return spec
 
   const { layer: _layer, ...outer } = spec
@@ -151,27 +147,21 @@ function translateVegaLite(spec: VegaLiteSpec, silent = false, createdAt?: strin
 
   // Data handling
   if (!data && spec.data?.url) {
-    warnings.push("Load data.url into inline data.values before import.")
+    warnings.push("Load data.url into data.values.")
   }
 
   if (spec.transform?.length) {
     warnings.push("Materialize Vega-Lite transforms before import.")
   }
 
-  if (spec.layer) {
-    warnings.push("Import one layer per chart.")
-  }
-  if (spec.hconcat || spec.vconcat || spec.concat) {
-    warnings.push("Import concat, hconcat and vconcat views separately.")
+  for (const key of ["layer", "hconcat", "vconcat", "concat", "repeat"] as const) {
+    if (spec[key]) warnings.push(`Import each ${key} view separately.`)
   }
   if (spec.facet || enc.facet || enc.row || enc.column) {
     warnings.push("Import each facet separately or use LinkedCharts.")
   }
-  if (spec.repeat) {
-    warnings.push("Import each repeat view separately.")
-  }
   if (spec.params || spec.selection) {
-    warnings.push("Use LinkedCharts selection props for params and selections.")
+    warnings.push("Use LinkedCharts for params and selections.")
   }
 
   // Determine component and build props
@@ -228,7 +218,6 @@ function translateVegaLite(spec: VegaLiteSpec, silent = false, createdAt?: strin
     }
     case "line": {
       component = "LineChart"
-      setXYAccessors(x, y, props)
       if (color?.field) {
         props.lineBy = color.field
       }
@@ -242,7 +231,6 @@ function translateVegaLite(spec: VegaLiteSpec, silent = false, createdAt?: strin
       const stack = color?.field && axis && stackOffset(enc[axis])
       component = stack ? "StackedAreaChart" : "AreaChart"
       if (color?.field) props.areaBy = color.field
-      setXYAccessors(x, y, props)
       if (stack === "normalize") props.normalize = true
       if (markProps.opacity !== undefined) {
         props.areaOpacity = markProps.opacity
@@ -276,7 +264,7 @@ function translateVegaLite(spec: VegaLiteSpec, silent = false, createdAt?: strin
       break
     }
     case "arc": {
-      if (markProps.innerRadius && markProps.innerRadius > 0) {
+      if (markProps.innerRadius > 0) {
         component = "DonutChart"
         props.innerRadius = markProps.innerRadius
       } else {
@@ -298,6 +286,12 @@ function translateVegaLite(spec: VegaLiteSpec, silent = false, createdAt?: strin
   }
 
   if (markType === "line" || markType === "area") {
+    setXYAccessors(x, y, props)
+    let seriesField = "coordinates"
+    while (seriesField === props.colorBy || data?.some(row => seriesField in row)) {
+      seriesField += "_"
+    }
+    if (seriesField !== "coordinates") props.lineDataAccessor = seriesField
     const curve = fromVegaInterpolation(markProps.interpolate)
     if (curve) props.curve = curve
   }
