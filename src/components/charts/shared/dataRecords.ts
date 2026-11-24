@@ -1,10 +1,12 @@
 import type { Datum } from "./datumTypes"
 
+export function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
+}
+
 export function isDataRecord(value: unknown): value is Datum {
   return (
-    value !== null &&
-    typeof value === "object" &&
-    !Array.isArray(value) &&
+    isRecord(value) &&
     !(value instanceof Date) &&
     !(value instanceof Map) &&
     !(value instanceof Set)

@@ -319,3 +319,16 @@ export const contaminatedSums = ["sum", "mean", "average"].map(aggregate => ({
     encoding: { x: { field: "x", type: "quantitative" }, y: { field: "y", type: "quantitative", aggregate } } },
   path: "/encoding/y/aggregate"
 }))
+
+export const extremeAggregates = [
+  { aggregate: "sum", values: [1e308, 1e308], expected: null },
+  { aggregate: "sum", values: [-1e308, -1e308], expected: null },
+  { aggregate: "mean", values: [1e308, -1e308], expected: null },
+  { aggregate: "average", values: [-1e308, 1e308], expected: null },
+  { aggregate: "mean", values: [1e308, 1e308], expected: 1e308 },
+  { aggregate: "average", values: [-1e308, -1e308], expected: -1e308 },
+  { aggregate: "sum", values: [-1e308, 1e308], expected: 0 }
+].map(({ aggregate, values, expected }) => ({
+  expected, spec: { mark: "point", data: { values: values.map(y => ({ x: 1, y })) },
+    encoding: { x: { field: "x", type: "quantitative" }, y: { field: "y", type: "quantitative", aggregate } } }
+}))

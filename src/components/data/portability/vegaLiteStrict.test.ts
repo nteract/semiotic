@@ -1,4 +1,4 @@
-import { areaLabelCases, booleanMeasureCases, collidingSeries, contaminatedSums, emptyPathCoordinates, encodingLossExamples, flatSeriesCases, impliedAggregateAxes, invalidAggregateGroups, malformedAggregateFields, malformedChannelTypes, normalizedArea, nullableMeasures, overlappingHeatmap, temporalExtrema, temporalGroupCases, temporalLossCases, translucentBubbles } from "../../../__tests__/fixtures/vegaLiteEncodingLoss"
+import { areaLabelCases, booleanMeasureCases, collidingSeries, contaminatedSums, emptyPathCoordinates, encodingLossExamples, extremeAggregates, flatSeriesCases, impliedAggregateAxes, invalidAggregateGroups, malformedAggregateFields, malformedChannelTypes, normalizedArea, nullableMeasures, overlappingHeatmap, temporalExtrema, temporalGroupCases, temporalLossCases, translucentBubbles } from "../../../__tests__/fixtures/vegaLiteEncodingLoss"
 import { describe, expect, it, vi } from "vitest"
 import { fromVegaLite, fromVegaLiteResult } from "../fromVegaLite"
 import type { VegaLiteSpec } from "../fromVegaLite"
@@ -162,6 +162,24 @@ describe("strict Vega-Lite boundaries", () => {
     expect(renderChartWithEvidence("Scatterplot", chart.props).evidence.markCountByType.point).toBe(3)
     expect(toVegaLiteResult(chart).lossReport).toContainEqual(expect.objectContaining({ path: "/props/data/1/y" }))
     expect(toVegaLiteResult(config("Scatterplot", { data: [{ x: 2, y: 0 }] })).status).toBe("success")
+  })
+
+  it.each(extremeAggregates)("keeps extreme $spec.encoding.y.aggregate results JSON-safe", ({ spec, expected }) => {
+    const result = importSpec(spec)
+    expect(result.status).toBe(expected === null ? "refused" : "success")
+    if (expected === null) {
+      expect(result.diagnostics).toContainEqual(expect.objectContaining({ path: "/encoding/y/aggregate" }))
+    }
+    const lossy = importSpec(spec, true)
+    const { data, yAccessor } = lossy.config!.props
+    expect(data[0][yAccessor]).toBe(expected)
+    expect(JSON.parse(JSON.stringify(data))).toEqual(data)
+    if (spec.encoding.y.aggregate === "sum") {
+      const bars = config("BarChart", { data: spec.data.values, categoryAccessor: "x", valueAccessor: "y" })
+      const exported = toVegaLiteResult(bars)
+      expect(exported.status).toBe(expected === null ? "refused" : "success")
+      if (expected === null) expect(exported.lossReport).toContainEqual(expect.objectContaining({ path: "/encoding/y/aggregate" }))
+    }
   })
 
   it.each(booleanMeasureCases)("preserves mixed boolean and numeric $spec.encoding.y.aggregate values", ({ spec, expected }) => {

@@ -1,4 +1,4 @@
-import { areaLabelCases, booleanMeasureCases, collidingSeries, contaminatedSums, encodingLossExamples, flatSeriesCases, impliedAggregateAxes, invalidAggregateGroups, malformedAggregateFields, malformedChannelTypes, normalizedArea, nullableMeasures, tickOrientations, temporalExtrema, temporalGroupCases, temporalLossCases, translucentBubbles } from "../fixtures/vegaLiteEncodingLoss"
+import { areaLabelCases, booleanMeasureCases, collidingSeries, contaminatedSums, encodingLossExamples, extremeAggregates, flatSeriesCases, impliedAggregateAxes, invalidAggregateGroups, malformedAggregateFields, malformedChannelTypes, normalizedArea, nullableMeasures, tickOrientations, temporalExtrema, temporalGroupCases, temporalLossCases, translucentBubbles } from "../fixtures/vegaLiteEncodingLoss"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import type { ChildProcess } from "node:child_process"
 import { initializeServer, sendRequest, spawnServer } from "./mcpStdioHarness"
@@ -42,6 +42,19 @@ describe("developer MCP Vega-Lite conversion", () => {
     const epochs = await call(dateSpec(Date.UTC(2024, 0, 1)))
     expect(epochs.isError).toBe(true)
     expect(epochs.structuredContent.diagnostics).toContainEqual(expect.objectContaining({ path: "/encoding/x/scale/type" }))
+  })
+
+  it.each(extremeAggregates)("serializes extreme $spec.encoding.y.aggregate results with their diagnostics", async ({ spec, expected }) => {
+    const result = await call(spec)
+    if (expected === null) {
+      expect(result.isError).toBe(true)
+      expect(result.structuredContent.diagnostics).toContainEqual(expect.objectContaining({ path: "/encoding/y/aggregate" }))
+    }
+    const converted = expected === null ? await call(spec, "lossy") : result
+    expect(converted.isError).not.toBe(true)
+    if (expected === null) expect(converted.structuredContent.warnings).toContainEqual(expect.stringContaining("/encoding/y/aggregate"))
+    const { data, yAccessor } = converted.structuredContent.props
+    expect(data[0][yAccessor]).toBe(expected)
   })
 
   it.each(booleanMeasureCases)("includes boolean observations in $spec.encoding.y.aggregate over MCP", async ({ spec, expected }) => {

@@ -25,12 +25,14 @@ export function vegaLiteAggregationDiagnostics(
 ): VegaLiteImportError[] {
   const encodings = spec.encoding ?? {}
   const diagnostics: VegaLiteImportError[] = []
+  const binned = encodings.x?.bin || encodings.y?.bin
   for (const [channel, encoding] of Object.entries(encodings)) {
-    if (encoding.aggregate === undefined) continue
-    const operation = normalizeAggregate(encoding.aggregate)
+    const { aggregate } = encoding
+    if (aggregate === undefined) continue
+    const operation = normalizeAggregate(aggregate)
     let message: string | undefined
     let code = "INVALID_AGGREGATE"
-    if (!operation || ((encodings.x?.bin || encodings.y?.bin) && operation !== "count")) {
+    if (!operation || (binned && operation !== "count")) {
       code = "UNSUPPORTED_AGGREGATE"
       message = operation ? "Use count with binning." : "Unsupported aggregate."
     } else if (operation !== "count" && !encoding.field) {
@@ -49,7 +51,7 @@ export function vegaLiteAggregationDiagnostics(
         code,
         severity: "error",
         path: `/encoding/${channel}/aggregate`,
-        message: `${channel} aggregate "${encoding.aggregate}": ${message}`
+        message: `${channel} aggregate "${aggregate}": ${message}`
       })
   }
   return diagnostics
@@ -93,7 +95,7 @@ export function aggregateVegaLite(
   }
   if (!measures.length) return { data, encoding }
   const readField = (row: Datum, field: string) => temporalFields.has(field) ? vegaTimeValue(row[field]) : row[field]
-  return { data: aggregateRows(data, [...fields], measures, readField), encoding: resolved }
+  return { data: aggregateRows(data, [...fields], measures, readField, true), encoding: resolved }
 }
 
 export function vegaLiteDataLosses(spec: VegaLiteSpec, base: string) {

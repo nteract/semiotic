@@ -1,4 +1,5 @@
 import { coerceDateLikeValue, detectDateAccessor } from "../charts/shared/temporalStrings"
+import { isRecord } from "../charts/shared/dataRecords"
 import type { Datum } from "../charts/shared/datumTypes"
 import { aggregateRows, isDataField } from "./aggregateRows"
 import { fromVegaInterpolation } from "./vegaLiteCurves"
@@ -48,9 +49,7 @@ export function areaStackAxis({ x, y, color }: Record<string, VegaLiteEncoding>)
   return axis
 }
 
-export function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === "object" && !Array.isArray(value)
-}
+export { isRecord }
 
 /** Array iteration visits sparse slots, unlike Array.prototype.some/every. */
 export function isRecordArray(value: unknown): value is Record<string, unknown>[] {

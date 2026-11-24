@@ -1,3 +1,4 @@
+import { isRecord } from "../charts/shared/dataRecords"
 import type { Datum } from "../charts/shared/datumTypes"
 import { parseNumericValue } from "./numericValue"
 
@@ -52,12 +53,13 @@ export function aggregateRows(
   data: readonly Datum[],
   groupFields: readonly string[],
   measures: readonly AggregateMeasure[],
-  readField: (row: Datum, field: string) => unknown = (row, field) => row[field]
+  readField: (row: Datum, field: string) => unknown = (row, field) => row[field],
+  vegaArithmetic = false
 ): Datum[] {
   if (!Array.isArray(data))
-    throw new TypeError("aggregate data must be an array of rows")
+    throw new TypeError("Expected an array of rows")
   if (!groupFields.every(isDataField)) {
-    throw new TypeError("groupBy must contain nonempty field names")
+    throw new TypeError("Expected nonempty groupBy fields")
   }
   const fields = [...new Set(groupFields)]
   const usedFields = new Set(fields)
@@ -70,33 +72,30 @@ export function aggregateRows(
       usedFields.has(measure.outputField)
     ) {
       throw new TypeError(
-        "outputField must be a new, nonempty field name"
+        "Expected a new, nonempty outputField"
       )
     }
     if (
       measure.operation !== "count" &&
       !isDataField(measure.field)
     ) {
-      throw new TypeError("A value field is required for this aggregate")
+      throw new TypeError("Expected an aggregate value field")
     }
     usedFields.add(measure.outputField)
   }
 
   const root: GroupIndex = {}
   const groups: Group[] = []
-  for (let rowIndex = 0; rowIndex < data.length; rowIndex++) {
-    const row = data[rowIndex]
-    if (!row || typeof row !== "object" || Array.isArray(row)) {
-      throw new TypeError(`aggregate data row ${rowIndex} must be an object`)
+  for (const [rowIndex, row] of data.entries()) {
+    if (!isRecord(row)) {
+      throw new TypeError(`Expected an object at row ${rowIndex}`)
     }
     let node = root
     for (const field of fields) {
       const raw = readField(row, field)
       // A Date and a number with the same epoch remain distinct dimensions.
-      const values =
-        raw instanceof Date
-          ? (node.dates ??= new Map())
-          : (node.values ??= new Map())
+      const mapKey = raw instanceof Date ? "dates" : "values"
+      const values: Map<unknown, GroupIndex> = (node[mapKey] ??= new Map())
       const key = raw instanceof Date ? raw.getTime() : raw
       let next = values.get(key)
       if (!next) {
@@ -130,6 +129,9 @@ export function aggregateRows(
         ) {
           state.total = value
         }
+      } else if (measure.operation === "mean" && vegaArithmetic) {
+        // Match Vega's running mean, including where the difference overflows.
+        state.total += (value - state.total) / (state.count + 1)
       } else {
         state.total += value
       }
@@ -147,10 +149,10 @@ export function aggregateRows(
             ? group.count
             : !state.count
               ? null
-              : measure.operation === "mean"
+              : measure.operation === "mean" && !vegaArithmetic
                 ? state.total / state.count
                 : state.total
-        return [measure.outputField, value]
+        return [measure.outputField, vegaArithmetic && !Number.isFinite(value) ? null : value]
       })
     ])
   )
