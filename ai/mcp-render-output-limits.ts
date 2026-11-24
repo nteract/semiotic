@@ -107,6 +107,11 @@ export function truncateUtf8(value: string, maximumBytes: number): string {
   return `${output}${marker}`
 }
 
+/** Keep caller-supplied identifiers recognizable in error responses. */
+export function diagnosticIdentifier(value: unknown): string {
+  return truncateUtf8(String(value), 240)
+}
+
 export function inspectMcpOutputLimit(value: unknown, maximum: number): McpOutputLimitResult {
   const observed = serializedMcpOutputBytes(value)
   return observed <= maximum

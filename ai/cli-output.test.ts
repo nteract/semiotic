@@ -1,4 +1,6 @@
-import { spawn } from "node:child_process"
+import { spawn, spawnSync } from "node:child_process"
+import { copyFileSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
 import { resolve } from "node:path"
 import { describe, expect, it } from "vitest"
 
@@ -77,4 +79,33 @@ describe("CLI piped output", () => {
     expect(result.stdout.length).toBeGreaterThan(64 * 1024)
     expect(result.stdout).toContain(fields[fields.length - 1])
   })
+})
+
+it("reveals the runtime load failure on the CLI debug channel", () => {
+  const root = mkdtempSync(resolve(tmpdir(), "semiotic-cli-load-"))
+  try {
+    const ai = resolve(root, "ai")
+    const dist = resolve(root, "dist")
+    mkdirSync(ai)
+    mkdirSync(dist)
+    const cli = resolve(ai, "cli.js")
+    copyFileSync(resolve("ai/cli.js"), cli)
+    for (const name of ["dist", "componentMetadata.cjs", "chartSuggestions.cjs", "behaviorContracts.cjs", "schema.json"]) {
+      symlinkSync(resolve("ai", name), resolve(ai, name))
+    }
+    writeFileSync(resolve(dist, "semiotic-ai.min.js"), 'throw new Error("incomplete local build")')
+    for (const debug of ["", "semiotic-ai"]) {
+      const result = spawnSync(process.execPath, [cli, "--doctor", "--json"], {
+        encoding: "utf8",
+        input: JSON.stringify({ component: "LineChart", props: { data: [{ x: 1, y: 2 }] } }),
+        env: { ...process.env, SEMIOTIC_AI_SCHEMA_ONLY: "", NODE_DEBUG: debug }
+      })
+      expect(result.status).toBe(0)
+      expect(JSON.parse(result.stdout)).toMatchObject({ ok: true, mode: "schema-only" })
+      if (debug) expect(result.stderr).toContain("incomplete local build")
+      else expect(result.stderr).toBe("")
+    }
+  } finally {
+    rmSync(root, { recursive: true, force: true })
+  }
 })
