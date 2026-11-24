@@ -2,7 +2,7 @@ import type React from "react"
 import type { PartialMargin } from "../../types/marginType"
 import type { OnObservationCallback } from "../../store/ObservationStore"
 import type { AnimateProp } from "../../stream/pipelineTransitionUtils"
-import type { Datum, DatumValue } from "./datumTypes"
+import type { Datum } from "./datumTypes"
 import type { AutoPlaceAnnotations } from "../../recipes/annotationLayout"
 import type { ResponsiveRule } from "./responsiveRules"
 import type { MobileVisualizationContract } from "./auditMobileVisualization"
@@ -293,7 +293,7 @@ export type CategoryFormatFn = (label: string, index?: number) => string | React
  * @deprecated Use `ChartAccessor<TDatum, TValue>` for typed chart props.
  * This legacy alias remains for compatibility with existing frame code.
  */
-export type Accessor<T = DatumValue> = string | ((d: Datum, i?: number) => T)
+export type { Accessor } from "./datumTypes"
 
 /**
  * Generic accessor type that provides autocomplete when TDatum is specified.
