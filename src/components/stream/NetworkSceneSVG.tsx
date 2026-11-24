@@ -5,7 +5,7 @@ import {
   networkSceneNodeToSVG,
   networkSceneEdgeToSVG
 } from "./SceneToSVGNetwork"
-import { renderSceneWithBackend } from "./renderBackend"
+import { renderSceneElements } from "./renderBackend"
 import { resolveStaleness } from "./stalenessBands"
 import { NetworkViewGroup } from "./networkViewTransform"
 
@@ -17,30 +17,17 @@ export function NetworkSceneMarks({
   store: NetworkPipelineStore
   renderMode?: StreamNetworkFrameProps["renderMode"]
 }) {
+  const idPrefix = React.useId()
   return (
     <>
       {store.perspective.underlay.map((edge, index) =>
         networkSceneEdgeToSVG(
           edge,
-          index + store.sceneEdges.length + store.sceneNodes.length
+          index + store.sceneEdges.length + store.sceneNodes.length, idPrefix
         )
       )}
-      {store.sceneEdges.map((edge, index) =>
-        renderSceneWithBackend({
-          node: edge,
-          index,
-          renderMode,
-          fallback: () => networkSceneEdgeToSVG(edge, index)
-        })
-      )}
-      {store.sceneNodes.map((node, index) =>
-        renderSceneWithBackend({
-          node,
-          index,
-          renderMode,
-          fallback: () => networkSceneNodeToSVG(node, index)
-        })
-      )}
+      {renderSceneElements(store.sceneEdges, renderMode, (edge, i) => networkSceneEdgeToSVG(edge, i, idPrefix))}
+      {renderSceneElements(store.sceneNodes, renderMode, networkSceneNodeToSVG)}
     </>
   )
 }

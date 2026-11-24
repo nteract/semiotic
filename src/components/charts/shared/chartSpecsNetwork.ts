@@ -124,6 +124,7 @@ export const NETWORK_CHART_SPECS: Record<string, ChartSpec> = {
       maxLabels: { type: "number", description: "Optional hard cap on visible auto labels after the area budget." },
       selectionDatum: { type: "string", enum: ["raw", "scene"] as const, default: "raw", description: "Datum shape for selection/linkedHover predicates: raw author records (default) or full scene payload with __kind." },
       groupPadding: { type: "number", default: 0, description: "Pixel gutter between adjacent slots in the same groupBy block." },
+      curves: { type: "string", enum: ["straight", "smooth"] as const, default: "straight", description: "Inventory band interpolation between timed events." },
       ribbonLane: { type: "string", enum: ["source", "target", "both"] as const, default: "both" },
       ribbonMinRun: { type: ["number", "string"], default: 0, description: "Minimum rendered time-axis runway in pixels for **source-only feeder** ribbons (not a general minimum ribbon length). Use `auto` to adapt to lane distance. Only source-only feeders with proven stock/runway are affected; authored times and inventory remain unchanged." },
       lifetimeMode: { type: "string", enum: ["full", "half"] as const, default: "half" },

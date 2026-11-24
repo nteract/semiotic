@@ -4,15 +4,16 @@
 // the same computation without instantiating React state — keeps CSR
 // and SSR paths byte-identical.
 
+import { bandSectionPath, hasInventory, projectBandSections } from "./bandPaths"
+import { bondProcessSankeyNodeData } from "./groupBonding"
 import { scaleTime } from "d3-scale"
 import {
   computeProcessSankeyLayout,
   partitionProcessSankeyIssues,
   validateProcessSankey,
   applyProcessSankeyValidationPolicy,
-  buildBandPath,
   buildBandCutoutsForNode,
-  clampSamples,
+  clampTime,
   type ProcessSankeyOptions,
   type ProcessSankeyLayout,
   type ProcessSankeyIssue,
@@ -81,6 +82,7 @@ export interface BuildScenesInput {
   domain: [number, number]
   plotW: number
   plotH: number
+  curves?: "straight" | "smooth"
   orientation?: ProcessSankeyOrientation
   ribbonLane: "source" | "target" | "both"
   /**
@@ -233,16 +235,28 @@ export function buildProcessSankeyScenes(
     layoutEdges, visualDepartureByEdge, sourceGroupByNode,
   )
 
+  const projectedNodeData = { ...nodeData }
+  for (const [id, departures] of visualDeparturesByNode) {
+    const original = nodeData[id]
+    if (original) projectedNodeData[id] = { ...original, samples: projectFeederBandSamples(original.samples, departures) }
+  }
+  const smoothGroups = input.curves === "smooth"
+    ? bondProcessSankeyNodeData(nodes, projectedNodeData, layout.slots, layout.slotByNode, centerlines, S, input.layoutOpts.groupPadding, domain)
+    : undefined
+
   nodes.forEach((n, idx) => {
     const data = nodeData[n.id]
     if (!data || data.samples.length === 0) return
-    const renderedSamples = projectFeederBandSamples(
-      data.samples, visualDeparturesByNode.get(n.id),
+    const grouped = smoothGroups && n.group ? smoothGroups[n.id].samples : undefined
+    const renderedSamples = grouped ?? projectedNodeData[n.id].samples
+    const sections = projectBandSections(
+      renderedSamples,
+      centerlines[n.id], S, xScale, domain, input.curves, !!grouped,
     )
-    const path = buildBandPath(renderedSamples, centerlines[n.id], S, xScale, domain)
+    const smooth = input.curves === "smooth"
+    const path = bandSectionPath(sections, smooth)
     if (!path) return
-    const smSamples = clampSamples(renderedSamples, domain)
-    const firstNonZero = smSamples.find((s) => s.topMass + s.botMass > 0) || smSamples[0]
+    const firstNonZero = renderedSamples.find(hasInventory) ?? renderedSamples[0]
     const visualOffset = (
       firstNonZero.botMass - firstNonZero.topMass + 2 * (firstNonZero.boundaryOffset ?? 0)
     ) * S / 2
@@ -269,7 +283,7 @@ export function buildProcessSankeyScenes(
       if (typeof ruled.opacity === "number" && fillOpacity == null) fillOpacity = ruled.opacity
     }
     const stubs = buildBandCutoutsForNode(
-      n.id, layoutEdges, layout, xScale, domain, visualDepartureByEdge,
+      n.id, layoutEdges, layout, xScale, domain, visualDepartureByEdge, smooth ? sections : undefined,
     )
     bands.push({
       id: n.id,
@@ -286,7 +300,7 @@ export function buildProcessSankeyScenes(
       // much earlier than that opening, so anchoring to firstNonZero would
       // mislabel the preceding era. Horizontal process views retain their
       // established first-visible-band anchor.
-      labelX: xScale(orientation === "vertical" && n.xExtent ? n.xExtent[0] : firstNonZero.t) - 4,
+      labelX: xScale(orientation === "vertical" && n.xExtent ? n.xExtent[0] : clampTime(firstNonZero.t, domain)) - 4,
       labelY,
       labelText: n.label ?? n.id,
     })

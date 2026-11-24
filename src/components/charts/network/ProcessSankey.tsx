@@ -9,17 +9,15 @@ import { resolveProcessSankeyMarginDefaults } from "./processSankey/frameMargins
 import { buildProcessSankeyBackgroundGraphics } from "./processSankey/axisChrome"
 import {
   type BuildScenesInput,
-  type ProcessSankeyNormalizedNode as NormalizedNode,
   type ProcessSankeyNormalizedEdge as NormalizedEdge
 } from "./processSankey/buildScenes"
 import { useProcessSankeyScenes } from "./processSankey/useProcessSankeyScenes"
 import { useProcessSankeyPush } from "./processSankey/useProcessSankeyPush"
 import { useProcessSankeyTooltipContent } from "./processSankey/processSankeyTooltip"
-import { readChartAccessor } from "./processSankey/accessors"
+import { normalizeProcessEdge, normalizeProcessNode, readChartAccessor } from "./processSankey/accessors"
 import {
   toProcessSankeyTime,
   isProcessSankeyDateDomain,
-  type ProcessSankeyTimeLike
 } from "./processSankey/time"
 import { renderLoadingState } from "../shared/withChartWrapper"
 import {
@@ -54,7 +52,6 @@ export type {
   ProcessSankeyTick
 } from "./ProcessSankeyProps"
 
-type TimeLike = ProcessSankeyTimeLike
 
 /**
  * ProcessSankey draws timed process flow as lane bands and ribbons on a real time axis.
@@ -143,6 +140,7 @@ export const ProcessSankey = /* @__PURE__ */ withSizedChartErrorBoundary(/* @__P
     lanePlacement = "stack",
     nodeSizing = "temporal",
     groupPadding = 0,
+    curves,
     ribbonLane = "both",
     ribbonMinRun = 0,
     lifetimeMode = "half",
@@ -205,61 +203,23 @@ export const ProcessSankey = /* @__PURE__ */ withSizedChartErrorBoundary(/* @__P
 
   // Normalize to algorithm-internal shape.
   const { nodes, edges, domain, rawNodeById } = useMemo(() => {
-    const ns: NormalizedNode[] = (rawNodes ?? []).map((n) => {
-      const id = getNodeId(n)
-      const labelValue = nodeLabel ? readChartAccessor(nodeLabel, n) : id
-      const o: NormalizedNode = {
-        id,
-        label: labelValue == null ? id : String(labelValue),
-        __raw: n as Datum
-      }
-      const groupValue = groupBy ? readChartAccessor(groupBy, n) : null
-      if (groupValue != null && String(groupValue) !== "")
-        o.group = String(groupValue)
-      const xExtent = xExtentAccessor
-        ? readChartAccessor(xExtentAccessor, n)
-        : null
-      if (Array.isArray(xExtent) && xExtent.length === 2) {
-        const a = toProcessSankeyTime(xExtent[0] as TimeLike)
-        const b = toProcessSankeyTime(xExtent[1] as TimeLike)
-        if (Number.isFinite(a) && Number.isFinite(b)) o.xExtent = [a, b]
-      }
-      return o
-    })
-    const es: NormalizedEdge[] = (rawEdges ?? []).map((e, i) => {
-      const out: NormalizedEdge = {
-        id: getEdgeId(e, i),
-        source: String(readChartAccessor(sourceAccessor, e)),
-        target: String(readChartAccessor(targetAccessor, e)),
-        value: Number(readChartAccessor(valueAccessor, e)),
-        startTime: toProcessSankeyTime(
-          readChartAccessor(startTimeAccessor, e) as TimeLike
-        ),
-        endTime: toProcessSankeyTime(
-          readChartAccessor(endTimeAccessor, e) as TimeLike
-        ),
-        __raw: e as Datum
-      }
-      if (systemInTimeAccessor) {
-        const v = toProcessSankeyTime(
-          readChartAccessor(systemInTimeAccessor, e) as TimeLike
-        )
-        if (Number.isFinite(v)) out.systemInTime = v
-      }
-      if (systemOutTimeAccessor) {
-        const v = toProcessSankeyTime(
-          readChartAccessor(systemOutTimeAccessor, e) as TimeLike
-        )
-        if (Number.isFinite(v)) out.systemOutTime = v
-      }
-      return out
-    })
+    const ns = (rawNodes ?? []).map(n => normalizeProcessNode(
+      n, getNodeId(n),
+      nodeLabel ? readChartAccessor(nodeLabel, n) : undefined,
+      groupBy && readChartAccessor(groupBy, n),
+      xExtentAccessor && readChartAccessor(xExtentAccessor, n)
+    ))
+    const es: NormalizedEdge[] = (rawEdges ?? []).map((e, i) => normalizeProcessEdge(
+      e, getEdgeId(e, i), readChartAccessor(sourceAccessor, e), readChartAccessor(targetAccessor, e),
+      readChartAccessor(valueAccessor, e), readChartAccessor(startTimeAccessor, e), readChartAccessor(endTimeAccessor, e),
+      systemInTimeAccessor ? readChartAccessor(systemInTimeAccessor, e) : undefined,
+      systemOutTimeAccessor ? readChartAccessor(systemOutTimeAccessor, e) : undefined
+    ))
     const dom: [number, number] = [
       toProcessSankeyTime(rawDomain[0]),
       toProcessSankeyTime(rawDomain[1])
     ]
-    const nodeMap = new Map<string, Datum>()
-    for (const n of ns) if (n.__raw != null) nodeMap.set(n.id, n.__raw)
+    const nodeMap = new Map(ns.map(node => [node.id, node.__raw!]))
     return {
       nodes: ns,
       edges: es,
@@ -422,6 +382,7 @@ export const ProcessSankey = /* @__PURE__ */ withSizedChartErrorBoundary(/* @__P
       plotW,
       plotH,
       orientation,
+      curves,
       ribbonLane,
       ribbonMinRun,
       edgeOpacity:
@@ -458,6 +419,7 @@ export const ProcessSankey = /* @__PURE__ */ withSizedChartErrorBoundary(/* @__P
     plotW,
     plotH,
     orientation,
+    curves,
     ribbonLane,
     ribbonMinRun,
     edgeOpacity,
@@ -549,10 +511,9 @@ export const ProcessSankey = /* @__PURE__ */ withSizedChartErrorBoundary(/* @__P
       showQualityReadout,
       showLaneRails,
       warnings: warningText,
-      timeFormat: timeFormat ? (d) => timeFormat(d) : undefined,
+      timeFormat,
       colorOf,
-      toTime: toProcessSankeyTime,
-      xScale: (t) => Number(xScale(t))
+      xScale: time => Number(xScale(time))
     })
   }, [
     layout,
@@ -572,8 +533,8 @@ export const ProcessSankey = /* @__PURE__ */ withSizedChartErrorBoundary(/* @__P
   ])
 
   const safeFrameNodes = useMemo(
-    () => (rawNodes ?? []).map((n) => ({ id: getNodeId(n), data: n as Datum })),
-    [rawNodes, getNodeId]
+    () => nodes.map(({ id, __raw }) => ({ id, data: __raw! })),
+    [nodes]
   )
   const ribbonBezierById = useMemo(() => {
     const map = new Map<string, BezierCache>()
@@ -584,26 +545,13 @@ export const ProcessSankey = /* @__PURE__ */ withSizedChartErrorBoundary(/* @__P
   }, [layoutConfig])
   const safeFrameEdges = useMemo(
     () =>
-      (rawEdges ?? []).map((e, i) => {
-        const id = getEdgeId(e, i)
-        const rawValue = Number(readChartAccessor(valueAccessor, e))
-        return {
-          id,
-          source: String(readChartAccessor(sourceAccessor, e)),
-          target: String(readChartAccessor(targetAccessor, e)),
-          value: Number.isFinite(rawValue) ? rawValue : 0,
-          bezier: ribbonBezierById.get(id),
-          data: e as Datum
-        }
-      }),
-    [
-      rawEdges,
-      getEdgeId,
-      sourceAccessor,
-      targetAccessor,
-      valueAccessor,
-      ribbonBezierById
-    ]
+      edges.map(({ id, source, target, value, __raw }) => ({
+        id, source, target,
+        value: Number.isFinite(value) ? value : 0,
+        bezier: ribbonBezierById.get(id),
+        data: __raw!
+      })),
+    [edges, ribbonBezierById]
   )
 
   if (issues.length > 0) {

@@ -1,3 +1,6 @@
+import { attachmentOffset, attachmentYRange } from "./bandPaths"
+import { clamp } from "../../../utils/clamp"
+import { laneControl } from "./ribbonInputs"
 import { compareRecipeIds as compareProcessSankeyIds } from "../../../utils/compareRecipeIds"
 import {
   packBandsBySilhouette,
@@ -5,7 +8,6 @@ import {
   type SilhouetteSample
 } from "../../../recipes/layout1d"
 import type {
-  ProcessSankeyAttachment,
   ProcessSankeyEdge,
   ProcessSankeyLaneLifetime,
   ProcessSankeyLayoutQuality,
@@ -134,26 +136,6 @@ function stackCenters(
     for (let i = 0; i < centers.length; i++) centers[i] *= scale
   }
   return centers
-}
-
-function attachmentOffset(
-  attachment: ProcessSankeyAttachment,
-  valueScale: number
-): number {
-  const boundaryOffset = (attachment.boundaryOffset ?? 0) * valueScale
-  const value = attachment.value * valueScale
-  if (attachment.kind === "out") {
-    const before = attachment.sideMassBefore * valueScale
-    return (
-      boundaryOffset +
-      (attachment.side === "top" ? -before + value / 2 : before - value / 2)
-    )
-  }
-  const after = attachment.sideMassAfter * valueScale
-  return (
-    boundaryOffset +
-    (attachment.side === "top" ? -after + value / 2 : after - value / 2)
-  )
 }
 
 function hugCenters(
@@ -294,7 +276,7 @@ export function computeSlotGeometry(
   }
   const verticalUtilization =
     Number.isFinite(top) && Number.isFinite(bottom) && options.plotH > 0
-      ? Math.max(0, Math.min(1, (bottom - top) / options.plotH))
+      ? clamp((bottom - top) / options.plotH, 0, 1)
       : 0
   return {
     adjacentClearance,
@@ -372,16 +354,6 @@ function parameterAtX(xFraction: number, controlFraction: number): number {
   return (lo + hi) / 2
 }
 
-function attachmentRange(
-  attachment: ProcessSankeyAttachment,
-  centerline: number,
-  valueScale: number
-): [number, number] {
-  const center = centerline + attachmentOffset(attachment, valueScale)
-  const half = (attachment.value * valueScale) / 2
-  return [center - half, center + half]
-}
-
 function overlapRatio(a0: number, a1: number, b0: number, b1: number): number {
   const overlap = Math.max(0, Math.min(a1, b1) - Math.max(a0, b0))
   return overlap / Math.max(1e-9, a1 - a0)
@@ -412,12 +384,7 @@ export function measureTransitOcclusion(
   options: TransitOcclusionOptions
 ): number {
   const { valueScale, domain, mode = "quality" } = options
-  const control =
-    options.ribbonLane === "source"
-      ? 0.85
-      : options.ribbonLane === "target"
-        ? 0.15
-        : 0.5
+  const control = laneControl(options.ribbonLane)
   // Intermediate lanes reuse normalized times with the same cubic control.
   // Keep exact fractions, bounded for caller-authored dense quality samples;
   // this invocation's numeric cache is released after scoring.
@@ -442,12 +409,12 @@ export function measureTransitOcclusion(
     const start = Math.max(edge.startTime, domain?.[0] ?? -Infinity)
     const end = Math.min(edge.endTime, domain?.[1] ?? Infinity)
     if (!(end > start)) continue
-    const [sourceTop, sourceBottom] = attachmentRange(
+    const [sourceTop, sourceBottom] = attachmentYRange(
       sourceAttachment,
       centerlines[edge.source],
       valueScale
     )
-    const [targetTop, targetBottom] = attachmentRange(
+    const [targetTop, targetBottom] = attachmentYRange(
       targetAttachment,
       centerlines[edge.target],
       valueScale
@@ -558,4 +525,8 @@ export function computeLayoutQuality(
     ),
     verticalUtilization
   }
+}
+
+export function positionByItem<T>(items: readonly T[]): Map<T, number> {
+  return new Map(items.map((item, index) => [item, index]))
 }

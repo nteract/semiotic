@@ -1,31 +1,15 @@
-import { getMax, getMin } from "../../shared/minMax"
-/**
- * Compute the `RibbonGeometryInput` shape for a ProcessSankey ribbon
- * from its source/target attachment data. Both the HOC (CSR) and the
- * pure scene builder (SSR) call this so the coords feeding into the
- * shared `buildRibbonGeometry` helper match between the two paths.
- *
- * Replaces `algorithm.js`'s `buildRibbonPath` — the path-D formula
- * itself moved into `buildRibbonGeometry` so SankeyDiagram and
- * ProcessSankey emit identical M-C-L-C-Z shapes.
- */
+import { clamp } from "../../../utils/clamp"
+import { appendToGroup } from "../../../utils/appendToGroup"
+import { attachmentYRange, clampTime } from "./bandPaths"
+import type { ProcessSankeyAttachment } from "./processSankeyTypes"
 import type { RibbonGeometryInput } from "../../../geometry/ribbonGeometry"
-
-type Side = "top" | "bot"
-type Kind = "in" | "out"
-
-interface AttachmentLike {
-  side: Side
-  time: number
-  sideMassBefore: number
-  sideMassAfter: number
-  kind: Kind
-  value: number
-  boundaryOffset?: number
-}
 
 export type ProcessSankeyRibbonLaneInput = "source" | "target" | "both"
 type XScale = (t: number) => number
+
+export function laneControl(lane?: ProcessSankeyRibbonLaneInput) {
+  return lane === "source" ? 0.85 : lane === "target" ? 0.15 : 0.5
+}
 
 const AUTO_MINIMUM_BEND_RADIUS = 8
 const AUTO_MAXIMUM_RUN = 144
@@ -41,17 +25,10 @@ export interface ProcessSankeyRibbonInputOptions {
   sourceRunwayStart?: number
 }
 
-/**
- * Build the geometry inputs for a single ProcessSankey ribbon. The
- * source attachment is assumed to be `kind: "out"` (the value leaves
- * the source on its outgoing side); the target attachment is
- * `kind: "in"`. attachmentYRange's formula is inlined here to keep
- * this module pure TS (the `algorithm.js` version is JS-only).
- */
 export function computeProcessSankeyRibbonInputs(
-  srcAtt: AttachmentLike,
+  srcAtt: ProcessSankeyAttachment,
   srcCenterline: number,
-  tgtAtt: AttachmentLike,
+  tgtAtt: ProcessSankeyAttachment,
   tgtCenterline: number,
   valueScale: number,
   xScale: XScale,
@@ -59,43 +36,11 @@ export function computeProcessSankeyRibbonInputs(
   domain: [number, number] | null,
   options: ProcessSankeyRibbonInputOptions = {},
 ): RibbonGeometryInput {
-  const S = valueScale
-  const clampTime = (t: number): number => {
-    if (!domain) return t
-    return Math.max(domain[0], Math.min(domain[1], t))
-  }
-
-  let sx = xScale(clampTime(srcAtt.time))
-  const tx = xScale(clampTime(tgtAtt.time))
-
-  // attachmentYRange-equivalent — top/bottom y of the ribbon band at
-  // each end. Source attachment reads sideMassBefore (mass stacked
-  // above before this out-edge attaches); target reads sideMassAfter
-  // (mass stacked after this in-edge attaches).
-  const srcV = srcAtt.value * S
-  const tgtV = tgtAtt.value * S
-  const srcBoundary = srcCenterline + (srcAtt.boundaryOffset ?? 0) * S
-  const tgtBoundary = tgtCenterline + (tgtAtt.boundaryOffset ?? 0) * S
-  const srcBefore = srcAtt.sideMassBefore * S
-  const tgtAfter = tgtAtt.sideMassAfter * S
-
-  let sTop: number, sBot: number
-  if (srcAtt.side === "top") {
-    sTop = srcBoundary - srcBefore
-    sBot = sTop + srcV
-  } else {
-    sBot = srcBoundary + srcBefore
-    sTop = sBot - srcV
-  }
-
-  let tTop: number, tBot: number
-  if (tgtAtt.side === "top") {
-    tTop = tgtBoundary - tgtAfter
-    tBot = tTop + tgtV
-  } else {
-    tBot = tgtBoundary + tgtAfter
-    tTop = tBot - tgtV
-  }
+  const timeToX = (t: number) => xScale(clampTime(t, domain))
+  let sx = timeToX(srcAtt.time)
+  const tx = timeToX(tgtAtt.time)
+  const [sTop, sBot] = attachmentYRange(srcAtt, srcCenterline, valueScale)
+  const [tTop, tBot] = attachmentYRange(tgtAtt, tgtCenterline, valueScale)
 
   // A feeder can have years of proven stock immediately before a very short
   // dated transaction. Rendering that transaction only between start/end can
@@ -108,12 +53,12 @@ export function computeProcessSankeyRibbonInputs(
   const sourceCenter = (sTop + sBot) / 2
   const targetCenter = (tTop + tBot) / 2
   const laneDistance = Math.abs(targetCenter - sourceCenter)
+  const control = laneControl(lane)
   const logicalRun = tx - sx
   const hasRunway = typeof sourceRunwayStart === "number" && Number.isFinite(sourceRunwayStart)
   const numericRun = typeof minRun === "number" && Number.isFinite(minRun) && minRun > 0
 
   if (hasRunway && laneDistance > 1e-9 && logicalRun > 0 && (minRun === "auto" || numericRun)) {
-    const control = lane === "source" ? 0.85 : lane === "target" ? 0.15 : 0.5
     // For P0=(0,0), P1=(cD,0), P2=(cD,L), P3=(D,L), the smaller
     // endpoint radius is 1.5*min(c²,(1-c)²)*D²/L. Solve for D.
     const radiusCoefficient = 1.5 * Math.min(control * control, (1 - control) * (1 - control))
@@ -126,10 +71,10 @@ export function computeProcessSankeyRibbonInputs(
       : minRun
 
     if (desiredRun > logicalRun) {
-      const runwayX = xScale(clampTime(Math.min(sourceRunwayStart, srcAtt.time)))
+      const runwayX = timeToX(Math.min(sourceRunwayStart, srcAtt.time))
       if (Number.isFinite(runwayX)) {
         const earliestSourceX = Math.min(sx, runwayX)
-        sx = Math.min(sx, Math.max(earliestSourceX, tx - desiredRun))
+        sx = clamp(tx - desiredRun, earliestSourceX, sx)
       }
     }
   }
@@ -137,9 +82,7 @@ export function computeProcessSankeyRibbonInputs(
   // `cp1X === cp2X` for ProcessSankey — the lane choice picks a
   // single x position where the bend concentrates, in contrast to
   // Sankey's two-point curvature-based S-curve.
-  const cx = lane === "source" ? sx + (tx - sx) * 0.85
-           : lane === "target" ? sx + (tx - sx) * 0.15
-           : (sx + tx) / 2
+  const cx = sx + (tx - sx) * control
 
   return {
     sx, sTop, sBot,
@@ -171,44 +114,36 @@ export function synchronizeProcessSankeyFeederBatches(
   sourceGroupByNode?: ReadonlyMap<string, string>,
 ): Map<string, RibbonGeometryInput> {
   const synchronized = new Map(inputsByEdge)
-  const batchesBySource = new Map<string, Map<number, FeederBatchEdge[]>>()
-
+  const batches = new Map<string, FeederBatchEdge[]>()
   for (const edge of edges) {
     const group = sourceGroupByNode?.get(edge.source)
-    const batchOwner = group == null ? `node:${edge.source}` : `group:${group}`
-    const byTime = batchesBySource.get(batchOwner) ?? new Map<number, FeederBatchEdge[]>()
-    const batch = byTime.get(edge.startTime) ?? []
-    batch.push(edge)
-    byTime.set(edge.startTime, batch)
-    batchesBySource.set(batchOwner, byTime)
+    const owner = group == null ? `node:${edge.source}` : `group:${group}`
+    appendToGroup(batches, `${edge.startTime}/${owner}`, edge)
   }
 
-  for (const byTime of batchesBySource.values()) {
-    for (const [startTime, batch] of byTime) {
-      if (!batch.some((edge) => runwayStartByEdge.has(edge.id))) continue
-      const batchInputs = batch.map((edge) => inputsByEdge.get(edge.id))
-      if (batchInputs.some((input) => input == null)) continue
-
-      const authoredX = xScale(startTime)
-      const earliestRequestedX = getMin(batchInputs.map((input) => input!.sx))
-      if (!(earliestRequestedX < authoredX - 1e-9)) continue
-      const latestSafeX = getMax(batch.map((edge) => {
-        const runwayStart = runwayStartByEdge.get(edge.id)
-        return runwayStart == null ? authoredX : Math.min(authoredX, xScale(runwayStart))
-      }))
-      const sharedSourceX = Math.min(authoredX, Math.max(earliestRequestedX, latestSafeX))
-
-      for (const edge of batch) {
-        const input = inputsByEdge.get(edge.id)!
-        const control = lane === "source" ? 0.85 : lane === "target" ? 0.15 : 0.5
-        const cx = sharedSourceX + (input.tx - sharedSourceX) * control
-        synchronized.set(edge.id, {
-          ...input,
-          sx: sharedSourceX,
-          cp1X: cx,
-          cp2X: cx,
-        })
+  const control = laneControl(lane)
+  for (const batch of batches.values()) {
+    if (!batch.some(edge => runwayStartByEdge.has(edge.id))) continue
+    const authoredX = xScale(batch[0].startTime)
+    let earliest = Infinity
+    let latest = -Infinity
+    for (const edge of batch) {
+      const input = inputsByEdge.get(edge.id)
+      if (!input) {
+        earliest = Infinity
+        break
       }
+      if (input.sx < earliest) earliest = input.sx
+      const runway = runwayStartByEdge.get(edge.id)
+      const safe = runway == null ? authoredX : xScale(runway)
+      if (safe > latest) latest = safe
+    }
+    if (!(earliest < authoredX - 1e-9)) continue
+    const sx = Math.min(authoredX, Math.max(earliest, latest))
+    for (const edge of batch) {
+      const input = inputsByEdge.get(edge.id)!
+      const cx = sx + (input.tx - sx) * control
+      synchronized.set(edge.id, { ...input, sx, cp1X: cx, cp2X: cx })
     }
   }
 

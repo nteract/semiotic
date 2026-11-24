@@ -1,3 +1,4 @@
+import { clamp } from "../../../utils/clamp"
 /**
  * Shared ProcessSankey background chrome (time axis, grid, quality readout,
  * optional lane rails). Used by the client HOC and the SSR config so both
@@ -8,7 +9,7 @@ import { scaleLinear, scaleUtc } from "d3-scale"
 import type { ProcessSankeyLayout } from "./algorithm"
 import type { ProcessSankeyOrientation } from "./orientation"
 import type { ProcessSankeyNormalizedNode } from "./buildScenes"
-import { isProcessSankeyDateDomain, type ProcessSankeyTimeLike } from "./time"
+import { toProcessSankeyTime as toTime, isProcessSankeyDateDomain, type ProcessSankeyTimeLike } from "./time"
 
 const CHROME_STROKE = "var(--semiotic-grid, #94a3b8)"
 const CHROME_TEXT = "var(--semiotic-text-secondary, #475569)"
@@ -34,7 +35,6 @@ export interface BuildProcessSankeyBackgroundGraphicsInput {
   warnings?: readonly string[]
   timeFormat?: (d: number | Date) => string | React.ReactNode
   colorOf?: (id: string, idx: number) => string
-  toTime: (value: number | Date | string | undefined | null) => number
   xScale: (t: number) => number
 }
 
@@ -52,7 +52,6 @@ export function buildProcessSankeyBackgroundGraphics(
   const warningLines = (input.warnings ?? []).slice(0, 3)
   const timeFormat = input.timeFormat
   const colorOf = input.colorOf
-  const toTime = input.toTime
   const xScale = input.xScale
   const dateDomain = isProcessSankeyDateDomain(input.domain)
   const {
@@ -60,23 +59,17 @@ export function buildProcessSankeyBackgroundGraphics(
     crossingsBefore, crossingsAfter, layoutQualityBefore, layoutQuality,
   } = layout
 
-  let dataMinTime: number | null = null
-  let dataMaxTime: number | null = null
   let minTime = Infinity
   let maxTime = -Infinity
-  for (const n of nodes) {
-    const lt = laneLifetime[n.id]
-    if (!lt || lt.start === null || lt.end === null) continue
-    const start = xScale(lt.start as number)
-    const end = xScale(lt.end as number)
-    minTime = Math.min(minTime, lt.start as number)
-    maxTime = Math.max(maxTime, lt.end as number)
-    if (dataMinTime === null || start < dataMinTime) dataMinTime = start
-    if (dataMaxTime === null || end > dataMaxTime) dataMaxTime = end
+  for (const node of nodes) {
+    const lifetime = laneLifetime[node.id]
+    if (lifetime?.start == null || lifetime.end == null) continue
+    minTime = Math.min(minTime, lifetime.start)
+    maxTime = Math.max(maxTime, lifetime.end)
   }
-  const clampTimeCoord = (value: number): number => Math.max(0, Math.min(timelineExtent, value))
-  const axisStart = clampTimeCoord(dataMinTime ?? 0)
-  const axisEnd = Math.max(axisStart, clampTimeCoord(dataMaxTime ?? timelineExtent))
+  const clampTimeCoord = (time: number) => clamp(xScale(time), 0, timelineExtent)
+  const axisStart = Number.isFinite(minTime) ? clampTimeCoord(minTime) : 0
+  const axisEnd = Number.isFinite(maxTime) ? Math.max(axisStart, clampTimeCoord(maxTime)) : timelineExtent
   const tickDomain: [number, number] = [
     Math.max(toTime(input.domain[0]), minTime),
     Math.min(toTime(input.domain[1]), maxTime)
@@ -99,7 +92,7 @@ export function buildProcessSankeyBackgroundGraphics(
     coordinate: xScale(toTime(tick.date)),
   })).filter(({ coordinate }) => coordinate >= axisStart - 0.5 && coordinate <= axisEnd + 0.5)
 
-  const hasMetrics = (crossingsAfter ?? null) !== null &&
+  const hasMetrics = crossingsAfter != null &&
     layoutQualityBefore != null && layoutQuality != null
   const qualityReadout = showQualityReadout && (hasMetrics || warningLines.length > 0) ? (
     <g fill={CHROME_MUTED} fontSize={10} textAnchor="end">
@@ -140,94 +133,44 @@ export function buildProcessSankeyBackgroundGraphics(
     </text>
   ) : null
 
-  const railColor = (id: string, idx: number) =>
-    colorOf ? colorOf(id, idx) : CHROME_STROKE
-
-  if (orientation === "vertical") {
-    return (
-      <g>
-        {qualityReadout}
-        {denseReadout}
-        {visibleTicks.map(({ index, coordinate }) => (
-          <line
-            key={`grid-${index}`}
-            x1={0} y1={coordinate} x2={plotW} y2={coordinate}
-            stroke={CHROME_STROKE} strokeOpacity={0.15} strokeDasharray="2 4"
-          />
-        ))}
-        {showLaneRails && nodes.map((n, idx) => {
-          const lt = laneLifetime[n.id]
-          if (!lt || lt.start === null) return null
-          const cl = centerlines[n.id]
-          const data = nodeData[n.id]
-          const peak = data ? { topPeak: data.topPeak, botPeak: data.botPeak } : { topPeak: 0, botPeak: 0 }
-          const visualMid = cl + ((peak.botPeak - peak.topPeak) * S) / 2
-          const y0 = xScale(lt.start as number)
-          const y1 = xScale(lt.end as number)
-          const c = railColor(n.id, idx)
-          return (
-            <g key={`lane-${n.id}`}>
-              <line x1={visualMid} y1={y0} x2={visualMid} y2={y1}
-                stroke={c} strokeOpacity={0.35} strokeWidth={1} strokeDasharray="3 3" />
-              <line x1={visualMid - 4} y1={y0} x2={visualMid + 4} y2={y0} stroke={c} strokeOpacity={0.5} />
-              <line x1={visualMid - 4} y1={y1} x2={visualMid + 4} y2={y1} stroke={c} strokeOpacity={0.5} />
-            </g>
-          )
-        })}
-        <line x1={-4} y1={axisStart} x2={-4} y2={axisEnd} stroke={CHROME_STROKE} />
-        {visibleTicks.map(({ tick, index, coordinate }) => {
-          const label = tickLabel(tick)
-          return (
-            <g key={index} transform={`translate(-4,${coordinate})`}>
-              <line x2={-6} stroke={CHROME_STROKE} />
-              <text x={-10} y={4} textAnchor="end" fontSize={11} fill={CHROME_TEXT}>{label as React.ReactNode}</text>
-            </g>
-          )
-        })}
-      </g>
-    )
-  }
+  const vertical = orientation === "vertical"
+  const axisOffset = vertical ? -4 : plotH + 4
+  const segment = (time1: number, lane1: number, time2: number, lane2: number) => vertical
+    ? { x1: lane1, y1: time1, x2: lane2, y2: time2 }
+    : { x1: time1, y1: lane1, x2: time2, y2: lane2 }
 
   return (
     <g>
       {qualityReadout}
       {denseReadout}
       {visibleTicks.map(({ index, coordinate }) => (
-        <line
-          key={`grid-${index}`}
-          x1={coordinate} y1={0} x2={coordinate} y2={plotH}
-          stroke={CHROME_STROKE} strokeOpacity={0.15} strokeDasharray="2 4"
-        />
+        <line key={`grid-${index}`} {...segment(coordinate, 0, coordinate, vertical ? plotW : plotH)}
+          stroke={CHROME_STROKE} strokeOpacity={0.15} strokeDasharray="2 4" />
       ))}
-      {showLaneRails && nodes.map((n, idx) => {
-        const lt = laneLifetime[n.id]
-        if (!lt || lt.start === null) return null
-        const cl = centerlines[n.id]
-        const data = nodeData[n.id]
-        const peak = data ? { topPeak: data.topPeak, botPeak: data.botPeak } : { topPeak: 0, botPeak: 0 }
-        const visualMid = cl + ((peak.botPeak - peak.topPeak) * S) / 2
-        const x0 = xScale(lt.start as number)
-        const x1 = xScale(lt.end as number)
-        const c = railColor(n.id, idx)
+      {showLaneRails && nodes.map((node, index) => {
+        const lifetime = laneLifetime[node.id]
+        if (!lifetime || lifetime.start === null) return null
+        const data = nodeData[node.id]
+        const middle = centerlines[node.id] + (data ? (data.botPeak - data.topPeak) * S / 2 : 0)
+        const start = xScale(lifetime.start)
+        const end = xScale(lifetime.end as number)
+        const color = colorOf ? colorOf(node.id, index) : CHROME_STROKE
         return (
-          <g key={`lane-${n.id}`}>
-            <line x1={x0} y1={visualMid} x2={x1} y2={visualMid}
-              stroke={c} strokeOpacity={0.35} strokeWidth={1} strokeDasharray="3 3" />
-            <line x1={x0} y1={visualMid - 4} x2={x0} y2={visualMid + 4} stroke={c} strokeOpacity={0.5} />
-            <line x1={x1} y1={visualMid - 4} x2={x1} y2={visualMid + 4} stroke={c} strokeOpacity={0.5} />
+          <g key={`lane-${node.id}`}>
+            <line {...segment(start, middle, end, middle)} stroke={color} strokeOpacity={0.35} strokeWidth={1} strokeDasharray="3 3" />
+            {[start, end].map((time, endpoint) => <line key={endpoint}
+              {...segment(time, middle - 4, time, middle + 4)} stroke={color} strokeOpacity={0.5} />)}
           </g>
         )
       })}
-      <line x1={axisStart} y1={plotH + 4} x2={axisEnd} y2={plotH + 4} stroke={CHROME_STROKE} />
-      {visibleTicks.map(({ tick, index, coordinate }) => {
-        const label = tickLabel(tick)
-        return (
-          <g key={index} transform={`translate(${coordinate},${plotH + 4})`}>
-            <line y2={6} stroke={CHROME_STROKE} />
-            <text y={20} textAnchor="middle" fontSize={11} fill={CHROME_TEXT}>{label as React.ReactNode}</text>
-          </g>
-        )
-      })}
+      <line {...segment(axisStart, axisOffset, axisEnd, axisOffset)} stroke={CHROME_STROKE} />
+      {visibleTicks.map(({ tick, index, coordinate }) => (
+        <g key={index} transform={vertical ? `translate(-4,${coordinate})` : `translate(${coordinate},${axisOffset})`}>
+          <line {...(vertical ? { x2: -6 } : { y2: 6 })} stroke={CHROME_STROKE} />
+          <text x={vertical ? -10 : undefined} y={vertical ? 4 : 20} textAnchor={vertical ? "end" : "middle"}
+            fontSize={11} fill={CHROME_TEXT}>{tickLabel(tick)}</text>
+        </g>
+      ))}
     </g>
   )
 }

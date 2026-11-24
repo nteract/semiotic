@@ -1,3 +1,4 @@
+import { appendToGroup } from "../../../utils/appendToGroup"
 import type { ProcessSankeyBandSpec } from "./streamingLayout"
 import type { SlotByNode } from "./layoutGeometry"
 
@@ -85,9 +86,7 @@ export function staggerProcessSankeyLabels(
   for (const band of resolved) {
     const slot = slotByNode[band.id]
     if (slot == null) continue
-    const rows = bySlot.get(slot) ?? []
-    rows.push(band)
-    bySlot.set(slot, rows)
+    appendToGroup(bySlot, slot, band)
   }
 
   const resolveCluster = (cluster: ProcessSankeyBandSpec[]): void => {

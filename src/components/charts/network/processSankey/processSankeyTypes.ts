@@ -59,6 +59,8 @@ export interface ProcessSankeySample {
    * Synthetic side transfers move this boundary so they can rebalance the
    * bookkeeping without translating the visible node band. */
   boundaryOffset?: number
+  /** Physical translation applied to the whole inventory by group layout, in mass units. */
+  groupOffset?: number
 }
 
 export type AttachmentSide = "top" | "bot"
@@ -73,6 +75,8 @@ export interface ProcessSankeyAttachment {
   value: number
   /** Boundary offset at the instant this ribbon attaches. */
   boundaryOffset?: number
+  /** Physical translation applied to the whole inventory by group layout, in mass units. */
+  groupOffset?: number
 }
 
 export interface ProcessSankeyNodeData {

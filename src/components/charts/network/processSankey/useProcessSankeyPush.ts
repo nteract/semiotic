@@ -80,28 +80,15 @@ export function useProcessSankeyPush<
 
   const rawNodes = useMemo<TNode[]>(() => {
     const controlled = filterSparseArray(rawNodesProp ?? []) as TNode[]
-    const pushed = pushedNodes
-    if (controlled.length === 0 && pushed.length === 0) {
-      return inferNodesFromEdges(
-        [],
-        rawEdges as unknown as Datum[],
-        sourceAccessor as string | ((d: Datum) => string),
-        targetAccessor as string | ((d: Datum) => string),
-      ) as unknown as TNode[]
-    }
     const seen = new Set<string>()
     const merged: TNode[] = []
-    for (const n of controlled) {
-      const id = String(readChartAccessor(nodeIdAccessor, n))
-      if (seen.has(id)) continue
-      seen.add(id)
-      merged.push(n)
-    }
-    for (const n of pushed) {
-      const id = String(readChartAccessor(nodeIdAccessor, n))
-      if (seen.has(id)) continue
-      seen.add(id)
-      merged.push(n)
+    for (const group of [controlled, pushedNodes]) {
+      for (const node of group) {
+        const id = String(readChartAccessor(nodeIdAccessor, node))
+        if (seen.has(id)) continue
+        seen.add(id)
+        merged.push(node)
+      }
     }
     const inferred = inferNodesFromEdges(
       [],
@@ -139,6 +126,27 @@ export function useProcessSankeyPush<
     [nodeIdAccessor],
   )
 
+  function editRows(id: string | string[], updater?: (row: Datum) => Datum) {
+    const ids = new Set(Array.isArray(id) ? id : [id])
+    const previous: Datum[] = []
+    function edit<T extends Datum>(rows: T[], getId: (row: T, index: number) => string, write: (next: T[]) => void) {
+      const start = previous.length
+      const next: T[] = []
+      rows.forEach((row, index) => {
+        if (ids.has(getId(row, index))) {
+          previous.push(row)
+          if (updater) next.push(updater(row) as T)
+        } else {
+          next.push(row)
+        }
+      })
+      if (previous.length !== start) write(next)
+    }
+    if (!isControlled) edit(pushedEdgesRef.current, resolveEdgeId, writePushedEdges)
+    edit(pushedNodesRef.current, getNodeId, writePushedNodes)
+    return previous
+  }
+
   useFrameImperativeHandle(ref, {
     variant: "network",
     frameRef,
@@ -170,55 +178,8 @@ export function useProcessSankeyPush<
         }
         if (newNodes.length > 0) writePushedNodes([...pushedNodesRef.current, ...newNodes])
       },
-      remove(id: string | string[]): Datum[] {
-        const ids = new Set(Array.isArray(id) ? id : [id])
-        const removed: Datum[] = []
-        if (!isControlled) {
-          const currentEdges = pushedEdgesRef.current
-          const nextEdges: TEdge[] = []
-          for (let i = 0; i < currentEdges.length; i++) {
-            const e = currentEdges[i]
-            if (ids.has(resolveEdgeId(e, i))) removed.push(e as Datum)
-            else nextEdges.push(e)
-          }
-          if (nextEdges.length !== currentEdges.length) writePushedEdges(nextEdges)
-        }
-        const currentNodes = pushedNodesRef.current
-        const nextNodes: TNode[] = []
-        for (const n of currentNodes) {
-          const nid = String(readChartAccessor(nodeIdAccessor, n))
-          if (ids.has(nid)) removed.push(n as Datum)
-          else nextNodes.push(n)
-        }
-        if (nextNodes.length !== currentNodes.length) writePushedNodes(nextNodes)
-        return removed
-      },
-      update(id: string | string[], updater: (d: Datum) => Datum): Datum[] {
-        const ids = new Set(Array.isArray(id) ? id : [id])
-        const previous: Datum[] = []
-        if (!isControlled) {
-          const currentEdges = pushedEdgesRef.current
-          let touchedEdges = false
-          const nextEdges = currentEdges.map((e, i) => {
-            if (!ids.has(resolveEdgeId(e, i))) return e
-            previous.push(e as Datum)
-            touchedEdges = true
-            return updater(e as Datum) as TEdge
-          })
-          if (touchedEdges) writePushedEdges(nextEdges)
-        }
-        const currentNodes = pushedNodesRef.current
-        let touchedNodes = false
-        const nextNodes = currentNodes.map((n) => {
-          const nid = String(readChartAccessor(nodeIdAccessor, n))
-          if (!ids.has(nid)) return n
-          previous.push(n as Datum)
-          touchedNodes = true
-          return updater(n as Datum) as TNode
-        })
-        if (touchedNodes) writePushedNodes(nextNodes)
-        return previous
-      },
+      remove: id => editRows(id),
+      update: editRows,
       clear() {
         if (!isControlled) writePushedEdges([])
         writePushedNodes([])

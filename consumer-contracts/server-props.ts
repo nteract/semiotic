@@ -24,6 +24,12 @@ export const serverPropContracts: readonly ServerPropContract[] = [
       "Selecting comparison readouts preserves the painted network paths and mark counts."
   })),
   {
+    id: "process-sankey-curves",
+    component: "ProcessSankey",
+    props: ["curves"],
+    observable: "Changing inventory interpolation changes the band perimeter while preserving ribbon geometry."
+  },
+  {
     id: "line-area",
     component: "LineChart",
     props: ["fillArea", "areaOpacity"],
