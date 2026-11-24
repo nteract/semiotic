@@ -423,8 +423,8 @@ describe("Component SSR — XY Charts", () => {
     expect(smooth).toMatch(/<path[^>]*d="M[^"]*C/)
   })
 
-  it("uses StackedAreaChart's monotoneX default when curve is omitted", () => {
-    const svg = renderChart("StackedAreaChart", {
+  it.each(["AreaChart", "StackedAreaChart"])("uses %s's monotoneX default when curve is omitted", component => {
+    const svg = renderChart(component, {
       data: [
         { x: 0, y: 2, group: "A" }, { x: 1, y: 6, group: "A" }, { x: 2, y: 3, group: "A" },
         { x: 0, y: 1, group: "B" }, { x: 1, y: 2, group: "B" }, { x: 2, y: 4, group: "B" },
@@ -436,8 +436,10 @@ describe("Component SSR — XY Charts", () => {
       height: 300,
     })
     expect(svg).toMatch(/<path[^>]*d="M[^"]*C/)
-    expect(svg).toContain(">A<")
-    expect(svg).toContain(">B<")
+    if (component === "StackedAreaChart") {
+      expect(svg).toContain(">A<")
+      expect(svg).toContain(">B<")
+    }
   })
 
   it("renderChart('StackedAreaChart', …) honors areaOpacity", () => {

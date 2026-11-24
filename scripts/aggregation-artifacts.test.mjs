@@ -83,7 +83,7 @@ function verify(data, experimental, server) {
     assert.match(rects[1], /fill="#bc3456"/)
   }
   const observations = [1, 1, 1, 1, 2, 9].map((n) => ({ n }))
-  const spec = experimental.unstable_toVegaLite({
+  const histogram = {
     component: "Histogram",
     version: "1",
     props: {
@@ -91,9 +91,16 @@ function verify(data, experimental, server) {
       valueAccessor: "n",
       bins: 2
     }
-  })
-  const imported = experimental.unstable_fromVegaLiteResult(spec)
-  assert.equal(imported.status, "success")
+  }
+  const strictExport = experimental.unstable_toVegaLiteResult(histogram)
+  assert.equal(strictExport.status, "refused")
+  assert.ok(strictExport.lossReport.some(loss => loss.path === "/props/bins"))
+  const spec = experimental.unstable_toVegaLite(histogram, { allowLossy: true })
+  const strictImport = experimental.unstable_fromVegaLiteResult(spec)
+  assert.equal(strictImport.status, "refused")
+  assert.ok(strictImport.lossReport.some(loss => loss.path === "/encoding/x/bin"))
+  const imported = experimental.unstable_fromVegaLiteResult(spec, { mode: "lossy" })
+  assert.equal(imported.status, "lossy")
   assert.deepEqual(imported.config.props.data, observations)
   const { evidence, svg } = server.renderChartWithEvidence("Histogram", {
     ...imported.config.props,

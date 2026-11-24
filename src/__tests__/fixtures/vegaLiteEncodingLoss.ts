@@ -1,0 +1,334 @@
+const quantity = { field: "orders", type: "quantitative" } as const
+const category = { field: "team", type: "nominal" } as const
+const values = [{ team: 1, cohort: "A", state: "open", orders: 3 }, { team: "1", cohort: "A", state: "closed", orders: 2 }]
+
+export const overlappingHeatmap = {
+  mark: "rect",
+  data: { values: [{ x: "A", y: "K", v: 100 }, { x: "A", y: "K", v: 1 }, { x: "B", y: "K", v: 2 }] },
+  encoding: { x: { field: "x", type: "nominal" }, y: { field: "y", type: "nominal" }, color: { field: "v", type: "quantitative" } }
+}
+
+export const emptyPathCoordinates = ["line", "area"].map(mark => ({
+  spec: { mark, data: { values: [{ x: 1, y: 3 }, { x: "", y: 4 }, { x: 3, y: 2 }] },
+    encoding: { x: { field: "x", type: "quantitative" }, y: { field: "y", type: "quantitative" } } },
+  path: "/data/values/1/x"
+}))
+
+export const encodingLossExamples = [
+  ...emptyPathCoordinates,
+  { spec: overlappingHeatmap, path: "/encoding/color" },
+  ...["point", "line", "area"].map(mark => ({
+    spec: { mark, data: { values: [{ x: "2024-01-01", y: 3 }, { x: "2024-01-02", y: 4 }] },
+      encoding: { x: { field: "x", type: "quantitative" }, y: { field: "y", type: "quantitative" } } },
+    path: "/encoding/x/type"
+  })),
+  { spec: { mark: "point", data: { values: [{ t: "2024-01-01" }, { t: "2023-12-31T19:00:00-05:00" }] },
+    encoding: { x: { field: "t", type: "temporal" }, y: { field: "t", type: "quantitative", aggregate: "min" } }
+  }, path: "/encoding/x/type" },
+  { spec: { mark: "tick", data: { values }, encoding: { x: category, y: quantity } }, path: "/encoding/x/field" },
+  { spec: { mark: "tick", data: { values }, encoding: { x: quantity, y: category } }, path: "/encoding/y/field" },
+  { spec: { mark: "rect", data: { values }, encoding: {
+    x: category, y: { field: "cohort", type: "nominal" }, color: quantity
+  } }, path: "/encoding/x/field" },
+  { spec: { mark: "line", data: { values }, encoding: {
+    x: quantity, y: quantity, color: { field: "cohort", type: "nominal", aggregate: "min" }
+  } }, path: "/encoding/color/aggregate" },
+  { spec: { mark: "point", data: { values }, encoding: {
+    x: quantity, y: quantity, opacity: { value: 0.5, type: "quantitative" }
+  } }, path: "/encoding/opacity/type" },
+  ...["line", "point", "area"].map(mark => ({
+    spec: { mark, data: { values }, encoding: { x: { field: "team" }, y: quantity } }, path: "/encoding/x/type"
+  })),
+  { spec: { mark: "rect", data: { values }, encoding: { x: category, y: category, color: { field: "orders" } } }, path: "/encoding/color/type" },
+  { spec: { mark: "arc", data: { values }, encoding: { theta: { field: "orders" }, color: category } }, path: "/encoding/theta/type" },
+  { spec: { mark: "point", data: { values }, encoding: { x: quantity, y: quantity, size: { field: "orders" } } }, path: "/encoding/size/type" },
+  { spec: { mark: "area", data: { values }, encoding: { x: { ...quantity, aggregate: "sum" }, y: { ...quantity, stack: null }, color: category } }, path: "/encoding/x/stack" },
+  { spec: { mark: "area", data: { values: [{ t: 1, v: 3 }, { t: 1, v: 5 }] },
+    encoding: { x: { field: "t", type: "quantitative" }, y: { field: "v", type: "quantitative" } } }, path: "/encoding/y/stack" },
+  {
+    spec: { mark: "tick", data: { values: [1, 2, 100].map(x => ({ x, y: 4 })) },
+      encoding: { x: { field: "x", type: "quantitative" }, y: { field: "y", type: "quantitative" } } },
+    path: "/encoding/x/type"
+  },
+  {
+    spec: { mark: "tick", data: { values }, encoding: { x: category, y: { ...category, field: "state", type: "ordinal" } } },
+    path: "/encoding/y/type"
+  },
+  ...["arc", { type: "arc", innerRadius: 45 }].flatMap(mark =>
+    [quantity, { ...quantity, aggregate: "sum" }].map(theta => ({
+      spec: { mark, data: { values }, encoding: { theta, color: category } },
+      path: "/encoding/color/field"
+    }))
+  ),
+  { spec: { mark: "arc", data: { values: [{ team: "A", orders: 2 }, { team: "A", orders: 5 }] },
+    encoding: { theta: quantity, color: category } }, path: "/encoding/color/field" },
+  ...["x", "y"].map(axis => ({
+    spec: { mark: "rect", data: { values: [1, 2, 100].map(value => ({ value, category: "A", price: 4 })) },
+      encoding: { [axis]: { field: "value", type: "quantitative" }, [axis === "x" ? "y" : "x"]: { field: "category", type: "nominal" }, color: { field: "price", type: "quantitative" } } },
+    path: `/encoding/${axis}/type`
+  })),
+  ...[true, { maxbins: 7 }].map(bin => ({
+    spec: { mark: "bar", data: { values: Array.from({ length: 101 }, (_, value) => ({ value })) },
+      encoding: { x: { field: "value", type: "quantitative", bin }, y: { aggregate: "count", type: "quantitative" } } },
+    path: "/encoding/x/bin"
+  })),
+  { spec: { mark: "bar", data: { values: [{ x: 1, y: 2 }, { x: 100, y: 3 }] }, encoding: {
+    x: { field: "x", type: "quantitative" }, y: { field: "y", type: "quantitative" }
+  } }, path: "/encoding/x/type" },
+  ...["arc", { type: "arc", innerRadius: 60 }].map(mark => ({
+    spec: { mark, data: { values }, encoding: { theta: quantity } }, path: "/encoding/color"
+  })),
+  { spec: { mark: "arc", data: { values }, encoding: { color: category } }, path: "/encoding/theta" },
+  { spec: { mark: "rect", data: { values }, encoding: { x: category, y: category } }, path: "/encoding/color" },
+  ...["x", "y"].map(axis => ({
+    spec: { mark: "bar", data: { values: Array.from({ length: 11 }, (_, i) => ({
+      orders: 3, team: i ? "East" : "West"
+    })) }, encoding: { [axis]: { ...quantity, bin: true }, [axis === "x" ? "y" : "x"]: { aggregate: "count", type: "quantitative" }, color: category } },
+    path: "/encoding/color"
+  })),
+  ...["point", "line", "area"].map(mark => ({
+    spec: { mark, data: { values: [{ x: 1, y: 2, date: "2025-01-01" }] }, encoding: {
+      x: { field: "x", type: "quantitative" }, y: { field: "y", type: "quantitative" }, color: { field: "date", type: "temporal" }
+    } }, path: "/encoding/color/type"
+  })),
+  ...["point", "circle", "square", "bar", "tick"].flatMap(mark =>
+    ["x", "y"].map(axis => ({
+      spec: { mark, data: { values }, encoding: { [axis === "x" ? "y" : "x"]: quantity } },
+      path: `/encoding/${axis}`
+    }))
+  ),
+  { spec: { mark: "bar", data: { values: [{ x: 7, y: 2 }, { x: 7, y: 3 }] }, encoding: {
+    x: { field: "x", type: "quantitative" }, y: { field: "y", type: "quantitative" }
+  } }, path: "/encoding/y" },
+  ...["nominal", "ordinal"].map(type => ({
+    spec: { mark: "rect", data: { values }, encoding: {
+      x: category, y: category, color: { field: "state", type }
+    } },
+    path: "/encoding/color/type"
+  })),
+  { spec: { mark: "bar", data: { values }, encoding: { x: category, y: quantity } }, path: "/encoding/y" },
+  { spec: { mark: "bar", data: { values }, encoding: {
+    y: { field: "cohort", type: "nominal" }, x: { ...quantity, aggregate: "sum" }, color: category
+  } }, path: "/encoding/x" }
+]
+
+export const translucentBubbles = {
+  mark: "point" as const,
+  data: { values },
+  encoding: { x: quantity, y: quantity, size: quantity, opacity: { value: 0.25 } }
+}
+
+export const tickOrientations = (["vertical", "horizontal"] as const).map(orientation => ({
+  orientation,
+  spec: { mark: "tick", data: { values: [{ team: "East", orders: 3 }, { team: "West", orders: 2 }] }, encoding: orientation === "vertical"
+    ? { x: category, y: quantity } : { x: quantity, y: category } }
+}))
+
+
+export const normalizedArea = {
+  mark: "area",
+  data: { values: [1, 2].flatMap(x => [{ x, y: 3, team: "A" }, { x, y: 7, team: "B" }]) },
+  encoding: {
+    x: { field: "x", type: "quantitative" as const, stack: null },
+    y: { field: "y", type: "quantitative" as const, stack: "normalize" },
+    color: { field: "team", type: "nominal" as const }
+  }
+}
+
+export const impliedAggregateAxes = {
+  data: { values: [{ team: "01", count: "002" }, { team: "01", count: "003" }, { team: "1", count: 4 }] },
+  encoding: {
+    x: { field: "count", aggregate: "sum", axis: { title: "Orders" } },
+    y: { field: "team", axis: { title: "Team" } }
+  }
+}
+
+export const flatSeriesCases = [
+  { mark: "line", component: "LineChart", grouped: false },
+  { mark: "area", component: "AreaChart", grouped: false },
+  { mark: "area", component: "StackedAreaChart", grouped: true }
+].map(({ mark, component, grouped }) => ({
+  component,
+  spec: {
+    mark,
+    data: {
+      values: [
+        { t: 1, v: 3, group: "A", coordinates: [], coordinates_: [] },
+        { t: 2, v: 5, group: "A", coordinates: [{ t: 100, v: 90 }] },
+        { t: 3, v: 4, group: "A" }
+      ]
+    },
+    encoding: {
+      x: { field: "t", type: "quantitative" as const },
+      y: { field: "v", type: "quantitative" as const },
+      ...(grouped && { color: { field: "group", type: "nominal" as const } })
+    }
+  }
+}))
+
+export const malformedAggregateFields = [
+  { mark: "arc", encoding: { theta: { ...quantity, aggregate: "sum" }, color: { ...category, field: "" } }, path: "/encoding/color/field" },
+  { mark: "bar", encoding: { x: { ...category, field: 2 }, y: { ...quantity, aggregate: "sum" } }, path: "/encoding/x/field" },
+  { mark: "area", encoding: { x: quantity, y: { ...quantity, field: null, aggregate: "mean" } }, path: "/encoding/y/field" }
+].map(({ mark, encoding, path }) => ({ spec: { mark, encoding, data: { values } }, path }))
+
+export const malformedChannelTypes = [
+  { channel: "x", type: null },
+  { channel: "y", type: false },
+  { channel: "color", type: "" },
+  { channel: "size", type: 0 },
+  { channel: "opacity", type: [] },
+  { channel: "theta", type: {} },
+  { channel: "x", type: "category" }
+].map(({ channel, type }) => ({
+  spec: {
+    mark: channel === "theta" ? "arc" : "point",
+    data: { values: [{ team: "A", orders: 3 }] },
+    encoding: {
+      ...(channel === "theta" ? { color: category } : { x: quantity, y: quantity }),
+      [channel]: channel === "opacity" ? { value: 0.5, type } : {
+        ...(channel === "color" ? category : quantity),
+        scale: { type: "linear" },
+        type
+      }
+    }
+  },
+  path: `/encoding/${channel}/type`
+}))
+
+export const temporalLossCases = [
+  { dates: ["2024", "2025"], index: 0 },
+  { dates: ["2024-01-01", "2024-1-2"], index: 1 },
+  { dates: ["2024-01-1", "2024-01-02"], index: 0 },
+  { dates: [Date.UTC(2024, 0, 1), "2024-01-02"], index: 1 },
+  { dates: ["2024-01-01", "invalid"], index: 1 },
+  { dates: ["2024-01-01", null], index: 1 }
+].map(({ dates, index }) => ({
+  spec: {
+    mark: "point",
+    data: { values: dates.map((date, v) => ({ date, v })) },
+    encoding: { x: { field: "date", type: "temporal" }, y: { field: "v", type: "quantitative" } }
+  },
+  path: `/data/values/${index}/date`
+}))
+
+export const areaLabelCases = [null, "zero"].map(stack => ({
+  component: stack ? "StackedAreaChart" : "AreaChart",
+  spec: {
+    mark: "area",
+    data: { values: ["__proto__", "constructor", "toString"].flatMap((group, i) => [
+      { t: 1, v: 1 + i, group }, { t: 2, v: 4 - i, group }
+    ]) },
+    encoding: {
+      x: { field: "t", type: "quantitative" as const },
+      y: { field: "v", type: "quantitative" as const, stack },
+      color: { field: "group", type: "nominal" as const }
+    }
+  }
+}))
+
+export const temporalExtrema = ["min", "max"].map(aggregate => ({
+  aggregate,
+  expected: aggregate === "min" ? Date.UTC(2024, 0, 1) : Date.UTC(2024, 0, 2),
+  spec: {
+    mark: "point",
+    data: { values: [{ date: "2024-01-02", v: 1 }, { date: "2024-01-01", v: 1 }] },
+    encoding: {
+      x: { field: "date", type: "temporal" as const, aggregate },
+      y: { field: "v", type: "quantitative" as const }
+    }
+  }
+}))
+
+export const collidingSeries = [
+  { mark: "line", stack: undefined },
+  { mark: "area", stack: "zero" },
+  { mark: "area", stack: null },
+  { mark: "point", stack: undefined }
+].map(({ mark, stack }) => ({
+  spec: {
+    mark,
+    data: { values: [1, "1"].flatMap((team, i) => [
+      { t: 2 - i, v: 2 + i, team }, { t: 4 - i, v: 3 + i, team }
+    ]) },
+    encoding: {
+      x: { field: "t", type: "quantitative" as const },
+      y: { field: "v", type: "quantitative" as const, ...(stack !== undefined && { stack }) },
+      color: { field: "team", type: "nominal" as const }
+    }
+  },
+  path: "/encoding/color/field"
+}))
+
+export const temporalGroupCases = ["sum", "count"].map(aggregate => ({
+  aggregate,
+  spec: {
+    mark: "point",
+    data: { values: [
+      { t: "2024-01-01", group: "A", v: 1 }, { t: "2023-12-31T19:00:00-05:00", group: "A", v: 2 },
+      { t: Date.UTC(2024, 0, 1), group: "A", v: 3 }, { t: "2024", group: "B", v: 4 },
+      { t: "2024-01-02", group: "A", v: 5 }
+    ] },
+    encoding: {
+      x: { field: "t", type: "temporal" as const },
+      color: { field: "group", type: "nominal" as const },
+      y: { field: "v", type: "quantitative" as const, aggregate }
+    }
+  },
+  expected: [
+    [Date.UTC(2024, 0, 1), "A", aggregate === "sum" ? 6 : 3],
+    [Date.UTC(2024, 0, 1), "B", aggregate === "sum" ? 4 : 1],
+    [Date.UTC(2024, 0, 2), "A", aggregate === "sum" ? 5 : 1]
+  ]
+}))
+
+export const nullableMeasures = [
+  { mark: "point", axis: "x", aggregate: undefined },
+  { mark: "point", axis: "y", aggregate: undefined },
+  { mark: "area", axis: "y", aggregate: undefined },
+  { mark: "bar", axis: "y", aggregate: undefined },
+  { mark: "point", axis: "y", aggregate: "sum" }
+].map(({ mark, axis, aggregate }) => ({
+  spec: {
+    mark,
+    data: { values: [{ x: 1, y: 3 }, { x: 2, y: 2, [axis]: null }, { x: 3, y: 4 }] },
+    encoding: {
+      x: { field: "x", type: mark === "bar" ? "nominal" : "quantitative" },
+      y: { field: "y", type: "quantitative", ...(aggregate && { aggregate }) }
+    }
+  },
+  path: aggregate ? "/encoding/y/aggregate" : `/data/values/1/${axis}`
+}))
+
+export const invalidAggregateGroups = ["sum", "mean", "min", "max"].map(aggregate => ({
+  spec: { mark: "point", data: { values: [{ x: 1, y: "not-a-number" }, { x: 2, y: 3 }] },
+    encoding: { x: { field: "x", type: "quantitative" }, y: { field: "y", type: "quantitative", aggregate } } },
+  path: "/encoding/y/aggregate"
+}))
+
+export const booleanMeasureCases = ([
+  ["sum", 4], ["mean", 4 / 3], ["average", 4 / 3], ["min", 0], ["max", 3], ["count", 3]
+] as const).map(([aggregate, expected]) => ({
+  expected,
+  spec: { mark: "bar", data: { values: [true, 3, false].map(y => ({ x: "A", y })) },
+    encoding: { x: { field: "x", type: "nominal" }, y: { field: "y", type: "quantitative", aggregate } } }
+}))
+
+export const contaminatedSums = ["sum", "mean", "average"].map(aggregate => ({
+  spec: { mark: "point", data: { values: [{ x: 1, y: "bad" }, { x: 1, y: 7 }] },
+    encoding: { x: { field: "x", type: "quantitative" }, y: { field: "y", type: "quantitative", aggregate } } },
+  path: "/encoding/y/aggregate"
+}))
+
+export const extremeAggregates = [
+  { aggregate: "sum", values: [1e308, 1e308], expected: null },
+  { aggregate: "sum", values: [-1e308, -1e308], expected: null },
+  { aggregate: "mean", values: [1e308, -1e308], expected: null },
+  { aggregate: "average", values: [-1e308, 1e308], expected: null },
+  { aggregate: "mean", values: [1e308, 1e308], expected: 1e308 },
+  { aggregate: "average", values: [-1e308, -1e308], expected: -1e308 },
+  { aggregate: "sum", values: [-1e308, 1e308], expected: 0 }
+].map(({ aggregate, values, expected }) => ({
+  expected, spec: { mark: "point", data: { values: values.map(y => ({ x: 1, y })) },
+    encoding: { x: { field: "x", type: "quantitative" }, y: { field: "y", type: "quantitative", aggregate } } }
+}))

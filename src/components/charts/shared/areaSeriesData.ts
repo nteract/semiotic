@@ -38,7 +38,7 @@ export function prepareAreaSeriesData<TDatum extends Datum = Datum>({
       }
       acc[key][lineDataAccessor].push(datum)
       return acc
-    }, {})
+    }, Object.create(null))
     groupedAreas = Object.values(grouped)
   }
 

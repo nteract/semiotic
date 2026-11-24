@@ -7,6 +7,29 @@ the schema is authoritative when prose drifts.
 
 ---
 
+## Convert an inline Vega-Lite chart through MCP
+
+Call `convertVegaLite` in the developer profile with these arguments.
+
+```json
+{
+  "spec": {
+    "mark": "bar",
+    "data": { "values": [{ "team": "East", "orders": 12 }, { "team": "West", "orders": 8 }] },
+    "encoding": {
+      "x": { "field": "team", "type": "nominal" },
+      "y": { "field": "orders", "type": "quantitative" }
+    }
+  }
+}
+```
+
+The result contains a `BarChart` config with `categoryAccessor: "team"` and
+`valueAccessor: "orders"`. Pass its `component` and `props` to `renderChart`.
+The default strict mode returns diagnostics for unsupported semantics. To accept
+an approximation, pass `"mode": "lossy"` alongside `spec` and inspect the returned
+`warnings`. Both modes validate the converted props against the component schema.
+
 ## Flat Array — XY Charts
 
 ### LineChart (single line)

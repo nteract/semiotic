@@ -30,7 +30,7 @@ import type {
   Style
 } from "./types"
 import { resolveAccessor, resolveRawAccessor, resolveStringAccessor, accessorsEquivalent } from "./accessorUtils"
-import { coerceDateLikeValue, parseDateLikeString } from "../charts/shared/temporalStrings"
+import { coerceDateLikeValue, detectDateAccessor } from "../charts/shared/temporalStrings"
 import { toIdSet } from "./pipelineIdentityOps"
 import { STREAMING_PALETTE } from "../charts/shared/colorUtils"
 import { now as getTimestamp, type ActiveTransition } from "./pipelineTransitionUtils"
@@ -320,11 +320,8 @@ export class PipelineStore extends UpdateResultStoreBase {
     this.xIsDate = false
     this.xTypeDetected = false
     for (const row of rows) {
-      const value = getRawX(row)
-      if (value == null || value === "") continue
-      const date = (value instanceof Date && Number.isFinite(value.getTime())) ||
-        (typeof value === "string" && Number.isFinite(parseDateLikeString(value)))
-      if (!date && !Number.isFinite(Number(value))) continue
+      const date = detectDateAccessor(getRawX(row))
+      if (date === undefined) continue
       this.xIsDate = date
       this.xTypeDetected = true
       break

@@ -2,33 +2,7 @@ import { initializeSvgSanitizer, sanitizeSvgForWidget } from "./svg-sanitize"
 /**
  * Semiotic MCP Server
  *
- * Exposes developer tools, thirteen resources (eleven fixed and
- * two templates), and two prompts:
- *   1. getSchema — returns the prop schema for a specific component
- *   2. suggestChart — sample-row chart recommender
- *   3. suggestCharts — capability-based static chart recommender (audience-aware, incl. receivability)
- *   4. proposeChartVariants — ranks variants/alternatives for a selected chart
- *   5. suggestStreamCharts — stream chart recommender from a schema
- *   6. suggestStreamDashboard — multi-panel dashboard from stream schemas
- *   7. suggestDashboard — multi-panel dashboard recommender
- *   8. suggestStretchCharts — audience-literacy stretch recommender
- *   9. repairChartConfig — checks a chart choice and proposes alternatives
- *   10. renderChart — renders static HOC charts to SVG/PNG
- *   11. interrogateChart — summarizes chart data for conversational answers
- *   12. groundChart — agent-reader grounding payload (description + intent + structure)
- *   13. diagnoseConfig — anti-pattern detector for chart configurations
- *   14. auditAccessibility — Chartability accessibility audit
- *   15. evaluateChart — unified data, deception, and accessibility evaluation
- *   16. auditMobileVisualization — mobile visualization audit
- *   17. reportIssue — generates a pre-filled GitHub issue URL for bugs/features
- *   18. applyTheme — returns usage guidance for theme presets
- *   19. renderInteractiveChart — ChatGPT Apps widget wrapper around a rendered Semiotic SVG
- *   20. suggestTokenEncoding — semantic token / ISOTYPE encoding recommender
- *   21. auditArtifact — audits an explicit interpretation contract under a named policy
- *   22. recommendRepresentation — considers chart and non-chart outcomes without inventing facts
- *   23. repairArtifact — proposes repairs or fills missing identity fields
- *   24. explainRefusal — explains policy refusals from an explicit contract
- *   25. critiqueChart — reviews configuration, representation, and fit to the caller’s intent
+ * The developer and public tool profiles are indexed in ai/surface-manifest.json.
  *
  * Usage (Claude Desktop / claude_desktop_config.json):
  * {
@@ -89,6 +63,7 @@ import { isAuthorizedRequest } from "./mcp-http-auth"
 import { mcpClientKey, resolveMcpTrustedProxyHops } from "./mcp-client-key"
 import { DEFAULT_MCP_BODY_TIMEOUT_MS } from "./mcp-http-body"
 import { closeMcpRequestAfterResponse, createMcpUploadAdmission, resolveMcpUploadLimit } from "./mcp-upload-admission"
+import { convertVegaLite } from "./mcp-convert-vega-lite"
 import { chartProfileInput } from "./mcp-chart-profile"
 import { critiqueChart } from "./operations/critique"
 import { diagnoseChart } from "./operations/diagnose"
@@ -4387,6 +4362,28 @@ function createServer(
       annotations: READ_ONLY_TOOL_ANNOTATIONS
     },
     isolateTool("explainRefusal", explainRefusalHandler)
+  )
+
+  srv.registerTool(
+    "convertVegaLite",
+    {
+      title: "Convert a Vega-Lite chart",
+      description: "Import a single-view Vega-Lite spec with inline data as a Semiotic ChartConfig. Strict mode reports unsupported semantics. Request lossy mode to receive a schema-validated approximation with warnings.",
+      inputSchema: {
+        spec: unknownRecordInput.describe("A Vega-Lite specification with inline data.values."),
+        mode: z.enum(["strict", "lossy"]).optional().describe("Defaults to strict.")
+      },
+      outputSchema: {
+        component: z.string(),
+        props: unknownRecordInput,
+        version: z.string(),
+        createdAt: z.string(),
+        warnings: z.array(z.string()).optional()
+      },
+      annotations: READ_ONLY_TOOL_ANNOTATIONS
+    },
+    isolateTool("convertVegaLite", (args: { spec: Record<string, unknown>; mode?: "strict" | "lossy" }) =>
+      convertVegaLite(args, schemaByComponent))
   )
 
   srv.tool(

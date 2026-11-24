@@ -431,7 +431,10 @@ const { componentName, props } = fromConfig(config)`} />
         </p>
         <p>
           Histograms receive the original observations, including repeated
-          values. Combining binning with an aggregate other than count, or
+          values. Vega-Lite and Semiotic choose different bin boundaries, so
+          strict conversion refuses automatic binning. Lossy conversion keeps
+          the observations and reports the affected encoding. Combining binning
+          with an aggregate other than count, or
           requesting an unsupported aggregate such as median, produces a warning.
           The experimental <code>unstable_fromVegaLiteResult</code> API refuses
           these requests in strict mode and reports the loss in lossy mode.

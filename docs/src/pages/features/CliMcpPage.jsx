@@ -167,6 +167,13 @@ MCP_ALLOWED_HOSTS=mcp.example.com MCP_TOOL_PROFILE=public npx -y -p semiotic sem
           <Link to="/intelligence/suggestions">Chart Suggestions</Link>).
         </li>
         <li>
+          <code>convertVegaLite</code> imports an inline Vega-Lite specification and returns
+          a Semiotic config with <code>component</code>, <code>props</code>, <code>version</code>,
+          and <code>createdAt</code>. Strict mode reports unsupported encodings, transforms,
+          and selections. Set <code>mode: "lossy"</code> to receive an approximation with
+          warnings when its props pass the component schema.
+        </li>
+        <li>
           <code>suggestTokenEncoding</code> — recommend semantic token encodings for ISOTYPE,
           natural-frequency grids, quantile dotplots, and hybrid bar-token views.
         </li>

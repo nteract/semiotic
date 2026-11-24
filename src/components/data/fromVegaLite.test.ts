@@ -1,3 +1,4 @@
+import { tickOrientations } from "../../__tests__/fixtures/vegaLiteEncodingLoss"
 import { fromVegaLite } from "./fromVegaLite"
 import { configToJSX } from "../export/chartConfig"
 import type { Datum } from "../charts/shared/datumTypes"
@@ -286,6 +287,12 @@ describe("fromVegaLite", () => {
   })
 
   // ── Dot Plot ─────────────────────────────────────────────────────────
+
+  it.each(tickOrientations)("preserves the $orientation tick axes", ({ spec, orientation }) => {
+    expect(fromVegaLite(spec)).toMatchObject({ component: "DotPlot", props: {
+      orientation, categoryAccessor: "team", valueAccessor: "orders"
+    } })
+  })
 
   it("translates tick mark to DotPlot", () => {
     const config = fromVegaLite({

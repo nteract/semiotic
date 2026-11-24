@@ -13,7 +13,9 @@
  *
  * Pure, dependency-free, no chart-family imports.
  */
-import { isRecord, isRecordArray } from "../vegaLiteValidation"
+import { vegaLiteDataLosses } from "../vegaLiteAggregation"
+import { toVegaInterpolation } from "../vegaLiteCurves"
+import { hasVegaFieldPath, infersTemporalX, isRecord, isRecordArray, pointOpacityProp, repeatedCategories, temporalCoordinateLoss } from "../vegaLiteValidation"
 import { exportableColorScheme, vegaLiteExportLosses } from "./vegaLiteExportDiagnostics"
 import type { ChartConfig } from "../../export/chartConfig"
 import type { Datum } from "../../charts/shared/datumTypes"
@@ -49,18 +51,7 @@ export interface VegaLiteExportResult extends PortabilityExportResult<VegaLiteSp
   spec?: VegaLiteSpec
 }
 
-/** Reverse of fromVegaLite's CURVE_MAP. */
-const CURVE_TO_INTERPOLATE: Record<string, string> = {
-  linear: "linear",
-  monotoneX: "monotone-x",
-  monotoneY: "monotone-y",
-  step: "step",
-  stepAfter: "step-after",
-  stepBefore: "step-before",
-  basis: "basis",
-  cardinal: "cardinal",
-  catmullRom: "catmull-rom",
-}
+
 
 function quant(field: string): VegaLiteEncoding {
   return { field, type: "quantitative" }
@@ -72,8 +63,12 @@ function nominal(field: string): VegaLiteEncoding {
 /** Preserve axis scale intent for every continuous XY component. */
 function xyEncoding(props: AnyProps, axis: "x" | "y"): VegaLiteEncoding {
   const type = props[`${axis}ScaleType`]
+  const field = props[`${axis}Accessor`]
+  if (axis === "x" && type === undefined && infersTemporalX(props.data, field)) {
+    return { field, type: "temporal", scale: { type: "utc" } }
+  }
   return {
-    field: props[`${axis}Accessor`],
+    field,
     type: type === "time" ? "temporal" : "quantitative",
     ...(["log", "symlog"].includes(type) ? { scale: { type } } : {}),
   }
@@ -102,7 +97,7 @@ const REQUIRED_ACCESSORS: Record<string, readonly string[]> = {
 
 const OPTIONAL_ACCESSORS: Record<string, readonly string[]> = {
   LineChart: ["lineBy", "colorBy"],
-  AreaChart: ["colorBy"],
+  AreaChart: ["areaBy", "colorBy"],
   StackedAreaChart: ["colorBy"],
   Scatterplot: ["colorBy"],
   BubbleChart: ["colorBy"],
@@ -112,23 +107,15 @@ const OPTIONAL_ACCESSORS: Record<string, readonly string[]> = {
 
 function accessorDiagnostics(component: string, props: AnyProps): PortabilityDiagnostic[] {
   const diagnostics: PortabilityDiagnostic[] = []
-  for (const key of (Object.prototype.hasOwnProperty.call(REQUIRED_ACCESSORS, component) ? REQUIRED_ACCESSORS[component] : [])) {
-    if (typeof props[key] !== "string" || props[key].length === 0) {
+  for (const [table, required] of [[REQUIRED_ACCESSORS, true], [OPTIONAL_ACCESSORS, false]] as const) {
+    if (!Object.hasOwn(table, component)) continue
+    for (const key of table[component]) {
+      const value = props[key]
+      if ((!required && value === undefined) || (typeof value === "string" && value.length)) continue
       diagnostics.push({
-        code: "UNSERIALIZABLE_ACCESSOR",
-        severity: "error",
-        path: `/props/${key}`,
-        message: `${component} requires a string ${key} for Vega-Lite export.`,
-      })
-    }
-  }
-  for (const key of (Object.prototype.hasOwnProperty.call(OPTIONAL_ACCESSORS, component) ? OPTIONAL_ACCESSORS[component] : [])) {
-    if (props[key] !== undefined && (typeof props[key] !== "string" || props[key].length === 0)) {
-      diagnostics.push({
-        code: "UNSERIALIZABLE_ACCESSOR",
-        severity: "error",
-        path: `/props/${key}`,
-        message: `${component} can export ${key} only as a non-empty string field name.`,
+        code: "UNSERIALIZABLE_ACCESSOR", severity: "error", path: `/props/${key}`,
+        message: required ? `${component} requires a string ${key} for Vega-Lite export.`
+          : `${component} can export ${key} only as a non-empty string field name.`
       })
     }
   }
@@ -156,7 +143,12 @@ export function toVegaLiteResult(
     const diagnostic = { code: "INVALID_CONFIG", severity: "error" as const, path: "/", message: "Export requires a chart config with a component string and props object." }
     return { status: "refused", diagnostics: [diagnostic], lossReport: [diagnostic], provenance }
   }
-  const props: AnyProps = config.props
+  const props: AnyProps = { ...config.props }
+  if (Object.hasOwn(REQUIRED_ACCESSORS, config.component) && REQUIRED_ACCESSORS[config.component].includes("xAccessor")) {
+    if (props.xAccessor === undefined) props.xAccessor = "x"
+    if (props.yAccessor === undefined) props.yAccessor = "y"
+    if (config.component === "Heatmap" && props.valueAccessor === undefined) props.valueAccessor = "value"
+  }
   if (props.data !== undefined && !isRecordArray(props.data)) {
     const diagnostic = { code: "INVALID_DATA", severity: "error" as const, path: "/props/data", message: "Inline chart data must be an array of row objects." }
     return { status: "refused", diagnostics: [diagnostic], lossReport: [diagnostic], provenance }
@@ -175,14 +167,19 @@ export function toVegaLiteResult(
 
   const component = config.component
 
+  const interpolation = toVegaInterpolation(props.curve)
   switch (component) {
+    case "DotPlot":
     case "BarChart":
     case "StackedBarChart":
     case "GroupedBarChart": {
-      mark = "bar"
-      const horizontal = props.orientation === "horizontal"
+      const tick = component === "DotPlot"
+      mark = tick ? "tick" : "bar"
+      const horizontal = (props.orientation ?? (tick ? "horizontal" : "vertical")) === "horizontal"
       const cat = withAxisTitle(nominal(props.categoryAccessor), props.categoryLabel)
       const val = withAxisTitle(quant(props.valueAccessor), props.valueLabel)
+      if (component === "BarChart" || component === "StackedBarChart") val.aggregate = "sum"
+      if (component === "BarChart") val.stack = null
       if (horizontal) {
         enc.y = cat
         enc.x = val
@@ -192,7 +189,7 @@ export function toVegaLiteResult(
       }
       if (component === "StackedBarChart" && props.stackBy) {
         enc.color = nominal(props.stackBy)
-        if (props.normalize) val.stack = "normalize"
+        val.stack = props.normalize ? "normalize" : "zero"
       } else if (component === "GroupedBarChart" && props.groupBy) {
         enc.color = nominal(props.groupBy)
         lossReport.push({
@@ -207,8 +204,8 @@ export function toVegaLiteResult(
     case "LineChart": {
       mark = props.curve || props.showPoints ? { type: "line" } : "line"
       if (typeof mark === "object") {
-        if (props.curve && Object.prototype.hasOwnProperty.call(CURVE_TO_INTERPOLATE, props.curve)) {
-          mark.interpolate = CURVE_TO_INTERPOLATE[props.curve]
+        if (interpolation) {
+          mark.interpolate = interpolation
         }
         if (props.showPoints) mark.point = true
       }
@@ -220,17 +217,12 @@ export function toVegaLiteResult(
     }
     case "AreaChart":
     case "StackedAreaChart": {
-      mark = props.curve || props.areaOpacity !== undefined ? { type: "area" } : "area"
-      if (typeof mark === "object" && props.curve && Object.prototype.hasOwnProperty.call(CURVE_TO_INTERPOLATE, props.curve)) {
-        mark.interpolate = CURVE_TO_INTERPOLATE[props.curve]
-      }
-      if (typeof mark === "object" && props.areaOpacity !== undefined) {
-        mark.opacity = props.areaOpacity
-      }
+      mark = { type: "area", interpolate: interpolation ?? "monotone" }
+      if (props.areaOpacity !== undefined) mark.opacity = props.areaOpacity
       enc.x = withAxisTitle(xyEncoding(props, "x"), props.xLabel)
       enc.y = withAxisTitle(xyEncoding(props, "y"), props.yLabel)
-      if (component === "StackedAreaChart" && props.areaBy) enc.color = nominal(props.areaBy)
-      if (props.normalize) enc.y.stack = "normalize"
+      if (props.areaBy) enc.color = nominal(props.areaBy)
+      enc.y.stack = component === "AreaChart" ? null : props.normalize ? "normalize" : "zero"
       break
     }
     case "Scatterplot":
@@ -239,7 +231,8 @@ export function toVegaLiteResult(
       enc.x = withAxisTitle(xyEncoding(props, "x"), props.xLabel)
       enc.y = withAxisTitle(xyEncoding(props, "y"), props.yLabel)
       if (props.colorBy) enc.color = nominal(props.colorBy)
-      if (props.pointOpacity !== undefined) enc.opacity = { value: props.pointOpacity }
+      const opacity = props[pointOpacityProp(component)]
+      if (opacity !== undefined) enc.opacity = { value: opacity }
       if (component === "BubbleChart" && props.sizeBy) {
         enc.size = quant(props.sizeBy)
         if (Array.isArray(props.sizeRange)) enc.size.scale = { range: props.sizeRange }
@@ -258,20 +251,6 @@ export function toVegaLiteResult(
       mark = component === "DonutChart" ? { type: "arc", innerRadius: props.innerRadius ?? 60 } : "arc"
       if (props.valueAccessor) enc.theta = quant(props.valueAccessor)
       if (props.categoryAccessor) enc.color = nominal(props.categoryAccessor)
-      break
-    }
-    case "DotPlot": {
-      mark = "tick"
-      const horizontal = props.orientation === "horizontal"
-      const cat = withAxisTitle(nominal(props.categoryAccessor), props.categoryLabel)
-      const val = withAxisTitle(quant(props.valueAccessor), props.valueLabel)
-      if (horizontal) {
-        enc.y = cat
-        enc.x = val
-      } else {
-        enc.x = cat
-        enc.y = val
-      }
       break
     }
     case "Histogram": {
@@ -300,6 +279,24 @@ export function toVegaLiteResult(
     }
   }
 
+  for (const [channel, encoding] of Object.entries(enc)) {
+    if (encoding.type === "nominal" && encoding.field && props.data && repeatedCategories(props.data, [encoding.field], true)) {
+      lossReport.push({ code: "UNSUPPORTED_ENCODING", path: `/encoding/${channel}/field`,
+        message: "Distinct categories share the same Semiotic display key." })
+    }
+    if (encoding.field && hasVegaFieldPath(encoding.field)) {
+      lossReport.push({ code: "UNSUPPORTED_ENCODING", path: `/encoding/${channel}/field`,
+        message: "Vega-Lite interprets this literal Semiotic field name as a field path." })
+    }
+  }
+  if (enc.x?.type === "quantitative" && enc.x.field && props.xScaleType && infersTemporalX(props.data, enc.x.field)) {
+    lossReport.push({ code: "UNSUPPORTED_ENCODING", path: "/props/xScaleType",
+      message: "Supply epoch milliseconds to preserve date coordinates on a numeric x scale." })
+  }
+  if (enc.x?.type === "temporal" && enc.x.field) {
+    const loss = temporalCoordinateLoss(props.data, enc.x.field, "/props/data")
+    if (loss) lossReport.push(loss)
+  }
   lossReport.unshift(...vegaLiteExportLosses(component, props, enc.color?.field))
 
   // Shared color scheme
@@ -314,32 +311,15 @@ export function toVegaLiteResult(
   if (typeof props.width === "number") spec.width = props.width
   if (typeof props.height === "number") spec.height = props.height
 
-  if (lossReport.length > 0 && !options.allowLossy) {
-    return {
-      status: "refused",
-      diagnostics: lossReport.map(({ code, message, path }) => ({
-        code,
-        severity: "error" as const,
-        message,
-        path,
-      })),
-      lossReport,
-      provenance,
-    }
-  }
-
+  lossReport.push(...vegaLiteDataLosses(spec, "/props/data"))
+  const refused = lossReport.length > 0 && !options.allowLossy
+  const diagnostics = lossReport.map(({ code, message, path }): PortabilityDiagnostic => ({
+    code, message, path, severity: refused ? "error" : "warning"
+  }))
+  if (refused) return { status: "refused", diagnostics, lossReport, provenance }
   return {
-    status: lossReport.length > 0 ? "lossy" : "success",
-    spec,
-    artifact: spec,
-    diagnostics: lossReport.map(({ code, message, path }) => ({
-      code,
-      severity: "warning" as const,
-      message,
-      path,
-    })),
-    lossReport,
-    provenance,
+    status: lossReport.length ? "lossy" : "success",
+    spec, artifact: spec, diagnostics, lossReport, provenance
   }
 }
 

@@ -138,6 +138,7 @@ describe("MCP protocol round-trip", () => {
       "auditAccessibility",
       "auditArtifact",
       "auditMobileVisualization",
+      "convertVegaLite",
       "critiqueChart",
       "diagnoseConfig",
       "evaluateChart",

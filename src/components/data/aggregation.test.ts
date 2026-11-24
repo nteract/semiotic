@@ -3,7 +3,7 @@ import { bin, fromVegaLite, rollup } from "semiotic/data"
 import {
   unstable_fromFlintChart as fromFlintChart,
   unstable_fromVegaLiteResult as fromVegaLiteResult,
-  unstable_toVegaLite as toVegaLite
+  unstable_toVegaLiteResult as toVegaLiteResult
 } from "semiotic/experimental"
 import type { FlintChartAssemblyInput } from "./fromFlintChart"
 
@@ -296,15 +296,16 @@ describe("aggregation semantics (#1382)", () => {
     "round-trips histogram source observations $values (#1385)",
     ({ values }) => {
       const data = values.map((amount) => ({ amount }))
-      const spec = toVegaLite({
+      const exported = toVegaLiteResult({
         component: "Histogram",
         version: "1",
         createdAt: "2026-01-01T00:00:00.000Z",
         props: { data, valueAccessor: "amount", bins: 2 }
-      })
-      expect(spec).toBeDefined()
-      const imported = fromVegaLiteResult(spec!)
-      expect(imported.status).toBe("success")
+      }, { allowLossy: true })
+      expect(exported.lossReport.map(loss => loss.path)).toEqual(["/props/bins"])
+      const imported = fromVegaLiteResult(exported.spec!, { mode: "lossy" })
+      expect(imported.status).toBe("lossy")
+      expect(imported.lossReport.map(loss => loss.path)).toContain("/encoding/x/bin")
       expect(imported.config?.props).toMatchObject({
         data,
         valueAccessor: "amount",
@@ -340,7 +341,7 @@ describe("aggregation semantics (#1382)", () => {
       { amount: 1, group: "A" },
       { amount: 1, group: "B" }
     ]
-    const spec = toVegaLite({
+    const exported = toVegaLiteResult({
       component: "Histogram",
       version: "1",
       createdAt: "2026-01-01T00:00:00.000Z",
@@ -350,9 +351,9 @@ describe("aggregation semantics (#1382)", () => {
         categoryAccessor: "group",
         bins: 2
       }
-    })
-    expect(spec).toBeDefined()
-    expect(fromVegaLite(spec!).props).toMatchObject({
+    }, { allowLossy: true })
+    expect(exported.lossReport.map(loss => loss.path)).toEqual(["/props/bins"])
+    expect(fromVegaLite(exported.spec!).props).toMatchObject({
       data,
       categoryAccessor: "group"
     })

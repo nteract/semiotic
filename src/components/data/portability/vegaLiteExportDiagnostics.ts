@@ -1,3 +1,5 @@
+import { pointerSegment, repeatedCategories } from "../vegaLiteValidation"
+import { toVegaInterpolation } from "../vegaLiteCurves"
 import type { Datum } from "../../charts/shared/datumTypes"
 import type { PortabilityLoss } from "./result"
 
@@ -22,10 +24,10 @@ const SUPPORTED: Record<string, string[]> = {
   StackedBarChart: [...ORDINAL, "stackBy", "normalize"],
   GroupedBarChart: [...ORDINAL, "groupBy"],
   LineChart: [...XY, "lineBy", "colorBy", "curve", "showPoints"],
-  AreaChart: [...XY, "curve", "areaOpacity"],
+  AreaChart: [...XY, "areaBy", "curve", "areaOpacity"],
   StackedAreaChart: [...XY, "areaBy", "curve", "areaOpacity", "normalize"],
   Scatterplot: [...XY, "colorBy", "pointOpacity"],
-  BubbleChart: [...XY, "colorBy", "sizeBy", "sizeRange"],
+  BubbleChart: [...XY, "colorBy", "sizeBy", "bubbleOpacity"],
   Heatmap: ["xAccessor", "yAccessor", "valueAccessor", "xLabel", "yLabel"],
   PieChart: ["categoryAccessor", "valueAccessor"],
   DonutChart: ["categoryAccessor", "valueAccessor", "innerRadius"],
@@ -55,18 +57,27 @@ export function vegaLiteExportLosses(
   ) =>
     losses.push({
       code: "UNSUPPORTED_PROP",
-      path: `/props/${key.replace(/~/g, "~0").replace(/\//g, "~1")}`,
+      path: `/props/${pointerSegment(key)}`,
       message
     })
-  const allowed = Object.prototype.hasOwnProperty.call(SUPPORTED, component)
+  if (component === "Histogram") {
+    add("bins", "Vega-Lite chooses rounded bin boundaries. The exported histogram can group observations differently.")
+  }
+  const allowed = Object.hasOwn(SUPPORTED, component)
     ? SUPPORTED[component]
     : []
+  const series = component === "LineChart" || component === "AreaChart" || component === "StackedAreaChart"
+  const seriesField = props.lineDataAccessor ?? "coordinates"
+  if (series && Array.isArray(props.data) && props.data[0]?.[seriesField] !== undefined) {
+    add("data", "Flatten nested series into observations before exporting to Vega-Lite.")
+  }
   // Imported implicit colors are equivalent only when the exporter actually
   // emits that field as a color channel.
   for (const [key, value] of Object.entries(props)) {
     if (value === undefined || SHARED.includes(key) || allowed.includes(key))
       continue
     if (key === "colorBy" && value === colorField) continue
+    if (key === "lineDataAccessor" && series && typeof value === "string" && Array.isArray(props.data)) continue
     add(key)
   }
   if (props.lineBy && props.colorBy && props.lineBy !== props.colorBy)
@@ -85,21 +96,11 @@ export function vegaLiteExportLosses(
     )
       add(key)
   }
-  if (
-    props.curve !== undefined &&
-    ![
-      "linear",
-      "monotoneX",
-      "monotoneY",
-      "step",
-      "stepAfter",
-      "stepBefore",
-      "basis",
-      "cardinal",
-      "catmullRom"
-    ].includes(props.curve)
-  )
-    add("curve")
+  if (props.curve !== undefined && !toVegaInterpolation(props.curve)) add("curve")
+  if ((component === "PieChart" || component === "DonutChart") &&
+      typeof props.categoryAccessor === "string" && props.data &&
+      repeatedCategories(props.data, [props.categoryAccessor]))
+    add("categoryAccessor", "Semiotic combines rows with the same category label into one wedge.")
   if (component === "DonutChart" && props.innerRadius === undefined)
     add(
       "innerRadius",
