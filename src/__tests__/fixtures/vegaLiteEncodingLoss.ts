@@ -3,6 +3,9 @@ const category = { field: "team", type: "nominal" } as const
 const values = [{ team: 1, cohort: "A", state: "open", orders: 3 }, { team: "1", cohort: "A", state: "closed", orders: 2 }]
 
 export const encodingLossExamples = [
+  { spec: { mark: "point", data: { values }, encoding: {
+    x: quantity, y: quantity, opacity: { value: 0.5, type: "quantitative" }
+  } }, path: "/encoding/opacity/type" },
   ...["line", "point", "area"].map(mark => ({
     spec: { mark, data: { values }, encoding: { x: { field: "team" }, y: quantity } }, path: "/encoding/x/type"
   })),
@@ -138,3 +141,27 @@ export const malformedAggregateFields = [
   { mark: "bar", encoding: { x: { ...category, field: 2 }, y: { ...quantity, aggregate: "sum" } }, path: "/encoding/x/field" },
   { mark: "area", encoding: { x: quantity, y: { ...quantity, field: null, aggregate: "mean" } }, path: "/encoding/y/field" }
 ].map(({ mark, encoding, path }) => ({ spec: { mark, encoding, data: { values } }, path }))
+
+export const malformedChannelTypes = [
+  { channel: "x", type: null },
+  { channel: "y", type: false },
+  { channel: "color", type: "" },
+  { channel: "size", type: 0 },
+  { channel: "opacity", type: [] },
+  { channel: "theta", type: {} },
+  { channel: "x", type: "category" }
+].map(({ channel, type }) => ({
+  spec: {
+    mark: channel === "theta" ? "arc" : "point",
+    data: { values: [{ team: "A", orders: 3 }] },
+    encoding: {
+      ...(channel === "theta" ? { color: category } : { x: quantity, y: quantity }),
+      [channel]: channel === "opacity" ? { value: 0.5, type } : {
+        ...(channel === "color" ? category : quantity),
+        scale: { type: "linear" },
+        type
+      }
+    }
+  },
+  path: `/encoding/${channel}/type`
+}))

@@ -17,7 +17,7 @@ export function isCategory(type?: string): boolean {
 }
 
 export function vegaLiteFieldType(channel?: VegaLiteEncoding) {
-  if (channel?.type) return channel.type
+  if (channel?.type !== undefined) return channel.type
   const scale = channel?.scale?.type
   if (channel?.aggregate || channel?.bin || scale === "linear" || scale === "log" || scale === "symlog") return "quantitative"
   return scale === "time" || scale === "utc" ? "temporal" : "nominal"
@@ -92,6 +92,9 @@ export function vegaLiteShapeDiagnostics(
         }
         if (encoding.field !== undefined && (typeof encoding.field !== "string" || !encoding.field.length)) {
           invalid(`${path}/field`, "a nonempty string")
+        }
+        if (encoding.type !== undefined && !["quantitative", "ordinal", "temporal", "nominal", "geojson"].includes(encoding.type as string)) {
+          invalid(`${path}/type`, "a Vega-Lite field type")
         }
         for (const key of ["scale", "axis"] as const) {
           if (encoding[key] !== undefined && !isRecord(encoding[key])) {
@@ -238,9 +241,8 @@ export function vegaLiteSemanticDiagnostics(
       unsupported(path)
       continue
     }
-    const allowed = ["field", "type", "aggregate", "scale"]
+    const allowed = channel === "opacity" ? ["value"] : ["field", "type", "aggregate", "scale"]
     if (channel === "x" || channel === "y") allowed.push("axis", "bin", "stack")
-    if (channel === "opacity") allowed.push("value")
     keys(enc, allowed, path)
     if (enc.field && hasVegaFieldPath(enc.field))
       unsupported(`${path}/field`)

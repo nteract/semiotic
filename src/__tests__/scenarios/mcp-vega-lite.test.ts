@@ -1,4 +1,4 @@
-import { encodingLossExamples, flatSeriesCases, impliedAggregateAxes, malformedAggregateFields, normalizedArea, tickOrientations, translucentBubbles } from "../fixtures/vegaLiteEncodingLoss"
+import { encodingLossExamples, flatSeriesCases, impliedAggregateAxes, malformedAggregateFields, malformedChannelTypes, normalizedArea, tickOrientations, translucentBubbles } from "../fixtures/vegaLiteEncodingLoss"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import type { ChildProcess } from "node:child_process"
 import { initializeServer, sendRequest, spawnServer } from "./mcpStdioHarness"
@@ -105,7 +105,7 @@ describe("developer MCP Vega-Lite conversion", () => {
     expect(result.structuredContent).toMatchObject({ component: "BubbleChart", props: { bubbleOpacity: 0.25 } })
   })
 
-  it.each(malformedAggregateFields)("returns a structured error for malformed $path", async ({ spec, path }) => {
+  it.each([...malformedAggregateFields, ...malformedChannelTypes])("returns a structured error for malformed $path", async ({ spec, path }) => {
     for (const mode of [undefined, "lossy"] as const) {
       const result = await call(spec, mode)
       expect(result.isError).toBe(true)

@@ -27,15 +27,15 @@ export function vegaLiteAggregationDiagnostics(
     let message: string | undefined
     let code = "UNSUPPORTED_AGGREGATE"
     if (!operation) {
-      message = `Unsupported aggregate "${encoding.aggregate}" on ${channel}; data was not aggregated.`
+      message = "Unsupported aggregate."
     } else if (
       (encodings.x?.bin || encodings.y?.bin) &&
       operation !== "count"
     ) {
-      message = `Binned aggregate "${encoding.aggregate}" on ${channel} is not supported; Histogram counts source rows.`
+      message = "Binned channels only support count."
     } else if (operation !== "count" && !encoding.field) {
       code = "INVALID_AGGREGATE"
-      message = `aggregate: "${encoding.aggregate}" on ${channel} requires an encoded value field.`
+      message = "An encoded value field is required."
     } else if (!spec.data?.values) {
       const mark = typeof spec.mark === "string" ? spec.mark : spec.mark?.type
       const category = channel === "x" ? encodings.y : channel === "y" ? encodings.x : undefined
@@ -44,14 +44,14 @@ export function vegaLiteAggregationDiagnostics(
         continue
       }
       code = "INVALID_AGGREGATE"
-      message = `aggregate: "${encoding.aggregate}" on ${channel} requires inline data.values; accessors remain unchanged.`
+      message = "Inline data.values are required."
     }
     if (message)
       diagnostics.push({
         code,
         severity: "error",
         path: `/encoding/${channel}/aggregate`,
-        message
+        message: `${channel} aggregate "${encoding.aggregate}": ${message}`
       })
   }
   return diagnostics

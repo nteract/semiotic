@@ -1,4 +1,4 @@
-import { encodingLossExamples, flatSeriesCases, impliedAggregateAxes, malformedAggregateFields, normalizedArea, translucentBubbles } from "../../../__tests__/fixtures/vegaLiteEncodingLoss"
+import { encodingLossExamples, flatSeriesCases, impliedAggregateAxes, malformedAggregateFields, malformedChannelTypes, normalizedArea, translucentBubbles } from "../../../__tests__/fixtures/vegaLiteEncodingLoss"
 import { describe, expect, it, vi } from "vitest"
 import { fromVegaLite, fromVegaLiteResult } from "../fromVegaLite"
 import type { VegaLiteSpec } from "../fromVegaLite"
@@ -107,12 +107,29 @@ describe("strict Vega-Lite boundaries", () => {
     expect(props.data).toEqual([{ team: "01", [props.valueAccessor]: 5 }, { team: "1", [props.valueAccessor]: 4 }])
   })
 
-  it.each(malformedAggregateFields)("checks $path before aggregation", ({ spec, path }) => {
+  it.each([...malformedAggregateFields, ...malformedChannelTypes])("rejects malformed $path before translation", ({ spec, path }) => {
     for (const lossy of [false, true]) {
       const result = importSpec(spec, lossy)
       expect(result.status).toBe("refused")
       expect(result.diagnostics).toContainEqual(expect.objectContaining({ path, severity: "error" }))
     }
+  })
+
+  it("distinguishes invalid type declarations from valid unsupported geographic fields", () => {
+    const invalid = malformedChannelTypes[0].spec
+    const log = vi.spyOn(console, "warn").mockImplementation(() => {})
+    try {
+      expect(fromVegaLite(invalid as unknown as VegaLiteSpec).warnings).toEqual([expect.stringContaining("/encoding/x/type")])
+    } finally {
+      log.mockRestore()
+    }
+    expect(importSpec({ layer: [invalid] }).diagnostics).toContainEqual(expect.objectContaining({
+      code: "INVALID_SPEC", path: "/layer/0/encoding/x/type"
+    }))
+    const geographic = { ...base, encoding: { ...base.encoding, shape: { field: "geometry", type: "geojson" } } }
+    expect(importSpec(geographic).diagnostics).toContainEqual(expect.objectContaining({
+      code: "UNSUPPORTED_ENCODING", path: "/encoding/shape"
+    }))
   })
 
   it.each(encodingLossExamples)("reports $path on a $spec.mark before rendering", ({ spec, path }) => {
