@@ -2,7 +2,19 @@ const quantity = { field: "orders", type: "quantitative" } as const
 const category = { field: "team", type: "nominal" } as const
 const values = [{ team: 1, cohort: "A", state: "open", orders: 3 }, { team: "1", cohort: "A", state: "closed", orders: 2 }]
 
+export const overlappingHeatmap = {
+  mark: "rect",
+  data: { values: [{ x: "A", y: "K", v: 100 }, { x: "A", y: "K", v: 1 }, { x: "B", y: "K", v: 2 }] },
+  encoding: { x: { field: "x", type: "nominal" }, y: { field: "y", type: "nominal" }, color: { field: "v", type: "quantitative" } }
+}
+
 export const encodingLossExamples = [
+  { spec: overlappingHeatmap, path: "/encoding/color" },
+  ...["point", "line", "area"].map(mark => ({
+    spec: { mark, data: { values: [{ x: "2024-01-01", y: 3 }, { x: "2024-01-02", y: 4 }] },
+      encoding: { x: { field: "x", type: "quantitative" }, y: { field: "y", type: "quantitative" } } },
+    path: "/encoding/x/type"
+  })),
   { spec: { mark: "point", data: { values: [{ t: "2024-01-01" }, { t: "2023-12-31T19:00:00-05:00" }] },
     encoding: { x: { field: "t", type: "temporal" }, y: { field: "t", type: "quantitative", aggregate: "min" } }
   }, path: "/encoding/x/type" },
@@ -179,6 +191,8 @@ export const malformedChannelTypes = [
 
 export const temporalLossCases = [
   { dates: ["2024", "2025"], index: 0 },
+  { dates: ["2024-01-01", "2024-1-2"], index: 1 },
+  { dates: ["2024-01-1", "2024-01-02"], index: 0 },
   { dates: [Date.UTC(2024, 0, 1), "2024-01-02"], index: 1 },
   { dates: ["2024-01-01", "invalid"], index: 1 },
   { dates: ["2024-01-01", null], index: 1 }

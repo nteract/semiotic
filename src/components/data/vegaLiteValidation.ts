@@ -164,7 +164,10 @@ export function temporalCoordinateLoss(data: Datum[] | undefined, field: string,
       const numeric = Number(value)
       const vegaTime = vegaTimeValue(value)
       const chartTime = readsDates ? coerceDateLikeValue(value) : numeric
-      if (Number.isFinite(new Date(vegaTime).getTime()) && (aggregated || chartTime === vegaTime)) continue
+      // Vega parses non-ISO calendar spellings in local time; the native frame uses UTC.
+      const localCalendar = typeof value === "string" && /^\d{4}-\d{1,2}(-\d{1,2})?$/.test(value.trim()) &&
+        !/^\d{4}-\d{2}(-\d{2})?$/.test(value)
+      if (!localCalendar && Number.isFinite(new Date(vegaTime).getTime()) && (aggregated || chartTime === vegaTime)) continue
     }
     const path = `${base}/${index}/${pointerSegment(field)}`
     return {
@@ -231,6 +234,9 @@ export function vegaLiteSemanticDiagnostics(
   }
   const encoding = spec.encoding ?? {}
   const { x, y, color, theta } = encoding
+  if (continuous && x?.field && !x.aggregate && vegaLiteFieldType(x) === "quantitative" && infersTemporalX(spec.data?.values, x.field)) {
+    unsupported("/encoding/x/type")
+  }
   if (continuous && x?.field && vegaLiteFieldType(x) === "temporal") {
     const materialized = !x.bin && !y?.bin && Object.values(encoding).some(channel => channel.aggregate !== undefined)
     if (x.scale?.type === "utc" && (materialized || !infersTemporalX(spec.data?.values, x.field))) unsupported("/encoding/x/scale/type")

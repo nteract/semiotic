@@ -1,5 +1,5 @@
 import type { Datum } from "../charts/shared/datumTypes"
-import { isCategory, pointerSegment, vegaLiteFieldType, vegaTimeValue } from "./vegaLiteValidation"
+import { isCategory, pointerSegment, repeatedCategories, vegaLiteFieldType, vegaTimeValue } from "./vegaLiteValidation"
 import type { VegaLiteImportError } from "./vegaLiteValidation"
 import type { VegaLiteEncoding, VegaLiteSpec } from "./fromVegaLite"
 import {
@@ -92,11 +92,16 @@ export function aggregateVegaLite(
   return { data: aggregateRows(data, [...fields], measures, readField), encoding: resolved }
 }
 
-export function missingQuantitativeData(spec: VegaLiteSpec, base: string) {
+export function vegaLiteDataLosses(spec: VegaLiteSpec, base: string) {
   const losses: Array<{ code: string; path: string; message: string }> = []
   const rows = spec.data?.values
   if (!rows) return losses
   const mark = typeof spec.mark === "string" ? spec.mark : spec.mark?.type
+  const { x, y, color } = spec.encoding ?? {}
+  if (mark === "rect" && x?.field && y?.field && color && !color.aggregate && repeatedCategories(rows, [x.field, y.field])) {
+    losses.push({ code: "OVERLAPPING_HEATMAP_CELLS", path: "/encoding/color",
+      message: "Semiotic uses the last value at each heatmap cell. Vega-Lite includes every row in the color domain." })
+  }
   let materialized: ReturnType<typeof aggregateVegaLite> | undefined
   for (const [name, channel] of Object.entries(spec.encoding ?? {})) {
     const { field, aggregate } = channel

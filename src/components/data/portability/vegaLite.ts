@@ -13,7 +13,7 @@
  *
  * Pure, dependency-free, no chart-family imports.
  */
-import { missingQuantitativeData } from "../vegaLiteAggregation"
+import { vegaLiteDataLosses } from "../vegaLiteAggregation"
 import { toVegaInterpolation } from "../vegaLiteCurves"
 import { hasVegaFieldPath, infersTemporalX, isRecord, isRecordArray, pointOpacityProp, repeatedCategories, temporalCoordinateLoss } from "../vegaLiteValidation"
 import { exportableColorScheme, vegaLiteExportLosses } from "./vegaLiteExportDiagnostics"
@@ -311,7 +311,7 @@ export function toVegaLiteResult(
   if (typeof props.width === "number") spec.width = props.width
   if (typeof props.height === "number") spec.height = props.height
 
-  lossReport.push(...missingQuantitativeData(spec, "/props/data"))
+  lossReport.push(...vegaLiteDataLosses(spec, "/props/data"))
   const refused = lossReport.length > 0 && !options.allowLossy
   const diagnostics = lossReport.map(({ code, message, path }): PortabilityDiagnostic => ({
     code, message, path, severity: refused ? "error" : "warning"

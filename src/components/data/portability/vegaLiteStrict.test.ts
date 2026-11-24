@@ -1,4 +1,4 @@
-import { areaLabelCases, collidingSeries, encodingLossExamples, flatSeriesCases, impliedAggregateAxes, invalidAggregateGroups, malformedAggregateFields, malformedChannelTypes, normalizedArea, nullableMeasures, temporalExtrema, temporalGroupCases, temporalLossCases, translucentBubbles } from "../../../__tests__/fixtures/vegaLiteEncodingLoss"
+import { areaLabelCases, collidingSeries, encodingLossExamples, flatSeriesCases, impliedAggregateAxes, invalidAggregateGroups, malformedAggregateFields, malformedChannelTypes, normalizedArea, nullableMeasures, overlappingHeatmap, temporalExtrema, temporalGroupCases, temporalLossCases, translucentBubbles } from "../../../__tests__/fixtures/vegaLiteEncodingLoss"
 import { describe, expect, it, vi } from "vitest"
 import { fromVegaLite, fromVegaLiteResult } from "../fromVegaLite"
 import type { VegaLiteSpec } from "../fromVegaLite"
@@ -88,6 +88,20 @@ describe("strict Vega-Lite boundaries", () => {
       expect(chart.props.data).toEqual([{ v: 1, [chart.props.xAccessor]: expected }])
       expect(renderChartWithEvidence(chart.component, chart.props).evidence.markCountByType.point).toBe(1)
     }
+  })
+
+  it("preserves an explicitly aggregated heatmap and diagnoses repeated raw cells on export", () => {
+    const { data, encoding } = overlappingHeatmap
+    const aggregated = importSpec({ ...overlappingHeatmap, encoding: { ...encoding, color: { ...encoding.color, aggregate: "sum" } } })
+    expect(aggregated.status).toBe("success")
+    const { valueAccessor, data: cells } = aggregated.config!.props
+    expect(cells.map((r: Record<string, unknown>) => r[valueAccessor])).toEqual([101, 2])
+    expect(toVegaLiteResult(aggregated.config!).status).toBe("success")
+
+    const chart = config("Heatmap", { data: data.values, valueAccessor: "v" })
+    expect(renderChartWithEvidence(chart.component, chart.props).evidence.markCountByType.heatcell).toBe(2)
+    expect(toVegaLiteResult(chart).lossReport).toContainEqual(expect.objectContaining({ path: "/encoding/color" }))
+    expect(toVegaLiteResult(chart, { allowLossy: true }).status).toBe("lossy")
   })
 
   it("exports flat areas with duplicate x positions and the component's default accessors", () => {
@@ -231,9 +245,14 @@ describe("strict Vega-Lite boundaries", () => {
   })
 
   it.each(["time", "linear", "log"])("preserves an x field's implied %s scale", scale => {
-    const result = importSpec({ ...base, encoding: { x: { field: "date", scale: { type: scale } }, y: base.encoding!.y } })
+    const encoding = { x: { field: "date", scale: { type: scale } }, y: base.encoding!.y }
+    const data = scale === "time" ? base.data : { values: [{ date: 7, value: 10 }] }
+    const result = importSpec({ ...base, data, encoding })
     expect(result.status).toBe("success")
     expect(result.config?.props.xScaleType ?? "linear").toBe(scale)
+    if (scale !== "time") {
+      expect(importSpec({ ...base, encoding }).diagnostics).toContainEqual(expect.objectContaining({ path: "/encoding/x/type" }))
+    }
   })
 
   it("keeps an area unstacked when its only color field is the aggregated chart's grouping axis", () => {
