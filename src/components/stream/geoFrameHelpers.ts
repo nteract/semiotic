@@ -73,6 +73,10 @@ export type GeoFeatureLike = Datum & {
   data?: Datum
 }
 
+export function geoHoverData(datum: GeoFeatureLike | null, x: number, y: number): HoverData {
+  return { ...datum, ...datum?.properties, data: datum, properties: datum?.properties, x, y, __semioticHoverData: true }
+}
+
 export type HitCanvas = HTMLCanvasElement | OffscreenCanvas
 export type HitCanvasContext = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
 export type GeoZoomSelection = Selection<HTMLDivElement, unknown, null, undefined>
@@ -155,14 +159,6 @@ export function resolveGeoPointerHit(options: {
   return {
     kind: "hit",
     node,
-    hover: {
-      ...rawData,
-      ...(rawData?.properties || {}),
-      data: rawData,
-      properties: rawData?.properties,
-      __semioticHoverData: true,
-      x,
-      y
-    }
+    hover: geoHoverData(rawData, x, y)
   }
 }

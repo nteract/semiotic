@@ -55,10 +55,16 @@ export function seamProps(
   }
 }
 
-export function steepRouteProps(
-  view: "arc" | "cartogram",
+export function routeProps(
+  view: "arc" | "cartogram" | "chord",
   width: number
 ): StreamGeoFrameProps {
+  if (view === "chord") return {
+    ...seamProps("equirectangular", width),
+    areas: [], points: [],
+    lines: [{ name: "Half-turn", coordinates: [{ lon: -90, lat: 10 }, { lon: 90, lat: 10 }] }],
+    lineType: "line"
+  }
   const coords = [
     { id: "west", lon: 179, lat: -75, cost: 0 },
     { id: "east", lon: -179, lat: 75, cost: 10 }

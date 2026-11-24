@@ -213,9 +213,6 @@ export function extractOrdinalNavPoints(scene: OrdinalSceneNode[]): NavPoint[] {
   return points.sort((a, b) => a.readingOrder! - b.readingOrder! || a.x - b.x || a.y - b.y)
 }
 
-
-
-
 /**
  * Convert a NavPoint to HoverData for the tooltip system.
  */

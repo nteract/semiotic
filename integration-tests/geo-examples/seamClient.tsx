@@ -1,7 +1,7 @@
 import React from "react"
 import { hydrateRoot } from "react-dom/client"
 import { StreamGeoFrame } from "../../dist/geo.module.min.js"
-import { seamProps, steepRouteProps } from "./seamProps"
+import { seamProps, routeProps } from "./seamProps"
 
 const panel = document.getElementById("frame")!
 const projection =
@@ -9,8 +9,8 @@ const projection =
 const view = panel.dataset.view
 const frame = (width: number) => (
   <StreamGeoFrame
-    {...(view === "arc" || view === "cartogram"
-      ? steepRouteProps(view, width)
+    {...(view === "arc" || view === "cartogram" || view === "chord"
+      ? routeProps(view, width)
       : seamProps(projection, width))}
     {...(view === "pan" && {
       zoomable: true,

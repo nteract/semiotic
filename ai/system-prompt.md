@@ -27,6 +27,8 @@ request.
    Each validation finding is structured (`validation.issues`, or `validation`
    on a `VALIDATION` diagnosis): apply its `patch` or `suggestion` (for example
    rename `x` to `xAccessor`) instead of guessing from the sentence.
+   In the developer MCP profile, use `critiqueChart` for ranked findings and
+   a static assessment of fit to the reader’s analytical intent.
 5. When a renderer is available, require non-empty render evidence and run the
    accessibility audit before presenting the result.
 

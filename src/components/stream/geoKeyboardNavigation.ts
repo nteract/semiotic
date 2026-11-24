@@ -1,8 +1,7 @@
 "use client"
-import type { HoverData } from "../realtime/types"
 import type { GeoPipelineStore } from "./GeoPipelineStore"
 import type { GeoSceneNode } from "./geoTypes"
-import type { GeoFeatureLike } from "./geoFrameHelpers"
+import { geoHoverData, type GeoFeatureLike } from "./geoFrameHelpers"
 import type { NavPoint } from "./navigationGraph"
 import { glyphNavPoint, navPath } from "./keyboardNav"
 import { normalizeHoverDatum } from "./hoverUtils"
@@ -66,26 +65,13 @@ export function extractGeoNavPoints(scene: GeoSceneNode[]): NavPoint[] {
   return points
 }
 
-function geoPointToHover(point: NavPoint): HoverData {
-  const rawDatum = point.datum as GeoFeatureLike | null
-  return {
-    ...(rawDatum || {}),
-    ...(rawDatum?.properties || {}),
-    data: rawDatum,
-    properties: rawDatum?.properties,
-    x: point.x,
-    y: point.y,
-    __semioticHoverData: true
-  }
-}
-
 export function useGeoKeyboardNavigation(
   params: KeyboardInteractionParams<GeoPipelineStore, GeoSceneNode>
 ) {
   return useGraphKeyboardNavigation({
     ...params,
     extractPoints: extractGeoNavPoints,
-    toHover: geoPointToHover,
+    toHover: point => geoHoverData(point.datum as GeoFeatureLike | null, point.x, point.y),
     navigation: "linear"
   })
 }

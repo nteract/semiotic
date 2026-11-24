@@ -15,7 +15,7 @@ export function isDataRecord(value: unknown): value is Datum {
 export function sampleDataRecords(data: readonly unknown[]): Datum[] {
   const sampled =
     data.length <= 3
-      ? Array.from(data)
+      ? data
       : [data[0], data[Math.floor(data.length / 2)], data[data.length - 1]]
   const records = sampled.filter(isDataRecord)
   if (records.length) return records
@@ -24,4 +24,8 @@ export function sampleDataRecords(data: readonly unknown[]): Datum[] {
 
 export function sampledFields(data: readonly unknown[]): string[] {
   return [...new Set(sampleDataRecords(data).flatMap(Object.keys))]
+}
+
+export function recordFields(records: Datum[]): string[] {
+  return [...new Set(records.flatMap(Object.keys))]
 }

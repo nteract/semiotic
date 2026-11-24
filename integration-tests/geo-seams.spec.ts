@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test"
 import { createElement } from "react"
 import { renderToString } from "react-dom/server"
 import { createRequire } from "node:module"
-import { seamProps, steepRouteProps } from "./geo-examples/seamProps"
+import { seamProps, routeProps } from "./geo-examples/seamProps"
 import { expectCanvasPainted, expectTooltipWithinPlot } from "./helpers"
 import { compareCurrentPanels } from "./helpers/ssrParity"
 
@@ -222,14 +222,14 @@ test("panning a zoomed map keeps keyboard focus on the visible Pacific polygon",
   await expect(tip).toHaveCount(0)
 })
 
-for (const view of ["arc", "cartogram"] as const) {
-  test(`keeps the steep ${view} route visible and interactive across hydration`, async ({
+for (const view of ["arc", "cartogram", "chord"] as const) {
+  test(`keeps the ${view} route visible and interactive across hydration`, async ({
     page
   }) => {
     const requirePackage = createRequire(__filename)
     const { StreamGeoFrame } = requirePackage("semiotic/geo")
     const { renderGeoToStaticSVG } = requirePackage("semiotic/server")
-    const props = steepRouteProps(view, 520)
+    const props = routeProps(view, 520)
     const staticMarkup = renderGeoToStaticSVG(props)
     const markup = renderToString(createElement(StreamGeoFrame, props))
     await page.route("**/geo-examples/seams", (route) =>
@@ -246,7 +246,11 @@ for (const view of ["arc", "cartogram"] as const) {
     expect(await page.locator(`#frame ${routes}`).evaluateAll(data)).toEqual(
       await paths.evaluateAll(data)
     )
-    if (view === "cartogram") await expect(paths).toHaveCount(1)
+    if (view !== "arc") await expect(paths).toHaveCount(1)
+    if (view === "chord") {
+      const height = await paths.evaluate(node => (node as SVGPathElement).getBBox().height)
+      expect(height).toBeLessThan(0.01)
+    }
     const target = await paths.evaluateAll((nodes) => {
       const paths = nodes as SVGPathElement[]
       const longest = paths.reduce((a, b) =>
@@ -271,7 +275,7 @@ for (const view of ["arc", "cartogram"] as const) {
     await expectCanvasPainted(frame.locator("canvas").first())
     const tip = frame.locator(".stream-frame-tooltip")
     await frame.hover({ position: { x: target.x, y: target.y } })
-    await expect(tip).toHaveText("Steep crossing")
+    await expect(tip).toHaveText(view === "chord" ? "Half-turn" : "Steep crossing")
     await expectTooltipWithinPlot(frame, {
       top: 0,
       right: 0,
@@ -283,7 +287,7 @@ for (const view of ["arc", "cartogram"] as const) {
     await frame.focus()
     await page.keyboard.press("Home")
     if (view === "cartogram") await page.keyboard.press("ArrowRight")
-    await expect(tip).toHaveText("Steep crossing")
+    await expect(tip).toHaveText(view === "chord" ? "Half-turn" : "Steep crossing")
     await expectTooltipWithinPlot(frame, {
       top: 0,
       right: 0,

@@ -121,6 +121,19 @@ for (const [name, createProjection] of [
         ])
       }
     )
+    it.each([10, -25])("keeps the projected chord across 180° at latitude %s", lat => {
+      const coordinates = [{ lon: -90, lat }, { lon: 90, lat }]
+      const datum = { name: "Half-turn", coordinates }
+      const lines = scene({ lineType: "line" }, [datum])
+      const endpoints = coordinates.map(({ lon, lat }) => projection([lon, lat])!)
+      expect(lines.map(line => line.path)).toEqual([endpoints])
+      const [x, y] = projection([0, lat])!
+      expect(findNearestGeoNode(lines, x, y, 1, hitContext)?.node.datum).toBe(datum)
+      const [stop] = extractGeoNavPoints(lines)
+      expect(stop.y).toBeCloseTo(y)
+      expect(findNearestGeoNode(lines, stop.x, stop.y, 1, hitContext)?.node.datum).toBe(datum)
+    })
+
     it("keeps an ordinary long straight route and its intermediate vertices", () => {
       const coordinates = [
         { lon: -130, lat: 2 },

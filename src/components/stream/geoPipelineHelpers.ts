@@ -5,6 +5,7 @@
  */
 
 import {
+  geoClipAntimeridian,
   geoClipRectangle,
   geoMercator,
   geoEqualEarth,
@@ -151,6 +152,38 @@ function screenClip(projection: Partial<Pick<GeoProjection, "postclip">>) {
   return projection.postclip?.()
 }
 
+// The projection supplies rotated radians. A half-turn still joins its two projected endpoints.
+function clipStraightAntimeridian(sink: GeoStream): GeoStream {
+  let previousLon = NaN
+  let previousLat = NaN
+  return {
+    polygonStart() { sink.polygonStart() },
+    polygonEnd() { sink.polygonEnd() },
+    lineEnd() { sink.lineEnd() },
+    lineStart() {
+      previousLon = NaN
+      sink.lineStart()
+    },
+    point(lon, lat) {
+      const span = Math.abs(lon - previousLon)
+      if (span > Math.PI + 1e-12) {
+        const seam = Math.sign(previousLon) * Math.PI
+        const distanceToSeam = Math.abs(seam - previousLon)
+        const wrappedSpan = distanceToSeam + Math.abs(lon + seam)
+        const fraction = wrappedSpan ? distanceToSeam / wrappedSpan : 0.5
+        const seamLat = previousLat + (lat - previousLat) * fraction
+        sink.point(seam, seamLat)
+        sink.lineEnd()
+        sink.lineStart()
+        sink.point(-seam, seamLat)
+      }
+      sink.point(lon, lat)
+      previousLon = lon
+      previousLat = lat
+    }
+  }
+}
+
 /** Stream whole routes so clipping preserves endpoints on both sides of a seam. */
 export function createGeoLineProjector(
   projection: GeoProjection, straight: boolean,
@@ -158,16 +191,22 @@ export function createGeoLineProjector(
 ) {
   const extent = projection.clipExtent?.()
   const postclip = screenClip(projection)
-  const angle = cartogram && projection.clipAngle?.()
+  const angle = projection.clipAngle?.()
+  const preclip = projection.preclip?.()
+  const straightSeam = straight && (preclip === geoClipAntimeridian || (cartogram && angle))
   const precision = projection.precision()
   try {
     if (postclip) projection.postclip(sink => sink)
-    if (angle) projection.clipAngle(0)
+    if (straightSeam) projection.preclip(clipStraightAntimeridian)
+    else if (cartogram && angle) projection.clipAngle(0)
     if (straight) projection.precision(0)
     return lineFragments(sink => projection.stream(sink), position)
   } finally {
     if (straight) projection.precision(precision)
-    if (angle) projection.clipAngle(angle)
+    if (straightSeam || (cartogram && angle)) {
+      if (Number.isFinite(angle)) projection.clipAngle(angle)
+      else projection.preclip(preclip)
+    }
     if (postclip) {
       if (extent) projection.clipExtent(extent)
       else projection.postclip(postclip)

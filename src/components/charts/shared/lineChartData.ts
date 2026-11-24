@@ -1,5 +1,4 @@
-import type { Datum } from "./datumTypes"
-import type { Accessor } from "./types"
+import type { Accessor, Datum } from "./datumTypes"
 
 const LINE_OBJECT_SERIES_FIELD = "__lineObjectSeries"
 
