@@ -8,7 +8,6 @@ import {
   type SilhouetteSample
 } from "../../../recipes/layout1d"
 import type {
-  ProcessSankeyAttachment,
   ProcessSankeyEdge,
   ProcessSankeyLaneLifetime,
   ProcessSankeyLayoutQuality,

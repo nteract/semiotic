@@ -18,7 +18,6 @@ import { normalizeProcessEdge, normalizeProcessNode, readChartAccessor } from ".
 import {
   toProcessSankeyTime,
   isProcessSankeyDateDomain,
-  type ProcessSankeyTimeLike
 } from "./processSankey/time"
 import { renderLoadingState } from "../shared/withChartWrapper"
 import {
@@ -53,7 +52,6 @@ export type {
   ProcessSankeyTick
 } from "./ProcessSankeyProps"
 
-type TimeLike = ProcessSankeyTimeLike
 
 /**
  * ProcessSankey draws timed process flow as lane bands and ribbons on a real time axis.
