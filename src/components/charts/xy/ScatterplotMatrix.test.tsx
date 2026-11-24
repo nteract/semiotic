@@ -2,6 +2,7 @@ import { vi } from "vitest"
 import { act, fireEvent, render, within } from "@testing-library/react"
 import { ScatterplotMatrix } from "./ScatterplotMatrix"
 import { TooltipProvider } from "../../store/TooltipStore"
+import { renderChart } from "../../server/renderToStaticSVG"
 
 describe("ScatterplotMatrix", () => {
   it("reserves the matrix footprint and announces translated loading and empty states", () => {
@@ -102,6 +103,21 @@ describe("ScatterplotMatrix", () => {
     const svgs = container.querySelectorAll("svg")
     // At least 2 SVGs from diagonal cells (StreamXYFrames also have SVGs)
     expect(svgs.length).toBeGreaterThanOrEqual(2)
+  })
+
+  it.each([
+    { name: "mixed values", values: [1, 2, "2", Infinity, -Infinity, NaN, null], heights: [38, 76] },
+    { name: "the full finite range", values: [-Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE], heights: [38, 76] },
+    { name: "no finite values", values: [Infinity, -Infinity, NaN, null], heights: [] }
+  ])("bins $name consistently in mounted and static diagonal histograms", ({ values, heights }) => {
+    const props = { data: values.map(a => ({ a })), fields: ["a"], cellSize: 100, histogramBins: 2 }
+    const visibleHeights = (node: Element) => Array.from(node.querySelectorAll("rect"),
+      rect => Number(rect.getAttribute("height"))).filter(height => height > 0)
+    const { getByRole } = render(<ScatterplotMatrix {...props} />)
+    expect(visibleHeights(getByRole("gridcell", { name: "a" }))).toEqual(heights)
+
+    const svg = new DOMParser().parseFromString(renderChart("ScatterplotMatrix", props), "image/svg+xml")
+    expect(visibleHeights(svg.querySelector('[data-semiotic-composite-part="diagonal-a"]')!)).toEqual(heights)
   })
 
   it("renders label diagonal when configured", () => {
