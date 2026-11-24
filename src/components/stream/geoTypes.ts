@@ -93,6 +93,8 @@ export interface GeoAreaSceneNode {
   pathData: string
   /** Centroid in screen coords (for tooltip/annotation positioning) */
   centroid: [number, number]
+  /** Visible polygon used for keyboard targeting when panned beyond the plot. */
+  focusPath?: string
   /** Bounding box in screen coords [[x0,y0],[x1,y1]] */
   bounds: [[number, number], [number, number]]
   /** Screen-space area in px² */
@@ -112,6 +114,8 @@ export interface GeoAreaSceneNode {
 
 export interface GeoLineSceneNode {
   type: "line"
+  /** Another visible fragment of the preceding source route. */
+  continuation?: boolean
   path: [number, number][]
   style: Style
   datum: SceneDatum
