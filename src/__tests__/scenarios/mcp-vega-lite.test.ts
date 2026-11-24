@@ -1,4 +1,4 @@
-import { encodingLossExamples, malformedAggregateFields, normalizedArea, tickOrientations, translucentBubbles } from "../fixtures/vegaLiteEncodingLoss"
+import { encodingLossExamples, impliedAggregateAxes, malformedAggregateFields, normalizedArea, tickOrientations, translucentBubbles } from "../fixtures/vegaLiteEncodingLoss"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import type { ChildProcess } from "node:child_process"
 import { initializeServer, sendRequest, spawnServer } from "./mcpStdioHarness"
@@ -30,6 +30,15 @@ describe("developer MCP Vega-Lite conversion", () => {
         arguments: { spec, mode }
       })
     ).result
+
+  it("sums numeric strings under an implied quantitative type while preserving nominal IDs", async () => {
+    for (const mode of [undefined, "lossy"] as const) {
+      const result = await call({ mark: "tick", ...impliedAggregateAxes }, mode)
+      expect(result.isError).not.toBe(true)
+      const { data, valueAccessor } = result.structuredContent.props
+      expect(data).toEqual([{ team: "01", [valueAccessor]: 5 }, { team: "1", [valueAccessor]: 4 }])
+    }
+  })
 
   it("preserves the normalized y stack independently of the x stack", async () => {
     const result = await call(normalizedArea)

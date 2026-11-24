@@ -93,6 +93,14 @@ export const normalizedArea = {
   }
 }
 
+export const impliedAggregateAxes = {
+  data: { values: [{ team: "01", count: "002" }, { team: "01", count: "003" }, { team: "1", count: 4 }] },
+  encoding: {
+    x: { field: "count", aggregate: "sum", axis: { title: "Orders" } },
+    y: { field: "team", axis: { title: "Team" } }
+  }
+}
+
 export const malformedAggregateFields = [
   { mark: "arc", encoding: { theta: { ...quantity, aggregate: "sum" }, color: { ...category, field: "" } }, path: "/encoding/color/field" },
   { mark: "bar", encoding: { x: { ...category, field: 2 }, y: { ...quantity, aggregate: "sum" } }, path: "/encoding/x/field" },

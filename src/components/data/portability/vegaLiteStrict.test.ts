@@ -1,4 +1,4 @@
-import { encodingLossExamples, malformedAggregateFields, normalizedArea, translucentBubbles } from "../../../__tests__/fixtures/vegaLiteEncodingLoss"
+import { encodingLossExamples, impliedAggregateAxes, malformedAggregateFields, normalizedArea, translucentBubbles } from "../../../__tests__/fixtures/vegaLiteEncodingLoss"
 import { describe, expect, it, vi } from "vitest"
 import { fromVegaLite, fromVegaLiteResult } from "../fromVegaLite"
 import type { VegaLiteSpec } from "../fromVegaLite"
@@ -59,14 +59,11 @@ describe("strict Vega-Lite boundaries", () => {
   })
 
   it.each(["bar", "tick"])("retains the implied category and aggregate axes of a horizontal %s", mark => {
-    const result = fromVegaLiteResult({ mark, data: { values: [{ team: "A", count: 2 }, { team: "A", count: 3 }] }, encoding: {
-      x: { field: "count", aggregate: "sum", axis: { title: "Orders" } },
-      y: { field: "team", axis: { title: "Team" } }
-    } })
+    const result = fromVegaLiteResult({ mark, ...impliedAggregateAxes })
     expect(result.status).toBe("success")
     expect(result.config?.props).toMatchObject({ orientation: "horizontal", categoryAccessor: "team", categoryLabel: "Team", valueLabel: "Orders" })
     const props = result.config!.props
-    expect(props.data[0][props.valueAccessor]).toBe(5)
+    expect(props.data).toEqual([{ team: "01", [props.valueAccessor]: 5 }, { team: "1", [props.valueAccessor]: 4 }])
   })
 
   it.each(malformedAggregateFields)("checks $path before aggregation", ({ spec, path }) => {

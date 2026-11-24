@@ -1,5 +1,5 @@
 import type { Datum } from "../charts/shared/datumTypes"
-import { isCategory } from "./vegaLiteValidation"
+import { isCategory, vegaLiteFieldType } from "./vegaLiteValidation"
 import type { PortabilityDiagnostic } from "./portability/result"
 import type { VegaLiteEncoding, VegaLiteSpec } from "./fromVegaLite"
 import {
@@ -9,7 +9,7 @@ import {
 } from "./aggregateRows"
 import type { AggregateMeasure } from "./aggregateRows"
 
-/** Explicit quantitative encodings also accept zero-padded numeric strings. */
+/** Quantitative measures accept zero-padded numeric strings. */
 function quantitativeValue(raw: unknown) {
   if (typeof raw === "number") return raw
   if (typeof raw === "string" && raw.trim()) return Number(raw)
@@ -86,9 +86,10 @@ export function aggregateVegaLite(
     if (!operation) continue
     const outputField = unusedAggregateField(usedFields)
     usedFields.add(outputField)
+    const type = vegaLiteFieldType(value)
     measures.push({ field: value.field, operation, outputField,
-      readValue: value.type === "quantitative" ? quantitativeValue : undefined })
-    resolved[channel] = { ...value, type: value.type ?? "quantitative", field: outputField, aggregate: undefined }
+      readValue: type === "quantitative" ? quantitativeValue : undefined })
+    resolved[channel] = { ...value, type, field: outputField, aggregate: undefined }
   }
   return measures.length
     ? { data: aggregateRows(data, [...fields], measures), encoding: resolved }

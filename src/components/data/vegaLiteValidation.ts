@@ -14,12 +14,12 @@ export function isCategory(type?: string): boolean {
   return type === "nominal" || type === "ordinal"
 }
 
-function ordinalAxisType(channel?: VegaLiteEncoding) {
+export function vegaLiteFieldType(channel?: VegaLiteEncoding) {
   return channel?.type ?? (channel?.aggregate || channel?.bin ? "quantitative" : "nominal")
 }
 
 export function isHorizontalOrdinal(x?: VegaLiteEncoding, y?: VegaLiteEncoding): boolean {
-  return !isCategory(ordinalAxisType(x)) && isCategory(ordinalAxisType(y))
+  return !isCategory(vegaLiteFieldType(x)) && isCategory(vegaLiteFieldType(y))
 }
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
@@ -198,8 +198,8 @@ export function vegaLiteSemanticDiagnostics(
     const [dimension, measure] = horizontal ? [y, x] : [x, y]
     const dimensionPath = horizontal ? "/encoding/y" : "/encoding/x"
     const path = horizontal ? "/encoding/x" : "/encoding/y"
-    if (!isCategory(ordinalAxisType(dimension))) unsupported(`${dimensionPath}/type`)
-    if (ordinalAxisType(measure) !== "quantitative") unsupported(`${path}/type`)
+    if (!isCategory(vegaLiteFieldType(dimension))) unsupported(`${dimensionPath}/type`)
+    if (vegaLiteFieldType(measure) !== "quantitative") unsupported(`${path}/type`)
     if (mark === "bar") {
       if (dimension.stack !== undefined) unsupported(`${dimensionPath}/stack`)
       if (color?.field && (measure.stack === null || measure.stack === false)) unsupported(`${path}/stack`)
