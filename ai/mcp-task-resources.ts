@@ -1,5 +1,6 @@
 import { readFileSync, realpathSync } from "node:fs"
 import { dirname, join } from "node:path"
+import { diagnosticIdentifier } from "./mcp-render-output-limits"
 
 type TaskEntry = {
   id: string
@@ -158,7 +159,7 @@ export function createTaskResourceReader(options: TaskResourceOptions) {
     ): Record<string, unknown> & { delivery: ReturnType<typeof delivery> } {
       // Check syntax before opening any file, including the index.
       if (!validId(taskId))
-        throw new Error(`Invalid Semiotic task ID: ${taskId}`)
+        throw new Error(`Invalid Semiotic task ID: ${diagnosticIdentifier(taskId)}`)
       const index = loadIndex()
       const entry = index.tasks.find((task) => task.id === taskId)
       if (!entry)

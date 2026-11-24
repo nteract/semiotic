@@ -14,6 +14,33 @@ const observer = path.resolve(
   "../../../ai/__fixtures__/mcp-ipc-size-trace.cjs"
 )
 
+describe("shipped MCP identifier diagnostics", () => {
+  let proc: ChildProcess
+  const name = "🚉".repeat(2000)
+
+  beforeAll(async () => {
+    proc = spawnServer(["--profile=developer"])
+    await initializeServer(proc)
+  })
+
+  afterAll(async () => {
+    proc.kill("SIGTERM")
+    await waitForProcessExit(proc)
+  })
+
+  it.each(Object.entries({
+    getSchema: { component: name },
+    renderChart: { component: name, props: {} },
+    applyTheme: { name },
+    proposeChartVariants: { component: name, data: [] },
+    repairChartConfig: { component: name, data: [] }
+  }))("%s bounds echoed identifiers in text and structured diagnostics", async (tool, args) => {
+    const { result } = await sendRequest(proc, "tools/call", { name: tool, arguments: args })
+    expect(result.content[0].text).toContain("🚉".repeat(59) + "…")
+    expect(JSON.stringify(result)).not.toContain("🚉".repeat(60))
+  })
+})
+
 describe("shipped MCP complete response limits", () => {
   let proc: ChildProcess | undefined
   let directory: string | undefined
