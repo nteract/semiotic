@@ -204,14 +204,34 @@ describe("strict Vega-Lite boundaries", () => {
     expect(exported.spec?.data?.values).toEqual(spec.data.values)
   })
 
-  it.each([undefined, "points"])("reports the loss of nested series using accessor %s", (accessor) => {
-    const chart = config("LineChart", {
-      data: [{ [accessor ?? "coordinates"]: [{ t: 1, v: 3 }, { t: 2, v: 5 }] }],
-      xAccessor: "t",
-      yAccessor: "v",
-      ...(accessor && { lineDataAccessor: accessor })
-    })
-    expect(toVegaLiteResult(chart).lossReport).toContainEqual(expect.objectContaining({ path: "/props/data" }))
+  it.each(["LineChart", "AreaChart", "StackedAreaChart"])("exports flat %s rows with an array on a later row", component => {
+    for (const field of ["coordinates", "points"]) {
+      const rows = [{ x: 1, y: 3, g: "A" }, { x: 2, y: 7, g: "A" }, { x: 3, y: 2, g: "A" }]
+      const data = rows.map((row, i) => i === 1 ? { ...row, [field]: [{ x: 100, y: 99 }] } : row)
+      const options = { ...(component === "StackedAreaChart" && { areaBy: "g" }), ...(field === "points" && { lineDataAccessor: field }) }
+      const reference = renderChartWithEvidence(component, { ...options, data: rows })
+      const native = renderChartWithEvidence(component, { ...options, data })
+      const paths = (svg: string) => Array.from(svg.matchAll(/<path\b[^>]*\bd="([^"]+)"/g), match => match[1])
+      expect(reference.evidence.markCount).toBeGreaterThan(0)
+      expect(native.evidence.markCountByType).toEqual(reference.evidence.markCountByType)
+      expect(paths(native.svg)).toEqual(paths(reference.svg))
+      const result = toVegaLiteResult(config(component, { ...options, data }))
+      expect(result.lossReport).toEqual([])
+      expect(result.spec?.data?.values).toEqual(data)
+    }
+  })
+
+  it.each(["LineChart", "AreaChart", "StackedAreaChart"])("reports nested %s series for default and custom accessors", component => {
+    for (const field of ["coordinates", "points"]) {
+      const chart = config(component, {
+        data: [{ g: "A", [field]: [{ t: 1, v: 3 }, { t: 2, v: 5 }] }],
+        xAccessor: "t",
+        yAccessor: "v",
+        ...(component === "StackedAreaChart" && { areaBy: "g" }),
+        ...(field === "points" && { lineDataAccessor: field })
+      })
+      expect(toVegaLiteResult(chart).lossReport).toContainEqual(expect.objectContaining({ path: "/props/data" }))
+    }
   })
 
   it("round trips BubbleChart opacity through its public prop", () => {

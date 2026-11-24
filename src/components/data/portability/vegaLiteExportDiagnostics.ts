@@ -68,9 +68,7 @@ export function vegaLiteExportLosses(
     : []
   const series = component === "LineChart" || component === "AreaChart" || component === "StackedAreaChart"
   const seriesField = props.lineDataAccessor ?? "coordinates"
-  if (series && Array.isArray(props.data) && (
-    props.data[0]?.[seriesField] !== undefined || props.data.some(row => Array.isArray(row[seriesField]))
-  )) {
+  if (series && Array.isArray(props.data) && props.data[0]?.[seriesField] !== undefined) {
     add("data", "Flatten nested series into observations before exporting to Vega-Lite.")
   }
   // Imported implicit colors are equivalent only when the exporter actually
