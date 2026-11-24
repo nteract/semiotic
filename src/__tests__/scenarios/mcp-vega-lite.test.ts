@@ -1,4 +1,4 @@
-import { areaLabelCases, collidingSeries, encodingLossExamples, flatSeriesCases, impliedAggregateAxes, malformedAggregateFields, malformedChannelTypes, normalizedArea, nullableMeasures, tickOrientations, temporalExtrema, temporalGroupCases, temporalLossCases, translucentBubbles } from "../fixtures/vegaLiteEncodingLoss"
+import { areaLabelCases, collidingSeries, encodingLossExamples, flatSeriesCases, impliedAggregateAxes, invalidAggregateGroups, malformedAggregateFields, malformedChannelTypes, normalizedArea, nullableMeasures, tickOrientations, temporalExtrema, temporalGroupCases, temporalLossCases, translucentBubbles } from "../fixtures/vegaLiteEncodingLoss"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import type { ChildProcess } from "node:child_process"
 import { initializeServer, sendRequest, spawnServer } from "./mcpStdioHarness"
@@ -30,6 +30,19 @@ describe("developer MCP Vega-Lite conversion", () => {
         arguments: { spec, mode }
       })
     ).result
+
+  it("imports UTC axes when the native frame can infer dates", async () => {
+    const dateSpec = (x: string | number) => ({ mark: "line", data: { values: [{ x, y: 1 }] }, encoding: {
+      x: { field: "x", type: "temporal", scale: { type: "utc" } }, y: { field: "y", type: "quantitative" }
+    } })
+    const dates = await call(dateSpec("2024-01-01"))
+    expect(dates.isError).not.toBe(true)
+    expect(dates.structuredContent.props.data).toEqual([{ x: "2024-01-01", y: 1 }])
+    expect(dates.structuredContent.props.xScaleType).toBeUndefined()
+    const epochs = await call(dateSpec(Date.UTC(2024, 0, 1)))
+    expect(epochs.isError).toBe(true)
+    expect(epochs.structuredContent.diagnostics).toContainEqual(expect.objectContaining({ path: "/encoding/x/scale/type" }))
+  })
 
   it.each(temporalGroupCases)("groups equivalent date representations for $aggregate", async ({ spec, expected }) => {
     for (const mode of [undefined, "lossy"] as const) {
@@ -148,7 +161,7 @@ describe("developer MCP Vega-Lite conversion", () => {
     }
   })
 
-  it.each([...encodingLossExamples, ...temporalLossCases, ...collidingSeries, ...nullableMeasures])("exposes $path on a $spec.mark over MCP", async ({ spec, path }) => {
+  it.each([...encodingLossExamples, ...temporalLossCases, ...collidingSeries, ...nullableMeasures, ...invalidAggregateGroups])("exposes $path on a $spec.mark over MCP", async ({ spec, path }) => {
     const strict = await call(spec)
     expect(strict.isError).toBe(true)
     expect(strict.structuredContent.diagnostics).toContainEqual(expect.objectContaining({ path }))

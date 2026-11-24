@@ -15,7 +15,7 @@
  */
 import { missingQuantitativeData } from "../vegaLiteAggregation"
 import { toVegaInterpolation } from "../vegaLiteCurves"
-import { hasVegaFieldPath, isRecord, isRecordArray, pointOpacityProp, repeatedCategories, temporalCoordinateLoss } from "../vegaLiteValidation"
+import { hasVegaFieldPath, infersTemporalX, isRecord, isRecordArray, pointOpacityProp, repeatedCategories, temporalCoordinateLoss } from "../vegaLiteValidation"
 import { exportableColorScheme, vegaLiteExportLosses } from "./vegaLiteExportDiagnostics"
 import type { ChartConfig } from "../../export/chartConfig"
 import type { Datum } from "../../charts/shared/datumTypes"
@@ -63,8 +63,12 @@ function nominal(field: string): VegaLiteEncoding {
 /** Preserve axis scale intent for every continuous XY component. */
 function xyEncoding(props: AnyProps, axis: "x" | "y"): VegaLiteEncoding {
   const type = props[`${axis}ScaleType`]
+  const field = props[`${axis}Accessor`]
+  if (axis === "x" && type === undefined && infersTemporalX(props.data, field)) {
+    return { field, type: "temporal", scale: { type: "utc" } }
+  }
   return {
-    field: props[`${axis}Accessor`],
+    field,
     type: type === "time" ? "temporal" : "quantitative",
     ...(["log", "symlog"].includes(type) ? { scale: { type } } : {}),
   }
@@ -284,6 +288,10 @@ export function toVegaLiteResult(
       lossReport.push({ code: "UNSUPPORTED_ENCODING", path: `/encoding/${channel}/field`,
         message: "Vega-Lite interprets this literal Semiotic field name as a field path." })
     }
+  }
+  if (enc.x?.type === "quantitative" && enc.x.field && props.xScaleType && infersTemporalX(props.data, enc.x.field)) {
+    lossReport.push({ code: "UNSUPPORTED_ENCODING", path: "/props/xScaleType",
+      message: "Supply epoch milliseconds to preserve date coordinates on a numeric x scale." })
   }
   if (enc.x?.type === "temporal" && enc.x.field) {
     const loss = temporalCoordinateLoss(props.data, enc.x.field, "/props/data")

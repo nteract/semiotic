@@ -278,3 +278,9 @@ export const nullableMeasures = [
   },
   path: aggregate ? "/encoding/y/aggregate" : `/data/values/1/${axis}`
 }))
+
+export const invalidAggregateGroups = ["sum", "mean", "min", "max"].map(aggregate => ({
+  spec: { mark: "point", data: { values: [{ x: 1, y: "not-a-number" }, { x: 2, y: 3 }] },
+    encoding: { x: { field: "x", type: "quantitative" }, y: { field: "y", type: "quantitative", aggregate } } },
+  path: "/encoding/y/aggregate"
+}))

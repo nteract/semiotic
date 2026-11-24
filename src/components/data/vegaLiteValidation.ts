@@ -147,6 +147,14 @@ export function vegaTimeValue(value: unknown): number {
   return value instanceof Date || typeof value === "number" ? Number(value) : NaN
 }
 
+export function infersTemporalX(data: Datum[] | undefined, field: string) {
+  for (const row of data ?? []) {
+    const detected = detectDateAccessor(row[field])
+    if (detected !== undefined) return detected
+  }
+  return false
+}
+
 export function temporalCoordinateLoss(data: Datum[] | undefined, field: string, base: string, aggregated = false) {
   let readsDates: boolean | undefined
   for (const [index, row] of (data ?? []).entries()) {
@@ -225,6 +233,7 @@ export function vegaLiteSemanticDiagnostics(
   const { x, y, color, theta } = encoding
   if (continuous && x?.field && vegaLiteFieldType(x) === "temporal") {
     const materialized = !x.bin && !y?.bin && Object.values(encoding).some(channel => channel.aggregate !== undefined)
+    if (x.scale?.type === "utc" && (materialized || !infersTemporalX(spec.data?.values, x.field))) unsupported("/encoding/x/scale/type")
     const loss = temporalCoordinateLoss(spec.data?.values, x.field, "/data/values", materialized)
     if (loss) diagnostics.push({ ...loss, severity: "error" })
   }
@@ -322,7 +331,7 @@ export function vegaLiteSemanticDiagnostics(
         enc.scale.type !== undefined &&
         !(
           channel === "x"
-            ? ["linear", "log", "time"]
+            ? ["linear", "log", "time", ...(fieldType === "temporal" && continuous ? ["utc"] : [])]
             : ["linear", "log", "symlog"]
         ).includes(enc.scale.type)
       )

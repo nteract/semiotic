@@ -369,7 +369,7 @@ function setXYAccessors(
   setAxisProps(props, "xAccessor", "xLabel", x)
   setAxisProps(props, "yAccessor", "yLabel", y)
   if (!continuous) return
-  if (vegaLiteFieldType(x) === "temporal") props.xScaleType = "time"
+  if (vegaLiteFieldType(x) === "temporal" && x?.scale?.type !== "utc") props.xScaleType = "time"
   else if (x?.scale?.type === "log") props.xScaleType = "log"
   if (y?.scale?.type === "log" || y?.scale?.type === "symlog") props.yScaleType = y.scale.type
 }

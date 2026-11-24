@@ -102,14 +102,17 @@ export function missingQuantitativeData(spec: VegaLiteSpec, base: string) {
     const { field, aggregate } = channel
     if (!field || vegaLiteFieldType(channel) !== "quantitative" || aggregate === "count") continue
     if (mark === "line" && name === "y" && !aggregate) continue
-    const index = rows.findIndex(row => row[field] == null)
-    if (index < 0) continue
-    let path = `${base}/${index}/${pointerSegment(field)}`
+    let path: string
     if (aggregate) {
       materialized ??= aggregateVegaLite(spec, [])
-      const output = materialized.encoding[name]?.field
-      if (!output || !materialized.data?.some(row => row[output] == null)) continue
+      const result = materialized.encoding[name]
+      const output = result?.field
+      if (!output || result.aggregate || !materialized.data?.some(row => row[output] == null)) continue
       path = `/encoding/${pointerSegment(name)}/aggregate`
+    } else {
+      const index = rows.findIndex(row => row[field] == null)
+      if (index < 0) continue
+      path = `${base}/${index}/${pointerSegment(field)}`
     }
     losses.push({ code: "MISSING_MEASURE", path, message: `${path} can turn a missing quantitative mark into a zero coordinate.` })
   }

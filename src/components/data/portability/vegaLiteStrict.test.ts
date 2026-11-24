@@ -1,4 +1,4 @@
-import { areaLabelCases, collidingSeries, encodingLossExamples, flatSeriesCases, impliedAggregateAxes, malformedAggregateFields, malformedChannelTypes, normalizedArea, nullableMeasures, temporalExtrema, temporalGroupCases, temporalLossCases, translucentBubbles } from "../../../__tests__/fixtures/vegaLiteEncodingLoss"
+import { areaLabelCases, collidingSeries, encodingLossExamples, flatSeriesCases, impliedAggregateAxes, invalidAggregateGroups, malformedAggregateFields, malformedChannelTypes, normalizedArea, nullableMeasures, temporalExtrema, temporalGroupCases, temporalLossCases, translucentBubbles } from "../../../__tests__/fixtures/vegaLiteEncodingLoss"
 import { describe, expect, it, vi } from "vitest"
 import { fromVegaLite, fromVegaLiteResult } from "../fromVegaLite"
 import type { VegaLiteSpec } from "../fromVegaLite"
@@ -129,13 +129,36 @@ describe("strict Vega-Lite boundaries", () => {
     expect(toVegaLiteResult(config("Scatterplot", { data: [{ x: 2, y: 0 }] })).status).toBe("success")
   })
 
-  it.each(["sum", "count"])("retains valid aggregate groups containing nulls for %s", aggregate => {
-    const input = { mark: "point", data: { values: [{ x: 1, y: null }, { x: 1, y: 3 }] }, encoding: {
+  it.each(["sum", "count"])("retains aggregate groups with a valid value among invalid entries for %s", aggregate => {
+    const input = { mark: "point", data: { values: [{ x: 1, y: null }, { x: 1, y: "bad" }, { x: 1, y: 7 }] }, encoding: {
       x: { field: "x", type: "quantitative" }, y: { field: "y", type: "quantitative", aggregate }
     } }
     const result = importSpec(input)
     expect(result.status).toBe("success")
-    expect(result.config!.props.data).toEqual([{ x: 1, [result.config!.props.yAccessor]: aggregate === "sum" ? 3 : 2 }])
+    expect(result.config!.props.data).toEqual([{ x: 1, [result.config!.props.yAccessor]: aggregate === "sum" ? 7 : 3 }])
+  })
+
+  it.each(["LineChart", "AreaChart", "Scatterplot", "BubbleChart"])("exports inferred UTC dates for a data-only %s", component => {
+    const data = ["2024-01-01", "2024-01-02T01:00:00+01:00", "2024-01-03"].map((x, y) => ({ x, y, size: 2 }))
+    const chart = config(component, { data, ...(component === "BubbleChart" && { sizeBy: "size" }) })
+    const result = toVegaLiteResult(chart)
+    expect(result.status).toBe("success")
+    expect(result.spec?.encoding?.x).toMatchObject({ field: "x", type: "temporal", scale: { type: "utc" } })
+    const roundTrip = importSpec(result.spec)
+    expect(roundTrip.status).toBe("success")
+    expect(roundTrip.config?.props.xScaleType).toBeUndefined()
+    expect(roundTrip.config?.props.data).toEqual(data)
+  })
+
+  it("reports date strings on explicit numeric scales and preserves numeric epochs", () => {
+    const chart = (x: string | number) => config("LineChart", { data: [{ x, y: 1 }], xScaleType: "linear" })
+    expect(toVegaLiteResult(chart("2024-01-01")).lossReport).toContainEqual(expect.objectContaining({ path: "/props/xScaleType" }))
+    expect(toVegaLiteResult(chart(Date.UTC(2024, 0, 1))).status).toBe("success")
+  })
+
+  it("keeps numeric-looking native x data quantitative", () => {
+    const chart = config("LineChart", { data: [{ x: "2024", y: 1 }, { x: "2025", y: 2 }] })
+    expect(toVegaLiteResult(chart).spec?.encoding?.x).toEqual({ field: "x", type: "quantitative" })
   })
 
   it.each(areaLabelCases)("paints all three nominal $component series with object-property names", ({ spec, component }) => {
@@ -254,7 +277,7 @@ describe("strict Vega-Lite boundaries", () => {
     }))
   })
 
-  it.each([...encodingLossExamples, ...temporalLossCases, ...collidingSeries, ...nullableMeasures])("reports $path on a $spec.mark before rendering", ({ spec, path }) => {
+  it.each([...encodingLossExamples, ...temporalLossCases, ...collidingSeries, ...nullableMeasures, ...invalidAggregateGroups])("reports $path on a $spec.mark before rendering", ({ spec, path }) => {
     const strict = importSpec(spec)
     expect(strict.status).toBe("refused")
     expect(strict.diagnostics).toContainEqual(expect.objectContaining({ path, severity: "error" }))
