@@ -298,3 +298,17 @@ export const invalidAggregateGroups = ["sum", "mean", "min", "max"].map(aggregat
     encoding: { x: { field: "x", type: "quantitative" }, y: { field: "y", type: "quantitative", aggregate } } },
   path: "/encoding/y/aggregate"
 }))
+
+export const booleanMeasureCases = ([
+  ["sum", 4], ["mean", 4 / 3], ["average", 4 / 3], ["min", 0], ["max", 3], ["count", 3]
+] as const).map(([aggregate, expected]) => ({
+  expected,
+  spec: { mark: "bar", data: { values: [true, 3, false].map(y => ({ x: "A", y })) },
+    encoding: { x: { field: "x", type: "nominal" }, y: { field: "y", type: "quantitative", aggregate } } }
+}))
+
+export const contaminatedSums = ["sum", "mean", "average"].map(aggregate => ({
+  spec: { mark: "point", data: { values: [{ x: 1, y: "bad" }, { x: 1, y: 7 }] },
+    encoding: { x: { field: "x", type: "quantitative" }, y: { field: "y", type: "quantitative", aggregate } } },
+  path: "/encoding/y/aggregate"
+}))

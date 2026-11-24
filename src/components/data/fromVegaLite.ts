@@ -70,17 +70,13 @@ function normalizeMark(mark: VegaLiteSpec["mark"] | undefined): Datum {
   return typeof mark === "string" ? { type: mark } : mark ?? {}
 }
 
-function readIDIDMetadata(spec: VegaLiteSpec): Datum | undefined {
-  return spec?.usermeta?.idid
-}
-
 /**
  * Recover the one base view emitted by attachIDIDAnnotations(). This is
  * narrow: arbitrary Vega-Lite layer composition remains
  * unsupported and must not be guessed as a chart configuration.
  */
 export function unwrapIDIDEnrichedVegaLiteSpec(spec: VegaLiteSpec): VegaLiteSpec {
-  if (!readIDIDMetadata(spec) || !Array.isArray(spec.layer)) return spec
+  if (!spec?.usermeta?.idid || !Array.isArray(spec.layer)) return spec
 
   const baseLayers = spec.layer.filter(layer => layer?.usermeta?.idid?.role !== "annotation-layer")
   if (baseLayers.length !== 1) return spec
@@ -171,8 +167,9 @@ function translateVegaLite(spec: VegaLiteSpec, silent = false, createdAt?: strin
   const props: Datum = {}
 
   // Layout
-  if (spec.width) props.width = spec.width
-  if (spec.height) props.height = spec.height
+  for (const axis of ["width", "height"] as const) {
+    if (spec[axis]) props[axis] = spec[axis]
+  }
   const title = typeof spec.title === "string" ? spec.title : spec.title?.text
   if (title) props.title = title
 
@@ -313,7 +310,7 @@ export function fromVegaLiteResult(
   const malformed = vegaLiteShapeDiagnostics(spec)
   const diagnostics = malformed.length ? malformed : strictImportDiagnostics(spec)
   const lossReport = diagnostics.map(({ code, message, path }) => ({ code, message, path }))
-  const idid = readIDIDMetadata(spec)
+  const idid = spec?.usermeta?.idid
   const provenance = {
     adapter: "semiotic/vega-lite",
     direction: "import" as const,

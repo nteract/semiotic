@@ -9,10 +9,14 @@ import {
 } from "./aggregateRows"
 import type { AggregateMeasure } from "./aggregateRows"
 
-/** Quantitative measures accept zero-padded numeric strings. */
+/** Vega treats only nullish values and the empty string as missing. */
 function quantitativeValue(raw: unknown) {
-  if (typeof raw === "number") return raw
-  if (typeof raw === "string" && raw.trim()) return Number(raw)
+  if (raw == null || raw === "") return
+  try {
+    return Number(raw)
+  } catch {
+    return NaN
+  }
 }
 
 /** Validate before changing rows or accessors, including in strict imports. */
@@ -112,14 +116,19 @@ export function vegaLiteDataLosses(spec: VegaLiteSpec, base: string) {
       materialized ??= aggregateVegaLite(spec, [])
       const result = materialized.encoding[name]
       const output = result?.field
-      if (!output || result.aggregate || !materialized.data?.some(row => row[output] == null)) continue
+      if (!output || result.aggregate) continue
+      const invalidTotal = ["sum", "mean", "average"].includes(aggregate) && rows.some(row => {
+        const value = quantitativeValue(row[field])
+        return value !== undefined && !Number.isFinite(value)
+      })
+      if (!invalidTotal && !materialized.data?.some(row => row[output] == null)) continue
       path = `/encoding/${pointerSegment(name)}/aggregate`
     } else {
       const index = rows.findIndex(row => row[field] == null)
       if (index < 0) continue
       path = `${base}/${index}/${pointerSegment(field)}`
     }
-    losses.push({ code: "MISSING_MEASURE", path, message: `${path} can turn a missing quantitative mark into a zero coordinate.` })
+    losses.push({ code: "MISSING_MEASURE", path, message: `${path} changes a missing quantitative mark or its aggregate value.` })
   }
   return losses
 }

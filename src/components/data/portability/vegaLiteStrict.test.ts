@@ -1,4 +1,4 @@
-import { areaLabelCases, collidingSeries, encodingLossExamples, flatSeriesCases, impliedAggregateAxes, invalidAggregateGroups, malformedAggregateFields, malformedChannelTypes, normalizedArea, nullableMeasures, overlappingHeatmap, temporalExtrema, temporalGroupCases, temporalLossCases, translucentBubbles } from "../../../__tests__/fixtures/vegaLiteEncodingLoss"
+import { areaLabelCases, booleanMeasureCases, collidingSeries, contaminatedSums, encodingLossExamples, flatSeriesCases, impliedAggregateAxes, invalidAggregateGroups, malformedAggregateFields, malformedChannelTypes, normalizedArea, nullableMeasures, overlappingHeatmap, temporalExtrema, temporalGroupCases, temporalLossCases, translucentBubbles } from "../../../__tests__/fixtures/vegaLiteEncodingLoss"
 import { describe, expect, it, vi } from "vitest"
 import { fromVegaLite, fromVegaLiteResult } from "../fromVegaLite"
 import type { VegaLiteSpec } from "../fromVegaLite"
@@ -143,13 +143,44 @@ describe("strict Vega-Lite boundaries", () => {
     expect(toVegaLiteResult(config("Scatterplot", { data: [{ x: 2, y: 0 }] })).status).toBe("success")
   })
 
-  it.each(["sum", "count"])("retains aggregate groups with a valid value among invalid entries for %s", aggregate => {
+  it.each(booleanMeasureCases)("preserves mixed boolean and numeric $spec.encoding.y.aggregate values", ({ spec, expected }) => {
+    const result = importSpec(spec)
+    expect(result.status).toBe("success")
+    const { data, valueAccessor } = result.config!.props
+    expect(data[0][valueAccessor]).toBeCloseTo(expected)
+    const exported = toVegaLiteResult(result.config!)
+    expect(exported.status).toBe("success")
+    const roundTrip = importSpec(exported.spec)
+    expect(roundTrip.status).toBe("success")
+    expect(roundTrip.config!.props.data[0][roundTrip.config!.props.valueAccessor]).toBeCloseTo(expected)
+  })
+
+  it("round trips native boolean-valued bars as the same total", () => {
+    const { data } = booleanMeasureCases[0].spec
+    const exported = toVegaLiteResult(config("BarChart", { data: data.values, categoryAccessor: "x", valueAccessor: "y" }))
+    expect(exported.status).toBe("success")
+    const imported = importSpec(exported.spec)
+    expect(imported.status).toBe("success")
+    const { data: totals, valueAccessor } = imported.config!.props
+    expect(totals).toEqual([{ x: "A", [valueAccessor]: 4 }])
+  })
+
+  it("matches Vega numeric coercion for empty, whitespace, and array measures", () => {
+    const { spec } = booleanMeasureCases[1]
+    const data = { values: [null, "", " ", [], [3], "004", false].map(y => ({ x: "A", y })) }
+    const result = importSpec({ ...spec, data })
+    expect(result.status).toBe("success")
+    const props = result.config!.props
+    expect(props.data[0][props.valueAccessor]).toBeCloseTo(7 / 5)
+  })
+
+  it.each(["min", "max", "count"])("retains valid extrema or row counts alongside invalid entries for %s", aggregate => {
     const input = { mark: "point", data: { values: [{ x: 1, y: null }, { x: 1, y: "bad" }, { x: 1, y: 7 }] }, encoding: {
       x: { field: "x", type: "quantitative" }, y: { field: "y", type: "quantitative", aggregate }
     } }
     const result = importSpec(input)
     expect(result.status).toBe("success")
-    expect(result.config!.props.data).toEqual([{ x: 1, [result.config!.props.yAccessor]: aggregate === "sum" ? 7 : 3 }])
+    expect(result.config!.props.data).toEqual([{ x: 1, [result.config!.props.yAccessor]: aggregate === "count" ? 3 : 7 }])
   })
 
   it.each(["LineChart", "AreaChart", "Scatterplot", "BubbleChart"])("exports inferred UTC dates for a data-only %s", component => {
@@ -316,7 +347,7 @@ describe("strict Vega-Lite boundaries", () => {
     }))
   })
 
-  it.each([...encodingLossExamples, ...temporalLossCases, ...collidingSeries, ...nullableMeasures, ...invalidAggregateGroups])("reports $path on a $spec.mark before rendering", ({ spec, path }) => {
+  it.each([...encodingLossExamples, ...temporalLossCases, ...collidingSeries, ...nullableMeasures, ...invalidAggregateGroups, ...contaminatedSums])("reports $path on a $spec.mark before rendering", ({ spec, path }) => {
     const strict = importSpec(spec)
     expect(strict.status).toBe("refused")
     expect(strict.diagnostics).toContainEqual(expect.objectContaining({ path, severity: "error" }))
