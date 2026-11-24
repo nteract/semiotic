@@ -18,11 +18,13 @@ import {
   GAUNTLET_SURFACE_PAINT
 } from "./gauntletChrome"
 import {
+  type GauntletBodyDatum,
   buildLayout,
   defaultPlacement,
   projectCoreId,
   projectNegativeId
 } from "./gauntletPhysics"
+import { buildGauntletImperativeHandle } from "./gauntletController"
 import { recordGauntletEvent } from "./gauntletEffects"
 import {
   computeGauntletBodyForce,
@@ -249,6 +251,64 @@ describe("GauntletChart physics primitives", () => {
     expect(replayed).toBe(once)
     expect(replayed.eventsApplied).toEqual(["merge-decision"])
     expect(replayed.eventHistory).toHaveLength(1)
+  })
+
+  it("retains each repeated positive body through spawning, popping and adding", () => {
+    const positiveById = new Map([["speed", { id: "speed" }]])
+    const negativeById = new Map()
+    const { initialSpawns, states, layout } = buildGauntletPhysics({
+      data: [{ id: "P", positives: ["speed", "speed"] }], positiveAccessor: "positives",
+      positiveProperties: [...positiveById.values()]
+    })
+    const store = new PhysicsPipelineStore()
+    store.enqueue(initialSpawns)
+    store.tick(0)
+    const inventory = () => store.readBodies().filter(body => (body.datum as GauntletBodyDatum).kind === "gauntlet-positive")
+    expect(inventory()).toHaveLength(2)
+    const first = inventory()[0].id
+    expect(new Set(inventory().map(body => body.x)).size).toBe(2)
+    let [project] = states
+    const effect = (change: Parameters<typeof applyGauntletEffect>[1]) => {
+      spawnBodiesForGauntletEffect({
+        project, effect: change, controls: store.controls(), layout, positiveById, negativeById,
+        popBodies: ids => store.remove(ids)
+      })
+      project = applyGauntletEffect(project, change, {
+        event: { id: "gate", time: 1 }, positiveProperties: positiveById, negativeProperties: negativeById, project
+      })
+      store.tick(0)
+      expect(inventory()).toHaveLength(project.activePositiveIds.length)
+    }
+    effect({ popPositive: ["speed"] })
+    expect(inventory().map(body => body.id)).toEqual([first])
+    effect({ addPositive: { speed: 2 } })
+    expect(inventory()).toHaveLength(3)
+    effect({ popPositive: ["speed", "speed"], addPositive: ["speed"] })
+    expect(inventory()).toHaveLength(2)
+    for (let cycle = 0; cycle < 3; cycle++) {
+      effect({ popPositive: ["speed"] })
+      effect({ addPositive: ["speed"] })
+      const springs = store.snapshot().world.springs
+      expect(springs).toHaveLength(3)
+      for (const body of inventory()) {
+        expect(springs.filter(spring => spring.bodyId === body.id)).toHaveLength(1)
+      }
+    }
+    const controls = store.controls()
+    const handle = buildGauntletImperativeHandle({
+      statesRef: { current: [project] }, setStates: () => {}, elapsedRef: { current: 0 },
+      frameRef: { current: {
+        ...controls, getStore: () => store, getData: controls.readBodies,
+        getRegionState: () => undefined, clearRegionState: () => {}, popBodies: ids => store.remove(ids)
+      } },
+      layout, positiveById, negativeById, projectPlacement: undefined, coreBody: undefined,
+      createState: datum => ({ ...project, datum, activePositiveIds: datum.positives })
+    })
+    handle.update("P", row => ({ ...row, positives: ["speed", "speed", "speed"] }))
+    store.tick(0)
+    expect(inventory()).toHaveLength(3)
+    expect(handle.remove("P")).toHaveLength(1)
+    expect(store.readBodies()).toHaveLength(0)
   })
 
   it("places positives above the core, negatives below it, and only the core is load-bearing", () => {

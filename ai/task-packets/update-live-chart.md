@@ -358,7 +358,7 @@ npx vitest run docs/src/pages/tasks/examples/live-chart.test.tsx
 npx playwright test --config playwright.docs-examples.config.ts integration-tests/docs-examples-task-live.spec.ts
 ```
 
-Recorded execution: 2026-11-24T00:33:47.946Z. Agent-observed execution of repository tests; independent review is not recorded.
+Recorded execution: 2026-11-24T00:47:07.359Z. Agent-observed execution of repository tests; independent review is not recorded.
 
 Not assessed:
 

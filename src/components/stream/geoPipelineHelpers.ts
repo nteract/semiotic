@@ -1,10 +1,12 @@
 /**
  * Pure geo pipeline helpers — projection resolution, accessors, themed defaults,
- * anti-meridian path splitting, and flow-style arc/offset builders.
+ * clipped route projection, and flow-style arc/offset builders.
  * Extracted from GeoPipelineStore so the store class stays orchestration-only.
  */
 
 import {
+  geoClipAntimeridian,
+  geoClipRectangle,
   geoMercator,
   geoEqualEarth,
   geoAlbersUsa,
@@ -12,7 +14,7 @@ import {
   geoNaturalEarth1,
   geoEquirectangular
 } from "d3-geo"
-import type { GeoProjection } from "d3-geo"
+import type { GeoProjection, GeoStream } from "d3-geo"
 import type {
   GeoPipelineConfig,
   ProjectionProp,
@@ -57,21 +59,23 @@ export function resolveProjection(prop: ProjectionProp | undefined): GeoProjecti
 
 // ── Accessor helpers ─────────────────────────────────────────────────
 
-export function makeGeoNumericAccessor(
-  acc: string | ((d: Datum) => number) | undefined,
-  fallback: string
-): (d: Datum) => number {
-  if (!acc) return (d: Datum) => d[fallback]
-  if (typeof acc === "function") return acc
-  return (d: Datum) => d[acc]
+export function geoAccessor<T>(accessor: string | ((datum: Datum) => T) | undefined, fallback: string) {
+  if (typeof accessor === "function") return accessor
+  const key = accessor || fallback
+  return (datum: Datum): T => datum[key]
+}
+
+export function geoCoordinates(config: GeoPipelineConfig) {
+  const longitude = geoAccessor<number>(config.xAccessor, "lon")
+  const latitude = geoAccessor<number>(config.yAccessor, "lat")
+  return (datum: Datum): Position => [longitude(datum), latitude(datum)]
 }
 
 export function makeLineDataAccessor(
   acc: string | ((d: Datum) => Datum[]) | undefined
 ): (d: Datum) => Datum[] {
   if (!acc) return (d: Datum) => d.coordinates || d.data || []
-  if (typeof acc === "function") return acc
-  return (d: Datum) => d[acc]
+  return geoAccessor<Datum[]>(acc, "coordinates")
 }
 
 export function resolveGeoStyle<TDatum extends object>(
@@ -82,9 +86,7 @@ export function resolveGeoStyle<TDatum extends object>(
   // Always return a fresh object. Transition / decay mutate `node.style.opacity`
   // in place on a specific scene node; without a per-call copy, a shared defaults
   // object would leak that mutation across every node that had no user style.
-  if (!styleProp) return { ...defaults }
-  if (typeof styleProp === "function") return { ...defaults, ...styleProp(datum) }
-  return { ...defaults, ...styleProp }
+  return { ...defaults, ...(typeof styleProp === "function" ? styleProp(datum) : styleProp) }
 }
 
 // ── Default styles ───────────────────────────────────────────────────
@@ -124,47 +126,101 @@ export function themedDefaultLine(config: GeoPipelineConfig): Style {
   }
 }
 
-// ── Anti-meridian line splitting ─────────────────────────────────
+type Position = [number, number]
 
-/**
- * Detect screen-space jumps in a projected path that indicate the line
- * has wrapped around the edge of the projection (anti-meridian crossing).
- * Split the path at those jumps and return an array of continuous segments.
- *
- * A jump is detected when consecutive screen-space points are further apart
- * than `threshold` pixels (default: half the viewport width).
- */
-export function splitAntiMeridianPath(
-  screenPath: [number, number][],
-  viewportWidth: number
-): [number, number][][] {
-  if (screenPath.length < 2) return [screenPath]
+function lineFragments<T>(transform: (sink: GeoStream) => GeoStream, position: (d: T) => Position) {
+  let paths: Position[][] = []
+  let path: Position[] = []
+  const stream = transform({
+    polygonStart() {}, polygonEnd() {},
+    lineStart() { path = [] }, point(x, y) { path.push([x, y]) },
+    lineEnd() {
+      if (path.some(([x, y]) => x !== path[0][0] || y !== path[0][1])) paths.push(path)
+    }
+  })
+  return (coordinates: T[]) => {
+    paths = []
+    stream.lineStart()
+    for (const datum of coordinates) stream.point(...position(datum))
+    stream.lineEnd()
+    return paths
+  }
+}
 
-  const threshold = viewportWidth * 0.4
-  const segments: [number, number][][] = []
-  let current: [number, number][] = [screenPath[0]]
+// Composite projections such as Albers USA omit the configurable postclip.
+function screenClip(projection: Partial<Pick<GeoProjection, "postclip">>) {
+  return projection.postclip?.()
+}
 
-  for (let i = 1; i < screenPath.length; i++) {
-    const prev = screenPath[i - 1]
-    const curr = screenPath[i]
-    const dx = Math.abs(curr[0] - prev[0])
-
-    if (dx > threshold) {
-      // Jump detected — end the current segment and start a new one
-      if (current.length >= 2) {
-        segments.push(current)
+// The projection supplies rotated radians. A half-turn still joins its two projected endpoints.
+function clipStraightAntimeridian(sink: GeoStream): GeoStream {
+  let previousLon = NaN
+  let previousLat = NaN
+  return {
+    polygonStart() { sink.polygonStart() },
+    polygonEnd() { sink.polygonEnd() },
+    lineEnd() { sink.lineEnd() },
+    lineStart() {
+      previousLon = NaN
+      sink.lineStart()
+    },
+    point(lon, lat) {
+      const span = Math.abs(lon - previousLon)
+      if (span > Math.PI + 1e-12) {
+        const seam = Math.sign(previousLon) * Math.PI
+        const distanceToSeam = Math.abs(seam - previousLon)
+        const wrappedSpan = distanceToSeam + Math.abs(lon + seam)
+        const fraction = wrappedSpan ? distanceToSeam / wrappedSpan : 0.5
+        const seamLat = previousLat + (lat - previousLat) * fraction
+        sink.point(seam, seamLat)
+        sink.lineEnd()
+        sink.lineStart()
+        sink.point(-seam, seamLat)
       }
-      current = [curr]
-    } else {
-      current.push(curr)
+      sink.point(lon, lat)
+      previousLon = lon
+      previousLat = lat
     }
   }
+}
 
-  if (current.length >= 2) {
-    segments.push(current)
+/** Stream whole routes so clipping preserves endpoints on both sides of a seam. */
+export function createGeoLineProjector(
+  projection: GeoProjection, straight: boolean,
+  position: (d: Datum) => Position, cartogram = false
+) {
+  const extent = projection.clipExtent?.()
+  const postclip = screenClip(projection)
+  const angle = projection.clipAngle?.()
+  const preclip = projection.preclip?.()
+  const straightSeam = straight && (preclip === geoClipAntimeridian || (cartogram && angle))
+  const precision = projection.precision()
+  try {
+    if (postclip) projection.postclip(sink => sink)
+    if (straightSeam) projection.preclip(clipStraightAntimeridian)
+    else if (cartogram && angle) projection.clipAngle(0)
+    if (straight) projection.precision(0)
+    return lineFragments(sink => projection.stream(sink), position)
+  } finally {
+    if (straight) projection.precision(precision)
+    if (straightSeam || (cartogram && angle)) {
+      if (Number.isFinite(angle)) projection.clipAngle(angle)
+      else projection.preclip(preclip)
+    }
+    if (postclip) {
+      if (extent) projection.clipExtent(extent)
+      else projection.postclip(postclip)
+    }
   }
+}
 
-  return segments
+export function clipStyledGeoLine(projection: GeoProjection, width: number, height: number) {
+  const viewport = geoClipRectangle(0, 0, width, height)
+  const postclip = screenClip(projection)
+  return lineFragments<Position>(sink => {
+    const clipped = viewport(sink)
+    return postclip ? postclip(clipped) : clipped
+  }, point => point)
 }
 
 // ── Flow style helpers ───────────────────────────────────────────────
@@ -181,32 +237,16 @@ export function buildArcPath(
 ): [number, number][] {
   const dx = end[0] - start[0]
   const dy = end[1] - start[1]
-  const dist = Math.sqrt(dx * dx + dy * dy)
+  const dist = Math.hypot(dx, dy)
   if (dist === 0) return [start, end]
 
-  // Perpendicular normal (right-hand in screen coords, y-down)
-  const nx = -dy / dist
-  const ny = dx / dist
-
-  // Arc height proportional to distance (capped)
-  const bulge = Math.min(dist * 0.3, 80)
-
-  // Midpoint
-  const mx = (start[0] + end[0]) / 2
-  const my = (start[1] + end[1]) / 2
-
-  // Control point for quadratic bezier
-  const cx = mx + nx * bulge
-  const cy = my + ny * bulge
-
-  // Sample quadratic bezier
-  const path: [number, number][] = []
+  // Quadratic Bézier with its control point offset along the right-hand normal.
+  const bend = Math.min(0.3, 80 / dist)
+  const path: Position[] = []
   for (let i = 0; i <= segments; i++) {
     const t = i / segments
-    const u = 1 - t
-    const x = u * u * start[0] + 2 * u * t * cx + t * t * end[0]
-    const y = u * u * start[1] + 2 * u * t * cy + t * t * end[1]
-    path.push([x, y])
+    const offset = 2 * t * (1 - t) * bend
+    path.push([start[0] + dx * t - dy * offset, start[1] + dy * t + dx * offset])
   }
   return path
 }
@@ -220,63 +260,13 @@ export function buildOffsetGeoPath(
   screenPath: [number, number][],
   strokeWidth: number
 ): [number, number][] {
-  if (screenPath.length < 2) return screenPath
   const offset = strokeWidth / 2 + 1
-
-  const result: [number, number][] = []
-  for (let i = 0; i < screenPath.length; i++) {
-    const p = screenPath[i]
-    // Compute tangent direction at this point
-    let dx: number, dy: number
-    if (i === 0) {
-      dx = screenPath[1][0] - p[0]
-      dy = screenPath[1][1] - p[1]
-    } else if (i === screenPath.length - 1) {
-      dx = p[0] - screenPath[i - 1][0]
-      dy = p[1] - screenPath[i - 1][1]
-    } else {
-      // Average of prev→current and current→next for smoother normals
-      dx = screenPath[i + 1][0] - screenPath[i - 1][0]
-      dy = screenPath[i + 1][1] - screenPath[i - 1][1]
-    }
-    const len = Math.sqrt(dx * dx + dy * dy) || 1
-    // Left-hand normal (same convention as buildOffsetPath)
-    const nx = dy / len
-    const ny = -dx / len
-    result.push([p[0] + nx * offset, p[1] + ny * offset])
-  }
-  return result
-}
-
-/**
- * Build an offset path — shift a straight line perpendicular to its direction.
- * All flows are offset to their left by half their stroke width plus padding.
- * Bidirectional pairs (A->B and B->A) naturally separate because their
- * left-hand normals point to opposite sides.
- */
-export function buildOffsetPath(
-  start: [number, number],
-  end: [number, number],
-  _flow: Datum,
-  _allFlows: Datum[],
-  strokeWidth: number
-): [number, number][] {
-  const dx = end[0] - start[0]
-  const dy = end[1] - start[1]
-  const dist = Math.sqrt(dx * dx + dy * dy)
-  if (dist === 0) return [start, end]
-
-  // Left-hand normal in screen coords (y-down): (dy, -dx) points left of travel
-  const nx = dy / dist
-  const ny = -dx / dist
-
-  // Every flow offsets to its own left by half its stroke width.
-  // Opposite-direction flows naturally separate because their lefts
-  // point to opposite sides.
-  const offset = strokeWidth / 2 + 1
-
-  return [
-    [start[0] + nx * offset, start[1] + ny * offset],
-    [end[0] + nx * offset, end[1] + ny * offset]
-  ]
+  return screenPath.map(([x, y], index) => {
+    const before = screenPath[Math.max(0, index - 1)]
+    const after = screenPath[Math.min(screenPath.length - 1, index + 1)]
+    const dx = after[0] - before[0]
+    const dy = after[1] - before[1]
+    const length = Math.hypot(dx, dy) || 1
+    return [x + offset * dy / length, y - offset * dx / length]
+  })
 }

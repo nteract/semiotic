@@ -245,5 +245,6 @@ export interface GauntletBodyDatum<TDatum extends Datum = Datum> {
   kind: typeof CORE_KIND | typeof POSITIVE_KIND | typeof NEGATIVE_KIND
   projectId: string
   property?: GauntletPropertyDefinition
+  occurrence?: number
   sourceDatum: TDatum
 }

@@ -23,21 +23,13 @@ export function normalizeFitPadding(value: unknown): number {
   )
 }
 
-export function normalizeInitialGeoPipelineConfig(
-  config: GeoPipelineConfig
-): GeoPipelineConfig {
-  return {
-    ...config,
-    fitPadding: normalizeFitPadding(config.fitPadding)
-  }
+export function normalizeInitialGeoPipelineConfig<T extends Partial<GeoPipelineConfig>>(config: T) {
+  return { ...config, fitPadding: normalizeFitPadding(config.fitPadding) }
 }
 
 export function normalizeGeoPipelineConfigUpdate(
   config: Partial<GeoPipelineConfig>
 ): Partial<GeoPipelineConfig> {
   if (!("fitPadding" in config)) return config
-  return {
-    ...config,
-    fitPadding: normalizeFitPadding(config.fitPadding)
-  }
+  return normalizeInitialGeoPipelineConfig(config)
 }

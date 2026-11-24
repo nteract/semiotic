@@ -25,52 +25,22 @@ export function buildFormatter(
 ): (value: number) => string {
   if (typeof format === "function") return format
 
-  const locale = ctx.locale ?? "en-US"
-  const currency = ctx.currency ?? "USD"
-
-  if (format === "currency") {
-    const precision = ctx.precision ?? 2
-    const nf = new Intl.NumberFormat(locale, {
-      style: "currency",
-      currency,
-      maximumFractionDigits: precision,
-      minimumFractionDigits: precision,
-    })
-    return (v) => nf.format(v)
-  }
-
-  if (format === "percent") {
-    const precision = ctx.precision ?? 1
-    const nf = new Intl.NumberFormat(locale, {
-      style: "percent",
-      maximumFractionDigits: precision,
-      minimumFractionDigits: 0,
-    })
-    return (v) => nf.format(v)
-  }
-
-  if (format === "compact") {
-    const precision = ctx.precision ?? 1
-    const nf = new Intl.NumberFormat(locale, {
-      notation: "compact",
-      maximumFractionDigits: precision,
-      minimumFractionDigits: 0,
-    })
-    return (v) => nf.format(v)
-  }
-
-  if (format === "duration") {
-    return (v) => formatDuration(v)
-  }
-
-  // Default — plain number with grouping.
-  const precision = ctx.precision ?? 0
-  const nf = new Intl.NumberFormat(locale, {
-    notation: ctx.notation ?? "standard",
+  if (format === "duration") return formatDuration
+  const currency = format === "currency"
+  const precision = ctx.precision ?? (currency ? 2 : format === "percent" || format === "compact" ? 1 : 0)
+  const options: Intl.NumberFormatOptions = {
     maximumFractionDigits: precision,
-    minimumFractionDigits: 0,
-  })
-  return (v) => nf.format(v)
+    minimumFractionDigits: currency ? precision : 0,
+  }
+  if (currency) {
+    options.style = "currency"
+    options.currency = ctx.currency ?? "USD"
+  } else if (format === "percent") {
+    options.style = "percent"
+  } else {
+    options.notation = format === "compact" ? "compact" : ctx.notation ?? "standard"
+  }
+  return new Intl.NumberFormat(ctx.locale ?? "en-US", options).format
 }
 
 /**
@@ -88,7 +58,7 @@ export function formatDuration(ms: number): string {
   const wholeMs = Math.round(v)
   if (wholeMs < 1000) return `${sign}${wholeMs}ms`
   const seconds = Math.round(v / 10) / 100
-  if (seconds < 60) return `${sign}${trimZero(seconds)}s`
+  if (seconds < 60) return `${sign}${seconds}s`
   const totalS = Math.round(v / 1000)
   if (totalS < 3600) return `${sign}${unitPair(Math.floor(totalS / 60), "m", totalS % 60, "s")}`
   const totalM = Math.round(v / 60_000)
@@ -99,12 +69,6 @@ export function formatDuration(ms: number): string {
 
 function unitPair(major: number, majorUnit: string, minor: number, minorUnit: string): string {
   return minor === 0 ? `${major}${majorUnit}` : `${major}${majorUnit} ${minor}${minorUnit}`
-}
-
-function trimZero(n: number): string {
-  // Round to 2dp; JS's `String(n)` already trims trailing zeros
-  // (`String(1.0) === "1"`, `String(1.25) === "1.25"`).
-  return String(Math.round(n * 100) / 100)
 }
 
 /**
