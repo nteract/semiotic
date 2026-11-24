@@ -75,6 +75,72 @@ describe("buildProcessSankeyScenes validation policy", () => {
     expect(scene.layoutConfig.ribbons.map((ribbon) => ribbon.opacity)).toEqual([0.8, 1])
   })
 
+  it("changes only band outlines on a prepared layout with stacked transfers", () => {
+    const input = {
+      nodes: [{ id: "Intake" }, { id: "Queue" }, { id: "Done" }],
+      edges: [
+        { id: "first", source: "Intake", target: "Queue", startTime: 5, endTime: 15, value: 3 },
+        { id: "second", source: "Intake", target: "Queue", startTime: 25, endTime: 40, value: 7 },
+        { id: "exit", source: "Queue", target: "Done", startTime: 75, endTime: 85, value: 10 }
+      ],
+      domain: [0, 100] as [number, number], plotW: 450, plotH: 300,
+      ribbonLane: "both" as const, edgeOpacity: 0.4, colorOf: () => "#175e48",
+      selectionDatum: "scene" as const, layoutOpts: {}
+    }
+    const straight = buildProcessSankeyScenes(input)
+    const smooth = buildProcessSankeyScenes({ ...input, curves: "smooth" }, straight)
+    expect(smooth.layout).toBe(straight.layout)
+    expect(smooth.layoutConfig.ribbons).toEqual(straight.layoutConfig.ribbons)
+    expect(smooth.layoutConfig.selectionDatum).toBe("scene")
+    expect(smooth.layoutConfig.bands.map(({ pathD: _outline, ...band }) => band))
+      .toEqual(straight.layoutConfig.bands.map(({ pathD: _outline, ...band }) => band))
+    expect(smooth.layoutConfig.bands.find(band => band.id === "Queue")?.pathD).toContain("C")
+    expect(straight.layoutConfig.bands.find(band => band.id === "Queue")?.pathD).not.toContain("C")
+  })
+
+  it("keeps grouped inventory and touching edges at the interval midpoint", () => {
+    const input = {
+      nodes: [{ id: "source" }, { id: "A", group: "stock", xExtent: [0, 8] as [number, number] }, { id: "B", group: "stock", xExtent: [0, 8] as [number, number] }],
+      edges: [
+        { id: "a", source: "source", target: "A", startTime: -1, endTime: 0, value: 1 },
+        { id: "b", source: "source", target: "B", startTime: -1, endTime: 0, value: 1, systemOutTime: 8 },
+        { id: "growth", source: "source", target: "A", startTime: 3, endTime: 4, value: 2 }
+      ],
+      domain: [0, 8] as [number, number], plotW: 800, plotH: 300,
+      curves: "smooth" as const, ribbonLane: "both" as const,
+      edgeOpacity: 0.4, colorOf: () => "green", layoutOpts: {}
+    }
+    const { layout, layoutConfig } = buildProcessSankeyScenes(input)
+    const atMidpoint = ["A", "B"].map((id) => {
+      const path = layoutConfig.bands.find((band) => band.id === id)!.pathD
+      const ys = [...path.matchAll(/(?:^|[ ML])200,([-\d.]+)(?= |$)/g)].map((m) => Number(m[1]))
+      expect(ys).toHaveLength(2)
+      const [top, bottom] = ys.sort((a, b) => a - b)
+      expect(bottom - top).toBeCloseTo(layout!.valueScale)
+      return { top, bottom }
+    }).sort((a, b) => a.top - b.top)
+    expect(atMidpoint[0].bottom).toBeCloseTo(atMidpoint[1].top)
+
+    const lower = layoutConfig.bands.find(band => band.id === "B")!
+    const slot = lower.gradientStubs![0]
+    function spanAtSix(path: string) {
+      const ys = new Set<number>()
+      let previous: number[] = []
+      for (const match of path.matchAll(/([MLC])([^MLCZ]+)/g)) {
+        const [x, y] = match[2].trim().split(/\s+/).at(-1)!.split(",").map(Number)
+        if (x === 600 || (match[1] === "L" && y === previous[1] &&
+          Math.min(x, previous[0]) < 600 && 600 < Math.max(x, previous[0]))) ys.add(y)
+        previous = [x, y]
+      }
+      return [...ys].sort((a, b) => a - b)
+    }
+    const band = spanAtSix(lower.pathD)
+    expect(band).toHaveLength(2)
+    expect(band[1] - band[0]).toBeCloseTo(layout!.valueScale)
+    expect(spanAtSix(slot.pathD)).toEqual(band)
+    expect([slot.x0, slot.x1, slot.from, slot.to]).toEqual([800, 820, 1, 0])
+  })
+
   it("CSR/SSR reserve time-axis height without fixed side gutters", () => {
     const margin = resolveProcessSankeyMarginDefaults(true, true, true, "horizontal")
     expect(margin.left).toBe(20)
@@ -206,6 +272,30 @@ describe("buildProcessSankeyScenes feeder runway", () => {
     expect(verticalPathEnd(feederBand?.pathD ?? "")).toBe(starts[0])
     expect(scene.layout?.nodeData.Feeder.samples.some((sample) => sample.t === 96)).toBe(true)
     expect(edges.every((edge) => edge.startTime === 96)).toBe(true)
+  })
+
+  it("places smooth bonded feeder checkpoints on their visual departure clock", () => {
+    const input = {
+      nodes: [
+        { id: "A", group: "feeders", xExtent: [0, 8] as [number, number] },
+        { id: "B", group: "feeders", xExtent: [0, 8] as [number, number] },
+        { id: "Sink", xExtent: [0, 10] as [number, number] }
+      ],
+      edges: ["A", "B"].map(source => ({ id: source + "-sink", source, target: "Sink", value: 1, startTime: 8, endTime: 9 })),
+      domain: [0, 10] as [number, number], plotH: 100, plotW: 300,
+      orientation: "vertical" as const, ribbonLane: "both" as const, ribbonMinRun: 90,
+      edgeOpacity: 0.5, colorOf: () => "#123456", layoutOpts: { groupPadding: 0 }
+    }
+    const straight = buildProcessSankeyScenes(input)
+    const smooth = buildProcessSankeyScenes({ ...input, curves: "smooth" })
+    expect(smooth.layout).toEqual(straight.layout)
+    expect(smooth.layoutConfig.ribbons).toEqual(straight.layoutConfig.ribbons)
+    const start = smooth.layoutConfig.ribbons[0].bezier?.points?.[0].y
+    expect(start).toBe(0)
+    for (const node of ["A", "B"]) {
+      const band = smooth.layoutConfig.bands.find(band => band.id === node)!
+      expect(verticalPathEnd(band.pathD)).toBe(start)
+    }
   })
 
   it("keeps a lockstep bonded feeder group contiguous through its visual handoff", () => {

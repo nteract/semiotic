@@ -1,3 +1,4 @@
+import { getEdgePath2D } from "../networkPath2D"
 import type {
   NetworkSceneEdge,
   NetworkBezierEdge,
@@ -7,22 +8,6 @@ import type {
 import { resolveCSSColor } from "./resolveCSSColor"
 import { hasPulse } from "./renderPulse"
 import { resolveCanvasFill } from "./canvasRenderHelpers"
-
-/**
- * Lazily build (and cache) a Path2D for an edge. Re-parses only when `pathD`
- * actually changes. Shared between the renderer and hit tester via the
- * `_cachedPath2D` / `_cachedPath2DSource` fields on edge nodes.
- */
-function getOrBuildEdgePath2D(
-  edge: { pathD: string; _cachedPath2D?: Path2D; _cachedPath2DSource?: string }
-): Path2D {
-  if (edge._cachedPath2D && edge._cachedPath2DSource === edge.pathD) {
-    return edge._cachedPath2D
-  }
-  edge._cachedPath2D = new Path2D(edge.pathD)
-  edge._cachedPath2DSource = edge.pathD
-  return edge._cachedPath2D
-}
 
 /**
  * Canvas painter for all network edge types.
@@ -53,7 +38,9 @@ export function networkEdgeRenderer(
       continue
     if (edge.type === "line") {
       if (edge.style.stroke === "none" || (edge.style.strokeWidth ?? 1) <= 0) continue
-    } else if (!edge.pathD) continue
+    }
+    const path = edge.type === "line" || !edge.pathD ? null : getEdgePath2D(edge)
+    if (edge.type !== "line" && !path) continue
 
     const baseAlpha = ctx.globalAlpha
     ctx.save()
@@ -67,8 +54,7 @@ export function networkEdgeRenderer(
       ctx.moveTo(edge.x1, edge.y1)
       ctx.lineTo(edge.x2, edge.y2)
       strokeEdge(ctx, edge, baseAlpha)
-    } else {
-      const path = getOrBuildEdgePath2D(edge)
+    } else if (path) {
       // Curved paths retain their stroke-before-fill order; bands outline last.
       if (edge.type === "curved") strokeEdge(ctx, edge, baseAlpha, path)
       fillEdge(ctx, edge, baseAlpha, path)

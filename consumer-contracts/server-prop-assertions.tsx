@@ -29,6 +29,31 @@ const opacity = (node: Element) =>
     node.getAttribute("fill-opacity") ?? (node as SVGElement).style.fillOpacity
   )
 
+function processSankeyCurves() {
+  const props = {
+    nodes: [{ id: "Intake" }, { id: "Queue" }, { id: "Done" }],
+    edges: [
+      { id: "first", source: "Intake", target: "Queue", startTime: 5, endTime: 15, value: 3 },
+      { id: "second", source: "Intake", target: "Queue", startTime: 25, endTime: 40, value: 7 },
+      { id: "exit", source: "Queue", target: "Done", startTime: 75, endTime: 85, value: 10 }
+    ],
+    domain: [0, 100],
+    width: 500,
+    height: 280
+  }
+  const paths = (curves?: string) =>
+    filledPaths(render("ProcessSankey", { ...props, curves }).doc)
+      .map(path => path.getAttribute("d")!)
+  const original = paths()
+  const smooth = paths("smooth")
+  expect(paths("straight")).toEqual(original)
+  expect(smooth).toHaveLength(original.length)
+  const ribbons = original.filter(d => d.includes("C"))
+  expect(ribbons).toHaveLength(3)
+  expect(smooth).toEqual(expect.arrayContaining(ribbons))
+  expect(smooth.some(d => d.includes("C") && !original.includes(d))).toBe(true)
+}
+
 function lineArea(context: Context) {
   const props: Record<string, unknown> = {
     ...propsFor(context),
@@ -432,6 +457,7 @@ function atlasComparison({ contract }: Context) {
 // The test runner also checks exact agreement before executing every contract.
 export const serverPropAssertions: Record<string, (context: Context) => void> =
   {
+    "process-sankey-curves": processSankeyCurves,
     "MotifBraidChart-comparison": atlasComparison,
     "DependencyForestChart-comparison": atlasComparison,
     "FlowCircuitChart-comparison": atlasComparison,

@@ -9,6 +9,11 @@ import {
 import type { ProcessSankeyLayout } from "./processSankeyTypes"
 
 describe("ProcessSankey layout quality product (M10)", () => {
+  it("diagnoses missing edge records without accessing their timestamps", () => {
+    expect(diagnoseProcessSankeyProps({ domain: [0, 1], edges: [null] }))
+      .toContainEqual(expect.objectContaining({ code: "PROCESS_SANKEY_EDGE_TIMES" }))
+  })
+
   it("flags missing domain on props", () => {
     const findings = diagnoseProcessSankeyProps({ edges: [{ source: "A", target: "B" }] })
     expect(findings.some((f) => f.code === "PROCESS_SANKEY_MISSING_DOMAIN")).toBe(true)

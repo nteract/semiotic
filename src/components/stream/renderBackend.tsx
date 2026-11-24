@@ -140,6 +140,14 @@ export function renderSceneWithBackend<Node extends SceneLike>(args: {
   )
 }
 
+/** Paint live marks without allocating per-mark fallback closures or evidence entries. */
+export function renderSceneElements<Node extends SceneLike>(
+  nodes: Node[], renderMode: SceneRenderMode<NoInfer<Node>> | undefined,
+  fallback: (node: Node, index: number) => React.ReactNode
+) {
+  return nodes.map((node, index) => renderSceneElementWithBackend(node, index, renderMode, fallback))
+}
+
 export interface RenderedSceneEntry<Node> {
   node: Node
   element: React.ReactNode

@@ -54,6 +54,22 @@ export function adventureSuggestionInput(componentName: string, props: ChartProp
   return undefined
 }
 
+export function adventureSuggestionRows(componentName: string, rows: readonly Row[]) {
+  if (componentName !== "GauntletChart") return rows
+  return rows.map((row) => ({
+    ...row,
+    positives: [
+      row.denominatorPresent ? "denominator" : null,
+      row.freshEvidence ? "freshness" : null,
+      row.lineageComplete ? "lineage" : null,
+    ].filter(Boolean),
+    negatives:
+      row.denominatorPresent && row.freshEvidence && row.lineageComplete
+        ? []
+        : ["caveat"],
+  }))
+}
+
 function numericDateRows(rows: readonly Row[], accessor: unknown) {
   if (typeof accessor !== "string") return rows
   return rows.map((row) => {
@@ -136,18 +152,7 @@ export function adventureDiagnosticProps(
   if (componentName === "GauntletChart") {
     return {
       title: props.title,
-      data: rows.map((row) => ({
-        ...row,
-        positives: [
-          row.denominatorPresent ? "denominator" : null,
-          row.freshEvidence ? "freshness" : null,
-          row.lineageComplete ? "lineage" : null,
-        ].filter(Boolean),
-        negatives:
-          row.denominatorPresent && row.freshEvidence && row.lineageComplete
-            ? []
-            : ["caveat"],
-      })),
+      data: adventureSuggestionRows(componentName, rows),
       positiveProperties: [
         { id: "denominator", label: "Denominator", short: "D", color: "#55f6ff" },
         { id: "freshness", label: "Freshness", short: "F", color: "#ffd166" },

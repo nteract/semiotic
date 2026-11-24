@@ -185,7 +185,7 @@ function normalizePositiveInteger(
   if (!Number.isFinite(next) || next <= 0) {
     throw new RangeError(`${label} must be a positive number, got ${String(next)}`)
   }
-  return Math.floor(next)
+  return Math.max(1, Math.floor(next))
 }
 
 function warnSinkError(label: string, err: unknown): void {
@@ -739,12 +739,7 @@ function ensureStore(): ConversationArcStoreInternal | null {
 export function enableConversationArc(
   options: EnableConversationArcOptions = {}
 ): ConversationArcStore {
-  const capacity = options.capacity ?? 1000
-  if (!Number.isFinite(capacity) || capacity <= 0) {
-    throw new RangeError(
-      `enableConversationArc: capacity must be a positive number, got ${String(capacity)}`
-    )
-  }
+  const capacity = normalizePositiveInteger(options.capacity, DEFAULT_MAX_EVENTS, "enableConversationArc: capacity")
   if (!store) {
     store = {
       enabled: true,

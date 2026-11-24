@@ -254,6 +254,18 @@ describe("conversationArc — ring buffer", () => {
     expect(events.map((e) => e.component)).toEqual(["C3", "C4", "C5"])
   })
 
+  it("retains whole events for fractional capacities on enable, resize, and replay", () => {
+    const store = enableConversationArc({ capacity: 2.8 })
+    expect(store.capacity).toBe(2)
+    for (const component of ["A", "B", "C"]) store.record({ type: "chart-rendered", component })
+    const saved = store.getEvents()
+    expect(saved).toHaveLength(2)
+    enableConversationArc({ capacity: 0.5 })
+    expect(store.capacity).toBe(1)
+    expect(store.getEvents()).toEqual(saved.slice(-1))
+    expect(loadConversationArc(saved, { capacity: 0.5 })).toEqual(saved.slice(-1))
+  })
+
   it("rejects non-positive capacity", () => {
     expect(() => enableConversationArc({ capacity: 0 })).toThrow(/positive/)
     expect(() => enableConversationArc({ capacity: -5 })).toThrow(/positive/)

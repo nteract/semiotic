@@ -108,8 +108,6 @@ export function explainProcessSankeyLayout(
 export function diagnoseProcessSankeyProps(props: Record<string, unknown>): Diagnosis[] {
   const out: Diagnosis[] = []
   const domain = props.domain
-  const start = Array.isArray(domain) ? coerceUtcTimeValue(domain[0]) : NaN
-  const end = Array.isArray(domain) ? coerceUtcTimeValue(domain[1]) : NaN
   if (domain == null) {
     out.push({
       severity: "error",
@@ -120,9 +118,7 @@ export function diagnoseProcessSankeyProps(props: Record<string, unknown>): Diag
   } else if (
     !Array.isArray(domain) ||
     domain.length !== 2 ||
-    !Number.isFinite(start) ||
-    !Number.isFinite(end) ||
-    start > end
+    !(coerceUtcTimeValue(domain[0]) <= coerceUtcTimeValue(domain[1]))
   ) {
     out.push({
       severity: "error",
@@ -132,10 +128,10 @@ export function diagnoseProcessSankeyProps(props: Record<string, unknown>): Diag
     })
   }
 
-  const edges = props.edges
-  if (Array.isArray(edges) && edges.length > 0) {
-    const sample = edges[0] as Record<string, unknown>
-    if (sample.startTime == null || sample.endTime == null) {
+  const edges = Array.isArray(props.edges) ? props.edges : []
+  if (edges.length > 0) {
+    const sample = edges[0]
+    if (sample?.startTime == null || sample.endTime == null) {
       out.push({
         severity: "warning",
         code: "PROCESS_SANKEY_EDGE_TIMES",
@@ -156,8 +152,7 @@ export function diagnoseProcessSankeyProps(props: Record<string, unknown>): Diag
     })
   }
 
-  const edgeCount = Array.isArray(edges) ? edges.length : 0
-  if (edgeCount >= 80 && props.layoutExecution == null && props.packing !== "off") {
+  if (edges.length >= 80 && props.layoutExecution == null && props.packing !== "off") {
     out.push({
       severity: "warning",
       code: "PROCESS_SANKEY_WORKER_HINT",

@@ -90,6 +90,7 @@ import {
   formatMcpOutputLimitError,
   inspectMcpOutputLimit,
   resolveMcpRenderOutputLimits,
+  diagnosticIdentifier,
   truncateUtf8
 } from "./mcp-render-output-limits"
 import { renderMcpChartOnce } from "./mcp-render-chart"
@@ -1432,12 +1433,12 @@ async function getSchemaHandler(args: {
       content: [
         {
           type: "text" as const,
-          text: `Unknown component "${component}". Available: ${available.join(", ")}`
+          text: `Unknown component "${diagnosticIdentifier(component)}". Available: ${available.join(", ")}`
         }
       ],
       structuredContent: profileResult({
         status: "unknown-component",
-        component,
+        component: diagnosticIdentifier(component),
         availableComponents
       }),
       isError: true
@@ -1575,7 +1576,7 @@ async function renderChartHandler(
       content: [
         {
           type: "text" as const,
-          text: `Unknown component "${component}". Available: ${componentNames.join(", ")}`
+          text: `Unknown component "${diagnosticIdentifier(component)}". Available: ${componentNames.join(", ")}`
         }
       ],
       isError: true
@@ -2163,7 +2164,7 @@ async function applyThemeHandler(args: { name?: string }): Promise<ToolResult> {
       content: [
         {
           type: "text" as const,
-          text: `Unknown theme "${name}". Available: ${THEME_PRESET_NAMES.join(", ")}`
+          text: `Unknown theme "${diagnosticIdentifier(name)}". Available: ${THEME_PRESET_NAMES.join(", ")}`
         }
       ],
       isError: true
@@ -2296,7 +2297,7 @@ async function proposeChartVariantsHandler(args: {
       content: [
         {
           type: "text",
-          text: `No chart capability registered for "${component}". Call suggestCharts first to pick from known capability components.`
+          text: `No chart capability registered for "${diagnosticIdentifier(component)}". Call suggestCharts first to pick from known capability components.`
         }
       ],
       isError: true
@@ -2461,7 +2462,7 @@ async function suggestTokenEncodingHandler(args: {
       content: [
         {
           type: "text",
-          text: `Invalid 'taskIntent': "${args.taskIntent}". Expected one of: ${ALLOWED_TOKEN_TASK_INTENTS.join(", ")}.`
+          text: `Invalid 'taskIntent': "${diagnosticIdentifier(args.taskIntent)}". Expected one of: ${ALLOWED_TOKEN_TASK_INTENTS.join(", ")}.`
         }
       ],
       isError: true
@@ -2744,7 +2745,7 @@ async function repairChartConfigHandler(args: {
     }
   } else {
     lines.push(
-      `❓ No capability registered for "${component}". Closest matches:`
+      `❓ No capability registered for "${diagnosticIdentifier(component)}". Closest matches:`
     )
     for (let i = 0; i < result.alternatives.length; i++) {
       const s = result.alternatives[i]
@@ -2756,7 +2757,9 @@ async function repairChartConfigHandler(args: {
 
   return {
     content: [{ type: "text", text: lines.join("\n") }],
-    structuredContent: result as unknown as Record<string, unknown>
+    structuredContent: result.status === "unknown"
+      ? { ...result, component: diagnosticIdentifier(component) }
+      : result as unknown as Record<string, unknown>
   }
 }
 
@@ -3745,7 +3748,7 @@ function createServer(
       const component = canonicalComponentName(String(requested ?? ""))
       if (!component) {
         throw new Error(
-          `Unknown Semiotic component schema: ${String(requested ?? "")}`
+          `Unknown Semiotic component schema: ${diagnosticIdentifier(String(requested ?? ""))}`
         )
       }
       return textResource(

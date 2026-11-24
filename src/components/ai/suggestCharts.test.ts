@@ -257,6 +257,24 @@ describe("suggestCharts", () => {
     expect(suggestions.find((s) => s.component === "StackedBarChart")).toBeUndefined()
   })
 
+  it("suggests a gauntlet only for authored property inventories", () => {
+    const options = { allow: ["GauntletChart"], includeVariants: false }
+    expect(suggestCharts([{ id: "A", value: 4 }, { id: "B", cost: 2 }], options)).toEqual([])
+    expect(suggestCharts([{ id: "A", positives: [null, 4, "  "], negatives: "cost" }], options)).toEqual([])
+    const rows = [
+      { id: "A", positives: ["speed", "speed"], negatives: ["risk"] },
+      { id: "B", positives: ["quality"], negatives: ["delay", "risk"] },
+      { id: "C" }
+    ]
+    const [suggestion] = suggestCharts(rows, options)
+    expect(suggestion.props.data).toEqual([rows[0], rows[1], { id: "C", positives: [], negatives: [] }])
+    expect(suggestion.props.positiveProperties).toEqual([{ id: "speed" }, { id: "quality" }])
+    expect(suggestion.props.negativeProperties).toEqual([{ id: "risk" }, { id: "delay" }])
+    const [oneSided] = suggestCharts([{ id: "A", negatives: ["risk"] }, { id: "B" }], options)
+    expect(oneSided.props.positiveProperties).toEqual([])
+    expect(oneSided.props.data).toEqual([{ id: "A", positives: [], negatives: ["risk"] }, { id: "B", positives: [], negatives: [] }])
+  })
+
   it("buildProps returns runnable accessor configuration", () => {
     const suggestions = suggestCharts(temporalMultiSeries, { intent: "trend", allow: ["LineChart"], includeVariants: false })
     const top = suggestions[0]

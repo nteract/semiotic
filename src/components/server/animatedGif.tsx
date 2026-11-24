@@ -32,7 +32,7 @@ provideXYTransitionEngine(xyTransitionEngine)
 import { OrdinalPipelineStore } from "../stream/OrdinalPipelineStore"
 import type { OrdinalPipelineConfig } from "../stream/ordinalTypes"
 import { xySceneNodeToSVG } from "../stream/SceneToSVGXY"
-import { renderSceneWithBackend } from "../stream/renderBackend"
+import { renderSceneElements } from "../stream/renderBackend"
 import { renderOrdinalSceneListWithBackend } from "../stream/ordinalSceneSVG"
 import type { SceneNode, SceneRenderMode } from "../stream/types"
 import type { OrdinalSceneNode } from "../stream/ordinalTypes"
@@ -528,12 +528,7 @@ function renderGifFrameSVG(
         renderMode: renderMode as SceneRenderMode<OrdinalSceneNode> | undefined,
         idPrefix: props.idPrefix
       }).map(entry => entry.element)
-    : (scene as SceneNode[]).map((node, index) => renderSceneWithBackend({
-        node,
-        index,
-        renderMode: renderMode as SceneRenderMode<SceneNode> | undefined,
-        fallback: () => xySceneNodeToSVG(node, index)
-      })).filter(Boolean)
+    : renderSceneElements(scene as SceneNode[], renderMode as SceneRenderMode<SceneNode> | undefined, xySceneNodeToSVG).filter(Boolean)
   // XY thresholds use the explicit extent, then the store's computed scale.
   const annots = family === "xy" ? renderFrameAnnotations(
     props.annotations,

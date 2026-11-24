@@ -9,7 +9,7 @@
     "packageName": "semiotic",
     "packageVersion": "3.14.1",
     "channel": "source",
-    "sourceRevision": "sha256:473f317bf1a1b3adadddb75045cd9e044a6162824d7589d6fdc6cc46ea6bcf8f",
+    "sourceRevision": "sha256:c8286c8f6a33fb7259c95ca92bda46fe408597d3f1369a0ea600cec0ce15f1c2",
     "revisionKind": "content-digest",
     "revisionScope": "This task's definition, declared examples and checks, task pages and tooling, and the selected public contract. Runtime and test-harness contents are compared when recorded evidence is evaluated; they are not part of this identifier.",
     "contract": {
@@ -23,7 +23,7 @@
       ]
     },
     "taskSources": {
-      "digest": "sha256:3c070823036c8505e984abbf792a2e74ce163dc720016423595c64ccfd9fa89b",
+      "digest": "sha256:343b8c0b85a66e3bdf94d86f11b788a694a02f355332e736d87aae2e190f896c",
       "fileCount": 28
     },
     "availability": "Verified source checkout guidance; npm package, hosted site and MCP deployment identities require separate checks."
@@ -175,7 +175,7 @@
     "owner": "Semiotic repository maintainers",
     "status": "supported-in-scope",
     "observed": {
-      "verifiedAt": "2026-11-24T00:58:37.933Z",
+      "verifiedAt": "2026-11-24T01:02:35.724Z",
       "environment": {
         "node": "v22.22.1",
         "platform": "darwin",
@@ -183,8 +183,8 @@
         "browser": "Playwright Chromium"
       },
       "runtime": {
-        "digest": "sha256:64fed478de28e9b341438c295c4fbb58adcd708be4f25c41edfa8da608a97e3f",
-        "fileCount": 1541
+        "digest": "sha256:472817d49b665c1574032068fc7e358590207821a8a2b1fc2d1db95f36e1268b",
+        "fileCount": 1544
       },
       "harness": {
         "digest": "sha256:acdb4ff3e31197059c1113897147528fabf10409377b136a5a1e90b54f48ef56",

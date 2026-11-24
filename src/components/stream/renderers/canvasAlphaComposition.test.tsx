@@ -198,6 +198,30 @@ edgeCases.push([
     _gradient: { x0: 0, x1: 100, from: 1, to: 0 }
   }
 ])
+it("continues painting later edges when a retained path cannot be parsed", () => {
+  vi.stubGlobal("Path2D", class { constructor() { throw new Error("invalid path") } })
+  const { ctx, strokes } = recordingContext(1)
+  const line: NetworkSceneEdge = { type: "line", x1: 0, y1: 0, x2: 1, y2: 1, style, datum: {} }
+  networkEdgeRenderer(ctx, [{ type: "bezier", pathD: "invalid", style, datum: {} }, line])
+  expect(strokes).toHaveLength(1)
+})
+
+it("preserves an unfilled lifecycle edge and its stroke in Canvas and SVG", () => {
+  const edge: NetworkSceneEdge = {
+    type: "bezier", pathD: path, style: { ...style, fill: "none" }, datum: {},
+    _gradient: { x0: 0, x1: 100, from: 1, to: 0 }
+  }
+  const { ctx, fills, strokes } = recordingContext(1)
+  networkEdgeRenderer(ctx, [edge])
+  expect(fills).toHaveLength(0)
+  expect(strokes).toHaveLength(1)
+  const html = renderToStaticMarkup(<svg>{networkSceneEdgeToSVG(edge, 0)}</svg>)
+  const doc = new DOMParser().parseFromString(html, "image/svg+xml")
+  expect(doc.querySelector("linearGradient")).toBeNull()
+  expect(doc.querySelector("path")?.getAttribute("fill")).toBe("none")
+  expect(doc.querySelector("path")?.getAttribute("stroke")).toBe(style.stroke)
+})
+
 const geo: GeoSceneNode = {
   type: "geoarea",
   pathData: path,
@@ -402,12 +426,23 @@ describe.each(cases)(
           alpha *= Number(attribute(current, "opacity") ?? 1)
         return alpha
       }
-      if (filled)
+      if (name === "gradient bezier") {
+        const mark = marks.find(mark => mark.getAttribute("fill")?.startsWith("url(#"))
+        expect(mark).toBeDefined()
+        const gradient = doc.getElementById(mark!.getAttribute("fill")!.slice(5, -1))
+        expect(gradient?.localName).toBe("linearGradient")
+        const stops = Array.from(gradient!.querySelectorAll("stop"), stop => [
+          stop.getAttribute("stop-color"),
+          effective(mark!, "fill") * Number(stop.getAttribute("stop-opacity"))
+        ])
+        expect(stops).toEqual([["#336699", 0.2], ["#336699", 0]])
+      } else if (filled) {
         expect(
           marks
             .filter((m) => m.getAttribute("fill") === "#336699")
             .map((m) => effective(m, "fill"))
         ).toContainEqual(0.2)
+      }
       expect(
         marks
           .filter((m) => m.getAttribute("stroke") === "#112233")

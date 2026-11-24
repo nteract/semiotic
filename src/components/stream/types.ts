@@ -1010,6 +1010,8 @@ export interface StreamXYFrameProps<T = Datum>
 
   // ── Accessibility ─────────────────────────────────
   /** Render a visually-hidden data table from the scene graph for screen readers */
+  /** Tab order for the interactive frame and its brush. Defaults to 0. */
+  tabIndex?: number
   accessibleTable?: AccessibleTableProp
   /** Accessible description overriding the auto-generated aria-label on the chart container */
   description?: string

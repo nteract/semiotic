@@ -1,8 +1,8 @@
+import { extractGeoNavPoints } from "./geoKeyboardNavigation"
 import {
   extractXYNavPoints,
   extractOrdinalNavPoints,
   extractNetworkNavPoints,
-  extractGeoNavPoints,
   nextIndex,
   navPointToHover,
   buildNavGraph,

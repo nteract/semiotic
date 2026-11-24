@@ -1821,6 +1821,7 @@ interface-member ProcessSankeyIssue::property::target = optional target: string 
 interface-member ProcessSankeyProps::property::axisTicks = optional axisTicks: ProcessSankeyTick[] | undefined
 interface-member ProcessSankeyProps::property::colorBy = optional colorBy: ChartAccessor<TNode, string> | undefined
 interface-member ProcessSankeyProps::property::colorScheme = optional colorScheme: Record<string, string> | string | string[] | undefined
+interface-member ProcessSankeyProps::property::curves = optional curves: "smooth" | "straight" | undefined
 interface-member ProcessSankeyProps::property::domain = required domain: [ProcessSankeyTimeLike, ProcessSankeyTimeLike]
 interface-member ProcessSankeyProps::property::edgeIdAccessor = optional edgeIdAccessor: ChartAccessor<TEdge, string> | undefined
 interface-member ProcessSankeyProps::property::edgeOpacity = optional edgeOpacity: ((edge: TEdge) => number) | number | undefined
@@ -2929,6 +2930,7 @@ interface-member StreamXYFrameProps::property::svgPreRenderers = optional svgPre
 interface-member StreamXYFrameProps::property::swarmStyle = optional swarmStyle: SwarmStyle | undefined
 interface-member StreamXYFrameProps::property::symbolAccessor = optional symbolAccessor: ((d: T) => string) | string | undefined
 interface-member StreamXYFrameProps::property::symbolMap = optional symbolMap: Record<string, import("./symbolPath").NetworkSymbolName> | undefined
+interface-member StreamXYFrameProps::property::tabIndex = optional tabIndex: number | undefined
 interface-member StreamXYFrameProps::property::tickFormatTime = optional tickFormatTime: ((value: number) => string) | undefined
 interface-member StreamXYFrameProps::property::tickFormatValue = optional tickFormatValue: ((value: number) => string) | undefined
 interface-member StreamXYFrameProps::property::timeAccessor = optional timeAccessor: ((d: T) => CoercibleNumber) | string | undefined

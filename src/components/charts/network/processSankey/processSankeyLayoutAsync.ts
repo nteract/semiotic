@@ -82,6 +82,7 @@ export function toProcessSankeyWorkerRequest(
       plotW: input.plotW,
       plotH: input.plotH,
       orientation: input.orientation,
+      curves: input.curves,
       ribbonLane: input.ribbonLane,
       ribbonMinRun: input.ribbonMinRun,
       // Function opacity resolvers cannot cross the worker boundary; the

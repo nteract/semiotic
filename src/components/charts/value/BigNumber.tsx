@@ -19,15 +19,15 @@ import {
   useState
 } from "react"
 
+import { SR_ONLY_STYLE } from "../../screenReaderStyles"
 import { useReducedMotion } from "../../stream/useMediaPreferences"
 import { useWasHydratingFromSSR } from "../../stream/useHydration"
 import {
-  buildFormatter,
   decorate,
   formatSignedDelta,
   isFormattedZero
 } from "./formatting"
-import { useTargetPresentation } from "./targetPresentation"
+import { useTargetPresentation, useValueFormatter } from "./targetPresentation"
 import { colorForLevel, resolveThreshold } from "./thresholdSparkline"
 import type {
   BigNumberHandle,
@@ -51,21 +51,16 @@ interface ModeDefaults {
   valueSize: number
   deltaSize: number
   padding: { top: number; right: number; bottom: number; left: number }
-  background: string
-  border: boolean
-  showHeader: boolean
-  showDelta: boolean
-  /** Whether to render `trendSlot` content if provided. Inline / thumbnail
-   *  modes suppress the wide chart area. */
-  showTrend: boolean
-  /** Whether to render `chartSlot` content if provided. Inline / thumbnail
-   *  modes suppress the square chart area. */
-  showChart: boolean
+  expanded: boolean
   /** Default reserved square size (pixels) for `chartSlot`. Sized for
    *  sparkline scale by default — roughly two line-heights — so the
    *  decoration sits in the corner without competing with the focal value.
    *  Override per-card via the `chartSize` prop. */
   chartSize: number
+}
+
+function cardPadding(vertical: number, horizontal = vertical) {
+  return { top: vertical, right: horizontal, bottom: vertical, left: horizontal }
 }
 
 const MODE_DEFAULTS: Record<BigNumberMode, ModeDefaults> = {
@@ -76,13 +71,8 @@ const MODE_DEFAULTS: Record<BigNumberMode, ModeDefaults> = {
     captionSize: 11,
     valueSize: 40,
     deltaSize: 13,
-    padding: { top: 14, right: 16, bottom: 14, left: 16 },
-    background: "var(--semiotic-surface, transparent)",
-    border: true,
-    showHeader: true,
-    showDelta: true,
-    showTrend: true,
-    showChart: true,
+    padding: /* @__PURE__ */ cardPadding(14, 16),
+    expanded: true,
     chartSize: 44
   },
   presentation: {
@@ -92,13 +82,8 @@ const MODE_DEFAULTS: Record<BigNumberMode, ModeDefaults> = {
     captionSize: 14,
     valueSize: 96,
     deltaSize: 18,
-    padding: { top: 32, right: 32, bottom: 32, left: 32 },
-    background: "var(--semiotic-surface, transparent)",
-    border: true,
-    showHeader: true,
-    showDelta: true,
-    showTrend: true,
-    showChart: true,
+    padding: /* @__PURE__ */ cardPadding(32),
+    expanded: true,
     chartSize: 80
   },
   inline: {
@@ -108,13 +93,8 @@ const MODE_DEFAULTS: Record<BigNumberMode, ModeDefaults> = {
     captionSize: 0,
     valueSize: 0, // inherits ambient font-size
     deltaSize: 0,
-    padding: { top: 0, right: 0, bottom: 0, left: 0 },
-    background: "transparent",
-    border: false,
-    showHeader: false,
-    showDelta: true,
-    showTrend: false,
-    showChart: false,
+    padding: /* @__PURE__ */ cardPadding(0),
+    expanded: false,
     chartSize: 0
   },
   thumbnail: {
@@ -124,15 +104,27 @@ const MODE_DEFAULTS: Record<BigNumberMode, ModeDefaults> = {
     captionSize: 0,
     valueSize: 22,
     deltaSize: 0,
-    padding: { top: 4, right: 6, bottom: 4, left: 6 },
-    background: "transparent",
-    border: false,
-    showHeader: false,
-    showDelta: false,
-    showTrend: false,
-    showChart: false,
+    padding: /* @__PURE__ */ cardPadding(4, 6),
+    expanded: false,
     chartSize: 0
   }
+}
+
+interface ValueSnapshot {
+  rows: BigNumberPushInput[]
+  value: number | null
+  comparison: number | null
+  time: number | null
+}
+
+function emptySnapshot(): ValueSnapshot {
+  return { rows: [], value: null, comparison: null, time: null }
+}
+
+function normalisePushInput(input: number | BigNumberPushInput): BigNumberPushInput {
+  const row = typeof input === "number" ? { value: input } : input
+  const { time } = row
+  return { ...row, time: typeof time === "number" ? time : time instanceof Date ? time.getTime() : Date.now() }
 }
 
 // ── Slot resolver ────────────────────────────────────────────────────
@@ -157,76 +149,34 @@ function useTweenedValue(
 ): number {
   const [displayed, setDisplayed] = useState<number>(() => initialValue)
   const displayedRef = useRef<number>(initialValue)
-  const rafRef = useRef<number | null>(null)
-  const fromRef = useRef<number>(target)
-  const startRef = useRef<number>(0)
   const animationEnabled = Boolean(animate)
-  const configuredDuration =
-    typeof animate === "object" ? animate.duration : undefined
-  const duration =
-    typeof configuredDuration === "number" && Number.isFinite(configuredDuration)
-      ? Math.max(0, configuredDuration)
-      : 300
-  const easing: "linear" | "ease-out" =
-    typeof animate === "object" && animate.easing === "linear"
-      ? "linear"
-      : "ease-out"
-  // Track the latest target without re-creating the RAF callback on every
-  // setDisplayed re-render — the tween reads tweenTargetRef.current to
-  // know where to land. A new target re-arms the animation via the
-  // outer useEffect.
-  const tweenTargetRef = useRef<number>(target)
-
+  const options = typeof animate === "object" ? animate : undefined
+  const duration = Number.isFinite(options?.duration) ? Math.max(0, options!.duration!) : 300
+  const linear = options?.easing === "linear"
   useEffect(() => {
     const updateDisplayed = (next: number) => {
       displayedRef.current = next
       setDisplayed(next)
     }
 
-    if (!Number.isFinite(target)) {
+    if (!Number.isFinite(target) || !animationEnabled || reducedMotion || duration === 0) {
       updateDisplayed(target)
       return
     }
-    if (!animationEnabled || reducedMotion) {
-      updateDisplayed(target)
-      return
-    }
-    if (duration === 0) {
-      updateDisplayed(target)
-      return
-    }
-
-    fromRef.current = displayedRef.current
-    tweenTargetRef.current = target
-    startRef.current =
-      typeof performance !== "undefined" ? performance.now() : Date.now()
-
-    const ease =
-      easing === "linear"
-        ? (t: number) => t
-        : (t: number) => 1 - Math.pow(1 - t, 3)
-
+    const from = displayedRef.current
+    const start = typeof performance !== "undefined" ? performance.now() : Date.now()
+    let request: number
     const tick = (now: number) => {
-      const t = Math.min(1, (now - startRef.current) / duration)
-      const eased = ease(t)
-      const next =
-        fromRef.current + (tweenTargetRef.current - fromRef.current) * eased
-      updateDisplayed(next)
-      if (t < 1) {
-        rafRef.current = requestAnimationFrame(tick)
-      } else {
-        rafRef.current = null
-        updateDisplayed(tweenTargetRef.current)
-      }
+      const t = Math.min(1, (now - start) / duration)
+      const eased = linear ? t : 1 - (1 - t) ** 3
+      updateDisplayed(t < 1 ? from + (target - from) * eased : target)
+      if (t < 1) request = requestAnimationFrame(tick)
     }
-    rafRef.current = requestAnimationFrame(tick)
-    return () => {
-      if (rafRef.current != null) cancelAnimationFrame(rafRef.current)
-      rafRef.current = null
-    }
+    request = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(request)
     // The current display value lives in a ref so a tween frame can update
     // React state without restarting this effect.
-  }, [animationEnabled, duration, easing, reducedMotion, target])
+  }, [animationEnabled, duration, linear, reducedMotion, target])
 
   return displayed
 }
@@ -265,28 +215,15 @@ function resolveSentiment(
   override: BigNumberProps["sentiment"]
 ): "positive" | "negative" | "neutral" {
   if (override && override !== "auto") return override
-  if (delta == null || delta === 0 || !Number.isFinite(delta)) return "neutral"
-  const dir = direction ?? "higher-is-better"
-  if (dir === "neutral") return "neutral"
-  const higherBetter = dir === "higher-is-better"
-  const positive = higherBetter ? delta > 0 : delta < 0
+  if (!delta || !Number.isFinite(delta) || direction === "neutral") return "neutral"
+  const positive = direction === "lower-is-better" ? delta < 0 : delta > 0
   return positive ? "positive" : "negative"
 }
 
-function sentimentColor(
-  sentiment: "positive" | "negative" | "neutral"
-): string {
-  if (sentiment === "positive") return "var(--semiotic-success, currentColor)"
-  if (sentiment === "negative") return "var(--semiotic-danger, currentColor)"
-  return "var(--semiotic-text-secondary, currentColor)"
-}
-
-function sentimentArrow(
-  sentiment: "positive" | "negative" | "neutral"
-): string {
-  if (sentiment === "positive") return "▲"
-  if (sentiment === "negative") return "▼"
-  return "■"
+const sentimentDisplay = {
+  positive: { color: "var(--semiotic-success, currentColor)", arrow: "▲", suffix: "up" },
+  negative: { color: "var(--semiotic-danger, currentColor)", arrow: "▼", suffix: "down" },
+  neutral: { color: "var(--semiotic-text-secondary, currentColor)", arrow: "■", suffix: "flat" }
 }
 
 // ── ARIA sentence ────────────────────────────────────────────────────
@@ -316,13 +253,8 @@ function buildAriaSentence(args: {
     // factual phrasing must remain "up" for +5 and "down" for −5
     // regardless. Avoids the previous "up −5" reading on lower-is-better
     // metrics.
-    const d = args.delta
-    const dirWord =
-      d != null && Number.isFinite(d) && d !== 0
-        ? d > 0
-          ? "up"
-          : "down"
-        : "change"
+    const delta = args.delta ?? 0
+    const dirWord = delta > 0 ? "up" : delta < 0 ? "down" : "change"
     const pct = args.deltaPercent ? ` (${args.deltaPercent})` : ""
     const comp = args.comparisonLabel ? ` from ${args.comparisonLabel}` : ""
     parts.push(`${dirWord} ${args.deltaFormatted}${pct}${comp}`)
@@ -399,6 +331,7 @@ const BigNumberInner = (
   const align = alignProp ?? defaults.align
   const width = widthProp ?? defaults.width
   const height = heightProp ?? defaults.height
+  const summaryId = React.useId()
   const reducedMotion = useReducedMotion()
   const wasHydratingFromSSR = useWasHydratingFromSSR()
 
@@ -409,172 +342,85 @@ const BigNumberInner = (
   // handle in a parent ref and expect getValue()/getData() to see
   // post-push state without re-grabbing the handle). React state
   // alongside drives the visible re-render.
-  const [pushBuffer, setPushBuffer] = useState<BigNumberPushInput[]>([])
-  const [pushedValue, setPushedValue] = useState<number | null>(null)
-  const [pushedComparison, setPushedComparison] = useState<number | null>(null)
-  const [lastUpdate, setLastUpdate] = useState<number | null>(null)
-
-  const pushBufferRef = useRef<BigNumberPushInput[]>([])
-  const pushedValueRef = useRef<number | null>(null)
-  const propValueRef = useRef<number | null | undefined>(propValue)
+  const [snapshot, setSnapshot] = useState(emptySnapshot)
+  const latest = useRef(snapshot)
+  const publish = useCallback((next: ValueSnapshot) => {
+    latest.current = next
+    setSnapshot(next)
+  }, [])
+  const fallbackValue = Number.isFinite(propValue) ? propValue as number : null
+  const pushOptions = useRef({ fallbackValue, windowSize })
   useEffect(() => {
-    propValueRef.current = propValue
-  }, [propValue])
-  const windowSizeRef = useRef<number>(windowSize)
-  useEffect(() => {
-    windowSizeRef.current = windowSize
-  }, [windowSize])
+    pushOptions.current = { fallbackValue, windowSize }
+  }, [fallbackValue, windowSize])
 
-  // Normalize a single push input into a BigNumberPushInput with a
-  // numeric timestamp. Pulled out so `ingestBatch` can avoid a per-item
-  // setState fan-out on `pushMany([...])`.
-  const normalisePushInput = useCallback(
-    (input: number | BigNumberPushInput): BigNumberPushInput => {
-      const raw: BigNumberPushInput =
-        typeof input === "number"
-          ? { value: input, time: Date.now() }
-          : { time: Date.now(), ...input }
-      // Normalize `time`: number (ms) or Date — both must produce
-      // identical staleness behavior. Without this, a Date silently
-      // fell back to wall-clock `Date.now()`.
-      const t =
-        typeof raw.time === "number"
-          ? raw.time
-          : raw.time instanceof Date
-            ? raw.time.getTime()
-            : Date.now()
-      return { ...raw, time: t }
-    },
-    []
-  )
-
-  /** Append one or many inputs through a single state-update pass. */
   const ingestBatch = useCallback(
     (inputs: ReadonlyArray<number | BigNumberPushInput>) => {
       if (inputs.length === 0) return
-      const win = windowSizeRef.current
+      const win = pushOptions.current.windowSize
       const normalised = inputs.map(normalisePushInput)
-      const prev = pushBufferRef.current
+      const prev = latest.current.rows
       // Concat + drop from the head until we're within window. Skipping
       // intermediate slices means a pushMany of N keeps O(N) work, not
       // O(N²).
       let next = prev.concat(normalised)
       if (next.length > win) next = next.slice(next.length - win)
-      pushBufferRef.current = next
       const last = normalised[normalised.length - 1]
-      pushedValueRef.current = last.value
-      setPushBuffer(next)
-      setPushedValue(last.value)
-      // Latest comparison wins.
-      for (let i = normalised.length - 1; i >= 0; i--) {
-        const c = normalised[i].comparison
-        if (c != null) {
-          setPushedComparison(c)
-          break
-        }
-      }
-      setLastUpdate(last.time as number)
+      publish({
+        rows: next, value: last.value, time: last.time as number,
+        comparison: normalised.reduce((previous, row) => row.comparison ?? previous, latest.current.comparison)
+      })
     },
-    [normalisePushInput]
-  )
-
-  const ingest = useCallback(
-    (input: number | BigNumberPushInput) => ingestBatch([input]),
-    [ingestBatch]
+    [publish]
   )
 
   useImperativeHandle(
     ref,
     () => ({
-      push: (input) => ingest(input),
+      push: (input) => ingestBatch([input]),
       // Single state-update pass for the whole batch.
-      pushMany: (inputs) => ingestBatch(inputs),
-      clear: () => {
-        pushBufferRef.current = []
-        pushedValueRef.current = null
-        setPushBuffer([])
-        setPushedValue(null)
-        setPushedComparison(null)
-        setLastUpdate(null)
-      },
-      getValue: () =>
-        pushedValueRef.current ??
-        (Number.isFinite(propValueRef.current)
-          ? (propValueRef.current as number)
-          : null),
+      pushMany: ingestBatch,
+      clear: () => publish(emptySnapshot()),
+      getValue: () => latest.current.value ?? pushOptions.current.fallbackValue,
       // Defensive copy — consumers receive a snapshot rather than the live
       // ref, so they can't mutate component state by writing into the array.
-      getData: () => pushBufferRef.current.slice()
+      getData: () => latest.current.rows.slice()
     }),
-    [ingest, ingestBatch]
+    [ingestBatch, publish]
   )
 
   // Effective value — pushed value wins once any push has landed.
-  const effectiveValue = pushedValue ?? propValue
+  const effectiveValue = snapshot.value ?? propValue
   // Treat anything non-finite as empty so Infinity / -Infinity / NaN
   // don't silently render as `0` via the downstream displayedValue
   // fallback.
-  const isEmpty =
-    effectiveValue == null ||
-    typeof effectiveValue !== "number" ||
-    !Number.isFinite(effectiveValue)
+  const isEmpty = !Number.isFinite(effectiveValue)
+  const numericValue = isEmpty ? NaN : effectiveValue as number
 
   // ── Formatting context ───────────────────────────────────────────
-  const formatter = useMemo(
-    () =>
-      buildFormatter(format ?? "number", {
-        locale,
-        currency,
-        precision
-      }),
-    [format, locale, currency, precision]
-  )
-
-  const deltaFormatter = useMemo(
-    () =>
-      buildFormatter(deltaFormat ?? format ?? "number", {
-        locale,
-        currency,
-        precision: deltaFormat == null && format == null ? 0 : precision
-      }),
-    [deltaFormat, format, locale, currency, precision]
-  )
+  const formatter = useValueFormatter(format, locale, currency, precision)
+  const deltaFormatter = useValueFormatter(deltaFormat ?? format, locale, currency,
+    deltaFormat == null && format == null ? 0 : precision)
 
   // ── Animation ────────────────────────────────────────────────────
   const animateOpt = animate ?? false
-  const introEnabled =
-    typeof animateOpt === "object" && animateOpt.intro === false
-      ? false
-      : Boolean(animateOpt)
-  const tweenTarget = Number.isFinite(effectiveValue)
-    ? (effectiveValue as number)
-    : 0
+  const introEnabled = Boolean(animateOpt) && (typeof animateOpt !== "object" || animateOpt.intro !== false)
+  const tweenTarget = isEmpty ? 0 : numericValue
   // Preserve the final value in SSR and on the first hydration render so the
   // client markup matches the server. Fresh CSR mounts can visibly animate
   // into the focal value when intro is enabled.
-  const initialTweenValueRef = useRef<number>(
-    introEnabled && !reducedMotion && !wasHydratingFromSSR ? 0 : tweenTarget
-  )
   const tweened = useTweenedValue(
     tweenTarget,
     animateOpt,
     reducedMotion,
-    initialTweenValueRef.current
+    introEnabled && !reducedMotion && !wasHydratingFromSSR ? 0 : tweenTarget
   )
-  const displayedValue = animateOpt
-    ? tweened
-    : Number.isFinite(effectiveValue)
-      ? (effectiveValue as number)
-      : 0
+  const displayedValue = animateOpt ? tweened : tweenTarget
 
   // ── Threshold + colour ───────────────────────────────────────────
   const matchedThreshold = useMemo(
-    () =>
-      resolveThreshold(
-        Number.isFinite(effectiveValue) ? (effectiveValue as number) : NaN,
-        thresholds
-      ),
-    [effectiveValue, thresholds]
+    () => resolveThreshold(numericValue, thresholds),
+    [numericValue, thresholds]
   )
   const level: BigNumberLevel = matchedThreshold
     ? matchedThreshold.level
@@ -583,18 +429,18 @@ const BigNumberInner = (
     colorProp ?? colorForLevel(level, matchedThreshold?.color)
 
   // ── Delta ────────────────────────────────────────────────────────
-  const comparisonValue = pushedComparison ?? comparison?.value ?? null
+  const comparisonValue = snapshot.comparison ?? comparison?.value ?? null
   const computedDelta =
     explicitDelta != null
       ? explicitDelta
-      : comparisonValue != null && Number.isFinite(effectiveValue)
-        ? (effectiveValue as number) - comparisonValue
+      : comparisonValue != null && !isEmpty
+        ? numericValue - comparisonValue
         : null
   // A delta that formats as zero reads, and is colored, as no change; the
   // raw delta still reaches slots and callbacks.
+  const hasDelta = computedDelta != null && Number.isFinite(computedDelta)
   const shownDelta =
-    computedDelta != null && Number.isFinite(computedDelta) &&
-      isFormattedZero(computedDelta, deltaFormatter)
+    hasDelta && isFormattedZero(computedDelta, deltaFormatter)
       ? 0
       : computedDelta
   const sentiment = resolveSentiment(
@@ -603,7 +449,7 @@ const BigNumberInner = (
     sentimentProp
   )
   const deltaFormatted =
-    computedDelta != null && Number.isFinite(computedDelta)
+    hasDelta
       ? formatSignedDelta(computedDelta, deltaFormatter)
       : null
   const deltaPercentFormatter = useMemo(
@@ -618,11 +464,11 @@ const BigNumberInner = (
   )
   const deltaPercent =
     comparisonValue != null &&
-    Number.isFinite(effectiveValue) &&
+    !isEmpty &&
     (showDeltaPercent ?? true) &&
     comparisonValue !== 0
       ? deltaPercentFormatter.format(
-          ((effectiveValue as number) - comparisonValue) / Math.abs(comparisonValue)
+          (numericValue - comparisonValue) / Math.abs(comparisonValue)
         )
       : null
 
@@ -639,17 +485,13 @@ const BigNumberInner = (
   const targetText = targetPresentation?.text ?? null
 
   // ── Staleness ────────────────────────────────────────────────────
-  const stale = useStaleness(lastUpdate, stalenessThreshold)
-
-  // (No value-update observation event is emitted — the ChartObservation
-  // union currently only covers hover/click/brush/selection. Click is wired
-  // below via handleClick; a future `"value-update"` variant on the union
-  // would let live-KPI consumers subscribe without a slot override.)
+  const stale = useStaleness(snapshot.time, stalenessThreshold)
 
   // ── Pre-rendered strings ─────────────────────────────────────────
-  const formattedValue = Number.isFinite(displayedValue)
-    ? decorate(formatter(displayedValue), prefix, suffix)
+  const formatReading = (value: number | null | undefined) => Number.isFinite(value)
+    ? decorate(formatter(value as number), prefix, suffix)
     : ""
+  const formattedValue = formatReading(displayedValue)
 
   // ── Slot context (for callable slots) ────────────────────────────
   const slotCtx: BigNumberSlotContext = {
@@ -662,7 +504,7 @@ const BigNumberInner = (
     deltaPercent,
     sentiment,
     isStale: stale,
-    pushBuffer
+    pushBuffer: snapshot.rows
   }
 
   // ── ARIA sentence ────────────────────────────────────────────────
@@ -670,9 +512,7 @@ const BigNumberInner = (
     description ??
     buildAriaSentence({
       label,
-      formattedValue: Number.isFinite(effectiveValue)
-        ? decorate(formatter(effectiveValue as number), prefix, suffix)
-        : "",
+      formattedValue: formatReading(effectiveValue),
       unit,
       comparisonLabel: comparison?.label,
       delta: shownDelta,
@@ -687,23 +527,14 @@ const BigNumberInner = (
   // ── Layout primitives ────────────────────────────────────────────
   const padding =
     typeof paddingProp === "number"
-      ? {
-          top: paddingProp,
-          right: paddingProp,
-          bottom: paddingProp,
-          left: paddingProp
-        }
+      ? cardPadding(paddingProp)
       : { ...defaults.padding, ...(paddingProp ?? {}) }
 
-  const flexAlign =
-    align === "end"
-      ? "flex-end"
-      : align === "center"
-        ? "center"
-        : align === "start"
-          ? "flex-start"
-          : "inherit"
+  const flexAlign = align === "start" || align === "end"
+    ? `flex-${align}` as const
+    : align === "center" ? "center" : undefined
 
+  const display = mode === "inline" ? "inline-flex" : "flex"
   const containerStyle: React.CSSProperties = {
     // `relative` so a top-right-anchored `chartSlot` can absolute-position
     // against the card.
@@ -712,64 +543,57 @@ const BigNumberInner = (
     width,
     height,
     padding: `${padding.top}px ${padding.right}px ${padding.bottom}px ${padding.left}px`,
-    background: backgroundProp ?? defaults.background,
-    border: defaults.border
+    background: backgroundProp ?? (defaults.expanded ? "var(--semiotic-surface, transparent)" : "transparent"),
+    border: defaults.expanded
       ? `1px solid ${borderColor ?? "var(--semiotic-border, #e2e2e2)"}`
       : undefined,
     borderRadius:
       typeof borderRadius === "number"
         ? `${borderRadius}px`
         : (borderRadius ?? "var(--semiotic-border-radius, 8px)"),
-    display: mode === "inline" ? "inline-flex" : "flex",
+    display,
     flexDirection: "column",
-    alignItems:
-      flexAlign === "inherit"
-        ? undefined
-        : (flexAlign as React.CSSProperties["alignItems"]),
+    alignItems: flexAlign,
     textAlign: align as React.CSSProperties["textAlign"],
     fontFamily: "var(--semiotic-font-family, system-ui, sans-serif)",
     color: "var(--semiotic-text, #111)",
     opacity: stale ? 0.55 : 1,
     transition: "opacity 240ms ease-out",
     gridColumn: emphasis === "primary" ? "span 2" : undefined,
-    cursor: onClick ? "pointer" : undefined,
+    cursor: onClick || onObservation ? "pointer" : undefined,
     ...styleProp
   }
 
   // ── Click handler ────────────────────────────────────────────────
-  const handleClick = useCallback(
-    (e: React.MouseEvent) => {
-      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-      const x = e.clientX - rect.left
-      const y = e.clientY - rect.top
-      const datum = {
-        value: isEmpty ? Number.NaN : (effectiveValue as number),
-        level,
-        delta: computedDelta
-      }
-      if (onClick) onClick(datum, { x, y })
-      if (onObservation) {
-        onObservation({
-          type: "click",
-          datum,
-          x,
-          y,
-          chartType: "BigNumber",
-          chartId,
-          timestamp: Date.now()
-        })
-      }
-    },
-    [
-      onClick,
-      onObservation,
-      chartId,
-      isEmpty,
-      effectiveValue,
+  function activate(x: number, y: number) {
+    const datum = {
+      value: numericValue,
       level,
-      computedDelta
-    ]
-  )
+      delta: computedDelta
+    }
+    onClick?.(datum, { x, y })
+    onObservation?.({
+      type: "click",
+      datum,
+      x,
+      y,
+      chartType: "BigNumber",
+      chartId,
+      timestamp: Date.now()
+    })
+  }
+
+  const interactive = Boolean(onClick || onObservation)
+  function handleActivationKey(event: React.KeyboardEvent<HTMLElement>) {
+    if (event.target !== event.currentTarget || event.defaultPrevented) return
+    if (event.key !== "Enter" && event.key !== " ") return
+    event.preventDefault()
+    const trigger = event.key === "Enter" ? "keydown" : "keyup"
+    if (event.type === trigger && !event.repeat) {
+      const rect = event.currentTarget.getBoundingClientRect()
+      activate(rect.width / 2, rect.height / 2)
+    }
+  }
 
   // ── Element tag — `span` in inline mode so the card can sit inside a
   // `<p>` without HTML-validity hydration errors. `<span>` accepts
@@ -792,12 +616,7 @@ const BigNumberInner = (
   ]
     .filter(Boolean)
     .join(" ")
-  const sentimentSuffix =
-    sentiment === "positive"
-      ? "up"
-      : sentiment === "negative"
-        ? "down"
-        : "flat"
+  const { color: deltaColor, arrow, suffix: sentimentSuffix } = sentimentDisplay[sentiment] ?? sentimentDisplay.neutral
 
   // ── Loading + empty ──────────────────────────────────────────────
   if (loading) {
@@ -844,8 +663,10 @@ const BigNumberInner = (
   // ── Render ───────────────────────────────────────────────────────
   return (
     <Block
-        role="group"
+        role={interactive ? "button" : "group"}
+        tabIndex={interactive ? 0 : undefined}
         aria-label={ariaSentence}
+        aria-describedby={summary ? summaryId : undefined}
         data-chart="BigNumber"
         data-mode={mode}
         data-level={level}
@@ -853,10 +674,15 @@ const BigNumberInner = (
         data-sentiment={sentiment}
         className={rootClassName}
         style={containerStyle}
-        onClick={onClick || onObservation ? handleClick : undefined}
+        onKeyDown={interactive ? handleActivationKey : undefined}
+        onKeyUp={interactive ? handleActivationKey : undefined}
+        onClick={interactive ? event => {
+          const rect = event.currentTarget.getBoundingClientRect()
+          activate(event.clientX - rect.left, event.clientY - rect.top)
+        } : undefined}
       >
         {/* Header (label + caption) */}
-        {defaults.showHeader && (label || caption || headerSlot) ? (
+        {defaults.expanded && (label || caption || headerSlot) ? (
           <div
             className="semiotic-bignumber__header"
             style={{
@@ -868,7 +694,7 @@ const BigNumberInner = (
               // overdraw the label / caption. Width hint = default chart
               // size + small gutter.
               paddingRight:
-                defaults.showChart && chartSlot != null
+                chartSlot != null
                   ? (chartSizeProp ?? defaults.chartSize) + 8
                   : 0
             }}
@@ -913,7 +739,7 @@ const BigNumberInner = (
           <Block
             className={`semiotic-bignumber__value semiotic-bignumber__value--${level}`}
             style={{
-              display: mode === "inline" ? "inline-flex" : "flex",
+              display,
               alignItems: "baseline",
               gap: 6,
               fontVariantNumeric: "tabular-nums",
@@ -944,12 +770,12 @@ const BigNumberInner = (
         )}
 
         {/* Delta + comparison + target */}
-        {defaults.showDelta &&
+        {mode !== "thumbnail" &&
         (deltaFormatted || targetPresentation || comparison) ? (
           <Block
             className={`semiotic-bignumber__delta semiotic-bignumber__delta--${sentimentSuffix}`}
             style={{
-              display: mode === "inline" ? "inline-flex" : "flex",
+              display,
               flexWrap: "wrap",
               gap: 8,
               alignItems: "baseline",
@@ -969,7 +795,7 @@ const BigNumberInner = (
                       display: "inline-flex",
                       alignItems: "center",
                       gap: 4,
-                      color: sentimentColor(sentiment),
+                      color: deltaColor,
                       fontWeight: 600
                     }}
                   >
@@ -977,7 +803,7 @@ const BigNumberInner = (
                       aria-hidden="true"
                       className={`semiotic-bignumber__arrow semiotic-bignumber__arrow--${sentimentSuffix}`}
                     >
-                      {sentimentArrow(sentiment)}
+                      {arrow}
                     </span>
                     <span className="semiotic-bignumber__delta-amount">
                       {deltaFormatted}
@@ -1039,7 +865,7 @@ const BigNumberInner = (
             Absolute-positioned so it overlays a corner without
             displacing the text content; the header above reserves
             right-padding to keep the label from running under it. */}
-        {defaults.showChart && chartSlot != null ? (
+        {defaults.expanded && chartSlot != null ? (
           <div
             className="semiotic-bignumber__chart"
             style={{
@@ -1068,7 +894,7 @@ const BigNumberInner = (
             overlays without consuming flex-flow space. Cards must be
             tall enough that the text content doesn't overlap this
             region — the default tile height is tuned accordingly. */}
-        {defaults.showTrend && trendSlot != null ? (
+        {defaults.expanded && trendSlot != null ? (
           <div
             className="semiotic-bignumber__trend"
             style={{
@@ -1098,13 +924,8 @@ const BigNumberInner = (
           </Block>
         ) : null}
 
-        {/* Sr-only summary supplement */}
         {summary ? (
-          <span
-            style={hiddenTextStyle}
-          >
-            {summary}
-          </span>
+          <span id={summaryId} hidden>{summary}</span>
         ) : null}
       </Block>
   )
@@ -1186,8 +1007,7 @@ export default BigNumber
 // ── Internal: loading shimmer ────────────────────────────────────────
 
 const hiddenTextStyle: React.CSSProperties = {
-  position: "absolute", width: 1, height: 1, padding: 0, margin: -1,
-  overflow: "hidden", clip: "rect(0,0,0,0)", whiteSpace: "nowrap", border: 0
+  ...SR_ONLY_STYLE, padding: 0, margin: -1
 }
 
 function DefaultLoadingShimmer(props: {

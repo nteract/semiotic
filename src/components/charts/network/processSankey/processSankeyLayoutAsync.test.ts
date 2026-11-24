@@ -59,6 +59,7 @@ describe("ProcessSankey worker request parity", () => {
     const input = baseInput({
       usageMode: "push",
       selectionDatum: "scene",
+      curves: "smooth",
       showLabels: "auto",
       labelPriorityAccessor: "priority",
       maxLabels: 2,
@@ -78,6 +79,7 @@ describe("ProcessSankey worker request parity", () => {
     const request = toProcessSankeyWorkerRequest(input, { A: "#111", B: "#222" }, ["#333"])
 
     expect(request.input.usageMode).toBe("push")
+    expect(request.input.curves).toBe("smooth")
     expect(request.input.selectionDatum).toBe("scene")
     expect(request.input.showLabels).toBe("auto")
     expect(request.input.labelPriorityAccessor).toBe("priority")

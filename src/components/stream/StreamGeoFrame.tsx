@@ -46,7 +46,7 @@ import { type HoverPointerCoords } from "./hoverUtils"
 import { resolveNodeColor } from "./sceneUtils"
 import { composeOverlays } from "./composeOverlays"
 import { wrapWithCustomLayoutSelection } from "./customLayoutSelection"
-import { paintSceneWithBackend, renderSceneWithBackend } from "./renderBackend"
+import { paintSceneWithBackend, renderSceneElements } from "./renderBackend"
 
 import { collectGeoAnnotationAnchors } from "./geoAnnotationAnchors"
 import { DefaultGeoTooltip } from "./geoDefaultTooltip"
@@ -63,7 +63,7 @@ import {
 import { observationInputType } from "../charts/shared/semanticInteractions"
 import { isAnnotationActivationTarget } from "../charts/shared/annotationActivation"
 import { useSemanticFrameInteractions } from "./useSemanticFrameInteractions"
-import { useGeoKeyboardNavigation } from "./frameKeyboardNavigation"
+import { useGeoKeyboardNavigation } from "./geoKeyboardNavigation"
 import { createFrameGraphicsScaleTracker, resolveSubscribedFrameLayers, type FrameGraphicsScaleTracker } from "./frameGraphicsSubscription"
 import { sceneHasAuthoredCursor, sceneMarkCursor, setCanvasMarkCursor, useCanvasMarkCursorCleanup } from "./sceneCursor"
 import { shouldHandleFramePointer } from "./frameCursorInteraction"
@@ -1224,14 +1224,7 @@ const StreamGeoFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(
                 {resolvedBackground}
               </g>
               <g transform={`translate(${margin.left},${margin.top})`}>
-                {scene.map((node, i) =>
-                  renderSceneWithBackend({
-                    node,
-                    index: i,
-                    renderMode,
-                    fallback: () => geoSceneNodeToSVG(node, i),
-                  }),
-                )}
+                {renderSceneElements(scene, renderMode, geoSceneNodeToSVG)}
               </g>
             </svg>
             <GeoSVGOverlay

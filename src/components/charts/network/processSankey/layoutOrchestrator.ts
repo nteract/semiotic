@@ -114,48 +114,20 @@ export function computeLaneLayout(
     // node's lane spans `min(xExtent[0], earliestEdge)` to
     // `max(xExtent[1], latestEdge)` — explicit extent extends the
     // lane *outward* but never trims it inside the actual edge range.
-    const explicitStart = Array.isArray(n.xExtent) ? n.xExtent[0] : null
-    const explicitEnd = Array.isArray(n.xExtent) ? n.xExtent[1] : null
-    let tStart: number =
-      explicitStart != null && Number.isFinite(explicitStart)
-        ? explicitStart
-        : Infinity
-    let tEnd: number =
-      explicitEnd != null && Number.isFinite(explicitEnd)
-        ? explicitEnd
-        : -Infinity
+    const [explicitStart, explicitEnd] = Array.isArray(n.xExtent) ? n.xExtent : []
+    let tStart = Number.isFinite(explicitStart) ? explicitStart! : Infinity
+    let tEnd = Number.isFinite(explicitEnd) ? explicitEnd! : -Infinity
     for (const e of edgeIndex.outgoing[n.id]) {
       if (e.startTime < tStart) tStart = e.startTime
-      // systemInTime (when set) pre-dates startTime — the source node
-      // holds the unit of mass from systemInTime through startTime, so
-      // its lane lifetime has to include the earlier time or the band
-      // gets clipped at startTime and the systemInTime gradient stub
-      // has no surface to paint on.
-      if (
-        e.systemInTime != null &&
-        Number.isFinite(e.systemInTime) &&
-        e.systemInTime < tStart
-      ) {
-        tStart = e.systemInTime
-      }
-      const endForSource = half ? (e.startTime + e.endTime) / 2 : e.endTime
-      if (endForSource > tEnd) tEnd = endForSource
+      if (Number.isFinite(e.systemInTime) && e.systemInTime! < tStart) tStart = e.systemInTime!
+      const end = half ? (e.startTime + e.endTime) / 2 : e.endTime
+      if (end > tEnd) tEnd = end
     }
     for (const e of edgeIndex.incoming[n.id]) {
-      const startForTarget = half ? (e.startTime + e.endTime) / 2 : e.startTime
-      if (startForTarget < tStart) tStart = startForTarget
+      const start = half ? (e.startTime + e.endTime) / 2 : e.startTime
+      if (start < tStart) tStart = start
       if (e.endTime > tEnd) tEnd = e.endTime
-      // systemOutTime mirror: target holds the unit of mass through
-      // endTime → systemOutTime, so the lane has to extend right or
-      // the band gets cut off at endTime and the systemOutTime fade-
-      // out has nowhere to render.
-      if (
-        e.systemOutTime != null &&
-        Number.isFinite(e.systemOutTime) &&
-        e.systemOutTime > tEnd
-      ) {
-        tEnd = e.systemOutTime
-      }
+      if (Number.isFinite(e.systemOutTime) && e.systemOutTime! > tEnd) tEnd = e.systemOutTime!
     }
     laneLifetime[n.id] = {
       start: Number.isFinite(tStart) ? tStart : null,

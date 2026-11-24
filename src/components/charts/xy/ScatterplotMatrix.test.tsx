@@ -1,5 +1,5 @@
 import { vi } from "vitest"
-import { fireEvent, render, within } from "@testing-library/react"
+import { act, fireEvent, render, within } from "@testing-library/react"
 import { ScatterplotMatrix } from "./ScatterplotMatrix"
 import { TooltipProvider } from "../../store/TooltipStore"
 
@@ -50,6 +50,41 @@ describe("ScatterplotMatrix", () => {
     // Each scatterplot renders a StreamXYFrame (.stream-xy-frame)
     const streamFrames = container.querySelectorAll(".stream-xy-frame")
     expect(streamFrames.length).toBe(6) // 3x3 - 3 diagonal = 6
+  })
+
+  it("uses one tab stop for the matrix and lets the reader enter and leave a cell", () => {
+    const { getByRole, getAllByRole } = render(<ScatterplotMatrix
+      data={sampleData} fields={["a", "b", "c"]} accessibleTable={false} />)
+    const grid = getByRole("grid")
+    expect(grid.querySelectorAll('[tabindex="0"]')).toHaveLength(1)
+    const cells = getAllByRole("gridcell")
+    cells[0].focus()
+    fireEvent.keyDown(cells[0], { key: "ArrowRight" })
+    expect(cells[1]).toHaveFocus()
+    fireEvent.keyDown(cells[1], { key: "ArrowDown" })
+    expect(cells[4]).toHaveFocus()
+    fireEvent.keyDown(cells[4], { key: "ArrowLeft" })
+    expect(cells[3]).toHaveFocus()
+    fireEvent.keyDown(cells[3], { key: "Enter" })
+    const frame = within(cells[3]).getByRole("group", { name: /a versus b/ })
+    expect(frame).toHaveFocus()
+    fireEvent.keyDown(frame, { key: "Escape" })
+    expect(cells[3]).toHaveFocus()
+    expect(grid.querySelectorAll('[tabindex="0"]')).toHaveLength(1)
+  })
+
+  it("keeps the surviving focused cell tabbable across field changes", () => {
+    const chart = (fields: string[]) => <ScatterplotMatrix data={sampleData} fields={fields} accessibleTable={false} />
+    const { getByRole, rerender } = render(chart(["a", "b", "c"]))
+    const active = getByRole("gridcell", { name: "a versus b" })
+    act(() => active.focus())
+    for (const fields of [["a", "b"], ["b", "a"]]) {
+      rerender(chart(fields))
+      expect(active).toHaveAttribute("tabindex", "0")
+      expect(getByRole("grid").querySelectorAll('[tabindex="0"]')).toHaveLength(1)
+    }
+    rerender(chart(["a", "c"]))
+    expect(getByRole("gridcell", { name: "a" })).toHaveAttribute("tabindex", "0")
   })
 
   it("renders diagonal histograms as SVGs", () => {

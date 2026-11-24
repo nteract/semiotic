@@ -1,6 +1,7 @@
 import { networkFrameDefaultMargin } from "../stream/frameDefaultMargins"
 import { resolveAxisFreeMarginDefaults } from "../charts/shared/chartMode"
 import type { Datum } from "../charts/shared/datumTypes"
+import { normalizeProcessEdge, normalizeProcessNode } from "../charts/network/processSankey/accessors"
 import { buildProcessSankeyScenes } from "../charts/network/processSankey/buildScenes"
 import { resolveProcessSankeyMarginDefaults } from "../charts/network/processSankey/frameMargins"
 import { buildProcessSankeyBackgroundGraphics } from "../charts/network/processSankey/axisChrome"
@@ -73,76 +74,32 @@ export const processSankey: ChartConfig = {
     // edge endpoints. Otherwise every edge would emit a "missing-node"
     // validation issue and `renderChart("ProcessSankey", { edges })`
     // would refuse to draw.
-    const explicitNodes: Datum[] = Array.isArray(rest.nodes) ? rest.nodes : []
-    const rawNodes: Datum[] =
-      explicitNodes.length > 0
-        ? explicitNodes
-        : (inferNodesFromEdges(
-            [],
-            rawEdges,
-            sourceAccessor as string | ((d: Datum) => string),
-            targetAccessor as string | ((d: Datum) => string)
-          ) as Datum[])
+    const rawNodes = inferNodesFromEdges(
+      Array.isArray(rest.nodes) ? rest.nodes : undefined,
+      rawEdges,
+      sourceAccessor as string | ((d: Datum) => string),
+      targetAccessor as string | ((d: Datum) => string)
+    )
     const domain: [number, number] = [
       toTime((rest.domain as [unknown, unknown])?.[0]),
       toTime((rest.domain as [unknown, unknown])?.[1])
     ]
 
-    const ns = rawNodes.map((n) => {
-      const id = String(accVal(nodeIdAccessor, n))
-      const x = accVal(xExtentAccessor, n)
-      const labelValue = rest.nodeLabel ? accVal(rest.nodeLabel, n) : id
-      const out: {
-        id: string
-        label: string
-        group?: string
-        xExtent?: [number, number]
-        __raw: Datum
-      } = { id, label: labelValue == null ? id : String(labelValue), __raw: n }
-      const groupValue = groupBy ? accVal(groupBy, n) : null
-      if (groupValue != null && String(groupValue) !== "")
-        out.group = String(groupValue)
-      if (Array.isArray(x) && x.length === 2) {
-        const a = toTime(x[0])
-        const b = toTime(x[1])
-        if (Number.isFinite(a) && Number.isFinite(b)) out.xExtent = [a, b]
-      }
-      return out
-    })
+    const ns = rawNodes.map(node => normalizeProcessNode(
+      node, String(accVal(nodeIdAccessor, node)),
+      rest.nodeLabel ? accVal(rest.nodeLabel, node) : undefined,
+      groupBy && accVal(groupBy, node),
+      accVal(xExtentAccessor, node)
+    ))
     const es = rawEdges.map((e, i) => {
-      const fromAcc = accVal(edgeIdAccessor, e) as string | undefined
-      const id =
-        fromAcc != null
-          ? String(fromAcc)
-          : `${accVal(sourceAccessor, e)}-${accVal(targetAccessor, e)}-${i}`
-      const out: {
-        id: string
-        source: string
-        target: string
-        value: number
-        startTime: number
-        endTime: number
-        systemInTime?: number
-        systemOutTime?: number
-        __raw: Datum
-      } = {
-        id,
-        source: String(accVal(sourceAccessor, e)),
-        target: String(accVal(targetAccessor, e)),
-        value: Number(accVal(valueAccessor, e)),
-        startTime: toTime(accVal(startTimeAccessor, e)),
-        endTime: toTime(accVal(endTimeAccessor, e)),
-        __raw: e
-      }
-      if (systemInTimeAccessor) {
-        const t = toTime(accVal(systemInTimeAccessor, e))
-        if (Number.isFinite(t)) out.systemInTime = t
-      }
-      if (systemOutTimeAccessor) {
-        const t = toTime(accVal(systemOutTimeAccessor, e))
-        if (Number.isFinite(t)) out.systemOutTime = t
-      }
-      return out
+      const source = String(accVal(sourceAccessor, e))
+      const target = String(accVal(targetAccessor, e))
+      const fromAcc = accVal(edgeIdAccessor, e)
+      const id = fromAcc == null ? `${source}-${target}-${i}` : String(fromAcc)
+      return normalizeProcessEdge(e, id, source, target, accVal(valueAccessor, e),
+        accVal(startTimeAccessor, e), accVal(endTimeAccessor, e),
+        systemInTimeAccessor ? accVal(systemInTimeAccessor, e) : undefined,
+        systemOutTimeAccessor ? accVal(systemOutTimeAccessor, e) : undefined)
     })
 
     // Resolve the same dimensions `renderNetworkFrame` will use so the
@@ -294,6 +251,7 @@ export const processSankey: ChartConfig = {
       plotW,
       plotH,
       orientation,
+      curves: rest.curves,
       ribbonLane: rest.ribbonLane || "both",
       ribbonMinRun:
         rest.ribbonMinRun === "auto" || typeof rest.ribbonMinRun === "number"
@@ -365,8 +323,7 @@ export const processSankey: ChartConfig = {
                   (rest.timeFormat as (d: number | Date) => string | React.ReactNode)(d)
               : undefined,
           colorOf,
-          toTime: (v) => toTime(v),
-          xScale: (t) => Number(xScale(t))
+          xScale: time => Number(xScale(time))
         })
       : undefined
 

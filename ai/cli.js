@@ -3,6 +3,7 @@
 
 const fs = require("fs")
 const path = require("path")
+const debug = require("node:util").debuglog("semiotic-ai")
 
 const { diagnoseChart } = require("./dist/diagnose-operation.js")
 
@@ -75,6 +76,8 @@ Usage:
   npx -p semiotic semiotic-ai --explain-refusal
                                                Explain why { component, props, contract, data?, policy?, exceptions?, now? } is refused
   npx -p semiotic semiotic-ai --help           Show this help message
+
+Set NODE_DEBUG=semiotic-ai to see why an optional runtime failed to load.
 `.trim()
 
 const flag = process.argv[2]
@@ -195,23 +198,21 @@ async function readJSONInput(usage) {
   throw new Error(usage)
 }
 
-function loadArtifactRuntime() {
-  const distPath = path.join(pkgRoot, "dist", "semiotic-artifact.min.js")
-  const serverPath = path.join(pkgRoot, "dist", "server.min.js")
+function loadOptionalRuntime(filename) {
+  if (process.env.SEMIOTIC_AI_SCHEMA_ONLY) return null
   try {
-    if (!process.env.SEMIOTIC_AI_SCHEMA_ONLY) {
-      const artifactRuntime = require(distPath)
-      try {
-        const { renderChartWithEvidence } = require(serverPath)
-        return { ...artifactRuntime, renderChartWithEvidence }
-      } catch (e) {
-        return artifactRuntime
-      }
-    }
-  } catch (e) {
-    // The caller-facing error below explains the supported recovery path.
+    return require(path.join(pkgRoot, "dist", filename))
+  } catch (error) {
+    debug("Could not load %s: %s", filename, errorMessage(error))
+    return null
   }
-  return null
+}
+
+function loadArtifactRuntime() {
+  const artifact = loadOptionalRuntime("semiotic-artifact.min.js")
+  if (!artifact) return null
+  const server = loadOptionalRuntime("server.min.js")
+  return server ? { ...artifact, renderChartWithEvidence: server.renderChartWithEvidence } : artifact
 }
 
 const ARTIFACT_BULK_PROP_KEYS = new Set([
@@ -431,18 +432,7 @@ async function main() {
       }
 
       // Load diagnoseConfig from dist (falls back to validateProps, then schema.json)
-      const distPath = path.join(pkgRoot, "dist", "semiotic-ai.min.js")
-      let diagnoseConfig, validateProps
-      try {
-        if (!process.env.SEMIOTIC_AI_SCHEMA_ONLY) {
-          const mod = require(distPath)
-          diagnoseConfig = mod.diagnoseConfig
-          validateProps = mod.validateProps
-        }
-      } catch (e) {
-        // Dist is not available in a clean source checkout. Fall back to the
-        // packaged schema so the CLI still catches basic agent mistakes.
-      }
+      const { diagnoseConfig, validateProps } = loadOptionalRuntime("semiotic-ai.min.js") ?? {}
 
       const report = diagnoseChart(
         { component, props, usageMode: rawUsageMode },
@@ -552,17 +542,7 @@ async function main() {
 
       // Load the audit from dist (same strategy as --doctor). It lives in the
       // semiotic/ai bundle; a clean source checkout without a build can't run it.
-      const distPath = path.join(pkgRoot, "dist", "semiotic-ai.min.js")
-      let auditAccessibility, formatAccessibilityAudit
-      try {
-        if (!process.env.SEMIOTIC_AI_SCHEMA_ONLY) {
-          const mod = require(distPath)
-          auditAccessibility = mod.auditAccessibility
-          formatAccessibilityAudit = mod.formatAccessibilityAudit
-        }
-      } catch (e) {
-        // Dist unavailable.
-      }
+      const { auditAccessibility, formatAccessibilityAudit } = loadOptionalRuntime("semiotic-ai.min.js") ?? {}
 
       if (!auditAccessibility || !formatAccessibilityAudit) {
         console.error(
@@ -598,17 +578,7 @@ async function main() {
         return setExitCode(1)
       }
 
-      const distPath = path.join(pkgRoot, "dist", "semiotic-ai.min.js")
-      let auditMobileVisualization, formatMobileVisualizationAudit
-      try {
-        if (!process.env.SEMIOTIC_AI_SCHEMA_ONLY) {
-          const mod = require(distPath)
-          auditMobileVisualization = mod.auditMobileVisualization
-          formatMobileVisualizationAudit = mod.formatMobileVisualizationAudit
-        }
-      } catch (e) {
-        // Dist unavailable.
-      }
+      const { auditMobileVisualization, formatMobileVisualizationAudit } = loadOptionalRuntime("semiotic-ai.min.js") ?? {}
 
       if (!auditMobileVisualization || !formatMobileVisualizationAudit) {
         console.error(
@@ -649,17 +619,7 @@ async function main() {
         return setExitCode(1)
       }
 
-      const distPath = path.join(pkgRoot, "dist", "semiotic-ai.min.js")
-      let evaluateChart, formatEvaluateChart
-      try {
-        if (!process.env.SEMIOTIC_AI_SCHEMA_ONLY) {
-          const mod = require(distPath)
-          evaluateChart = mod.evaluateChart
-          formatEvaluateChart = mod.formatEvaluateChart
-        }
-      } catch (e) {
-        // Dist unavailable.
-      }
+      const { evaluateChart, formatEvaluateChart } = loadOptionalRuntime("semiotic-ai.min.js") ?? {}
 
       if (!evaluateChart || !formatEvaluateChart) {
         const msg =

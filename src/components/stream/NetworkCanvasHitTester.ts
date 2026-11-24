@@ -1,3 +1,4 @@
+import { getEdgePath2D } from "./networkPath2D"
 import type {
   NetworkSceneNode,
   NetworkSceneEdge,
@@ -319,26 +320,6 @@ function getHitContext(): CanvasRenderingContext2D | null {
     _hitCtx = canvas.getContext("2d")
   }
   return _hitCtx
-}
-
-/**
- * Lazily build (and cache) a Path2D for an edge. Re-parses only when `pathD`
- * actually changes — Path2D parsing is the dominant cost in network hit
- * testing for large sankey/chord scenes.
- */
-function getEdgePath2D(
-  edge: { pathD: string; _cachedPath2D?: Path2D; _cachedPath2DSource?: string }
-): Path2D | null {
-  if (edge._cachedPath2D && edge._cachedPath2DSource === edge.pathD) {
-    return edge._cachedPath2D
-  }
-  try {
-    edge._cachedPath2D = new Path2D(edge.pathD)
-    edge._cachedPath2DSource = edge.pathD
-    return edge._cachedPath2D
-  } catch {
-    return null
-  }
 }
 
 // ── Edge hit testing ────────────────────────────────────────────────────
