@@ -1,4 +1,4 @@
-import { encodingLossExamples, flatSeriesCases, impliedAggregateAxes, malformedAggregateFields, malformedChannelTypes, normalizedArea, translucentBubbles } from "../../../__tests__/fixtures/vegaLiteEncodingLoss"
+import { areaLabelCases, encodingLossExamples, flatSeriesCases, impliedAggregateAxes, malformedAggregateFields, malformedChannelTypes, normalizedArea, temporalLossCases, translucentBubbles } from "../../../__tests__/fixtures/vegaLiteEncodingLoss"
 import { describe, expect, it, vi } from "vitest"
 import { fromVegaLite, fromVegaLiteResult } from "../fromVegaLite"
 import type { VegaLiteSpec } from "../fromVegaLite"
@@ -28,6 +28,40 @@ const config = (component: string, props: Record<string, unknown>) => ({
 })
 
 describe("strict Vega-Lite boundaries", () => {
+  it.each([
+    [0, 86400000, 172800000],
+    ["2024-01-01", Date.UTC(2024, 0, 2), "2024-01-03T01:00:00+01:00"]
+  ])("preserves the UTC positions of supported temporal observations", (...dates) => {
+    const data = dates.map((date, value) => ({ date, value }))
+    const chart = fromVegaLiteResult({ ...base, mark: "point", data: { values: data } }).config!
+    const reference = data.map(row => ({ ...row, date: typeof row.date === "number" ? row.date : Date.parse(row.date) }))
+    const render = (rows: typeof data) => renderChartWithEvidence(chart.component, { ...chart.props, data: rows })
+    const positions = (svg: string) => Array.from(svg.matchAll(/<circle\b[^>]*\bcx="([^"]+)"/g), match => match[1])
+    const actual = render(data)
+    expect(actual.evidence.markCountByType.point).toBe(3)
+    expect(positions(actual.svg)).toHaveLength(3)
+    expect(positions(actual.svg)).toEqual(positions(render(reference).svg))
+  })
+
+  it.each(temporalLossCases)("reports the corresponding loss on export from $path", ({ spec, path }) => {
+    const chart = config("Scatterplot", { data: spec.data.values, xAccessor: "date", yAccessor: "v", xScaleType: "time" })
+    const exported = toVegaLiteResult(chart)
+    expect(exported.status).toBe("refused")
+    expect(exported.lossReport).toContainEqual(expect.objectContaining({ path: path.replace("/data/values", "/props/data") }))
+  })
+
+  it.each(areaLabelCases)("paints all three nominal $component series with object-property names", ({ spec, component }) => {
+    const imported = fromVegaLiteResult(spec)
+    expect(imported.status).toBe("success")
+    const props = { ...imported.config!.props, showLegend: false }
+    const reference = renderChartWithEvidence(component, { ...props, data: spec.data.values.map(row => ({ ...row, group: "series-" + row.group })) })
+    expect(reference.evidence.markCountByType.area).toBe(3)
+    const rendered = renderChartWithEvidence(component, props)
+    expect(rendered.evidence.markCountByType.area).toBe(3)
+    const paths = (svg: string) => Array.from(svg.matchAll(/<path\b[^>]*\bd="([^"]+)"/g), match => match[1])
+    expect(paths(rendered.svg)).toEqual(paths(reference.svg))
+  })
+
   it.each(flatSeriesCases)("renders flat $component observations with unrelated coordinates arrays", ({ spec, component }) => {
     const chart = fromVegaLiteResult(spec).config!
     expect(chart.component).toBe(component)
@@ -132,7 +166,7 @@ describe("strict Vega-Lite boundaries", () => {
     }))
   })
 
-  it.each(encodingLossExamples)("reports $path on a $spec.mark before rendering", ({ spec, path }) => {
+  it.each([...encodingLossExamples, ...temporalLossCases])("reports $path on a $spec.mark before rendering", ({ spec, path }) => {
     const strict = importSpec(spec)
     expect(strict.status).toBe("refused")
     expect(strict.diagnostics).toContainEqual(expect.objectContaining({ path, severity: "error" }))

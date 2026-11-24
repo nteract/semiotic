@@ -23,6 +23,13 @@ export function parseDateLikeString(value: string): number {
   return Number.isFinite(parsed) ? parsed : NaN
 }
 
+export function detectDateAccessor(value: unknown): boolean | undefined {
+  if (value == null || value === "") return
+  if (value instanceof Date && Number.isFinite(value.getTime())) return true
+  if (typeof value === "string" && Number.isFinite(parseDateLikeString(value))) return true
+  if (Number.isFinite(Number(value))) return false
+}
+
 export function coerceDateLikeValue(value: unknown): number {
   if (value instanceof Date) return value.getTime()
   if (typeof value === "string") return parseDateLikeString(value)

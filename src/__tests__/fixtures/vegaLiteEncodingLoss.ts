@@ -165,3 +165,32 @@ export const malformedChannelTypes = [
   },
   path: `/encoding/${channel}/type`
 }))
+
+export const temporalLossCases = [
+  { dates: ["2024", "2025"], index: 0 },
+  { dates: [Date.UTC(2024, 0, 1), "2024-01-02"], index: 1 },
+  { dates: ["2024-01-01", "invalid"], index: 1 },
+  { dates: ["2024-01-01", null], index: 1 }
+].map(({ dates, index }) => ({
+  spec: {
+    mark: "point",
+    data: { values: dates.map((date, v) => ({ date, v })) },
+    encoding: { x: { field: "date", type: "temporal" }, y: { field: "v", type: "quantitative" } }
+  },
+  path: `/data/values/${index}/date`
+}))
+
+export const areaLabelCases = [null, "zero"].map(stack => ({
+  component: stack ? "StackedAreaChart" : "AreaChart",
+  spec: {
+    mark: "area",
+    data: { values: ["__proto__", "constructor", "toString"].flatMap((group, i) => [
+      { t: 1, v: 1 + i, group }, { t: 2, v: 4 - i, group }
+    ]) },
+    encoding: {
+      x: { field: "t", type: "quantitative" as const },
+      y: { field: "v", type: "quantitative" as const, stack },
+      color: { field: "group", type: "nominal" as const }
+    }
+  }
+}))

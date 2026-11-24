@@ -1,4 +1,4 @@
-import { encodingLossExamples, flatSeriesCases, impliedAggregateAxes, malformedAggregateFields, malformedChannelTypes, normalizedArea, tickOrientations, translucentBubbles } from "../fixtures/vegaLiteEncodingLoss"
+import { areaLabelCases, encodingLossExamples, flatSeriesCases, impliedAggregateAxes, malformedAggregateFields, malformedChannelTypes, normalizedArea, tickOrientations, temporalLossCases, translucentBubbles } from "../fixtures/vegaLiteEncodingLoss"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import type { ChildProcess } from "node:child_process"
 import { initializeServer, sendRequest, spawnServer } from "./mcpStdioHarness"
@@ -30,6 +30,17 @@ describe("developer MCP Vega-Lite conversion", () => {
         arguments: { spec, mode }
       })
     ).result
+
+  it.each(areaLabelCases)("renders $component with ordinary object-property names as series", async ({ component, spec }) => {
+    const result = await call(spec)
+    expect(result.isError).not.toBe(true)
+    expect(result.structuredContent.component).toBe(component)
+    const render = (await sendRequest(server, "tools/call", {
+      name: "renderChart", arguments: { component, props: result.structuredContent.props }
+    })).result
+    expect(render.isError).not.toBe(true)
+    expect(render.content[0].text).toContain("<path")
+  })
 
   it.each(flatSeriesCases)("keeps flat $component observations with coordinates arrays", async ({ component, spec }) => {
     const result = await call(spec)
@@ -113,7 +124,7 @@ describe("developer MCP Vega-Lite conversion", () => {
     }
   })
 
-  it.each(encodingLossExamples)("exposes $path on a $spec.mark over MCP", async ({ spec, path }) => {
+  it.each([...encodingLossExamples, ...temporalLossCases])("exposes $path on a $spec.mark over MCP", async ({ spec, path }) => {
     const strict = await call(spec)
     expect(strict.isError).toBe(true)
     expect(strict.structuredContent.diagnostics).toContainEqual(expect.objectContaining({ path }))

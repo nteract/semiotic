@@ -1,3 +1,4 @@
+import { coerceDateLikeValue, detectDateAccessor } from "../charts/shared/temporalStrings"
 import type { Datum } from "../charts/shared/datumTypes"
 import { aggregateRows } from "./aggregateRows"
 import { fromVegaInterpolation } from "./vegaLiteCurves"
@@ -141,6 +142,26 @@ export function repeatedCategories(data: Datum[], fields: string[], aggregate = 
   return false
 }
 
+export function temporalCoordinateLoss(data: Datum[] | undefined, field: string, base: string) {
+  let readsDates: boolean | undefined
+  for (const [index, row] of (data ?? []).entries()) {
+    const value = row[field]
+    if (typeof value === "number" || typeof value === "string" || value instanceof Date) {
+      readsDates ??= detectDateAccessor(value)
+      const numeric = Number(value)
+      const vegaTime = typeof value === "string" ? Date.parse(value) : numeric
+      const chartTime = readsDates ? coerceDateLikeValue(value) : numeric
+      if (Number.isFinite(new Date(vegaTime).getTime()) && chartTime === vegaTime) continue
+    }
+    const path = `${base}/${index}/${pointerSegment(field)}`
+    return {
+      code: "UNSUPPORTED_TEMPORAL_VALUE",
+      path,
+      message: `${path} cannot retain its time coordinate. Supply epoch milliseconds for all rows.`
+    }
+  }
+}
+
 /** The strict subset is an allowlist: unhandled semantics cannot silently succeed. */
 export function vegaLiteSemanticDiagnostics(
   spec: VegaLiteSpec
@@ -196,6 +217,10 @@ export function vegaLiteSemanticDiagnostics(
   }
   const encoding = spec.encoding ?? {}
   const { x, y, color, theta } = encoding
+  if (continuous && x?.field && vegaLiteFieldType(x) === "temporal") {
+    const loss = temporalCoordinateLoss(spec.data?.values, x.field, "/data/values")
+    if (loss) diagnostics.push({ ...loss, severity: "error" })
+  }
   if (mark === "arc" && typeof color?.field === "string" && spec.data?.values &&
       repeatedCategories(spec.data.values, [color.field], Boolean(theta?.aggregate))) {
     unsupported("/encoding/color/field")
