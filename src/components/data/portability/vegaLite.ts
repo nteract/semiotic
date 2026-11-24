@@ -14,7 +14,7 @@
  * Pure, dependency-free, no chart-family imports.
  */
 import { toVegaInterpolation } from "../vegaLiteCurves"
-import { hasVegaFieldPath, isRecord, isRecordArray, pointOpacityProp, temporalCoordinateLoss } from "../vegaLiteValidation"
+import { hasVegaFieldPath, isRecord, isRecordArray, pointOpacityProp, repeatedCategories, temporalCoordinateLoss } from "../vegaLiteValidation"
 import { exportableColorScheme, vegaLiteExportLosses } from "./vegaLiteExportDiagnostics"
 import type { ChartConfig } from "../../export/chartConfig"
 import type { Datum } from "../../charts/shared/datumTypes"
@@ -278,6 +278,10 @@ export function toVegaLiteResult(
   }
 
   for (const [channel, encoding] of Object.entries(enc)) {
+    if (encoding.type === "nominal" && encoding.field && props.data && repeatedCategories(props.data, [encoding.field], true)) {
+      lossReport.push({ code: "UNSUPPORTED_ENCODING", path: `/encoding/${channel}/field`,
+        message: "Distinct categories share the same Semiotic display key." })
+    }
     if (encoding.field && hasVegaFieldPath(encoding.field)) {
       lossReport.push({ code: "UNSUPPORTED_ENCODING", path: `/encoding/${channel}/field`,
         message: "Vega-Lite interprets this literal Semiotic field name as a field path." })

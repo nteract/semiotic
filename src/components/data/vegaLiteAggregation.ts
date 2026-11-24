@@ -1,5 +1,5 @@
 import type { Datum } from "../charts/shared/datumTypes"
-import { isCategory, vegaLiteFieldType } from "./vegaLiteValidation"
+import { isCategory, vegaLiteFieldType, vegaTimeValue } from "./vegaLiteValidation"
 import type { VegaLiteImportError } from "./vegaLiteValidation"
 import type { VegaLiteEncoding, VegaLiteSpec } from "./fromVegaLite"
 import {
@@ -32,10 +32,10 @@ export function vegaLiteAggregationDiagnostics(
       (encodings.x?.bin || encodings.y?.bin) &&
       operation !== "count"
     ) {
-      message = "Binned channels only support count."
+      message = "Use count with binning."
     } else if (operation !== "count" && !encoding.field) {
       code = "INVALID_AGGREGATE"
-      message = "An encoded value field is required."
+      message = "Provide a value field."
     } else if (!spec.data?.values) {
       const mark = typeof spec.mark === "string" ? spec.mark : spec.mark?.type
       const category = channel === "x" ? encodings.y : channel === "y" ? encodings.x : undefined
@@ -44,7 +44,7 @@ export function vegaLiteAggregationDiagnostics(
         continue
       }
       code = "INVALID_AGGREGATE"
-      message = "Inline data.values are required."
+      message = "Provide data.values."
     }
     if (message)
       diagnostics.push({
@@ -73,11 +73,10 @@ export function aggregateVegaLite(
   // values and make the downstream chart count unique values instead of rows.
   if (!data || diagnostics.length || encoding.x?.bin || encoding.y?.bin)
     return { data, encoding }
-  const fields = new Set(
-    Object.values(encoding)
-      .filter((channel) => channel.aggregate === undefined && channel.field)
-      .map((channel) => channel.field!)
-  )
+  const fields = new Set<string>()
+  for (const { aggregate, field } of Object.values(encoding)) {
+    if (aggregate === undefined && field) fields.add(field)
+  }
   const usedFields = new Set(fields)
   const measures: AggregateMeasure[] = []
   const resolved = { ...encoding }
@@ -87,8 +86,8 @@ export function aggregateVegaLite(
     const outputField = unusedAggregateField(usedFields)
     usedFields.add(outputField)
     const type = vegaLiteFieldType(value)
-    measures.push({ field: value.field, operation, outputField,
-      readValue: type === "quantitative" ? quantitativeValue : undefined })
+    const readValue = type === "temporal" ? vegaTimeValue : type === "quantitative" ? quantitativeValue : undefined
+    measures.push({ field: value.field, operation, outputField, readValue })
     resolved[channel] = { ...value, type, field: outputField, aggregate: undefined }
   }
   return measures.length

@@ -3,6 +3,14 @@ const category = { field: "team", type: "nominal" } as const
 const values = [{ team: 1, cohort: "A", state: "open", orders: 3 }, { team: "1", cohort: "A", state: "closed", orders: 2 }]
 
 export const encodingLossExamples = [
+  { spec: { mark: "tick", data: { values }, encoding: { x: category, y: quantity } }, path: "/encoding/x/field" },
+  { spec: { mark: "tick", data: { values }, encoding: { x: quantity, y: category } }, path: "/encoding/y/field" },
+  { spec: { mark: "rect", data: { values }, encoding: {
+    x: category, y: { field: "cohort", type: "nominal" }, color: quantity
+  } }, path: "/encoding/x/field" },
+  { spec: { mark: "line", data: { values }, encoding: {
+    x: quantity, y: quantity, color: { field: "cohort", type: "nominal", aggregate: "min" }
+  } }, path: "/encoding/color/aggregate" },
   { spec: { mark: "point", data: { values }, encoding: {
     x: quantity, y: quantity, opacity: { value: 0.5, type: "quantitative" }
   } }, path: "/encoding/opacity/type" },
@@ -90,7 +98,7 @@ export const translucentBubbles = {
 
 export const tickOrientations = (["vertical", "horizontal"] as const).map(orientation => ({
   orientation,
-  spec: { mark: "tick", data: { values }, encoding: orientation === "vertical"
+  spec: { mark: "tick", data: { values: [{ team: "East", orders: 3 }, { team: "West", orders: 2 }] }, encoding: orientation === "vertical"
     ? { x: category, y: quantity } : { x: quantity, y: category } }
 }))
 
@@ -193,4 +201,37 @@ export const areaLabelCases = [null, "zero"].map(stack => ({
       color: { field: "group", type: "nominal" as const }
     }
   }
+}))
+
+export const temporalExtrema = ["min", "max"].map(aggregate => ({
+  aggregate,
+  expected: aggregate === "min" ? Date.UTC(2024, 0, 1) : Date.UTC(2024, 0, 2),
+  spec: {
+    mark: "point",
+    data: { values: [{ date: "2024-01-02", v: 1 }, { date: "2024-01-01", v: 1 }] },
+    encoding: {
+      x: { field: "date", type: "temporal" as const, aggregate },
+      y: { field: "v", type: "quantitative" as const }
+    }
+  }
+}))
+
+export const collidingSeries = [
+  { mark: "line", stack: undefined },
+  { mark: "area", stack: "zero" },
+  { mark: "area", stack: null },
+  { mark: "point", stack: undefined }
+].map(({ mark, stack }) => ({
+  spec: {
+    mark,
+    data: { values: [1, "1"].flatMap((team, i) => [
+      { t: 2 - i, v: 2 + i, team }, { t: 4 - i, v: 3 + i, team }
+    ]) },
+    encoding: {
+      x: { field: "t", type: "quantitative" as const },
+      y: { field: "v", type: "quantitative" as const, ...(stack !== undefined && { stack }) },
+      color: { field: "team", type: "nominal" as const }
+    }
+  },
+  path: "/encoding/color/field"
 }))

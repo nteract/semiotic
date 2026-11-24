@@ -10,6 +10,10 @@ export interface AggregateMeasure {
   readValue?: (raw: unknown) => number | undefined
 }
 
+export function isDataField(value: unknown): value is string {
+  return typeof value === "string" && value.length > 0
+}
+
 export function normalizeAggregate(
   value: unknown
 ): AggregateOperation | undefined {
@@ -50,9 +54,7 @@ export function aggregateRows(
 ): Datum[] {
   if (!Array.isArray(data))
     throw new TypeError("aggregate data must be an array of rows")
-  if (
-    groupFields.some((field) => typeof field !== "string" || field.length === 0)
-  ) {
+  if (!groupFields.every(isDataField)) {
     throw new TypeError("groupBy must contain nonempty field names")
   }
   const fields = [...new Set(groupFields)]
@@ -65,17 +67,16 @@ export function aggregateRows(
       throw new TypeError("Unsupported aggregate operation")
     }
     if (
-      typeof measure.outputField !== "string" ||
-      !measure.outputField ||
+      !isDataField(measure.outputField) ||
       usedFields.has(measure.outputField)
     ) {
       throw new TypeError(
-        "outputField must be a nonempty field distinct from groupBy and other aggregate outputs"
+        "outputField must be a new, nonempty field name"
       )
     }
     if (
       measure.operation !== "count" &&
-      (typeof measure.field !== "string" || !measure.field)
+      !isDataField(measure.field)
     ) {
       throw new TypeError("A value field is required for this aggregate")
     }

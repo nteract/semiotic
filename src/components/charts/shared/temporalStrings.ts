@@ -19,8 +19,7 @@ export function parseDateLikeString(value: string): number {
       : NaN
   }
   if (trimmed.length < 10) return NaN
-  const parsed = Date.parse(trimmed)
-  return Number.isFinite(parsed) ? parsed : NaN
+  return Date.parse(trimmed)
 }
 
 export function detectDateAccessor(value: unknown): boolean | undefined {
@@ -44,7 +43,7 @@ export function coerceUtcTimeValue(value: unknown): number {
   const text = value.trim()
   const numeric = Number(text)
   if (!Number.isNaN(numeric)) return Number.isFinite(numeric) ? numeric : NaN
-  if (/^\d{4}-\d{1,2}(?:-\d{1,2})?$/.test(text)) {
+  if (ISO_CALENDAR_DATE.test(text)) {
     return parseDateLikeString(text)
   }
   const datetime = /^(\d{4}-\d{2}-\d{2})[Tt ](\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?)([Zz]|[+-]\d{2}:?\d{2})?$/.exec(text)

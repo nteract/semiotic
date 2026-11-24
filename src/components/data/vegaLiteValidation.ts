@@ -1,6 +1,6 @@
 import { coerceDateLikeValue, detectDateAccessor } from "../charts/shared/temporalStrings"
 import type { Datum } from "../charts/shared/datumTypes"
-import { aggregateRows } from "./aggregateRows"
+import { aggregateRows, isDataField } from "./aggregateRows"
 import { fromVegaInterpolation } from "./vegaLiteCurves"
 import type { VegaLiteEncoding, VegaLiteSpec } from "./fromVegaLite"
 import type { PortabilityDiagnostic } from "./portability/result"
@@ -91,7 +91,7 @@ export function vegaLiteShapeDiagnostics(
           invalid(path, "an object")
           continue
         }
-        if (encoding.field !== undefined && (typeof encoding.field !== "string" || !encoding.field.length)) {
+        if (encoding.field !== undefined && !isDataField(encoding.field)) {
           invalid(`${path}/field`, "a nonempty string")
         }
         if (encoding.type !== undefined && !["quantitative", "ordinal", "temporal", "nominal", "geojson"].includes(encoding.type as string)) {
@@ -142,16 +142,21 @@ export function repeatedCategories(data: Datum[], fields: string[], aggregate = 
   return false
 }
 
-export function temporalCoordinateLoss(data: Datum[] | undefined, field: string, base: string) {
+export function vegaTimeValue(value: unknown): number {
+  if (typeof value === "string") return Date.parse(value)
+  return value instanceof Date || typeof value === "number" ? Number(value) : NaN
+}
+
+export function temporalCoordinateLoss(data: Datum[] | undefined, field: string, base: string, aggregated = false) {
   let readsDates: boolean | undefined
   for (const [index, row] of (data ?? []).entries()) {
     const value = row[field]
     if (typeof value === "number" || typeof value === "string" || value instanceof Date) {
       readsDates ??= detectDateAccessor(value)
       const numeric = Number(value)
-      const vegaTime = typeof value === "string" ? Date.parse(value) : numeric
+      const vegaTime = vegaTimeValue(value)
       const chartTime = readsDates ? coerceDateLikeValue(value) : numeric
-      if (Number.isFinite(new Date(vegaTime).getTime()) && chartTime === vegaTime) continue
+      if (Number.isFinite(new Date(vegaTime).getTime()) && (aggregated || chartTime === vegaTime)) continue
     }
     const path = `${base}/${index}/${pointerSegment(field)}`
     return {
@@ -218,7 +223,7 @@ export function vegaLiteSemanticDiagnostics(
   const encoding = spec.encoding ?? {}
   const { x, y, color, theta } = encoding
   if (continuous && x?.field && vegaLiteFieldType(x) === "temporal") {
-    const loss = temporalCoordinateLoss(spec.data?.values, x.field, "/data/values")
+    const loss = temporalCoordinateLoss(spec.data?.values, x.field, "/data/values", x.aggregate !== undefined)
     if (loss) diagnostics.push({ ...loss, severity: "error" })
   }
   if (mark === "arc" && typeof color?.field === "string" && spec.data?.values &&
@@ -269,9 +274,15 @@ export function vegaLiteSemanticDiagnostics(
     const allowed = channel === "opacity" ? ["value"] : ["field", "type", "aggregate", "scale"]
     if (channel === "x" || channel === "y") allowed.push("axis", "bin", "stack")
     keys(enc, allowed, path)
+    const fieldType = vegaLiteFieldType(enc)
+    if (isCategory(fieldType) && enc.aggregate !== undefined && enc.aggregate !== "count") unsupported(`${path}/aggregate`)
+    if (isCategory(fieldType) && enc.field && enc.aggregate === undefined && spec.data?.values &&
+        (mark !== "arc" || channel !== "color") && repeatedCategories(spec.data.values, [enc.field], true)) {
+      unsupported(`${path}/field`)
+    }
     if (enc.field && hasVegaFieldPath(enc.field))
       unsupported(`${path}/field`)
-    if (!supportsChannelType(channel, vegaLiteFieldType(enc), mark, continuous)) unsupported(`${path}/type`)
+    if (!supportsChannelType(channel, fieldType, mark, continuous)) unsupported(`${path}/type`)
     if (
       channel === "opacity" &&
       (enc.field !== undefined || typeof enc.value !== "number")

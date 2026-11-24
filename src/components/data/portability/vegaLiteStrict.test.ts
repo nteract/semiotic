@@ -1,4 +1,4 @@
-import { areaLabelCases, encodingLossExamples, flatSeriesCases, impliedAggregateAxes, malformedAggregateFields, malformedChannelTypes, normalizedArea, temporalLossCases, translucentBubbles } from "../../../__tests__/fixtures/vegaLiteEncodingLoss"
+import { areaLabelCases, collidingSeries, encodingLossExamples, flatSeriesCases, impliedAggregateAxes, malformedAggregateFields, malformedChannelTypes, normalizedArea, temporalExtrema, temporalLossCases, translucentBubbles } from "../../../__tests__/fixtures/vegaLiteEncodingLoss"
 import { describe, expect, it, vi } from "vitest"
 import { fromVegaLite, fromVegaLiteResult } from "../fromVegaLite"
 import type { VegaLiteSpec } from "../fromVegaLite"
@@ -48,6 +48,26 @@ describe("strict Vega-Lite boundaries", () => {
     const exported = toVegaLiteResult(chart)
     expect(exported.status).toBe("refused")
     expect(exported.lossReport).toContainEqual(expect.objectContaining({ path: path.replace("/data/values", "/props/data") }))
+  })
+
+  it.each(collidingSeries)("retains the categorical loss on export of a lossy $spec.mark conversion", ({ spec, path }) => {
+    const chart = fromVegaLiteResult(spec, { mode: "lossy" }).config!
+    const exported = toVegaLiteResult(chart)
+    expect(exported.status).toBe("refused")
+    expect(exported.lossReport).toContainEqual(expect.objectContaining({ path }))
+  })
+
+  it("compares temporal aggregate inputs in Vega time, including a calendar year and an epoch", () => {
+    const spec = temporalExtrema[0].spec
+    const chart = importSpec({ ...spec, data: { values: [{ date: "2024", v: 1 }, { date: Date.UTC(2025, 0, 1), v: 1 }] } }).config!
+    expect(chart.props.data).toEqual([{ [chart.props.xAccessor]: Date.UTC(2024, 0, 1), v: 1 }])
+  })
+
+  it.each(temporalExtrema)("materializes temporal $aggregate before plotting", ({ spec, expected }) => {
+    for (const chart of [fromVegaLite(spec), fromVegaLiteResult(spec).config!]) {
+      expect(chart.props.data).toEqual([{ v: 1, [chart.props.xAccessor]: expected }])
+      expect(renderChartWithEvidence(chart.component, chart.props).evidence.markCountByType.point).toBe(1)
+    }
   })
 
   it.each(areaLabelCases)("paints all three nominal $component series with object-property names", ({ spec, component }) => {
@@ -166,7 +186,7 @@ describe("strict Vega-Lite boundaries", () => {
     }))
   })
 
-  it.each([...encodingLossExamples, ...temporalLossCases])("reports $path on a $spec.mark before rendering", ({ spec, path }) => {
+  it.each([...encodingLossExamples, ...temporalLossCases, ...collidingSeries])("reports $path on a $spec.mark before rendering", ({ spec, path }) => {
     const strict = importSpec(spec)
     expect(strict.status).toBe("refused")
     expect(strict.diagnostics).toContainEqual(expect.objectContaining({ path, severity: "error" }))
