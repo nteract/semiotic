@@ -124,7 +124,9 @@ export function vegaLiteDataLosses(spec: VegaLiteSpec, base: string) {
       if (!invalidTotal && !materialized.data?.some(row => row[output] == null)) continue
       path = `/encoding/${pointerSegment(name)}/aggregate`
     } else {
-      const index = rows.findIndex(row => row[field] == null)
+      // Vega parses a path's quantitative x before sorting its observations.
+      const pathX = name === "x" && (mark === "line" || mark === "area")
+      const index = rows.findIndex(row => row[field] == null || (pathX && row[field] === ""))
       if (index < 0) continue
       path = `${base}/${index}/${pointerSegment(field)}`
     }

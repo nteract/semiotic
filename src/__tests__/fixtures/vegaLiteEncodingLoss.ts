@@ -8,7 +8,14 @@ export const overlappingHeatmap = {
   encoding: { x: { field: "x", type: "nominal" }, y: { field: "y", type: "nominal" }, color: { field: "v", type: "quantitative" } }
 }
 
+export const emptyPathCoordinates = ["line", "area"].map(mark => ({
+  spec: { mark, data: { values: [{ x: 1, y: 3 }, { x: "", y: 4 }, { x: 3, y: 2 }] },
+    encoding: { x: { field: "x", type: "quantitative" }, y: { field: "y", type: "quantitative" } } },
+  path: "/data/values/1/x"
+}))
+
 export const encodingLossExamples = [
+  ...emptyPathCoordinates,
   { spec: overlappingHeatmap, path: "/encoding/color" },
   ...["point", "line", "area"].map(mark => ({
     spec: { mark, data: { values: [{ x: "2024-01-01", y: 3 }, { x: "2024-01-02", y: 4 }] },

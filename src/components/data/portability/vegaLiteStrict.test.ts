@@ -1,4 +1,4 @@
-import { areaLabelCases, booleanMeasureCases, collidingSeries, contaminatedSums, encodingLossExamples, flatSeriesCases, impliedAggregateAxes, invalidAggregateGroups, malformedAggregateFields, malformedChannelTypes, normalizedArea, nullableMeasures, overlappingHeatmap, temporalExtrema, temporalGroupCases, temporalLossCases, translucentBubbles } from "../../../__tests__/fixtures/vegaLiteEncodingLoss"
+import { areaLabelCases, booleanMeasureCases, collidingSeries, contaminatedSums, emptyPathCoordinates, encodingLossExamples, flatSeriesCases, impliedAggregateAxes, invalidAggregateGroups, malformedAggregateFields, malformedChannelTypes, normalizedArea, nullableMeasures, overlappingHeatmap, temporalExtrema, temporalGroupCases, temporalLossCases, translucentBubbles } from "../../../__tests__/fixtures/vegaLiteEncodingLoss"
 import { describe, expect, it, vi } from "vitest"
 import { fromVegaLite, fromVegaLiteResult } from "../fromVegaLite"
 import type { VegaLiteSpec } from "../fromVegaLite"
@@ -133,6 +133,27 @@ describe("strict Vega-Lite boundaries", () => {
     expect(toVegaLiteResult(config("LineChart", { ...props, curve: "monotoneY" })).lossReport).toContainEqual(
       expect.objectContaining({ path: "/props/curve" })
     )
+  })
+
+  it.each(emptyPathCoordinates)("reports an empty x in a native $spec.mark export", ({ spec }) => {
+    const component = spec.mark === "line" ? "LineChart" : "AreaChart"
+    const chart = config(component, { data: spec.data.values })
+    expect(toVegaLiteResult(chart).lossReport).toContainEqual(expect.objectContaining({ path: "/props/data/1/x" }))
+    const native = renderChartWithEvidence(component, chart.props)
+    const zero = renderChartWithEvidence(component, { data: spec.data.values.map(row => ({ ...row, x: Number(row.x) })) })
+    const paths = (svg: string) => Array.from(svg.matchAll(/<path\b[^>]*\bd="([^"]+)"/g), match => match[1])
+    expect(native.evidence.markCount).toBeGreaterThan(0)
+    expect(paths(native.svg)).toEqual(paths(zero.svg))
+  })
+
+  it("preserves an empty quantitative point coordinate and a line's empty y coordinate", () => {
+    const { spec } = emptyPathCoordinates[0]
+    const point = importSpec({ ...spec, mark: "point" })
+    expect(point.status).toBe("success")
+    expect(renderChartWithEvidence("Scatterplot", point.config!.props).evidence.markCountByType.point).toBe(3)
+    const data = { values: spec.data.values.map(row => ({ x: row.y, y: row.x })) }
+    expect(importSpec({ ...spec, data }).status).toBe("success")
+    expect(toVegaLiteResult(config("LineChart", { data: data.values })).status).toBe("success")
   })
 
   it("distinguishes a missing numeric point from numeric zero in both directions", () => {
