@@ -1,3 +1,4 @@
+import { extractGeoNavPoints } from "./geoKeyboardNavigation"
 import { describe, expect, it } from "vitest"
 import { geoContains, geoEquirectangular, geoEqualEarth, geoMercator, geoPath } from "d3-geo"
 import { zoomIdentity } from "d3-zoom"
@@ -5,7 +6,6 @@ import { GeoPipelineStore } from "./GeoPipelineStore"
 import { applyDistanceCartogram } from "./geoCartogram"
 import { buildBuiltInGeoScene } from "./geoSceneBuilder"
 import { findNearestGeoNode } from "./GeoCanvasHitTester"
-import { extractGeoNavPoints } from "./keyboardNav"
 import type { GeoPipelineConfig } from "./geoTypes"
 
 const size = { width: 600, height: 320 }

@@ -11,11 +11,9 @@
  */
 
 import type { HoverData } from "../realtime/types"
-import type { SceneNode } from "./types"
+import type { GlyphSceneNode, SceneNode, RectSceneNode, HeatcellSceneNode } from "./types"
 import type { OrdinalSceneNode } from "./ordinalTypes"
-import type { GeoSceneNode } from "./geoTypes"
 import { glyphHitGeometry } from "./glyphDef"
-import { polygonFocusAnchor } from "./geoPolygonFocus"
 import { normalizeHoverDatum } from "./hoverUtils"
 
 export { buildNavGraph, resolvePosition, nextGraphIndex, nextIndex } from "./navigationGraph"
@@ -24,6 +22,23 @@ export { extractNetworkNavPoints, nextNetworkIndex } from "./networkKeyboardNav"
 import type { NavPoint } from "./navigationGraph"
 
 // ── XY Extraction ────────────────────────────────────────────────────────
+
+function rectNavPoint({ x, y, w, h, datum }: RectSceneNode | HeatcellSceneNode, group: string, semanticKey?: string): NavPoint {
+  return { x: x + w / 2, y: y + h / 2, w, h, datum, shape: "rect", group, semanticKey }
+}
+
+export function navPath(path: [number, number][]) {
+  return `M${path.map(point => point.join(",")).join("L")}`
+}
+
+export function glyphNavPoint(node: GlyphSceneNode, group?: string): NavPoint {
+  const geometry = glyphHitGeometry(node.glyph, node.size)
+  return {
+    x: node.x + geometry.centerDx, y: node.y + geometry.centerDy,
+    w: geometry.halfWidth * 2, h: geometry.halfHeight * 2,
+    datum: node.datum, shape: "rect", group
+  }
+}
 
 /**
  * Extract navigable data points from XY scene nodes.
@@ -45,16 +60,7 @@ export function extractXYNavPoints(scene: SceneNode[]): NavPoint[] {
       case "glyph": {
         if (node.size <= 0 || node.datum == null) break
         // Focus ring hugs the drawn pictogram bounds (anchor-aware).
-        const geometry = glyphHitGeometry(node.glyph, node.size)
-        points.push({
-          x: node.x + geometry.centerDx,
-          y: node.y + geometry.centerDy,
-          datum: node.datum,
-          shape: "rect",
-          w: geometry.halfWidth * 2,
-          h: geometry.halfHeight * 2,
-          group: "_default"
-        })
+        points.push(glyphNavPoint(node, "_default"))
         break
       }
 
@@ -74,18 +80,8 @@ export function extractXYNavPoints(scene: SceneNode[]): NavPoint[] {
         // A restyle or a data push rebuilds every histogram bin datum, so
         // focus finds its bin again by stack segment and bin start.
         const binStart = node.datum?.binStart
-        points.push({
-          x: node.x + node.w / 2,
-          y: node.y + node.h / 2,
-          datum: node.datum,
-          shape: "rect",
-          w: node.w,
-          h: node.h,
-          semanticKey: typeof binStart === "number" && Number.isFinite(binStart)
-            ? JSON.stringify(["bin", node.group ?? null, binStart])
-            : undefined,
-          group: node.group ?? "_default"
-        })
+        const key = Number.isFinite(binStart) ? JSON.stringify(["bin", node.group ?? null, binStart]) : undefined
+        points.push(rectNavPoint(node, node.group ?? "_default", key))
         break
       }
 
@@ -101,15 +97,7 @@ export function extractXYNavPoints(scene: SceneNode[]): NavPoint[] {
       }
 
       case "heatcell":
-        points.push({
-          x: node.x + node.w / 2,
-          y: node.y + node.h / 2,
-          datum: node.datum,
-          shape: "rect",
-          w: node.w,
-          h: node.h,
-          group: "_default"
-        })
+        points.push(rectNavPoint(node, "_default"))
         break
     }
   }
@@ -154,41 +142,24 @@ export function extractOrdinalNavPoints(scene: OrdinalSceneNode[]): NavPoint[] {
             : datum.bin != null && datum.count != null && Array.isArray(datum.range)
               ? ["bin", category, ...datum.range]
               : undefined
-      push({
-        x: node.x + node.w / 2,
-        y: node.y + node.h / 2,
-        datum: node.datum,
-        shape: "rect",
-        w: node.w,
-        h: node.h,
-        semanticKey: aggregateKey && JSON.stringify(aggregateKey),
-        group
-      })
+      push(rectNavPoint(node, group, aggregateKey && JSON.stringify(aggregateKey)))
     } else if (node.type === "point" || node.type === "symbol") {
       if (node.datum == null || (node.type === "point" ? node.interactive === false : node.size <= 0)) continue
       push({ x: node.x, y: node.y, datum: node.datum, shape: "circle", group: "_default" })
     } else if (node.type === "glyph") {
       if (node.size <= 0 || node.datum == null) continue
-      const geometry = glyphHitGeometry(node.glyph, node.size)
-      push({
-        x: node.x + geometry.centerDx,
-        y: node.y + geometry.centerDy,
-        datum: node.datum,
-        shape: "rect",
-        w: geometry.halfWidth * 2,
-        h: geometry.halfHeight * 2,
-        group: "_default"
-      })
+      push(glyphNavPoint(node, "_default"))
     } else if (node.type === "boxplot") {
       if (node.datum == null) continue
       const vertical = node.projection === "vertical"
+      const center = (node.q1Pos + node.q3Pos) / 2
+      const span = Math.abs(node.q3Pos - node.q1Pos)
       push({
-        x: vertical ? node.x : (node.q1Pos + node.q3Pos) / 2,
-        y: vertical ? (node.q1Pos + node.q3Pos) / 2 : node.y,
+        x: vertical ? node.x : center, y: vertical ? center : node.y,
         datum: normalizeHoverDatum(node.datum),
         shape: "rect",
-        w: vertical ? node.columnWidth : Math.abs(node.q3Pos - node.q1Pos),
-        h: vertical ? Math.abs(node.q3Pos - node.q1Pos) : node.columnWidth,
+        w: vertical ? node.columnWidth : span,
+        h: vertical ? span : node.columnWidth,
         semanticKey: node.category != null ? JSON.stringify([node.type, node.category]) : undefined,
         stats: node.stats, category: node.category, group: "_default"
       })
@@ -208,7 +179,7 @@ export function extractOrdinalNavPoints(scene: OrdinalSceneNode[]): NavPoint[] {
         x: node.points.reduce((sum, point) => sum + point[0], 0) / node.points.length,
         y: node.points.reduce((sum, point) => sum + point[1], 0) / node.points.length,
         datum: normalizeHoverDatum(node.datum),
-        shape: "path", pathData: `M${node.points.map((point) => point.join(",")).join("L")}Z`,
+        shape: "path", pathData: navPath(node.points) + "Z",
         category: node.category, group: "_default"
       })
     } else if (node.type === "connector") {
@@ -242,76 +213,8 @@ export function extractOrdinalNavPoints(scene: OrdinalSceneNode[]): NavPoint[] {
   return points.sort((a, b) => a.readingOrder! - b.readingOrder! || a.x - b.x || a.y - b.y)
 }
 
-// ── Geo Extraction ───────────────────────────────────────────────────────
 
-/**
- * Extract navigable points from geo scene nodes.
- * Flat navigation only (no meaningful grouping for geo).
- */
-export function extractGeoNavPoints(scene: GeoSceneNode[]): NavPoint[] {
-  const points: NavPoint[] = []
 
-  for (const node of scene) {
-    if (
-      node.type === "point" &&
-      node.x != null &&
-      node.interactive !== false
-    ) {
-      points.push({ x: node.x, y: node.y, datum: node.datum, shape: "circle" })
-    } else if (node.type === "glyph") {
-      if (node.size <= 0 || node.datum == null) continue
-      const geometry = glyphHitGeometry(node.glyph, node.size)
-      points.push({
-        x: node.x + geometry.centerDx,
-        y: node.y + geometry.centerDy,
-        datum: node.datum,
-        shape: "rect",
-        w: geometry.halfWidth * 2,
-        h: geometry.halfHeight * 2,
-      })
-    } else if (node.type === "line") {
-      if (node.continuation || node.datum == null || node.path.length < 2) continue
-      // Half the drawn path length keeps the tooltip on curved/resampled flows.
-      const lengths = node.path.slice(1).map((point, index) =>
-        Math.hypot(point[0] - node.path[index][0], point[1] - node.path[index][1]))
-      let remaining = lengths.reduce((sum, length) => sum + length, 0) / 2
-      if (!Number.isFinite(remaining) || remaining <= 0) continue
-      for (let index = 0; index < lengths.length; index++) {
-        const length = lengths[index]
-        if (length > 0 && remaining <= length) {
-          const start = node.path[index]
-          const end = node.path[index + 1]
-          const ratio = remaining / length
-          points.push({
-            x: start[0] + (end[0] - start[0]) * ratio,
-            y: start[1] + (end[1] - start[1]) * ratio,
-            datum: normalizeHoverDatum(node.datum), shape: "path",
-            pathData: `M${node.path.map((point) => point.join(",")).join("L")}`
-          })
-          break
-        }
-        remaining -= length
-      }
-    } else if (node.type === "geoarea" && node.centroid && node.interactive !== false) {
-      // Skip non-interactive areas (e.g. the graticule, `datum: null`) so
-      // keyboard nav lands only on hit-testable shapes — mirrors the
-      // `interactive === false` skip in CanvasHitTester. Without this, the
-      // new geoarea focus ring would outline the whole graticule mesh.
-      // Navigate to the centroid (for the hover payload + label position) but
-      // carry the path so the focus ring outlines the whole area, not a dot.
-      const [x, y] = polygonFocusAnchor(node.focusPath ?? node.pathData, node.centroid) ?? node.centroid
-      points.push({
-        x, y,
-        datum: node.datum,
-        shape: "geoarea",
-        pathData: node.pathData,
-      })
-    }
-  }
-
-  points.sort((a, b) => a.x - b.x || a.y - b.y)
-  return points
-}
 
 /**
  * Convert a NavPoint to HoverData for the tooltip system.

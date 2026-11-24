@@ -146,13 +146,18 @@ function lineFragments<T>(transform: (sink: GeoStream) => GeoStream, position: (
   }
 }
 
+// Composite projections such as Albers USA omit the configurable postclip.
+function screenClip(projection: Partial<Pick<GeoProjection, "postclip">>) {
+  return projection.postclip?.()
+}
+
 /** Stream whole routes so clipping preserves endpoints on both sides of a seam. */
 export function createGeoLineProjector(
   projection: GeoProjection, straight: boolean,
   position: (d: Datum) => Position, cartogram = false
 ) {
   const extent = projection.clipExtent?.()
-  const postclip = typeof projection.postclip === "function" ? projection.postclip() : undefined
+  const postclip = screenClip(projection)
   const angle = cartogram && projection.clipAngle?.()
   const precision = projection.precision()
   try {
@@ -172,7 +177,7 @@ export function createGeoLineProjector(
 
 export function clipStyledGeoLine(projection: GeoProjection, width: number, height: number) {
   const viewport = geoClipRectangle(0, 0, width, height)
-  const postclip = typeof projection.postclip === "function" ? projection.postclip() : undefined
+  const postclip = screenClip(projection)
   return lineFragments<Position>(sink => {
     const clipped = viewport(sink)
     return postclip ? postclip(clipped) : clipped

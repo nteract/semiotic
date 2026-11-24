@@ -191,7 +191,7 @@
     "owner": "Semiotic repository maintainers",
     "status": "supported-in-scope",
     "observed": {
-      "verifiedAt": "2026-11-23T23:16:07.848Z",
+      "verifiedAt": "2026-11-24T00:05:04.442Z",
       "environment": {
         "node": "v22.22.1",
         "platform": "darwin",
@@ -199,8 +199,8 @@
         "browser": "Playwright Chromium"
       },
       "runtime": {
-        "digest": "sha256:1e85e374ebf4acde85cef78987e85cb0d65bad469e9c7ad198e304514e19b64b",
-        "fileCount": 1536
+        "digest": "sha256:d9b9f59280612880a741f2846d76bf750834d80a40f2312791ca6f06813a9f63",
+        "fileCount": 1538
       },
       "harness": {
         "digest": "sha256:acdb4ff3e31197059c1113897147528fabf10409377b136a5a1e90b54f48ef56",
