@@ -1,18 +1,13 @@
-const CURVE_TO_INTERPOLATE: Record<string, string> = {
-  linear: "linear",
-  monotoneX: "monotone-x",
-  monotoneY: "monotone-y",
-  step: "step",
-  stepAfter: "step-after",
-  stepBefore: "step-before",
-  basis: "basis",
-  cardinal: "cardinal",
-  catmullRom: "catmull-rom",
-}
+const portableNames = [
+  "linear", "monotone-x", "monotone-y", "step", "step-after", "step-before",
+  "basis", "cardinal", "catmull-rom"
+]
+const nativeNames = /* @__PURE__ */ portableNames.map(name => name.replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase()))
 
 export function toVegaInterpolation(curve: unknown): string | undefined {
-  return typeof curve === "string" && Object.hasOwn(CURVE_TO_INTERPOLATE, curve)
-    ? CURVE_TO_INTERPOLATE[curve] : undefined
+  if (curve === "monotoneX") return "monotone"
+  if (curve === "monotoneY") return
+  return portableNames[nativeNames.indexOf(curve as string)]
 }
 
 export function fromVegaInterpolation(interpolation: unknown): string | undefined {
@@ -21,5 +16,5 @@ export function fromVegaInterpolation(interpolation: unknown): string | undefine
 }
 
 export function fromPortableInterpolation(interpolation: unknown): string | undefined {
-  return Object.keys(CURVE_TO_INTERPOLATE).find(curve => CURVE_TO_INTERPOLATE[curve] === interpolation)
+  return nativeNames[portableNames.indexOf(interpolation as string)]
 }

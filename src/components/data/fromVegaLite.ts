@@ -11,7 +11,7 @@ import type { Datum } from "../charts/shared/datumTypes"
  * with basic encodings. No layers, facets, selections, or complex transforms.
  */
 import type { ChartConfig } from "../export/chartConfig"
-import { aggregateVegaLite, vegaLiteAggregationDiagnostics } from "./vegaLiteAggregation"
+import { aggregateVegaLite, missingQuantitativeData, vegaLiteAggregationDiagnostics } from "./vegaLiteAggregation"
 import type {
   PortabilityDiagnostic,
   PortabilityImportResult,
@@ -122,6 +122,7 @@ function strictImportDiagnostics(spec: VegaLiteSpec): VegaLiteImportError[] {
   }
 
   diagnostics.push(...vegaLiteSemanticDiagnostics(normalized), ...vegaLiteAggregationDiagnostics(normalized))
+  for (const loss of missingQuantitativeData(normalized, "/data/values")) diagnostics.push({ ...loss, severity: "error" })
   return diagnostics
 }
 
@@ -291,7 +292,7 @@ function translateVegaLite(spec: VegaLiteSpec, silent = false, createdAt?: strin
       seriesField += "_"
     }
     if (seriesField !== "coordinates") props.lineDataAccessor = seriesField
-    const curve = fromVegaInterpolation(markProps.interpolate)
+    const curve = fromVegaInterpolation(markProps.interpolate ?? (markType === "area" ? "linear" : undefined))
     if (curve) props.curve = curve
   }
   return finish(component)

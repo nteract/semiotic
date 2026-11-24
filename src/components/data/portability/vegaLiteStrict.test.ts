@@ -1,4 +1,4 @@
-import { areaLabelCases, collidingSeries, encodingLossExamples, flatSeriesCases, impliedAggregateAxes, malformedAggregateFields, malformedChannelTypes, normalizedArea, temporalExtrema, temporalGroupCases, temporalLossCases, translucentBubbles } from "../../../__tests__/fixtures/vegaLiteEncodingLoss"
+import { areaLabelCases, collidingSeries, encodingLossExamples, flatSeriesCases, impliedAggregateAxes, malformedAggregateFields, malformedChannelTypes, normalizedArea, nullableMeasures, temporalExtrema, temporalGroupCases, temporalLossCases, translucentBubbles } from "../../../__tests__/fixtures/vegaLiteEncodingLoss"
 import { describe, expect, it, vi } from "vitest"
 import { fromVegaLite, fromVegaLiteResult } from "../fromVegaLite"
 import type { VegaLiteSpec } from "../fromVegaLite"
@@ -88,6 +88,54 @@ describe("strict Vega-Lite boundaries", () => {
       expect(chart.props.data).toEqual([{ v: 1, [chart.props.xAccessor]: expected }])
       expect(renderChartWithEvidence(chart.component, chart.props).evidence.markCountByType.point).toBe(1)
     }
+  })
+
+  it("exports flat areas with duplicate x positions and the component's default accessors", () => {
+    const data = [{ x: 1, y: 3 }, { x: 1, y: 2 }, { x: 2, y: 4 }]
+    const exported = toVegaLiteResult(config("AreaChart", { data }))
+    expect(exported.status).toBe("success")
+    expect(exported.spec?.mark).toMatchObject({ type: "area", interpolate: "monotone" })
+    expect(exported.spec?.encoding).toMatchObject({ x: { field: "x" }, y: { field: "y", stack: null } })
+    expect(importSpec(exported.spec).config?.props).toMatchObject({ xAccessor: "x", yAccessor: "y", data })
+  })
+
+  it.each([null, "zero"])("renders an unstyled Vega area as linear in stack mode %s", stack => {
+    const data = [1, 4, 2, 3].map((y, x) => ({ x, y, group: "A" }))
+    const input = { mark: "area", data: { values: data }, encoding: {
+      x: { field: "x", type: "quantitative" }, y: { field: "y", type: "quantitative", stack },
+      color: { field: "group", type: "nominal" }
+    } }
+    const chart = importSpec(input).config!
+    const shape = renderChartWithEvidence(chart.component, chart.props)
+    expect(shape.evidence.markCountByType.area).toBe(1)
+    expect(shape.svg).not.toMatch(/<path[^>]*d="M[^"]*C/)
+    expect(chart.props.curve).toBe("linear")
+    expect(toVegaLiteResult(chart).spec?.mark).toMatchObject({ interpolate: "linear" })
+  })
+
+  it("exports the Vega-Lite monotone spelling and refuses unsupported vertical interpolation", () => {
+    const props = { data: [{ x: 1, y: 2 }, { x: 2, y: 3 }] }
+    expect(toVegaLiteResult(config("LineChart", { ...props, curve: "monotoneX" })).spec?.mark).toMatchObject({ interpolate: "monotone" })
+    expect(toVegaLiteResult(config("LineChart", { ...props, curve: "monotoneY" })).lossReport).toContainEqual(
+      expect.objectContaining({ path: "/props/curve" })
+    )
+  })
+
+  it("distinguishes a missing numeric point from numeric zero in both directions", () => {
+    const data = [{ x: 1, y: 3 }, { x: 2, y: null }, { x: 3, y: 4 }]
+    const chart = config("Scatterplot", { data, xAccessor: "x", yAccessor: "y" })
+    expect(renderChartWithEvidence("Scatterplot", chart.props).evidence.markCountByType.point).toBe(3)
+    expect(toVegaLiteResult(chart).lossReport).toContainEqual(expect.objectContaining({ path: "/props/data/1/y" }))
+    expect(toVegaLiteResult(config("Scatterplot", { data: [{ x: 2, y: 0 }] })).status).toBe("success")
+  })
+
+  it.each(["sum", "count"])("retains valid aggregate groups containing nulls for %s", aggregate => {
+    const input = { mark: "point", data: { values: [{ x: 1, y: null }, { x: 1, y: 3 }] }, encoding: {
+      x: { field: "x", type: "quantitative" }, y: { field: "y", type: "quantitative", aggregate }
+    } }
+    const result = importSpec(input)
+    expect(result.status).toBe("success")
+    expect(result.config!.props.data).toEqual([{ x: 1, [result.config!.props.yAccessor]: aggregate === "sum" ? 3 : 2 }])
   })
 
   it.each(areaLabelCases)("paints all three nominal $component series with object-property names", ({ spec, component }) => {
@@ -206,7 +254,7 @@ describe("strict Vega-Lite boundaries", () => {
     }))
   })
 
-  it.each([...encodingLossExamples, ...temporalLossCases, ...collidingSeries])("reports $path on a $spec.mark before rendering", ({ spec, path }) => {
+  it.each([...encodingLossExamples, ...temporalLossCases, ...collidingSeries, ...nullableMeasures])("reports $path on a $spec.mark before rendering", ({ spec, path }) => {
     const strict = importSpec(spec)
     expect(strict.status).toBe("refused")
     expect(strict.diagnostics).toContainEqual(expect.objectContaining({ path, severity: "error" }))
@@ -718,7 +766,7 @@ describe("strict Vega-Lite export", () => {
     const result = toVegaLiteResult(
       config("AreaChart", { xAccessor: "x", yAccessor: "y", areaOpacity: 0.25 })
     )
-    expect(result.spec?.mark).toEqual({ type: "area", opacity: 0.25 })
+    expect(result.spec?.mark).toEqual({ type: "area", interpolate: "monotone", opacity: 0.25 })
   })
 
   it.each([null, 42, { component: "BarChart", props: null }, { component: "BarChart", props: { data: "bad" } }])("refuses malformed outbound config %j", value => {

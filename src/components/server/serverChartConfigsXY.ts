@@ -375,6 +375,7 @@ export const areaChart: ChartConfig = {
       ...(series.yExtent && !common.yExtent && { yExtent: series.yExtent }),
       ...(resolvedGradientFill !== undefined && { gradientFill: resolvedGradientFill }),
       ...(semanticLineStops && { semanticLineStops }),
+      curve: common.curve ?? rest.curve ?? "monotoneX",
       // `frameProps.lineStyle` is the public escape hatch and wins exactly
       // as it does in AreaChart; otherwise resolve the HOC defaults here.
       lineStyle: common.lineStyle || buildAreaLineStyle(preparedData, effectiveColorBy, colorScheme, common, rest),

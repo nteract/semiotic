@@ -13,6 +13,7 @@
  *
  * Pure, dependency-free, no chart-family imports.
  */
+import { missingQuantitativeData } from "../vegaLiteAggregation"
 import { toVegaInterpolation } from "../vegaLiteCurves"
 import { hasVegaFieldPath, isRecord, isRecordArray, pointOpacityProp, repeatedCategories, temporalCoordinateLoss } from "../vegaLiteValidation"
 import { exportableColorScheme, vegaLiteExportLosses } from "./vegaLiteExportDiagnostics"
@@ -138,7 +139,12 @@ export function toVegaLiteResult(
     const diagnostic = { code: "INVALID_CONFIG", severity: "error" as const, path: "/", message: "Export requires a chart config with a component string and props object." }
     return { status: "refused", diagnostics: [diagnostic], lossReport: [diagnostic], provenance }
   }
-  const props: AnyProps = config.props
+  const props: AnyProps = { ...config.props }
+  if (Object.hasOwn(REQUIRED_ACCESSORS, config.component) && REQUIRED_ACCESSORS[config.component].includes("xAccessor")) {
+    if (props.xAccessor === undefined) props.xAccessor = "x"
+    if (props.yAccessor === undefined) props.yAccessor = "y"
+    if (config.component === "Heatmap" && props.valueAccessor === undefined) props.valueAccessor = "value"
+  }
   if (props.data !== undefined && !isRecordArray(props.data)) {
     const diagnostic = { code: "INVALID_DATA", severity: "error" as const, path: "/props/data", message: "Inline chart data must be an array of row objects." }
     return { status: "refused", diagnostics: [diagnostic], lossReport: [diagnostic], provenance }
@@ -207,20 +213,12 @@ export function toVegaLiteResult(
     }
     case "AreaChart":
     case "StackedAreaChart": {
-      mark = props.curve || props.areaOpacity !== undefined ? { type: "area" } : "area"
-      if (typeof mark === "object" && interpolation) {
-        mark.interpolate = interpolation
-      }
-      if (typeof mark === "object" && props.areaOpacity !== undefined) {
-        mark.opacity = props.areaOpacity
-      }
+      mark = { type: "area", interpolate: interpolation ?? "monotone" }
+      if (props.areaOpacity !== undefined) mark.opacity = props.areaOpacity
       enc.x = withAxisTitle(xyEncoding(props, "x"), props.xLabel)
       enc.y = withAxisTitle(xyEncoding(props, "y"), props.yLabel)
-      if (props.areaBy) {
-        enc.color = nominal(props.areaBy)
-        if (component === "AreaChart") enc.y.stack = null
-        else enc.y.stack = props.normalize ? "normalize" : "zero"
-      }
+      if (props.areaBy) enc.color = nominal(props.areaBy)
+      enc.y.stack = component === "AreaChart" ? null : props.normalize ? "normalize" : "zero"
       break
     }
     case "Scatterplot":
@@ -305,6 +303,7 @@ export function toVegaLiteResult(
   if (typeof props.width === "number") spec.width = props.width
   if (typeof props.height === "number") spec.height = props.height
 
+  lossReport.push(...missingQuantitativeData(spec, "/props/data"))
   const refused = lossReport.length > 0 && !options.allowLossy
   const diagnostics = lossReport.map(({ code, message, path }): PortabilityDiagnostic => ({
     code, message, path, severity: refused ? "error" : "warning"

@@ -1,5 +1,5 @@
 import type { Datum } from "../charts/shared/datumTypes"
-import { isCategory, vegaLiteFieldType, vegaTimeValue } from "./vegaLiteValidation"
+import { isCategory, pointerSegment, vegaLiteFieldType, vegaTimeValue } from "./vegaLiteValidation"
 import type { VegaLiteImportError } from "./vegaLiteValidation"
 import type { VegaLiteEncoding, VegaLiteSpec } from "./fromVegaLite"
 import {
@@ -90,4 +90,28 @@ export function aggregateVegaLite(
   if (!measures.length) return { data, encoding }
   const readField = (row: Datum, field: string) => temporalFields.has(field) ? vegaTimeValue(row[field]) : row[field]
   return { data: aggregateRows(data, [...fields], measures, readField), encoding: resolved }
+}
+
+export function missingQuantitativeData(spec: VegaLiteSpec, base: string) {
+  const losses: Array<{ code: string; path: string; message: string }> = []
+  const rows = spec.data?.values
+  if (!rows) return losses
+  const mark = typeof spec.mark === "string" ? spec.mark : spec.mark?.type
+  let materialized: ReturnType<typeof aggregateVegaLite> | undefined
+  for (const [name, channel] of Object.entries(spec.encoding ?? {})) {
+    const { field, aggregate } = channel
+    if (!field || vegaLiteFieldType(channel) !== "quantitative" || aggregate === "count") continue
+    if (mark === "line" && name === "y" && !aggregate) continue
+    const index = rows.findIndex(row => row[field] == null)
+    if (index < 0) continue
+    let path = `${base}/${index}/${pointerSegment(field)}`
+    if (aggregate) {
+      materialized ??= aggregateVegaLite(spec, [])
+      const output = materialized.encoding[name]?.field
+      if (!output || !materialized.data?.some(row => row[output] == null)) continue
+      path = `/encoding/${pointerSegment(name)}/aggregate`
+    }
+    losses.push({ code: "MISSING_MEASURE", path, message: `${path} can turn a missing quantitative mark into a zero coordinate.` })
+  }
+  return losses
 }

@@ -217,7 +217,8 @@ export function vegaLiteSemanticDiagnostics(
     if (mark === "line" && spec.mark.point !== undefined && typeof spec.mark.point !== "boolean") {
       unsupported("/mark/point")
     }
-    if (spec.mark.interpolate !== undefined && !fromVegaInterpolation(spec.mark.interpolate))
+    if (spec.mark.interpolate !== undefined && (!fromVegaInterpolation(spec.mark.interpolate) ||
+      ["monotone-x", "monotone-y"].includes(spec.mark.interpolate)))
       unsupported("/mark/interpolate")
   }
   const encoding = spec.encoding ?? {}

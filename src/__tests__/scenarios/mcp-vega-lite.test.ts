@@ -1,4 +1,4 @@
-import { areaLabelCases, collidingSeries, encodingLossExamples, flatSeriesCases, impliedAggregateAxes, malformedAggregateFields, malformedChannelTypes, normalizedArea, tickOrientations, temporalExtrema, temporalGroupCases, temporalLossCases, translucentBubbles } from "../fixtures/vegaLiteEncodingLoss"
+import { areaLabelCases, collidingSeries, encodingLossExamples, flatSeriesCases, impliedAggregateAxes, malformedAggregateFields, malformedChannelTypes, normalizedArea, nullableMeasures, tickOrientations, temporalExtrema, temporalGroupCases, temporalLossCases, translucentBubbles } from "../fixtures/vegaLiteEncodingLoss"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import type { ChildProcess } from "node:child_process"
 import { initializeServer, sendRequest, spawnServer } from "./mcpStdioHarness"
@@ -47,6 +47,12 @@ describe("developer MCP Vega-Lite conversion", () => {
       const { data, xAccessor } = result.structuredContent.props
       expect(data).toEqual([{ v: 1, [xAccessor]: expected }])
     }
+  })
+
+  it.each(areaLabelCases)("retains the Vega default linear area geometry for $component", async ({ component, spec }) => {
+    const result = await call(spec)
+    expect(result.isError).not.toBe(true)
+    expect(result.structuredContent).toMatchObject({ component, props: { curve: "linear" } })
   })
 
   it.each(areaLabelCases)("renders $component with ordinary object-property names as series", async ({ component, spec }) => {
@@ -142,7 +148,7 @@ describe("developer MCP Vega-Lite conversion", () => {
     }
   })
 
-  it.each([...encodingLossExamples, ...temporalLossCases, ...collidingSeries])("exposes $path on a $spec.mark over MCP", async ({ spec, path }) => {
+  it.each([...encodingLossExamples, ...temporalLossCases, ...collidingSeries, ...nullableMeasures])("exposes $path on a $spec.mark over MCP", async ({ spec, path }) => {
     const strict = await call(spec)
     expect(strict.isError).toBe(true)
     expect(strict.structuredContent.diagnostics).toContainEqual(expect.objectContaining({ path }))

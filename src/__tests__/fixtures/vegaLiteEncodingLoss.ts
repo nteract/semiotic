@@ -260,3 +260,21 @@ export const temporalGroupCases = ["sum", "count"].map(aggregate => ({
     [Date.UTC(2024, 0, 2), "A", aggregate === "sum" ? 5 : 1]
   ]
 }))
+
+export const nullableMeasures = [
+  { mark: "point", axis: "x", aggregate: undefined },
+  { mark: "point", axis: "y", aggregate: undefined },
+  { mark: "area", axis: "y", aggregate: undefined },
+  { mark: "bar", axis: "y", aggregate: undefined },
+  { mark: "point", axis: "y", aggregate: "sum" }
+].map(({ mark, axis, aggregate }) => ({
+  spec: {
+    mark,
+    data: { values: [{ x: 1, y: 3 }, { x: 2, y: 2, [axis]: null }, { x: 3, y: 4 }] },
+    encoding: {
+      x: { field: "x", type: mark === "bar" ? "nominal" : "quantitative" },
+      y: { field: "y", type: "quantitative", ...(aggregate && { aggregate }) }
+    }
+  },
+  path: aggregate ? "/encoding/y/aggregate" : `/data/values/1/${axis}`
+}))
