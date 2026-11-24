@@ -2929,6 +2929,7 @@ interface-member StreamXYFrameProps::property::svgPreRenderers = optional svgPre
 interface-member StreamXYFrameProps::property::swarmStyle = optional swarmStyle: SwarmStyle | undefined
 interface-member StreamXYFrameProps::property::symbolAccessor = optional symbolAccessor: ((d: T) => string) | string | undefined
 interface-member StreamXYFrameProps::property::symbolMap = optional symbolMap: Record<string, import("./symbolPath").NetworkSymbolName> | undefined
+interface-member StreamXYFrameProps::property::tabIndex = optional tabIndex: number | undefined
 interface-member StreamXYFrameProps::property::tickFormatTime = optional tickFormatTime: ((value: number) => string) | undefined
 interface-member StreamXYFrameProps::property::tickFormatValue = optional tickFormatValue: ((value: number) => string) | undefined
 interface-member StreamXYFrameProps::property::timeAccessor = optional timeAccessor: ((d: T) => CoercibleNumber) | string | undefined

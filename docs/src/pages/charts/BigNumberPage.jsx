@@ -873,6 +873,10 @@ semiotic-bignumber--empty                (only when value is empty)
         screen-reader-only supplement below.
       </p>
       <p style={sectionNote}>
+        A tile with <code>onClick</code> or <code>onObservation</code> is a keyboard button.
+        Press Enter or Space to activate it at the center of the tile.
+      </p>
+      <p style={sectionNote}>
         Threshold zones use semantic theme roles, so a high-contrast or forced-colors theme
         automatically remaps the value text colour without per-card overrides.
       </p>
