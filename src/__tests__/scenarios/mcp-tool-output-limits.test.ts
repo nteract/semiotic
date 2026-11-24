@@ -67,7 +67,7 @@ describe("shipped MCP complete response limits", () => {
       expect(recovered.status).toBe(200)
       const listed = await recovered.json()
       expect(listed.id).toBe(0)
-      expect(listed.result.tools.length).toBe(profile === "public" ? 5 : 25)
+      expect(listed.result.tools.length).toBe(profile === "public" ? 5 : 26)
       const accepted = await fetch(`http://127.0.0.1:${started.port}/mcp`, {
         method: "POST",
         headers: {
@@ -151,7 +151,7 @@ describe("shipped MCP complete response limits", () => {
         })
         expect(JSON.stringify(dispatchError)).not.toContain("private-value")
         const tools = await rpc("tools/list")
-        expect(tools.result.tools.length).toBe(profile === "public" ? 5 : 25)
+        expect(tools.result.tools.length).toBe(profile === "public" ? 5 : 26)
       }
     )
   }

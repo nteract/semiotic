@@ -215,7 +215,8 @@ for (const profile of ["public", "developer"]) {
       })
     )
     const tools = await server.request("tools/list")
-    assert.equal(tools.tools.length, profile === "public" ? 5 : 25)
+    assert.equal(tools.tools.length, profile === "public" ? 5 : 26)
+    assert.equal(tools.tools.some(({ name }) => name === "critiqueChart"), profile === "developer")
     if (profile === "developer") {
       assert.ok(tools.tools.some(({ name }) => name === "suggestStreamDashboard"))
       const converted = await server.request("tools/call", {

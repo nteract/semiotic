@@ -64,6 +64,8 @@ import { mcpClientKey, resolveMcpTrustedProxyHops } from "./mcp-client-key"
 import { DEFAULT_MCP_BODY_TIMEOUT_MS } from "./mcp-http-body"
 import { closeMcpRequestAfterResponse, createMcpUploadAdmission, resolveMcpUploadLimit } from "./mcp-upload-admission"
 import { convertVegaLite } from "./mcp-convert-vega-lite"
+import { chartProfileInput } from "./mcp-chart-profile"
+import { critiqueChart } from "./operations/critique"
 import { diagnoseChart } from "./operations/diagnose"
 import { createMcpRequestCancellationSignal } from "./mcp-request-cancellation"
 import {
@@ -2212,41 +2214,6 @@ async function applyThemeHandler(args: { name?: string }): Promise<ToolResult> {
   }
 }
 
-function profileInputFromVariantArgs(args: {
-  data?: unknown[]
-  props?: Record<string, unknown>
-}): {
-  data: Record<string, unknown>[]
-  rawInput?: unknown
-} {
-  const props = args.props ?? {}
-  if (Array.isArray(args.data)) {
-    return { data: args.data as Record<string, unknown>[] }
-  }
-  if (Array.isArray(props.data)) {
-    return { data: props.data as Record<string, unknown>[] }
-  }
-  if (
-    Array.isArray(props.nodes) &&
-    (Array.isArray(props.edges) || Array.isArray(props.links))
-  ) {
-    return {
-      data: [],
-      rawInput: {
-        nodes: props.nodes,
-        edges: props.edges ?? props.links
-      }
-    }
-  }
-  if (
-    props.data &&
-    typeof props.data === "object" &&
-    !Array.isArray(props.data)
-  ) {
-    return { data: [], rawInput: props.data }
-  }
-  return { data: [] }
-}
 
 function buildVariantProposalProps(
   proposal: VariantProposal,
@@ -2336,9 +2303,10 @@ async function proposeChartVariantsHandler(args: {
     }
   }
 
-  const { data, rawInput } = profileInputFromVariantArgs(args)
+  const { data, rawInput, seriesField } = chartProfileInput(args)
   const profile = profileData(data, {
     rawInput,
+    seriesField,
     identifiers: args.identifiers,
     fieldRoles: args.fieldRoles
   })
@@ -3125,7 +3093,7 @@ async function improveChartHandler(args: {
   identifiers?: string[]
   fieldRoles?: McpProfileFieldRoleHints
 }): Promise<ToolResult> {
-  const { data, rawInput } = profileInputFromVariantArgs(args)
+  const { data, rawInput, seriesField } = chartProfileInput(args)
   const intent = (
     Array.isArray(args.intent)
       ? args.intent
@@ -3134,16 +3102,13 @@ async function improveChartHandler(args: {
         : undefined
   ) as IntentId[] | undefined
   const diagnosis = diagnoseConfig(args.component, args.props)
-  const repair = repairChartConfigFromCapabilities(args.component, data, {
-    intent,
-    identifiers: args.identifiers,
-    fieldRoles: args.fieldRoles
-  })
   const profile = profileData(data, {
     rawInput,
+    seriesField,
     identifiers: args.identifiers,
     fieldRoles: args.fieldRoles
   })
+  const repair = repairChartConfigFromCapabilities(args.component, data, { intent, profile })
   const { proposals: variants } = rankVariantProposals(
     args.component,
     profile,
@@ -4612,6 +4577,25 @@ function createServer(
     },
     READ_ONLY_TOOL_ANNOTATIONS,
     isolateTool("auditAccessibility", auditAccessibilityHandler)
+  )
+
+  srv.tool(
+    "critiqueChart",
+    "Critique a chart's configuration, representation, and fit to the supplied analytical intent. Returns a concise static assessment, ranked findings, and the capability score when data supports it.",
+    {
+      component: z.string().min(1).describe("Semiotic component name."),
+      props: unknownRecordInput.describe("Chart configuration including its authored data."),
+      intent: z.string().trim().min(1).optional().describe("A registered analytical intent such as trend or distribution.")
+    },
+    READ_ONLY_TOOL_ANNOTATIONS,
+    isolateTool("critiqueChart", (args: Parameters<typeof critiqueChart>[0]) => {
+      const report = critiqueChart(args)
+      return {
+        content: [{ type: "text", text: report.narrative }],
+        structuredContent: report,
+        isError: !report.configurationValid
+      }
+    })
   )
 
   srv.tool(

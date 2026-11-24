@@ -51,6 +51,7 @@ describe("shipped MCP cancellation identities", () => {
           SEMIOTIC_TEST_STAGE_TRACE: trace
         })
         await initializeServer(proc)
+        const before = await sendRequest(proc, "tools/list", {}, "before-cancellation")
         proc.stdin!.write(
           JSON.stringify({
             jsonrpc: "2.0",
@@ -122,7 +123,7 @@ describe("shipped MCP cancellation identities", () => {
         )
         const reused = await sendRequest(proc, "tools/list", {}, id)
         expect(reused.id).toBe(id)
-        expect(reused.result.tools).toHaveLength(profile === "public" ? 5 : 25)
+        expect(reused.result.tools).toEqual(before.result.tools)
       },
       15_000
     )
