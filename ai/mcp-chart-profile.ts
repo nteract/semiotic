@@ -79,13 +79,16 @@ export function chartProfileInput(args: {
   }
   const points = args.component === "FlowMap" ? props.nodes : props.points
   if (Array.isArray(props.areas) || Array.isArray(points) || Array.isArray(props.flows)) {
+    const measure = args.component === "DistanceCartogram" ? props.costAccessor
+      : args.component === "ProportionalSymbolMap" ? props.sizeBy : undefined
     return {
       data: [],
       rawInput: {
         type: "FeatureCollection",
         features: Array.isArray(props.areas) ? props.areas : [],
         points: Array.isArray(points) ? profileRecords(points, {
-          lon: props.xAccessor, lat: props.yAccessor, id: props.nodeIdAccessor ?? props.pointIdAccessor
+          lon: props.xAccessor, lat: props.yAccessor, id: props.nodeIdAccessor ?? props.pointIdAccessor,
+          value: measure, cost: measure
         }) : undefined,
         flows: Array.isArray(props.flows) ? profileRecords(props.flows, { value: props.valueAccessor }) : undefined
       }

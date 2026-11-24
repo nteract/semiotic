@@ -118,6 +118,31 @@ describe("developer MCP chart critique", () => {
     expect(Buffer.byteLength(JSON.stringify(profile))).toBeLessThan(200_000)
   })
 
+  it("retains symbol sizes as cartogram costs in the repair profile", async () => {
+    const original = [{ id: "station", lon: -122, lat: 38, riders: 19, cost: 0, value: 0 }]
+    const response = await sendRequest(publicServer, "tools/call", {
+      name: "improveChart", arguments: { component: "ProportionalSymbolMap", props: { points: original, sizeBy: "riders" } }
+    }, "symbol-size-to-cost")
+    expect(response.result.isError, JSON.stringify(response.result.content)).not.toBe(true)
+    expect(response.result.structuredContent.repair.profile.geo.points).toEqual([
+      { ...original[0], cost: 19, value: 19 }
+    ])
+  })
+
+  it("keeps cartogram costs in the size field of a proposed symbol map", async () => {
+    const locations = [{ id: "west", lon: -122, lat: 38, minutes: 7 }, { id: "east", lon: -72, lat: 43, minutes: 19 }]
+    const response = await sendRequest(server, "tools/call", {
+      name: "proposeChartVariants", arguments: { component: "DistanceCartogram", intent: "geo",
+        props: { center: "west", costAccessor: "minutes", points: locations } }
+    }, "cartogram-size-measure")
+    expect(response.result.isError, JSON.stringify(response.result.content)).not.toBe(true)
+    const symbol = response.result.structuredContent.proposals.find(
+      (item: { proposal: { baseComponent: string } }) => item.proposal.baseComponent === "ProportionalSymbolMap"
+    ).props
+    expect(symbol.points.map((point: Record<string, unknown>) => point[symbol.sizeBy])).toEqual([7, 19])
+    expect(symbol.points.map((point: Record<string, unknown>) => point.minutes)).toEqual([7, 19])
+  })
+
   it("builds a geographic alternative with readable positions from custom FlowMap fields", async () => {
     const nodes = [
       { code: "west", longitude: -122, latitude: 38, value: 5 },
