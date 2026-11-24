@@ -73,7 +73,7 @@ export function gauntletWallColliders(
   ]
 }
 
-export function readAccessor<TDatum extends Datum, TValue>(
+function readAccessor<TDatum extends Datum, TValue>(
   datum: TDatum,
   index: number,
   accessor: ChartAccessor<TDatum, TValue> | undefined,
@@ -83,6 +83,12 @@ export function readAccessor<TDatum extends Datum, TValue>(
   return typeof accessor === "function"
     ? accessor(datum, index)
     : ((datum[accessor] as TValue) ?? fallback)
+}
+
+export function gauntletProjectId<TDatum extends Datum>(
+  datum: TDatum, index: number, accessor: GauntletAccessors<TDatum>["idAccessor"]
+) {
+  return String(readAccessor(datum, index, accessor, String(datum.id ?? `project-${index}`)))
 }
 
 export function propertyLabel(
@@ -298,14 +304,7 @@ export function createInitialState<TDatum extends Datum>(
   positiveProperties: readonly GauntletPropertyDefinition[],
   negativeProperties: Map<string, GauntletPropertyDefinition>
 ): GauntletProjectState<TDatum> {
-  const id = String(
-    readAccessor(
-      datum,
-      index,
-      props.idAccessor,
-      datum.id != null ? String(datum.id) : `project-${index}`
-    )
-  )
+  const id = gauntletProjectId(datum, index, props.idAccessor)
   const allPositiveIds = positiveProperties.map((property) => property.id)
   const activePositiveIds = [
     ...readAccessor(datum, index, props.positiveAccessor, allPositiveIds)
@@ -555,7 +554,8 @@ function buildPropertySpawn<TDatum extends Datum>(
       target: { type: "body", bodyId: projectCoreId(project.id) },
       stiffness: slot ? 0.56 : 0.62, damping: slot ? 0.9 : 0.92,
       restLength: Math.max(6, (52 + (slot ? (index % 2) * 4 : (index % 4) * 3)) * scale),
-      ...property.spring
+      ...property.spring,
+      id: property.spring?.id ?? `${id}:spring`
     }]
   }
 }

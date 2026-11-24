@@ -50,7 +50,7 @@ import {
   createInitialState,
   resolveGauntletViability,
   gauntletWallColliders,
-  readAccessor,
+  gauntletProjectId,
   resolvePlacement,
   type GauntletBodyDatum,
   type GauntletEffect,
@@ -187,16 +187,7 @@ export const GauntletChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__
   const dataKey = useMemo(
     () =>
       safeData
-        .map((datum, index) =>
-          String(
-            readAccessor(
-              datum,
-              index,
-              stateAccessors.idAccessor,
-              datum.id != null ? String(datum.id) : `project-${index}`
-            )
-          )
-        )
+        .map((datum, index) => gauntletProjectId(datum, index, stateAccessors.idAccessor))
         .join("|"),
     [safeData, stateAccessors.idAccessor]
   )

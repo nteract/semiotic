@@ -285,6 +285,15 @@ describe("GauntletChart physics primitives", () => {
     expect(inventory()).toHaveLength(3)
     effect({ popPositive: ["speed", "speed"], addPositive: ["speed"] })
     expect(inventory()).toHaveLength(2)
+    for (let cycle = 0; cycle < 3; cycle++) {
+      effect({ popPositive: ["speed"] })
+      effect({ addPositive: ["speed"] })
+      const springs = store.snapshot().world.springs
+      expect(springs).toHaveLength(3)
+      for (const body of inventory()) {
+        expect(springs.filter(spring => spring.bodyId === body.id)).toHaveLength(1)
+      }
+    }
     const controls = store.controls()
     const handle = buildGauntletImperativeHandle({
       statesRef: { current: [project] }, setStates: () => {}, elapsedRef: { current: 0 },

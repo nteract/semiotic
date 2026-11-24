@@ -48,39 +48,6 @@ function negativeBodyOrdinal(body: PhysicsBodyState): number {
   return Number.isFinite(ordinal) ? ordinal : -1
 }
 
-function nextNegativeBodyIndex<TDatum extends Datum>(
-  project: GauntletProjectState<TDatum>,
-  bodies: readonly PhysicsBodyState[]
-): number {
-  let maxOrdinal = -1
-  for (const body of bodies) {
-    if (!isProjectNegativeBody<TDatum>(body, project.id)) continue
-    maxOrdinal = Math.max(maxOrdinal, negativeBodyOrdinal(body))
-  }
-  return Math.max(project.negativeIds.length, maxOrdinal + 1)
-}
-
-function resolveNegativeBodyIdsForPop<TDatum extends Datum>(
-  project: GauntletProjectState<TDatum>,
-  bodies: readonly PhysicsBodyState[],
-  entries: Array<{ propertyId: string; index: number }>
-): string[] {
-  const candidates = bodies
-    .filter((body) => isProjectNegativeBody<TDatum>(body, project.id))
-    .sort((a, b) => negativeBodyOrdinal(a) - negativeBodyOrdinal(b) || a.id.localeCompare(b.id))
-  const used = new Set<string>()
-
-  return entries.map((entry) => {
-    const body = candidates.find((candidate) => {
-      if (used.has(candidate.id)) return false
-      return candidate.datum.property?.id === entry.propertyId
-    })
-    if (!body) return projectNegativeId(project.id, entry.propertyId, entry.index)
-    used.add(body.id)
-    return body.id
-  })
-}
-
 function settleAwareForce(
   body: PhysicsBodyState,
   force: { x: number; y: number }
@@ -282,7 +249,10 @@ export function spawnBodiesForGauntletEffect<TDatum extends Datum>(options: {
   const core = bodies.find(body => body.id === projectCoreId(project.id))
   const x = core?.x ?? layout.startX
   const y = core?.y ?? layout.routeY
-  const currentNegativeCount = nextNegativeBodyIndex(project, bodies)
+  const negatives = bodies.filter(body => isProjectNegativeBody<TDatum>(body, project.id))
+  const currentNegativeCount = negatives.reduce(
+    (next, body) => Math.max(next, negativeBodyOrdinal(body) + 1), project.negativeIds.length
+  )
   const spawns = expandIds(effect.addNegative).flatMap(
     (propertyId, offset) => {
       const property = negativeById.get(propertyId)
@@ -321,15 +291,14 @@ export function spawnBodiesForGauntletEffect<TDatum extends Datum>(options: {
     ))
   }
   if (spawns.length) controls.pushMany(spawns)
-  const popNegativeEntries = resolvePopNegativeEntries(project, effect)
-  const popNegativeBodyIds = resolveNegativeBodyIdsForPop(
-    project,
-    bodies,
-    popNegativeEntries
-  )
-  popNegativeEntries.forEach((entry, index) => {
-    popProperty(popNegativeBodyIds[index], negativeById.get(entry.propertyId), 7)
-  })
+  const removedNegatives = resolvePopNegativeEntries(project, effect)
+  if (!removedNegatives.length) return
+  negatives.sort((a, b) => negativeBodyOrdinal(a) - negativeBodyOrdinal(b) || a.id.localeCompare(b.id))
+  for (const { propertyId, index } of removedNegatives) {
+    const match = negatives.findIndex(body => body.datum.property?.id === propertyId)
+    const bodyId = match < 0 ? projectNegativeId(project.id, propertyId, index) : negatives.splice(match, 1)[0].id
+    popProperty(bodyId, negativeById.get(propertyId), 7)
+  }
 }
 
 export function projectRouteTarget<TDatum extends Datum>(
