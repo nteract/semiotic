@@ -88,7 +88,7 @@ export function aggregateVegaLite(
     usedFields.add(outputField)
     measures.push({ field: value.field, operation, outputField,
       readValue: value.type === "quantitative" ? quantitativeValue : undefined })
-    resolved[channel] = { ...value, field: outputField, aggregate: undefined }
+    resolved[channel] = { ...value, type: value.type ?? "quantitative", field: outputField, aggregate: undefined }
   }
   return measures.length
     ? { data: aggregateRows(data, [...fields], measures), encoding: resolved }

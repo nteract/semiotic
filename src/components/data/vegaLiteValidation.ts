@@ -14,8 +14,12 @@ export function isCategory(type?: string): boolean {
   return type === "nominal" || type === "ordinal"
 }
 
-export function isHorizontalBar(x?: VegaLiteEncoding, y?: VegaLiteEncoding): boolean {
-  return (x?.type === "quantitative" || x?.type === "temporal") && isCategory(y?.type)
+function ordinalAxisType(channel?: VegaLiteEncoding) {
+  return channel?.type ?? (channel?.aggregate || channel?.bin ? "quantitative" : "nominal")
+}
+
+export function isHorizontalOrdinal(x?: VegaLiteEncoding, y?: VegaLiteEncoding): boolean {
+  return !isCategory(ordinalAxisType(x)) && isCategory(ordinalAxisType(y))
 }
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
@@ -179,7 +183,8 @@ export function vegaLiteSemanticDiagnostics(
   if (mark === "arc" && !theta?.field && !theta?.aggregate) unsupported("/encoding/theta")
   if ((mark === "arc" && !color?.field) || (mark === "rect" && !color?.field && !color?.aggregate) ||
       (mark === "bar" && (x?.bin || y?.bin) && color)) unsupported("/encoding/color")
-  if (continuous || mark === "rect" || mark === "tick" || (mark === "bar" && !x?.bin && !y?.bin)) {
+  const ordinal = mark === "tick" || (mark === "bar" && !x?.bin && !y?.bin)
+  if (continuous || mark === "rect" || ordinal) {
     for (const axis of ["x", "y"] as const) {
       const channel = encoding[axis]
       if (!channel?.field && !channel?.aggregate) unsupported(`/encoding/${axis}`)
@@ -188,20 +193,21 @@ export function vegaLiteSemanticDiagnostics(
   for (const [binned, measure, channel] of [[x, y, "y"], [y, x, "x"]] as const) {
     if (binned?.bin && measure && measure.aggregate !== "count") unsupported(`/encoding/${channel}`)
   }
-  if (mark === "bar" && x && y && !x.bin && !y.bin) {
-    const horizontal = isHorizontalBar(x, y)
+  if (ordinal && x && y) {
+    const horizontal = isHorizontalOrdinal(x, y)
     const [dimension, measure] = horizontal ? [y, x] : [x, y]
     const dimensionPath = horizontal ? "/encoding/y" : "/encoding/x"
     const path = horizontal ? "/encoding/x" : "/encoding/y"
-    if (dimension.type && !isCategory(dimension.type)) unsupported(`${dimensionPath}/type`)
-    if (measure.type && measure.type !== "quantitative") unsupported(`${path}/type`)
-    if (dimension.stack !== undefined) unsupported(`${dimensionPath}/stack`)
-    const overlaid = measure.stack === null || measure.stack === false
-    if (color?.field && overlaid) unsupported(`${path}/stack`)
-    if (typeof dimension.field === "string" && dimension.field && spec.data?.values) {
-      const fields = [dimension.field]
-      if (typeof color?.field === "string" && color.field) fields.push(color.field)
-      if (repeatedCategories(spec.data.values, fields, Boolean(measure.aggregate))) unsupported(path)
+    if (!isCategory(ordinalAxisType(dimension))) unsupported(`${dimensionPath}/type`)
+    if (ordinalAxisType(measure) !== "quantitative") unsupported(`${path}/type`)
+    if (mark === "bar") {
+      if (dimension.stack !== undefined) unsupported(`${dimensionPath}/stack`)
+      if (color?.field && (measure.stack === null || measure.stack === false)) unsupported(`${path}/stack`)
+      if (dimension.field && spec.data?.values) {
+        const fields = [dimension.field]
+        if (color?.field) fields.push(color.field)
+        if (repeatedCategories(spec.data.values, fields, Boolean(measure.aggregate))) unsupported(path)
+      }
     }
   }
   if (mark === "area" && color?.field && x?.aggregate && !y?.aggregate &&

@@ -3,6 +3,15 @@ const category = { field: "team", type: "nominal" } as const
 const values = [{ team: 1, cohort: "A", state: "open", orders: 3 }, { team: "1", cohort: "A", state: "closed", orders: 2 }]
 
 export const encodingLossExamples = [
+  {
+    spec: { mark: "tick", data: { values: [1, 2, 100].map(x => ({ x, y: 4 })) },
+      encoding: { x: { field: "x", type: "quantitative" }, y: { field: "y", type: "quantitative" } } },
+    path: "/encoding/x/type"
+  },
+  {
+    spec: { mark: "tick", data: { values }, encoding: { x: category, y: { ...category, field: "state", type: "ordinal" } } },
+    path: "/encoding/y/type"
+  },
   ...["arc", { type: "arc", innerRadius: 45 }].flatMap(mark =>
     [quantity, { ...quantity, aggregate: "sum" }].map(theta => ({
       spec: { mark, data: { values }, encoding: { theta, color: category } },

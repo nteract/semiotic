@@ -58,6 +58,17 @@ describe("strict Vega-Lite boundaries", () => {
     expect(result.config).toMatchObject({ component: "StackedAreaChart", props: { areaBy: "team", normalize: true } })
   })
 
+  it.each(["bar", "tick"])("retains the implied category and aggregate axes of a horizontal %s", mark => {
+    const result = fromVegaLiteResult({ mark, data: { values: [{ team: "A", count: 2 }, { team: "A", count: 3 }] }, encoding: {
+      x: { field: "count", aggregate: "sum", axis: { title: "Orders" } },
+      y: { field: "team", axis: { title: "Team" } }
+    } })
+    expect(result.status).toBe("success")
+    expect(result.config?.props).toMatchObject({ orientation: "horizontal", categoryAccessor: "team", categoryLabel: "Team", valueLabel: "Orders" })
+    const props = result.config!.props
+    expect(props.data[0][props.valueAccessor]).toBe(5)
+  })
+
   it.each(malformedAggregateFields)("checks $path before aggregation", ({ spec, path }) => {
     for (const lossy of [false, true]) {
       const result = importSpec(spec, lossy)

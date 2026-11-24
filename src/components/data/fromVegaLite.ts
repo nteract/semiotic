@@ -1,6 +1,6 @@
 import { portableScheme } from "./portableEncodingNames"
 import { fromVegaInterpolation } from "./vegaLiteCurves"
-import { compositionKeys, isCategory, isHorizontalBar, pointOpacityProp, isRecord, vegaLiteShapeDiagnostics, vegaLiteSemanticDiagnostics } from "./vegaLiteValidation"
+import { compositionKeys, isHorizontalOrdinal, pointOpacityProp, isRecord, vegaLiteShapeDiagnostics, vegaLiteSemanticDiagnostics } from "./vegaLiteValidation"
 import type { Datum } from "../charts/shared/datumTypes"
 /**
  * Vega-Lite to Semiotic translator.
@@ -283,9 +283,9 @@ function translateVegaLite(spec: VegaLiteSpec, silent = false, createdAt?: strin
     }
     case "tick": {
       component = "DotPlot"
-      const horizontal = !isCategory(x?.type) && isCategory(y?.type)
+      const horizontal = isHorizontalOrdinal(x, y)
       if (!horizontal) props.orientation = "vertical"
-      setOrdinalAccessors(x, y, props, horizontal, horizontal || isCategory(x?.type))
+      setOrdinalAccessors(x, y, props, horizontal)
       break
     }
     default: {
@@ -377,7 +377,7 @@ function resolveBarComponent(
   color: VegaLiteEncoding | undefined,
   props: Datum,
 ): string {
-  const horizontal = isHorizontalBar(x, y)
+  const horizontal = isHorizontalOrdinal(x, y)
   setOrdinalAccessors(x, y, props, horizontal)
   const stack = stackOffset(horizontal ? x : y)
   if (!color?.field || !stack) return "BarChart"
@@ -388,16 +388,16 @@ function resolveBarComponent(
 
 function setOrdinalAccessors(
   x: VegaLiteEncoding | undefined, y: VegaLiteEncoding | undefined,
-  props: Datum, horizontal: boolean, labels = true
+  props: Datum, horizontal: boolean
 ) {
   if (horizontal) props.orientation = "horizontal"
-  setAxisProps(props, "categoryAccessor", "categoryLabel", horizontal ? y : x, labels)
-  setAxisProps(props, "valueAccessor", "valueLabel", horizontal ? x : y, labels)
+  setAxisProps(props, "categoryAccessor", "categoryLabel", horizontal ? y : x)
+  setAxisProps(props, "valueAccessor", "valueLabel", horizontal ? x : y)
 }
 
-function setAxisProps(props: Datum, accessor: string, label: string, channel?: VegaLiteEncoding, labels = true) {
+function setAxisProps(props: Datum, accessor: string, label: string, channel?: VegaLiteEncoding) {
   if (channel?.field) props[accessor] = channel.field
-  if (labels && channel?.axis?.title) props[label] = channel.axis.title
+  if (channel?.axis?.title) props[label] = channel.axis.title
 }
 
 function setXYAccessors(
