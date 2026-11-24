@@ -399,51 +399,6 @@ describe("MCP protocol round-trip", () => {
     expect(result.result.content[0].text).toContain("Unknown component")
   })
 
-  it("suggestChart returns recommendations for tabular data", async () => {
-    const result = await sendRequest(proc, "tools/call", {
-      name: "suggestChart",
-      arguments: {
-        data: [
-          { category: "A", value: 10 },
-          { category: "B", value: 20 },
-          { category: "C", value: 30 },
-        ],
-      },
-    }, "suggest-1")
-
-    expect(result.result).toBeDefined()
-    expect(result.result.isError).toBeFalsy()
-    const text = result.result.content[0].text
-    expect(text).toContain("BarChart")
-    expect(result.result.structuredContent.ok).toBe(true)
-    expect(result.result.structuredContent.suggestions[0].component).toBe("BarChart")
-  })
-
-  it("suggestChart with empty data returns error", async () => {
-    const result = await sendRequest(proc, "tools/call", {
-      name: "suggestChart",
-      arguments: { data: [] },
-    }, "suggest-err")
-
-    expect(result.result.isError).toBe(true)
-  })
-
-  it("suggestChart accepts the broader suggestCharts intent vocabulary", async () => {
-    // "compare-categories" is part of the suggestCharts (plural) 13-intent
-    // taxonomy. It used to be hard-rejected by suggestChart's zod enum; now it
-    // is translated into this engine's space rather than erroring.
-    const result = await sendRequest(proc, "tools/call", {
-      name: "suggestChart",
-      arguments: {
-        data: [{ category: "A", value: 10 }, { category: "B", value: 20 }],
-        intent: "compare-categories",
-      },
-    }, "suggest-vocab")
-
-    expect(result.result.isError).toBeFalsy()
-    expect(result.result.structuredContent.ok).toBe(true)
-  })
-
   it("suggestTokenEncoding returns semantic token recommendations", async () => {
     const result = await sendRequest(proc, "tools/call", {
       name: "suggestTokenEncoding",

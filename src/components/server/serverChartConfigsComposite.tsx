@@ -1,5 +1,6 @@
 import { staticTitleText } from "./staticTitle"
-import { getMax, getMinMax } from "../charts/shared/minMax"
+import { getMax } from "../charts/shared/minMax"
+import { matrixHistogramBins } from "../charts/xy/matrixHistogramBins"
 import { renderToStaticMarkup } from "react-dom/server"
 import type { Datum } from "../charts/shared/datumTypes"
 import {
@@ -140,34 +141,21 @@ function diagonalMarkup(options: {
     }
   }
 
-  const numeric = data
-    .map((datum) => Number(datum[field]))
-    .filter(Number.isFinite)
-  const [min, max] = numeric.length ? getMinMax(numeric) : [0, 0]
-  const binWidth = (max - min) / bins || 1
-  const buckets = Array.from({ length: bins }, () => new Map<string, Datum[]>())
-  for (const datum of data) {
-    const value = Number(datum[field])
-    if (!Number.isFinite(value)) continue
-    const index = Math.max(
-      0,
-      Math.min(bins - 1, Math.floor((value - min) / binWidth))
-    )
-    const category = colorBy ? categoryValue(datum, colorBy) : "__all"
-    const bucket = buckets[index]
-    bucket.set(category, [...(bucket.get(category) ?? []), datum])
-  }
-  const totals = buckets.map((bucket) =>
-    Array.from(bucket.values()).reduce((sum, values) => sum + values.length, 0)
-  )
-  const maxCount = getMax(totals, 1)
+  const buckets = matrixHistogramBins(data, field, bins)
+  const maxCount = getMax(buckets.map(rows => rows.length), 1)
   let visibleBars = 0
-  const bars = buckets.flatMap((bucket, binIndex) => {
+  const bars = buckets.flatMap((rows, binIndex) => {
+    const groups = new Map<string, { count: number; datum: Datum }>()
+    for (const datum of rows) {
+      const category = colorBy ? categoryValue(datum, colorBy) : "__all"
+      const group = groups.get(category)
+      if (group) group.count++
+      else groups.set(category, { count: 1, datum })
+    }
     let stacked = 0
-    return Array.from(bucket.entries()).flatMap(([category, values]) => {
-      if (values.length === 0) return []
+    return Array.from(groups, ([category, { count, datum }]) => {
       visibleBars += 1
-      const height = (values.length / maxCount) * (cellSize - 24)
+      const height = (count / maxCount) * (cellSize - 24)
       const y0 = stacked
       stacked += height
       return (
@@ -177,7 +165,7 @@ function diagonalMarkup(options: {
           y={cellSize - y0 - height}
           width={Math.max(cellSize / bins - 1, 1)}
           height={height}
-          fill={colorBy ? color(values[0]) : DEFAULT_COLOR}
+          fill={colorBy ? color(datum) : DEFAULT_COLOR}
           opacity={0.6}
         />
       )
