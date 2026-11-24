@@ -8,7 +8,8 @@ import type { StreamXYFrameProps, HoverData, Style } from "../../stream/types"
 import { ensureXYPlugin } from "../../stream/xyPlugins/registry"
 import { scatterXYPlugin } from "../../stream/xyPlugins/pointPlugin"
 import { getColor } from "../shared/colorUtils"
-import { getMax, getMinMax } from "../shared/minMax"
+import { getMax } from "../shared/minMax"
+import { matrixHistogramBins } from "./matrixHistogramBins"
 import { DEFAULT_COLOR } from "../shared/hooks"
 import { useSelection } from "../../store/useSelection"
 import { buildCustomBehaviorProps } from "../shared/streamPropsHelpers"
@@ -216,42 +217,35 @@ export function DiagonalCell({
   })
   const histogram = useMemo(() => {
     const colorField = typeof colorBy === "string" ? colorBy : null
-    const values: number[] = []
+    const buckets = matrixHistogramBins(data, field, bins)
+    if (!buckets.length) return []
     const categoryIndex = new Map<string, number>()
     for (const d of data) {
-      const value = d[field]
-      if (value != null && !isNaN(value)) values.push(Number(value))
       if (colorField && d[colorField] != null) {
         const category = String(d[colorField])
         if (!categoryIndex.has(category)) categoryIndex.set(category, categoryIndex.size)
       }
     }
-    if (!values.length) return []
-    const [min, max] = getMinMax(values)
-    const binWidth = (max - min) / bins || 1
     const categories = Array.from(categoryIndex.keys())
-    const counts = new Array<number>(bins).fill(0)
-    const makeBins = () => Array.from({ length: bins }, () => new Array<number>(categories.length || 1).fill(0))
+    const makeBins = () => buckets.map(() => new Array<number>(categories.length || 1).fill(0))
     const all = makeBins()
     const selected = isActive ? makeBins() : null
-    for (const row of data) {
-      const value = row[field]
-      if (value == null || isNaN(value)) continue
-      const bin = Math.min(Math.floor((value - min) / binWidth), bins - 1)
-      counts[bin]++
-      const category = categories.length && colorField ? categoryIndex.get(String(row[colorField])) : 0
-      if (category === undefined) continue
-      all[bin][category]++
-      if (selected && predicate(row)) selected[bin][category]++
-    }
-    const maxCount = getMax(counts, 1)
+    buckets.forEach((rows, bin) => {
+      for (const row of rows) {
+        const category = categories.length && colorField ? categoryIndex.get(String(row[colorField])) : 0
+        if (category === undefined) continue
+        all[bin][category]++
+        if (selected && predicate(row)) selected[bin][category]++
+      }
+    })
+    const maxCount = getMax(buckets.map(rows => rows.length), 1)
     const renderBars = (series: number[][], opacity: number) => series.map((stack, bin) => {
       let bottom = cellSize
       return stack.map((count, i) => {
         const h = (count / maxCount) * (cellSize - 24)
         bottom -= h
-        return <rect key={i} x={(bin / bins) * cellSize} y={bottom}
-          width={Math.max(cellSize / bins - 1, 1)} height={h}
+        return <rect key={i} x={(bin / buckets.length) * cellSize} y={bottom}
+          width={Math.max(cellSize / buckets.length - 1, 1)} height={h}
           fill={categories.length && colorScale ? colorScale(categories[i]) : DEFAULT_COLOR}
           opacity={opacity} />
       })
