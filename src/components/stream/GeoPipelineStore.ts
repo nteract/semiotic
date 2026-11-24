@@ -2,15 +2,13 @@ import { IngestActivity } from "./IngestActivity"
 import { repairDegenerateGeoFit } from "./geoProjectionFit"
 import { geoPointIndices } from "./geoPointSourceIndex"
 import { buildGeoScales } from "./geoScales"
-import { geoPath as d3GeoPath } from "d3-geo"
-import type { GeoProjection, GeoPath, GeoPermissibleObjects } from "d3-geo"
+import type { GeoProjection } from "d3-geo"
 import type { ZoomTransform } from "d3-zoom"
 import type { Quadtree } from "d3-quadtree"
 import type {
   GeoPipelineConfig,
   GeoScales,
-  GeoSceneNode,
-  DistanceCartogramConfig
+  GeoSceneNode
 } from "./geoTypes"
 import type {
   PointSceneNode,
@@ -44,7 +42,8 @@ import { runCustomLayoutAttempt } from "./customLayoutAttempt"
 import type { CustomLayoutFailureDiagnostic } from "./customLayoutFailure"
 import {
   resolveProjection,
-  makeGeoNumericAccessor as makeAccessor,
+  geoAccessor,
+  geoCoordinates,
   makeLineDataAccessor
 } from "./geoPipelineHelpers"
 import { applyDistanceCartogram } from "./geoCartogram"
@@ -95,12 +94,9 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
 
   // Internal state
   private projection: GeoProjection | null = null
-  private geoPath: GeoPath<void, GeoPermissibleObjects> | null = null
 
   // Base projection state (before zoom) — used to restore on zoom reset
-  private baseScale: number = 0
-  private baseTranslate: [number, number] = [0, 0]
-  private baseRotation: [number, number, number] = [0, 0, 0]
+  private baseView = { scale: 0, translate: [0, 0] as [number, number], rotation: [0, 0, 0] as [number, number, number] }
 
   // Current zoom level for onZoom callbacks
   currentZoom = 1
@@ -166,21 +162,20 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
   /** Rebuild both point resources from the same retained suffix so pulse
    *  timestamps remain indexed to their matching point after a resize. */
   private resizeStreamingWindow(windowSize: number): void {
-    if (this.pointBuffer) {
-      const points = this.pointBuffer.toArray()
-      const timestamps = this.timestampBuffer?.toArray() ?? []
-      const retainedPoints = points.slice(-windowSize)
-      const retainedTimestamps = timestamps.slice(-retainedPoints.length)
-      const fallbackTimestamp = this.currentTime()
-
-      this.pointBuffer = new RingBuffer<Datum>(windowSize)
-      this.timestampBuffer = new RingBuffer<number>(windowSize)
-      retainedPoints.forEach((point, index) => {
-        this.pointBuffer!.push(point)
-        this.timestampBuffer!.push(retainedTimestamps[index] ?? fallbackTimestamp)
-      })
-    }
+    if (this.pointBuffer) this.rebuildPointBuffers(this.pointBuffer.toArray(), windowSize)
     this.retainNewestLines(windowSize)
+  }
+
+  private rebuildPointBuffers(points: Datum[], capacity: number): void {
+    const retained = points.slice(-capacity)
+    const timestamps = this.timestampBuffer?.toArray().slice(-retained.length) ?? []
+    const fallback = this.currentTime()
+    this.pointBuffer = new RingBuffer<Datum>(capacity)
+    this.timestampBuffer = new RingBuffer<number>(capacity)
+    retained.forEach((point, index) => {
+      this.pointBuffer!.push(point)
+      this.timestampBuffer!.push(timestamps[index] ?? fallback)
+    })
   }
 
   updateConfig(config: Partial<GeoPipelineConfig>): void {
@@ -220,10 +215,14 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
 
   // ── Data ingestion ───────────────────────────────────────────────
 
+  private recordDataChange(kind: "replace" | "ingest" | "remove", count: number) {
+    this.activity.touch()
+    this.updateResults.recordData(kind, count)
+  }
+
   setAreas(features: GeoJSON.Feature[]): void {
     this.areas = features
-    this.activity.touch()
-    this.updateResults.recordData("replace", features.length)
+    this.recordDataChange("replace", features.length)
   }
 
   /** Additive explicit-result form of {@link setAreas}. */
@@ -241,8 +240,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
     this.pointBuffer = null
     this.timestampBuffer = null
     this.streaming = false
-    this.activity.touch()
-    this.updateResults.recordData("replace", data.length)
+    this.recordDataChange("replace", data.length)
   }
 
   /** Additive explicit-result form of {@link setPoints}. */
@@ -258,8 +256,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
     // into the React-owned array passed via the `lines` prop.
     this.lineData = data.slice()
     if (this.streaming) this.retainNewestLines()
-    this.activity.touch()
-    this.updateResults.recordData("replace", data.length)
+    this.recordDataChange("replace", data.length)
   }
 
   /** Additive explicit-result form of {@link setLines}. */
@@ -278,18 +275,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
       this.config = { ...this.config, windowSize }
     }
     const configuredWindowSize = this.getConfiguredWindowSize()
-    const points = this.pointBuffer ? this.pointBuffer.toArray() : this.pointData
-    const timestamps = this.timestampBuffer?.toArray() ?? []
-    const retainedPoints = points.slice(-configuredWindowSize)
-    const retainedTimestamps = timestamps.slice(-retainedPoints.length)
-    const fallbackTimestamp = this.currentTime()
-
-    this.pointBuffer = new RingBuffer<Datum>(configuredWindowSize)
-    this.timestampBuffer = new RingBuffer<number>(configuredWindowSize)
-    retainedPoints.forEach((point, index) => {
-      this.pointBuffer!.push(point)
-      this.timestampBuffer!.push(retainedTimestamps[index] ?? fallbackTimestamp)
-    })
+    this.rebuildPointBuffers(this.pointBuffer?.toArray() ?? this.pointData, configuredWindowSize)
     this.pointData = []
     this.retainNewestLines(configuredWindowSize)
     this.streaming = true
@@ -297,12 +283,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
 
   /** Push a single streaming point */
   pushPoint(datum: Datum): void {
-    if (!this.pointBuffer) this.initStreaming()
-    const now = this.currentTime()
-    pushWithTimestamp(this.pointBuffer!, datum, this.timestampBuffer, now)
-    this.activity.touch()
-    this.lastIngestTime = now
-    this.updateResults.recordData("ingest", 1)
+    this.pushMany([datum])
   }
 
   /** Additive explicit-result form of {@link pushPoint}. */
@@ -318,9 +299,8 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
     for (const d of data) {
       pushWithTimestamp(this.pointBuffer!, d, this.timestampBuffer, now)
     }
-    this.activity.touch()
     this.lastIngestTime = now
-    this.updateResults.recordData("ingest", data.length)
+    this.recordDataChange("ingest", data.length)
   }
 
   /** Additive explicit-result form of {@link pushMany}. */
@@ -336,16 +316,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
    *  because `setLines` defensive-copies on entry and `getLines`
    *  defensive-copies on exit. */
   pushLine(line: Datum): void {
-    if (line == null || typeof line !== "object") {
-      this.updateResults.recordNoop("ingest")
-      return
-    }
-    if (!this.streaming) this.initStreaming()
-    this.lineData.push(line)
-    this.retainNewestLines()
-    this.version++
-    this.activity.touch()
-    this.updateResults.recordData("ingest", 1)
+    this.pushManyLines([line])
   }
 
   /** Append multiple line/flow records in one pass. Same in-place
@@ -354,11 +325,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
    *  blow the engine's argument-count limit (mirrors how `pushMany`
    *  for points iterates rather than spreads). */
   pushManyLines(lines: Datum[]): void {
-    if (!Array.isArray(lines) || lines.length === 0) {
-      this.updateResults.recordNoop("ingest")
-      return
-    }
-    const safe = lines.filter((l) => l != null && typeof l === "object")
+    const safe = Array.isArray(lines) ? lines.filter(line => line != null && typeof line === "object") : []
     if (safe.length === 0) {
       this.updateResults.recordNoop("ingest")
       return
@@ -367,8 +334,33 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
     for (const line of safe) this.lineData.push(line)
     this.retainNewestLines()
     this.version++
-    this.activity.touch()
-    this.updateResults.recordData("ingest", safe.length)
+    this.recordDataChange("ingest", safe.length)
+  }
+
+  private recordRemoval(removed: Datum[]): Datum[] {
+    if (removed.length) {
+      this.version++
+      this.recordDataChange("remove", removed.length)
+    } else {
+      this.updateResults.recordNoop("remove")
+    }
+    return removed
+  }
+
+  private matchesId(id: string | string[], accessor: string | ((row: Datum) => string)) {
+    const getId = geoAccessor(accessor, "id")
+    const ids = new Set(Array.isArray(id) ? id : [id])
+    return (row: Datum) => ids.has(String(getId(row)))
+  }
+
+  private removeFromArray(key: "pointData" | "lineData", matches: (row: Datum) => boolean) {
+    const removed: Datum[] = []
+    this[key] = this[key].filter(row => {
+      if (!matches(row)) return true
+      removed.push(row)
+      return false
+    })
+    return this.recordRemoval(removed)
   }
 
   /** Remove line records by id. Requires `lineIdAccessor`. */
@@ -377,26 +369,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
     if (!lineIdAccessor) {
       throw new Error("removeLine() requires lineIdAccessor to be configured")
     }
-    const getId = typeof lineIdAccessor === "function"
-      ? lineIdAccessor
-      : (d: Datum) => d[lineIdAccessor as string]
-    const ids = new Set(Array.isArray(id) ? id : [id])
-    const removed: Datum[] = []
-    this.lineData = this.lineData.filter((d) => {
-      if (ids.has(String(getId(d)))) {
-        removed.push(d)
-        return false
-      }
-      return true
-    })
-    if (removed.length > 0) {
-      this.version++
-      this.activity.touch()
-      this.updateResults.recordData("remove", removed.length)
-    } else {
-      this.updateResults.recordNoop("remove")
-    }
-    return removed
+    return this.removeFromArray("lineData", this.matchesId(id, lineIdAccessor))
   }
 
   /** Read the current line/flow set (post-push, pre-projection).
@@ -417,41 +390,14 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
     if (!pointIdAccessor) {
       throw new Error("removePoint() requires pointIdAccessor to be configured")
     }
-    const getId = typeof pointIdAccessor === "function"
-      ? pointIdAccessor
-      : (d: Datum) => d[pointIdAccessor as string]
-    const ids = new Set(Array.isArray(id) ? id : [id])
+    const predicate = this.matchesId(id, pointIdAccessor)
 
     if (this.streaming && this.pointBuffer) {
-      const predicate = (item: Datum) => ids.has(String(getId(item)))
       compactTimestampBufferForRemoval(this.pointBuffer, this.timestampBuffer, predicate)
       const removed = this.pointBuffer.remove(predicate)
-      if (removed.length > 0) {
-        this.version++
-        this.activity.touch()
-        this.updateResults.recordData("remove", removed.length)
-      } else {
-        this.updateResults.recordNoop("remove")
-      }
-      return removed
-    } else {
-      const removed: Datum[] = []
-      this.pointData = this.pointData.filter((d) => {
-        if (ids.has(String(getId(d)))) {
-          removed.push(d)
-          return false
-        }
-        return true
-      })
-      if (removed.length > 0) {
-        this.version++
-        this.activity.touch()
-        this.updateResults.recordData("remove", removed.length)
-      } else {
-        this.updateResults.recordNoop("remove")
-      }
-      return removed
+      return this.recordRemoval(removed)
     }
+    return this.removeFromArray("pointData", predicate)
   }
 
   clear(): void {
@@ -469,15 +415,19 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
     this.activeTransition = null
     this.prevPositions = null
     this.pointIndex.clear()
-    this.customLayoutOverlays = null
-    this.lastCustomLayoutResult = null
+    this.resetCustomLayout()
     this.lastCustomLayoutFailure = null
-    this._customRestyle = undefined
-    this.hasCustomRestyle = false
-    this._baseStyles = new WeakMap()
     this._customLayoutFailedThisBuild = false
     this.version++
     this.updateResults.recordData("clear")
+  }
+
+  private resetCustomLayout() {
+    this.customLayoutOverlays = null
+    this.lastCustomLayoutResult = null
+    this._customRestyle = undefined
+    this.hasCustomRestyle = false
+    this._baseStyles = new WeakMap()
   }
 
   restyleScene(selection: CustomLayoutSelection | null): void {
@@ -501,17 +451,25 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
     layout: StreamLayout,
     rollback: () => void
   ): boolean {
-    this._customLayoutFailedThisBuild = false
+    const previousScales = this.scales
+    this.scales = buildGeoScales(this.projection!)
     const nextScene = this.buildSceneNodes(layout)
     if (this._customLayoutFailedThisBuild) {
-      if (this.lastCustomLayoutFailure?.preservedLastGoodScene) rollback()
-      else {
+      if (this.lastCustomLayoutFailure?.preservedLastGoodScene) {
+        rollback()
+        this.scales = previousScales
+      } else {
         this.scene = []
         this.pointIndex.clear()
       }
       return false
     }
     this.scene = nextScene
+    const transform = this.config.projectionTransform
+    this.cartogramLayout = transform ? applyDistanceCartogram(this.scene, transform, layout, this.areas.length) : null
+    if (transform && !this.cartogramLayout && !this.config.customLayout) {
+      this.scene = this.buildSceneNodes(layout, { ...this.config, projectionTransform: undefined })
+    }
     this.pointIndex.invalidate()
     return true
   }
@@ -519,47 +477,16 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
   computeScene(layout: StreamLayout): void {
     const { config } = this
     const previousProjection = this.projection
-    const previousGeoPath = this.geoPath
-    const previousScales = this.scales
-    const previousBaseScale = this.baseScale
-    const previousBaseTranslate = [...this.baseTranslate] as [number, number]
-    const previousBaseRotation = [...this.baseRotation] as [number, number, number]
+    const previousView = this.baseView
     const prevScene = this.scene
 
-    // Step 1: Resolve projection
     this.projection = resolveProjection(config.projection)
-    this.geoPath = d3GeoPath(this.projection)
-
-    // Step 2: Compute bounds and fit projection
     this.fitProjection(layout)
+    if (!this.rebuildProjectedScene(layout, () => {
+      this.projection = previousProjection
+      this.baseView = previousView
+    })) return
 
-    // Rebuild geoPath after fitting
-    this.geoPath = d3GeoPath(this.projection)
-
-    // Step 3: Build scales object
-    const proj = this.projection
-    this.scales = buildGeoScales(proj)
-    this.geoPath = this.scales.geoPath
-
-    // Step 4: Build scene nodes
-    if (
-      !this.rebuildProjectedScene(layout, () => {
-        this.projection = previousProjection
-        this.geoPath = previousGeoPath
-        this.scales = previousScales
-        this.baseScale = previousBaseScale
-        this.baseTranslate = previousBaseTranslate
-        this.baseRotation = previousBaseRotation
-      })
-    )
-      return
-
-    // Step 5: Apply distance cartogram transform
-    if (config.projectionTransform) {
-      this.applyCartogramTransform(config.projectionTransform, layout)
-    }
-
-    // Step 6: Apply realtime encodings
     if (config.decay && this.streaming) {
       this.applyDecay()
     }
@@ -571,8 +498,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
     if (config.transition && !this._hasRenderedOnce && this.scene.length > 0 && config.introAnimation) {
       const cx = layout.width / 2
       const cy = layout.height / 2
-      const syntheticPrev = this.scene
-        .filter((n) => n.type === "point")
+      const syntheticPrev = this.scenePoints()
         .map((n) => ({ ...n, x: cx, y: cy }))
       if (syntheticPrev.length > 0) {
         this.startTransition(syntheticPrev)
@@ -595,39 +521,19 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
     const proj = this.projection!
     const config = this.config
 
-    // Collect all geo features for bounds
-    const allFeatures: GeoJSON.Feature[] = [...this.areas]
-
-    // Add point coordinates as a synthetic feature
-    const xAcc = makeAccessor(config.xAccessor, "lon")
-    const yAcc = makeAccessor(config.yAccessor, "lat")
+    const geometries = this.areas.map(feature => feature.geometry)
+    const coordinates = geoCoordinates(config)
     const points = this.getPoints()
-
-    if (points.length > 0) {
-      const coords: [number, number][] = points.map((d): [number, number] => [xAcc(d), yAcc(d)])
-        .filter((coord) => coord.every(Number.isFinite))
-      allFeatures.push({
-        type: "Feature",
-        properties: {},
-        geometry: { type: "MultiPoint", coordinates: coords }
-      })
+    if (points.length) {
+      geometries.push({ type: "MultiPoint", coordinates: points.map(coordinates).filter(pair => pair.every(Number.isFinite)) })
     }
-
-    // Add line coordinates
     const lineDataAcc = makeLineDataAccessor(config.lineDataAccessor)
     for (const line of this.lineData) {
       const coords = lineDataAcc(line)
-      if (coords && coords.length > 0) {
-        const lineCoords: [number, number][] = coords.map((d: Datum) => [xAcc(d), yAcc(d)])
-        allFeatures.push({
-          type: "Feature",
-          properties: {},
-          geometry: { type: "LineString", coordinates: lineCoords }
-        })
-      }
+      if (coords?.length) geometries.push({ type: "LineString", coordinates: coords.map(coordinates) })
     }
 
-    if (allFeatures.length === 0) return
+    if (geometries.length === 0) return
 
     // Use projectionExtent override or auto-fit
     if (config.projectionExtent) {
@@ -635,18 +541,10 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
       // Exterior rings must be counter-clockwise (RFC 7946 / d3-geo). A
       // clockwise ring is interpreted as the complement of the box — i.e. the
       // whole globe — so fitExtent collapses to world scale.
-      const syntheticFeature: GeoJSON.Feature = {
-        type: "Feature",
-        properties: {},
-        geometry: {
-          type: "Polygon",
-          coordinates: [[[lonMin, latMin], [lonMin, latMax], [lonMax, latMax], [lonMax, latMin], [lonMin, latMin]]]
-        }
-      }
-      proj.fitExtent(
-        [[0, 0], [layout.width, layout.height]],
-        syntheticFeature
-      )
+      proj.fitExtent([[0, 0], [layout.width, layout.height]], {
+        type: "Polygon",
+        coordinates: [[[lonMin, latMin], [lonMin, latMax], [lonMax, latMax], [lonMax, latMin], [lonMin, latMin]]]
+      })
     } else if (proj.clipAngle && (proj.clipAngle() ?? 0) > 0) {
       // Clipped projections (e.g. orthographic): size the globe to fill the
       // viewport rather than fitting to data bounds, which would crop the
@@ -658,10 +556,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
       proj.translate([layout.width / 2, layout.height / 2])
     } else {
       // Auto-fit to all data
-      const collection: GeoJSON.FeatureCollection = {
-        type: "FeatureCollection",
-        features: allFeatures
-      }
+      const collection: GeoJSON.GeometryCollection = { type: "GeometryCollection", geometries }
       const pad = config.fitPadding ?? 0
       const px = layout.width * pad
       const py = layout.height * pad
@@ -673,9 +568,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
     }
 
     // Save base projection state for zoom reference
-    this.baseScale = proj.scale()
-    this.baseTranslate = proj.translate() as [number, number]
-    this.baseRotation = (proj.rotate?.() ?? [0, 0, 0]) as [number, number, number]
+    this.baseView = { scale: proj.scale(), translate: proj.translate(), rotation: proj.rotate?.() ?? [0, 0, 0] }
   }
 
   /**
@@ -683,84 +576,36 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
    * Called on zoom end — updates projection scale/translate and rebuilds scene.
    */
   applyZoomTransform(transform: ZoomTransform, layout: StreamLayout): void {
-    const proj = this.projection
-    if (!proj) return
-    const previousGeoPath = this.geoPath
-    const previousScales = this.scales
-    const previousScale = proj.scale()
-    const previousTranslate = [...proj.translate()] as [number, number]
-    const previousZoom = this.currentZoom
-
-    // Apply zoom transform to the base projection state
-    proj.scale(this.baseScale * transform.k)
-    proj.translate([
-      this.baseTranslate[0] * transform.k + transform.x,
-      this.baseTranslate[1] * transform.k + transform.y
+    this.zoomProjection(transform.k, layout, [
+      this.baseView.translate[0] * transform.k + transform.x,
+      this.baseView.translate[1] * transform.k + transform.y
     ])
-
-    this.currentZoom = transform.k
-
-    // Rebuild geoPath and scene with new projection
-    this.geoPath = d3GeoPath(proj)
-
-    // Rebuild scales
-    this.scales = buildGeoScales(proj)
-    this.geoPath = this.scales.geoPath
-
-    // Rebuild scene nodes with zoomed projection (skip re-fitting)
-    if (!this.rebuildProjectedScene(layout, () => {
-        proj.scale(previousScale)
-        proj.translate(previousTranslate)
-        this.currentZoom = previousZoom
-        this.geoPath = previousGeoPath
-        this.scales = previousScales
-      })
-    )
-      return
-
-    // Apply cartogram transform if configured
-    if (this.config.projectionTransform) {
-      this.applyCartogramTransform(this.config.projectionTransform, layout)
-    }
-
-    this.version++
   }
 
-  /**
-   * Apply zoom as scale-only (no translate shift).
-   * Used in drag-rotate mode to prevent globe drift on zoom.
-   */
+  /** Zoom without translating the globe during drag rotation. */
   applyZoomScale(k: number, layout: StreamLayout): void {
+    this.zoomProjection(k, layout, this.baseView.translate)
+  }
+
+  private zoomProjection(k: number, layout: StreamLayout, translate: [number, number]): void {
     const proj = this.projection
     if (!proj) return
-    const previousGeoPath = this.geoPath
-    const previousScales = this.scales
     const previousScale = proj.scale()
-    const previousTranslate = [...proj.translate()] as [number, number]
+    const previousTranslate = proj.translate()
     const previousZoom = this.currentZoom
 
-    proj.scale(this.baseScale * k)
-    // Keep translate at base center — no shift
-    proj.translate(this.baseTranslate)
+    proj.scale(this.baseView.scale * k)
+    proj.translate(translate)
 
     this.currentZoom = k
 
-    this.geoPath = d3GeoPath(proj)
-    this.scales = buildGeoScales(proj)
-    this.geoPath = this.scales.geoPath
-
     if (!this.rebuildProjectedScene(layout, () => {
         proj.scale(previousScale)
         proj.translate(previousTranslate)
         this.currentZoom = previousZoom
-        this.geoPath = previousGeoPath
-        this.scales = previousScales
       })
     )
       return
-    if (this.config.projectionTransform) {
-      this.applyCartogramTransform(this.config.projectionTransform, layout)
-    }
     this.version++
   }
 
@@ -771,29 +616,12 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
   applyRotation(rotation: [number, number, number], layout: StreamLayout): void {
     const proj = this.projection
     if (!proj || !proj.rotate) return
-    const previousGeoPath = this.geoPath
-    const previousScales = this.scales
-    const previousRotation = [...proj.rotate()] as [number, number, number]
+    const previousRotation = proj.rotate()
 
     proj.rotate(rotation)
 
-    // Rebuild geoPath and scales
-    this.geoPath = d3GeoPath(proj)
-    this.scales = buildGeoScales(proj)
-    this.geoPath = this.scales.geoPath
-
     // Rebuild scene
-    if (!this.rebuildProjectedScene(layout, () => {
-        proj.rotate(previousRotation)
-        this.geoPath = previousGeoPath
-        this.scales = previousScales
-      })
-    )
-      return
-    if (this.config.projectionTransform) {
-      this.applyCartogramTransform(this.config.projectionTransform, layout)
-    }
-    this.version++
+    if (this.rebuildProjectedScene(layout, () => proj.rotate(previousRotation))) this.version++
   }
 
   /**
@@ -814,12 +642,12 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
 
   /** Get current rotation (for external tracking) */
   getRotation(): [number, number, number] {
-    return (this.projection?.rotate?.() ?? this.baseRotation) as [number, number, number]
+    return (this.projection?.rotate?.() ?? this.baseView.rotation) as [number, number, number]
   }
 
   /** Get the current base projection state (for zoom reset) */
   getBaseProjectionState(): { scale: number; translate: [number, number] } {
-    return { scale: this.baseScale, translate: [...this.baseTranslate] as [number, number] }
+    return { scale: this.baseView.scale, translate: [...this.baseView.translate] as [number, number] }
   }
 
   // ── Build scene nodes ──────────────────────────────────────────
@@ -846,11 +674,10 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
     return (this.activeTransition ? this.pointIndex.last : this.pointIndex.resolve()).maxRadius
   }
 
-  private buildSceneNodes(layout: StreamLayout): GeoSceneNode[] {
+  private buildSceneNodes(layout: StreamLayout, config = this.config): GeoSceneNode[] {
     this._customLayoutFailedThisBuild = false
-    const { config } = this
     const proj = this.projection!
-    const path = this.geoPath!
+    const path = this.scales!.geoPath
     if (config.customLayout && this.scales) {
       const margin = config.layoutMargin ?? { top: 0, right: 0, bottom: 0, left: 0 }
       const palette = resolveCustomLayoutPalette(
@@ -890,11 +717,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
         this.lastCustomLayoutFailure = outcome.diagnostic
         this._customLayoutFailedThisBuild = true
         if (!outcome.preservedLastGoodScene) {
-          this.customLayoutOverlays = null
-          this.lastCustomLayoutResult = null
-          this._customRestyle = undefined
-          this.hasCustomRestyle = false
-          this._baseStyles = new WeakMap()
+          this.resetCustomLayout()
           return []
         }
         return this.scene
@@ -925,12 +748,8 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
       return nodes
     }
 
-    this.customLayoutOverlays = null
-    this.lastCustomLayoutResult = null
+    this.resetCustomLayout()
     this.lastCustomLayoutFailure = null
-    this._customRestyle = undefined
-    this.hasCustomRestyle = false
-    this._baseStyles = new WeakMap()
 
     return buildBuiltInGeoScene({
       config,
@@ -943,22 +762,11 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
     })
   }
 
-  // ── Distance cartogram transform ──────────────────────────────
-
-  private applyCartogramTransform(
-    transform: DistanceCartogramConfig,
-    layout: StreamLayout
-  ): void {
-    const layoutInfo = applyDistanceCartogram(
-      this.scene,
-      transform,
-      layout,
-      this.areas.length
-    )
-    if (layoutInfo) this.cartogramLayout = layoutInfo
-  }
-
   // ── Decay ──────────────────────────────────────────────────────
+
+  private scenePoints(): PointSceneNode[] {
+    return this.scene.filter(node => node.type === "point")
+  }
 
   private applyDecay(): void {
     const decay = this.config.decay
@@ -968,9 +776,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
     if (bufferSize === 0) return
 
     // Points get per-node decay
-    const pointNodes = this.scene.filter(
-      (n): n is PointSceneNode => n.type === "point"
-    )
+    const pointNodes = this.scenePoints()
 
     const indices = geoPointIndices(pointNodes, this.getPoints())
     for (let i = 0; i < pointNodes.length; i++) {
@@ -987,9 +793,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
     const pulse = this.config.pulse
     if (!pulse || !this.timestampBuffer) return false
 
-    const pointNodes = this.scene.filter(
-      (n): n is PointSceneNode => n.type === "point"
-    )
+    const pointNodes = this.scenePoints()
     const timestamps = this.timestampBuffer.toArray()
     const indices = geoPointIndices(pointNodes, this.getPoints())
     const pulseColor = pulse.color || "rgba(255,255,255,0.6)"
@@ -1037,9 +841,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
     }
 
     // Set targets and restore previous positions
-    const pointNodes = this.scene.filter(
-      (n): n is PointSceneNode => n.type === "point"
-    )
+    const pointNodes = this.scenePoints()
     let hasMovement = false
     for (const node of pointNodes) {
       if (node.pointId) {
@@ -1108,9 +910,7 @@ export class GeoPipelineStore extends UpdateResultStoreBase {
     const rawT = computeRawProgress(now, this.activeTransition)
     const t = computeEasing(rawT, this.config.transition?.easing)
 
-    const pointNodes = this.scene.filter(
-      (n): n is PointSceneNode => n.type === "point"
-    )
+    const pointNodes = this.scenePoints()
 
     for (const node of pointNodes) {
       if (node._targetX != null && node._targetY != null) {

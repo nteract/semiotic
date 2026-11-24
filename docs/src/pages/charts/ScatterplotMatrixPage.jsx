@@ -249,6 +249,12 @@ export default function ScatterplotMatrixPage() {
         hiddenProps={{}}
       />
 
+      <p>
+        Tab into the matrix and use arrow keys to move between cells. Press Enter in a scatterplot
+        to explore its points or adjust its brush. In brush mode, arrows move the range and
+        Shift plus an arrow resizes it. Escape clears the brush and returns focus to the cell.
+      </p>
+
       <h3 id="click-to-act">Click to Act</h3>
       <p>
         Pass an <code>onClick</code> handler to make the matrix a navigation

@@ -469,13 +469,6 @@ export function chartValueFormatter(locale = "en"): (n: number) => string {
   }
 }
 
-// Public API
-
-/**
- * Generate a layered (L1/L2/L3) natural-language description of a chart config.
- * Best for XY, bar, part-to-whole, and distribution families; degrades to an
- * L1-only description (chart type + structure) for network/hierarchy/geo/value.
- */
 // Author annotations — the reception side of author intent
 
 // Human phrasing per annotation type, with a leading article so the sentence
@@ -562,6 +555,7 @@ function annotationSentence(props: Datum): string | undefined {
   return `The author has marked ${n === 1 ? "one feature" : `${n} features`} on this chart: ${list}.`
 }
 
+/** Describe a chart's structure, measures, and trends at the requested levels. */
 export function describeChart(
   component: string,
   props: Datum,

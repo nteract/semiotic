@@ -63,7 +63,7 @@ import {
 import { observationInputType } from "../charts/shared/semanticInteractions"
 import { isAnnotationActivationTarget } from "../charts/shared/annotationActivation"
 import { useSemanticFrameInteractions } from "./useSemanticFrameInteractions"
-import { useGeoKeyboardNavigation } from "./frameKeyboardNavigation"
+import { useGeoKeyboardNavigation } from "./geoKeyboardNavigation"
 import { createFrameGraphicsScaleTracker, resolveSubscribedFrameLayers, type FrameGraphicsScaleTracker } from "./frameGraphicsSubscription"
 import { sceneHasAuthoredCursor, sceneMarkCursor, setCanvasMarkCursor, useCanvasMarkCursorCleanup } from "./sceneCursor"
 import { shouldHandleFramePointer } from "./frameCursorInteraction"

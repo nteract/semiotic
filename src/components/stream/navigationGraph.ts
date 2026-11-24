@@ -139,65 +139,18 @@ export function nextGraphIndex(
   const { group, indexInGroup } = pos
   const groupPoints = graph.byGroup.get(group)!
 
-  switch (key) {
-    case "ArrowRight": {
-      // Next within group
-      if (indexInGroup < groupPoints.length - 1) {
-        return groupPoints[indexInGroup + 1]._flatIndex!
-      }
-      return pos.flatIndex // at end, stay
-    }
-
-    case "ArrowLeft": {
-      // Prev within group
-      if (indexInGroup > 0) {
-        return groupPoints[indexInGroup - 1]._flatIndex!
-      }
-      return pos.flatIndex // at start, stay
-    }
-
-    case "ArrowDown": {
-      // Next group, nearest position
-      const gi = graph.groups.indexOf(group)
-      if (gi < graph.groups.length - 1) {
-        const nextGroup = graph.groups[gi + 1]
-        return findNearestInGroup(graph, nextGroup, groupPoints[indexInGroup])
-      }
-      return pos.flatIndex // at last group, stay
-    }
-
-    case "ArrowUp": {
-      // Prev group, nearest position
-      const gi = graph.groups.indexOf(group)
-      if (gi > 0) {
-        const prevGroup = graph.groups[gi - 1]
-        return findNearestInGroup(graph, prevGroup, groupPoints[indexInGroup])
-      }
-      return pos.flatIndex // at first group, stay
-    }
-
-    case "PageDown": {
-      const skip = Math.max(1, Math.floor(graph.flat.length * 0.1))
-      return Math.min(pos.flatIndex + skip, graph.flat.length - 1)
-    }
-
-    case "PageUp": {
-      const skip = Math.max(1, Math.floor(graph.flat.length * 0.1))
-      return Math.max(pos.flatIndex - skip, 0)
-    }
-
-    case "Home":
-      return 0
-
-    case "End":
-      return graph.flat.length - 1
-
-    case "Escape":
-      return -1
-
-    default:
-      return null
+  if (key === "ArrowRight" || key === "ArrowLeft") {
+    const step = key === "ArrowRight" ? 1 : -1
+    return groupPoints[indexInGroup + step]?._flatIndex ?? pos.flatIndex
   }
+  if (key === "ArrowDown" || key === "ArrowUp") {
+    const step = key === "ArrowDown" ? 1 : -1
+    const nextGroup = graph.groups[graph.groups.indexOf(group) + step]
+    return nextGroup === undefined
+      ? pos.flatIndex
+      : findNearestInGroup(graph, nextGroup, groupPoints[indexInGroup])
+  }
+  return nextIndex(key, pos.flatIndex, graph.flat.length)
 }
 
 /** Find the point in targetGroup nearest to the reference point by x. */

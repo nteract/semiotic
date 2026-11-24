@@ -1,12 +1,7 @@
 import { rememberGeoPointSource } from "./geoPointSourceIndex"
-import {
-  geoDistance,
-  geoGraticule,
-  geoInterpolate
-} from "d3-geo"
+import { geoClipRectangle, geoGraticule, geoPath } from "d3-geo"
 import type { GeoPath, GeoPermissibleObjects, GeoProjection } from "d3-geo"
 import type {
-  GeoLineSceneNode,
   GeoPipelineConfig,
   GeoSceneNode,
   GraticuleConfig
@@ -14,13 +9,14 @@ import type {
 import type { PointSceneNode, StreamLayout, Style } from "./types"
 import type { Datum } from "../charts/shared/datumTypes"
 import {
+  geoAccessor,
   buildArcPath,
   buildOffsetGeoPath,
-  buildOffsetPath,
-  makeGeoNumericAccessor as makeAccessor,
+  geoCoordinates,
   makeLineDataAccessor,
   resolveGeoStyle as resolveStyle,
-  splitAntiMeridianPath,
+  createGeoLineProjector,
+  clipStyledGeoLine,
   themedDefaultArea,
   themedDefaultLine,
   themedDefaultPoint
@@ -36,6 +32,10 @@ interface GeoSceneBuildInput {
   layout: StreamLayout
 }
 
+function finitePosition(point: [number, number] | undefined | null): point is [number, number] {
+  return !!point?.every(Number.isFinite)
+}
+
 /** Builds the built-in geo scene independently of store-owned custom layout state. */
 export function buildBuiltInGeoScene({
   config,
@@ -46,8 +46,7 @@ export function buildBuiltInGeoScene({
   lines,
   layout
 }: GeoSceneBuildInput): GeoSceneNode[] {
-  const xAcc = makeAccessor(config.xAccessor, "lon")
-  const yAcc = makeAccessor(config.yAccessor, "lat")
+  const coordinates = geoCoordinates(config)
   const nodes: GeoSceneNode[] = []
   const areaDefault = themedDefaultArea(config)
   const lineDefault = themedDefaultLine(config)
@@ -79,110 +78,46 @@ export function buildBuiltInGeoScene({
     }
   }
 
+  const clipViewport = geoClipRectangle(0, 0, layout.width, layout.height)
+  const visibleArea = geoPath({ stream: sink => projection.stream(clipViewport(sink)) })
   for (const feature of areas) {
     const pathData = path(feature)
     if (!pathData) continue
-    const centroid = path.centroid(feature)
-    const featureBounds = path.bounds(feature)
-    const featureArea = path.area(feature)
+    const focusPath = visibleArea(feature)
+    if (!focusPath) continue
+    const centroid = visibleArea.centroid(feature)
     nodes.push({
       type: "geoarea",
       pathData,
-      centroid: centroid as [number, number],
-      bounds: featureBounds as [[number, number], [number, number]],
-      screenArea: featureArea,
+      centroid,
+      bounds: path.bounds(feature),
+      screenArea: path.area(feature),
       style: resolveStyle(config.areaStyle, feature, areaDefault),
       datum: feature,
-      interactive: true
+      interactive: true,
+      focusPath
     })
   }
 
-  const lineDataAcc = makeLineDataAccessor(config.lineDataAccessor)
-  for (const line of lines) {
-    const coords = lineDataAcc(line)
-    if (!coords || coords.length < 2) continue
-    let screenPath: [number, number][] = []
-    if (config.lineType === "geo") {
-      const lineCoords: [number, number][] = new Array(coords.length)
-      for (let i = 0; i < coords.length; i++) {
-        lineCoords[i] = [xAcc(coords[i]), yAcc(coords[i])]
-      }
-      for (let i = 0; i < lineCoords.length - 1; i++) {
-        const start = lineCoords[i]
-        const end = lineCoords[i + 1]
-        const dist = geoDistance(start, end) || 0
-        const steps = Math.max(2, Math.ceil(dist / (Math.PI / 180)))
-        const interpolate = geoInterpolate(start, end)
-        for (let step = 0; step <= steps; step++) {
-          if (i > 0 && step === 0) continue
-          const projected = projection(interpolate(step / steps) as [number, number])
-          if (projected != null) screenPath.push(projected as [number, number])
-        }
-      }
-    } else {
-      for (let i = 0; i < coords.length; i++) {
-        const datum = coords[i]
-        const projected = projection([xAcc(datum), yAcc(datum)])
-        if (projected != null) screenPath.push(projected as [number, number])
-      }
-    }
-    if (screenPath.length < 2) continue
-    const style = resolveStyle(config.lineStyle, line, lineDefault) as Style
-    const strokeWidth = typeof style.strokeWidth === "number" ? style.strokeWidth : 1
-    if (coords.length === 2 && screenPath.length >= 2 && config.flowStyle === "arc") {
-      screenPath = buildArcPath(screenPath[0], screenPath[screenPath.length - 1])
-    } else if (coords.length === 2 && screenPath.length >= 2 && config.flowStyle === "offset") {
-      screenPath = config.lineType === "geo"
-        ? buildOffsetGeoPath(screenPath, strokeWidth)
-        : buildOffsetPath(screenPath[0], screenPath[screenPath.length - 1], line, lines, strokeWidth)
-    }
-    const segments = splitAntiMeridianPath(screenPath, layout.width)
-    if (segments.length <= 1) {
-      nodes.push({
-        type: "line",
-        path: screenPath.length >= 2 ? screenPath : segments[0] || screenPath,
-        style,
-        datum: line
-      } as GeoLineSceneNode)
-    } else {
-      for (const segment of segments) {
-        if (segment.length < 2) continue
-        nodes.push({
-          type: "line",
-          path: segment,
-          style: { ...style, _edgeFade: true },
-          datum: line
-        } as GeoLineSceneNode)
-      }
-    }
+  const pointIdAcc = config.pointIdAccessor && geoAccessor(config.pointIdAccessor, "id")
+  let visible: [number, number] | undefined
+  const pointStream = projection.stream({
+    point(x, y) { visible ??= [x, y] },
+    lineStart() {}, lineEnd() {}, polygonStart() {}, polygonEnd() {}
+  })
+
+  function projectPoint(position: [number, number]): [number, number] | undefined {
+    visible = undefined
+    pointStream.point(...position)
+    return visible
   }
 
-  const pointIdAcc = config.pointIdAccessor
-    ? typeof config.pointIdAccessor === "function"
-      ? config.pointIdAccessor
-      : (datum: Datum) => datum[config.pointIdAccessor as string]
-    : null
-  const clipAngle = projection.clipAngle ? (projection.clipAngle() ?? 0) : 0
-  const clipRadians = clipAngle > 0 ? (clipAngle * Math.PI) / 180 : null
-  const rotation = projection.rotate ? projection.rotate() : [0, 0, 0]
-  const center = typeof projection.center === "function" ? projection.center() : [0, 0]
-  const projectionCenter: [number, number] = [
-    (center[0] ?? 0) - rotation[0],
-    (center[1] ?? 0) - rotation[1]
-  ]
-
+  const stations: PointSceneNode[] = []
   for (const [sourceIndex, datum] of points.entries()) {
-    const lon = xAcc(datum)
-    const lat = yAcc(datum)
-    if (!Number.isFinite(lon) || !Number.isFinite(lat)) continue
-    if (clipRadians != null && geoDistance([lon, lat], projectionCenter) > clipRadians) {
-      continue
-    }
-    const projected = projection([lon, lat])
-    if (!projected ||
-      !Number.isFinite(projected[0]) ||
-      !Number.isFinite(projected[1])
-    ) continue
+    const position = coordinates(datum)
+    if (!finitePosition(position)) continue
+    const projected = config.projectionTransform ? projection(position) : projectPoint(position)
+    if (!finitePosition(projected)) continue
     const style = config.pointStyle ? config.pointStyle(datum) : { ...pointDefault }
     const point: PointSceneNode = {
       type: "point",
@@ -194,7 +129,42 @@ export function buildBuiltInGeoScene({
       pointId: pointIdAcc ? String(pointIdAcc(datum)) : undefined
     }
     rememberGeoPointSource(point, sourceIndex)
-    nodes.push(point)
+    stations.push(point)
   }
-  return nodes
+  const lineDataAcc = makeLineDataAccessor(config.lineDataAccessor)
+  const stationIds = config.projectionTransform && new Set(stations.map(point => point.pointId))
+  const projector = (cartogram: boolean) => createGeoLineProjector(projection, config.lineType !== "geo", coordinates, cartogram)
+  let mapRoute: ReturnType<typeof projector> | undefined
+  let cartogramRoute: ReturnType<typeof projector> | undefined
+  const clipLine = clipStyledGeoLine(projection, layout.width, layout.height)
+  for (const line of lines) {
+    const coords = lineDataAcc(line)
+    if (!coords || coords.length < 2) continue
+    const linked = stationIds?.has(String(line.source)) && stationIds.has(String(line.target))
+    const projectLine = linked ? (cartogramRoute ??= projector(true)) : (mapRoute ??= projector(false))
+    const segments = projectLine(coords)
+    if (linked && !segments.length) {
+      const positions = coords.map(d => projection(coordinates(d)))
+      if (positions.every(finitePosition)) segments.push(positions)
+    }
+    const style = resolveStyle(config.lineStyle, line, lineDefault) as Style
+    const strokeWidth = typeof style.strokeWidth === "number" ? style.strokeWidth : 1
+    let paths = segments
+    if (coords.length === 2 && (config.flowStyle === "arc" || config.flowStyle === "offset")) {
+      paths = segments.map(segment => config.flowStyle === "arc"
+          ? buildArcPath(segment[0], segment[segment.length - 1])
+          : buildOffsetGeoPath(segment, strokeWidth))
+    }
+    // Cartograms reattach complete routes after projecting their endpoints.
+    const visibleSegments = linked ? paths : paths.flatMap(clipLine)
+    for (const [index, path] of visibleSegments.entries()) {
+      nodes.push({
+        type: "line", path, datum: line,
+        style: segments.length > 1 ? { ...style, _edgeFade: true } : style,
+        ...(index > 0 && { continuation: true })
+      })
+    }
+  }
+
+  return nodes.concat(stations)
 }

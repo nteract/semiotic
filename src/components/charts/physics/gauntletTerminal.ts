@@ -34,12 +34,13 @@
  * Charts that need a fully authored reading should disable crash detection.
  */
 import type { Datum } from "../shared/datumTypes"
+import { indexDefinitions } from "./gauntletEffects"
 import {
   applyGauntletEffect,
   eventLogItem,
   recordGauntletEvent
 } from "./gauntletEffects"
-import { defaultViability } from "./gauntletPhysics"
+import { resolveGauntletViability } from "./gauntletPhysics"
 import type {
   GauntletEvent,
   GauntletEventContext,
@@ -73,12 +74,6 @@ export interface GauntletTerminalOptions<TDatum extends Datum = Datum> {
   ) => string
 }
 
-function gateIndex(
-  layout: GauntletLayout
-): Map<string, GauntletLayout["gates"][number]> {
-  return new Map(layout.gates.map((gate) => [gate.id, gate]))
-}
-
 /**
  * Fold one project's whole authored tape into its terminal state.
  *
@@ -91,7 +86,7 @@ export function resolveGauntletTerminalState<TDatum extends Datum = Datum>(
 ): GauntletProjectState<TDatum> {
   const { layout, positiveProperties, negativeProperties, viability, outcome } =
     options
-  const gates = gateIndex(layout)
+  const gates = indexDefinitions(layout.gates)
   const timeline = [
     ...((typeof options.events === "function"
       ? options.events(project, layout)
@@ -124,8 +119,7 @@ export function resolveGauntletTerminalState<TDatum extends Datum = Datum>(
     next = {
       ...next,
       viability:
-        viability?.(next, { negativeProperties, positiveProperties }) ??
-        defaultViability(next, positiveProperties, negativeProperties)
+        resolveGauntletViability(next, positiveProperties, negativeProperties, viability)
     }
 
     if (event.final) {

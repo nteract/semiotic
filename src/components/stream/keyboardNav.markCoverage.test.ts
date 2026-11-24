@@ -1,5 +1,6 @@
+import { extractGeoNavPoints } from "./geoKeyboardNavigation"
 import { describe, expect, it } from "vitest"
-import { extractXYNavPoints, extractOrdinalNavPoints, extractGeoNavPoints, navPointToHover } from "./keyboardNav"
+import { extractXYNavPoints, extractOrdinalNavPoints, navPointToHover } from "./keyboardNav"
 import { findNearestOrdinalNode } from "./OrdinalCanvasHitTester"
 import { ordinalHitToHover } from "./ordinalFrameInteraction"
 import type { BoxplotSceneNode, OrdinalSceneNode } from "./ordinalTypes"

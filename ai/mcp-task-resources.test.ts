@@ -117,6 +117,10 @@ describe("installed MCP task resources", () => {
     expect(() => reader().read(id)).toThrow(/Invalid Semiotic task ID/)
   })
 
+  it("bounds the invalid ID echoed in a resource error", () => {
+    expect(() => reader().read("🚉".repeat(2000))).toThrow(/^Invalid Semiotic task ID: 🚉{59}…$/u)
+  })
+
   it("refuses a valid-looking ID outside the generated allowlist even when a file exists", () => {
     write("unlisted-task.json", { secret: "Do not expose this file" })
     expect(() => reader().read("unlisted-task")).toThrow(

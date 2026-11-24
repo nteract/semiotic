@@ -4,6 +4,7 @@ import { auditAccessibility, diagnoseConfig } from "semiotic/utils"
 import {
   adventureDiagnosticProps,
   adventureSuggestionInput,
+  adventureSuggestionRows,
 } from "./analyticalHeuristics"
 import { badgePacketFlows, campusPoints } from "./data/campusFlows"
 import { departmentRecords } from "./data/departmentRecords"
@@ -113,8 +114,8 @@ const FATAL_CAVEAT = /\b(?:cannot render|does not support|unsupported data|fatal
 describe("Analyst Adventure analytical contracts", () => {
   it.each(CASES)(
     "$room keeps its intended chart eligible without a fatal caveat",
-    ({ componentName, intendedSuggestion, intent, data, props }) => {
-      const suggestions = suggestCharts(data, {
+    ({ componentName, diagnosticComponentName, intendedSuggestion, intent, data, props }) => {
+      const suggestions = suggestCharts([...adventureSuggestionRows(diagnosticComponentName, data)], {
         intent,
         maxResults: 50,
         rawInput: adventureSuggestionInput(componentName, props),

@@ -85,7 +85,7 @@ export function renderGeoFrame(props: StreamGeoFrameProps & ThemeAwareProps, sin
     lineDataAccessor: props.lineDataAccessor,
     pointIdAccessor: props.pointIdAccessor,
     lineIdAccessor: props.lineIdAccessor,
-    lineType: props.lineType,
+    lineType: props.lineType ?? "geo",
     flowStyle: props.flowStyle,
     areaStyle: props.areaStyle,
     pointStyle: props.pointStyle,

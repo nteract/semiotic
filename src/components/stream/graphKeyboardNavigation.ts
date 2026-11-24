@@ -120,6 +120,13 @@ export function useGraphKeyboardNavigation<
   const navGraphCacheRef = useRef<{ version: number; graph: NavGraph } | null>(
     null
   )
+  const graphFor = useCallback((store: Store, refresh = false) => {
+    const cached = navGraphCacheRef.current
+    if (!refresh && cached?.version === store.version) return cached.graph
+    const graph = buildNavGraph(extractPoints(store.scene), navigation === "ordered")
+    navGraphCacheRef.current = { version: store.version, graph }
+    return graph
+  }, [extractPoints, navigation])
   const clearFocus = useCallback(() => {
     clearPointerHover?.()
     const hadHover = hoverRef.current !== null
@@ -157,11 +164,7 @@ export function useGraphKeyboardNavigation<
       navGraphCacheRef.current = null
       return
     }
-    const graph = buildNavGraph(
-      extractPoints(store.scene),
-      navigation === "ordered"
-    )
-    navGraphCacheRef.current = { version: store.version, graph }
+    const graph = graphFor(store, true)
     const previousHover = hoverRef.current
     refreshFocusedPoint(
       graph.flat,
@@ -175,8 +178,7 @@ export function useGraphKeyboardNavigation<
     if (kbFocusIndexRef.current < 0 && hoveredNodeRef)
       hoveredNodeRef.current = null
   }, [
-    navigation,
-    extractPoints,
+    graphFor,
     hoverRef,
     hoveredNodeRef,
     setHoverPoint,
@@ -189,25 +191,11 @@ export function useGraphKeyboardNavigation<
       if (isInteractiveKeyboardTarget(event)) return
       const store = storeRef.current
       if (!store) return
-      if (store.scene.length === 0) {
+      const graph = store.scene.length ? graphFor(store) : null
+      if (!graph?.flat.length) {
         if (kbFocusIndexRef.current >= 0 || event.key === "Escape") clearFocus()
         return
       }
-
-      let graph: NavGraph
-      if (navGraphCacheRef.current?.version === store.version) {
-        graph = navGraphCacheRef.current.graph
-      } else {
-        const navPoints = extractPoints(store.scene)
-        if (navPoints.length === 0) {
-          if (kbFocusIndexRef.current >= 0 || event.key === "Escape")
-            clearFocus()
-          return
-        }
-        graph = buildNavGraph(navPoints, navigation === "ordered")
-        navGraphCacheRef.current = { version: store.version, graph }
-      }
-
       if (event.key === "Escape") {
         const parent = nextConnected?.(
           "Escape",
@@ -217,7 +205,6 @@ export function useGraphKeyboardNavigation<
         )
         if (parent == null || parent < 0) {
           event.preventDefault()
-          clearPointerHover?.()
           clearFocus()
           return
         }
@@ -225,8 +212,7 @@ export function useGraphKeyboardNavigation<
         // must not clear the newly focused owner while the mouse is still inside.
         event.stopPropagation()
       }
-      const requestedIndex = kbFocusIndexRef.current
-      let current = requestedIndex
+      let current = kbFocusIndexRef.current
       if (current >= graph.flat.length) {
         clearFocus()
         current = -1
@@ -245,30 +231,13 @@ export function useGraphKeyboardNavigation<
 
       let next: number | null
       if (current < 0) {
-        const navigationKeys = [
-          "ArrowRight",
-          "ArrowLeft",
-          "ArrowUp",
-          "ArrowDown",
-          "Home",
-          "End",
-          "PageUp",
-          "PageDown"
-        ]
-        if (
-          !navigationKeys.includes(event.key) &&
-          !(nextConnected && event.key === "Enter")
-        )
-          return
+        const linearStart = nextIndex(event.key, -1, graph.flat.length)
+        if (event.key === "Escape" || (linearStart === null && !(nextConnected && event.key === "Enter"))) return
         neighborIndexRef.current = -1
         next =
           nextConnected && graph.flat.some((point) => point.navParentId != null)
             ? (nextConnected(event.key, graph, -1, neighborIndexRef) ?? 0)
-            : event.key === "End"
-              ? graph.flat.length - 1
-              : event.key === "PageDown"
-                ? nextIndex(event.key, -1, graph.flat.length)
-                : 0
+            : Math.max(0, linearStart ?? 0)
       } else {
         next = nextConnected
           ? nextConnected(event.key, graph, current, neighborIndexRef)
@@ -295,10 +264,9 @@ export function useGraphKeyboardNavigation<
     },
     [
       clearFocus,
-      clearPointerHover,
       customClickBehavior,
       customHoverBehavior,
-      extractPoints,
+      graphFor,
       nextConnected,
       activateOnEnter,
       navigation,

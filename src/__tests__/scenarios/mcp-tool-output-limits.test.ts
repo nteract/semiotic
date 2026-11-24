@@ -25,6 +25,23 @@ describe("shipped MCP complete response limits", () => {
     directory = undefined
   })
 
+  it("bounds echoed identifiers in both text and structured diagnostics", async () => {
+    proc = spawnServer(["--profile=developer"])
+    await initializeServer(proc)
+    const name = "🚉".repeat(2000)
+    for (const [tool, args] of Object.entries({
+      getSchema: { component: name },
+      renderChart: { component: name, props: {} },
+      applyTheme: { name },
+      proposeChartVariants: { component: name, data: [] },
+      repairChartConfig: { component: name, data: [] }
+    })) {
+      const { result } = await sendRequest(proc, "tools/call", { name: tool, arguments: args }, `long-${tool}`)
+      expect(result.content[0].text).toContain("🚉".repeat(59) + "…")
+      expect(JSON.stringify(result)).not.toContain("🚉".repeat(60))
+    }
+  })
+
   it.each(["developer", "public"])(
     "bounds direct HTTP transport errors for the %s profile",
     async (profile) => {

@@ -23,10 +23,10 @@ import type { StreamPhysicsFrameHandle } from "../../stream/physics/StreamPhysic
 import {
   CORE_KIND,
   buildProjectSpawns,
-  defaultViability,
+  resolveGauntletViability,
   projectCoreId,
   projectNegativeId,
-  projectPositiveId,
+  positiveBodies,
   resolvePlacement,
   type GauntletBodyDatum,
   type GauntletCoreBodyFn,
@@ -40,6 +40,14 @@ import {
   type GauntletViabilityFn
 } from "./gauntletPhysics"
 import { applyGauntletEffect, eventLogItem, recordGauntletEvent } from "./gauntletEffects"
+
+function projectBodyIds<TDatum extends Datum>(project: GauntletProjectState<TDatum>) {
+  return [
+    projectCoreId(project.id),
+    ...positiveBodies(project.id, project.activePositiveIds).map(entry => entry.bodyId),
+    ...project.negativeIds.map((id, index) => projectNegativeId(project.id, id, index))
+  ]
+}
 
 export function capacitySnapshotsEqual(
   a: readonly CapacityQueueSnapshot[],
@@ -143,63 +151,28 @@ export function buildGauntletImperativeHandle<TDatum extends Datum>(deps: {
     coreBody,
     createState
   } = deps
+  const spawnsFor = (state: GauntletProjectState<TDatum>, index: number) =>
+    buildProjectSpawns(state, index, layout, resolvePlacement(state, index, layout, projectPlacement),
+      positiveById, negativeById, coreBody)
+
+  const pushMany: PhysicsFrameHandle["pushMany"] = (rows) => {
+    const nextStates = [...statesRef.current]
+    const spawns: PhysicsQueuedSpawn[] = []
+    const startedAt = elapsedRef.current
+    for (const row of rows) {
+      const index = nextStates.length
+      const state = createState(row as TDatum, index, startedAt)
+      spawns.push(...spawnsFor(state, index))
+      nextStates.push(state)
+    }
+    statesRef.current = nextStates
+    setStates(nextStates)
+    if (spawns.length) frameRef.current?.pushMany(spawns)
+    frameRef.current?.step(0)
+  }
   return {
-    push: (datum) => {
-      const state = createState(
-        datum as TDatum,
-        statesRef.current.length,
-        elapsedRef.current
-      )
-      const placement = resolvePlacement(
-        state,
-        statesRef.current.length,
-        layout,
-        projectPlacement
-      )
-      const spawns = buildProjectSpawns(
-        state,
-        statesRef.current.length,
-        layout,
-        placement,
-        positiveById,
-        negativeById,
-        coreBody
-      )
-      const nextStates = [...statesRef.current, state]
-      statesRef.current = nextStates
-      setStates(nextStates)
-      frameRef.current?.pushMany(spawns)
-      frameRef.current?.step(0)
-    },
-    pushMany: (rows) => {
-      const nextStates = [...statesRef.current]
-      const nextSpawns: PhysicsQueuedSpawn[] = []
-      const startedAt = elapsedRef.current
-      rows.forEach((row) => {
-        const state = createState(
-          row as TDatum,
-          nextStates.length,
-          startedAt
-        )
-        const placement = resolvePlacement(state, nextStates.length, layout, projectPlacement)
-        nextSpawns.push(
-          ...buildProjectSpawns(
-            state,
-            nextStates.length,
-            layout,
-            placement,
-            positiveById,
-            negativeById,
-            coreBody
-          )
-        )
-        nextStates.push(state)
-      })
-      statesRef.current = nextStates
-      setStates(nextStates)
-      if (nextSpawns.length) frameRef.current?.pushMany(nextSpawns)
-      frameRef.current?.step(0)
-    },
+    push: (datum) => pushMany([datum]),
+    pushMany,
     remove: (id) => {
       const ids = Array.isArray(id) ? id : [id]
       const removed: Datum[] = []
@@ -208,13 +181,7 @@ export function buildGauntletImperativeHandle<TDatum extends Datum>(deps: {
         const project = statesRef.current.find((state) => state.id === projectId)
         if (!project) continue
         removed.push(project.datum)
-        bodyIds.push(
-          projectCoreId(project.id),
-          ...project.activePositiveIds.map((propertyId) => projectPositiveId(project.id, propertyId))
-        )
-        project.negativeIds.forEach((propertyId, index) => {
-          bodyIds.push(projectNegativeId(project.id, propertyId, index))
-        })
+        bodyIds.push(...projectBodyIds(project))
       }
       statesRef.current = statesRef.current.filter((state) => !ids.includes(state.id))
       setStates(statesRef.current)
@@ -225,38 +192,18 @@ export function buildGauntletImperativeHandle<TDatum extends Datum>(deps: {
       const ids = Array.isArray(id) ? id : [id]
       const previous: Datum[] = []
       for (const projectId of ids) {
-        const old = statesRef.current.find((state) => state.id === projectId)
-        if (!old) continue
-        const projectIndex = statesRef.current.findIndex((state) => state.id === projectId)
+        const projectIndex = statesRef.current.findIndex(state => state.id === projectId)
+        if (projectIndex < 0) continue
+        const old = statesRef.current[projectIndex]
         previous.push(old.datum)
         const nextDatum = updater(old.datum) as TDatum
         const nextState = createState(
           nextDatum,
-          projectIndex < 0 ? statesRef.current.length : projectIndex,
+          projectIndex,
           old.startedAt ?? elapsedRef.current
         )
-        const placement = resolvePlacement(
-          nextState,
-          projectIndex < 0 ? statesRef.current.length : projectIndex,
-          layout,
-          projectPlacement
-        )
-        frameRef.current?.remove([
-          projectCoreId(old.id),
-          ...old.activePositiveIds.map((propertyId) => projectPositiveId(old.id, propertyId)),
-          ...old.negativeIds.map((propertyId, index) => projectNegativeId(old.id, propertyId, index))
-        ])
-        frameRef.current?.pushMany(
-          buildProjectSpawns(
-            nextState,
-            projectIndex < 0 ? statesRef.current.length : projectIndex,
-            layout,
-            placement,
-            positiveById,
-            negativeById,
-            coreBody
-          )
-        )
+        frameRef.current?.remove(projectBodyIds(old))
+        frameRef.current?.pushMany(spawnsFor(nextState, projectIndex))
         statesRef.current = statesRef.current.map((state) => state.id === projectId ? nextState : state)
       }
       setStates(statesRef.current)
@@ -421,10 +368,7 @@ export function runGauntletTick<TDatum extends Datum>(
           next = applyGauntletEffect(next, effect, context)
         }
         const computedViability =
-          viability?.(next, {
-            negativeProperties: negativeById,
-            positiveProperties: positiveById
-          }) ?? defaultViability(next, positiveById, negativeById)
+          resolveGauntletViability(next, positiveById, negativeById, viability)
         next = { ...next, viability: computedViability }
         if (event.final) {
           next = {
