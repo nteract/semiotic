@@ -1,4 +1,4 @@
-import { areaLabelCases, collidingSeries, encodingLossExamples, flatSeriesCases, impliedAggregateAxes, malformedAggregateFields, malformedChannelTypes, normalizedArea, tickOrientations, temporalExtrema, temporalLossCases, translucentBubbles } from "../fixtures/vegaLiteEncodingLoss"
+import { areaLabelCases, collidingSeries, encodingLossExamples, flatSeriesCases, impliedAggregateAxes, malformedAggregateFields, malformedChannelTypes, normalizedArea, tickOrientations, temporalExtrema, temporalGroupCases, temporalLossCases, translucentBubbles } from "../fixtures/vegaLiteEncodingLoss"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import type { ChildProcess } from "node:child_process"
 import { initializeServer, sendRequest, spawnServer } from "./mcpStdioHarness"
@@ -30,6 +30,15 @@ describe("developer MCP Vega-Lite conversion", () => {
         arguments: { spec, mode }
       })
     ).result
+
+  it.each(temporalGroupCases)("groups equivalent date representations for $aggregate", async ({ spec, expected }) => {
+    for (const mode of [undefined, "lossy"] as const) {
+      const result = await call(spec, mode)
+      expect(result.isError).not.toBe(true)
+      const { data, xAccessor, yAccessor, colorBy } = result.structuredContent.props
+      expect(data.map((row: Record<string, unknown>) => [row[xAccessor], row[colorBy], row[yAccessor]])).toEqual(expected)
+    }
+  })
 
   it.each(temporalExtrema)("converts temporal $aggregate to an epoch coordinate", async ({ spec, expected }) => {
     for (const mode of [undefined, "lossy"] as const) {

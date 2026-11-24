@@ -3,6 +3,9 @@ const category = { field: "team", type: "nominal" } as const
 const values = [{ team: 1, cohort: "A", state: "open", orders: 3 }, { team: "1", cohort: "A", state: "closed", orders: 2 }]
 
 export const encodingLossExamples = [
+  { spec: { mark: "point", data: { values: [{ t: "2024-01-01" }, { t: "2023-12-31T19:00:00-05:00" }] },
+    encoding: { x: { field: "t", type: "temporal" }, y: { field: "t", type: "quantitative", aggregate: "min" } }
+  }, path: "/encoding/x/type" },
   { spec: { mark: "tick", data: { values }, encoding: { x: category, y: quantity } }, path: "/encoding/x/field" },
   { spec: { mark: "tick", data: { values }, encoding: { x: quantity, y: category } }, path: "/encoding/y/field" },
   { spec: { mark: "rect", data: { values }, encoding: {
@@ -234,4 +237,26 @@ export const collidingSeries = [
     }
   },
   path: "/encoding/color/field"
+}))
+
+export const temporalGroupCases = ["sum", "count"].map(aggregate => ({
+  aggregate,
+  spec: {
+    mark: "point",
+    data: { values: [
+      { t: "2024-01-01", group: "A", v: 1 }, { t: "2023-12-31T19:00:00-05:00", group: "A", v: 2 },
+      { t: Date.UTC(2024, 0, 1), group: "A", v: 3 }, { t: "2024", group: "B", v: 4 },
+      { t: "2024-01-02", group: "A", v: 5 }
+    ] },
+    encoding: {
+      x: { field: "t", type: "temporal" as const },
+      color: { field: "group", type: "nominal" as const },
+      y: { field: "v", type: "quantitative" as const, aggregate }
+    }
+  },
+  expected: [
+    [Date.UTC(2024, 0, 1), "A", aggregate === "sum" ? 6 : 3],
+    [Date.UTC(2024, 0, 1), "B", aggregate === "sum" ? 4 : 1],
+    [Date.UTC(2024, 0, 2), "A", aggregate === "sum" ? 5 : 1]
+  ]
 }))

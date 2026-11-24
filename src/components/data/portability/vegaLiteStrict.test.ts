@@ -1,4 +1,4 @@
-import { areaLabelCases, collidingSeries, encodingLossExamples, flatSeriesCases, impliedAggregateAxes, malformedAggregateFields, malformedChannelTypes, normalizedArea, temporalExtrema, temporalLossCases, translucentBubbles } from "../../../__tests__/fixtures/vegaLiteEncodingLoss"
+import { areaLabelCases, collidingSeries, encodingLossExamples, flatSeriesCases, impliedAggregateAxes, malformedAggregateFields, malformedChannelTypes, normalizedArea, temporalExtrema, temporalGroupCases, temporalLossCases, translucentBubbles } from "../../../__tests__/fixtures/vegaLiteEncodingLoss"
 import { describe, expect, it, vi } from "vitest"
 import { fromVegaLite, fromVegaLiteResult } from "../fromVegaLite"
 import type { VegaLiteSpec } from "../fromVegaLite"
@@ -61,6 +61,26 @@ describe("strict Vega-Lite boundaries", () => {
     const spec = temporalExtrema[0].spec
     const chart = importSpec({ ...spec, data: { values: [{ date: "2024", v: 1 }, { date: Date.UTC(2025, 0, 1), v: 1 }] } }).config!
     expect(chart.props.data).toEqual([{ [chart.props.xAccessor]: Date.UTC(2024, 0, 1), v: 1 }])
+  })
+
+  it.each(temporalGroupCases)("groups equivalent date representations for $aggregate without changing the input", ({ spec, expected }) => {
+    const source = structuredClone(spec.data.values)
+    const strict = fromVegaLiteResult(spec)
+    expect(strict.status).toBe("success")
+    for (const chart of [strict.config!, fromVegaLite(spec)]) {
+      const { data, xAccessor, yAccessor, colorBy } = chart.props
+      expect(data.map((row: Record<string, unknown>) => [row[xAccessor], row[colorBy], row[yAccessor]])).toEqual(expected)
+      expect(renderChartWithEvidence(chart.component, chart.props).evidence.markCountByType.point).toBe(3)
+    }
+    expect(spec.data.values).toEqual(source)
+  })
+
+  it("retains Vega's raw quantitative grouping keys while aggregating the measure", () => {
+    const spec = temporalGroupCases[0].spec
+    const result = importSpec({ ...spec, data: { values: ["002", 2, "2.0"].map((t, v) => ({ t, v, group: "A" })) },
+      encoding: { ...spec.encoding, x: { field: "t", type: "quantitative" } } })
+    const props = result.config!.props
+    expect(props.data.map((row: Record<string, unknown>) => [row.t, row[props.yAccessor]])).toEqual([["002", 0], [2, 1], ["2.0", 2]])
   })
 
   it.each(temporalExtrema)("materializes temporal $aggregate before plotting", ({ spec, expected }) => {

@@ -223,7 +223,8 @@ export function vegaLiteSemanticDiagnostics(
   const encoding = spec.encoding ?? {}
   const { x, y, color, theta } = encoding
   if (continuous && x?.field && vegaLiteFieldType(x) === "temporal") {
-    const loss = temporalCoordinateLoss(spec.data?.values, x.field, "/data/values", x.aggregate !== undefined)
+    const materialized = !x.bin && !y?.bin && Object.values(encoding).some(channel => channel.aggregate !== undefined)
+    const loss = temporalCoordinateLoss(spec.data?.values, x.field, "/data/values", materialized)
     if (loss) diagnostics.push({ ...loss, severity: "error" })
   }
   if (mark === "arc" && typeof color?.field === "string" && spec.data?.values &&
@@ -275,6 +276,9 @@ export function vegaLiteSemanticDiagnostics(
     if (channel === "x" || channel === "y") allowed.push("axis", "bin", "stack")
     keys(enc, allowed, path)
     const fieldType = vegaLiteFieldType(enc)
+    if (fieldType === "temporal" && enc.field && Object.values(encoding).some(other =>
+      other.field === enc.field && vegaLiteFieldType(other) !== "temporal"
+    ) && spec.data?.values?.some(row => typeof row[enc.field!] !== "number")) unsupported(`${path}/type`)
     if (isCategory(fieldType) && enc.aggregate !== undefined && enc.aggregate !== "count") unsupported(`${path}/aggregate`)
     if (isCategory(fieldType) && enc.field && enc.aggregate === undefined && spec.data?.values &&
         (mark !== "arc" || channel !== "color") && repeatedCategories(spec.data.values, [enc.field], true)) {

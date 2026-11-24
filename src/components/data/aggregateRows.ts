@@ -1,7 +1,8 @@
 import type { Datum } from "../charts/shared/datumTypes"
 import { parseNumericValue } from "./numericValue"
 
-export type AggregateOperation = "sum" | "mean" | "count" | "min" | "max"
+const OPERATIONS = ["sum", "mean", "count", "min", "max"] as const
+export type AggregateOperation = (typeof OPERATIONS)[number]
 
 export interface AggregateMeasure {
   field?: string
@@ -18,7 +19,7 @@ export function normalizeAggregate(
   value: unknown
 ): AggregateOperation | undefined {
   if (value === "average") return "mean"
-  return ["sum", "mean", "count", "min", "max"].includes(value as string)
+  return OPERATIONS.includes(value as AggregateOperation)
     ? value as AggregateOperation : undefined
 }
 
@@ -31,7 +32,7 @@ export function unusedAggregateField(fields: ReadonlySet<string>): string {
 }
 
 interface Group {
-  keys: Datum
+  keys: [string, unknown][]
   count: number
   measures: Array<{ total: number; count: number }>
 }
@@ -50,7 +51,8 @@ interface GroupIndex {
 export function aggregateRows(
   data: readonly Datum[],
   groupFields: readonly string[],
-  measures: readonly AggregateMeasure[]
+  measures: readonly AggregateMeasure[],
+  readField: (row: Datum, field: string) => unknown = (row, field) => row[field]
 ): Datum[] {
   if (!Array.isArray(data))
     throw new TypeError("aggregate data must be an array of rows")
@@ -60,10 +62,7 @@ export function aggregateRows(
   const fields = [...new Set(groupFields)]
   const usedFields = new Set(fields)
   for (const measure of measures) {
-    if (
-      normalizeAggregate(measure.operation) !== measure.operation ||
-      !measure.operation
-    ) {
+    if (!OPERATIONS.includes(measure.operation)) {
       throw new TypeError("Unsupported aggregate operation")
     }
     if (
@@ -92,7 +91,7 @@ export function aggregateRows(
     }
     let node = root
     for (const field of fields) {
-      const raw = row[field]
+      const raw = readField(row, field)
       // A Date and a number with the same epoch remain distinct dimensions.
       const values =
         raw instanceof Date
@@ -108,7 +107,7 @@ export function aggregateRows(
     }
     if (!node.group) {
       node.group = {
-        keys: Object.fromEntries(fields.map((field) => [field, row[field]])),
+        keys: fields.map(field => [field, readField(row, field)]),
         count: 0,
         measures: measures.map(() => ({ total: 0, count: 0 }))
       }
@@ -119,7 +118,7 @@ export function aggregateRows(
     for (let i = 0; i < measures.length; i++) {
       const measure = measures[i]
       if (measure.operation === "count") continue
-      const value = (measure.readValue ?? parseNumericValue)(row[measure.field!])
+      const value = (measure.readValue ?? parseNumericValue)(readField(row, measure.field!))
       if (value === undefined || !Number.isFinite(value)) continue
       const state = group.measures[i]
       if (measure.operation === "min" || measure.operation === "max") {
@@ -140,7 +139,7 @@ export function aggregateRows(
 
   return groups.map((group) =>
     Object.fromEntries([
-      ...Object.entries(group.keys),
+      ...group.keys,
       ...measures.map((measure, i) => {
         const state = group.measures[i]
         const value =

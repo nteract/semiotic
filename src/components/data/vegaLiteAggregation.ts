@@ -25,16 +25,11 @@ export function vegaLiteAggregationDiagnostics(
     if (encoding.aggregate === undefined) continue
     const operation = normalizeAggregate(encoding.aggregate)
     let message: string | undefined
-    let code = "UNSUPPORTED_AGGREGATE"
-    if (!operation) {
-      message = "Unsupported aggregate."
-    } else if (
-      (encodings.x?.bin || encodings.y?.bin) &&
-      operation !== "count"
-    ) {
-      message = "Use count with binning."
+    let code = "INVALID_AGGREGATE"
+    if (!operation || ((encodings.x?.bin || encodings.y?.bin) && operation !== "count")) {
+      code = "UNSUPPORTED_AGGREGATE"
+      message = operation ? "Use count with binning." : "Unsupported aggregate."
     } else if (operation !== "count" && !encoding.field) {
-      code = "INVALID_AGGREGATE"
       message = "Provide a value field."
     } else if (!spec.data?.values) {
       const mark = typeof spec.mark === "string" ? spec.mark : spec.mark?.type
@@ -43,7 +38,6 @@ export function vegaLiteAggregationDiagnostics(
           !encoding.bin && isCategory(category?.type) && !category?.aggregate) {
         continue
       }
-      code = "INVALID_AGGREGATE"
       message = "Provide data.values."
     }
     if (message)
@@ -74,8 +68,11 @@ export function aggregateVegaLite(
   if (!data || diagnostics.length || encoding.x?.bin || encoding.y?.bin)
     return { data, encoding }
   const fields = new Set<string>()
-  for (const { aggregate, field } of Object.values(encoding)) {
-    if (aggregate === undefined && field) fields.add(field)
+  const temporalFields = new Set<string>()
+  for (const channel of Object.values(encoding)) {
+    if (!channel.field) continue
+    if (channel.aggregate === undefined) fields.add(channel.field)
+    if (vegaLiteFieldType(channel) === "temporal") temporalFields.add(channel.field)
   }
   const usedFields = new Set(fields)
   const measures: AggregateMeasure[] = []
@@ -86,11 +83,11 @@ export function aggregateVegaLite(
     const outputField = unusedAggregateField(usedFields)
     usedFields.add(outputField)
     const type = vegaLiteFieldType(value)
-    const readValue = type === "temporal" ? vegaTimeValue : type === "quantitative" ? quantitativeValue : undefined
+    const readValue = type === "quantitative" ? quantitativeValue : undefined
     measures.push({ field: value.field, operation, outputField, readValue })
     resolved[channel] = { ...value, type, field: outputField, aggregate: undefined }
   }
-  return measures.length
-    ? { data: aggregateRows(data, [...fields], measures), encoding: resolved }
-    : { data, encoding }
+  if (!measures.length) return { data, encoding }
+  const readField = (row: Datum, field: string) => temporalFields.has(field) ? vegaTimeValue(row[field]) : row[field]
+  return { data: aggregateRows(data, [...fields], measures, readField), encoding: resolved }
 }
