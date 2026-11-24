@@ -1,4 +1,4 @@
-import { encodingLossExamples, normalizedArea, translucentBubbles } from "../../../__tests__/fixtures/vegaLiteEncodingLoss"
+import { encodingLossExamples, malformedAggregateFields, normalizedArea, translucentBubbles } from "../../../__tests__/fixtures/vegaLiteEncodingLoss"
 import { describe, expect, it, vi } from "vitest"
 import { fromVegaLite, fromVegaLiteResult } from "../fromVegaLite"
 import type { VegaLiteSpec } from "../fromVegaLite"
@@ -56,6 +56,14 @@ describe("strict Vega-Lite boundaries", () => {
     const result = fromVegaLiteResult(normalizedArea)
     expect(result.status).toBe("success")
     expect(result.config).toMatchObject({ component: "StackedAreaChart", props: { areaBy: "team", normalize: true } })
+  })
+
+  it.each(malformedAggregateFields)("checks $path before aggregation", ({ spec, path }) => {
+    for (const lossy of [false, true]) {
+      const result = importSpec(spec, lossy)
+      expect(result.status).toBe("refused")
+      expect(result.diagnostics).toContainEqual(expect.objectContaining({ path, severity: "error" }))
+    }
   })
 
   it.each(encodingLossExamples)("reports $path on a $spec.mark before rendering", ({ spec, path }) => {

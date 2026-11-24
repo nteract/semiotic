@@ -83,3 +83,9 @@ export const normalizedArea = {
     color: { field: "team", type: "nominal" as const }
   }
 }
+
+export const malformedAggregateFields = [
+  { mark: "arc", encoding: { theta: { ...quantity, aggregate: "sum" }, color: { ...category, field: "" } }, path: "/encoding/color/field" },
+  { mark: "bar", encoding: { x: { ...category, field: 2 }, y: { ...quantity, aggregate: "sum" } }, path: "/encoding/x/field" },
+  { mark: "area", encoding: { x: quantity, y: { ...quantity, field: null, aggregate: "mean" } }, path: "/encoding/y/field" }
+].map(({ mark, encoding, path }) => ({ spec: { mark, encoding, data: { values } }, path }))

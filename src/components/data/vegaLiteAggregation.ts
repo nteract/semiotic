@@ -1,5 +1,5 @@
 import type { Datum } from "../charts/shared/datumTypes"
-import { isCategory, isRecordArray } from "./vegaLiteValidation"
+import { isCategory } from "./vegaLiteValidation"
 import type { PortabilityDiagnostic } from "./portability/result"
 import type { VegaLiteEncoding, VegaLiteSpec } from "./fromVegaLite"
 import {
@@ -21,11 +21,6 @@ export function vegaLiteAggregationDiagnostics(
 ): PortabilityDiagnostic[] {
   const encodings = spec.encoding ?? {}
   const diagnostics: PortabilityDiagnostic[] = []
-  if (spec.data?.values !== undefined && !isRecordArray(spec.data.values) &&
-      Object.values(encodings).some(encoding => encoding.aggregate !== undefined)) {
-    diagnostics.push({ code: "INVALID_AGGREGATE_DATA", severity: "error", path: "/data/values",
-      message: "Aggregation requires data.values to be an array of row objects." })
-  }
   for (const [channel, encoding] of Object.entries(encodings)) {
     if (encoding.aggregate === undefined) continue
     const operation = normalizeAggregate(encoding.aggregate)

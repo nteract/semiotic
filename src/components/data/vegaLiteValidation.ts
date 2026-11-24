@@ -59,20 +59,18 @@ export function vegaLiteShapeDiagnostics(
     else
       for (const [channel, encoding] of Object.entries(value.encoding)) {
         const path = `/encoding/${pointerSegment(channel)}`
-        if (!isRecord(encoding))
-          invalid(
-            path,
-            "An encoding must be an object."
-          )
-        else
-          for (const key of ["scale", "axis"] as const) {
-            if (encoding[key] !== undefined && !isRecord(encoding[key])) {
-              invalid(
-                `${path}/${key}`,
-                `${key} must be an object in the supported subset.`
-              )
-            }
+        if (!isRecord(encoding)) {
+          invalid(path, "An encoding must be an object.")
+          continue
+        }
+        if (encoding.field !== undefined && (typeof encoding.field !== "string" || !encoding.field.length)) {
+          invalid(`${path}/field`, "An encoded field name must be a nonempty string.")
+        }
+        for (const key of ["scale", "axis"] as const) {
+          if (encoding[key] !== undefined && !isRecord(encoding[key])) {
+            invalid(`${path}/${key}`, `${key} must be an object in the supported subset.`)
           }
+        }
       }
   }
   if (value.data !== undefined) {
@@ -218,10 +216,7 @@ export function vegaLiteSemanticDiagnostics(
     if (channel === "x" || channel === "y") allowed.push("axis", "bin", "stack")
     if (channel === "opacity") allowed.push("value")
     keys(enc, allowed, path)
-    if (
-      enc.field !== undefined &&
-      (typeof enc.field !== "string" || !enc.field.length || hasVegaFieldPath(enc.field))
-    )
+    if (enc.field && hasVegaFieldPath(enc.field))
       unsupported(`${path}/field`)
     if (
       enc.type !== undefined &&

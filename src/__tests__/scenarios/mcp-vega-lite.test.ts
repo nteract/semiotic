@@ -1,4 +1,4 @@
-import { encodingLossExamples, normalizedArea, tickOrientations, translucentBubbles } from "../fixtures/vegaLiteEncodingLoss"
+import { encodingLossExamples, malformedAggregateFields, normalizedArea, tickOrientations, translucentBubbles } from "../fixtures/vegaLiteEncodingLoss"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import type { ChildProcess } from "node:child_process"
 import { initializeServer, sendRequest, spawnServer } from "./mcpStdioHarness"
@@ -84,6 +84,14 @@ describe("developer MCP Vega-Lite conversion", () => {
     const result = await call(translucentBubbles)
     expect(result.isError).not.toBe(true)
     expect(result.structuredContent).toMatchObject({ component: "BubbleChart", props: { bubbleOpacity: 0.25 } })
+  })
+
+  it.each(malformedAggregateFields)("returns a structured error for malformed $path", async ({ spec, path }) => {
+    for (const mode of [undefined, "lossy"] as const) {
+      const result = await call(spec, mode)
+      expect(result.isError).toBe(true)
+      expect(result.structuredContent.diagnostics).toContainEqual(expect.objectContaining({ path }))
+    }
   })
 
   it.each(encodingLossExamples)("exposes $path on a $spec.mark over MCP", async ({ spec, path }) => {
