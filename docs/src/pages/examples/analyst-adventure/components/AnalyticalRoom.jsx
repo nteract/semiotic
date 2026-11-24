@@ -17,6 +17,7 @@ import {
 import {
   adventureDiagnosticProps,
   adventureSuggestionInput,
+  adventureSuggestionRows,
 } from "../analyticalHeuristics"
 import { withSecretTitleWarp } from "./SecretRoomWarp"
 
@@ -165,7 +166,7 @@ function safeAnalysis(componentName, diagnosticComponentName, props, rows, inten
     grounding = null
   }
   try {
-    suggestions = suggestCharts(rows, {
+    suggestions = suggestCharts(adventureSuggestionRows(diagnosticComponentName, rows), {
       intent,
       maxResults: 3,
       rawInput: adventureSuggestionInput(componentName, props),

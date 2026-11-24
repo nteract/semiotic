@@ -254,6 +254,12 @@ export default function LikertChartPage() {
         (1–5) that the chart aggregates automatically.
       </p>
 
+      <p>
+        In push mode, <code>getData()</code> returns the retained survey responses.
+        Set <code>dataIdAccessor</code> to update or remove responses by ID and{" "}
+        <code>windowSize</code> to keep the latest responses in arrival order.
+      </p>
+
       <StreamingToggle
         staticContent={
           <>

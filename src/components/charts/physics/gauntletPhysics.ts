@@ -1,3 +1,4 @@
+import { indexDefinitions } from "./gauntletEffects"
 /**
  * Pure Gauntlet physics helpers (no React).
  * Types: `./gauntletTypes`.
@@ -57,60 +58,18 @@ export function gauntletWallColliders(
   layout: Pick<GauntletLayout, "width" | "floorY"> &
     Partial<Pick<GauntletLayout, "height">>
 ): NonNullable<PhysicsPipelineConfig["colliders"]> {
-  const wall = resolveGauntletWall(layout)
-  return [
-    {
-      id: "gauntlet-left",
-      restitution: 0.12,
-      friction: 0.42,
-      shape: {
-        type: "segment",
-        x1: wall.left,
-        y1: wall.top,
-        x2: wall.left,
-        y2: layout.floorY,
-        thickness: wall.thickness
-      }
-    },
-    {
-      id: "gauntlet-ceiling",
-      restitution: 0.12,
-      friction: 0.42,
-      shape: {
-        type: "segment",
-        x1: wall.left,
-        y1: wall.top,
-        x2: layout.width - wall.rightInset,
-        y2: wall.top,
-        thickness: wall.thickness
-      }
-    },
-    {
-      id: "gauntlet-floor",
-      restitution: 0.12,
-      friction: 0.42,
-      shape: {
-        type: "segment",
-        x1: wall.left,
-        y1: layout.floorY,
-        x2: layout.width - wall.rightInset,
-        y2: layout.floorY,
-        thickness: wall.thickness
-      }
-    },
-    {
-      id: "gauntlet-right",
-      restitution: 0.12,
-      friction: 0.42,
-      shape: {
-        type: "segment",
-        x1: layout.width - wall.rightInset,
-        y1: wall.top,
-        x2: layout.width - wall.rightInset,
-        y2: layout.floorY,
-        thickness: wall.thickness
-      }
+  const { left, top, rightInset, thickness } = resolveGauntletWall(layout)
+  const right = layout.width - rightInset
+  const floor = layout.floorY
+  function segment(name: string, x1: number, y1: number, x2: number, y2: number) {
+    return {
+      id: `gauntlet-${name}`, restitution: 0.12, friction: 0.42,
+      shape: { type: "segment" as const, x1, y1, x2, y2, thickness }
     }
+  }
+  return [
+    segment("left", left, top, left, floor), segment("ceiling", left, top, right, top),
+    segment("floor", left, floor, right, floor), segment("right", right, top, right, floor)
   ]
 }
 
@@ -136,11 +95,14 @@ export function projectCoreId(projectId: string): string {
   return `gauntlet:${projectId}:core`
 }
 
-export function projectPositiveId(
-  projectId: string,
-  propertyId: string
-): string {
-  return `gauntlet:${projectId}:positive:${propertyId}`
+export function positiveBodies(projectId: string, ids: readonly string[]) {
+  const counts = new Map<string, number>()
+  return ids.map(propertyId => {
+    const occurrence = counts.get(propertyId) ?? 0
+    counts.set(propertyId, occurrence + 1)
+    const kind = occurrence ? `positive-${occurrence}` : "positive"
+    return { propertyId, occurrence, bodyId: `gauntlet:${projectId}:${kind}:${propertyId}` }
+  })
 }
 
 export function projectNegativeId(
@@ -220,7 +182,7 @@ export function buildLayout(
     ? height - Math.max(3, Math.min(12, height * 0.1))
     : height - 36
   const enabledGates = (gates ?? []).filter((gate) => gate.enabled !== false)
-  const gateCount = Math.max(1, enabledGates.length)
+  const gateCount = enabledGates.length
   const gateStart = width * 0.22
   const gateEnd = width * 0.78
   const gateStep = gateCount <= 1 ? 0 : (gateEnd - gateStart) / (gateCount - 1)
@@ -237,13 +199,10 @@ export function buildLayout(
     floorY,
     gates: enabledGates.map((gate, index) => ({
       ...gate,
-      id: gate.id,
       x: gate.x ?? Math.round(gateStart + index * gateStep),
       width:
         gate.width ??
-        (compact
-          ? Math.max(8, Math.round(width * 0.07))
-          : Math.max(54, Math.round(width * 0.07)))
+        Math.max(compact ? 8 : 54, Math.round(width * 0.07))
     })),
     graveyardX: Math.round(width * (compact ? 0.72 : 0.84)),
     graveyardY: floorY - 4,
@@ -289,11 +248,16 @@ export function resolvePlacement<TDatum extends Datum>(
 export function featureSlot(
   ids: readonly string[],
   id: string,
-  spatialScale = 1
+  spatialScale = 1,
+  occurrence = 0
 ): { angle: number; index: number; radius: number } {
-  const ordered = [...ids].sort((a, b) => a.localeCompare(b))
-  const index = Math.max(0, ordered.indexOf(id))
-  const t = ordered.length > 1 ? index / (ordered.length - 1) : 0.5
+  // Collation-equivalent IDs still need separate slots. Count preceding properties
+  // directly so each force calculation avoids copying and sorting the inventory.
+  const index = ids.reduce((rank, other) => {
+    const order = other.localeCompare(id)
+    return rank + Number(order < 0 || (order === 0 && other < id))
+  }, occurrence)
+  const t = ids.length > 1 ? index / (ids.length - 1) : 0.5
   // Keep positives on the upper arc so they read as lift/balloons. Avoid
   // angles in the lower half-plane; y increases downward in canvas space.
   return {
@@ -303,11 +267,14 @@ export function featureSlot(
   }
 }
 
-export function defaultViability<TDatum extends Datum>(
+export function resolveGauntletViability<TDatum extends Datum>(
   project: GauntletProjectState<TDatum>,
   positiveProperties: Map<string, GauntletPropertyDefinition>,
-  negativeProperties: Map<string, GauntletPropertyDefinition>
+  negativeProperties: Map<string, GauntletPropertyDefinition>,
+  viability?: GauntletViabilityFn<TDatum>
 ): number {
+  const authored = viability?.(project, { negativeProperties, positiveProperties })
+  if (authored != null) return authored
   const lift = project.activePositiveIds.reduce(
     (sum, id) => sum + (positiveProperties.get(id)?.value ?? 1),
     0
@@ -379,7 +346,8 @@ export function buildProjectSpawns<TDatum extends Datum>(
   placement: Required<GauntletProjectPlacement>,
   positiveProperties: Map<string, GauntletPropertyDefinition>,
   negativeProperties: Map<string, GauntletPropertyDefinition>,
-  coreBody?: GauntletCoreBodyFn<TDatum>
+  coreBody?: GauntletCoreBodyFn<TDatum>,
+  positiveStart?: number
 ): PhysicsQueuedSpawn[] {
   const spatialScale = gauntletSpatialScale(layout)
   const defaultCoreRadius = Math.max(3, 28 * spatialScale)
@@ -390,27 +358,6 @@ export function buildProjectSpawns<TDatum extends Datum>(
   const corePatch = coreBody?.(project, projectIndex, layout, placement) ?? {}
   const authoredCoreX = corePatch.x ?? coreX
   const authoredCoreY = corePatch.y ?? coreY
-  const coreDatum = {
-    __gauntlet: true,
-    kind: CORE_KIND,
-    projectId: project.id,
-    sourceDatum: project.datum
-  } satisfies GauntletBodyDatum<TDatum>
-  const spawns: PhysicsQueuedSpawn[] = [
-    {
-      ...corePatch,
-      id: projectCoreId(project.id),
-      x: authoredCoreX,
-      y: authoredCoreY,
-      vx: corePatch.vx ?? 42,
-      vy: corePatch.vy ?? 0,
-      mass: corePatch.mass ?? 7,
-      bodyCollisions: corePatch.bodyCollisions ?? true,
-      shape: corePatch.shape ?? { type: "circle", radius: defaultCoreRadius },
-      spawnAt: corePatch.spawnAt ?? project.startedAt,
-      datum: coreDatum
-    }
-  ]
   const coreRadius =
     corePatch.shape && "radius" in corePatch.shape
       ? Number(corePatch.shape.radius) || defaultCoreRadius
@@ -421,54 +368,39 @@ export function buildProjectSpawns<TDatum extends Datum>(
     coreRadius,
     layout
   )
-  spawns[0].x = clampedCore.x
-  spawns[0].y = clampedCore.y
-
-  for (const propertyId of project.activePositiveIds) {
+  const spawns: PhysicsQueuedSpawn[] = []
+  if (positiveStart === undefined) {
+    const coreDatum = {
+      __gauntlet: true,
+      kind: CORE_KIND,
+      projectId: project.id,
+      sourceDatum: project.datum
+    } satisfies GauntletBodyDatum<TDatum>
+    spawns.push({
+        ...corePatch,
+        id: projectCoreId(project.id),
+        ...clampedCore,
+        vx: corePatch.vx ?? 42,
+        vy: corePatch.vy ?? 0,
+        mass: corePatch.mass ?? 7,
+        bodyCollisions: corePatch.bodyCollisions ?? true,
+        shape: corePatch.shape ?? { type: "circle", radius: defaultCoreRadius },
+        spawnAt: corePatch.spawnAt ?? project.startedAt,
+        datum: coreDatum
+    })
+  }
+  const positives = positiveBodies(project.id, project.activePositiveIds)
+  for (const { propertyId, occurrence, bodyId } of positives.slice(positiveStart ?? 0)) {
     const property = positiveProperties.get(propertyId)
     if (!property) continue
     const slot = featureSlot(
       project.activePositiveIds,
       propertyId,
-      spatialScale
+      spatialScale,
+      occurrence
     )
-    const radius = property.radius ?? Math.max(2, 10 * spatialScale)
-    const rawX = clampedCore.x + Math.cos(slot.angle) * slot.radius
-    const rawY = clampedCore.y + Math.sin(slot.angle) * slot.radius
-    const pos = clampGauntletPoint(rawX, rawY, radius, layout)
-    spawns.push({
-      id: projectPositiveId(project.id, propertyId),
-      x: pos.x,
-      y: pos.y,
-      vx: Math.cos(slot.angle) * 18,
-      vy: Math.sin(slot.angle) * 18,
-      mass: property.mass ?? 0.75,
-      bodyCollisions: false,
-      shape: { type: "circle", radius },
-      spawnAt: corePatch.spawnAt ?? project.startedAt,
-      datum: {
-        __gauntlet: true,
-        kind: POSITIVE_KIND,
-        projectId: project.id,
-        property,
-        sourceDatum: project.datum
-      } satisfies GauntletBodyDatum<TDatum>,
-      springs:
-        property.spring === false
-          ? []
-          : [
-              {
-                target: { type: "body", bodyId: projectCoreId(project.id) },
-                stiffness: 0.56,
-                damping: 0.9,
-                restLength: Math.max(
-                  6,
-                  (52 + (slot.index % 2) * 4) * spatialScale
-                ),
-                ...(property.spring ?? {})
-              }
-            ]
-    })
+    spawns.push(buildPropertySpawn(project, property, bodyId, slot.index, clampedCore.x,
+      clampedCore.y, layout, corePatch.spawnAt ?? project.startedAt, { ...slot, occurrence }))
   }
   project.negativeIds.forEach((propertyId, index) => {
     const property = negativeProperties.get(propertyId)
@@ -519,10 +451,8 @@ export function buildGauntletPhysics<TDatum extends Datum = Datum>(options: {
   const size = options.size ?? [900, 520]
   const layout = buildLayout(size, options.gates, options.crashOffset ?? 30)
   const positiveProperties = options.positiveProperties ?? []
-  const positiveById = new Map(positiveProperties.map((p) => [p.id, p]))
-  const negativeById = new Map(
-    (options.negativeProperties ?? []).map((p) => [p.id, p])
-  )
+  const positiveById = indexDefinitions(positiveProperties)
+  const negativeById = indexDefinitions(options.negativeProperties ?? [])
   const accessors = {
     idAccessor: options.idAccessor,
     initialViability: options.initialViability,
@@ -543,10 +473,7 @@ export function buildGauntletPhysics<TDatum extends Datum = Datum>(options: {
     return {
       ...state,
       viability:
-        options.viability?.(state, {
-          negativeProperties: negativeById,
-          positiveProperties: positiveById
-        }) ?? defaultViability(state, positiveById, negativeById)
+        resolveGauntletViability(state, positiveById, negativeById, options.viability)
     }
   })
   const initialSpawns = states.flatMap((project, index) => {
@@ -596,42 +523,39 @@ export function buildNegativeSpawn<TDatum extends Datum>(
   layout: GauntletWallLayout,
   spawnAt?: number
 ): PhysicsQueuedSpawn {
-  const spatialScale = gauntletSpatialScale(layout)
-  const radius = property.radius ?? Math.max(2, 7.2 * spatialScale)
+  return buildPropertySpawn(project, property, projectNegativeId(project.id, property.id, index),
+    index, x, y, layout, spawnAt)
+}
+
+function buildPropertySpawn<TDatum extends Datum>(
+  project: GauntletProjectState<TDatum>, property: GauntletPropertyDefinition,
+  id: string, index: number, x: number, y: number, layout: GauntletWallLayout,
+  spawnAt: number | undefined, slot?: ReturnType<typeof featureSlot> & { occurrence: number }
+): PhysicsQueuedSpawn {
+  const scale = gauntletSpatialScale(layout)
+  const radius = property.radius ?? Math.max(2, (slot ? 10 : 7.2) * scale)
   const pos = clampGauntletPoint(
-    x + (-12 + (index % 4) * 12) * spatialScale,
-    y + (54 + Math.floor(index / 4) * 12) * spatialScale,
-    radius,
-    layout
+    x + (slot ? Math.cos(slot.angle) * slot.radius : (-12 + (index % 4) * 12) * scale),
+    y + (slot ? Math.sin(slot.angle) * slot.radius : (54 + Math.floor(index / 4) * 12) * scale),
+    radius, layout
   )
   return {
-    id: projectNegativeId(project.id, property.id, index),
-    x: pos.x,
-    y: pos.y,
-    vx: 10,
-    vy: 6,
-    mass: property.mass ?? 0.72,
+    id, ...pos, spawnAt,
+    vx: slot ? Math.cos(slot.angle) * 18 : 10,
+    vy: slot ? Math.sin(slot.angle) * 18 : 6,
+    mass: property.mass ?? (slot ? 0.75 : 0.72),
     bodyCollisions: false,
     shape: { type: "circle", radius },
-    spawnAt,
     datum: {
-      __gauntlet: true,
-      kind: NEGATIVE_KIND,
-      projectId: project.id,
-      property,
-      sourceDatum: project.datum
+      __gauntlet: true, kind: slot ? POSITIVE_KIND : NEGATIVE_KIND,
+      projectId: project.id, sourceDatum: project.datum, property,
+      ...(slot && { occurrence: slot.occurrence })
     } satisfies GauntletBodyDatum<TDatum>,
-    springs:
-      property.spring === false
-        ? []
-        : [
-            {
-              target: { type: "body", bodyId: projectCoreId(project.id) },
-              stiffness: 0.62,
-              damping: 0.92,
-              restLength: Math.max(6, (52 + (index % 4) * 3) * spatialScale),
-              ...(property.spring ?? {})
-            }
-          ]
+    springs: property.spring === false ? [] : [{
+      target: { type: "body", bodyId: projectCoreId(project.id) },
+      stiffness: slot ? 0.56 : 0.62, damping: slot ? 0.9 : 0.92,
+      restLength: Math.max(6, (52 + (slot ? (index % 2) * 4 : (index % 4) * 3)) * scale),
+      ...property.spring
+    }]
   }
 }

@@ -1,4 +1,5 @@
 "use client"
+import { indexDefinitions } from "./gauntletEffects"
 import { renderChartPlaceholder } from "../shared/withChartWrapper"
 import { GAUNTLET_CHART_SIZE } from "../shared/chartSizeDefaultsPhysics"
 
@@ -47,7 +48,7 @@ import {
   buildLayout,
   buildProjectSpawns,
   createInitialState,
-  defaultViability,
+  resolveGauntletViability,
   gauntletWallColliders,
   readAccessor,
   resolvePlacement,
@@ -201,12 +202,12 @@ export const GauntletChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__
   )
   const positiveById = useMemo(
     () =>
-      new Map(positiveProperties.map((property) => [property.id, property])),
+      indexDefinitions(positiveProperties),
     [positiveProperties]
   )
   const negativeById = useMemo(
     () =>
-      new Map(negativeProperties.map((property) => [property.id, property])),
+      indexDefinitions(negativeProperties),
     [negativeProperties]
   )
   const layout = useMemo(
@@ -214,7 +215,7 @@ export const GauntletChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__
     [chartSize, crashOffset, gates]
   )
   const gateById = useMemo(
-    () => new Map(layout.gates.map((gate) => [gate.id, gate])),
+    () => indexDefinitions(layout.gates),
     [layout.gates]
   )
   const gateRegionEffects = useMemo<StreamPhysicsRegionEffect[]>(
@@ -288,10 +289,7 @@ export const GauntletChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__
       return {
         ...state,
         viability:
-          deps.viability?.(state, {
-            negativeProperties: deps.negativeById,
-            positiveProperties: deps.positiveById
-          }) ?? defaultViability(state, deps.positiveById, deps.negativeById)
+          resolveGauntletViability(state, deps.positiveById, deps.negativeById, deps.viability)
       }
     },
     []
@@ -372,14 +370,7 @@ export const GauntletChart = /* @__PURE__ */ withChartErrorBoundary(/* @__PURE__
   const seededDataKeyRef = useRef(dataKey)
   if (seededDataKeyRef.current !== dataKey) {
     seededDataKeyRef.current = dataKey
-    processedGateVisitsRef.current.clear()
-    capacitySnapshotsRef.current = []
-    elapsedRef.current = 0
-    const next = safeDataRef.current.map((datum, index) =>
-      createState(datum, index)
-    )
-    statesRef.current = next
-    setStates(next)
+    resetRunState()
   }
 
   useEffect(() => {

@@ -16,6 +16,10 @@ import type {
   GauntletPropertyWorkPlanOptions
 } from "./gauntletTypes"
 
+export function indexDefinitions<T extends { id: string }>(definitions: readonly T[]) {
+  return new Map(definitions.map(definition => [definition.id, definition]))
+}
+
 export function expandIds(input: readonly string[] | Record<string, number> | undefined): string[] {
   if (!input) return []
   if (Array.isArray(input)) return [...input]
@@ -41,11 +45,30 @@ export function resolvePopSpecIds(
     .slice(0, popSpec.count ?? 1)
 }
 
-export function resolvePopPositiveIds<TDatum extends Datum>(
-  project: GauntletProjectState<TDatum>,
-  effect: GauntletEffect
-): string[] {
-  return resolvePopSpecIds(project.activePositiveIds, effect.popPositive)
+function removeOccurrences(ids: readonly string[], spec: GauntletPopSpec | undefined, newest: boolean) {
+  const remaining = new Map<string, number>()
+  for (const id of resolvePopSpecIds(ids, spec)) remaining.set(id, (remaining.get(id) ?? 0) + 1)
+  const removed: Array<{ propertyId: string; index: number }> = []
+  if (remaining.size) {
+    for (let i = 0; i < ids.length; i++) {
+      const index = newest ? ids.length - 1 - i : i
+      const propertyId = ids[index]
+      const count = remaining.get(propertyId) ?? 0
+      if (count > 0) {
+        remaining.set(propertyId, count - 1)
+        removed.push({ propertyId, index })
+      }
+    }
+  }
+  return removed
+}
+
+export function inventoryChange(ids: readonly string[], pop: GauntletPopSpec | undefined, additions: GauntletEffect["addPositive"], newest: boolean) {
+  const removed = removeOccurrences(ids, pop, newest)
+  const indices = new Set(removed.map(entry => entry.index))
+  const added = expandIds(additions)
+  const active = ids.filter((_, index) => !indices.has(index)).concat(added)
+  return { removed, added, active }
 }
 
 /**
@@ -61,7 +84,7 @@ export function planGauntletPropertyWork(
   const properties =
     options.properties instanceof Map
       ? options.properties
-      : new Map(options.properties.map((property) => [property.id, property]))
+      : indexDefinitions(options.properties)
   const candidates = options.candidates ? new Set(options.candidates) : null
   const occurrences = options.attachedIds
     .map((id, index) => {
@@ -125,20 +148,7 @@ export function resolvePopNegativeEntries<TDatum extends Datum>(
   project: GauntletProjectState<TDatum>,
   effect: GauntletEffect
 ): Array<{ propertyId: string; index: number }> {
-  const wanted = resolvePopSpecIds(project.negativeIds, effect.popNegative)
-  if (!wanted.length) return []
-  const remaining = new Map<string, number>()
-  for (const id of wanted) {
-    remaining.set(id, (remaining.get(id) ?? 0) + 1)
-  }
-  const entries: Array<{ propertyId: string; index: number }> = []
-  project.negativeIds.forEach((propertyId, index) => {
-    const count = remaining.get(propertyId) ?? 0
-    if (count <= 0) return
-    entries.push({ propertyId, index })
-    remaining.set(propertyId, count - 1)
-  })
-  return entries
+  return removeOccurrences(project.negativeIds, effect.popNegative, false)
 }
 
 /**
@@ -152,57 +162,28 @@ export function applyGauntletEffect<TDatum extends Datum>(
   context: GauntletEventContext<TDatum>
 ): GauntletProjectState<TDatum> {
   if (effect.when && !effect.when(context)) return project
-  let next = { ...project }
-  const popIds = resolvePopPositiveIds(next, effect)
-  if (popIds.length) {
-    next = {
-      ...next,
-      activePositiveIds: next.activePositiveIds.filter((id) => !popIds.includes(id)),
-      poppedPositiveIds: Array.from(new Set([...next.poppedPositiveIds, ...popIds]))
-    }
+  const next = { ...project }
+  if (effect.popPositive || effect.addPositive) {
+    const { active, added, removed } = inventoryChange(project.activePositiveIds, effect.popPositive, effect.addPositive, true)
+    next.activePositiveIds = active
+    next.poppedPositiveIds = [...project.poppedPositiveIds, ...removed.map(entry => entry.propertyId)]
+    next.missingPositiveIds = project.missingPositiveIds.filter(id => !added.includes(id))
   }
-  const popNegativeEntries = resolvePopNegativeEntries(next, effect)
-  if (popNegativeEntries.length) {
-    const removeIndices = new Set(popNegativeEntries.map((entry) => entry.index))
-    next = {
-      ...next,
-      negativeIds: next.negativeIds.filter((_, index) => !removeIndices.has(index)),
-      poppedNegativeIds: [
-        ...next.poppedNegativeIds,
-        ...popNegativeEntries.map((entry) => entry.propertyId)
-      ]
-    }
+  if (effect.popNegative || effect.addNegative) {
+    const { active, removed } = inventoryChange(project.negativeIds, effect.popNegative, effect.addNegative, false)
+    next.negativeIds = active
+    next.poppedNegativeIds = [...project.poppedNegativeIds, ...removed.map(entry => entry.propertyId)]
   }
-  const addedPositive = expandIds(effect.addPositive)
-  if (addedPositive.length) {
-    next = {
-      ...next,
-      activePositiveIds: Array.from(new Set([...next.activePositiveIds, ...addedPositive])),
-      missingPositiveIds: next.missingPositiveIds.filter((id) => !addedPositive.includes(id))
-    }
-  }
-  const addedNegative = expandIds(effect.addNegative)
-  if (addedNegative.length) {
-    next = {
-      ...next,
-      negativeIds: [...next.negativeIds, ...addedNegative]
-    }
-  }
-  if (effect.delayDelta) {
-    next = { ...next, delay: next.delay + effect.delayDelta }
-  }
+  if (effect.delayDelta) next.delay += effect.delayDelta
   if (effect.metricsDelta) {
-    const metrics = { ...next.metrics }
+    next.metrics = { ...project.metrics }
     for (const [key, value] of Object.entries(effect.metricsDelta)) {
-      metrics[key] = Number(metrics[key] ?? 0) + value
+      next.metrics[key] = Number(next.metrics[key] ?? 0) + value
     }
-    next = { ...next, metrics }
   }
-  if (effect.viabilityDelta) {
-    next = { ...next, viability: next.viability + effect.viabilityDelta }
-  }
-  if (effect.stage) next = { ...next, stage: effect.stage }
-  if (effect.outcome) next = { ...next, outcome: effect.outcome }
+  if (effect.viabilityDelta) next.viability += effect.viabilityDelta
+  if (effect.stage) next.stage = effect.stage
+  if (effect.outcome) next.outcome = effect.outcome
   return next
 }
 
