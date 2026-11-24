@@ -1,18 +1,14 @@
 "use client"
 
 import type { HoverData } from "../realtime/types"
-import type { PipelineStore } from "./PipelineStore"
 import type { OrdinalPipelineStore } from "./OrdinalPipelineStore"
 import type { GeoPipelineStore } from "./GeoPipelineStore"
-import type { SceneNode } from "./types"
 import type { OrdinalSceneNode } from "./ordinalTypes"
 import type { GeoSceneNode } from "./geoTypes"
 import type { GeoFeatureLike } from "./geoFrameHelpers"
-import { enrichDatumWithBand } from "./xySceneBuilders/ribbonScene"
 import {
   extractGeoNavPoints,
   extractOrdinalNavPoints,
-  extractXYNavPoints,
   navPointToHover,
   type NavPoint
 } from "./keyboardNav"
@@ -20,31 +16,6 @@ import {
   useGraphKeyboardNavigation,
   type KeyboardInteractionParams
 } from "./graphKeyboardNavigation"
-
-interface XYKeyboardParams extends KeyboardInteractionParams<
-  PipelineStore,
-  SceneNode
-> {
-  /** Adds frame-owned context, such as multi-series rows, to a focused point's hover. */
-  decorateHover?: (hover: HoverData, store: PipelineStore) => HoverData
-}
-
-export function useXYKeyboardNavigation({
-  decorateHover,
-  ...params
-}: XYKeyboardParams) {
-  return useGraphKeyboardNavigation({
-    ...params,
-    extractPoints: extractXYNavPoints,
-    toHover: (point, store) => {
-      const hover = navPointToHover({
-        ...point,
-        datum: enrichDatumWithBand(point.datum, store.resolvedRibbons)
-      })
-      return decorateHover ? decorateHover(hover, store) : hover
-    }
-  })
-}
 
 interface OrdinalKeyboardParams extends KeyboardInteractionParams<
   OrdinalPipelineStore,
