@@ -73,7 +73,7 @@ import { XYFrameTooltip } from "./xyDefaultTooltip"
 import { observationInputType } from "../charts/shared/semanticInteractions"
 import { isAnnotationActivationTarget } from "../charts/shared/annotationActivation"
 import { useSemanticFrameInteractions } from "./useSemanticFrameInteractions"
-import { useXYKeyboardNavigation } from "./frameKeyboardNavigation"
+import { useXYKeyboardNavigation } from "./xyKeyboardNavigation"
 import { normalizeColorGradient, normalizeGradient } from "../charts/shared/gradient"
 import { normalizeXYData } from "./normalizeXYData"
 import { sceneHasAuthoredCursor, sceneMarkCursor, setCanvasMarkCursor, useCanvasMarkCursorCleanup } from "./sceneCursor"
@@ -227,6 +227,7 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       xScaleType,
       yScaleType,
       accessibleTable = true,
+      tabIndex = 0,
       description,
       summary,
       linkedCrosshairName,
@@ -978,15 +979,10 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       // clear so the previous crosshair does not stick.
       const hasHoverOverlay =
         Boolean(effectiveHoverAnnotation && hoverRef.current && store.scales)
-      const hasHighlightOverlay =
-        Boolean(
-          hoveredNodeRef.current &&
-            Array.isArray(hoverAnnotation) &&
-            hoverAnnotation.some(
-              (a: { type?: string } | null) => a && typeof a === "object" && a.type === "highlight"
-            )
-        )
-      const interactionActive = hasHoverOverlay || hasHighlightOverlay
+      const highlightEntry = hoveredNodeRef.current && Array.isArray(hoverAnnotation)
+        ? hoverAnnotation.find(a => a && typeof a === "object" && a.type === "highlight")
+        : undefined
+      const interactionActive = hasHoverOverlay || Boolean(highlightEntry)
       const needsInteractionRepaint = needsInteractionCanvasPaint(
         interactionActive,
         interactionHasContentRef.current
@@ -1013,13 +1009,8 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
           }
 
           // Line highlight on hover
-          if (hasHighlightOverlay && hoveredNodeRef.current && Array.isArray(hoverAnnotation)) {
-            const highlightEntry = hoverAnnotation.find(
-              (a: { type?: string } | null) => a && typeof a === "object" && a.type === "highlight"
-            )
-            if (highlightEntry) {
-              drawLineHighlight(ictx, store.scene, hoveredNodeRef.current, highlightEntry, theme)
-            }
+          if (highlightEntry && hoveredNodeRef.current) {
+            drawLineHighlight(ictx, store.scene, hoveredNodeRef.current, highlightEntry, theme)
           }
         }
         interactionHasContentRef.current = interactionActive
@@ -1130,6 +1121,53 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       ? `${tableId}-direct-labels`
       : undefined
 
+    const overlaySize = { width: adjustedWidth, height: adjustedHeight, totalWidth: size[0], totalHeight: size[1], margin }
+    const overlayAxes = { showAxes, axes: axesConfig, axisExtent, showGrid, yFormat: yFormat || (tickFormatValue as StreamXYFrameProps["yFormat"]) }
+
+    function renderOverlay({
+      foregroundGraphics: foreground, ...layout
+    }: Pick<React.ComponentProps<typeof SVGOverlay>,
+      "scales" | "foregroundGraphics" | "xFormat" | "xValues" | "yValues" |
+      "annotationFrame" | "underlayRendered" | "canvasObscuresUnderlay">) {
+      return <SVGOverlay
+        decorative
+        {...overlaySize}
+        title={title} description={description} directLabelDescriptionId={directLabelDescriptionId}
+        {...overlayAxes}
+        xLabel={xLabel} yLabel={yLabel} yLabelRight={yLabelRight}
+        legend={resolveSceneLegend(storeRef.current)}
+        legendHoverBehavior={legendHoverBehavior} legendClickBehavior={legendClickBehavior}
+        legendHighlightedCategory={legendHighlightedCategory} legendIsolatedCategories={legendIsolatedCategories}
+        legendPosition={legendPosition} legendLayout={legendLayout}
+        foregroundGraphics={composeOverlays(foreground, wrapWithCustomLayoutSelection(storeRef.current?.customLayoutOverlays, layoutSelection ?? null))}
+        marginalGraphics={marginalGraphics} annotations={annotations}
+        onAnnotationActivate={onAnnotationActivate} onObservation={annotationObservationCallback ?? onObservation}
+        chartId={chartId} chartType="StreamXYFrame" autoPlaceAnnotations={autoPlaceAnnotations}
+        svgAnnotationRules={svgAnnotationRules} xAccessor={annXAccessor} yAccessor={annYAccessor}
+        annotationData={enrichAnnotationData(storeRef.current?.getData())}
+        pointNodes={collectAnnotationAnchors(storeRef.current?.scene)}
+        curve={typeof curve === "string" ? curve : undefined}
+        linkedCrosshairName={linkedCrosshairName} linkedCrosshairSourceId={linkedCrosshairSourceId}
+        {...layout}
+      />
+    }
+    const ariaLabel = description || (typeof title === "string" ? title : "XY chart")
+
+    function renderAccessibleData(scene: PipelineStore["scene"], sceneRevision?: number) {
+      return <>
+        <AccessibleDataTableSlot accessibleTable={accessibleTable} scene={scene} sceneRevision={sceneRevision}
+          chartType={chartType + " chart"} tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />
+        <ScreenReaderSummary summary={withAudienceNoteDescriptions(summary, annotations, autoPlaceAnnotations)} />
+      </>
+    }
+    const frameClassName = `stream-xy-frame${className ? ` ${className}` : ""}`
+    const frameStyle: React.CSSProperties = {
+      position: "relative",
+      fontFamily: "var(--semiotic-font-family, sans-serif)",
+      width: responsiveWidth ? "100%" : size[0],
+      height: responsiveHeight ? "100%" : size[1],
+    }
+
     // ── SSR + hydration path: render SVG instead of canvas ─────────────
     //
     // Fires on the server pass (so the framework gets pre-rendered SVG
@@ -1181,7 +1219,6 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
       const ssrXFormat: StreamXYFrameProps["xFormat"] =
         effectiveXFormat || (resolveFrameAutoXFormat(store, scales, isStreaming) as StreamXYFrameProps["xFormat"])
 
-      const chartAriaLabel = description || (typeof title === "string" ? title : "XY chart")
       const ssrMarginal = marginalGraphics && store
         ? collectMarginalValues(store.getData(), xAccessor, yAccessor)
         : { xValues: [] as number[], yValues: [] as number[] }
@@ -1195,19 +1232,13 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
           // because the observer's useEffect deps don't include the ref,
           // it would never re-run to see the now-attached element.
           ref={responsiveRef}
-          className={`stream-xy-frame${className ? ` ${className}` : ""}`}
+          className={frameClassName}
           role="group"
-          aria-label={chartAriaLabel}
-          style={{
-            position: "relative",
-            fontFamily: "var(--semiotic-font-family, sans-serif)",
-            width: responsiveWidth ? "100%" : size[0],
-            height: responsiveHeight ? "100%" : size[1],
-          }}
+          aria-label={ariaLabel}
+          style={frameStyle}
         >
-          <AccessibleDataTableSlot accessibleTable={accessibleTable} scene={scene} chartType={chartType + " chart"} tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />
-          <ScreenReaderSummary summary={withAudienceNoteDescriptions(summary, annotations, autoPlaceAnnotations)} />
-          <div role="img" aria-label={chartAriaLabel} aria-describedby={directLabelDescriptionId}>
+          {renderAccessibleData(scene)}
+          <div role="img" aria-label={ariaLabel} aria-describedby={directLabelDescriptionId}>
           <svg role="presentation"
             xmlns="http://www.w3.org/2000/svg"
             width={size[0]}
@@ -1237,55 +1268,10 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
               })).filter(Boolean)}
             </g>
           </svg>
-          <SVGOverlay
-            decorative
-            directLabelDescriptionId={directLabelDescriptionId}
-            width={adjustedWidth}
-            height={adjustedHeight}
-            totalWidth={size[0]}
-            totalHeight={size[1]}
-            margin={margin}
-            scales={scales}
-            showAxes={showAxes}
-            axes={axesConfig}
-            xLabel={xLabel}
-            yLabel={yLabel}
-            yLabelRight={yLabelRight}
-            xFormat={ssrXFormat}
-            yFormat={yFormat || (tickFormatValue as StreamXYFrameProps["yFormat"])}
-            axisExtent={axisExtent}
-            showGrid={showGrid}
-            title={title}
-            description={description}
-            legend={resolveSceneLegend(store)}
-            legendHoverBehavior={legendHoverBehavior}
-            legendClickBehavior={legendClickBehavior}
-            legendHighlightedCategory={legendHighlightedCategory}
-            legendIsolatedCategories={legendIsolatedCategories}
-            legendPosition={legendPosition}
-            legendLayout={legendLayout}
-            foregroundGraphics={
-            composeOverlays(ssrForeground, wrapWithCustomLayoutSelection(storeRef.current?.customLayoutOverlays, layoutSelection ?? null))
-          }
-            marginalGraphics={marginalGraphics}
-            xValues={ssrMarginal.xValues}
-            yValues={ssrMarginal.yValues}
-            annotations={annotations}
-            onAnnotationActivate={onAnnotationActivate}
-            onObservation={annotationObservationCallback ?? onObservation}
-            chartId={chartId}
-            chartType="StreamXYFrame"
-            autoPlaceAnnotations={autoPlaceAnnotations}
-            svgAnnotationRules={svgAnnotationRules}
-            annotationFrame={0}
-            xAccessor={annXAccessor}
-            yAccessor={annYAccessor}
-            annotationData={enrichAnnotationData(storeRef.current?.getData())}
-            pointNodes={collectAnnotationAnchors(storeRef.current?.scene)}
-            curve={typeof curve === "string" ? curve : undefined}
-            linkedCrosshairName={linkedCrosshairName}
-            linkedCrosshairSourceId={linkedCrosshairSourceId}
-          />
+          {renderOverlay({
+            scales, xFormat: ssrXFormat, foregroundGraphics: ssrForeground,
+            xValues: ssrMarginal.xValues, yValues: ssrMarginal.yValues, annotationFrame: 0
+          })}
           </div>
         </div>
       )
@@ -1293,20 +1279,24 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
 
     // ── Render ───────────────────────────────────────────────────────────
 
-    // tableId comes from useFrame above (semiotic-table-${React.useId()}).
+    const pointerHandlers = {
+      onPointerMove: onPointerMoveWrapped,
+      onMouseMove: onMouseMoveFallback,
+      onPointerLeave,
+      onMouseLeave: onPointerLeave,
+      onPointerDown: effectiveHoverAnnotation || hasClickBehavior ? onPointerDown : undefined,
+      onClick: hasClickBehavior ? onClick : undefined
+    }
 
     return (
       <div
         ref={responsiveRef}
-        className={`stream-xy-frame${className ? ` ${className}` : ""}`}
+        className={frameClassName}
         role="group"
-        aria-label={description || (typeof title === "string" ? title : "XY chart")}
-        tabIndex={0}
+        aria-label={ariaLabel}
+        tabIndex={tabIndex}
         style={{
-          position: "relative",
-          fontFamily: "var(--semiotic-font-family, sans-serif)",
-          width: responsiveWidth ? "100%" : size[0],
-          height: responsiveHeight ? "100%" : size[1],
+          ...frameStyle,
           overflow: "visible",
           touchAction: brushTouchAction(brush),
         }}
@@ -1319,23 +1309,14 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
             diagnostics={sceneRevisionDiagnosticsRef.current}
           />
         )}
-        <AccessibleDataTableSlot accessibleTable={accessibleTable} sceneRevision={storeRef.current?.getUpdateSnapshot().revisions.accessibility} scene={storeRef.current?.scene ?? []} chartType={chartType + " chart"} tableId={tableId} chartTitle={typeof title === "string" ? title : undefined} />
-        <ScreenReaderSummary summary={withAudienceNoteDescriptions(summary, annotations, autoPlaceAnnotations)} />
+        {renderAccessibleData(storeRef.current?.scene ?? [], storeRef.current?.getUpdateSnapshot().revisions.accessibility)}
         {/* Live region MUST live outside the role="img" wrapper — AT treats the
             image as atomic and never announces content nested inside it. */}
         <AriaLiveTooltip active={kbFocusIndexRef.current >= 0} hoverPoint={hoverPoint} />
-        {/* Inner graphic wrapper — role="img" so AT treats canvas as a single image */}
         <div
-          role="img"
-          aria-label={description || (typeof title === "string" ? title : "XY chart")}
-          aria-describedby={directLabelDescriptionId}
+          role="img" aria-label={ariaLabel} aria-describedby={directLabelDescriptionId}
           style={{ position: "relative", width: "100%", height: "100%" }}
-          onPointerMove={onPointerMoveWrapped}
-          onMouseMove={onMouseMoveFallback}
-          onPointerLeave={onPointerLeave}
-          onMouseLeave={onPointerLeave}
-          onPointerDown={effectiveHoverAnnotation || hasClickBehavior ? onPointerDown : undefined}
-          onClick={hasClickBehavior ? onClick : undefined}
+          {...pointerHandlers}
         >
         <CanvasFrameBackground
           size={size}
@@ -1349,94 +1330,19 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
           {resolvedBackground}
         </CanvasFrameBackground>
         <SVGUnderlay
-          width={adjustedWidth}
-          height={adjustedHeight}
-          totalWidth={size[0]}
-          totalHeight={size[1]}
-          margin={margin}
+          {...overlaySize}
           scales={currentScales}
-          showAxes={showAxes}
-          axes={axesConfig}
-          showGrid={showGrid}
+          {...overlayAxes}
           xFormat={effectiveXFormat}
-          yFormat={yFormat || (tickFormatValue as StreamXYFrameProps["yFormat"])}
-          axisExtent={axisExtent}
         />
         {/* CSS box from the frame size at commit, so paused or hidden-tab mounts lay out before their first paint. */}
         <canvas aria-hidden="true" ref={canvasRef} aria-label={computeCanvasAriaLabel(storeRef.current?.scene ?? [], chartType + " chart")} style={{ position: "absolute", left: 0, top: 0, width: size[0], height: size[1] }} />
         <canvas ref={interactionCanvasRef} style={{ position: "absolute", left: 0, top: 0, width: size[0], height: size[1], pointerEvents: "none" }} />
-        <SVGOverlay
-          decorative
-          directLabelDescriptionId={directLabelDescriptionId}
-          width={adjustedWidth}
-          height={adjustedHeight}
-          totalWidth={size[0]}
-          totalHeight={size[1]}
-          margin={margin}
-          scales={currentScales}
-          showAxes={showAxes}
-          axes={axesConfig}
-          xLabel={xLabel}
-          yLabel={yLabel}
-          yLabelRight={yLabelRight}
-          xFormat={effectiveXFormat}
-          yFormat={yFormat || (tickFormatValue as StreamXYFrameProps["yFormat"])}
-          axisExtent={axisExtent}
-          showGrid={showGrid}
-          title={title}
-          description={description}
-          legend={resolveSceneLegend(storeRef.current)}
-          legendHoverBehavior={legendHoverBehavior}
-          legendClickBehavior={legendClickBehavior}
-          legendHighlightedCategory={legendHighlightedCategory}
-          legendIsolatedCategories={legendIsolatedCategories}
-          legendPosition={legendPosition}
-          legendLayout={legendLayout}
-          foregroundGraphics={
-            composeOverlays(resolvedForeground, wrapWithCustomLayoutSelection(storeRef.current?.customLayoutOverlays, layoutSelection ?? null))
-          }
-          marginalGraphics={marginalGraphics}
-          xValues={marginalXValues}
-          yValues={marginalYValues}
-          annotations={annotations}
-          onAnnotationActivate={onAnnotationActivate}
-          onObservation={annotationObservationCallback ?? onObservation}
-          chartId={chartId}
-          chartType="StreamXYFrame"
-          autoPlaceAnnotations={autoPlaceAnnotations}
-          svgAnnotationRules={svgAnnotationRules}
-          annotationFrame={annotationFrame}
-          xAccessor={annXAccessor}
-          yAccessor={annYAccessor}
-          annotationData={enrichAnnotationData(storeRef.current?.getData())}
-          pointNodes={collectAnnotationAnchors(storeRef.current?.scene)}
-          curve={typeof curve === "string" ? curve : undefined}
-          underlayRendered
-          // The SVG grid and baselines remain visible below the mark canvas.
-          canvasObscuresUnderlay={false}
-          linkedCrosshairName={linkedCrosshairName}
-          linkedCrosshairSourceId={linkedCrosshairSourceId}
-        />
-        {(brush || onBrush) && (
-          <XYBrushOverlayLazy
-            width={adjustedWidth}
-            height={adjustedHeight}
-            totalWidth={size[0]}
-            totalHeight={size[1]}
-            margin={margin}
-            dimension={brush?.dimension ?? "xy"}
-            scales={currentScales}
-            onBrush={onBrush ?? (() => {})}
-            binSize={binSize}
-            snap={brush?.snap}
-            binBoundaries={brush?.binBoundaries ?? (chartType === "bar" ? storeRef.current?.getBinBoundaries() : undefined)}
-            snapDuring={brush?.snapDuring}
-            streaming={runtimeMode === "streaming"}
-            extent={brushExtent}
-            onBrushEnd={onBrushEnd}
-          />
-        )}
-
+        {renderOverlay({
+          scales: currentScales, xFormat: effectiveXFormat, foregroundGraphics: resolvedForeground,
+          xValues: marginalXValues, yValues: marginalYValues, annotationFrame,
+          underlayRendered: true, canvasObscuresUnderlay: false
+        })}
         {focusRing}
         <XYFrameTooltip
           enabled={Boolean(effectiveHoverAnnotation)}
@@ -1446,7 +1352,25 @@ const StreamXYFrame = /* @__PURE__ */ withDisplayName(/* @__PURE__ */ memo(/* @_
           containerHeight={adjustedHeight}
           margin={margin}
         />
-        </div>{/* end role="img" */}
+        </div>
+        {(brush || onBrush) && (
+          <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }} {...pointerHandlers}>
+            <XYBrushOverlayLazy
+              {...overlaySize}
+              dimension={brush?.dimension ?? "xy"}
+              scales={currentScales}
+              tabIndex={tabIndex}
+              onBrush={onBrush ?? (() => {})}
+              binSize={binSize}
+              snap={brush?.snap}
+              binBoundaries={brush?.binBoundaries ?? (chartType === "bar" ? storeRef.current?.getBinBoundaries() : undefined)}
+              snapDuring={brush?.snapDuring}
+              streaming={runtimeMode === "streaming"}
+              extent={brushExtent}
+              onBrushEnd={onBrushEnd}
+            />
+          </div>
+        )}
         {staleness?.showBadge && (
           <StalenessBadge
             isStale={isStale}

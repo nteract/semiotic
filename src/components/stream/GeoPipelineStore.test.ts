@@ -432,6 +432,10 @@ describe("GeoPipelineStore", () => {
       const distLondon = Math.sqrt((london.x - rome.x) ** 2 + (london.y - rome.y) ** 2)
 
       expect(distAthens).toBeLessThan(distLondon)
+      expect(store.cartogramLayout?.layout).toBe("radial")
+      store.updateConfig({ projectionTransform: undefined })
+      store.computeScene({ width: 600, height: 400 })
+      expect(store.cartogramLayout).toBeNull()
     })
 
     it("strength=0 preserves geographic positions", () => {

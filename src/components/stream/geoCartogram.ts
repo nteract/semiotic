@@ -8,12 +8,9 @@
  *   (sparkline-friendly; no map chrome)
  */
 
-import { scaleLinear } from "d3-scale"
-import type { Datum } from "../charts/shared/datumTypes"
-import { getMax } from "../charts/shared/minMax"
+import { geoAccessor } from "./geoPipelineHelpers"
 import type {
   DistanceCartogramConfig,
-  GeoAreaSceneNode,
   GeoLineSceneNode,
   GeoSceneNode
 } from "./geoTypes"
@@ -49,20 +46,12 @@ export function applyDistanceCartogram(
     : 1
   // Radial strength=0 means "leave geographic positions"; strip always
   // encodes cost on the axis (the map isn't the message).
-  const layoutMode = transform.layout === "strip" ? "strip" : "radial"
-  if (layoutMode === "radial" && strength === 0) return null
+  const strip = transform.layout === "strip"
+  if (!strip && strength === 0) return null
 
-  const idAcc = transform.centerAccessor
-    ? typeof transform.centerAccessor === "function"
-      ? transform.centerAccessor
-      : (d: Datum) => d[transform.centerAccessor as string]
-    : (d: Datum) => d.id
-
-  const costAcc =
-    typeof transform.costAccessor === "function"
-      ? transform.costAccessor
-      : (d: Datum) => d[transform.costAccessor as string]
-
+  const idAcc = geoAccessor(transform.centerAccessor, "id")
+  const costAcc = geoAccessor(transform.costAccessor, "")
+  const readCost = (node: PointSceneNode) => node.datum ? Number(costAcc(node.datum)) : NaN
   // Find center node
   const centerNode = pointNodes.find(
     (n) => n.datum && String(idAcc(n.datum)) === String(transform.center)
@@ -77,10 +66,11 @@ export function applyDistanceCartogram(
   }
 
   // Compute max cost for scaling
-  const costs = pointNodes
-    .map((n) => (n.datum ? Number(costAcc(n.datum)) : NaN))
-    .filter((c) => isFinite(c) && c >= 0)
-  const maxCost = getMax(costs, 1)
+  let maxCost = 1
+  for (const point of pointNodes) {
+    const cost = readCost(point)
+    if (Number.isFinite(cost) && cost > maxCost) maxCost = cost
+  }
 
   // Warn about areas in cartogram mode
   if (areasLength > 0 && process.env.NODE_ENV !== "production") {
@@ -91,81 +81,65 @@ export function applyDistanceCartogram(
     )
   }
 
-  // Filter out area nodes in cartogram mode (mutate caller's array via splice)
-  for (let i = scene.length - 1; i >= 0; i--) {
-    const n = scene[i]
-    if (n.type === "geoarea" && (n as GeoAreaSceneNode).interactive) {
-      scene.splice(i, 1)
-    }
-  }
-
   const cartogramLayout =
-    layoutMode === "strip"
-      ? applyStripLayout(pointNodes, centerNode, costAcc, maxCost, layout)
-      : applyRadialLayout(pointNodes, centerNode, costAcc, maxCost, strength, layout)
+    strip
+      ? applyStripLayout(pointNodes, centerNode, readCost, maxCost, layout)
+      : applyRadialLayout(pointNodes, centerNode, readCost, maxCost, strength, layout)
 
-  // Reposition lines connecting repositioned points
-  const lineNodes = scene.filter(
-    (n): n is GeoLineSceneNode => n.type === "line"
-  )
-  if (lineNodes.length > 0) {
-    // Build position lookup from repositioned points
-    const posMap = new Map<string, [number, number]>()
-    for (const pn of pointNodes) {
-      if (pn.pointId != null) posMap.set(String(pn.pointId), [pn.x, pn.y])
-    }
-
-    for (const ln of lineNodes) {
-      const src = ln.datum?.source
-      const tgt = ln.datum?.target
-      if (src != null && tgt != null) {
-        const srcPos = posMap.get(String(src))
-        const tgtPos = posMap.get(String(tgt))
-        if (srcPos && tgtPos) {
-          if (transform.lineMode === "fractional" && ln.path.length > 2) {
-            // Preserve the authored route shape while moving its endpoints to
-            // the cartogram positions. Each intermediate vertex receives an
-            // interpolated share of the source and target displacement.
-            const sourceStart = ln.path[0]
-            const targetStart = ln.path[ln.path.length - 1]
-            const sourceDelta: [number, number] = [
-              srcPos[0] - sourceStart[0],
-              srcPos[1] - sourceStart[1],
-            ]
-            const targetDelta: [number, number] = [
-              tgtPos[0] - targetStart[0],
-              tgtPos[1] - targetStart[1],
-            ]
-
-            const cumulative = [0]
-            for (let i = 1; i < ln.path.length; i++) {
-              cumulative.push(
-                cumulative[i - 1] +
-                  Math.hypot(
-                    ln.path[i][0] - ln.path[i - 1][0],
-                    ln.path[i][1] - ln.path[i - 1][1],
-                  ),
-              )
-            }
-            const totalLength = cumulative[cumulative.length - 1]
-
-            ln.path = ln.path.map((point, index) => {
-              const fraction =
-                totalLength > 0 ? cumulative[index] / totalLength : index / (ln.path.length - 1)
-              return [
-                point[0] + sourceDelta[0] * (1 - fraction) + targetDelta[0] * fraction,
-                point[1] + sourceDelta[1] * (1 - fraction) + targetDelta[1] * fraction,
-              ]
-            })
-          } else {
-            ln.path = [srcPos, tgtPos]
-          }
-        }
-      }
-    }
+  const positions = new Map<string, [number, number]>()
+  for (const point of pointNodes) {
+    if (point.pointId != null) positions.set(String(point.pointId), [point.x, point.y])
   }
+  let retained = 0
+  for (let i = 0; i < scene.length; i++) {
+    const node = scene[i]
+    if (node.type === "geoarea" && node.interactive) continue
+    scene[retained++] = node
+    if (node.type !== "line" || node.datum?.source == null || node.datum.target == null) continue
+    const start = positions.get(String(node.datum.source))
+    const end = positions.get(String(node.datum.target))
+    if (!start || !end) continue
+    const fractional = transform.lineMode === "fractional"
+    const route = fractional ? node.path.slice() : node.path
+    let next = scene[i + 1]
+    while (next?.type === "line" && next.continuation && next.datum === node.datum) {
+      if (fractional) {
+        // Continue in the same projected plane as the previous seam endpoint.
+        const last = route[route.length - 1]
+        const [firstX, firstY] = next.path[0]
+        for (const [x, y] of next.path.slice(1)) route.push([last[0] + x - firstX, last[1] + y - firstY])
+      }
+      delete node.style._edgeFade
+      i++
+      next = scene[i + 1]
+    }
+    node.path = fractional && route.length > 2
+      ? reattachRoute(route, start, end)
+      : [start, end]
+  }
+  scene.length = retained
 
   return cartogramLayout
+}
+
+/** Translate each vertex by its distance-weighted share of both endpoint moves. */
+function reattachRoute(
+  route: GeoLineSceneNode["path"], start: [number, number], end: [number, number]
+): GeoLineSceneNode["path"] {
+  const last = route.length - 1
+  const cumulative = [0]
+  for (let i = 1; i <= last; i++) {
+    cumulative.push(cumulative[i - 1] + Math.hypot(route[i][0] - route[i - 1][0], route[i][1] - route[i - 1][1]))
+  }
+  return route.map(([x, y], i) => {
+    if (i === 0) return start
+    if (i === last) return end
+    const fraction = cumulative[last] > 0 ? cumulative[i] / cumulative[last] : i / last
+    return [
+      x + (start[0] - route[0][0]) * (1 - fraction) + (end[0] - route[last][0]) * fraction,
+      y + (start[1] - route[0][1]) * (1 - fraction) + (end[1] - route[last][1]) * fraction
+    ]
+  })
 }
 
 // ── Radial (polar) layout ─────────────────────────────────────────────
@@ -173,46 +147,38 @@ export function applyDistanceCartogram(
 function applyRadialLayout(
   pointNodes: PointSceneNode[],
   centerNode: PointSceneNode,
-  costAcc: (d: Datum) => unknown,
+  readCost: (node: PointSceneNode) => number,
   maxCost: number,
   strength: number,
   layout: StreamLayout
 ): GeoCartogramLayout {
-  const geographicCx = centerNode.x
-  const geographicCy = centerNode.y
   const viewCx = layout.width / 2
   const viewCy = layout.height / 2
   const availableRadius = Math.min(layout.width, layout.height) / 2
-  const costScale = scaleLinear().domain([0, maxCost]).range([0, availableRadius])
 
   for (const node of pointNodes) {
-    if (node === centerNode) continue
-    if (!node.datum) continue
+    if (node === centerNode || !node.datum) continue
 
-    const geographicX = node.x
-    const geographicY = node.y
-    const angle = Math.atan2(geographicY - geographicCy, geographicX - geographicCx)
-    const geoDist = Math.hypot(
-      geographicX - geographicCx,
-      geographicY - geographicCy,
-    )
-    const cost = Number(costAcc(node.datum))
+    const dx = node.x - centerNode.x
+    const dy = node.y - centerNode.y
+    const geoDist = Math.hypot(dx, dy)
+    const cost = readCost(node)
     const costDist =
       isFinite(cost) && cost >= 0
-        ? (maxCost > 0 ? costScale(cost) : 0)
+        ? (cost / maxCost) * availableRadius
         : geoDist
-    const costX = viewCx + Math.cos(angle) * costDist
-    const costY = viewCy + Math.sin(angle) * costDist
+    const costX = viewCx + (geoDist ? dx / geoDist : 1) * costDist
+    const costY = viewCy + (geoDist ? dy / geoDist : 0) * costDist
 
     // Interpolate between two complete, in-bounds layouts: the fitted
     // geography and the centered cost cartogram. Applying the full recenter
     // offset at partial strength pushes the geographic half outside the plot.
-    node.x = geographicX + (costX - geographicX) * strength
-    node.y = geographicY + (costY - geographicY) * strength
+    node.x += (costX - node.x) * strength
+    node.y += (costY - node.y) * strength
   }
 
-  centerNode.x = geographicCx + (viewCx - geographicCx) * strength
-  centerNode.y = geographicCy + (viewCy - geographicCy) * strength
+  centerNode.x += (viewCx - centerNode.x) * strength
+  centerNode.y += (viewCy - centerNode.y) * strength
 
   return {
     cx: centerNode.x,
@@ -228,7 +194,7 @@ function applyRadialLayout(
 function applyStripLayout(
   pointNodes: PointSceneNode[],
   centerNode: PointSceneNode,
-  costAcc: (d: Datum) => unknown,
+  readCost: (node: PointSceneNode) => number,
   maxCost: number,
   layout: StreamLayout
 ): GeoCartogramLayout {
@@ -237,31 +203,15 @@ function applyStripLayout(
   const pad = Math.max(3, Math.min(8, layout.height * 0.35))
   const stripLen = Math.max(1, layout.width - pad * 2)
   const midY = layout.height / 2
-  const costScale = scaleLinear().domain([0, maxCost]).range([0, stripLen])
 
-  // Origin at the left; cost grows rightward.
-  centerNode.x = pad
-  centerNode.y = midY
-
-  // Place each non-center mark on the cost axis.
-  type Placed = { node: PointSceneNode; x: number }
-  const placed: Placed[] = []
+  const placed: PointSceneNode[] = []
   for (const node of pointNodes) {
-    if (node === centerNode) continue
-    if (!node.datum) {
-      node.x = pad
-      node.y = midY
-      continue
-    }
-    const cost = Number(costAcc(node.datum))
-    const x = pad + (
-      isFinite(cost) && cost >= 0 && maxCost > 0
-        ? costScale(cost)
-        : 0
-    )
-    node.x = x
+    node.x = pad
     node.y = midY
-    placed.push({ node, x })
+    if (node === centerNode || !node.datum) continue
+    const cost = readCost(node)
+    if (Number.isFinite(cost) && cost > 0) node.x += cost / maxCost * stripLen
+    placed.push(node)
   }
 
   // Light beeswarm: when marks share nearly the same x, fan them vertically
@@ -281,11 +231,11 @@ function applyStripLayout(
     }
     const runLen = runEnd - runStart
     if (runLen > 1 && maxOffset > 0) {
+      const step = Math.min(2.5, (maxOffset * 2) / (runLen - 1))
       for (let i = 0; i < runLen; i++) {
         // Center the stack on midY: … -2, -1, 0, 1, 2 …
         const offsetIndex = i - (runLen - 1) / 2
-        const step = Math.min(2.5, (maxOffset * 2) / Math.max(1, runLen - 1))
-        placed[runStart + i].node.y = midY + offsetIndex * step
+        placed[runStart + i].y = midY + offsetIndex * step
       }
     }
     runStart = runEnd

@@ -19,6 +19,13 @@ interface UseTargetPresentationOptions {
   precision: number | undefined
 }
 
+export function useValueFormatter(
+  format: BigNumberFormat | undefined, locale?: string, currency?: string, precision?: number
+) {
+  return useMemo(() => buildFormatter(format ?? "number", { locale, currency, precision }),
+    [format, locale, currency, precision])
+}
+
 /**
  * Format a finite target once for both visible chrome and the accessible
  * sentence. Invalid target values are omitted rather than announcing NaN or
@@ -40,15 +47,7 @@ export function useTargetPresentation({
       }),
     [locale]
   )
-  const targetFormatter = useMemo(
-    () =>
-      buildFormatter(target?.format ?? format ?? "number", {
-        locale,
-        currency,
-        precision
-      }),
-    [target?.format, format, locale, currency, precision]
-  )
+  const targetFormatter = useValueFormatter(target?.format ?? format, locale, currency, precision)
 
   return useMemo(() => {
     if (!target || !Number.isFinite(target.value)) return null
@@ -60,13 +59,8 @@ export function useTargetPresentation({
         ? percentFormatter.format(value / target.value)
         : null
     const formattedValue = targetFormatter(target.value)
-    const text = percent
-      ? target.label
-        ? `${percent} of ${target.label} (${formattedValue})`
-        : `${percent} of ${formattedValue}`
-      : target.label
-        ? `target ${target.label} (${formattedValue})`
-        : `target ${formattedValue}`
+    const amount = target.label ? `${target.label} (${formattedValue})` : formattedValue
+    const text = percent ? `${percent} of ${amount}` : `target ${amount}`
 
     return { label: target.label, percent, formattedValue, text }
   }, [target, value, targetFormatter, percentFormatter])
