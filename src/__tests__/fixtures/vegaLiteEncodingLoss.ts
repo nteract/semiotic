@@ -1,8 +1,13 @@
-const quantity = { field: "orders", type: "quantitative" }
-const category = { field: "team", type: "nominal" }
+const quantity = { field: "orders", type: "quantitative" } as const
+const category = { field: "team", type: "nominal" } as const
 const values = [{ team: 1, cohort: "A", state: "open", orders: 3 }, { team: "1", cohort: "A", state: "closed", orders: 2 }]
 
 export const encodingLossExamples = [
+  ...[true, { maxbins: 7 }].map(bin => ({
+    spec: { mark: "bar", data: { values: Array.from({ length: 101 }, (_, value) => ({ value })) },
+      encoding: { x: { field: "value", type: "quantitative", bin }, y: { aggregate: "count", type: "quantitative" } } },
+    path: "/encoding/x/bin"
+  })),
   { spec: { mark: "bar", data: { values: [{ x: 1, y: 2 }, { x: 100, y: 3 }] }, encoding: {
     x: { field: "x", type: "quantitative" }, y: { field: "y", type: "quantitative" }
   } }, path: "/encoding/x/type" },
@@ -48,3 +53,9 @@ export const translucentBubbles = {
   data: { values },
   encoding: { x: quantity, y: quantity, size: quantity, opacity: { value: 0.25 } }
 }
+
+export const tickOrientations = (["vertical", "horizontal"] as const).map(orientation => ({
+  orientation,
+  spec: { mark: "tick", data: { values }, encoding: orientation === "vertical"
+    ? { x: category, y: quantity } : { x: quantity, y: category } }
+}))

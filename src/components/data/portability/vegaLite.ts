@@ -159,14 +159,16 @@ export function toVegaLiteResult(
 
   const interpolation = toVegaInterpolation(props.curve)
   switch (component) {
+    case "DotPlot":
     case "BarChart":
     case "StackedBarChart":
     case "GroupedBarChart": {
-      mark = "bar"
-      const horizontal = props.orientation === "horizontal"
+      const tick = component === "DotPlot"
+      mark = tick ? "tick" : "bar"
+      const horizontal = (props.orientation ?? (tick ? "horizontal" : "vertical")) === "horizontal"
       const cat = withAxisTitle(nominal(props.categoryAccessor), props.categoryLabel)
       const val = withAxisTitle(quant(props.valueAccessor), props.valueLabel)
-      if (component !== "GroupedBarChart") val.aggregate = "sum"
+      if (component === "BarChart" || component === "StackedBarChart") val.aggregate = "sum"
       if (component === "BarChart") val.stack = null
       if (horizontal) {
         enc.y = cat
@@ -247,20 +249,6 @@ export function toVegaLiteResult(
       mark = component === "DonutChart" ? { type: "arc", innerRadius: props.innerRadius ?? 60 } : "arc"
       if (props.valueAccessor) enc.theta = quant(props.valueAccessor)
       if (props.categoryAccessor) enc.color = nominal(props.categoryAccessor)
-      break
-    }
-    case "DotPlot": {
-      mark = "tick"
-      const horizontal = props.orientation === "horizontal"
-      const cat = withAxisTitle(nominal(props.categoryAccessor), props.categoryLabel)
-      const val = withAxisTitle(quant(props.valueAccessor), props.valueLabel)
-      if (horizontal) {
-        enc.y = cat
-        enc.x = val
-      } else {
-        enc.x = cat
-        enc.y = val
-      }
       break
     }
     case "Histogram": {

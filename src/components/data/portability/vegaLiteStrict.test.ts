@@ -114,7 +114,9 @@ describe("strict Vega-Lite boundaries", () => {
     const bin = { field: "value", type: "quantitative", bin: true }
     const count = { aggregate: "count", type: "quantitative" }
     const input = (encoding: object) => ({ ...base, mark: "bar", encoding })
-    expect(importSpec(input({ x: bin, y: count })).status).toBe("success")
+    const horizontal = input({ x: bin, y: count })
+    expect(importSpec(horizontal).status).toBe("refused")
+    expect(importSpec(horizontal, true).lossReport).toContainEqual(expect.objectContaining({ path: "/encoding/x/bin" }))
     const vertical = input({ x: count, y: bin })
     expect(importSpec(vertical).status).toBe("refused")
     expect(importSpec(vertical, true).lossReport).toContainEqual(expect.objectContaining({ path: "/encoding/y/bin" }))
@@ -364,6 +366,15 @@ describe("strict Vega-Lite export", () => {
     expect(toVegaLiteResult(chart, { allowLossy: true }).lossReport).toContainEqual(expect.objectContaining({ path: "/props/sizeRange" }))
   })
 
+  it.each([undefined, "horizontal", "vertical"])("exports DotPlot's %s orientation on its physical axes", orientation => {
+    const chart = config("DotPlot", { categoryAccessor: "team", valueAccessor: "wins", ...(orientation && { orientation }) })
+    const result = toVegaLiteResult(chart)
+    expect(result.status).toBe("success")
+    const categoryAxis = orientation === "vertical" ? "x" : "y"
+    expect(result.spec?.encoding?.[categoryAxis]?.field).toBe("team")
+    expect(importSpec(result.spec).config?.props.orientation).toBe(orientation ?? "horizontal")
+  })
+
   it.each(["BarChart", "DotPlot"])(
     "reports unexported category colors and palettes for %s",
     (component) => {
@@ -406,9 +417,8 @@ describe("strict Vega-Lite export", () => {
     const lossy = toVegaLiteResult(input, { allowLossy: true })
     expect(lossy.status).toBe("lossy")
     expect(lossy.spec?.encoding?.color).toBeUndefined()
-    expect(lossy.lossReport).toEqual([
-      expect.objectContaining({ path: "/props/colorScheme" })
-    ])
+    const paths = component === "Histogram" ? ["/props/bins", "/props/colorScheme"] : ["/props/colorScheme"]
+    expect(lossy.lossReport.map(loss => loss.path).sort()).toEqual(paths)
   })
 
   it.each<[string, Record<string, unknown>, string]>([
@@ -422,13 +432,11 @@ describe("strict Vega-Lite export", () => {
     ["BubbleChart", { xAccessor: "x", yAccessor: "y", sizeBy: "v" }, "g"],
     ["Heatmap", { xAccessor: "x", yAccessor: "y", valueAccessor: "g" }, "g"]
   ])("preserves matching color fields and palettes for %s", (component, props, field) => {
-    const result = toVegaLiteResult(config(component, {
-      ...props,
-      colorBy: field,
-      colorScheme: ["red", "blue"]
-    }))
-    expect(result.status).toBe("success")
-    expect(result.lossReport).toEqual([])
+    const chart = config(component, { ...props, colorBy: field, colorScheme: ["red", "blue"] })
+    const histogram = component === "Histogram"
+    const result = toVegaLiteResult(chart, { allowLossy: histogram })
+    expect(result.status).toBe(histogram ? "lossy" : "success")
+    expect(result.lossReport.map(loss => loss.path)).toEqual(histogram ? ["/props/bins"] : [])
     expect(result.spec?.encoding?.color).toEqual({
       field,
       type: component === "Heatmap" ? "quantitative" : "nominal",

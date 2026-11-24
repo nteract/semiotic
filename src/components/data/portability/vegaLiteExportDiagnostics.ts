@@ -60,6 +60,9 @@ export function vegaLiteExportLosses(
       path: `/props/${pointerSegment(key)}`,
       message
     })
+  if (component === "Histogram") {
+    add("bins", "Vega-Lite chooses rounded bin boundaries. The exported histogram can group observations differently.")
+  }
   const allowed = Object.hasOwn(SUPPORTED, component)
     ? SUPPORTED[component]
     : []

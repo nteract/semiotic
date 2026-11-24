@@ -65,12 +65,8 @@ export type VegaLiteImportResult = PortabilityImportResult<ChartConfig>
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
-function normalizeMark(mark: string | ({ type: string } & Datum) | undefined): {
-  type: string
-  markProps: Datum
-} {
-  const markProps: Datum = isRecord(mark) ? mark : {}
-  return { type: typeof mark === "string" ? mark : markProps.type ?? "", markProps }
+function normalizeMark(mark: VegaLiteSpec["mark"] | undefined): Datum {
+  return isRecord(mark) ? mark : { type: typeof mark === "string" ? mark : "" }
 }
 
 function readIDIDMetadata(spec: VegaLiteSpec): Datum | undefined {
@@ -147,7 +143,8 @@ function translateVegaLite(spec: VegaLiteSpec, silent = false, createdAt?: strin
   // layered specs remain on the legacy warning/fallback path below.
   spec = unwrapIDIDEnrichedVegaLiteSpec(spec)
   const warnings: string[] = []
-  const { type: markType, markProps } = normalizeMark(spec.mark)
+  const markProps = normalizeMark(spec.mark)
+  const markType = markProps.type ?? ""
   const { data, encoding: enc } = aggregateVegaLite(spec, warnings)
   const { x, y, color, size, theta, opacity } = enc
 
@@ -168,7 +165,7 @@ function translateVegaLite(spec: VegaLiteSpec, silent = false, createdAt?: strin
   }
   if (spec.hconcat || spec.vconcat || spec.concat) {
     warnings.push(
-      'Concatenated views ("hconcat"/"vconcat"/"concat") are unsupported; import each view separately.'
+      'Import each concat, hconcat or vconcat view separately.'
     )
   }
   if (spec.facet || enc.facet || enc.row || enc.column) {
@@ -176,7 +173,7 @@ function translateVegaLite(spec: VegaLiteSpec, silent = false, createdAt?: strin
   }
   if (spec.repeat) {
     warnings.push(
-      'Repeated views ("repeat") are unsupported; import each field combination separately.'
+      'Import each repeat field combination separately.'
     )
   }
   if (spec.params || spec.selection) {
@@ -208,10 +205,9 @@ function translateVegaLite(spec: VegaLiteSpec, silent = false, createdAt?: strin
   // Handle bin → Histogram
   if (x?.bin || y?.bin) {
     const binned = x?.bin ? x : y!
-    props.valueAccessor = binned.field
-    if (binned.axis?.title) props.valueLabel = binned.axis.title
+    setAxisProps(props, "valueAccessor", "valueLabel", binned)
     if (color?.field) props.categoryAccessor = color.field
-    if (typeof binned.bin === "object" && binned.bin?.maxbins) props.bins = binned.bin.maxbins
+    if (typeof binned.bin === "object" && binned.bin.maxbins) props.bins = binned.bin.maxbins
     return finish("Histogram")
   }
 
@@ -287,6 +283,7 @@ function translateVegaLite(spec: VegaLiteSpec, silent = false, createdAt?: strin
     case "tick": {
       component = "DotPlot"
       const horizontal = !isCategory(x?.type) && isCategory(y?.type)
+      if (!horizontal) props.orientation = "vertical"
       setOrdinalAccessors(x, y, props, horizontal, horizontal || isCategory(x?.type))
       break
     }

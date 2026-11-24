@@ -1,4 +1,4 @@
-import { encodingLossExamples, translucentBubbles } from "../fixtures/vegaLiteEncodingLoss"
+import { encodingLossExamples, tickOrientations, translucentBubbles } from "../fixtures/vegaLiteEncodingLoss"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import type { ChildProcess } from "node:child_process"
 import { initializeServer, sendRequest, spawnServer } from "./mcpStdioHarness"
@@ -30,6 +30,14 @@ describe("developer MCP Vega-Lite conversion", () => {
         arguments: { spec, mode }
       })
     ).result
+
+  it.each(tickOrientations)("preserves the $orientation tick axes", async ({ spec, orientation }) => {
+    const result = await call(spec)
+    expect(result.isError).not.toBe(true)
+    expect(result.structuredContent).toMatchObject({ component: "DotPlot", props: {
+      orientation, categoryAccessor: "team", valueAccessor: "orders"
+    } })
+  })
 
   it("publishes the input and config schemas and returns a directly renderable config", async () => {
     const listing = (await sendRequest(server, "tools/list")).result.tools
