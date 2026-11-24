@@ -1,4 +1,4 @@
-import { pointerSegment } from "../vegaLiteValidation"
+import { pointerSegment, repeatedCategories } from "../vegaLiteValidation"
 import { toVegaInterpolation } from "../vegaLiteCurves"
 import type { Datum } from "../../charts/shared/datumTypes"
 import type { PortabilityLoss } from "./result"
@@ -91,6 +91,10 @@ export function vegaLiteExportLosses(
       add(key)
   }
   if (props.curve !== undefined && !toVegaInterpolation(props.curve)) add("curve")
+  if ((component === "PieChart" || component === "DonutChart") &&
+      typeof props.categoryAccessor === "string" && props.data &&
+      repeatedCategories(props.data, [props.categoryAccessor]))
+    add("categoryAccessor", "Semiotic combines rows with the same category label into one wedge.")
   if (component === "DonutChart" && props.innerRadius === undefined)
     add(
       "innerRadius",

@@ -1,4 +1,4 @@
-import { encodingLossExamples, translucentBubbles } from "../../../__tests__/fixtures/vegaLiteEncodingLoss"
+import { encodingLossExamples, normalizedArea, translucentBubbles } from "../../../__tests__/fixtures/vegaLiteEncodingLoss"
 import { describe, expect, it, vi } from "vitest"
 import { fromVegaLite, fromVegaLiteResult } from "../fromVegaLite"
 import type { VegaLiteSpec } from "../fromVegaLite"
@@ -38,6 +38,24 @@ describe("strict Vega-Lite boundaries", () => {
     const exported = toVegaLiteResult(chart)
     expect(exported.status).toBe("success")
     expect(exported.spec?.encoding?.opacity).toEqual({ value: 0.25 })
+  })
+
+  it.each(["PieChart", "DonutChart"])("reports merged %s wedges on export", component => {
+    const chart = config(component, {
+      data: [{ team: 1, orders: 2 }, { team: "1", orders: 3 }],
+      categoryAccessor: "team", valueAccessor: "orders", ...(component === "DonutChart" && { innerRadius: 30 })
+    })
+    expect(renderChartWithEvidence(component, chart.props).evidence.markCountByType.wedge).toBe(1)
+    expect(toVegaLiteResult(chart).status).toBe("refused")
+    const lossy = toVegaLiteResult(chart, { allowLossy: true })
+    expect(lossy.lossReport).toContainEqual(expect.objectContaining({ path: "/props/categoryAccessor" }))
+    expect(lossy.spec?.data?.values).toEqual(chart.props.data)
+  })
+
+  it("preserves the active vertical area stack when the x stack is disabled", () => {
+    const result = fromVegaLiteResult(normalizedArea)
+    expect(result.status).toBe("success")
+    expect(result.config).toMatchObject({ component: "StackedAreaChart", props: { areaBy: "team", normalize: true } })
   })
 
   it.each(encodingLossExamples)("reports $path on a $spec.mark before rendering", ({ spec, path }) => {

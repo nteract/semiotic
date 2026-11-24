@@ -3,6 +3,19 @@ const category = { field: "team", type: "nominal" } as const
 const values = [{ team: 1, cohort: "A", state: "open", orders: 3 }, { team: "1", cohort: "A", state: "closed", orders: 2 }]
 
 export const encodingLossExamples = [
+  ...["arc", { type: "arc", innerRadius: 45 }].flatMap(mark =>
+    [quantity, { ...quantity, aggregate: "sum" }].map(theta => ({
+      spec: { mark, data: { values }, encoding: { theta, color: category } },
+      path: "/encoding/color/field"
+    }))
+  ),
+  { spec: { mark: "arc", data: { values: [{ team: "A", orders: 2 }, { team: "A", orders: 5 }] },
+    encoding: { theta: quantity, color: category } }, path: "/encoding/color/field" },
+  ...["x", "y"].map(axis => ({
+    spec: { mark: "rect", data: { values: [1, 2, 100].map(value => ({ value, category: "A", price: 4 })) },
+      encoding: { [axis]: { field: "value", type: "quantitative" }, [axis === "x" ? "y" : "x"]: { field: "category", type: "nominal" }, color: { field: "price", type: "quantitative" } } },
+    path: `/encoding/${axis}/type`
+  })),
   ...[true, { maxbins: 7 }].map(bin => ({
     spec: { mark: "bar", data: { values: Array.from({ length: 101 }, (_, value) => ({ value })) },
       encoding: { x: { field: "value", type: "quantitative", bin }, y: { aggregate: "count", type: "quantitative" } } },
@@ -59,3 +72,14 @@ export const tickOrientations = (["vertical", "horizontal"] as const).map(orient
   spec: { mark: "tick", data: { values }, encoding: orientation === "vertical"
     ? { x: category, y: quantity } : { x: quantity, y: category } }
 }))
+
+
+export const normalizedArea = {
+  mark: "area",
+  data: { values: [1, 2].flatMap(x => [{ x, y: 3, team: "A" }, { x, y: 7, team: "B" }]) },
+  encoding: {
+    x: { field: "x", type: "quantitative" as const, stack: null },
+    y: { field: "y", type: "quantitative" as const, stack: "normalize" },
+    color: { field: "team", type: "nominal" as const }
+  }
+}

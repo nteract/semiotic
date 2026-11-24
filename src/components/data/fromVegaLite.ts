@@ -230,11 +230,12 @@ function translateVegaLite(spec: VegaLiteSpec, silent = false, createdAt?: strin
       break
     }
     case "area": {
-      const stacked = color?.field && stackingEnabled(x, y)
-      component = stacked ? "StackedAreaChart" : "AreaChart"
+      const stackAxis = spec.encoding?.x?.aggregate && !spec.encoding?.y?.aggregate && y?.stack === undefined ? x : y
+      const stack = color?.field && stackOffset(stackAxis)
+      component = stack ? "StackedAreaChart" : "AreaChart"
       if (color?.field) props.areaBy = color.field
       setXYAccessors(x, y, props)
-      if (stacked && (x?.stack === "normalize" || y?.stack === "normalize")) props.normalize = true
+      if (stack === "normalize") props.normalize = true
       if (markProps.opacity !== undefined) {
         props.areaOpacity = markProps.opacity
       }
@@ -366,8 +367,8 @@ export function fromVegaLiteResult(
 
 // ── Internal helpers ─────────────────────────────────────────────────────
 
-function stackingEnabled(x?: VegaLiteEncoding, y?: VegaLiteEncoding): boolean {
-  return x?.stack !== false && x?.stack !== null && y?.stack !== false && y?.stack !== null
+function stackOffset(channel?: VegaLiteEncoding) {
+  return channel?.stack === undefined ? "zero" : channel.stack
 }
 
 function resolveBarComponent(
@@ -376,10 +377,12 @@ function resolveBarComponent(
   color: VegaLiteEncoding | undefined,
   props: Datum,
 ): string {
-  setOrdinalAccessors(x, y, props, isHorizontalBar(x, y))
-  if (!color?.field || !stackingEnabled(x, y)) return "BarChart"
+  const horizontal = isHorizontalBar(x, y)
+  setOrdinalAccessors(x, y, props, horizontal)
+  const stack = stackOffset(horizontal ? x : y)
+  if (!color?.field || !stack) return "BarChart"
   props.stackBy = color.field
-  if (x?.stack === "normalize" || y?.stack === "normalize") props.normalize = true
+  if (stack === "normalize") props.normalize = true
   return "StackedBarChart"
 }
 

@@ -1,3 +1,4 @@
+import type { Datum } from "../charts/shared/datumTypes"
 import { aggregateRows } from "./aggregateRows"
 import { fromVegaInterpolation } from "./vegaLiteCurves"
 import type { VegaLiteEncoding, VegaLiteSpec } from "./fromVegaLite"
@@ -106,6 +107,18 @@ export function vegaLiteShapeDiagnostics(
   return diagnostics
 }
 
+/** Ordinal frame keys coerce each category to a string. */
+export function repeatedCategories(data: Datum[], fields: string[], aggregate = false): boolean {
+  const rows = aggregate ? aggregateRows(data, fields, []) : data
+  const seen = new Set<string>()
+  for (const row of rows) {
+    const key = JSON.stringify(fields.map(field => String(row[field])))
+    if (seen.has(key)) return true
+    seen.add(key)
+  }
+  return false
+}
+
 /** The strict subset is an allowlist: unhandled semantics cannot silently succeed. */
 export function vegaLiteSemanticDiagnostics(
   spec: VegaLiteSpec
@@ -161,6 +174,10 @@ export function vegaLiteSemanticDiagnostics(
   }
   const encoding = spec.encoding ?? {}
   const { x, y, color, theta } = encoding
+  if (mark === "arc" && typeof color?.field === "string" && spec.data?.values &&
+      repeatedCategories(spec.data.values, [color.field], Boolean(theta?.aggregate))) {
+    unsupported("/encoding/color/field")
+  }
   if (mark === "arc" && !theta?.field && !theta?.aggregate) unsupported("/encoding/theta")
   if ((mark === "arc" && !color?.field) || (mark === "rect" && !color?.field && !color?.aggregate) ||
       (mark === "bar" && (x?.bin || y?.bin) && color)) unsupported("/encoding/color")
@@ -186,13 +203,7 @@ export function vegaLiteSemanticDiagnostics(
     if (typeof dimension.field === "string" && dimension.field && spec.data?.values) {
       const fields = [dimension.field]
       if (typeof color?.field === "string" && color.field) fields.push(color.field)
-      const rows = measure.aggregate ? aggregateRows(spec.data.values, fields, []) : spec.data.values
-      const seen = new Set<string>()
-      for (const row of rows) {
-        const key = JSON.stringify(fields.map(field => String(row[field])))
-        if (seen.has(key)) { unsupported(path); break }
-        seen.add(key)
-      }
+      if (repeatedCategories(spec.data.values, fields, Boolean(measure.aggregate))) unsupported(path)
     }
   }
   if (mark === "area" && color?.field && x?.aggregate && !y?.aggregate &&
@@ -222,6 +233,8 @@ export function vegaLiteSemanticDiagnostics(
       (enc.field !== undefined || typeof enc.value !== "number")
     )
       unsupported(path)
+    if (mark === "rect" && (channel === "x" || channel === "y") && enc.type === "quantitative")
+      unsupported(`${path}/type`)
     if (enc.type === "temporal" && (!continuous || channel !== "x")) unsupported(`${path}/type`)
     if (
       continuous &&

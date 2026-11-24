@@ -1,4 +1,4 @@
-import { encodingLossExamples, tickOrientations, translucentBubbles } from "../fixtures/vegaLiteEncodingLoss"
+import { encodingLossExamples, normalizedArea, tickOrientations, translucentBubbles } from "../fixtures/vegaLiteEncodingLoss"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import type { ChildProcess } from "node:child_process"
 import { initializeServer, sendRequest, spawnServer } from "./mcpStdioHarness"
@@ -30,6 +30,12 @@ describe("developer MCP Vega-Lite conversion", () => {
         arguments: { spec, mode }
       })
     ).result
+
+  it("preserves the normalized y stack independently of the x stack", async () => {
+    const result = await call(normalizedArea)
+    expect(result.isError).not.toBe(true)
+    expect(result.structuredContent).toMatchObject({ component: "StackedAreaChart", props: { areaBy: "team", normalize: true } })
+  })
 
   it.each(tickOrientations)("preserves the $orientation tick axes", async ({ spec, orientation }) => {
     const result = await call(spec)
