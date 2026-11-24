@@ -1,5 +1,5 @@
 import type { Datum } from "./datumTypes"
-import { isDataRecord, sampleDataRecords } from "./dataRecords"
+import { isDataRecord, recordFields, sampleDataRecords } from "./dataRecords"
 /**
  * Validates chart data and accessors at render time.
  * Returns null if data is valid, or an error message string if not.
@@ -58,7 +58,7 @@ function validateAccessors(
   dataLabel: string
 ): string | null {
   if (!accessors) return null
-  const available = [...new Set(samples.flatMap(Object.keys))]
+  const available = recordFields(samples)
   for (const [label, accessor] of Object.entries(accessors)) {
     if (accessor && typeof accessor === "string" && !available.includes(accessor)) {
       const suggestion = suggestField(accessor, available)
@@ -76,6 +76,7 @@ function validateAccessors(
 interface ArrayDataValidation {
   componentName: string
   data: ChartDataInput
+  samples?: Datum[]
   accessors?: Record<string, AccessorLike | undefined>
   requiredProps?: Datum
 }
@@ -102,6 +103,7 @@ export function validateArrayData({
   componentName,
   data,
   accessors,
+  samples,
   requiredProps
 }: ArrayDataValidation): string | null {
   // Check required props first
@@ -129,7 +131,7 @@ export function validateArrayData({
     return `${componentName}: No data provided. Pass a non-empty array to the data prop.`
   }
 
-  const samples = sampleDataRecords(data)
+  samples ??= sampleDataRecords(data)
   if (!samples.length) {
     return `${componentName}: No data records provided. Pass a non-empty array of objects to the data prop.`
   }
@@ -182,7 +184,7 @@ export function validateNetworkData({
 
   if (
     edgesRequired &&
-    (!edges || !Array.isArray(edges) || edges.length === 0)
+    (!Array.isArray(edges) || edges.length === 0)
   ) {
     return (
       `${componentName}: No edges provided. Pass a non-empty array: ` +
@@ -192,7 +194,7 @@ export function validateNetworkData({
 
   if (
     nodesRequired &&
-    (!nodes || !Array.isArray(nodes) || nodes.length === 0)
+    (!Array.isArray(nodes) || nodes.length === 0)
   ) {
     return (
       `${componentName}: No nodes provided. Pass a non-empty array: ` +
